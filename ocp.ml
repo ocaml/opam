@@ -84,13 +84,103 @@ sig
   val compare_computer : t -> t -> int
 end
 
-module Path =
+module Path : PATH =
 struct
-  type t
-  type basename
-  type filename
-  type url
-  type 'a contents
+  open Printf
+
+  type url = U of string
+
+  type basename = B of string 
+
+  type filename = 
+    | Normalized of string
+    | Raw of string
+
+  type t = { computer : url option (* [None] : local *)
+           ; home_opam : string }
+
+  type 'a contents = 
+    | Directory of basename list
+    | File of 'a
+    | Not_exists
+
+  let s_of_filename = function
+    | Normalized s -> s
+    | Raw s -> s
+
+  let filename_map f = function
+    | Normalized s -> Normalized (f s)
+    | Raw s -> Raw (f s)
+
+  let normalize s = 
+    let getchdir s = 
+      let p = Unix.getcwd () in
+      let () = Unix.chdir s in
+      p in
+
+    Normalized (getchdir (getchdir s))
+
+  let home = Unix.getenv "HOME"
+  let (//) = sprintf "%s/%s"
+
+  let init o s = { computer = o ; home_opam = home // s }
+
+  let proot _ = normalize "."
+  let lib t (Namespace.Name n) = Raw (t.home_opam // "lib" // n)
+  let bin t = Raw (t.home_opam // "bin")
+
+  let mk_name_version d ext t n v = Raw (t.home_opam // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
+
+  let mk_name_version_o name ext t = 
+      function
+        | None -> Raw (t.home_opam // name)
+        | Some (n, v) -> mk_name_version name ext t n v
+
+  let index_opam = mk_name_version_o "index" ".opam"
+  let archives_targz = mk_name_version_o "archives" ".tar.gz"
+
+  let build = mk_name_version "build" ""
+  let installed t = Raw (t.home_opam // "installed")
+  let config t = Raw (t.home_opam // "config")
+
+  let url x o = U (sprintf "%s%s" x (match o with None -> "" | Some i -> sprintf ":%d" i))
+
+  let change_url t u = { t with computer = Some u }
+
+  let contents f_dir f_fic f_not_exists t f = 
+    match t.computer with 
+      | None -> 
+        let fic = s_of_filename f in
+          if Sys.file_exists fic then
+            (if Sys.is_directory fic then f_dir else f_fic) fic
+          else
+            f_not_exists
+      | Some _ -> failwith "to complete !"
+
+
+  let find = 
+    contents
+      (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
+      (fun fic -> File (BatFile.with_file_in fic BatIO.read_all))
+      Not_exists
+
+  let chop_extension (B s) = Filename.chop_extension s
+  let concat f (B s) = filename_map (fun filename -> filename // s) f
+  let file_exists f = Sys.file_exists (s_of_filename f)
+
+  let add t f =
+    function 
+      | Directory d -> failwith "to complete !"
+      | File cts -> 
+          let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
+          let fic = s_of_filename f in
+          let () = BatFile.with_file_out fic (fun oc -> BatString.print oc cts) in
+            t
+      | Not_exists -> failwith "to complete !"
+
+(*  let modify_def t cts f f_update = 
+*)  
+  let compare_computer t1 t2 = compare t1.computer t2.computer
 end
 
 module File =
