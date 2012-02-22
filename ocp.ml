@@ -290,6 +290,77 @@ sig
     (** Every [(name, version)] given by [getList] exists. *)
 end
 
+module Server (F_cudf : File.CUDF) : SERVER =
+struct
+  module Path_map = BatMap.Make (struct type t = Path.t let compare = Path.compare_computer end)
+
+  type t = 
+      { current_repository : F_cudf.package NV_map.t
+      ; home_opam : Path.t (* ~/.opam-server *)
+      ; all_repository : F_cudf.package NV_map.t Path_map.t
+      ; package_manager : Namespace.version }
+
+  type opam = (Namespace.name * Namespace.version) * F_cudf.package option
+      (* [None] : the current repository does not contain the package associated to the [name] and [version] *)
+
+  type package = F_cudf.package
+
+  let read_archives home_opam =
+    let archives = Path.archives_targz home_opam None in
+      List.fold_left
+        (fun map x -> 
+           NV_map.add
+             (Namespace.nv_of_string (Path.chop_extension x)) 
+             (F_cudf.package (F_cudf.find home_opam (Path.concat archives x))) 
+             map) NV_map.empty 
+        (match Path.find home_opam archives with
+           | Path.Directory l -> l
+           | _ -> [])
+
+  let init o = 
+    let home_opam = Path.init o ".opam-server" in
+    { current_repository = read_archives home_opam
+    ; home_opam
+    ; all_repository = Path_map.empty
+    ; package_manager = Namespace.Version "1.0" }
+
+  let change_url t url = 
+    let home_opam = Path.change_url t.home_opam url in
+    { t with
+        current_repository = (match Path_map.Exceptionless.find home_opam t.all_repository with
+                                | None -> read_archives home_opam
+                                | Some v -> v);
+        home_opam;
+        all_repository = Path_map.add t.home_opam t.current_repository t.all_repository }
+
+  let getList t = BatList.map fst (NV_map.bindings t.current_repository)
+  let getOpam t n_v = n_v, NV_map.Exceptionless.find n_v t.current_repository
+  let getArchive t = function
+    | _, None -> Empty
+    | n_v, Some _ -> 
+        match Path.find t.home_opam (Path.archives_targz t.home_opam (Some n_v)) with
+          | Path.File s -> Tar_gz s
+          | _ -> Empty
+
+  let newArchive t (n_v, o_pack) arch = 
+    let t = 
+      { t with 
+        home_opam = 
+          Path.add 
+            t.home_opam 
+            (Path.archives_targz t.home_opam (Some n_v)) 
+            (Path.File (match arch with 
+                          | Empty -> failwith "create an empty tar.gz here" 
+                          | Tar_gz s -> s)) } in
+      
+    match o_pack with
+      | None -> { t with current_repository = NV_map.add n_v (F_cudf.new_package n_v "") t.current_repository }
+      | Some _ -> t
+
+  let version t = t.package_manager
+  let package = snd
+end
+
 module type CLIENT =
 sig
   type t
