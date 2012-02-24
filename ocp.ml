@@ -271,6 +271,17 @@ struct
     val printf : t -> ('a, out_channel, t) format -> 'a
   end
 
+  module P : PRINTF =
+  struct
+    type t = unit
+    include Pervasives
+
+    let init x = x
+    let read_line () = 
+      read_line (), ()
+    let printf () = Printf.printf
+  end
+
   module type IO_FILE =
   sig
     type t
@@ -298,15 +309,73 @@ struct
     val new_package : name_version -> string (* description *) -> package
     val cudf : version -> package -> t
   end
-  (*
+
+  let filter motif =
+    BatList.filter_map 
+      (fun s -> 
+        try Some (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> None)
+
+  let parse motif s = filter motif (BatString.nsplit s "\n")
+
+  let parse_colon = parse ":"
+  let parse_space = parse " "
+  
   module Cudf : CUDF =
   struct
-    type cudf = string
-    type package 
-    type request
-  end
-  *)
+    type package =
+        { name : name 
+        ; version : version
+        ; description : string }
 
+    let name p = p.name
+    let version p = p.version
+    let description p = p.description
+    let new_package (name, version) description = { name ; version ; description }
+
+    type t = 
+        { opam_version : version
+        ; package : package }
+
+    let opam_version t = t.opam_version
+    let package t = t.package
+    let cudf opam_version package = { opam_version ; package }
+
+    let empty = 
+      { opam_version = Version ""
+      ; package = { name = Name "" ; version = Version "" ; description = "" } }
+
+    let find t f =
+      match Path.find t f with
+        | Path.File (Binary s) -> 
+            (match parse_colon s with
+               |  ("opam-version", opam_version)
+               :: ("package", name)
+               :: ("version", version)
+               :: ("description", description)
+
+               :: _ -> { opam_version = Version opam_version
+                       ; package = { name = Name name 
+                                   ; version = Version version
+                                   ; description } }
+               | _ -> empty)
+        | _ -> empty
+
+    let to_string t = 
+      Printf.sprintf "
+opam-version: %s
+
+package: %s
+version: %s
+description: %s" 
+        (Namespace.string_user_of_version t.opam_version)
+
+        (Namespace.string_user_of_name t.package.name)
+        (Namespace.string_user_of_version t.package.version)
+        t.package.description
+
+    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+  end
+  
   module type CONFIG =
   sig
     include IO_FILE
@@ -320,9 +389,64 @@ struct
     val config : version -> Path.url option -> t
   end
 
+  module Config : CONFIG =
+  struct
+    type t = { version : version ; sources : Path.url option }
+
+    let version t = t.version
+    let sources t = t.sources
+    let config version sources = { version ; sources }
+
+    let ocamlpro_http = "opam.ocamlpro.com"
+    let ocamlpro_port = 9999
+    let empty1 = { version = Version "" ; sources = Some (Path.url ocamlpro_http (Some ocamlpro_port)) }
+    let empty2 = { version = Version "" ; sources = None }
+
+    let find t f = 
+      match Path.find t f with
+        | Path.File (Binary s) -> 
+            (match parse_colon s with
+               |  ("version", version)
+               :: ("sources", sources)
+
+               :: _ -> { version = Version version
+                       ; sources = 
+                          try Some (let hostname, port = BatString.split sources ":" in
+                                      Path.url hostname (try Some (int_of_string port) with _ -> None)) with _ -> None }
+               | _ -> empty1)
+        | _ -> empty2
+
+    let to_string t =
+      Printf.sprintf "
+version: %s
+sources: %s" 
+        (Namespace.string_user_of_version t.version)
+        (match t.sources with None -> Printf.sprintf "%s:%d" ocamlpro_http ocamlpro_port | Some sources -> Path.string_of_url sources)
+
+    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+  end
+
   module type INSTALLED =
   sig
     include IO_FILE with type t = name_version list
+  end
+
+  module Installed : INSTALLED =
+  struct
+    type t = name_version list
+    let empty = []
+
+    let find t f = 
+      match Path.find t f with
+        | Path.File (Binary s) -> 
+            BatList.map (fun (name, version) -> Name name, Version version) (parse_space s)
+        | _ -> empty
+
+    let to_string = 
+      BatIO.to_string (BatList.print (fun oc (name, version) -> BatString.print oc (Printf.sprintf "%s %s" 
+                                                                                      (Namespace.string_user_of_name name) 
+                                                                                      (Namespace.string_user_of_version version)))) 
+    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
 
   type basename_last = 
@@ -364,6 +488,113 @@ struct
 
 
     (** construct *)
+  end
+
+  module To_install : TO_INSTALL =
+  struct
+    type t = 
+        { lib : path list
+        ; bin : path
+        ; misc : misc list }
+
+    let lib t = t.lib
+    let bin t = t.bin
+    let misc t = t.misc
+    let path_from m = m.p_from
+    let path_to m = m.p_to
+
+    let string_of_misc m = 
+      Printf.sprintf "from %s to %s" (string_of_path m.p_from) (string_of_path m.p_to)
+
+    let filename_of_path t f l_b suff = 
+      let f = List.fold_left Path.concat f l_b in
+      BatList.map (Path.concat f)
+        (match suff with
+          | Exact name -> [ B name ]
+          | Suffix suff ->
+            BatList.filter 
+              (fun (B name) -> 
+                (try Some (snd (BatString.split name ".")) with _ -> None) = Some suff)
+              (match Path.find t f with Path.Directory l -> l | _ -> []))
+
+    let filename_of_path_relative t f = function
+      | Relative, l_b, suff -> filename_of_path t f l_b suff
+      | Absolute, _, _ -> assert false
+
+    let filename_of_path_absolute t = function
+      | Absolute, l_b, suff -> filename_of_path t Path.root l_b suff
+      | _ -> assert false
+
+    let empty = { lib = []
+                ; bin = Relative, [], Suffix ""
+                ; misc = [] }
+
+    let b_of_string abs s = 
+      let l = BatString.nsplit (BatString.strip ~chars:"/" s) "/" in
+      match List.rev l with
+        | x :: xs ->
+          abs,
+          BatList.map (fun s -> B s) (List.rev xs), 
+          (match try Some (BatString.split x "*.") with _ -> None with
+            | Some ("", suff) -> Suffix suff
+            | _ -> Exact x)
+        | [] -> abs, [], Exact ""
+
+    let relative_path_of_string = b_of_string Relative
+
+    let find t f =
+      match Path.find t f with
+        | Path.File (Binary s) -> 
+
+          let l_lib_bin, l_misc = 
+            let l, f_while = 
+              BatString.nsplit s "\n",
+              fun s ->
+                match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
+                  | Some ("", _) -> true
+                  | _ -> false in
+            BatList.take_while f_while l, BatList.drop_while f_while l in
+
+          (match filter ":" l_lib_bin with 
+            |  ("lib", lib)
+            :: ("bin", bin) :: _ -> 
+              { lib = BatList.map relative_path_of_string (BatString.nsplit lib ",")
+              ; bin = relative_path_of_string bin 
+              ; misc = 
+                  BatList.map
+                    (fun (s_path, s_fname) -> 
+                      { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
+                    (filter " " l_misc) }
+            | _ -> empty)
+
+        | _ -> empty
+
+
+    let to_string t =
+
+      let path_print oc (pref, l_base, base) = 
+        begin
+          BatString.print oc (match pref with Absolute -> "/" | Relative -> "");
+          BatList.print ~first:"" ~last:"/" ~sep:"/" (fun oc (B base) -> BatString.print oc base) oc l_base;
+          BatString.print oc (match base with Suffix s -> Printf.sprintf "*.%s" s | Exact s -> s);
+        end in
+
+      Printf.sprintf "
+lib: %s
+bin: %s
+misc:
+%s"
+        (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:", " path_print) t.lib)
+        (BatIO.to_string path_print t.bin)
+        (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:"\n" 
+                            (fun oc misc -> 
+                              begin
+                                path_print oc (misc.p_from);
+                                BatString.print oc " ";
+                                path_print oc (misc.p_to);
+                              end)) t.misc)
+
+    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
 end
 
