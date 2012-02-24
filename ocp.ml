@@ -38,19 +38,21 @@ end
 module NV_map = BatMap.Make (NV_orderedtype)
 module NV_set = BatSet.Make (NV_orderedtype)
 
-
-type archive = 
-  | Tar_gz of string
-  | Empty
-
 type 'a ocaml_options = 
   | I of 'a
+
+type binary_data = Binary of string
+
+type 'a archive = 
+  | Tar_gz of 'a
+  | Empty
+
+type basename = B of string
 
 module type PATH =
 sig
 
   type t
-  type basename
   type filename
   type url
 
@@ -62,13 +64,14 @@ sig
   type 'a contents_rec = 
     | R_directory of (basename * 'a contents_rec) list
     | R_file of 'a
-    | R_filename of filename
+    | R_filename of filename list
 
   val init : url option (* [None] : local *) -> string (* $HOME_OPAM *) -> t
 
 
   (** definitions of some shortcuts *)
-
+  val root : filename (* / *)
+    (** the root of every path *)
   val proot : t -> filename (* $PWD *)
     (** path in the packager filesystem, contains the collection of libraries and programs *)
   val lib : t -> Namespace.name -> filename (* $HOME_OPAM/lib/NAME *)
@@ -92,16 +95,16 @@ sig
 
   (** **)
 
-  val find : t -> filename -> string (* raw binary *) contents
+  val find : t -> filename -> binary_data contents
     (** Retrieves the contents from the hard disk. *)
 
-  val add : t -> filename -> string contents -> t
+  val add : t -> filename -> binary_data contents -> t
     (** Removes everything in [filename] if existed, then write [contents] instead. *)
 
-  val add_rec : t -> filename -> string contents_rec -> t
+  val add_rec : t -> filename -> binary_data contents_rec -> t
     (** Removes everything in [filename] if existed, then write [contents_rec] inside [filename]. *)
 
-  val extract_targz : t -> archive -> string contents_rec
+  val extract_targz : t -> binary_data archive -> binary_data contents_rec
     (** Returns the same meaning as [archive] but in extracted form. *)
 
   val exec_buildsh : t -> name_version -> t
@@ -125,9 +128,9 @@ sig
     (** Returns the exact path to give to the OCaml compiler (ie. -I ...) *)
 
   val url : string (* hostname *) -> int option (* port *) -> url
-
   val change_url : t -> url -> t
-
+  val string_of_url : url -> string
+    (** in the format "HOSTNAME:PORT" *)
   val compare_computer : t -> t -> int
 end
 
@@ -136,8 +139,6 @@ struct
   open Printf
 
   type url = U of string
-
-  type basename = B of string 
 
   type filename = 
     | Normalized of string
@@ -154,7 +155,7 @@ struct
   type 'a contents_rec = 
     | R_directory of (basename * 'a contents_rec) list
     | R_file of 'a
-    | R_filename of filename
+    | R_filename of filename list
 
   let s_of_filename = function
     | Normalized s -> s
@@ -178,6 +179,7 @@ struct
   let (///) = concat
   let init o s = { computer = o ; home = home // s }
 
+  let root = Raw "/"
   let proot _ = normalize "."
   let lib t (Namespace.Name n) = Raw (t.home // "lib" // n)
   let bin t = Raw (t.home // "bin")
@@ -196,7 +198,7 @@ struct
   let installed t = Raw (t.home // "installed")
   let config t = Raw (t.home // "config")
 
-  let to_install t (n, v) = build t (Some (n, v)) /// B ((Namespace.string_of_name n) ^ ".install")
+  let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
 
   let url x o = U (sprintf "%s%s" x (match o with None -> "" | Some i -> sprintf ":%d" i))
 
@@ -216,7 +218,7 @@ struct
   let find = 
     contents
       (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
-      (fun fic -> File (BatFile.with_file_in fic BatIO.read_all))
+      (fun fic -> File (Binary (BatFile.with_file_in fic BatIO.read_all)))
       Not_exists
 
   let chop_extension (B s) = Filename.chop_extension s
@@ -231,17 +233,13 @@ struct
   let add t f =
     function 
       | Directory d -> failwith "to complete !"
-      | File cts -> 
+      | File (Binary cts) -> 
           let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
           let fic = s_of_filename f in
           let () = BatFile.with_file_out fic (fun oc -> BatString.print oc cts) in
             t
       | Not_exists -> failwith "to complete !"
 
-  let nv_of_basename (B s) = failwith ""
-
-(*  let modify_def t cts f f_update = 
-*)  
   let compare_computer t1 t2 = compare t1.computer t2.computer
 
   let exec_buildsh t n_v = 
@@ -255,6 +253,8 @@ struct
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))
+
+  let string_of_url (U s) = s
 end
 
 module File =
@@ -271,24 +271,32 @@ struct
     val printf : t -> ('a, out_channel, t) format -> 'a
   end
 
-  module type CUDF =
+  module type IO_FILE =
   sig
     type t
 
     val find : Path.t -> Path.filename -> t
     val add : Path.t -> Path.filename -> t -> Path.t
+  end
+
+  module type CUDF =
+  sig
+    include IO_FILE
 
     type package
 
+    (** destruct *)
     val opam_version : t -> version
     val package : t -> package
-    val cudf : version -> package -> t
 
-    (** fields related to package *)
     val name : package -> name
     val version : package -> version
     val description : package -> string
+
+
+    (** construct *)
     val new_package : name_version -> string (* description *) -> package
+    val cudf : version -> package -> t
   end
   (*
   module Cudf : CUDF =
@@ -301,51 +309,61 @@ struct
 
   module type CONFIG =
   sig
-    type t
+    include IO_FILE
 
-    val find : Path.t -> Path.filename -> t
-    val add : Path.t -> Path.filename -> t -> Path.t
-
+    (** destruct *)
     val version : t -> version
     val sources : t -> Path.url option
+
+
+    (** construct *)
+    val config : version -> Path.url option -> t
   end
 
   module type INSTALLED =
   sig
-    type t = name_version list
-
-    val find : Path.t -> Path.filename -> t
-    val add : Path.t -> Path.filename -> t -> Path.t
+    include IO_FILE with type t = name_version list
   end
+
+  type basename_last = 
+    | Suffix of string 
+        (* Designates a file which have [string] as suffix, ie. cmo, cma, cmi, cmx...
+           More generally, a file which name is "file.ssss" will have "ssss" as suffix. *)
+        (** By default, every matching value will be considered (ie. the regexp equivalent to ".*" ). *)
+    | Exact of string
+    
+  type prefix = 
+    | Absolute (** consider that the path begins at "/" *)
+    | Relative
+
+  type path = prefix * basename list * basename_last
+
+  type misc = { p_from : path ; p_to : path }
+
+  let string_of_path (pref, l, b) =
+    Printf.sprintf "(%s, %s, %s)" 
+      (match pref with Absolute -> "Absolute" | Relative -> "Relative")
+      (BatIO.to_string (BatList.print (fun oc (B b) -> BatString.print oc b)) l)
+      (match b with Suffix s -> Printf.sprintf "Suffix %s" s | Exact s -> Printf.sprintf "Exact %s" s)
 
   module type TO_INSTALL =
   sig
-    type suffix = 
-      | CMI 
-      | CMO
-      | CMA
-      | CMX
-      | Explicit of string
+    include IO_FILE
 
-    type prefix = 
-      | Absolute (** consider that the path begins at "/" *)
-      | Relative
-
-    type path = prefix * Path.basename list * suffix (** By default, every [suffix] will be considered (ie. the regexp equivalent to ".*" ). *)
-    type t
-
-    val find : Path.t -> Path.filename -> t
-    val add : Path.t -> Path.filename -> t -> Path.t
-
-    val is_relative : path -> bool
-
+    (** destruct *)
     val lib : t -> path list
     val bin : t -> path
-    val misc : t -> (path (* from *) * path (* to *)) list
+    val misc : t -> misc list
 
-    val string_of_path : path -> string
-    val filename_of_path_relative : Path.filename (* prefix *) -> path -> Path.filename
-    val filename_of_path_absolute : path -> Path.filename
+    val path_from : misc -> path
+    val path_to : misc -> path
+    val string_of_misc : misc -> string
+
+    val filename_of_path_relative : Path.t -> Path.filename (* prefix *) -> path -> Path.filename list
+    val filename_of_path_absolute : Path.t -> path -> Path.filename list
+
+
+    (** construct *)
   end
 end
 
@@ -362,7 +380,7 @@ sig
     | To_change of 'a 
         (* Version to install. The package could have been present or not, 
            but if present, it is another version than the proposed solution. *)
-    | To_delete (* The package have been installed. *)
+    | To_delete (* The package has been installed. *)
     | To_recompile (* The package is already installed, we just recompile it. *)
 
   type solution = (Namespace.name * Namespace.version action) list
@@ -391,10 +409,10 @@ sig
     (** Returns the representation of
         the OPAM file for the corresponding package version. *)
 
-  val getArchive : t -> opam -> archive
+  val getArchive : t -> opam -> binary_data archive
     (** Returns the corresponding package archive. *)
 
-  val newArchive : t -> opam -> archive -> t
+  val newArchive : t -> opam -> binary_data archive -> t
     (** Receives an upload, it contains an OPAM file and the
         corresponding package archive. *)
 
@@ -642,7 +660,7 @@ struct
       
     let t, tgz = 
       if Path.file_exists p_targz then
-        t, Path.R_filename p_build
+        t, Path.R_filename (BatList.map (Path.concat p_build) (match Path.find t.home p_build with Path.Directory l -> l | _ -> []))
       else
         let tgz = Path.extract_targz t.home (Server.getArchive t.server (Server.getOpam t.server (name, v))) in
           { t with home = Path.add_rec t.home p_build tgz }, tgz in
@@ -653,18 +671,18 @@ struct
            (Path.add_rec t.home (Path.build t.home (Some (name, v))) tgz) 
            (name, v))
         (Path.to_install t.home (name, v)) in
+
+    let filename_of_path_relative t path = 
+      Path.R_filename (F_toinstall.filename_of_path_relative t.home
+                         (Path.build t.home (Some (name, v))) 
+                         path) in
       
     let add_rec f_lib t path = 
-      if F_toinstall.is_relative path then
-        { t with home = 
-            Path.add_rec t.home 
-              (f_lib t.home name) 
-              (Path.R_filename (F_toinstall.filename_of_path_relative
-                                  (Path.build t.home (Some (name, v))) 
-                                  path)) }
-      else
-        { t with stdout = P.printf t.stdout "to complete !" } in
-      
+      { t with home = 
+          Path.add_rec t.home 
+            (f_lib t.home name (* warning : we assume that this result is a directory *))
+            (filename_of_path_relative t path) } in
+
     let t = (* lib *) 
       List.fold_left (add_rec Path.lib) t (F_toinstall.lib to_install) in
       
@@ -673,16 +691,17 @@ struct
       
     let t = (* misc *)
       List.fold_left 
-        (fun t (p_from, p_to) -> 
-           let ok, t = confirm t (Printf.sprintf "from %s to %s" (F_toinstall.string_of_path p_from) (F_toinstall.string_of_path p_to)) in
-             if ok then
-               { t with home = Path.add_rec t.home
-                   (F_toinstall.filename_of_path_absolute p_to)
-                   (Path.R_filename (F_toinstall.filename_of_path_absolute p_from)) }
-             else
-               t
-        ) t (F_toinstall.misc to_install) in
-      t
+        (fun t misc -> 
+          let ok, t = confirm t (F_toinstall.string_of_misc misc) in
+          if ok then
+            let path_from = filename_of_path_relative t (F_toinstall.path_from misc) in
+            List.fold_left 
+              (fun t path_to -> { t with home = Path.add_rec t.home path_to path_from }) 
+              t
+              (F_toinstall.filename_of_path_absolute t.home (F_toinstall.path_to misc))
+          else
+            t) t (F_toinstall.misc to_install) in
+    t
 
   let proceed_torecompile _ = failwith "to complete !"
   let proceed_todelete _ = failwith "to complete !"
