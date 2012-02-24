@@ -257,6 +257,12 @@ struct
   let string_of_url (U s) = s
 end
 
+let filename_of_string s = 
+  List.fold_left 
+    (fun t s -> Path.concat t (B s)) 
+    Path.root
+    (BatString.nsplit (BatString.strip ~chars:"/" s) "/")
+    
 module File =
 struct
   open Namespace
@@ -656,7 +662,7 @@ end
 
 module Server
   (F_cudf : File.CUDF) 
-  : SERVER =
+  : SERVER with type package = F_cudf.package =
 struct
   module Path_map = BatMap.Make (struct type t = Path.t let compare = Path.compare_computer end)
 
@@ -1006,3 +1012,56 @@ struct
           (match Path.ocaml_options_of_library t.home name with
              | I s -> s) }
 end
+
+
+(* ************* *)
+
+module Solver
+  (F_cudf : File.CUDF)
+  : SOLVER with type package = F_cudf.package = 
+struct
+  type package = F_cudf.package
+  type 'a request =
+      { wish_install : 'a list
+      ; wish_remove : 'a list
+      ; wish_upgrade : 'a list }
+
+  type 'a action = 
+    | To_change of 'a 
+    | To_delete
+    | To_recompile
+
+  type solution = (Namespace.name * Namespace.version action) list
+  let resolve _ _ = []
+end
+
+open File
+module Solv = Solver (Cudf)
+module S = Server (Cudf)
+module C = Client (Config) (Installed) (Cudf) (To_install) (Solv) (S) (P)
+
+open Namespace
+
+let _ = 
+  let client = C.init0 () in
+  match Array.to_list Sys.argv with
+
+    | "init" :: url :: port :: _ -> C.init client (Some (Path.url url (Some (int_of_string port))))
+    | "init" :: url :: _ -> C.init client (Some (Path.url url None))
+    | "init" :: _ -> C.init client None
+
+    | "info" :: name :: _ -> C.info client (Some (Name name))
+    | "info" :: _ -> C.info client None
+
+    | "config" :: name :: []
+    | "config" :: _ :: name :: _ -> C.config client C.Dir (Name name)
+
+    | "install" :: name :: _ -> C.install client (Name name)
+
+    | "update" :: _ -> C.update client
+
+    | "upgrade" :: _ -> C.upgrade client
+
+    | "upload" :: s :: _ -> C.upload client (filename_of_string s)
+
+    | _ -> client
