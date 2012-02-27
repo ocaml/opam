@@ -1,0 +1,4 @@
+begin program "ocp-get"
+  files = [ "ocp.ml" ]
+  requires = [ "bat" "unix" ]
+end
