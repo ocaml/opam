@@ -1281,6 +1281,88 @@ struct
     let resolve_summary = resolve (fun univ_init diff -> Some (CudfDiff.summary univ_init diff))
   end
 
+  module Graph = 
+  struct
+    open Algo
+
+    module PG = 
+    struct
+      module G = Defaultgraphs.PackageGraph.G
+      let union g1 g2 =
+        let g1 = G.copy g1 in
+        let () = 
+          begin
+            G.iter_vertex (G.add_vertex g1) g2;
+            G.iter_edges (G.add_edge g1) g2;
+          end in
+        g1
+      include G
+    end
+    module PO = Defaultgraphs.GraphOper (PG)
+
+    module PG_bfs = 
+    struct
+      include Graph.Traverse.Bfs (PG)
+      let fold f acc g = 
+        let rec aux acc iter = 
+          match try Some (get iter, step iter) with Exit -> None with
+            | None -> acc
+            | Some (x, iter) -> aux (f acc x) iter in
+        aux acc (start g)
+    end
+
+    module O_pkg = struct type t = Cudf.package let compare = compare end
+    module PkgMap = BatMap.Make (O_pkg)
+    module PkgSet = BatSet.Make (O_pkg)
+
+    let dep_reduction v =
+      let g = Defaultgraphs.PackageGraph.dependency_graph (Cudf.load_universe v) in
+      let () = PO.transitive_reduction g in
+      g
+
+    let resolve l_pkg_pb req =
+      [ match
+      BatOption.bind 
+        (let cons pkg act = Some (pkg, act) in
+         fun l -> 
+          let graph_installed = dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) (Cudf.load_universe l_pkg_pb)) in
+          
+          let l_del_p, l_del = 
+            BatList.split
+              (BatList.filter_map (function
+                | To_delete pkg as act -> cons pkg act
+                | _ -> None) l) in
+
+          let map_add = 
+            PkgMap.of_enum (BatList.enum (BatList.filter_map (function 
+              | To_change (_, pkg) as act -> cons pkg act
+              | To_delete _ -> None
+              | To_recompile _ -> assert false) l)) in
+
+          let _, l_act = 
+            PG_bfs.fold
+              (fun (set_recompile, l_act) pkg -> 
+                let add_succ_rem pkg set act =
+                  List.fold_left (fun set x -> PkgSet.add x set) (PkgSet.remove pkg set) (PG.succ graph_installed pkg), act :: l_act in
+                
+                match PkgMap.Exceptionless.find pkg map_add with
+                  | Some act -> 
+                    add_succ_rem pkg set_recompile act
+                  | None ->
+                    if PkgSet.mem pkg set_recompile then
+                      add_succ_rem pkg set_recompile (To_recompile pkg)
+                    else
+                      set_recompile, l_act) (PkgSet.empty, List.rev l_del) 
+              (let graph_installed = PG.copy graph_installed in
+               let () = List.iter (PG.remove_vertex graph_installed) l_del_p in              
+               PG.union graph_installed (dep_reduction (BatList.of_enum (PkgMap.keys map_add)))) in
+          Some (List.rev l_act))
+        (CudfDiff.resolve_diff l_pkg_pb req)
+      with
+        | None -> []
+        | Some l -> BatList.map (fun x -> P [ x ]) l ]
+  end
+
   let resolve _ _ = []
 end
 
