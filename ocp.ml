@@ -300,6 +300,10 @@ struct
   sig
     include IO_FILE
 
+    type version
+    val empty_version : version
+    val version_of_string : string -> version
+
     (** destruct *)
     val version : t -> version
     val sources : t -> Path.url option
@@ -321,7 +325,12 @@ struct
 
   module Config : CONFIG =
   struct
+    type version = Version of string
+
     type t = { version : version ; sources : Path.url option }
+
+    let empty_version = Version "1"
+    let version_of_string s = Version s
 
     let version t = t.version
     let sources t = t.sources
@@ -350,7 +359,7 @@ struct
       Printf.sprintf "
 version: %s
 sources: %s" 
-        (Namespace.string_user_of_version t.version)
+        (match t.version with Version s -> s)
         (match t.sources with None -> Printf.sprintf "%s:%d" ocamlpro_http ocamlpro_port | Some sources -> Path.string_of_url sources)
 
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
