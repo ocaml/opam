@@ -18,4 +18,8 @@ struct
         f_k oc k;
         f_v oc v;
       end) oc (bindings map)
+
+  let of_enum l = List.fold_left (fun map (k, v) -> add k v map) empty l
+
+  let keys map = fold (fun k _ l -> k :: l) map []
 end
