@@ -296,6 +296,66 @@ struct
     val add : Path.t -> Path.filename -> t -> Path.t
   end
 
+  module type CONFIG =
+  sig
+    include IO_FILE
+
+    (** destruct *)
+    val version : t -> version
+    val sources : t -> Path.url option
+
+
+    (** construct *)
+    val config : version -> Path.url option -> t
+  end
+
+  let filter motif =
+    BatList.filter_map 
+      (fun s -> 
+        try Some (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> None)
+
+  let parse motif s = filter motif (BatString.nsplit s "\n")
+
+  let parse_colon = parse ":"
+  let parse_space = parse " "
+
+  module Config : CONFIG =
+  struct
+    type t = { version : version ; sources : Path.url option }
+
+    let version t = t.version
+    let sources t = t.sources
+    let config version sources = { version ; sources }
+
+    let ocamlpro_http = "opam.ocamlpro.com"
+    let ocamlpro_port = 9999
+    let empty1 = { version = Version "" ; sources = Some (Path.url ocamlpro_http (Some ocamlpro_port)) }
+    let empty2 = { version = Version "" ; sources = None }
+
+    let find t f = 
+      match Path.find t f with
+        | Path.File (Binary s) -> 
+            (match parse_colon s with
+               |  ("version", version)
+               :: ("sources", sources)
+
+               :: _ -> { version = Version version
+                       ; sources = 
+                          try Some (let hostname, port = BatString.split sources ":" in
+                                      Path.url hostname (try Some (int_of_string port) with _ -> None)) with _ -> None }
+               | _ -> empty1)
+        | _ -> empty2
+
+    let to_string t =
+      Printf.sprintf "
+version: %s
+sources: %s" 
+        (Namespace.string_user_of_version t.version)
+        (match t.sources with None -> Printf.sprintf "%s:%d" ocamlpro_http ocamlpro_port | Some sources -> Path.string_of_url sources)
+
+    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+  end
+
   module type CUDF =
   sig
     include IO_FILE
@@ -316,16 +376,6 @@ struct
     val cudf : version -> package -> t
   end
 
-  let filter motif =
-    BatList.filter_map 
-      (fun s -> 
-        try Some (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> None)
-
-  let parse motif s = filter motif (BatString.nsplit s "\n")
-
-  let parse_colon = parse ":"
-  let parse_space = parse " "
-  
   module Cudf : CUDF =
   struct
     type package =
@@ -378,56 +428,6 @@ description: %s"
         (Namespace.string_user_of_name t.package.name)
         (Namespace.string_user_of_version t.package.version)
         t.package.description
-
-    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
-  end
-  
-  module type CONFIG =
-  sig
-    include IO_FILE
-
-    (** destruct *)
-    val version : t -> version
-    val sources : t -> Path.url option
-
-
-    (** construct *)
-    val config : version -> Path.url option -> t
-  end
-
-  module Config : CONFIG =
-  struct
-    type t = { version : version ; sources : Path.url option }
-
-    let version t = t.version
-    let sources t = t.sources
-    let config version sources = { version ; sources }
-
-    let ocamlpro_http = "opam.ocamlpro.com"
-    let ocamlpro_port = 9999
-    let empty1 = { version = Version "" ; sources = Some (Path.url ocamlpro_http (Some ocamlpro_port)) }
-    let empty2 = { version = Version "" ; sources = None }
-
-    let find t f = 
-      match Path.find t f with
-        | Path.File (Binary s) -> 
-            (match parse_colon s with
-               |  ("version", version)
-               :: ("sources", sources)
-
-               :: _ -> { version = Version version
-                       ; sources = 
-                          try Some (let hostname, port = BatString.split sources ":" in
-                                      Path.url hostname (try Some (int_of_string port) with _ -> None)) with _ -> None }
-               | _ -> empty1)
-        | _ -> empty2
-
-    let to_string t =
-      Printf.sprintf "
-version: %s
-sources: %s" 
-        (Namespace.string_user_of_version t.version)
-        (match t.sources with None -> Printf.sprintf "%s:%d" ocamlpro_http ocamlpro_port | Some sources -> Path.string_of_url sources)
 
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
