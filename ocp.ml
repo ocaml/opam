@@ -1078,8 +1078,32 @@ struct
       , 'a (* old *) )
         action parallel list
 
-  let solution_map _ = failwith "to complete !"
-  let solution_print _ = failwith "to complete !"
+  let solution_map f = 
+    BatList.map (function P l -> P (BatList.map (function
+      | To_change (o_p, p) -> To_change ((match o_p with
+          |  Was_installed p -> Was_installed (f p)
+          | Was_not_installed -> Was_not_installed), f p)
+      | To_delete p -> To_delete (f p)
+      | To_recompile p -> To_recompile (f p)) l))
+
+  let solution_print f = 
+    BatList.print ~first:"" ~last:"" ~sep:", " 
+      (fun oc (P l) -> 
+        BatList.print ~first:"" ~last:"" ~sep:", " 
+          (fun oc act -> 
+            let f_act s l_p = 
+              begin
+                BatString.print oc (Printf.sprintf "%s : " s);
+                BatList.print f oc l_p;
+              end in
+            match act with
+              | To_change (o_v_old, p_new) -> 
+                f_act "change"
+                  (match o_v_old with
+                    | Was_not_installed -> [ p_new ]
+                    | Was_installed p_old -> [ p_old ; p_new ])
+              | To_recompile _ -> ()
+              | To_delete v -> f_act "remove" [v]) oc l)
 
   module type CUDFDIFF = 
   sig
@@ -1363,7 +1387,7 @@ struct
         | Some l -> BatList.map (fun x -> P [ x ]) l ]
   end
 
-  let resolve _ _ = []
+  let resolve = Graph.resolve
 end
 
 module M =
