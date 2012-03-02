@@ -1081,7 +1081,31 @@ struct
   let solution_map _ = failwith "to complete !"
   let solution_print _ = failwith "to complete !"
 
-    module CudfDiff (*: CUDFDIFF*) = 
+  module type CUDFDIFF = 
+  sig
+    val resolve_diff : Cudf.package list -> Cudf_types.vpkg request ->
+      (Cudf.package installed_status * Cudf.package, Cudf.package) action list option
+
+    val resolve_summary : Cudf.package list -> Cudf_types.vpkg request ->
+      ( Cudf.package list
+      * (Cudf.package * Cudf.package) list
+      * (Cudf.package * Cudf.package) list
+      * Cudf.package list ) option
+  end
+
+  module CudfDiff : CUDFDIFF =
+  struct
+    module type CUDFDIFF =
+    sig
+      type solution =
+          { installed : Common.CudfAdd.Cudf_set.t
+          ; removed : Common.CudfAdd.Cudf_set.t }
+      val diff : Cudf.universe -> Cudf.universe -> (Common.CudfAdd.StringSet.elt, solution) ExtLib.Hashtbl.t
+      val summary : Cudf.universe -> (Common.CudfAdd.StringSet.elt, solution) ExtLib.Hashtbl.t ->
+        Cudf.package list * (Cudf.package * Cudf.package) list * (Cudf.package * Cudf.package) list * Cudf.package list
+    end
+      
+    module CudfDiff : CUDFDIFF = 
     struct
       (**************************************************************************************)
       (*  Copyright (C) 2010 Pietro Abate <pietro.abate@pps.jussieu.fr>                     *)
@@ -1194,6 +1218,68 @@ struct
         (!i,!u,!d,!r)
       ;;
     end
+
+    let to_cudf_doc l_pkg req = 
+      None, l_pkg, { Cudf.request_id = "" 
+                   ; install = req.wish_install
+                   ; remove = req.wish_remove
+                   ; upgrade = req.wish_upgrade
+                   ; req_extra = [] }
+
+
+    let cudf_resolve l_pkg req = 
+      let open Algo in
+      let r = Depsolver.check_request (to_cudf_doc l_pkg req) in
+      if Diagnostic.is_solution r then
+        match r with
+          | { Diagnostic.result = Diagnostic.Success f } -> Some (f ~all:true ())
+          | _ -> assert false
+      else
+        None
+
+    module Cudf_set =
+    struct
+      module S = Common.CudfAdd.Cudf_set
+
+      let choose_one s = 
+        match S.cardinal s with
+          | 0 -> raise Not_found
+          | 1 -> S.choose s
+          | _ ->
+            failwith "to complete ! Determine if it suffices to remove one arbitrary element from the \"removed\" class, or remove completely every element."
+
+      include S
+    end
+
+    let resolve f_diff l_pkg_pb req = 
+      BatOption.bind
+        (fun l_pkg_sol -> 
+          let univ_init = Cudf.load_universe l_pkg_pb in
+          BatOption.bind 
+            (f_diff univ_init)
+            (try Some (CudfDiff.diff univ_init (Cudf.load_universe l_pkg_sol)) with Cudf.Constraint_violation _ -> None))
+        (cudf_resolve l_pkg_pb req)
+
+    let resolve_diff = 
+      resolve
+        (fun _ diff -> 
+          match 
+            Hashtbl.fold (fun pkgname s acc ->
+              let add x = x :: acc in
+              match 
+                (try Some (Cudf_set.choose_one s.CudfDiff.removed) with Not_found -> None), 
+                try Some (Cudf_set.choose s.CudfDiff.installed) with Not_found -> None
+              with
+                | None, Some p -> add (To_change (Was_not_installed, p))
+                | Some p, None -> add (To_delete p)
+                | Some p_old, Some p_new -> add (To_change (Was_installed p_old, p_new))
+                | None, None -> acc) diff []
+          with
+            | [] -> None
+            | l -> Some l)
+
+    let resolve_summary = resolve (fun univ_init diff -> Some (CudfDiff.summary univ_init diff))
+  end
 
   let resolve _ _ = []
 end
