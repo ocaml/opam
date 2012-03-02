@@ -2,20 +2,24 @@ module Namespace =
 struct
   open Printf
 
-  type name = Name of string
-  let name_compare (Name n1) (Name n2) = failwith "to complete !"
+  type name = Name of Cudf_types.pkgname
+  let name_compare = compare
 
-  type version = Version of string
-  let version_compare (Version v1) (Version v2) = failwith "to complete !"
+  type version = { deb : Debian.Format822.version ; cudf : Cudf_types.version }
+  let version_compare v1 v2 = compare v1.cudf v2.cudf
 
-  let string_of_nv (Name n) (Version v) = sprintf "%s-%s" n v
+  let string_of_nv (Name n) version = sprintf "%s-%s" n version.deb
   let string_of_name (Name n) = n
   let string_user_of_name (Name n) = n
-  let string_user_of_version (Version v) = v
+  let string_user_of_version version = version.deb
+
+  let table = ref (Debian.Debcudf.init_tables [])
+
+  let version_of_string n version = { deb = version ; cudf = Debian.Debcudf.get_cudf_version !table (n, version) }
 
   let nv_of_string s = 
-    let n, v = BatString.split s "-" in
-      Name n, Version v
+    let n, version = BatString.split s "-" in
+      Name n, version_of_string n version
 end
 
 type name_version = Namespace.name * Namespace.version
@@ -369,74 +373,89 @@ sources: %s"
   sig
     include IO_FILE
 
-    type package
-
+    type version
     (** destruct *)
-    val opam_version : t -> version
-    val package : t -> package
-
-    val name : package -> name
-    val version : package -> version
-    val description : package -> string
-
+    val package : t -> Cudf.package
+    val description : Cudf.package -> string
 
     (** construct *)
-    val new_package : name_version -> string (* description *) -> package
-    val cudf : version -> package -> t
+    val new_package : name_version -> string (* description *) -> Cudf.package
+    val cudf : version -> Cudf.package -> t
   end
 
-  module Cudf : CUDF =
+  module Cudf (F_config : CONFIG) : CUDF with type version = F_config.version = 
   struct
-    type package =
-        { name : name 
-        ; version : version
-        ; description : string }
+    type version = F_config.version
 
-    let name p = p.name
-    let version p = p.version
-    let description p = p.description
-    let new_package (name, version) description = { name ; version ; description }
-
+    type package = 
+        { preamble : Cudf.preamble option
+        ; pkg : Cudf.package list
+        ; request : Cudf.request option }
+        
     type t = 
         { opam_version : version
         ; package : package }
 
-    let opam_version t = t.opam_version
-    let package t = t.package
-    let cudf opam_version package = { opam_version ; package }
+    let find_field key = function
+      | [x] -> (try Some (List.assoc key x.Cudf.pkg_extra) with Not_found -> None)
+      | _ -> None
+          
+    let package t = 
+      match t.package.pkg with 
+        | [ x ] -> x
+        | _ -> Cudf.default_package
+
+    let name p = match p.pkg with [x] -> x.Cudf.package | _ -> ""
+    let version p = match p.pkg with [x] -> x.Cudf.version | _ -> min_int
+
+    let s_description = "description"
+    let description p = 
+      match find_field s_description [ p ] with
+        | Some (`String s) -> s
+        | _ -> ""
+
+    let new_package (Name name, version) description = 
+      { Cudf.default_package with 
+        Cudf.package = name ;
+        Cudf.version = version.cudf ; 
+        Cudf.pkg_extra = [ s_description, `String description ] }
+
+    let cudf opam_version pkg = { opam_version ; package = { preamble = None ; pkg = [ pkg ] ; request = None } }
 
     let empty = 
-      { opam_version = Version ""
-      ; package = { name = Name "" ; version = Version "" ; description = "" } }
+      { opam_version = F_config.empty_version
+      ; package = { preamble = None ; pkg = [] ; request = None } }
 
     let find t f =
       match Path.find t f with
         | Path.File (Binary s) -> 
-            (match parse_colon s with
-               |  ("opam-version", opam_version)
-               :: ("package", name)
-               :: ("version", version)
-               :: ("description", description)
-
-               :: _ -> { opam_version = Version opam_version
-                       ; package = { name = Name name 
-                                   ; version = Version version
-                                   ; description } }
-               | _ -> empty)
+          (match 
+              try
+                Some (Cudf_parser.parse (Cudf_parser.from_IO_in_channel (IO.input_string s)))
+              with _ -> None
+           with
+             | None -> empty
+             | Some (preamble, pkg, request) -> 
+               { opam_version = 
+                   (match find_field "opam_version" pkg with
+                      | Some (`String v) -> F_config.version_of_string v
+                      | _ -> empty.opam_version)
+               ; package = { preamble ; pkg ; request } })
         | _ -> empty
 
     let to_string t = 
-      Printf.sprintf "
-opam-version: %s
-
-package: %s
-version: %s
-description: %s" 
-        (Namespace.string_user_of_version t.opam_version)
-
-        (Namespace.string_user_of_name t.package.name)
-        (Namespace.string_user_of_version t.package.version)
-        t.package.description
+      let oc = IO.output_string () in
+      let () = 
+        begin
+          (match t.package.preamble with
+            | Some preamble -> Cudf_printer.pp_io_preamble oc preamble
+            | None -> ());
+          List.iter (Cudf_printer.pp_io_package oc) t.package.pkg;
+          (match t.package.request with
+            | Some request -> Cudf_printer.pp_io_request oc request
+            | None -> ());
+        end in
+      IO.close_out oc
 
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
@@ -454,7 +473,7 @@ description: %s"
     let find t f = 
       match Path.find t f with
         | Path.File (Binary s) -> 
-            BatList.map (fun (name, version) -> Name name, Version version) (parse_space s)
+            BatList.map (fun (name, version) -> Name name, version_of_string name version) (parse_space s)
         | _ -> empty
 
     let to_string = 
@@ -613,27 +632,37 @@ misc:
   end
 end
 
+type 'a installed_status =
+  | Was_installed of 'a
+  | Was_not_installed
+
 module type SOLVER =
 sig
-  type package (* name, version, conflicts, dependencies *)
-
   type 'a request =
       { wish_install : 'a list
       ; wish_remove : 'a list
       ; wish_upgrade : 'a list }
 
-  type 'a action = 
+  type ('a, 'b) action = 
     | To_change of 'a 
         (* Version to install. The package could have been present or not, 
            but if present, it is another version than the proposed solution. *)
-    | To_delete (* The package has been installed. *)
-    | To_recompile (* The package is already installed, we just recompile it. *)
+    | To_delete of 'b (* The package has been installed. *)
+    | To_recompile of 'b (* The package is already installed, we just recompile it. *)
 
-  type solution = (Namespace.name * Namespace.version action) list
+  type 'a parallel = P of 'a list (* order irrelevant : elements are considered in parallel *)
+
+  type 'a solution = 
+      ( 'a (* old *) installed_status * 'a (* new *)
+      , 'a (* old *) )
+        action parallel list
       (** Sequence describing the action to perform.
           Order natural : first element to execute is the first element of the list. *)
 
-  val resolve : package list -> name_version request -> solution list
+  val solution_print : ('a BatIO.output -> 'b -> unit) -> 'a BatIO.output -> 'b solution -> unit
+  val solution_map : ('a -> 'b) -> 'a solution -> 'b solution
+
+  val resolve : Cudf.package list -> Cudf_types.vpkg request -> Cudf.package solution list
     (** Given a description of packages, it returns a list of solution preserving the consistency of the initial description. *)
 end
 
@@ -642,6 +671,7 @@ sig
   type t
   type opam
   type package
+  type version
 
   val init : Path.url option -> t
 
@@ -662,7 +692,7 @@ sig
     (** Receives an upload, it contains an OPAM file and the
         corresponding package archive. *)
 
-  val version : t -> Namespace.version
+  val version : t -> version
 
   val package : opam -> package option 
     (** [None] : the [opam] associated to the [(name, version)] does not exist. 
@@ -670,21 +700,23 @@ sig
 end
 
 module Server
-  (F_cudf : File.CUDF) 
-  : SERVER with type package = F_cudf.package =
+  (F_config : File.CONFIG)
+  (F_cudf : File.CUDF with type version = F_config.version) 
+  : SERVER with type package = Cudf.package with type version = F_config.version =
 struct
   module Path_map = BatMap.Make (struct type t = Path.t let compare = Path.compare_computer end)
 
+  type version = F_config.version
   type t = 
-      { current_repository : F_cudf.package NV_map.t
+      { current_repository : Cudf.package NV_map.t
       ; home : Path.t (* ~/.opam-server *)
-      ; all_repository : F_cudf.package NV_map.t Path_map.t
-      ; package_manager : Namespace.version }
+      ; all_repository : Cudf.package NV_map.t Path_map.t
+      ; package_manager : version }
 
-  type opam = name_version * F_cudf.package option
+  type opam = name_version * Cudf.package option
       (* [None] : the current repository does not contain the package associated to the [name] and [version] *)
 
-  type package = F_cudf.package
+  type package = Cudf.package
 
   let read_archives home =
     let archives = Path.archives_targz home None in
@@ -703,7 +735,7 @@ struct
     { current_repository = read_archives home
     ; home
     ; all_repository = Path_map.empty
-    ; package_manager = Namespace.Version "1.0" }
+    ; package_manager = F_config.empty_version }
 
   let change_url t url = 
     let home = Path.change_url t.home url in
@@ -778,8 +810,8 @@ module Client
   (F_installed : File.INSTALLED) 
   (F_cudf : File.CUDF) 
   (F_toinstall : File.TO_INSTALL)
-  (Solver : SOLVER with type package = F_cudf.package)
-  (Server : SERVER with type package = F_cudf.package) 
+  (Solver : SOLVER)
+  (Server : SERVER with type package = Cudf.package with type version = F_cudf.version) 
   (P : File.PRINTF)
   : CLIENT =
 struct
@@ -899,7 +931,7 @@ struct
     let b, stdout = confirm_ msg t.stdout in
     b, { t with stdout }
 
-  let proceed_tochange v t name =
+  let proceed_tochange (_ (* old *), (name, v)) t =
     let p_targz, p_build = 
       Path.archives_targz t.home (Some (name, v)),
       Path.build t.home (Some (name, v)) in
@@ -952,19 +984,14 @@ struct
   let proceed_torecompile _ = failwith "to complete !"
   let proceed_todelete _ = failwith "to complete !"
 
+  module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
+
   let resolve t l_index request = 
 
     let rec aux chan = function
       | x :: xs -> 
           let ok, chan = 
-            confirm_ (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:", " 
-                                         (fun oc (name, act) -> 
-                                            let f s = BatString.print oc (Printf.sprintf "%s : %s" (Namespace.string_user_of_name name) s) in
-                                              match act with
-                                                | Solver.To_change v -> f (Printf.sprintf "-> %s" (Namespace.string_user_of_version v))
-                                                | Solver.To_recompile -> ()
-                                                | Solver.To_delete -> f "remove"
-                                         )) x) chan in
+            confirm_ (BatIO.to_string (Solver.solution_print (fun oc (_, v) -> BatString.print oc (Namespace.string_user_of_version v))) x) chan in
             if ok then
               chan, Some x
             else
@@ -974,19 +1001,24 @@ struct
       
     let stdout, o =
       aux t.stdout 
-        (Solver.resolve 
-           (BatList.map (fun n_v -> F_cudf.package (F_cudf.find t.home (Path.index_opam t.home (Some n_v)))) l_index)
-           request) in
+        (let l_pkg, map_pkg = 
+           List.fold_left
+             (fun (l, map) n_v -> 
+               let pkg = F_cudf.package (F_cudf.find t.home (Path.index_opam t.home (Some n_v))) in
+               pkg :: l, PkgMap.add pkg n_v map) ([], PkgMap.empty) l_index in
+         (BatList.map (Solver.solution_map (fun p -> PkgMap.find p map_pkg)) (Solver.resolve l_pkg request)) ) in
 
     let t = { t with stdout } in
       match o with
         | Some sol -> 
-            List.fold_left (fun t (name, action) ->
-                              (match action with 
-                                  | Solver.To_change v -> proceed_tochange v
-                                  | Solver.To_delete -> proceed_todelete
-                                  | Solver.To_recompile -> proceed_torecompile) t name) t sol
+            List.fold_left (fun t (Solver.P l) -> 
+              List.fold_left (fun t -> function
+                | Solver.To_change n_v -> proceed_tochange n_v t
+                | Solver.To_delete _ -> proceed_todelete t
+                | Solver.To_recompile _ -> proceed_torecompile t) t l) t sol
         | None -> t
+
+  let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some (`Eq, v.Namespace.cudf)
 
   let install t name = 
     let l_index = Path.index_opam_list t.home in
@@ -999,11 +1031,13 @@ struct
             else
               t
       | Some v -> 
-          resolve t l_index { Solver.wish_install = [ name, V_set.max_elt v ] ; wish_remove = [] ; wish_upgrade = [] }
+          resolve t l_index { Solver.wish_install = [ vpkg_of_nv (name, V_set.max_elt v) ]
+                            ; wish_remove = [] 
+                            ; wish_upgrade = [] }
 
   let upgrade t =
       resolve t (Path.index_opam_list t.home) 
-        { Solver.wish_install = [] ; wish_remove = [] ; wish_upgrade = F_installed.find t.home (Path.installed t.home) }
+        { Solver.wish_install = [] ; wish_remove = [] ; wish_upgrade = BatList.map vpkg_of_nv (F_installed.find t.home (Path.installed t.home)) }
     
   let upload t filename = 
     { t with
@@ -1027,27 +1061,41 @@ end
 
 module Solver
   (F_cudf : File.CUDF)
-  : SOLVER with type package = F_cudf.package = 
+  : SOLVER = 
 struct
-  type package = F_cudf.package
+
   type 'a request =
       { wish_install : 'a list
       ; wish_remove : 'a list
       ; wish_upgrade : 'a list }
 
-  type 'a action = 
+  type ('a, 'b) action = 
     | To_change of 'a 
-    | To_delete
-    | To_recompile
+    | To_delete of 'b
+    | To_recompile of 'b
 
-  type solution = (Namespace.name * Namespace.version action) list
+  type 'a parallel = P of 'a list
+
+  type 'a solution = 
+      ( 'a (* old *) installed_status * 'a (* new *)
+      , 'a (* old *) )
+        action parallel list
+
+  let solution_map _ = failwith "to complete !"
+  let solution_print _ = failwith "to complete !"
   let resolve _ _ = []
 end
 
-open File
-module Solv = Solver (Cudf)
-module S = Server (Cudf)
-module C = Client (Config) (Installed) (Cudf) (To_install) (Solv) (S) (P)
+module M =
+struct
+  open File
+  module Cudf = Cudf (Config)
+  module Solv = Solver (Cudf)
+  module S = Server (Config) (Cudf)
+  module C = Client (Config) (Installed) (Cudf) (To_install) (Solv) (S) (P)
+end
+
+module C = M.C
 
 open Namespace
 
