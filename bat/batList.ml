@@ -34,3 +34,8 @@ let drop_while f =
   aux
 
 let enum x = x
+
+module Exceptionless =
+struct
+  let assoc a l = try Some (assoc a l) with Not_found -> None
+end
