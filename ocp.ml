@@ -102,6 +102,9 @@ sig
   val find : t -> filename -> binary_data contents
     (** Retrieves the contents from the hard disk. *)
 
+  val remove : t -> filename -> t
+    (** Removes everything in [filename] if existed. *)
+
   val add : t -> filename -> binary_data contents -> t
     (** Removes everything in [filename] if existed, then write [contents] instead. *)
 
@@ -233,6 +236,17 @@ struct
       (match find t (index_opam t None) with
         | Directory l -> l
         | _ -> [])
+
+  let remove t f = 
+    let rec aux fic = 
+      match (Unix.lstat fic).Unix.st_kind with
+        | Unix.S_DIR -> 
+          let () = BatEnum.iter (fun f -> aux (fic // f)) (BatSys.files_of fic) in
+          Unix.rmdir fic
+        | Unix.S_REG -> Unix.unlink fic
+        | _ -> failwith "to complete !" in
+    let () = aux (s_of_filename f) in
+    t
 
   let add t f =
     function 
@@ -803,6 +817,9 @@ sig
 
   val upload : t -> Path.filename -> t
     (** Sends a new created package to the server. *)
+
+  val remove : t -> Namespace.name -> t
+    (** Removes the given package. *)
 end
 
 module Client 
@@ -931,24 +948,19 @@ struct
     let b, stdout = confirm_ msg t.stdout in
     b, { t with stdout }
 
-  let proceed_tochange (_ (* old *), (name, v)) t =
-    let p_targz, p_build = 
-      Path.archives_targz t.home (Some (name, v)),
-      Path.build t.home (Some (name, v)) in
-      
+  let fold_toinstall f_build f_add_rec t (name, v) = 
     let t, tgz = 
+      let p_targz, p_build = 
+        Path.archives_targz t.home (Some (name, v)),
+        Path.build t.home (Some (name, v)) in
       if Path.file_exists p_targz then
         t, Path.R_filename (BatList.map (Path.concat p_build) (match Path.find t.home p_build with Path.Directory l -> l | _ -> []))
       else
         let tgz = Path.extract_targz t.home (Server.getArchive t.server (Server.getOpam t.server (name, v))) in
           { t with home = Path.add_rec t.home p_build tgz }, tgz in
       
-    let to_install =
-      F_toinstall.find 
-        (Path.exec_buildsh
-           (Path.add_rec t.home (Path.build t.home (Some (name, v))) tgz) 
-           (name, v))
-        (Path.to_install t.home (name, v)) in
+    let t = f_build t tgz in
+    let to_install = F_toinstall.find t.home (Path.to_install t.home (name, v)) in
 
     let filename_of_path_relative t path = 
       Path.R_filename (F_toinstall.filename_of_path_relative t.home
@@ -956,10 +968,9 @@ struct
                          path) in
       
     let add_rec f_lib t path = 
-      { t with home = 
-          Path.add_rec t.home 
-            (f_lib t.home name (* warning : we assume that this result is a directory *))
-            (filename_of_path_relative t path) } in
+      f_add_rec t
+        (f_lib t.home name (* warning : we assume that this result is a directory *))
+        (filename_of_path_relative t path) in
 
     let t = (* lib *) 
       List.fold_left (add_rec Path.lib) t (F_toinstall.lib to_install) in
@@ -981,8 +992,42 @@ struct
             t) t (F_toinstall.misc to_install) in
     t
 
-  let proceed_torecompile _ = failwith "to complete !"
-  let proceed_todelete _ = failwith "to complete !"
+  let proceed_todelete t (n, v0) = 
+    let map_installed = N_map.of_enum (BatList.enum (F_installed.find t.home (Path.installed t.home))) in
+    match N_map.Exceptionless.find n map_installed with
+      | Some v when v = v0 ->
+        let t = 
+          fold_toinstall
+            (fun t _ -> t)
+            (fun t file -> function
+              | Path.R_filename l -> 
+                { t with home = List.fold_left (fun t_home f -> Path.remove t_home (Path.concat file (Path.basename f))) t.home l }
+              | _ -> failwith "to complete !")
+            t
+            (n, v) in
+
+        let t = { t with home = F_installed.add t.home (Path.installed t.home) (N_map.bindings (N_map.remove n map_installed)) } in
+        
+        t
+      | _ -> t
+
+  let proceed_torecompile t (name, v) =
+    fold_toinstall  
+      (fun t tgz -> 
+        { t with home = 
+            Path.exec_buildsh
+              (Path.add_rec t.home (Path.build t.home (Some (name, v))) tgz) 
+              (name, v) })
+      (fun t file contents -> { t with home = Path.add_rec t.home file contents })
+      t
+      (name, v)
+
+  let proceed_tochange t (nv_old, nv) =
+    proceed_torecompile
+      (match nv_old with 
+        | Was_installed n_v -> proceed_todelete t n_v
+        | Was_not_installed -> t) 
+      nv
 
   module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
 
@@ -1013,9 +1058,9 @@ struct
         | Some sol -> 
             List.fold_left (fun t (Solver.P l) -> 
               List.fold_left (fun t -> function
-                | Solver.To_change n_v -> proceed_tochange n_v t
-                | Solver.To_delete _ -> proceed_todelete t
-                | Solver.To_recompile _ -> proceed_torecompile t) t l) t sol
+                | Solver.To_change n_v -> proceed_tochange t n_v
+                | Solver.To_delete n_v -> proceed_todelete t n_v
+                | Solver.To_recompile n_v -> proceed_torecompile t n_v) t l) t sol
         | None -> t
 
   let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some (`Eq, v.Namespace.cudf)
@@ -1034,6 +1079,25 @@ struct
           resolve t l_index { Solver.wish_install = [ vpkg_of_nv (name, V_set.max_elt v) ]
                             ; wish_remove = [] 
                             ; wish_upgrade = [] }
+
+  let remove t name = 
+    match
+      match BatList.Exceptionless.assoc name (F_installed.find t.home (Path.installed t.home)) with
+        | None -> 
+          let ok, t = confirm t (Printf.sprintf "Package \"%s\" not found. We will call the solver to see its output."
+                                   (Namespace.string_user_of_name name)) in
+          if ok then
+            Some (t, None)
+          else
+            None
+        | Some v -> Some (t, Some (`Eq, v.Namespace.cudf))
+    with
+      | Some (t, o_v) -> 
+        let l_index = Path.index_opam_list t.home in
+        resolve t l_index { Solver.wish_install = []
+                          ; wish_remove = [ Namespace.string_of_name name, o_v ]
+                          ; wish_upgrade = [] }
+      | None -> t    
 
   let upgrade t =
       resolve t (Path.index_opam_list t.home) 
@@ -1424,5 +1488,7 @@ let _ =
     | "upgrade" :: _ -> C.upgrade client
 
     | "upload" :: s :: _ -> C.upload client (filename_of_string s)
+
+    | "remove" :: name :: _ -> C.remove client (Name name)
 
     | _ -> client
