@@ -53,6 +53,9 @@ type 'a archive =
 
 type basename = B of string
 
+type internal_version = Version of string
+(** Type used to represent an internal form of version, which is in particular not related to the version of a particular package *)
+
 module type PATH =
 sig
 
@@ -70,21 +73,21 @@ sig
     | R_file of 'a
     | R_filename of filename list
 
-  val init : url option (* [None] : local *) -> string (* $HOME_OPAM *) -> t
-
+  val init : url option (* [None] : local *) -> string (* $HOME_OPAM *) -> internal_version (* OVERSION *) -> t
+  (* $HOME_OPAM_OVERSION = $HOME_OPAM/OVERSION *)
 
   (** definitions of some shortcuts *)
   val root : filename (* / *)
     (** the root of every path *)
-  val proot : t -> filename (* $PWD *)
+  val package : t -> filename (* $PWD *)
     (** path in the packager filesystem, contains the collection of libraries and programs *)
-  val lib : t -> Namespace.name -> filename (* $HOME_OPAM/lib/NAME *)
+  val lib : t -> Namespace.name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
     (** installed libraries for the package (at most one version installed) *)
-  val bin : t -> filename (* $HOME_OPAM/bin *)
+  val bin : t -> filename (* $HOME_OPAM_OVERSION/bin *)
     (** contain installed binaries *)
   val config : t -> filename (* $HOME_OPAM/config *)
     (** main configuration file *)
-  val installed : t -> filename (* $HOME_OPAM/installed *)
+  val installed : t -> filename (* $HOME_OPAM_OVERSION/installed *)
     (** list of installed packages with their version *)
   val index_opam : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.opam *)
     (** OPAM files considered for an arbitrary version and package *)
@@ -92,9 +95,9 @@ sig
     (** list of OPAM files *)
   val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
     (** source archives for all versions of all packages *)
-  val build : t -> name_version option -> filename (* $HOME_OPAM/build/NAME-VERSION *)
+  val build : t -> name_version option -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION *)
     (** tempory folders used to decompress the corresponding archives *)
-  val to_install : t -> name_version -> filename (* $HOME_OPAM/build/NAME-VERSION/NAME.install *)
+  val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
     (** compiled files in the extracted archive to install *)
 
   (** **)
@@ -152,7 +155,8 @@ struct
     | Raw of string
 
   type t = { computer : url option (* [None] : local *)
-           ; home : string }
+           ; home : string
+           ; home_ocamlversion : string }
 
   type 'a contents = 
     | Directory of basename list
@@ -184,25 +188,27 @@ struct
   let (//) = sprintf "%s/%s"
   let concat f (B s) = filename_map (fun filename -> filename // s) f
   let (///) = concat
-  let init o s = { computer = o ; home = home // s }
+  let init o s (Version ocamlv) = 
+    let home = home // s in
+    { computer = o ; home ; home_ocamlversion = home // ocamlv }
 
   let root = Raw "/"
-  let proot _ = normalize "."
-  let lib t (Namespace.Name n) = Raw (t.home // "lib" // n)
-  let bin t = Raw (t.home // "bin")
+  let package _ = normalize "."
+  let lib t (Namespace.Name n) = Raw (t.home_ocamlversion // "lib" // n)
+  let bin t = Raw (t.home_ocamlversion // "bin")
 
-  let mk_name_version d ext t n v = Raw (t.home // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
+  let mk_name_version t_home d ext n v = Raw (t_home // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
 
-  let mk_name_version_o name ext t = 
+  let mk_name_version_o t_home name ext = 
       function
-        | None -> Raw (t.home // name)
-        | Some (n, v) -> mk_name_version name ext t n v
+        | None -> Raw (t_home // name)
+        | Some (n, v) -> mk_name_version t_home name ext n v
 
-  let index_opam = mk_name_version_o "index" ".opam"
-  let archives_targz = mk_name_version_o "archives" ".tar.gz"
+  let index_opam t = mk_name_version_o t.home "index" ".opam"
+  let archives_targz t = mk_name_version_o t.home "archives" ".tar.gz"
 
-  let build = mk_name_version_o "build" ""
-  let installed t = Raw (t.home // "installed")
+  let build t = mk_name_version_o t.home_ocamlversion "build" ""
+  let installed t = Raw (t.home_ocamlversion // "installed")
   let config t = Raw (t.home // "config")
 
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
@@ -318,17 +324,18 @@ struct
   sig
     include IO_FILE
 
-    type version
-    val empty_version : version
-    val version_of_string : string -> version
+    val empty_package_manager : internal_version
+    val empty_ocaml : internal_version
+    val version_of_string : string -> internal_version
 
     (** destruct *)
-    val version : t -> version
+    val package_manager : t -> internal_version
     val sources : t -> Path.url option
+    val ocaml_version : t -> internal_version
 
 
     (** construct *)
-    val config : version -> Path.url option -> t
+    val config : internal_version (* opam *) -> Path.url option -> internal_version (* ocaml *) -> t
   end
 
   let filter motif =
@@ -343,21 +350,21 @@ struct
 
   module Config : CONFIG =
   struct
-    type version = Version of string
+    type t = { version : internal_version ; sources : Path.url option ; ocaml_version : internal_version }
 
-    type t = { version : version ; sources : Path.url option }
-
-    let empty_version = Version "1"
+    let empty_package_manager = Version "1"
+    let empty_ocaml = Version Sys.ocaml_version
     let version_of_string s = Version s
 
-    let version t = t.version
+    let package_manager t = t.version
     let sources t = t.sources
-    let config version sources = { version ; sources }
+    let ocaml_version t = t.ocaml_version
+    let config version sources ocaml_version = { version ; sources ; ocaml_version }
 
     let ocamlpro_http = "opam.ocamlpro.com"
     let ocamlpro_port = 9999
-    let empty1 = { version = Version "" ; sources = Some (Path.url ocamlpro_http (Some ocamlpro_port)) }
-    let empty2 = { version = Version "" ; sources = None }
+    let empty1 = { version = Version "" ; sources = Some (Path.url ocamlpro_http (Some ocamlpro_port)) ; ocaml_version = Version Sys.ocaml_version }
+    let empty2 = { version = Version "" ; sources = None ; ocaml_version = Version Sys.ocaml_version }
 
     let find t f = 
       match Path.find t f with
@@ -365,11 +372,13 @@ struct
             (match parse_colon s with
                |  ("version", version)
                :: ("sources", sources)
+               :: ("ocaml-version", ocaml_version)
 
                :: _ -> { version = Version version
                        ; sources = 
-                          try Some (let hostname, port = BatString.split sources ":" in
-                                      Path.url hostname (try Some (int_of_string port) with _ -> None)) with _ -> None }
+                          (try Some (let hostname, port = BatString.split sources ":" in
+                                     Path.url hostname (try Some (int_of_string port) with _ -> None)) with _ -> None)
+                       ; ocaml_version = Version ocaml_version }
                | _ -> empty1)
         | _ -> empty2
 
@@ -387,27 +396,24 @@ sources: %s"
   sig
     include IO_FILE
 
-    type version
     (** destruct *)
     val package : t -> Cudf.package
     val description : Cudf.package -> string
 
     (** construct *)
     val new_package : name_version -> string (* description *) -> Cudf.package
-    val cudf : version -> Cudf.package -> t
+    val cudf : internal_version (* package manager *) -> Cudf.package -> t
   end
 
-  module Cudf (F_config : CONFIG) : CUDF with type version = F_config.version = 
+  module Cudf (F_config : CONFIG) : CUDF = 
   struct
-    type version = F_config.version
-
     type package = 
         { preamble : Cudf.preamble option
         ; pkg : Cudf.package list
         ; request : Cudf.request option }
         
     type t = 
-        { opam_version : version
+        { opam_version : internal_version
         ; package : package }
 
     let find_field key = function
@@ -437,7 +443,7 @@ sources: %s"
     let cudf opam_version pkg = { opam_version ; package = { preamble = None ; pkg = [ pkg ] ; request = None } }
 
     let empty = 
-      { opam_version = F_config.empty_version
+      { opam_version = F_config.empty_package_manager
       ; package = { preamble = None ; pkg = [] ; request = None } }
 
     let find t f =
@@ -685,7 +691,6 @@ sig
   type t
   type opam
   type package
-  type version
 
   val init : Path.url option -> t
 
@@ -706,7 +711,8 @@ sig
     (** Receives an upload, it contains an OPAM file and the
         corresponding package archive. *)
 
-  val version : t -> version
+  val version_opam : t -> internal_version
+  val version_ocaml : t -> internal_version
 
   val package : opam -> package option 
     (** [None] : the [opam] associated to the [(name, version)] does not exist. 
@@ -715,17 +721,17 @@ end
 
 module Server
   (F_config : File.CONFIG)
-  (F_cudf : File.CUDF with type version = F_config.version) 
-  : SERVER with type package = Cudf.package with type version = F_config.version =
+  (F_cudf : File.CUDF) 
+  : SERVER with type package = Cudf.package =
 struct
   module Path_map = BatMap.Make (struct type t = Path.t let compare = Path.compare_computer end)
 
-  type version = F_config.version
   type t = 
       { current_repository : Cudf.package NV_map.t
       ; home : Path.t (* ~/.opam-server *)
       ; all_repository : Cudf.package NV_map.t Path_map.t
-      ; package_manager : version }
+      ; version_package_manager : internal_version
+      ; version_ocaml : internal_version }
 
   type opam = name_version * Cudf.package option
       (* [None] : the current repository does not contain the package associated to the [name] and [version] *)
@@ -745,11 +751,13 @@ struct
            | _ -> [])
 
   let init o = 
-    let home = Path.init o ".opam-server" in
+    let version_ocaml = F_config.empty_ocaml in
+    let home = Path.init o ".opam-server" version_ocaml in
     { current_repository = read_archives home
     ; home
     ; all_repository = Path_map.empty
-    ; package_manager = F_config.empty_version }
+    ; version_package_manager = F_config.empty_package_manager
+    ; version_ocaml }
 
   let change_url t url = 
     let home = Path.change_url t.home url in
@@ -784,7 +792,8 @@ struct
       | None -> { t with current_repository = NV_map.add n_v (F_cudf.new_package n_v "") t.current_repository }
       | Some _ -> t
 
-  let version t = t.package_manager
+  let version_opam t = t.version_package_manager
+  let version_ocaml t = t.version_ocaml
   let package = snd
 end
 
@@ -828,7 +837,7 @@ module Client
   (F_cudf : File.CUDF) 
   (F_toinstall : File.TO_INSTALL)
   (Solver : SOLVER)
-  (Server : SERVER with type package = Cudf.package with type version = F_cudf.version) 
+  (Server : SERVER with type package = Cudf.package) 
   (P : File.PRINTF)
   : CLIENT =
 struct
@@ -838,7 +847,7 @@ struct
       ; stdout : P.t }
 
   let init0 x =
-    let home = Path.init None ".opam" in
+    let home = Path.init None ".opam" (F_config.empty_ocaml) in
       { server = Server.init (F_config.sources (F_config.find home (Path.config home)))
       ; home
       ; stdout = P.init x }
@@ -853,7 +862,7 @@ struct
              else
                F_cudf.add home index_nv
                  (F_cudf.cudf
-                    (Server.version t.server)
+                    (Server.version_opam t.server)
                     (match Server.package (Server.getOpam t.server (n, v)) with
                        | None -> assert false
                        | Some pkg -> pkg)),
