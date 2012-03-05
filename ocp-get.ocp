@@ -57,7 +57,7 @@ begin library "cudf"
 end
 
 begin library "graph"
-  sorted = true
+  sort = true
   files = [
     "ocamlgraph/lib/bitv.ml"
     "ocamlgraph/lib/unionfind.ml"
