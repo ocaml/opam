@@ -3,24 +3,3 @@ let regexp pat =
 
 let extract ~rex s =
   Re.get_all (Re.exec rex s)
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
