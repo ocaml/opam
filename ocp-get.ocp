@@ -27,6 +27,7 @@ end
 
 begin library "pcre"
    sort = true
+   cclib = [ "-lpcre" ] (* ADDED by Fabrice *)
    files = [
      "ocaml-pcre/lib/pcre_stubs.c"
      "ocaml-pcre/lib/pcre.ml"
@@ -71,7 +72,7 @@ begin library "graph"
       "ocamlgraph/src/sig_pack.mli"
       "ocamlgraph/src/sig.mli"
       "ocamlgraph/src/rand.ml"
-      "ocamlgraph/src/persistent.ml"
+      "ocamlgraph/src/persistent.ml" (nodeps = [ "Graph"]) (* ADDED by Fabrice *)
       "ocamlgraph/src/path.ml"
       "ocamlgraph/src/pack.ml"
       "ocamlgraph/src/oper.ml"
@@ -79,7 +80,7 @@ begin library "graph"
       "ocamlgraph/src/md.ml"
       "ocamlgraph/src/mcs_m.ml"
       "ocamlgraph/src/kruskal.ml"
-      "ocamlgraph/src/imperative.ml"
+      "ocamlgraph/src/imperative.ml"  (nodeps = [ "Graph"]) (* ADDED by Fabrice *)
       "ocamlgraph/src/graphviz.ml"
       "ocamlgraph/src/gml.mll"
       "ocamlgraph/src/gmap.ml"
@@ -102,7 +103,7 @@ end
 begin library "dose"
    sort = true
    pp = "camlp4o Camlp4MacroParser.cmo"
-   files = [ 
+   files = [
      pack Common [
        "dose/common/util.ml"
        "dose/common/url.ml"
@@ -132,7 +133,7 @@ begin library "dose"
    ]
 
    pack Algo [
-     "dose/algo/tests.ml"
+(*     "dose/algo/tests.ml" *)       (* COMMENTED by Fabrice *)
      "dose/algo/strongdeps_int.ml"
      "dose/algo/strongdeps.ml"
      "dose/algo/strongconflicts_int.ml"
