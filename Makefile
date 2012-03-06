@@ -22,7 +22,7 @@ opt: ./_obuild/unixrun
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
-clone: cudf extlib ocaml-pcre ocamlgraph
+clone: cudf extlib ocaml-pcre ocamlgraph dose
 
 cudf:
 	git clone git://scm.gforge.inria.fr/mancoosi-tools/cudf.git
@@ -50,3 +50,8 @@ clean:
 
 # ocaml-re:
 # 	git clone https://github.com/avsm/ocaml-re
+
+distclean:
+	rm -f *.tar.gz
+	rm -rf dose cudf extlib ocaml-pcre ocamlgraph
+	rm -rf _obuild
