@@ -1086,7 +1086,11 @@ struct
     let rec aux chan = function
       | x :: xs -> 
           let ok, chan = 
-            confirm_ (BatIO.to_string (Solver.solution_print (fun oc (_, v) -> BatString.print oc (Namespace.string_user_of_version v))) x) chan in
+            confirm_ (Printf.sprintf "%s This solution will be performed or another will be tried if existed."
+                        (if x = [] then
+                            "Solution found : The current state of the repository can be kept to satisfy the constraints given."
+                         else
+                            BatIO.to_string (Solver.solution_print (fun oc (_, v) -> BatString.print oc (Namespace.string_user_of_version v))) x)) chan in
             if ok then
               chan, Some x
             else
