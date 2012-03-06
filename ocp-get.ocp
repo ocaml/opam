@@ -1,6 +1,6 @@
 (* typerex support *)
-(* ocamlc   = ["ocp-ocamlc.opt"]
-   ocamlopt = ["ocp-ocamlopt.opt"] *)
+ocamlc   = ["ocp-ocamlc.opt"]
+ocamlopt = ["ocp-ocamlopt.opt"]
 
 begin library "extlib"
    sort = true
@@ -166,12 +166,24 @@ begin library "dose"
 
 end
 
-begin program "ocp-get"
-  files = [ "ocp.ml" ]
+begin library "ocp-get-lib"
+  files = [
+    "config.ml"
+    "namespace.ml"
+    "path.ml"
+    "file.ml"
+    "server.ml" 
+  ]
+
   requires = [
     "cudf"
     "dose"
     "bat"
     "unix"
   ]
+end
+
+begin program "ocp-get"
+  files    = [ "ocp.ml" ]
+  requires = [ "ocp-get-lib" ]
 end
