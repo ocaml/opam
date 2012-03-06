@@ -1,7 +1,6 @@
 open Namespace
 open Path
 open File
-
 open Server
 
 type 'a installed_status =
@@ -65,7 +64,7 @@ sig
     (** Finds a consistent state where most of the installed packages are
         upgraded to their latest version. *)
 
-  val upload : t -> Path.filename -> t
+  val upload : t -> string -> t
     (** Sends a new created package to the server. *)
 
   val remove : t -> Namespace.name -> t
@@ -357,14 +356,25 @@ struct
       resolve t (Path.index_opam_list t.home) 
         { Solver.wish_install = [] ; wish_remove = [] ; wish_upgrade = BatList.map vpkg_of_nv (F_installed.find t.home (Path.installed t.home)) }
     
-  let upload t filename = 
-    { t with
-      server = 
-        Server.newArchive t.server
-          (Server.getOpam t.server (Namespace.nv_of_string (Path.chop_extension (Path.basename filename))))
-          (match Path.find t.home filename with
-             | Path.File binary -> Tar_gz binary
-             | _ -> Empty) }
+  let upload t s_filename = 
+    let filename = Path.package t.home s_filename in
+    let t, o =
+      let f msg v = 
+        let ok, t = confirm t (Printf.sprintf "Path \"%s\" %s. It will be uploaded anyway." s_filename msg) in
+        if ok then
+          t, Some v
+        else
+          t, None in
+      match Path.find t.home filename with
+        | Path.File binary -> t, Some (Tar_gz binary)
+        | Path.Directory _ -> f "is a directory" (Path.raw_targz filename)
+        | Path.Not_exists -> f "has not been found" Empty in
+
+    match o with
+      | Some v ->
+        { t with server = 
+            Server.newArchive t.server (Server.getOpam t.server (Path.nv_of_extension Namespace.default_version (Path.basename filename))) v }
+      | None -> t
 
   type config_request = Dir
   let config t Dir name =     
@@ -730,7 +740,13 @@ end
 module C = M.C
 
 open Namespace
-
+(*
+let filename_of_string s = 
+  List.fold_left 
+    (fun t s -> Path.concat t (B s)) 
+    Path.root
+    (BatString.nsplit (BatString.strip ~chars:"/" s) "/")
+*)
 let _ = 
   let client = C.init0 () in
   let f x = 
@@ -757,7 +773,7 @@ let _ =
           
         | "upgrade" :: _ -> C.upgrade client
           
-        | "upload" :: s :: _ -> C.upload client (filename_of_string s)
+        | "upload" :: s :: _ -> C.upload client s
           
         | "remove" :: name :: _ -> C.remove client (Name name)
           

@@ -1,12 +1,6 @@
 open Namespace
 open Path
 
-let filename_of_string s = 
-  List.fold_left 
-    (fun t s -> Path.concat t (B s)) 
-    Path.root
-    (BatString.nsplit (BatString.strip ~chars:"/" s) "/")
-
 module File =
 struct
   open Namespace

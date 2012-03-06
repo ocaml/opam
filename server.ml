@@ -71,7 +71,7 @@ struct
       List.fold_left
         (fun map x -> 
            NV_map.add
-             (Namespace.nv_of_string (Path.chop_extension x)) 
+             (Path.nv_of_extension Namespace.default_version x)
              (F_cudf.package (F_cudf.find home (Path.concat archives x))) 
              map) NV_map.empty 
         (match Path.find home archives with
@@ -112,13 +112,13 @@ struct
           Path.add 
             t.home 
             (Path.archives_targz t.home (Some n_v)) 
-            (Path.File (match arch with 
-                          | Empty -> failwith "create an empty tar.gz here" 
-                          | Tar_gz s -> s)) } in
-      
+            (match arch with 
+            | Empty -> Path.Not_exists
+            | Tar_gz s -> Path.File s) } in
+    
     match o_pack with
-      | None -> { t with current_repository = NV_map.add n_v (F_cudf.new_package n_v "") t.current_repository }
-      | Some _ -> t
+    | None -> { t with current_repository = NV_map.add n_v (F_cudf.new_package n_v "") t.current_repository }
+    | Some _ -> t
 
   let version_opam t = t.version_package_manager
   let version_ocaml t = t.version_ocaml

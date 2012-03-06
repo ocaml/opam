@@ -15,11 +15,19 @@ struct
 
   let table = ref (Debian.Debcudf.init_tables [])
 
-  let version_of_string n version = { deb = version ; cudf = Debian.Debcudf.get_cudf_version !table (n, version) }
+  let version_of_string n version = 
+    { deb = version 
+    ; cudf = 
+        match try Some (Debian.Debcudf.get_cudf_version !table (n, version)) with Not_found -> None with
+        | Some v -> v
+        | None -> int_of_string version }
+ 
 
   let nv_of_string s = 
     let n, version = BatString.split s "-" in
       Name n, version_of_string n version
+
+  let default_version = "0"
 end
 
 type name_version = Namespace.name * Namespace.version
