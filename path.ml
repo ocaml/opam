@@ -1,5 +1,15 @@
 open Namespace
 
+type url = {
+  hostname: string;
+  port: int;
+}
+
+let url hostname port = { hostname; port }
+
+let string_of_url url =
+  Printf.sprintf "%s:%d" url.hostname url.port
+
 type 'a ocaml_options = 
   | I of 'a
 
@@ -21,7 +31,6 @@ sig
 
   type t
   type filename
-  type url
 
   type 'a contents = 
     | Directory of basename list
@@ -33,95 +42,104 @@ sig
     | R_file of 'a
     | R_filename of filename list
 
-  val init : url option (* [None] : local *) -> string (* $HOME_OPAM *) -> internal_version (* OVERSION *) -> t
+  val init : string (* $HOME_OPAM *) -> t
   (* $HOME_OPAM_OVERSION = $HOME_OPAM/OVERSION *)
 
   (** definitions of some shortcuts *)
-  val root : filename (* / *)
+
   (** the root of every path *)
-  val package : t -> string (* computed from $PWD *) -> filename
+  val root : filename (* ~/ *)
+
   (** path in the packager filesystem, contains the collection of libraries and programs *)
-  val lib : t -> Namespace.name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
+  val package : t -> string (* computed from $PWD *) -> filename
+
   (** installed libraries for the package (at most one version installed) *)
-  val bin : t -> filename (* $HOME_OPAM_OVERSION/bin *)
+  val lib : t -> Namespace.name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
+
   (** contain installed binaries *)
-  val config : t -> filename (* $HOME_OPAM/config *)
+  val bin : t -> filename (* $HOME_OPAM_OVERSION/bin *)
+  
   (** main configuration file *)
-  val installed : t -> filename (* $HOME_OPAM_OVERSION/installed *)
+  val config : t -> filename (* $HOME_OPAM/config *)
+
   (** list of installed packages with their version *)
-  val index_opam : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.opam *)
+  val installed : t -> filename (* $HOME_OPAM_OVERSION/installed *)
+
   (** OPAM files considered for an arbitrary version and package *)
-  val index_opam_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.opam ] -> [ NAME, VERSION ] *)
+  val index_opam : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.opam *)
+  (* THOMAS: why option *)
+
   (** list of OPAM files *)
-  val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
+  val index_opam_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.opam ] -> [ NAME, VERSION ] *)
+
   (** source archives for all versions of all packages *)
-  val build : t -> name_version option -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION *)
+  val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
+  (* THOMAS: why option *)
+
   (** tempory folders used to decompress the corresponding archives *)
-  val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
+  val build : t -> name_version option -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION *)
+  (* THOMAS: why option *)
+
   (** compiled files in the extracted archive to install *)
+  val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
+
 
   (** **)
 
-  val find : t -> filename -> binary_data contents
   (** Retrieves the contents from the hard disk. *)
+  val find : t -> filename -> binary_data contents
 
-  val remove : t -> filename -> t
   (** Removes everything in [filename] if existed. *)
+  val remove : t -> filename -> t
 
-  val add : t -> filename -> binary_data contents -> t
   (** Removes everything in [filename] if existed, then write [contents] instead. *)
+  val add : t -> filename -> binary_data contents -> t
 
-  val add_rec : t -> filename -> binary_data contents_rec -> t
   (** Removes everything in [filename] if existed, then write [contents_rec] inside [filename]. *)
+  val add_rec : t -> filename -> binary_data contents_rec -> t
 
-  val extract_targz : t -> binary_data archive -> binary_data contents_rec
   (** Returns the same meaning as [archive] but in extracted form. *)
+  val extract_targz : t -> binary_data archive -> binary_data contents_rec
 
- val raw_targz : filename -> binary_data archive
   (** Considers the given [filename] as the contents of an [archive] already extracted. *)
+  val raw_targz : filename -> binary_data archive
 
+  (** Executes this particularly named script. *)
   val exec_buildsh : t -> name_version -> t
   (* $HOME_OPAM/build/NAME-VERSION/build.sh *)
-  (** Executes this particularly named script. *)
-
-  val dirname : filename -> filename
+  
   (** see [Filename.dirname] *)
+  val dirname : filename -> filename
 
-  val basename : filename -> basename
   (** see [Filename.basename] *)
+  val basename : filename -> basename
 
   val nv_of_extension : string (* version *) -> basename -> Namespace.name * Namespace.version
   (** see [Filename.chop_extension], but in case of no extensions, it behaves as the identity function. 
       When [basename] is not of the form "NAME-VERSION", or when we can not extract the version, [string]
       is returned as version. *)
 
-  val concat : filename -> basename -> filename
   (** see [Filename.concat] *)
+  val concat : filename -> basename -> filename
 
-  val file_exists : filename -> bool
   (** see [Sys.file_exists] *)
+  val file_exists : filename -> bool
 
+  (** Returns the exact path to give to the OCaml compiler (ie. -I ...) *)
   val ocaml_options_of_library : t -> Namespace.name -> string ocaml_options 
   (* $HOME_OPAM/lib/NAME *)
-  (** Returns the exact path to give to the OCaml compiler (ie. -I ...) *)
 
-  val url : string (* hostname *) -> int option (* port *) -> url
-  val change_url : t -> url -> t
-  val string_of_url : url -> string
-  (** in the format "HOSTNAME:PORT" *)
-  val compare_computer : t -> t -> int
+  val string_of_filename: filename -> string
 end
+
 module Path : PATH = struct
   open Printf
-
-  type url = U of string
 
   type filename = 
     | Normalized of string
     | Raw of string
 
-  type t = { computer : url option (* [None] : local *)
-           ; home : string
+  type t = { home : string
            ; home_ocamlversion : string }
 
   type 'a contents = 
@@ -154,9 +172,9 @@ module Path : PATH = struct
   let (//) = sprintf "%s/%s"
   let concat f (B s) = filename_map (fun filename -> filename // s) f
   let (///) = concat
-  let init o s (Version ocamlv) = 
+  let init s = 
     let home = home // s in
-    { computer = o ; home ; home_ocamlversion = home // ocamlv }
+    { home ; home_ocamlversion = home // Globals.default_ocaml_version }
 
   let root = Raw "/"
   let package _ s = Raw (Printf.sprintf "%s" s)
@@ -179,20 +197,12 @@ module Path : PATH = struct
 
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
 
-  let url x o = U (sprintf "%s%s" x (match o with None -> "" | Some i -> sprintf ":%d" i))
-
-  let change_url t u = { t with computer = Some u }
-
   let contents f_dir f_fic f_not_exists t f = 
-    match t.computer with 
-    | None -> 
-        let fic = s_of_filename f in
-        if Sys.file_exists fic then
-        (if Sys.is_directory fic then f_dir else f_fic) fic
-        else
-        f_not_exists
-    | Some _ -> failwith "to complete !"
-
+    let fic = s_of_filename f in
+    if Sys.file_exists fic then
+      (if Sys.is_directory fic then f_dir else f_fic) fic
+    else
+      f_not_exists
 
   let find = 
     contents
@@ -273,8 +283,6 @@ module Path : PATH = struct
       t
   | Not_exists -> t
 
-  let compare_computer t1 t2 = compare t1.computer t2.computer
-
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
     let _ = Sys.command "build.sh" in
@@ -324,5 +332,6 @@ module Path : PATH = struct
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))
 
-  let string_of_url (U s) = s
+  let string_of_filename = s_of_filename
+
 end

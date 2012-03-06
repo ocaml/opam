@@ -3,9 +3,6 @@ open Unix
 open File
 open Server
 
-module Cudf   = File.Cudf(File.Config)
-module Server = Server(File.Config)(Cudf)
-
 let usage =
   Printf.sprintf "%s -p <port> [--debug]" Sys.argv.(0)
 
@@ -21,11 +18,11 @@ Copyright (C) 2012 OCamlPro - INRIA
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.argv.(0) Config.version
+    Sys.argv.(0) Globals.version
 
 let debug = ref false
 
-let port  = ref 9999
+let port  = ref Globals.default_port
 let set_port p = port := p
 
 let args = Arg.align [
@@ -47,8 +44,7 @@ let server fn =
 
 let fn stdin stdout =
   let print s = Printf.eprintf "%s\n%!" s in
-  let open Server in
-  match (input_value stdin : Server.api) with
+  match (input_value stdin : api) with
   | GetList t                     -> print "getList"
   | GetOpam (t, name_version)     -> print "GetOpam"
   | GetArchive (t, opam)          -> print "GetArchive"

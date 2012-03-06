@@ -1,6 +1,4 @@
-(* typerex support *)
-ocamlc   = ["ocp-ocamlc.opt"]
-ocamlopt = ["ocp-ocamlopt.opt"]
+comp = [ "-annot" ]
 
 begin library "extlib"
    sort = true
@@ -168,7 +166,7 @@ end
 
 begin library "ocp-get-lib"
   files = [
-    "config.ml"
+    "globals.ml"
     "namespace.ml"
     "path.ml"
     "file.ml"

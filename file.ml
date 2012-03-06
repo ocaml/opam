@@ -1,30 +1,30 @@
 open Namespace
 open Path
 
+module type PRINTF =
+sig
+  type t
+  type out_channel
+
+  val init : unit -> t
+  val read_line : t -> string * t
+  val printf : t -> ('a, out_channel, t) format -> 'a
+end
+
+module P : PRINTF =
+struct
+  type t = unit
+  include Pervasives
+
+  let init x = x
+  let read_line () = 
+    read_line (), ()
+  let printf () = Printf.printf
+end
+
 module File =
 struct
   open Namespace
-
-  module type PRINTF =
-  sig
-    type t
-    type out_channel
-
-    val init : unit -> t
-    val read_line : t -> string * t
-    val printf : t -> ('a, out_channel, t) format -> 'a
-  end
-
-  module P : PRINTF =
-  struct
-    type t = unit
-    include Pervasives
-
-    let init x = x
-    let read_line () = 
-      read_line (), ()
-    let printf () = Printf.printf
-  end
 
   module type IO_FILE =
   sig
@@ -38,18 +38,16 @@ struct
   sig
     include IO_FILE
 
-    val empty_package_manager : internal_version
-    val empty_ocaml : internal_version
     val version_of_string : string -> internal_version
 
     (** destruct *)
     val package_manager : t -> internal_version
-    val sources : t -> Path.url option
+    val sources : t -> url
     val ocaml_version : t -> internal_version
 
 
     (** construct *)
-    val config : internal_version (* opam *) -> Path.url option -> internal_version (* ocaml *) -> t
+    val config : internal_version (* opam *) -> url -> internal_version (* ocaml *) -> t
   end
 
   let filter motif =
@@ -64,10 +62,8 @@ struct
 
   module Config : CONFIG =
   struct
-    type t = { version : internal_version ; sources : Path.url option ; ocaml_version : internal_version }
+    type t = { version : internal_version ; sources : url ; ocaml_version : internal_version }
 
-    let empty_package_manager = Version "1"
-    let empty_ocaml = Version Sys.ocaml_version
     let version_of_string s = Version s
 
     let package_manager t = t.version
@@ -75,33 +71,34 @@ struct
     let ocaml_version t = t.ocaml_version
     let config version sources ocaml_version = { version ; sources ; ocaml_version }
 
-    let ocamlpro_http = "opam.ocamlpro.com"
-    let ocamlpro_port = 9999
-    let empty1 = { version = Version "" ; sources = Some (Path.url ocamlpro_http (Some ocamlpro_port)) ; ocaml_version = Version Sys.ocaml_version }
-    let empty2 = { version = Version "" ; sources = None ; ocaml_version = Version Sys.ocaml_version }
+    let empty = {
+      version = Version Globals.version;
+      sources = url Globals.default_hostname Globals.default_port ;
+      ocaml_version = Version Sys.ocaml_version
+    }
 
     let find t f = 
       match Path.find t f with
-        | Path.File (Binary s) -> 
-            (match parse_colon s with
-               |  ("version", version)
-               :: ("sources", sources)
-               :: ("ocaml-version", ocaml_version)
-
-               :: _ -> { version = Version version
-                       ; sources = 
-                          (try Some (let hostname, port = BatString.split sources ":" in
-                                     Path.url hostname (try Some (int_of_string port) with _ -> None)) with _ -> None)
-                       ; ocaml_version = Version ocaml_version }
-               | _ -> empty1)
-        | _ -> empty2
+      | Path.File (Binary s) ->
+          let file = parse_colon s in
+          let version = try List.assoc "version" file with _ -> Globals.default_opam_version in
+          let sources =
+            try
+              let sources = List.assoc "sources" file in
+              let hostname, port =  BatString.split sources ":" in
+              url hostname (try int_of_string port with _ -> Globals.default_port)
+            with _ ->
+              url Globals.default_hostname Globals.default_port in
+          let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
+          { version = Version version; sources; ocaml_version = Version ocaml_version }
+      | _ -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f))
 
     let to_string t =
       Printf.sprintf "
 version: %s
 sources: %s" 
         (match t.version with Version s -> s)
-        (match t.sources with None -> Printf.sprintf "%s:%d" ocamlpro_http ocamlpro_port | Some sources -> Path.string_of_url sources)
+        (string_of_url t.sources)
 
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
@@ -119,7 +116,7 @@ sources: %s"
     val cudf : internal_version (* package manager *) -> Cudf.package -> t
   end
 
-  module Cudf (F_config : CONFIG) : CUDF = 
+  module Cudf : CUDF = 
   struct
     type package = 
         { preamble : Cudf.preamble option
@@ -157,7 +154,7 @@ sources: %s"
     let cudf opam_version pkg = { opam_version ; package = { preamble = None ; pkg = [ pkg ] ; request = None } }
 
     let empty = 
-      { opam_version = F_config.empty_package_manager
+      { opam_version = Version Globals.default_opam_version
       ; package = { preamble = None ; pkg = [] ; request = None } }
 
     let find t f =
@@ -172,7 +169,7 @@ sources: %s"
              | Some (preamble, pkg, request) -> 
                { opam_version = 
                    (match find_field "opam_version" pkg with
-                      | Some (`String v) -> F_config.version_of_string v
+                      | Some (`String v) -> Config.version_of_string v
                       | _ -> empty.opam_version)
                ; package = { preamble ; pkg ; request } })
         | _ -> empty
