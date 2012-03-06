@@ -36,19 +36,22 @@ let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 let server fn =
   let host = (gethostbyname(gethostname ())).h_addr_list.(0) in 
   let addr = ADDR_INET (host, !port) in
+  let state = Server.init () in
   if !debug then
     Printf.printf "Listening on port %d (%s) ...\n%!"
       !port (string_of_inet_addr host);
 
-  establish_server fn addr
+  establish_server (fn state) addr
 
-let fn stdin stdout =
-  let print s = Printf.eprintf "%s\n%!" s in
-  match (input_value stdin : api) with
-  | GetList t                     -> print "getList"
-  | GetOpam (t, name_version)     -> print "GetOpam"
-  | GetArchive (t, opam)          -> print "GetArchive"
-  | NewArchive (t, opam, archive) -> print "NewArchive"
+let fn t stdin stdout =
+  let output = match (input_value stdin : input_api) with
+  | IgetList                    -> OgetList (Server.getList t)
+  | IgetOpam name_version       -> OgetOpam (Server.getOpam t name_version)
+  | IgetArchive opam            -> OgetArchive (Server.getArchive t opam)
+  | InewArchive (opam, archive) ->
+      (* XXX: need to protect the server state mutation as it can be updated concurrently *)
+      Server.newArchive t opam archive; OnewArchive in 
+  output_value stdout output
 
 let _ =
   handle_unix_error server fn

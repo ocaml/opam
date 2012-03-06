@@ -304,7 +304,7 @@ module Client = struct
                File.Cudf.add home index_nv
                  (File.Cudf.cudf
                     (Version Globals.default_opam_version)
-                    (match Server.package (RemoteServer.getOpam t.server (n, v)) with
+                    (match snd (RemoteServer.getOpam t.server (n, v)) with
                        | None -> assert false
                        | Some pkg -> pkg)),
            N_map.modify_def V_set.empty n (V_set.add v) map)
@@ -580,11 +580,11 @@ module Client = struct
 
     match o with
       | Some v ->
-        { t with server = 
-            RemoteServer.newArchive t.server
-              (RemoteServer.getOpam t.server
-                 (Path.nv_of_extension Namespace.default_version (Path.basename filename))) v }
-      | None -> t
+          RemoteServer.newArchive t.server
+            (RemoteServer.getOpam t.server
+               (Path.nv_of_extension Namespace.default_version (Path.basename filename))
+            ) v
+      | None -> ()
 
   type config_request = Dir
   let config t Dir name =     
@@ -643,7 +643,7 @@ let _ =
           
         | "upgrade" :: _ -> Client.upgrade client
           
-        | "upload" :: s :: _ -> Client.upload client s
+        | "upload" :: s :: _ -> Client.upload client s; client
           
         | "remove" :: name :: _ -> Client.remove client (Name name)
           
