@@ -187,3 +187,8 @@ begin program "ocp-get"
   files    = [ "ocp.ml" ]
   requires = [ "ocp-get-lib" ]
 end
+
+begin program "ocp-get-server"
+  files    = [ "ocp_get_server.ml" ]
+  requires = [ "ocp-get-lib" ]
+end

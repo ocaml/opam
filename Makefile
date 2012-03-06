@@ -1,6 +1,6 @@
 OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 WGET     ?= wget
-TARGET   = ocp-get
+TARGET   = ocp-get ocp-get-server
 
 .PHONY: all
 
