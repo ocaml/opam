@@ -1520,25 +1520,28 @@ open Namespace
 let _ = 
   let client = C.init0 () in
   match Array.to_list Sys.argv with
-
-    | "init" :: url :: port :: _ -> C.init client (Some (Path.url url (Some (int_of_string port))))
-    | "init" :: url :: _ -> C.init client (Some (Path.url url None))
-    | "init" :: _ -> C.init client None
-
-    | "info" :: name :: _ -> C.info client (Some (Name name))
-    | "info" :: _ -> C.info client None
-
-    | "config" :: name :: []
-    | "config" :: _ :: name :: _ -> C.config client C.Dir (Name name)
-
-    | "install" :: name :: _ -> C.install client (Name name)
-
-    | "update" :: _ -> C.update client
-
-    | "upgrade" :: _ -> C.upgrade client
-
-    | "upload" :: s :: _ -> C.upload client (filename_of_string s)
-
-    | "remove" :: name :: _ -> C.remove client (Name name)
-
-    | _ -> client
+    | [] -> client
+    | _ :: l ->
+      match l with
+          
+        | "init" :: url :: port :: _ -> C.init client (Some (Path.url url (Some (int_of_string port))))
+        | "init" :: url :: _ -> C.init client (Some (Path.url url None))
+        | "init" :: _ -> C.init client None
+          
+        | "info" :: name :: _ -> C.info client (Some (Name name))
+        | "info" :: _ -> C.info client None
+          
+        | "config" :: name :: []
+        | "config" :: _ :: name :: _ -> C.config client C.Dir (Name name)
+          
+        | "install" :: name :: _ -> C.install client (Name name)
+          
+        | "update" :: _ -> C.update client
+          
+        | "upgrade" :: _ -> C.upgrade client
+          
+        | "upload" :: s :: _ -> C.upload client (filename_of_string s)
+          
+        | "remove" :: name :: _ -> C.remove client (Name name)
+          
+        | _ -> client
