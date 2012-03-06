@@ -5,7 +5,6 @@
 # Prerequisites:
 
 * ocaml
-* pcre (the C library)
 * wget
 
 To compile `ocp-get`, simply run:
