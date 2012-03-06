@@ -1163,11 +1163,21 @@ struct
              | _ -> Empty) }
 
   type config_request = Dir
-  let config t Dir name = 
-    { t with stdout = 
-        P.printf t.stdout "-I %s" 
-          (match Path.ocaml_options_of_library t.home name with
-             | I s -> s) }
+  let config t Dir name =     
+    match find_from_name name (Path.index_opam_list t.home) with
+      | None -> 
+        let ok, t = confirm t (Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
+                                 (Namespace.string_user_of_name name)) in
+        if ok then
+          update t
+        else
+          t
+      | Some _ -> 
+        
+        { t with stdout = 
+            P.printf t.stdout "-I %s" 
+              (match Path.ocaml_options_of_library t.home name with
+                | I s -> s) }
 end
 
 module Solver
@@ -1519,8 +1529,11 @@ open Namespace
 
 let _ = 
   let client = C.init0 () in
+  let f x = 
+    let _ = Printf.printf "(* command not found *)\n%!" in
+    x in
   match Array.to_list Sys.argv with
-    | [] -> client
+    | [] -> f client
     | _ :: l ->
       match l with
           
@@ -1544,4 +1557,4 @@ let _ =
           
         | "remove" :: name :: _ -> C.remove client (Name name)
           
-        | _ -> client
+        | _ -> f client
