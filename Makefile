@@ -22,7 +22,7 @@ opt: ./_obuild/unixrun
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
-clone: cudf extlib ocaml-pcre ocamlgraph dose
+clone: cudf extlib ocaml-re ocamlgraph dose
 
 cudf:
 	git clone git://scm.gforge.inria.fr/mancoosi-tools/cudf.git
@@ -35,10 +35,10 @@ extlib:
 dose:
 	git clone git://scm.gforge.inria.fr/mancoosi-tools/dose.git
 
-ocaml-pcre:
-	$(WGET) http://hg.ocaml.info/release/pcre-ocaml/archive/release-6.2.5.tar.gz
-	tar xfvz release-6.2.5.tar.gz
-	mv pcre-ocaml-release-6.2.5 ocaml-pcre
+# ocaml-pcre:
+# 	$(WGET) http://hg.ocaml.info/release/pcre-ocaml/archive/release-6.2.5.tar.gz
+# 	tar xfvz release-6.2.5.tar.gz
+# 	mv pcre-ocaml-release-6.2.5 ocaml-pcre
 
 ocamlgraph:
 	$(WGET) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
@@ -48,8 +48,8 @@ ocamlgraph:
 clean:
 	$(OCPBUILD) -clean
 
-# ocaml-re:
-# 	git clone https://github.com/avsm/ocaml-re
+ocaml-re:
+	git clone https://github.com/avsm/ocaml-re
 
 distclean:
 	rm -f *.tar.gz

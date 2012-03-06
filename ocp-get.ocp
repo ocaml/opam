@@ -1,3 +1,7 @@
+(* typerex support *)
+(* ocamlc   = ["ocp-ocamlc.opt"]
+   ocamlopt = ["ocp-ocamlopt.opt"] *)
+
 begin library "extlib"
    sort = true
    files = [
@@ -25,12 +29,18 @@ begin library "extlib"
      ]
 end
 
-begin library "pcre"
+begin library "re"
    sort = true
-   cclib = [ "-lpcre" ] (* ADDED by Fabrice *)
    files = [
-     "ocaml-pcre/lib/pcre_stubs.c"
-     "ocaml-pcre/lib/pcre.ml"
+     "pcre.ml"
+     "ocaml-re/lib/re_str.ml"
+     "ocaml-re/lib/re_posix.ml"
+     "ocaml-re/lib/re_perl.ml"
+     "ocaml-re/lib/re_glob.ml"
+     "ocaml-re/lib/re_emacs.ml"
+     "ocaml-re/lib/re.ml"
+     "ocaml-re/lib/cset.ml"
+     "ocaml-re/lib/automata.ml"
    ]
 end
 
@@ -72,7 +82,7 @@ begin library "graph"
       "ocamlgraph/src/sig_pack.mli"
       "ocamlgraph/src/sig.mli"
       "ocamlgraph/src/rand.ml"
-      "ocamlgraph/src/persistent.ml" (nodeps = [ "Graph"]) (* ADDED by Fabrice *)
+      "ocamlgraph/src/persistent.ml" (nodeps = [ "Graph" ])
       "ocamlgraph/src/path.ml"
       "ocamlgraph/src/pack.ml"
       "ocamlgraph/src/oper.ml"
@@ -80,7 +90,7 @@ begin library "graph"
       "ocamlgraph/src/md.ml"
       "ocamlgraph/src/mcs_m.ml"
       "ocamlgraph/src/kruskal.ml"
-      "ocamlgraph/src/imperative.ml"  (nodeps = [ "Graph"]) (* ADDED by Fabrice *)
+      "ocamlgraph/src/imperative.ml"  (nodeps = [ "Graph" ])
       "ocamlgraph/src/graphviz.ml"
       "ocamlgraph/src/gml.mll"
       "ocamlgraph/src/gmap.ml"
@@ -133,7 +143,6 @@ begin library "dose"
    ]
 
    pack Algo [
-(*     "dose/algo/tests.ml" *)       (* COMMENTED by Fabrice *)
      "dose/algo/strongdeps_int.ml"
      "dose/algo/strongdeps.ml"
      "dose/algo/strongconflicts_int.ml"
@@ -149,7 +158,7 @@ begin library "dose"
    ]]
 
    requires = [
-     "pcre"
+     "re"
      "extlib"
      "cudf"
      "graph"
