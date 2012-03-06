@@ -45,7 +45,9 @@ module NV_set = BatSet.Make (NV_orderedtype)
 type 'a ocaml_options = 
   | I of 'a
 
-type binary_data = Binary of string
+type binary_data = 
+  | Binary of string (* contents *)
+  | Filename of string (* pointer to the contents *)
 
 type 'a archive = 
   | Tar_gz of 'a
@@ -120,6 +122,9 @@ sig
   val exec_buildsh : t -> name_version -> t
     (* $HOME_OPAM/build/NAME-VERSION/build.sh *)
     (** Executes this particularly named script. *)
+
+  val dirname : filename -> filename
+    (** see [Filename.dirname] *)
 
   val basename : filename -> basename
     (** see [Filename.basename] *)
@@ -231,7 +236,7 @@ struct
   let find = 
     contents
       (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
-      (fun fic -> File (Binary (BatFile.with_file_in fic BatIO.read_all)))
+      (fun fic -> File ((*Binary (BatFile.with_file_in fic BatIO.read_all)*)Filename fic))
       Not_exists
 
   let chop_extension (B s) = Filename.chop_extension s
@@ -262,6 +267,7 @@ struct
           let fic = s_of_filename f in
           let () = BatFile.with_file_out fic (fun oc -> BatString.print oc cts) in
             t
+      | File (Filename fic) -> failwith "to complete ! copy the given filename"
       | Not_exists -> failwith "to complete !"
 
   let compare_computer t1 t2 = compare t1.computer t2.computer
@@ -272,8 +278,43 @@ struct
       t
   let basename s = B (Filename.basename (s_of_filename s))
 
-  let extract_targz _ = failwith "to complete !"
-  let add_rec _ = failwith "to complete !"
+  let extract_targz t = function
+    | Tar_gz (Binary _) -> failwith "to complete ! check if the \"dose\" project has been configured with the correct option to extract the gzip or bz2, then use similars functions to extract" (*IO.read_all (Common.Input.open_file fic)*)
+    | Tar_gz (Filename fic) -> R_filename [Raw fic]
+    | Empty -> R_directory []
+
+  let lstat s = Unix.lstat (s_of_filename s)
+  let files_of f = BatSys.files_of (s_of_filename f)
+
+  let dirname = filename_map Filename.dirname
+
+  let add_rec t f = 
+    let () = (* check that [f] is not a file *)
+      contents
+        (fun _ -> ())
+        (fun _ -> failwith "to complete !") 
+        () t f in
+
+    let rec aux t f (* <- filename dir *) name (* name of the value that will be destructed*) = function
+      | R_directory l -> 
+        List.fold_left 
+          (let f = f /// name in
+           fun t (b, cts) -> aux t f b cts) t l
+      | R_file cts -> add t (f /// name) (File cts)
+      | R_filename l -> 
+        List.fold_left
+          (fun t fic -> 
+            aux
+              t
+              f
+              (basename fic)
+              (match (lstat fic).Unix.st_kind with
+                | Unix.S_DIR -> R_directory (BatList.map (fun f -> 
+                  let f = B f in
+                  f, R_filename [fic /// f]) (files_of fic))
+                | Unix.S_REG -> R_file (Filename (s_of_filename fic))
+                | _ -> failwith "to complete !")) t l in
+    aux t (dirname f) (basename f)
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))
