@@ -1,0 +1,11 @@
+_obuild/
+cudf/
+dose/
+extlib/
+ocaml-re/
+ocamlgraph/
+*.annot
+*.tar.gz
+*~
+ocp-build.root
+ocp-build.root.old
