@@ -46,6 +46,10 @@ let request = ref 0
 let log fmt =
   Globals.log (Printf.sprintf "REQUEST-%d" !request) fmt
 
+let protect f =
+  try f ()
+  with e -> Oerror (Printexc.to_string e)
+
 let fn t stdin stdout =
   incr request;
   log "Processing an incoming request";
@@ -53,17 +57,17 @@ let fn t stdin stdout =
   let output = match (input_value stdin : input_api) with
   | IgetList                    ->
       log "getList";
-      OgetList (Server.getList t)
+      protect (fun () -> OgetList (Server.getList t))
   | IgetOpam name_version       ->
       log "getOpam";
-      OgetOpam (Server.getOpam t name_version)
+      protect (fun () -> OgetOpam (Server.getOpam t name_version))
   | IgetArchive opam            ->
       log "getArchive";
-      OgetArchive (Server.getArchive t opam)
+      protect (fun () -> OgetArchive (Server.getArchive t opam))
   | InewArchive (opam, archive) ->
       (* XXX: need to protect the server state mutation as it can be updated concurrently *)
       log "newArchive";
-      Server.newArchive t opam archive; OnewArchive in 
+      protect (fun () -> Server.newArchive t opam archive; OnewArchive) in 
 
   output_value stdout output;
   flush stdout

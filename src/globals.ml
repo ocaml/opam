@@ -16,3 +16,8 @@ let log section fmt =
     if !debug then
       Printf.eprintf " %-20s %s\n%!" section str
   ) fmt
+
+let error fmt =
+  Printf.kprintf (fun str ->
+    Printf.eprintf "ERROR: %s\n%!" str
+  ) fmt

@@ -90,6 +90,7 @@ type output_api =
   | OgetOpam of Server.opam
   | OgetArchive of binary_data archive
   | OnewArchive
+  | Oerror of string (* server error *)
 
 module RemoteServer : SERVER with type t = url = struct
 
@@ -98,7 +99,7 @@ module RemoteServer : SERVER with type t = url = struct
 
   (* untyped message exchange *)
   let send url (m : input_api) =
-    let host = (gethostbyname(gethostname ())).h_addr_list.(0) in
+    let host = (gethostbyname url.hostname).h_addr_list.(0) in
     let addr = ADDR_INET (host, url.port) in
     try
       let stdin, stdout = open_connection addr in
@@ -106,8 +107,7 @@ module RemoteServer : SERVER with type t = url = struct
       flush stdout;
       (input_value stdin : output_api)
     with _ ->
-      Printf.eprintf
-        "ERROR: The server (%s) is unreachable. Please check your network configuration.\n%!"
+      Globals.error "The server (%s) is unreachable. Please check your network configuration."
         (string_of_url url);
       exit 1
 
@@ -117,21 +117,25 @@ module RemoteServer : SERVER with type t = url = struct
   let getList t =
     match send t IgetList with
     | OgetList nl -> nl
+    | Oerror s    -> error s
     | _ -> error "getList"
 
   let getOpam t name_version =
     match send t (IgetOpam name_version) with
     | OgetOpam o -> o
+    | Oerror s   -> error s
     | _ -> error "getOpam"
 
   let getArchive t opam =
     match send t (IgetArchive opam) with
     | OgetArchive a -> a
+    | Oerror s      -> error s
     | _ -> error "getArchive"
 
   let newArchive t opam archive =
     match send t (InewArchive (opam, archive)) with
     | OnewArchive -> ()
+    | Oerror s    -> error s
     | _ -> error "newArchive"
 
 end

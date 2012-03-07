@@ -56,7 +56,18 @@ struct
       ocaml_version = Version Sys.ocaml_version
     }
 
+
+    let to_string t =
+      Printf.sprintf "version: %s\nsources: %s\nocaml-version: %s\n"
+        (match t.version with Version s -> s)
+        (string_of_url t.sources)
+        (match t.ocaml_version with Version s -> s)
+
+    let log fmt =
+      Globals.log "FILE.CONFIG" fmt
+
     let find t f =
+      log "read %s" (Path.string_of_filename f);
       let aux contents =
         let file = parse_colon contents in
         let version = try List.assoc "version" file with _ -> Globals.default_opam_version in
@@ -70,7 +81,7 @@ struct
         let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
         { version = Version version; sources; ocaml_version = Version ocaml_version } in
 
-      match Path.find t f with
+      let t = match Path.find t f with
       | Path.File (Binary s)   -> aux s
       | Path.File (Filename s) ->
           let contents =
@@ -82,13 +93,10 @@ struct
             s in
           aux contents
       | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
-      | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f))
+      | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f)) in
 
-    let to_string t =
-      Printf.sprintf "version: %s\nsources: %s\nocaml-version: %s\n"
-        (match t.version with Version s -> s)
-        (string_of_url t.sources)
-        (match t.ocaml_version with Version s -> s)
+      log "contents:\n%s" (to_string t);
+      t
 
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end

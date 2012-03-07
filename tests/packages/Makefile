@@ -9,10 +9,10 @@ all: upload
 	@
 
 upload: $(ARCHIVES)
-	$(OCPGET) upload P1
-	$(OCPGET) upload P2
-	$(OCPGET) upload P3
-	$(OCPGET) upload P4
+	$(OCPGET) upload P1.opam
+	$(OCPGET) upload P2.opam
+	$(OCPGET) upload P3.opam
+	$(OCPGET) upload P4.opam
 
 %.tar.gz: %
 	tar cz $^ > $@
