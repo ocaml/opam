@@ -16,9 +16,15 @@ let string_of_url url =
 type 'a ocaml_options = 
   | I of 'a
 
+type raw_binary = 
+  | Raw_binary of string (* contents *)
+
+type raw_filename =
+  | Raw_filename of string (* pointer to the contents *)
+
 type binary_data = 
-  | Binary of string (* contents *)
-  | Filename of string (* pointer to the contents *)
+  | Binary of raw_binary
+  | Filename of raw_filename
 
 type 'a archive = 
   | Tar_gz of 'a
@@ -91,6 +97,12 @@ sig
 
   (** Retrieves the contents from the hard disk. *)
   val find : t -> filename -> binary_data contents
+
+  (** see [find] *)
+  val find_binary : t -> filename -> raw_binary contents
+
+  (** see [find] *)
+  val find_filename : t -> filename -> raw_filename contents
 
   (** Removes everything in [filename] if existed. *)
   val remove : t -> filename -> unit
@@ -208,11 +220,17 @@ module Path : PATH = struct
     else
       f_not_exists
 
-  let find = 
+  let find_ f_fic = 
     contents
       (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
-      (fun fic -> File ((*Binary (BatFile.with_file_in fic BatIO.read_all)*)Filename fic))
+      (fun fic -> File (f_fic fic))
       Not_exists
+
+  let find = find_ (fun fic -> Filename (Raw_filename fic))
+
+  let find_binary = find_ (fun fic -> Raw_binary (BatFile.with_file_in fic BatIO.read_all))
+
+  let find_filename = find_ (fun fic -> Raw_filename fic)
 
   let nv_of_extension version (B s) = 
     let s = 
@@ -264,11 +282,11 @@ module Path : PATH = struct
     log "add %s" (s_of_filename f);
     match content with
     | Directory d -> failwith "to complete !"
-    | File (Binary cts) -> 
+    | File (Binary (Raw_binary cts)) -> 
         let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
         let fic = s_of_filename f in
         U.mkdir (fun fic -> BatFile.with_file_out fic (fun oc -> BatString.print oc cts)) fic
-    | File (Filename fic) -> 
+    | File (Filename (Raw_filename fic)) -> 
         begin match (Unix.lstat fic).Unix.st_kind with
         | Unix.S_DIR -> 
             let () = contents (fun _ -> ()) (fun _ -> failwith "to complete !") () t f in
@@ -297,10 +315,10 @@ module Path : PATH = struct
 
   let extract_targz t = function
   | Tar_gz (Binary _) -> failwith "to complete ! check if the \"dose\" project has been configured with the correct option to extract the gzip or bz2, then use similars functions to extract" (*IO.read_all (Common.Input.open_file fic)*)
-  | Tar_gz (Filename fic) -> R_filename [Raw fic]
+  | Tar_gz (Filename (Raw_filename fic)) -> R_filename [Raw fic]
   | Empty -> R_directory []
 
-  let raw_targz f = Tar_gz (Filename (s_of_filename f))
+  let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))
 
   let lstat s = Unix.lstat (s_of_filename s)
   let files_of f = BatSys.files_of (s_of_filename f)
@@ -330,7 +348,7 @@ module Path : PATH = struct
               | Unix.S_DIR -> R_directory (BatList.map (fun f -> 
                 let f = B f in
                 f, R_filename [fic /// f]) (files_of fic))
-              | Unix.S_REG -> R_file (Filename (s_of_filename fic))
+              | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
               | _ -> failwith "to complete !")) l in
     aux t (dirname f) (basename f)
 

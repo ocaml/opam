@@ -81,24 +81,15 @@ struct
         let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
         { version = Version version; sources; ocaml_version = Version ocaml_version } in
 
-      let t = match Path.find t f with
-      | Path.File (Binary s)   -> aux s
-      | Path.File (Filename s) ->
-          let contents =
-            let ic = open_in s in
-            let n = in_channel_length ic in
-            let s = String.create n in
-            really_input ic s 0 n;
-            close_in ic;
-            s in
-          aux contents
+      let t = match Path.find_binary t f with
+      | Path.File (Raw_binary s)     -> aux s
       | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
       | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f)) in
 
       log "contents:\n%s" (to_string t);
       t
 
-    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
   end
 
   module type CUDF =
@@ -156,8 +147,8 @@ struct
       ; package = { preamble = None ; pkg = [] ; request = None } }
 
     let find t f =
-      match Path.find t f with
-        | Path.File (Binary s) -> 
+      match Path.find_binary t f with
+        | Path.File (Raw_binary s) -> 
           (match 
               try
                 Some (Cudf_parser.parse (Cudf_parser.from_IO_in_channel (IO.input_string s)))
@@ -186,7 +177,7 @@ struct
         end in
       IO.close_out oc
 
-    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
   end
 
   module type INSTALLED =
@@ -200,8 +191,8 @@ struct
     let empty = []
 
     let find t f = 
-      match Path.find t f with
-        | Path.File (Binary s) -> 
+      match Path.find_binary t f with
+        | Path.File (Raw_binary s) -> 
             BatList.map (fun (name, version) -> Name name, version_of_string name version) (parse_space s)
         | _ -> empty
 
@@ -213,7 +204,7 @@ struct
                (Namespace.string_user_of_name name) 
                (Namespace.string_user_of_version version))))
 
-    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
   end
 
   type basename_last = 
@@ -310,8 +301,8 @@ struct
     let relative_path_of_string = b_of_string Relative
 
     let find t f =
-      match Path.find t f with
-        | Path.File (Binary s) -> 
+      match Path.find_binary t f with
+        | Path.File (Raw_binary s) -> 
 
           let l_lib_bin, l_misc = 
             let l, f_while = 
@@ -361,6 +352,6 @@ misc:
                                 path_print oc (misc.p_to);
                               end)) t.misc)
 
-    let add t f v = Path.add t f (Path.File (Binary (to_string v)))
+    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
   end
 end
