@@ -38,21 +38,18 @@ module Server = struct
 
   type opam = name_version * Cudf.package option
 
-  let read_archives home =
-    let archives = Path.archives_targz home None in
-      List.fold_left
-        (fun map x -> 
-           NV_map.add
-             (Path.nv_of_extension Namespace.default_version x)
-             (File.Cudf.package (File.Cudf.find home (Path.concat archives x))) 
-             map) NV_map.empty 
-        (match Path.find home archives with
-           | Path.Directory l -> l
-           | _ -> [])
+  let read_index home =
+    List.fold_left
+      (fun map nv -> 
+        NV_map.add
+          nv
+          (File.Cudf.package (File.Cudf.find home (Path.index_opam home (Some nv)))) 
+          map) NV_map.empty 
+      (Path.index_opam_list home)
 
   let init () = 
     let home = Path.init Globals.opam_server_path in
-    { current_repository = read_archives home
+    { current_repository = read_index home
     ; home
     ; version_package_manager = Version Globals.default_opam_version }
 
@@ -72,9 +69,16 @@ module Server = struct
       (match arch with 
       | Empty -> Path.Not_exists
       | Tar_gz s -> Path.File s);
+
+    let new_package = File.Cudf.new_package n_v "" in
+
+    File.Cudf.add 
+      t.home 
+      (Path.index_opam t.home (Some n_v))
+      (File.Cudf.cudf t.version_package_manager new_package);
     
     match o_pack with
-    | None   -> t.current_repository <- NV_map.add n_v (File.Cudf.new_package n_v "") t.current_repository
+    | None   -> t.current_repository <- NV_map.add n_v new_package t.current_repository
     | Some _ -> ()
 
 end
