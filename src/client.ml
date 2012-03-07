@@ -63,7 +63,7 @@ module Client : CLIENT = struct
           else begin
             File.Cudf.add t.home index_nv
               (File.Cudf.cudf
-                 (Version Globals.default_opam_version)
+                 (Version Globals.opam_version)
                  (match snd (RemoteServer.getOpam t.server (n, v)) with
                  | None -> assert false
                  | Some pkg -> pkg));
@@ -86,9 +86,9 @@ module Client : CLIENT = struct
     log "init %s" (string_of_url url);
     let config =
       File.Config.config
-        (Version Globals.default_opam_version)
+        (Version Globals.opam_version)
         url
-        (Version Globals.default_ocaml_version) in
+        (Version Globals.ocaml_version) in
     let home = Path.init Globals.opam_path in
     File.Config.add home (Path.config home) config;
     update ()
@@ -352,17 +352,20 @@ module Client : CLIENT = struct
         else
           None in
       match Path.find t.home filename with
-        | Path.File binary -> Some (Tar_gz binary)
-        | Path.Directory _ -> f "is a directory" (Path.raw_targz filename)
-        | Path.Not_exists  -> f "has not been found" Empty in
+      | Path.File binary -> Some (Tar_gz binary)
+      | Path.Directory _ -> f "is a directory" (Path.raw_targz filename)
+      | Path.Not_exists  -> f "has not been found" Empty in
 
+    (* Upload the archive to the server *)
     match o with
-      | Some v ->
-          RemoteServer.newArchive t.server
-            (RemoteServer.getOpam t.server
-               (Path.nv_of_extension Namespace.default_version (Path.basename filename))
-            ) v
-      | None -> ()
+    | Some v ->
+        let package = Path.nv_of_extension Namespace.default_version (Path.basename filename) in
+        let local_server = Server.init Globals.opam_path in
+        (* Upload the archive to the remote server *)
+        RemoteServer.newArchive t.server (RemoteServer.getOpam t.server package) v;
+        (* Copy the archive in the client state *)
+        Server.newArchive local_server (Server.getOpam local_server package) v
+    | None -> ()
 
   type config_request = Dir
   let config Dir name =
@@ -381,3 +384,5 @@ module Client : CLIENT = struct
           Printf.printf "-I %s" 
             (match Path.ocaml_options_of_library t.home name with I s -> s)
 end
+
+

@@ -78,7 +78,7 @@ struct
       log "read %s" (Path.string_of_filename f);
       let aux contents =
         let file = parse_colon contents in
-        let version = try List.assoc "version" file with _ -> Globals.default_opam_version in
+        let version = try List.assoc "version" file with _ -> Globals.opam_version in
         let sources =
           try
             let sources = List.assoc "sources" file in
@@ -152,7 +152,7 @@ struct
     let cudf opam_version pkg = { opam_version ; package = { preamble = None ; pkg = [ pkg ] ; request = None } }
 
     let empty = 
-      { opam_version = Version Globals.default_opam_version
+      { opam_version = Version Globals.opam_version
       ; package = { preamble = None ; pkg = [] ; request = None } }
 
     let find t f =

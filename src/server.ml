@@ -47,11 +47,11 @@ module Server = struct
           map) NV_map.empty 
       (Path.index_opam_list home)
 
-  let init () = 
-    let home = Path.init Globals.opam_server_path in
+  let init path = 
+    let home = Path.init path in
     { current_repository = read_index home
     ; home
-    ; version_package_manager = Version Globals.default_opam_version }
+    ; version_package_manager = Version Globals.opam_version }
 
   let getList t = BatList.map fst (NV_map.bindings t.current_repository)
   let getOpam t n_v = n_v, NV_map.Exceptionless.find n_v t.current_repository
