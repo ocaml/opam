@@ -85,9 +85,10 @@ struct
       | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f))
 
     let to_string t =
-      Printf.sprintf "version: %s\nsources: %s\n"
+      Printf.sprintf "version: %s\nsources: %s\nocaml-version: %s\n"
         (match t.version with Version s -> s)
         (string_of_url t.sources)
+        (match t.ocaml_version with Version s -> s)
 
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
