@@ -105,6 +105,7 @@ module Client : CLIENT = struct
             N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
   let info package =
+    log "info %s" (match package with None -> "" | Some p -> Namespace.string_of_name p);
     let t = load_state () in
     let s_not_installed = "--" in
     match package with
@@ -294,6 +295,7 @@ module Client : CLIENT = struct
   let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some (`Eq, v.Namespace.cudf)
 
   let install name = 
+    log "install %s" (Namespace.string_of_name name);
     let t = load_state () in
     let l_index = Path.index_opam_list t.home in
     match find_from_name name l_index with
@@ -310,6 +312,7 @@ module Client : CLIENT = struct
           ()
 
   let remove name =
+    log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
     let r = match BatList.Exceptionless.assoc name (File.Installed.find t.home (Path.installed t.home)) with
     | None ->
@@ -330,6 +333,7 @@ module Client : CLIENT = struct
     | None -> ()
 
   let upgrade () =
+    log "upgrade";
     let t = load_state () in
       resolve t (Path.index_opam_list t.home) 
         { Solver.wish_install = []
@@ -337,6 +341,7 @@ module Client : CLIENT = struct
         ; wish_upgrade = BatList.map vpkg_of_nv (File.Installed.find t.home (Path.installed t.home)) }
     
   let upload s_filename =
+    log "upload %s" s_filename;
     let t = load_state () in
     let filename = Path.package t.home s_filename in
     let o =
@@ -361,6 +366,7 @@ module Client : CLIENT = struct
 
   type config_request = Dir
   let config Dir name =
+    log "config %s" (Namespace.string_of_name name);
     let t = load_state () in
     match find_from_name name (Path.index_opam_list t.home) with
 
