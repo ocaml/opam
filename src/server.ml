@@ -100,9 +100,16 @@ module RemoteServer : SERVER with type t = url = struct
   let send url (m : input_api) =
     let host = (gethostbyname(gethostname ())).h_addr_list.(0) in
     let addr = ADDR_INET (host, url.port) in
-    let stdin, stdout = open_connection addr in
-    output_value stdout m;
-    (input_value stdin : output_api)
+    try
+      let stdin, stdout = open_connection addr in
+      output_value stdout m;
+      flush stdout;
+      (input_value stdin : output_api)
+    with _ ->
+      Printf.eprintf
+        "ERROR: The server (%s) is unreachable. Please check your network configuration.\n%!"
+        (string_of_url url);
+      exit 1
 
   let error str =
     failwith (str ^ ": protocol error")

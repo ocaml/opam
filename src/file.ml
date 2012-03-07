@@ -56,26 +56,36 @@ struct
       ocaml_version = Version Sys.ocaml_version
     }
 
-    let find t f = 
+    let find t f =
+      let aux contents =
+        let file = parse_colon contents in
+        let version = try List.assoc "version" file with _ -> Globals.default_opam_version in
+        let sources =
+          try
+            let sources = List.assoc "sources" file in
+            let hostname, port =  BatString.split sources ":" in
+            url hostname (try int_of_string port with _ -> Globals.default_port)
+          with _ ->
+            url Globals.default_hostname Globals.default_port in
+        let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
+        { version = Version version; sources; ocaml_version = Version ocaml_version } in
+
       match Path.find t f with
-      | Path.File (Binary s) ->
-          let file = parse_colon s in
-          let version = try List.assoc "version" file with _ -> Globals.default_opam_version in
-          let sources =
-            try
-              let sources = List.assoc "sources" file in
-              let hostname, port =  BatString.split sources ":" in
-              url hostname (try int_of_string port with _ -> Globals.default_port)
-            with _ ->
-              url Globals.default_hostname Globals.default_port in
-          let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
-          { version = Version version; sources; ocaml_version = Version ocaml_version }
-      | _ -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f))
+      | Path.File (Binary s)   -> aux s
+      | Path.File (Filename s) ->
+          let contents =
+            let ic = open_in s in
+            let n = in_channel_length ic in
+            let s = String.create n in
+            really_input ic s 0 n;
+            close_in ic;
+            s in
+          aux contents
+      | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
+      | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f))
 
     let to_string t =
-      Printf.sprintf "
-version: %s
-sources: %s" 
+      Printf.sprintf "version: %s\nsources: %s\n"
         (match t.version with Version s -> s)
         (string_of_url t.sources)
 
@@ -187,9 +197,13 @@ sources: %s"
         | _ -> empty
 
     let to_string = 
-      BatIO.to_string (BatList.print (fun oc (name, version) -> BatString.print oc (Printf.sprintf "%s %s" 
-                                                                                      (Namespace.string_user_of_name name) 
-                                                                                      (Namespace.string_user_of_version version)))) 
+      BatIO.to_string
+        (BatList.print (fun oc (name, version) ->
+          BatString.print oc
+            (Printf.sprintf "%s %s" 
+               (Namespace.string_user_of_name name) 
+               (Namespace.string_user_of_version version))))
+
     let add t f v = Path.add t f (Path.File (Binary (to_string v)))
   end
 

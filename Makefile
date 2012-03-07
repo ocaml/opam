@@ -4,7 +4,7 @@ TARGET   = ocp-get ocp-get-server
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile clone
+all: ./_obuild/unixrun compile clone link
 	@
 
 scan: ./_obuild/unixrun
@@ -18,6 +18,10 @@ opt: ./_obuild/unixrun
 ./_obuild/unixrun:
 	mkdir -p ./_obuild
 	ocamlc -o ./_obuild/unixrun -make-runtime unix.cma
+
+link:
+	ln -s _obuild/ocp-get/ocp-get.asm ocp-get
+	ln -s _obuild/ocp-get-server/ocp-get-server.asm ocp-get-server
 
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
@@ -48,6 +52,7 @@ ocamlgraph:
 clean:
 	$(OCPBUILD) -clean
 	rm -rf src/*.annot bat/*.annot
+	rm -f ocp-get ocp-get-server
 
 ocaml-re:
 	git clone https://github.com/avsm/ocaml-re

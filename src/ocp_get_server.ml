@@ -41,15 +41,32 @@ let server fn =
 
   establish_server (fn state) addr
 
+let request = ref 0
+
+let log fmt =
+  Globals.log (Printf.sprintf "REQUEST-%d" !request) fmt
+
 let fn t stdin stdout =
+  incr request;
+  log "Processing an incoming request";
+
   let output = match (input_value stdin : input_api) with
-  | IgetList                    -> OgetList (Server.getList t)
-  | IgetOpam name_version       -> OgetOpam (Server.getOpam t name_version)
-  | IgetArchive opam            -> OgetArchive (Server.getArchive t opam)
+  | IgetList                    ->
+      log "getList";
+      OgetList (Server.getList t)
+  | IgetOpam name_version       ->
+      log "getOpam";
+      OgetOpam (Server.getOpam t name_version)
+  | IgetArchive opam            ->
+      log "getArchive";
+      OgetArchive (Server.getArchive t opam)
   | InewArchive (opam, archive) ->
       (* XXX: need to protect the server state mutation as it can be updated concurrently *)
+      log "newArchive";
       Server.newArchive t opam archive; OnewArchive in 
-  output_value stdout output
+
+  output_value stdout output;
+  flush stdout
 
 let _ =
   handle_unix_error server fn

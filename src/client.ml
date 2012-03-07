@@ -3,6 +3,9 @@ open Path
 open Server
 open Solver
 
+let log fmt =
+  Globals.log "CLIENT" fmt
+
 module type CLIENT =
 sig
   type t
@@ -46,7 +49,8 @@ module Client : CLIENT = struct
   (* Look into the content of ~/.opam/config to build the client state *)
   let load_state () =
     let home = Path.init Globals.opam_path in
-    { server = File.Config.sources (File.Config.find home (Path.config home))
+    let config = File.Config.find home (Path.config home) in
+    { server = File.Config.sources config
     ;  home }
 
   let update_aux t =
@@ -79,12 +83,13 @@ module Client : CLIENT = struct
     update_aux (load_state ())
 
   let init url =
+    log "init %s" (string_of_url url);
     let config =
       File.Config.config
         (Version Globals.default_opam_version)
         url
         (Version Globals.default_ocaml_version) in
-    let home = Path.init Globals.opam_path in (* THOMAS: not sure about that *)
+    let home = Path.init Globals.opam_path in
     File.Config.add home (Path.config home) config;
     update ()
 
@@ -99,11 +104,10 @@ module Client : CLIENT = struct
          (fun map (n, v) -> 
             N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
-  let info =
+  let info package =
     let t = load_state () in
     let s_not_installed = "--" in
-
-    function
+    match package with
     | None -> 
         let install_set = NV_set.of_enum (BatList.enum (File.Installed.find t.home (Path.installed t.home))) in
         let map, max_n, max_v = 
@@ -371,9 +375,3 @@ module Client : CLIENT = struct
           Printf.printf "-I %s" 
             (match Path.ocaml_options_of_library t.home name with I s -> s)
 end
-
-
-
-
-
-

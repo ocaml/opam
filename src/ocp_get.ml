@@ -38,7 +38,7 @@ let filename_of_string s =
     Path.root
     (BatString.nsplit (BatString.strip ~chars:"/" s) "/")
 *)
-let () = 
+let () =
   let error msg =
     Printf.eprintf "%s\n" msg;
     nice_exit () in

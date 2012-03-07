@@ -1,5 +1,8 @@
 open Namespace
 
+let log fmt =
+  Globals.log "PATH" fmt
+
 type url = {
   hostname: string;
   port: int;
@@ -257,31 +260,33 @@ module Path : PATH = struct
 
   end
 
-  let add t f = function 
-  | Directory d -> failwith "to complete !"
-  | File (Binary cts) -> 
-      let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
-      let fic = s_of_filename f in
-      U.mkdir (fun fic -> BatFile.with_file_out fic (fun oc -> BatString.print oc cts)) fic
-  | File (Filename fic) -> 
-      begin match (Unix.lstat fic).Unix.st_kind with
-      | Unix.S_DIR -> 
-          let () = contents (fun _ -> ()) (fun _ -> failwith "to complete !") () t f in
-          let rec aux f_from f_to = 
-            (match (Unix.lstat f_from).Unix.st_kind with
-            | Unix.S_DIR -> List.fold_left (fun _ b -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
-            | Unix.S_REG -> 
-                let () = 
-                  if Sys.file_exists f_to then
-                    Unix.unlink f_to
-                  else
-                    () in
-                U.link f_from f_to
-            | _ -> failwith "to complete !") in
-          aux fic (s_of_filename f)
-      | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
-      end
-  | Not_exists -> ()
+  let add t f content =
+    log "add %s" (s_of_filename f);
+    match content with
+    | Directory d -> failwith "to complete !"
+    | File (Binary cts) -> 
+        let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
+        let fic = s_of_filename f in
+        U.mkdir (fun fic -> BatFile.with_file_out fic (fun oc -> BatString.print oc cts)) fic
+    | File (Filename fic) -> 
+        begin match (Unix.lstat fic).Unix.st_kind with
+        | Unix.S_DIR -> 
+            let () = contents (fun _ -> ()) (fun _ -> failwith "to complete !") () t f in
+            let rec aux f_from f_to = 
+              (match (Unix.lstat f_from).Unix.st_kind with
+              | Unix.S_DIR -> List.fold_left (fun _ b -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
+              | Unix.S_REG -> 
+                  let () = 
+                    if Sys.file_exists f_to then
+                      Unix.unlink f_to
+                    else
+                      () in
+                  U.link f_from f_to
+              | _ -> failwith "to complete !") in
+            aux fic (s_of_filename f)
+        | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
+        end
+    | Not_exists -> ()
 
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in

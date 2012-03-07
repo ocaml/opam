@@ -10,3 +10,9 @@ let default_opam_version = "1"
 
 let opam_server_path = ".opam-server"
 let opam_path = ".opam"
+
+let log section fmt =
+  Printf.kprintf (fun str ->
+    if !debug then
+      Printf.eprintf " %-20s %s\n%!" section str
+  ) fmt
