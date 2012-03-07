@@ -29,5 +29,5 @@ make tests
 ```
 
 WARNING: the tests will remove everything in `~/.opam` and
-'~/.opam-server`.
+`~/.opam-server`.
 
