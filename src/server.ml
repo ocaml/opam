@@ -111,31 +111,35 @@ module RemoteServer : SERVER with type t = url = struct
         (string_of_url url);
       exit 1
 
-  let error str =
-    failwith (str ^ ": protocol error")
+  let dyn_error str =
+    failwith ("Protocol error: " ^ str)
+
+  let error msg =
+    Globals.error "[SERVER] %s" msg;
+    exit 1
 
   let getList t =
     match send t IgetList with
     | OgetList nl -> nl
     | Oerror s    -> error s
-    | _ -> error "getList"
+    | _           -> dyn_error "getList"
 
   let getOpam t name_version =
     match send t (IgetOpam name_version) with
     | OgetOpam o -> o
     | Oerror s   -> error s
-    | _ -> error "getOpam"
+    | _          -> dyn_error "getOpam"
 
   let getArchive t opam =
     match send t (IgetArchive opam) with
     | OgetArchive a -> a
     | Oerror s      -> error s
-    | _ -> error "getArchive"
+    | _             -> dyn_error "getArchive"
 
   let newArchive t opam archive =
     match send t (InewArchive (opam, archive)) with
     | OnewArchive -> ()
     | Oerror s    -> error s
-    | _ -> error "newArchive"
+    | _           -> dyn_error "newArchive"
 
 end
