@@ -1,0 +1,8 @@
+opam-version: 1.0
+
+package: P2
+version: 1
+description:
+  An other very useful package.
+  The description can go on multiple lines
+depends: P1
