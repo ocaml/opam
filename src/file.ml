@@ -1,14 +1,6 @@
 open Namespace
 open Path
 
-let read_content file =
-  let ic = open_in file in
-  let n = in_channel_length ic in
-  let s = String.create n in
-  really_input ic s 0 n;
-  close_in ic;
-  s
-
 module File =
 struct
   open Namespace
