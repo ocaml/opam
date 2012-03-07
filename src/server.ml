@@ -141,6 +141,10 @@ module RemoteServer : SERVER with type t = url = struct
     | _             -> dyn_error "getArchive"
 
   let newArchive t opam archive =
+    let archive = match archive with
+    | Tar_gz (Filename s) -> Tar_gz (Binary (read_content s))
+    | Tar_gz _            -> archive
+    | Empty               -> error "cannot send empty archive" in
     match send t (InewArchive (opam, archive)) with
     | OnewArchive -> ()
     | Oerror s    -> error s

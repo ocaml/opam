@@ -1,6 +1,14 @@
 open Namespace
 open Path
 
+let read_content file =
+  let ic = open_in file in
+  let n = in_channel_length ic in
+  let s = String.create n in
+  really_input ic s 0 n;
+  close_in ic;
+  s
+
 module File =
 struct
   open Namespace
@@ -83,17 +91,9 @@ struct
 
       let t = match Path.find t f with
       | Path.File (Binary s)   -> aux s
-      | Path.File (Filename s) ->
-          let contents =
-            let ic = open_in s in
-            let n = in_channel_length ic in
-            let s = String.create n in
-            really_input ic s 0 n;
-            close_in ic;
-            s in
-          aux contents
-      | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
-      | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f)) in
+      | Path.File (Filename s) -> aux (read_content s)
+      | Path.Directory _       -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
+      | Path.Not_exists        -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f)) in
 
       log "contents:\n%s" (to_string t);
       t
