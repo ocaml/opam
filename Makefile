@@ -47,6 +47,7 @@ ocamlgraph:
 
 clean:
 	$(OCPBUILD) -clean
+	rm -rf src/*.annot
 
 ocaml-re:
 	git clone https://github.com/avsm/ocaml-re

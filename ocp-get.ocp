@@ -1,5 +1,3 @@
-comp = [ "-annot" ]
-
 begin library "extlib"
    sort = true
    files = [
@@ -165,6 +163,8 @@ begin library "dose"
 end
 
 begin library "ocp-get-lib"
+  dirname = [ "src" ]
+  comp = [ "-annot" ]
   files = [
     "globals.ml"
     "namespace.ml"
@@ -182,11 +182,15 @@ begin library "ocp-get-lib"
 end
 
 begin program "ocp-get"
+  dirname  = [ "src" ]
+  comp = [ "-annot" ]
   files    = [ "ocp.ml" ]
   requires = [ "ocp-get-lib" ]
 end
 
 begin program "ocp-get-server"
+  dirname  = [ "src" ]
+  comp = [ "-annot" ]
   files    = [ "ocp_get_server.ml" ]
   requires = [ "ocp-get-lib" ]
 end
