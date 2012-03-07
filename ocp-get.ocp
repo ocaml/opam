@@ -183,14 +183,18 @@ end
 
 begin program "ocp-get"
   dirname  = [ "src" ]
-  comp = [ "-annot" ]
-  files    = [ "ocp.ml" ]
+  comp     = [ "-annot" ]
+  files    = [
+    "solver.ml"
+    "client.ml"
+    "ocp_get.ml"
+  ]
   requires = [ "ocp-get-lib" ]
 end
 
 begin program "ocp-get-server"
   dirname  = [ "src" ]
-  comp = [ "-annot" ]
+  comp     = [ "-annot" ]
   files    = [ "ocp_get_server.ml" ]
   requires = [ "ocp-get-lib" ]
 end
