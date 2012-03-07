@@ -68,7 +68,7 @@ module Client : CLIENT = struct
         N_map.empty
         (RemoteServer.getList t.server) in
     
-      Printf.printf "%s"
+      Printf.printf "%s\n"
         (BatIO.to_string 
            (N_map.print 
               (fun oc name -> BatString.print oc (Namespace.string_user_of_name name))
@@ -124,7 +124,8 @@ module Client : CLIENT = struct
           Printf.printf "%s %s %s" 
             (indent_left (Namespace.string_user_of_name (fst n_v)) max_n)
             (indent_right (if b then Namespace.string_user_of_version (snd n_v) else s_not_installed) max_v)
-            description) map
+            description) map;
+        Printf.printf "\n"
 
     | Some name -> 
         let find_from_name = find_from_name name in
@@ -144,7 +145,7 @@ module Client : CLIENT = struct
           | Some v -> V_set.remove v v_set in
 
         List.iter
-          (fun (tit, desc) -> Printf.printf "%s: %s" tit desc)
+          (fun (tit, desc) -> Printf.printf "%s: %s\n" tit desc)
           [ "package", Namespace.string_user_of_name name
           ; "version", (match o_v with None -> s_not_installed | Some v -> Namespace.string_user_of_version v)
           ; "versions",
