@@ -1,27 +1,6 @@
 open Namespace
 open Path
 
-module type PRINTF =
-sig
-  type t
-  type out_channel
-
-  val init : unit -> t
-  val read_line : t -> string * t
-  val printf : t -> ('a, out_channel, t) format -> 'a
-end
-
-module P : PRINTF =
-struct
-  type t = unit
-  include Pervasives
-
-  let init x = x
-  let read_line () = 
-    read_line (), ()
-  let printf () = Printf.printf
-end
-
 module File =
 struct
   open Namespace
@@ -31,7 +10,7 @@ struct
     type t
 
     val find : Path.t -> Path.filename -> t
-    val add : Path.t -> Path.filename -> t -> Path.t
+    val add : Path.t -> Path.filename -> t -> unit
   end
 
   module type CONFIG =

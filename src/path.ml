@@ -90,13 +90,13 @@ sig
   val find : t -> filename -> binary_data contents
 
   (** Removes everything in [filename] if existed. *)
-  val remove : t -> filename -> t
+  val remove : t -> filename -> unit
 
   (** Removes everything in [filename] if existed, then write [contents] instead. *)
-  val add : t -> filename -> binary_data contents -> t
+  val add : t -> filename -> binary_data contents -> unit
 
   (** Removes everything in [filename] if existed, then write [contents_rec] inside [filename]. *)
-  val add_rec : t -> filename -> binary_data contents_rec -> t
+  val add_rec : t -> filename -> binary_data contents_rec -> unit
 
   (** Returns the same meaning as [archive] but in extracted form. *)
   val extract_targz : t -> binary_data archive -> binary_data contents_rec
@@ -105,7 +105,7 @@ sig
   val raw_targz : filename -> binary_data archive
 
   (** Executes this particularly named script. *)
-  val exec_buildsh : t -> name_version -> t
+  val exec_buildsh : t -> name_version -> unit
   (* $HOME_OPAM/build/NAME-VERSION/build.sh *)
   
   (** see [Filename.dirname] *)
@@ -236,8 +236,7 @@ module Path : PATH = struct
           Unix.rmdir fic
       | Unix.S_REG -> Unix.unlink fic
       | _ -> failwith "to complete !" in
-    let () = aux (s_of_filename f) in
-    t
+    aux (s_of_filename f)
 
   module U = struct
     let mkdir = 
@@ -260,33 +259,32 @@ module Path : PATH = struct
   | File (Binary cts) -> 
       let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
       let fic = s_of_filename f in
-      let () = BatFile.with_file_out fic (fun oc -> BatString.print oc cts) in
-      t
+      BatFile.with_file_out fic (fun oc -> BatString.print oc cts)
   | File (Filename fic) -> 
-      let () = 
-        match (Unix.lstat fic).Unix.st_kind with
-        | Unix.S_DIR -> 
-            let () = contents (fun _ -> ()) (fun _ -> failwith "to complete !") () t f in
-            let rec aux f_from f_to = 
-              (match (Unix.lstat f_from).Unix.st_kind with
-              | Unix.S_DIR -> List.fold_left (fun _ b -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
-              | Unix.S_REG -> 
-                  let () = 
-                    if Sys.file_exists f_to then
+      begin match (Unix.lstat fic).Unix.st_kind with
+      | Unix.S_DIR -> 
+          let () = contents (fun _ -> ()) (fun _ -> failwith "to complete !") () t f in
+          let rec aux f_from f_to = 
+            (match (Unix.lstat f_from).Unix.st_kind with
+            | Unix.S_DIR -> List.fold_left (fun _ b -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
+            | Unix.S_REG -> 
+                let () = 
+                  if Sys.file_exists f_to then
                     Unix.unlink f_to
-                    else
+                  else
                     () in
-                  U.link f_from f_to
-              | _ -> failwith "to complete !") in
-            aux fic (s_of_filename f)
-        | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic in
-      t
-  | Not_exists -> t
+                U.link f_from f_to
+            | _ -> failwith "to complete !") in
+          aux fic (s_of_filename f)
+      | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
+      end
+  | Not_exists -> ()
 
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
     let _ = Sys.command "build.sh" in
-    t
+    ()
+
   let basename s = B (Filename.basename (s_of_filename s))
 
   let extract_targz t = function
@@ -309,14 +307,13 @@ module Path : PATH = struct
         () t f in
 
     let rec aux t f (* <- filename dir *) name (* name of the value that will be destructed*) = function
-    | R_directory l -> 
-        List.fold_left 
-          (let f = f /// name in
-           fun t (b, cts) -> aux t f b cts) t l
+    | R_directory l ->
+        let f = f /// name in
+        List.iter (fun (b, cts) -> aux t f b cts) l
     | R_file cts -> add t (f /// name) (File cts)
     | R_filename l -> 
-        List.fold_left
-          (fun t fic -> 
+        List.iter
+          (fun fic -> 
             aux
               t
               f
@@ -326,7 +323,7 @@ module Path : PATH = struct
                 let f = B f in
                 f, R_filename [fic /// f]) (files_of fic))
               | Unix.S_REG -> R_file (Filename (s_of_filename fic))
-              | _ -> failwith "to complete !")) t l in
+              | _ -> failwith "to complete !")) l in
     aux t (dirname f) (basename f)
 
   let ocaml_options_of_library t name = 

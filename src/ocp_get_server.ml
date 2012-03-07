@@ -20,15 +20,13 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
     Sys.argv.(0) Globals.version
 
-let debug = ref false
-
 let port  = ref Globals.default_port
 let set_port p = port := p
 
 let args = Arg.align [
-  "-p"       , Arg.Int set_port, " Set up the listening port (default is 9999)";
-  "--debug"  , Arg.Set debug,    " Print more debug messages";
-  "--version", Arg.Unit version, " Display version information";
+  "-p"       , Arg.Int set_port     , " Set up the listening port (default is 9999)";
+  "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
+  "--version", Arg.Unit version     , " Display version information";
 ]
 
 let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
@@ -37,7 +35,7 @@ let server fn =
   let host = (gethostbyname(gethostname ())).h_addr_list.(0) in 
   let addr = ADDR_INET (host, !port) in
   let state = Server.init () in
-  if !debug then
+  if !Globals.debug then
     Printf.printf "Listening on port %d (%s) ...\n%!"
       !port (string_of_inet_addr host);
 

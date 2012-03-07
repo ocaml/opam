@@ -66,15 +66,12 @@ module Server = struct
           | _ -> Empty
 
   let newArchive t (n_v, o_pack) arch = 
-    let t = 
-      { t with 
-        home = 
-          Path.add 
-            t.home 
-            (Path.archives_targz t.home (Some n_v)) 
-            (match arch with 
-            | Empty -> Path.Not_exists
-            | Tar_gz s -> Path.File s) } in
+    Path.add 
+      t.home 
+      (Path.archives_targz t.home (Some n_v)) 
+      (match arch with 
+      | Empty -> Path.Not_exists
+      | Tar_gz s -> Path.File s);
     
     match o_pack with
     | None   -> t.current_repository <- NV_map.add n_v (File.Cudf.new_package n_v "") t.current_repository

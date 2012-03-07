@@ -1,3 +1,5 @@
+let debug = ref false
+
 let version = "0.1+dev"
 
 let default_hostname = "opam.ocamlpro.com"
