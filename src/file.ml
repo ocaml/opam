@@ -140,11 +140,13 @@ struct
         Cudf.version = version.cudf ; 
         Cudf.pkg_extra = [ s_description, `String description ] }
 
-    let cudf opam_version pkg = { opam_version ; package = { preamble = None ; pkg = [ pkg ] ; request = None } }
+    let empty_preamble = Some { Cudf.default_preamble with Cudf.property = [ s_description, `String None ] }
+
+    let cudf opam_version pkg = { opam_version ; package = { preamble = empty_preamble ; pkg = [ pkg ] ; request = None } }
 
     let empty = 
       { opam_version = Version Globals.default_opam_version
-      ; package = { preamble = None ; pkg = [] ; request = None } }
+      ; package = { preamble = empty_preamble ; pkg = [] ; request = None } }
 
     let find t f =
       match Path.find_binary t f with
@@ -170,7 +172,9 @@ struct
           (match t.package.preamble with
             | Some preamble -> Cudf_printer.pp_io_preamble oc preamble
             | None -> ());
+          IO.write oc '\n';
           List.iter (Cudf_printer.pp_io_package oc) t.package.pkg;
+          IO.write oc '\n';
           (match t.package.request with
             | Some request -> Cudf_printer.pp_io_request oc request
             | None -> ());
