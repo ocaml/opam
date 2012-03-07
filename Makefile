@@ -66,3 +66,7 @@ distclean:
 	rm -f *.tar.gz
 	rm -rf dose cudf extlib ocaml-pcre ocamlgraph
 	rm -rf _obuild
+
+.PHONY: tests
+tests:
+	make -C tests

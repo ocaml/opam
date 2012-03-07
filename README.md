@@ -13,3 +13,21 @@ To compile `ocp-get`, simply run:
 make
 ```
 
+## Tests
+
+In order to run the test you should run:
+
+```
+ocp-get-server --debug
+```
+
+This will run the server in debug mode. It will show the IP address it
+is listening to. You can open an other terminal and run:
+
+```
+make tests
+```
+
+WARNING: the tests will remove everything in `~/.opam` and
+`~/.opam-server`.
+
