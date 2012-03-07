@@ -63,7 +63,7 @@ module Client : CLIENT = struct
           else begin
             File.Cudf.add t.home index_nv
               (File.Cudf.cudf
-                 (Version Globals.default_opam_version)
+                 (Version Globals.opam_version)
                  (match snd (RemoteServer.getOpam t.server (n, v)) with
                  | None -> assert false
                  | Some pkg -> pkg));
@@ -86,9 +86,9 @@ module Client : CLIENT = struct
     log "init %s" (string_of_url url);
     let config =
       File.Config.config
-        (Version Globals.default_opam_version)
+        (Version Globals.opam_version)
         url
-        (Version Globals.default_ocaml_version) in
+        (Version Globals.ocaml_version) in
     let home = Path.init Globals.opam_path in
     File.Config.add home (Path.config home) config;
     update ()
@@ -105,6 +105,7 @@ module Client : CLIENT = struct
             N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
   let info package =
+    log "info %s" (match package with None -> "" | Some p -> Namespace.string_of_name p);
     let t = load_state () in
     let s_not_installed = "--" in
     match package with
@@ -294,6 +295,7 @@ module Client : CLIENT = struct
   let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some (`Eq, v.Namespace.cudf)
 
   let install name = 
+    log "install %s" (Namespace.string_of_name name);
     let t = load_state () in
     let l_index = Path.index_opam_list t.home in
     match find_from_name name l_index with
@@ -310,6 +312,7 @@ module Client : CLIENT = struct
           ()
 
   let remove name =
+    log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
     let r = match BatList.Exceptionless.assoc name (File.Installed.find t.home (Path.installed t.home)) with
     | None ->
@@ -330,6 +333,7 @@ module Client : CLIENT = struct
     | None -> ()
 
   let upgrade () =
+    log "upgrade";
     let t = load_state () in
       resolve t (Path.index_opam_list t.home) 
         { Solver.wish_install = []
@@ -337,6 +341,7 @@ module Client : CLIENT = struct
         ; wish_upgrade = BatList.map vpkg_of_nv (File.Installed.find t.home (Path.installed t.home)) }
     
   let upload s_filename =
+    log "upload %s" s_filename;
     let t = load_state () in
     let filename = Path.package t.home s_filename in
     let o =
@@ -347,20 +352,24 @@ module Client : CLIENT = struct
         else
           None in
       match Path.find t.home filename with
-        | Path.File binary -> Some (Tar_gz binary)
-        | Path.Directory _ -> f "is a directory" (Path.raw_targz filename)
-        | Path.Not_exists  -> f "has not been found" Empty in
+      | Path.File binary -> Some (Tar_gz binary)
+      | Path.Directory _ -> f "is a directory" (Path.raw_targz filename)
+      | Path.Not_exists  -> f "has not been found" Empty in
 
+    (* Upload the archive to the server *)
     match o with
-      | Some v ->
-          RemoteServer.newArchive t.server
-            (RemoteServer.getOpam t.server
-               (Path.nv_of_extension Namespace.default_version (Path.basename filename))
-            ) v
-      | None -> ()
+    | Some v ->
+        let package = Path.nv_of_extension Namespace.default_version (Path.basename filename) in
+        let local_server = Server.init Globals.opam_path in
+        (* Upload the archive to the remote server *)
+        RemoteServer.newArchive t.server (RemoteServer.getOpam t.server package) v;
+        (* Copy the archive in the client state *)
+        Server.newArchive local_server (Server.getOpam local_server package) v
+    | None -> ()
 
   type config_request = Dir
   let config Dir name =
+    log "config %s" (Namespace.string_of_name name);
     let t = load_state () in
     match find_from_name name (Path.index_opam_list t.home) with
 
@@ -375,3 +384,5 @@ module Client : CLIENT = struct
           Printf.printf "-I %s" 
             (match Path.ocaml_options_of_library t.home name with I s -> s)
 end
+
+

@@ -190,7 +190,7 @@ module Path : PATH = struct
   let (///) = concat
   let init s = 
     let home = home // s in
-    { home ; home_ocamlversion = home // Globals.default_ocaml_version }
+    { home ; home_ocamlversion = home // Globals.ocaml_version }
 
   let root = Raw "/"
   let package _ s = Raw (Printf.sprintf "%s" s)

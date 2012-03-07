@@ -19,8 +19,13 @@ opt: ./_obuild/unixrun
 	mkdir -p ./_obuild
 	ocamlc -o ./_obuild/unixrun -make-runtime unix.cma
 
-link:
+link: ocp-get ocp-get-server
+	@
+
+ocp-get:
 	ln -s _obuild/ocp-get/ocp-get.asm ocp-get
+
+ocp-get-server:
 	ln -s _obuild/ocp-get-server/ocp-get-server.asm ocp-get-server
 
 compile: ./_obuild/unixrun clone

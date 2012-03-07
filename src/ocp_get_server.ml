@@ -34,39 +34,38 @@ let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 let server fn =
   let host = (gethostbyname(gethostname ())).h_addr_list.(0) in 
   let addr = ADDR_INET (host, !port) in
-  let state = Server.init () in
+  let state = Server.init Globals.opam_server_path in
   if !Globals.debug then
     Printf.printf "Listening on port %d (%s) ...\n%!"
       !port (string_of_inet_addr host);
 
   establish_server (fn state) addr
 
-let request = ref 0
-
-let log fmt =
-  Globals.log (Printf.sprintf "REQUEST-%d" !request) fmt
+let log id fmt =
+  Globals.log (Printf.sprintf "REQUEST [%d]" id) fmt
 
 let protect f =
   try f ()
   with e -> Oerror (Printexc.to_string e)
 
 let fn t stdin stdout =
-  incr request;
-  log "Processing an incoming request";
+  Random.self_init();
+  let id = Random.int 1024 in
+  log id "Processing an incoming request";
 
   let output = match (input_value stdin : input_api) with
   | IgetList                    ->
-      log "getList";
+      log id "getList";
       protect (fun () -> OgetList (Server.getList t))
   | IgetOpam name_version       ->
-      log "getOpam";
+      log id "getOpam";
       protect (fun () -> OgetOpam (Server.getOpam t name_version))
   | IgetArchive opam            ->
-      log "getArchive";
+      log id "getArchive";
       protect (fun () -> OgetArchive (Server.getArchive t opam))
   | InewArchive (opam, archive) ->
       (* XXX: need to protect the server state mutation as it can be updated concurrently *)
-      log "newArchive";
+      log id "newArchive";
       protect (fun () -> Server.newArchive t opam archive; OnewArchive) in 
 
   output_value stdout output;
