@@ -46,51 +46,36 @@ module Client : CLIENT = struct
       { server : url
       ; home   : Path.t (* ~/.opam *) }
 
+  let home = Path.init Globals.opam_path
+
   (* Look into the content of ~/.opam/config to build the client state *)
   let load_state () =
-    let home = Path.init Globals.opam_path in
-    let config = File.Config.find home (Path.config home) in
+    let config = File.Config.find (Path.config home) in
     { server = File.Config.sources config
     ;  home }
 
-  let update_aux t =
-    let map =
-      List.fold_left
-        (fun map (n, v) -> 
-          let index_nv = Path.index_opam t.home (Some (n, v)) in
-          if Path.file_exists index_nv then
-            map
-          else begin
-            File.Cudf.add t.home index_nv
-              (File.Cudf.cudf
-                 (Version Globals.opam_version)
-                 (match snd (RemoteServer.getOpam t.server (n, v)) with
-                 | None -> assert false
-                 | Some pkg -> pkg));
-            N_map.modify_def V_set.empty n (V_set.add v) map
-          end)
-        N_map.empty
-        (RemoteServer.getList t.server) in
-    
-      Printf.printf "%s\n"
-        (BatIO.to_string 
-           (N_map.print 
-              (fun oc name -> BatString.print oc (Namespace.string_user_of_name name))
-              (V_set.print (fun oc version -> BatString.print oc (Namespace.string_user_of_version version)))
-           ) map)
+  let update_t t =
+    let packages = RemoteServer.getList t.server in
+    List.iter
+      (fun (n, v) -> 
+        let opam_file = Path.index_opam t.home (Some (n, v)) in
+        if not (Path.file_exists opam_file) then
+          let opam = RemoteServer.getOpam t.server (n, v) in
+          Path.add opam_file (Path.File opam);
+          Printf.printf "New package available: %s\n%!" (Namespace.string_of_nv n v)
+      ) packages
 
   let update () =
-    update_aux (load_state ())
+    update_t (load_state ())
 
   let init url =
     log "init %s" (string_of_url url);
     let config =
-      File.Config.config
+      File.Config.create
         (Version Globals.opam_version)
         url
         (Version Globals.ocaml_version) in
-    let home = Path.init Globals.opam_path in
-    File.Config.add home (Path.config home) config;
+    File.Config.add (Path.config home) config;
     update ()
 
   let indent_left s nb = s ^ String.make nb ' '
@@ -110,15 +95,14 @@ module Client : CLIENT = struct
     let s_not_installed = "--" in
     match package with
     | None -> 
-        let install_set = NV_set.of_enum (BatList.enum (File.Installed.find t.home (Path.installed t.home))) in
+        (* Get all the installed packages *)
+        let install_set = NV_set.of_enum (BatList.enum (File.Installed.find (Path.installed t.home))) in
         let map, max_n, max_v = 
           List.fold_left
             (fun (map, max_n, max_v) n_v -> 
               let b = NV_set.mem n_v install_set in
               NV_map.add n_v
-                (b, 
-                 File.Cudf.description
-                   (File.Cudf.package (File.Cudf.find t.home (Path.index_opam t.home (Some n_v)))))
+                (b, File.Opam.description (File.Opam.find (Path.index_opam t.home (Some n_v))))
                 map,
               max max_n (String.length (Namespace.string_user_of_name (fst n_v))), 
               if b then max max_v (String.length (Namespace.string_user_of_version (snd n_v))) else max_v)
@@ -138,7 +122,7 @@ module Client : CLIENT = struct
         let o_v = 
           BatOption.map
             V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
-            (find_from_name (File.Installed.find t.home (Path.installed t.home))) in
+            (find_from_name (File.Installed.find (Path.installed t.home))) in
 
         let v_set =
           let v_set = 
@@ -161,8 +145,7 @@ module Client : CLIENT = struct
           ; "description", "\n" ^ 
             match o_v with None -> ""
             | Some v -> 
-                File.Cudf.description
-                  (File.Cudf.package (File.Cudf.find t.home (Path.index_opam t.home (Some (name, v)))))
+                File.Opam.description (File.Opam.find (Path.index_opam t.home (Some (name, v))))
           ]
 
   let confirm msg = 
@@ -179,18 +162,17 @@ module Client : CLIENT = struct
       if Path.file_exists p_targz then
         Path.R_filename
           (BatList.map (Path.concat p_build)
-             (match Path.find t.home p_build with
+             (match Path.find p_build with
              | Path.Directory l -> l
              | _ -> []))
       else
-        let tgz = Path.extract_targz t.home
-          (RemoteServer.getArchive t.server (RemoteServer.getOpam t.server (name, v))) in
-        Path.add_rec t.home p_build tgz;
+        let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
+        Path.add_rec p_build tgz;
         tgz in
     
     f_build t tgz;
 
-    let to_install = File.To_install.find t.home (Path.to_install t.home (name, v)) in
+    let to_install = File.To_install.find (Path.to_install t.home (name, v)) in
 
     let filename_of_path_relative t path = 
       Path.R_filename (File.To_install.filename_of_path_relative t.home
@@ -214,33 +196,33 @@ module Client : CLIENT = struct
         if confirm (File.To_install.string_of_misc misc) then
           let path_from = filename_of_path_relative t (File.To_install.path_from misc) in
           List.iter 
-            (fun path_to -> Path.add_rec t.home path_to path_from) 
+            (fun path_to -> Path.add_rec path_to path_from) 
             (File.To_install.filename_of_path_absolute t.home (File.To_install.path_to misc)))
       (File.To_install.misc to_install)
 
   let proceed_todelete t (n, v0) = 
-    let map_installed = N_map.of_enum (BatList.enum (File.Installed.find t.home (Path.installed t.home))) in
+    let map_installed = N_map.of_enum (BatList.enum (File.Installed.find (Path.installed t.home))) in
     match N_map.Exceptionless.find n map_installed with
       | Some v when v = v0 ->
           iter_toinstall
             (fun t _ -> t)
             (fun t file -> function
               | Path.R_filename l -> 
-                List.iter (fun f -> Path.remove t.home (Path.concat file (Path.basename f))) l
+                List.iter (fun f -> Path.remove (Path.concat file (Path.basename f))) l
               | _ -> failwith "to complete !")
             t
             (n, v);
-        File.Installed.add t.home (Path.installed t.home) (N_map.bindings (N_map.remove n map_installed))
+        File.Installed.add (Path.installed t.home) (N_map.bindings (N_map.remove n map_installed))
 
       | _ -> ()
 
   let proceed_torecompile t (name, v) =
     iter_toinstall  
       (fun t tgz ->
-        Path.add_rec t.home (Path.build t.home (Some (name, v))) tgz;
+        Path.add_rec (Path.build t.home (Some (name, v))) tgz;
         Path.exec_buildsh t.home (name, v))
       (fun t file contents ->
-        Path.add_rec t.home file contents)
+        Path.add_rec file contents)
       t
       (name, v)
 
@@ -276,7 +258,7 @@ module Client : CLIENT = struct
     let l_pkg, map_pkg = 
       List.fold_left
         (fun (l, map) n_v -> 
-          let pkg = File.Cudf.package (File.Cudf.find t.home (Path.index_opam t.home (Some n_v))) in
+          let pkg = File.Opam.package (File.Opam.find (Path.index_opam t.home (Some n_v))) in
           pkg :: l, PkgMap.add pkg n_v map) ([], PkgMap.empty) l_index in
     let l =
       BatList.map (Solver.solution_map (fun p -> PkgMap.find p map_pkg)) (Solver.resolve l_pkg request) in
@@ -304,7 +286,7 @@ module Client : CLIENT = struct
             Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
               (Namespace.string_user_of_name name) in
           if confirm msg then
-            update_aux t
+            update_t t
       | Some v -> 
           let _ = resolve t l_index { Solver.wish_install = [ vpkg_of_nv (name, V_set.max_elt v) ]
                                     ; wish_remove = [] 
@@ -314,7 +296,7 @@ module Client : CLIENT = struct
   let remove name =
     log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
-    let r = match BatList.Exceptionless.assoc name (File.Installed.find t.home (Path.installed t.home)) with
+    let r = match BatList.Exceptionless.assoc name (File.Installed.find (Path.installed t.home)) with
     | None ->
         let msg =
           Printf.sprintf "Package \"%s\" not found. We will call the solver to see its output."
@@ -338,34 +320,36 @@ module Client : CLIENT = struct
       resolve t (Path.index_opam_list t.home) 
         { Solver.wish_install = []
         ; wish_remove = []
-        ; wish_upgrade = BatList.map vpkg_of_nv (File.Installed.find t.home (Path.installed t.home)) }
+        ; wish_upgrade = BatList.map vpkg_of_nv (File.Installed.find (Path.installed t.home)) }
     
-  let upload s_filename =
-    log "upload %s" s_filename;
+  (* Upload reads NAME.opam to get the current package version.
+     Then it looks for NAME-VERSION.tar.gz in the same directory.
+     Then, it sends both NAME.opam and NAME-VERSION.tar.gz to the server *)
+  let upload name =
+    log "upload %s" name;
     let t = load_state () in
-    let filename = Path.package t.home s_filename in
-    let o =
-      let f msg v =
-        let msg = Printf.sprintf "Path \"%s\" %s. It will be uploaded anyway." s_filename msg in
-        if confirm msg then
-          Some v
-        else
-          None in
-      match Path.find t.home filename with
-      | Path.File binary -> Some (Tar_gz binary)
-      | Path.Directory _ -> f "is a directory" (Path.raw_targz filename)
-      | Path.Not_exists  -> f "has not been found" Empty in
 
-    (* Upload the archive to the server *)
-    match o with
-    | Some v ->
-        let package = Path.nv_of_extension Namespace.default_version (Path.basename filename) in
-        let local_server = Server.init Globals.opam_path in
-        (* Upload the archive to the remote server *)
-        RemoteServer.newArchive t.server (RemoteServer.getOpam t.server package) v;
-        (* Copy the archive in the client state *)
-        Server.newArchive local_server (Server.getOpam local_server package) v
-    | None -> ()
+    (* Get the current package version *)
+    let opam_filename = name ^ ".opam" in
+    let opam_binary = U.read_content opam_filename in
+    let opam = File.Opam.parse opam_binary in
+    let version = File.Opam.version opam in
+    let opam = binary opam_binary in
+
+    (* look for the archive *)
+    let archive_filename = Namespace.string_of_nv (Namespace.Name name) version ^ ".tar.gz" in
+    let archive =
+      if Sys.file_exists archive_filename then
+        Tar_gz (binary (U.read_content archive_filename))
+      else
+        Globals.error_and_exit "Cannot find %s" archive_filename in
+
+    (* Upload both files to the server and update the client
+       filesystem to reflect the new uploaded packages *)
+    let nv = Namespace.Name name, version in
+    let local_server = Server.init Globals.opam_path in
+    RemoteServer.newArchive t.server nv opam archive;
+    Server.newArchive local_server nv opam archive
 
   type config_request = Dir
   let config Dir name =
@@ -373,16 +357,14 @@ module Client : CLIENT = struct
     let t = load_state () in
     match find_from_name name (Path.index_opam_list t.home) with
 
-      | None -> 
-          let msg =
-            Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
-              (Namespace.string_user_of_name name) in
-          if confirm msg then
-            update_aux t
+    | None -> 
+        let msg =
+          Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
+            (Namespace.string_user_of_name name) in
+        if confirm msg then
+          update_t t
 
-      | Some _ -> 
-          Printf.printf "-I %s" 
-            (match Path.ocaml_options_of_library t.home name with I s -> s)
+    | Some _ -> 
+        Printf.printf "-I %s" 
+          (match Path.ocaml_options_of_library t.home name with I s -> s)
 end
-
-

@@ -63,10 +63,10 @@ let fn t stdin stdout =
   | IgetArchive opam            ->
       log id "getArchive";
       protect (fun () -> OgetArchive (Server.getArchive t opam))
-  | InewArchive (opam, archive) ->
+  | InewArchive (nv, opam, archive) ->
       (* XXX: need to protect the server state mutation as it can be updated concurrently *)
       log id "newArchive";
-      protect (fun () -> Server.newArchive t opam archive; OnewArchive) in 
+      protect (fun () -> Server.newArchive t nv opam archive; OnewArchive) in 
 
   output_value stdout output;
   flush stdout

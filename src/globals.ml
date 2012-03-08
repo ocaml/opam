@@ -21,3 +21,9 @@ let error fmt =
   Printf.kprintf (fun str ->
     Printf.eprintf "ERROR: %s\n%!" str
   ) fmt
+
+let error_and_exit fmt =
+  Printf.kprintf (fun str ->
+    error "%s" str;
+    exit 1
+  ) fmt

@@ -26,14 +26,95 @@ type binary_data =
   | Binary of raw_binary
   | Filename of raw_filename
 
+let binary s = Binary (Raw_binary s)
+let filename s = Filename (Raw_filename s)
+
 type 'a archive = 
   | Tar_gz of 'a
-  | Empty
 
 type basename = B of string
 
+(** Type used to represent an internal form of version, which is in
+    particular not related to the version of a particular package *)
 type internal_version = Version of string
-(** Type used to represent an internal form of version, which is in particular not related to the version of a particular package *)
+
+module U = struct
+  let mkdir f f_to = 
+    let rec aux f_to = 
+      if Sys.file_exists f_to then
+        ()
+      else begin
+        aux (Filename.dirname f_to);
+        Unix.mkdir f_to 0o755;
+      end in
+    aux (Filename.dirname f_to);
+    f f_to
+      
+  let link f_from = mkdir (Unix.link f_from)
+
+  let copy src dst =
+    log "Copying %s to %s" src dst;
+    let n = 1024 in
+    let b = String.create n in
+    let read = ref 0 in
+    let ic = open_in src in
+    let oc = open_out dst in
+    while !read <>0 do
+      read := input ic b 0 n;
+      output oc b 0 !read;
+    done;
+    close_in ic;
+    close_out oc
+
+  let read_content file =
+    let ic = open_in file in
+    let n = in_channel_length ic in
+    let s = String.create n in
+    really_input ic s 0 n;
+    close_in ic;
+    s
+
+  (**************************)
+  (* from ocplib-system ... *)
+  (**************************)
+
+  let in_dir dir fn =
+    let cwd = Unix.getcwd () in
+    Unix.chdir dir;
+    try
+      let r = fn () in
+      Unix.chdir cwd;
+      r
+    with e ->
+      Unix.chdir cwd;
+      raise e
+
+  let directories () =
+    let d = Sys.readdir (Unix.getcwd ()) in
+    let d = Array.to_list d in
+    List.filter (fun f -> try Sys.is_directory f with _ -> false) d
+
+  let files () =
+    let d = Sys.readdir (Unix.getcwd ()) in
+    let d = Array.to_list d in
+    List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
+
+  let safe_unlink file =
+    try Unix.unlink file
+    with Unix.Unix_error _ -> ()
+
+  let rec safe_rmdir dir =
+    if Sys.file_exists dir then begin
+      in_dir dir (fun () ->
+        let dirs = directories () in
+        let files = files () in
+        List.iter safe_unlink files;
+        List.iter safe_rmdir dirs;
+      );
+      Unix.rmdir dir;
+    end
+end
+
 
 module type PATH =
 sig
@@ -44,7 +125,6 @@ sig
   type 'a contents = 
     | Directory of basename list
     | File of 'a
-    | Not_exists
 
   type 'a contents_rec = 
     | R_directory of (basename * 'a contents_rec) list
@@ -93,28 +173,28 @@ sig
   val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
 
 
-  (** **)
+  (** Path utilities **)
 
   (** Retrieves the contents from the hard disk. *)
-  val find : t -> filename -> binary_data contents
+  val find : filename -> binary_data contents
 
   (** see [find] *)
-  val find_binary : t -> filename -> raw_binary contents
+  val find_binary : filename -> raw_binary contents
 
   (** see [find] *)
-  val find_filename : t -> filename -> raw_filename contents
+  val find_filename : filename -> raw_filename contents
 
   (** Removes everything in [filename] if existed. *)
-  val remove : t -> filename -> unit
+  val remove : filename -> unit
 
   (** Removes everything in [filename] if existed, then write [contents] instead. *)
-  val add : t -> filename -> binary_data contents -> unit
+  val add : filename -> binary_data contents -> unit
 
   (** Removes everything in [filename] if existed, then write [contents_rec] inside [filename]. *)
-  val add_rec : t -> filename -> binary_data contents_rec -> unit
+  val add_rec : filename -> binary_data contents_rec -> unit
 
   (** Returns the same meaning as [archive] but in extracted form. *)
-  val extract_targz : t -> binary_data archive -> binary_data contents_rec
+  val extract_targz : binary_data archive -> binary_data contents_rec
 
   (** Considers the given [filename] as the contents of an [archive] already extracted. *)
   val raw_targz : filename -> binary_data archive
@@ -161,7 +241,6 @@ module Path : PATH = struct
   type 'a contents = 
     | Directory of basename list
     | File of 'a
-    | Not_exists
 
   type 'a contents_rec = 
     | R_directory of (basename * 'a contents_rec) list
@@ -213,18 +292,19 @@ module Path : PATH = struct
 
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
 
-  let contents f_dir f_fic f_not_exists t f = 
+  let contents f_dir f_fic f =
     let fic = s_of_filename f in
     if Sys.file_exists fic then
       (if Sys.is_directory fic then f_dir else f_fic) fic
-    else
-      f_not_exists
+    else begin
+      log "%s does not exist" fic;
+      raise Not_found
+    end
 
   let find_ f_fic = 
     contents
       (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
       (fun fic -> File (f_fic fic))
-      Not_exists
 
   let find = find_ (fun fic -> Filename (Raw_filename fic))
 
@@ -247,12 +327,14 @@ module Path : PATH = struct
   let file_exists f = Sys.file_exists (s_of_filename f)
 
   let index_opam_list t =
-    BatList.map (nv_of_extension Namespace.default_version)
-      (match find t (index_opam t None) with
+    let files =
+      try match find (index_opam t None) with
       | Directory l -> l
-      | _ -> [])
+      | File _      -> [] (* XXX: ? *) 
+      with Not_found -> [] in
+    List.map (nv_of_extension Namespace.default_version) files
 
-  let remove t f = 
+  let remove f = 
     let rec aux fic = 
       match (Unix.lstat fic).Unix.st_kind with
       | Unix.S_DIR -> 
@@ -262,34 +344,18 @@ module Path : PATH = struct
       | _ -> failwith "to complete !" in
     aux (s_of_filename f)
 
-  module U = struct
-    let mkdir f f_to = 
-      let rec aux f_to = 
-        if Sys.file_exists f_to then
-          ()
-        else begin
-          aux (Filename.dirname f_to);
-          Unix.mkdir f_to 0o755;
-        end in
-      aux (Filename.dirname f_to);
-      f f_to
-  
-    let link f_from = mkdir (Unix.link f_from)
-
-  end
-
-  let add t f content =
+  let add f content =
     log "add %s" (s_of_filename f);
     match content with
     | Directory d -> failwith "to complete !"
     | File (Binary (Raw_binary cts)) -> 
-        let () = contents (fun _ -> failwith "to complete !") Unix.unlink () t f in
-        let fic = s_of_filename f in
+        let fic = s_of_filename  f in
+        U.safe_unlink fic;
         U.mkdir (fun fic -> BatFile.with_file_out fic (fun oc -> BatString.print oc cts)) fic
-    | File (Filename (Raw_filename fic)) -> 
+    | File (Filename (Raw_filename fic)) ->
         begin match (Unix.lstat fic).Unix.st_kind with
         | Unix.S_DIR -> 
-            let () = contents (fun _ -> ()) (fun _ -> failwith "to complete !") () t f in
+            U.safe_rmdir fic;
             let rec aux f_from f_to = 
               (match (Unix.lstat f_from).Unix.st_kind with
               | Unix.S_DIR -> List.fold_left (fun _ b -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
@@ -302,9 +368,11 @@ module Path : PATH = struct
                   U.link f_from f_to
               | _ -> failwith "to complete !") in
             aux fic (s_of_filename f)
+        | Unix.S_REG ->
+            U.safe_unlink fic;
+            U.copy fic (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
         end
-    | Not_exists -> ()
 
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
@@ -313,10 +381,9 @@ module Path : PATH = struct
 
   let basename s = B (Filename.basename (s_of_filename s))
 
-  let extract_targz t = function
+  let extract_targz = function
   | Tar_gz (Binary _) -> failwith "to complete ! check if the \"dose\" project has been configured with the correct option to extract the gzip or bz2, then use similars functions to extract" (*IO.read_all (Common.Input.open_file fic)*)
   | Tar_gz (Filename (Raw_filename fic)) -> R_filename [Raw fic]
-  | Empty -> R_directory []
 
   let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))
 
@@ -325,23 +392,22 @@ module Path : PATH = struct
 
   let dirname = filename_map Filename.dirname
 
-  let add_rec t f = 
+  let add_rec f = 
     let () = (* check that [f] is not a file *)
       contents
         (fun _ -> ())
         (fun _ -> failwith "to complete !") 
-        () t f in
+        f in
 
-    let rec aux t f (* <- filename dir *) name (* name of the value that will be destructed*) = function
+    let rec aux f (* <- filename dir *) name (* name of the value that will be destructed*) = function
     | R_directory l ->
         let f = f /// name in
-        List.iter (fun (b, cts) -> aux t f b cts) l
-    | R_file cts -> add t (f /// name) (File cts)
+        List.iter (fun (b, cts) -> aux f b cts) l
+    | R_file cts -> add (f /// name) (File cts)
     | R_filename l -> 
         List.iter
           (fun fic -> 
             aux
-              t
               f
               (basename fic)
               (match (lstat fic).Unix.st_kind with
@@ -350,7 +416,7 @@ module Path : PATH = struct
                 f, R_filename [fic /// f]) (files_of fic))
               | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
               | _ -> failwith "to complete !")) l in
-    aux t (dirname f) (basename f)
+    aux (dirname f) (basename f)
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))

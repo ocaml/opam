@@ -13,10 +13,10 @@ init: fresh
 	$(OCPGET) init $(LOCALHOST)
 
 upload: $(ARCHIVES) init
-	cd packages && ../$(OCPGET) upload P1.opam
-	cd packages && ../$(OCPGET) upload P2.opam
-	cd packages && ../$(OCPGET) upload P3.opam
-	cd packages && ../$(OCPGET) upload P4.opam
+	cd packages && ../$(OCPGET) upload P1
+	cd packages && ../$(OCPGET) upload P2
+	cd packages && ../$(OCPGET) upload P3
+	cd packages && ../$(OCPGET) upload P4
 
 info: upload
 	$(OCPGET) info

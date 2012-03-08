@@ -7,91 +7,78 @@ module type SERVER =
 sig
   type t
 
-  (** [None] : the current repository does not contain the package
-      associated to the [name] and [version] *)
-  type opam = name_version * Cudf.package option
-
   (** Returns the list of the available versions for all packages. *)
   val getList : t -> name_version list
 
   (** Returns the representation of the OPAM file for the
       corresponding package version. *)
-  val getOpam : t -> name_version -> opam
+  val getOpam : t -> name_version -> binary_data
 
   (** Returns the corresponding package archive. *)
-  val getArchive : t -> opam -> binary_data archive
+  val getArchive : t -> name_version -> binary_data archive
 
   (** Receives an upload, it contains an OPAM file and the
       corresponding package archive. *)
-  val newArchive : t -> opam -> binary_data archive -> unit
+  val newArchive : t -> name_version -> binary_data -> binary_data archive -> unit
 
 end
 
 type server_state =
-    { mutable current_repository : Cudf.package NV_map.t
-    ; home : Path.t (* ~/.opam-server *)
-    ; version_package_manager : internal_version }
+    { home : Path.t (* ~/.opam-server *)
+    ; opam_version : internal_version }
 
 module Server = struct
 
   type t = server_state
 
-  type opam = name_version * Cudf.package option
-
+  (* Return all the .opam files *)
   let read_index home =
     List.fold_left
-      (fun map nv -> 
-        NV_map.add
-          nv
-          (File.Cudf.package (File.Cudf.find home (Path.index_opam home (Some nv)))) 
-          map) NV_map.empty 
+      (fun map nv -> NV_map.add nv (File.Opam.find (Path.index_opam home (Some nv))) map)
+      NV_map.empty 
       (Path.index_opam_list home)
 
+  let string_of_nv (n, v) = Namespace.string_of_nv n v
+
   let init path = 
-    let home = Path.init path in
-    { current_repository = read_index home
-    ; home
-    ; version_package_manager = Version Globals.opam_version }
+    { home = Path.init path
+    ; opam_version = Version Globals.opam_version }
 
-  let getList t = BatList.map fst (NV_map.bindings t.current_repository)
-  let getOpam t n_v = n_v, NV_map.Exceptionless.find n_v t.current_repository
-  let getArchive t = function
-    | _, None -> Empty
-    | n_v, Some _ -> 
-        match Path.find t.home (Path.archives_targz t.home (Some n_v)) with
-          | Path.File s -> Tar_gz s
-          | _ -> Empty
+  let getList t =
+    Path.index_opam_list t.home
 
-  let newArchive t (n_v, o_pack) arch = 
-    Path.add 
-      t.home 
-      (Path.archives_targz t.home (Some n_v)) 
-      (match arch with 
-      | Empty -> Path.Not_exists
-      | Tar_gz s -> Path.File s);
+  let getOpam t n_v =
+    let index = read_index t.home in
+    try binary (File.Opam.to_string (NV_map.find n_v index))
+    with Not_found -> failwith (string_of_nv n_v ^ " not found")
 
-    let new_package = File.Cudf.new_package n_v "" in
+  let getArchive t n_v =
+    match Path.find (Path.archives_targz t.home (Some n_v)) with
+    | Path.File s -> Tar_gz s
+    | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
 
-    File.Cudf.add 
-      t.home 
-      (Path.index_opam t.home (Some n_v))
-      (File.Cudf.cudf t.version_package_manager new_package);
-    
-    match o_pack with
-    | None   -> t.current_repository <- NV_map.add n_v new_package t.current_repository
-    | Some _ -> ()
+  let newArchive t n_v opam archive =
+    let opam_file = Path.index_opam t.home (Some n_v) in
+    let archive_file = Path.archives_targz t.home (Some n_v) in
+    begin match opam with
+    | Binary (Raw_binary s) -> File.Opam.add opam_file (File.Opam.parse s)
+    | f                     -> Path.add opam_file (Path.File f)
+    end;
+    begin match archive with
+    | Tar_gz f -> Path.add archive_file (Path.File f)
+    end;
 
 end
 
 type input_api =
   | IgetList
   | IgetOpam of name_version
-  | IgetArchive of Server.opam
-  | InewArchive of Server.opam * binary_data archive
+  | IgetArchive of name_version
+  | InewArchive of name_version * binary_data * binary_data archive
 
 type output_api =
   | OgetList of name_version list
-  | OgetOpam of Server.opam
+  | OgetOpam of binary_data
   | OgetArchive of binary_data archive
   | OnewArchive
   | Oerror of string (* server error *)
@@ -99,7 +86,6 @@ type output_api =
 module RemoteServer : SERVER with type t = url = struct
 
   type t = url
-  type opam = Server.opam
 
   (* untyped message exchange *)
   let send url (m : input_api) =
@@ -134,26 +120,17 @@ module RemoteServer : SERVER with type t = url = struct
     | Oerror s   -> error s
     | _          -> dyn_error "getOpam"
 
-  let getArchive t opam =
-    match send t (IgetArchive opam) with
+  let getArchive t nv =
+    match send t (IgetArchive nv) with
     | OgetArchive a -> a
     | Oerror s      -> error s
     | _             -> dyn_error "getArchive"
 
-  let read_content file =
-    let ic = open_in file in
-    let n = in_channel_length ic in
-    let s = String.create n in
-    really_input ic s 0 n;
-    close_in ic;
-    s
-
-  let newArchive t opam archive =
+  let newArchive t nv opam archive =
     let archive = match archive with
-    | Tar_gz (Filename (Raw_filename s)) -> Tar_gz (Binary (Raw_binary (read_content s)))
-    | Tar_gz _            -> archive
-    | Empty               -> error "cannot send empty archive" in
-    match send t (InewArchive (opam, archive)) with
+    | Tar_gz (Filename (Raw_filename s)) -> Tar_gz (Binary (Raw_binary (U.read_content s)))
+    | Tar_gz _                           -> archive in
+    match send t (InewArchive (nv, opam, archive)) with
     | OnewArchive -> ()
     | Oerror s    -> error s
     | _           -> dyn_error "newArchive"

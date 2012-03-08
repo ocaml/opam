@@ -9,8 +9,17 @@ struct
   sig
     type t
 
-    val find : Path.t -> Path.filename -> t
-    val add : Path.t -> Path.filename -> t -> unit
+    (** Parse a string *)
+    val parse: string -> t
+
+    (** Return the content of a file as a string *)
+    val to_string: t -> string
+
+    (** Find a file. Raise [Not_found] is the file does not exists *)
+    val find : Path.filename -> t
+
+    (** Add a file *)
+    val add : Path.filename -> t -> unit
   end
 
   module type CONFIG =
@@ -20,13 +29,12 @@ struct
     val version_of_string : string -> internal_version
 
     (** destruct *)
-    val package_manager : t -> internal_version
+    val opam_version : t -> internal_version
     val sources : t -> url
     val ocaml_version : t -> internal_version
 
-
     (** construct *)
-    val config : internal_version (* opam *) -> url -> internal_version (* ocaml *) -> t
+    val create : internal_version (* opam *) -> url -> internal_version (* ocaml *) -> t
   end
 
   let filter motif =
@@ -41,21 +49,24 @@ struct
 
   module Config : CONFIG =
   struct
-    type t = { version : internal_version ; sources : url ; ocaml_version : internal_version }
+    type t =
+        { version : internal_version (* opam version *)
+        ; sources : url
+        ; ocaml_version : internal_version }
 
     let version_of_string s = Version s
 
-    let package_manager t = t.version
+    let opam_version t = t.version
     let sources t = t.sources
     let ocaml_version t = t.ocaml_version
-    let config version sources ocaml_version = { version ; sources ; ocaml_version }
 
-    let empty = {
+    let create version sources ocaml_version = { version ; sources ; ocaml_version }
+
+    let default = {
       version = Version Globals.version;
       sources = url Globals.default_hostname Globals.default_port ;
       ocaml_version = Version Sys.ocaml_version
     }
-
 
     let to_string t =
       Printf.sprintf "version: %s\nsources: %s\nocaml-version: %s\n"
@@ -66,123 +77,204 @@ struct
     let log fmt =
       Globals.log "FILE.CONFIG" fmt
 
-    let find t f =
-      log "read %s" (Path.string_of_filename f);
-      let aux contents =
-        let file = parse_colon contents in
-        let version = try List.assoc "version" file with _ -> Globals.opam_version in
-        let sources =
-          try
-            let sources = List.assoc "sources" file in
-            let hostname, port =  BatString.split sources ":" in
-            url hostname (try int_of_string port with _ -> Globals.default_port)
-          with _ ->
-            url Globals.default_hostname Globals.default_port in
-        let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
-        { version = Version version; sources; ocaml_version = Version ocaml_version } in
+    let parse contents =
+      let file = parse_colon contents in
+      let version = try List.assoc "version" file with _ -> Globals.opam_version in
+      let sources =
+        try
+          let sources = List.assoc "sources" file in
+          let hostname, port =  BatString.split sources ":" in
+          url hostname (try int_of_string port with _ -> Globals.default_port)
+        with _ ->
+          url Globals.default_hostname Globals.default_port in
+      let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
+      { version = Version version
+      ; sources
+      ; ocaml_version = Version ocaml_version }
 
-      let t = match Path.find_binary t f with
-      | Path.File (Raw_binary s)     -> aux s
+    let find f =
+      log "find %s" (Path.string_of_filename f);
+      match Path.find_binary f with
+      | Path.File (Raw_binary s)     -> parse s
       | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
-      | Path.Not_exists  -> failwith (Printf.sprintf "%s does not exist" (Path.string_of_filename f)) in
 
-      log "contents:\n%s" (to_string t);
-      t
-
-    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
+    let add f v =
+      log "add %s" (Path.string_of_filename f);
+      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
   end
 
   module type CUDF =
   sig
     include IO_FILE
 
-    (** destruct *)
-    val package : t -> Cudf.package
-    val description : Cudf.package -> string
+    (** Constructor *)
+    val create: Cudf.preamble option -> Cudf.package list -> Cudf.request option -> t
 
-    (** construct *)
-    val new_package : name_version -> string (* description *) -> Cudf.package
-    val cudf : internal_version (* package manager *) -> Cudf.package -> t
+    (** Getters *)
+    val packages: t -> Cudf.package list
   end
+
+  (* If next modules wants to refer to Cudf *)
+  module C = Cudf
 
   module Cudf : CUDF = 
   struct
-    type package = 
-        { preamble : Cudf.preamble option
-        ; pkg : Cudf.package list
-        ; request : Cudf.request option }
-        
     type t = 
-        { opam_version : internal_version
-        ; package : package }
+        { preamble : Cudf.preamble option
+        ; pkgs : Cudf.package list
+        ; request : Cudf.request option }
+
+    let parse str =
+      let preamble, pkgs, request =
+        Cudf_parser.parse (Cudf_parser.from_IO_in_channel (IO.input_string str)) in
+      { preamble; pkgs; request }
+
+    let to_string t = 
+      let oc = IO.output_string () in
+      (match t.preamble with
+      | Some preamble -> Cudf_printer.pp_io_preamble oc preamble
+      | None -> ());
+      IO.write oc '\n';
+      List.iter (Cudf_printer.pp_io_package oc) t.pkgs;
+      IO.write oc '\n';
+      (match t.request with
+      | Some request -> Cudf_printer.pp_io_request oc request
+      | None -> ());
+      IO.close_out oc
+
+     let create preamble pkgs request =
+       { preamble; pkgs; request }
+
+    let packages p = p.pkgs
+
+    let log fmt =
+      Globals.log "FILE.CONFIG" fmt
+
+    let find f =
+      log "find %s" (Path.string_of_filename f);
+      match Path.find_binary f with
+        | Path.File (Raw_binary s) -> 
+          (try parse s
+           with _ ->
+             failwith ("Error while parsing " ^ Path.string_of_filename f))
+        | _ -> raise Not_found
+
+    let add f v =
+      log "add %s" (Path.string_of_filename f);
+      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+  end
+
+  module type OPAM = sig
+    include IO_FILE
+
+    (** destruct *)
+    val opam_version: t -> internal_version
+    val version : t -> Namespace.version
+    val description : t -> string
+    val package: t -> C.package
+
+    (** construct *)
+    val create : name_version -> string (* description *) -> t
+  end
+
+  module Opam : OPAM = struct
+
+    type t = {
+      opam_version: internal_version;
+      version: Namespace.version;
+      description: string;
+      cudf: Cudf.t;
+    }
+
+    let opam_version t = t.opam_version
+    let version t = t.version
+    let description t = t.description
 
     let find_field key = function
-      | [x] -> (try Some (List.assoc key x.Cudf.pkg_extra) with Not_found -> None)
-      | _ -> None
+      | [x] -> (try Some (List.assoc key x.C.pkg_extra) with Not_found -> None)
+      | _   -> None
           
     let package t = 
-      match t.package.pkg with 
+      match Cudf.packages t with 
         | [ x ] -> x
-        | _ -> Cudf.default_package
-
-    let name p = match p.pkg with [x] -> x.Cudf.package | _ -> ""
-    let version p = match p.pkg with [x] -> x.Cudf.version | _ -> min_int
+        | _     -> failwith "package: Bad format"
 
     let s_description = "description"
-    let description p = 
+    let s_user_version = "user-version"
+    let s_opam_version = "opam-version"
+
+    let opam_version_pkg p = 
+      match find_field s_opam_version [ p ] with
+        | Some (`String s) -> Version s
+        | _ -> Version Globals.opam_version
+
+    let version_pkg p =
+      match find_field s_user_version [ p ] with
+        | Some (`String s) -> { Namespace.deb = s; cudf = p.C.version }
+        | _ -> failwith "Bad format"
+
+    let description_pkg p = 
       match find_field s_description [ p ] with
         | Some (`String s) -> s
         | _ -> ""
 
-    let new_package (Name name, version) description = 
-      { Cudf.default_package with 
-        Cudf.package = name ;
-        Cudf.version = version.cudf ; 
-        Cudf.pkg_extra = [ s_description, `String description ] }
+    let package p =
+      match Cudf.packages p.cudf with
+      | []    -> failwith "Empty opam file"
+      | [ p ] -> p
+      | _     -> failwith "Too many packages"
 
-    let empty_preamble = Some { Cudf.default_preamble with Cudf.property = [ s_description, `String None ] }
+    let default_preamble =
+      Some { C.default_preamble with C.property = [ s_description, `String None ] }
 
-    let cudf opam_version pkg = { opam_version ; package = { preamble = empty_preamble ; pkg = [ pkg ] ; request = None } }
-
-    let empty = 
+    let create (Name name, version) description = 
+      let pkg = {
+        C.default_package with 
+          C.package = name ;
+          version = version.Namespace.cudf ; 
+          pkg_extra = [
+            s_description , `String description;
+            s_user_version, `String version.deb;
+            s_opam_version, `String Globals.opam_version;
+          ] } in
+      let cudf = Cudf.create default_preamble [pkg] None in
       { opam_version = Version Globals.opam_version
-      ; package = { preamble = empty_preamble ; pkg = [] ; request = None } }
+      ; version
+      ; description
+      ; cudf }
 
-    let find t f =
-      match Path.find_binary t f with
+    let parse str =
+      let pkg = match Cudf.packages (Cudf.parse str) with
+      | [p] -> p
+      | _   -> failwith ("parse:" ^ str) in
+      let cudf =  Cudf.create default_preamble [pkg] None in
+      { opam_version = opam_version_pkg pkg
+      ; version = version_pkg pkg
+      ; description = description_pkg pkg
+      ; cudf }
+
+    (* XXX: This need to be handled in a better way:
+       * opam-version MUST appear on the first line,
+       * and the version should be the user-version *)
+    let to_string t =
+      Cudf.to_string t.cudf
+
+    let log fmt =
+      Globals.log "FILE.CONFIG" fmt
+
+    let find f =
+      log "find %s" (Path.string_of_filename f);
+      match Path.find_binary f with
         | Path.File (Raw_binary s) -> 
-          (match 
-              try
-                Some (Cudf_parser.parse (Cudf_parser.from_IO_in_channel (IO.input_string s)))
-              with _ -> None
-           with
-             | None -> empty
-             | Some (preamble, pkg, request) -> 
-               { opam_version = 
-                   (match find_field "opam_version" pkg with
-                      | Some (`String v) -> Config.version_of_string v
-                      | _ -> empty.opam_version)
-               ; package = { preamble ; pkg ; request } })
-        | _ -> empty
+          (try parse s
+           with _ -> failwith ("Error while parsing " ^ Path.string_of_filename f))
+        | _ -> raise Not_found
 
-    let to_string t = 
-      let oc = IO.output_string () in
-      let () = 
-        begin
-          (match t.package.preamble with
-            | Some preamble -> Cudf_printer.pp_io_preamble oc preamble
-            | None -> ());
-          IO.write oc '\n';
-          List.iter (Cudf_printer.pp_io_package oc) t.package.pkg;
-          IO.write oc '\n';
-          (match t.package.request with
-            | Some request -> Cudf_printer.pp_io_request oc request
-            | None -> ());
-        end in
-      IO.close_out oc
-
-    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
+    let add f v =
+      log "add %s" (Path.string_of_filename f);
+      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
   end
+
 
   module type INSTALLED =
   sig
@@ -194,10 +286,12 @@ struct
     type t = name_version list
     let empty = []
 
-    let find t f = 
-      match Path.find_binary t f with
-        | Path.File (Raw_binary s) -> 
-            BatList.map (fun (name, version) -> Name name, version_of_string name version) (parse_space s)
+    let parse s =
+      BatList.map (fun (name, version) -> Name name, version_of_string name version) (parse_space s)
+
+    let find f = 
+      match Path.find_binary f with
+        | Path.File (Raw_binary s) -> parse s
         | _ -> empty
 
     let to_string = 
@@ -208,7 +302,7 @@ struct
                (Namespace.string_user_of_name name) 
                (Namespace.string_user_of_version version))))
 
-    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
+    let add f v = Path.add f (Path.File (Binary (Raw_binary (to_string v))))
   end
 
   type basename_last = 
@@ -277,7 +371,7 @@ struct
             BatList.filter 
               (fun (B name) -> 
                 (try Some (snd (BatString.split name ".")) with _ -> None) = Some suff)
-              (match Path.find t f with Path.Directory l -> l | _ -> []))
+              (match Path.find f with Path.Directory l -> l | _ -> []))
 
     let filename_of_path_relative t f = function
       | Relative, l_b, suff -> filename_of_path t f l_b suff
@@ -304,33 +398,32 @@ struct
 
     let relative_path_of_string = b_of_string Relative
 
-    let find t f =
-      match Path.find_binary t f with
-        | Path.File (Raw_binary s) -> 
+    let parse s =
+      let l_lib_bin, l_misc = 
+        let l, f_while = 
+          BatString.nsplit s "\n",
+          fun s ->
+            match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
+            | Some ("", _) -> true
+            | _ -> false in
+        BatList.take_while f_while l, BatList.drop_while f_while l in
 
-          let l_lib_bin, l_misc = 
-            let l, f_while = 
-              BatString.nsplit s "\n",
-              fun s ->
-                match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
-                  | Some ("", _) -> true
-                  | _ -> false in
-            BatList.take_while f_while l, BatList.drop_while f_while l in
+      (match filter ":" l_lib_bin with 
+      |  ("lib", lib)
+        :: ("bin", bin) :: _ -> 
+          { lib = BatList.map relative_path_of_string (BatString.nsplit lib ",")
+          ; bin = relative_path_of_string bin 
+          ; misc = 
+              BatList.map
+                (fun (s_path, s_fname) -> 
+                  { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
+                (filter " " l_misc) }
+      | _ -> empty)
 
-          (match filter ":" l_lib_bin with 
-            |  ("lib", lib)
-            :: ("bin", bin) :: _ -> 
-              { lib = BatList.map relative_path_of_string (BatString.nsplit lib ",")
-              ; bin = relative_path_of_string bin 
-              ; misc = 
-                  BatList.map
-                    (fun (s_path, s_fname) -> 
-                      { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
-                    (filter " " l_misc) }
-            | _ -> empty)
-
+    let find f =
+      match Path.find_binary f with
+        | Path.File (Raw_binary s) -> parse s
         | _ -> empty
-
 
     let to_string t =
 
@@ -356,6 +449,7 @@ misc:
                                 path_print oc (misc.p_to);
                               end)) t.misc)
 
-    let add t f v = Path.add t f (Path.File (Binary (Raw_binary (to_string v))))
+    let add f v =
+      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
   end
 end
