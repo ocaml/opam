@@ -291,6 +291,9 @@ struct
   module type INSTALLED =
   sig
     include IO_FILE with type t = name_version list
+
+    (** Same as [add] but the map we operating on is retrieved after a [find_default]. *)
+    val modify_def : Path.filename -> (version N_map.t -> version N_map.t) -> unit
   end
 
   module Installed : INSTALLED =
@@ -319,6 +322,8 @@ struct
     let add f v = Path.add f (Path.File (Binary (Raw_binary (to_string v))))
 
     let find_default f = match find f with None -> empty | Some t -> t
+
+    let modify_def f f_map = add f (N_map.bindings (f_map (N_map.of_enum (BatList.enum (find_default f)))))
   end
 
   type basename_last = 

@@ -189,20 +189,20 @@ module Client : CLIENT = struct
       (File.To_install.misc to_install)
 
   let proceed_todelete t (n, v0) = 
-    let installed = Path.read File.Installed.find (Path.installed t.home) in
-    let map_installed = N_map.of_enum (BatList.enum installed) in
-    match N_map.Exceptionless.find n map_installed with
-      | Some v when v = v0 ->
-          iter_toinstall
-            (fun t file -> function
-              | Path.R_filename l -> 
-                List.iter (fun f -> Path.remove (Path.concat file (Path.basename f))) l
-              | _ -> failwith "to complete !")
-            t
-            (n, v);
-        File.Installed.add (Path.installed t.home) (N_map.bindings (N_map.remove n map_installed))
-
-      | _ -> ()
+    File.Installed.modify_def (Path.installed t.home) 
+      (fun map_installed -> 
+        match N_map.Exceptionless.find n map_installed with
+          | Some v when v = v0 ->
+            iter_toinstall
+              (fun t file -> function
+                | Path.R_filename l -> 
+                  List.iter (fun f -> Path.remove (Path.concat file (Path.basename f))) l
+                | _ -> failwith "to complete !")
+              t
+              (n, v);
+            N_map.remove n map_installed
+              
+          | _ -> map_installed)
 
   let proceed_torecompile t (name, v) =
     begin
@@ -228,7 +228,7 @@ module Client : CLIENT = struct
             let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
             Path.add_rec p_build tgz);
       proceed_torecompile t (name, v);
-      File.Installed.add (Path.installed t.home) ((name, v) :: File.Installed.find_default (Path.installed t.home));
+      File.Installed.modify_def (Path.installed t.home) (N_map.add name v);
     end
 
   module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
