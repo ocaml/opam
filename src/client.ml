@@ -155,26 +155,10 @@ module Client : CLIENT = struct
   let confirm msg = 
     Printf.printf "%s\nContinue ? [y/N] " msg;
     match read_line () with
-      | ("y"|"Y") -> true
+      | "y" | "Y" -> true
       | _         -> false
 
-  let iter_toinstall f_build f_add_rec t (name, v) = 
-    let tgz = 
-      let p_targz, p_build = 
-        Path.archives_targz t.home (Some (name, v)),
-        Path.build t.home (Some (name, v)) in
-      if Path.file_exists p_targz then
-        Path.R_filename
-          (BatList.map (Path.concat p_build)
-             (match Path.find p_build with
-             | Path.Directory l -> l
-             | _ -> []))
-      else
-        let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-        Path.add_rec p_build tgz;
-        tgz in
-    
-    f_build t tgz;
+  let iter_toinstall f_add_rec t (name, v) = 
 
     let to_install = Path.read File.To_install.find (Path.to_install t.home (name, v)) in
 
@@ -210,7 +194,6 @@ module Client : CLIENT = struct
     match N_map.Exceptionless.find n map_installed with
       | Some v when v = v0 ->
           iter_toinstall
-            (fun t _ -> t)
             (fun t file -> function
               | Path.R_filename l -> 
                 List.iter (fun f -> Path.remove (Path.concat file (Path.basename f))) l
@@ -222,21 +205,29 @@ module Client : CLIENT = struct
       | _ -> ()
 
   let proceed_torecompile t (name, v) =
-    iter_toinstall  
-      (fun t tgz ->
-        Path.add_rec (Path.build t.home (Some (name, v))) tgz;
-        Path.exec_buildsh t.home (name, v))
-      (fun t file contents ->
-        Path.add_rec file contents)
-      t
-      (name, v)
+    begin
+      Path.exec_buildsh t.home (name, v);
+      iter_toinstall  
+        (fun t file contents ->
+          Path.add_rec file contents)
+        t
+        (name, v);
+    end
 
-  let proceed_tochange t (nv_old, nv) =
+  let proceed_tochange t (nv_old, (name, v)) =
     begin match nv_old with 
-    | Was_installed n_v -> proceed_todelete t n_v
-    | Was_not_installed -> ()
+    | Was_installed nv_old -> proceed_todelete t nv_old
+    | Was_not_installed ->
+      let p_targz, p_build = 
+        Path.archives_targz t.home (Some (name, v)),
+        Path.build t.home (Some (name, v)) in
+      if Path.file_exists p_targz then
+        ()
+      else
+        let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
+        Path.add_rec p_build tgz
     end;
-    proceed_torecompile t nv
+    proceed_torecompile t (name, v)
 
   module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
 

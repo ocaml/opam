@@ -55,9 +55,13 @@ module Server = struct
     with Not_found -> failwith (string_of_nv n_v ^ " not found")
 
   let getArchive t n_v =
-    match Path.find (Path.archives_targz t.home (Some n_v)) with
-    | Path.File s -> Tar_gz s
-    | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
+    let p = Path.archives_targz t.home (Some n_v) in
+    match Path.is_directory p with
+      | Some dir -> Tar_gz (Filename dir)
+      | None -> 
+        match Path.find p with
+          | Path.File s -> Tar_gz s
+          | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
 
   let newArchive t n_v opam archive =
     let opam_file = Path.index_opam t.home (Some n_v) in

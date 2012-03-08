@@ -157,18 +157,18 @@ sig
 
   (** OPAM files considered for an arbitrary version and package *)
   val index_opam : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.opam *)
-  (* THOMAS: why option *)
+  (* [None] : $HOME_OPAM/index *)
 
   (** list of OPAM files *)
   val index_opam_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.opam ] -> [ NAME, VERSION ] *)
 
   (** source archives for all versions of all packages *)
   val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
-  (* THOMAS: why option *)
+  (* [None] : $HOME_OPAM/archives *)
 
   (** tempory folders used to decompress the corresponding archives *)
   val build : t -> name_version option -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION *)
-  (* THOMAS: why option *)
+  (* [None] : $HOME_OPAM_OVERSION/build *)
 
   (** compiled files in the extracted archive to install *)
   val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
@@ -221,6 +221,9 @@ sig
 
   (** see [Sys.file_exists] *)
   val file_exists : filename -> bool
+
+  (** [None] : not a directory *)
+  val is_directory : filename -> raw_filename option
 
   (** Returns the exact path to give to the OCaml compiler (ie. -I ...) *)
   val ocaml_options_of_library : t -> Namespace.name -> string ocaml_options 
@@ -331,6 +334,13 @@ module Path : PATH = struct
 
   let file_exists f = Sys.file_exists (s_of_filename f)
 
+  let is_directory f = 
+    let s = s_of_filename f in
+    if Sys.is_directory s then
+      Some (Raw_filename s)
+    else
+      None
+
   let index_opam_list t =
     let files =
       match find (index_opam t None) with
@@ -355,8 +365,13 @@ module Path : PATH = struct
     | Directory d -> failwith "to complete !"
     | File (Binary (Raw_binary cts)) -> 
         let fic = s_of_filename  f in
-        U.safe_unlink fic;
-        U.mkdir (fun fic -> BatFile.with_file_out fic (fun oc -> BatString.print oc cts)) fic
+        U.mkdir
+          (fun fic -> 
+            begin
+              U.safe_unlink fic; 
+              BatFile.with_file_out fic (fun oc -> BatString.print oc cts);
+            end)
+          fic
     | File (Filename (Raw_filename fic)) ->
         begin match (Unix.lstat fic).Unix.st_kind with
         | Unix.S_DIR -> 
@@ -374,15 +389,20 @@ module Path : PATH = struct
               | _ -> failwith "to complete !") in
             aux fic (s_of_filename f)
         | Unix.S_REG ->
-            U.safe_unlink fic;
-            U.copy fic (s_of_filename f)
+          U.mkdir 
+            (fun f_to -> 
+              begin
+                U.safe_unlink f_to;
+                U.link fic f_to;
+              end)
+            (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
         end
     | Not_found s -> ()
 
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
-    let _ = Sys.command "build.sh" in
+    let _ = Sys.command "./build.sh" in
     ()
 
   let basename s = B (Filename.basename (s_of_filename s))
@@ -406,24 +426,31 @@ module Path : PATH = struct
         (fun _ -> ())
         f in
 
+    let f_filename f f_basename = 
+      BatList.map
+        (fun fic -> 
+          f, 
+          f_basename fic,
+          match (lstat fic).Unix.st_kind with
+            | Unix.S_DIR -> R_directory (BatList.map (fun f -> 
+              let f = B f in
+              f, R_filename [fic /// f]) (files_of fic))
+            | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
+            | _ -> failwith "to complete !") in
+
     let rec aux f (* <- filename dir *) name (* name of the value that will be destructed*) = function
     | R_directory l ->
         let f = f /// name in
         List.iter (fun (b, cts) -> aux f b cts) l
     | R_file cts -> add (f /// name) (File cts)
     | R_filename l -> 
-        List.iter
-          (fun fic -> 
-            aux
-              f
-              (basename fic)
-              (match (lstat fic).Unix.st_kind with
-              | Unix.S_DIR -> R_directory (BatList.map (fun f -> 
-                let f = B f in
-                f, R_filename [fic /// f]) (files_of fic))
-              | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
-              | _ -> failwith "to complete !")) l in
-    aux (dirname f) (basename f)
+        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l) in
+
+    let f, name = dirname f, basename f in
+    function
+      | R_filename l -> 
+        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f (fun _ -> name) l)
+      | v -> aux f name v
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))
