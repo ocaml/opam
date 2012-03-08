@@ -18,11 +18,14 @@ make
 In order to run the test you should run:
 
 ```
-ocp-get-server --debug
+make tests-runserver
 ```
 
 This will run the server in debug mode. It will show the IP address it
-is listening to. You can open an other terminal and run:
+is listening to. If this address is different of `127.0.0.1` you
+should set the environment variable `LOCALHOST` accordingly.
+
+You can then open a new terminal window and run:
 
 ```
 make tests
