@@ -180,7 +180,7 @@ struct
     val opam_version: t -> internal_version
     val version : t -> Namespace.version
     val description : t -> string
-    val package: t -> C.package
+    val package: t -> bool (* true : installed *) -> C.package
 
     (** construct *)
     val create : name_version -> string (* description *) -> t
@@ -227,11 +227,11 @@ struct
         | Some (`String s) -> s
         | _ -> ""
 
-    let package p =
-      match Cudf.packages p.cudf with
-      | []    -> failwith "Empty opam file"
-      | [ p ] -> p
-      | _     -> failwith "Too many packages"
+    let package p installed =
+      { (match Cudf.packages p.cudf with
+        | []    -> failwith "Empty opam file"
+        | [ p ] -> p
+        | _     -> failwith "Too many packages") with C.installed }
 
     let default_preamble =
       Some { C.default_preamble with C.property = [ s_description, `String None ] }
@@ -294,6 +294,9 @@ struct
 
     (** Same as [add] but the map we operating on is retrieved after a [find_default]. *)
     val modify_def : Path.filename -> (version N_map.t -> version N_map.t) -> unit
+
+    (** see [find_default] *)
+    val find_map : Path.filename -> version N_map.t
   end
 
   module Installed : INSTALLED =
@@ -323,7 +326,9 @@ struct
 
     let find_default f = match find f with None -> empty | Some t -> t
 
-    let modify_def f f_map = add f (N_map.bindings (f_map (N_map.of_enum (BatList.enum (find_default f)))))
+    let find_map f = N_map.of_enum (BatList.enum (find_default f))
+
+    let modify_def f f_map = add f (N_map.bindings (f_map (find_map f)))
   end
 
   type basename_last = 

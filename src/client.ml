@@ -233,7 +233,7 @@ module Client : CLIENT = struct
 
   module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
 
-  let resolve t l_index request = 
+  let resolve t l_index map_installed request = 
 
     let rec aux = function
     | x :: xs -> 
@@ -257,7 +257,11 @@ module Client : CLIENT = struct
       List.fold_left
         (fun (l, map) n_v ->
           let opam = Path.read File.Opam.find (Path.index_opam t.home (Some n_v)) in
-          let pkg = File.Opam.package opam in
+          let pkg = 
+            File.Opam.package opam
+              (match N_map.Exceptionless.find (fst n_v) map_installed with
+                | Some v -> Namespace.version_compare v (snd n_v) = 0
+                | _ -> false) in
           pkg :: l, PkgMap.add pkg n_v map) ([], PkgMap.empty) l_index in
     let l =
       BatList.map (Solver.solution_map (fun p -> PkgMap.find p map_pkg)) (Solver.resolve l_pkg request) in
@@ -287,16 +291,19 @@ module Client : CLIENT = struct
           if confirm msg then
             update_t t
       | Some v -> 
-          let _ = resolve t l_index { Solver.wish_install = [ vpkg_of_nv (name, V_set.max_elt v) ]
-                                    ; wish_remove = [] 
-                                    ; wish_upgrade = [] } in
-          ()
+        resolve t
+          l_index
+          (File.Installed.find_map (Path.installed t.home))
+          { Solver.wish_install = [ vpkg_of_nv (name, V_set.max_elt v) ]
+          ; wish_remove = [] 
+          ; wish_upgrade = [] }
 
   let remove name =
     log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
-    let installed = Path.read File.Installed.find (Path.installed t.home) in
-    let r = match BatList.Exceptionless.assoc name installed with
+    let installed = File.Installed.find_map (Path.installed t.home) in
+
+    let r = match N_map.Exceptionless.find name installed with
     | None ->
         let msg =
           Printf.sprintf "Package \"%s\" not found. We will call the solver to see its output."
@@ -307,21 +314,25 @@ module Client : CLIENT = struct
           None
     | Some v -> Some (Some (`Eq, v.Namespace.cudf)) in
     match r with
-    | Some (o_v) -> 
-        let l_index = Path.index_opam_list t.home in
-        resolve t l_index { Solver.wish_install = []
-                          ; wish_remove = [ Namespace.string_of_name name, o_v ]
-                          ; wish_upgrade = [] }
+    | Some o_v -> 
+        resolve t 
+          (Path.index_opam_list t.home)
+          installed
+          { Solver.wish_install = []
+          ; wish_remove = [ Namespace.string_of_name name, o_v ]
+          ; wish_upgrade = [] }
     | None -> ()
 
   let upgrade () =
     log "upgrade";
     let t = load_state () in
-    let installed = Path.read File.Installed.find (Path.installed t.home) in
-    resolve t (Path.index_opam_list t.home) 
+    let installed = File.Installed.find_map (Path.installed t.home) in
+    resolve t
+      (Path.index_opam_list t.home)
+      installed
       { Solver.wish_install = []
       ; wish_remove = []
-      ; wish_upgrade = BatList.map vpkg_of_nv installed }
+      ; wish_upgrade = BatList.map vpkg_of_nv (N_map.bindings installed) }
     
   (* Upload reads NAME.opam to get the current package version.
      Then it looks for NAME-VERSION.tar.gz in the same directory.
