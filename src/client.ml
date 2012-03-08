@@ -215,19 +215,21 @@ module Client : CLIENT = struct
     end
 
   let proceed_tochange t (nv_old, (name, v)) =
-    begin match nv_old with 
-    | Was_installed nv_old -> proceed_todelete t nv_old
-    | Was_not_installed ->
-      let p_targz, p_build = 
-        Path.archives_targz t.home (Some (name, v)),
-        Path.build t.home (Some (name, v)) in
-      if Path.file_exists p_targz then
-        ()
-      else
-        let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-        Path.add_rec p_build tgz
-    end;
-    proceed_torecompile t (name, v)
+    begin 
+      (match nv_old with 
+        | Was_installed nv_old -> proceed_todelete t nv_old
+        | Was_not_installed ->
+          let p_targz, p_build = 
+            Path.archives_targz t.home (Some (name, v)),
+            Path.build t.home (Some (name, v)) in
+          if Path.file_exists p_targz then
+            ()
+          else
+            let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
+            Path.add_rec p_build tgz);
+      proceed_torecompile t (name, v);
+      File.Installed.add (Path.installed t.home) ((name, v) :: File.Installed.find_default (Path.installed t.home));
+    end
 
   module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
 

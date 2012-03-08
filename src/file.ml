@@ -18,6 +18,10 @@ struct
     (** Find a file. Return [None] if the file does not exists *)
     val find : Path.filename -> t option
 
+    (** Find a file. Return a default value [v0] if the file does not exists. 
+        In general, forall [v1], [compare v0 v1] < 0. *)
+    val find_default : Path.filename -> t
+
     (** Add a file *)
     val add : Path.filename -> t -> unit
   end
@@ -102,6 +106,8 @@ struct
     let add f v =
       log "add %s" (Path.string_of_filename f);
       Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+
+    let find_default f = match find f with None -> default | Some t -> t
   end
 
   module type CUDF =
@@ -163,6 +169,8 @@ struct
     let add f v =
       log "add %s" (Path.string_of_filename f);
       Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+
+    let find_default f = match find f with None -> { preamble = None ; pkgs = [] ; request = None } | Some t -> t
   end
 
   module type OPAM = sig
@@ -275,6 +283,8 @@ struct
     let add f v =
       log "add %s" (Path.string_of_filename f);
       Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+
+    let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
   end
 
 
@@ -299,13 +309,16 @@ struct
 
     let to_string = 
       BatIO.to_string
-        (BatList.print (fun oc (name, version) ->
-          BatString.print oc
-            (Printf.sprintf "%s %s" 
-               (Namespace.string_user_of_name name) 
-               (Namespace.string_user_of_version version))))
+        (BatList.print ~first:"" ~last:"" ~sep:"\n" 
+           (fun oc (name, version) ->
+             BatString.print oc
+               (Printf.sprintf "%s %s" 
+                  (Namespace.string_user_of_name name) 
+                  (Namespace.string_user_of_version version))))
 
     let add f v = Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+
+    let find_default f = match find f with None -> empty | Some t -> t
   end
 
   type basename_last = 
@@ -455,5 +468,7 @@ misc:
 
     let add f v =
       Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+
+    let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
   end
 end
