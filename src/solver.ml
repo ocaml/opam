@@ -220,8 +220,9 @@ module Solver = struct
             PG_bfs.fold
               (fun (set_recompile, l_act) pkg -> 
                 let add_succ_rem pkg set act =
-                  (try
-                     List.fold_left (fun set x -> PkgSet.add x set) (PkgSet.remove pkg set) (PG.succ graph_installed pkg) 
+                  (let set = PkgSet.remove pkg set in
+                   try
+                     List.fold_left (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg) 
                    with _ -> set), 
                   act :: l_act in
                 
