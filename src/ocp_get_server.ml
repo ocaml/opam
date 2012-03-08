@@ -22,11 +22,16 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
 
 let port  = ref Globals.default_port
 let set_port p = port := p
+let _ =
+  Globals.root_path := Globals.default_opam_server_path
 
 let args = Arg.align [
   "-p"       , Arg.Int set_port     , " Set up the listening port (default is 9999)";
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version     , " Display version information";
+
+  "--root"   , Arg.Set_string Globals.root_path,
+  (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
 ]
 
 let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
@@ -34,10 +39,10 @@ let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 let server fn =
   let host = (gethostbyname(gethostname ())).h_addr_list.(0) in 
   let addr = ADDR_INET (host, !port) in
-  let state = Server.init Globals.opam_server_path in
+  let state = Server.init !Globals.root_path in
   if !Globals.debug then
-    Printf.printf "Listening on port %d (%s) ...\n%!"
-      !port (string_of_inet_addr host);
+    Printf.printf "Root path is %s.\nListening on port %d (%s) ...\n%!"
+      !Globals.root_path !port (string_of_inet_addr host);
 
   establish_server (fn state) addr
 

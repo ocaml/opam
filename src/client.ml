@@ -46,11 +46,11 @@ module Client : CLIENT = struct
       { server : url
       ; home   : Path.t (* ~/.opam *) }
 
-  let home = Path.init Globals.opam_path
 
   (* Look into the content of ~/.opam/config to build the client state *)
   let load_state () =
-    let config = File.Config.find (Path.config home) in
+    let home = Path.init !Globals.root_path in
+    let config = Path.read File.Config.find (Path.config home) in
     { server = File.Config.sources config
     ;  home }
 
@@ -70,6 +70,7 @@ module Client : CLIENT = struct
 
   let init url =
     log "init %s" (string_of_url url);
+    let home = Path.init !Globals.root_path in
     let config =
       File.Config.create
         (Version Globals.opam_version)
@@ -90,27 +91,29 @@ module Client : CLIENT = struct
             N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
   let info package =
-    log "info %s" (match package with None -> "" | Some p -> Namespace.string_of_name p);
+    log "info %s" (match package with None -> "ALL" | Some p -> Namespace.string_of_name p);
     let t = load_state () in
     let s_not_installed = "--" in
     match package with
     | None -> 
         (* Get all the installed packages *)
-        let install_set = NV_set.of_enum (BatList.enum (File.Installed.find (Path.installed t.home))) in
+        let installed = Path.read File.Installed.find (Path.installed t.home) in
+        let install_set = NV_set.of_enum (BatList.enum installed) in
         let map, max_n, max_v = 
           List.fold_left
             (fun (map, max_n, max_v) n_v -> 
               let b = NV_set.mem n_v install_set in
-              NV_map.add n_v
-                (b, File.Opam.description (File.Opam.find (Path.index_opam t.home (Some n_v))))
-                map,
-              max max_n (String.length (Namespace.string_user_of_name (fst n_v))), 
-              if b then max max_v (String.length (Namespace.string_user_of_version (snd n_v))) else max_v)
+              let opam = Path.read File.Opam.find (Path.index_opam t.home (Some n_v)) in
+              let new_map = NV_map.add n_v (b, File.Opam.description opam) map in
+              let new_max_n = max max_n (String.length (Namespace.string_user_of_name (fst n_v))) in
+              let new_max_v =
+                if b then max max_v (String.length (Namespace.string_user_of_version (snd n_v))) else max_v in
+            new_map, new_max_n, new_max_v)
             (NV_map.empty, min_int, String.length s_not_installed)
             (Path.index_opam_list t.home) in
 
         NV_map.iter (fun n_v (b, description) -> 
-          Printf.printf "%s %s %s" 
+          Printf.printf "%s %s %s\n" 
             (indent_left (Namespace.string_user_of_name (fst n_v)) max_n)
             (indent_right (if b then Namespace.string_user_of_version (snd n_v) else s_not_installed) max_v)
             description) map;
@@ -118,11 +121,11 @@ module Client : CLIENT = struct
 
     | Some name -> 
         let find_from_name = find_from_name name in
-
+        let installed = Path.read File.Installed.find (Path.installed t.home) in
         let o_v = 
           BatOption.map
             V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
-            (find_from_name (File.Installed.find (Path.installed t.home))) in
+            (find_from_name installed) in
 
         let v_set =
           let v_set = 
@@ -144,8 +147,9 @@ module Client : CLIENT = struct
               ) v_set
           ; "description", "\n" ^ 
             match o_v with None -> ""
-            | Some v -> 
-                File.Opam.description (File.Opam.find (Path.index_opam t.home (Some (name, v))))
+            | Some v ->
+                let opam = Path.read File.Opam.find (Path.index_opam t.home (Some (name, v))) in
+                File.Opam.description opam
           ]
 
   let confirm msg = 
@@ -172,7 +176,7 @@ module Client : CLIENT = struct
     
     f_build t tgz;
 
-    let to_install = File.To_install.find (Path.to_install t.home (name, v)) in
+    let to_install = Path.read File.To_install.find (Path.to_install t.home (name, v)) in
 
     let filename_of_path_relative t path = 
       Path.R_filename (File.To_install.filename_of_path_relative t.home
@@ -201,7 +205,8 @@ module Client : CLIENT = struct
       (File.To_install.misc to_install)
 
   let proceed_todelete t (n, v0) = 
-    let map_installed = N_map.of_enum (BatList.enum (File.Installed.find (Path.installed t.home))) in
+    let installed = Path.read File.Installed.find (Path.installed t.home) in
+    let map_installed = N_map.of_enum (BatList.enum installed) in
     match N_map.Exceptionless.find n map_installed with
       | Some v when v = v0 ->
           iter_toinstall
@@ -257,8 +262,9 @@ module Client : CLIENT = struct
     
     let l_pkg, map_pkg = 
       List.fold_left
-        (fun (l, map) n_v -> 
-          let pkg = File.Opam.package (File.Opam.find (Path.index_opam t.home (Some n_v))) in
+        (fun (l, map) n_v ->
+          let opam = Path.read File.Opam.find (Path.index_opam t.home (Some n_v)) in
+          let pkg = File.Opam.package opam in
           pkg :: l, PkgMap.add pkg n_v map) ([], PkgMap.empty) l_index in
     let l =
       BatList.map (Solver.solution_map (fun p -> PkgMap.find p map_pkg)) (Solver.resolve l_pkg request) in
@@ -296,7 +302,8 @@ module Client : CLIENT = struct
   let remove name =
     log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
-    let r = match BatList.Exceptionless.assoc name (File.Installed.find (Path.installed t.home)) with
+    let installed = Path.read File.Installed.find (Path.installed t.home) in
+    let r = match BatList.Exceptionless.assoc name installed with
     | None ->
         let msg =
           Printf.sprintf "Package \"%s\" not found. We will call the solver to see its output."
@@ -317,10 +324,11 @@ module Client : CLIENT = struct
   let upgrade () =
     log "upgrade";
     let t = load_state () in
-      resolve t (Path.index_opam_list t.home) 
-        { Solver.wish_install = []
-        ; wish_remove = []
-        ; wish_upgrade = BatList.map vpkg_of_nv (File.Installed.find (Path.installed t.home)) }
+    let installed = Path.read File.Installed.find (Path.installed t.home) in
+    resolve t (Path.index_opam_list t.home) 
+      { Solver.wish_install = []
+      ; wish_remove = []
+      ; wish_upgrade = BatList.map vpkg_of_nv installed }
     
   (* Upload reads NAME.opam to get the current package version.
      Then it looks for NAME-VERSION.tar.gz in the same directory.
@@ -347,7 +355,7 @@ module Client : CLIENT = struct
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
     let nv = Namespace.Name name, version in
-    let local_server = Server.init Globals.opam_path in
+    let local_server = Server.init !Globals.root_path in
     RemoteServer.newArchive t.server nv opam archive;
     Server.newArchive local_server nv opam archive
 

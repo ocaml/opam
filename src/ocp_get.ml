@@ -23,9 +23,14 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
 
 let port  = ref Globals.default_port
 let ano_args = ref []
+let () = Globals.root_path := Globals.default_opam_path
+
 let args = Arg.align [
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
-  "--version", Arg.Unit version,     " Display version information";
+  "--version", Arg.Unit version,      " Display version information";
+
+  "--root"   , Arg.Set_string Globals.root_path,
+  (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
 ]
 
 let _ = Arg.parse args (fun s -> ano_args := s :: !ano_args) usage
@@ -39,6 +44,8 @@ let filename_of_string s =
     (BatString.nsplit (BatString.strip ~chars:"/" s) "/")
 *)
 let () =
+  Globals.log "CLIENT" "Root path is %s" !Globals.root_path;
+
   let error msg =
     Printf.eprintf "%s\n" msg;
     nice_exit () in

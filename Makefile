@@ -70,3 +70,6 @@ distclean:
 .PHONY: tests
 tests:
 	make -C tests
+
+tests-runserver:
+	make -C tests runserver

@@ -34,14 +34,16 @@ module Server = struct
   (* Return all the .opam files *)
   let read_index home =
     List.fold_left
-      (fun map nv -> NV_map.add nv (File.Opam.find (Path.index_opam home (Some nv))) map)
-      NV_map.empty 
+      (fun map nv ->
+        let file = Path.read File.Opam.find (Path.index_opam home (Some nv)) in
+        NV_map.add nv file map)
+      NV_map.empty
       (Path.index_opam_list home)
 
   let string_of_nv (n, v) = Namespace.string_of_nv n v
 
-  let init path = 
-    { home = Path.init path
+  let init home = 
+    { home = Path.init home
     ; opam_version = Version Globals.opam_version }
 
   let getList t =

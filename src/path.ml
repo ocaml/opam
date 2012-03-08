@@ -125,6 +125,7 @@ sig
   type 'a contents = 
     | Directory of basename list
     | File of 'a
+    | Not_found of string
 
   type 'a contents_rec = 
     | R_directory of (basename * 'a contents_rec) list
@@ -226,6 +227,10 @@ sig
   (* $HOME_OPAM/lib/NAME *)
 
   val string_of_filename: filename -> string
+
+  val file_not_found: filename -> unit
+
+  val read: (filename -> 'a option) -> filename -> 'a
 end
 
 module Path : PATH = struct
@@ -241,6 +246,7 @@ module Path : PATH = struct
   type 'a contents = 
     | Directory of basename list
     | File of 'a
+    | Not_found of string
 
   type 'a contents_rec = 
     | R_directory of (basename * 'a contents_rec) list
@@ -263,12 +269,10 @@ module Path : PATH = struct
 
     Normalized (getchdir (getchdir s))
 
-  let home = Unix.getenv "HOME"
   let (//) = sprintf "%s/%s"
   let concat f (B s) = filename_map (fun filename -> filename // s) f
   let (///) = concat
-  let init s = 
-    let home = home // s in
+  let init home = 
     { home ; home_ocamlversion = home // Globals.ocaml_version }
 
   let root = Raw "/"
@@ -292,19 +296,20 @@ module Path : PATH = struct
 
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
 
-  let contents f_dir f_fic f =
+  let contents f_dir f_fic f_notfound f =
     let fic = s_of_filename f in
+    Printf.eprintf "XXX %s: %b\n%!"
+      (Filename.concat (Unix.getcwd ()) fic) (Sys.file_exists (Filename.concat (Unix.getcwd()) fic));
     if Sys.file_exists fic then
       (if Sys.is_directory fic then f_dir else f_fic) fic
-    else begin
-      log "%s does not exist" fic;
-      raise Not_found
-    end
+    else
+      f_notfound fic
 
   let find_ f_fic = 
     contents
       (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
       (fun fic -> File (f_fic fic))
+      (fun fic -> Not_found fic)
 
   let find = find_ (fun fic -> Filename (Raw_filename fic))
 
@@ -328,10 +333,10 @@ module Path : PATH = struct
 
   let index_opam_list t =
     let files =
-      try match find (index_opam t None) with
+      match find (index_opam t None) with
       | Directory l -> l
-      | File _      -> [] (* XXX: ? *) 
-      with Not_found -> [] in
+      | File _
+      | Not_found _ -> [] in
     List.map (nv_of_extension Namespace.default_version) files
 
   let remove f = 
@@ -373,6 +378,7 @@ module Path : PATH = struct
             U.copy fic (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
         end
+    | Not_found s -> ()
 
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
@@ -397,6 +403,7 @@ module Path : PATH = struct
       contents
         (fun _ -> ())
         (fun _ -> failwith "to complete !") 
+        (fun _ -> ())
         f in
 
     let rec aux f (* <- filename dir *) name (* name of the value that will be destructed*) = function
@@ -423,4 +430,10 @@ module Path : PATH = struct
 
   let string_of_filename = s_of_filename
 
+  let file_not_found f =
+    Globals.error_and_exit "%s not found" (string_of_filename f)
+
+  let read f n = match f n with
+  | None   -> file_not_found n
+  | Some a -> a
 end

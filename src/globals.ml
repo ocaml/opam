@@ -8,8 +8,11 @@ let default_port = 9999
 let ocaml_version = Sys.ocaml_version
 let opam_version = "1"
 
-let opam_server_path = ".opam-server"
-let opam_path = ".opam"
+let home = Unix.getenv "HOME"
+let default_opam_server_path = Filename.concat home ".opam-server"
+let default_opam_path = Filename.concat home ".opam"
+
+let root_path = ref default_opam_path
 
 let log section fmt =
   Printf.kprintf (fun str ->
@@ -27,3 +30,6 @@ let error_and_exit fmt =
     error "%s" str;
     exit 1
   ) fmt
+
+
+

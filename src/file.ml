@@ -15,8 +15,8 @@ struct
     (** Return the content of a file as a string *)
     val to_string: t -> string
 
-    (** Find a file. Raise [Not_found] is the file does not exists *)
-    val find : Path.filename -> t
+    (** Find a file. Return [None] if the file does not exists *)
+    val find : Path.filename -> t option
 
     (** Add a file *)
     val add : Path.filename -> t -> unit
@@ -95,7 +95,8 @@ struct
     let find f =
       log "find %s" (Path.string_of_filename f);
       match Path.find_binary f with
-      | Path.File (Raw_binary s)     -> parse s
+      | Path.File (Raw_binary s)     -> Some (parse s)
+      | Path.Not_found _             -> None
       | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
 
     let add f v =
@@ -153,11 +154,11 @@ struct
     let find f =
       log "find %s" (Path.string_of_filename f);
       match Path.find_binary f with
-        | Path.File (Raw_binary s) -> 
-          (try parse s
-           with _ ->
-             failwith ("Error while parsing " ^ Path.string_of_filename f))
-        | _ -> raise Not_found
+      | Path.File (Raw_binary s) -> 
+          (try Some (parse s)
+           with _ -> failwith ("Error while parsing " ^ Path.string_of_filename f))
+      | Path.Not_found _ -> None
+      | _ -> assert false
 
     let add f v =
       log "add %s" (Path.string_of_filename f);
@@ -266,8 +267,9 @@ struct
       log "find %s" (Path.string_of_filename f);
       match Path.find_binary f with
         | Path.File (Raw_binary s) -> 
-          (try parse s
+          (try Some (parse s)
            with _ -> failwith ("Error while parsing " ^ Path.string_of_filename f))
+        | Path.Not_found _ -> None
         | _ -> raise Not_found
 
     let add f v =
@@ -291,8 +293,9 @@ struct
 
     let find f = 
       match Path.find_binary f with
-        | Path.File (Raw_binary s) -> parse s
-        | _ -> empty
+        | Path.File (Raw_binary s) -> Some (parse s)
+        | Path.Not_found _         -> Some empty
+        | _ -> assert false
 
     let to_string = 
       BatIO.to_string
@@ -422,8 +425,9 @@ struct
 
     let find f =
       match Path.find_binary f with
-        | Path.File (Raw_binary s) -> parse s
-        | _ -> empty
+        | Path.File (Raw_binary s) -> Some (parse s)
+        | Path.Not_found _         -> Some empty
+        | _ -> assert false
 
     let to_string t =
 

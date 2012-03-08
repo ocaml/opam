@@ -28,6 +28,3 @@ is listening to. You can open an other terminal and run:
 make tests
 ```
 
-WARNING: the tests will remove everything in `~/.opam` and
-`~/.opam-server`.
-
