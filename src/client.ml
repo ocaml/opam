@@ -98,7 +98,7 @@ module Client : CLIENT = struct
     | None -> 
         (* Get all the installed packages *)
         let installed = Path.read File.Installed.find (Path.installed t.home) in
-        let install_set = NV_set.of_enum (BatList.enum installed) in
+        let install_set = NV_set.of_list installed in
         let map, max_n, max_v = 
           List.fold_left
             (fun (map, max_n, max_v) n_v -> 

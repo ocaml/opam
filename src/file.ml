@@ -122,151 +122,78 @@ struct
   end
 
   (* If next modules wants to refer to Cudf *)
-  module C = Cudf
-
-  module Cudf : CUDF = 
+  module C = 
   struct
-    type t = 
-        { preamble : Cudf.preamble option
-        ; pkgs : Cudf.package list
-        ; request : Cudf.request option }
+    include Cudf
 
-    let parse str =
-      let preamble, pkgs, request =
-        Cudf_parser.parse (Cudf_parser.from_IO_in_channel (IO.input_string str)) in
-      { preamble; pkgs; request }
+    let find_field x key = 
+      try Some (List.assoc key x.Cudf.pkg_extra) with Not_found -> None
 
-    let to_string t = 
-      let oc = IO.output_string () in
-      (match t.preamble with
-      | Some preamble -> Cudf_printer.pp_io_preamble oc preamble
-      | None -> ());
-      IO.write oc '\n';
-      List.iter (Cudf_printer.pp_io_package oc) t.pkgs;
-      IO.write oc '\n';
-      (match t.request with
-      | Some request -> Cudf_printer.pp_io_request oc request
-      | None -> ());
-      IO.close_out oc
-
-     let create preamble pkgs request =
-       { preamble; pkgs; request }
-
-    let packages p = p.pkgs
-
-    let log fmt =
-      Globals.log "FILE.CONFIG" fmt
-
-    let find f =
-      log "find %s" (Path.string_of_filename f);
-      match Path.find_binary f with
-      | Path.File (Raw_binary s) -> 
-          (try Some (parse s)
-           with _ -> failwith ("Error while parsing " ^ Path.string_of_filename f))
-      | Path.Not_found _ -> None
-      | _ -> assert false
-
-    let add f v =
-      log "add %s" (Path.string_of_filename f);
-      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
-
-    let find_default f = match find f with None -> { preamble = None ; pkgs = [] ; request = None } | Some t -> t
+    let description p s_description = 
+      match find_field p s_description with
+        | Some (`String s) -> s
+        | _ -> ""
   end
 
   module type OPAM = sig
     include IO_FILE
 
     (** destruct *)
-    val opam_version: t -> internal_version
+    val opam_version : t -> internal_version
     val version : t -> Namespace.version
+    val package : t -> bool (* true : installed *) -> C.package
     val description : t -> string
-    val package: t -> bool (* true : installed *) -> C.package
 
     (** construct *)
-    val create : name_version -> string (* description *) -> t
   end
 
   module Opam : OPAM = struct
 
+    open BatMap
+
     type t = {
-      opam_version: internal_version;
-      version: Namespace.version;
-      description: string;
-      cudf: Cudf.t;
+      opam_version : internal_version ;
+      name : string ;
+      version : Namespace.version ;
+      map_stanza : string StringMap.t ;
     }
 
     let opam_version t = t.opam_version
     let version t = t.version
-    let description t = t.description
-
-    let find_field key = function
-      | [x] -> (try Some (List.assoc key x.C.pkg_extra) with Not_found -> None)
-      | _   -> None
           
-    let package t = 
-      match Cudf.packages t with 
-        | [ x ] -> x
-        | _     -> failwith "package: Bad format"
-
     let s_description = "description"
     let s_user_version = "user-version"
     let s_opam_version = "opam-version"
+    let s_package = "package"
 
-    let opam_version_pkg p = 
-      match find_field s_opam_version [ p ] with
-        | Some (`String s) -> Version s
-        | _ -> Version Globals.opam_version
+    let description t = 
+      match StringMap.Exceptionless.find s_description t.map_stanza with None -> "" | Some s -> s
+      
+    let default_package t =
+      { C.default_package with 
+        C.package = t.name ;
+        C.version = t.version.cudf ;
+        C.pkg_extra = [ s_description, `String (description t) ] }
 
-    let version_pkg p =
-      match find_field s_user_version [ p ] with
-        | Some (`String s) -> { Namespace.deb = s; cudf = p.C.version }
-        | _ -> failwith "Bad format"
-
-    let description_pkg p = 
-      match find_field s_description [ p ] with
-        | Some (`String s) -> s
-        | _ -> ""
-
-    let package p installed =
-      { (match Cudf.packages p.cudf with
-        | []    -> failwith "Empty opam file"
-        | [ p ] -> p
-        | _     -> failwith "Too many packages") with C.installed }
-
-    let default_preamble =
-      Some { C.default_preamble with C.property = [ s_description, `String None ] }
-
-    let create (Name name, version) description = 
-      let pkg = {
-        C.default_package with 
-          C.package = name ;
-          version = version.Namespace.cudf ; 
-          pkg_extra = [
-            s_description , `String description;
-            s_user_version, `String version.deb;
-            s_opam_version, `String Globals.opam_version;
-          ] } in
-      let cudf = Cudf.create default_preamble [pkg] None in
-      { opam_version = Version Globals.opam_version
-      ; version
-      ; description
-      ; cudf }
+    let package t installed =
+      { (default_package t) with C.installed }
 
     let parse str =
-      let pkg = match Cudf.packages (Cudf.parse str) with
-      | [p] -> p
-      | _   -> failwith ("parse:" ^ str) in
-      let cudf =  Cudf.create default_preamble [pkg] None in
-      { opam_version = opam_version_pkg pkg
-      ; version = version_pkg pkg
-      ; description = description_pkg pkg
-      ; cudf }
+      let map_stanza = StringMap.of_list (snd (Cudf_parser.parse_stanza (Cudf_parser.from_IO_in_channel (IO.input_string str)))) in
+      let name = match StringMap.Exceptionless.find s_package map_stanza with None -> "" | Some name -> name in
+      { opam_version = Version (match StringMap.Exceptionless.find s_opam_version map_stanza with None -> Globals.version | Some v -> v)
+      ; name
+      ; version = 
+          Namespace.version_of_string
+            name
+            (match StringMap.Exceptionless.find s_package map_stanza with
+              | None -> Namespace.default_version
+              | Some v -> v)
+          
+      ; map_stanza }
 
-    (* XXX: This need to be handled in a better way:
-       * opam-version MUST appear on the first line,
-       * and the version should be the user-version *)
     let to_string t =
-      Cudf.to_string t.cudf
+      BatIO.to_string (StringMap.print ~first:"" ~last:"" ~sep:"\n" (fun oc k -> BatString.print oc (k ^ ":")) BatString.print) t.map_stanza
 
     let log fmt =
       Globals.log "FILE.CONFIG" fmt
@@ -326,7 +253,7 @@ struct
 
     let find_default f = match find f with None -> empty | Some t -> t
 
-    let find_map f = N_map.of_enum (BatList.enum (find_default f))
+    let find_map f = N_map.of_list (find_default f)
 
     let modify_def f f_map = add f (N_map.bindings (f_map (find_map f)))
   end

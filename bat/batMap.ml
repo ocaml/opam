@@ -22,4 +22,8 @@ struct
   let of_enum l = List.fold_left (fun map (k, v) -> add k v map) empty l
 
   let keys map = fold (fun k _ l -> k :: l) map []
+
+  let of_list l = of_enum (BatList.enum l)
 end
+
+module StringMap = Make (struct type t = string let compare = compare end)

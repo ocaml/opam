@@ -211,10 +211,10 @@ module Solver = struct
                 | _ -> None) l) in
 
           let map_add = 
-            PkgMap.of_enum (BatList.enum (BatList.filter_map (function 
+            PkgMap.of_list (BatList.filter_map (function 
               | To_change (_, pkg) as act -> cons pkg act
               | To_delete _ -> None
-              | To_recompile _ -> assert false) l)) in
+              | To_recompile _ -> assert false) l) in
 
           let _, l_act = 
             PG_bfs.fold
