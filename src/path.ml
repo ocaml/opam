@@ -279,7 +279,10 @@ module Path : PATH = struct
     { home ; home_ocamlversion = home // Globals.ocaml_version }
 
   let root = Raw "/"
-  let package _ s = Raw (Printf.sprintf "%s" s)
+  let package _ s =
+    (* REMARK this should be normalized *)
+    Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (BatString.strip ~chars:"/" s))
+
   let lib t (Namespace.Name n) = Raw (t.home_ocamlversion // "lib" // n)
   let bin t = Raw (t.home_ocamlversion // "bin")
 
