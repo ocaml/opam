@@ -40,3 +40,16 @@ let strip ?(chars="\t\r\n") s =
   of_list (List.rev (del_first (List.rev (del_first (to_list s)))))
 
 let trim = strip ~chars:" \010\013\009\026\012"
+
+(** Suppress the extension [tgz] in the given [s] string.
+    [None] is returned in case the [s] does not end with [tgz]. *)
+let right_chop s tgz = 
+  let l_s, l_tgz = String.length s, String.length tgz in
+  if l_s < l_tgz then
+    None
+  else 
+    let dim = l_s - l_tgz in
+    if String.sub s dim l_tgz = tgz then
+      Some (String.sub s 0 dim)
+    else
+      None

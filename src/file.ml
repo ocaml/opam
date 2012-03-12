@@ -141,7 +141,7 @@ struct
     (** destruct *)
     val opam_version : t -> internal_version
     val version : t -> Namespace.version
-    val package : t -> bool (* true : installed *) -> C.package
+    val package : t -> bool (* true : installed *) -> Debian.Packages.package
     val description : t -> string
 
     (** construct *)
@@ -149,11 +149,12 @@ struct
 
   module Opam : OPAM = struct
 
+    module D = Debian.Packages
+
     open BatMap
 
     type t = {
       opam_version : internal_version ;
-      name : string ;
       version : Namespace.version ;
       map_stanza : string StringMap.t ;
     }
@@ -162,34 +163,28 @@ struct
     let version t = t.version
           
     let s_description = "description"
-    let s_user_version = "user-version"
+    let s_user_version = "version"
     let s_opam_version = "opam-version"
     let s_package = "package"
+    let s_installed = "installed"
 
     let description t = 
       match StringMap.Exceptionless.find s_description t.map_stanza with None -> "" | Some s -> s
       
     let default_package t =
-      { C.default_package with 
-        C.package = t.name ;
-        C.version = t.version.cudf ;
-        C.pkg_extra = [ s_description, `String (description t) ] }
+      { D.default_package with 
+        D.name = StringMap.find s_package t.map_stanza ;
+        D.version = t.version.deb ;
+        D.extras = [ s_description, description t ] }
 
     let package t installed =
-      { (default_package t) with C.installed }
+      let p = default_package t in
+      { p with D.extras = (s_installed, string_of_bool installed) :: p.D.extras }
 
     let parse str =
-      let map_stanza = StringMap.of_list (snd (Cudf_parser.parse_stanza (Cudf_parser.from_IO_in_channel (IO.input_string str)))) in
-      let name = match StringMap.Exceptionless.find s_package map_stanza with None -> "" | Some name -> name in
+      let map_stanza = StringMap.of_list (parse_colon str) in
       { opam_version = Version (match StringMap.Exceptionless.find s_opam_version map_stanza with None -> Globals.version | Some v -> v)
-      ; name
-      ; version = 
-          Namespace.version_of_string
-            name
-            (match StringMap.Exceptionless.find s_package map_stanza with
-              | None -> Namespace.default_version
-              | Some v -> v)
-          
+      ; version = Namespace.version_of_string (StringMap.find s_user_version map_stanza)
       ; map_stanza }
 
     let to_string t =
@@ -232,7 +227,7 @@ struct
     let empty = []
 
     let parse s =
-      BatList.map (fun (name, version) -> Name name, version_of_string name version) (parse_space s)
+      BatList.map (fun (name, version) -> Name name, version_of_string version) (parse_space s)
 
     let find f = 
       match Path.find_binary f with

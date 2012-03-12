@@ -231,8 +231,6 @@ module Client : CLIENT = struct
       File.Installed.modify_def (Path.installed t.home) (N_map.add name v);
     end
 
-  module PkgMap = BatMap.Make (struct type t = Cudf.package let compare = compare end)
-
   let resolve t l_index map_installed request = 
 
     let rec aux = function
@@ -243,9 +241,7 @@ module Client : CLIENT = struct
             (if x = [] then
                 "Solution found : The current state of the repository can be kept to satisfy the constraints given."
              else
-                BatIO.to_string
-                  (Solver.solution_print
-                     (fun oc (_, v) -> BatString.print oc (Namespace.string_user_of_version v))) x) in
+                BatIO.to_string (Solver.solution_print Namespace.user_print Namespace.user_print) x) in
         if confirm msg then
           Some x
         else
@@ -253,20 +249,18 @@ module Client : CLIENT = struct
             
     | [] -> None in
     
-    let l_pkg, map_pkg = 
+    let l_pkg = 
       List.fold_left
-        (fun (l, map) n_v ->
+        (fun l n_v ->
           let opam = Path.read File.Opam.find (Path.index_opam t.home (Some n_v)) in
           let pkg = 
             File.Opam.package opam
               (match N_map.Exceptionless.find (fst n_v) map_installed with
-                | Some v -> Namespace.version_compare v (snd n_v) = 0
+                | Some v -> v = snd n_v
                 | _ -> false) in
-          pkg :: l, PkgMap.add pkg n_v map) ([], PkgMap.empty) l_index in
-    let l =
-      BatList.map (Solver.solution_map (fun p -> PkgMap.find p map_pkg)) (Solver.resolve l_pkg request) in
+          pkg :: l) [] l_index in
 
-    match aux l with
+    match aux (Solver.resolve l_pkg request) with
     | Some sol -> 
         List.iter (fun(Solver.P l) -> 
           List.iter (function
@@ -277,7 +271,7 @@ module Client : CLIENT = struct
         ) sol
     | None -> ()
 
-  let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some (`Eq, v.Namespace.cudf)
+  let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some ("=", v.Namespace.deb)
 
   let install name = 
     log "install %s" (Namespace.string_of_name name);
@@ -312,7 +306,7 @@ module Client : CLIENT = struct
           Some None
         else
           None
-    | Some v -> Some (Some (`Eq, v.Namespace.cudf)) in
+    | Some v -> Some (Some ("=", v.Namespace.deb)) in
     match r with
     | Some o_v -> 
         resolve t 

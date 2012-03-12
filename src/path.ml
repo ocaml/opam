@@ -304,8 +304,7 @@ module Path : PATH = struct
 
   let contents f_dir f_fic f_notfound f =
     let fic = s_of_filename f in
-    Printf.eprintf "XXX %s: %b\n%!"
-      (Filename.concat (Unix.getcwd ()) fic) (Sys.file_exists (Filename.concat (Unix.getcwd()) fic));
+    Printf.eprintf "XXX %s: %b\n%!" fic (Sys.file_exists fic);
     if Sys.file_exists fic then
       (if Sys.is_directory fic then f_dir else f_fic) fic
     else
@@ -325,15 +324,18 @@ module Path : PATH = struct
 
   let nv_of_extension version (B s) = 
     let s = 
-     let rec aux s =
-       match try Some (Filename.chop_extension s) with _ -> None with 
-       | Some s -> aux s
-       | _ -> s in
-     aux s in
+      match BatString.right_chop s ".opam" with
+        | Some s -> s
+        | _ ->
+          let rec aux s =
+            match try Some (Filename.chop_extension s) with _ -> None with 
+              | Some s -> aux s
+              | _ -> s in
+          aux s in
 
     match try Some (Namespace.nv_of_string s) with _ -> None with
     | Some nv -> nv
-    | None -> Namespace.Name s, Namespace.version_of_string s version
+    | None -> Namespace.Name s, Namespace.version_of_string version
 
   let file_exists f = Sys.file_exists (s_of_filename f)
 

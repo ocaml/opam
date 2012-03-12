@@ -22,21 +22,22 @@ sig
 
   type 'a parallel = P of 'a list (* order irrelevant : elements are considered in parallel *)
 
-  type 'a solution = 
-      ( 'a (* old *) installed_status * 'a (* new *)
-      , 'a (* old *) )
+  type ('a (* old package *), 'b (* new package *)) solution = 
+      ( 'a installed_status * 'b
+      , 'a )
         action parallel list
       (** Sequence describing the action to perform.
           Order natural : first element to execute is the first element of the list. *)
 
-  val solution_print : ('a BatIO.output -> 'b -> unit) -> 'a BatIO.output -> 'b solution -> unit
-  val solution_map : ('a -> 'b) -> 'a solution -> 'b solution
+  val solution_print : ('a BatIO.output -> 'b -> unit) -> ('a BatIO.output -> 'c -> unit) -> 'a BatIO.output -> ('b, 'c) solution -> unit
+  val solution_map : ('a -> 'b) -> ('c -> 'd) -> ('a, 'c) solution -> ('b, 'd) solution
+  val request_map : ('a -> 'b) -> 'a request -> 'b request
 
-  val resolve : Cudf.package list -> Cudf_types.vpkg request -> Cudf.package solution list
+  val resolve : Debian.Packages.package list -> Debian.Format822.vpkg request -> (name_version, name_version) solution list
     (** Given a description of packages, it returns a list of solution preserving the consistency of the initial description. *)
 end
 
-module Solver = struct
+module Solver : SOLVER = struct
 
   type 'a request =
       { wish_install : 'a list
@@ -50,20 +51,20 @@ module Solver = struct
 
   type 'a parallel = P of 'a list
 
-  type 'a solution = 
-      ( 'a (* old *) installed_status * 'a (* new *)
-      , 'a (* old *) )
+  type ('a, 'b) solution = 
+      ( 'a installed_status * 'b
+      , 'a )
         action parallel list
 
-  let solution_map f = 
+  let solution_map f1 f2 = 
     BatList.map (function P l -> P (BatList.map (function
       | To_change (o_p, p) -> To_change ((match o_p with
-          |  Was_installed p -> Was_installed (f p)
-          | Was_not_installed -> Was_not_installed), f p)
-      | To_delete p -> To_delete (f p)
-      | To_recompile p -> To_recompile (f p)) l))
+          |  Was_installed p -> Was_installed (f1 p)
+          | Was_not_installed -> Was_not_installed), f2 p)
+      | To_delete p -> To_delete (f1 p)
+      | To_recompile p -> To_recompile (f1 p)) l))
 
-  let solution_print f = 
+  let solution_print f1 f2 = 
     BatList.print ~first:"" ~last:"" ~sep:", " 
       (fun oc (P l) -> 
         BatList.print ~first:"" ~last:"" ~sep:", " 
@@ -71,23 +72,32 @@ module Solver = struct
             let f_act s l_p = 
               begin
                 BatString.print oc (Printf.sprintf "%s : " s);
-                BatList.print f oc l_p;
+                BatList.print f1 oc l_p;
               end in
             match act with
               | To_change (o_v_old, p_new) -> 
-                f_act "change"
-                  (match o_v_old with
-                    | Was_not_installed -> [ p_new ]
-                    | Was_installed p_old -> [ p_old ; p_new ])
+                begin
+                  f_act "change"
+                    (match o_v_old with
+                      | Was_not_installed -> []
+                      | Was_installed p_old -> [ p_old ]);
+                  f2 oc p_new;
+                end
               | To_recompile _ -> ()
               | To_delete v -> f_act "remove" [v]) oc l)
 
+  let request_map f r = 
+    let f = BatList.map f in
+    { wish_install = f r.wish_install
+    ; wish_remove = f r.wish_remove
+    ; wish_upgrade = f r.wish_upgrade }
+
   module type CUDFDIFF = 
   sig
-    val resolve_diff : Cudf.package list -> Cudf_types.vpkg request ->
+    val resolve_diff : Cudf.universe -> Cudf_types.vpkg request ->
       (Cudf.package installed_status * Cudf.package, Cudf.package) action list option
 
-    val resolve_summary : Cudf.package list -> Cudf_types.vpkg request ->
+    val resolve_summary : Cudf.universe -> Cudf_types.vpkg request ->
       ( Cudf.package list
         * (Cudf.package * Cudf.package) list
         * (Cudf.package * Cudf.package) list
@@ -96,17 +106,19 @@ module Solver = struct
 
   module CudfDiff : CUDFDIFF = struct
 
-    let to_cudf_doc l_pkg req = 
-      None, l_pkg, { Cudf.request_id = "" 
-                   ; install = req.wish_install
-                   ; remove = req.wish_remove
-                   ; upgrade = req.wish_upgrade
-                   ; req_extra = [] }
+    let to_cudf_doc univ req = 
+      None, 
+      Cudf.fold_packages (fun l x -> x :: l) [] univ, 
+      { Cudf.request_id = "" 
+      ; install = req.wish_install
+      ; remove = req.wish_remove
+      ; upgrade = req.wish_upgrade
+      ; req_extra = [] }
 
 
-    let cudf_resolve l_pkg req = 
+    let cudf_resolve univ req = 
       let open Algo in
-      let r = Depsolver.check_request (to_cudf_doc l_pkg req) in
+      let r = Depsolver.check_request (to_cudf_doc univ req) in
       if Diagnostic.is_solution r then
         match r with
         | { Diagnostic.result = Diagnostic.Success f } -> Some (f ~all:true ())
@@ -127,15 +139,14 @@ module Solver = struct
       include S
     end
 
-    let resolve f_diff l_pkg_pb req = 
+    let resolve f_diff univ_init req = 
       BatOption.bind
         (fun l_pkg_sol -> 
-          let univ_init = Cudf.load_universe l_pkg_pb in
           BatOption.bind 
             (f_diff univ_init)
             (try Some (Common.CudfDiff.diff univ_init (Cudf.load_universe l_pkg_sol))
              with Cudf.Constraint_violation _ -> None))
-        (cudf_resolve l_pkg_pb req)
+        (cudf_resolve univ_init req)
 
     let resolve_diff = 
       resolve
@@ -198,11 +209,15 @@ module Solver = struct
       g
 
     let resolve l_pkg_pb req =
+      let table = Debian.Debcudf.init_tables l_pkg_pb in
+      let pkglist = List.map (Debian.Debcudf.tocudf table) l_pkg_pb in
+      let universe = Cudf.load_universe pkglist in 
+      let l = 
       [ match
       BatOption.bind 
         (let cons pkg act = Some (pkg, act) in
          fun l -> 
-          let graph_installed = dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) (Cudf.load_universe l_pkg_pb)) in
+          let graph_installed = dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe) in
           
           let l_del_p, l_del = 
             BatList.split
@@ -238,10 +253,21 @@ module Solver = struct
                let () = List.iter (PG.remove_vertex graph_installed) l_del_p in              
                PG.union graph_installed (dep_reduction (BatList.of_enum (PkgMap.keys map_add)))) in
           Some (List.rev l_act))
-        (CudfDiff.resolve_diff l_pkg_pb req)
+        (CudfDiff.resolve_diff universe 
+           (request_map
+              (fun x -> 
+                match Debian.Debcudf.ltocudf table [x] with
+                  | [x] -> x
+                  | _ -> failwith "to complete !") req))
       with
         | None -> []
-        | Some l -> BatList.map (fun x -> P [ x ]) l ]
+        | Some l -> 
+          solution_map
+            (fun pkg -> Namespace.Name pkg.Cudf.package, { Namespace.deb = Debian.Debcudf.get_real_version table (pkg.Cudf.package, pkg.Cudf.version) })
+            (fun pkg -> Namespace.Name pkg.Cudf.package, { Namespace.deb = Debian.Debcudf.get_real_version table (pkg.Cudf.package, pkg.Cudf.version) })
+            (BatList.map (fun x -> P [ x ]) l) ] in
+      let () = Debian.Debcudf.clear table in
+      l
   end
 
   let resolve = Graph.resolve
