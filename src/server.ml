@@ -54,13 +54,13 @@ module Server = struct
     try binary (File.Opam.to_string (NV_map.find n_v index))
     with Not_found -> failwith (string_of_nv n_v ^ " not found")
 
-  let getArchive t n_v =
+  let getArchive t n_v = 
     let p = Path.archives_targz t.home (Some n_v) in
     match Path.is_directory p with
       | Some dir -> Tar_gz (Filename dir)
       | None -> 
-        match Path.find p with
-          | Path.File s -> Tar_gz s
+        match Path.find_binary p with
+          | Path.File s -> Tar_gz (Binary s)
           | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
 
   let newArchive t n_v opam archive =

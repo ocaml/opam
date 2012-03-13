@@ -166,7 +166,8 @@ struct
     let s_user_version = "version"
     let s_opam_version = "opam-version"
     let s_package = "package"
-    let s_installed = "installed"
+    let s_installed = "status"
+    let s_installed_true = "installed"
 
     let description t = 
       match StringMap.Exceptionless.find s_description t.map_stanza with None -> "" | Some s -> s
@@ -179,7 +180,10 @@ struct
 
     let package t installed =
       let p = default_package t in
-      { p with D.extras = (s_installed, string_of_bool installed) :: p.D.extras }
+      if installed then 
+        { p with D.extras = (s_installed, s_installed_true) :: p.D.extras }
+      else
+        p
 
     let parse str =
       let map_stanza = StringMap.of_list (parse_colon str) in

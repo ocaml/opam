@@ -115,7 +115,6 @@ module Solver : SOLVER = struct
       ; upgrade = req.wish_upgrade
       ; req_extra = [] }
 
-
     let cudf_resolve univ req = 
       let open Algo in
       let r = Depsolver.check_request (to_cudf_doc univ req) in
@@ -208,9 +207,14 @@ module Solver : SOLVER = struct
       let () = PO.transitive_reduction g in
       g
 
-    let resolve l_pkg_pb req =
+    let resolve l_pkg_pb req = 
       let table = Debian.Debcudf.init_tables l_pkg_pb in
-      let pkglist = List.map (Debian.Debcudf.tocudf table) l_pkg_pb in
+      let pkglist = 
+        List.map
+          (fun pkg ->
+            let p = Debian.Debcudf.tocudf table pkg in
+            { p with Cudf.conflicts = List.tl p.Cudf.conflicts
+              (* we cancel the 'self package conflict' notion introduced in [loadlc] in debcudf.ml *) } ) l_pkg_pb in
       let universe = Cudf.load_universe pkglist in 
       let l = 
       [ match

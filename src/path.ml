@@ -49,7 +49,7 @@ module U = struct
       end in
     aux (Filename.dirname f_to);
     f f_to
-      
+
   let link f_from = mkdir (Unix.link f_from)
 
   let copy src dst =
@@ -113,6 +113,11 @@ module U = struct
       );
       Unix.rmdir dir;
     end
+
+  let getchdir s = 
+    let p = Unix.getcwd () in
+    let () = Unix.chdir s in
+    p
 end
 
 
@@ -131,6 +136,9 @@ sig
     | R_directory of (basename * 'a contents_rec) list
     | R_file of 'a
     | R_filename of filename list
+    | R_lazy of (unit -> unit) (* The data describing the contents will appear as soon as : 
+                                  1. the current directory is the directory where one would the contents appear,
+                                  2. this function is executed. *)
 
   val init : string (* $HOME_OPAM *) -> t
   (* $HOME_OPAM_OVERSION = $HOME_OPAM/OVERSION *)
@@ -255,7 +263,8 @@ module Path : PATH = struct
     | R_directory of (basename * 'a contents_rec) list
     | R_file of 'a
     | R_filename of filename list
-
+    | R_lazy of (unit -> unit) 
+        
   let s_of_filename = function
   | Normalized s -> s
   | Raw s -> s
@@ -264,13 +273,7 @@ module Path : PATH = struct
   | Normalized s -> Normalized (f s)
   | Raw s -> Raw (f s)
 
-  let normalize s = 
-    let getchdir s = 
-      let p = Unix.getcwd () in
-      let () = Unix.chdir s in
-      p in
-
-    Normalized (getchdir (getchdir s))
+  let normalize s = Normalized (U.getchdir (U.getchdir s))
 
   let (//) = sprintf "%s/%s"
   let concat f (B s) = filename_map (fun filename -> filename // s) f
@@ -413,7 +416,16 @@ module Path : PATH = struct
   let basename s = B (Filename.basename (s_of_filename s))
 
   let extract_targz = function
-  | Tar_gz (Binary _) -> failwith "to complete ! check if the \"dose\" project has been configured with the correct option to extract the gzip or bz2, then use similars functions to extract" (*IO.read_all (Common.Input.open_file fic)*)
+  | Tar_gz (Binary (Raw_binary bin)) -> 
+    R_lazy
+      (fun () -> 
+        let oc = BatUnix.open_process_out "tar xzv" in
+        begin
+          BatIO.write_string oc bin;
+          BatIO.close_out oc;
+        end)
+  (*IO.read_all (Common.Input.open_file fic)*)
+    
   | Tar_gz (Filename (Raw_filename fic)) -> R_filename [Raw fic]
 
   let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))
@@ -449,7 +461,15 @@ module Path : PATH = struct
         List.iter (fun (b, cts) -> aux f b cts) l
     | R_file cts -> add (f /// name) (File cts)
     | R_filename l -> 
-        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l) in
+        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)
+    | R_lazy write_contents -> 
+      U.mkdir
+        (fun fic -> 
+          let pwd = U.getchdir (Filename.dirname fic) in 
+          begin 
+            write_contents ();
+            ignore (U.getchdir pwd);
+          end) (s_of_filename (f /// name)) in
 
     let f, name = dirname f, basename f in
     function

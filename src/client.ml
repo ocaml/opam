@@ -219,10 +219,8 @@ module Client : CLIENT = struct
       (match nv_old with 
         | Was_installed nv_old -> proceed_todelete t nv_old
         | Was_not_installed ->
-          let p_targz, p_build = 
-            Path.archives_targz t.home (Some (name, v)),
-            Path.build t.home (Some (name, v)) in
-          if Path.file_exists p_targz then
+          let p_build = Path.build t.home (Some (name, v)) in
+          if Path.file_exists p_build then
             ()
           else
             let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
