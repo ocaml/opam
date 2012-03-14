@@ -41,15 +41,55 @@ struct
     val create : internal_version (* opam *) -> url -> internal_version (* ocaml *) -> t
   end
 
-  let filter motif =
-    BatList.filter_map 
-      (fun s -> 
-        try Some (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> None)
+  type ('a, 'b) text = 
+    | Parsed of 'a 
+    | Raw of 'b
 
-  let parse motif s = filter motif (BatString.nsplit s "\n")
+  module Parse =
+  struct
 
-  let parse_colon = parse ":"
-  let parse_space = parse " "
+    let parse motif =
+      BatList.map 
+        (fun s -> 
+          try Parsed (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> Raw s)
+
+    let split motif s = parse motif (BatString.nsplit s "\n")
+
+    let filter_parsed = 
+      BatList.filter_map 
+        (function 
+          | Parsed x -> Some x
+          | Raw _ -> None)
+      
+    let colon = split ":"
+    let space = split " "
+
+    let assoc f k0 =
+      let rec aux = function
+        | x :: xs -> 
+          (match x with 
+            | Parsed (k1, v) -> 
+              if k0 = k1 then f v xs else aux xs
+            | Raw _ -> aux xs)
+        | [] -> raise Not_found in
+      aux
+
+    let assoc_parsed = assoc (fun v _ -> v)
+    let assoc_all = assoc (fun v xs -> v :: BatList.take_while_map (function Raw x -> Some x | Parsed _ -> None) xs)
+
+    let map_parsed f = 
+      BatList.map 
+        (function
+          | Parsed x -> Parsed (f x)
+          | Raw r -> Raw r)       
+
+    module Exceptionless = 
+    struct
+      let assoc_parsed k l = try Some (assoc_parsed k l) with Not_found -> None
+      let assoc_all k l = try Some (assoc_all k l) with Not_found -> None
+    end
+
+  end
 
   module Config : CONFIG =
   struct
@@ -82,16 +122,16 @@ struct
       Globals.log "FILE.CONFIG" fmt
 
     let parse contents =
-      let file = parse_colon contents in
-      let version = try List.assoc "version" file with _ -> Globals.opam_version in
+      let file = Parse.colon contents in
+      let version = try Parse.assoc_parsed "version" file with Not_found -> Globals.opam_version in
       let sources =
         try
-          let sources = List.assoc "sources" file in
+          let sources = Parse.assoc_parsed "sources" file in
           let hostname, port =  BatString.split sources ":" in
-          url hostname (try int_of_string port with _ -> Globals.default_port)
+          url hostname (try int_of_string port with Not_found -> Globals.default_port)
         with _ ->
           url Globals.default_hostname Globals.default_port in
-      let ocaml_version = try List.assoc "ocaml-version" file with _ -> Sys.ocaml_version in
+      let ocaml_version = try Parse.assoc_parsed "ocaml-version" file with Not_found -> Sys.ocaml_version in
       { version = Version version
       ; sources
       ; ocaml_version = Version ocaml_version }
@@ -156,7 +196,7 @@ struct
     type t = {
       opam_version : internal_version ;
       version : Namespace.version ;
-      map_stanza : string StringMap.t ;
+      list_stanza : (string * string, string) text list ;
     }
 
     let opam_version t = t.opam_version
@@ -166,15 +206,19 @@ struct
     let s_user_version = "version"
     let s_opam_version = "opam-version"
     let s_package = "package"
-    let s_installed = "status"
-    let s_installed_true = "installed"
+    let s_installed = "status" (* see [Debcudf.add_inst] for more details about the format *)
+    let s_installed_true = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
 
     let description t = 
-      match StringMap.Exceptionless.find s_description t.map_stanza with None -> "" | Some s -> s
+      BatIO.to_string
+        (BatList.print ~first:"" ~last:"" ~sep:"\n" BatString.print)
+        (match Parse.Exceptionless.assoc_all s_description t.list_stanza with
+          | None -> [] 
+          | Some l -> l)
       
     let default_package t =
       { D.default_package with 
-        D.name = StringMap.find s_package t.map_stanza ;
+        D.name = Parse.assoc_parsed s_package t.list_stanza ;
         D.version = t.version.deb ;
         D.extras = [ s_description, description t ] }
 
@@ -186,13 +230,19 @@ struct
         p
 
     let parse str =
-      let map_stanza = StringMap.of_list (parse_colon str) in
-      { opam_version = Version (match StringMap.Exceptionless.find s_opam_version map_stanza with None -> Globals.version | Some v -> v)
-      ; version = Namespace.version_of_string (StringMap.find s_user_version map_stanza)
-      ; map_stanza }
+      let list_stanza = Parse.colon str in
+      { opam_version = Version (match Parse.Exceptionless.assoc_parsed s_opam_version list_stanza with None -> Globals.version | Some v -> v)
+      ; version = Namespace.version_of_string (Parse.assoc_parsed s_user_version list_stanza)
+      ; list_stanza }
 
     let to_string t =
-      BatIO.to_string (StringMap.print ~first:"" ~last:"" ~sep:"\n" (fun oc k -> BatString.print oc (k ^ ":")) BatString.print) t.map_stanza
+      BatIO.to_string
+        (BatList.print ~first:"" ~last:"" ~sep:"\n" 
+           (fun oc txt -> 
+             BatString.print oc 
+               (match txt with
+                 | Raw s -> s
+                 | Parsed (k, v) -> k ^ " : " ^ v))) t.list_stanza
 
     let log fmt =
       Globals.log "FILE.CONFIG" fmt
@@ -231,7 +281,7 @@ struct
     let empty = []
 
     let parse s =
-      BatList.map (fun (name, version) -> Name name, version_of_string version) (parse_space s)
+      BatList.map (fun (name, version) -> Name name, version_of_string version) (Parse.filter_parsed (Parse.space s))
 
     let find f = 
       match Path.find_binary f with
@@ -360,16 +410,16 @@ struct
             | _ -> false in
         BatList.take_while f_while l, BatList.drop_while f_while l in
 
-      (match filter ":" l_lib_bin with 
-      |  ("lib", lib)
-        :: ("bin", bin) :: _ -> 
+      (match Parse.parse ":" l_lib_bin with 
+      |  Parsed ("lib", lib)
+      :: Parsed ("bin", bin) :: _ -> 
           { lib = BatList.map relative_path_of_string (BatString.nsplit lib ",")
           ; bin = relative_path_of_string bin 
           ; misc = 
               BatList.map
                 (fun (s_path, s_fname) -> 
                   { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
-                (filter " " l_misc) }
+                (Parse.filter_parsed (Parse.parse " " l_misc)) }
       | _ -> empty)
 
     let find f =

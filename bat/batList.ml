@@ -21,9 +21,10 @@ let print ?(first="[") ?(last="]") ?(sep=";") f (BatIO.O oc) l =
     Buffer.add_string oc last;
   end
 
-let take_while f = 
+let take_while_map f = 
   let rec aux acc = function
-    | x :: xs when f x -> aux (x :: acc) xs
+    | x :: xs -> 
+      (match f x with Some x -> aux (x :: acc) xs | None -> List.rev acc)
     | _ -> List.rev acc in
   aux []
 
@@ -39,3 +40,5 @@ module Exceptionless =
 struct
   let assoc a l = try Some (assoc a l) with Not_found -> None
 end
+
+let take_while f l = take_while_map (fun x -> if f x then Some x else None) l
