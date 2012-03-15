@@ -16,3 +16,10 @@ let right_chop s tgz =
       Some (String.sub s 0 dim)
     else
       None
+
+let split s sep = try String.split s sep with _ -> raise Not_found
+
+module Exceptionless =
+struct
+  let split s sep = try Some (String.split s sep) with _ -> None
+end

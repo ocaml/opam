@@ -53,7 +53,7 @@ struct
     let parse motif =
       List.map 
         (fun s -> 
-          try Parsed (BatPair.map BatString.trim (String.split (BatString.trim s) motif)) with Not_found -> Raw s)
+          try Parsed (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> Raw s)
 
     let split motif s = parse motif (String.nsplit s "\n")
 
@@ -129,7 +129,7 @@ struct
       let sources =
         try
           let sources = Parse.assoc_parsed "sources" file in
-          let hostname, port = String.split sources ":" in
+          let hostname, port = BatString.split sources ":" in
           url hostname (try int_of_string port with Not_found -> Globals.default_port)
         with _ ->
           url Globals.default_hostname Globals.default_port in
@@ -374,7 +374,7 @@ struct
           | Suffix suff ->
             List.filter 
               (fun (B name) -> 
-                (try Some (snd (String.split name ".")) with _ -> None) = Some suff)
+                (try Some (snd (BatString.split name ".")) with _ -> None) = Some suff)
               (match Path.find f with Path.Directory l -> l | _ -> []))
 
     let filename_of_path_relative t f = function
@@ -395,7 +395,7 @@ struct
         | x :: xs ->
           abs,
           List.map (fun s -> B s) (List.rev xs), 
-          (match try Some (String.split x "*.") with _ -> None with
+          (match BatString.Exceptionless.split x "*." with
             | Some ("", suff) -> Suffix suff
             | _ -> Exact x)
         | [] -> abs, [], Exact ""
@@ -407,7 +407,7 @@ struct
         let l, f_while = 
           String.nsplit s "\n",
           fun s ->
-            match try Some (String.split "misc" (BatString.trim s)) with _ -> None with
+            match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
             | Some ("", _) -> true
             | _ -> false in
         List.takewhile f_while l, List.dropwhile f_while l in
@@ -489,7 +489,7 @@ misc:
 
     let parse s = 
       let library, s = 
-        let s_beg, s = String.split s "{" in
+        let s_beg, s = BatString.split s "{" in
         (match List.filter (function "" -> false | _ -> true) (String.nsplit s_beg " ") with
           | "library" :: name :: _ -> name
           | [] -> failwith "The name of the library is not found"), s in

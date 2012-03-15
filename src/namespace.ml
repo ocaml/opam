@@ -1,5 +1,3 @@
-open ExtString
-
 module Namespace =
 struct
   open Printf
@@ -17,7 +15,7 @@ struct
   let version_of_string version = { deb = version }
  
   let nv_of_string s = 
-    let n, version = String.split s "-" in
+    let n, version = BatString.split s "-" in
       Name n, version_of_string version
 
   let default_version = "0"
