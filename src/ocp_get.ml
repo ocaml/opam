@@ -35,20 +35,14 @@ let args = Arg.align [
 
 let _ = Arg.parse args (fun s -> ano_args := s :: !ano_args) usage
 
-
-(*
-let filename_of_string s = 
-  List.fold_left 
-    (fun t s -> Path.concat t (B s)) 
-    Path.root
-    (BatString.nsplit (BatString.strip ~chars:"/" s) "/")
-*)
 let () =
   Globals.log "CLIENT" "Root path is %s" !Globals.root_path;
 
   let error msg =
     Printf.eprintf "%s\n" msg;
     nice_exit () in
+
+  let err l = error (String.concat " " l) in
 
   match List.rev !ano_args with
   | [] -> nice_exit ()
@@ -66,10 +60,19 @@ let () =
   | ["info"]       -> Client.info None
   | ["info"; name] -> Client.info (Some (Name name))
 
-      
-  (* ocp-get config -dir PACKAGE *)
-  | ["config"; name]
-  | ["config"; _ ; name] -> Client.config Client.Dir (Name name)
+  (* ocp-get config [-r] [-dir|-bytelink|-asmlink] PACKAGE *)
+  | "config" :: l_arg ->
+    let is_rec, l_arg = 
+      match l_arg with
+        | "-r" :: l_arg -> true, l_arg
+        | _ -> false, l_arg in
+    let opt, name = 
+      match l_arg with
+        | [ "-dir" ; name ] -> Client.Dir, name
+        | [ "-bytelink" ; name ] -> Client.Bytelink, name
+        | [ "-asmlink" ; name ] -> Client.Asmlink, name
+        | _ -> err l_arg in
+    Client.config is_rec opt (Name name)
      
   (* ocp-get install PACKAGE *)
   | ["install"; name] -> Client.install (Name name)
@@ -86,4 +89,4 @@ let () =
   (* ocp-get remove PACKAGE *)
   | ["remove"; name] -> Client.remove (Name name)
       
-  | l -> error (String.concat " " l)
+  | l -> err l

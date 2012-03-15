@@ -457,4 +457,71 @@ misc:
 
     let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
   end
+
+
+
+  module type DESCR =
+  sig
+    include IO_FILE
+
+    val library : t -> string
+    val requires : t -> string list
+    val link : t -> string list
+    val asmlink : t -> string list
+  end
+
+  module Descr : DESCR =
+  struct
+    type t = 
+        { library : string
+        ; requires : string list
+        ; link : string list
+        ; asmlink : string list }
+
+    open ExtString
+
+    let library t = t.library
+    let requires t = t.requires
+    let link t = t.link
+    let asmlink t = t.asmlink
+
+    let parse s = 
+      let library, s = 
+        let s_beg, s = String.split s "{" in
+        (match List.filter (function "" -> false | _ -> true) (String.nsplit s_beg " ") with
+          | "library" :: name :: _ -> name
+          | [] -> failwith "The name of the library is not found"), s in
+      let l = Parse.colon s in
+      let f_dash dash key = BatList.map (String.strip ~chars:" ") (String.nsplit dash (Parse.assoc_parsed key l)) in
+      { library 
+      ; requires = f_dash "," "requires"
+      ; link = f_dash "-" "link"
+      ; asmlink = f_dash "-" "asmlink" }
+
+    let to_string t = 
+      let f_s print_beg motif l =
+        BatIO.to_string (BatList.print ~first:(if print_beg then motif else "") ~last:"" ~sep:motif BatString.print) l in
+      Printf.sprintf "
+library %s {
+  %s
+  %s
+  %s
+}" t.library (f_s false ", " t.requires) (f_s true " -" t.link) (f_s true " -" t.asmlink)
+
+    let empty = 
+      { library = "" ; requires = [] ; link = [] ; asmlink = [] }
+
+    let find f = 
+      match Path.find_binary f with
+        | Path.File (Raw_binary s) -> Some (parse s)
+        | Path.Not_found _         -> Some empty
+        | _ -> assert false
+
+
+    let add f v =
+      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
+
+    let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
+  end
+
 end

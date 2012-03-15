@@ -6,6 +6,7 @@
 
 * ocaml
 * wget
+* tar
 
 To compile `ocp-get`, simply run:
 

@@ -181,6 +181,9 @@ sig
   (** compiled files in the extracted archive to install *)
   val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
 
+  (** descriptions of option to give to compile and link *)
+  val descr : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.descr *)
+
 
   (** Path utilities **)
 
@@ -304,6 +307,8 @@ module Path : PATH = struct
   let config t = Raw (t.home // "config")
 
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
+
+  let descr t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".descr")
 
   let contents f_dir f_fic f_notfound f =
     let fic = s_of_filename f in

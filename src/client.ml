@@ -16,11 +16,11 @@ sig
   (** Displays the installed package. [None] : a general summary is given. *)
   val info : Namespace.name option -> unit
 
-  type config_request = Dir
+  type config_request = Dir | Bytelink | Asmlink
 
   (** Returns the directory where the package is installed,
       in a form suitable to OCaml compilers (i.e. like "-I ..."). *)
-  val config : config_request -> Namespace.name -> unit
+  val config : bool (* true : recursive search *) -> config_request -> Namespace.name -> unit
 
   (** Installs the given package. *)
   val install : Namespace.name -> unit
@@ -168,7 +168,7 @@ module Client : CLIENT = struct
                          path) in
     
     let add_rec f_lib t path = 
-      f_add_rec t
+      f_add_rec
         (f_lib t.home name (* warning : we assume that this result is a directory *))
         (filename_of_path_relative t path) in
 
@@ -194,7 +194,7 @@ module Client : CLIENT = struct
         match N_map.Exceptionless.find n map_installed with
           | Some v when v = v0 ->
             iter_toinstall
-              (fun t file -> function
+              (fun file -> function
                 | Path.R_filename l -> 
                   List.iter (fun f -> Path.remove (Path.concat file (Path.basename f))) l
                 | _ -> failwith "to complete !")
@@ -204,14 +204,10 @@ module Client : CLIENT = struct
               
           | _ -> map_installed)
 
-  let proceed_torecompile t (name, v) =
+  let proceed_torecompile t nv =
     begin
-      Path.exec_buildsh t.home (name, v);
-      iter_toinstall  
-        (fun t file contents ->
-          Path.add_rec file contents)
-        t
-        (name, v);
+      Path.exec_buildsh t.home nv;
+      iter_toinstall Path.add_rec t nv;
     end
 
   let proceed_tochange t (nv_old, (name, v)) =
@@ -355,20 +351,33 @@ module Client : CLIENT = struct
     RemoteServer.newArchive t.server nv opam archive;
     Server.newArchive local_server nv opam archive
 
-  type config_request = Dir
-  let config Dir name =
+  type config_request = Dir | Bytelink | Asmlink
+  let config _ req name =
     log "config %s" (Namespace.string_of_name name);
     let t = load_state () in
-    match find_from_name name (Path.index_opam_list t.home) with
-
-    | None -> 
+    match find_from_name name (Path.index_opam_list t.home), req with
+        
+      | None, _ -> 
         let msg =
           Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
             (Namespace.string_user_of_name name) in
         if confirm msg then
           update_t t
-
-    | Some _ -> 
+            
+      | Some _, Dir -> 
         Printf.printf "-I %s" 
           (match Path.ocaml_options_of_library t.home name with I s -> s)
+      | Some v, _ -> 
+        let l_f, s_cma = 
+          (match req with
+            | Bytelink -> [ File.Descr.link ], ".cma"
+            | Asmlink -> [ File.Descr.link ; File.Descr.asmlink ], ".cmxa"
+            | Dir -> assert false) in
+        let descr = Path.read File.Descr.find (Path.descr t.home (name, V_set.max_elt v)) in
+
+        Printf.printf "%s %s%s" 
+          (BatIO.to_string (BatList.print ~first:" -" ~sep:" -" ~last:"" BatString.print)
+             (BatList.flatten (BatList.map (fun f -> f descr) l_f)))
+          (File.Descr.library descr)
+          s_cma
 end
