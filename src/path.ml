@@ -325,7 +325,6 @@ module Path : PATH = struct
 
   let contents f_dir f_fic f_notfound f =
     let fic = s_of_filename f in
-    Printf.eprintf "XXX %s: %b\n%!" fic (Sys.file_exists fic);
     if Sys.file_exists fic then
       (if Sys.is_directory fic then f_dir else f_fic) fic
     else
