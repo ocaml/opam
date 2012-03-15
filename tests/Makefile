@@ -8,7 +8,7 @@ OCPGET_SERVER = ../ocp-get-server --debug --root $(OPAM_SERVER_ROOT)
 
 BACKTRACES = export OCAMLRUNPARAM=b &&
 
-PACKAGES   = P1-1 P2-1 P3-1-weird.version P4-1
+PACKAGES   = P1-1 P2-1 P2-1 P3-1-weird.version P4-1
 
 ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 .PHONY: all upload
@@ -31,9 +31,20 @@ upload: $(ARCHIVES) init
 info: upload
 	$(OCPGET) info
 
-install:
+install: upload
 	$(OCPGET) install P1
 	$(OCPGET) install P2
+	$(OCPGET) install P3
+	$(OCPGET) install P4
+
+upload-new: install
+	cd packages && \
+	  cp P1.opam P1.opam.1 && cp P1.opam.2 P1.opam && \
+	  $(BACKTRACES) ../$(OCPGET) upload P1 && \
+	  cp P1.opam.1 P1.opam
+
+updgrade: upload-new
+	$(OCPGET) upgrade
 
 packages/%.tar.gz: packages/%
 	cd packages && tar cz $* > $*.tar.gz
