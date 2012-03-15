@@ -78,6 +78,7 @@ module Client : CLIENT = struct
         url
         (Version Globals.ocaml_version) in
     File.Config.add (Path.config home) config;
+    File.Installed.add (Path.installed home) File.Installed.empty;
     update ()
 
   let indent_left s nb = s ^ String.make nb ' '
