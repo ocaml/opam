@@ -13,7 +13,7 @@ PACKAGES   = P1-1 P2-1 P3-1-weird.version P4-1
 ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 .PHONY: all upload
 
-all: init upload info
+all: init upload info install
 	@
 
 runserver:
@@ -30,6 +30,10 @@ upload: $(ARCHIVES) init
 
 info: upload
 	$(OCPGET) info
+
+install:
+	$(OCPGET) install P1
+	$(OCPGET) install P2
 
 packages/%.tar.gz: packages/%
 	cd packages && tar cz $* > $*.tar.gz
