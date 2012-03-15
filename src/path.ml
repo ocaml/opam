@@ -40,6 +40,8 @@ type basename = B of string
     particular not related to the version of a particular package *)
 type internal_version = Version of string
 
+type security_key = Random of string
+
 module U = struct
   let mkdir f f_to = 
     let rec aux f_to = 
@@ -186,6 +188,12 @@ sig
   (** descriptions of option to give to compile and link *)
   val descr : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.descr *)
 
+  (** security keys related to package name *)
+  val keys : t -> Namespace.name -> filename (* $HOME_OPAM/keys/NAME *)
+
+  (** similar as [keys] *)
+  val hashes : t -> Namespace.name -> filename (* $HOME_OPAM/hashes/NAME *)
+
 
   (** Path utilities **)
 
@@ -244,7 +252,7 @@ sig
 
   val string_of_filename: filename -> string
 
-  val file_not_found: filename -> unit
+  val file_not_found: filename -> 'a
 
   val read: (filename -> 'a option) -> filename -> 'a
 end
@@ -311,6 +319,9 @@ module Path : PATH = struct
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
 
   let descr t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".descr")
+
+  let keys t n = Raw (t.home // "keys" // Namespace.string_of_name n)
+  let hashes t n = Raw (t.home // "hashes" // Namespace.string_of_name n)
 
   let contents f_dir f_fic f_notfound f =
     let fic = s_of_filename f in

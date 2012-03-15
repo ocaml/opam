@@ -51,7 +51,7 @@ module Client : CLIENT = struct
   (* Look into the content of ~/.opam/config to build the client state *)
   let load_state () =
     let home = Path.init !Globals.root_path in
-    let config = Path.read File.Config.find (Path.config home) in
+    let config = File.Config.find_err (Path.config home) in
     { server = File.Config.sources config
     ;  home }
 
@@ -98,13 +98,13 @@ module Client : CLIENT = struct
     match package with
     | None -> 
         (* Get all the installed packages *)
-        let installed = Path.read File.Installed.find (Path.installed t.home) in
+        let installed = File.Installed.find_err (Path.installed t.home) in
         let install_set = NV_set.of_list installed in
         let map, max_n, max_v = 
           List.fold_left
             (fun (map, max_n, max_v) n_v -> 
               let b = NV_set.mem n_v install_set in
-              let opam = Path.read File.Opam.find (Path.index_opam t.home (Some n_v)) in
+              let opam = File.Opam.find_err (Path.index_opam t.home (Some n_v)) in
               let new_map = NV_map.add n_v (b, File.Opam.description opam) map in
               let new_max_n = max max_n (String.length (Namespace.string_user_of_name (fst n_v))) in
               let new_max_v =
@@ -122,7 +122,7 @@ module Client : CLIENT = struct
 
     | Some name -> 
         let find_from_name = find_from_name name in
-        let installed = Path.read File.Installed.find (Path.installed t.home) in
+        let installed = File.Installed.find_err (Path.installed t.home) in
         let o_v = 
           Option.map
             V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
@@ -149,7 +149,7 @@ module Client : CLIENT = struct
           ; "description", "\n" ^ 
             match o_v with None -> ""
             | Some v ->
-                let opam = Path.read File.Opam.find (Path.index_opam t.home (Some (name, v))) in
+                let opam = File.Opam.find_err (Path.index_opam t.home (Some (name, v))) in
                 File.Opam.description opam
           ]
 
@@ -161,7 +161,7 @@ module Client : CLIENT = struct
 
   let iter_toinstall f_add_rec t (name, v) = 
 
-    let to_install = Path.read File.To_install.find (Path.to_install t.home (name, v)) in
+    let to_install = File.To_install.find_err (Path.to_install t.home (name, v)) in
 
     let filename_of_path_relative t path = 
       Path.R_filename (File.To_install.filename_of_path_relative t.home
@@ -247,7 +247,7 @@ module Client : CLIENT = struct
     let l_pkg = 
       List.fold_left
         (fun l n_v ->
-          let opam = Path.read File.Opam.find (Path.index_opam t.home (Some n_v)) in
+          let opam = File.Opam.find_err (Path.index_opam t.home (Some n_v)) in
           let pkg = 
             File.Opam.package opam
               (match N_map.Exceptionless.find (fst n_v) map_installed with
@@ -374,7 +374,7 @@ module Client : CLIENT = struct
             | Bytelink -> [ File.Descr.link ], ".cma"
             | Asmlink -> [ File.Descr.link ; File.Descr.asmlink ], ".cmxa"
             | Dir -> assert false) in
-        let descr = Path.read File.Descr.find (Path.descr t.home (name, V_set.max_elt v)) in
+        let descr = File.Descr.find_err (Path.descr t.home (name, V_set.max_elt v)) in
 
         Printf.printf "%s %s%s" 
           (BatIO.to_string (BatList.print ~first:" -" ~sep:" -" ~last:"" BatString.print)

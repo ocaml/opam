@@ -35,7 +35,7 @@ module Server = struct
   let read_index home =
     List.fold_left
       (fun map nv ->
-        let file = Path.read File.Opam.find (Path.index_opam home (Some nv)) in
+        let file = File.Opam.find_err (Path.index_opam home (Some nv)) in
         NV_map.add nv file map)
       NV_map.empty
       (Path.index_opam_list home)
