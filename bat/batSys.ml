@@ -1,2 +1,4 @@
+open ExtList
+
 let files_of dir = 
-  Array.to_list (Sys.readdir dir)
+  List.enum (Array.to_list (Sys.readdir dir))

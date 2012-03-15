@@ -1,3 +1,4 @@
+open ExtList
 open Namespace
 open Path
 open Server
@@ -57,7 +58,7 @@ module Solver : SOLVER = struct
         action parallel list
 
   let solution_map f1 f2 = 
-    BatList.map (function P l -> P (BatList.map (function
+    List.map (function P l -> P (List.map (function
       | To_change (o_p, p) -> To_change ((match o_p with
           |  Was_installed p -> Was_installed (f1 p)
           | Was_not_installed -> Was_not_installed), f2 p)
@@ -87,7 +88,7 @@ module Solver : SOLVER = struct
               | To_delete v -> f_act "remove" [v]) oc l)
 
   let request_map f r = 
-    let f = BatList.map f in
+    let f = List.map f in
     { wish_install = f r.wish_install
     ; wish_remove = f r.wish_remove
     ; wish_upgrade = f r.wish_upgrade }
@@ -224,13 +225,13 @@ module Solver : SOLVER = struct
           let graph_installed = dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe) in
           
           let l_del_p, l_del = 
-            BatList.split
-              (BatList.filter_map (function
+            List.split
+              (List.filter_map (function
                 | To_delete pkg as act -> cons pkg act
                 | _ -> None) l) in
 
           let map_add = 
-            PkgMap.of_list (BatList.filter_map (function 
+            PkgMap.of_list (List.filter_map (function 
               | To_change (_, pkg) as act -> cons pkg act
               | To_delete _ -> None
               | To_recompile _ -> assert false) l) in
@@ -255,7 +256,7 @@ module Solver : SOLVER = struct
                       set_recompile, l_act) (PkgSet.empty, List.rev l_del) 
               (let graph_installed = PG.copy graph_installed in
                let () = List.iter (PG.remove_vertex graph_installed) l_del_p in              
-               PG.union graph_installed (dep_reduction (BatList.of_enum (PkgMap.keys map_add)))) in
+               PG.union graph_installed (dep_reduction (PkgMap.keys map_add))) in
           Some (List.rev l_act))
         (CudfDiff.resolve_diff universe 
            (request_map
@@ -269,7 +270,7 @@ module Solver : SOLVER = struct
           solution_map
             (fun pkg -> Namespace.Name pkg.Cudf.package, { Namespace.deb = Debian.Debcudf.get_real_version table (pkg.Cudf.package, pkg.Cudf.version) })
             (fun pkg -> Namespace.Name pkg.Cudf.package, { Namespace.deb = Debian.Debcudf.get_real_version table (pkg.Cudf.package, pkg.Cudf.version) })
-            (BatList.map (fun x -> P [ x ]) l) ] in
+            (List.map (fun x -> P [ x ]) l) ] in
       let () = Debian.Debcudf.clear table in
       l
   end

@@ -1,3 +1,5 @@
+open ExtString
+open ExtList
 open Namespace
 open Path
 
@@ -49,14 +51,14 @@ struct
   struct
 
     let parse motif =
-      BatList.map 
+      List.map 
         (fun s -> 
-          try Parsed (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> Raw s)
+          try Parsed (BatPair.map BatString.trim (String.split (BatString.trim s) motif)) with Not_found -> Raw s)
 
-    let split motif s = parse motif (BatString.nsplit s "\n")
+    let split motif s = parse motif (String.nsplit s "\n")
 
     let filter_parsed = 
-      BatList.filter_map 
+      List.filter_map 
         (function 
           | Parsed x -> Some x
           | Raw _ -> None)
@@ -75,10 +77,10 @@ struct
       aux
 
     let assoc_parsed = assoc (fun v _ -> v)
-    let assoc_all = assoc (fun v xs -> v :: BatList.take_while_map (function Raw x -> Some x | Parsed _ -> None) xs)
+    let assoc_all = assoc (fun v xs -> v :: BatList.takewhile_map (function Raw x -> Some x | Parsed _ -> None) xs)
 
     let map_parsed f = 
-      BatList.map 
+      List.map 
         (function
           | Parsed x -> Parsed (f x)
           | Raw r -> Raw r)       
@@ -127,7 +129,7 @@ struct
       let sources =
         try
           let sources = Parse.assoc_parsed "sources" file in
-          let hostname, port =  BatString.split sources ":" in
+          let hostname, port = String.split sources ":" in
           url hostname (try int_of_string port with Not_found -> Globals.default_port)
         with _ ->
           url Globals.default_hostname Globals.default_port in
@@ -281,7 +283,7 @@ struct
     let empty = []
 
     let parse s =
-      BatList.map (fun (name, version) -> Name name, version_of_string version) (Parse.filter_parsed (Parse.space s))
+      List.map (fun (name, version) -> Name name, version_of_string version) (Parse.filter_parsed (Parse.space s))
 
     let find f = 
       match Path.find_binary f with
@@ -366,13 +368,13 @@ struct
 
     let filename_of_path t f l_b suff = 
       let f = List.fold_left Path.concat f l_b in
-      BatList.map (Path.concat f)
+      List.map (Path.concat f)
         (match suff with
           | Exact name -> [ B name ]
           | Suffix suff ->
-            BatList.filter 
+            List.filter 
               (fun (B name) -> 
-                (try Some (snd (BatString.split name ".")) with _ -> None) = Some suff)
+                (try Some (snd (String.split name ".")) with _ -> None) = Some suff)
               (match Path.find f with Path.Directory l -> l | _ -> []))
 
     let filename_of_path_relative t f = function
@@ -388,12 +390,12 @@ struct
                 ; misc = [] }
 
     let b_of_string abs s = 
-      let l = BatString.nsplit (BatString.strip ~chars:"/" s) "/" in
+      let l = String.nsplit (String.strip ~chars:"/" s) "/" in
       match List.rev l with
         | x :: xs ->
           abs,
-          BatList.map (fun s -> B s) (List.rev xs), 
-          (match try Some (BatString.split x "*.") with _ -> None with
+          List.map (fun s -> B s) (List.rev xs), 
+          (match try Some (String.split x "*.") with _ -> None with
             | Some ("", suff) -> Suffix suff
             | _ -> Exact x)
         | [] -> abs, [], Exact ""
@@ -403,20 +405,20 @@ struct
     let parse s =
       let l_lib_bin, l_misc = 
         let l, f_while = 
-          BatString.nsplit s "\n",
+          String.nsplit s "\n",
           fun s ->
-            match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
+            match try Some (String.split "misc" (BatString.trim s)) with _ -> None with
             | Some ("", _) -> true
             | _ -> false in
-        BatList.take_while f_while l, BatList.drop_while f_while l in
+        List.takewhile f_while l, List.dropwhile f_while l in
 
       (match Parse.parse ":" l_lib_bin with 
       |  Parsed ("lib", lib)
       :: Parsed ("bin", bin) :: _ -> 
-          { lib = BatList.map relative_path_of_string (BatString.nsplit lib ",")
+          { lib = List.map relative_path_of_string (String.nsplit lib ",")
           ; bin = relative_path_of_string bin 
           ; misc = 
-              BatList.map
+              List.map
                 (fun (s_path, s_fname) -> 
                   { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
                 (Parse.filter_parsed (Parse.parse " " l_misc)) }
@@ -492,7 +494,7 @@ misc:
           | "library" :: name :: _ -> name
           | [] -> failwith "The name of the library is not found"), s in
       let l = Parse.colon s in
-      let f_dash dash key = BatList.map (String.strip ~chars:" ") (String.nsplit dash (Parse.assoc_parsed key l)) in
+      let f_dash dash key = List.map (String.strip ~chars:" ") (String.nsplit dash (Parse.assoc_parsed key l)) in
       { library 
       ; requires = f_dash "," "requires"
       ; link = f_dash "-" "link"

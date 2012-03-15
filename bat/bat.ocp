@@ -1,5 +1,5 @@
 begin library "bat"
    sort = true
-   files = [ "batUnix.ml" "batSys.ml" "batString.ml" "batSet.ml" "batPair.ml" "batOption.ml" "batMap.ml" "batList.ml" "batIO.ml" "batFile.ml" "batEnum.ml" ]
-   requires = [ "str" ]
+   files = [ "batUnix.ml" "batSys.ml" "batString.ml" "batSet.ml" "batPair.ml" "batOption.ml" "batMap.ml" "batList.ml" "batIO.ml" "batFile.ml" ]
+   requires = [ "str" "extlib" ]
 end

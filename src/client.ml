@@ -1,3 +1,4 @@
+open ExtList
 open Namespace
 open Path
 open Server
@@ -123,7 +124,7 @@ module Client : CLIENT = struct
         let find_from_name = find_from_name name in
         let installed = Path.read File.Installed.find (Path.installed t.home) in
         let o_v = 
-          BatOption.map
+          Option.map
             V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
             (find_from_name installed) in
 
@@ -320,7 +321,7 @@ module Client : CLIENT = struct
       installed
       { Solver.wish_install = []
       ; wish_remove = []
-      ; wish_upgrade = BatList.map vpkg_of_nv (N_map.bindings installed) }
+      ; wish_upgrade = List.map vpkg_of_nv (N_map.bindings installed) }
     
   (* Upload reads NAME.opam to get the current package version.
      Then it looks for NAME-VERSION.tar.gz in the same directory.
@@ -377,7 +378,7 @@ module Client : CLIENT = struct
 
         Printf.printf "%s %s%s" 
           (BatIO.to_string (BatList.print ~first:" -" ~sep:" -" ~last:"" BatString.print)
-             (BatList.flatten (BatList.map (fun f -> f descr) l_f)))
+             (List.flatten (List.map (fun f -> f descr) l_f)))
           (File.Descr.library descr)
           s_cma
 end

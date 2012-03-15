@@ -1,3 +1,5 @@
+open ExtList
+open ExtString
 open Namespace
 
 let log fmt =
@@ -133,7 +135,7 @@ sig
     | Not_found of string
 
   type 'a contents_rec = 
-    | R_directory of (basename * 'a contents_rec) list
+    | R_directory of (basename * 'a contents_rec) Enum.t
     | R_file of 'a
     | R_filename of filename list
     | R_lazy of (unit -> unit) (* The data describing the contents will appear as soon as : 
@@ -263,7 +265,7 @@ module Path : PATH = struct
     | Not_found of string
 
   type 'a contents_rec = 
-    | R_directory of (basename * 'a contents_rec) list
+    | R_directory of (basename * 'a contents_rec) Enum.t
     | R_file of 'a
     | R_filename of filename list
     | R_lazy of (unit -> unit) 
@@ -287,7 +289,7 @@ module Path : PATH = struct
   let root = Raw "/"
   let package _ s =
     (* REMARK this should be normalized *)
-    Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (BatString.strip ~chars:"/" s))
+    Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (String.strip ~chars:"/" s))
 
   let lib t (Namespace.Name n) = Raw (t.home_ocamlversion // "lib" // n)
   let bin t = Raw (t.home_ocamlversion // "bin")
@@ -320,7 +322,7 @@ module Path : PATH = struct
 
   let find_ f_fic = 
     contents
-      (fun fic -> Directory (BatList.of_enum (BatEnum.map (fun s -> B s) (BatSys.files_of fic))))
+      (fun fic -> Directory (List.of_enum (Enum.map (fun s -> B s) (BatSys.files_of fic))))
       (fun fic -> File (f_fic fic))
       (fun fic -> Not_found fic)
 
@@ -366,7 +368,7 @@ module Path : PATH = struct
     let rec aux fic = 
       match (Unix.lstat fic).Unix.st_kind with
       | Unix.S_DIR -> 
-          let () = BatEnum.iter (fun f -> aux (fic // f)) (BatSys.files_of fic) in
+          let () = Enum.iter (fun f -> aux (fic // f)) (BatSys.files_of fic) in
           Unix.rmdir fic
       | Unix.S_REG -> Unix.unlink fic
       | _ -> failwith "to complete !" in
@@ -391,7 +393,7 @@ module Path : PATH = struct
             U.safe_rmdir fic;
             let rec aux f_from f_to = 
               (match (Unix.lstat f_from).Unix.st_kind with
-              | Unix.S_DIR -> List.fold_left (fun _ b -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
+              | Unix.S_DIR -> Enum.fold (fun b _ -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
               | Unix.S_REG -> 
                   let () = 
                     if Sys.file_exists f_to then
@@ -449,12 +451,12 @@ module Path : PATH = struct
         f in
 
     let f_filename f f_basename = 
-      BatList.map
+      List.map
         (fun fic -> 
           f, 
           f_basename fic,
           match (lstat fic).Unix.st_kind with
-            | Unix.S_DIR -> R_directory (BatList.map (fun f -> 
+            | Unix.S_DIR -> R_directory (Enum.map (fun f -> 
               let f = B f in
               f, R_filename [fic /// f]) (files_of fic))
             | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
@@ -463,7 +465,7 @@ module Path : PATH = struct
     let rec aux f (* <- filename dir *) name (* name of the value that will be destructed*) = function
     | R_directory l ->
         let f = f /// name in
-        List.iter (fun (b, cts) -> aux f b cts) l
+        Enum.iter (fun (b, cts) -> aux f b cts) l
     | R_file cts -> add (f /// name) (File cts)
     | R_filename l -> 
         List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)

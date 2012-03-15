@@ -1,3 +1,5 @@
+open ExtList
+
 module Make (O : Map.OrderedType) = 
 struct
   include Map.Make (O)
@@ -19,11 +21,11 @@ struct
         f_v oc v;
       end) oc (bindings map)
 
-  let of_enum l = List.fold_left (fun map (k, v) -> add k v map) empty l
+  let of_enum l = Enum.fold (fun (k, v) -> add k v) empty l
 
   let keys map = fold (fun k _ l -> k :: l) map []
 
-  let of_list l = of_enum (BatList.enum l)
+  let of_list l = of_enum (List.enum l)
 end
 
 module StringMap = Make (struct type t = string let compare = compare end)
