@@ -181,7 +181,7 @@ module Client : CLIENT = struct
     List.iter (add_rec Path.lib t) (File.To_install.lib to_install);
   
     (* bin *) 
-    add_rec (fun t _ -> Path.bin t) t (File.To_install.bin to_install);
+    BatOption.iter (add_rec (fun t _ -> Path.bin t) t) (File.To_install.bin to_install);
   
     (* misc *)
     List.iter 
@@ -191,7 +191,7 @@ module Client : CLIENT = struct
           let path_from =
             filename_of_path_relative t (File.To_install.path_from misc) in
           List.iter 
-            (fun path_to -> Path.add_rec path_to path_from) 
+            (fun path_to -> f_add_rec path_to path_from) 
             (File.To_install.filename_of_path_absolute t.home
                (File.To_install.path_to misc)))
       (File.To_install.misc to_install)
@@ -213,10 +213,10 @@ module Client : CLIENT = struct
           | _ -> map_installed)
 
   let proceed_torecompile t nv =
-    begin
-      Path.exec_buildsh t.home nv;
-      iter_toinstall Path.add_rec t nv;
-    end
+    if Path.exec_buildsh t.home nv = 0 then
+      iter_toinstall Path.add_rec t nv
+    else
+      Globals.error_and_exit "./build.sh failed. We stop here because otherwise the installation would fail to copy not created files."
 
   let delete_or_update l =
     let action = function

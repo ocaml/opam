@@ -49,6 +49,11 @@ struct
   struct
     let assoc_parsed k l = try Some (assoc_parsed k l) with Not_found -> None
     let assoc_all k l = try Some (assoc_all k l) with Not_found -> None
+
+    let assoc_def def k l = 
+      match assoc_parsed k l with
+        | None -> def
+        | Some v -> v
   end
 
 end
@@ -133,7 +138,7 @@ struct
 
     let parse contents =
       let file = Parse.colon contents in
-      let version = try Parse.assoc_parsed "version" file with Not_found -> Globals.opam_version in
+      let version = Parse.Exceptionless.assoc_def Globals.opam_version "version" file in
       let sources =
         try
           let sources = Parse.assoc_parsed "sources" file in
@@ -217,12 +222,17 @@ struct
           | Some l -> l)
       
     let default_package t =
+      let assoc f s = 
+        match Parse.Exceptionless.assoc_parsed s t.list_stanza with
+          | None -> []
+          | Some l -> f l in
+
       { D.default_package with 
         D.name = Parse.assoc_parsed s_package t.list_stanza ;
         D.version = t.version.deb ;
         D.extras = [ s_description, description t ] ;
-        D.depends = D.parse_vpkgformula (Parse.assoc_parsed s_depends t.list_stanza) ;
-        D.conflicts = D.parse_vpkglist (Parse.assoc_parsed s_conflicts t.list_stanza) }
+        D.depends = assoc D.parse_vpkgformula s_depends ;
+        D.conflicts = assoc D.parse_vpkglist s_conflicts }
 
     let package t installed =
       let p = default_package t in
@@ -233,7 +243,7 @@ struct
 
     let parse str =
       let list_stanza = Parse.colon str in
-      { opam_version = Version (match Parse.Exceptionless.assoc_parsed s_opam_version list_stanza with None -> Globals.version | Some v -> v)
+      { opam_version = Version (Parse.Exceptionless.assoc_def Globals.version s_opam_version list_stanza)
       ; version = Namespace.version_of_string (Parse.assoc_parsed s_user_version list_stanza)
       ; list_stanza }
 
@@ -300,7 +310,7 @@ struct
 
     (** destruct *)
     val lib : t -> path list
-    val bin : t -> path
+    val bin : t -> path option
     val misc : t -> misc list
 
     val path_from : misc -> path
@@ -320,7 +330,7 @@ struct
 
     type t = 
         { lib : path list
-        ; bin : path
+        ; bin : path option
         ; misc : misc list }
 
     let lib t = t.lib
@@ -352,11 +362,11 @@ struct
       | _ -> assert false
 
     let empty = { lib = []
-                ; bin = Relative, [], Suffix ""
+                ; bin = None
                 ; misc = [] }
 
     let b_of_string abs s = 
-      let l = String.nsplit (String.strip ~chars:"/" s) "/" in
+      let l = String.nsplit (String.strip ~chars:" /" s) "/" in
       match List.rev l with
         | x :: xs ->
           abs,
@@ -374,21 +384,23 @@ struct
           String.nsplit s "\n",
           fun s ->
             match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
-            | Some ("", _) -> true
-            | _ -> false in
+            | Some ("", _) -> false
+            | _ -> true in
         List.takewhile f_while l, List.dropwhile f_while l in
 
-      (match Parse.parse ":" l_lib_bin with 
-      |  Parsed ("lib", lib)
-      :: Parsed ("bin", bin) :: _ -> 
-          { lib = List.map relative_path_of_string (String.nsplit lib ",")
-          ; bin = relative_path_of_string bin 
-          ; misc = 
-              List.map
-                (fun (s_path, s_fname) -> 
-                  { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
-                (Parse.filter_parsed (Parse.parse " " l_misc)) }
-      | _ -> empty)
+      let l_lib_bin = Parse.parse ":" l_lib_bin in
+
+      
+      { lib = 
+          (match Parse.Exceptionless.assoc_parsed "lib" l_lib_bin with
+            | Some lib -> List.map relative_path_of_string (String.nsplit lib ",")
+            | None -> [])
+      ; bin = Option.map relative_path_of_string (Parse.Exceptionless.assoc_parsed "bin" l_lib_bin)
+      ; misc = 
+          List.map
+            (fun (s_path, s_fname) -> 
+              { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
+            (Parse.filter_parsed (Parse.parse " " l_misc)) }
 
     let to_string t =
 
@@ -405,7 +417,7 @@ bin: %s
 misc:
 %s"
         (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:", " path_print) t.lib)
-        (BatIO.to_string path_print t.bin)
+        (BatIO.to_string (BatOption.print path_print) t.bin)
         (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:"\n" 
                             (fun oc misc -> 
                               begin

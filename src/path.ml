@@ -239,8 +239,8 @@ sig
   (** Considers the given [filename] as the contents of an [archive] already extracted. *)
   val raw_targz : filename -> binary_data archive
 
-  (** Executes this particularly named script. *)
-  val exec_buildsh : t -> name_version -> unit
+  (** Executes this particularly named script. For the [int], see [Sys.command]. *)
+  val exec_buildsh : t -> name_version -> int
   (* $HOME_OPAM/build/NAME-VERSION/build.sh *)
   
   (** see [Filename.dirname] *)
@@ -445,8 +445,7 @@ module Path : PATH = struct
 
   let exec_buildsh t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
-    let _ = Sys.command "./build.sh" in
-    ()
+    Sys.command "./build.sh"
 
   let basename s = B (Filename.basename (s_of_filename s))
 
@@ -461,7 +460,7 @@ module Path : PATH = struct
         end)
   (*IO.read_all (Common.Input.open_file fic)*)
     
-  | Tar_gz (Filename (Raw_filename fic)) -> R_filename [Raw fic]
+  | Tar_gz (Filename (Raw_filename fic)) -> failwith "to complete !" (* R_filename [Raw fic] *)
 
   let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))
 
@@ -471,6 +470,7 @@ module Path : PATH = struct
   let dirname = filename_map Filename.dirname
 
   let add_rec f = 
+    log "add_rec %s" (s_of_filename f);
     let () = (* check that [f] is not a file *)
       contents
         (fun _ -> ())
@@ -506,11 +506,13 @@ module Path : PATH = struct
             ignore (U.getchdir pwd);
           end) (s_of_filename (f /// name)) in
 
-    let f, name = dirname f, basename f in
     function
       | R_filename l -> 
-        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f (fun _ -> name) l)
-      | v -> aux f name v
+        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f (basename) l)
+      | R_lazy _ as r_lazy -> 
+        let f, name = dirname f, basename f in
+        aux f name r_lazy
+      | _ -> failwith "to complete !"
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))
