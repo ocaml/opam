@@ -174,7 +174,18 @@ struct
 
     let internal_name = "opam"
 
-    module D = Debian.Packages
+    module D = struct
+      module D = Debian.Packages
+
+      module D_add = struct
+        let f g s = g ((Lexing.dummy_pos, Lexing.dummy_pos), s)
+        let parse_vpkgformula = f D.parse_vpkgformula
+        let parse_vpkglist = f D.parse_vpkglist
+      end
+
+      include D
+      include D_add
+    end
 
     open BatMap
 
@@ -195,6 +206,8 @@ struct
     let s_package = "package"
     let s_installed = "status" (* see [Debcudf.add_inst] for more details about the format *)
     let s_installed_true = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
+    let s_depends = "depends"
+    let s_conflicts = "conflicts"
 
     let description t = 
       BatIO.to_string
@@ -207,7 +220,9 @@ struct
       { D.default_package with 
         D.name = Parse.assoc_parsed s_package t.list_stanza ;
         D.version = t.version.deb ;
-        D.extras = [ s_description, description t ] }
+        D.extras = [ s_description, description t ] ;
+        D.depends = D.parse_vpkgformula (Parse.assoc_parsed s_depends t.list_stanza) ;
+        D.conflicts = D.parse_vpkglist (Parse.assoc_parsed s_conflicts t.list_stanza) }
 
     let package t installed =
       let p = default_package t in
