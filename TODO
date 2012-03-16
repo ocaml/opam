@@ -1,1 +1,2 @@
-* File.Opam.parse does not work
+* ocp-get install P1 does not copy the file in P1.install at the rigth place
+* ocp-get install P2 tries to uninstall P1
