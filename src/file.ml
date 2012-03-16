@@ -3,29 +3,88 @@ open ExtList
 open Namespace
 open Path
 
-module File =
+type ('a, 'b) text = 
+  | Parsed of 'a 
+  | Raw of 'b
+
+module Parse =
+struct
+
+  let parse motif =
+    List.map 
+      (fun s -> 
+        try Parsed (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> Raw s)
+
+  let split motif s = parse motif (String.nsplit s "\n")
+
+  let filter_parsed = 
+    List.filter_map 
+      (function 
+        | Parsed x -> Some x
+        | Raw _ -> None)
+    
+  let colon = split ":"
+  let space = split " "
+
+  let assoc f k0 =
+    let rec aux = function
+      | x :: xs -> 
+        (match x with 
+          | Parsed (k1, v) -> 
+            if k0 = k1 then f v xs else aux xs
+          | Raw _ -> aux xs)
+      | [] -> raise Not_found in
+    aux
+
+  let assoc_parsed = assoc (fun v _ -> v)
+  let assoc_all = assoc (fun v xs -> v :: BatList.takewhile_map (function Raw x -> Some x | Parsed _ -> None) xs)
+
+  let map_parsed f = 
+    List.map 
+      (function
+        | Parsed x -> Parsed (f x)
+        | Raw r -> Raw r)       
+
+  module Exceptionless = 
+  struct
+    let assoc_parsed k l = try Some (assoc_parsed k l) with Not_found -> None
+    let assoc_all k l = try Some (assoc_all k l) with Not_found -> None
+  end
+
+end
+
+module Cudf =
+struct
+  include Cudf
+    
+  let find_field x key = 
+    try Some (List.assoc key x.Cudf.pkg_extra) with Not_found -> None
+      
+  let description p s_description = 
+    match find_field p s_description with
+      | Some (`String s) -> s
+      | _ -> ""
+end
+
+module Base =
 struct
   open Namespace
+
+  exception Parsing of string
 
   module type IO_FILE =
   sig
     type t
 
-    (** Parse a string *)
-    val parse: string -> t
+    (** Parse a string or raise the exception [Parsing _]. *)
+    val parse : string -> t
+
+    val empty : t
 
     (** Return the content of a file as a string *)
-    val to_string: t -> string
+    val to_string : t -> string
 
-    (** Find a file. Return [None] if the file does not exists *)
-    val find : Path.filename -> t option
-
-    (** Find a file. Return a default value [v0] if the file does not exists. 
-        In general, forall [v1], [compare v0 v1] < 0. *)
-    val find_default : Path.filename -> t
-
-    (** Add a file *)
-    val add : Path.filename -> t -> unit
+    val internal_name : string
   end
 
   module type CONFIG =
@@ -43,58 +102,10 @@ struct
     val create : internal_version (* opam *) -> url -> internal_version (* ocaml *) -> t
   end
 
-  type ('a, 'b) text = 
-    | Parsed of 'a 
-    | Raw of 'b
-
-  module Parse =
-  struct
-
-    let parse motif =
-      List.map 
-        (fun s -> 
-          try Parsed (BatPair.map BatString.trim (BatString.split (BatString.trim s) motif)) with Not_found -> Raw s)
-
-    let split motif s = parse motif (String.nsplit s "\n")
-
-    let filter_parsed = 
-      List.filter_map 
-        (function 
-          | Parsed x -> Some x
-          | Raw _ -> None)
-      
-    let colon = split ":"
-    let space = split " "
-
-    let assoc f k0 =
-      let rec aux = function
-        | x :: xs -> 
-          (match x with 
-            | Parsed (k1, v) -> 
-              if k0 = k1 then f v xs else aux xs
-            | Raw _ -> aux xs)
-        | [] -> raise Not_found in
-      aux
-
-    let assoc_parsed = assoc (fun v _ -> v)
-    let assoc_all = assoc (fun v xs -> v :: BatList.takewhile_map (function Raw x -> Some x | Parsed _ -> None) xs)
-
-    let map_parsed f = 
-      List.map 
-        (function
-          | Parsed x -> Parsed (f x)
-          | Raw r -> Raw r)       
-
-    module Exceptionless = 
-    struct
-      let assoc_parsed k l = try Some (assoc_parsed k l) with Not_found -> None
-      let assoc_all k l = try Some (assoc_all k l) with Not_found -> None
-    end
-
-  end
-
   module Config : CONFIG =
   struct
+    let internal_name = "config"
+
     type t =
         { version : internal_version (* opam version *)
         ; sources : url
@@ -108,7 +119,7 @@ struct
 
     let create version sources ocaml_version = { version ; sources ; ocaml_version }
 
-    let default = {
+    let empty = {
       version = Version Globals.version;
       sources = url Globals.default_hostname Globals.default_port ;
       ocaml_version = Version Sys.ocaml_version
@@ -119,9 +130,6 @@ struct
         (match t.version with Version s -> s)
         (string_of_url t.sources)
         (match t.ocaml_version with Version s -> s)
-
-    let log fmt =
-      Globals.log "FILE.CONFIG" fmt
 
     let parse contents =
       let file = Parse.colon contents in
@@ -137,19 +145,6 @@ struct
       { version = Version version
       ; sources
       ; ocaml_version = Version ocaml_version }
-
-    let find f =
-      log "find %s" (Path.string_of_filename f);
-      match Path.find_binary f with
-      | Path.File (Raw_binary s)     -> Some (parse s)
-      | Path.Not_found _             -> None
-      | Path.Directory _ -> failwith (Printf.sprintf "%s is a directory" (Path.string_of_filename f))
-
-    let add f v =
-      log "add %s" (Path.string_of_filename f);
-      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
-
-    let find_default f = match find f with None -> default | Some t -> t
   end
 
   module type CUDF =
@@ -161,20 +156,6 @@ struct
 
     (** Getters *)
     val packages: t -> Cudf.package list
-  end
-
-  (* If next modules wants to refer to Cudf *)
-  module C = 
-  struct
-    include Cudf
-
-    let find_field x key = 
-      try Some (List.assoc key x.Cudf.pkg_extra) with Not_found -> None
-
-    let description p s_description = 
-      match find_field p s_description with
-        | Some (`String s) -> s
-        | _ -> ""
   end
 
   module type OPAM = sig
@@ -191,6 +172,8 @@ struct
 
   module Opam : OPAM = struct
 
+    let internal_name = "opam"
+
     module D = Debian.Packages
 
     open BatMap
@@ -200,6 +183,8 @@ struct
       version : Namespace.version ;
       list_stanza : (string * string, string) text list ;
     }
+
+    let empty = { opam_version = Version "" ; version = { deb = "" } ; list_stanza = [] }
 
     let opam_version t = t.opam_version
     let version t = t.version
@@ -245,51 +230,23 @@ struct
                (match txt with
                  | Raw s -> s
                  | Parsed (k, v) -> k ^ " : " ^ v))) t.list_stanza
-
-    let log fmt =
-      Globals.log "FILE.CONFIG" fmt
-
-    let find f =
-      log "find %s" (Path.string_of_filename f);
-      match Path.find_binary f with
-        | Path.File (Raw_binary s) -> 
-          (try Some (parse s)
-           with _ -> failwith ("Error while parsing " ^ Path.string_of_filename f))
-        | Path.Not_found _ -> None
-        | _ -> raise Not_found
-
-    let add f v =
-      log "add %s" (Path.string_of_filename f);
-      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
-
-    let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
   end
 
 
   module type INSTALLED =
   sig
     include IO_FILE with type t = name_version list
-
-    (** Same as [add] but the map we operating on is retrieved after a [find_default]. *)
-    val modify_def : Path.filename -> (version N_map.t -> version N_map.t) -> unit
-
-    (** see [find_default] *)
-    val find_map : Path.filename -> version N_map.t
   end
 
   module Installed : INSTALLED =
   struct
+    let internal_name = "install"
+
     type t = name_version list
     let empty = []
 
     let parse s =
       List.map (fun (name, version) -> Name name, version_of_string version) (Parse.filter_parsed (Parse.space s))
-
-    let find f = 
-      match Path.find_binary f with
-        | Path.File (Raw_binary s) -> Some (parse s)
-        | Path.Not_found _         -> Some empty
-        | _ -> assert false
 
     let to_string = 
       BatIO.to_string
@@ -299,14 +256,6 @@ struct
                (Printf.sprintf "%s %s" 
                   (Namespace.string_user_of_name name) 
                   (Namespace.string_user_of_version version))))
-
-    let add f v = Path.add f (Path.File (Binary (Raw_binary (to_string v))))
-
-    let find_default f = match find f with None -> empty | Some t -> t
-
-    let find_map f = N_map.of_list (find_default f)
-
-    let modify_def f f_map = add f (N_map.bindings (f_map (find_map f)))
   end
 
   type basename_last = 
@@ -352,6 +301,8 @@ struct
 
   module To_install : TO_INSTALL =
   struct
+    let internal_name = "to_install"
+
     type t = 
         { lib : path list
         ; bin : path
@@ -424,12 +375,6 @@ struct
                 (Parse.filter_parsed (Parse.parse " " l_misc)) }
       | _ -> empty)
 
-    let find f =
-      match Path.find_binary f with
-        | Path.File (Raw_binary s) -> Some (parse s)
-        | Path.Not_found _         -> Some empty
-        | _ -> assert false
-
     let to_string t =
 
       let path_print oc (pref, l_base, base) = 
@@ -453,11 +398,6 @@ misc:
                                 BatString.print oc " ";
                                 path_print oc (misc.p_to);
                               end)) t.misc)
-
-    let add f v =
-      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
-
-    let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
   end
 
 
@@ -474,6 +414,8 @@ misc:
 
   module Descr : DESCR =
   struct
+    let internal_name = "descr"
+
     type t = 
         { library : string
         ; requires : string list
@@ -510,20 +452,86 @@ library %s {
   %s
 }" t.library (f_s false ", " t.requires) (f_s true " -" t.link) (f_s true " -" t.asmlink)
 
-    let empty = 
-      { library = "" ; requires = [] ; link = [] ; asmlink = [] }
-
-    let find f = 
-      match Path.find_binary f with
-        | Path.File (Raw_binary s) -> Some (parse s)
-        | Path.Not_found _         -> Some empty
-        | _ -> assert false
-
-
-    let add f v =
-      Path.add f (Path.File (Binary (Raw_binary (to_string v))))
-
-    let find_default f = match find f with None -> failwith "to complete !" | Some t -> t
+    let empty = { library = "" ; requires = [] ; link = [] ; asmlink = [] }
   end
 
+  module type SECURITY_KEY =
+  sig
+    include IO_FILE with type t = security_key
+  end
+
+  module Security_key : SECURITY_KEY =
+  struct
+    let internal_name = "security_key"
+
+    type t = security_key
+
+    let parse s = Random s
+    let to_string (Random s) = s
+
+    let empty = Random ""
+  end
+
+end
+
+
+exception Directory_found
+
+module Make (F : Base.IO_FILE) = 
+struct
+  let log = Globals.log F.internal_name
+
+  (** Add a file *)
+  let add f v =
+    log "add %s" (Path.string_of_filename f);
+    Path.add f (Path.File (Binary (Raw_binary (F.to_string v))))
+
+  (** Find a file. Return [None] if the file does not exists.
+      Raise [Parsing] or [Directory_found] in case an error happens. *)
+  let find f =
+    log "find %s" (Path.string_of_filename f);
+    match Path.find_binary f with
+      | Path.File (Raw_binary s)     -> Some (F.parse s)
+      | Path.Not_found _             -> None
+      | Path.Directory _             -> raise Directory_found
+
+  (** Find a file. Exit the program if the file does not exists.
+      Raise [Parsing] or [Directory] in case another error happen. *)
+  let find_err = Path.read find
+
+  module Exceptionless =
+  struct
+      (** Find a file. Return a default value [v0] if the file does not exists. 
+          In general, forall [v1], [compare v0 v1] < 0. *)
+    let default def f = 
+      match try Some (find f) with _ -> None with
+        | Some (Some t) -> t
+        | _ -> def
+          
+    let find = default F.empty
+  end
+end
+
+
+module File =
+struct
+  open Base
+
+  module Config = struct include Config include Make (Config) end
+  module Opam = struct include Opam include Make (Opam) end
+  module To_install = struct include To_install include Make (To_install) end
+  module Descr = struct include Descr include Make (Descr) end
+  module Security_key = struct include Security_key include Make (Security_key) end
+
+  module Installed =
+  struct
+    module M_installed = Make (Installed)
+      
+    let find_map f = N_map.of_list (M_installed.Exceptionless.find f)
+      
+    let modify_def f f_map = M_installed.add f (N_map.bindings (f_map (find_map f)))
+      
+    include Installed
+    include M_installed
+  end
 end
