@@ -141,21 +141,24 @@ module Client : CLIENT = struct
         List.iter
           (fun (tit, desc) -> Printf.printf "%s: %s\n" tit desc)
           [ "package", Namespace.string_user_of_name name
-          ; "version", (match o_v with None -> s_not_installed | Some v -> Namespace.string_user_of_version v)
-          ; "versions",
-            BatIO.to_string
-              (V_set.print ~first:"" ~last:"" ~sep:", "
-                 (fun oc v -> BatString.print oc (Namespace.string_user_of_version v))
-              ) v_set
+
+          ; "version",
+            (match o_v with
+            | None   -> s_not_installed
+            | Some v -> Namespace.string_user_of_version v)
+
+          ; "versions", (V_set.to_string Namespace.string_user_of_version v_set)
+
           ; "description", "\n" ^ 
             match o_v with None -> ""
             | Some v ->
-                let opam = File.Opam.find_err (Path.index_opam t.home (Some (name, v))) in
+                let opam =
+                  File.Opam.find_err (Path.index_opam t.home (Some (name, v))) in
                 File.Opam.description opam
           ]
 
   let confirm msg = 
-    Printf.printf "%s\nContinue ? [y/N] " msg;
+    Printf.printf "%s [y/N] " msg;
     match read_line () with
       | "y" | "Y" -> true
       | _         -> false
@@ -182,12 +185,15 @@ module Client : CLIENT = struct
   
     (* misc *)
     List.iter 
-      (fun misc -> 
-        if confirm (File.To_install.string_of_misc misc) then
-          let path_from = filename_of_path_relative t (File.To_install.path_from misc) in
+      (fun misc ->
+        Printf.printf "%s\n" (File.To_install.string_of_misc misc);
+        if confirm "Continue ?" then
+          let path_from =
+            filename_of_path_relative t (File.To_install.path_from misc) in
           List.iter 
             (fun path_to -> Path.add_rec path_to path_from) 
-            (File.To_install.filename_of_path_absolute t.home (File.To_install.path_to misc)))
+            (File.To_install.filename_of_path_absolute t.home
+               (File.To_install.path_to misc)))
       (File.To_install.misc to_install)
 
   let proceed_todelete t (n, v0) = 
@@ -212,36 +218,54 @@ module Client : CLIENT = struct
       iter_toinstall Path.add_rec t nv;
     end
 
-  let proceed_tochange t (nv_old, (name, v)) =
-    begin 
-      (match nv_old with 
-        | Was_installed nv_old -> proceed_todelete t nv_old
-        | Was_not_installed ->
+  let delete_or_update l =
+    let action = function
+      | Solver.To_change(Was_installed _,_ )
+      | Solver.To_delete _ -> true
+      | _ -> false in
+    let parallel (Solver.P l) = List.exists action l in
+    List.exists parallel l
+
+  let proceed_tochange t nv_old (name, v) =
+    begin match nv_old with 
+      | Was_installed nv_old -> proceed_todelete t nv_old
+      | Was_not_installed ->
           let p_build = Path.build t.home (Some (name, v)) in
           if Path.file_exists p_build then
             ()
           else
             let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-            Path.add_rec p_build tgz);
-      proceed_torecompile t (name, v);
-      File.Installed.modify_def (Path.installed t.home) (N_map.add name v);
-    end
+            Path.add_rec p_build tgz
+    end;
+    proceed_torecompile t (name, v);
+    File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
 
   let resolve t l_index map_installed request = 
 
     let rec aux = function
-    | x :: xs -> 
-        let msg =
-          Printf.sprintf
-            "%s This solution will be performed or another will be tried if existed."
-            (if x = [] then
-                "Solution found : The current state of the repository can be kept to satisfy the constraints given."
-             else
-                BatIO.to_string (Solver.solution_print Namespace.user_print Namespace.user_print) x) in
-        if confirm msg then
-          Some x
+    | [x] ->
+        (* Only 1 solution exists *)
+        Printf.printf "The following actions will be performed:\n";
+        Solver.solution_print Namespace.string_of_user x;
+        if delete_or_update x then
+          if confirm "Continue ?" then
+            Some x
+          else
+            None
         else
-          aux xs
+          Some x
+
+    | x :: xs ->
+        (* Multiple solution exist *)
+        Printf.printf "The following actions will be performed:\n";
+        Solver.solution_print Namespace.string_of_user x;
+        if delete_or_update x then
+          if confirm "Continue ? (press [n] to try another solution)" then
+            Some x
+          else
+            aux xs
+        else
+          Some x
             
     | [] -> None in
     
@@ -260,8 +284,8 @@ module Client : CLIENT = struct
     | Some sol -> 
         List.iter (fun(Solver.P l) -> 
           List.iter (function
-          | Solver.To_change n_v -> proceed_tochange t n_v
-          | Solver.To_delete n_v -> proceed_todelete t n_v
+          | Solver.To_change (o,n)  -> proceed_tochange t o n
+          | Solver.To_delete n_v    -> proceed_todelete t n_v
           | Solver.To_recompile n_v -> proceed_torecompile t n_v
           ) l
         ) sol
@@ -269,17 +293,17 @@ module Client : CLIENT = struct
 
   let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some ("=", v.Namespace.deb)
 
+  let unknown_package name =
+    Globals.error_and_exit
+      "ERROR: Unable to locate package \"%s\"\n"
+      (Namespace.string_user_of_name  name)
+
   let install name = 
     log "install %s" (Namespace.string_of_name name);
     let t = load_state () in
     let l_index = Path.index_opam_list t.home in
     match find_from_name name l_index with
-      | None ->
-          let msg =
-            Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
-              (Namespace.string_user_of_name name) in
-          if confirm msg then
-            update_t t
+      | None -> unknown_package name
       | Some v -> 
         resolve t
           l_index
@@ -293,25 +317,15 @@ module Client : CLIENT = struct
     let t = load_state () in
     let installed = File.Installed.find_map (Path.installed t.home) in
 
-    let r = match N_map.Exceptionless.find name installed with
-    | None ->
-        let msg =
-          Printf.sprintf "Package \"%s\" not found. We will call the solver to see its output."
-            (Namespace.string_user_of_name name) in
-        if confirm msg then
-          Some None
-        else
-          None
-    | Some v -> Some (Some ("=", v.Namespace.deb)) in
-    match r with
-    | Some o_v -> 
-        resolve t 
-          (Path.index_opam_list t.home)
-          installed
-          { Solver.wish_install = []
-          ; wish_remove = [ Namespace.string_of_name name, o_v ]
-          ; wish_upgrade = [] }
-    | None -> ()
+    let v = match N_map.Exceptionless.find name installed with
+      | None   -> unknown_package name
+      | Some v -> ("=", v.Namespace.deb) in
+    resolve t 
+      (Path.index_opam_list t.home)
+      installed
+      { Solver.wish_install = []
+      ; wish_remove = [ Namespace.string_of_name name, Some v ]
+      ; wish_upgrade = [] }
 
   let upgrade () =
     log "upgrade";
@@ -339,7 +353,8 @@ module Client : CLIENT = struct
     let opam = binary opam_binary in
 
     (* look for the archive *)
-    let archive_filename = Namespace.string_of_nv (Namespace.Name name) version ^ ".tar.gz" in
+    let archive_filename =
+      Namespace.string_of_nv (Namespace.Name name) version ^ ".tar.gz" in
     let archive =
       if Sys.file_exists archive_filename then
         Tar_gz (binary (U.read_content archive_filename))
@@ -369,6 +384,7 @@ module Client : CLIENT = struct
     end
 
   type config_request = Dir | Bytelink | Asmlink
+
   let config _ req name =
     log "config %s" (Namespace.string_of_name name);
     let t = load_state () in
@@ -376,7 +392,8 @@ module Client : CLIENT = struct
         
       | None, _ -> 
         let msg =
-          Printf.sprintf "Package \"%s\" not found. An update of package will be performed."
+          Printf.sprintf
+            "Package \"%s\" not found. An update of package will be performed."
             (Namespace.string_user_of_name name) in
         if confirm msg then
           update_t t
@@ -384,6 +401,7 @@ module Client : CLIENT = struct
       | Some _, Dir -> 
         Printf.printf "-I %s" 
           (match Path.ocaml_options_of_library t.home name with I s -> s)
+
       | Some v, _ -> 
         let l_f, s_cma = 
           (match req with
@@ -391,10 +409,9 @@ module Client : CLIENT = struct
             | Asmlink -> [ File.Descr.link ; File.Descr.asmlink ], ".cmxa"
             | Dir -> assert false) in
         let descr = File.Descr.find_err (Path.descr t.home (name, V_set.max_elt v)) in
+        let flags = List.flatten (List.map (fun f -> f descr) l_f) in
+        Printf.printf "%s %s%s"
+          (String.concat " " flags)
+          (File.Descr.library descr) s_cma
 
-        Printf.printf "%s %s%s" 
-          (BatIO.to_string (BatList.print ~first:" -" ~sep:" -" ~last:"" BatString.print)
-             (List.flatten (List.map (fun f -> f descr) l_f)))
-          (File.Descr.library descr)
-          s_cma
 end

@@ -14,28 +14,32 @@ sig
       ; wish_remove : 'a list
       ; wish_upgrade : 'a list }
 
-  type ('a, 'b) action = 
-    | To_change of 'a 
-        (* Version to install. The package could have been present or not, 
-           but if present, it is another version than the proposed solution. *)
-    | To_delete of 'b (* The package has been installed. *)
-    | To_recompile of 'b (* The package is already installed, we just recompile it. *)
+  type 'a action = 
+    (* The package must be installed. The package could have been present or not, 
+       but if present, it is another version than the proposed solution. *)
+    | To_change of 'a installed_status * 'a 
+
+    (* The package must be deleted. *)
+    | To_delete of 'a
+
+    (* The package is already installed, but it must be recompiled it. *)
+    | To_recompile of 'a 
 
   type 'a parallel = P of 'a list (* order irrelevant : elements are considered in parallel *)
 
-  type ('a (* old package *), 'b (* new package *)) solution = 
-      ( 'a installed_status * 'b
-      , 'a )
-        action parallel list
-      (** Sequence describing the action to perform.
-          Order natural : first element to execute is the first element of the list. *)
+  (** Sequence describing the action to perform.
+      Natural order : the first element to execute is the first element of the list. *)
+  type 'a solution = 'a action parallel list
 
-  val solution_print : ('a BatIO.output -> 'b -> unit) -> ('a BatIO.output -> 'c -> unit) -> 'a BatIO.output -> ('b, 'c) solution -> unit
-  val solution_map : ('a -> 'b) -> ('c -> 'd) -> ('a, 'c) solution -> ('b, 'd) solution
+  val solution_print : ('a -> string) -> 'a solution -> unit
+  val solution_map : ('a -> 'b) -> 'a solution -> 'b solution
   val request_map : ('a -> 'b) -> 'a request -> 'b request
 
-  val resolve : Debian.Packages.package list -> Debian.Format822.vpkg request -> (name_version, name_version) solution list
-    (** Given a description of packages, it returns a list of solution preserving the consistency of the initial description. *)
+  (** Given a description of packages, return the list of solution preserving
+      the consistency of the initial description. *)
+  val resolve :
+    Debian.Packages.package list -> Debian.Format822.vpkg request
+    -> name_version solution list
 end
 
 module Solver : SOLVER = struct
@@ -45,47 +49,32 @@ module Solver : SOLVER = struct
       ; wish_remove : 'a list
       ; wish_upgrade : 'a list }
 
-  type ('a, 'b) action = 
-    | To_change of 'a 
-    | To_delete of 'b
-    | To_recompile of 'b
+  type 'a action = 
+    | To_change of 'a installed_status * 'a
+    | To_delete of 'a
+    | To_recompile of 'a
 
   type 'a parallel = P of 'a list
 
-  type ('a, 'b) solution = 
-      ( 'a installed_status * 'b
-      , 'a )
-        action parallel list
+  type 'a solution = 'a action parallel list
 
-  let solution_map f1 f2 = 
+  let solution_map f = 
     List.map (function P l -> P (List.map (function
-      | To_change (o_p, p) -> To_change ((match o_p with
-          |  Was_installed p -> Was_installed (f1 p)
-          | Was_not_installed -> Was_not_installed), f2 p)
-      | To_delete p -> To_delete (f1 p)
-      | To_recompile p -> To_recompile (f1 p)) l))
+      | To_change (Was_installed p1, p2) -> To_change (Was_installed (f p1), f p2)
+      | To_change (Was_not_installed, p) -> To_change (Was_not_installed, f p)
+      | To_delete p                      -> To_delete (f p)
+      | To_recompile p                   -> To_recompile (f p)
+    ) l))
 
-  let solution_print f1 f2 = 
-    BatList.print ~first:"" ~last:"" ~sep:", " 
-      (fun oc (P l) -> 
-        BatList.print ~first:"" ~last:"" ~sep:", " 
-          (fun oc act -> 
-            let f_act s l_p = 
-              begin
-                BatString.print oc (Printf.sprintf "%s : " s);
-                BatList.print f1 oc l_p;
-              end in
-            match act with
-              | To_change (o_v_old, p_new) -> 
-                begin
-                  f_act "change"
-                    (match o_v_old with
-                      | Was_not_installed -> []
-                      | Was_installed p_old -> [ p_old ]);
-                  f2 oc p_new;
-                end
-              | To_recompile _ -> ()
-              | To_delete v -> f_act "remove" [v]) oc l)
+  let solution_print f =
+    let pf = Printf.printf in
+    List.iter (fun (P l) ->
+      List.iter (function
+        | To_recompile p                   -> pf "Recompile: %s\n" (f p)
+        | To_delete p                      -> pf "Remove: %s\n" (f p)
+        | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
+        | To_change (Was_installed o, p)   -> pf "Update: %s -> %s\n" (f o) (f p)
+      ) l)
 
   let request_map f r = 
     let f = List.map f in
@@ -95,8 +84,8 @@ module Solver : SOLVER = struct
 
   module type CUDFDIFF = 
   sig
-    val resolve_diff : Cudf.universe -> Cudf_types.vpkg request ->
-      (Cudf.package installed_status * Cudf.package, Cudf.package) action list option
+    val resolve_diff :
+      Cudf.universe -> Cudf_types.vpkg request -> Cudf.package action list option
 
     val resolve_summary : Cudf.universe -> Cudf_types.vpkg request ->
       ( Cudf.package list
@@ -242,7 +231,8 @@ module Solver : SOLVER = struct
                 let add_succ_rem pkg set act =
                   (let set = PkgSet.remove pkg set in
                    try
-                     List.fold_left (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg) 
+                     List.fold_left
+                       (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg)
                    with _ -> set), 
                   act :: l_act in
                 
@@ -268,8 +258,12 @@ module Solver : SOLVER = struct
         | None -> []
         | Some l -> 
           solution_map
-            (fun pkg -> Namespace.Name pkg.Cudf.package, { Namespace.deb = Debian.Debcudf.get_real_version table (pkg.Cudf.package, pkg.Cudf.version) })
-            (fun pkg -> Namespace.Name pkg.Cudf.package, { Namespace.deb = Debian.Debcudf.get_real_version table (pkg.Cudf.package, pkg.Cudf.version) })
+            (fun pkg ->
+              Namespace.Name pkg.Cudf.package,
+              { Namespace.deb =
+                  Debian.Debcudf.get_real_version
+                    table
+                    (pkg.Cudf.package, pkg.Cudf.version) })
             (List.map (fun x -> P [ x ]) l) ] in
       let () = Debian.Debcudf.clear table in
       l

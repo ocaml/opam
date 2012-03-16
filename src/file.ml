@@ -449,7 +449,7 @@ misc:
         let s_beg, s = BatString.split s "{" in
         (match List.filter (function "" -> false | _ -> true) (String.nsplit s_beg " ") with
           | "library" :: name :: _ -> name
-          | [] -> failwith "The name of the library is not found"), s in
+          | _ -> failwith "The name of the library is not found"), s in
       let l = Parse.colon s in
       let f_dash dash key = List.map (String.strip ~chars:" ") (String.nsplit dash (Parse.assoc_parsed key l)) in
       { library 
