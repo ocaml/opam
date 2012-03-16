@@ -42,6 +42,24 @@ type internal_version = Version of string
 
 type security_key = Random of string
 
+module type RANDOM_KEY = sig
+  val new_key : unit -> security_key
+end
+
+module Random_key : RANDOM_KEY = struct
+  let make n = Random (String.implode (List.init n (fun _ -> char_of_int (Random.int 255))))
+
+  let len = 128
+
+  let n = ref (make len)
+
+  let new_key _ = 
+    let k = !n in
+    let () = n := make len in
+    k
+end
+
+
 module U = struct
   let mkdir f f_to = 
     let rec aux f_to = 

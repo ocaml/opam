@@ -363,10 +363,25 @@ module Client : CLIENT = struct
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
-    let nv = Namespace.Name name, version in
+    let name = Namespace.Name name in
     let local_server = Server.init !Globals.root_path in
-    RemoteServer.newArchive t.server nv opam archive;
-    Server.newArchive local_server nv opam archive
+
+    let o_key0 = File.Security_key.find (Path.keys t.home name) in
+    let o_key1 = 
+      match o_key0 with
+        | None -> RemoteServer.newArchive t.server (name, version) opam archive
+        | Some k -> if RemoteServer.updateArchive t.server (name, version) opam archive k then Some k else None in
+
+    begin      
+      (match o_key1 with
+        | Some k1 when o_key0 <> o_key1 -> File.Security_key.add (Path.keys t.home name) k1
+        | None -> Printf.printf "The key given to upload was not accepted.\n%!"
+        | _ -> ());
+      (if o_key1 = None then
+          ()
+       else
+          ignore (Server.newArchive local_server (name, version) opam archive));
+    end
 
   type config_request = Dir | Bytelink | Asmlink
 

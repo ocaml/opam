@@ -3,6 +3,8 @@ open Path
 open File
 open Unix
 
+type 'a boolean = 'a -> bool
+
 module type SERVER =
 sig
   type t
@@ -17,10 +19,16 @@ sig
   (** Returns the corresponding package archive. *)
   val getArchive : t -> name_version -> binary_data archive
 
+  (** Receives a first upload, it contains an OPAM file and the
+      corresponding package archive. *)
+  val newArchive : t -> name_version -> binary_data -> binary_data archive -> security_key option
+    (* [None] : An archive with the same NAME already exists, we cancel the reception.
+       [Some key] : The reception is accepted, a new unique key associated to the NAME is returned. *)
+
   (** Receives an upload, it contains an OPAM file and the
       corresponding package archive. *)
-  val newArchive : t -> name_version -> binary_data -> binary_data archive -> unit
-
+  val updateArchive : t -> name_version -> binary_data -> binary_data archive -> security_key boolean
+    (* [false] : An archive with the same NAME already exists, we cancel the reception. *)
 end
 
 type server_state =
@@ -63,7 +71,7 @@ module Server = struct
           | Path.File s -> Tar_gz (Binary s)
           | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
 
-  let newArchive t n_v opam archive =
+  let f_archive t n_v opam archive =
     let opam_file = Path.index_opam t.home (Some n_v) in
     let archive_file = Path.archives_targz t.home (Some n_v) in
     begin match opam with
@@ -72,8 +80,34 @@ module Server = struct
     end;
     begin match archive with
     | Tar_gz f -> Path.add archive_file (Path.File f)
-    end;
+    end
 
+  let mapArchive t name f o_key = 
+    let hashes = Path.hashes t.home name in
+    let o_key = 
+      match o_key, File.Security_key.find hashes with 
+        | None, None ->
+          let key = Random_key.new_key () in
+          let () = File.Security_key.add hashes key in
+          Some key
+        | Some k0, Some k1 -> 
+          if k0 = k1 then
+            Some k0
+          else
+            None
+        | _ -> None in
+    let () = 
+      if o_key = None then
+        () (* execution canceled *)
+      else
+        f t in
+    o_key
+
+  let newArchive t n_v opam archive = 
+    mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) None
+
+  let updateArchive t n_v opam archive key =
+    None <> mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) (Some key)
 end
 
 type input_api =
@@ -81,12 +115,14 @@ type input_api =
   | IgetOpam of name_version
   | IgetArchive of name_version
   | InewArchive of name_version * binary_data * binary_data archive
+  | IupdateArchive of name_version * binary_data * binary_data archive * security_key
 
 type output_api =
   | OgetList of name_version list
   | OgetOpam of binary_data
   | OgetArchive of binary_data archive
-  | OnewArchive
+  | OnewArchive of security_key option
+  | OupdateArchive of bool
   | Oerror of string (* server error *)
 
 module RemoteServer : SERVER with type t = url = struct
@@ -132,13 +168,19 @@ module RemoteServer : SERVER with type t = url = struct
     | Oerror s      -> error s
     | _             -> dyn_error "getArchive"
 
-  let newArchive t nv opam archive =
-    let archive = match archive with
+  let read_archive = function
     | Tar_gz (Filename (Raw_filename s)) -> Tar_gz (Binary (Raw_binary (U.read_content s)))
-    | Tar_gz _                           -> archive in
-    match send t (InewArchive (nv, opam, archive)) with
-    | OnewArchive -> ()
+    | x                                  -> x
+      
+  let newArchive t nv opam archive = 
+    match send t (InewArchive (nv, opam, read_archive archive)) with
+    | OnewArchive o -> o
     | Oerror s    -> error s
     | _           -> dyn_error "newArchive"
 
+  let updateArchive t nv opam archive k = 
+    match send t (IupdateArchive (nv, opam, read_archive archive, k)) with
+    | OupdateArchive b -> b
+    | Oerror s    -> error s
+    | _           -> dyn_error "updateArchive"
 end
