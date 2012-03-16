@@ -1,1 +1,1 @@
-lib: p1.cma p1.cmxa p1.cmi
+lib: _build/p1.cma _build/p1.cmxa _build/p1.cmi
