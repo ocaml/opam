@@ -1,7 +1,8 @@
 #!/bin/bash
+OCPGET="./ocp-get --root /tmp/OPAM.TEST"
 
 echo "Bytecode Compilation"
-ocamlopt -c -I `$(OCPGET) -dir P1` p2.ml
+ocamlopt -c `${OCPGET} config dir P1` p2.ml
 
 echo "Native Compilation"
-ocamlc -c -I `$(OCPGET) -dir P1` p2.ml
+ocamlc -c `${OCPGET} config dir P1` p2.ml
