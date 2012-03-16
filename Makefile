@@ -34,7 +34,8 @@ compile: ./_obuild/unixrun clone
 clone: cudf extlib ocaml-re ocamlgraph dose
 
 cudf:
-	git clone git://scm.gforge.inria.fr/mancoosi-tools/cudf.git
+	$(WGET) http://www.ocamlpro.com/pub/cudf.tar.bz2
+	tar xfvj cudf.tar.bz2
 
 extlib:
 	$(WGET) http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz
@@ -42,7 +43,8 @@ extlib:
 	mv extlib-1.5.2 extlib
 
 dose:
-	git clone git://scm.gforge.inria.fr/mancoosi-tools/dose.git
+	$(WGET) http://www.ocamlpro.com/pub/dose.tar.bz2
+	tar xvfz dose.tar.bz2
 
 # ocaml-pcre:
 # 	$(WGET) http://hg.ocaml.info/release/pcre-ocaml/archive/release-6.2.5.tar.gz
@@ -60,7 +62,8 @@ clean:
 	rm -f ocp-get ocp-get-server
 
 ocaml-re:
-	git clone https://github.com/avsm/ocaml-re
+	$(WGET) http://www.ocamlpro.com/pub/ocaml-re.tar.gz
+	tar xcfj ocaml-re.tar.gz
 
 distclean:
 	rm -f *.tar.gz
