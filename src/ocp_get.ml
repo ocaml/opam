@@ -64,13 +64,13 @@ let () =
   | "config" :: l_arg ->
     let is_rec, l_arg = 
       match l_arg with
-        | "-r" :: l_arg -> true, l_arg
+        | "r" :: l_arg -> true, l_arg
         | _ -> false, l_arg in
     let opt, name = 
       match l_arg with
-        | [ "-dir" ; name ] -> Client.Dir, name
-        | [ "-bytelink" ; name ] -> Client.Bytelink, name
-        | [ "-asmlink" ; name ] -> Client.Asmlink, name
+        | [ "dir" ; name ] -> Client.Dir, name
+        | [ "bytelink" ; name ] -> Client.Bytelink, name
+        | [ "asmlink" ; name ] -> Client.Asmlink, name
         | _ -> err l_arg in
     Client.config is_rec opt (Name name)
      
