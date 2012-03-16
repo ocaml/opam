@@ -20,8 +20,8 @@ struct
 
   let default_version = "0"
 
-  let user_print oc (Name n, v) =
-    BatString.print oc (Printf.sprintf "%s %s" n v.deb)
+  let string_of_user (Name n, v) =
+    Printf.sprintf "%s %s" n v.deb
 end
 
 type name_version = Namespace.name * Namespace.version
