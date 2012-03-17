@@ -67,7 +67,7 @@ module Solver : SOLVER = struct
     ) l))
 
   let solution_print f =
-    let pf = Printf.printf in
+    let pf = Globals.msg in
     List.iter (fun (P l) ->
       List.iter (function
         | To_recompile p                   -> pf "Recompile: %s\n" (f p)

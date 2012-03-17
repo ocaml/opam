@@ -63,7 +63,7 @@ module Client : CLIENT = struct
         if not (Path.file_exists opam_file) then
           let opam = RemoteServer.getOpam t.server (n, v) in
           Path.add opam_file (Path.File opam);
-          Printf.printf "New package available: %s\n%!" (Namespace.string_of_nv n v)
+          Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
       ) packages
 
   let update () =
@@ -93,7 +93,9 @@ module Client : CLIENT = struct
             N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
   let info package =
-    log "info %s" (match package with None -> "ALL" | Some p -> Namespace.string_of_name p);
+    log "info %s" (match package with
+      | None -> "ALL"
+      | Some p -> Namespace.string_of_name p);
     let t = load_state () in
     let s_not_installed = "--" in
     match package with
@@ -115,11 +117,11 @@ module Client : CLIENT = struct
             (Path.index_opam_list t.home) in
 
         NV_map.iter (fun n_v (b, description) -> 
-          Printf.printf "%s %s %s\n" 
+          Globals.msg "%s %s %s\n" 
             (indent_left (Namespace.string_user_of_name (fst n_v)) max_n)
             (indent_right (if b then Namespace.string_user_of_version (snd n_v) else s_not_installed) max_v)
             description) map;
-        Printf.printf "\n"
+        Globals.msg "\n"
 
     | Some name -> 
         let find_from_name = find_from_name name in
@@ -139,7 +141,7 @@ module Client : CLIENT = struct
           | Some v -> V_set.remove v v_set in
 
         List.iter
-          (fun (tit, desc) -> Printf.printf "%s: %s\n" tit desc)
+          (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
           [ "package", Namespace.string_user_of_name name
 
           ; "version",
@@ -158,7 +160,7 @@ module Client : CLIENT = struct
           ]
 
   let confirm msg = 
-    Printf.printf "%s [y/N] " msg;
+    Globals.msg "%s [y/N] " msg;
     match read_line () with
       | "y" | "Y" -> true
       | _         -> false
@@ -186,7 +188,7 @@ module Client : CLIENT = struct
     (* misc *)
     List.iter 
       (fun misc ->
-        Printf.printf "%s\n" (File.To_install.string_of_misc misc);
+        Globals.msg "%s\n" (File.To_install.string_of_misc misc);
         if confirm "Continue ?" then
           let path_from =
             filename_of_path_relative t (File.To_install.path_from misc) in
@@ -245,7 +247,7 @@ module Client : CLIENT = struct
     let rec aux = function
     | [x] ->
         (* Only 1 solution exists *)
-        Printf.printf "The following actions will be performed:\n";
+        Globals.msg "The following actions will be performed:\n";
         Solver.solution_print Namespace.string_of_user x;
         if delete_or_update x then
           if confirm "Continue ?" then
@@ -257,7 +259,7 @@ module Client : CLIENT = struct
 
     | x :: xs ->
         (* Multiple solution exist *)
-        Printf.printf "The following actions will be performed:\n";
+        Globals.msg "The following actions will be performed:\n";
         Solver.solution_print Namespace.string_of_user x;
         if delete_or_update x then
           if confirm "Continue ? (press [n] to try another solution)" then
@@ -375,7 +377,7 @@ module Client : CLIENT = struct
     begin      
       (match o_key1 with
         | Some k1 when o_key0 <> o_key1 -> File.Security_key.add (Path.keys t.home name) k1
-        | None -> Printf.printf "The key given to upload was not accepted.\n%!"
+        | None -> Globals.msg "The key given to upload was not accepted.\n"
         | _ -> ());
       (if o_key1 = None then
           ()
@@ -391,15 +393,14 @@ module Client : CLIENT = struct
     match find_from_name name (Path.index_opam_list t.home), req with
         
       | None, _ -> 
-        let msg =
-          Printf.sprintf
-            "Package \"%s\" not found. An update of package will be performed."
-            (Namespace.string_user_of_name name) in
-        if confirm msg then
+        Globals.msg
+          "Package \"%s\" not found. An update of package will be performed.\n"
+          (Namespace.string_user_of_name name);
+        if confirm "Confirm ?" then
           update_t t
             
       | Some _, Dir -> 
-        Printf.printf "-I %s" 
+        Globals.msg "-I %s" 
           (match Path.ocaml_options_of_library t.home name with I s -> s)
 
       | Some v, _ -> 
@@ -410,8 +411,18 @@ module Client : CLIENT = struct
             | Dir -> assert false) in
         let descr = File.Descr.find_err (Path.descr t.home (name, V_set.max_elt v)) in
         let flags = List.flatten (List.map (fun f -> f descr) l_f) in
-        Printf.printf "%s %s%s"
+        Globals.msg "%s %s%s"
           (String.concat " " flags)
           (File.Descr.library descr) s_cma
 
 end
+
+
+
+
+
+
+
+
+
+

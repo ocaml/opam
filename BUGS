@@ -1,3 +1,1 @@
 * ocp-get install P3 asks to remove P2
-* packages are downloaded / untared & built before calling the solver
-  (which is weird as the build step needs the right dependencies to be installed)

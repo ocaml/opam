@@ -31,5 +31,27 @@ let error_and_exit fmt =
     exit 1
   ) fmt
 
+let msg fmt =
+  Printf.kprintf (fun str ->
+    Printf.printf "%s%!" str
+  ) fmt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

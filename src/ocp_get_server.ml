@@ -41,7 +41,7 @@ let server fn =
   let addr = ADDR_INET (host, !port) in
   let state = Server.init !Globals.root_path in
   if !Globals.debug then
-    Printf.printf "Root path is %s.\nListening on port %d (%s) ...\n%!"
+    Globals.msg "Root path is %s.\nListening on port %d (%s) ...\n%!"
       !Globals.root_path !port (string_of_inet_addr host);
 
   establish_server (fn state) addr
