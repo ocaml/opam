@@ -4,7 +4,7 @@ OPAM_ROOT        = /tmp/OPAM.TEST
 OPAM_SERVER_ROOT = /tmp/OPAM.SERVER.TEST
 BIN              = /tmp
 
-ENV           = export OCAMLRUNPARAM=b PATH=$(BIN):$(PATH) &&
+ENV           = export OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH) &&
 OCPGET        = $(ENV) ocp-get --debug --root $(OPAM_ROOT)
 OCPGET_SERVER = $(ENV) ocp-get-server --debug --root $(OPAM_SERVER_ROOT)
 

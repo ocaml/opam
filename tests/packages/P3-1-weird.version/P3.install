@@ -1,1 +1,1 @@
-lib: p3.cma p3.cmxa p3.cmi
+lib: _build/p3.cma, _build/p3.cmxa, _build/p3.cmi
