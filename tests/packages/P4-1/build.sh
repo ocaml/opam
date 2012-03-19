@@ -1,1 +1,1 @@
-ocamlbuild `$(OCPGET config -r -dir P2)` `$(OCPGET config -r -dir P3)` p4.cma p4.cmxa
+ocamlbuild p4.cma p4.cmxa

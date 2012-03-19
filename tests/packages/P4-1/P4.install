@@ -1,1 +1,1 @@
-lib: p4.cma p4.cmxa p4.cmi
+lib: _build/p4.cma, _build/p4.cmxa, _build/p4.cmi
