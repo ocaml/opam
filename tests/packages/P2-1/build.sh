@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OCPGET="ocp-get --root /tmp/OPAM.TEST"
-FLAGS=`${OCPGET} config dir P1`
+FLAGS="-I `${OCPGET} config dir P1`"
 
 echo "Bytecode Compilation"
 ocamlopt -c ${FLAGS} p2.ml

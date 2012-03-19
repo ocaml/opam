@@ -19,8 +19,7 @@ sig
 
   type config_request = Dir | Bytelink | Asmlink
 
-  (** Returns the directory where the package is installed,
-      in a form suitable to OCaml compilers (i.e. like "-I ..."). *)
+  (** Depending on request, returns options or directories where the package is installed. *)
   val config : bool (* true : recursive search *) -> config_request -> Namespace.name -> unit
 
   (** Installs the given package. *)
@@ -402,7 +401,7 @@ module Client : CLIENT = struct
           update_t t
             
       | Some _, Dir -> 
-        Globals.msg "-I %s" 
+        Globals.msg "%s"
           (match Path.ocaml_options_of_library t.home name with I s -> s)
 
       | Some v, _ -> 
