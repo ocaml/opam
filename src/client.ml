@@ -307,10 +307,12 @@ module Client : CLIENT = struct
     match find_from_name name l_index with
       | None -> unknown_package name
       | Some v -> 
+        let map_installed = File.Installed.find_map (Path.installed t.home) in
         resolve t
           l_index
-          (File.Installed.find_map (Path.installed t.home))
-          { Solver.wish_install = [ vpkg_of_nv (name, V_set.max_elt v) ]
+          map_installed
+          { Solver.wish_install = 
+              List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings map_installed)
           ; wish_remove = [] 
           ; wish_upgrade = [] }
 
