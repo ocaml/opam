@@ -74,7 +74,7 @@ let fn t stdin stdout =
       protect (fun () -> OnewArchive (Server.newArchive t nv opam archive))
   | IupdateArchive (nv, opam, archive, k) ->
       (* XXX: need to protect the server state mutation as it can be updated concurrently *)
-      log id "newArchive";
+      log id "updateArchive [%s]" (Digest.to_hex (Digest.string (match k with Path.Random s -> s)));
       protect (fun () -> OupdateArchive (Server.updateArchive t nv opam archive k)) in 
 
   output_value stdout output;
