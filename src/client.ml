@@ -311,7 +311,7 @@ module Client : CLIENT = struct
           l_index
           map_installed
           { Solver.wish_install = 
-              List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings map_installed)
+              List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings (N_map.remove name map_installed))
           ; wish_remove = [] 
           ; wish_upgrade = [] }
 
