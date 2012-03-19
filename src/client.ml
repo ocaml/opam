@@ -333,13 +333,20 @@ module Client : CLIENT = struct
   let upgrade () =
     log "upgrade";
     let t = load_state () in
+    let l_index = Path.index_opam_list t.home in
     let installed = File.Installed.find_map (Path.installed t.home) in
     resolve t
-      (Path.index_opam_list t.home)
+      l_index
       installed
       { Solver.wish_install = []
       ; wish_remove = []
-      ; wish_upgrade = List.map vpkg_of_nv (N_map.bindings installed) }
+      ; wish_upgrade = 
+          List.map
+            (fun (name, _) -> 
+              match find_from_name name l_index with 
+                | None -> assert false (* an already installed package must figure in the index *) 
+                | Some v -> vpkg_of_nv (name, V_set.max_elt v))
+            (N_map.bindings installed) }
     
   (* Upload reads NAME.opam to get the current package version.
      Then it looks for NAME-VERSION.tar.gz in the same directory.
@@ -372,19 +379,19 @@ module Client : CLIENT = struct
     let o_key0 = File.Security_key.find (Path.keys t.home name) in
     let o_key1 = 
       match o_key0 with
-        | None -> RemoteServer.newArchive t.server (name, version) opam archive
-        | Some k -> if RemoteServer.updateArchive t.server (name, version) opam archive k then Some k else None in
+        | None -> 
+          let o = RemoteServer.newArchive t.server (name, version) opam archive in
+          let () = assert (o = Server.newArchive local_server (name, version) opam archive) in
+          o
+        | Some k -> 
+          let b = RemoteServer.updateArchive t.server (name, version) opam archive k in
+          let () = assert (b = Server.updateArchive local_server (name, version) opam archive k) in
+          if b then Some k else None in
 
-    begin      
-      (match o_key1 with
-        | Some k1 when o_key0 <> o_key1 -> File.Security_key.add (Path.keys t.home name) k1
-        | None -> Globals.msg "The key given to upload was not accepted.\n"
-        | _ -> ());
-      (if o_key1 = None then
-          ()
-       else
-          ignore (Server.newArchive local_server (name, version) opam archive));
-    end
+    match o_key1 with
+      | Some k1 when o_key0 <> o_key1 -> File.Security_key.add (Path.keys t.home name) k1
+      | None -> Globals.msg "The key given to upload was not accepted.\n"
+      | _ -> ignore "The server has returned the same key than currently stored.\n"
 
   type config_request = Dir | Bytelink | Asmlink
 

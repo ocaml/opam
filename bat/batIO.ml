@@ -12,9 +12,8 @@ let to_string f x =
 
 let write_string = 
   function 
-    | OC b -> fun s ->
-      output_string b s
-    | _ -> failwith "to complete !"
+    | OC b -> output_string b
+    | O b -> Buffer.add_string b
 
 let close_out = function
   | OC b -> ignore (Unix.close_process_out b)
