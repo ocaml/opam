@@ -73,7 +73,7 @@ module Solver : SOLVER = struct
         | To_recompile p                   -> pf "Recompile: %s\n" (f p)
         | To_delete p                      -> pf "Remove: %s\n" (f p)
         | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
-        | To_change (Was_installed o, p)   -> pf "Update: %s -> %s\n" (f o) (f p)
+        | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
       ) l)
 
   let request_map f r = 
@@ -211,19 +211,27 @@ module Solver : SOLVER = struct
       BatOption.bind 
         (let cons pkg act = Some (pkg, act) in
          fun l -> 
-          let graph_installed = dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe) in
-          
-          let l_del_p, l_del = 
-            List.split
-              (List.filter_map (function
-                | To_delete pkg as act -> cons pkg act
-                | _ -> None) l) in
+           let l_del_p, l_del = 
+             List.filter_map (function
+               | To_change (Was_installed pkg, _) 
+               | To_delete pkg -> Some pkg
+               | _ -> None) l,
+             List.filter_map (function
+               | To_delete _ as act -> Some act
+               | _ -> None) l in
 
           let map_add = 
             PkgMap.of_list (List.filter_map (function 
               | To_change (_, pkg) as act -> cons pkg act
               | To_delete _ -> None
               | To_recompile _ -> assert false) l) in
+
+          let graph_installed = 
+            PO.O.mirror
+              (dep_reduction 
+                 (Cudf.get_packages 
+                    ~filter:(fun p -> p.Cudf.installed || PkgMap.mem p map_add) 
+                    universe)) in
 
           let _, l_act = 
             PG_bfs.fold
@@ -243,10 +251,11 @@ module Solver : SOLVER = struct
                     if PkgSet.mem pkg set_recompile then
                       add_succ_rem pkg set_recompile (To_recompile pkg)
                     else
-                      set_recompile, l_act) (PkgSet.empty, List.rev l_del) 
+                      set_recompile, l_act)
+              (PkgSet.empty, List.rev l_del)
               (let graph_installed = PG.copy graph_installed in
-               let () = List.iter (PG.remove_vertex graph_installed) l_del_p in              
-               PG.union graph_installed (dep_reduction (PkgMap.keys map_add))) in
+               let () = List.iter (PG.remove_vertex graph_installed) l_del_p in
+               graph_installed) in
           Some (List.rev l_act))
         (CudfDiff.resolve_diff universe 
            (request_map
