@@ -209,16 +209,43 @@ response time). The state is stored under {\tt \$opamserver/}:
 \label{api}
 
 Server state can be queried and modified by any OPAM clients, using
-the following API. {\em Except the first message on a stream}, all
+the following API. {\em Except the first message on a stream},
+indicating the agreement of version used between the client and 
+the server, all
 other messages are marshalled using standard OCaml \verb-output_value-
 function.
+If a client sends a value of type \verb|client_to_server_message|:
 
 \begin{verbatim}
+open Namespace
+open Path
+
 type client_to_server_message =
   | C2S_GetList
-  | C2S_GetOpam of ...
+  | C2S_GetOpam of name_version
+  | C2S_GetArchive of name_version
+  | C2S_NewArchive of name_version * binary_data * binary_data archive
+  | C2S_UpdateArchive of 
+      name_version * binary_data * binary_data archive * security_key
 \end{verbatim}
 
+The answer from the server can be decoded with \verb|input_value|, 
+it contains a constructor similar to the one sent 
+(except that \verb|C2S| becomes now \verb|S2C|):
+
+\begin{verbatim}
+type server_to_client_message =
+  | S2C_GetList of name_version list
+  | S2C_GetOpam of binary_data
+  | S2C_GetArchive of binary_data archive
+  | S2C_NewArchive of security_key option
+  | S2C_UpdateArchive of bool
+
+  | S2C_error of string
+\end{verbatim}
+
+Note that when an error is raised by an arbitrary function
+ at server side, the client receives \verb|S2C_error _|.
 
 \subsubsection{Basic types}
 
