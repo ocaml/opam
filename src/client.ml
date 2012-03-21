@@ -114,9 +114,9 @@ module Client : CLIENT = struct
               let b = NV_set.mem n_v install_set in
               let opam = File.Spec.find_err (Path.index t.home (Some n_v)) in
               let new_map = NV_map.add n_v (b, File.Spec.description opam) map in
-              let new_max_n = max max_n (String.length (Namespace.string_user_of_name (fst n_v))) in
+              let new_max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
               let new_max_v =
-                if b then max max_v (String.length (Namespace.string_user_of_version (snd n_v))) else max_v in
+                if b then max max_v (String.length (Namespace.string_of_version (snd n_v))) else max_v in
             new_map, new_max_n, new_max_v)
             (NV_map.empty, min_int, String.length s_not_installed)
             (Path.index_list t.home) in
@@ -126,8 +126,8 @@ module Client : CLIENT = struct
             | []   -> ""
             | h::_ -> h in
           Globals.msg "%s %s %s\n" 
-            (indent_left (Namespace.string_user_of_name (fst n_v)) max_n)
-            (indent_right (if b then Namespace.string_user_of_version (snd n_v) else s_not_installed) max_v)
+            (indent_left (Namespace.string_of_name (fst n_v)) max_n)
+            (indent_right (if b then Namespace.string_of_version (snd n_v) else s_not_installed) max_v)
             description) map;
         Globals.msg "\n"
 
@@ -150,14 +150,14 @@ module Client : CLIENT = struct
 
         List.iter
           (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
-          [ "package", Namespace.string_user_of_name name
+          [ "package", Namespace.string_of_name name
 
           ; "version",
             (match o_v with
             | None   -> s_not_installed
-            | Some v -> Namespace.string_user_of_version v)
+            | Some v -> Namespace.string_of_version v)
 
-          ; "versions", (V_set.to_string Namespace.string_user_of_version v_set)
+          ; "versions", (V_set.to_string Namespace.string_of_version v_set)
 
           ; "description", "\n" ^ 
             match o_v with None -> ""
@@ -298,7 +298,7 @@ module Client : CLIENT = struct
         function
       | [x] ->
           (* Only 1 solution exists *)
-          Solver.solution_print Namespace.string_of_user x;
+          Solver.solution_print Namespace.to_string x;
           if delete_or_update x then
             if confirm "Continue ?" then
               Some x
@@ -309,7 +309,7 @@ module Client : CLIENT = struct
 
       | x :: xs ->
           (* Multiple solution exist *)
-          Solver.solution_print Namespace.string_of_user x;
+          Solver.solution_print Namespace.to_string x;
           if delete_or_update x then
             if confirm "Continue ? (press [n] to try another solution)" then
               Some x
@@ -336,7 +336,7 @@ module Client : CLIENT = struct
   let unknown_package name =
     Globals.error_and_exit
       "ERROR: Unable to locate package \"%s\"\n"
-      (Namespace.string_user_of_name  name)
+      (Namespace.string_of_name  name)
 
   let install name = 
     log "install %s" (Namespace.string_of_name name);

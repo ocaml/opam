@@ -337,8 +337,8 @@ struct
            (fun oc (name, version) ->
              BatString.print oc
                (Printf.sprintf "%s %s" 
-                  (Namespace.string_user_of_name name) 
-                  (Namespace.string_user_of_version version))))
+                  (Namespace.string_of_name name) 
+                  (Namespace.string_of_version version))))
   end
 
   module type TO_INSTALL =

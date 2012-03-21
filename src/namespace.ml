@@ -9,18 +9,17 @@ struct
 
   let string_of_nv (Name n) version = sprintf "%s-%s" n version.deb
   let string_of_name (Name n) = n
-  let string_user_of_name (Name n) = n
-  let string_user_of_version version = version.deb
+  let string_of_version version = version.deb
 
   let version_of_string version = { deb = version }
  
   let nv_of_string s = 
     let n, version = BatString.split s "-" in
-      Name n, version_of_string version
+    Name n, version_of_string version
 
   let default_version = "0"
 
-  let string_of_user (Name n, v) =
+  let to_string (Name n, v) =
     Printf.sprintf "%s %s" n v.deb
 end
 
