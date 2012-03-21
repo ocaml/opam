@@ -1,4 +1,5 @@
 comp = [ "-g" ]
+link = [ "-g" ]
 
 begin library "extlib"
    sort = true
@@ -172,6 +173,7 @@ begin library "ocp-get-lib"
     "namespace.ml"
     "path.ml"
     "file.ml"
+    "protocol.ml"
     "server.ml" 
   ]
 
