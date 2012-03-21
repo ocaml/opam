@@ -31,7 +31,7 @@ end
 begin library "re"
    sort = true
    files = [
-     "pcre.ml"
+     "lib/pcre.ml"
      "ocaml-re/lib/re_str.ml"
      "ocaml-re/lib/re_posix.ml"
      "ocaml-re/lib/re_perl.ml"
