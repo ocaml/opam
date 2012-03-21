@@ -234,11 +234,12 @@ module Client : CLIENT = struct
           | _ -> map_installed)
 
   let proceed_torecompile t nv =
-    if Path.exec_buildsh t.home nv = 0 then
+    let err = Path.exec_buildsh t.home nv in
+    if err = 0 then
       iter_toinstall Path.add_rec t nv
     else
       Globals.error_and_exit
-        "./build.sh failed. We stop here because otherwise the installation would fail to copy not created files."
+        "./build.sh failed with error %d" err
 
   let delete_or_update l =
     let action = function
@@ -249,18 +250,22 @@ module Client : CLIENT = struct
     List.exists parallel l
 
   let proceed_tochange t nv_old (name, v) =
-    begin
-      (match nv_old with 
-        | Was_installed nv_old -> proceed_todelete t nv_old
-        | Was_not_installed -> ());
-      (let p_build = Path.build t.home (Some (name, v)) in
-       if Path.file_exists p_build then
-         ()
-       else
-         let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-         Path.add_rec p_build tgz);
+    (* First, uninstall any previous version *)
+    (match nv_old with 
+    | Was_installed nv_old -> proceed_todelete t nv_old
+    | Was_not_installed -> ());
+
+    (* Then, untar the archive *)
+    let p_build = Path.build t.home (Some (name, v)) in
+    if not (Path.file_exists p_build) then begin
+      let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
+      Path.add_rec p_build tgz
     end;
+
+    (* Call the build script and copy the output files *)
     proceed_torecompile t (name, v);
+
+    (* Mark the packet as installed *)
     File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
 
   let debpkg_of_nv t map_installed =
@@ -445,12 +450,19 @@ module Client : CLIENT = struct
       | None   -> unknown_package name
       | Some v -> v in
 
-    let versions = List.map (fun n -> n, version n) names in
-
-    let version name = List.assoc name versions in
+    let version_cache = ref N_map.empty in
+    let version name =
+      try N_map.find name !version_cache
+      with Not_found ->
+        let version = version name in
+        version_cache := N_map.add name version !version_cache;
+        version in
     
     let one name =
-      let version = version name in
+      let version =
+        try version name
+        with Not_found ->
+          Globals.error_and_exit "%s is not installed" (Namespace.string_of_name name) in
       let path = match Path.ocaml_options_of_library t.home name with I s -> s in
       match req with
       | Include ->Globals.msg "-I %s" path
@@ -476,12 +488,12 @@ module Client : CLIENT = struct
           | _ -> assert false in
 
     let rec iter_with_spaces f = function
-      | []
-      | [_]  -> ()
+      | []   -> ()
+      | [h]  -> f h
       | h::t -> f h; Globals.msg " "; iter_with_spaces f t in
 
     if not is_rec then
-      List.iter one names
+      iter_with_spaces one names
     else
       let l_deb = debpkg_of_nv t installed l_index in
       let dependencies =
@@ -491,7 +503,7 @@ module Client : CLIENT = struct
                let name = Namespace.Name pkg.Debian.Packages.name in
                try
                  let version = version name in
-                 List.exists (fun (n,v) -> n=name && v=version) versions
+                 N_map.exists (fun n v -> n=name && v=version) !version_cache
                with
                  Not_found -> false)
              l_deb)
@@ -501,3 +513,14 @@ module Client : CLIENT = struct
       iter_with_spaces one dependencies
 
 end
+
+
+
+
+
+
+
+
+
+
+
