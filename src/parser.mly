@@ -33,6 +33,7 @@ statements:
 ;
 
 statement:
+| IDENT STRING                        { {kind=$1; name=$2; contents= []} }
 | IDENT STRING LBRACE contents RBRACE { {kind=$1; name=$2; contents= $4} }
 ;
 

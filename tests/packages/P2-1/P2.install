@@ -1,7 +1,8 @@
 install "P2" {
   lib = [
-    "p2.cmo";
-    "p2.cmx";
+    "p2.cma";
+    "p2.cmxa";
+    "p2.a";
     "p2.cmi";
   ]
 }

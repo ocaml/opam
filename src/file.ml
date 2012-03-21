@@ -354,9 +354,9 @@ struct
     val path_to : move -> path
     val string_of_move : move -> string
 
-    val filename_of_path_relative : Path.t -> Path.filename (* prefix *) -> path -> Path.filename list
-    val filename_of_path_absolute : Path.t -> path -> Path.filename list
-
+    val filename_of_path_relative : Path.filename (* prefix *) -> path -> Path.filename list
+    val filename_of_path_absolute : path -> Path.filename list
+    val filename_of_path : Path.filename -> path -> Path.filename list
 
     (** construct *)
   end
@@ -379,7 +379,7 @@ struct
     let string_of_move m = 
       Printf.sprintf "from %s to %s" (string_of_path m.p_from) (string_of_path m.p_to)
 
-    let filename_of_path t f l_b suff = 
+    let filename_of_path f l_b suff = 
       let f = List.fold_left Path.concat f l_b in
       List.map (Path.concat f)
         (match suff with
@@ -390,13 +390,17 @@ struct
                 (try Some (snd (BatString.split name ".")) with _ -> None) = Some suff)
               (match Path.find f with Path.Directory l -> l | _ -> []))
 
-    let filename_of_path_relative t f = function
-      | Relative, l_b, suff -> filename_of_path t f l_b suff
+    let filename_of_path_relative f = function
+      | Relative, l_b, suff -> filename_of_path f l_b suff
       | Absolute, _, _ -> assert false
 
-    let filename_of_path_absolute t = function
-      | Absolute, l_b, suff -> filename_of_path t Path.root l_b suff
+    let filename_of_path_absolute = function
+      | Absolute, l_b, suff -> filename_of_path Path.root l_b suff
       | _ -> assert false
+
+    let filename_of_path f p = match p with
+      | Absolute, _, _ -> filename_of_path_absolute p
+      | Relative, _, _ -> filename_of_path_relative f p
 
     let empty = { lib  = []
                 ; bin  = []

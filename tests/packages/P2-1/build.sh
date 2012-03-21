@@ -4,7 +4,7 @@ OCPGET="ocp-get --root /tmp/OPAM.TEST"
 FLAGS="`${OCPGET} config Include P1`"
 
 echo "Bytecode Compilation"
-ocamlopt -c ${FLAGS} p2.ml
+ocamlopt ${FLAGS} -a p2.ml -o p2.cmxa
 
 echo "Native Compilation"
-ocamlc -c ${FLAGS} p2.ml
+ocamlc ${FLAGS} -a p2.ml -o p2.cma

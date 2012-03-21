@@ -51,7 +51,10 @@ sig
   (** Return the recursive dependencies of a package
       Note : the given package exists in the list in input because this list describes the entire universe. 
       However, by convention, it does not appear in output. *)
-  val filter_dependencies : Debian.Packages.package -> Debian.Packages.package list -> Debian.Packages.package list
+  val filter_dependencies :
+    Debian.Packages.package list 
+    -> Debian.Packages.package list
+    -> Debian.Packages.package list
 end
 
 module Solver : SOLVER = struct
@@ -237,7 +240,7 @@ module Solver : SOLVER = struct
       let () = Debian.Debcudf.clear table in
       v
 
-    let filter_dependencies pkg l_pkg_pb = 
+    let filter_dependencies pkg_l l_pkg_pb = 
       let pkg_map = 
         List.fold_left
           (fun map pkg -> 
@@ -248,7 +251,11 @@ module Solver : SOLVER = struct
           NV_map.empty
           l_pkg_pb in
       get_table l_pkg_pb
-        (fun table pkglist -> 
+        (fun table pkglist ->
+          let pkg_set = List.fold_left
+            (fun accu pkg -> PkgSet.add (tocudf table pkg) accu)
+            PkgSet.empty
+            pkg_l in
           let g = dep_reduction pkglist in
           let _, l = 
             PG_topo.fold
@@ -265,8 +272,7 @@ module Solver : SOLVER = struct
                   add_succ_rem p set p
                 else
                   set, l)
-              g
-              (PkgSet.add (tocudf table pkg) PkgSet.empty, []) in
+              g (pkg_set, []) in
           List.map (fun pkg -> 
             NV_map.find 
               (Namespace.Name pkg.Cudf.package, 

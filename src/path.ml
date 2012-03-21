@@ -203,8 +203,8 @@ sig
   (** compiled files in the extracted archive to install *)
   val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
 
-  (** descriptions of option to give to compile and link *)
-  val descr : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.descr *)
+  (** package configuration for compile and link options *)
+  val pconfig : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.config *)
 
   (** security keys related to package name *)
   val keys : t -> Namespace.name -> filename (* $HOME_OPAM/keys/NAME *)
@@ -336,7 +336,7 @@ module Path : PATH = struct
 
   let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
 
-  let descr t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".descr")
+  let pconfig t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".config")
 
   let keys t n = Raw (t.home // "keys" // Namespace.string_of_name n)
   let hashes t n = Raw (t.home // "hashes" // Namespace.string_of_name n)

@@ -179,7 +179,7 @@ module Client : CLIENT = struct
     let to_install = File.To_install.find_err (Path.to_install t.home (name, v)) in
 
     let filename_of_path_relative t path = 
-      Path.R_filename (File.To_install.filename_of_path_relative t.home
+      Path.R_filename (File.To_install.filename_of_path_relative
                          (Path.build t.home (Some (name, v))) 
                          path) in
     
@@ -198,9 +198,13 @@ module Client : CLIENT = struct
       let tmp =
         let (p, b, _) = src in
         match dst with
-        | (Absolute, [], Exact s) -> (p, b, Exact s)
+        | (Relative, [], Exact s) -> (p, b, Exact s)
         | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
-      U.copy (string_of_path src) (string_of_path tmp);
+      let root = Path.build t.home (Some (name, v)) in
+      let file f = match File.To_install.filename_of_path_relative root f with
+        | [f] -> Path.string_of_filename f
+        | _   -> Globals.error_and_exit "'bin' files cannot contain * patterns" in
+      U.copy (file src) (file tmp);
       add_rec (fun t _ -> Path.bin t) t tmp
     ) (File.To_install.bin to_install);
   
@@ -213,7 +217,7 @@ module Client : CLIENT = struct
             filename_of_path_relative t (File.To_install.path_from misc) in
           List.iter 
             (fun path_to -> f_add_rec path_to path_from) 
-            (File.To_install.filename_of_path_absolute t.home
+            (File.To_install.filename_of_path_absolute
                (File.To_install.path_to misc)))
       (File.To_install.misc to_install)
 
@@ -450,77 +454,68 @@ module Client : CLIENT = struct
       | None   -> unknown_package name
       | Some v -> v in
 
-    let version_cache = ref N_map.empty in
-    let version name =
-      try N_map.find name !version_cache
-      with Not_found ->
-        let version = version name in
-        version_cache := N_map.add name version !version_cache;
-        version in
-    
-    let one name =
-      let version =
-        try version name
-        with Not_found ->
-          Globals.error_and_exit "%s is not installed" (Namespace.string_of_name name) in
+    let rec iter_with_spaces f = function
+      | []   -> ()
+      | [h]  -> f h 
+      | h::t -> f h; Globals.msg " "; iter_with_spaces f t in
+
+    let versions = List.map (fun n -> n, version n) names in
+
+    let one (name, version) =
       let path = match Path.ocaml_options_of_library t.home name with I s -> s in
       match req with
       | Include ->Globals.msg "-I %s" path
       | link    ->
-          let config =  File.PConfig.find_err (Path.descr t.home (name, version)) in
+          let config = File.PConfig.find_err (Path.pconfig t.home (name, version)) in
           let libraries = File.PConfig.library_names config in
           let link_options = File.PConfig.link_options config in
           let asmlink_options = File.PConfig.link_options config in
           let bytelink_options = File.PConfig.link_options config in
-          let options o = String.concat " " o in
+          let options = function
+            | [] -> ""
+            | l  -> String.concat " " l ^ " " in
           let files ext  = String.concat " " (List.map (fun f -> f ^ ext) libraries) in
           match link with
           | Asmlink ->
-              Globals.msg "-I %s %s %s"
+              Globals.msg "-I %s %s%s"
                 path
                 (options (link_options@asmlink_options))
                 (files ".cmxa")
           | Bytelink ->
-              Globals.msg "-I %s %s %s"
+              Globals.msg "-I %s %s%s"
                 path
                 (options (link_options@bytelink_options))
                 (files ".cma")
           | _ -> assert false in
 
-    let rec iter_with_spaces f = function
-      | []   -> ()
-      | [h]  -> f h
-      | h::t -> f h; Globals.msg " "; iter_with_spaces f t in
-
     if not is_rec then
-      iter_with_spaces one names
+
+      (* If we don't need to look at the dependencies, simply call [one] for
+         each pair (name x version) *)
+      iter_with_spaces one versions
+
     else
+
+      (* Otherwise, we need to compute the transitive closure of dependencies *)
+      
+      (* So first, get the list of installed packages *)
       let l_deb = debpkg_of_nv t installed l_index in
-      let dependencies =
-        Solver.filter_dependencies 
-          (List.find
-             (fun pkg ->
-               let name = Namespace.Name pkg.Debian.Packages.name in
-               try
-                 let version = version name in
-                 N_map.exists (fun n v -> n=name && v=version) !version_cache
-               with
-                 Not_found -> false)
-             l_deb)
+      let nv pkg =
+        Namespace.Name pkg.Debian.Packages.name,
+        Namespace.version_of_string pkg.Debian.Packages.version in
+            
+      (* Then, get the packages we are looking for *)
+      let l_pkg =
+        List.filter
+          (fun pkg ->
+            let name, version = nv pkg in
+            List.exists (fun (n,v) -> n=name && v=version) versions)
           l_deb in
+
+      (* Compute the transitive closure of dependencies *)
       let dependencies =
-        List.map (fun pkg -> Namespace.Name pkg.Debian.Packages.name) dependencies in
-      iter_with_spaces one dependencies
+        Solver.filter_dependencies l_pkg l_deb in
+
+      iter_with_spaces one (List.map nv dependencies)
 
 end
-
-
-
-
-
-
-
-
-
-
-
