@@ -36,7 +36,7 @@ end
 
 type server_state =
     { home : Path.t (* ~/.opam-server *)
-    ; opam_version : internal_version }
+    ; opam_version : int }
 
 module Server = struct
 
@@ -46,26 +46,26 @@ module Server = struct
   let read_index home =
     List.fold_left
       (fun map nv ->
-        let file = File.Opam.find_err (Path.index_opam home (Some nv)) in
+        let file = File.Spec.find_err (Path.index home (Some nv)) in
         NV_map.add nv file map)
       NV_map.empty
-      (Path.index_opam_list home)
+      (Path.index_list home)
 
   let string_of_nv (n, v) = Namespace.string_of_nv n v
 
   let init home = 
     { home = Path.init home
-    ; opam_version = Version Globals.opam_version }
+    ; opam_version = Globals.api_version }
 
   let acceptedVersion t s =
     s = Globals.version
 
   let getList t =
-    Path.index_opam_list t.home
+    Path.index_list t.home
 
   let getOpam t n_v =
     let index = read_index t.home in
-    try binary (File.Opam.to_string (NV_map.find n_v index))
+    try binary (File.Spec.to_string (NV_map.find n_v index))
     with Not_found -> failwith (string_of_nv n_v ^ " not found")
 
   let getArchive t n_v = 
@@ -78,10 +78,10 @@ module Server = struct
           | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
 
   let f_archive t n_v opam archive =
-    let opam_file = Path.index_opam t.home (Some n_v) in
+    let opam_file = Path.index t.home (Some n_v) in
     let archive_file = Path.archives_targz t.home (Some n_v) in
     begin match opam with
-    | Binary (Raw_binary s) -> File.Opam.add opam_file (File.Opam.parse s)
+    | Binary (Raw_binary s) -> File.Spec.add opam_file (File.Spec.parse s)
     | f                     -> Path.add opam_file (Path.File f)
     end;
     begin match archive with

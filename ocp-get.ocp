@@ -170,6 +170,9 @@ begin library "ocp-get-lib"
   comp   += [ "-annot" ]
   files   = [
     "globals.ml"
+    "file_format.ml"
+    "lexer.mll"
+    "parser.mly"
     "namespace.ml"
     "path.ml"
     "file.ml"

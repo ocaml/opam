@@ -8,22 +8,25 @@ ENV           = export OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH
 OCPGET        = $(ENV) ocp-get --debug --root $(OPAM_ROOT)
 OCPGET_SERVER = $(ENV) ocp-get-server --debug --root $(OPAM_SERVER_ROOT)
 
-PACKAGES   = P1-1 P2-1 P2-1 P3-1-weird.version P4-1
+PACKAGES   = P1-1 P1-2 P2-1 P2-1 P3-1-weird.version P4-1
 
 ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: init upload info install
+all: fresh init upload info install upload-new upgrade
 	@
 
-install-binaries:
-	cp ../ocp-get ../ocp-get-server $(BIN)
+$(BIN)/ocp-get: ../ocp-get
+	cp ../ocp-get $(BIN)/ocp-get
 
-runserver: install-binaries
+$(BIN)/ocp-get-server: ../ocp-get-server
+	cp ../ocp-get-server $(BIN)/ocp-get-server
+
+runserver: fresh $(BIN)/ocp-get-server
 	$(OCPGET_SERVER)
 
-init: install-binaries fresh
+init: fresh $(BIN)/ocp-get
 	$(OCPGET) init $(LOCALHOST)
 
 upload: $(ARCHIVES) init
@@ -43,12 +46,14 @@ install: upload
 
 upload-new: install
 	cd packages && \
-	  cp P1.opam P1.opam.1 && cp P1.opam.2 P1.opam && \
+	  cp P1.spec P1.spec.1 && cp P1.spec.2 P1.spec && \
 	  $(OCPGET) upload P1 && \
-	  cp P1.opam.1 P1.opam
+	  cp P1.spec.1 P1.spec
 
-updgrade: upload-new
+upgrade: upload-new
+	$(OCPGET) info
 	$(OCPGET) upgrade
+	$(OCPGET) info
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz

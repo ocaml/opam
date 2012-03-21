@@ -1,1 +1,7 @@
-lib: _build/p4.cma, _build/p4.cmxa, _build/p4.cmi
+install "P4" {
+  lib = [
+    "_build/p4.cma";
+    "_build/p4.cmxa";
+    "_build/p4.cmi";
+  ]
+}
