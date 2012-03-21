@@ -6,7 +6,7 @@ let default_hostname = "opam.ocamlpro.com"
 let default_port = 9999
 
 let ocaml_version = Sys.ocaml_version
-let opam_version = "1"
+let api_version = 1
 
 let home = Unix.getenv "HOME"
 let default_opam_server_path = Filename.concat home ".opam-server"

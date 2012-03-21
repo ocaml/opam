@@ -14,16 +14,19 @@ ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: init upload info install
+all: fresh init upload info install
 	@
 
-install-binaries:
-	cp ../ocp-get ../ocp-get-server $(BIN)
+$(BIN)/ocp-get: ../ocp-get
+	cp ../ocp-get $(BIN)/ocp-get
 
-runserver: install-binaries
+$(BIN)/ocp-get-server: ../ocp-get-server
+	cp ../ocp-get-server $(BIN)/ocp-get-server
+
+runserver: fresh $(BIN)/ocp-get-server
 	$(OCPGET_SERVER)
 
-init: install-binaries fresh
+init: fresh $(BIN)/ocp-get
 	$(OCPGET) init $(LOCALHOST)
 
 upload: $(ARCHIVES) init

@@ -60,19 +60,19 @@ let () =
   | ["info"]       -> Client.info None
   | ["info"; name] -> Client.info (Some (Name name))
 
-  (* ocp-get config [-r] [-dir|-bytelink|-asmlink] PACKAGE *)
+  (* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
   | "config" :: l_arg ->
-    let is_rec, l_arg = 
-      match l_arg with
-        | "r" :: l_arg -> true, l_arg
-        | _ -> false, l_arg in
-    let opt, name = 
-      match l_arg with
-        | [ "dir" ; name ] -> Client.Dir, name
-        | [ "bytelink" ; name ] -> Client.Bytelink, name
-        | [ "asmlink" ; name ] -> Client.Asmlink, name
-        | _ -> err l_arg in
-    Client.config is_rec opt (Name name)
+    let is_rec, req, name = match l_arg with
+      | ["R"; r; name]
+      | [r; "R"; name] -> true , r, name
+      | [r; name]      -> false, r, name
+      | _              -> err l_arg in
+    let req = match req with
+      | "Include"  -> Client.Include
+      | "Bytelink" -> Client.Bytelink
+      | "Asmlink"  -> Client.Asmlink
+      | _          -> err l_arg in
+    Client.config is_rec req (Name name)
      
   (* ocp-get install PACKAGE *)
   | ["install"; name] -> Client.install (Name name)
@@ -90,3 +90,6 @@ let () =
   | ["remove"; name] -> Client.remove (Name name)
       
   | l -> err l
+
+
+

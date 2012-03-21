@@ -1,1 +1,7 @@
-lib: _build/p1.cma, _build/p1.cmxa, _build/p1.cmi
+install "P1" {
+  lib = [
+    "_build/p1.cma";
+    "_build/p1.cmxa";
+    "_build/p1.cmi";
+  ]
+}

@@ -1,1 +1,7 @@
-lib: _build/p3.cma, _build/p3.cmxa, _build/p3.cmi
+install "P3" {
+  lib = [
+    "_build/p3.cma";
+    "_build/p3.cmxa";
+    "_build/p3.cmi";
+  ]
+}

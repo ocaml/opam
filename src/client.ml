@@ -17,7 +17,7 @@ sig
   (** Displays the installed package. [None] : a general summary is given. *)
   val info : Namespace.name option -> unit
 
-  type config_request = Dir | Bytelink | Asmlink
+  type config_request = Include | Bytelink | Asmlink
 
   (** Depending on request, returns options or directories where the package is installed. *)
   val config : bool (* true : recursive search *) -> config_request -> Namespace.name -> unit
@@ -58,7 +58,7 @@ module Client : CLIENT = struct
     let packages = RemoteServer.getList t.server in
     List.iter
       (fun (n, v) -> 
-        let opam_file = Path.index_opam t.home (Some (n, v)) in
+        let opam_file = Path.index t.home (Some (n, v)) in
         if not (Path.file_exists opam_file) then
           let opam = RemoteServer.getOpam t.server (n, v) in
           Path.add opam_file (Path.File opam);
@@ -73,7 +73,7 @@ module Client : CLIENT = struct
     let home = Path.init !Globals.root_path in
     let config =
       File.Config.create
-        (Version Globals.opam_version)
+        Globals.api_version
         url
         (Version Globals.ocaml_version) in
     File.Config.add (Path.config home) config;
@@ -106,16 +106,19 @@ module Client : CLIENT = struct
           List.fold_left
             (fun (map, max_n, max_v) n_v -> 
               let b = NV_set.mem n_v install_set in
-              let opam = File.Opam.find_err (Path.index_opam t.home (Some n_v)) in
-              let new_map = NV_map.add n_v (b, File.Opam.description opam) map in
+              let opam = File.Spec.find_err (Path.index t.home (Some n_v)) in
+              let new_map = NV_map.add n_v (b, File.Spec.description opam) map in
               let new_max_n = max max_n (String.length (Namespace.string_user_of_name (fst n_v))) in
               let new_max_v =
                 if b then max max_v (String.length (Namespace.string_user_of_version (snd n_v))) else max_v in
             new_map, new_max_n, new_max_v)
             (NV_map.empty, min_int, String.length s_not_installed)
-            (Path.index_opam_list t.home) in
+            (Path.index_list t.home) in
 
-        NV_map.iter (fun n_v (b, description) -> 
+        NV_map.iter (fun n_v (b, description) ->
+          let description = match description with
+            | []   -> ""
+            | h::_ -> h in
           Globals.msg "%s %s %s\n" 
             (indent_left (Namespace.string_user_of_name (fst n_v)) max_n)
             (indent_right (if b then Namespace.string_user_of_version (snd n_v) else s_not_installed) max_v)
@@ -132,7 +135,7 @@ module Client : CLIENT = struct
 
         let v_set =
           let v_set = 
-            match find_from_name (Path.index_opam_list t.home) with
+            match find_from_name (Path.index_list t.home) with
             | None -> V_set.empty
             | Some v -> v in
           match o_v with
@@ -154,8 +157,8 @@ module Client : CLIENT = struct
             match o_v with None -> ""
             | Some v ->
                 let opam =
-                  File.Opam.find_err (Path.index_opam t.home (Some (name, v))) in
-                File.Opam.description opam
+                  File.Spec.find_err (Path.index t.home (Some (name, v))) in
+                (String.concat "." (File.Spec.description opam))
           ]
 
   let confirm msg = 
@@ -182,7 +185,7 @@ module Client : CLIENT = struct
     List.iter (add_rec Path.lib t) (File.To_install.lib to_install);
   
     (* bin *) 
-    BatOption.iter (add_rec (fun t _ -> Path.bin t) t) (File.To_install.bin to_install);
+    List.iter (add_rec (fun t _ -> Path.bin t) t) (File.To_install.bin to_install);
   
     (* misc *)
     List.iter 
@@ -217,7 +220,8 @@ module Client : CLIENT = struct
     if Path.exec_buildsh t.home nv = 0 then
       iter_toinstall Path.add_rec t nv
     else
-      Globals.error_and_exit "./build.sh failed. We stop here because otherwise the installation would fail to copy not created files."
+      Globals.error_and_exit
+        "./build.sh failed. We stop here because otherwise the installation would fail to copy not created files."
 
   let delete_or_update l =
     let action = function
@@ -244,9 +248,9 @@ module Client : CLIENT = struct
   let debpkg_of_nv t map_installed =
     List.fold_left
       (fun l n_v ->
-        let opam = File.Opam.find_err (Path.index_opam t.home (Some n_v)) in
+        let opam = File.Spec.find_err (Path.index t.home (Some n_v)) in
         let pkg = 
-          File.Opam.package opam
+          File.Spec.to_package opam
             (match N_map.Exceptionless.find (fst n_v) map_installed with
               | Some v -> v = snd n_v
               | _ -> false) in
@@ -308,7 +312,7 @@ module Client : CLIENT = struct
   let install name = 
     log "install %s" (Namespace.string_of_name name);
     let t = load_state () in
-    let l_index = Path.index_opam_list t.home in
+    let l_index = Path.index_list t.home in
     match find_from_name name l_index with
       | None -> unknown_package name
       | Some v -> 
@@ -330,7 +334,7 @@ module Client : CLIENT = struct
       | None   -> unknown_package name
       | Some v -> ("=", v.Namespace.deb) in
     resolve t 
-      (Path.index_opam_list t.home)
+      (Path.index_list t.home)
       installed
       { Solver.wish_install = []
       ; wish_remove = [ Namespace.string_of_name name, Some v ]
@@ -339,7 +343,7 @@ module Client : CLIENT = struct
   let upgrade () =
     log "upgrade";
     let t = load_state () in
-    let l_index = Path.index_opam_list t.home in
+    let l_index = Path.index_list t.home in
     let installed = File.Installed.find_map (Path.installed t.home) in
     resolve t
       l_index
@@ -362,10 +366,10 @@ module Client : CLIENT = struct
     let t = load_state () in
 
     (* Get the current package version *)
-    let opam_filename = name ^ ".opam" in
+    let opam_filename = name ^ ".spec" in
     let opam_binary = U.read_content opam_filename in
-    let opam = File.Opam.parse opam_binary in
-    let version = File.Opam.version opam in
+    let opam = File.Spec.parse opam_binary in
+    let version = File.Spec.version opam in
     let opam = binary opam_binary in
 
     (* look for the archive *)
@@ -399,88 +403,59 @@ module Client : CLIENT = struct
       | None -> Globals.msg "The key given to upload was not accepted.\n"
       | _ -> ignore "The server has returned the same key than currently stored.\n"
 
-  type config_request = Dir | Bytelink | Asmlink
+  type config_request = Include | Bytelink | Asmlink
 
   let config is_rec req name =
     log "config %s" (Namespace.string_of_name name);
     let t = load_state () in
 
-    let l_index = Path.index_opam_list t.home in
+    let l_index = Path.index_list t.home in
 
-    let f_is_rec f_true f_false = 
-      let installed = File.Installed.find_map (Path.installed t.home) in
+    let installed = File.Installed.find_map (Path.installed t.home) in
+    let version =
       match N_map.Exceptionless.find name installed with
-        | None -> unknown_package name
-        | Some version -> 
+      | None   -> unknown_package name
+      | Some v -> v in
 
-      if is_rec then
-        let l_deb = debpkg_of_nv t installed l_index in 
-        f_true 
-          (Solver.filter_dependencies 
-             (List.find
-                (fun pkg -> 
-                  Namespace.Name pkg.Debian.Packages.name = name 
-                  && 
-                  pkg.Debian.Packages.version = version.Namespace.deb)
-                l_deb)
+    let one name =
+      let path = match Path.ocaml_options_of_library t.home name with I s -> s in
+      match req with
+      | Include ->Globals.msg "-I %s " path
+      | link    ->
+          let config =  File.PConfig.find_err (Path.descr t.home (name, version)) in
+          let libraries = File.PConfig.library_names config in
+          let link_options = File.PConfig.link_options config in
+          let asmlink_options = File.PConfig.link_options config in
+          let bytelink_options = File.PConfig.link_options config in
+          let options o = String.concat " " o in
+          let files ext  = String.concat " " (List.map (fun f -> f ^ ext) libraries) in
+          match link with
+          | Asmlink ->
+              Globals.msg "-I %s %s %s "
+                path
+                (options (link_options@asmlink_options))
+                (files ".cmxa")
+          | Bytelink ->
+              Globals.msg "-I %s %s %s "
+                path
+                (options (link_options@bytelink_options))
+                (files ".cma")
+          | _ -> assert false in
+
+    if not is_rec then
+      one name
+    else
+      let l_deb = debpkg_of_nv t installed l_index in
+      let dependencies =
+        Solver.filter_dependencies 
+          (List.find
+             (fun pkg -> 
+               Namespace.Name pkg.Debian.Packages.name = name 
+               && pkg.Debian.Packages.version = version.Namespace.deb)
              l_deb)
-      else
-        f_false version in
-
-    match find_from_name name l_index, req with
-        
-      | None, _ -> 
-        Globals.msg
-          "Package \"%s\" not found. An update of package will be performed.\n"
-          (Namespace.string_user_of_name name);
-        if confirm "Confirm ?" then
-          update_t t
-            
-      | Some _, Dir -> 
-        f_is_rec
-          (fun l -> 
-            Globals.msg "%s"
-              (BatIO.to_string
-                 (let i = "-I " in 
-                  BatList.print ~first:i ~last:"" ~sep:(" " ^ i) BatString.print)
-                 (List.map 
-                    (fun pkg -> match Path.ocaml_options_of_library t.home (Namespace.Name pkg.Debian.Packages.name) with I s -> s)
-                    l)))
-          (fun _ -> 
-            Globals.msg "%s"
-              (match Path.ocaml_options_of_library t.home name with I s -> s))
-
-      | _ -> 
-        let display name version = 
-          let l_f, s_cma = 
-            match req with
-              | Bytelink -> [ File.Descr.link ], ".cma"
-              | Asmlink -> [ File.Descr.link ; File.Descr.asmlink ], ".cmxa"
-              | Dir -> assert false in
-          let descr = File.Descr.find_err (Path.descr t.home (name, version)) in
-          
-          List.flatten (List.map (fun f -> f descr) l_f), 
-          File.Descr.library descr ^ s_cma in
-        
-        f_is_rec
-          (fun l -> 
-            let l_opt, l_cma =
-              List.split (List.map (fun pkg -> display (Namespace.Name pkg.Debian.Packages.name) { Namespace.deb = pkg.Debian.Packages.version }) l) in
-            Globals.msg "%s %s" 
-              (String.concat " " (List.flatten l_opt))
-              (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:" " BatString.print) l_cma))
-          (fun version -> 
-            let l, s_cma = display name version in
-            Globals.msg "%s %s" (String.concat " " l) s_cma)
+          l_deb in
+      let dependencies =
+        List.map (fun pkg -> Namespace.Name pkg.Debian.Packages.name) dependencies in
+      List.iter one dependencies
 
 end
-
-
-
-
-
-
-
-
-
-

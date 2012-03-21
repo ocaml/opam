@@ -22,11 +22,21 @@ opt: ./_obuild/unixrun
 link: ocp-get ocp-get-server
 	@
 
-ocp-get:
-	ln -s _obuild/ocp-get/ocp-get.asm ocp-get
+ocp-get: _obuild/ocp-get/ocp-get.asm
+	if [ ! -e $^]; then \
+	  ln -s $^ ocp-get; \
+	fi
 
-ocp-get-server:
-	ln -s _obuild/ocp-get-server/ocp-get-server.asm ocp-get-server
+_obuild/ocp-get-server/ocp-get-server.asm:
+	ocp-build ocp-get-server
+
+_obuild/ocp-get/ocp-get.asm:
+	ocp-build ocp-get
+
+ocp-get-server: _obuild/ocp-get-server/ocp-get-server.asm
+	if [ ! -f $^]; then \
+	  ln -s $^ ocp-get-server; \
+	fi
 
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)

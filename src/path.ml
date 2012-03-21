@@ -186,11 +186,11 @@ sig
   val installed : t -> filename (* $HOME_OPAM_OVERSION/installed *)
 
   (** OPAM files considered for an arbitrary version and package *)
-  val index_opam : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.opam *)
+  val index : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.spec *)
   (* [None] : $HOME_OPAM/index *)
 
-  (** list of OPAM files *)
-  val index_opam_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.opam ] -> [ NAME, VERSION ] *)
+  (** list of spec files *)
+  val index_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.spec ] -> [ NAME, VERSION ] *)
 
   (** source archives for all versions of all packages *)
   val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
@@ -327,7 +327,7 @@ module Path : PATH = struct
     | None -> Raw (t_home // name)
     | Some (n, v) -> mk_name_version t_home name ext n v
 
-  let index_opam t = mk_name_version_o t.home "index" ".opam"
+  let index t = mk_name_version_o t.home "index" ".spec"
   let archives_targz t = mk_name_version_o t.home "archives" ".tar.gz"
 
   let build t = mk_name_version_o t.home_ocamlversion "build" ""
@@ -362,7 +362,7 @@ module Path : PATH = struct
 
   let nv_of_extension version (B s) = 
     let s = 
-      match BatString.right_chop s ".opam" with
+      match BatString.right_chop s ".spec" with
         | Some s -> s
         | _ ->
           let rec aux s =
@@ -384,9 +384,9 @@ module Path : PATH = struct
     else
       None
 
-  let index_opam_list t =
+  let index_list t =
     let files =
-      match find (index_opam t None) with
+      match find (index t None) with
       | Directory l -> l
       | File _
       | Not_found _ -> [] in
@@ -480,15 +480,22 @@ module Path : PATH = struct
 
     let f_filename f f_basename = 
       List.map
-        (fun fic -> 
-          f, 
-          f_basename fic,
-          match (lstat fic).Unix.st_kind with
-            | Unix.S_DIR -> R_directory (Enum.map (fun f -> 
-              let f = B f in
-              f, R_filename [fic /// f]) (files_of fic))
+        (fun fic ->
+          if Sys.file_exists (s_of_filename fic) then begin
+            f, 
+            f_basename fic,
+            match (lstat fic).Unix.st_kind with
+            | Unix.S_DIR ->
+                R_directory (Enum.map 
+                               (fun f -> 
+                                 let f = B f in
+                                 f, R_filename [fic /// f])
+                               (files_of fic))
             | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
-            | _ -> failwith "to complete !") in
+            | _ -> failwith "to complete !"
+          end else
+            Globals.error_and_exit "File %s does not exist." (s_of_filename fic))
+    in
 
     let rec aux f (* <- filename dir *) name (* name of the value that will be destructed*) = function
     | R_directory l ->

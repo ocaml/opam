@@ -1,1 +1,7 @@
-lib: p2.cmo, p2.cmx, p2.cmi
+install "P2" {
+  lib = [
+    "p2.cmo";
+    "p2.cmx";
+    "p2.cmi";
+  ]
+}

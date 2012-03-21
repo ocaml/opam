@@ -2,6 +2,7 @@ open ExtString
 open ExtList
 open Namespace
 open Path
+open File_format
 
 type ('a, 'b) text = 
   | Parsed of 'a 
@@ -37,8 +38,9 @@ struct
     aux
 
   let assoc_parsed = assoc (fun v _ -> v)
+(*
   let assoc_all = assoc (fun v xs -> v :: BatList.takewhile_map (function Raw x -> Some x | Parsed _ -> None) xs)
-
+*)
   let map_parsed f = 
     List.map 
       (function
@@ -48,7 +50,7 @@ struct
   module Exceptionless = 
   struct
     let assoc_parsed k l = try Some (assoc_parsed k l) with Not_found -> None
-    let assoc_all k l = try Some (assoc_all k l) with Not_found -> None
+(*  let assoc_all k l = try Some (assoc_all k l) with Not_found -> None *)
 
     let assoc_def def k l = 
       match assoc_parsed k l with
@@ -99,12 +101,12 @@ struct
     val version_of_string : string -> internal_version
 
     (** destruct *)
-    val opam_version : t -> internal_version
+    val opam_version : t -> int
     val sources : t -> url
     val ocaml_version : t -> internal_version
 
     (** construct *)
-    val create : internal_version (* opam *) -> url -> internal_version (* ocaml *) -> t
+    val create : int (* opam *) -> url -> internal_version (* ocaml *) -> t
   end
 
   module Config : CONFIG =
@@ -112,7 +114,7 @@ struct
     let internal_name = "config"
 
     type t =
-        { version : internal_version (* opam version *)
+        { version : int (* opam version *)
         ; sources : url
         ; ocaml_version : internal_version }
 
@@ -125,20 +127,30 @@ struct
     let create version sources ocaml_version = { version ; sources ; ocaml_version }
 
     let empty = {
-      version = Version Globals.version;
+      version = Globals.api_version;
       sources = url Globals.default_hostname Globals.default_port ;
       ocaml_version = Version Sys.ocaml_version
     }
 
-    let to_string t =
-      Printf.sprintf "version: %s\nsources: %s\nocaml-version: %s\n"
-        (match t.version with Version s -> s)
+   let to_string t =
+      Printf.sprintf "version: %d\nsources: %s\nocaml-version: %s\n"
+        t.version
         (string_of_url t.sources)
         (match t.ocaml_version with Version s -> s)
 
     let parse contents =
       let file = Parse.colon contents in
-      let version = Parse.Exceptionless.assoc_def Globals.opam_version "version" file in
+      let version = match Parse.Exceptionless.assoc_parsed "version" file with
+        | None ->
+            Globals.error_and_exit
+              "Fatal error: Missing field 'version' in %s/config. Exit."
+              !Globals.root_path
+        | Some v ->
+            try int_of_string v
+            with _ ->
+              Globals.error_and_exit
+                "Fatal error: invalid value for 'version' field in %s/config. Exit"
+                !Globals.root_path in
       let sources =
         try
           let sources = Parse.assoc_parsed "sources" file in
@@ -147,7 +159,7 @@ struct
         with _ ->
           url Globals.default_hostname Globals.default_port in
       let ocaml_version = try Parse.assoc_parsed "ocaml-version" file with Not_found -> Sys.ocaml_version in
-      { version = Version version
+      { version = version
       ; sources
       ; ocaml_version = Version ocaml_version }
   end
@@ -163,21 +175,25 @@ struct
     val packages: t -> Cudf.package list
   end
 
-  module type OPAM = sig
+  module type SPEC = sig
     include IO_FILE
 
     (** destruct *)
-    val opam_version : t -> internal_version
-    val version : t -> Namespace.version
-    val package : t -> bool (* true : installed *) -> Debian.Packages.package
-    val description : t -> string
+    val name        : t -> string
+    val version     : t -> Namespace.version
 
-    (** construct *)
+    (** Returns the list of sentences *)
+    val description : t -> string list
+
+    (** Convert to Debian packages to feed the solver *)
+    val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
+
   end
 
-  module Opam : OPAM = struct
+  module Spec : SPEC = struct
 
-    let internal_name = "opam"
+    let internal_name = "spec"
+    let log = Globals.log internal_name
 
     module D = struct
       module D = Debian.Packages
@@ -195,66 +211,86 @@ struct
     open BatMap
 
     type t = {
-      opam_version : internal_version ;
-      version : Namespace.version ;
-      list_stanza : (string * string, string) text list ;
+      name       : string;
+      version    : string;
+      description: string list;
+      fields     : (string * string) list;
     }
 
-    let empty = { opam_version = Version "" ; version = { deb = "" } ; list_stanza = [] }
+    let empty = {
+      name        = "<none>";
+      version     = "<none>";
+      description = ["empty package"];
+      fields      = [];
+    }
 
-    let opam_version t = t.opam_version
-    let version t = t.version
-          
     let s_description = "description"
-    let s_user_version = "version"
-    let s_opam_version = "opam-version"
-    let s_package = "package"
-    let s_installed = "status" (* see [Debcudf.add_inst] for more details about the format *)
-    let s_installed_true = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
-    let s_depends = "depends"
-    let s_conflicts = "conflicts"
+    let s_version     = "version"
+    let s_status      = "status"      (* see [Debcudf.add_inst] for more details about the format *)
+    let s_installed   = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
+    let s_depends     = "depends"
+    let s_conflicts   = "conflicts"
 
-    let description t = 
-      BatIO.to_string
-        (BatList.print ~first:"" ~last:"" ~sep:"\n" BatString.print)
-        (match Parse.Exceptionless.assoc_all s_description t.list_stanza with
-          | None -> [] 
-          | Some l -> l)
-      
-    let default_package t =
-      let assoc f s = 
-        match Parse.Exceptionless.assoc_parsed s t.list_stanza with
-          | None -> []
-          | Some l -> f l in
+    let description t = t.description
+    let name t = t.name
+    let version t = {deb = t.version}
+
+    let default_package (t:t) =
+      let assoc f s =
+        try f (List.assoc s t.fields)
+        with Not_found -> [] in
 
       { D.default_package with 
-        D.name = Parse.assoc_parsed s_package t.list_stanza ;
-        D.version = t.version.deb ;
-        D.extras = [ s_description, description t ] ;
-        D.depends = assoc D.parse_vpkgformula s_depends ;
+        D.name      = t.name ;
+        D.version   = t.version ;
+        D.extras    = [] ;
+        D.depends   = assoc D.parse_vpkgformula s_depends ;
         D.conflicts = assoc D.parse_vpkglist s_conflicts }
 
-    let package t installed =
+    let to_package t installed =
       let p = default_package t in
       if installed then 
-        { p with D.extras = (s_installed, s_installed_true) :: p.D.extras }
+        { p with D.extras = (s_status, s_installed) :: p.D.extras }
       else
         p
 
-    let parse str =
-      let list_stanza = Parse.colon str in
-      { opam_version = Version (Parse.Exceptionless.assoc_def Globals.version s_opam_version list_stanza)
-      ; version = Namespace.version_of_string (Parse.assoc_parsed s_user_version list_stanza)
-      ; list_stanza }
-
     let to_string t =
-      BatIO.to_string
-        (BatList.print ~first:"" ~last:"" ~sep:"\n" 
-           (fun oc txt -> 
-             BatString.print oc 
-               (match txt with
-                 | Raw s -> s
-                 | Parsed (k, v) -> k ^ " : " ^ v))) t.list_stanza
+      let pf (k, v) = Printf.sprintf "  %s = %S\n" k v in
+      Printf.sprintf "@%d\n\npackage %S {\n%s}\n"
+        Globals.api_version t.name
+        (String.concat "" (List.map pf t.fields))
+
+    let parse str =
+      let lexbuf = Lexing.from_string str in
+      let file = Parser.main Lexer.token lexbuf in
+      if file.File_format.version <> Globals.api_version then
+        Globals.error_and_exit "Incompatible software versions";
+      let statement = match file.statements with
+        | [s] -> s
+        | []  -> Globals.error_and_exit "No package defined"
+        | _   -> Globals.error_and_exit "Too many packages defined" in
+      if statement.kind <> "package" then
+        Globals.error_and_exit "%s: bad format (was waiting for 'package')" statement.kind;
+      let version =
+        try match List.assoc s_version statement.contents with
+          | String v -> v
+          | _        -> Globals.error_and_exit "Field 'version': bad format"
+        with Not_found ->
+          Globals.error_and_exit "field 'version' is missing" in
+      let description =
+        try match List.assoc s_description statement.contents with
+          | String s -> String.nsplit s "."
+          | _        -> Globals.error_and_exit "Fied 'description': bad format"  
+        with Not_found -> [] in
+      let fields =
+        let unstring (k,v) = match v with
+          | String s -> k, s
+          | _        -> Globals.error_and_exit "Field %s: bad format" k in
+        List.map unstring statement.contents in
+      let r = { version; description; fields;
+        name   = statement.File_format.name } in
+      r
+
   end
 
 
@@ -310,7 +346,7 @@ struct
 
     (** destruct *)
     val lib : t -> path list
-    val bin : t -> path option
+    val bin : t -> path list
     val misc : t -> misc list
 
     val path_from : misc -> path
@@ -330,7 +366,7 @@ struct
 
     type t = 
         { lib : path list
-        ; bin : path option
+        ; bin : path list
         ; misc : misc list }
 
     let lib t = t.lib
@@ -361,8 +397,8 @@ struct
       | Absolute, l_b, suff -> filename_of_path t Path.root l_b suff
       | _ -> assert false
 
-    let empty = { lib = []
-                ; bin = None
+    let empty = { lib  = []
+                ; bin  = []
                 ; misc = [] }
 
     let b_of_string abs s = 
@@ -379,107 +415,124 @@ struct
     let relative_path_of_string = b_of_string Relative
 
     let parse s =
-      let l_lib_bin, l_misc = 
-        let l, f_while = 
-          String.nsplit s "\n",
-          fun s ->
-            match try Some (BatString.split "misc" (BatString.trim s)) with _ -> None with
-            | Some ("", _) -> false
-            | _ -> true in
-        List.takewhile f_while l, List.dropwhile f_while l in
-
-      let l_lib_bin = Parse.parse ":" l_lib_bin in
-
-      
-      { lib = 
-          (match Parse.Exceptionless.assoc_parsed "lib" l_lib_bin with
-            | Some lib -> List.map relative_path_of_string (String.nsplit lib ",")
-            | None -> [])
-      ; bin = Option.map relative_path_of_string (Parse.Exceptionless.assoc_parsed "bin" l_lib_bin)
-      ; misc = 
-          List.map
-            (fun (s_path, s_fname) -> 
-              { p_from = relative_path_of_string s_path ; p_to = b_of_string Absolute s_fname })
-            (Parse.filter_parsed (Parse.parse " " l_misc)) }
+      let file = Parser.main Lexer.token (Lexing.from_string s) in
+      let one accu s =
+        if s.kind <> "install" then
+          Globals.error_and_exit "Bad format: expecting 'install', got %s" s.kind;
+        let aux1 = List.map relative_path_of_string in
+        let aux2 = List.map
+          (fun (k,v) -> { p_from = relative_path_of_string k;
+                          p_to   = relative_path_of_string v }) in
+        { lib  = aux1 (string_list "lib" s) @ accu.lib;
+          bin  = aux1 (string_list "bin" s) @ accu.bin;
+          misc = aux2 (pair_list "misc" s)  @ accu.misc } in
+      List.fold_left one empty file.statements
 
     let to_string t =
 
-      let path_print oc (pref, l_base, base) = 
-        begin
-          BatString.print oc (match pref with Absolute -> "/" | Relative -> "");
-          BatList.print ~first:"" ~last:"/" ~sep:"/" (fun oc (B base) -> BatString.print oc base) oc l_base;
-          BatString.print oc (match base with Suffix s -> Printf.sprintf "*.%s" s | Exact s -> s);
-        end in
+      let print (pref, l_base, base) = 
+        let prefix = match pref with Absolute -> "/" | Relative -> "" in
+        let path = match l_base with
+          | [] -> ""
+          | _  -> String.concat "/" (List.map (fun (B base) -> base) l_base) in
+        let suffix = match base with Suffix s -> Printf.sprintf "*.%s" s | Exact s -> s in
+        Printf.sprintf "%s%s%s" prefix path suffix in
 
-      Printf.sprintf "
-lib: %s
-bin: %s
-misc:
-%s"
-        (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:", " path_print) t.lib)
-        (BatIO.to_string (BatOption.print path_print) t.bin)
-        (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:"\n" 
-                            (fun oc misc -> 
-                              begin
-                                path_print oc (misc.p_from);
-                                BatString.print oc " ";
-                                path_print oc (misc.p_to);
-                              end)) t.misc)
+      let print_list = List.map print in
+      Printf.sprintf "\
+        lib: %s\n\
+        bin: %s\n\
+        misc:\n\
+        %s"
+        (String.concat ", " (print_list t.lib))
+        (String.concat ", " (print_list t.bin))
+        (String.concat "\n"
+           (List.map (fun m ->
+             Printf.sprintf "%s %s"
+               (print m.p_from)
+               (print m.p_to))
+              t.misc))
   end
 
 
 
-  module type DESCR =
+  (* Package config X.config *)
+  module type PCONFIG =
   sig
     include IO_FILE
 
-    val library : t -> string
-    val requires : t -> string list
-    val link : t -> string list
-    val asmlink : t -> string list
+    val library_names   : t -> string list
+    val link_options    : t -> string list
+    val asmlink_options : t -> string list
+    val bytelink_options: t -> string list
   end
 
-  module Descr : DESCR =
+  module PConfig : PCONFIG =
   struct
-    let internal_name = "descr"
+    let internal_name = "pconfig"
 
-    type t = 
-        { library : string
-        ; requires : string list
-        ; link : string list
+    type library =
+        { name    : string
+        ; link    : string list
+        ; bytelink: string list
         ; asmlink : string list }
+
+    type elt = Library of library
+
+    type t = elt list
 
     open ExtString
 
-    let library t = t.library
-    let requires t = t.requires
-    let link t = t.link
-    let asmlink t = t.asmlink
+    let libraries t =
+      List.fold_left (fun accu -> function Library l -> l :: accu) [] t
 
-    let parse s = 
-      let library, s = 
-        let s_beg, s = BatString.split s "{" in
-        (match List.filter (function "" -> false | _ -> true) (String.nsplit s_beg " ") with
-          | "library" :: name :: _ -> name
-          | _ -> failwith "The name of the library is not found"), s in
-      let l = Parse.colon s in
-      let f_dash dash key = List.map (String.strip ~chars:" ") (String.nsplit dash (Parse.assoc_parsed key l)) in
-      { library 
-      ; requires = f_dash "," "requires"
-      ; link = f_dash "-" "link"
-      ; asmlink = f_dash "-" "asmlink" }
+    let library_names t = List.map (fun l -> l.name) (libraries t)
 
-    let to_string t = 
-      let f_s print_beg motif l =
-        BatIO.to_string (BatList.print ~first:(if print_beg then motif else "") ~last:"" ~sep:motif BatString.print) l in
-      Printf.sprintf "
-library %s {
-  %s
-  %s
-  %s
-}" t.library (f_s false ", " t.requires) (f_s true " -" t.link) (f_s true " -" t.asmlink)
+    let options f t = List.flatten (List.map (fun l -> f l) (libraries t))
 
-    let empty = { library = "" ; requires = [] ; link = [] ; asmlink = [] }
+    let link_options = options (fun l -> l.link)
+
+    let asmlink_options = options (fun l -> l.asmlink)
+
+    let bytelink_options = options (fun l -> l.bytelink)
+
+    let parse_library s =
+      { name     = s.File_format.name;
+        link     = string_list "link" s;
+        bytelink = string_list "bytelink" s;
+        asmlink  = string_list "bytelink" s }
+
+    let parse s =
+      let file = Parser.main Lexer.token (Lexing.from_string s) in
+      let parse_statement s = match s.kind with
+        | "library" -> Library (parse_library s)
+        | _         -> Globals.error_and_exit "Bad format: unknown kind '%s'" s.kind in
+      List.map parse_statement file.statements
+
+    let string_of_string_list l =
+      let p = Printf.sprintf "%S" in
+      match l with
+      | [] -> "[]"
+      | _  ->
+        let elts = List.map p l in
+        Printf.sprintf "[ %s ]" (String.concat "; " elts)
+
+    let string_of_library t =
+      let p (k,v) = match v with
+        | [] -> ""
+        | _  -> Printf.sprintf "  %s = %s;\n" k (string_of_string_list v) in
+      let fields = List.map p [
+        ("link"    , t.link);
+        ("bytelink", t.bytelink);
+        ("asmlink", t.asmlink);
+      ] in
+      Printf.sprintf "library %s {\n%s}\n" t.name (String.concat "" fields)
+
+    let to_string l =
+      let aux (Library l) = string_of_library l in
+      String.concat "\n\n" (List.map aux l)
+
+    let empty = []
   end
 
   module type SECURITY_KEY =
@@ -545,9 +598,9 @@ struct
   open Base
 
   module Config = struct include Config include Make (Config) end
-  module Opam = struct include Opam include Make (Opam) end
+  module Spec = struct include Spec include Make (Spec) end
   module To_install = struct include To_install include Make (To_install) end
-  module Descr = struct include Descr include Make (Descr) end
+  module PConfig = struct include PConfig include Make (PConfig) end
   module Security_key = struct include Security_key include Make (Security_key) end
 
   module Installed =
