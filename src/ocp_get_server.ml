@@ -2,6 +2,7 @@ open Sys
 open Unix
 open File
 open Server
+open Protocol 
 
 let usage =
   Printf.sprintf "%s -p <port> [--debug]" Sys.argv.(0)
@@ -53,12 +54,15 @@ let protect f =
   try f ()
   with e -> Oerror (Printexc.to_string e)
 
-let fn t stdin stdout =
+let fn t =
   Random.self_init();
   let id = Random.int 1024 in
   log id "Processing an incoming request";
 
-  let output = match (input_value stdin : input_api) with
+  Protocol.add (function 
+  | IacceptedVersion s ->
+      log id "acceptedVersion";
+      protect (fun () -> OacceptedVersion (Server.acceptedVersion t s))
   | IgetList                    ->
       log id "getList";
       protect (fun () -> OgetList (Server.getList t))
@@ -75,10 +79,7 @@ let fn t stdin stdout =
   | IupdateArchive (nv, opam, archive, k) ->
       (* XXX: need to protect the server state mutation as it can be updated concurrently *)
       log id "updateArchive [%s]" (Digest.to_hex (Digest.string (match k with Path.Random s -> s)));
-      protect (fun () -> OupdateArchive (Server.updateArchive t nv opam archive k)) in 
-
-  output_value stdout output;
-  flush stdout
+      protect (fun () -> OupdateArchive (Server.updateArchive t nv opam archive k)))
 
 let _ =
   handle_unix_error server fn

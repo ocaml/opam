@@ -9,6 +9,9 @@ module type SERVER =
 sig
   type t
 
+  (** Return [true] in case the given version is accepted by the server. *)
+  val acceptedVersion : t -> string -> bool
+
   (** Returns the list of the available versions for all packages. *)
   val getList : t -> name_version list
 
@@ -53,6 +56,9 @@ module Server = struct
   let init home = 
     { home = Path.init home
     ; opam_version = Globals.api_version }
+
+  let acceptedVersion t s =
+    s = Globals.version
 
   let getList t =
     Path.index_list t.home
@@ -110,34 +116,18 @@ module Server = struct
     None <> mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) (Some key)
 end
 
-type input_api =
-  | IgetList
-  | IgetOpam of name_version
-  | IgetArchive of name_version
-  | InewArchive of name_version * binary_data * binary_data archive
-  | IupdateArchive of name_version * binary_data * binary_data archive * security_key
-
-type output_api =
-  | OgetList of name_version list
-  | OgetOpam of binary_data
-  | OgetArchive of binary_data archive
-  | OnewArchive of security_key option
-  | OupdateArchive of bool
-  | Oerror of string (* server error *)
-
 module RemoteServer : SERVER with type t = url = struct
+
+  open Protocol
 
   type t = url
 
   (* untyped message exchange *)
-  let send url (m : input_api) =
+  let send url m =
     let host = (gethostbyname url.hostname).h_addr_list.(0) in
     let addr = ADDR_INET (host, url.port) in
     try
-      let stdin, stdout = open_connection addr in
-      output_value stdout m;
-      flush stdout;
-      (input_value stdin : output_api)
+      Protocol.find (open_connection addr) m
     with _ ->
       Globals.error "The server (%s) is unreachable. Please check your network configuration."
         (string_of_url url);
@@ -149,6 +139,12 @@ module RemoteServer : SERVER with type t = url = struct
   let error msg =
     Globals.error "[SERVER] %s" msg;
     exit 1
+
+  let acceptedVersion t s =
+    match send t (IacceptedVersion s) with
+    | OacceptedVersion nl -> nl
+    | Oerror s    -> error s
+    | _           -> dyn_error "acceptedVersion"
 
   let getList t =
     match send t IgetList with
