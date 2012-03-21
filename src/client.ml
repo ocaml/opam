@@ -51,8 +51,14 @@ module Client : CLIENT = struct
   let load_state () =
     let home = Path.init !Globals.root_path in
     let config = File.Config.find_err (Path.config home) in
-    { server = File.Config.sources config
-    ;  home }
+    let server = File.Config.sources config in
+    if RemoteServer.acceptedVersion server Globals.version then
+      { server ;  home }
+    else
+      begin
+        Globals.msg "The version of this program is different than the one at server side.\n";
+        exit 1;
+      end
 
   let update_t t =
     let packages = RemoteServer.getList t.server in

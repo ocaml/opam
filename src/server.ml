@@ -9,6 +9,9 @@ module type SERVER =
 sig
   type t
 
+  (** Return [true] in case the given version is accepted by the server. *)
+  val acceptedVersion : t -> string -> bool
+
   (** Returns the list of the available versions for all packages. *)
   val getList : t -> name_version list
 
@@ -53,6 +56,9 @@ module Server = struct
   let init home = 
     { home = Path.init home
     ; opam_version = Version Globals.opam_version }
+
+  let acceptedVersion t s =
+    s = Globals.version
 
   let getList t =
     Path.index_opam_list t.home
@@ -133,6 +139,12 @@ module RemoteServer : SERVER with type t = url = struct
   let error msg =
     Globals.error "[SERVER] %s" msg;
     exit 1
+
+  let acceptedVersion t s =
+    match send t (IacceptedVersion s) with
+    | OacceptedVersion nl -> nl
+    | Oerror s    -> error s
+    | _           -> dyn_error "acceptedVersion"
 
   let getList t =
     match send t IgetList with

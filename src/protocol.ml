@@ -2,6 +2,7 @@ open Namespace
 open Path
 
 type client_to_server =
+  | IacceptedVersion of string
   | IgetList
   | IgetOpam of name_version
   | IgetArchive of name_version
@@ -9,6 +10,7 @@ type client_to_server =
   | IupdateArchive of name_version * binary_data * binary_data archive * security_key
 
 type server_to_client =
+  | OacceptedVersion of bool
   | OgetList of name_version list
   | OgetOpam of binary_data
   | OgetArchive of binary_data archive

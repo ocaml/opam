@@ -60,6 +60,9 @@ let fn t =
   log id "Processing an incoming request";
 
   Protocol.add (function 
+  | IacceptedVersion s ->
+      log id "acceptedVersion";
+      protect (fun () -> OacceptedVersion (Server.acceptedVersion t s))
   | IgetList                    ->
       log id "getList";
       protect (fun () -> OgetList (Server.getList t))
