@@ -192,8 +192,8 @@ module Client : CLIENT = struct
     Globals.msg "%s [Y/n] " msg;
     match read_line () with
       | "y" | "Y"
-      | "\n" -> true
-      | _    -> false
+      | "" -> true
+      | _  -> false
 
   let iter_toinstall f_add_rec t (name, v) = 
 
@@ -214,19 +214,19 @@ module Client : CLIENT = struct
   
     (* bin *) 
     List.iter (fun m ->
-      let src = File.To_install.path_from m in
-      let dst = File.To_install.path_to m in
-      let tmp =
-        let (p, b, _) = src in
-        match dst with
-        | (Relative, [], Exact s) -> (p, b, Exact s)
-        | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
       let root = Path.build t.home (Some (name, v)) in
-      let file f = match File.To_install.filename_of_path_relative root f with
-        | [f] -> Path.string_of_filename f
+      let src = File.To_install.path_from m in
+      let src = match File.To_install.filename_of_path_relative root src with
+        | [f] -> f
         | _   -> Globals.error_and_exit "'bin' files cannot contain * patterns" in
-      U.copy (file src) (file tmp);
-      add_rec (fun t _ -> Path.bin t) t tmp
+
+      let dst = File.To_install.path_to m in
+      let dst = match dst with
+        | (Relative, [], Exact s) -> Path.concat (Path.bin t.home) (B s)
+        | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
+
+      (* XXX: use the API *)
+      U.copy (Path.string_of_filename src) (Path.string_of_filename dst)
     ) (File.To_install.bin to_install);
   
     (* misc *)
@@ -242,29 +242,31 @@ module Client : CLIENT = struct
                (File.To_install.path_to misc)))
       (File.To_install.misc to_install)
 
-  let proceed_todelete t (n, v0) = 
+  let proceed_todelete t (n, v0) =
+    log "deleting %s" (Namespace.to_string (n, v0));
     File.Installed.modify_def (Path.installed t.home) 
       (fun map_installed -> 
         match N_map.Exceptionless.find n map_installed with
           | Some v when v = v0 ->
-            iter_toinstall
-              (fun file -> function
-                | Path.R_filename l -> 
-                  List.iter (fun f -> Path.remove (Path.concat file (Path.basename f))) l
-                | _ -> failwith "to complete !")
-              t
-              (n, v);
-            N_map.remove n map_installed
-              
-          | _ -> map_installed)
+              (* Remove the libraries *)
+              Path.remove (Path.lib t.home n);
 
-  let proceed_torecompile t nv =
-    let err = Path.exec_buildsh t.home nv in
-    if err = 0 then
-      iter_toinstall Path.add_rec t nv
-    else
-      Globals.error_and_exit
-        "./build.sh failed with error %d" err
+              (* Remove the binaries *)
+              let bins =
+                let to_install =
+                  File.To_install.find_err (Path.to_install t.home (n, v0)) in
+                let file m =
+                  File.To_install.filename_of_path
+                    (Path.bin t.home)
+                    (File.To_install.path_to m) in
+                List.flatten (List.map file (File.To_install.bin to_install)) in
+              List.iter Path.remove bins;
+
+              (* TODO: remove miscs files *)
+
+              (* Remove the package from the installed package file *)
+              N_map.remove n map_installed
+          | _ -> map_installed)
 
   let delete_or_update l =
     let action = function
@@ -274,24 +276,34 @@ module Client : CLIENT = struct
     let parallel (Solver.P l) = List.exists action l in
     List.exists parallel l
 
-  let proceed_tochange t nv_old (name, v) =
+  let proceed_tochange t nv_old (name, v as nv) =
     (* First, uninstall any previous version *)
     (match nv_old with 
     | Was_installed nv_old -> proceed_todelete t nv_old
-    | Was_not_installed -> ());
+    | Was_not_installed    -> ());
 
     (* Then, untar the archive *)
-    let p_build = Path.build t.home (Some (name, v)) in
-    if not (Path.file_exists p_build) then begin
-      let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-      Path.add_rec p_build tgz
-    end;
+    let p_build = Path.build t.home (Some nv) in
+    Path.remove p_build;
+    let tgz = Path.extract_targz (RemoteServer.getArchive t.server nv) in
+    log "untar archive for %s" (Namespace.to_string nv);
+    Path.add_rec p_build tgz;
 
     (* Call the build script and copy the output files *)
-    proceed_torecompile t (name, v);
+    log "Run build.sh";
+    let err = Path.exec_buildsh t.home nv in
+    if err = 0 then
+      iter_toinstall Path.add_rec t nv
+    else
+      Globals.error_and_exit
+        "./build.sh failed with error %d" err;
 
     (* Mark the packet as installed *)
     File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
+
+  (* we need to clean-up things before recompiling *)
+  let proceed_torecompile t nv =
+    proceed_tochange t (Was_installed nv) nv
 
   let debpkg_of_nv t map_installed =
     List.fold_left

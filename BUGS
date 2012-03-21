@@ -1,1 +1,6 @@
-* ocp-get install P3 asks to remove P2
+* 'ocp-get remove' does not remove forward dependencies
+
+* nothing should be linked from ../build/.. directories.
+  these folders are supposed to be temporary, ie. they
+  will be deleted when we need to make some on cleanups
+  later

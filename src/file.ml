@@ -215,7 +215,6 @@ struct
   module Spec : SPEC = struct
 
     let internal_name = "spec"
-    let log = Globals.log internal_name
 
     module D = struct
       module D = Debian.Packages
@@ -613,9 +612,25 @@ struct
       
     let find_map f = N_map.of_list (M_installed.Exceptionless.find f)
       
-    let modify_def f f_map = M_installed.add f (N_map.bindings (f_map (find_map f)))
+    let modify_def f f_map =
+      M_installed.add f (N_map.bindings (f_map (find_map f)))
       
     include Installed
     include M_installed
   end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

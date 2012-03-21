@@ -55,6 +55,14 @@ sig
     Debian.Packages.package list 
     -> Debian.Packages.package list
     -> Debian.Packages.package list
+
+  (** Same as [filter_dependencies] but for forward depencies *)
+  val filter_forward_dependencies :
+    Debian.Packages.package list 
+    -> Debian.Packages.package list
+    -> Debian.Packages.package list
+
+
 end
 
 module Solver : SOLVER = struct
@@ -240,7 +248,7 @@ module Solver : SOLVER = struct
       let () = Debian.Debcudf.clear table in
       v
 
-    let filter_dependencies pkg_l l_pkg_pb = 
+    let filter_dependencies pkg_l l_pkg_pb =
       let pkg_map = 
         List.fold_left
           (fun map pkg -> 
@@ -280,7 +288,10 @@ module Solver : SOLVER = struct
                    Debian.Debcudf.get_real_version
                      table
                      (pkg.Cudf.package, pkg.Cudf.version) }) pkg_map) l)
-        
+
+    let filter_forward_dependencies pkg_l universe =
+      failwith "TODO"
+
     let resolve l_pkg_pb req = 
       get_table l_pkg_pb 
       (fun table pkglist ->
@@ -354,6 +365,17 @@ module Solver : SOLVER = struct
   end
 
   let filter_dependencies = Graph.filter_dependencies
+  let filter_forward_dependencies = Graph.filter_forward_dependencies
   let resolve = Graph.resolve
   let resolve_list pkg = List.filter_map (resolve pkg)
 end
+
+
+
+
+
+
+
+
+
+

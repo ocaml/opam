@@ -63,9 +63,7 @@ end
 module U = struct
   let mkdir f f_to = 
     let rec aux f_to = 
-      if Sys.file_exists f_to then
-        ()
-      else begin
+      if not (Sys.file_exists f_to) then begin
         aux (Filename.dirname f_to);
         Unix.mkdir f_to 0o755;
       end in
@@ -79,8 +77,14 @@ module U = struct
     let n = 1024 in
     let b = String.create n in
     let read = ref 0 in
-    let ic = open_in src in
-    let oc = open_out dst in
+    let ic = open_in_bin src in
+    let oc =
+      if Sys.file_exists dst then
+        open_out_bin dst
+      else
+        let perm = (Unix.stat src).Unix.st_perm in
+        mkdir (open_out_gen [Open_creat; Open_binary] perm) dst
+    in
     while !read <>0 do
       read := input ic b 0 n;
       output oc b 0 !read;
@@ -201,9 +205,11 @@ sig
   (* [None] : $HOME_OPAM_OVERSION/build *)
 
   (** compiled files in the extracted archive to install *)
+  (* XXX: P.install should be installed in their own path *)
   val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
 
   (** package configuration for compile and link options *)
+  (* XXX: P.config should be installed in their own path *)
   val pconfig : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.config *)
 
   (** security keys related to package name *)
@@ -394,12 +400,15 @@ module Path : PATH = struct
 
   let remove f = 
     let rec aux fic = 
-      match (Unix.lstat fic).Unix.st_kind with
-      | Unix.S_DIR -> 
-          let () = Enum.iter (fun f -> aux (fic // f)) (BatSys.files_of fic) in
-          Unix.rmdir fic
-      | Unix.S_REG -> Unix.unlink fic
-      | _ -> failwith "to complete !" in
+      log "remove %s" fic;
+      if Sys.file_exists fic then
+        match (Unix.lstat fic).Unix.st_kind with
+        | Unix.S_DIR -> 
+            let () = Enum.iter (fun f -> aux (fic // f)) (BatSys.files_of fic) in
+            Unix.rmdir fic
+        | Unix.S_REG
+        | Unix.S_LNK -> Unix.unlink fic
+        | _          -> failwith "to complete!" in
     aux (s_of_filename f)
 
   let add f content =
@@ -454,10 +463,8 @@ module Path : PATH = struct
     R_lazy
       (fun () -> 
         let oc = BatUnix.open_process_out "tar xzv" in
-        begin
-          BatIO.write_string oc bin;
-          BatIO.close_out oc;
-        end)
+        BatIO.write_string oc bin;
+        BatIO.close_out oc)
   (*IO.read_all (Common.Input.open_file fic)*)
     
   | Tar_gz (Filename (Raw_filename fic)) -> failwith "to complete !" (* R_filename [Raw fic] *)
@@ -504,14 +511,12 @@ module Path : PATH = struct
     | R_file cts -> add (f /// name) (File cts)
     | R_filename l -> 
         List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)
-    | R_lazy write_contents -> 
-      U.mkdir
-        (fun fic -> 
+    | R_lazy write_contents ->
+        U.mkdir (fun fic -> 
           let pwd = U.getchdir (Filename.dirname fic) in 
-          begin 
-            write_contents ();
-            ignore (U.getchdir pwd);
-          end) (s_of_filename (f /// name)) in
+          write_contents ();
+          ignore (U.getchdir pwd);
+        ) (s_of_filename (f /// name)) in
 
     function
       | R_filename l -> 
@@ -520,6 +525,7 @@ module Path : PATH = struct
         let f, name = dirname f, basename f in
         aux f name r_lazy
       | _ -> failwith "to complete !"
+
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))
@@ -533,3 +539,10 @@ module Path : PATH = struct
   | None   -> file_not_found n
   | Some a -> a
 end
+
+
+
+
+
+
+
