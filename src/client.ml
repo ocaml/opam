@@ -86,9 +86,19 @@ module Client : CLIENT = struct
     File.Installed.add (Path.installed home) File.Installed.empty;
     update ()
 
-  let indent_left s nb = s ^ String.make nb ' '
+  let indent_left s nb =
+    let nb = nb - String.length s in
+    if nb <= 0 then
+      s
+    else
+      s ^ String.make nb ' '
 
-  let indent_right s nb = String.make nb ' ' ^ s
+  let indent_right s nb =
+    let nb = nb - String.length s in
+    if nb <= 0 then
+      s
+    else
+      String.make nb ' ' ^ s
 
   let find_from_name name l = 
     N_map.Exceptionless.find 
@@ -104,32 +114,43 @@ module Client : CLIENT = struct
     let t = load_state () in
     let s_not_installed = "--" in
     match package with
+
     | None -> 
         (* Get all the installed packages *)
         let installed = File.Installed.find_err (Path.installed t.home) in
         let install_set = NV_set.of_list installed in
         let map, max_n, max_v = 
           List.fold_left
-            (fun (map, max_n, max_v) n_v -> 
-              let b = NV_set.mem n_v install_set in
-              let opam = File.Spec.find_err (Path.index t.home (Some n_v)) in
-              let new_map = NV_map.add n_v (b, File.Spec.description opam) map in
-              let new_max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
-              let new_max_v =
-                if b then max max_v (String.length (Namespace.string_of_version (snd n_v))) else max_v in
-            new_map, new_max_n, new_max_v)
-            (NV_map.empty, min_int, String.length s_not_installed)
+            (fun (map, max_n, max_v) (name, version as n_v) ->
+              let installed = NV_set.mem n_v install_set in
+              if installed || not (N_map.mem name map) then 
+               (* If the packet is installed or if it has not been processed yet *)
+                let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
+                let new_map = N_map.add name (Some version, File.Spec.description index) map in
+                let new_max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
+                let new_max_v =
+                  if installed then
+                    max max_v (String.length (Namespace.string_of_version (snd n_v)))
+                  else
+                    max_v in
+                new_map, new_max_n, new_max_v
+
+              else
+                map, max_n, max_v)
+            (N_map.empty, min_int, String.length s_not_installed)
             (Path.index_list t.home) in
 
-        NV_map.iter (fun n_v (b, description) ->
+        N_map.iter (fun name (version, description) ->
           let description = match description with
             | []   -> ""
             | h::_ -> h in
-          Globals.msg "%s %s %s\n" 
-            (indent_left (Namespace.string_of_name (fst n_v)) max_n)
-            (indent_right (if b then Namespace.string_of_version (snd n_v) else s_not_installed) max_v)
-            description) map;
-        Globals.msg "\n"
+          let version = match version with
+            | None   -> s_not_installed
+            | Some v -> Namespace.string_of_version v in
+          Globals.msg "%s  %s  %s\n" 
+            (indent_left  (Namespace.string_of_name name) max_n)
+            (indent_right version max_v)
+            description) map
 
     | Some name -> 
         let find_from_name = find_from_name name in
@@ -150,16 +171,16 @@ module Client : CLIENT = struct
 
         List.iter
           (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
-          [ "package", Namespace.string_of_name name
+          [ "package    ", Namespace.string_of_name name
 
-          ; "version",
+          ; "version    ",
             (match o_v with
             | None   -> s_not_installed
             | Some v -> Namespace.string_of_version v)
 
-          ; "versions", (V_set.to_string Namespace.string_of_version v_set)
+          ; "versions   ", (V_set.to_string Namespace.string_of_version v_set)
 
-          ; "description", "\n" ^ 
+          ; "description", "\n  " ^ 
             match o_v with None -> ""
             | Some v ->
                 let opam =
