@@ -241,12 +241,24 @@ module Client : CLIENT = struct
     proceed_torecompile t (name, v);
     File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
 
+  let debpkg_of_nv t map_installed =
+    List.fold_left
+      (fun l n_v ->
+        let opam = File.Opam.find_err (Path.index_opam t.home (Some n_v)) in
+        let pkg = 
+          File.Opam.package opam
+            (match N_map.Exceptionless.find (fst n_v) map_installed with
+              | Some v -> v = snd n_v
+              | _ -> false) in
+        pkg :: l) 
+      []
+
   let resolve t l_index map_installed request = 
 
     let rec aux = function
     | [x] ->
         (* Only 1 solution exists *)
-        Globals.msg "The following actions will be performed:\n";
+        Globals.msg "The following solution has been found:\n";
         Solver.solution_print Namespace.string_of_user x;
         if delete_or_update x then
           if confirm "Continue ?" then
@@ -258,7 +270,7 @@ module Client : CLIENT = struct
 
     | x :: xs ->
         (* Multiple solution exist *)
-        Globals.msg "The following actions will be performed:\n";
+        Globals.msg "The following solution has been found:\n";
         Solver.solution_print Namespace.string_of_user x;
         if delete_or_update x then
           if confirm "Continue ? (press [n] to try another solution)" then
@@ -268,29 +280,23 @@ module Client : CLIENT = struct
         else
           Some x
             
-    | [] -> None in
+    | [] -> assert false in
     
-    let l_pkg = 
-      List.fold_left
-        (fun l n_v ->
-          let opam = File.Opam.find_err (Path.index_opam t.home (Some n_v)) in
-          let pkg = 
-            File.Opam.package opam
-              (match N_map.Exceptionless.find (fst n_v) map_installed with
-                | Some v -> v = snd n_v
-                | _ -> false) in
-          pkg :: l) [] l_index in
+    let l_pkg = debpkg_of_nv t map_installed l_index in
 
-    match aux (Solver.resolve l_pkg request) with
-    | Some sol -> 
-        List.iter (fun(Solver.P l) -> 
-          List.iter (function
-          | Solver.To_change (o,n)  -> proceed_tochange t o n
-          | Solver.To_delete n_v    -> proceed_todelete t n_v
-          | Solver.To_recompile n_v -> proceed_torecompile t n_v
-          ) l
-        ) sol
-    | None -> ()
+    match Solver.resolve l_pkg request with
+      | [] -> Globals.msg "No solution has been found.\n"
+      | l -> 
+        match aux l with
+          | Some sol -> 
+            List.iter (fun(Solver.P l) -> 
+              List.iter (function
+                | Solver.To_change (o,n)  -> proceed_tochange t o n
+                | Solver.To_delete n_v    -> proceed_todelete t n_v
+                | Solver.To_recompile n_v -> proceed_torecompile t n_v
+              ) l
+            ) sol
+          | None -> ()
 
   let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some ("=", v.Namespace.deb)
 
@@ -395,10 +401,33 @@ module Client : CLIENT = struct
 
   type config_request = Dir | Bytelink | Asmlink
 
-  let config _ req name =
+  let config is_rec req name =
     log "config %s" (Namespace.string_of_name name);
     let t = load_state () in
-    match find_from_name name (Path.index_opam_list t.home), req with
+
+    let l_index = Path.index_opam_list t.home in
+
+    let f_is_rec f_true f_false = 
+      let installed = File.Installed.find_map (Path.installed t.home) in
+      match N_map.Exceptionless.find name installed with
+        | None -> unknown_package name
+        | Some version -> 
+
+      if is_rec then
+        let l_deb = debpkg_of_nv t installed l_index in 
+        f_true 
+          (Solver.filter_dependencies 
+             (List.find
+                (fun pkg -> 
+                  Namespace.Name pkg.Debian.Packages.name = name 
+                  && 
+                  pkg.Debian.Packages.version = version.Namespace.deb)
+                l_deb)
+             l_deb)
+      else
+        f_false version in
+
+    match find_from_name name l_index, req with
         
       | None, _ -> 
         Globals.msg
@@ -408,20 +437,41 @@ module Client : CLIENT = struct
           update_t t
             
       | Some _, Dir -> 
-        Globals.msg "%s"
-          (match Path.ocaml_options_of_library t.home name with I s -> s)
+        f_is_rec
+          (fun l -> 
+            Globals.msg "%s"
+              (BatIO.to_string
+                 (let i = "-I " in 
+                  BatList.print ~first:i ~last:"" ~sep:(" " ^ i) BatString.print)
+                 (List.map 
+                    (fun pkg -> match Path.ocaml_options_of_library t.home (Namespace.Name pkg.Debian.Packages.name) with I s -> s)
+                    l)))
+          (fun _ -> 
+            Globals.msg "%s"
+              (match Path.ocaml_options_of_library t.home name with I s -> s))
 
-      | Some v, _ -> 
-        let l_f, s_cma = 
-          (match req with
-            | Bytelink -> [ File.Descr.link ], ".cma"
-            | Asmlink -> [ File.Descr.link ; File.Descr.asmlink ], ".cmxa"
-            | Dir -> assert false) in
-        let descr = File.Descr.find_err (Path.descr t.home (name, V_set.max_elt v)) in
-        let flags = List.flatten (List.map (fun f -> f descr) l_f) in
-        Globals.msg "%s %s%s"
-          (String.concat " " flags)
-          (File.Descr.library descr) s_cma
+      | _ -> 
+        let display name version = 
+          let l_f, s_cma = 
+            match req with
+              | Bytelink -> [ File.Descr.link ], ".cma"
+              | Asmlink -> [ File.Descr.link ; File.Descr.asmlink ], ".cmxa"
+              | Dir -> assert false in
+          let descr = File.Descr.find_err (Path.descr t.home (name, version)) in
+          
+          List.flatten (List.map (fun f -> f descr) l_f), 
+          File.Descr.library descr ^ s_cma in
+        
+        f_is_rec
+          (fun l -> 
+            let l_opt, l_cma =
+              List.split (List.map (fun pkg -> display (Namespace.Name pkg.Debian.Packages.name) { Namespace.deb = pkg.Debian.Packages.version }) l) in
+            Globals.msg "%s %s" 
+              (String.concat " " (List.flatten l_opt))
+              (BatIO.to_string (BatList.print ~first:"" ~last:"" ~sep:" " BatString.print) l_cma))
+          (fun version -> 
+            let l, s_cma = display name version in
+            Globals.msg "%s %s" (String.concat " " l) s_cma)
 
 end
 

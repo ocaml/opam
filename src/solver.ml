@@ -40,6 +40,11 @@ sig
   val resolve :
     Debian.Packages.package list -> Debian.Format822.vpkg request
     -> name_version solution list
+
+  (** Return the recursive dependencies of a package
+      Note : the given package exists in the list in input because this list describes the entire universe. 
+      However, by convention, it does not appear in output. *)
+  val filter_dependencies : Debian.Packages.package -> Debian.Packages.package list -> Debian.Packages.package list
 end
 
 module Solver : SOLVER = struct
@@ -68,13 +73,19 @@ module Solver : SOLVER = struct
 
   let solution_print f =
     let pf = Globals.msg in
-    List.iter (fun (P l) ->
-      List.iter (function
-        | To_recompile p                   -> pf "Recompile: %s\n" (f p)
-        | To_delete p                      -> pf "Remove: %s\n" (f p)
-        | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
-        | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
-      ) l)
+    function 
+      | [] -> pf "No actions will be performed, the current state satisfies the request.\n"
+      | l -> 
+        let l_total = List.fold_left (fun acc (P l) -> acc + List.length l) 0 l in
+        List.iteri (fun i1 (P l) ->
+          List.iteri (fun i2 -> 
+            let pf f = Printf.kprintf (pf "[%d/%d] %s" (succ (i1 + i2)) l_total) f in
+            function
+            | To_recompile p                   -> pf "Recompile: %s\n" (f p)
+            | To_delete p                      -> pf "Remove: %s\n" (f p)
+            | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
+            | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
+          ) l) l
 
   let request_map f r = 
     let f = List.map f in
@@ -177,16 +188,25 @@ module Solver : SOLVER = struct
     end
     module PO = Defaultgraphs.GraphOper (PG)
 
-    module PG_bfs = 
-    struct
-      include Graph.Traverse.Bfs (PG)
+    module type FS = sig
+      type iterator
+      val start : PG.t -> iterator
+      val step : iterator -> iterator
+      val get : iterator -> PG.V.t
+    end
+
+    module Make_fs (F : FS) = struct
       let fold f acc g = 
         let rec aux acc iter = 
-          match try Some (get iter, step iter) with Exit -> None with
+          match try Some (F.get iter, F.step iter) with Exit -> None with
             | None -> acc
             | Some (x, iter) -> aux (f acc x) iter in
-        aux acc (start g)
+        aux acc (F.start g)
     end
+
+    module PG_bfs = Make_fs (Graph.Traverse.Bfs (PG))
+    module PG_dfs = Make_fs (Graph.Traverse.Dfs (PG))
+    module PG_topo = Graph.Topological.Make (PG)
 
     module O_pkg = struct type t = Cudf.package let compare = compare end
     module PkgMap = BatMap.Make (O_pkg)
@@ -197,16 +217,62 @@ module Solver : SOLVER = struct
       let () = PO.transitive_reduction g in
       g
 
-    let resolve l_pkg_pb req = 
+    let tocudf table pkg = 
+      let p = Debian.Debcudf.tocudf table pkg in
+      { p with Cudf.conflicts = List.tl p.Cudf.conflicts
+              (* we cancel the 'self package conflict' notion introduced in [loadlc] in debcudf.ml *) }
+
+    let cudfpkg_of_debpkg table = List.map (tocudf table)
+
+    let get_table l_pkg_pb f = 
       let table = Debian.Debcudf.init_tables l_pkg_pb in
-      let pkglist = 
-        List.map
-          (fun pkg ->
-            let p = Debian.Debcudf.tocudf table pkg in
-            { p with Cudf.conflicts = List.tl p.Cudf.conflicts
-              (* we cancel the 'self package conflict' notion introduced in [loadlc] in debcudf.ml *) } ) l_pkg_pb in
+      let v = f table (cudfpkg_of_debpkg table l_pkg_pb) in
+      let () = Debian.Debcudf.clear table in
+      v
+
+    let filter_dependencies pkg l_pkg_pb = 
+      let pkg_map = 
+        List.fold_left
+          (fun map pkg -> 
+            NV_map.add
+              (Namespace.Name pkg.Debian.Packages.name, { Namespace.deb = pkg.Debian.Packages.version }) 
+              pkg
+              map)
+          NV_map.empty
+          l_pkg_pb in
+      get_table l_pkg_pb
+        (fun table pkglist -> 
+          let g = dep_reduction pkglist in
+          let _, l = 
+            PG_topo.fold
+              (fun p (set, l) -> 
+                let add_succ_rem pkg set act =
+                  (let set = PkgSet.remove pkg set in
+                   try
+                     List.fold_left (fun set x -> 
+                       PkgSet.add x set) set (PG.succ g pkg)
+                   with _ -> set), 
+                  act :: l in
+                
+                if PkgSet.mem p set then 
+                  add_succ_rem p set p
+                else
+                  set, l)
+              g
+              (PkgSet.add (tocudf table pkg) PkgSet.empty, []) in
+          List.map (fun pkg -> 
+            NV_map.find 
+              (Namespace.Name pkg.Cudf.package, 
+               { Namespace.deb =
+                   Debian.Debcudf.get_real_version
+                     table
+                     (pkg.Cudf.package, pkg.Cudf.version) }) pkg_map) l)
+        
+    let resolve l_pkg_pb req = 
+      get_table l_pkg_pb 
+      (fun table pkglist ->
       let universe = Cudf.load_universe pkglist in 
-      let l = 
+
       [ match
       BatOption.bind 
         (let cons pkg act = Some (pkg, act) in
@@ -227,7 +293,7 @@ module Solver : SOLVER = struct
               | To_recompile _ -> assert false) l) in
 
           let graph_installed = 
-            PO.O.mirror
+            PO.O.mirror 
               (dep_reduction 
                  (Cudf.get_packages 
                     ~filter:(fun p -> p.Cudf.installed || PkgMap.mem p map_add) 
@@ -273,10 +339,9 @@ module Solver : SOLVER = struct
                   Debian.Debcudf.get_real_version
                     table
                     (pkg.Cudf.package, pkg.Cudf.version) })
-            (List.map (fun x -> P [ x ]) l) ] in
-      let () = Debian.Debcudf.clear table in
-      l
+            (List.map (fun x -> P [ x ]) l) ])
   end
 
+  let filter_dependencies = Graph.filter_dependencies
   let resolve = Graph.resolve
 end
