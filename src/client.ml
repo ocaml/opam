@@ -249,15 +249,16 @@ module Client : CLIENT = struct
     List.exists parallel l
 
   let proceed_tochange t nv_old (name, v) =
-    begin match nv_old with 
-      | Was_installed nv_old -> proceed_todelete t nv_old
-      | Was_not_installed ->
-          let p_build = Path.build t.home (Some (name, v)) in
-          if Path.file_exists p_build then
-            ()
-          else
-            let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-            Path.add_rec p_build tgz
+    begin
+      (match nv_old with 
+        | Was_installed nv_old -> proceed_todelete t nv_old
+        | Was_not_installed -> ());
+      (let p_build = Path.build t.home (Some (name, v)) in
+       if Path.file_exists p_build then
+         ()
+       else
+         let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
+         Path.add_rec p_build tgz);
     end;
     proceed_torecompile t (name, v);
     File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
@@ -275,40 +276,42 @@ module Client : CLIENT = struct
       []
 
   let resolve t l_index map_installed request = 
-
-    let rec aux = function
-    | [x] ->
-        (* Only 1 solution exists *)
-        Globals.msg "The following solution has been found:\n";
-        Solver.solution_print Namespace.string_of_user x;
-        if delete_or_update x then
-          if confirm "Continue ?" then
-            Some x
-          else
-            None
-        else
-          Some x
-
-    | x :: xs ->
-        (* Multiple solution exist *)
-        Globals.msg "The following solution has been found:\n";
-        Solver.solution_print Namespace.string_of_user x;
-        if delete_or_update x then
-          if confirm "Continue ? (press [n] to try another solution)" then
-            Some x
-          else
-            aux xs
-        else
-          Some x
-            
-    | [] -> assert false in
     
     let l_pkg = debpkg_of_nv t map_installed l_index in
 
-    match Solver.resolve l_pkg request with
-      | [] -> Globals.msg "No solution has been found.\n"
-      | l -> 
-        match aux l with
+    match Solver.resolve_list l_pkg request with
+    | [] -> Globals.msg "No solution has been found.\n"
+    | l -> 
+      let nb_sol = List.length l in
+
+      let rec aux pos = 
+        Globals.msg "{%d/%d} The following solution has been found:\n" pos nb_sol;
+        function
+      | [x] ->
+          (* Only 1 solution exists *)
+          Solver.solution_print Namespace.string_of_user x;
+          if delete_or_update x then
+            if confirm "Continue ?" then
+              Some x
+            else
+              None
+          else
+            Some x
+
+      | x :: xs ->
+          (* Multiple solution exist *)
+          Solver.solution_print Namespace.string_of_user x;
+          if delete_or_update x then
+            if confirm "Continue ? (press [n] to try another solution)" then
+              Some x
+            else
+              aux (succ pos) xs
+          else
+            Some x
+
+      | [] -> assert false in
+
+        match aux 1 l with
           | Some sol -> 
             List.iter (fun(Solver.P l) -> 
               List.iter (function
@@ -337,10 +340,10 @@ module Client : CLIENT = struct
         resolve t
           l_index
           map_installed
-          { Solver.wish_install = 
+          [ { Solver.wish_install = 
               List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings (N_map.remove name map_installed))
-          ; wish_remove = [] 
-          ; wish_upgrade = [] }
+            ; wish_remove = [] 
+            ; wish_upgrade = [] } ]
 
   let remove name =
     log "remove %s" (Namespace.string_of_name name);
@@ -350,13 +353,20 @@ module Client : CLIENT = struct
     let v = match N_map.Exceptionless.find name installed with
       | None   -> unknown_package name
       | Some v -> ("=", v.Namespace.deb) in
+
+    let wish_remove, wish_upgrade = [ Namespace.string_of_name name, Some v ], [] in
+
     resolve t 
       (Path.index_list t.home)
       installed
-      { Solver.wish_install = []
-      ; wish_remove = [ Namespace.string_of_name name, Some v ]
-      ; wish_upgrade = [] }
+      [ { Solver.wish_install = List.map vpkg_of_nv (N_map.bindings (N_map.remove name installed))
+        ; wish_remove
+        ; wish_upgrade }
 
+      ; { Solver.wish_install = []
+        ; wish_remove
+        ; wish_upgrade } ]
+      
   let upgrade () =
     log "upgrade";
     let t = load_state () in
@@ -365,15 +375,15 @@ module Client : CLIENT = struct
     resolve t
       l_index
       installed
-      { Solver.wish_install = []
-      ; wish_remove = []
-      ; wish_upgrade = 
+      [ { Solver.wish_install = []
+        ; wish_remove = []
+        ; wish_upgrade = 
           List.map
             (fun (name, _) -> 
               match find_from_name name l_index with 
                 | None -> assert false (* an already installed package must figure in the index *) 
                 | Some v -> vpkg_of_nv (name, V_set.max_elt v))
-            (N_map.bindings installed) }
+            (N_map.bindings installed) } ]
     
   (* Upload reads NAME.opam to get the current package version.
      Then it looks for NAME-VERSION.tar.gz in the same directory.

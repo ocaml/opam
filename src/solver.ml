@@ -35,10 +35,17 @@ sig
   val solution_map : ('a -> 'b) -> 'a solution -> 'b solution
   val request_map : ('a -> 'b) -> 'a request -> 'b request
 
-  (** Given a description of packages, return the list of solution preserving
-      the consistency of the initial description. *)
+  (** Given a description of packages, return a solution preserving
+      the consistency of the initial description.
+      [None] : No solution found. *)
   val resolve :
     Debian.Packages.package list -> Debian.Format822.vpkg request
+    -> name_version solution option
+
+  (** Same as [resolve], but each element of the list of solutions does not precise
+      which request in the initial list was satisfied. *)
+  val resolve_list : 
+    Debian.Packages.package list -> Debian.Format822.vpkg request list
     -> name_version solution list
 
   (** Return the recursive dependencies of a package
@@ -273,7 +280,6 @@ module Solver : SOLVER = struct
       (fun table pkglist ->
       let universe = Cudf.load_universe pkglist in 
 
-      [ match
       BatOption.bind 
         (let cons pkg act = Some (pkg, act) in
          fun l -> 
@@ -322,26 +328,26 @@ module Solver : SOLVER = struct
               (let graph_installed = PG.copy graph_installed in
                let () = List.iter (PG.remove_vertex graph_installed) l_del_p in
                graph_installed) in
-          Some (List.rev l_act))
+
+          Some
+            (solution_map
+               (fun pkg ->
+                 Namespace.Name pkg.Cudf.package,
+                 { Namespace.deb =
+                     Debian.Debcudf.get_real_version
+                       table
+                       (pkg.Cudf.package, pkg.Cudf.version) })
+               (List.map (fun x -> P [ x ]) (List.rev l_act))))
+
         (CudfDiff.resolve_diff universe 
            (request_map
               (fun x -> 
                 match Debian.Debcudf.ltocudf table [x] with
                   | [x] -> x
-                  | _ -> failwith "to complete !") req))
-      with
-        | None -> []
-        | Some l -> 
-          solution_map
-            (fun pkg ->
-              Namespace.Name pkg.Cudf.package,
-              { Namespace.deb =
-                  Debian.Debcudf.get_real_version
-                    table
-                    (pkg.Cudf.package, pkg.Cudf.version) })
-            (List.map (fun x -> P [ x ]) l) ])
+                  | _ -> failwith "to complete !") req)))
   end
 
   let filter_dependencies = Graph.filter_dependencies
   let resolve = Graph.resolve
+  let resolve_list pkg = List.filter_map (resolve pkg)
 end
