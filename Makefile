@@ -44,7 +44,7 @@ extlib:
 
 dose:
 	$(WGET) http://www.ocamlpro.com/pub/dose.tar.bz2
-	tar xvfz dose.tar.bz2
+	tar xvfj dose.tar.bz2
 
 # ocaml-pcre:
 # 	$(WGET) http://hg.ocaml.info/release/pcre-ocaml/archive/release-6.2.5.tar.gz
@@ -57,17 +57,18 @@ ocamlgraph:
 	mv ocamlgraph-1.8.1 ocamlgraph
 
 clean:
-	$(OCPBUILD) -clean
+	rm -rf _obuild
 	rm -rf src/*.annot bat/*.annot
 	rm -f ocp-get ocp-get-server
+	rm -f ocp-build.*
 
 ocaml-re:
-	$(WGET) http://www.ocamlpro.com/pub/ocaml-re.tar.gz
-	tar xcfj ocaml-re.tar.gz
+	$(WGET) http://www.ocamlpro.com/pub/ocaml-re.tar.bz2
+	tar xvfj ocaml-re.tar.bz2
 
 distclean:
-	rm -f *.tar.gz
-	rm -rf dose cudf extlib ocaml-pcre ocamlgraph
+	rm -f *.tar.gz *.tar.bz2
+	rm -rf dose cudf extlib ocaml-re ocamlgraph
 	rm -rf _obuild
 
 .PHONY: tests
