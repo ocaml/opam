@@ -238,15 +238,16 @@ module Client : CLIENT = struct
     List.exists parallel l
 
   let proceed_tochange t nv_old (name, v) =
-    begin match nv_old with 
-      | Was_installed nv_old -> proceed_todelete t nv_old
-      | Was_not_installed ->
-          let p_build = Path.build t.home (Some (name, v)) in
-          if Path.file_exists p_build then
-            ()
-          else
-            let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
-            Path.add_rec p_build tgz
+    begin
+      (match nv_old with 
+        | Was_installed nv_old -> proceed_todelete t nv_old
+        | Was_not_installed -> ());
+      (let p_build = Path.build t.home (Some (name, v)) in
+       if Path.file_exists p_build then
+         ()
+       else
+         let tgz = Path.extract_targz (RemoteServer.getArchive t.server (name, v)) in
+         Path.add_rec p_build tgz);
     end;
     proceed_torecompile t (name, v);
     File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
