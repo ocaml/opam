@@ -20,7 +20,7 @@ sig
   type config_request = Include | Bytelink | Asmlink
 
   (** Depending on request, returns options or directories where the package is installed. *)
-  val config : bool (* true : recursive search *) -> config_request -> Namespace.name -> unit
+  val config : bool (* true : recursive search *) -> config_request -> Namespace.name list -> unit
 
   (** Installs the given package. *)
   val install : Namespace.name -> unit
@@ -168,10 +168,11 @@ module Client : CLIENT = struct
           ]
 
   let confirm msg = 
-    Globals.msg "%s [y/N] " msg;
+    Globals.msg "%s [Y/n] " msg;
     match read_line () with
-      | "y" | "Y" -> true
-      | _         -> false
+      | "y" | "Y"
+      | "\n" -> true
+      | _    -> false
 
   let iter_toinstall f_add_rec t (name, v) = 
 
@@ -191,12 +192,22 @@ module Client : CLIENT = struct
     List.iter (add_rec Path.lib t) (File.To_install.lib to_install);
   
     (* bin *) 
-    List.iter (add_rec (fun t _ -> Path.bin t) t) (File.To_install.bin to_install);
+    List.iter (fun m ->
+      let src = File.To_install.path_from m in
+      let dst = File.To_install.path_to m in
+      let tmp =
+        let (p, b, _) = src in
+        match dst with
+        | (Absolute, [], Exact s) -> (p, b, Exact s)
+        | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
+      U.copy (string_of_path src) (string_of_path tmp);
+      add_rec (fun t _ -> Path.bin t) t tmp
+    ) (File.To_install.bin to_install);
   
     (* misc *)
     List.iter 
       (fun misc ->
-        Globals.msg "%s\n" (File.To_install.string_of_misc misc);
+        Globals.msg "%s\n" (File.To_install.string_of_move misc);
         if confirm "Continue ?" then
           let path_from =
             filename_of_path_relative t (File.To_install.path_from misc) in
@@ -411,22 +422,28 @@ module Client : CLIENT = struct
 
   type config_request = Include | Bytelink | Asmlink
 
-  let config is_rec req name =
-    log "config %s" (Namespace.string_of_name name);
+  let config is_rec req names =
+    log "config %s" (String.concat "," (List.map Namespace.string_of_name names));
     let t = load_state () in
 
     let l_index = Path.index_list t.home in
 
     let installed = File.Installed.find_map (Path.installed t.home) in
-    let version =
+
+    let version name =
       match N_map.Exceptionless.find name installed with
       | None   -> unknown_package name
       | Some v -> v in
 
+    let versions = List.map (fun n -> n, version n) names in
+
+    let version name = List.assoc name versions in
+    
     let one name =
+      let version = version name in
       let path = match Path.ocaml_options_of_library t.home name with I s -> s in
       match req with
-      | Include ->Globals.msg "-I %s " path
+      | Include ->Globals.msg "-I %s" path
       | link    ->
           let config =  File.PConfig.find_err (Path.descr t.home (name, version)) in
           let libraries = File.PConfig.library_names config in
@@ -437,31 +454,40 @@ module Client : CLIENT = struct
           let files ext  = String.concat " " (List.map (fun f -> f ^ ext) libraries) in
           match link with
           | Asmlink ->
-              Globals.msg "-I %s %s %s "
+              Globals.msg "-I %s %s %s"
                 path
                 (options (link_options@asmlink_options))
                 (files ".cmxa")
           | Bytelink ->
-              Globals.msg "-I %s %s %s "
+              Globals.msg "-I %s %s %s"
                 path
                 (options (link_options@bytelink_options))
                 (files ".cma")
           | _ -> assert false in
 
+    let rec iter_with_spaces f = function
+      | []
+      | [_]  -> ()
+      | h::t -> f h; Globals.msg " "; iter_with_spaces f t in
+
     if not is_rec then
-      one name
+      List.iter one names
     else
       let l_deb = debpkg_of_nv t installed l_index in
       let dependencies =
         Solver.filter_dependencies 
           (List.find
-             (fun pkg -> 
-               Namespace.Name pkg.Debian.Packages.name = name 
-               && pkg.Debian.Packages.version = version.Namespace.deb)
+             (fun pkg ->
+               let name = Namespace.Name pkg.Debian.Packages.name in
+               try
+                 let version = version name in
+                 List.exists (fun (n,v) -> n=name && v=version) versions
+               with
+                 Not_found -> false)
              l_deb)
           l_deb in
       let dependencies =
         List.map (fun pkg -> Namespace.Name pkg.Debian.Packages.name) dependencies in
-      List.iter one dependencies
+      iter_with_spaces one dependencies
 
 end

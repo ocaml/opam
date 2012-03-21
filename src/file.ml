@@ -8,6 +8,28 @@ type ('a, 'b) text =
   | Parsed of 'a 
   | Raw of 'b
 
+
+type basename_last = 
+  | Suffix of string 
+    (* Designates a file which have [string] as suffix, ie. cmo, cma, cmi, cmx...
+       More generally, a file which name is "file.ssss" will have "ssss" as suffix. *)
+    (** By default, every matching value will be considered (ie. the regexp equivalent to ".*" ). *)
+  | Exact of string
+    
+type prefix = 
+  | Absolute (** consider that the path begins at "/" *)
+  | Relative
+
+type path = prefix * basename list * basename_last
+
+type move = { p_from : path ; p_to : path }
+
+let string_of_path (pref, l, b) =
+  Printf.sprintf "(%s, %s, %s)" 
+    (match pref with Absolute -> "Absolute" | Relative -> "Relative")
+    (BatIO.to_string (BatList.print (fun oc (B b) -> BatString.print oc b)) l)
+    (match b with Suffix s -> Printf.sprintf "Suffix %s" s | Exact s -> Printf.sprintf "Exact %s" s)
+
 module Parse =
 struct
 
@@ -319,39 +341,18 @@ struct
                   (Namespace.string_user_of_version version))))
   end
 
-  type basename_last = 
-    | Suffix of string 
-        (* Designates a file which have [string] as suffix, ie. cmo, cma, cmi, cmx...
-           More generally, a file which name is "file.ssss" will have "ssss" as suffix. *)
-        (** By default, every matching value will be considered (ie. the regexp equivalent to ".*" ). *)
-    | Exact of string
-    
-  type prefix = 
-    | Absolute (** consider that the path begins at "/" *)
-    | Relative
-
-  type path = prefix * basename list * basename_last
-
-  type misc = { p_from : path ; p_to : path }
-
-  let string_of_path (pref, l, b) =
-    Printf.sprintf "(%s, %s, %s)" 
-      (match pref with Absolute -> "Absolute" | Relative -> "Relative")
-      (BatIO.to_string (BatList.print (fun oc (B b) -> BatString.print oc b)) l)
-      (match b with Suffix s -> Printf.sprintf "Suffix %s" s | Exact s -> Printf.sprintf "Exact %s" s)
-
   module type TO_INSTALL =
   sig
     include IO_FILE
 
     (** destruct *)
     val lib : t -> path list
-    val bin : t -> path list
-    val misc : t -> misc list
+    val bin : t -> move list
+    val misc : t -> move list
 
-    val path_from : misc -> path
-    val path_to : misc -> path
-    val string_of_misc : misc -> string
+    val path_from : move -> path
+    val path_to : move -> path
+    val string_of_move : move -> string
 
     val filename_of_path_relative : Path.t -> Path.filename (* prefix *) -> path -> Path.filename list
     val filename_of_path_absolute : Path.t -> path -> Path.filename list
@@ -366,8 +367,8 @@ struct
 
     type t = 
         { lib : path list
-        ; bin : path list
-        ; misc : misc list }
+        ; bin : move list
+        ; misc: move list }
 
     let lib t = t.lib
     let bin t = t.bin
@@ -375,7 +376,7 @@ struct
     let path_from m = m.p_from
     let path_to m = m.p_to
 
-    let string_of_misc m = 
+    let string_of_move m = 
       Printf.sprintf "from %s to %s" (string_of_path m.p_from) (string_of_path m.p_to)
 
     let filename_of_path t f l_b suff = 
@@ -419,13 +420,13 @@ struct
       let one accu s =
         if s.kind <> "install" then
           Globals.error_and_exit "Bad format: expecting 'install', got %s" s.kind;
-        let aux1 = List.map relative_path_of_string in
-        let aux2 = List.map
+        let cp = List.map relative_path_of_string in
+        let mv = List.map
           (fun (k,v) -> { p_from = relative_path_of_string k;
                           p_to   = relative_path_of_string v }) in
-        { lib  = aux1 (string_list "lib" s) @ accu.lib;
-          bin  = aux1 (string_list "bin" s) @ accu.bin;
-          misc = aux2 (pair_list "misc" s)  @ accu.misc } in
+        { lib  = cp (string_list "lib" s)  @ accu.lib;
+          bin  = mv (pair_list   "bin" s)  @ accu.bin;
+          misc = mv (pair_list   "misc" s) @ accu.misc } in
       List.fold_left one empty file.statements
 
     let to_string t =
@@ -439,19 +440,18 @@ struct
         Printf.sprintf "%s%s%s" prefix path suffix in
 
       let print_list = List.map print in
+      let print_moves = 
+        List.map (fun m ->
+          Printf.sprintf "%s %s" (print m.p_from) (print m.p_to)
+        ) in
       Printf.sprintf "\
         lib: %s\n\
         bin: %s\n\
         misc:\n\
         %s"
         (String.concat ", " (print_list t.lib))
-        (String.concat ", " (print_list t.bin))
-        (String.concat "\n"
-           (List.map (fun m ->
-             Printf.sprintf "%s %s"
-               (print m.p_from)
-               (print m.p_to))
-              t.misc))
+        (String.concat ", " (print_moves t.bin))
+        (String.concat "\n" (print_moves t.misc))
   end
 
 

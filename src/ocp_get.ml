@@ -62,17 +62,17 @@ let () =
 
   (* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
   | "config" :: l_arg ->
-    let is_rec, req, name = match l_arg with
-      | ["R"; r; name]
-      | [r; "R"; name] -> true , r, name
-      | [r; name]      -> false, r, name
-      | _              -> err l_arg in
+    let is_rec, req, names = match l_arg with
+      | "R"::r  :: names
+      | r  ::"R":: names -> true , r, names
+      | r       :: names -> false, r, names
+      | _                -> err l_arg in
     let req = match req with
       | "Include"  -> Client.Include
       | "Bytelink" -> Client.Bytelink
       | "Asmlink"  -> Client.Asmlink
       | _          -> err l_arg in
-    Client.config is_rec req (Name name)
+    Client.config is_rec req (List.map (fun n -> Name n) names)
      
   (* ocp-get install PACKAGE *)
   | ["install"; name] -> Client.install (Name name)
