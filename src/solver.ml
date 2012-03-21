@@ -369,13 +369,3 @@ module Solver : SOLVER = struct
   let resolve = Graph.resolve
   let resolve_list pkg = List.filter_map (resolve pkg)
 end
-
-
-
-
-
-
-
-
-
-
