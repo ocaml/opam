@@ -76,7 +76,7 @@ module U = struct
     log "Copying %s to %s" src dst;
     let n = 1024 in
     let b = String.create n in
-    let read = ref 0 in
+    let read = ref min_int in
     let ic = open_in_bin src in
     let oc =
       if Sys.file_exists dst then
