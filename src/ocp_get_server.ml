@@ -22,12 +22,17 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
     Sys.argv.(0) Globals.version
 
 let port  = ref Globals.default_port
-let set_port p = port := p
+let host  = ref (inet_addr_of_string "127.0.0.1")
+let set_host h =
+  try host := inet_addr_of_string h
+  with exn -> raise (Arg.Bad ("invalid [-i] IP: " ^ h))
+  
 let _ =
   Globals.root_path := Globals.default_opam_server_path
 
 let args = Arg.align [
-  "-p"       , Arg.Int set_port     , " Set up the listening port (default is 9999)";
+  "-p"       , Arg.Set_int port     , " Set up the listening port (default: 9999)";
+  "-i"       , Arg.String set_host  , " Set up the listening IP address (default: "^(Unix.string_of_inet_addr !host)^")";
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version     , " Display version information";
 
@@ -38,12 +43,11 @@ let args = Arg.align [
 let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 
 let server fn =
-  let host = (gethostbyname(gethostname ())).h_addr_list.(0) in 
-  let addr = ADDR_INET (host, !port) in
+  let addr = ADDR_INET (!host, !port) in
   let state = Server.init !Globals.root_path in
   if !Globals.debug then
     Globals.msg "Root path is %s.\nListening on port %d (%s) ...\n%!"
-      !Globals.root_path !port (string_of_inet_addr host);
+      !Globals.root_path !port (string_of_inet_addr !host);
 
   establish_server (fn state) addr
 
