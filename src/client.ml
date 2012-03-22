@@ -416,11 +416,7 @@ module Client : CLIENT = struct
     let t = load_state () in
     let installed = File.Installed.find_map (Path.installed t.home) in
 
-    let v = match N_map.Exceptionless.find name installed with
-      | None   -> unknown_package name
-      | Some v -> ("=", v.Namespace.deb) in
-
-    let wish_remove, wish_upgrade = [ Namespace.string_of_name name, Some v ], [] in
+    let wish_remove, wish_upgrade = [ Namespace.string_of_name name, None ], [] in
 
     resolve t 
       (Path.index_list t.home)
@@ -428,7 +424,11 @@ module Client : CLIENT = struct
       [ { Solver.wish_install = List.map vpkg_of_nv (N_map.bindings (N_map.remove name installed))
         ; wish_remove
         ; wish_upgrade }
-
+      (*
+      ; { Solver.wish_install = (* Put here all the packages which are not in the dependencies of [name]. This heuristic should be the most accurate. *)
+        ; wish_remove
+        ; wish_upgrade } ]
+      *)
       ; { Solver.wish_install = []
         ; wish_remove
         ; wish_upgrade } ]
