@@ -66,15 +66,15 @@ sig
   (** Return the recursive dependencies of a package
       Note : the given package exists in the list in input because this list describes the entire universe. 
       However, by convention, it does not appear in output. *)
-  val filter_dependencies :
-    Debian.Packages.package list 
-    -> Debian.Packages.package list
+  val filter_backward_dependencies :
+    Debian.Packages.package list (* few packages from the universe *)
+    -> Debian.Packages.package list (* universe *)
     -> Debian.Packages.package list
 
-  (** Same as [filter_dependencies] but for forward depencies *)
+  (** Same as [filter_backward_dependencies] but for forward depencies *)
   val filter_forward_dependencies :
-    Debian.Packages.package list 
-    -> Debian.Packages.package list
+    Debian.Packages.package list (* few packages from the universe *)
+    -> Debian.Packages.package list (* universe *)
     -> Debian.Packages.package list
 
 
@@ -263,7 +263,7 @@ module Solver : SOLVER = struct
       let () = Debian.Debcudf.clear table in
       v
 
-    let filter_dependencies pkg_l l_pkg_pb =
+    let filter_dependencies f_direction pkg_l l_pkg_pb =
       let pkg_map = 
         List.fold_left
           (fun map pkg -> 
@@ -279,7 +279,7 @@ module Solver : SOLVER = struct
             (fun accu pkg -> PkgSet.add (tocudf table pkg) accu)
             PkgSet.empty
             pkg_l in
-          let g = dep_reduction pkglist in
+          let g = f_direction (dep_reduction pkglist) in
           let _, l = 
             PG_topo.fold
               (fun p (set, l) -> 
@@ -304,8 +304,8 @@ module Solver : SOLVER = struct
                      table
                      (pkg.Cudf.package, pkg.Cudf.version) }) pkg_map) l)
 
-    let filter_forward_dependencies pkg_l universe =
-      failwith "TODO"
+    let filter_backward_dependencies = filter_dependencies (fun x -> x)
+    let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
     let resolve l_pkg_pb req = 
       get_table l_pkg_pb 
@@ -379,7 +379,7 @@ module Solver : SOLVER = struct
                   | _ -> failwith "to complete !") req)))
   end
 
-  let filter_dependencies = Graph.filter_dependencies
+  let filter_backward_dependencies = Graph.filter_backward_dependencies
   let filter_forward_dependencies = Graph.filter_forward_dependencies
   let resolve = Graph.resolve
   let resolve_list pkg = List.filter_map (resolve pkg)

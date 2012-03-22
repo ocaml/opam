@@ -330,16 +330,13 @@ module Client : CLIENT = struct
     proceed_tochange t (Was_installed nv) nv
 
   let debpkg_of_nv t map_installed =
-    List.fold_left
-      (fun l n_v ->
+    List.map
+      (fun n_v ->
         let opam = File.Spec.find_err (Path.index t.home (Some n_v)) in
-        let pkg = 
-          File.Spec.to_package opam
-            (match N_map.Exceptionless.find (fst n_v) map_installed with
-              | Some v -> v = snd n_v
-              | _ -> false) in
-        pkg :: l) 
-      []
+        File.Spec.to_package opam
+          (match N_map.Exceptionless.find (fst n_v) map_installed with
+            | Some v -> v = snd n_v
+            | _ -> false))
 
   let resolve t l_index map_installed request = 
     
@@ -414,24 +411,32 @@ module Client : CLIENT = struct
   let remove name =
     log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
+    let l_index = Path.index_list t.home in
     let installed = File.Installed.find_map (Path.installed t.home) in
 
-    let wish_remove, wish_upgrade = [ Namespace.string_of_name name, None ], [] in
+    let dependencies = 
+      NV_set.of_list
+        (List.map
+           (fun d -> Namespace.Name d.Debian.Packages.name, { Namespace.deb = d.Debian.Packages.version })
+           (Solver.filter_forward_dependencies
+              (match N_map.Exceptionless.find name installed with 
+                | None -> []
+                | Some v -> debpkg_of_nv t installed [name, v])
+              (debpkg_of_nv t installed l_index))) in
 
     resolve t 
-      (Path.index_list t.home)
+      l_index
       installed
-      [ { Solver.wish_install = List.map vpkg_of_nv (N_map.bindings (N_map.remove name installed))
-        ; wish_remove
-        ; wish_upgrade }
-      (*
-      ; { Solver.wish_install = (* Put here all the packages which are not in the dependencies of [name]. This heuristic should be the most accurate. *)
-        ; wish_remove
-        ; wish_upgrade } ]
-      *)
-      ; { Solver.wish_install = []
-        ; wish_remove
-        ; wish_upgrade } ]
+      [ { Solver.wish_install = 
+          List.filter_map 
+            (fun nv ->
+              if NV_set.mem nv dependencies then
+                None
+              else
+                Some (vpkg_of_nv nv)) 
+            (N_map.bindings (N_map.remove name installed))
+        ; wish_remove = [ Namespace.string_of_name name, None ]
+        ; wish_upgrade = [] } ]
       
   let upgrade () =
     log "upgrade";
@@ -571,7 +576,7 @@ module Client : CLIENT = struct
 
       (* Compute the transitive closure of dependencies *)
       let dependencies =
-        Solver.filter_dependencies l_pkg l_deb in
+        Solver.filter_backward_dependencies l_pkg l_deb in
 
       iter_with_spaces one (List.map nv dependencies)
 
