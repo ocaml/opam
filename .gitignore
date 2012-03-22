@@ -4,8 +4,14 @@ dose/
 extlib/
 ocaml-re/
 ocamlgraph/
+src/lexer.ml
+src/parser.ml
+src/parser.mli
+*.tar.bz2
 *.annot
 *.tar.gz
 *~
 ocp-build.root
 ocp-build.root.old
+ocp-get
+ocp-get-server
