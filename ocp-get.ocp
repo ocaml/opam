@@ -43,6 +43,14 @@ begin library "re"
    ]
 end
 
+begin library "ocaml-arg"
+   files = [
+     "ocaml-arg/src/subCommand.ml"
+     "ocaml-arg/src/formatExt.ml"
+     "ocaml-arg/src/argExt.ml"
+   ]
+end
+
 begin library "cudf"
    sort = true
    files = [
@@ -185,6 +193,7 @@ begin library "ocp-get-lib"
     "dose"
     "bat"
     "unix"
+    "ocaml-arg"
   ]
 end
 
