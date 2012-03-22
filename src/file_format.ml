@@ -51,3 +51,7 @@ let string_list n s =
 let pair_list n s =
   try parse_pair_list (List.assoc n s.contents)
   with Not_found -> []
+
+let string n s =
+  try parse_string (List.assoc n s.contents)
+  with Not_found -> Globals.error_and_exit "Bad format: field '%s' is missing" n
