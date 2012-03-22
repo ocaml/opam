@@ -85,8 +85,6 @@ module U = struct
     aux (Filename.dirname f_to);
     f f_to
 
-  let link f_from = mkdir (Unix.link f_from)
-
   let copy src dst =
     log "Copying %s to %s" src dst;
     let n = 1024 in
@@ -328,7 +326,7 @@ module Path : PATH = struct
   let normalize s = Normalized (U.getchdir (U.getchdir s))
 
   let (//) = sprintf "%s/%s"
-  let concat f (B s) = filename_map (fun filename -> filename // s) f
+  let concat f (B s) = filename_map (function "/" -> "" // s | filename -> filename // s) f
   let (///) = concat
   let init home = 
     { home ; home_ocamlversion = home // Globals.ocaml_version }
@@ -452,7 +450,7 @@ module Path : PATH = struct
                       Unix.unlink f_to
                     else
                       () in
-                  U.link f_from f_to
+                  U.copy f_from f_to
               | _ -> failwith "to complete !") in
             aux fic (s_of_filename f)
         | Unix.S_REG ->
@@ -460,7 +458,7 @@ module Path : PATH = struct
             (fun f_to -> 
               begin
                 U.safe_unlink f_to;
-                U.link fic f_to;
+                U.copy fic f_to;
               end)
             (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic

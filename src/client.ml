@@ -137,20 +137,20 @@ module Client : CLIENT = struct
         let map, max_n, max_v = 
           List.fold_left
             (fun (map, max_n, max_v) (name, version as n_v) ->
-              let installed = NV_set.mem n_v install_set in
-              if installed || not (N_map.mem name map) then 
-               (* If the packet is installed or if it has not been processed yet *)
+              match N_map.Exceptionless.find name map with
+                | Some (Some _, _) -> map, max_n, max_v
+                | _ -> 
+               (* If the packet has not been processed yet or 
+                  if it has been processed but the version processed was not installed *)
+                let installed = NV_set.mem n_v install_set in
                 let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
-                let new_map = N_map.add name (Some version, File.Spec.description index) map in
-                let new_max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
-                let new_max_v =
+                let map = N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
+                let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
+                let max_v =
                   if installed then
                     max max_v (String.length (Namespace.string_of_version (snd n_v)))
                   else
                     max_v in
-                new_map, new_max_n, new_max_v
-
-              else
                 map, max_n, max_v)
             (N_map.empty, min_int, String.length s_not_installed)
             (Path.index_list t.home) in
@@ -247,7 +247,7 @@ module Client : CLIENT = struct
     (* misc *)
     List.iter 
       (fun misc ->
-        Globals.msg "%s\n" (File.To_install.string_of_move misc);
+        Globals.msg "Copy %s.\n" (File.To_install.string_of_move misc);
         if confirm "Continue ?" then
           let path_from =
             filename_of_path_relative t (File.To_install.path_from misc) in
@@ -267,9 +267,9 @@ module Client : CLIENT = struct
               Path.remove (Path.lib t.home n);
 
               (* Remove the binaries *)
+              let to_install =
+                File.To_install.find_err (Path.to_install t.home (n, v0)) in
               let bins =
-                let to_install =
-                  File.To_install.find_err (Path.to_install t.home (n, v0)) in
                 let file m =
                   File.To_install.filename_of_path
                     (Path.bin t.home)
@@ -277,7 +277,16 @@ module Client : CLIENT = struct
                 List.flatten (List.map file (File.To_install.bin to_install)) in
               List.iter Path.remove bins;
 
-              (* TODO: remove miscs files *)
+              List.iter 
+                (fun misc ->
+                  List.iter 
+                    (fun path_to ->                   
+                      Globals.msg "The complete directory '%s' will be removed.\n" (Path.string_of_filename path_to);
+                      if confirm "Continue ?" then
+                        Path.remove path_to)
+                    (File.To_install.filename_of_path_absolute
+                       (File.To_install.path_to misc)))
+                (File.To_install.misc to_install);
 
               (* Remove the package from the installed package file *)
               N_map.remove n map_installed
