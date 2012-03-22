@@ -1,5 +1,11 @@
 OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
-WGET     ?= wget
+OS = $(shell uname -s)
+ifeq ($(OS),Darwin)
+WGET ?= ftp
+else
+WGET ?= wget
+endif
+
 TARGET   = ocp-get ocp-get-server
 
 .PHONY: all
