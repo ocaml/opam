@@ -250,6 +250,7 @@ struct
       name       : string;
       version    : string;
       description: string list;
+      urls       : string list;
       fields     : (string * string) list;
     }
 
@@ -257,6 +258,7 @@ struct
       name        = "<none>";
       version     = "<none>";
       description = ["empty package"];
+      urls        = [];
       fields      = [];
     }
 
@@ -266,6 +268,7 @@ struct
     let s_installed   = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
     let s_depends     = "depends"
     let s_conflicts   = "conflicts"
+    let s_url         = "url"
 
     let description t = t.description
     let name t = t.name
@@ -307,25 +310,23 @@ struct
         | _   -> Globals.error_and_exit "Too many packages defined" in
       if statement.kind <> "package" then
         Globals.error_and_exit "%s: bad format (was waiting for 'package')" statement.kind;
-      let version =
-        try match List.assoc s_version statement.contents with
-          | String v -> v
-          | _        -> Globals.error_and_exit "Field 'version': bad format"
-        with Not_found ->
-          Globals.error_and_exit "field 'version' is missing" in
+      let version = string s_version statement in
       let description =
         try match List.assoc s_description statement.contents with
           | String s -> String.nsplit s "."
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
+      let urls = string_list s_url statement in
       let fields =
         let unstring (k,v) = match v with
           | String s -> k, s
           | _        -> Globals.error_and_exit "Field %s: bad format" k in
         List.map unstring statement.contents in
-      let r = { version; description; fields;
-        name   = statement.File_format.name } in
-      r
+      { version
+      ; description
+      ; fields
+      ; urls
+      ; name   = statement.File_format.name }
 
   end
 
