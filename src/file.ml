@@ -424,12 +424,12 @@ struct
         if s.kind <> "install" then
           Globals.error_and_exit "Bad format: expecting 'install', got %s" s.kind;
         let cp = List.map relative_path_of_string in
-        let mv = List.map
+        let mv f_to = List.map
           (fun (k,v) -> { p_from = relative_path_of_string k;
-                          p_to   = relative_path_of_string v }) in
+                          p_to   = f_to v }) in
         { lib  = cp (string_list "lib" s)  @ accu.lib;
-          bin  = mv (pair_list   "bin" s)  @ accu.bin;
-          misc = mv (pair_list   "misc" s) @ accu.misc } in
+          bin  = mv relative_path_of_string (pair_list "bin"  s) @ accu.bin;
+          misc = mv (b_of_string Absolute)  (pair_list "misc" s) @ accu.misc } in
       List.fold_left one empty file.statements
 
     let to_string t =
