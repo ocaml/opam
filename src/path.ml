@@ -83,7 +83,7 @@ module U = struct
         open_out_bin dst
       else
         let perm = (Unix.stat src).Unix.st_perm in
-        mkdir (open_out_gen [Open_creat; Open_binary] perm) dst
+        mkdir (open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm) dst
     in
     while !read <>0 do
       read := input ic b 0 n;
