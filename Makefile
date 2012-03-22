@@ -43,7 +43,7 @@ ocp-get: _obuild/ocp-get/ocp-get.asm
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
-clone: cudf extlib ocaml-re ocamlgraph dose
+clone: cudf extlib ocaml-re ocamlgraph dose ocaml-arg
 
 cudf:
 	$(WGET) http://www.ocamlpro.com/pub/cudf.tar.bz2
@@ -57,6 +57,10 @@ extlib:
 dose:
 	$(WGET) http://www.ocamlpro.com/pub/dose.tar.bz2
 	tar xvfj dose.tar.bz2
+
+ocaml-arg:
+	$(WGET) http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2
+	tar xvfj ocaml-arg.tar.bz2
 
 # ocaml-pcre:
 # 	$(WGET) http://hg.ocaml.info/release/pcre-ocaml/archive/release-6.2.5.tar.gz
@@ -80,7 +84,7 @@ ocaml-re:
 
 distclean:
 	rm -f *.tar.gz *.tar.bz2
-	rm -rf dose cudf extlib ocaml-re ocamlgraph
+	rm -rf dose cudf extlib ocaml-re ocamlgraph ocaml-arg
 	rm -rf _obuild
 
 .PHONY: tests
