@@ -85,13 +85,16 @@ module Server = struct
     with Not_found -> failwith (string_of_nv n_v ^ " not found")
 
   let getArchive t n_v = 
-    let p = Path.archives_targz t.home (Some n_v) in
-    match Path.is_directory p with
-      | Some dir -> Tar_gz (Filename dir)
-      | None -> 
-        match Path.find_binary p with
-          | Path.File s -> Tar_gz (Binary s)
-          | _           -> failwith ("Cannot find " ^ string_of_nv n_v)
+    match File.Spec.urls (File.Spec.find_err (Path.index t.home (Some n_v))) with
+      | [] -> 
+        (let p = Path.archives_targz t.home (Some n_v) in
+         match Path.is_directory p with
+           | Some dir -> Tar_gz (Filename dir)
+           | None -> 
+             match Path.find_binary p with
+               | Path.File s -> Tar_gz (Binary s)
+               | _           -> failwith ("Cannot find " ^ string_of_nv n_v))
+      | url -> Tar_gz (Filename (Raw_links url))
 
   let f_archive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in

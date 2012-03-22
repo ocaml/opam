@@ -37,7 +37,8 @@ type raw_binary =
   | Raw_binary of string (* contents *)
 
 type raw_filename =
-  | Raw_filename of string (* pointer to the contents *)
+  | Raw_filename of string (* pointer to the local contents *)
+  | Raw_links of string list (* pointer to some external http links *)
 
 type binary_data = 
   | Binary of raw_binary
@@ -478,8 +479,20 @@ module Path : PATH = struct
         let oc = BatUnix.open_process_out "tar xzv" in
         BatIO.write_string oc bin;
         BatIO.close_out oc)
-  (*IO.read_all (Common.Input.open_file fic)*)
     
+  | Tar_gz (Filename (Raw_links urls)) -> 
+    R_lazy
+      (fun () -> 
+        let rec aux = function
+          | [] -> Globals.error_and_exit "No tar.gz found"
+          | url :: urls ->
+            let err = Sys.command (Printf.sprintf "wget %s -O - | tar xzv" url) in
+            if err = 0 then
+              ()
+            else
+              aux urls in
+        aux urls)
+
   | Tar_gz (Filename (Raw_filename fic)) -> failwith "to complete !" (* R_filename [Raw fic] *)
 
   let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))

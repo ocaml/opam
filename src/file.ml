@@ -225,6 +225,7 @@ struct
     (** Convert to Debian packages to feed the solver *)
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
 
+    val urls : t -> string list
   end
 
   module Spec : SPEC = struct
@@ -273,6 +274,7 @@ struct
     let description t = t.description
     let name t = t.name
     let version t = {deb = t.version}
+    let urls t = t.urls
 
     let default_package (t:t) =
       let assoc f s =
