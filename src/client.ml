@@ -122,20 +122,20 @@ module Client : CLIENT = struct
         let map, max_n, max_v = 
           List.fold_left
             (fun (map, max_n, max_v) (name, version as n_v) ->
-              let installed = NV_set.mem n_v install_set in
-              if installed || not (N_map.mem name map) then 
-               (* If the packet is installed or if it has not been processed yet *)
+              match N_map.Exceptionless.find name map with
+                | Some (Some _, _) -> map, max_n, max_v
+                | _ -> 
+               (* If the packet has not been processed yet or 
+                  if it has been processed but the version processed was not installed *)
+                let installed = NV_set.mem n_v install_set in
                 let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
-                let new_map = N_map.add name (Some version, File.Spec.description index) map in
-                let new_max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
-                let new_max_v =
+                let map = N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
+                let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
+                let max_v =
                   if installed then
                     max max_v (String.length (Namespace.string_of_version (snd n_v)))
                   else
                     max_v in
-                new_map, new_max_n, new_max_v
-
-              else
                 map, max_n, max_v)
             (N_map.empty, min_int, String.length s_not_installed)
             (Path.index_list t.home) in
