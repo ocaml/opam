@@ -241,7 +241,7 @@ module Client : CLIENT = struct
         | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
 
       (* XXX: use the API *)
-      U.copy (Path.string_of_filename src) (Path.string_of_filename dst)
+      Run.copy (Path.string_of_filename src) (Path.string_of_filename dst)
     ) (File.To_install.bin to_install);
   
     (* misc *)
@@ -309,7 +309,7 @@ module Client : CLIENT = struct
     (* Then, untar the archive *)
     let p_build = Path.build t.home (Some nv) in
     Path.remove p_build;
-    let tgz = Path.extract_targz (RemoteServer.getArchive t.server nv) in
+    let tgz = Path.extract_targz nv (RemoteServer.getArchive t.server nv) in
     log "untar archive for %s" (Namespace.to_string nv);
     Path.add_rec p_build tgz;
 
@@ -456,28 +456,38 @@ module Client : CLIENT = struct
                 | Some v -> vpkg_of_nv (name, V_set.max_elt v))
             (N_map.bindings installed) } ]
     
-  (* Upload reads NAME.opam to get the current package version.
-     Then it looks for NAME-VERSION.tar.gz in the same directory.
-     Then, it sends both NAME.opam and NAME-VERSION.tar.gz to the server *)
+  (* Upload reads NAME.spec (or NAME if it ends .spec) to get the current package version.
+     Then it looks for NAME-VERSION.tar.gz in the same directory (if it exists).
+     If not, it looks for provided URLs.
+     Then, it sends both NAME.spec and NAME-VERSION.tar.gz to the server *)
   let upload name =
     log "upload %s" name;
     let t = load_state () in
 
     (* Get the current package version *)
-    let opam_filename = name ^ ".spec" in
-    let opam_binary = U.read_content opam_filename in
-    let opam = File.Spec.parse opam_binary in
-    let version = File.Spec.version opam in
-    let opam = binary opam_binary in
+    let spec_f =
+      if Filename.check_suffix name "spec" then
+        name
+      else
+        name ^ ".spec" in
+    let spec_s = Run.read spec_f in
+    let spec = File.Spec.parse spec_s in
+    let version = File.Spec.version spec in
+    let name = File.Spec.name spec in
+    let spec_b = binary spec_s in
 
     (* look for the archive *)
     let archive_filename =
       Namespace.string_of_nv (Namespace.Name name) version ^ ".tar.gz" in
     let archive =
       if Sys.file_exists archive_filename then
-        Tar_gz (binary (U.read_content archive_filename))
+        Tar_gz (binary (Run.read archive_filename))
       else
-        Globals.error_and_exit "Cannot find %s" archive_filename in
+        let urls = File.Spec.urls spec in
+        if urls = [] then
+          Globals.error_and_exit "Cannot find %s" archive_filename
+        else
+          Tar_gz (Filename (Raw_links urls)) in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
@@ -488,12 +498,12 @@ module Client : CLIENT = struct
     let o_key1 = 
       match o_key0 with
         | None -> 
-          let o = RemoteServer.newArchive t.server (name, version) opam archive in
-          let () = assert (o = Server.newArchive local_server (name, version) opam archive) in
+          let o = RemoteServer.newArchive t.server (name, version) spec_b archive in
+          let () = assert (o = Server.newArchive local_server (name, version) spec_b archive) in
           o
         | Some k -> 
-          let b = RemoteServer.updateArchive t.server (name, version) opam archive k in
-          let () = assert (b = Server.updateArchive local_server (name, version) opam archive k) in
+          let b = RemoteServer.updateArchive t.server (name, version) spec_b archive k in
+          let () = assert (b = Server.updateArchive local_server (name, version) spec_b archive k) in
           if b then Some k else None in
 
     match o_key1 with

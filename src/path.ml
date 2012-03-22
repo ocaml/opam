@@ -75,92 +75,6 @@ module Random_key : RANDOM_KEY = struct
     k
 end
 
-
-module U = struct
-  let mkdir f f_to = 
-    let rec aux f_to = 
-      if not (Sys.file_exists f_to) then begin
-        aux (Filename.dirname f_to);
-        Unix.mkdir f_to 0o755;
-      end in
-    aux (Filename.dirname f_to);
-    f f_to
-
-  let copy src dst =
-    log "Copying %s to %s" src dst;
-    let n = 1024 in
-    let b = String.create n in
-    let read = ref min_int in
-    let ic = open_in_bin src in
-    let oc =
-      if Sys.file_exists dst then
-        open_out_bin dst
-      else
-        let perm = (Unix.stat src).Unix.st_perm in
-        mkdir (open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm) dst
-    in
-    while !read <>0 do
-      read := input ic b 0 n;
-      output oc b 0 !read;
-    done;
-    close_in ic;
-    close_out oc
-
-  let read_content file =
-    let ic = open_in file in
-    let n = in_channel_length ic in
-    let s = String.create n in
-    really_input ic s 0 n;
-    close_in ic;
-    s
-
-  (**************************)
-  (* from ocplib-system ... *)
-  (**************************)
-
-  let in_dir dir fn =
-    let cwd = Unix.getcwd () in
-    Unix.chdir dir;
-    try
-      let r = fn () in
-      Unix.chdir cwd;
-      r
-    with e ->
-      Unix.chdir cwd;
-      raise e
-
-  let directories () =
-    let d = Sys.readdir (Unix.getcwd ()) in
-    let d = Array.to_list d in
-    List.filter (fun f -> try Sys.is_directory f with _ -> false) d
-
-  let files () =
-    let d = Sys.readdir (Unix.getcwd ()) in
-    let d = Array.to_list d in
-    List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
-
-  let safe_unlink file =
-    try Unix.unlink file
-    with Unix.Unix_error _ -> ()
-
-  let rec safe_rmdir dir =
-    if Sys.file_exists dir then begin
-      in_dir dir (fun () ->
-        let dirs = directories () in
-        let files = files () in
-        List.iter safe_unlink files;
-        List.iter safe_rmdir dirs;
-      );
-      Unix.rmdir dir;
-    end
-
-  let getchdir s = 
-    let p = Unix.getcwd () in
-    let () = Unix.chdir s in
-    p
-end
-
-
 module type PATH =
 sig
 
@@ -253,8 +167,8 @@ sig
   (** Removes everything in [filename] if existed, then write [contents_rec] inside [filename]. *)
   val add_rec : filename -> binary_data contents_rec -> unit
 
-  (** Returns the same meaning as [archive] but in extracted form. *)
-  val extract_targz : binary_data archive -> binary_data contents_rec
+  (** Returns the same meaning as [archive] but extracted in the right path (corresponding to name_version) . *)
+  val extract_targz : name_version -> binary_data archive -> binary_data contents_rec
 
   (** Considers the given [filename] as the contents of an [archive] already extracted. *)
   val raw_targz : filename -> binary_data archive
@@ -324,7 +238,7 @@ module Path : PATH = struct
   | Normalized s -> Normalized (f s)
   | Raw s -> Raw (f s)
 
-  let normalize s = Normalized (U.getchdir (U.getchdir s))
+  let normalize s = Normalized (Run.getchdir (Run.getchdir s))
 
   let (//) = sprintf "%s/%s"
   let concat f (B s) = filename_map (function "/" -> "" // s | filename -> filename // s) f
@@ -431,17 +345,17 @@ module Path : PATH = struct
     | Directory d -> failwith "to complete !"
     | File (Binary (Raw_binary cts)) -> 
         let fic = s_of_filename  f in
-        U.mkdir
+        Run.mkdir
           (fun fic -> 
             begin
-              U.safe_unlink fic; 
+              Run.safe_unlink fic; 
               BatFile.with_file_out fic (fun oc -> BatString.print oc cts);
             end)
           fic
     | File (Filename (Raw_filename fic)) ->
         begin match (Unix.lstat fic).Unix.st_kind with
         | Unix.S_DIR -> 
-            U.safe_rmdir fic;
+            Run.safe_rmdir fic;
             let rec aux f_from f_to = 
               (match (Unix.lstat f_from).Unix.st_kind with
               | Unix.S_DIR -> Enum.fold (fun b _ -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
@@ -451,19 +365,20 @@ module Path : PATH = struct
                       Unix.unlink f_to
                     else
                       () in
-                  U.copy f_from f_to
+                  Run.copy f_from f_to
               | _ -> failwith "to complete !") in
             aux fic (s_of_filename f)
         | Unix.S_REG ->
-          U.mkdir 
+          Run.mkdir 
             (fun f_to -> 
               begin
-                U.safe_unlink f_to;
-                U.copy fic f_to;
+                Run.safe_unlink f_to;
+                Run.copy fic f_to;
               end)
             (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
         end
+    | File _      -> ()
     | Not_found s -> ()
 
   let exec_buildsh t n_v = 
@@ -472,10 +387,12 @@ module Path : PATH = struct
 
   let basename s = B (Filename.basename (s_of_filename s))
 
-  let extract_targz = function
+  let extract_targz nv = function
   | Tar_gz (Binary (Raw_binary bin)) -> 
-    R_lazy
-      (fun () -> 
+    R_lazy (fun () ->
+        (* As we received the binary from the server, it is
+           "safe" to assume that the file will be untared at
+           the right place (ie. in NAME-VERSION/ *)
         let oc = BatUnix.open_process_out "tar xzv" in
         BatIO.write_string oc bin;
         BatIO.close_out oc)
@@ -486,7 +403,7 @@ module Path : PATH = struct
         let rec aux = function
           | [] -> Globals.error_and_exit "No tar.gz found"
           | url :: urls ->
-            let err = Sys.command (Printf.sprintf "wget %s -O - | tar xzv" url) in
+            let err = Run.download url nv in
             if err = 0 then
               ()
             else
@@ -538,10 +455,10 @@ module Path : PATH = struct
     | R_filename l -> 
         List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)
     | R_lazy write_contents ->
-        U.mkdir (fun fic -> 
-          let pwd = U.getchdir (Filename.dirname fic) in 
+        Run.mkdir (fun fic -> 
+          let pwd = Run.getchdir (Filename.dirname fic) in 
           write_contents ();
-          ignore (U.getchdir pwd);
+          ignore (Run.getchdir pwd);
         ) (s_of_filename (f /// name)) in
 
     function

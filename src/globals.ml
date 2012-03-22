@@ -51,14 +51,26 @@ let msg fmt =
     Printf.printf "%s%!" str
   ) fmt
 
+type os = 
+  | Darwin
+  | Linux
+  | FreeBSD
+  | Cygwin
+  | Win32
+  | Unix
 
-
-
-
-
-
-
-
+let os =
+  match Sys.os_type with
+  | "Unix" -> begin
+    match input_line (Unix.open_process_in "uname -s") with
+    | "Darwin"  -> Darwin
+    | "Linux"   -> Linux
+    | "FreeBSD" -> FreeBSD
+    | _         -> Unix
+  end
+  | "Win32"  -> Win32
+  | "Cygwin" -> Cygwin
+  | _        -> assert false
 
 
 

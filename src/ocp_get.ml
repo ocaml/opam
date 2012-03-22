@@ -42,7 +42,7 @@ let noanon s =
 
 let () = Globals.root_path := Globals.default_opam_path
 
-let global_args = Arg.align [
+let global_args = [
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version,      " Display version information";
 

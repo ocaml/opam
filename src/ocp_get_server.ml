@@ -71,7 +71,10 @@ let log id fmt =
 
 let protect f =
   try f ()
-  with e -> Oerror (Printexc.to_string e)
+  with e ->
+    let msg = Printexc.to_string e in
+    Globals.error "%s" msg;
+    Oerror msg
 
 let fn t =
   Random.self_init();

@@ -269,7 +269,7 @@ struct
     let s_installed   = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
     let s_depends     = "depends"
     let s_conflicts   = "conflicts"
-    let s_url         = "url"
+    let s_urls        = "urls"
 
     let description t = t.description
     let name t = t.name
@@ -297,9 +297,11 @@ struct
 
     let to_string t =
       let pf (k, v) = Printf.sprintf "  %s = %S\n" k v in
-      Printf.sprintf "@%d\n\npackage %S {\n%s}\n"
+      let ps = Printf.sprintf "%S"in
+      Printf.sprintf "@%d\n\npackage %S {\n%s  urls = [%s]\n}\n"
         Globals.api_version t.name
         (String.concat "" (List.map pf t.fields))
+        (String.concat "; " (List.map ps t.urls))
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -318,12 +320,13 @@ struct
           | String s -> String.nsplit s "."
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
-      let urls = string_list s_url statement in
+      let urls = string_list s_urls statement in
       let fields =
-        let unstring (k,v) = match v with
-          | String s -> k, s
-          | _        -> Globals.error_and_exit "Field %s: bad format" k in
-        List.map unstring statement.contents in
+        let unstring accu (k,v) =
+          match v with
+          | String s -> (k, s) :: accu
+          | _        -> accu  in
+        List.fold_left unstring [] statement.contents in
       { version
       ; description
       ; fields

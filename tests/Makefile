@@ -8,7 +8,7 @@ ENV           = export OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH
 OCPGET        = $(ENV) ocp-get --debug --root $(OPAM_ROOT)
 OCPGET_SERVER = $(ENV) ocp-get-server --debug --root $(OPAM_SERVER_ROOT)
 
-PACKAGES   = P1-1 P1-2 P2-1 P2-1 P3-1-weird.version P4-1
+PACKAGES = P1-1 P1-2 P2-1 P2-1 P3-1-weird.version P4-1
 
 ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
@@ -45,10 +45,8 @@ install: upload
 	$(OCPGET) install P4
 
 upload-new: install
-	cd packages && \
-	  cp P1.spec P1.spec.1 && cp P1.spec.2 P1.spec && \
-	  $(OCPGET) upload P1 && \
-	  cp P1.spec.1 P1.spec
+	cd packages && $(OCPGET) upload P1-2.spec
+	cd packages && $(OCPGET) upload P4-2.spec
 
 upgrade: upload-new
 	$(OCPGET) info
