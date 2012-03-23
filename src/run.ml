@@ -164,7 +164,8 @@ let download url =
   else
     None
 
-let patch dir patch =
-  in_dir dir (function () ->
-    Sys.command (Printf.sprintf "patch -p1 < %s" patch)
+let patch p nv =
+  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  in_dir dirname (function () ->
+    Sys.command (Printf.sprintf "patch -p1 < %s" p)
   )

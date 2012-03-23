@@ -85,16 +85,22 @@ module Server = struct
     with Not_found -> failwith (string_of_nv n_v ^ " not found")
 
   let getArchive t n_v = 
-    match File.Spec.urls (File.Spec.find_err (Path.index t.home (Some n_v))) with
+    let spec = File.Spec.find_err (Path.index t.home (Some n_v)) in
+    let urls = File.Spec.urls spec in
+    match urls with
       | [] -> 
-        (let p = Path.archives_targz t.home (Some n_v) in
-         match Path.is_directory p with
-           | Some dir -> Tar_gz (Filename dir)
-           | None -> 
-             match Path.find_binary p with
-               | Path.File s -> Tar_gz (Binary s)
-               | _           -> failwith ("Cannot find " ^ string_of_nv n_v))
-      | urls -> Tar_gz (Filename (Raw_links {urls; patches=[]}))
+        (* if no url is provided, look at an archive in the same path
+           having the right name *)
+          let p = Path.archives_targz t.home (Some n_v) in
+          (match Path.find_binary p with
+          | Path.File s -> Tar_gz (Binary s)
+          | _           -> failwith ("Cannot find " ^ string_of_nv n_v))
+
+      | urls ->
+          (* if some urls are provided, then use the urls and patches
+             fields *)
+          let patches = File.Spec.patches spec in
+          Tar_gz (Filename (Raw_links {urls; patches}))
 
   let f_archive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in
@@ -111,16 +117,16 @@ module Server = struct
     let hashes = Path.hashes t.home name in
     let o_key = 
       match o_key, File.Security_key.find hashes with 
-        | None, None ->
+      | None, None ->
           let key = Random_key.new_key () in
           let () = File.Security_key.add hashes key in
           Some key
-        | Some k0, Some k1 -> 
+      | Some k0, Some k1 -> 
           if k0 = k1 then
             Some k0
           else
             None
-        | _ -> None in
+      | _ -> None in
     let () = 
       if o_key = None then
         () (* execution canceled *)

@@ -484,10 +484,11 @@ module Client : CLIENT = struct
         Tar_gz (binary (Run.read archive_filename))
       else
         let urls = File.Spec.urls spec in
+        let patches = File.Spec.patches spec in
         if urls = [] then
           Globals.error_and_exit "Cannot find %s" archive_filename
         else
-          Tar_gz (Filename (Raw_links {urls; patches=[]})) in
+          Tar_gz (Filename (Raw_links {urls; patches})) in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
