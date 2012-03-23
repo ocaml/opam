@@ -226,6 +226,7 @@ struct
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
 
     val urls : t -> string list
+    val patches : t -> string list
   end
 
   module Spec : SPEC = struct
@@ -252,6 +253,7 @@ struct
       version    : string;
       description: string list;
       urls       : string list;
+      patches    : string list;
       fields     : (string * string) list;
     }
 
@@ -261,6 +263,7 @@ struct
       description = ["empty package"];
       urls        = [];
       fields      = [];
+      patches     = [];
     }
 
     let s_description = "description"
@@ -270,11 +273,13 @@ struct
     let s_depends     = "depends"
     let s_conflicts   = "conflicts"
     let s_urls        = "urls"
+    let s_patches     = "patches"
 
     let description t = t.description
     let name t = t.name
     let version t = {deb = t.version}
     let urls t = t.urls
+    let patches t = t.patches
 
     let default_package (t:t) =
       let assoc f s =
@@ -298,10 +303,14 @@ struct
     let to_string t =
       let pf (k, v) = Printf.sprintf "  %s = %S\n" k v in
       let ps = Printf.sprintf "%S"in
-      Printf.sprintf "@%d\n\npackage %S {\n%s  urls = [%s]\n}\n"
+      let pl k l =
+        Printf.sprintf "  %s = [%s]\n" k
+          (String.concat "; " (List.map ps l)) in
+      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s\n}\n"
         Globals.api_version t.name
         (String.concat "" (List.map pf t.fields))
-        (String.concat "; " (List.map ps t.urls))
+        (pl s_urls t.urls)
+        (pl s_patches t.patches)
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -321,6 +330,7 @@ struct
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
       let urls = string_list s_urls statement in
+      let patches = string_list s_patches statement in
       let fields =
         let unstring accu (k,v) =
           match v with
@@ -331,6 +341,7 @@ struct
       ; description
       ; fields
       ; urls
+      ; patches
       ; name   = statement.File_format.name }
 
   end
