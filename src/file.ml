@@ -220,16 +220,13 @@ struct
     val version     : t -> Namespace.version
     val urls        : t -> string list
     val make        : t -> string list
+    val patches : t -> string list
 
     (** Returns the list of sentences *)
     val description : t -> string list
 
     (** Convert to Debian packages to feed the solver *)
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
-
-    val urls : t -> string list
-    val make : t -> string list
-    val patches : t -> string list
   end
 
   module Spec : SPEC = struct
