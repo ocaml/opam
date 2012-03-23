@@ -220,6 +220,7 @@ struct
     val version     : t -> Namespace.version
     val urls        : t -> string list
     val make        : t -> string list
+    val patches     : t -> string list
 
     (** Returns the list of sentences *)
     val description : t -> string list
@@ -252,6 +253,7 @@ struct
       version    : string;
       description: string list;
       urls       : string list;
+      patches    : string list;
       make       : string list;
       fields     : (string * string) list;
     }
@@ -263,6 +265,7 @@ struct
       urls        = [];
       make        = [];
       fields      = [];
+      patches     = [];
     }
 
     let s_description = "description"
@@ -272,12 +275,14 @@ struct
     let s_depends     = "depends"
     let s_conflicts   = "conflicts"
     let s_urls        = "urls"
+    let s_patches     = "patches"
     let s_make        = "make"
 
     let description t = t.description
     let name t = t.name
     let version t = {deb = t.version}
     let urls t = t.urls
+    let patches t = t.patches
     let make t = t.make
 
     let default_package (t:t) =
@@ -302,12 +307,15 @@ struct
     let to_string t =
       let pf (k, v) = Printf.sprintf "  %s = %S\n" k v in
       let ps = Printf.sprintf "%S"in
-      let pl s l = Printf.sprintf "  %s = [%s]\n" s (String.concat "; " (List.map ps l)) in
-      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s}\n"
+      let pl k l =
+        Printf.sprintf "  %s = [%s]\n" k
+          (String.concat "; " (List.map ps l)) in
+      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
         Globals.api_version t.name
         (String.concat "" (List.map pf t.fields))
-        (pl s_urls t.urls)
         (pl s_make t.make)
+        (pl s_urls t.urls)
+        (pl s_patches t.patches)
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -327,6 +335,7 @@ struct
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
       let urls = string_list s_urls statement in
+      let patches = string_list s_patches statement in
       let make = 
         let make = string_list s_make statement in 
         if make = [] then [ "./build.sh" ] else make in
@@ -340,6 +349,7 @@ struct
       ; description
       ; fields
       ; urls
+      ; patches
       ; make
       ; name   = statement.File_format.name }
 

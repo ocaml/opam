@@ -145,7 +145,7 @@ let untar file nv =
   ) moves;
   err
 
-let download url nv =
+let download url =
   log "download %s" url;
   let command = match Globals.os with
     | Globals.Darwin -> "ftp"
@@ -155,11 +155,18 @@ let download url nv =
     Unix.mkdir tmp_dir 0o750;
   if Sys.file_exists dst then
     Unix.unlink dst;
-  let pwd = Unix.getcwd () in
-  Unix.chdir tmp_dir;
-  let err = Sys.command (Printf.sprintf "%s %s" command url) in
-  Unix.chdir pwd;
+  let err =
+    in_dir tmp_dir (function () ->
+      Sys.command (Printf.sprintf "%s %s" command url)
+    ) in
   if err = 0 then
-    untar dst nv
+    Some dst
   else
-    err
+    None
+
+let patch p nv =
+  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  log "patching %s using %s" dirname p;
+  in_dir dirname (function () ->
+    Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
+  )

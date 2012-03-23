@@ -36,9 +36,14 @@ type 'a ocaml_options =
 type raw_binary = 
   | Raw_binary of string (* contents *)
 
+type links = {
+  urls   : string list; (* pointer to some external http links *)
+  patches: string list; (* pointer to some external patch links *)
+}
+
 type raw_filename =
   | Raw_filename of string (* pointer to the local contents *)
-  | Raw_links of string list (* pointer to some external http links *)
+  | Raw_links of links 
 
 type binary_data = 
   | Binary of raw_binary
@@ -390,28 +395,37 @@ module Path : PATH = struct
 
   let extract_targz nv = function
   | Tar_gz (Binary (Raw_binary bin)) -> 
-    R_lazy (fun () ->
-        (* As we received the binary from the server, it is
-           "safe" to assume that the file will be untared at
-           the right place (ie. in NAME-VERSION/ *)
+      R_lazy (fun () ->
+        (* As we received the binary from the server, it is "safe" to
+           assume that the file will be untared at the right place
+           (ie. in NAME-VERSION/) *)
         let oc = BatUnix.open_process_out "tar xzv" in
         BatIO.write_string oc bin;
         BatIO.close_out oc)
-    
-  | Tar_gz (Filename (Raw_links urls)) -> 
-    R_lazy
-      (fun () -> 
-        let rec aux = function
-          | [] -> Globals.error_and_exit "No tar.gz found"
-          | url :: urls ->
-            let err = Run.download url nv in
-            if err = 0 then
-              ()
-            else
-              aux urls in
-        aux urls)
+        
+  | Tar_gz (Filename (Raw_links links)) -> 
+      R_lazy (fun () -> 
 
-  | Tar_gz (Filename (Raw_filename fic)) -> failwith "to complete !" (* R_filename [Raw fic] *)
+        let rec download = function
+        | [] -> Globals.error_and_exit "No tar.gz found"
+        | url :: urls ->
+            match Run.download url with
+            | None   -> download urls
+            | Some f ->if Run.untar f nv <> 0 then download urls in
+
+        let patch p =
+          match Run.download p with
+          | None   -> Globals.error_and_exit "Patch %S is unavailable" p
+          | Some p ->
+              if Run.patch p nv <> 0 then
+                Globals.error_and_exit "Unable to apply path %S" p in
+        
+        download links.urls;
+        List.iter patch links.patches;
+      )
+
+  | Tar_gz (Filename (Raw_filename fic)) ->
+      failwith "to complete !" (* R_filename [Raw fic] *)
 
   let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))
 
