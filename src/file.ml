@@ -218,9 +218,9 @@ struct
     (** destruct *)
     val name        : t -> string
     val version     : t -> Namespace.version
-    val urls        : t -> string list
+    val urls        : t -> raw_filename list
     val make        : t -> string list
-    val patches     : t -> string list
+    val patches     : t -> raw_filename list
 
     (** Returns the list of sentences *)
     val description : t -> string list
@@ -252,8 +252,8 @@ struct
       name       : string;
       version    : string;
       description: string list;
-      urls       : string list;
-      patches    : string list;
+      urls       : raw_filename list;
+      patches    : raw_filename list;
       make       : string list;
       fields     : (string * string) list;
     }
@@ -305,17 +305,25 @@ struct
         p
 
     let to_string t =
-      let pf (k, v) = Printf.sprintf "  %s = %S\n" k v in
-      let ps = Printf.sprintf "%S"in
+      let open Printf in
+      let pf (k, v) = sprintf "  %s = %S\n" k v in
+      let ps = sprintf "%S"in
       let pl k l =
-        Printf.sprintf "  %s = [%s]\n" k
+        sprintf "  %s = [%s]\n" k
           (String.concat "; " (List.map ps l)) in
-      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
+      let plf k l = 
+        pl k (List.map (function
+          | Internal s -> sprintf "local://%s" s
+          | External (Run.Http_wget, s) -> sprintf "http://%s" s
+          | External (Run.Http_ftp, s) -> sprintf "http://%s" s
+          | External (Run.Git, s) -> sprintf "git://%s" s) l) in
+
+      sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
         Globals.api_version t.name
         (String.concat "" (List.map pf t.fields))
         (pl s_make t.make)
-        (pl s_urls t.urls)
-        (pl s_patches t.patches)
+        (plf s_urls t.urls)
+        (plf s_patches t.patches)
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -334,8 +342,8 @@ struct
           | String s -> String.nsplit s "\\"
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
-      let urls = string_list s_urls statement in
-      let patches = string_list s_patches statement in
+      let urls = parse_l_url (string_list s_urls statement) in
+      let patches = parse_l_url (string_list s_patches statement) in
       let make = 
         let make = string_list s_make statement in 
         if make = [] then [ "./build.sh" ] else make in

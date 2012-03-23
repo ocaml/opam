@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+open ExtString
+
 type content =
   | String of string
   | List of content list
@@ -61,3 +63,13 @@ let rec string_of_content = function
   | List l   ->
       Printf.sprintf "[%s]"
         (String.concat "; "  (List.map string_of_content l))
+
+let parse_l_url = 
+  List.map (fun s -> 
+    try
+      let s1, s2 = String.split s "://" in
+      match s1 with
+        | "http" -> Path.External ((match Globals.os with Globals.Darwin -> Run.Http_ftp | _ -> Run.Http_wget), s2)
+        | "local" -> Path.Internal s2
+        | _ -> failwith "to complete !"
+    with Invalid_string -> Printf.kprintf failwith "to complete : %S" s)

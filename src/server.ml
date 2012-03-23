@@ -191,7 +191,7 @@ module RemoteServer : SERVER with type t = url = struct
     | _             -> dyn_error "getArchive"
 
   let read_archive = function
-    | Archive (Filename (Raw_filename s)) -> Archive (Binary (Raw_binary (Run.read s)))
+    | Archive (Filename (Internal s)) -> Archive (Binary (Raw_binary (Run.read s)))
     | x                                   -> x
       
   let newArchive t nv opam archive = 

@@ -145,11 +145,18 @@ let untar file nv =
   ) moves;
   err
 
-let download url =
+type uri = 
+  | Http_wget
+  | Http_ftp
+  | Git
+
+let command_of_uri = function
+  | Http_wget -> "wget"
+  | Http_ftp -> "ftp"
+  | Git -> failwith "to complete !" "git clone"
+
+let download (uri, url) =
   log "download %s" url;
-  let command = match Globals.os with
-    | Globals.Darwin -> "ftp"
-    | _              -> "wget" in
   let dst = Filename.concat tmp_dir (Filename.basename url) in
   if not (Sys.file_exists tmp_dir) then
     Unix.mkdir tmp_dir 0o750;
@@ -157,7 +164,7 @@ let download url =
     Unix.unlink dst;
   let err =
     in_dir tmp_dir (function () ->
-      Sys.command (Printf.sprintf "%s %s" command url)
+      Sys.command (Printf.sprintf "%s %s" (command_of_uri uri) url)
     ) () in
   if err = 0 then
     Some dst

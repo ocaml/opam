@@ -37,18 +37,19 @@ type raw_binary =
   | Raw_binary of string (* contents *)
 
 type raw_filename =
-  | Raw_filename of string (* pointer to the local contents *)
+  | External of Run.uri * string
+  | Internal of string (* pointer to the local contents *)
 
 type binary_data = 
   | Binary   of raw_binary
   | Filename of raw_filename
 
 let binary s = Binary (Raw_binary s)
-let filename s = Filename (Raw_filename s)
+let filename s = Filename (Internal s)
 
 type links = {
-  urls   : string list; (* pointer to some external http links *)
-  patches: string list; (* pointer to some external patch links *)
+  urls   : raw_filename list; (* list OR of archive to download *)
+  patches: raw_filename list; (* list AND of patch to apply *)
 }
 
 type 'a archive = 
@@ -294,11 +295,11 @@ module Path : PATH = struct
       (fun fic -> File (f_fic fic))
       (fun fic -> Not_found fic)
 
-  let find = find_ (fun fic -> Filename (Raw_filename fic))
+  let find = find_ (fun fic -> Filename (Internal fic))
 
   let find_binary = find_ (fun fic -> Raw_binary (BatFile.with_file_in fic BatIO.read_all))
 
-  let find_filename = find_ (fun fic -> Raw_filename fic)
+  let find_filename = find_ (fun fic -> Internal fic)
 
   let nv_of_extension version (B s) = 
     let s = 
@@ -320,7 +321,7 @@ module Path : PATH = struct
   let is_directory f = 
     let s = s_of_filename f in
     if Sys.is_directory s then
-      Some (Raw_filename s)
+      Some (Internal s)
     else
       None
 
@@ -358,7 +359,7 @@ module Path : PATH = struct
               BatFile.with_file_out fic (fun oc -> BatString.print oc cts);
             end)
           fic
-    | File (Filename (Raw_filename fic)) ->
+    | File (Filename (Internal fic)) ->
         begin match (Unix.lstat fic).Unix.st_kind with
         | Unix.S_DIR -> 
             Run.safe_rmdir fic;
@@ -407,14 +408,18 @@ module Path : PATH = struct
 
         let rec download = function
         | [] -> Globals.error_and_exit "No tar.gz found"
-        | url :: urls ->
-            match Run.download url with
+        | Internal f :: urls -> download_aux f urls
+        | External (uri, url) :: urls ->
+            match Run.download (uri, url) with
             | None   -> download urls
-            | Some f ->if Run.untar f nv <> 0 then download urls in
+            | Some f -> download_aux f urls
+        and download_aux f urls = if Run.untar f nv <> 0 then download urls in
 
-        let patch p =
-          match Run.download p with
-          | None   -> Globals.error_and_exit "Patch %S is unavailable" p
+        let patch = function
+          | Internal _ -> Globals.error_and_exit "Internal patches are supposed to be already applied at client side."
+          | External (uri, url) ->
+          match Run.download (uri, url) with
+          | None   -> Globals.error_and_exit "Patch %S is unavailable" url
           | Some p ->
               if Run.patch p nv <> 0 then
                 Globals.error_and_exit "Unable to apply path %S" p in
@@ -423,10 +428,10 @@ module Path : PATH = struct
         List.iter patch links.patches;
       )
 
-  | Archive (Filename (Raw_filename fic)) ->
+  | Archive (Filename (Internal fic)) ->
       failwith "to complete !" (* R_filename [Raw fic] *)
 
-  let raw_targz f = Archive (Filename (Raw_filename (s_of_filename f)))
+  let raw_targz f = Archive (Filename (Internal (s_of_filename f)))
 
   let lstat s = Unix.lstat (s_of_filename s)
   let files_of f = BatSys.files_of (s_of_filename f)
@@ -455,7 +460,7 @@ module Path : PATH = struct
                                  let f = B f in
                                  f, R_filename [fic /// f])
                                (files_of fic))
-            | Unix.S_REG -> R_file (Filename (Raw_filename (s_of_filename fic)))
+            | Unix.S_REG -> R_file (Filename (Internal (s_of_filename fic)))
             | _ -> failwith "to complete !"
           end else
             Globals.error_and_exit "File %s does not exist." (s_of_filename fic))
