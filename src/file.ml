@@ -302,10 +302,12 @@ struct
     let to_string t =
       let pf (k, v) = Printf.sprintf "  %s = %S\n" k v in
       let ps = Printf.sprintf "%S"in
-      Printf.sprintf "@%d\n\npackage %S {\n%s  urls = [%s]\n}\n"
+      let pl s l = Printf.sprintf "  %s = [%s]\n" s (String.concat "; " (List.map ps l)) in
+      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s}\n"
         Globals.api_version t.name
         (String.concat "" (List.map pf t.fields))
-        (String.concat "; " (List.map ps t.urls))
+        (pl s_urls t.urls)
+        (pl s_make t.make)
 
     let parse str =
       let lexbuf = Lexing.from_string str in
