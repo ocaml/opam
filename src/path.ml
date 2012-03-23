@@ -36,24 +36,24 @@ type 'a ocaml_options =
 type raw_binary = 
   | Raw_binary of string (* contents *)
 
-type links = {
-  urls   : string list; (* pointer to some external http links *)
-  patches: string list; (* pointer to some external patch links *)
-}
-
 type raw_filename =
   | Raw_filename of string (* pointer to the local contents *)
-  | Raw_links of links 
 
 type binary_data = 
-  | Binary of raw_binary
+  | Binary   of raw_binary
   | Filename of raw_filename
 
 let binary s = Binary (Raw_binary s)
 let filename s = Filename (Raw_filename s)
 
+type links = {
+  urls   : string list; (* pointer to some external http links *)
+  patches: string list; (* pointer to some external patch links *)
+}
+
 type 'a archive = 
-  | Tar_gz of 'a
+  | Archive of 'a
+  | Links   of links 
 
 type basename = B of string
 
@@ -384,7 +384,6 @@ module Path : PATH = struct
             (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
         end
-    | File _      -> ()
     | Not_found s -> ()
 
   let exec t n_v = 
@@ -394,7 +393,7 @@ module Path : PATH = struct
   let basename s = B (Filename.basename (s_of_filename s))
 
   let extract_targz nv = function
-  | Tar_gz (Binary (Raw_binary bin)) -> 
+  | Archive (Binary (Raw_binary bin)) -> 
       R_lazy (fun () ->
         (* As we received the binary from the server, it is "safe" to
            assume that the file will be untared at the right place
@@ -403,7 +402,7 @@ module Path : PATH = struct
         BatIO.write_string oc bin;
         BatIO.close_out oc)
         
-  | Tar_gz (Filename (Raw_links links)) -> 
+  | Links links -> 
       R_lazy (fun () -> 
 
         let rec download = function
@@ -424,10 +423,10 @@ module Path : PATH = struct
         List.iter patch links.patches;
       )
 
-  | Tar_gz (Filename (Raw_filename fic)) ->
+  | Archive (Filename (Raw_filename fic)) ->
       failwith "to complete !" (* R_filename [Raw fic] *)
 
-  let raw_targz f = Tar_gz (Filename (Raw_filename (s_of_filename f)))
+  let raw_targz f = Archive (Filename (Raw_filename (s_of_filename f)))
 
   let lstat s = Unix.lstat (s_of_filename s)
   let files_of f = BatSys.files_of (s_of_filename f)
