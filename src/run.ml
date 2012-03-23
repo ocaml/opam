@@ -145,7 +145,7 @@ let untar file nv =
   ) moves;
   err
 
-let download url nv =
+let download url =
   log "download %s" url;
   let command = match Globals.os with
     | Globals.Darwin -> "ftp"
@@ -160,9 +160,9 @@ let download url nv =
       Sys.command (Printf.sprintf "%s %s" command url)
     ) in
   if err = 0 then
-    untar dst nv
+    Some dst
   else
-    err
+    None
 
 let patch dir patch =
   in_dir dir (function () ->

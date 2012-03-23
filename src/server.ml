@@ -94,7 +94,7 @@ module Server = struct
              match Path.find_binary p with
                | Path.File s -> Tar_gz (Binary s)
                | _           -> failwith ("Cannot find " ^ string_of_nv n_v))
-      | url -> Tar_gz (Filename (Raw_links url))
+      | urls -> Tar_gz (Filename (Raw_links {urls; patches=[]}))
 
   let f_archive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in
