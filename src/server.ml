@@ -104,6 +104,7 @@ module Server = struct
     | f                     -> Path.add opam_file (Path.File f)
     end;
     begin match archive with
+    | Tar_gz (Filename (Raw_links _)) -> ()
     | Tar_gz f -> Path.add archive_file (Path.File f)
     end
 
