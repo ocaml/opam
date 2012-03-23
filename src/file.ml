@@ -313,9 +313,10 @@ struct
       let pl k l =
         Printf.sprintf "  %s = [%s]\n" k
           (String.concat "; " (List.map ps l)) in
-      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s\n}\n"
+      Printf.sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
         Globals.api_version t.name
         (String.concat "" (List.map pf t.fields))
+        (pl s_make t.make)
         (pl s_urls t.urls)
         (pl s_patches t.patches)
 
