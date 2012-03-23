@@ -93,14 +93,14 @@ module Server = struct
            having the right name *)
           let p = Path.archives_targz t.home (Some n_v) in
           (match Path.find_binary p with
-          | Path.File s -> Tar_gz (Binary s)
+          | Path.File s -> Archive (Binary s)
           | _           -> failwith ("Cannot find " ^ string_of_nv n_v))
 
       | urls ->
           (* if some urls are provided, then use the urls and patches
              fields *)
           let patches = File.Spec.patches spec in
-          Tar_gz (Filename (Raw_links {urls; patches}))
+          Links {urls; patches}
 
   let f_archive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in
@@ -110,8 +110,8 @@ module Server = struct
     | f                     -> Path.add opam_file (Path.File f)
     end;
     begin match archive with
-    | Tar_gz (Filename (Raw_links _)) -> ()
-    | Tar_gz f -> Path.add archive_file (Path.File f)
+    | Links   _ -> ()
+    | Archive f -> Path.add archive_file (Path.File f)
     end
 
   let mapArchive t name f o_key = 
@@ -191,8 +191,8 @@ module RemoteServer : SERVER with type t = url = struct
     | _             -> dyn_error "getArchive"
 
   let read_archive = function
-    | Tar_gz (Filename (Raw_filename s)) -> Tar_gz (Binary (Raw_binary (Run.read s)))
-    | x                                  -> x
+    | Archive (Filename (Raw_filename s)) -> Archive (Binary (Raw_binary (Run.read s)))
+    | x                                   -> x
       
   let newArchive t nv opam archive = 
     match send t (InewArchive (nv, opam, read_archive archive)) with
