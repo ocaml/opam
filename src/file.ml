@@ -317,7 +317,7 @@ struct
       let version = string s_version statement in
       let description =
         try match List.assoc s_description statement.contents with
-          | String s -> String.nsplit s "."
+          | String s -> String.nsplit s "\\"
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
       let urls = string_list s_urls statement in

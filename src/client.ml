@@ -186,22 +186,29 @@ module Client : CLIENT = struct
 
         List.iter
           (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
-          [ "package    ", Namespace.string_of_name name
+          (  ("package    ", Namespace.string_of_name name)
 
-          ; "version    ",
-            (match o_v with
+          :: ("version    ",
+            match o_v with
             | None   -> s_not_installed
             | Some v -> Namespace.string_of_version v)
 
-          ; "versions   ", (V_set.to_string Namespace.string_of_version v_set)
+          :: ("versions   ", V_set.to_string Namespace.string_of_version v_set)
 
-          ; "description", "\n  " ^ 
-            match o_v with None -> ""
-            | Some v ->
+          ::
+            match
+              match o_v with
+                | None -> if V_set.is_empty v_set then None else Some (V_set.max_elt v_set)
+                | Some v -> Some v
+            with
+              | None -> []
+              | Some v ->
+
+              [ "description", "\n  " ^ 
                 let opam =
                   File.Spec.find_err (Path.index t.home (Some (name, v))) in
-                (String.concat "." (File.Spec.description opam))
-          ]
+                String.concat "" (File.Spec.description opam) ]
+          )
 
   let confirm msg = 
     Globals.msg "%s [Y/n] " msg;
