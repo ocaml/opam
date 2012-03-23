@@ -388,8 +388,8 @@ module Path : PATH = struct
     | Not_found s -> ()
 
   let exec t n_v = 
-    let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
-    List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0
+    Run.in_dir (s_of_filename (build t (Some n_v)))
+      (List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0)
 
   let basename s = B (Filename.basename (s_of_filename s))
 
@@ -471,9 +471,7 @@ module Path : PATH = struct
         List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)
     | R_lazy write_contents ->
         Run.mkdir (fun fic -> 
-          let pwd = Run.getchdir (Filename.dirname fic) in 
-          write_contents ();
-          ignore (Run.getchdir pwd);
+          Run.in_dir (Filename.dirname fic) write_contents ()
         ) (s_of_filename (f /// name)) in
 
     function

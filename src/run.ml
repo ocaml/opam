@@ -59,11 +59,11 @@ let read file =
 (* from ocplib-system ... *)
 (**************************)
 
-let in_dir dir fn =
+let in_dir dir fn x =
   let cwd = Unix.getcwd () in
   Unix.chdir dir;
   try
-    let r = fn () in
+    let r = fn x in
     Unix.chdir cwd;
     r
   with e ->
@@ -91,7 +91,7 @@ let rec safe_rmdir dir =
       let files = files () in
       List.iter safe_unlink files;
       List.iter safe_rmdir dirs;
-    );
+    ) ();
     Unix.rmdir dir;
   end
 
@@ -158,7 +158,7 @@ let download url =
   let err =
     in_dir tmp_dir (function () ->
       Sys.command (Printf.sprintf "%s %s" command url)
-    ) in
+    ) () in
   if err = 0 then
     Some dst
   else
@@ -169,4 +169,4 @@ let patch p nv =
   log "patching %s using %s" dirname p;
   in_dir dirname (function () ->
     Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
-  )
+  ) ()
