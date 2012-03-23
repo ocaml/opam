@@ -218,6 +218,8 @@ struct
     (** destruct *)
     val name        : t -> string
     val version     : t -> Namespace.version
+    val urls        : t -> string list
+    val make        : t -> string list
 
     (** Returns the list of sentences *)
     val description : t -> string list
@@ -226,6 +228,7 @@ struct
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
 
     val urls : t -> string list
+    val make : t -> string list
     val patches : t -> string list
   end
 
@@ -254,6 +257,7 @@ struct
       description: string list;
       urls       : string list;
       patches    : string list;
+      make       : string list;
       fields     : (string * string) list;
     }
 
@@ -262,6 +266,7 @@ struct
       version     = "<none>";
       description = ["empty package"];
       urls        = [];
+      make        = [];
       fields      = [];
       patches     = [];
     }
@@ -274,12 +279,14 @@ struct
     let s_conflicts   = "conflicts"
     let s_urls        = "urls"
     let s_patches     = "patches"
+    let s_make        = "make"
 
     let description t = t.description
     let name t = t.name
     let version t = {deb = t.version}
     let urls t = t.urls
     let patches t = t.patches
+    let make t = t.make
 
     let default_package (t:t) =
       let assoc f s =
@@ -326,11 +333,14 @@ struct
       let version = string s_version statement in
       let description =
         try match List.assoc s_description statement.contents with
-          | String s -> String.nsplit s "."
+          | String s -> String.nsplit s "\\"
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
       let urls = string_list s_urls statement in
       let patches = string_list s_patches statement in
+      let make = 
+        let make = string_list s_make statement in 
+        if make = [] then [ "./build.sh" ] else make in
       let fields =
         let unstring accu (k,v) =
           match v with
@@ -342,6 +352,7 @@ struct
       ; fields
       ; urls
       ; patches
+      ; make
       ; name   = statement.File_format.name }
 
   end

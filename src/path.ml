@@ -178,9 +178,10 @@ sig
   (** Considers the given [filename] as the contents of an [archive] already extracted. *)
   val raw_targz : filename -> binary_data archive
 
-  (** Executes this particularly named script. For the [int], see [Sys.command]. *)
-  val exec_buildsh : t -> name_version -> int
-  (* $HOME_OPAM/build/NAME-VERSION/build.sh *)
+  (** Executes an arbitrary list of command inside "build/NAME-VERSION". 
+      For the [int], see [Sys.command]. 
+      In particular, the execution continues as long as each command returns 0. *)
+  val exec : t -> name_version -> string list -> int
   
   (** see [Filename.dirname] *)
   val dirname : filename -> filename
@@ -386,9 +387,9 @@ module Path : PATH = struct
     | File _      -> ()
     | Not_found s -> ()
 
-  let exec_buildsh t n_v = 
+  let exec t n_v = 
     let _ = Sys.chdir (s_of_filename (build t (Some n_v))) in
-    Sys.command "./build.sh"
+    List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0
 
   let basename s = B (Filename.basename (s_of_filename s))
 
