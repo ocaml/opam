@@ -218,14 +218,14 @@ struct
     (** destruct *)
     val name        : t -> string
     val version     : t -> Namespace.version
+    val urls        : t -> string list
+    val make        : t -> string list
 
     (** Returns the list of sentences *)
     val description : t -> string list
 
     (** Convert to Debian packages to feed the solver *)
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
-
-    val urls : t -> string list
   end
 
   module Spec : SPEC = struct
@@ -252,6 +252,7 @@ struct
       version    : string;
       description: string list;
       urls       : string list;
+      make       : string list;
       fields     : (string * string) list;
     }
 
@@ -260,6 +261,7 @@ struct
       version     = "<none>";
       description = ["empty package"];
       urls        = [];
+      make        = [];
       fields      = [];
     }
 
@@ -270,11 +272,13 @@ struct
     let s_depends     = "depends"
     let s_conflicts   = "conflicts"
     let s_urls        = "urls"
+    let s_make        = "make"
 
     let description t = t.description
     let name t = t.name
     let version t = {deb = t.version}
     let urls t = t.urls
+    let make t = t.make
 
     let default_package (t:t) =
       let assoc f s =
@@ -321,6 +325,9 @@ struct
           | _        -> Globals.error_and_exit "Fied 'description': bad format"  
         with Not_found -> [] in
       let urls = string_list s_urls statement in
+      let make = 
+        let make = string_list s_make statement in 
+        if make = [] then [ "./build.sh" ] else make in
       let fields =
         let unstring accu (k,v) =
           match v with
@@ -331,6 +338,7 @@ struct
       ; description
       ; fields
       ; urls
+      ; make
       ; name   = statement.File_format.name }
 
   end

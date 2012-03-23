@@ -321,13 +321,14 @@ module Client : CLIENT = struct
     Path.add_rec p_build tgz;
 
     (* Call the build script and copy the output files *)
-    log "Run build.sh";
-    let err = Path.exec_buildsh t.home nv in
+    let buildsh = File.Spec.make (File.Spec.find_err (Path.index t.home (Some nv))) in
+    log "Run %s" (BatIO.to_string (BatList.print BatString.print) buildsh);
+    let err = Path.exec t.home nv buildsh in
     if err = 0 then
       iter_toinstall Path.add_rec t nv
     else
       Globals.error_and_exit
-        "./build.sh failed with error %d" err;
+        "Compilation failed with error %d" err;
 
     (* Mark the packet as installed *)
     File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
