@@ -416,7 +416,7 @@ module Path : PATH = struct
           match Run.download p with
           | None   -> Globals.error_and_exit "Patch %S is unavailable" p
           | Some p ->
-              if not (Run.patch p nv <> 0) then
+              if Run.patch p nv <> 0 then
                 Globals.error_and_exit "Unable to apply path %S" p in
         
         download links.urls;

@@ -166,6 +166,7 @@ let download url =
 
 let patch p nv =
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  log "patching %s using %s" dirname p;
   in_dir dirname (function () ->
-    Sys.command (Printf.sprintf "patch -p1 < %s" p)
+    Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
   )

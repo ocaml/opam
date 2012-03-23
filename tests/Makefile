@@ -47,6 +47,7 @@ install: upload
 upload-new: install
 	cd packages && $(OCPGET) upload P1-2.spec
 	cd packages && $(OCPGET) upload P4-2.spec
+	cd packages && $(OCPGET) upload P4-3.spec
 
 upgrade: upload-new
 	$(OCPGET) info
