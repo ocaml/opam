@@ -19,42 +19,53 @@ open Path
 open File
 open Unix
 
-type 'a boolean = 'a -> bool
-
 module type SERVER =
 sig
   type t
 
-  (** Return [true] in case the given version is accepted by the server. *)
-  val acceptedVersion : t -> string -> bool
+  (** [apiVersion t client] returns whether the API version for the
+      server.  If the server cannot handle the [client] version, it
+      raises an exception.  If the client cannot handle the server
+      version, it should take the appropriate decisions.*)
+  val apiVersion : t -> int -> int
 
-  (** Returns the list of the available versions for all packages. *)
+  (** Return the list of the available versions for all packages. *)
   val getList : t -> name_version list
 
-  (** Returns the representation of the OPAM file for the
-      corresponding package version. *)
-  val getOpam : t -> name_version -> binary_data
+  (** Returns the spec file for the corresponding package version. *)
+  val getSpec : t -> name_version -> raw_binary
 
-  (** Returns the corresponding package archive. *)
-  val getArchive : t -> name_version -> binary_data archive
+  (** Returns the corresponding package archive. [None] means that the
+      server does not mirror the associated archive. *)
+  val getArchive : t -> name_version -> raw_binary option
 
-  (** Receives a first upload, it contains an OPAM file and the
-      corresponding package archive. *)
-  val newArchive : t -> name_version -> binary_data -> binary_data archive -> security_key option
-    (* [None] : An archive with the same NAME already exists, we cancel the reception.
-       [Some key] : The reception is accepted, a new unique key associated to the NAME is returned. *)
+  (** Process a first upload: it contains a spec file and a possible
+      corresponding archive. If the archive is [None], then the spec
+      file should contains links to downloadable archives that clients
+      can use later. The function returns the secret key associated to
+      all the packages having the same name *)
+  val newArchive : t -> name_version -> raw_binary -> raw_binary option -> security_key
 
-  (** Receives an upload, it contains an OPAM file and the
-      corresponding package archive. *)
-  val updateArchive : t -> name_version -> binary_data -> binary_data archive -> security_key boolean
-    (* [false] : An archive with the same NAME already exists, we cancel the reception. *)
+  (** Same as [newArchive] but for subsequent upload (using the secret key) *)
+  val updateArchive : t -> name_version -> raw_binary -> raw_binary option -> security_key -> unit
+
 end
 
 type server_state =
     { home : Path.t (* ~/.opam-server *)
     ; opam_version : int }
 
-module Server = struct
+let server_init home = 
+  { home = Path.init home
+  ; opam_version = Globals.api_version }
+
+exception Server_error of string
+
+let error fmt =
+  Printf.kprintf (fun s -> raise (Server_error s)) fmt
+
+(* Used by the server to process things *)
+module Server : SERVER with type t = server_state = struct
 
   type t = server_state
 
@@ -69,20 +80,20 @@ module Server = struct
 
   let string_of_nv (n, v) = Namespace.string_of_nv n v
 
-  let init home = 
-    { home = Path.init home
-    ; opam_version = Globals.api_version }
-
-  let acceptedVersion t s =
-    s = Globals.version
+  let apiVersion t client =
+    if client <> Globals.api_version then
+      error "incompatible API version. client=%d server=%d"
+        client Globals.api_version
+    else
+      Globals.api_version
 
   let getList t =
     Path.index_list t.home
 
-  let getOpam t n_v =
+  let getSpec t n_v =
     let index = read_index t.home in
-    try binary (File.Spec.to_string (NV_map.find n_v index))
-    with Not_found -> failwith (string_of_nv n_v ^ " not found")
+    try Raw_binary (File.Spec.to_string (NV_map.find n_v index))
+    with Not_found -> error "%S not found" (string_of_nv n_v)
 
   let getArchive t n_v = 
     let spec = File.Spec.find_err (Path.index t.home (Some n_v)) in
@@ -93,55 +104,62 @@ module Server = struct
            having the right name *)
           let p = Path.archives_targz t.home (Some n_v) in
           (match Path.find_binary p with
-          | Path.File s -> Archive (Binary s)
-          | _           -> failwith ("Cannot find " ^ string_of_nv n_v))
+          | Path.File s -> Some s
+          | _           -> error "Cannot find %S" (string_of_nv n_v))
 
       | urls ->
-          (* if some urls are provided, then use the urls and patches
-             fields *)
-          let patches = File.Spec.patches spec in
-          Links {urls; patches}
+          (* if some urls are provided, check for external urls *)
+          let external_urls =
+            List.fold_left (fun accu -> function External (_,s) -> s::accu | _ -> accu) [] urls in
+          if external_urls <> [] then
+            (* clients can fetch archives *)
+            None
+          else
+            error "No archive associated to package %S" (string_of_nv n_v)
 
   let f_archive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in
     let archive_file = Path.archives_targz t.home (Some n_v) in
     begin match opam with
-    | Binary (Raw_binary s) -> File.Spec.add opam_file (File.Spec.parse s)
-    | f                     -> Path.add opam_file (Path.File f)
+      | Raw_binary s -> File.Spec.add opam_file (File.Spec.parse s)
     end;
     begin match archive with
-    | Links   _ -> ()
-    | Archive f -> Path.add archive_file (Path.File f)
+      | None   -> ()
+      | Some f -> Path.add archive_file (Path.File (Binary f))
     end
 
   let mapArchive t name f o_key = 
     let hashes = Path.hashes t.home name in
-    let o_key = 
+    let key = 
       match o_key, File.Security_key.find hashes with 
       | None, None ->
           let key = Random_key.new_key () in
-          let () = File.Security_key.add hashes key in
-          Some key
+          File.Security_key.add hashes key;
+          key
       | Some k0, Some k1 -> 
           if k0 = k1 then
-            Some k0
+            k0
           else
-            None
-      | _ -> None in
-    let () = 
-      if o_key = None then
-        () (* execution canceled *)
-      else
-        f t in
-    o_key
+            error
+              "secret keys differ for package %S"
+              (Namespace.string_of_name name)
+      | _ ->
+          error
+            "no previous keys stored for package %S"
+            (Namespace.string_of_name name) in
+    f t;
+    key
 
   let newArchive t n_v opam archive = 
     mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) None
 
   let updateArchive t n_v opam archive key =
-    None <> mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) (Some key)
+    let (_ : security_key) = mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) (Some key) in
+    ()
 end
 
+
+(* Used by the client to communicate with the server *)
 module RemoteServer : SERVER with type t = url = struct
 
   open Protocol
@@ -155,54 +173,152 @@ module RemoteServer : SERVER with type t = url = struct
     try
       Protocol.find (open_connection addr) m
     with _ ->
-      Globals.error "The server (%s) is unreachable. Please check your network configuration."
-        (string_of_url url);
-      exit 1
+      Globals.error_and_exit
+        "The server (%s) is unreachable. Please check your network configuration."
+        (string_of_url url)
 
   let dyn_error str =
-    failwith ("Protocol error: " ^ str)
+    Globals.error_and_exit "Protocol error: %S" str
 
   let error msg =
-    Globals.error "[SERVER] %s" msg;
-    exit 1
+    Globals.error_and_exit "SERVER: %s" msg
 
-  let acceptedVersion t s =
-    match send t (IacceptedVersion s) with
-    | OacceptedVersion nl -> nl
-    | Oerror s    -> error s
-    | _           -> dyn_error "acceptedVersion"
+  let apiVersion t s =
+    match send t (C2S_apidVersion s) with
+    | S2C_apiVersion nl -> nl
+    | S2C_error s       -> error s
+    | _                 -> dyn_error "apiVersion"
+
+  let check_version t =
+    let server_version = apiVersion t Globals.api_version in
+    if server_version <> Globals.api_version then
+     Globals.error_and_exit "API version error. client=%d server=%d"
+       Globals.api_version server_version
 
   let getList t =
-    match send t IgetList with
-    | OgetList nl -> nl
-    | Oerror s    -> error s
-    | _           -> dyn_error "getList"
+    check_version t;
+    match send t C2S_getList with
+    | S2C_getList nl -> nl
+    | S2C_error s    -> error s
+    | _              -> dyn_error "getList"
 
-  let getOpam t name_version =
-    match send t (IgetOpam name_version) with
-    | OgetOpam o -> o
-    | Oerror s   -> error s
-    | _          -> dyn_error "getOpam"
+  let getSpec t name_version =
+    check_version t;
+    match send t (C2S_getSpec name_version) with
+    | S2C_getSpec o -> o
+    | S2C_error s   -> error s
+    | _             -> dyn_error "getOpam"
 
   let getArchive t nv =
-    match send t (IgetArchive nv) with
-    | OgetArchive a -> a
-    | Oerror s      -> error s
-    | _             -> dyn_error "getArchive"
+    check_version t;
+    match send t (C2S_getArchive nv) with
+    | S2C_getArchive a -> a
+    | S2C_error s      -> error s
+    | _                -> dyn_error "getArchive"
 
-  let read_archive = function
-    | Archive (Filename (Internal s)) -> Archive (Binary (Raw_binary (Run.read s)))
-    | x                                   -> x
-      
-  let newArchive t nv opam archive = 
-    match send t (InewArchive (nv, opam, read_archive archive)) with
-    | OnewArchive o -> o
-    | Oerror s    -> error s
-    | _           -> dyn_error "newArchive"
+  let newArchive t nv opam archive =
+    check_version t;
+    match send t (C2S_newArchive (nv, opam, archive)) with
+    | S2C_newArchive o -> o
+    | S2C_error s      -> error s
+    | _                -> dyn_error "newArchive"
 
-  let updateArchive t nv opam archive k = 
-    match send t (IupdateArchive (nv, opam, read_archive archive, k)) with
-    | OupdateArchive b -> b
-    | Oerror s    -> error s
-    | _           -> dyn_error "updateArchive"
+  let updateArchive t nv opam archive k =
+    check_version t;
+    match send t (C2S_updateArchive (nv, opam, archive, k)) with
+    | S2C_updateArchive -> ()
+    | S2C_error s       -> error s
+    | _                 -> dyn_error "updateArchive"
+
+end
+
+module Daemon = struct
+
+  open Protocol
+
+  let log id fmt =
+    Globals.log (Printf.sprintf "[%s]" id) fmt
+
+  let protect f x =
+    try f x
+    with e ->
+      let msg = Printexc.to_string e in
+      Globals.error "%s" msg;
+      S2C_error msg
+
+  let file = Filename.temp_file "lock" "dat"
+
+  let flock id =
+    let l = ref 0 in
+    let rec loop () =
+      if Sys.file_exists id && !l < 5 then begin
+        log id "Filesytem busy. Waiting 1s (%d)" !l;
+        sleep 1;
+        loop ()
+      end else if Sys.file_exists id then begin
+        log id "Too many attemps. Cancelling ...";
+        error "Too many attemps. Cancelling ...";
+      end else begin
+        let oc = open_out file in
+        output_string oc id;
+        flush oc;
+        close_out oc;
+        log id "lock %s" id;
+      end in
+    loop ()
+    
+  let funlock id =
+    if Sys.file_exists file then
+      let ic = open_in file in
+      let s = input_line ic in
+      if s = id then begin
+        log id "unlock %s" id;
+        Unix.unlink file;
+      end
+
+  let with_flock id f =
+    try
+      flock id;
+      let r = f () in
+      funlock id;
+      r
+    with e ->
+      funlock id;
+      raise e
+
+  let process t id request =
+    log id "Processing an incoming request";
+    match request with
+
+    | C2S_apidVersion s ->
+        log id "acceptedVersion";
+        protect (fun () -> S2C_apiVersion (Server.apiVersion t s)) ()
+
+    | C2S_getList ->
+        log id "getList";
+        protect (fun () -> S2C_getList (Server.getList t)) ()
+
+    | C2S_getSpec nv ->
+        log id "getSpec";
+        protect (fun () -> S2C_getSpec (Server.getSpec t nv)) ()
+
+    | C2S_getArchive nv ->
+        log id "getArchive";
+        protect (fun () -> S2C_getArchive (Server.getArchive t nv)) ()
+
+    | C2S_newArchive (nv, opam, archive) ->
+        log id "newArchive";
+        protect
+          (with_flock id)
+          (fun () -> S2C_newArchive (Server.newArchive t nv opam archive))
+
+    | C2S_updateArchive (nv, opam, archive, k) ->
+        log id "updateArchive [%s]"
+          (Digest.to_hex (Digest.string (match k with Random s -> s)));
+        protect
+          (with_flock id)
+          (fun () ->
+            Server.updateArchive t nv opam archive k;
+            S2C_updateArchive)
+
 end

@@ -1,2 +1,4 @@
 * 'ocp-get init' remove the config file without warning if there is already one present
   (it should ask the user if he really wants to do that)
+
+* simplify protocol.ml

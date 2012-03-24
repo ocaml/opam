@@ -95,6 +95,12 @@ let rec safe_rmdir dir =
     Unix.rmdir dir;
   end
 
+let safe_rm file =
+  if Sys.file_exists file && Sys.is_directory file then
+    safe_rmdir file
+  else
+    safe_unlink file
+
 let getchdir s = 
   let p = Unix.getcwd () in
   let () = Unix.chdir s in
@@ -107,20 +113,26 @@ let rec root path =
   else
     root d
 
+let read_command_output cmd =
+  let lines = ref [] in
+  let ic = Unix.open_process_in cmd in
+  try while true do
+    let line = input_line ic in
+    if not (Filename.concat line "" = line) then
+      lines := line :: !lines;
+    done;
+    close_in ic;
+    !lines
+  with _ ->
+    close_in ic;
+    !lines
+
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
 let untar file nv =
   log "untar %s" file;
-  let files = ref [] in
-  let ic = Unix.open_process_in ("tar tf " ^ file) in
-  (try while true do
-      let line = input_line ic in
-      if not (Filename.concat line "" = line) then
-        (* the file is not a directory *)
-        files := line :: !files;
-    done;
-   with _ -> ());
-  log "%d files found: %s" (List.length !files) (String.concat ", " !files);
+  let files = read_command_output ("tar tf " ^ file) in
+  log "%d files found: %s" (List.length files) (String.concat ", " files);
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
   let aux name =
     if String.starts_with name dirname then
@@ -130,7 +142,7 @@ let untar file nv =
       let n = String.length root in
       let rest = String.sub name n (String.length name - n) in 
       Filename.concat tmp_dir name, dirname ^  rest in
-  let moves = List.map aux !files in
+  let moves = List.map aux files in
   if not (Sys.file_exists tmp_dir) then
     Unix.mkdir tmp_dir 0o750;
   let err =
@@ -152,16 +164,20 @@ type uri =
 
 let command_of_uri = function
   | Http_wget -> "wget"
-  | Http_ftp -> "ftp"
-  | Git -> failwith "to complete !" "git clone"
+  | Http_ftp  -> "ftp"
+  | Git       -> "git clone"
 
 let download (uri, url) =
   log "download %s" url;
-  let dst = Filename.concat tmp_dir (Filename.basename url) in
+  let dst =
+    match uri with
+    | Http_wget
+    | Http_ftp -> Filename.concat tmp_dir (Filename.basename url)
+    | Git      -> Filename.basename url in
   if not (Sys.file_exists tmp_dir) then
     Unix.mkdir tmp_dir 0o750;
   if Sys.file_exists dst then
-    Unix.unlink dst;
+    safe_rm dst;
   let err =
     in_dir tmp_dir (function () ->
       Sys.command (Printf.sprintf "%s %s" (command_of_uri uri) url)
@@ -174,6 +190,21 @@ let download (uri, url) =
 let patch p nv =
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
   log "patching %s using %s" dirname p;
-  in_dir dirname (function () ->
+  in_dir dirname (fun () ->
     Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
+  ) ()
+
+let clone repo nv =
+  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  log "cloning %s into %s" repo dirname;
+  if Filename.check_suffix repo "git" then
+    Sys.command (Printf.sprintf "git clone %s %s" repo dirname)
+  else
+    Globals.error_and_exit "Cannot infer the VCS type of %s" repo
+
+let update nv =
+  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  in_dir dirname (fun () ->
+    let lines = read_command_output "git diff remotes/origin/HEAD" in
+    lines <> []
   ) ()

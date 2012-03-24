@@ -6,7 +6,7 @@ else
 WGET ?= wget
 endif
 
-TARGET   = ocp-get ocp-get-server
+TARGET   = ocp-get ocp-get-server META2install
 
 .PHONY: all
 

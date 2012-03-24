@@ -44,9 +44,6 @@ type binary_data =
   | Binary   of raw_binary
   | Filename of raw_filename
 
-let binary s = Binary (Raw_binary s)
-let filename s = Filename (Internal s)
-
 type links = {
   urls   : raw_filename list; (* list OR of archive to download *)
   patches: raw_filename list; (* list AND of patch to apply *)
@@ -174,10 +171,7 @@ sig
   val add_rec : filename -> binary_data contents_rec -> unit
 
   (** Returns the same meaning as [archive] but extracted in the right path (corresponding to name_version) . *)
-  val extract_targz : name_version -> binary_data archive -> binary_data contents_rec
-
-  (** Considers the given [filename] as the contents of an [archive] already extracted. *)
-  val raw_targz : filename -> binary_data archive
+  val extract : name_version -> raw_binary archive -> binary_data contents_rec
 
   (** Executes an arbitrary list of command inside "build/NAME-VERSION". 
       For the [int], see [Sys.command]. 
@@ -385,6 +379,9 @@ module Path : PATH = struct
             (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
         end
+
+    | File (Filename(External _)) -> ()
+
     | Not_found s -> ()
 
   let exec t n_v = 
@@ -393,8 +390,10 @@ module Path : PATH = struct
 
   let basename s = B (Filename.basename (s_of_filename s))
 
-  let extract_targz nv = function
-  | Archive (Binary (Raw_binary bin)) -> 
+  (* This function is called by the client after he receives a package
+     archive from the server *)
+  let extract nv = function
+  | Archive (Raw_binary bin) -> 
       R_lazy (fun () ->
         (* As we received the binary from the server, it is "safe" to
            assume that the file will be untared at the right place
@@ -407,31 +406,30 @@ module Path : PATH = struct
       R_lazy (fun () -> 
 
         let rec download = function
-        | [] -> Globals.error_and_exit "No tar.gz found"
+        | [] -> Globals.error_and_exit "No archive found"
         | Internal f :: urls -> download_aux f urls
         | External (uri, url) :: urls ->
             match Run.download (uri, url) with
             | None   -> download urls
             | Some f -> download_aux f urls
-        and download_aux f urls = if Run.untar f nv <> 0 then download urls in
+        and download_aux f urls =
+          if Run.untar f nv <> 0 then
+            download urls in
 
         let patch = function
-          | Internal _ -> Globals.error_and_exit "Internal patches are supposed to be already applied at client side."
-          | External (uri, url) ->
-          match Run.download (uri, url) with
-          | None   -> Globals.error_and_exit "Patch %S is unavailable" url
-          | Some p ->
-              if Run.patch p nv <> 0 then
-                Globals.error_and_exit "Unable to apply path %S" p in
+        | Internal p  ->
+            if Run.patch p nv <> 0 then
+              Globals.error_and_exit "Unable to apply path %S" p
+        | External (uri, url) ->
+            match Run.download (uri, url) with
+            | None   -> Globals.error_and_exit "Patch %S is unavailable" url
+            | Some p ->
+                if Run.patch p nv <> 0 then
+                  Globals.error_and_exit "Unable to apply path %S" p in
         
         download links.urls;
         List.iter patch links.patches;
       )
-
-  | Archive (Filename (Internal fic)) ->
-      failwith "to complete !" (* R_filename [Raw fic] *)
-
-  let raw_targz f = Archive (Filename (Internal (s_of_filename f)))
 
   let lstat s = Unix.lstat (s_of_filename s)
   let files_of f = BatSys.files_of (s_of_filename f)

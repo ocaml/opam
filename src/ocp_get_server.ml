@@ -59,7 +59,7 @@ let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 
 let server fn =
   let addr = ADDR_INET (!host, !port) in
-  let state = Server.init !Globals.root_path in
+  let state = server_init !Globals.root_path in
   if !Globals.debug then
     Globals.msg "Root path is %s.\nListening on port %d (%s) ...\n%!"
       !Globals.root_path !port (string_of_inet_addr !host);
@@ -69,39 +69,11 @@ let server fn =
 let log id fmt =
   Globals.log (Printf.sprintf "REQUEST [%d]" id) fmt
 
-let protect f =
-  try f ()
-  with e ->
-    let msg = Printexc.to_string e in
-    Globals.error "%s" msg;
-    Oerror msg
 
-let fn t =
+let fn state =
   Random.self_init();
-  let id = Random.int 1024 in
-  log id "Processing an incoming request";
-
-  Protocol.add (function 
-  | IacceptedVersion s ->
-      log id "acceptedVersion";
-      protect (fun () -> OacceptedVersion (Server.acceptedVersion t s))
-  | IgetList                    ->
-      log id "getList";
-      protect (fun () -> OgetList (Server.getList t))
-  | IgetOpam name_version       ->
-      log id "getOpam";
-      protect (fun () -> OgetOpam (Server.getOpam t name_version))
-  | IgetArchive opam            ->
-      log id "getArchive";
-      protect (fun () -> OgetArchive (Server.getArchive t opam))
-  | InewArchive (nv, opam, archive) ->
-      (* XXX: need to protect the server state mutation as it can be updated concurrently *)
-      log id "newArchive";
-      protect (fun () -> OnewArchive (Server.newArchive t nv opam archive))
-  | IupdateArchive (nv, opam, archive, k) ->
-      (* XXX: need to protect the server state mutation as it can be updated concurrently *)
-      log id "updateArchive [%s]" (Digest.to_hex (Digest.string (match k with Path.Random s -> s)));
-      protect (fun () -> OupdateArchive (Server.updateArchive t nv opam archive k)))
+  let id = string_of_int (Random.int 1024) in
+  Protocol.add (Daemon.process state id)
 
 let _ =
   handle_unix_error server fn

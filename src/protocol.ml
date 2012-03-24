@@ -17,22 +17,22 @@ open Namespace
 open Path
 
 type client_to_server =
-  | IacceptedVersion of string
-  | IgetList
-  | IgetOpam of name_version
-  | IgetArchive of name_version
-  | InewArchive of name_version * binary_data * binary_data archive
-  | IupdateArchive of name_version * binary_data * binary_data archive * security_key
+  | C2S_apidVersion   of int
+  | C2S_getList
+  | C2S_getSpec       of name_version
+  | C2S_getArchive    of name_version
+  | C2S_newArchive    of name_version * raw_binary * raw_binary option
+  | C2S_updateArchive of name_version * raw_binary * raw_binary option * security_key
 
 type server_to_client =
-  | OacceptedVersion of bool
-  | OgetList of name_version list
-  | OgetOpam of binary_data
-  | OgetArchive of binary_data archive
-  | OnewArchive of security_key option
-  | OupdateArchive of bool
+  | S2C_apiVersion      of int
+  | S2C_getList         of name_version list
+  | S2C_getSpec         of raw_binary
+  | S2C_getArchive      of raw_binary option
+  | S2C_newArchive      of security_key
+  | S2C_updateArchive
 
-  | Oerror of string (* server error *)
+  | S2C_error of string (* server error *)
 
 type www = client_to_server -> server_to_client
 
@@ -44,13 +44,11 @@ end
 module Protocol : PROTOCOL = struct
 
   let output_v stdout m = 
-    begin
-      output_value stdout m ;
-      flush stdout ;
-    end
+    output_value stdout m ;
+    flush stdout
 
   let find (stdin, stdout) m =
-    let () = output_v stdout m in
+    output_v stdout m;
     (input_value stdin : server_to_client)
 
   let add f stdin stdout =

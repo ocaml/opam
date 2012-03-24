@@ -61,19 +61,14 @@ module Client : CLIENT = struct
       { server : url
       ; home   : Path.t (* ~/.opam *) }
 
-
   (* Look into the content of ~/.opam/config to build the client state *)
+  (* Do not call RemoteServer functions here, as it implies a
+     network roundtrip *)
   let load_state () =
     let home = Path.init !Globals.root_path in
     let config = File.Config.find_err (Path.config home) in
     let server = File.Config.sources config in
-    if RemoteServer.acceptedVersion server Globals.version then
-      { server ;  home }
-    else
-      begin
-        Globals.msg "The version of this program is different than the one at server side.\n";
-        exit 1;
-      end
+    { server ;  home }
 
   let update_t t =
     let packages = RemoteServer.getList t.server in
@@ -81,8 +76,8 @@ module Client : CLIENT = struct
       (fun (n, v) -> 
         let opam_file = Path.index t.home (Some (n, v)) in
         if not (Path.file_exists opam_file) then
-          let opam = RemoteServer.getOpam t.server (n, v) in
-          Path.add opam_file (Path.File opam);
+          let spec = RemoteServer.getSpec t.server (n, v) in
+          Path.add opam_file (Path.File (Binary spec));
           Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
       ) packages
 
@@ -120,12 +115,12 @@ module Client : CLIENT = struct
       name
       (List.fold_left
          (fun map (n, v) -> 
-            N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
+           N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
   let info package =
     log "info %s" (match package with
-      | None -> "ALL"
-      | Some p -> Namespace.string_of_name p);
+    | None -> "ALL"
+    | Some p -> Namespace.string_of_name p);
     let t = load_state () in
     let s_not_installed = "--" in
     match package with
@@ -313,15 +308,23 @@ module Client : CLIENT = struct
     | Was_installed nv_old -> proceed_todelete t nv_old
     | Was_not_installed    -> ());
 
+    let spec = File.Spec.find_err (Path.index t.home (Some nv)) in
+
     (* Then, untar the archive *)
     let p_build = Path.build t.home (Some nv) in
     Path.remove p_build;
-    let tgz = Path.extract_targz nv (RemoteServer.getArchive t.server nv) in
+    let archive = match RemoteServer.getArchive t.server nv with
+      | Some tgz -> Archive tgz
+      | None     ->
+          let urls = File.Spec.urls spec in
+          let patches = File.Spec.patches spec in
+          Links { urls; patches } in
+    let tgz = Path.extract nv archive in
     log "untar archive for %s" (Namespace.to_string nv);
     Path.add_rec p_build tgz;
 
     (* Call the build script and copy the output files *)
-    let buildsh = File.Spec.make (File.Spec.find_err (Path.index t.home (Some nv))) in
+    let buildsh = File.Spec.make spec in
     log "Run %s" (BatIO.to_string (BatList.print BatString.print) buildsh);
     let err = Path.exec t.home nv buildsh in
     if err = 0 then
@@ -482,43 +485,36 @@ module Client : CLIENT = struct
     let spec = File.Spec.parse spec_s in
     let version = File.Spec.version spec in
     let name = File.Spec.name spec in
-    let spec_b = binary spec_s in
+    let spec_b = Raw_binary spec_s in
 
     (* look for the archive *)
     let archive_filename =
       Namespace.string_of_nv (Namespace.Name name) version ^ ".tar.gz" in
     let archive =
       if Sys.file_exists archive_filename then
-        Archive (binary (Run.read archive_filename))
+        Some (Raw_binary (Run.read archive_filename))
       else
         let urls = File.Spec.urls spec in
-        let patches = File.Spec.patches spec in
+        (* XXX: support local files/patches *)
         if urls = [] then
-          Globals.error_and_exit "Cannot find %s" archive_filename
+          Globals.error_and_exit "No location specified for %s" archive_filename
         else
-          Links {urls; patches} in
+          None in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
     let name = Namespace.Name name in
-    let local_server = Server.init !Globals.root_path in
+    let local_server = server_init !Globals.root_path in
 
-    let o_key0 = File.Security_key.find (Path.keys t.home name) in
-    let o_key1 = 
-      match o_key0 with
-        | None -> 
-          let o = RemoteServer.newArchive t.server (name, version) spec_b archive in
-          let () = assert (o = Server.newArchive local_server (name, version) spec_b archive) in
-          o
-        | Some k -> 
-          let b = RemoteServer.updateArchive t.server (name, version) spec_b archive k in
-          let () = assert (b = Server.updateArchive local_server (name, version) spec_b archive k) in
-          if b then Some k else None in
-
-    match o_key1 with
-      | Some k1 when o_key0 <> o_key1 -> File.Security_key.add (Path.keys t.home name) k1
-      | None -> Globals.msg "The key given to upload was not accepted.\n"
-      | _ -> ignore "The server has returned the same key than currently stored.\n"
+    let o_key = File.Security_key.find (Path.keys t.home name) in
+    match o_key with
+    | None   ->
+        let k = RemoteServer.newArchive t.server (name, version) spec_b archive in
+        let _  = Server.newArchive local_server (name, version) spec_b archive in
+        File.Security_key.add (Path.keys t.home name) k
+    | Some k ->
+        RemoteServer.updateArchive t.server (name, version) spec_b archive k;
+        Server.updateArchive local_server (name, version) spec_b archive k
 
   type config_request = Include | Bytelink | Asmlink
 
