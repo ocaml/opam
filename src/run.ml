@@ -223,9 +223,14 @@ let patch p nv =
     Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
   ) ()
 
-let update nv =
-  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+(* Return the list of modified files *)
+let git_get_updates dirname =
   in_dir dirname (fun () ->
-    let lines = read_command_output "git diff remotes/origin/HEAD" in
-    lines <> []
+    read_command_output "git diff remotes/origin/HEAD --name-only"
+  ) ()
+
+let git_update dirname =
+  in_dir dirname (fun () ->
+    if Sys.command "git pull" <> 0 then
+      Globals.error_and_exit "Cannot update git repository %s" dirname
   ) ()

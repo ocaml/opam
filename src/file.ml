@@ -141,9 +141,15 @@ struct
     val opam_version : t -> int
     val sources : t -> url
     val ocaml_version : t -> internal_version
+    val git : t -> bool
 
     (** construct *)
-    val create : int (* opam *) -> url -> internal_version (* ocaml *) -> t
+    val create :
+      int  (* opam *) ->
+      bool (* git *)  ->
+      url ->
+      internal_version (* ocaml *) ->
+      t
   end
 
   module Config : CONFIG =
@@ -152,26 +158,30 @@ struct
 
     type t =
         { version : int (* opam version *)
+        ; git : bool (* git repo *)
         ; sources : url
         ; ocaml_version : internal_version }
 
     let version_of_string s = Version s
 
     let opam_version t = t.version
+    let git t = t.git
     let sources t = t.sources
     let ocaml_version t = t.ocaml_version
 
-    let create version sources ocaml_version = { version ; sources ; ocaml_version }
+    let create version git sources ocaml_version = { version ; git ; sources ; ocaml_version }
 
     let empty = {
       version = Globals.api_version;
+      git = false;
       sources = url Globals.default_hostname Globals.default_port ;
       ocaml_version = Version Sys.ocaml_version
     }
 
    let to_string t =
-      Printf.sprintf "version: %d\nsources: %s\nocaml-version: %s\n"
+      Printf.sprintf "version: %d\ngit: %b\nsources: %s\nocaml-version: %s\n"
         t.version
+        t.git
         (string_of_url t.sources)
         (match t.ocaml_version with Version s -> s)
 
@@ -188,6 +198,9 @@ struct
               Globals.error_and_exit
                 "Fatal error: invalid value for 'version' field in %s/config. Exit"
                 !Globals.root_path in
+      let git = match Parse.Exceptionless.assoc_parsed "git" file with
+        | None   -> false
+        | Some b -> bool_of_string b in
       let sources =
         try
           let sources = Parse.assoc_parsed "sources" file in
@@ -197,6 +210,7 @@ struct
           url Globals.default_hostname Globals.default_port in
       let ocaml_version = try Parse.assoc_parsed "ocaml-version" file with Not_found -> Sys.ocaml_version in
       { version = version
+      ; git
       ; sources
       ; ocaml_version = Version ocaml_version }
   end

@@ -54,22 +54,25 @@ let parse_args fn () =
   fn (List.rev !ano_args)
 
 (* ocp-get init [HOSTNAME[:PORT]]*)
-let init = {
+let init =
+  let git = ref false in {
   name     = "init";
   usage    = "";
   synopsis = "Initial setup";
   help     = "Create the initial config files";
-  specs    = [];
+  specs    = [
+    ("--git-repo", Arg.Set git, " Use a read-only git repository")
+  ];
   anon;
   main     =
     parse_args (function
-    | []            -> Client.init (url Globals.default_hostname Globals.default_port)
-    | [ host]       -> Client.init (url host Globals.default_port)
+    | []            -> Client.init !git (url Globals.default_hostname Globals.default_port)
+    | [ host]       -> Client.init !git (url host Globals.default_port)
     | [ host; port] ->
         let port =
           try int_of_string port
           with _ -> failwith (port ^ " is not a valid port") in
-        Client.init (url host port)
+        Client.init !git (url host port)
     | _ -> bad_argument ())
 }
 

@@ -27,7 +27,7 @@ sig
   type t
 
   (** Initializes the client a consistent state. *)
-  val init : url -> unit
+  val init : git:bool -> url -> unit
 
   (** Displays the installed package. [None] : a general summary is given. *)
   val info : Namespace.name option -> unit
@@ -59,6 +59,7 @@ module Client : CLIENT = struct
 
   type t = 
       { server : url
+      ; git    : bool
       ; home   : Path.t (* ~/.opam *) }
 
   (* Look into the content of ~/.opam/config to build the client state *)
@@ -68,33 +69,64 @@ module Client : CLIENT = struct
     let home = Path.init !Globals.root_path in
     let config = File.Config.find_err (Path.config home) in
     let server = File.Config.sources config in
-    { server ;  home }
+    let git = File.Config.git config in
+    { server ;  git; home }
 
-  let update_t t =
+  let update_remote t =
     let packages = RemoteServer.getList t.server in
     List.iter
       (fun (n, v) -> 
-        let opam_file = Path.index t.home (Some (n, v)) in
-        if not (Path.file_exists opam_file) then
+        let spec_f = Path.index t.home (Some (n, v)) in
+        if not (Path.file_exists spec_f) then
           let spec = RemoteServer.getSpec t.server (n, v) in
-          Path.add opam_file (Path.File (Binary spec));
+          Path.add spec_f (Path.File (Binary spec));
           Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
       ) packages
 
-  let update () =
-    update_t (load_state ())
+  let update_git t =
+    let index_path = Path.string_of_filename (Path.index t.home None) in
+    let newfiles = Run.git_get_updates index_path in
+    Run.git_update index_path;
+    let package_of_file file =
+      if Filename.check_suffix file ".spec" then
+        Some (Namespace.nv_of_string (Filename.chop_extension file))
+      else
+        None in
+    let packages = List.fold_left
+      (fun accu file ->
+        match package_of_file file with
+        | None   -> accu
+        | Some nv -> NV_set.add nv accu)
+      NV_set.empty
+      newfiles in
+    NV_set.iter (fun (n, v) ->
+      Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
+    ) packages
 
-  let init url =
-    log "init %s" (string_of_url url);
+    let update () =
+      let t = load_state () in
+      if t.git then
+        update_git t
+      else
+        update_remote t
+
+  let init ~git url =
+    log "init %b %s" git (string_of_url url);
     let home = Path.init !Globals.root_path in
-    let config =
-      File.Config.create
-        Globals.api_version
-        url
-        (Version Globals.ocaml_version) in
-    File.Config.add (Path.config home) config;
-    File.Installed.add (Path.installed home) File.Installed.empty;
-    update ()
+    let config_f = Path.config home in
+    match File.Config.find config_f with
+    | Some c ->
+        Globals.error_and_exit "%s already exist" (Path.string_of_filename config_f)
+    | None   ->
+      let config =
+        File.Config.create
+          Globals.api_version
+          git
+          url
+          (Version Globals.ocaml_version) in
+      File.Config.add config_f config;
+      File.Installed.add (Path.installed home) File.Installed.empty;
+      update ()
 
   let indent_left s nb =
     let nb = nb - String.length s in
