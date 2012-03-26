@@ -1,0 +1,8 @@
+install "ocpget" {
+  lib = [
+    "_obuild/ocp-get-lib/*.cma";
+    "_obuild/ocp-get-lib/*.cmxa";
+    "_obuild/ocp-get-lib/*.a";
+    "_obuild/ocp-get-lib/*.cmi";
+  ]
+}

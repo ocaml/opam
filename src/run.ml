@@ -183,11 +183,12 @@ let clone repo last_pwd nv =
       safe_rm repo;
     let err = Sys.command (Printf.sprintf "git clone %s" repo) in
     if err = 0 then
-      let () =
-        Unix.rename 
-          (Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name)
-          (Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv))) in
-      From_git
+      let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
+      let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
+      if Printf.kprintf Sys.command "mv -i %s %s" s_from s_to = 0 then
+        From_git
+      else
+        Globals.error_and_exit "moving failed"
     else
       Globals.error_and_exit "cloning failed"
   else
