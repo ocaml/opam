@@ -227,6 +227,9 @@ struct
 
     (** Convert to Debian packages to feed the solver *)
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
+
+    (** Delete in patches pointers to local filename *)
+    val filter_external_patches : t -> t
   end
 
   module Spec : SPEC = struct
@@ -316,7 +319,9 @@ struct
           | Internal s -> sprintf "local://%s" s
           | External (Run.Http_wget, s) -> sprintf "http://%s" s
           | External (Run.Http_ftp, s) -> sprintf "http://%s" s
-          | External (Run.Git, s) -> sprintf "git://%s" s) l) in
+          | External (Run.Git, s) -> sprintf "git://%s" s
+          | External (Run.Config, s) -> sprintf "config://%s" s
+          | External (Run.Install, s) -> sprintf "install://%s" s) l) in
 
       sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
         Globals.api_version t.name
@@ -324,6 +329,12 @@ struct
         (pl s_make t.make)
         (plf s_urls t.urls)
         (plf s_patches t.patches)
+
+    let filter_external_patches t = 
+      { t with patches = 
+          List.filter (function
+            | External ((Run.Config | Run.Install), _) -> false
+            | _ -> true) t.patches }
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -340,7 +351,7 @@ struct
       let description =
         try match List.assoc s_description statement.contents with
           | String s -> String.nsplit s "\\"
-          | _        -> Globals.error_and_exit "Fied 'description': bad format"  
+          | _        -> Globals.error_and_exit "Field 'description': bad format"  
         with Not_found -> [] in
       let urls = parse_l_url (string_list s_urls statement) in
       let patches = parse_l_url (string_list s_patches statement) in

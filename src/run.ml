@@ -129,6 +129,8 @@ let read_command_output cmd =
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
+let normalize s = getchdir (getchdir s)
+
 let untar file nv =
   log "untar %s" file;
   let files = read_command_output ("tar tf " ^ file) in
@@ -161,31 +163,57 @@ type uri =
   | Http_wget
   | Http_ftp
   | Git
+  | Config
+  | Install
 
-let command_of_uri = function
-  | Http_wget -> "wget"
-  | Http_ftp  -> "ftp"
-  | Git       -> "git clone"
+let sys_command = 
+  List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0
 
-let download (uri, url) =
-  log "download %s" url;
-  let dst =
-    match uri with
-    | Http_wget
-    | Http_ftp -> Filename.concat tmp_dir (Filename.basename url)
-    | Git      -> Filename.basename url in
+type download_result = 
+  | From_http of string (* file *)
+  | From_git
+  | Url_error
+
+let clone repo last_pwd nv =
+  if Filename.check_suffix repo "git" then
+    let b_name = Filename.chop_extension (Filename.basename repo) in
+    let dst_git = Filename.concat tmp_dir b_name in
+    log "cloning %s into %s" repo dst_git;
+    if Sys.file_exists repo then
+      safe_rm repo;
+    let err = Sys.command (Printf.sprintf "git clone %s" repo) in
+    if err = 0 then
+      let () =
+        Unix.rename 
+          (Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name)
+          (Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv))) in
+      From_git
+    else
+      Globals.error_and_exit "cloning failed"
+  else
+    Globals.error_and_exit "Cannot infer the VCS type of %s" repo
+
+let exec_download = 
+  let http s_wget url _ _ = 
+    log "download %s" url;
+    let dst = Filename.concat tmp_dir (Filename.basename url) in
+    if Sys.file_exists dst then
+      safe_rm dst;
+    if Sys.command (Printf.sprintf "%s %s" s_wget url) = 0 then
+      From_http dst
+    else
+      Url_error in
+  function
+  | Http_wget, url -> http "wget" url
+  | Http_ftp, url  -> http "ftp" url
+  | Git, repo      -> clone repo
+  | Config, _
+  | Install, _ -> assert false
+
+let download url nv =
   if not (Sys.file_exists tmp_dir) then
     Unix.mkdir tmp_dir 0o750;
-  if Sys.file_exists dst then
-    safe_rm dst;
-  let err =
-    in_dir tmp_dir (function () ->
-      Sys.command (Printf.sprintf "%s %s" (command_of_uri uri) url)
-    ) () in
-  if err = 0 then
-    Some dst
-  else
-    None
+  in_dir tmp_dir (fun s -> exec_download url s nv) (Unix.getcwd ())
 
 let patch p nv =
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
@@ -193,14 +221,6 @@ let patch p nv =
   in_dir dirname (fun () ->
     Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
   ) ()
-
-let clone repo nv =
-  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
-  log "cloning %s into %s" repo dirname;
-  if Filename.check_suffix repo "git" then
-    Sys.command (Printf.sprintf "git clone %s %s" repo dirname)
-  else
-    Globals.error_and_exit "Cannot infer the VCS type of %s" repo
 
 let update nv =
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in

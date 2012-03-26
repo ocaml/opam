@@ -97,17 +97,16 @@ module Server : SERVER with type t = server_state = struct
 
   let getArchive t n_v = 
     let spec = File.Spec.find_err (Path.index t.home (Some n_v)) in
-    let urls = File.Spec.urls spec in
-    match urls with
-      | [] -> 
-        (* if no url is provided, look at an archive in the same path
-           having the right name *)
-          let p = Path.archives_targz t.home (Some n_v) in
-          (match Path.find_binary p with
-          | Path.File s -> Some s
-          | _           -> error "Cannot find %S" (string_of_nv n_v))
 
-      | urls ->
+    (* look at an archive in the same path
+       having the right name *)
+    let p = Path.archives_targz t.home (Some n_v) in
+    match Path.find_binary p with
+      | Path.File s -> Some s
+      | _           -> 
+        match File.Spec.urls spec with
+          | [] -> error "Cannot find %S in local repository and no external url provided" (string_of_nv n_v)
+          | urls ->
           (* if some urls are provided, check for external urls *)
           let external_urls =
             List.fold_left (fun accu -> function External (_,s) -> s::accu | _ -> accu) [] urls in

@@ -105,6 +105,8 @@ sig
   (** the root of every path *)
   val root : filename (* ~/ *)
 
+  val cwd : filename (* $PWD *)
+
   (** path in the packager filesystem, contains the collection of libraries and programs *)
   val package : t -> string (* computed from $PWD *) -> filename
 
@@ -173,6 +175,10 @@ sig
   (** Returns the same meaning as [archive] but extracted in the right path (corresponding to name_version) . *)
   val extract : name_version -> raw_binary archive -> binary_data contents_rec
 
+  (** Creates an archive entitled [string] 
+      in the same directory as [filename] (which is also a directory). *)
+  val to_archive : string (* archive name *) -> filename -> unit
+
   (** Executes an arbitrary list of command inside "build/NAME-VERSION". 
       For the [int], see [Sys.command]. 
       In particular, the execution continues as long as each command returns 0. *)
@@ -239,8 +245,6 @@ module Path : PATH = struct
   | Normalized s -> Normalized (f s)
   | Raw s -> Raw (f s)
 
-  let normalize s = Normalized (Run.getchdir (Run.getchdir s))
-
   let (//) = sprintf "%s/%s"
   let concat f (B s) = filename_map (function "/" -> "" // s | filename -> filename // s) f
   let (///) = concat
@@ -248,6 +252,8 @@ module Path : PATH = struct
     { home ; home_ocamlversion = home // Globals.ocaml_version }
 
   let root = Raw "/"
+  let cwd = Normalized (Run.normalize ".")
+
   let package _ s =
     (* REMARK this should be normalized *)
     Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (String.strip ~chars:"/" s))
@@ -291,7 +297,7 @@ module Path : PATH = struct
 
   let find = find_ (fun fic -> Filename (Internal fic))
 
-  let find_binary = find_ (fun fic -> Raw_binary (BatFile.with_file_in fic BatIO.read_all))
+  let find_binary = find_ (fun fic -> Raw_binary (Run.read fic))
 
   let find_filename = find_ (fun fic -> Internal fic)
 
@@ -386,50 +392,9 @@ module Path : PATH = struct
 
   let exec t n_v = 
     Run.in_dir (s_of_filename (build t (Some n_v)))
-      (List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0)
+      Run.sys_command
 
   let basename s = B (Filename.basename (s_of_filename s))
-
-  (* This function is called by the client after he receives a package
-     archive from the server *)
-  let extract nv = function
-  | Archive (Raw_binary bin) -> 
-      R_lazy (fun () ->
-        (* As we received the binary from the server, it is "safe" to
-           assume that the file will be untared at the right place
-           (ie. in NAME-VERSION/) *)
-        let oc = BatUnix.open_process_out "tar xzv" in
-        BatIO.write_string oc bin;
-        BatIO.close_out oc)
-        
-  | Links links -> 
-      R_lazy (fun () -> 
-
-        let rec download = function
-        | [] -> Globals.error_and_exit "No archive found"
-        | Internal f :: urls -> download_aux f urls
-        | External (uri, url) :: urls ->
-            match Run.download (uri, url) with
-            | None   -> download urls
-            | Some f -> download_aux f urls
-        and download_aux f urls =
-          if Run.untar f nv <> 0 then
-            download urls in
-
-        let patch = function
-        | Internal p  ->
-            if Run.patch p nv <> 0 then
-              Globals.error_and_exit "Unable to apply path %S" p
-        | External (uri, url) ->
-            match Run.download (uri, url) with
-            | None   -> Globals.error_and_exit "Patch %S is unavailable" url
-            | Some p ->
-                if Run.patch p nv <> 0 then
-                  Globals.error_and_exit "Unable to apply path %S" p in
-        
-        download links.urls;
-        List.iter patch links.patches;
-      )
 
   let lstat s = Unix.lstat (s_of_filename s)
   let files_of f = BatSys.files_of (s_of_filename f)
@@ -484,6 +449,64 @@ module Path : PATH = struct
         aux f name r_lazy
       | _ -> failwith "to complete !"
 
+
+  (* This function is called by the client after he receives a package
+     archive from the server *)
+  let extract nv = function
+  | Archive (Raw_binary bin) -> 
+      R_lazy (fun () ->
+        (* As we received the binary from the server, it is "safe" to
+           assume that the file will be untared at the right place
+           (ie. in NAME-VERSION/) *)
+        let oc = BatUnix.open_process_out "tar xzv" in
+        BatIO.write_string oc bin;
+        BatIO.close_out oc)
+        
+  | Links links -> 
+      R_lazy (fun () -> 
+
+        let rec download = function
+        | [] -> Globals.error_and_exit "No archive found"
+        | Internal f :: urls -> download_aux f urls
+        | External (uri, url) :: urls ->
+            match Run.download (uri, url) nv with
+            | Run.Url_error   -> download urls
+            | Run.From_http f -> download_aux f urls
+            | Run.From_git    -> ()
+        and download_aux f urls =
+          if Run.untar f nv <> 0 then
+            download urls in
+
+        let patch = function
+        | External (Run.Config, p)
+        | External (Run.Install, p) ->
+          if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.string_of_nv (fst nv) (snd nv)) p) then
+            Globals.error_and_exit "overwrite the config or install already existing ?"
+          else
+            add_rec (Raw (Namespace.string_of_nv (fst nv) (snd nv))) (R_filename [Raw p])
+        | Internal p  ->
+            if Run.patch p nv <> 0 then
+              Globals.error_and_exit "Unable to apply path %S" p
+        | External (uri, url) ->
+            match Run.download (uri, url) nv with
+            | Run.Url_error   -> Globals.error_and_exit "Patch %S is unavailable" url
+            | Run.From_git    -> failwith "to complete"
+            | Run.From_http p ->
+                if Run.patch p nv <> 0 then
+                  Globals.error_and_exit "Unable to apply path %S" p in
+        
+        download links.urls;
+        List.iter patch links.patches;
+      )
+
+  let to_archive archive_filename tmp_nv = 
+    let fic = s_of_filename tmp_nv in
+    match
+      Run.in_dir (Filename.dirname fic) 
+        Sys.command (Printf.sprintf "tar czvf %s %s" archive_filename (Filename.basename fic))
+    with
+      | 0 -> ()
+      | _ -> failwith "tar creation failed"
 
   let ocaml_options_of_library t name = 
     I (Printf.sprintf "%s" (s_of_filename (lib t name)))

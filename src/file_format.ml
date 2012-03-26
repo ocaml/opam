@@ -71,5 +71,8 @@ let parse_l_url =
       match s1 with
         | "http" -> Path.External ((match Globals.os with Globals.Darwin -> Run.Http_ftp | _ -> Run.Http_wget), s2)
         | "local" -> Path.Internal s2
+        | "git" -> Path.External (Run.Git, s2)
+        | "config" -> Path.External (Run.Config, s2)
+        | "install" -> Path.External (Run.Install, s2)
         | _ -> failwith "to complete !"
     with Invalid_string -> Printf.kprintf failwith "to complete : %S" s)
