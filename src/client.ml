@@ -400,7 +400,7 @@ module Client : CLIENT = struct
 
   let unknown_package name =
     Globals.error_and_exit
-      "ERROR: Unable to locate package \"%s\"\n"
+      "Unable to locate package \"%s\"\n"
       (Namespace.string_of_name  name)
 
   let install name = 
@@ -485,7 +485,7 @@ module Client : CLIENT = struct
     let spec = File.Spec.parse spec_s in
     let version = File.Spec.version spec in
     let name = File.Spec.name spec in
-    let spec_b = Raw_binary spec_s in
+    let spec_b = Raw_binary (File.Spec.to_string (File.Spec.filter_external_patches spec)) in
 
     (* look for the archive *)
     let archive_filename =
@@ -495,11 +495,26 @@ module Client : CLIENT = struct
         Some (Raw_binary (Run.read archive_filename))
       else
         let urls = File.Spec.urls spec in
-        (* XXX: support local files/patches *)
         if urls = [] then
           Globals.error_and_exit "No location specified for %s" archive_filename
         else
-          None in
+          let is_local_patch = function External ((Run.Config | Run.Install), _) -> true | _ -> false in
+          match File.Spec.patches spec with
+            | patches when patches <> [] && List.for_all is_local_patch patches ->
+              (* the ".spec" being processed contains only local patches *)
+              let nv = Namespace.Name name, version in
+              let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
+              let () =
+                begin
+                  Path.add_rec tmp_nv (Path.extract nv (Links { urls ; patches }));
+                  Path.to_archive archive_filename tmp_nv;
+                  Path.remove tmp_nv;
+                end in
+              Some (Raw_binary (Run.read archive_filename))
+            | patches when List.for_all (fun p -> not (is_local_patch p)) patches -> 
+              (* in case there is no patch or it contains only external link *)
+              None
+            | _ -> failwith "the patch contains both internal and external links, situation not handled yet" in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)

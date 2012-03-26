@@ -1,0 +1,8 @@
+install "ocamlre" {
+  lib = [
+    "_build/lib/*.cma";
+    "_build/lib/*.cmxa";
+    "_build/lib/*.a";
+    "_build/lib/*.cmi";
+  ]
+}

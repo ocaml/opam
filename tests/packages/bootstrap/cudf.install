@@ -1,0 +1,8 @@
+install "cudf" {
+  lib = [
+    "_build/*.cma";
+    "_build/*.cmxa";
+    "_build/*.a";
+    "_build/*.cmi";
+  ]
+}
