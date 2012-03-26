@@ -117,7 +117,7 @@ module Server : SERVER with type t = server_state = struct
           else
             error "No archive associated to package %S" (string_of_nv n_v)
 
-  let f_archive t n_v opam archive =
+  let storeArchive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in
     let archive_file = Path.archives_targz t.home (Some n_v) in
     begin match opam with
@@ -128,7 +128,7 @@ module Server : SERVER with type t = server_state = struct
       | Some f -> Path.add archive_file (Path.File (Binary f))
     end
 
-  let mapArchive t name f o_key = 
+  let processArchive o_key t (name, v) spec archive = 
     let hashes = Path.hashes t.home name in
     let key = 
       match o_key, File.Security_key.find hashes with 
@@ -143,18 +143,21 @@ module Server : SERVER with type t = server_state = struct
             error
               "secret keys differ for package %S"
               (Namespace.string_of_name name)
-      | _ ->
+      | Some _, None ->
           error
             "no previous keys stored for package %S"
+            (Namespace.string_of_name name)
+      | None, Some _ ->
+          error
+            "no key given and the package %S has already been uploaded"
             (Namespace.string_of_name name) in
-    f t;
+    storeArchive t (name, v) spec archive;
     key
 
-  let newArchive t n_v opam archive = 
-    mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) None
+  let newArchive = processArchive None
 
-  let updateArchive t n_v opam archive key =
-    let (_ : security_key) = mapArchive t (fst n_v) (fun t -> f_archive t n_v opam archive) (Some key) in
+  let updateArchive t n_v spec archive key =
+    let (_ : security_key) = processArchive (Some key) t n_v spec archive in
     ()
 end
 
