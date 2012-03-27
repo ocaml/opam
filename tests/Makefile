@@ -8,7 +8,7 @@ ENV           = export OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH
 OCPGET        = $(ENV) ocp-get --debug --root $(OPAM_ROOT)
 OCPGET_SERVER = $(ENV) ocp-get-server --debug --root $(OPAM_SERVER_ROOT)
 
-PACKAGES = P1-1 P1-2 P2-1 P2-1 P3-1-weird.version P4-1
+PACKAGES = P1-1 P1-2 P2-1 P2-1 P3-1~weird.version P4-1
 
 ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
