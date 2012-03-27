@@ -16,19 +16,35 @@
 open ExtList
 open ExtString
 open Namespace
+open Uri
 
 let log fmt =
   Globals.log "PATH" fmt
 
 type url = {
+  uri: uri option;
   hostname: string;
-  port: int;
+  port: int option;
 }
 
-let url hostname port = { hostname; port }
+let url ?uri ?port hostname =
+  let uri, hostname = match uri with
+    | None     -> uri_of_url hostname
+    | Some uri -> Some uri, hostname in
+  let port = match port, uri with
+    | Some p, _        -> Some p
+    | None  , None     -> Some Globals.default_port
+    | _                -> None in
+  { uri; hostname; port }
 
 let string_of_url url =
-  Printf.sprintf "%s:%d" url.hostname url.port
+  let uri = match url.uri with
+    | None   -> ""
+    | Some u -> string_of_uri u in
+  let port = match url.port with
+    | None   -> ""
+    | Some p -> ":" ^ string_of_int p in
+  Printf.sprintf "%s%s%s" uri url.hostname port
 
 type 'a ocaml_options = 
   | I of 'a
@@ -37,7 +53,7 @@ type raw_binary =
   | Raw_binary of string (* contents *)
 
 type raw_filename =
-  | External of Run.uri * string
+  | External of uri * string
   | Internal of string (* pointer to the local contents *)
 
 type binary_data = 
@@ -326,9 +342,11 @@ module Path : PATH = struct
       None
 
   let index_list t =
+    let index_path = index t None in
+    let is_file f = is_directory (concat index_path f) = None in
     let files =
-      match find (index t None) with
-      | Directory l -> l
+      match find index_path with
+      | Directory l -> List.filter is_file l
       | File _
       | Not_found _ -> [] in
     List.map (nv_of_extension Namespace.default_version) files
@@ -478,8 +496,8 @@ module Path : PATH = struct
             download urls in
 
         let patch = function
-        | External (Run.Config, p)
-        | External (Run.Install, p) ->
+        | External (Config, p)
+        | External (Install, p) ->
           if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.string_of_nv (fst nv) (snd nv)) p) then
             Globals.error_and_exit "overwrite the config or install already existing ?"
           else

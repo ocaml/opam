@@ -19,6 +19,7 @@ open Server
 open Solver
 open Client
 open SubCommand
+open Uri
 
 let version () =
   Printf.printf "\
@@ -55,39 +56,55 @@ let parse_args fn () =
 
 (* ocp-get init [HOSTNAME[:PORT]]*)
 let init =
-  let git = ref false in {
+  let git_repo = ref false in
+  {
   name     = "init";
   usage    = "";
   synopsis = "Initial setup";
   help     = "Create the initial config files";
   specs    = [
-    ("--git-repo", Arg.Set git, " Use a read-only git repository")
+    ("--git-repo", Arg.Set git_repo, "Get in sync with a git repository of packages")
   ];
   anon;
   main     =
     parse_args (function
-    | []            -> Client.init !git (url Globals.default_hostname Globals.default_port)
-    | [ host]       -> Client.init !git (url host Globals.default_port)
+    | []            -> Client.init [url ~port:Globals.default_port Globals.default_hostname]
+    | [ host]       ->
+        if !git_repo then
+          Client.init [url ~uri:Git host]
+        else
+          Client.init [url ~port:Globals.default_port host]
     | [ host; port] ->
         let port =
           try int_of_string port
           with _ -> failwith (port ^ " is not a valid port") in
-        Client.init !git (url host port)
+        Client.init [url ~port host]
     | _ -> bad_argument ())
+}
+
+(* ocp-get list *)
+let list = {
+  name     = "list";
+  usage    = "";
+  synopsis = "Display information about all available packages";
+  help     = "";
+  specs    = [];
+  anon     = noanon;
+  main     = Client.list;
 }
 
 (* ocp-get info [PACKAGE] *)
 let info = {
   name     = "info";
-  usage    = "[package]*";
-  synopsis = "Display information about packages";
+  usage    = "[package]+";
+  synopsis = "Display information about specific packages";
   help     = "";
   specs    = [];
   anon;
   main     =
     parse_args (function
-    | [] -> Client.info None
-    | l  -> List.iter (fun name -> Client.info (Some (Name name))) l)
+    | [] -> raise (Arg.Bad "Missing package argument")
+    | l  -> List.iter (fun name -> Client.info (Name name)) l)
 }
 
 (* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
@@ -175,6 +192,7 @@ let remove = {
 
 let commands = [
   init;
+  list;
   info;
   config;
   install;

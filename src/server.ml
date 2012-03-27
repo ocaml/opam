@@ -171,7 +171,10 @@ module RemoteServer : SERVER with type t = url = struct
   (* untyped message exchange *)
   let send url m =
     let host = (gethostbyname url.hostname).h_addr_list.(0) in
-    let addr = ADDR_INET (host, url.port) in
+    let port = match url.port with
+      | None   -> Globals.error_and_exit "No port provided"
+      | Some p -> p in
+    let addr = ADDR_INET (host, port) in
     try
       Protocol.find (open_connection addr) m
     with _ ->

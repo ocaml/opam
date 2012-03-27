@@ -18,6 +18,7 @@ open Namespace
 open Path
 open Server
 open Solver
+open Uri
 
 let log fmt =
   Globals.log "CLIENT" fmt
@@ -27,10 +28,13 @@ sig
   type t
 
   (** Initializes the client a consistent state. *)
-  val init : git:bool -> url -> unit
+  val init : url list -> unit
 
-  (** Displays the installed package. [None] : a general summary is given. *)
-  val info : Namespace.name option -> unit
+  (** Displays all available packages *)
+  val list : unit -> unit
+
+  (** Displays a general summary of a package. *)
+  val info : Namespace.name -> unit
 
   type config_request = Include | Bytelink | Asmlink
 
@@ -58,8 +62,7 @@ module Client : CLIENT = struct
   open File
 
   type t = 
-      { server : url
-      ; git    : bool
+      { servers: url list
       ; home   : Path.t (* ~/.opam *) }
 
   (* Look into the content of ~/.opam/config to build the client state *)
@@ -68,25 +71,32 @@ module Client : CLIENT = struct
   let load_state () =
     let home = Path.init !Globals.root_path in
     let config = File.Config.find_err (Path.config home) in
-    let server = File.Config.sources config in
-    let git = File.Config.git config in
-    { server ;  git; home }
+    let servers = File.Config.sources config in
+    { servers ; home }
 
-  let update_remote t =
-    let packages = RemoteServer.getList t.server in
+  let update_remote server home =
+    log "update-remote-server %s%s"
+      server.hostname
+      (match server.port with Some p -> ":" ^ string_of_int p | None -> "");
+    let packages = RemoteServer.getList server in
     List.iter
       (fun (n, v) -> 
-        let spec_f = Path.index t.home (Some (n, v)) in
+        let spec_f = Path.index home (Some (n, v)) in
         if not (Path.file_exists spec_f) then
-          let spec = RemoteServer.getSpec t.server (n, v) in
+          let spec = RemoteServer.getSpec server (n, v) in
           Path.add spec_f (Path.File (Binary spec));
-          Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
+          Globals.msg "New package available: %s\n" (Namespace.string_of_nv n v)
       ) packages
 
-  let update_git t =
-    let index_path = Path.string_of_filename (Path.index t.home None) in
-    let newfiles = Run.git_get_updates index_path in
-    Run.git_update index_path;
+  let update_git server home =
+    log "update-git-server %s" server.hostname;
+    let index_path = Path.string_of_filename (Path.index home None) in
+    if not (Sys.file_exists index_path) then
+      let err = Run.Git.clone server.hostname index_path in
+      if err <> 0 then
+        Globals.error_and_exit "%s: unknown git repository" server.hostname;
+    let newfiles = Run.Git.get_updates index_path in
+    Run.Git.update index_path;
     let package_of_file file =
       if Filename.check_suffix file ".spec" then
         Some (Namespace.nv_of_string (Filename.chop_extension file))
@@ -100,18 +110,19 @@ module Client : CLIENT = struct
       NV_set.empty
       newfiles in
     NV_set.iter (fun (n, v) ->
-      Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
+      Globals.msg "New package available: %s\n" (Namespace.string_of_nv n v)
     ) packages
 
-    let update () =
-      let t = load_state () in
-      if t.git then
-        update_git t
-      else
-        update_remote t
+  let update () =
+    let t = load_state () in
+    let one server =
+      match server.uri with
+      | Some Git -> update_git server t.home
+      | _        -> update_remote server t.home in
+    List.iter one t.servers
 
-  let init ~git url =
-    log "init %b %s" git (string_of_url url);
+  let init urls =
+    log "init %s" (String.concat " " (List.map string_of_url urls));
     let home = Path.init !Globals.root_path in
     let config_f = Path.config home in
     match File.Config.find config_f with
@@ -121,8 +132,7 @@ module Client : CLIENT = struct
       let config =
         File.Config.create
           Globals.api_version
-          git
-          url
+          urls
           (Version Globals.ocaml_version) in
       File.Config.add config_f config;
       File.Installed.add (Path.installed home) File.Installed.empty;
@@ -149,93 +159,92 @@ module Client : CLIENT = struct
          (fun map (n, v) -> 
            N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
-  let info package =
-    log "info %s" (match package with
-    | None -> "ALL"
-    | Some p -> Namespace.string_of_name p);
+  let s_not_installed = "--"
+
+  let list () =
+    log "list";
     let t = load_state () in
-    let s_not_installed = "--" in
-    match package with
+    (* Get all the installed packages *)
+    let installed = File.Installed.find_err (Path.installed t.home) in
+    let install_set = NV_set.of_list installed in
+    let map, max_n, max_v = 
+      List.fold_left
+        (fun (map, max_n, max_v) (name, version as n_v) ->
+          match N_map.Exceptionless.find name map with
+          | Some (Some _, _) -> map, max_n, max_v
+          | _ -> 
+              (* If the packet has not been processed yet or 
+                 if it has been processed but the version processed was not installed *)
+              let installed = NV_set.mem n_v install_set in
+              let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
+              let map =
+                N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
+              let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
+              let max_v =
+                if installed then
+                  max max_v (String.length (Namespace.string_of_version (snd n_v)))
+                else
+                  max_v in
+              map, max_n, max_v)
+        (N_map.empty, min_int, String.length s_not_installed)
+        (Path.index_list t.home) in
 
-    | None -> 
-        (* Get all the installed packages *)
-        let installed = File.Installed.find_err (Path.installed t.home) in
-        let install_set = NV_set.of_list installed in
-        let map, max_n, max_v = 
-          List.fold_left
-            (fun (map, max_n, max_v) (name, version as n_v) ->
-              match N_map.Exceptionless.find name map with
-                | Some (Some _, _) -> map, max_n, max_v
-                | _ -> 
-               (* If the packet has not been processed yet or 
-                  if it has been processed but the version processed was not installed *)
-                let installed = NV_set.mem n_v install_set in
-                let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
-                let map = N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
-                let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
-                let max_v =
-                  if installed then
-                    max max_v (String.length (Namespace.string_of_version (snd n_v)))
-                  else
-                    max_v in
-                map, max_n, max_v)
-            (N_map.empty, min_int, String.length s_not_installed)
-            (Path.index_list t.home) in
+    N_map.iter (fun name (version, description) ->
+      let description = match description with
+      | []   -> ""
+      | h::_ -> h in
+      let version = match version with
+      | None   -> s_not_installed
+      | Some v -> Namespace.string_of_version v in
+      Globals.msg "%s  %s  %s\n" 
+        (indent_left  (Namespace.string_of_name name) max_n)
+        (indent_right version max_v)
+        description) map
 
-        N_map.iter (fun name (version, description) ->
-          let description = match description with
-            | []   -> ""
-            | h::_ -> h in
-          let version = match version with
-            | None   -> s_not_installed
-            | Some v -> Namespace.string_of_version v in
-          Globals.msg "%s  %s  %s\n" 
-            (indent_left  (Namespace.string_of_name name) max_n)
-            (indent_right version max_v)
-            description) map
+  let info package =
+    log "info %s" (Namespace.string_of_name package);
+    let t = load_state () in
+    let find_from_name = find_from_name package in
+    let installed = File.Installed.find_err (Path.installed t.home) in
+    let o_v = 
+      Option.map
+        V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
+        (find_from_name installed) in
 
-    | Some name -> 
-        let find_from_name = find_from_name name in
-        let installed = File.Installed.find_err (Path.installed t.home) in
-        let o_v = 
-          Option.map
-            V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
-            (find_from_name installed) in
+    let v_set =
+      let v_set = 
+        match find_from_name (Path.index_list t.home) with
+        | None -> V_set.empty
+        | Some v -> v in
+      match o_v with
+      | None -> v_set
+      | Some v -> V_set.remove v v_set in
 
-        let v_set =
-          let v_set = 
-            match find_from_name (Path.index_list t.home) with
-            | None -> V_set.empty
-            | Some v -> v in
-          match o_v with
-          | None -> v_set
-          | Some v -> V_set.remove v v_set in
+    List.iter
+      (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
+      (  ("package    ", Namespace.string_of_name package)
 
-        List.iter
-          (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
-          (  ("package    ", Namespace.string_of_name name)
+         :: ("version    ",
+             match o_v with
+             | None   -> s_not_installed
+             | Some v -> Namespace.string_of_version v)
 
-          :: ("version    ",
-            match o_v with
-            | None   -> s_not_installed
-            | Some v -> Namespace.string_of_version v)
+         :: ("versions   ", V_set.to_string Namespace.string_of_version v_set)
 
-          :: ("versions   ", V_set.to_string Namespace.string_of_version v_set)
+         ::
+           match
+             match o_v with
+             | None -> if V_set.is_empty v_set then None else Some (V_set.max_elt v_set)
+             | Some v -> Some v
+           with
+           | None -> []
+           | Some v ->
 
-          ::
-            match
-              match o_v with
-                | None -> if V_set.is_empty v_set then None else Some (V_set.max_elt v_set)
-                | Some v -> Some v
-            with
-              | None -> []
-              | Some v ->
-
-              [ "description", "\n  " ^ 
-                let opam =
-                  File.Spec.find_err (Path.index t.home (Some (name, v))) in
-                String.concat "" (File.Spec.description opam) ]
-          )
+               [ "description", "\n  " ^ 
+                 let opam =
+                   File.Spec.find_err (Path.index t.home (Some (package, v))) in
+                 String.concat "" (File.Spec.description opam) ]
+      )
 
   let confirm msg = 
     Globals.msg "%s [Y/n] " msg;
@@ -334,6 +343,16 @@ module Client : CLIENT = struct
     let parallel (Solver.P l) = List.exists action l in
     List.exists parallel l
 
+  (* Iterate over the list of servers to find one with the corresponding archive *)
+  let getArchive servers nv =
+    let rec aux = function
+    | []   -> None
+    | h::t ->
+      match RemoteServer.getArchive h nv with
+      | None   -> aux t
+      | Some a -> Some a in
+    aux servers
+
   let proceed_tochange t nv_old (name, v as nv) =
     (* First, uninstall any previous version *)
     (match nv_old with 
@@ -345,7 +364,9 @@ module Client : CLIENT = struct
     (* Then, untar the archive *)
     let p_build = Path.build t.home (Some nv) in
     Path.remove p_build;
-    let archive = match RemoteServer.getArchive t.server nv with
+    (* XXX: maybe we want to follow the external urls first *)
+    (* XXX: at one point, we would need to check SHA1 consistencies as well *)
+    let archive = match getArchive t.servers nv with
       | Some tgz -> Archive tgz
       | None     ->
           let urls = File.Spec.urls spec in
@@ -501,7 +522,39 @@ module Client : CLIENT = struct
                 | None -> assert false (* an already installed package must figure in the index *) 
                 | Some v -> vpkg_of_nv (name, V_set.max_elt v))
             (N_map.bindings installed) } ]
-    
+
+  (* XXX: ask the user on which repo she wants to upload the new package *)
+  (* XXX: hanlde git repo as well ... *)
+  let iter_upload_server fn servers =
+    let one server =
+      if server.uri = Some Git then
+        None
+      else begin
+        if List.length servers <= 1 || confirm (Printf.sprintf "Upload to %s ?" server.hostname) then
+          Some (fn server)
+        else
+          None
+      end in
+    List.fold_left (fun k server ->
+      let nk = one server in
+      if k <> None && k <> nk then
+        Globals.error_and_exit "upload keys differ!"
+      else
+        nk
+    ) None servers
+
+  let newArchive servers nv spec archive =
+    iter_upload_server (fun server ->
+      RemoteServer.newArchive server nv spec archive
+    ) servers
+
+  let updateArchive servers nv spec archive k =
+    let (_ : unit option) =
+      iter_upload_server (fun server ->
+        RemoteServer.updateArchive server nv spec archive k
+      ) servers in
+    ()
+
   (* Upload reads NAME.spec (or NAME if it ends .spec) to get the current package version.
      Then it looks for NAME-VERSION.tar.gz in the same directory (if it exists).
      If not, it looks for provided URLs.
@@ -533,7 +586,7 @@ module Client : CLIENT = struct
         if urls = [] then
           Globals.error_and_exit "No location specified for %s" archive_filename
         else
-          let is_local_patch = function External ((Run.Config | Run.Install), _) -> true | _ -> false in
+          let is_local_patch = function External ((Config|Install), _) -> true | _ -> false in
           match File.Spec.patches spec with
             | patches when patches <> [] && List.for_all is_local_patch patches ->
               (* the ".spec" being processed contains only local patches *)
@@ -559,11 +612,14 @@ module Client : CLIENT = struct
     let o_key = File.Security_key.find (Path.keys t.home name) in
     match o_key with
     | None   ->
-        let k = RemoteServer.newArchive t.server (name, version) spec_b archive in
-        let _  = Server.newArchive local_server (name, version) spec_b archive in
+        let k1 = newArchive t.servers (name, version) spec_b archive in
+        let k2 = Server.newArchive local_server (name, version) spec_b archive in
+        let k = match k1 with
+          | None   -> k2
+          | Some k -> k in
         File.Security_key.add (Path.keys t.home name) k
     | Some k ->
-        RemoteServer.updateArchive t.server (name, version) spec_b archive k;
+        updateArchive t.servers (name, version) spec_b archive k;
         Server.updateArchive local_server (name, version) spec_b archive k
 
   type config_request = Include | Bytelink | Asmlink

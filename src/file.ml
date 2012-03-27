@@ -18,6 +18,7 @@ open ExtList
 open Namespace
 open Path
 open File_format
+open Uri
 
 type ('a, 'b) text = 
   | Parsed of 'a 
@@ -139,15 +140,13 @@ struct
 
     (** destruct *)
     val opam_version : t -> int
-    val sources : t -> url
+    val sources : t -> url list
     val ocaml_version : t -> internal_version
-    val git : t -> bool
 
     (** construct *)
     val create :
       int  (* opam *) ->
-      bool (* git *)  ->
-      url ->
+      url list ->
       internal_version (* ocaml *) ->
       t
   end
@@ -158,31 +157,27 @@ struct
 
     type t =
         { version : int (* opam version *)
-        ; git : bool (* git repo *)
-        ; sources : url
+        ; sources : url list
         ; ocaml_version : internal_version }
 
     let version_of_string s = Version s
 
     let opam_version t = t.version
-    let git t = t.git
     let sources t = t.sources
     let ocaml_version t = t.ocaml_version
 
-    let create version git sources ocaml_version = { version ; git ; sources ; ocaml_version }
+    let create version sources ocaml_version = { version ; sources ; ocaml_version }
 
     let empty = {
       version = Globals.api_version;
-      git = false;
-      sources = url Globals.default_hostname Globals.default_port ;
+      sources = [url Globals.default_hostname];
       ocaml_version = Version Sys.ocaml_version
     }
 
    let to_string t =
-      Printf.sprintf "version: %d\ngit: %b\nsources: %s\nocaml-version: %s\n"
+      Printf.sprintf "version: %d\nsources: %s\nocaml-version: %s\n"
         t.version
-        t.git
-        (string_of_url t.sources)
+        (String.concat ", " (List.map string_of_url t.sources))
         (match t.ocaml_version with Version s -> s)
 
     let parse contents =
@@ -198,19 +193,22 @@ struct
               Globals.error_and_exit
                 "Fatal error: invalid value for 'version' field in %s/config. Exit"
                 !Globals.root_path in
-      let git = match Parse.Exceptionless.assoc_parsed "git" file with
-        | None   -> false
-        | Some b -> bool_of_string b in
       let sources =
-        try
-          let sources = Parse.assoc_parsed "sources" file in
-          let hostname, port = BatString.split sources ":" in
-          url hostname (try int_of_string port with Not_found -> Globals.default_port)
-        with _ ->
-          url Globals.default_hostname Globals.default_port in
+        Parse.assoc_parsed "sources" file in
+      let sources =
+        try List.map String.strip (String.nsplit sources ",")
+        with _ -> [sources] in
+      let one source =
+        let uri, hostname = uri_of_url source in
+        let hostname, port =
+          try
+            let u, p = BatString.split hostname ":" in
+            u, Some (int_of_string p)
+          with Not_found -> hostname, None in
+        url ?uri ?port hostname in
+      let sources = List.map one sources in
       let ocaml_version = try Parse.assoc_parsed "ocaml-version" file with Not_found -> Sys.ocaml_version in
       { version = version
-      ; git
       ; sources
       ; ocaml_version = Version ocaml_version }
   end
@@ -332,12 +330,9 @@ struct
           (String.concat "; " (List.map ps l)) in
       let plf k l = 
         pl k (List.map (function
-          | Internal s -> sprintf "local://%s" s
-          | External (Run.Http_wget, s) -> sprintf "http://%s" s
-          | External (Run.Http_ftp, s) -> sprintf "http://%s" s
-          | External (Run.Git, s) -> sprintf "git://%s" s
-          | External (Run.Config, s) -> sprintf "config://%s" s
-          | External (Run.Install, s) -> sprintf "install://%s" s) l) in
+          | Internal s        -> sprintf "local://%s" s
+          | External (uri, s) -> sprintf "%s%s" (string_of_uri uri) s
+        ) l) in
 
       sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
         Globals.api_version t.name
@@ -350,7 +345,7 @@ struct
     let filter_external_patches t = 
       { t with patches = 
           List.filter (function
-            | External ((Run.Config | Run.Install), _) -> false
+            | External ((Config|Install), _) -> false
             | _ -> true) t.patches }
 
     let parse str =
