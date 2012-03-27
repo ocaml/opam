@@ -22,6 +22,7 @@ type uri =
   | Config
   | Install
   | Local
+  | Ocp
 
 let uri_of_url s =
   try
@@ -32,13 +33,15 @@ let uri_of_url s =
     | "install" -> Some Install, s2
     | "local"   -> Some Local  , s2
     | "http"    -> Some Http   , s2
+    | "ocp"     -> Some Ocp    , s2
     | _         -> Globals.error_and_exit "invalid url: %s" s
   with _->
     None, s
 
 let string_of_uri = function
-  | Local  -> "local://"
-  | Http _ -> "http://"
-  | Git    ->  "git://"
+  | Local   -> "local://"
+  | Http    -> "http://"
+  | Git     -> "git://"
   | Config  -> "config://"
   | Install -> "install://"
+  | Ocp     -> "ocp://"

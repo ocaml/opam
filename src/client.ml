@@ -586,9 +586,8 @@ module Client : CLIENT = struct
         if urls = [] then
           Globals.error_and_exit "No location specified for %s" archive_filename
         else
-          let is_local_patch = function External ((Config|Install), _) -> true | _ -> false in
           match File.Spec.patches spec with
-            | patches when patches <> [] && List.for_all is_local_patch patches ->
+            | patches when patches <> [] && List.for_all (fun p -> None <> get_local_patch p) patches ->
               (* the ".spec" being processed contains only local patches *)
               let nv = Namespace.Name name, version in
               let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
@@ -599,7 +598,7 @@ module Client : CLIENT = struct
                   Path.remove tmp_nv;
                 end in
               Some (Raw_binary (Run.read archive_filename))
-            | patches when List.for_all (fun p -> not (is_local_patch p)) patches -> 
+            | patches when List.for_all (fun p -> None = get_local_patch p) patches -> 
               (* in case there is no patch or it contains only external link *)
               None
             | _ -> failwith "the patch contains both internal and external links, situation not handled yet" in
