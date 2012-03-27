@@ -326,9 +326,11 @@ module Path : PATH = struct
       None
 
   let index_list t =
+    let index_path = index t None in
+    let is_file f = is_directory (concat index_path f) = None in
     let files =
-      match find (index t None) with
-      | Directory l -> l
+      match find index_path with
+      | Directory l -> List.filter is_file l
       | File _
       | Not_found _ -> [] in
     List.map (nv_of_extension Namespace.default_version) files

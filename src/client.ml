@@ -85,6 +85,10 @@ module Client : CLIENT = struct
 
   let update_git t =
     let index_path = Path.string_of_filename (Path.index t.home None) in
+    if not (Sys.file_exists index_path) then
+      let err = Run.Git.clone t.server.hostname index_path in
+      if err <> 0 then
+        Globals.error_and_exit "%s: unknown git repository" t.server.hostname;
     let newfiles = Run.Git.get_updates index_path in
     Run.Git.update index_path;
     let package_of_file file =
@@ -103,12 +107,12 @@ module Client : CLIENT = struct
       Globals.msg "New package available: %s" (Namespace.string_of_nv n v)
     ) packages
 
-    let update () =
-      let t = load_state () in
-      if t.git then
-        update_git t
-      else
-        update_remote t
+  let update () =
+    let t = load_state () in
+    if t.git then
+      update_git t
+    else
+      update_remote t
 
   let init ~git url =
     log "init %b %s" git (string_of_url url);
@@ -171,7 +175,8 @@ module Client : CLIENT = struct
                   if it has been processed but the version processed was not installed *)
                 let installed = NV_set.mem n_v install_set in
                 let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
-                let map = N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
+                let map =
+                  N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
                 let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
                 let max_v =
                   if installed then
