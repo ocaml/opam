@@ -344,9 +344,7 @@ struct
 
     let filter_external_patches t = 
       { t with patches = 
-          List.filter (function
-            | External ((Config|Install), _) -> false
-            | _ -> true) t.patches }
+          List.filter (fun p -> None = get_local_patch p) t.patches }
 
     let parse str =
       let lexbuf = Lexing.from_string str in

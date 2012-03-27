@@ -14,7 +14,7 @@ ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: fresh init upload list install upload-new upgrade downgrade
+all: fresh init upload list install upload-new upgrade downgrade ocpbuild
 	@
 
 $(BIN)/ocp-get: ../ocp-get
@@ -23,11 +23,17 @@ $(BIN)/ocp-get: ../ocp-get
 $(BIN)/ocp-get-server: ../ocp-get-server
 	cp ../ocp-get-server $(BIN)/ocp-get-server
 
+$(BIN)/ocp-build: ../_obuild/unixrun
+	echo 'exec $(PWD)/_obuild/unixrun $(PWD)/boot/ocp-build.boot "$$@"' > $(BIN)/ocp-build
+	chmod +x $(BIN)/ocp-build
+
 runserver: fresh $(BIN)/ocp-get-server
 	$(OCPGET_SERVER)
 
 init: fresh $(BIN)/ocp-get
 	$(OCPGET) init $(LOCALHOST)
+
+ocpbuild: $(BIN)/ocp-build
 
 upload: $(ARCHIVES) init
 	cd packages && $(OCPGET) upload P1

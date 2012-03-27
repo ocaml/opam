@@ -77,6 +77,8 @@ type internal_version = Version of string
 
 type security_key = Random of string
 
+let get_local_patch = function External ((Config|Install|Ocp), p) -> Some p | _ -> None
+
 module type RANDOM_KEY = sig
   val new_key : unit -> security_key
 end
@@ -495,21 +497,23 @@ module Path : PATH = struct
           if Run.untar f nv <> 0 then
             download urls in
 
-        let patch = function
-        | External (Config, p)
-        | External (Install, p) ->
-          if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.string_of_nv (fst nv) (snd nv)) p) then
-            Globals.error_and_exit "overwrite the config or install already existing ?"
-          else
-            add_rec (Raw (Namespace.string_of_nv (fst nv) (snd nv))) (R_filename [Raw p])
-        | Internal p  ->
-            if Run.patch p nv <> 0 then
-              Globals.error_and_exit "Unable to apply path %S" p
-        | External (uri, url) ->
-            match Run.download (uri, url) nv with
-            | Run.Url_error   -> Globals.error_and_exit "Patch %S is unavailable" url
-            | Run.From_git    -> failwith "to complete"
-            | Run.From_http p ->
+        let patch p = 
+          match get_local_patch p with
+          | Some p ->
+            if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.string_of_nv (fst nv) (snd nv)) p) then
+              Globals.error_and_exit "overwrite the config or install already existing ?"
+            else
+              add_rec (Raw (Namespace.string_of_nv (fst nv) (snd nv))) (R_filename [Raw p])
+          | None -> 
+            match p with
+            | Internal p  ->
+              if Run.patch p nv <> 0 then
+                Globals.error_and_exit "Unable to apply path %S" p
+            | External (uri, url) ->
+              match Run.download (uri, url) nv with
+              | Run.Url_error   -> Globals.error_and_exit "Patch %S is unavailable" url
+              | Run.From_git    -> failwith "to complete"
+              | Run.From_http p ->
                 if Run.patch p nv <> 0 then
                   Globals.error_and_exit "Unable to apply path %S" p in
         

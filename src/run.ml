@@ -232,7 +232,8 @@ let exec_download =
   | Git, repo       -> clone repo
   | Config, _
   | Install, _
-  | Local, _ -> assert false
+  | Local, _ 
+  | Ocp, _ -> assert false
 
 let download url nv =
   if not (Sys.file_exists tmp_dir) then
