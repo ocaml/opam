@@ -15,6 +15,7 @@
 
 open ExtString
 open Namespace
+open Uri
 
 let log fmt = Globals.log "RUN" fmt
 
@@ -159,13 +160,6 @@ let untar file nv =
   ) moves;
   err
 
-type uri = 
-  | Http_wget
-  | Http_ftp
-  | Git
-  | Config
-  | Install
-
 let sys_command = 
   List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0
 
@@ -228,11 +222,14 @@ let exec_download =
     else
       Url_error in
   function
-  | Http_wget, url -> http "wget" url
-  | Http_ftp, url  -> http "ftp" url
-  | Git, repo      -> clone repo
+  | Http, url ->
+      (match Globals.os with
+      | Globals.Darwin -> http "fpt"  url
+      | _              -> http "wget" url)
+  | Git, repo       -> clone repo
   | Config, _
-  | Install, _ -> assert false
+  | Install, _
+  | Local, _ -> assert false
 
 let download url nv =
   if not (Sys.file_exists tmp_dir) then
@@ -245,3 +242,8 @@ let patch p nv =
   in_dir dirname (fun () ->
     Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
   ) ()
+
+
+
+
+
