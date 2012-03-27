@@ -6,4 +6,5 @@ package "cudf" {
   urls = [ "http://www.ocamlpro.com/pub/cudf.tar.bz2" ]
   patches = [ "install://cudf.install" ]
   make = [ "make" ]
+  depends = "extlib"
 }

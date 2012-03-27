@@ -58,6 +58,10 @@ let string n s =
   try parse_string (List.assoc n s.contents)
   with Not_found -> Globals.error_and_exit "Bad format: field'%S is missing" n
 
+let string_option n s =
+  try Some (parse_string (List.assoc n s.contents))
+  with Not_found -> None
+
 let rec string_of_content = function
   | String s -> Printf.sprintf "%S" s
   | List l   ->
