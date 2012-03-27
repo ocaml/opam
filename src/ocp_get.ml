@@ -61,7 +61,7 @@ let init =
   synopsis = "Initial setup";
   help     = "Create the initial config files";
   specs    = [
-    ("--git-repo", Arg.Set git, " Use a read-only git repository")
+    ("--git-repo", Arg.Set git, " Sync with a git repository instead of a remote OPAM server")
   ];
   anon;
   main     =

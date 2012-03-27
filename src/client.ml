@@ -85,8 +85,8 @@ module Client : CLIENT = struct
 
   let update_git t =
     let index_path = Path.string_of_filename (Path.index t.home None) in
-    let newfiles = Run.git_get_updates index_path in
-    Run.git_update index_path;
+    let newfiles = Run.Git.get_updates index_path in
+    Run.Git.update index_path;
     let package_of_file file =
       if Filename.check_suffix file ".spec" then
         Some (Namespace.nv_of_string (Filename.chop_extension file))
