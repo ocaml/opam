@@ -237,9 +237,11 @@ module Solver : SOLVER = struct
         aux acc (F.start g)
     end
 
-    module PG_bfs = Make_fs (Graph.Traverse.Bfs (PG))
-    module PG_dfs = Make_fs (Graph.Traverse.Dfs (PG))
     module PG_topo = Graph.Topological.Make (PG)
+    (* (* example of instantiation *)
+       module PG_bfs = Make_fs (Graph.Traverse.Bfs (PG))
+       module PG_dfs = Make_fs (Graph.Traverse.Dfs (PG))
+    *)
 
     module O_pkg = struct type t = Cudf.package let compare = compare end
     module PkgMap = BatMap.Make (O_pkg)
@@ -338,8 +340,8 @@ module Solver : SOLVER = struct
                     universe)) in
 
           let _, l_act = 
-            PG_bfs.fold
-              (fun (set_recompile, l_act) pkg -> 
+            PG_topo.fold
+              (fun pkg (set_recompile, l_act) -> 
                 let add_succ_rem pkg set act =
                   (let set = PkgSet.remove pkg set in
                    try
@@ -356,10 +358,11 @@ module Solver : SOLVER = struct
                       add_succ_rem pkg set_recompile (To_recompile pkg)
                     else
                       set_recompile, l_act)
-              (PkgSet.empty, List.rev l_del)
+              
               (let graph_installed = PG.copy graph_installed in
                let () = List.iter (PG.remove_vertex graph_installed) l_del_p in
-               graph_installed) in
+               graph_installed)
+              (PkgSet.empty, List.rev l_del) in
 
           Some
             (solution_map
