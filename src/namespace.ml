@@ -22,11 +22,12 @@ struct
 
   type version =
     | Deb of Debian.Format822.version
-    | Head (* Head of a version controled repository *)
+    | Head of [`uptodate|`behind] (* Head of a version controled repository *)
 
   let string_of_version = function
-    | Deb s -> s
-    | Head  -> "HEAD"
+    | Deb s           -> s
+    | Head `uptodate  -> "HEAD"
+    | Head `behind    -> "HEAD*"
 
   let string_of_nv (Name n) version =
     sprintf "%s-%s" n (string_of_version version)
@@ -35,7 +36,9 @@ struct
 
   let version_of_string version =
     if version = "HEAD" then
-      Head
+      Head `uptodate
+    else if version = "HEAD*" then
+      Head `behind
     else
       let valid =
         try let _ = String.index version '-' in false
