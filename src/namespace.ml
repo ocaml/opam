@@ -29,7 +29,12 @@ struct
   let version_of_string version = { deb = version }
  
   let nv_of_string s = 
-    let n, version = BatString.split s "-" in
+    let n, version =
+      try
+        let i = String.rindex s '-' in
+        String.sub s 0 i, String.sub s (i+1) (String.length s - i - 1)
+      with _ ->
+        Globals.error_and_exit "%s is not a valid versioned package name" s in
     Name n, version_of_string version
 
   let default_version = "0"
