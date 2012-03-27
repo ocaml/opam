@@ -179,7 +179,7 @@ begin library "ocp-get-lib"
   ocamlopt = [ "ocp-ocamlopt.opt" ]
 *)
   dirname = [ "src" ]
-  comp   += [ "-annot" ]
+  comp   += [ "-annot" "-warn-error" "A" ]
   files   = [
     "globals.ml"
     "uri.ml"
@@ -210,7 +210,7 @@ begin program "ocp-get"
   ocamlopt = [ "ocp-ocamlopt.opt" ]
 *)
   dirname  = [ "src" ]
-  comp    += [ "-annot" ]
+  comp    += [ "-annot" "-warn-error" "A" ]
   files    = [
     "solver.ml"
     "client.ml"
@@ -225,7 +225,7 @@ begin program "ocp-get-server"
   ocamlopt = [ "ocp-ocamlopt.opt" ]
 *)
   dirname  = [ "src" ]
-  comp    += [ "-annot" ]
+  comp    += [ "-annot" "-warn-error" "A" ]
   files    = [ "ocp_get_server.ml" ]
   requires = [ "ocp-get-lib" ]
 end

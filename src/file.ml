@@ -299,7 +299,7 @@ struct
 
     let description t = t.description
     let name t = t.name
-    let version t = {deb = t.version}
+    let version t = Namespace.version_of_string t.version
     let urls t = t.urls
     let patches t = t.patches
     let make t = t.make

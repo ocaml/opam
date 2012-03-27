@@ -170,7 +170,10 @@ module Git = struct
      at [dirname] *)
   let get_updates dirname =
     in_dir dirname (fun () ->
-      read_command_output "git diff remotes/origin/HEAD --name-only"
+      if Sys.command "git fetch" = 0 then
+        read_command_output "git diff remotes/origin/HEAD --name-only"
+      else
+        Globals.error_and_exit "Cannot fetch git repository %s" dirname
     ) ()
 
   (* Update the git repository located at [dirname] *)
