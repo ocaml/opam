@@ -7,5 +7,5 @@ package "ocpget" {
   patches = [ "install://ocpget.install" ]
   make = [ "make" ]
 
-  depends = [ "cudf, dose, extlib, ocamlarg, ocamlgraph" ]
+  depends = "cudf, dose, extlib, ocamlarg, ocamlgraph"
 }

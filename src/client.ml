@@ -465,6 +465,9 @@ module Client : CLIENT = struct
       | None -> unknown_package name
       | Some v -> 
         let map_installed = File.Installed.find_map (Path.installed t.home) in
+
+        (* ENHANCEMENT message which propose to upload the missing backward dependencies *)
+
         resolve t
           l_index
           map_installed

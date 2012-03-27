@@ -270,6 +270,8 @@ struct
       urls       : raw_filename list;
       patches    : raw_filename list;
       make       : string list;
+      depends    : string option;
+      conflicts  : string option;
       fields     : (string * string) list;
     }
 
@@ -280,6 +282,8 @@ struct
       urls        = [];
       make        = [];
       fields      = [];
+      depends     = None;
+      conflicts   = None;
       patches     = [];
     }
 
@@ -301,16 +305,14 @@ struct
     let make t = t.make
 
     let default_package (t:t) =
-      let assoc f s =
-        try f (List.assoc s t.fields)
-        with Not_found -> [] in
-
+      let bind f = function
+        | None -> []
+        | Some x -> f x in
       { D.default_package with 
         D.name      = t.name ;
         D.version   = t.version ;
-        D.extras    = [] ;
-        D.depends   = assoc D.parse_vpkgformula s_depends ;
-        D.conflicts = assoc D.parse_vpkglist s_conflicts }
+        D.depends   = bind D.parse_vpkgformula t.depends ;
+        D.conflicts = bind D.parse_vpkglist t.conflicts }
 
     let to_package t installed =
       let p = default_package t in
@@ -334,6 +336,7 @@ struct
 
       sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
         Globals.api_version t.name
+
         (String.concat "" (List.map pf t.fields))
         (pl s_make t.make)
         (plf s_urls t.urls)
@@ -367,7 +370,10 @@ struct
       let make = 
         let make = string_list s_make statement in 
         if make = [] then [ "./build.sh" ] else make in
-      let fields =
+      let depends = string_option s_depends statement in
+      let conflicts = string_option s_conflicts statement in
+
+      let fields = (* warning : 'List ...' values are not kept in [statement.contents] (only 'String ...') *)
         let unstring accu (k,v) =
           match v with
           | String s -> (k, s) :: accu
@@ -379,6 +385,8 @@ struct
       ; urls
       ; patches
       ; make
+      ; depends
+      ; conflicts
       ; name   = statement.File_format.name }
 
   end
