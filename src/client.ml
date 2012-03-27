@@ -42,7 +42,7 @@ sig
   val config : bool (* true : recursive search *) -> config_request -> Namespace.name list -> unit
 
   (** Installs the given package. *)
-  val install : Namespace.name -> unit
+  val install : string -> unit
 
   (** Downloads the latest packages available. *)
   val update : unit -> unit
@@ -458,23 +458,40 @@ module Client : CLIENT = struct
       (Namespace.string_of_name  name)
 
   let install name = 
-    log "install %s" (Namespace.string_of_name name);
+    log "install %s" name;
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    match find_from_name name l_index with
-      | None -> unknown_package name
-      | Some v -> 
-        let map_installed = File.Installed.find_map (Path.installed t.home) in
+    let map_installed = File.Installed.find_map (Path.installed t.home) in
+    match find_from_name (Namespace.Name name) l_index with
 
-        (* ENHANCEMENT message which propose to upload the missing backward dependencies *)
+      | None   ->
+          if Namespace.is_valid_nv name then begin
+            let n, v = Namespace.nv_of_string name in
+            Globals.msg
+              "Package %s not found, looking for package %s version %s"
+              name (Namespace.string_of_name n) (Namespace.string_of_version v);
+            (match File.Spec.find (Path.index t.home (Some (n, v))) with
+            | None   -> unknown_package n
+            | Some _ ->
+              resolve t
+                l_index
+                map_installed
+                [ { Solver.wish_install = 
+                    List.map vpkg_of_nv ((n, v) :: N_map.bindings (N_map.remove n map_installed))
+                  ; wish_remove = [] 
+                  ; wish_upgrade = [] } ])
+          end else
+            unknown_package (Namespace.Name name)
 
-        resolve t
-          l_index
-          map_installed
-          [ { Solver.wish_install = 
-              List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings (N_map.remove name map_installed))
-            ; wish_remove = [] 
-            ; wish_upgrade = [] } ]
+      | Some v ->
+          let name = Namespace.Name name in
+          resolve t
+            l_index
+            map_installed
+            [ { Solver.wish_install = 
+                List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings (N_map.remove name map_installed))
+              ; wish_remove = [] 
+              ; wish_upgrade = [] } ]
 
   let remove name =
     log "remove %s" (Namespace.string_of_name name);

@@ -33,6 +33,10 @@ struct
     if not valid then
       Globals.error_and_exit "%s is not a valid version (it contains '-')" version;
     { deb = version }
+
+  let is_valid_nv s =
+    try let _ = String.rindex s '-' in true
+    with Not_found -> false
  
   let nv_of_string s = 
     let n, version =

@@ -143,7 +143,7 @@ let install = {
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args (List.iter (fun name -> Client.install (Name name)))
+  main     = parse_args (List.iter (fun name -> Client.install name))
 }
 
 (* ocp-get update *)
