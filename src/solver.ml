@@ -268,11 +268,7 @@ module Solver : SOLVER = struct
     let filter_dependencies f_direction pkg_l l_pkg_pb =
       let pkg_map = 
         List.fold_left
-          (fun map pkg -> 
-            NV_map.add
-              (Namespace.Name pkg.Debian.Packages.name, { Namespace.deb = pkg.Debian.Packages.version }) 
-              pkg
-              map)
+          (fun map pkg -> NV_map.add (Namespace.nv_of_dpkg pkg) pkg map)
           NV_map.empty
           l_pkg_pb in
       get_table l_pkg_pb
@@ -301,10 +297,11 @@ module Solver : SOLVER = struct
           List.map (fun pkg -> 
             NV_map.find 
               (Namespace.Name pkg.Cudf.package, 
-               { Namespace.deb =
-                   Debian.Debcudf.get_real_version
-                     table
-                     (pkg.Cudf.package, pkg.Cudf.version) }) pkg_map) l)
+               Namespace.version_of_string
+                 (Debian.Debcudf.get_real_version
+                    table
+                    (pkg.Cudf.package, pkg.Cudf.version))
+              ) pkg_map) l)
 
     let filter_backward_dependencies = filter_dependencies (fun x -> x)
     let filter_forward_dependencies = filter_dependencies PO.O.mirror
@@ -368,10 +365,10 @@ module Solver : SOLVER = struct
             (solution_map
                (fun pkg ->
                  Namespace.Name pkg.Cudf.package,
-                 { Namespace.deb =
-                     Debian.Debcudf.get_real_version
-                       table
-                       (pkg.Cudf.package, pkg.Cudf.version) })
+                 Namespace.version_of_string
+                   (Debian.Debcudf.get_real_version
+                      table
+                      (pkg.Cudf.package, pkg.Cudf.version) ))
                (List.map (fun x -> P [ x ]) (List.rev l_act))))
 
         (CudfDiff.resolve_diff universe 

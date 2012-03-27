@@ -450,7 +450,8 @@ module Client : CLIENT = struct
             ) sol
           | None -> ()
 
-  let vpkg_of_nv (name, v) = Namespace.string_of_name name, Some ("=", v.Namespace.deb)
+  let vpkg_of_nv (name, v) =
+    Namespace.string_of_name name, Some ("=", Namespace.string_of_version v)
 
   let unknown_package name =
     Globals.error_and_exit
@@ -501,8 +502,7 @@ module Client : CLIENT = struct
 
     let dependencies = 
       NV_set.of_list
-        (List.map
-           (fun d -> Namespace.Name d.Debian.Packages.name, { Namespace.deb = d.Debian.Packages.version })
+        (List.map Namespace.nv_of_dpkg
            (Solver.filter_forward_dependencies
               (match N_map.Exceptionless.find name installed with 
                 | None -> []
@@ -700,15 +700,12 @@ module Client : CLIENT = struct
       
       (* So first, get the list of installed packages *)
       let l_deb = debpkg_of_nv t installed l_index in
-      let nv pkg =
-        Namespace.Name pkg.Debian.Packages.name,
-        Namespace.version_of_string pkg.Debian.Packages.version in
             
       (* Then, get the packages we are looking for *)
       let l_pkg =
         List.filter
           (fun pkg ->
-            let name, version = nv pkg in
+            let name, version = Namespace.nv_of_dpkg pkg in
             List.exists (fun (n,v) -> n=name && v=version) versions)
           l_deb in
 
@@ -716,6 +713,6 @@ module Client : CLIENT = struct
       let dependencies =
         Solver.filter_backward_dependencies l_pkg l_deb in
 
-      iter_with_spaces one (List.map nv dependencies)
+      iter_with_spaces one (List.map Namespace.nv_of_dpkg dependencies)
 
 end
