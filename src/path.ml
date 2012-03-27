@@ -129,7 +129,7 @@ sig
   val package : t -> string (* computed from $PWD *) -> filename
 
   (** installed libraries for the package (at most one version installed) *)
-  val lib : t -> Namespace.name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
+  val lib : t -> name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
 
   (** contain installed binaries *)
   val bin : t -> filename (* $HOME_OPAM_OVERSION/bin *)
@@ -164,10 +164,10 @@ sig
   val pconfig : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.config *)
 
   (** security keys related to package name *)
-  val keys : t -> Namespace.name -> filename (* $HOME_OPAM/keys/NAME *)
+  val keys : t -> name -> filename (* $HOME_OPAM/keys/NAME *)
 
   (** similar as [keys] *)
-  val hashes : t -> Namespace.name -> filename (* $HOME_OPAM/hashes/NAME *)
+  val hashes : t -> name -> filename (* $HOME_OPAM/hashes/NAME *)
 
 
   (** Path utilities **)
@@ -212,7 +212,7 @@ sig
       point is reached.  When [basename] is not of the form
       "NAME-VERSION", or when we can not extract the version, [string]
       is returned as version. *)
-  val nv_of_extension : string (* version *) -> basename -> Namespace.name * Namespace.version
+  val nv_of_extension : string (* version *) -> basename -> name * version
 
   (** see [Filename.concat] *)
   val concat : filename -> basename -> filename
@@ -224,7 +224,7 @@ sig
   val is_directory : filename -> raw_filename option
 
   (** Returns the exact path to give to the OCaml compiler (ie. -I ...) *)
-  val ocaml_options_of_library : t -> Namespace.name -> string ocaml_options 
+  val ocaml_options_of_library : t -> name -> string ocaml_options 
   (* $HOME_OPAM/lib/NAME *)
 
   val string_of_filename: filename -> string
@@ -276,7 +276,7 @@ module Path : PATH = struct
     (* REMARK this should be normalized *)
     Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (String.strip ~chars:"/" s))
 
-  let lib t (Namespace.Name n) = Raw (t.home_ocamlversion // "lib" // n)
+  let lib t (Name n) = Raw (t.home_ocamlversion // "lib" // n)
   let bin t = Raw (t.home_ocamlversion // "bin")
 
   let mk_name_version t_home d ext n v = Raw (t_home // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
@@ -332,7 +332,7 @@ module Path : PATH = struct
 
     match try Some (Namespace.nv_of_string s) with _ -> None with
     | Some nv -> nv
-    | None -> Namespace.Name s, Namespace.version_of_string version
+    | None -> Name s, Namespace.version_of_string version
 
   let file_exists f = Sys.file_exists (s_of_filename f)
 

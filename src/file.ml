@@ -228,8 +228,8 @@ struct
     include IO_FILE
 
     (** destruct *)
-    val name        : t -> string
-    val version     : t -> Namespace.version
+    val name        : t -> name
+    val version     : t -> version
     val urls        : t -> raw_filename list
     val make        : t -> string list
     val patches     : t -> raw_filename list
@@ -298,7 +298,7 @@ struct
     let s_make        = "make"
 
     let description t = t.description
-    let name t = t.name
+    let name t = Namespace.name_of_string t.name
     let version t = Namespace.version_of_string t.version
     let urls t = t.urls
     let patches t = t.patches

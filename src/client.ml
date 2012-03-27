@@ -34,12 +34,12 @@ sig
   val list : unit -> unit
 
   (** Displays a general summary of a package. *)
-  val info : Namespace.name -> unit
+  val info : name -> unit
 
   type config_request = Include | Bytelink | Asmlink
 
   (** Depending on request, returns options or directories where the package is installed. *)
-  val config : bool (* true : recursive search *) -> config_request -> Namespace.name list -> unit
+  val config : bool (* true : recursive search *) -> config_request -> name list -> unit
 
   (** Installs the given package. *)
   val install : string -> unit
@@ -55,7 +55,7 @@ sig
   val upload : string -> unit
 
   (** Removes the given package. *)
-  val remove : Namespace.name -> unit
+  val remove : name -> unit
 end
 
 module Client : CLIENT = struct
@@ -463,7 +463,7 @@ module Client : CLIENT = struct
     let t = load_state () in
     let l_index = Path.index_list t.home in
     let map_installed = File.Installed.find_map (Path.installed t.home) in
-    match find_from_name (Namespace.Name name) l_index with
+    match find_from_name (Namespace.name_of_string name) l_index with
 
       | None   ->
           if Namespace.is_valid_nv name then begin
@@ -482,10 +482,10 @@ module Client : CLIENT = struct
                   ; wish_remove = [] 
                   ; wish_upgrade = [] } ])
           end else
-            unknown_package (Namespace.Name name)
+            unknown_package (Namespace.name_of_string name)
 
       | Some v ->
-          let name = Namespace.Name name in
+          let name = Namespace.name_of_string name in
           resolve t
             l_index
             map_installed
@@ -528,6 +528,19 @@ module Client : CLIENT = struct
     let t = load_state () in
     let l_index = Path.index_list t.home in
     let installed = File.Installed.find_map (Path.installed t.home) in
+    (* mark git repo with updates *)
+    let installed =
+      N_map.mapi (fun n -> function
+        | Head _ as v ->
+          let repo = Path.string_of_filename (Path.index t.home (Some (n, v))) in
+          if Run.Git.get_updates repo = [] then
+            Head `uptodate
+          else begin
+            Run.Git.update repo;
+            Head `behind
+          end
+        | v -> v
+      ) installed in
     resolve t
       l_index
       installed
@@ -594,8 +607,7 @@ module Client : CLIENT = struct
     let spec_b = Raw_binary (File.Spec.to_string (File.Spec.filter_external_patches spec)) in
 
     (* look for the archive *)
-    let archive_filename =
-      Namespace.string_of_nv (Namespace.Name name) version ^ ".tar.gz" in
+    let archive_filename = Namespace.string_of_nv name version ^ ".tar.gz" in
     let archive =
       if Sys.file_exists archive_filename then
         Some (Raw_binary (Run.read archive_filename))
@@ -607,7 +619,7 @@ module Client : CLIENT = struct
           match File.Spec.patches spec with
             | patches when patches <> [] && List.for_all (fun p -> None <> get_local_patch p) patches ->
               (* the ".spec" being processed contains only local patches *)
-              let nv = Namespace.Name name, version in
+              let nv = name, version in
               let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
               let () =
                 begin
@@ -623,7 +635,6 @@ module Client : CLIENT = struct
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
-    let name = Namespace.Name name in
     let local_server = server_init !Globals.root_path in
 
     let o_key = File.Security_key.find (Path.keys t.home name) in

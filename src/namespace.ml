@@ -13,16 +13,19 @@
 (*                                                                     *)
 (***********************************************************************)
 
+type name = Name of Cudf_types.pkgname
+
+type version =
+  | Deb of Debian.Format822.version
+  | Head of [`uptodate|`behind] (* Head of a version controled repository *)
+
+type name_version = name * version
+
 module Namespace =
 struct
   open Printf
 
-  type name = Name of Cudf_types.pkgname
   let name_compare = compare
-
-  type version =
-    | Deb of Debian.Format822.version
-    | Head of [`uptodate|`behind] (* Head of a version controled repository *)
 
   let string_of_version = function
     | Deb s           -> s
@@ -47,6 +50,8 @@ struct
         Globals.error_and_exit "%s is not a valid version (it contains '-')" version;
       Deb version
 
+  let name_of_string s = Name s
+
   let is_valid_nv s =
     try let _ = String.rindex s '-' in true
     with Not_found -> false
@@ -68,8 +73,6 @@ struct
   let to_string (Name n, v) =
     Printf.sprintf "%s %s" n (string_of_version v)
 end
-
-type name_version = Namespace.name * Namespace.version
 
 module N_map = BatMap.Make (struct open Namespace type t = name let compare = name_compare end)
 module V_set = BatSet.Make (struct open Namespace type t = version let compare = compare end)

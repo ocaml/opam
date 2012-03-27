@@ -296,7 +296,7 @@ module Solver : SOLVER = struct
               g (pkg_set, []) in
           List.map (fun pkg -> 
             NV_map.find 
-              (Namespace.Name pkg.Cudf.package, 
+              (Namespace.name_of_string pkg.Cudf.package, 
                Namespace.version_of_string
                  (Debian.Debcudf.get_real_version
                     table
@@ -364,7 +364,7 @@ module Solver : SOLVER = struct
           Some
             (solution_map
                (fun pkg ->
-                 Namespace.Name pkg.Cudf.package,
+                 Namespace.name_of_string pkg.Cudf.package,
                  Namespace.version_of_string
                    (Debian.Debcudf.get_real_version
                       table

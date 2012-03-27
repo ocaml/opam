@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open Namespace.Namespace
+open Namespace
 open Path
 open Server
 open Solver
@@ -104,7 +104,7 @@ let info = {
   main     =
     parse_args (function
     | [] -> raise (Arg.Bad "Missing package argument")
-    | l  -> List.iter (fun name -> Client.info (Name name)) l)
+    | l  -> List.iter (fun name -> Client.info (Namespace.name_of_string name)) l)
 }
 
 (* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
