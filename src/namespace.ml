@@ -20,19 +20,29 @@ struct
   type name = Name of Cudf_types.pkgname
   let name_compare = compare
 
-  type version = { deb : Debian.Format822.version }
+  type version =
+    | Deb of Debian.Format822.version
+    | Head (* Head of a version controled repository *)
 
-  let string_of_nv (Name n) version = sprintf "%s-%s" n version.deb
+  let string_of_version = function
+    | Deb s -> s
+    | Head  -> "HEAD"
+
+  let string_of_nv (Name n) version =
+    sprintf "%s-%s" n (string_of_version version)
+
   let string_of_name (Name n) = n
-  let string_of_version version = version.deb
 
   let version_of_string version =
-    let valid =
-      try let _ = String.index version '-' in false
-      with Not_found -> true in
-    if not valid then
-      Globals.error_and_exit "%s is not a valid version (it contains '-')" version;
-    { deb = version }
+    if version = "HEAD" then
+      Head
+    else
+      let valid =
+        try let _ = String.index version '-' in false
+        with Not_found -> true in
+      if not valid then
+        Globals.error_and_exit "%s is not a valid version (it contains '-')" version;
+      Deb version
 
   let is_valid_nv s =
     try let _ = String.rindex s '-' in true
@@ -49,8 +59,11 @@ struct
 
   let default_version = "0"
 
+  let nv_of_dpkg d =
+    Name d.Debian.Packages.name, Deb d.Debian.Packages.version
+
   let to_string (Name n, v) =
-    Printf.sprintf "%s %s" n v.deb
+    Printf.sprintf "%s %s" n (string_of_version v)
 end
 
 type name_version = Namespace.name * Namespace.version
