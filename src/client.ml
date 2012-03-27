@@ -29,8 +29,11 @@ sig
   (** Initializes the client a consistent state. *)
   val init : git:bool -> url -> unit
 
-  (** Displays the installed package. [None] : a general summary is given. *)
-  val info : Namespace.name option -> unit
+  (** Displays all available packages *)
+  val list : unit -> unit
+
+  (** Displays a general summary of a package. *)
+  val info : Namespace.name -> unit
 
   type config_request = Include | Bytelink | Asmlink
 
@@ -153,94 +156,92 @@ module Client : CLIENT = struct
          (fun map (n, v) -> 
            N_map.modify_def V_set.empty n (V_set.add v) map) N_map.empty l)
 
-  let info package =
-    log "info %s" (match package with
-    | None -> "ALL"
-    | Some p -> Namespace.string_of_name p);
+  let s_not_installed = "--"
+
+  let list () =
+    log "list";
     let t = load_state () in
-    let s_not_installed = "--" in
-    match package with
+    (* Get all the installed packages *)
+    let installed = File.Installed.find_err (Path.installed t.home) in
+    let install_set = NV_set.of_list installed in
+    let map, max_n, max_v = 
+      List.fold_left
+        (fun (map, max_n, max_v) (name, version as n_v) ->
+          match N_map.Exceptionless.find name map with
+          | Some (Some _, _) -> map, max_n, max_v
+          | _ -> 
+              (* If the packet has not been processed yet or 
+                 if it has been processed but the version processed was not installed *)
+              let installed = NV_set.mem n_v install_set in
+              let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
+              let map =
+                N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
+              let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
+              let max_v =
+                if installed then
+                  max max_v (String.length (Namespace.string_of_version (snd n_v)))
+                else
+                  max_v in
+              map, max_n, max_v)
+        (N_map.empty, min_int, String.length s_not_installed)
+        (Path.index_list t.home) in
 
-    | None -> 
-        (* Get all the installed packages *)
-        let installed = File.Installed.find_err (Path.installed t.home) in
-        let install_set = NV_set.of_list installed in
-        let map, max_n, max_v = 
-          List.fold_left
-            (fun (map, max_n, max_v) (name, version as n_v) ->
-              match N_map.Exceptionless.find name map with
-                | Some (Some _, _) -> map, max_n, max_v
-                | _ -> 
-               (* If the packet has not been processed yet or 
-                  if it has been processed but the version processed was not installed *)
-                let installed = NV_set.mem n_v install_set in
-                let index = File.Spec.find_err (Path.index t.home (Some n_v)) in
-                let map =
-                  N_map.add name ((if installed then Some version else None), File.Spec.description index) map in
-                let max_n = max max_n (String.length (Namespace.string_of_name (fst n_v))) in
-                let max_v =
-                  if installed then
-                    max max_v (String.length (Namespace.string_of_version (snd n_v)))
-                  else
-                    max_v in
-                map, max_n, max_v)
-            (N_map.empty, min_int, String.length s_not_installed)
-            (Path.index_list t.home) in
+    N_map.iter (fun name (version, description) ->
+      let description = match description with
+      | []   -> ""
+      | h::_ -> h in
+      let version = match version with
+      | None   -> s_not_installed
+      | Some v -> Namespace.string_of_version v in
+      Globals.msg "%s  %s  %s\n" 
+        (indent_left  (Namespace.string_of_name name) max_n)
+        (indent_right version max_v)
+        description) map
 
-        N_map.iter (fun name (version, description) ->
-          let description = match description with
-            | []   -> ""
-            | h::_ -> h in
-          let version = match version with
-            | None   -> s_not_installed
-            | Some v -> Namespace.string_of_version v in
-          Globals.msg "%s  %s  %s\n" 
-            (indent_left  (Namespace.string_of_name name) max_n)
-            (indent_right version max_v)
-            description) map
+  let info package =
+    log "info %s" (Namespace.string_of_name package);
+    let t = load_state () in
+    let find_from_name = find_from_name package in
+    let installed = File.Installed.find_err (Path.installed t.home) in
+    let o_v = 
+      Option.map
+        V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
+        (find_from_name installed) in
 
-    | Some name -> 
-        let find_from_name = find_from_name name in
-        let installed = File.Installed.find_err (Path.installed t.home) in
-        let o_v = 
-          Option.map
-            V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
-            (find_from_name installed) in
+    let v_set =
+      let v_set = 
+        match find_from_name (Path.index_list t.home) with
+        | None -> V_set.empty
+        | Some v -> v in
+      match o_v with
+      | None -> v_set
+      | Some v -> V_set.remove v v_set in
 
-        let v_set =
-          let v_set = 
-            match find_from_name (Path.index_list t.home) with
-            | None -> V_set.empty
-            | Some v -> v in
-          match o_v with
-          | None -> v_set
-          | Some v -> V_set.remove v v_set in
+    List.iter
+      (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
+      (  ("package    ", Namespace.string_of_name package)
 
-        List.iter
-          (fun (tit, desc) -> Globals.msg "%s: %s\n" tit desc)
-          (  ("package    ", Namespace.string_of_name name)
+         :: ("version    ",
+             match o_v with
+             | None   -> s_not_installed
+             | Some v -> Namespace.string_of_version v)
 
-          :: ("version    ",
-            match o_v with
-            | None   -> s_not_installed
-            | Some v -> Namespace.string_of_version v)
+         :: ("versions   ", V_set.to_string Namespace.string_of_version v_set)
 
-          :: ("versions   ", V_set.to_string Namespace.string_of_version v_set)
+         ::
+           match
+             match o_v with
+             | None -> if V_set.is_empty v_set then None else Some (V_set.max_elt v_set)
+             | Some v -> Some v
+           with
+           | None -> []
+           | Some v ->
 
-          ::
-            match
-              match o_v with
-                | None -> if V_set.is_empty v_set then None else Some (V_set.max_elt v_set)
-                | Some v -> Some v
-            with
-              | None -> []
-              | Some v ->
-
-              [ "description", "\n  " ^ 
-                let opam =
-                  File.Spec.find_err (Path.index t.home (Some (name, v))) in
-                String.concat "" (File.Spec.description opam) ]
-          )
+               [ "description", "\n  " ^ 
+                 let opam =
+                   File.Spec.find_err (Path.index t.home (Some (package, v))) in
+                 String.concat "" (File.Spec.description opam) ]
+      )
 
   let confirm msg = 
     Globals.msg "%s [Y/n] " msg;

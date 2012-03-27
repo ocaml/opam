@@ -76,18 +76,29 @@ let init =
     | _ -> bad_argument ())
 }
 
+(* ocp-get list *)
+let list = {
+  name     = "list";
+  usage    = "";
+  synopsis = "Display information about all available packages";
+  help     = "";
+  specs    = [];
+  anon     = noanon;
+  main     = Client.list;
+}
+
 (* ocp-get info [PACKAGE] *)
 let info = {
   name     = "info";
-  usage    = "[package]*";
-  synopsis = "Display information about packages";
+  usage    = "[package]+";
+  synopsis = "Display information about specific packages";
   help     = "";
   specs    = [];
   anon;
   main     =
     parse_args (function
-    | [] -> Client.info None
-    | l  -> List.iter (fun name -> Client.info (Some (Name name))) l)
+    | [] -> raise (Arg.Bad "Missing package argument")
+    | l  -> List.iter (fun name -> Client.info (Name name)) l)
 }
 
 (* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
@@ -175,6 +186,7 @@ let remove = {
 
 let commands = [
   init;
+  list;
   info;
   config;
   install;
