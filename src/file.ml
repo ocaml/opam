@@ -65,6 +65,13 @@ struct
   let colon = split ":"
   let space = split " "
 
+  let split_comma str =
+    if str = "" then
+      []
+    else
+      try List.map String.strip (String.nsplit str ",")
+      with _ -> [str]
+
   let assoc f k0 =
     let rec aux = function
       | x :: xs -> 
@@ -198,9 +205,7 @@ struct
                 !Globals.root_path in
       let sources =
         Parse.assoc_parsed "sources" file in
-      let sources =
-        try List.map String.strip (String.nsplit sources ",")
-        with _ -> [sources] in
+      let sources = Parse.split_comma sources in
       let one source =
         let uri, hostname = uri_of_url source in
         url ?uri hostname in
@@ -628,8 +633,74 @@ struct
     let empty = Random ""
   end
 
-end
+  module type COMPIL = sig
+    include IO_FILE
 
+    val name: t -> string
+    val source: t -> url
+    val configure: t -> string list
+    val make: t -> string list
+    val patches: t -> url list
+
+  end
+
+  module Compil : COMPIL = struct
+
+    let internal_name = "compiler"
+
+    type t = {
+      name: string;
+      source: url;
+      patches: url list;
+      configure: string list;
+      make: string list;
+    }
+
+    let empty = {
+      name = "<none>";
+      source = url "<none>";
+      patches = [];
+      configure = [];
+      make = [];
+    }
+
+    let name t = t.name
+    let source t = t.source
+    let patches t = t.patches
+    let configure t = t.configure
+    let make t = t.make
+
+    let to_string t =
+      Printf.sprintf "\
+name: %s
+source: %s
+patches: %s
+configure: %s
+make: %s
+"
+        t.name
+        (string_of_url t.source)
+        (String.concat ", " (List.map string_of_url t.patches))
+        (String.concat ", " t.configure)
+        (String.concat ", " t.make)
+
+    let parse contents =
+      let file = Parse.colon contents in
+      let name = Parse.assoc_parsed "name" file in
+      let source = url (Parse.assoc_parsed "source" file) in
+      let patches = match Parse.Exceptionless.assoc_parsed "patches" file with
+      | None   -> []
+      | Some s -> List.map url (Parse.split_comma s) in
+      let configure = match Parse.Exceptionless.assoc_parsed "configure" file with
+      | None   -> []
+      | Some s -> Parse.split_comma s in
+      let make = match Parse.Exceptionless.assoc_parsed "make" file with
+      | None   -> []
+      | Some s -> Parse.split_comma s in
+      { name; source; patches; configure; make }
+        
+  end
+end
 
 exception Directory_found
 
@@ -647,9 +718,9 @@ struct
   let find f =
     log "find %s" (Path.string_of_filename f);
     match Path.find_binary f with
-      | Path.File (Raw_binary s)     -> Some (F.parse s)
-      | Path.Not_found _             -> None
-      | Path.Directory _             -> raise Directory_found
+    | Path.File (Raw_binary s)     -> Some (F.parse s)
+    | Path.Not_found _             -> None
+    | Path.Directory _             -> raise Directory_found
 
   (** Find a file. Exit the program if the file does not exists.
       Raise [Parsing] or [Directory] in case another error happen. *)
@@ -657,12 +728,12 @@ struct
 
   module Exceptionless =
   struct
-      (** Find a file. Return a default value [v0] if the file does not exists. 
-          In general, forall [v1], [compare v0 v1] < 0. *)
+    (** Find a file. Return a default value [v0] if the file does not exists. 
+        In general, forall [v1], [compare v0 v1] < 0. *)
     let default def f = 
       match try Some (find f) with _ -> None with
-        | Some (Some t) -> t
-        | _ -> def
+      | Some (Some t) -> t
+      | _ -> def
           
     let find = default F.empty
   end
@@ -678,6 +749,7 @@ struct
   module To_install = struct include To_install include Make (To_install) end
   module PConfig = struct include PConfig include Make (PConfig) end
   module Security_key = struct include Security_key include Make (Security_key) end
+  module Compil = struct include Compil include Make (Compil) end
 
   module Installed =
   struct
@@ -687,7 +759,7 @@ struct
       
     let modify_def f f_map =
       M_installed.add f (N_map.bindings (f_map (find_map f)))
-      
+        
     include Installed
     include M_installed
   end

@@ -71,7 +71,7 @@ struct
     Name d.Debian.Packages.name, Deb d.Debian.Packages.version
 
   let to_string (Name n, v) =
-    Printf.sprintf "%s %s" n (string_of_version v)
+    Printf.sprintf "%s-%s" n (string_of_version v)
 end
 
 module N_map = BatMap.Make (struct open Namespace type t = name let compare = name_compare end)
