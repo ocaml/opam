@@ -1,0 +1,13 @@
+install "ocpgetboot" {
+  lib = [
+    "_obuild/pcre/*.cma";
+    "_obuild/pcre/*.cmxa";
+    "_obuild/pcre/*.a";
+    "_obuild/pcre/*.cmi";
+
+    "_obuild/bat/*.cma";
+    "_obuild/bat/*.cmxa";
+    "_obuild/bat/*.a";
+    "_obuild/bat/*.cmi";
+  ]
+}
