@@ -42,7 +42,7 @@ sig
   (** Displays a general summary of a package. *)
   val info : name -> unit
 
-  type config_request = Include | Bytelink | Asmlink
+  type config_request = Include | Bytelink | Asmlink | Ocp
 
   (** Depending on request, returns options or directories where the package is installed. *)
   val config : bool (* true : recursive search *) -> config_request -> name list -> unit
@@ -670,7 +670,7 @@ module Client : CLIENT = struct
         updateArchive t.servers (name, version) spec_b archive k;
         Server.updateArchive local_server (name, version) spec_b archive k
 
-  type config_request = Include | Bytelink | Asmlink
+  type config_request = Include | Bytelink | Asmlink | Ocp
 
   let config is_rec req names =
     log "config %s" (String.concat "," (List.map Namespace.string_of_name names));
@@ -695,7 +695,10 @@ module Client : CLIENT = struct
     let one (name, version) =
       let path = match Path.ocaml_options_of_library t.home name with I s -> s in
       match req with
-      | Include ->Globals.msg "-I %s" path
+      | Include -> Globals.msg "-I %s" path
+      | Ocp     ->
+          Globals.msg "begin library %S\n  generated=true\n  dirname=%S\nend\n\n"
+            (Namespace.string_of_name name) path
       | link    ->
           let config = File.PConfig.find_err (Path.pconfig t.home (name, version)) in
           let libraries = File.PConfig.library_names config in
