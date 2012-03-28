@@ -69,10 +69,10 @@ let rec string_of_content = function
       Printf.sprintf "[%s]"
         (String.concat "; "  (List.map string_of_content l))
 
-let parse_l_url = 
-  List.map (fun s -> 
+let parse_l_url =
+  List.map (fun s ->
     match uri_of_url s with
     | None      , s2
-    | Some Local, s2 -> Path.Internal s2
+    | Some Local, s2 -> Path.Internal (Run.real_path s2)
     | Some uri  , s2 -> Path.External (uri, s2)
   )

@@ -347,7 +347,7 @@ struct
 
     let filter_external_patches t = 
       { t with patches = 
-          List.filter (fun p -> None = get_local_patch p) t.patches }
+          List.filter (function Internal _ -> false | _ -> true) t.patches }
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -716,11 +716,18 @@ struct
   (** Find a file. Return [None] if the file does not exists.
       Raise [Parsing] or [Directory_found] in case an error happens. *)
   let find f =
-    log "find %s" (Path.string_of_filename f);
-    match Path.find_binary f with
-    | Path.File (Raw_binary s)     -> Some (F.parse s)
-    | Path.Not_found _             -> None
-    | Path.Directory _             -> raise Directory_found
+    let filename = Path.string_of_filename f in
+    log "find %s" filename;
+    let dirname = Filename.dirname filename in
+    if not (Sys.file_exists dirname) then
+      None
+    else
+      Run.in_dir (Filename.dirname filename) (function
+        | Path.File (Raw_binary s)     -> Some (F.parse s)
+        | Path.Not_found _             -> None
+        | Path.Directory _             -> raise Directory_found
+      ) (Path.find_binary f)
+
 
   (** Find a file. Exit the program if the file does not exists.
       Raise [Parsing] or [Directory] in case another error happen. *)

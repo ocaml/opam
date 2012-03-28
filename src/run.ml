@@ -276,11 +276,8 @@ let exec_download =
       (match Globals.os with
       | Globals.Darwin -> http "fpt"  url
       | _              -> http "wget" url)
-  | Git, repo       -> clone repo
-  | Config, _
-  | Install, _
-  | Local, _ 
-  | Ocp, _ -> assert false
+  | Git, repo -> clone repo
+  | Local, _  -> assert false
 
 let download url nv =
   if not (Sys.file_exists tmp_dir) then
@@ -293,3 +290,13 @@ let patch p nv =
   in_dir dirname (fun () ->
     sys_command "patch -p1 -f -i %s" p
   ) ()
+
+let real_path p =
+  let dir = Filename.dirname p in
+  let dir = normalize dir in
+  let base = Filename.basename p in
+  let (/) = Filename.concat in
+  if Filename.is_relative dir then
+    (Sys.getcwd ()) / dir / base
+  else
+    dir / base

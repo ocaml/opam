@@ -85,7 +85,14 @@ type internal_version = Version of string
 
 type security_key = Random of string
 
-let get_local_patch = function External ((Config|Install|Ocp), p) -> Some p | _ -> None
+let get_local_files = function
+  | Internal p -> 
+    if Filename.check_suffix p ".patch"
+    || Filename.check_suffix p ".diff" then
+      None
+    else
+      Some p 
+  | _ -> None
 
 module type RANDOM_KEY = sig
   val new_key : unit -> security_key
@@ -502,7 +509,7 @@ module Path : PATH = struct
         BatIO.write_string oc bin;
         BatIO.close_out oc)
         
-  | Links links -> 
+  | Links links ->
       R_lazy (fun () -> 
 
         let rec download = function
@@ -517,13 +524,13 @@ module Path : PATH = struct
           if Run.untar f nv <> 0 then
             download urls in
 
-        let patch p = 
-          match get_local_patch p with
+        let patch p =
+          match get_local_files p with
           | Some p ->
-            if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.string_of_nv (fst nv) (snd nv)) p) then
+            if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.to_string nv) p) then
               Globals.error_and_exit "overwrite the config or install already existing ?"
             else
-              add_rec (Raw (Namespace.string_of_nv (fst nv) (snd nv))) (R_filename [Raw p])
+              add_rec (Raw (Namespace.to_string nv)) (R_filename [Raw p])
           | None -> 
             match p with
             | Internal p  ->
