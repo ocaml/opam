@@ -1,8 +1,25 @@
 install "dose" {
   lib = [
-    "_build/doselibs/*.cma";
-    "_build/doselibs/*.cmxa";
-    "_build/doselibs/*.a";
-    "_build/doselibs/*.cmi";
+    "_obuild/dose/*.cma";
+    "_obuild/dose/*.cmxa";
+    "_obuild/dose/*.a";
+    "_obuild/dose/*.cmi";
+
+(* warning : at copy, we may conserve the structure *)
+
+    "_obuild/dose/Algo/*.cma";
+    "_obuild/dose/Algo/*.cmxa";
+    "_obuild/dose/Algo/*.a";
+    "_obuild/dose/Algo/*.cmi";
+
+    "_obuild/dose/Common/*.cma";
+    "_obuild/dose/Common/*.cmxa";
+    "_obuild/dose/Common/*.a";
+    "_obuild/dose/Common/*.cmi";
+
+    "_obuild/dose/Debian/*.cma";
+    "_obuild/dose/Debian/*.cmxa";
+    "_obuild/dose/Debian/*.a";
+    "_obuild/dose/Debian/*.cmi";
   ]
 }

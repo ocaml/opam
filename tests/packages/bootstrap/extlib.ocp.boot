@@ -1,3 +1,6 @@
+comp = [ "-g" ]
+link = [ "-g" ]
+
 begin library "extlib"
    sort = true
    files = [

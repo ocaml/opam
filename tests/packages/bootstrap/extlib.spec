@@ -7,5 +7,5 @@ package "extlib" {
   patches = [ "install://extlib.install"
             ; "ocp://extlib.ocp.boot" ]
   make = [ "mv -i extlib.ocp.boot extlib.ocp"
-         ; "ocp-build -init -scan -sanitize"]
+         ; "ocp-build -init -scan" ]
 }
