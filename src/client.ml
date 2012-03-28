@@ -358,7 +358,9 @@ module Client : CLIENT = struct
     let rec aux = function
     | []   -> None
     | h::t ->
-      match RemoteServer.getArchive h nv with
+      if h.uri = Some Git then
+        None
+      else match RemoteServer.getArchive h nv with
       | None   -> aux t
       | Some a -> Some a in
     aux servers

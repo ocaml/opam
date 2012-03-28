@@ -18,6 +18,7 @@ open Namespace
 open Path
 open File
 open Unix
+open Uri
 
 module type SERVER =
 sig
@@ -170,6 +171,8 @@ module RemoteServer : SERVER with type t = url = struct
 
   (* untyped message exchange *)
   let send url m =
+    if url.uri = Some Git then
+      Globals.error_and_exit "%s is not a valid OPAM server" url.hostname;
     let host = (gethostbyname url.hostname).h_addr_list.(0) in
     let port = match url.port with
       | None   -> Globals.error_and_exit "No port provided"
