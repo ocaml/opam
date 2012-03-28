@@ -49,6 +49,7 @@ and string s = parse
 | '"'  { s }
 | "\n" { newline lexbuf;
          string (s ^ Lexing.lexeme lexbuf) lexbuf }
+| "\\\"" { string (s ^ "\"") lexbuf }
 | "\\" [^ '"' '\\']+
        { string (s ^ Lexing.lexeme lexbuf) lexbuf }
 | eof  { s }
