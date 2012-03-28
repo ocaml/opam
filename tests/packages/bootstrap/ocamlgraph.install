@@ -1,15 +1,6 @@
 install "ocamlgraph" {
   lib = [
-    "_obuild/graph/*.cma";
-    "_obuild/graph/*.cmxa";
-    "_obuild/graph/*.a";
-    "_obuild/graph/*.cmi";
-
-(* warning : at copy, we may conserve the structure *)
-
-    "_obuild/graph/Graph/*.cma";
-    "_obuild/graph/Graph/*.cmxa";
-    "_obuild/graph/Graph/*.a";
-    "_obuild/graph/Graph/*.cmi";
+    "_obuild/graph/graph.cma";
+    "_obuild/graph/graph.cmi";
   ]
 }

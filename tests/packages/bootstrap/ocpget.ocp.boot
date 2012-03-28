@@ -29,10 +29,11 @@ begin library "ocp-get-lib"
     "unix"
     "extlib"
     "ocamlarg"
+    "ocamlgraph"
   ]
 end
-(*
-begin program "ocp-get"
+
+begin library "ocp-get"
 (*
   ocamlc   = [ "ocp-ocamlc.opt" ]
   ocamlopt = [ "ocp-ocamlopt.opt" ]
@@ -47,7 +48,7 @@ begin program "ocp-get"
   requires = [ "ocp-get-lib" ]
 end
 
-begin program "ocp-get-server"
+begin library "ocp-get-server"
 (*
   ocamlc   = [ "ocp-ocamlc.opt" ]
   ocamlopt = [ "ocp-ocamlopt.opt" ]
@@ -57,4 +58,3 @@ begin program "ocp-get-server"
   files    = [ "ocp_get_server.ml" ]
   requires = [ "ocp-get-lib" ]
 end
-*)
