@@ -34,6 +34,7 @@ let hostname_port hostname =
   with Not_found -> hostname, None
 
 let url ?uri ?port hostname =
+  let hostname = Run.normalize hostname in
   let hostname, port2 = hostname_port hostname in
   let uri, hostname = match uri with
     | None     -> uri_of_url hostname
@@ -420,7 +421,7 @@ module Path : PATH = struct
 
   let exec t n_v = 
     Run.in_dir (s_of_filename (build t (Some n_v)))
-      Run.sys_command
+      Run.sys_commands
 
   let basename s = B (Filename.basename (s_of_filename s))
 

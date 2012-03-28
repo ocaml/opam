@@ -101,10 +101,10 @@ module Client : CLIENT = struct
     log "update-git-server %s" server.hostname;
     let index_path = Path.string_of_filename (Path.index home None) in
     if not (Sys.file_exists index_path) then begin
-      let err = Run.Git.clone server.hostname index_path in
-      if err <> 0 then
-        Globals.error_and_exit "%s: unknown git repository" server.hostname;
+      Unix.mkdir index_path 0o750;
+      Run.Git.init index_path;
     end;
+    Run.Git.safe_remote_add index_path server.hostname;
     let newfiles = Run.Git.get_updates index_path in
     Run.Git.update index_path;
     let package_of_file file =
@@ -768,6 +768,7 @@ module Client : CLIENT = struct
     | AddGit s -> add_url (url ~uri:Git s)
 
     | Rm s     ->
+        let s = Run.normalize s in
         let filter t = (string_of_url t <> s) && (t.hostname <> s) in
         update_config (List.filter filter t.servers)
 

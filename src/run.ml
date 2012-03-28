@@ -130,7 +130,11 @@ let read_command_output cmd =
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
-let normalize s = getchdir (getchdir s)
+let normalize s =
+  if Sys.file_exists s then
+    getchdir (getchdir s)
+  else
+    s
 
 let untar file nv =
   log "untar %s" file;
@@ -160,18 +164,55 @@ let untar file nv =
   ) moves;
   err
 
-let sys_command = 
-  List.fold_left (function 0 -> Sys.command | err -> fun _ -> err) 0
+let sys_command fmt =
+  Printf.kprintf (fun str ->
+    log "cwd=%s '%s'" (Unix.getcwd ()) str;
+    Sys.command str;
+  ) fmt
+
+let sys_commands = 
+  List.fold_left (function 0 -> sys_command "%s" | err -> fun _ -> err) 0
 
 (* Git wrappers *)
 module Git = struct
+
+  (* Init a git repository in [dirname] *)
+  let init dirname =
+    in_dir dirname (fun () ->
+      let (_ : int) = sys_command "git init" in
+      ()
+    ) ()
+
+  (* tentative to build a unique branch name from a repo name *)
+  (* '.' and ':' are forbidden; it cannot start by '/'  *)
+  let remote_name url =
+    "R" ^ snd (uri_of_url url)
+
+  (* Add a remote url in dirname *)
+  let remote_add dirname url =
+    in_dir dirname (fun () ->
+      sys_command "git remote add %s %s" (remote_name url) url
+    ) ()
+
+  (* internal command *)
+  let get_remotes () = read_command_output "git remote" 
+
+  let safe_remote_add dirname url =
+    in_dir dirname (fun () ->
+      if not (List.mem (remote_name url) (get_remotes ())) then
+        if remote_add dirname url <> 0 then
+          Globals.error_and_exit "%s is not a valid git repository" dirname
+    ) ()
 
   (* Return the list of modified files of the git repository located
      at [dirname] *)
   let get_updates dirname =
     in_dir dirname (fun () ->
-      if Sys.command "git fetch" = 0 then
-        read_command_output "git diff remotes/origin/HEAD --name-only"
+      let fetches = List.map (Printf.sprintf "git fetch %s") (get_remotes ()) in
+      let diff remote =
+        read_command_output (Printf.sprintf "git diff remotes/%s/master --name-only" remote) in
+      if sys_commands fetches = 0 then
+        List.flatten (List.map diff (get_remotes ()))
       else
         Globals.error_and_exit "Cannot fetch git repository %s" dirname
     ) ()
@@ -179,13 +220,14 @@ module Git = struct
   (* Update the git repository located at [dirname] *)
   let update dirname =
     in_dir dirname (fun () ->
-      if Sys.command "git pull" <> 0 then
+      let commands = List.map (Printf.sprintf "git pull %s master") (get_remotes ()) in
+      if sys_commands commands <> 0 then
         Globals.error_and_exit "Cannot update git repository %s" dirname
     ) ()
 
   (* Clone [repo] into the directory [dst] *)
   let clone repo dst =
-    Sys.command (Printf.sprintf "git clone %s %s" repo dst)
+    sys_command "git clone %s %s" repo dst
  
 end
 
@@ -205,7 +247,7 @@ let clone repo last_pwd nv =
     if err = 0 then
       let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
       let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
-      if Printf.kprintf Sys.command "mv -i %s %s" s_from s_to = 0 then
+      if sys_command "mv -i %s %s" s_from s_to = 0 then
         From_git
       else
         Globals.error_and_exit "moving failed"
@@ -220,7 +262,7 @@ let exec_download =
     let dst = Filename.concat tmp_dir (Filename.basename url) in
     if Sys.file_exists dst then
       safe_rm dst;
-    if Sys.command (Printf.sprintf "%s %s" s_wget url) = 0 then
+    if sys_command "%s %s" s_wget url = 0 then
       From_http dst
     else
       Url_error in
@@ -244,10 +286,5 @@ let patch p nv =
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
   log "patching %s using %s" dirname p;
   in_dir dirname (fun () ->
-    Sys.command (Printf.sprintf "patch -p1 -f -i %s" p)
+    sys_command "patch -p1 -f -i %s" p
   ) ()
-
-
-
-
-
