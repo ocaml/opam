@@ -184,7 +184,7 @@ module Git = struct
     ) ()
 
   (* tentative to build a unique branch name from a repo name *)
-  (* '.' and ':' are forbidden; it cannot start by '/'  *)
+  (*  ':' is forbidden and it cannot start by '/'  *)
   let remote_name url =
     "R" ^ snd (uri_of_url url)
 
