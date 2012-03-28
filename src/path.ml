@@ -41,9 +41,8 @@ let url ?uri ?port hostname =
     | Some uri -> Some uri, hostname in
   let port = match port, port2, uri with
     | Some p, _     , _
-    | None  , Some p, _    -> Some p
-    | None, _       , None -> Some Globals.default_port
-    | _                    -> None in
+    | None  , Some p, _ -> Some p
+    | _                 -> None in
   { uri; hostname; port }
 
 let string_of_url url =
@@ -152,6 +151,9 @@ sig
   (** OPAM files considered for an arbitrary version and package *)
   val index : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.spec *)
   (* [None] : $HOME_OPAM/index *)
+
+  val compil : t -> string -> filename
+  (* $HOME_OPAM/compilers/[oversion].compil *)
 
   (** list of spec files *)
   val index_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.spec ] -> [ NAME, VERSION ] *)
@@ -296,6 +298,9 @@ module Path : PATH = struct
     | Some (n, v) -> mk_name_version t_home name ext n v
 
   let index t = mk_name_version_o t.home "index" ".spec"
+
+  let compil t c = Raw (t.home // "compilers" // c ^ ".compil")
+
   let archives_targz t = mk_name_version_o t.home "archives" ".tar.gz"
 
   let build t = mk_name_version_o t.home_ocamlversion "build" ""
@@ -352,12 +357,18 @@ module Path : PATH = struct
     else
       None
 
+  let check_suffix f suff =
+    Filename.check_suffix (s_of_filename f) suff
+
   let index_list t =
     let index_path = index t None in
-    let is_file f = is_directory (concat index_path f) = None in
+    let is_spec f =
+      let file = concat index_path f in
+      is_directory file = None 
+      && check_suffix file ".spec" in
     let files =
       match find index_path with
-      | Directory l -> List.filter is_file l
+      | Directory l -> List.filter is_spec l
       | File _
       | Not_found _ -> [] in
     List.map (nv_of_extension Namespace.default_version) files
@@ -495,7 +506,7 @@ module Path : PATH = struct
       R_lazy (fun () -> 
 
         let rec download = function
-        | [] -> Globals.error_and_exit "No archive found"
+        | [] -> Globals.warning "%s contains no archive" (Namespace.to_string nv)
         | Internal f :: urls -> download_aux f urls
         | External (uri, url) :: urls ->
             match Run.download (uri, url) nv with

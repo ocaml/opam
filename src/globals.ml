@@ -40,6 +40,11 @@ let error fmt =
     Printf.eprintf "ERROR: %s\n%!" str
   ) fmt
 
+let warning fmt =
+  Printf.kprintf (fun str ->
+    Printf.eprintf "WARNING: %s\n%!" str
+  ) fmt
+  
 let error_and_exit fmt =
   Printf.kprintf (fun str ->
     error "%s" str;

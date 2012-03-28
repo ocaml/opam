@@ -208,6 +208,18 @@ let remote = {
     | _                  -> bad_argument ())
 }
 
+let switch = {
+  name     = "switch";
+  usage    = "[compiler-name]";
+  synopsis = "Switch to an other compiler version";
+  help     = "";
+  specs    = [];
+  anon;
+  main     = parse_args (function
+    | [name] -> Client.switch name
+    | _      -> bad_argument ())
+}
+
 let commands = [
   init;
   list;
@@ -219,6 +231,7 @@ let commands = [
   upload;
   remove;
   remote;
+  switch;
 ]
 
 
@@ -226,4 +239,3 @@ let () =
   Globals.log "CLIENT" "Root path is %s" !Globals.root_path;
   List.iter SubCommand.register commands;
   ArgExt.parse global_args
-

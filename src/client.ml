@@ -65,6 +65,9 @@ sig
 
   (** Manage remote indexes *)
   val remote : remote_action -> unit
+
+  (** Switch to an other version of ocaml *)
+  val switch : string -> unit
 end
 
 module Client : CLIENT = struct
@@ -786,4 +789,24 @@ module Client : CLIENT = struct
         let filter t = (string_of_url t <> s) && (t.hostname <> s) in
         update_config (List.filter filter t.servers)
 
+  let switch name =
+    log "switch %s" name;
+    let t = load_state () in
+    let compile compil =
+      failwith "TODO" in
+    if Filename.check_suffix name ".compil" then begin
+      (* we switch to a fresh OCaml install *)
+      let compil = File.Compil.parse (Run.read name) in
+      let name = File.Compil.name compil in
+      let compil_f = Path.compil t.home name in
+      if Path.file_exists compil_f then
+        Globals.error_and_exit "Compiler spec %s already exists" name;
+      File.Compil.add compil_f compil;
+      compile compil
+    end else begin
+      let compil_f = Path.compil t.home name in
+      let compil = File.Compil.find compil_f in
+      compile compil
+    end
+      
 end
