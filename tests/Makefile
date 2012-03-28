@@ -14,7 +14,7 @@ ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: fresh init upload list install upload-new upgrade downgrade ocpbuild
+all: fresh init upload list install upload-new upgrade downgrade ocpbuild #ocpget
 	@
 
 $(BIN)/ocp-get: ../ocp-get
@@ -63,6 +63,10 @@ upgrade: upload-new
 downgrade: upgrade
 	$(OCPGET) install P4-2
 	$(OCPGET) list
+
+ocpget: fresh init ocpbuild
+	cd packages/bootstrap && for i in *spec ; do $(OCPGET) upload $$i ; done
+	$(OCPGET) install ocpget
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz
