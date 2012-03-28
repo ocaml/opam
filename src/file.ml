@@ -149,6 +149,8 @@ struct
       url list ->
       internal_version (* ocaml *) ->
       t
+
+    val with_sources : t -> url list -> t
   end
 
   module Config : CONFIG =
@@ -167,6 +169,7 @@ struct
     let ocaml_version t = t.ocaml_version
 
     let create version sources ocaml_version = { version ; sources ; ocaml_version }
+    let with_sources t sources = { t with sources }
 
     let empty = {
       version = Globals.api_version;
@@ -200,12 +203,7 @@ struct
         with _ -> [sources] in
       let one source =
         let uri, hostname = uri_of_url source in
-        let hostname, port =
-          try
-            let u, p = BatString.split hostname ":" in
-            u, Some (int_of_string p)
-          with Not_found -> hostname, None in
-        url ?uri ?port hostname in
+        url ?uri hostname in
       let sources = List.map one sources in
       let ocaml_version = try Parse.assoc_parsed "ocaml-version" file with Not_found -> Sys.ocaml_version in
       { version = version

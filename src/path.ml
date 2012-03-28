@@ -27,14 +27,22 @@ type url = {
   port: int option;
 }
 
+let hostname_port hostname =
+  try
+    let u, p = BatString.split hostname ":" in
+    u, Some (int_of_string p)
+  with Not_found -> hostname, None
+
 let url ?uri ?port hostname =
+  let hostname, port2 = hostname_port hostname in
   let uri, hostname = match uri with
     | None     -> uri_of_url hostname
     | Some uri -> Some uri, hostname in
-  let port = match port, uri with
-    | Some p, _        -> Some p
-    | None  , None     -> Some Globals.default_port
-    | _                -> None in
+  let port = match port, port2, uri with
+    | Some p, _     , _
+    | None  , Some p, _    -> Some p
+    | None, _       , None -> Some Globals.default_port
+    | _                    -> None in
   { uri; hostname; port }
 
 let string_of_url url =

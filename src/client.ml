@@ -23,6 +23,12 @@ open Uri
 let log fmt =
   Globals.log "CLIENT" fmt
 
+type remote_action =
+  | List
+  | Add of string
+  | AddGit of string
+  | Rm of string
+
 module type CLIENT =
 sig
   type t
@@ -56,6 +62,9 @@ sig
 
   (** Removes the given package. *)
   val remove : name -> unit
+
+  (** Manage remote indexes *)
+  val remote : remote_action -> unit
 end
 
 module Client : CLIENT = struct
@@ -725,5 +734,41 @@ module Client : CLIENT = struct
         Solver.filter_backward_dependencies l_pkg l_deb in
 
       iter_with_spaces one (List.map Namespace.nv_of_dpkg dependencies)
+
+  let string_of_remote_action = function
+    | List     -> "list"
+    | Add s    -> Printf.sprintf "add %s" s
+    | AddGit s -> Printf.sprintf "add-git %s" s
+    | Rm s     -> Printf.sprintf "rm %s" s
+
+  let remote action =
+    log "remote %s" (string_of_remote_action action);
+    let t = load_state () in
+    let update_config servers =
+      let config = File.Config.find_err (Path.config t.home) in
+      let new_config = File.Config.with_sources config servers in
+      File.Config.add (Path.config t.home) new_config in
+    let add_url url =
+      if List.mem url t.servers then
+        Globals.error_and_exit "%s is already in the list of remote indexes" (string_of_url url)
+      else
+        update_config (url :: t.servers) in
+
+    match action with
+
+    | List ->
+      List.iter (fun url ->
+        match url.uri with
+        | Some Git -> Globals.msg "git   %s\n" url.hostname
+        | _        -> Globals.msg "OPAM  %s\n" (string_of_url url)
+      ) t.servers
+
+    | Add s    -> add_url (url s)
+
+    | AddGit s -> add_url (url ~uri:Git s)
+
+    | Rm s     ->
+        let filter t = (string_of_url t <> s) && (t.hostname <> s) in
+        update_config (List.filter filter t.servers)
 
 end

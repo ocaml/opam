@@ -190,6 +190,22 @@ let remove = {
   main     = parse_args (List.iter (fun n -> Client.remove (Name n)));
 }
 
+(* ocp-get remote [-list|-add <url>|-rm <url>] *)
+let remote = {
+  name     = "remote";
+  usage    = "[list|add <url>|add-git <url>|rm <url>]";
+  synopsis = "Manage remote servers";
+  help     = "";
+  specs    = [];
+  anon;
+  main     = parse_args (function
+    | [ "list" ]         -> Client.remote List
+    | [ "add"    ; url ] -> Client.remote (Add url)
+    | [ "add-git"; url ] -> Client.remote (AddGit url)
+    | [ "rm"     ; url ] -> Client.remote (Rm url)
+    | _                  -> bad_argument ())
+}
+
 let commands = [
   init;
   list;
@@ -200,9 +216,12 @@ let commands = [
   upgrade;
   upload;
   remove;
+  remote;
 ]
+
 
 let () =
   Globals.log "CLIENT" "Root path is %s" !Globals.root_path;
   List.iter SubCommand.register commands;
   ArgExt.parse global_args
+
