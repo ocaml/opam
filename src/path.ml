@@ -31,7 +31,7 @@ let hostname_port hostname =
   try
     let u, p = BatString.split hostname ":" in
     u, Some (int_of_string p)
-  with Not_found -> hostname, None
+  with _ -> hostname, None
 
 let url ?uri ?port hostname =
   let hostname = Run.normalize hostname in

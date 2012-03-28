@@ -34,7 +34,7 @@ let uri_of_url s =
     | "local"   -> Some Local  , s2
     | "http"    -> Some Http   , s2
     | "ocp"     -> Some Ocp    , s2
-    | _         -> Globals.error_and_exit "invalid url: %s" s
+    | _         -> None        , s2
   with _->
     None, s
 

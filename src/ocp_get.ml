@@ -114,6 +114,7 @@ let config =
   let set_include  () = command := Some Client.Include in
   let set_asmlink  () = command := Some Client.Asmlink in
   let set_bytelink () = command := Some Client.Bytelink in
+  let set_ocp      () = command := Some Client.Ocp in
   {
     name     = "config";
     usage    = "[package]+";
@@ -124,6 +125,7 @@ let config =
       ("-I", Arg.Unit set_include        , " Display include options");
       ("-bytelink", Arg.Unit set_bytelink, " Display bytecode link options");
       ("-asmlink" , Arg.Unit set_asmlink , " Display native link options");
+      ("-ocp"     , Arg.Unit set_ocp     , " Display ocp-build configuration");
     ];
     anon;
     main =
