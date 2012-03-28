@@ -474,7 +474,19 @@ module Client : CLIENT = struct
     let t = load_state () in
     let l_index = Path.index_list t.home in
     let map_installed = File.Installed.find_map (Path.installed t.home) in
-    match find_from_name (Namespace.name_of_string name) l_index with
+    let package = Namespace.name_of_string name in
+
+    (* Fail if the package is already installed *)
+    let check package =
+      if N_map.mem package map_installed then
+        Globals.error_and_exit
+          "Package %s is already installed (current version is %s)"
+          name
+          (Namespace.string_of_version (N_map.find package map_installed)) in
+
+    check package;
+
+    match find_from_name package l_index with
 
       | None   ->
           if Namespace.is_valid_nv name then begin
@@ -485,6 +497,7 @@ module Client : CLIENT = struct
             (match File.Spec.find (Path.index t.home (Some (n, v))) with
             | None   -> unknown_package n
             | Some _ ->
+              check n;
               resolve t
                 l_index
                 map_installed
