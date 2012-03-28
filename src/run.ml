@@ -186,7 +186,12 @@ module Git = struct
   (* tentative to build a unique branch name from a repo name *)
   (*  ':' is forbidden and it cannot start by '/'  *)
   let remote_name url =
-    "R" ^ snd (uri_of_url url)
+    let name = "R" ^ snd (uri_of_url url) in
+    for i = 0 to String.length name - 1 do
+      if name.[i] = ':' then
+        name.[i] <- 'T';
+    done;
+    name
 
   (* Add a remote url in dirname *)
   let remote_add dirname url =
