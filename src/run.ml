@@ -194,10 +194,12 @@ let sys_command_with_bin bin fmt =
       let (o,_,e as chans) = Unix.open_process_full cmd env in
       let s_of_l = String.concat "\n" in
       (* we MUST read the input_channels otherwise [close_process] will fail *)
-      log "output: %s %s" (s_of_l (read_lines o)) (s_of_l (read_lines e));
+      let out = read_lines o in
+      let err = read_lines e in
+      let msg () = Globals.msg "out: %s\nerr: %s\n" (s_of_l out) (s_of_l err) in
       match Unix.close_process_full chans with
-      | Unix.WEXITED i -> i
-      | _              -> 1
+      | Unix.WEXITED i -> msg (); i
+      | _              -> msg (); 1
     end else
       sys_command "%s" cmd
   ) fmt
