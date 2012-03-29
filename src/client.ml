@@ -423,7 +423,6 @@ module Client : CLIENT = struct
             | _ -> false))
 
   let resolve t l_index map_installed request = 
-    
     let l_pkg = debpkg_of_nv t map_installed l_index in
 
     match Solver.resolve_list l_pkg request with

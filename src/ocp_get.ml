@@ -137,9 +137,8 @@ let config =
         let names = List.rev !ano_args in
         let command = match !command with
         | None   -> 
-          raise (Arg.Bad (Printf.sprintf "Missing command %s" 
-                            (BatIO.to_string (BatList.print ~first:"[" ~sep:"|" ~last:"]" 
-                                                (fun oc (s, _, _) -> BatString.print oc s)) specs)))
+          raise (Arg.Bad (Printf.sprintf "Missing command [%s]" 
+                            (String.concat "|" (List.map (fun (s,_,_) -> s) specs))))
         | Some c -> c in
         Client.config !recursive command (List.map (fun n -> Name n) names);
   }
@@ -185,7 +184,9 @@ let upload = {
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args (List.iter Client.upload);
+  main     = parse_args (function
+    | [] -> bad_argument ()
+    | l  -> List.iter Client.upload l);
 }
 
 (* ocp-get remove PACKAGE *)

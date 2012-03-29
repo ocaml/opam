@@ -68,7 +68,7 @@ struct
   let default_version = "0"
 
   let nv_of_dpkg d =
-    Name d.Debian.Packages.name, Deb d.Debian.Packages.version
+    name_of_string d.Debian.Packages.name, version_of_string d.Debian.Packages.version
 
   let to_string (Name n, v) =
     Printf.sprintf "%s-%s" n (string_of_version v)
