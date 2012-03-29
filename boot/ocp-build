@@ -1,1 +1,6 @@
-unixrun ocp-build.boot
+#!/bin/bash
+set -e
+echo `which unixrun`
+echo `which ocp-build.boot`
+ocp-get config -rstrict -ocp $1 > depends.ocp
+unixrun ocp-build.boot -init -scan $1
