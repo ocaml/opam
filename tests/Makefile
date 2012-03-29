@@ -14,7 +14,7 @@ ARCHIVES = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: fresh init upload list install upload-new upgrade downgrade ocpbuild #ocpget
+all: fresh init upload list install upload-new upgrade downgrade ocpbuild remove
 	@
 
 $(BIN)/ocp-get: ../ocp-get
@@ -44,7 +44,11 @@ upload: $(ARCHIVES) init
 list: upload
 	$(OCPGET) list
 
-install: upload
+remove: upload
+	cd packages && $(OCPGET) install P1
+	cd packages && $(OCPGET) remove P1
+
+install: remove upload
 	$(OCPGET) install P1
 	$(OCPGET) install P2
 	$(OCPGET) install P3
