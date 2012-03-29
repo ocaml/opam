@@ -35,11 +35,13 @@ let ano_args = ref []
 let anon s =
   ano_args := s :: !ano_args
 
-let bad_argument () =
-  raise (Arg.Bad "Invalid argument")
+exception Bad of string * string
 
-let noanon s =
-  raise (Arg.Bad (s ^ ": Invalid argument"))
+let bad_argument cmd fmt =
+  Printf.kprintf (fun msg -> raise (Bad (cmd, msg))) fmt
+
+let noanon cmd s =
+  raise (Bad (cmd, s ^ " is not expected"))
 
 let () = Globals.root_path := Globals.default_opam_path
 
@@ -79,7 +81,7 @@ let init =
           try int_of_string port
           with _ -> failwith (port ^ " is not a valid port") in
         Client.init [url ~port host]
-    | _ -> bad_argument ())
+    | _ -> bad_argument "init" "Too many remote server")
 }
 
 (* ocp-get list *)
@@ -89,7 +91,7 @@ let list = {
   synopsis = "Display information about all available packages";
   help     = "";
   specs    = [];
-  anon     = noanon;
+  anon     = noanon "list";
   main     = Client.list;
 }
 
@@ -103,7 +105,7 @@ let info = {
   anon;
   main     =
     parse_args (function
-    | [] -> raise (Arg.Bad "Missing package argument")
+    | [] -> bad_argument "info" "Missing package argument"
     | l  -> List.iter (fun name -> Client.info (Namespace.name_of_string name)) l)
 }
 
@@ -137,8 +139,9 @@ let config =
         let names = List.rev !ano_args in
         let command = match !command with
         | None   -> 
-          raise (Arg.Bad (Printf.sprintf "Missing command [%s]" 
-                            (String.concat "|" (List.map (fun (s,_,_) -> s) specs))))
+          bad_argument
+            "config"  "Missing command [%s]" 
+            (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
         | Some c -> c in
         Client.config !recursive command (List.map (fun n -> Name n) names);
   }
@@ -161,7 +164,7 @@ let update = {
   synopsis = "Update the installed package to latest version";
   help     = "";
   specs    = [];
-  anon     = noanon;
+  anon     = noanon "update";
   main     = Client.update;
 }
 
@@ -172,7 +175,7 @@ let upgrade = {
   synopsis = "Upgrade the list of available package";
   help     = "";
   specs    = [];
-  anon     = noanon;
+  anon     = noanon "upgrade";
   main     = Client.upgrade;
 }
 
@@ -185,7 +188,7 @@ let upload = {
   specs    = [];
   anon;
   main     = parse_args (function
-    | [] -> bad_argument ()
+    | [] -> bad_argument "upload" "package name of .spec file missing"
     | l  -> List.iter Client.upload l);
 }
 
@@ -216,7 +219,7 @@ let remote =
     | [ "list" ]     -> Client.remote List
     | [ "add"; url ] -> Client.remote (if !git_repo then (AddGit url) else (Add url))
     | [ "rm" ; url ] -> Client.remote (Rm url)
-    | _              -> bad_argument ())
+    | _              -> bad_argument "remote" "action missing")
 }
 
 let switch = {
@@ -227,8 +230,9 @@ let switch = {
   specs    = [];
   anon;
   main     = parse_args (function
+    |[]      -> bad_argument "switch" "Compiler name is missing"
     | [name] -> Client.switch name
-    | _      -> bad_argument ())
+    | _      -> bad_argument "switch" "Too many compiler names")
 }
 
 let commands = [
@@ -249,4 +253,11 @@ let commands = [
 let () =
   Globals.log "CLIENT" "Root path is %s" !Globals.root_path;
   List.iter SubCommand.register commands;
-  ArgExt.parse global_args
+  try ArgExt.parse global_args
+  with
+  | Bad (cmd, msg) ->
+    ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
+    Printf.eprintf "ERROR: %s\n%!" msg
+  | _ ->
+    ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
+    Printf.eprintf "ERROR: no action provided\n%!"
