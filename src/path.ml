@@ -85,14 +85,11 @@ type internal_version = Version of string
 
 type security_key = Random of string
 
-let get_local_files = function
-  | Internal p -> 
-    if Filename.check_suffix p ".patch"
-    || Filename.check_suffix p ".diff" then
-      None
-    else
-      Some p 
-  | _ -> None
+let is_patch = function
+  | Internal p
+  | External (_,p) ->
+      Filename.check_suffix p ".patch"
+      || Filename.check_suffix p ".diff"
 
 module type RANDOM_KEY = sig
   val new_key : unit -> security_key
@@ -526,29 +523,30 @@ module Path : PATH = struct
           if Run.untar f nv <> 0 then
             download urls in
 
-        let patch p =
-          match get_local_files p with
-          | Some p ->
-            let file = Printf.sprintf "%s/%s" (Namespace.to_string nv) p in
+        let add p =
+          let file = Printf.sprintf "%s/%s" (Namespace.to_string nv) p in
             if Sys.file_exists file then
               Globals.error_and_exit "%s already exits" file
             else
-              add_rec (Raw (Namespace.to_string nv)) (R_filename [Raw p])
-          | None -> 
-            match p with
-            | Internal p  ->
-              if Run.patch p nv <> 0 then
-                Globals.error_and_exit "Unable to apply path %S" p
+              add_rec (Raw (Namespace.to_string nv)) (R_filename [Raw p]) in
+        let apply p =
+          if Run.patch p nv <> 0 then
+            Globals.error_and_exit "Unable to apply path %S" p in
+        let patch p =
+          let l = match p with
+            | Internal p -> p
             | External (uri, url) ->
               match Run.download (uri, url) nv with
               | Run.Url_error   -> Globals.error_and_exit "Patch %S is unavailable" url
-              | Run.From_git    -> failwith "to complete"
-              | Run.From_http p ->
-                if Run.patch p nv <> 0 then
-                  Globals.error_and_exit "Unable to apply path %S" p in
+              | Run.From_git    -> failwith "TODO"
+              | Run.From_http p -> p in
+          if is_patch p then
+            apply l
+          else
+            add l in
         
         download links.urls;
-        List.iter patch links.patches;
+        List.iter patch links.patches
       )
 
   let to_archive archive_filename tmp_nv = 

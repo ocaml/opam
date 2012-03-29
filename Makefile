@@ -10,7 +10,7 @@ TARGET = ocp-get ocp-get-server
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile #clone link
+all: ./_obuild/unixrun compile link #clone
 	@
 
 scan: ./_obuild/unixrun
