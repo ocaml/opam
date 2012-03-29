@@ -114,22 +114,24 @@ let rec root path =
   else
     root d
 
-let read_command_output cmd =
+let read_lines ic =
   let lines = ref [] in
-  let ic = Unix.open_process_in cmd in
-  let close () =
-    if Unix.close_process_in ic = Unix.WEXITED 0 then
-      !lines
-    else
-      Globals.error_and_exit "command %s failed" cmd in
   try while true do
     let line = input_line ic in
     if not (Filename.concat line "" = line) then
       lines := line :: !lines;
     done;
-    close ()
+    !lines
   with _ ->
-    close ()
+    !lines
+
+let read_command_output cmd =
+  let ic = Unix.open_process_in cmd in
+  let lines = read_lines ic in
+  if Unix.close_process_in ic <> Unix.WEXITED 0 then
+    Globals.error_and_exit "command %s failed" cmd
+  else
+    lines
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
@@ -189,8 +191,10 @@ let sys_command_with_bin bin fmt =
           path := new_path;
       done;
       log "cwd=%s path=%s %s" (Unix.getcwd ()) !path cmd;
-      let chans = Unix.open_process_full cmd env in
-      log "XXX";
+      let (o,_,e as chans) = Unix.open_process_full cmd env in
+      let s_of_l = String.concat "\n" in
+      (* we MUST read the input_channels otherwise [close_process] will fail *)
+      log "output: %s %s" (s_of_l (read_lines o)) (s_of_l (read_lines e));
       match Unix.close_process_full chans with
       | Unix.WEXITED i -> i
       | _              -> 1
