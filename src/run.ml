@@ -117,16 +117,19 @@ let rec root path =
 let read_command_output cmd =
   let lines = ref [] in
   let ic = Unix.open_process_in cmd in
+  let close () =
+    if Unix.close_process_in ic = Unix.WEXITED 0 then
+      !lines
+    else
+      Globals.error_and_exit "command %s failed" cmd in
   try while true do
     let line = input_line ic in
     if not (Filename.concat line "" = line) then
       lines := line :: !lines;
     done;
-    close_in ic;
-    !lines
+    close ()
   with _ ->
-    close_in ic;
-    !lines
+    close ()
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
@@ -172,6 +175,31 @@ let sys_command fmt =
 
 let sys_commands = 
   List.fold_left (function 0 -> sys_command "%s" | err -> fun _ -> err) 0
+
+let sys_command_with_bin bin fmt =
+  Printf.kprintf (fun cmd ->
+    if Sys.file_exists bin then begin
+      let path = ref "<not set>" in
+      let env = Unix.environment () in
+      for i = 0 to Array.length env - 1 do
+        let k,v = String.split env.(i) "=" in
+        if k = "PATH" then
+          let new_path = bin ^ ":" ^ v in
+          env.(i) <- "PATH=" ^ new_path;
+          path := new_path;
+      done;
+      log "cwd=%s path=%s %s" (Unix.getcwd ()) !path cmd;
+      let chans = Unix.open_process_full cmd env in
+      log "XXX";
+      match Unix.close_process_full chans with
+      | Unix.WEXITED i -> i
+      | _              -> 1
+    end else
+      sys_command "%s" cmd
+  ) fmt
+
+let sys_commands_with_bin bin = 
+  List.fold_left (function 0 -> sys_command_with_bin bin "%s" | err -> fun _ -> err) 0
 
 (* Git wrappers *)
 module Git = struct

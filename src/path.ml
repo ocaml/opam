@@ -439,7 +439,7 @@ module Path : PATH = struct
 
   let exec t n_v = 
     Run.in_dir (s_of_filename (build t (Some n_v)))
-      Run.sys_commands
+      (Run.sys_commands_with_bin (s_of_filename (bin t)))
 
   let basename s = B (Filename.basename (s_of_filename s))
 

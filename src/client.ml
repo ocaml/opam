@@ -395,9 +395,9 @@ module Client : CLIENT = struct
           let urls = File.Spec.urls spec in
           let patches = File.Spec.patches spec in
           Links { urls; patches } in
-    let tgz = Path.extract nv archive in
-    log "untar archive for %s" (Namespace.to_string nv);
-    Path.add_rec p_build tgz;
+    let archive = Path.extract nv archive in
+    log "Process %s archive" (Namespace.to_string nv);
+    Path.add_rec p_build archive;
 
     (* Call the build script and copy the output files *)
     let buildsh = File.Spec.make spec in
