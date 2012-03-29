@@ -29,6 +29,13 @@ type remote_action =
   | AddGit of string
   | Rm of string
 
+type config_recursive = 
+  | Not_recursive
+  | Recursive_large (* package + dependencies *)
+  | Recursive_strict (* only dependencies, not package *)
+
+type config_request = Include | Bytelink | Asmlink | Ocp
+
 module type CLIENT =
 sig
   type t
@@ -42,10 +49,8 @@ sig
   (** Displays a general summary of a package. *)
   val info : name -> unit
 
-  type config_request = Include | Bytelink | Asmlink | Ocp
-
   (** Depending on request, returns options or directories where the package is installed. *)
-  val config : bool (* true : recursive search *) -> config_request -> name list -> unit
+  val config : config_recursive (* search power *) -> config_request -> name list -> unit
 
   (** Installs the given package. *)
   val install : string -> unit
@@ -673,9 +678,7 @@ module Client : CLIENT = struct
         updateArchive t.servers (name, version) spec_b archive k;
         Server.updateArchive local_server (name, version) spec_b archive k
 
-  type config_request = Include | Bytelink | Asmlink | Ocp
-
-  let config is_rec req names =
+  let config rec_search req names =
     log "config %s" (String.concat "," (List.map Namespace.string_of_name names));
     let t = load_state () in
 
@@ -684,9 +687,13 @@ module Client : CLIENT = struct
     let installed = File.Installed.find_map (Path.installed t.home) in
 
     let version name =
-      match N_map.Exceptionless.find name installed with
-      | None   -> unknown_package name
-      | Some v -> v in
+      match
+        match req, N_map.Exceptionless.find name installed with
+          | Ocp, None -> Option.map V_set.max_elt (find_from_name name l_index)
+          | _, o -> o
+      with
+        | None -> unknown_package name
+        | Some v -> v in
 
     let rec iter_with_spaces f = function
       | []   -> ()
@@ -725,13 +732,14 @@ module Client : CLIENT = struct
                 (files ".cma")
           | _ -> assert false in
 
-    if not is_rec then
+    match rec_search with
+      | Not_recursive ->
 
       (* If we don't need to look at the dependencies, simply call [one] for
          each pair (name x version) *)
       iter_with_spaces one versions
 
-    else
+      | _ ->
 
       (* Otherwise, we need to compute the transitive closure of dependencies *)
       
@@ -748,7 +756,12 @@ module Client : CLIENT = struct
 
       (* Compute the transitive closure of dependencies *)
       let dependencies =
-        Solver.filter_backward_dependencies l_pkg l_deb in
+        let d = 
+          Solver.filter_backward_dependencies l_pkg l_deb in
+        if rec_search = Recursive_large then 
+          d
+        else
+          List.filter (fun p -> not (List.mem (fst (Namespace.nv_of_dpkg p)) names)) d in
 
       iter_with_spaces one (List.map Namespace.nv_of_dpkg dependencies)
 

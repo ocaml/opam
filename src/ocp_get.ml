@@ -109,30 +109,37 @@ let info = {
 
 (* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
 let config =
-  let recursive = ref false in
+  let recursive = ref Not_recursive in
   let command = ref None in
-  let set_include  () = command := Some Client.Include in
-  let set_asmlink  () = command := Some Client.Asmlink in
-  let set_bytelink () = command := Some Client.Bytelink in
-  let set_ocp      () = command := Some Client.Ocp in
+  let set_include   () = command := Some Include in
+  let set_asmlink   () = command := Some Asmlink in
+  let set_bytelink  () = command := Some Bytelink in
+  let set_ocp       () = command := Some Ocp in
+  let set_rec_large  () = recursive := Recursive_large in
+  let set_rec_strict () = recursive := Recursive_strict in
+  let specs = [
+      ("-r", Arg.Unit set_rec_large        , " Recursive search (large)");
+      ("-rstrict", Arg.Unit set_rec_strict , " Recursive search (strict)");
+      ("-I", Arg.Unit set_include        , " Display include options");
+      ("-bytelink", Arg.Unit set_bytelink, " Display bytecode link options");
+      ("-asmlink" , Arg.Unit set_asmlink , " Display native link options");
+      ("-ocp"     , Arg.Unit set_ocp     , " Display ocp-build configuration");
+    ] in
   {
     name     = "config";
     usage    = "[package]+";
     synopsis = "Display configuration options for packages";
     help     = "";
-    specs    = [
-      ("-r", Arg.Set recursive           , " Recursive search");
-      ("-I", Arg.Unit set_include        , " Display include options");
-      ("-bytelink", Arg.Unit set_bytelink, " Display bytecode link options");
-      ("-asmlink" , Arg.Unit set_asmlink , " Display native link options");
-      ("-ocp"     , Arg.Unit set_ocp     , " Display ocp-build configuration");
-    ];
+    specs;
     anon;
     main =
       function () ->
         let names = List.rev !ano_args in
         let command = match !command with
-        | None   -> raise (Arg.Bad "Missing command [-I|-asmlink|-bytelink]")
+        | None   -> 
+          raise (Arg.Bad (Printf.sprintf "Missing command %s" 
+                            (BatIO.to_string (BatList.print ~first:"[" ~sep:"|" ~last:"]" 
+                                                (fun oc (s, _, _) -> BatString.print oc s)) specs)))
         | Some c -> c in
         Client.config !recursive command (List.map (fun n -> Name n) names);
   }
