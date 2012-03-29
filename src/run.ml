@@ -114,6 +114,7 @@ let rec root path =
   else
     root d
 
+(* XXX: blocking function *)
 let read_lines ic =
   let lines = ref [] in
   try while true do
@@ -192,12 +193,11 @@ let sys_command_with_bin bin fmt =
       done;
       log "cwd=%s path=%s %s" (Unix.getcwd ()) !path cmd;
       let (o,i,e as chans) = Unix.open_process_full cmd env in
-      let s_of_l = String.concat "\n" in
       (* we MUST read the input_channels otherwise [close_process] will fail *)
-      flush i;
-      let out = read_lines o in
       let err = read_lines e in
-      let msg () = Globals.msg "out: %s\nerr: %s\n" (s_of_l out) (s_of_l err) in
+      let out = read_lines o in
+      let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
+      let msg () = Globals.msg "%s\n" (str ()) in
       match Unix.close_process_full chans with
       | Unix.WEXITED i -> msg (); i
       | _              -> msg (); 1
