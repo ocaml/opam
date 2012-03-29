@@ -258,6 +258,6 @@ let () =
   | Bad (cmd, msg) ->
     ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
     Printf.eprintf "ERROR: %s\n%!" msg
-  | _ ->
+  | Failure s ->
     ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
-    Printf.eprintf "ERROR: no action provided\n%!"
+    Printf.eprintf "ERROR: %s\n%!" s
