@@ -203,12 +203,24 @@ module Git = struct
   let get_remotes () = read_command_output "git remote" 
 
   let safe_remote_add dirname url =
-    in_dir dirname (fun () ->
-      if not (List.mem (remote_name url) (get_remotes ())) then
-        if remote_add dirname url <> 0 then
-          Globals.error_and_exit "%s is not a valid git repository" dirname
-    ) ()
+    let name = remote_name url in
+    if List.mem name (get_remotes ()) then
+      (* Globals.error_and_exit "%s is already a remote branch in %s" name dirname; *)
+      ();
+    if remote_add dirname url <> 0 then
+      Globals.error_and_exit "cannot add remote branch %s in %s" name dirname
 
+  let remote_rm dirname url =
+    in_dir dirname (sys_command "git remote rm %s") (remote_name url)
+
+  let safe_remote_rm dirname url =
+    let name = remote_name url in
+    if not (List.mem name (get_remotes ())) then
+      (* Globals.error_and_exit "%s is not a remote branch in %s" name dirname; *)
+      ();
+    if remote_rm dirname url <> 0 then
+      Globals.error_and_exit "cannot remove remote branch %s in %s" name dirname
+          
   (* Return the list of modified files of the git repository located
      at [dirname] *)
   let get_updates dirname =
@@ -242,24 +254,21 @@ type download_result =
   | Url_error
 
 let clone repo last_pwd nv =
-  if Filename.check_suffix repo "git" then
-    let b_name = Filename.chop_extension (Filename.basename repo) in
-    let dst_git = Filename.concat tmp_dir b_name in
-    log "cloning %s into %s" repo dst_git;
-    if Sys.file_exists repo then
-      safe_rm repo;
-    let err = Git.clone repo b_name in
-    if err = 0 then
-      let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
-      let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
-      if sys_command "mv -i %s %s" s_from s_to = 0 then
-        From_git
-      else
-        Globals.error_and_exit "moving failed"
+  let b_name = Filename.chop_extension (Filename.basename repo) in
+  let dst_git = Filename.concat tmp_dir b_name in
+  log "cloning %s into %s" repo dst_git;
+  if Sys.file_exists repo then
+    safe_rm repo;
+  let err = Git.clone repo b_name in
+  if err = 0 then
+    let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
+    let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
+    if sys_command "mv -i %s %s" s_from s_to = 0 then
+      From_git
     else
-      Globals.error_and_exit "cloning failed"
+      Globals.error_and_exit "moving failed"
   else
-    Globals.error_and_exit "Cannot infer the VCS type of %s" repo
+    Globals.error_and_exit "cloning failed"
 
 let exec_download = 
   let http s_wget url _ _ = 

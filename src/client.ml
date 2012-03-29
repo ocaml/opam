@@ -782,12 +782,24 @@ module Client : CLIENT = struct
 
     | Add s    -> add_url (url s)
 
-    | AddGit s -> add_url (url ~uri:Git s)
+    | AddGit s ->
+        let url = url ~uri:Git s in
+        Run.Git.safe_remote_add
+          (Path.string_of_filename (Path.index t.home None))
+          url.hostname;
+        add_url url
 
     | Rm s     ->
         let s = Run.normalize s in
-        let filter t = (string_of_url t <> s) && (t.hostname <> s) in
-        update_config (List.filter filter t.servers)
+        let server =
+          try List.find (fun t -> string_of_url t = s || t.hostname = s) t.servers
+          with Not_found ->
+            Globals.error_and_exit "%s is not a remote index" s in
+        if server.uri = Some Git then
+          Run.Git.safe_remote_rm
+            (Path.string_of_filename (Path.index t.home None))
+            server.hostname;
+        update_config (List.filter ((!=) server) t.servers)
 
   let switch name =
     log "switch %s" name;

@@ -193,19 +193,22 @@ let remove = {
 }
 
 (* ocp-get remote [-list|-add <url>|-rm <url>] *)
-let remote = {
+let remote =
+  let git_repo = ref false in
+  {
   name     = "remote";
   usage    = "[list|add <url>|add-git <url>|rm <url>]";
   synopsis = "Manage remote servers";
   help     = "";
-  specs    = [];
+  specs    = [
+    ("--git-repo", Arg.Set git_repo, " Consider the given url as a git repository")
+  ];
   anon;
   main     = parse_args (function
-    | [ "list" ]         -> Client.remote List
-    | [ "add"    ; url ] -> Client.remote (Add url)
-    | [ "add-git"; url ] -> Client.remote (AddGit url)
-    | [ "rm"     ; url ] -> Client.remote (Rm url)
-    | _                  -> bad_argument ())
+    | [ "list" ]     -> Client.remote List
+    | [ "add"; url ] -> Client.remote (if !git_repo then (AddGit url) else (Add url))
+    | [ "rm" ; url ] -> Client.remote (Rm url)
+    | _              -> bad_argument ())
 }
 
 let switch = {
