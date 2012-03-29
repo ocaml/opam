@@ -38,5 +38,5 @@ let uri_of_url s =
 let string_of_uri = function
   | Local   -> "local://"
   | Http    -> "http://"
-  | Https   -> "http://"
+  | Https   -> "https://"
   | Git     -> "git://"
