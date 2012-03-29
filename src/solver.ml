@@ -252,6 +252,9 @@ module Solver : SOLVER = struct
     let dep_reduction v =
       let g = Defaultgraphs.PackageGraph.dependency_graph (Cudf.load_universe v) in
       let () = PO.transitive_reduction g in
+      (* uncomment to view the dependency graph:
+         XXX: cycles are not detected, which can lead to very weird situations
+         Defaultgraphs.PackageGraph.D.output_graph stdout g; *)
       g
 
     let tocudf table pkg = 
@@ -340,7 +343,8 @@ module Solver : SOLVER = struct
 
           let _, l_act = 
             PG_topo.fold
-              (fun pkg (set_recompile, l_act) -> 
+              (fun pkg (set_recompile, l_act) ->
+                Printf.printf "package: %s\n" pkg.Cudf.package;
                 let add_succ_rem pkg set act =
                   (let set = PkgSet.remove pkg set in
                    try

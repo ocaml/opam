@@ -436,7 +436,7 @@ module Client : CLIENT = struct
       let rec aux pos = 
         Globals.msg "{%d/%d} The following solution has been found:\n" pos nb_sol;
         function
-      | [x] ->
+        | [x] ->
           (* Only 1 solution exists *)
           Solver.solution_print Namespace.to_string x;
           if delete_or_update x then
@@ -447,7 +447,7 @@ module Client : CLIENT = struct
           else
             Some x
 
-      | x :: xs ->
+        | x :: xs ->
           (* Multiple solution exist *)
           Solver.solution_print Namespace.to_string x;
           if delete_or_update x then
@@ -458,18 +458,18 @@ module Client : CLIENT = struct
           else
             Some x
 
-      | [] -> assert false in
+        | [] -> assert false in
 
-        match aux 1 l with
-          | Some sol -> 
-            List.iter (fun(Solver.P l) -> 
-              List.iter (function
-                | Solver.To_change (o,n)  -> proceed_tochange t o n
-                | Solver.To_delete n_v    -> proceed_todelete t n_v
-                | Solver.To_recompile n_v -> proceed_torecompile t n_v
-              ) l
+      match aux 1 l with
+      | Some sol -> 
+          List.iter (fun(Solver.P l) -> 
+            List.iter (function
+            | Solver.To_change (o,n)  -> proceed_tochange t o n
+            | Solver.To_delete n_v    -> proceed_todelete t n_v
+            | Solver.To_recompile n_v -> proceed_torecompile t n_v
+            ) l
             ) sol
-          | None -> ()
+      | None -> ()
 
   let vpkg_of_nv (name, v) =
     Namespace.string_of_name name, Some ("=", Namespace.string_of_version v)

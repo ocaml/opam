@@ -25,8 +25,8 @@ let uri_of_url s =
   let git = Filename.check_suffix s ".git" in
   try let s1, s2 = String.split s "://" in
     match s1 with
-    | "git"      -> Some Git    , s2
     | _ when git -> Some Git    , s
+    | "git"      -> Some Git    , s2
     | "local"    -> Some Local  , s2
     | "http"     -> Some Http   , s2
     | _          -> None        , s2
