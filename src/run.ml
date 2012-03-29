@@ -200,14 +200,16 @@ module Git = struct
     ) ()
 
   (* internal command *)
-  let get_remotes () = read_command_output "git remote" 
+  let get_remotes dirname =
+    in_dir dirname read_command_output "git remote" 
 
   let safe_remote_add dirname url =
     let name = remote_name url in
-    if List.mem name (get_remotes ()) then
+    log "name=%s" name;
+    if List.mem name (get_remotes dirname) then
       (* Globals.error_and_exit "%s is already a remote branch in %s" name dirname; *)
-      ();
-    if remote_add dirname url <> 0 then
+      ()
+    else if remote_add dirname url <> 0 then
       Globals.error_and_exit "cannot add remote branch %s in %s" name dirname
 
   let remote_rm dirname url =
@@ -215,21 +217,21 @@ module Git = struct
 
   let safe_remote_rm dirname url =
     let name = remote_name url in
-    if not (List.mem name (get_remotes ())) then
+    if not (List.mem name (get_remotes dirname)) then
       (* Globals.error_and_exit "%s is not a remote branch in %s" name dirname; *)
-      ();
-    if remote_rm dirname url <> 0 then
+      ()
+    else if remote_rm dirname url <> 0 then
       Globals.error_and_exit "cannot remove remote branch %s in %s" name dirname
           
   (* Return the list of modified files of the git repository located
      at [dirname] *)
   let get_updates dirname =
     in_dir dirname (fun () ->
-      let fetches = List.map (Printf.sprintf "git fetch %s") (get_remotes ()) in
+      let fetches = List.map (Printf.sprintf "git fetch %s") (get_remotes dirname) in
       let diff remote =
         read_command_output (Printf.sprintf "git diff remotes/%s/master --name-only" remote) in
       if sys_commands fetches = 0 then
-        List.flatten (List.map diff (get_remotes ()))
+        List.flatten (List.map diff (get_remotes dirname))
       else
         Globals.error_and_exit "Cannot fetch git repository %s" dirname
     ) ()
@@ -237,7 +239,7 @@ module Git = struct
   (* Update the git repository located at [dirname] *)
   let update dirname =
     in_dir dirname (fun () ->
-      let commands = List.map (Printf.sprintf "git pull %s master") (get_remotes ()) in
+      let commands = List.map (Printf.sprintf "git pull %s master") (get_remotes dirname) in
       if sys_commands commands <> 0 then
         Globals.error_and_exit "Cannot update git repository %s" dirname
     ) ()
