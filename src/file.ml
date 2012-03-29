@@ -300,6 +300,16 @@ struct
     let s_patches     = "patches"
     let s_make        = "make"
 
+    let valid_fields = [
+      s_description;
+      s_version;
+      s_depends;
+      s_conflicts;
+      s_urls;
+      s_patches;
+      s_make;
+    ]
+      
     let description t = t.description
     let name t = Namespace.name_of_string t.name
     let version t = Namespace.version_of_string t.version
@@ -360,6 +370,8 @@ struct
         | _   -> Globals.error_and_exit "Too many packages defined" in
       if statement.kind <> "package" then
         Globals.error_and_exit "%s: bad format (was waiting for 'package')" statement.kind;
+      if not (is_valid statement valid_fields) then
+        Globals.error_and_exit "%s contains some invalid fields" str;
       let version = string s_version statement in
       let description =
         try match List.assoc s_description statement.contents with

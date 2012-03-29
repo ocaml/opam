@@ -31,6 +31,9 @@ type file = {
   statements: statement list;
 }
 
+let is_valid s fields =
+  List.for_all (fun f -> List.mem f fields) (List.map fst s.contents)
+
 let parse_string = function
   | String s -> s
   | _        -> Globals.error_and_exit "Bad format: expecting a string, got a list"
