@@ -18,6 +18,7 @@ open ExtString
 (* XXX: config:// andn install:// are weird URI *)
 type uri = 
   | Http
+  | Https
   | Git
   | Local
 
@@ -28,6 +29,7 @@ let uri_of_url s =
     | _ when git -> Some Git    , s
     | "git"      -> Some Git    , s2
     | "local"    -> Some Local  , s2
+    | "https"    -> Some Https  , s2
     | "http"     -> Some Http   , s2
     | _          -> None        , s2
   with _->
@@ -36,4 +38,5 @@ let uri_of_url s =
 let string_of_uri = function
   | Local   -> "local://"
   | Http    -> "http://"
+  | Https   -> "http://"
   | Git     -> "git://"

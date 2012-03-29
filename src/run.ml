@@ -315,7 +315,7 @@ let exec_download =
     else
       Url_error in
   function
-  | Http, url ->
+  | (Http|Https), url ->
       (match Globals.os with
       | Globals.Darwin -> http "fpt"  url
       | _              -> http "wget" url)
