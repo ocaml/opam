@@ -65,7 +65,7 @@ sig
 
   (** Return the recursive dependencies of a package
       Note : the given package exists in the list in input because this list describes the entire universe. 
-      However, by convention, it does not appear in output. *)
+      By convention, it also appears in output. *)
   val filter_backward_dependencies :
     Debian.Packages.package list (* few packages from the universe *)
     -> Debian.Packages.package list (* universe *)
