@@ -153,7 +153,7 @@ let untar file nv =
   if not (Sys.file_exists tmp_dir) then
     Unix.mkdir tmp_dir 0o750;
   let err =
-    if Filename.check_suffix file "tar.gz" then
+    if List.exists (Filename.check_suffix file) [ "tar.gz" ; "tgz" ] then
       Sys.command (Printf.sprintf "tar xvfz %s -C %s" file tmp_dir)
     else if Filename.check_suffix file "tar.bz2" then
       Sys.command (Printf.sprintf "tar xvfj %s -C %s" file tmp_dir)
