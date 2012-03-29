@@ -499,7 +499,7 @@ module Client : CLIENT = struct
           if Namespace.is_valid_nv name then begin
             let n, v = Namespace.nv_of_string name in
             Globals.msg
-              "Package %s not found, looking for package %s version %s"
+              "Package %s not found, looking for package %s version %s\n"
               name (Namespace.string_of_name n) (Namespace.string_of_version v);
             (match File.Spec.find (Path.index t.home (Some (n, v))) with
             | None   -> unknown_package n
