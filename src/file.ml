@@ -706,7 +706,7 @@ exception Directory_found
 
 module Make (F : Base.IO_FILE) = 
 struct
-  let log = Globals.log F.internal_name
+  let log = Globals.log ("FILE." ^ F.internal_name)
 
   (** Add a file *)
   let add f v =

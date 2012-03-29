@@ -18,6 +18,8 @@ open Namespace
 open Path
 open Server
 
+let log fmt = Globals.log "SOLVER" fmt
+
 type 'a installed_status =
   | Was_installed of 'a
   | Was_not_installed
