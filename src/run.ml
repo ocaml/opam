@@ -315,10 +315,10 @@ let exec_download =
     else
       Url_error in
   function
-  | (Http|Https), url ->
+  | (Http|Https as uri), url ->
       (match Globals.os with
-      | Globals.Darwin -> http "fpt"  url
-      | _              -> http "wget" url)
+      | Globals.Darwin -> http "fpt"  (Uri.to_string (Some uri, url))
+      | _              -> http "wget" (Uri.to_string (Some uri, url)))
   | Git, repo -> clone repo
   | Local, _  -> assert false
 

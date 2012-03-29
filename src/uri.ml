@@ -40,3 +40,8 @@ let string_of_uri = function
   | Http    -> "http://"
   | Https   -> "https://"
   | Git     -> "git://"
+
+let to_string (uri, url) =
+  match uri with
+  | None   -> url
+  | Some u -> Printf.sprintf "%s%s" (string_of_uri u) url
