@@ -13,7 +13,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-let debug = ref false
+let debug = ref (
+  try let (_:string) = Sys.getenv "OCPGETDEBUG" in true
+  with _ -> false
+)
 
 let version = "0.1+dev"
 

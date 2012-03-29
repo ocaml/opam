@@ -191,9 +191,10 @@ let sys_command_with_bin bin fmt =
           path := new_path;
       done;
       log "cwd=%s path=%s %s" (Unix.getcwd ()) !path cmd;
-      let (o,_,e as chans) = Unix.open_process_full cmd env in
+      let (o,i,e as chans) = Unix.open_process_full cmd env in
       let s_of_l = String.concat "\n" in
       (* we MUST read the input_channels otherwise [close_process] will fail *)
+      flush i;
       let out = read_lines o in
       let err = read_lines e in
       let msg () = Globals.msg "out: %s\nerr: %s\n" (s_of_l out) (s_of_l err) in
