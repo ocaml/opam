@@ -10,7 +10,7 @@ TARGET = ocp-get ocp-get-server
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile link #clone
+all: ./_obuild/unixrun compile link clone
 	@
 
 scan: ./_obuild/unixrun
@@ -43,7 +43,7 @@ ocp-get-server: _obuild/ocp-get-server/ocp-get-server.asm
 ocp-get: _obuild/ocp-get/ocp-get.asm
 	ln -s $^ ocp-get
 
-compile: ./_obuild/unixrun #clone
+compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
 clone: cudf extlib ocaml-re ocamlgraph dose ocaml-arg
