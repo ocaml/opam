@@ -162,6 +162,12 @@ module Server : SERVER with type t = server_state = struct
 end
 
 
+exception Connection_error of string
+let connection_error fmt =
+  Printf.kprintf (fun str ->
+    raise (Connection_error str)
+  ) fmt
+
 (* Used by the client to communicate with the server *)
 module RemoteServer : SERVER with type t = url = struct
 
@@ -172,8 +178,11 @@ module RemoteServer : SERVER with type t = url = struct
   (* untyped message exchange *)
   let send url m =
     if url.uri = Some Git then
-      Globals.error_and_exit "%s is not a valid OPAM server" url.hostname;
-    let host = (gethostbyname url.hostname).h_addr_list.(0) in
+      connection_error "%s is not a valid OPAM server" url.hostname;
+    let host =
+      try (gethostbyname url.hostname).h_addr_list.(0)
+      with Not_found ->
+        connection_error "%s is not a valid host address" url.hostname in
     let port = match url.port with
       | None   -> Globals.error_and_exit "No port provided"
       | Some p -> p in
@@ -181,7 +190,7 @@ module RemoteServer : SERVER with type t = url = struct
     try
       Protocol.find (open_connection addr) m
     with _ ->
-      Globals.error_and_exit
+      connection_error
         "The server (%s) is unreachable. Please check your network configuration."
         (string_of_url url)
 

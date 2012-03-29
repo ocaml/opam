@@ -154,7 +154,10 @@ module Client : CLIENT = struct
           (Version Globals.ocaml_version) in
       File.Config.add config_f config;
       File.Installed.add (Path.installed home) File.Installed.empty;
-      update ()
+      try update ()
+      with Connection_error msg ->
+        Run.safe_rmdir !Globals.root_path;
+        Globals.error_and_exit "%s" msg
 
   let indent_left s nb =
     let nb = nb - String.length s in
