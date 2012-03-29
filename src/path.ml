@@ -511,9 +511,11 @@ module Path : PATH = struct
         
   | Links links ->
       R_lazy (fun () -> 
+        if links.urls = [] && links.patches = [] then
+          Globals.error_and_exit "The package contains no content";
 
         let rec download = function
-        | [] -> Globals.warning "%s contains no archive" (Namespace.to_string nv)
+        | [] -> ()
         | Internal f :: urls -> download_aux f urls
         | External (uri, url) :: urls ->
             match Run.download (uri, url) nv with
@@ -527,8 +529,9 @@ module Path : PATH = struct
         let patch p =
           match get_local_files p with
           | Some p ->
-            if Sys.file_exists (Printf.sprintf "%s/%s" (Namespace.to_string nv) p) then
-              Globals.error_and_exit "overwrite the config or install already existing ?"
+            let file = Printf.sprintf "%s/%s" (Namespace.to_string nv) p in
+            if Sys.file_exists file then
+              Globals.error_and_exit "%s already exits" file
             else
               add_rec (Raw (Namespace.to_string nv)) (R_filename [Raw p])
           | None -> 
