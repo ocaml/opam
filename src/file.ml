@@ -517,7 +517,7 @@ struct
           (fun (k,v) -> { p_from = relative_path_of_string k;
                           p_to   = f_to v }) in
         { lib  = cp (string_list "lib" s)  @ accu.lib;
-          bin  = mv relative_path_of_string (pair_list "bin"  s) @ accu.bin;
+          bin  = mv relative_path_of_string (pair_opt_list "bin"  s) @ accu.bin;
           misc = mv (b_of_string Absolute)  (pair_list "misc" s) @ accu.misc } in
       List.fold_left one empty file.statements
 

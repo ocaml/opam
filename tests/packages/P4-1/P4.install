@@ -1,5 +1,6 @@
 install "P4" {
   bin = [
-    ["_build/p4.native"; "p4"]
+    ["_build/p4.native"; "p4"];
+    ["_build/p4.native"];
   ]
 }
