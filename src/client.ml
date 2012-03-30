@@ -702,20 +702,55 @@ module Client : CLIENT = struct
       | [h]  -> f h 
       | h::t -> f h; Globals.msg " "; iter_with_spaces f t in
 
-    let versions = List.map (fun n -> n, version n) names in
+    (* Get the list of installed packages *)
+    let l_deb = debpkg_of_nv t installed l_index in
+
+    (* return the dependencies of [names] *)
+    let get_dependencies rec_search names =
+      let versions = List.map (fun n -> n, version n) names in
+      (* Get the packages we are looking for in the list of debian packages *)
+      let l_pkg =
+        List.filter
+          (fun pkg ->
+            let name, version = Namespace.nv_of_dpkg pkg in
+            List.exists (fun (n,v) -> n=name && v=version) versions)
+          l_deb in
+      (* Compute the transitive closure of dependencies *)
+      let depends =
+        let d = 
+          Solver.filter_backward_dependencies l_pkg l_deb in
+        if rec_search = Recursive_large then 
+          d
+        else
+          List.filter (fun p -> not (List.mem (fst (Namespace.nv_of_dpkg p)) names)) d in
+(*      log "get_depends: %s => %s" (String.concat "," (List.map Namespace.string_of_name names))
+        (String.concat ", " (List.map (fun k -> Namespace.to_string (Namespace.nv_of_dpkg k)) depends)); *)
+      List.map  Namespace.nv_of_dpkg depends in
+
+    let libraries_of_nv (name, version) =
+      match File.PConfig.find (Path.pconfig t.home (name, version)) with
+      | None        -> []
+      | Some config -> File.PConfig.library_names config in
 
     let one (name, version) =
       let path = match Path.ocaml_options_of_library t.home name with I s -> s in
       match req with
       | Include -> Globals.msg "-I %s" path
       | Ocp     ->
-          (match File.PConfig.find (Path.pconfig t.home (name, version)) with
-          | None        -> ()
-          | Some config ->
-            let libraries = File.PConfig.library_names config in
-            let one lib =
-              Globals.msg "begin library %S\n  generated=true\n  dirname=%S\nend\n\n" lib path in
-            List.iter one libraries)
+          let libraries = libraries_of_nv (name, version) in
+          let rec_search = match rec_search with Not_recursive -> Not_recursive | _ -> Recursive_strict in
+          let depends = get_dependencies rec_search [name] in
+          let requires =
+            List.fold_left
+              (fun accu dep -> libraries_of_nv dep @ accu)
+              []
+              depends in
+          let requires = String.concat " " (List.map (Printf.sprintf "%S") requires) in
+          let one lib =
+            Globals.msg
+              "begin library %S\n  generated=true\n  dirname=%S\n  requires=[%s]\nend\n\n"
+              lib path requires in
+          List.iter one libraries
       | link    ->
           let config = File.PConfig.find_err (Path.pconfig t.home (name, version)) in
           let libraries = File.PConfig.library_names config in
@@ -744,33 +779,12 @@ module Client : CLIENT = struct
 
       (* If we don't need to look at the dependencies, simply call [one] for
          each pair (name x version) *)
-      iter_with_spaces one versions
+      iter_with_spaces one (List.map (fun n -> n, version n) names)
 
       | _ ->
 
       (* Otherwise, we need to compute the transitive closure of dependencies *)
-      
-      (* So first, get the list of installed packages *)
-      let l_deb = debpkg_of_nv t installed l_index in
-            
-      (* Then, get the packages we are looking for *)
-      let l_pkg =
-        List.filter
-          (fun pkg ->
-            let name, version = Namespace.nv_of_dpkg pkg in
-            List.exists (fun (n,v) -> n=name && v=version) versions)
-          l_deb in
-
-      (* Compute the transitive closure of dependencies *)
-      let dependencies =
-        let d = 
-          Solver.filter_backward_dependencies l_pkg l_deb in
-        if rec_search = Recursive_large then 
-          d
-        else
-          List.filter (fun p -> not (List.mem (fst (Namespace.nv_of_dpkg p)) names)) d in
-
-      iter_with_spaces one (List.map Namespace.nv_of_dpkg dependencies)
+      iter_with_spaces one (get_dependencies rec_search names)
 
   let string_of_remote_action = function
     | List     -> "list"

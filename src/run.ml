@@ -199,6 +199,7 @@ let sys_command_with_bin bin fmt =
       let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
       let msg () = Globals.msg "%s\n" (str ()) in
       match Unix.close_process_full chans with
+      | Unix.WEXITED 0 -> 0
       | Unix.WEXITED i -> msg (); i
       | _              -> msg (); 1
     end else
