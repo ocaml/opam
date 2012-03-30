@@ -634,7 +634,7 @@ module Client : CLIENT = struct
     let spec = File.Spec.parse spec_s in
     let version = File.Spec.version spec in
     let name = File.Spec.name spec in
-    let spec_b = Raw_binary (File.Spec.to_string (File.Spec.filter_external_patches spec)) in
+    let spec_b = Raw_binary (File.Spec.to_string (File.Spec.filter_external_ressources spec)) in
 
     (* look for the archive *)
     let archive_filename = Namespace.string_of_nv name version ^ ".tar.gz" in

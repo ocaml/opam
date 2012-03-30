@@ -244,7 +244,7 @@ struct
     val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
 
     (** Delete in patches pointers to local filename *)
-    val filter_external_patches : t -> t
+    val filter_external_ressources : t -> t
   end
 
   module Spec : SPEC = struct
@@ -355,9 +355,8 @@ struct
         (plf s_urls t.urls)
         (plf s_patches t.patches)
 
-    let filter_external_patches t = 
-      { t with patches = 
-          List.filter (function Internal _ -> false | _ -> true) t.patches }
+    let filter_external_ressources t = 
+      { t with urls = [] ; patches = [] }
 
     let parse str =
       let lexbuf = Lexing.from_string str in
