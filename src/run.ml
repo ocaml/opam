@@ -161,7 +161,7 @@ let untar file nv =
   let err =
     if List.exists (Filename.check_suffix file) [ "tar.gz" ; "tgz" ] then
       Sys.command (Printf.sprintf "tar xvfz %s -C %s" file tmp_dir)
-    else if Filename.check_suffix file "tar.bz2" then
+    else if List.exists (Filename.check_suffix file) [ "tar.bz2" ; "tbz" ] then
       Sys.command (Printf.sprintf "tar xvfj %s -C %s" file tmp_dir)
     else
       Globals.error_and_exit "%s is not a valid archive" file in
