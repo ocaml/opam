@@ -709,8 +709,13 @@ module Client : CLIENT = struct
       match req with
       | Include -> Globals.msg "-I %s" path
       | Ocp     ->
-          Globals.msg "begin library %S\n  generated=true\n  dirname=%S\nend\n\n"
-            (Namespace.string_of_name name) path
+          (match File.PConfig.find (Path.pconfig t.home (name, version)) with
+          | None        -> ()
+          | Some config ->
+            let libraries = File.PConfig.library_names config in
+            let one lib =
+              Globals.msg "begin library %S\n  generated=true\n  dirname=%S\nend\n\n" lib path in
+            List.iter one libraries)
       | link    ->
           let config = File.PConfig.find_err (Path.pconfig t.home (name, version)) in
           let libraries = File.PConfig.library_names config in
