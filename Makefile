@@ -33,10 +33,10 @@ link: ocp-get ocp-get-server
 	@
 
 _obuild/ocp-get-server/ocp-get-server.asm:
-	ocp-build ocp-get-server
+	$(OCPBUILD) ocp-get-server
 
 _obuild/ocp-get/ocp-get.asm:
-	ocp-build ocp-get
+	$(OCPBUILD) ocp-get
 
 ocp-get-server: _obuild/ocp-get-server/ocp-get-server.asm
 	ln -s $^ ocp-get-server
