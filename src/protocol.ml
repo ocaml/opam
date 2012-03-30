@@ -21,8 +21,8 @@ type client_to_server =
   | C2S_getList
   | C2S_getSpec       of name_version
   | C2S_getArchive    of name_version
-  | C2S_newArchive    of name_version * raw_binary * raw_binary option
-  | C2S_updateArchive of name_version * raw_binary * raw_binary option * security_key
+  | C2S_newArchive    of name_version * raw_binary * raw_binary
+  | C2S_updateArchive of name_version * raw_binary * raw_binary * security_key
 
 type server_to_client =
   | S2C_apiVersion      of int

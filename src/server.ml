@@ -41,14 +41,13 @@ sig
   val getArchive : t -> name_version -> raw_binary option
 
   (** Process a first upload: it contains a spec file and a possible
-      corresponding archive. If the archive is [None], then the spec
-      file should contains links to downloadable archives that clients
-      can use later. The function returns the secret key associated to
+      corresponding archive.
+      The function returns the secret key associated to
       all the packages having the same name *)
-  val newArchive : t -> name_version -> raw_binary -> raw_binary option -> security_key
+  val newArchive : t -> name_version -> raw_binary -> raw_binary -> security_key
 
   (** Same as [newArchive] but for subsequent upload (using the secret key) *)
-  val updateArchive : t -> name_version -> raw_binary -> raw_binary option -> security_key -> unit
+  val updateArchive : t -> name_version -> raw_binary -> raw_binary -> security_key -> unit
 
 end
 
@@ -123,10 +122,7 @@ module Server : SERVER with type t = server_state = struct
     begin match opam with
       | Raw_binary s -> File.Spec.add opam_file (File.Spec.parse s)
     end;
-    begin match archive with
-      | None   -> ()
-      | Some f -> Path.add archive_file (Path.File (Binary f))
-    end
+    Path.add archive_file (Path.File (Binary archive))
 
   let processArchive o_key t (name, v) spec archive = 
     let hashes = Path.hashes t.home name in

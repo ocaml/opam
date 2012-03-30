@@ -640,42 +640,36 @@ module Client : CLIENT = struct
     let archive_filename = Namespace.string_of_nv name version ^ ".tar.gz" in
     let archive =
       if Sys.file_exists archive_filename then
-        Some (Raw_binary (Run.read archive_filename))
+        Raw_binary (Run.read archive_filename)
       else
         let urls = File.Spec.urls spec in
         if urls = [] then
           Globals.error_and_exit "No location specified for %s" archive_filename
         else
-          match File.Spec.patches spec with
-            | patches when patches <> [] && List.for_all (function Internal _ -> true | _ -> false) patches ->
-              (* the ".spec" being processed contains only local patches *)
-              let nv = name, version in
-              let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
-              let () =
-                begin                 
-                  ((* try to check that patches are well-parsed before the copy *)
-                    List.iter
-                      (function Internal p ->
-                        if not (Sys.is_directory p) && Filename.check_suffix p "install" then
-                          (try ignore (File.To_install.parse (Run.read p)) with e -> 
-                            Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)
-                        else
-                          () (* TODO perform the recursive check for a directory. 
-                                Change [Path.add_rec] such that it accepts an optional checking function. *)
-                        | _ -> ())
-                      patches;
-                  );
-
-                  (* include the patches inside the downloaded directory *)
-                  Path.add_rec tmp_nv (Path.extract nv (Links { urls ; patches }));
-                  Path.to_archive archive_filename tmp_nv;
-                  Path.remove tmp_nv;
-                end in
-              Some (Raw_binary (Run.read archive_filename))
-            | patches when List.for_all (function Internal _ -> false | _ -> true) patches -> 
-              (* in case there is no patch or it contains only external link *)
-              None
-            | _ -> failwith "the patch contains both internal and external links, situation not handled yet" in
+          let patches = File.Spec.patches spec in
+          (* the ".spec" being processed contains only local patches *)
+          let nv = name, version in
+          let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
+          let () =
+            begin                 
+              (* try to check that patches are well-parsed before the copy *)
+              List.iter
+                (function Internal p ->
+                  if not (Sys.is_directory p) && Filename.check_suffix p "install" then
+                    (try ignore (File.To_install.parse (Run.read p)) with e -> 
+                      Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)
+                  else
+                    () (* TODO perform the recursive check for a directory. 
+                          Change [Path.add_rec] such that it accepts an optional checking function. *)
+                  | _ -> ())
+                patches;
+              
+              (* include the patches inside the downloaded directory *)
+              Path.add_rec tmp_nv (Path.extract nv (Links { urls ; patches }));
+              Path.to_archive archive_filename tmp_nv;
+              Path.remove tmp_nv;
+            end in
+          Raw_binary (Run.read archive_filename) in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)

@@ -5,8 +5,17 @@
 # Prerequisites:
 
 * ocaml
-* wget (or ftp for "Darwin")
 * tar
+* ocp-get (optional)
+
+Unless the following packages are already downloaded :
+* http://www.ocamlpro.com/pub/cudf.tar.bz2
+* http://www.ocamlpro.com/pub/dose.tar.bz2
+* http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz
+* http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2
+* http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
+* http://www.ocamlpro.com/pub/ocaml-re.tar.bz2
+a manual downloading will be performed.
 
 To compile `ocp-get`, simply run:
 
