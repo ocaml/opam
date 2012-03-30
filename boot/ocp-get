@@ -1,1 +1,3 @@
-unixrun ocp-get.boot
+#!/bin/bash
+set -e
+unixrun ocp-get.boot $@
