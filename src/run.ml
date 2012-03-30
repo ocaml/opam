@@ -294,8 +294,8 @@ let clone repo last_pwd nv =
   let b_name = Filename.chop_extension (Filename.basename repo) in
   let dst_git = Filename.concat tmp_dir b_name in
   log "cloning %s into %s" repo dst_git;
-  if Sys.file_exists repo then
-    safe_rm repo;
+  if Sys.file_exists dst_git then
+    safe_rm dst_git;
   let err = Git.clone repo b_name in
   if err = 0 then
     let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in

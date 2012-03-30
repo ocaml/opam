@@ -26,6 +26,7 @@ opt: ./_obuild/unixrun
 	ocamlc -o ./_obuild/unixrun -make-runtime unix.cma str.cma
 
 bootstrap: _obuild/unixrun _obuild/ocp-get/ocp-get.byte
+	rm -f boot/ocp-get.boot
 	ocp-bytehack -static _obuild/ocp-get/ocp-get.byte -o boot/ocp-get.boot
 
 link: ocp-get ocp-get-server
