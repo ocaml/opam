@@ -92,7 +92,7 @@ module Server : SERVER with type t = server_state = struct
 
   let getSpec t n_v =
     let index = read_index t.home in
-    try Raw_binary (File.Spec.to_string (NV_map.find n_v index))
+    try Raw_binary (File.Spec.to_string (File.Spec.filter_external_ressources (NV_map.find n_v index)))
     with Not_found -> error "%S not found" (string_of_nv n_v)
 
   let getArchive t n_v = 
