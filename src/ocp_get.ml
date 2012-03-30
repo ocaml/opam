@@ -258,6 +258,6 @@ let () =
   | Bad (cmd, msg) ->
     ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
     Printf.eprintf "ERROR: %s\n%!" msg
-  | Failure s ->
+  | Failure ("no subcommand defined" as s) ->
     ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
     Printf.eprintf "ERROR: %s\n%!" s
