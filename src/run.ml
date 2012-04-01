@@ -321,7 +321,7 @@ let exec_download =
   function
   | (Http|Https as uri), url ->
       (match Globals.os with
-      | Globals.Darwin -> http "fpt"  (Uri.to_string (Some uri, url))
+      | Globals.Darwin -> http "ftp"  (Uri.to_string (Some uri, url))
       | _              -> http "wget" (Uri.to_string (Some uri, url)))
   | Git, repo -> clone repo
   | Local, _  -> assert false
