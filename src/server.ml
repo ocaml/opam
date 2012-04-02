@@ -104,7 +104,7 @@ module Server : SERVER with type t = server_state = struct
     match Path.find_binary p with
       | Path.File s -> Some s
       | _           -> 
-        match File.Spec.urls spec with
+        match File.Spec.sources spec with
           | [] -> error "Cannot find %S in local repository and no external url provided" (string_of_nv n_v)
           | urls ->
           (* if some urls are provided, check for external urls *)

@@ -392,9 +392,9 @@ module Client : CLIENT = struct
     let archive = match getArchive t.servers nv with
       | Some tgz -> Archive tgz
       | None     ->
-          let urls = File.Spec.urls spec in
+          let sources = File.Spec.sources spec in
           let patches = File.Spec.patches spec in
-          Links { urls; patches } in
+          Links { sources; patches } in
     let archive = Path.extract nv archive in
     log "Process %s archive" (Namespace.to_string nv);
     Path.add_rec p_build archive;
@@ -642,8 +642,8 @@ module Client : CLIENT = struct
       if Sys.file_exists archive_filename then
         Raw_binary (Run.read archive_filename)
       else
-        let urls = File.Spec.urls spec in
-        if urls = [] then
+        let sources = File.Spec.sources spec in
+        if sources = [] then
           Globals.error_and_exit "No location specified for %s" archive_filename
         else
           let patches = File.Spec.patches spec in
@@ -665,7 +665,7 @@ module Client : CLIENT = struct
                 patches;
               
               (* include the patches inside the downloaded directory *)
-              Path.add_rec tmp_nv (Path.extract nv (Links { urls ; patches }));
+              Path.add_rec tmp_nv (Path.extract nv (Links { sources ; patches }));
               Path.to_archive archive_filename tmp_nv;
               Path.remove tmp_nv;
             end in

@@ -142,6 +142,14 @@ let normalize s =
   else
     s
 
+let is_archive file =
+  if List.exists (Filename.check_suffix file) [ "tar.gz" ; "tgz" ] then
+    Some (fun tmp_dir -> Sys.command (Printf.sprintf "tar xvfz %s -C %s" file tmp_dir))
+  else if List.exists (Filename.check_suffix file) [ "tar.bz2" ; "tbz" ] then
+    Some (fun tmp_dir -> Sys.command (Printf.sprintf "tar xvfj %s -C %s" file tmp_dir))
+  else
+    None
+
 let untar file nv =
   log "untar %s" file;
   let files = read_command_output ("tar tf " ^ file) in
@@ -159,12 +167,9 @@ let untar file nv =
   if not (Sys.file_exists tmp_dir) then
     Unix.mkdir tmp_dir 0o750;
   let err =
-    if List.exists (Filename.check_suffix file) [ "tar.gz" ; "tgz" ] then
-      Sys.command (Printf.sprintf "tar xvfz %s -C %s" file tmp_dir)
-    else if List.exists (Filename.check_suffix file) [ "tar.bz2" ; "tbz" ] then
-      Sys.command (Printf.sprintf "tar xvfj %s -C %s" file tmp_dir)
-    else
-      Globals.error_and_exit "%s is not a valid archive" file in
+    match is_archive file with
+      | Some f_cmd -> f_cmd tmp_dir
+      | None -> Globals.error_and_exit "%s is not a valid archive" file in
   List.iter (fun (src, dst) ->
     mkdir (copy src) dst
   ) moves;

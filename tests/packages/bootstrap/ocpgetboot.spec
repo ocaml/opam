@@ -3,7 +3,7 @@
 package "ocpgetboot" {
   version     = "max_int"
   description = "https://github.com/OCamlPro/ocp-get"
-  urls = [ "https://github.com/OCamlPro/ocp-get.git" ]
+  sources = [ "https://github.com/OCamlPro/ocp-get.git" ]
   patches = [ "local://ocpgetboot.install"
             ; "local://ocpgetboot.ocp.boot" ]
   make = [ "rm depends.ocp ocp-get.ocp"
