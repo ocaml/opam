@@ -7,7 +7,6 @@
 * ocaml
 * tar
 * ocp-get (optional)
-* git (optional)
 
 Unless the following packages are already downloaded :
 
