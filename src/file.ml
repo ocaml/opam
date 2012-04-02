@@ -233,8 +233,8 @@ struct
     (** destruct *)
     val name        : t -> name
     val version     : t -> version
-    val sources     : t -> raw_filename list
     val make        : t -> string list
+    val sources     : t -> raw_filename list
     val patches     : t -> raw_filename list
 
     (** Returns the list of sentences *)
