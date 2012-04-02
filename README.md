@@ -2,13 +2,15 @@
 
 *Warning* do not use this software in production, it is not yet stable
 
-# Prerequisites:
+## Prerequisites:
 
 * ocaml
-* tar
-* ocp-get (optional)
 
-Unless the following packages are already downloaded :
+## (optional) Preparing the build
+
+    make clone
+
+This command will download and extract the following archives:
 
 * http://www.ocamlpro.com/pub/cudf.tar.bz2
 * http://www.ocamlpro.com/pub/dose.tar.bz2
@@ -17,13 +19,11 @@ Unless the following packages are already downloaded :
 * http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
 * http://www.ocamlpro.com/pub/ocaml-re.tar.bz2
 
-a manual downloading will be performed.
+## Building ocp-get
 
 To compile `ocp-get`, simply run:
 
-```
-make
-```
+    make
 
 ## Tests
 
@@ -43,11 +43,13 @@ You can then open a new terminal window and either run:
 make tests
 ```
 
-or
+## Bootstrapping 
+
+Running:
 
 ```
 make -C tests ocpget
 ```
-to compile `ocp-get` once again. 
-But this time, the complete installation will be orchestrated
-by the existing `ocp-get` itself.
+
+will compile `ocp-get` once again.But this time, the complete installation will be orchestrated
+by the existing `ocp-get` itself (ie. this will bypass the `clone` step).
