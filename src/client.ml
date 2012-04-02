@@ -643,33 +643,30 @@ module Client : CLIENT = struct
         Raw_binary (Run.read archive_filename)
       else
         let sources = File.Spec.sources spec in
-        if sources = [] then
-          Globals.error_and_exit "No location specified for %s" archive_filename
-        else
-          let patches = File.Spec.patches spec in
-          (* the ".spec" being processed contains only local patches *)
-          let nv = name, version in
-          let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
-          let () =
-            begin                 
-              (* try to check that patches are well-parsed before the copy *)
-              List.iter
-                (function Internal p ->
-                  if not (Sys.is_directory p) && Filename.check_suffix p "install" then
-                    (try ignore (File.To_install.parse (Run.read p)) with e -> 
-                      Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)
-                  else
-                    () (* TODO perform the recursive check for a directory. 
-                          Change [Path.add_rec] such that it accepts an optional checking function. *)
-                  | _ -> ())
-                patches;
+        let patches = File.Spec.patches spec in
+        (* the ".spec" being processed contains only local patches *)
+        let nv = name, version in
+        let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
+        let () =
+          begin                 
+            (* try to check that patches are well-parsed before the copy *)
+            List.iter
+              (function Internal p ->
+                if not (Sys.is_directory p) && Filename.check_suffix p "install" then
+                  (try ignore (File.To_install.parse (Run.read p)) with e -> 
+                    Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)
+                else
+                  () (* TODO perform the recursive check for a directory. 
+                        Change [Path.add_rec] such that it accepts an optional checking function. *)
+                | _ -> ())
+              patches;
               
-              (* include the patches inside the downloaded directory *)
-              Path.add_rec tmp_nv (Path.extract nv (Links { sources ; patches }));
-              Path.to_archive archive_filename tmp_nv;
-              Path.remove tmp_nv;
-            end in
-          Raw_binary (Run.read archive_filename) in
+            (* include the patches inside the downloaded directory *)
+            Path.add_rec tmp_nv (Path.extract nv (Links { sources ; patches }));
+            Path.to_archive archive_filename tmp_nv;
+            Path.remove tmp_nv;
+          end in
+        Raw_binary (Run.read archive_filename) in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
