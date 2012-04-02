@@ -69,8 +69,10 @@ type binary_data =
   | Filename of raw_filename
 
 type links = {
-  urls   : raw_filename list; (* list OR of archive to download *)
-  patches: raw_filename list; (* list AND of patch to apply *)
+  patches: raw_filename list; 
+  (* list of patches to apply. The order of application is the natural order of the list.
+     During application, every new patches could overwrite the previous one 
+     (if modifications target same locations).  *)
 }
 
 type 'a archive = 
@@ -508,20 +510,8 @@ module Path : PATH = struct
         
   | Links links ->
       R_lazy (fun () -> 
-        if links.urls = [] && links.patches = [] then
+        if links.patches = [] then
           Globals.error_and_exit "The package contains no content";
-
-        let rec download = function
-        | [] -> ()
-        | Internal f :: urls -> download_aux f urls
-        | External (uri, url) :: urls ->
-            match Run.download (uri, url) nv with
-            | Run.Url_error   -> download urls
-            | Run.From_http f -> download_aux f urls
-            | Run.From_git    -> ()
-        and download_aux f urls =
-          if Run.untar f nv <> 0 then
-            download urls in
 
         let add p =
           let file = Printf.sprintf "%s/%s" (Namespace.to_string nv) p in
@@ -532,20 +522,26 @@ module Path : PATH = struct
         let apply p =
           if Run.patch p nv <> 0 then
             Globals.error_and_exit "Unable to apply path %S" p in
+
         let patch p =
           let l = match p with
-            | Internal p -> p
+            | Internal p -> Some p
             | External (uri, url) ->
               match Run.download (uri, url) nv with
               | Run.Url_error   -> Globals.error_and_exit "Patch %S is unavailable" url
-              | Run.From_git    -> failwith "TODO"
-              | Run.From_http p -> p in
-          if is_patch p then
-            apply l
-          else
-            add l in
+              | Run.From_git    -> None
+              | Run.From_http p -> Some p in
+
+          match l, is_patch p with
+            | Some l, true -> apply l
+            | Some l, false when Run.is_archive l <> None ->
+              if Run.untar l nv <> 0 then
+                Globals.error_and_exit "Unable to extract %S" l
+                        (* WARNING currently, only the first patch is supported to overwrite the extracting destination directory.
+                           Futur archives should be able to overwrite also. *)
+            | Some l, _ -> add l
+            | _ -> () in
         
-        download links.urls;
         List.iter patch links.patches
       )
 

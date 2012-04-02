@@ -233,7 +233,6 @@ struct
     (** destruct *)
     val name        : t -> name
     val version     : t -> version
-    val urls        : t -> raw_filename list
     val make        : t -> string list
     val patches     : t -> raw_filename list
 
@@ -270,7 +269,6 @@ struct
       name       : string;
       version    : string;
       description: string list;
-      urls       : raw_filename list;
       patches    : raw_filename list;
       make       : string list;
       depends    : string option;
@@ -282,7 +280,6 @@ struct
       name        = "<none>";
       version     = "<none>";
       description = ["empty package"];
-      urls        = [];
       make        = [];
       fields      = [];
       depends     = None;
@@ -296,7 +293,6 @@ struct
     let s_installed   = "  installed" (* see [Debcudf.add_inst] for more details about the format *)
     let s_depends     = "depends"
     let s_conflicts   = "conflicts"
-    let s_urls        = "urls"
     let s_patches     = "patches"
     let s_make        = "make"
 
@@ -305,7 +301,6 @@ struct
       s_version;
       s_depends;
       s_conflicts;
-      s_urls;
       s_patches;
       s_make;
     ]
@@ -313,7 +308,6 @@ struct
     let description t = t.description
     let name t = Namespace.name_of_string t.name
     let version t = Namespace.version_of_string t.version
-    let urls t = t.urls
     let patches t = t.patches
     let make t = t.make
 
@@ -347,16 +341,15 @@ struct
           | External (uri, s) -> sprintf "%s%s" (string_of_uri uri) s
         ) l) in
 
-      sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
+      sprintf "@%d\n\npackage %S {\n%s%s%s\n}\n"
         Globals.api_version t.name
 
         (String.concat "" (List.map pf t.fields))
         (pl s_make t.make)
-        (plf s_urls t.urls)
         (plf s_patches t.patches)
 
     let filter_external_ressources t = 
-      { t with urls = [] ; patches = [] }
+      { t with patches = [] }
 
     let parse str =
       let lexbuf = Lexing.from_string str in
@@ -377,7 +370,6 @@ struct
           | String s -> String.nsplit s "\\"
           | _        -> Globals.error_and_exit "Field 'description': bad format"  
         with Not_found -> [] in
-      let urls = parse_l_url (string_list s_urls statement) in
       let patches = parse_l_url (string_list s_patches statement) in
       let make = 
         let make = string_list s_make statement in 
@@ -394,7 +386,6 @@ struct
       { version
       ; description
       ; fields
-      ; urls
       ; patches
       ; make
       ; depends

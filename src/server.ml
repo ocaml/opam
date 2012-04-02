@@ -96,25 +96,12 @@ module Server : SERVER with type t = server_state = struct
     with Not_found -> error "%S not found" (string_of_nv n_v)
 
   let getArchive t n_v = 
-    let spec = File.Spec.find_err (Path.index t.home (Some n_v)) in
-
     (* look at an archive in the same path
        having the right name *)
     let p = Path.archives_targz t.home (Some n_v) in
     match Path.find_binary p with
       | Path.File s -> Some s
-      | _           -> 
-        match File.Spec.urls spec with
-          | [] -> error "Cannot find %S in local repository and no external url provided" (string_of_nv n_v)
-          | urls ->
-          (* if some urls are provided, check for external urls *)
-          let external_urls =
-            List.fold_left (fun accu -> function External (_,s) -> s::accu | _ -> accu) [] urls in
-          if external_urls <> [] then
-            (* clients can fetch archives *)
-            None
-          else
-            error "No archive associated to package %S" (string_of_nv n_v)
+      | _           -> None
 
   let storeArchive t n_v opam archive =
     let opam_file = Path.index t.home (Some n_v) in
