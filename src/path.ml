@@ -17,6 +17,7 @@ open ExtList
 open ExtString
 open Namespace
 open Uri
+open Protocol
 
 let log fmt =
   Globals.log "PATH" fmt
@@ -57,9 +58,6 @@ let string_of_url url =
 type 'a ocaml_options = 
   | I of 'a
 
-type raw_binary = 
-  | Raw_binary of string (* contents *)
-
 type raw_filename =
   | External of uri * string
   | Internal of string (* pointer to the local contents *)
@@ -83,8 +81,6 @@ type basename = B of string
 (** Type used to represent an internal form of version, which is in
     particular not related to the version of a particular package *)
 type internal_version = Version of string
-
-type security_key = Random of string
 
 let is_patch = function
   | Internal p

@@ -13,13 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-type name = Name of Cudf_types.pkgname
-
-type version =
-  | Deb of Debian.Format822.version
-  | Head of [`uptodate|`behind] (* Head of a version controled repository *)
-
-type name_version = name * version
+open Protocol
 
 module Namespace =
 struct

@@ -19,6 +19,7 @@ open Path
 open File
 open Unix
 open Uri
+open Protocol
 
 module type SERVER =
 sig

@@ -19,6 +19,7 @@ open Path
 open Server
 open Solver
 open Uri
+open Protocol
 
 let log fmt =
   Globals.log "CLIENT" fmt

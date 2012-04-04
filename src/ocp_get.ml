@@ -20,6 +20,7 @@ open Solver
 open Client
 open SubCommand
 open Uri
+open Protocol
 
 let version () =
   Printf.printf "\

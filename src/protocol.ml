@@ -13,8 +13,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open Namespace
-open Path
+type name = Name of Cudf_types.pkgname
+
+type version =
+  | Deb of Debian.Format822.version
+  | Head of [`uptodate|`behind] (* Head of a version controled repository *)
+
+type name_version = name * version
+
+type raw_binary = 
+  | Raw_binary of string (* contents *)
+
+type security_key = Random of string
 
 type client_to_server =
   | C2S_apidVersion   of int

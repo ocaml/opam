@@ -17,6 +17,7 @@ open ExtList
 open Namespace
 open Path
 open Server
+open Protocol
 
 let log fmt = Globals.log "SOLVER" fmt
 

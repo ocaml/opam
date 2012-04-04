@@ -19,6 +19,7 @@ open Namespace
 open Path
 open File_format
 open Uri
+open Protocol
 
 type ('a, 'b) text = 
   | Parsed of 'a 
