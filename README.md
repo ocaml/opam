@@ -45,11 +45,13 @@ make tests
 
 ## Bootstrapping 
 
-Running:
+`ocp-get` is able to bootstrap itself, using an external index repository.
 
-```
-make -C tests ocpget
-```
+You can test the bootrap process by:
 
-will compile `ocp-get` once again. But this time, the complete installation will be orchestrated
-by the existing `ocp-get` itself (ie. this will bypass the `clone` step).
+* compiling `ocp-get` following the steps described previously
+* run `./ocp-get init https://github.com/samoht/opam-test.git` at the root path
+  of your cloned repository
+* run `./ocp-get install ocp-get`: this will download, compile and install all the
+  needed dependencies. The new binary will be in `~/.opam/<ocaml-version/bin/ocp-get`.
+  If you want to use, you may want to use update your `$PATH` variable.
