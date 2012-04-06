@@ -43,7 +43,7 @@ begin library "ocp-get"
   files    = [
     "solver.ml"
     "client.ml"
-    "ocp_get.ml"
+    (*"ocp_get.ml"*)
   ]
   requires = [ "ocp-get-lib" ]
 end

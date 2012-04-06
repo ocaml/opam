@@ -4,8 +4,8 @@ link = [ "-g" ]
 begin library "cudf"
    sort = true
    files = [
-     "main_cudf_parse_822.ml"
-     "main_cudf_check.ml"
+     (*"main_cudf_parse_822.ml"
+     "main_cudf_check.ml"*)
      "cudf_types_pp.ml"
      "cudf_types.ml"
      "cudf_type_parser.mly"

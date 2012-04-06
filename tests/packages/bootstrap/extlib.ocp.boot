@@ -12,7 +12,7 @@ begin library "extlib"
      "pMap.ml"
      "option.ml"
      "optParse.ml"
-     "install.ml"
+     (*"install.ml"*)
      "IO.ml"
      "global.ml"
      "extString.ml"
