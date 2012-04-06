@@ -40,7 +40,7 @@ let parse_string = function
 
 let parse_string_list = function
   | List l -> List.map parse_string l
-  | _      -> Globals.error_and_exit "Bad format: expecting a list, got s string"
+  | _      -> Globals.error_and_exit "Bad format: expecting a list, got a string"
 
 let parse_pair_opt = function
   | List[String k; String v] -> k, v
@@ -90,3 +90,12 @@ let parse_l_url =
     | Some Local, s2 -> Path.Internal (Run.real_path s2)
     | Some uri  , s2 -> Path.External (uri, s2)
   )
+
+let command n s = 
+  List.map 
+    (function 
+      | List l -> Run.Sh (parse_string_list (List l))
+      | s -> Run.OCaml (parse_string s))
+    (match try List.assoc n s.contents with Not_found -> List [] with
+      | List l -> l
+      | _ -> Globals.error_and_exit "Bad format: expecting a list, got a string")

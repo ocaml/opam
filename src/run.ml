@@ -126,13 +126,18 @@ let read_lines ic =
   with _ ->
     !lines
 
-let read_command_output cmd =
+let read_command_output_ cmd =
   let ic = Unix.open_process_in cmd in
   let lines = read_lines ic in
   if Unix.close_process_in ic <> Unix.WEXITED 0 then
-    Globals.error_and_exit "command %s failed" cmd
+    None
   else
-    lines
+    Some lines
+
+let read_command_output cmd =
+  match read_command_output_ cmd with
+    | None -> Globals.error_and_exit "command %s failed" cmd
+    | Some lines -> lines
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
@@ -175,14 +180,19 @@ let untar file nv =
   ) moves;
   err
 
+type command = 
+  | Sh of string list
+  | OCaml of string
+
 let sys_command fmt =
   Printf.kprintf (fun str ->
     log "cwd=%s '%s'" (Unix.getcwd ()) str;
     Sys.command str;
   ) fmt
 
-let sys_commands = 
-  List.fold_left (function 0 -> sys_command "%s" | err -> fun _ -> err) 0
+let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
+
+let sys_commands = fold_0 (sys_command "%s")
 
 let sys_command_with_bin bin fmt =
   Printf.kprintf (fun cmd ->
@@ -211,8 +221,71 @@ let sys_command_with_bin bin fmt =
       sys_command "%s" cmd
   ) fmt
 
-let sys_commands_with_bin bin = 
-  List.fold_left (function 0 -> sys_command_with_bin bin "%s" | err -> fun _ -> err) 0
+let sys_commands_with_bin bin = fold_0 (sys_command_with_bin bin "%s")
+
+let ocpget_config s_lib = 
+  Printf.kprintf read_command_output_ "ocp-get --root %s config -I %s 2>/dev/null" !Globals.root_path s_lib
+
+let sys_commands_general =
+  let get_tmp_ml = 
+    (* Return a temporary file. 
+       The first call sets the name. Next calls will return that name. *)
+    let ml = ref None in 
+    fun () -> 
+      match !ml with 
+        | None -> 
+          let tmp = Filename.temp_file "ocpget" ".ml" in
+          let _ = ml := Some tmp in
+          tmp
+        | Some ml -> ml in
+
+  let ocpget_lib = 
+    (* library that is loaded by default with 'ocaml' *)
+    [ "extlib", None
+    ; "cudf", None
+    ; "ocamlre", Some [ "re" ]
+    ; "ocpgetboot", Some [ "pcre" ; "bat" ]
+    ; "ocamlgraph", Some [ "graph" ]
+    ; "dose", None
+    ; "ocpget", Some [ "ocp-get-lib" ; "ocp-get" ] ] in
+
+  fun bin ->
+    fold_0 (function 
+      | Sh l -> sys_command_with_bin bin "%s" (String.concat " " l)
+      | OCaml s -> 
+
+        (* construct the OCaml program *)
+        let ml = get_tmp_ml () in
+        let oc = open_out ml in
+        let _ = Printf.fprintf oc "%s%!" s in
+        let _ = close_out oc in
+
+        (* compute the "-I ..." to give to 'ocaml' from the [ocpget_lib] *)
+        (* NOTE We normally take from [ocpget_lib]. It would be interesting to also add all the cma that depends this library. *)
+        let s_include, ocpget_lib = 
+          List.fold_left (fun (acc, ocpget_lib) (s_lib, o_lib) -> 
+            match ocpget_config s_lib with
+              | None -> acc, ocpget_lib
+              | Some l -> Printf.sprintf "%s%s " acc (String.concat " " l), (s_lib, o_lib) :: ocpget_lib
+          ) ("", []) ocpget_lib in
+        let ocpget_lib = List.rev ocpget_lib in
+
+        (* execute the 'ocaml' command *)
+        sys_command "ocaml %s %s %s" 
+          s_include
+
+          ((* cma *)
+           List.fold_left
+             (fun acc l_lib -> 
+               List.fold_left
+                 (fun acc s_lib -> 
+                   Printf.sprintf "%s%s.cma " acc s_lib)
+                 acc
+                 (match l_lib with s_lib, None -> [ s_lib ] | _, Some l -> l))
+             ""
+             (("unix", None) :: ("str", None) :: ocpget_lib))
+
+          ml)
 
 (* Git wrappers *)
 module Git = struct

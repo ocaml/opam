@@ -402,7 +402,7 @@ module Client : CLIENT = struct
 
     (* Call the build script and copy the output files *)
     let buildsh = File.Spec.make spec in
-    log "Run %s" (BatIO.to_string (BatList.print BatString.print) buildsh);
+    log "Run %s" (File.Spec.string_of_command buildsh);
     let err = Path.exec t.home nv buildsh in
     if err = 0 then
       iter_toinstall Path.add_rec t nv

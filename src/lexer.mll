@@ -35,7 +35,9 @@ rule token = parse
 | "["    { LBRACKET }
 | "]"    { RBRACKET }
 | ";"    { SEMI }
-| '"'    { let s = string "" lexbuf in
+| '"'    { let s = string1 "" lexbuf in
+           STRING s }
+| '#'    { let s = string2 "" lexbuf in
            STRING s }
 | "(*"   { comment 1 lexbuf; token lexbuf }
 | number { INT (int_of_string (Lexing.lexeme lexbuf)) }
@@ -45,15 +47,28 @@ rule token = parse
             Globals.error_and_exit "lexer error: '%s' is not a valid tokenm" token }
 
 (* XXX: not optimal at all *)
-and string s = parse
+and string1 s = parse
 | '"'  { s }
 | "\n" { newline lexbuf;
-         string (s ^ Lexing.lexeme lexbuf) lexbuf }
-| "\\\"" { string (s ^ "\"") lexbuf }
+         string1 (s ^ Lexing.lexeme lexbuf) lexbuf }
+| "\\\"" { string1 (s ^ "\"") lexbuf }
+| "\\\\" { string1 (s ^ "\\") lexbuf }
 | "\\" [^ '"' '\\']+
-       { string (s ^ Lexing.lexeme lexbuf) lexbuf }
+       { string1 (s ^ Lexing.lexeme lexbuf) lexbuf }
 | eof  { s }
-| _    { string (s ^ Lexing.lexeme lexbuf) lexbuf }
+| _    { string1 (s ^ Lexing.lexeme lexbuf) lexbuf }
+
+(* XXX: not optimal at all *)
+and string2 s = parse
+| '#'  { s }
+| "\n" { newline lexbuf;
+         string2 (s ^ Lexing.lexeme lexbuf) lexbuf }
+| "\\#" { string2 (s ^ "#") lexbuf }
+| "\\\\" { string2 (s ^ "\\") lexbuf }
+| "\\" [^ '#' '\\']+
+       { string2 (s ^ Lexing.lexeme lexbuf) lexbuf }
+| eof  { s }
+| _    { string2 (s ^ Lexing.lexeme lexbuf) lexbuf }
 
 and comment n = parse
 | "*)" { if n > 1 then comment (n-1) lexbuf }

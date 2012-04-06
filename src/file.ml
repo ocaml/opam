@@ -234,7 +234,7 @@ struct
     (** destruct *)
     val name        : t -> name
     val version     : t -> version
-    val make        : t -> string list
+    val make        : t -> Run.command list
     val sources     : t -> raw_filename list
     val patches     : t -> raw_filename list
 
@@ -246,6 +246,9 @@ struct
 
     (** Delete in patches pointers to local filename *)
     val filter_external_ressources : t -> t
+
+    (** Classic printing function *)
+    val string_of_command : Run.command list -> string
   end
 
   module Spec : SPEC = struct
@@ -273,7 +276,7 @@ struct
       description: string list;
       sources    : raw_filename list;
       patches    : raw_filename list;
-      make       : string list;
+      make       : Run.command list;
       depends    : string option;
       conflicts  : string option;
       fields     : (string * string) list;
@@ -335,26 +338,35 @@ struct
       else
         p
 
-    let to_string t =
+    let to_string, string_of_command = 
       let open Printf in
       let pf (k, v) = sprintf "  %s = %S\n" k v in
-      let ps = sprintf "%S"in
-      let pl k l =
-        sprintf "  %s = [%s]\n" k
-          (String.concat "; " (List.map ps l)) in
+      let p_concat f l = String.concat "; " (List.map f l) in
+      let p_S = sprintf "%S" in
+      let pl_S = p_concat p_S in
+      let pl_s = p_concat (sprintf "%s") in
+      let pl f_S k l = sprintf "  %s = [%s]\n" k (f_S l) in
       let plf k l = 
-        pl k (List.map (function
+        pl pl_S k (List.map (function
           | Internal s        -> sprintf "local://%s" s
           | External (uri, s) -> sprintf "%s%s" (string_of_uri uri) s
         ) l) in
+      let string_of_command l = 
+        List.map (function 
+          | Run.Sh l -> sprintf "[%s]" (pl_S l)
+          | Run.OCaml s -> p_S s) l in
+      let plc k l = pl pl_s k (string_of_command l) in
 
-      sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
-        Globals.api_version t.name
+      (fun t ->
+        sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
+          Globals.api_version t.name
 
-        (String.concat "" (List.map pf t.fields))
-        (pl s_make t.make)
-        (plf s_sources t.sources)
-        (plf s_patches t.patches)
+          (String.concat "" (List.map pf t.fields))
+          (plc s_make t.make)
+          (plf s_sources t.sources)
+          (plf s_patches t.patches)), 
+      fun l -> pl_s (string_of_command l)
+ 
 
     let filter_external_ressources t = 
       { t with sources = [] ; patches = [] }
@@ -381,8 +393,8 @@ struct
       let sources = parse_l_url (string_list s_sources statement) in
       let patches = parse_l_url (string_list s_patches statement) in
       let make = 
-        let make = string_list s_make statement in 
-        if make = [] then [ "./build.sh" ] else make in
+        let make = command s_make statement in 
+        if make = [] then [ Run.Sh [ "./build.sh" ] ] else make in
       let depends = string_option s_depends statement in
       let conflicts = string_option s_conflicts statement in
 
@@ -401,7 +413,6 @@ struct
       ; depends
       ; conflicts
       ; name   = statement.File_format.name }
-
   end
 
 

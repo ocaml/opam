@@ -212,7 +212,7 @@ sig
   (** Executes an arbitrary list of command inside "build/NAME-VERSION". 
       For the [int], see [Sys.command]. 
       In particular, the execution continues as long as each command returns 0. *)
-  val exec : t -> name_version -> string list -> int
+  val exec : t -> name_version -> Run.command list -> int
   
   (** see [Filename.dirname] *)
   val dirname : filename -> filename
@@ -433,7 +433,7 @@ module Path : PATH = struct
 
   let exec t n_v = 
     Run.in_dir (s_of_filename (build t (Some n_v)))
-      (Run.sys_commands_with_bin (s_of_filename (bin t)))
+      (Run.sys_commands_general (s_of_filename (bin t))) 
 
   let basename s = B (Filename.basename (s_of_filename s))
 
