@@ -9,5 +9,5 @@ package "dose" {
   make = [ # Sys.command "for i in ocamlre extlib cudf ocamlgraph ocpgetboot ; do echo 'begin library \"'$i'\" dirname = \"'$(ocp-get --root /tmp/OPAM.TEST config -I $i | cut -d ' ' -f 2)'\" end' >> dose.ocp ; done" #
          ; # Sys.command "cat dose.ocp.boot >> dose.ocp" #
          ; # let exec s a = Unix.execvp s (Array.append [|s|] a) in exec "ocp-build" [| "-init" ; "-scan" |] # ]
-  depends = "ocamlre, extlib, cudf, ocamlgraph, ocpgetboot"
+  depends = [ [ ["ocamlre"] ] ; [ ["extlib"] ] ; [ ["cudf"] ] ; [ ["ocamlgraph"] ] ; [ ["ocpgetboot"] ] ]
 }

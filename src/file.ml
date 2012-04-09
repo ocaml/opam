@@ -277,8 +277,8 @@ struct
       sources    : raw_filename list;
       patches    : raw_filename list;
       make       : Run.command list;
-      depends    : string option;
-      conflicts  : string option;
+      depends    : Debian.Format822.vpkgformula;
+      conflicts  : Debian.Format822.vpkglist;
       fields     : (string * string) list;
     }
 
@@ -289,8 +289,8 @@ struct
       sources     = [];
       make        = [];
       fields      = [];
-      depends     = None;
-      conflicts   = None;
+      depends     = [];
+      conflicts   = [];
       patches     = [];
     }
 
@@ -322,14 +322,11 @@ struct
     let make t = t.make
 
     let default_package (t:t) =
-      let bind f = function
-        | None -> []
-        | Some x -> f x in
       { D.default_package with 
         D.name      = t.name ;
         D.version   = t.version ;
-        D.depends   = bind D.parse_vpkgformula t.depends ;
-        D.conflicts = bind D.parse_vpkglist t.conflicts }
+        D.depends   = t.depends ;
+        D.conflicts = t.conflicts }
 
     let to_package t installed =
       let p = default_package t in
@@ -340,8 +337,9 @@ struct
 
     let to_string, string_of_command = 
       let open Printf in
-      let pf (k, v) = sprintf "  %s = %S\n" k v in
+      let pf p_S (k, v) = sprintf "  %s = %s\n" k (p_S v) in
       let p_concat f l = String.concat "; " (List.map f l) in
+      let p_s = sprintf "%s" in
       let p_S = sprintf "%S" in
       let pl_S = p_concat p_S in
       let pl_s = p_concat (sprintf "%s") in
@@ -356,17 +354,26 @@ struct
           | Run.Sh l -> sprintf "[%s]" (pl_S l)
           | Run.OCaml s -> p_S s) l in
       let plc k l = pl pl_s k (string_of_command l) in
-
+      let pvpkgl = function
+        | [] -> "[]"
+        | l ->
+          sprintf "[%s]"
+            (p_concat (fun s -> sprintf "[%s]" (p_concat p_S s)) 
+               (List.map (function
+                 | s, None -> [ s ] 
+                 | s, Some (rel, v) -> [s ; rel ; v]) l)) in
       (fun t ->
-        sprintf "@%d\n\npackage %S {\n%s%s%s%s\n}\n"
+        sprintf "@%d\n\npackage %S {\n%s%s%s%s%s%s\n}\n"
           Globals.api_version t.name
 
-          (String.concat "" (List.map pf t.fields))
+          (String.concat "" (List.map (pf p_S) t.fields))
           (plc s_make t.make)
           (plf s_sources t.sources)
-          (plf s_patches t.patches)), 
+          (plf s_patches t.patches)
+          (pl (fun l -> p_concat p_s (List.map pvpkgl l)) s_depends t.depends)
+          (pf p_s (s_conflicts, pvpkgl t.conflicts))), 
       fun l -> pl_s (string_of_command l)
- 
+
 
     let filter_external_ressources t = 
       { t with sources = [] ; patches = [] }
@@ -395,8 +402,8 @@ struct
       let make = 
         let make = command s_make statement in 
         if make = [] then [ Run.Sh [ "./build.sh" ] ] else make in
-      let depends = string_option s_depends statement in
-      let conflicts = string_option s_conflicts statement in
+      let depends = vpkgformula s_depends statement in
+      let conflicts = vpkglist s_conflicts statement in
 
       let fields = (* warning : 'List ...' values are not kept in [statement.contents] (only 'String ...') *)
         let unstring accu (k,v) =

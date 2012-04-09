@@ -9,5 +9,5 @@ package "P2" {
      need to be escaped correclty (see the '\\' character\
      at the end of the lines."
 
-  depends = "P1"
+  depends = [ [ ["P1"] ] ]
 }

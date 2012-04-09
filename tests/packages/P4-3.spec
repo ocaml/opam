@@ -5,5 +5,5 @@ package "P4" {
   description = "Testing transitive closure"
   sources     = [ "http://www.ocamlpro.com/pub/p4.tar.gz" ]
   patches     = [ "http://www.ocamlpro.com/pub/p4.diff" ]
-  depends     = "P2, P3"
+  depends     = [ [ ["P2"] ] ; [ ["P3"] ] ]
 }

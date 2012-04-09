@@ -11,5 +11,5 @@ package "ocpget" {
          ; # Sys.command "for i in ocpgetboot ; do echo 'begin library \"bat\" dirname = \"'$(ocp-get --root /tmp/OPAM.TEST config -I $i | cut -d ' ' -f 2)'\" end' >> ocp-get.ocp ; done" #
          ; # Sys.command "cat ocpget.ocp.boot >> ocp-get.ocp" #
          ; # let exec s a = Unix.execvp s (Array.append [|s|] a) in exec "ocp-build" [| "-init" ; "-scan" |] # ]
-  depends = "cudf, dose, extlib, ocamlarg, ocamlgraph, ocpgetboot"
+  depends = [ [ ["cudf"] ] ; [ ["dose"] ] ; [ ["extlib"] ] ; [ ["ocamlarg"] ] ; [ ["ocamlgraph"] ] ; [ ["ocpgetboot"] ] ]
 }
