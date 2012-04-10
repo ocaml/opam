@@ -68,8 +68,10 @@ downgrade: upgrade
 	$(OCPGET) install P4-2
 	$(OCPGET) list
 
-ocpget: fresh init ocpbuild
+ocpget_upload: fresh init ocpbuild
 	cd packages/bootstrap && for i in *spec ; do $(OCPGET) upload $$i ; done
+
+ocpget: ocpget_upload
 	$(OCPGET) install ocpget
 
 packages/%.tar.gz: packages/% packages/%/*
