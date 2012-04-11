@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OCPGET="ocp-get --root /tmp/OPAM.TEST"
+OCPGET="ocp-get --root ${OPAM_ROOT}"
 FLAGS="`${OCPGET} config -I P1`"
 
 echo "Bytecode Compilation"

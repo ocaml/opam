@@ -4,9 +4,9 @@ LOCALHOST       ?= 127.0.0.1
 # never use /tmp
 # should be absolute
 TEST_DIR=/tmp
-OPAM_ROOT        = $(TEST_DIR)/OPAM.TEST
-OPAM_SERVER_ROOT = $(TEST_DIR)/OPAM.SERVER.TEST
-BIN              = $(TEST_DIR)/bin
+OPAM_ROOT        = $(TEST_DIR)/OPAM.CLIENT
+OPAM_SERVER_ROOT = $(TEST_DIR)/OPAM.SERVER
+BIN              = $(TEST_DIR)/OPAM.BIN
 
 # ocp-get in the path should not be a requirement
 ENV           = OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
