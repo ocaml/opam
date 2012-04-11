@@ -1,10 +1,15 @@
 # Make sure to have ocp-get-server running before launchin the tests
 LOCALHOST       ?= 127.0.0.1
-OPAM_ROOT        = /tmp/OPAM.TEST
-OPAM_SERVER_ROOT = /tmp/OPAM.SERVER.TEST
-BIN              = /tmp
 
-ENV           = export OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH) &&
+# never use /tmp
+# should be absolute
+TEST_DIR=/tmp
+OPAM_ROOT        = $(TEST_DIR)/OPAM.TEST
+OPAM_SERVER_ROOT = $(TEST_DIR)/OPAM.SERVER.TEST
+BIN              = $(TEST_DIR)/bin
+
+# ocp-get in the path should not be a requirement
+ENV           = OCAMLRUNPARAM=b OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
 OCPGET        = $(ENV) ocp-get --debug --root $(OPAM_ROOT)
 OCPGET_SERVER = $(ENV) ocp-get-server --debug --root $(OPAM_SERVER_ROOT)
 
@@ -18,13 +23,17 @@ all: fresh init upload list install upload-new upgrade downgrade ocpbuild remove
 	@
 
 $(BIN)/ocp-get: ../ocp-get
+	mkdir -p $(BIN)
 	cp ../ocp-get $(BIN)/ocp-get
 
 $(BIN)/ocp-get-server: ../ocp-get-server
+	mkdir -p $(BIN)
 	cp ../ocp-get-server $(BIN)/ocp-get-server
 
 $(BIN)/ocp-build: ../_obuild/unixrun
-	echo 'exec $(PWD)/_obuild/unixrun $(PWD)/boot/ocp-build.boot "$$@"' > $(BIN)/ocp-build
+	cp ../_obuild/unixrun $(BIN)/unixrun
+	cp ../boot/ocp-build.boot $(BIN)/ocp-build.boot
+	echo 'exec $(BIN)/unixrun $(BIN)/ocp-build.boot "$$@"' > $(BIN)/ocp-build
 	chmod +x $(BIN)/ocp-build
 
 runserver: fresh $(BIN)/ocp-get-server
@@ -81,4 +90,4 @@ clean:
 	rm -f $(ARCHIVES)
 
 fresh:
-	rm -rf $(OPAM_ROOT) $(OPAM_SERVER_ROOT)
+	rm -rf $(OPAM_ROOT) $(OPAM_SERVER_ROOT) $(BIN)
