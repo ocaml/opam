@@ -1,9 +1,10 @@
 _obuild/
-cudf/
-dose/
-extlib/
-ocaml-re/
-ocamlgraph/
+src_ext/cudf/
+src_ext/dose/
+src_ext/extlib/
+src_ext/ocaml-re/
+src_ext/ocamlgraph/
+src_ext/ocaml-arg/
 src/lexer.ml
 src/parser.ml
 src/parser.mli
