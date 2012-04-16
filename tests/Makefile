@@ -31,6 +31,7 @@ $(BIN)/ocp-get-server: ../ocp-get-server
 	cp ../ocp-get-server $(BIN)/ocp-get-server
 
 $(BIN)/ocp-build: ../_obuild/unixrun
+	mkdir -p $(BIN)
 	cp ../_obuild/unixrun $(BIN)/unixrun
 	cp ../boot/ocp-build.boot $(BIN)/ocp-build.boot
 	echo 'exec $(BIN)/unixrun $(BIN)/ocp-build.boot "$$@"' > $(BIN)/ocp-build
