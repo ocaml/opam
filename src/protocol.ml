@@ -13,6 +13,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
+module Lib =
+struct
+  module Cudf_types = struct type pkgname = string end
+
+  module Debian = struct
+    module Format822 = struct type version = string end
+  end
+end
+
+open Lib
+
 type name = Name of Cudf_types.pkgname
 
 type version =
