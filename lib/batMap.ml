@@ -29,3 +29,4 @@ struct
 end
 
 module StringMap = Make (struct type t = string let compare = compare end)
+module IntMap = Make (struct type t = int let compare = compare end)

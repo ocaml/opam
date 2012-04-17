@@ -25,8 +25,97 @@ type 'a installed_status =
   | Was_installed of 'a
   | Was_not_installed
 
-module type SOLVER =
-sig
+module Parallel_fold =
+struct
+  module type G =
+  sig
+    include Graph.Topological.G
+    val fold_vertex : (V.t -> 'a -> 'a) -> t -> 'a -> 'a
+    val fold_succ : (V.t -> 'a -> 'a) -> t -> V.t -> 'a -> 'a
+  end
+
+  module type TOPOLOGICAL =
+  sig
+    type key
+    module G : G
+
+    (** same as [Graph.Topological.Make.fold] but nodes with minimal in-degree are proposed simultaneously *)
+    val fold : (key list (** several proposed choices *) -> 'a
+                -> key list (** answers that should be proposed again *) 
+                *  G.V.t list (** answers that we discard *)
+                *  'a) -> G.t -> 'a -> 'a
+  end
+
+  module Make (G : G) : TOPOLOGICAL = struct
+
+    module H = Hashtbl.Make(G.V)
+    module G = G
+    type key = H.key
+
+    let fold f g acc =
+      let degree = H.create 997 in
+      let rec walk todo acc =
+        if todo = [] then
+          (* let's find any nodes of minimal degree *)
+          let min =
+            H.fold
+              (fun v d acc ->
+                 match acc with
+                 | None -> Some ([v], d)
+                 | Some (l, min) -> 
+                     if d < min then
+                       Some ([v], d) 
+                     else if d = min then
+                       Some (v :: l, min) 
+                     else
+                       acc)
+              degree
+              None
+          in
+          match min with
+          | None -> acc
+          | Some (l, min) -> let () = List.iter (H.remove degree) l in walk l acc
+        else
+          let rec aux l acc = 
+            let l, l_done, acc = f l acc in
+            let l = 
+              List.fold_left
+                (fun acc v ->
+                  G.fold_succ
+                    (fun x l ->
+                      try
+                        let d = H.find degree x in
+                        if d = 1 then 
+                          let () = H.remove degree x in 
+                          x :: l
+                        else
+                          let () = H.replace degree x (d-1) in 
+                          l
+                      with Not_found ->
+                       (* [x] already visited *)
+                        l)
+                    g v acc) l l_done in
+            if l = [] then
+              acc
+            else
+              aux l acc in
+          walk [] (aux todo acc)
+      in
+      
+      walk
+        (G.fold_vertex
+           (fun v todo ->
+             let d = G.in_degree g v in
+             if d = 0 then v :: todo
+             else let () = H.add degree v d in todo)
+           g []) 
+        acc
+  end
+end
+
+module Action = 
+struct
+
   type 'a request =
       { wish_install : 'a list
       ; wish_remove : 'a list
@@ -43,14 +132,65 @@ sig
     (* The package is already installed, but it must be recompiled it. *)
     | To_recompile of 'a 
 
-  type 'a parallel = P of 'a list (* order irrelevant : elements are considered in parallel *)
+  module NV_graph =
+  struct
+    module PkgV = 
+    struct
+      type 'a behavior =
+        | Action of 'a action
+        | Do_nothing
+      type t = 
+          { cudf : Cudf.package 
+          ; behavior : name_version behavior 
+          (* WARNING in case we simplify this type, 
+             by replacing this field by [name_version action], 
+             do not forget to compute the strongly connected edge at solving time. *) }
+      module PkgV = Algo.Defaultgraphs.PackageGraph.PkgV
 
-  (** Sequence describing the action to perform.
-      Natural order : the first element to execute is the first element of the list. *)
-  type 'a solution = 'a action parallel list
+      let compare t1 t2 = PkgV.compare t1.cudf t2.cudf
+      let hash t = PkgV.hash t.cudf
+      let equal t1 t2 = PkgV.equal t1.cudf t2.cudf
+    end
 
-  val solution_print : ('a -> string) -> 'a solution -> unit
-  val solution_map : ('a -> 'b) -> 'a solution -> 'b solution
+    module PG = Graph.Imperative.Digraph.ConcreteBidirectional (PkgV)
+    module PG_topo = Graph.Topological.Make (PG)
+    module PG_topo_para = Parallel_fold.Make (PG)
+  end
+
+  type solution = 
+      { to_remove : name_version list
+      ; to_add : NV_graph.PG.t }
+
+  let action_map f = function
+    | To_change (Was_installed p1, p2) -> To_change (Was_installed (f p1), f p2)
+    | To_change (Was_not_installed, p) -> To_change (Was_not_installed, f p)
+    | To_delete p                      -> To_delete (f p)
+    | To_recompile p                   -> To_recompile (f p)
+
+  let solution_print f t =
+    let pf = Globals.msg in
+    if t.to_remove = [] && NV_graph.PG.is_empty t.to_add then
+      pf "No actions will be performed, the current state satisfies the request.\n"
+    else
+      let pf f = Printf.kprintf (pf " %s") f in
+      begin
+        List.iter (fun p -> pf "Remove: %s\n" (f p)) t.to_remove;
+        NV_graph.PG_topo.iter (let open NV_graph.PkgV in function 
+          | { behavior = Do_nothing ; _ } -> ()
+          | { behavior = Action act ; _ } -> 
+          match act with
+          | To_recompile p                   -> pf "Recompile: %s\n" (f p)
+          | To_delete p                      -> assert false (* items to delete are listed above *)
+          | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
+          | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
+        ) t.to_add;
+      end
+end
+
+open Action
+
+module type SOLVER =
+sig
   val request_map : ('a -> 'b) -> 'a request -> 'b request
 
   (** Given a description of packages, return a solution preserving
@@ -58,13 +198,13 @@ sig
       [None] : No solution found. *)
   val resolve :
     Debian.Packages.package list -> Debian.Format822.vpkg request
-    -> name_version solution option
+    -> solution option
 
   (** Same as [resolve], but each element of the list of solutions does not precise
       which request in the initial list was satisfied. *)
   val resolve_list : 
     Debian.Packages.package list -> Debian.Format822.vpkg request list
-    -> name_version solution list
+    -> solution list
 
   (** Return the recursive dependencies of a package
       Note : the given package exists in the list in input because this list describes the entire universe. 
@@ -74,54 +214,16 @@ sig
     -> Debian.Packages.package list (* universe *)
     -> Debian.Packages.package list
 
-  (** Same as [filter_backward_dependencies] but for forward depencies *)
+  (** Same as [filter_backward_dependencies] but for forward dependencies *)
   val filter_forward_dependencies :
     Debian.Packages.package list (* few packages from the universe *)
     -> Debian.Packages.package list (* universe *)
     -> Debian.Packages.package list
 
-
+  val delete_or_update : solution -> bool
 end
 
 module Solver : SOLVER = struct
-
-  type 'a request =
-      { wish_install : 'a list
-      ; wish_remove : 'a list
-      ; wish_upgrade : 'a list }
-
-  type 'a action = 
-    | To_change of 'a installed_status * 'a
-    | To_delete of 'a
-    | To_recompile of 'a
-
-  type 'a parallel = P of 'a list
-
-  type 'a solution = 'a action parallel list
-
-  let solution_map f = 
-    List.map (function P l -> P (List.map (function
-      | To_change (Was_installed p1, p2) -> To_change (Was_installed (f p1), f p2)
-      | To_change (Was_not_installed, p) -> To_change (Was_not_installed, f p)
-      | To_delete p                      -> To_delete (f p)
-      | To_recompile p                   -> To_recompile (f p)
-    ) l))
-
-  let solution_print f =
-    let pf = Globals.msg in
-    function 
-      | [] -> pf "No actions will be performed, the current state satisfies the request.\n"
-      | l -> 
-        let l_total = List.fold_left (fun acc (P l) -> acc + List.length l) 0 l in
-        List.iteri (fun i1 (P l) ->
-          List.iteri (fun i2 -> 
-            let pf f = Printf.kprintf (pf "[%d/%d] %s" (succ (i1 + i2)) l_total) f in
-            function
-            | To_recompile p                   -> pf "Recompile: %s\n" (f p)
-            | To_delete p                      -> pf "Remove: %s\n" (f p)
-            | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
-            | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
-          ) l) l
 
   let request_map f r = 
     let f = List.map f in
@@ -312,9 +414,17 @@ module Solver : SOLVER = struct
     let filter_backward_dependencies = filter_dependencies (fun x -> x)
     let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
+    open BatMap
+
     let resolve l_pkg_pb req = 
       get_table l_pkg_pb 
       (fun table pkglist ->
+      let package_map pkg =
+        Namespace.name_of_string pkg.Cudf.package,
+        Namespace.version_of_string
+          (Debian.Debcudf.get_real_version
+             table
+             (pkg.Cudf.package, pkg.Cudf.version)) in
       let universe = Cudf.load_universe pkglist in 
 
       BatOption.bind 
@@ -326,7 +436,7 @@ module Solver : SOLVER = struct
                | To_delete pkg -> Some pkg
                | _ -> None) l,
              List.filter_map (function
-               | To_delete _ as act -> Some act
+               | To_delete pkg -> Some pkg
                | _ -> None) l in
 
           let map_add = 
@@ -342,16 +452,22 @@ module Solver : SOLVER = struct
                     ~filter:(fun p -> p.Cudf.installed || PkgMap.mem p map_add) 
                     universe)) in
 
-          let _, l_act = 
+          let graph_installed =
+            let graph_installed = PG.copy graph_installed in
+            let () = List.iter (PG.remove_vertex graph_installed) l_del_p in
+            graph_installed in
+          let _, map_act = 
+            let open NV_graph.PkgV in
             PG_topo.fold
               (fun pkg (set_recompile, l_act) ->
+                let add_act pkg act = IntMap.add (PG.V.hash pkg) { cudf = pkg ; behavior = act } in
                 let add_succ_rem pkg set act =
                   (let set = PkgSet.remove pkg set in
                    try
                      List.fold_left
                        (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg)
                    with _ -> set), 
-                  act :: l_act in
+                  add_act pkg (Action (action_map package_map act)) l_act in
                 
                 match PkgMap.Exceptionless.find pkg map_add with
                   | Some act -> 
@@ -360,22 +476,25 @@ module Solver : SOLVER = struct
                     if PkgSet.mem pkg set_recompile then
                       add_succ_rem pkg set_recompile (To_recompile pkg)
                     else
-                      set_recompile, l_act)
+                      set_recompile, add_act pkg Do_nothing l_act)
               
-              (let graph_installed = PG.copy graph_installed in
-               let () = List.iter (PG.remove_vertex graph_installed) l_del_p in
-               graph_installed)
-              (PkgSet.empty, List.rev l_del) in
-
-          Some
-            (solution_map
-               (fun pkg ->
-                 Namespace.name_of_string pkg.Cudf.package,
-                 Namespace.version_of_string
-                   (Debian.Debcudf.get_real_version
-                      table
-                      (pkg.Cudf.package, pkg.Cudf.version) ))
-               (List.map (fun x -> P [ x ]) (List.rev l_act))))
+              graph_installed
+              (PkgSet.empty, IntMap.empty) in
+          let graph = NV_graph.PG.create () in
+          let () =
+            begin
+              IntMap.iter (fun _ -> NV_graph.PG.add_vertex graph) map_act;
+              PG.iter_edges
+                (fun v1 v2 -> 
+                  match 
+                    IntMap.Exceptionless.find (PG.V.hash v1) map_act, 
+                    IntMap.Exceptionless.find (PG.V.hash v2) map_act 
+                  with
+                    | Some v1, Some v2 -> NV_graph.PG.add_edge graph v1 v2
+                    | _ -> ())
+                graph_installed;
+            end in
+          Some { to_remove = List.rev_map package_map l_del ; to_add = graph })
 
         (CudfDiff.resolve_diff universe 
            (request_map
@@ -389,4 +508,13 @@ module Solver : SOLVER = struct
   let filter_forward_dependencies = Graph.filter_forward_dependencies
   let resolve = Graph.resolve
   let resolve_list pkg = List.filter_map (resolve pkg)
+
+  let delete_or_update t =
+    t.to_remove <> []
+    || 
+    NV_graph.PG.fold_vertex
+      (let open NV_graph.PkgV in fun v acc -> 
+        acc || match v.behavior with Action (Action.To_change (Was_installed _, _)) -> true | _ -> false)
+      t.to_add
+      false
 end

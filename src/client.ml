@@ -357,14 +357,6 @@ module Client : CLIENT = struct
               N_map.remove n map_installed
           | _ -> map_installed)
 
-  let delete_or_update l =
-    let action = function
-      | Solver.To_change(Was_installed _,_ )
-      | Solver.To_delete _ -> true
-      | _ -> false in
-    let parallel (Solver.P l) = List.exists action l in
-    List.exists parallel l
-
   (* Iterate over the list of servers to find one with the corresponding archive *)
   let getArchive servers nv =
     let rec aux = function
@@ -426,6 +418,31 @@ module Client : CLIENT = struct
             | Some v -> v = snd n_v
             | _ -> false))
 
+  module type PROCESS = 
+  sig
+    type 'a t
+
+    type 'a plist = 'a list (* order irrelevant *)
+
+    type state = 
+      | Is_running
+      | Not_yet_begun
+
+    val init : ('a -> string (* see [Sys.command] for this [string] *)) -> 'a t
+
+    val add : 'a t -> 'a plist -> 'a t
+
+    (** [true] : no more process to run *)
+    val is_empty : 'a t -> bool
+
+    (** Run or continue the execution of the list of processes. 
+        The function returns as soon as more than one process terminates. *)
+    val run_remove : 'a t -> 'a t * 'a plist (* finished *)
+
+    (** Detail the current state of every processes. *)
+    val activity : 'a t -> (state * 'a) plist
+  end
+
   let resolve t l_index map_installed request = 
     let l_pkg = debpkg_of_nv t map_installed l_index in
 
@@ -435,12 +452,12 @@ module Client : CLIENT = struct
       let nb_sol = List.length l in
 
       let rec aux pos = 
-        Globals.msg "{%d/%d} The following solution has been found:\n" pos nb_sol;
+        Globals.msg "[%d/%d] The following solution has been found:\n" pos nb_sol;
         function
         | [x] ->
           (* Only 1 solution exists *)
-          Solver.solution_print Namespace.to_string x;
-          if delete_or_update x then
+          Action.solution_print Namespace.to_string x;
+          if Solver.delete_or_update x then
             if confirm "Continue ?" then
               Some x
             else
@@ -450,8 +467,8 @@ module Client : CLIENT = struct
 
         | x :: xs ->
           (* Multiple solution exist *)
-          Solver.solution_print Namespace.to_string x;
-          if delete_or_update x then
+          Action.solution_print Namespace.to_string x;
+          if Solver.delete_or_update x then
             if confirm "Continue ? (press [n] to try another solution)" then
               Some x
             else
@@ -463,13 +480,16 @@ module Client : CLIENT = struct
 
       match aux 1 l with
       | Some sol -> 
-          List.iter (fun(Solver.P l) -> 
-            List.iter (function
-            | Solver.To_change (o,n)  -> proceed_tochange t o n
-            | Solver.To_delete n_v    -> proceed_todelete t n_v
-            | Solver.To_recompile n_v -> proceed_torecompile t n_v
-            ) l
-            ) sol
+        begin
+          List.iter (proceed_todelete t) sol.Action.to_remove;
+          Action.NV_graph.PG_topo.iter (let open Action.NV_graph.PkgV in function
+            | { behavior = Do_nothing ; _ } -> ()
+            | { behavior = Action act ; _ } -> 
+              match act with
+                | Action.To_change (o, n) -> proceed_tochange t o n
+                | Action.To_delete _ -> assert false
+                | Action.To_recompile n_v -> proceed_torecompile t n_v) sol.Action.to_add;
+        end
       | None -> ()
 
   let vpkg_of_nv (name, v) =
@@ -508,7 +528,7 @@ module Client : CLIENT = struct
               resolve t
                 l_index
                 map_installed
-                [ { Solver.wish_install = 
+                [ { Action.wish_install = 
                     List.map vpkg_of_nv ((n, v) :: N_map.bindings (N_map.remove n map_installed))
                   ; wish_remove = [] 
                   ; wish_upgrade = [] } ])
@@ -520,7 +540,7 @@ module Client : CLIENT = struct
           resolve t
             l_index
             map_installed
-            [ { Solver.wish_install = 
+            [ { Action.wish_install = 
                 List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings (N_map.remove name map_installed))
               ; wish_remove = [] 
               ; wish_upgrade = [] } ]
@@ -543,7 +563,7 @@ module Client : CLIENT = struct
     resolve t 
       l_index
       installed
-      [ { Solver.wish_install = 
+      [ { Action.wish_install = 
           List.filter_map 
             (fun nv ->
               if NV_set.mem nv dependencies then
@@ -575,7 +595,7 @@ module Client : CLIENT = struct
     resolve t
       l_index
       installed
-      [ { Solver.wish_install = []
+      [ { Action.wish_install = []
         ; wish_remove = []
         ; wish_upgrade = 
           List.map
