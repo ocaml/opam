@@ -66,15 +66,17 @@ type binary_data =
   | Binary   of raw_binary
   | Filename of raw_filename
 
-type links = {
-  sources: raw_filename list; (* list OR of archive to download *)
-  patches: raw_filename list; (* list AND of patch to apply *)
-} (* at execution, (sources, OR) will be first considered, 
-     then it is (patches, AND). *)
+type links = (raw_filename * string option (* target_name *)) list
+
+type links_order = {
+  sources: links; (* list OR of archive to download *)
+  patches: links; (* list AND of patch to apply *)
+} (* at execution, "list OR" will be first considered, 
+     then it is "list AND". *)
 
 type 'a archive = 
   | Archive of 'a
-  | Links   of links 
+  | Links   of links_order
 
 type basename = B of string
 
@@ -517,38 +519,49 @@ module Path : PATH = struct
           if Sys.file_exists file then
             error_and_exit "%s already exits" file
           else
-            add_rec (Raw (Namespace.to_string nv)) (R_filename [Raw p]) in
+            let dir = Namespace.to_string nv in
+            let () = add_rec (Raw dir) (R_filename [Raw p]) in
+            function
+              | Some p_name -> Run.in_dir dir (Unix.rename (Filename.basename p)) p_name
+              | None -> () in
         let apply p =
           if Run.patch p nv <> 0 then
             error_and_exit "Unable to apply path %S" p in
 
-        let patch p =
-          let l = match p with
-            | Internal p -> Some p
-            | External (uri, url) ->
-              match Run.download (uri, url) nv with
-              | Run.Url_error   -> error_and_exit "Patch %S is unavailable" url
-              | Run.From_git    -> None
-              | Run.From_http p -> Some p in
+        let process_link (p, p_name) =
+          let l = 
+            match p with
+              | Internal p -> Some p
+              | External (uri, url) ->
+                  match Run.download (uri, url) nv with
+                    | Run.Url_error   -> error_and_exit "Patch %S is unavailable" url
+                    | Run.From_git    -> None 
+                    | Run.From_http p -> Some p
+          in
 
           match l, is_patch p with
             | Some l, true -> apply l
             | Some l, false when Run.is_archive l <> None ->
               if Run.untar l nv <> 0 then
                 error_and_exit "Unable to extract %S" l
-            | Some l, _ -> add l
+            | Some l, _ -> add l p_name
             | _ -> () in
         
-        let rec download = function
+        let rec links_or = function
           | [] -> ()
           | x :: xs -> 
-            try patch x with
+            (* WARNING nothing is done in case [x] represents a "git://" *)
+            try process_link x with
               | Extraction s -> 
                 let () = Globals.warning "%s" s in
-                download xs in
-        
-        download links.sources;
-        try List.iter patch links.patches with Extraction s -> Globals.error_and_exit "%s" s
+                links_or xs in
+
+        let links_and ln = 
+          try List.iter process_link ln with
+            | Extraction s -> Globals.error_and_exit "%s" s in
+
+        links_or links.sources;
+        links_and links.patches;
       )
 
   let to_archive archive_filename tmp_nv = 

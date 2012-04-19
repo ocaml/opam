@@ -670,9 +670,10 @@ module Client : CLIENT = struct
         let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
         let () =
           begin                 
-            (* try to check that patches are well-parsed before the copy *)
+            (* try to check that patches are well-parsed before the copy.
+               Currently, only ".install" are processed. *)
             List.iter
-              (function Internal p ->
+              (function Internal p, _ ->
                 if not (Sys.is_directory p) && Filename.check_suffix p "install" then
                   (try ignore (File.To_install.parse (Run.read p)) with e -> 
                     Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)

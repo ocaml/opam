@@ -110,7 +110,7 @@ module Server : SERVER with type t = server_state = struct
           | urls ->
           (* if some urls are provided, check for external urls *)
           let external_urls =
-            List.fold_left (fun accu -> function External (_,s) -> s::accu | _ -> accu) [] urls in
+            List.fold_left (fun accu -> function External (_,s), o -> (s, o) :: accu | _ -> accu) [] urls in
           if external_urls <> [] then
             (* clients can fetch archives *)
             None

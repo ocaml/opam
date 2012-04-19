@@ -45,8 +45,9 @@ let parse_string_list = function
   | _      -> bad_format "expecting a list, got a string"
 
 let parse_pair_opt = function
-  | List[String k; String v] -> k, v
-  | List[String k]           -> k, Filename.basename k
+  | List[String k; String v] -> k, Some v
+  | List[String k]
+  | String k                 -> k, None
   | _                        -> bad_format "expecting a pair"
 
 let parse_pair = function
@@ -58,7 +59,12 @@ let parse_pair_list_ parse_pair = function
   | _      -> bad_format "expecting a list, got a string"
 
 let parse_pair_list = parse_pair_list_ parse_pair
-let parse_pair_opt_list = parse_pair_list_ parse_pair_opt
+let parse_pair_opt_list = 
+  parse_pair_list_ 
+    (fun x -> 
+      match parse_pair_opt x with
+        | k, Some v -> k, v
+        | k, None -> k, Filename.basename k)
 
 let string_list n s =
   try parse_string_list (List.assoc n s.contents)
@@ -85,13 +91,13 @@ let rec string_of_content = function
       Printf.sprintf "[%s]"
         (String.concat "; "  (List.map string_of_content l))
 
-let parse_l_url =
-  List.map (fun s ->
-    match uri_of_url s with
-    | None      , s2
-    | Some Local, s2 -> Path.Internal (Run.real_path s2)
-    | Some uri  , s2 -> Path.External (uri, s2)
-  )
+let parse_l_url n s =
+  List.map (fun (s, o) ->
+    (match uri_of_url s with
+      | None      , s2
+      | Some Local, s2 -> Path.Internal s2
+      | Some uri  , s2 -> Path.External (uri, s2)), o
+  ) (pair_list_ (parse_pair_list_ parse_pair_opt) n s)
 
 let raw_list n s = 
   match try List.assoc n s.contents with Not_found -> List [] with

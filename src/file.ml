@@ -235,8 +235,8 @@ struct
     val name        : t -> name
     val version     : t -> version
     val make        : t -> Run.command list
-    val sources     : t -> raw_filename list
-    val patches     : t -> raw_filename list
+    val sources     : t -> links
+    val patches     : t -> links
 
     (** Returns the list of sentences *)
     val description : t -> string list
@@ -274,8 +274,8 @@ struct
       name       : string;
       version    : string;
       description: string list;
-      sources    : raw_filename list;
-      patches    : raw_filename list;
+      sources    : links;
+      patches    : links;
       make       : Run.command list;
       depends    : Debian.Format822.vpkgformula;
       conflicts  : Debian.Format822.vpkglist;
@@ -314,11 +314,17 @@ struct
       s_make;
     ]
       
+    let real_path = 
+      List.map
+        (function
+          | Internal s, o -> Internal (Run.real_path s), o
+          | External (s1, s2), o -> External (s1, s2), o)
+
     let description t = t.description
     let name t = Namespace.name_of_string t.name
     let version t = Namespace.version_of_string t.version
-    let sources t = t.sources
-    let patches t = t.patches
+    let sources t = real_path t.sources
+    let patches t = real_path t.patches
     let make t = t.make
 
     let default_package (t:t) =
@@ -338,27 +344,45 @@ struct
     let to_string, string_of_command = 
       let open Printf in
       let pf p_S (k, v) = sprintf "  %s = %s\n" k (p_S v) in
-      let p_concat f l = String.concat "; " (List.map f l) in
+      let p_concat f l = String.concat " ; " (List.map f l) in
       let p_s = sprintf "%s" in
       let p_S = sprintf "%S" in
       let pl_S = p_concat p_S in
       let pl_s = p_concat (sprintf "%s") in
-      let pl f_S k l = sprintf "  %s = [%s]\n" k (f_S l) in
+      let plist = sprintf "[ %s ]" in
+      let pl f_S k l = sprintf "  %s = %s\n" k (plist (f_S l)) in
       let plf k l = 
-        pl pl_S k (List.map (function
-          | Internal s        -> sprintf "local://%s" s
-          | External (uri, s) -> sprintf "%s%s" (string_of_uri uri) s
-        ) l) in
+        pl 
+          (p_concat (function 
+            | s, None -> p_S s
+            | s, Some s_to -> plist (pl_S [ s ; s_to ])))
+          k
+          (List.map
+             (function s, o -> 
+               (match s with
+                 | Internal s        -> sprintf "local://%s" s
+                 | External (uri, s) -> sprintf "%s%s" (string_of_uri uri) s), o) l) in
       let string_of_command l = 
         List.map (function 
-          | Run.Sh l -> sprintf "[%s]" (pl_S l)
-          | Run.OCaml s -> p_S s) l in
+          | Run.Sh l -> plist (pl_S l)
+          | Run.OCaml s -> 
+              Printf.sprintf "%c%s%c" 
+                Lexer.escape_sharp
+                (String.replace_chars
+                   (fun c ->
+                     sprintf "%s%c"
+                       (if c = Lexer.escape_sharp then
+                           "\\" 
+                        else
+                           "")
+                       c) s)
+                Lexer.escape_sharp) l in
       let plc k l = pl pl_s k (string_of_command l) in
       let pvpkgl = function
         | [] -> "[]"
         | l ->
-          sprintf "[%s]"
-            (p_concat (fun s -> sprintf "[%s]" (p_concat p_S s)) 
+          plist
+            (p_concat (fun s -> plist (p_concat p_S s)) 
                (List.map (function
                  | s, None -> [ s ] 
                  | s, Some (rel, v) -> [s ; rel ; v]) l)) in
@@ -397,8 +421,8 @@ struct
           | String s -> String.nsplit s "\\"
           | _        -> Globals.error_and_exit "Field 'description': bad format"  
         with Not_found -> [] in
-      let sources = parse_l_url (string_list s_sources statement) in
-      let patches = parse_l_url (string_list s_patches statement) in
+      let sources = parse_l_url s_sources statement in
+      let patches = parse_l_url s_patches statement in
       let make = 
         let make = command s_make statement in 
         if make = [] then [ Run.Sh [ "./build.sh" ] ] else make in

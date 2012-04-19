@@ -5,7 +5,6 @@ package "ocamlarg" {
   description = "https://github.com/samoht/ocaml-arg.git"
   patches = [ "http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2"
             ; "local://ocamlarg.install"
-            ; "local://ocamlarg.ocp.boot" ]
-  make = [ # Unix.rename "ocamlarg.ocp.boot" "ocamlarg.ocp" #
-         ; # let exec s a = Unix.execvp s (Array.append [|s|] a) in exec "ocp-build" [| "-init" ; "-scan" |] # ]
+            ; [ "local://ocamlarg.ocp.boot" ; "ocamlarg.ocp" ] ]
+  make = [ # let exec s a = Unix.execvp s (Array.append [|s|] a) in exec "ocp-build" [| "-init" ; "-scan" |] # ]
 }
