@@ -36,26 +36,74 @@ struct
 
   module type TOPOLOGICAL =
   sig
-    type key
+    (* This module considers the graph to fold as a forest where the children of each node are topologically ordered after their parent. *)
+
     module G : G
 
-    (** same as [Graph.Topological.Make.fold] but nodes with minimal in-degree are proposed simultaneously *)
-    val fold : (key list (** several proposed choices *) -> 'a
-                -> key list (** answers that should be proposed again *) 
-                *  G.V.t list (** answers that we discard *)
-                *  'a) -> G.t -> 'a -> 'a
+    type 'a plist = 'a list (* nodes with minimal in-degree are proposed simultaneously *)
+    type t
+
+    val root : G.t -> t * G.V.t plist (** several proposed choices that can be considered in parallel *)
+
+    (** [Invalid_argument _] in case the children of [G.V.t] has already been requested before. *)
+    val children : t -> G.V.t (** answers that we have consumed *) -> t * G.V.t plist (* new choices resulting from the consumption that we can append with [root] or with any previous calls to [children] *)
   end
 
-  module Make (G : G) : TOPOLOGICAL = struct
+  module Make (G : G) : TOPOLOGICAL with module G = G = struct
 
-    module H = Hashtbl.Make(G.V)
+    module H = Hashtbl.Make (G.V)
     module G = G
-    type key = H.key
 
-    let fold f g acc =
+    module IntSet = Set.Make (struct type t = int let compare = compare end)
+
+    type 'a plist = 'a list (* nodes with minimal in-degree are proposed simultaneously *)
+    type t = 
+        { graph : G.t
+        ; visited_node : IntSet.t (* [int] represents the hash of [G.V.t] *)
+        ; queue_size : int
+        ; degree : int H.t }
+
+    let root graph = 
       let degree = H.create 997 in
-      let rec walk todo acc =
-        if todo = [] then
+      let l, queue_size = 
+        G.fold_vertex
+          (fun v (todo, queue_size) ->
+            let d = G.in_degree graph v in
+            if d = 0 then v :: todo, succ queue_size
+            else let () = H.add degree v d in todo, queue_size)
+          graph
+          ([], 0) in
+      { graph ; degree ; queue_size ; visited_node = IntSet.empty }, l
+      
+    let children t x =
+      let t = 
+        if IntSet.mem (G.V.hash x) t.visited_node then
+          invalid_arg "This node has already been visited."
+        else
+          { t with visited_node = IntSet.add (G.V.hash x) t.visited_node } in
+      let t, l = 
+        (* simulate the removing of [x] and the adding of the children of [x] *)
+        let l, queue_size = 
+          G.fold_succ
+            (fun x (l, queue_size) ->
+              try
+                let d = H.find t.degree x in
+                if d = 1 then 
+                  let () = H.remove t.degree x in 
+                  x :: l, succ queue_size
+                else
+                  let () = H.replace t.degree x (d-1) in 
+                  l, queue_size
+              with Not_found ->
+                (* [x] already visited *)
+                l, queue_size)
+            t.graph
+            x
+            ([], pred t.queue_size) in
+        { t with queue_size }, l in
+
+      match t.queue_size, l with
+        | 0, [] -> 
           (* let's find any nodes of minimal degree *)
           let min =
             H.fold
@@ -69,47 +117,17 @@ struct
                        Some (v :: l, min) 
                      else
                        acc)
-              degree
+              t.degree
               None
           in
-          match min with
-          | None -> acc
-          | Some (l, min) -> let () = List.iter (H.remove degree) l in walk l acc
-        else
-          let rec aux l acc = 
-            let l, l_done, acc = f l acc in
-            let l = 
-              List.fold_left
-                (fun acc v ->
-                  G.fold_succ
-                    (fun x l ->
-                      try
-                        let d = H.find degree x in
-                        if d = 1 then 
-                          let () = H.remove degree x in 
-                          x :: l
-                        else
-                          let () = H.replace degree x (d-1) in 
-                          l
-                      with Not_found ->
-                       (* [x] already visited *)
-                        l)
-                    g v acc) l l_done in
-            if l = [] then
-              acc
-            else
-              aux l acc in
-          walk [] (aux todo acc)
-      in
-      
-      walk
-        (G.fold_vertex
-           (fun v todo ->
-             let d = G.in_degree g v in
-             if d = 0 then v :: todo
-             else let () = H.add degree v d in todo)
-           g []) 
-        acc
+          let l = 
+            match min with
+              | None -> []
+              | Some (l, min) -> 
+                  let () = List.iter (H.remove t.degree) l in 
+                  l in
+          { t with queue_size = List.length l }, l
+        | _ -> t, l
   end
 end
 
@@ -129,22 +147,22 @@ struct
     (* The package must be deleted. *)
     | To_delete of 'a
 
-    (* The package is already installed, but it must be recompiled it. *)
+    (* The package is already installed, but it must be recompiled. *)
     | To_recompile of 'a 
 
   module NV_graph =
   struct
     module PkgV = 
     struct
-      type 'a behavior =
-        | Action of 'a action
-        | Do_nothing
       type t = 
           { cudf : Cudf.package 
-          ; behavior : name_version behavior 
-          (* WARNING in case we simplify this type, 
-             by replacing this field by [name_version action], 
-             do not forget to compute the strongly connected edge at solving time. *) }
+          ; action : name_version action }
+      (* NOTE the field [action] currently does not need to contain a boolean sum type
+         (i.e. something isomorphic to [name_version action option] where [None] means an action not to perform) 
+         because the graph containing all these nodes is composed of 2 parts :
+         1. starting from the root, all the nodes that we ignore,
+         2. when we encounter a node action, every children is an action (not a node to ignore). *)
+
       module PkgV = Algo.Defaultgraphs.PackageGraph.PkgV
 
       let compare t1 t2 = PkgV.compare t1.cudf t2.cudf
@@ -175,15 +193,14 @@ struct
       let pf f = Printf.kprintf (pf " %s") f in
       begin
         List.iter (fun p -> pf "Remove: %s\n" (f p)) t.to_remove;
-        NV_graph.PG_topo.iter (let open NV_graph.PkgV in function 
-          | { behavior = Do_nothing ; _ } -> ()
-          | { behavior = Action act ; _ } -> 
-          match act with
-          | To_recompile p                   -> pf "Recompile: %s\n" (f p)
-          | To_delete p                      -> assert false (* items to delete are listed above *)
-          | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
-          | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
-        ) t.to_add;
+        NV_graph.PG_topo.iter
+          (let open NV_graph.PkgV in function { action ; _ } -> 
+           match action with
+             | To_recompile p                   -> pf "Recompile: %s\n" (f p)
+             | To_delete p                      -> assert false (* items to delete are listed above *)
+             | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
+             | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p))
+          t.to_add;
       end
 end
 
@@ -460,14 +477,13 @@ module Solver : SOLVER = struct
             let open NV_graph.PkgV in
             PG_topo.fold
               (fun pkg (set_recompile, l_act) ->
-                let add_act pkg act = IntMap.add (PG.V.hash pkg) { cudf = pkg ; behavior = act } in
                 let add_succ_rem pkg set act =
                   (let set = PkgSet.remove pkg set in
                    try
                      List.fold_left
                        (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg)
                    with _ -> set), 
-                  add_act pkg (Action (action_map package_map act)) l_act in
+                  IntMap.add (PG.V.hash pkg) { cudf = pkg ; action = action_map package_map act } l_act in
                 
                 match PkgMap.Exceptionless.find pkg map_add with
                   | Some act -> 
@@ -476,7 +492,7 @@ module Solver : SOLVER = struct
                     if PkgSet.mem pkg set_recompile then
                       add_succ_rem pkg set_recompile (To_recompile pkg)
                     else
-                      set_recompile, add_act pkg Do_nothing l_act)
+                      set_recompile, l_act)
               
               graph_installed
               (PkgSet.empty, IntMap.empty) in
@@ -514,7 +530,7 @@ module Solver : SOLVER = struct
     || 
     NV_graph.PG.fold_vertex
       (let open NV_graph.PkgV in fun v acc -> 
-        acc || match v.behavior with Action (Action.To_change (Was_installed _, _)) -> true | _ -> false)
+        acc || match v.action with Action.To_change (Was_installed _, _) -> true | _ -> false)
       t.to_add
       false
 end

@@ -322,40 +322,36 @@ module Client : CLIENT = struct
                (File.To_install.path_to misc)))
       (File.To_install.misc to_install)
 
-  let proceed_todelete t (n, v0) =
+  let proceed_todelete t (n, v0) map_installed =
     log "deleting %s" (Namespace.to_string (n, v0));
-    File.Installed.modify_def (Path.installed t.home) 
-      (fun map_installed -> 
-        match N_map.Exceptionless.find n map_installed with
-          | Some v when v = v0 ->
-              (* Remove the libraries *)
-              Path.remove (Path.lib t.home n);
+    match N_map.Exceptionless.find n map_installed with
+      | Some v when v = v0 ->
+          (* Remove the libraries *)
+          Path.remove (Path.lib t.home n);
+          
+          (* Remove the binaries *)
+          let to_install =
+            File.To_install.find_err (Path.to_install t.home (n, v0)) in
+          let bins =
+            let file m =
+              File.To_install.filename_of_path
+                (Path.bin t.home)
+                (File.To_install.path_to m) in
+            List.flatten (List.map file (File.To_install.bin to_install)) in
+          List.iter Path.remove bins;
 
-              (* Remove the binaries *)
-              let to_install =
-                File.To_install.find_err (Path.to_install t.home (n, v0)) in
-              let bins =
-                let file m =
-                  File.To_install.filename_of_path
-                    (Path.bin t.home)
-                    (File.To_install.path_to m) in
-                List.flatten (List.map file (File.To_install.bin to_install)) in
-              List.iter Path.remove bins;
-
+          List.iter 
+            (fun misc ->
               List.iter 
-                (fun misc ->
-                  List.iter 
-                    (fun path_to ->                   
-                      Globals.msg "The complete directory '%s' will be removed.\n" (Path.string_of_filename path_to);
-                      if confirm "Continue ?" then
-                        Path.remove path_to)
-                    (File.To_install.filename_of_path_absolute
-                       (File.To_install.path_to misc)))
-                (File.To_install.misc to_install);
+                (fun path_to ->                   
+                  Globals.msg "The complete directory '%s' will be removed.\n" (Path.string_of_filename path_to);
+                  if confirm "Continue ?" then
+                    Path.remove path_to)
+                (File.To_install.filename_of_path_absolute
+                   (File.To_install.path_to misc)))
+            (File.To_install.misc to_install)
 
-              (* Remove the package from the installed package file *)
-              N_map.remove n map_installed
-          | _ -> map_installed)
+      | _ -> assert false (* check for example if the solver has returned a wrong version or not *)
 
   (* Iterate over the list of servers to find one with the corresponding archive *)
   let getArchive servers nv =
@@ -370,9 +366,10 @@ module Client : CLIENT = struct
     aux servers
 
   let proceed_tochange t nv_old (name, v as nv) =
+    let map_installed = File.Installed.Map.find (Path.installed t.home) in
     (* First, uninstall any previous version *)
     (match nv_old with 
-    | Was_installed nv_old -> proceed_todelete t nv_old
+    | Was_installed nv_old -> proceed_todelete t nv_old map_installed
     | Was_not_installed    -> ());
 
     let spec = File.Spec.find_err (Path.index t.home (Some nv)) in
@@ -400,12 +397,12 @@ module Client : CLIENT = struct
       iter_toinstall Path.add_rec t nv
     else
       Globals.error_and_exit
-        "Compilation failed with error %d" err;
+        "Compilation failed with error %d" err
 
-    (* Mark the packet as installed *)
-    File.Installed.modify_def (Path.installed t.home) (N_map.add name v)
+  (* We need to clean-up things before recompiling.
 
-  (* we need to clean-up things before recompiling *)
+     NB: Currently, the implementation follows only a simple parallelism scheme.
+     Determine if we need to clean-up when the parallelism scheme is full. *)
   let proceed_torecompile t nv =
     proceed_tochange t (Was_installed nv) nv
 
@@ -420,27 +417,66 @@ module Client : CLIENT = struct
 
   module type PROCESS = 
   sig
-    type 'a t
+    type ('a, 'b) t
 
     type 'a plist = 'a list (* order irrelevant *)
 
     type state = 
-      | Is_running
+      | Pause
       | Not_yet_begun
 
-    val init : ('a -> string (* see [Sys.command] for this [string] *)) -> 'a t
+    val cores : int (* above [cores + 1], the parallel running gain is not significant *)
 
-    val add : 'a t -> 'a plist -> 'a t
+    val init : int (* maximum number of parallel running task *) 
+      -> ('a -> 'b) (* function to execute in parallel *)
+      -> ('a -> string)
+      -> ('a, 'b) t
 
-    (** [true] : no more process to run *)
-    val is_empty : 'a t -> bool
+    (** Run or continue the execution of the given list of processes. 
+        The function returns as soon as one process terminates.
+        NB The parallel running is performed on at most : [max 1 "the number of tasks indicated at [init] time"] . *)
+    val filter_finished : ('a, 'b) t -> (state * 'a) plist (** By convention : list not empty *) -> ('a, 'b) t * (state * 'a) plist * ('a * 'b (* finished *))
+  end
 
-    (** Run or continue the execution of the list of processes. 
-        The function returns as soon as more than one process terminates. *)
-    val run_remove : 'a t -> 'a t * 'a plist (* finished *)
+  module Process : PROCESS =
+  struct
+    type ('a, 'b) t = { nb_proc : int ; f : 'a -> 'b ; to_str : 'a -> string }
 
-    (** Detail the current state of every processes. *)
-    val activity : 'a t -> (state * 'a) plist
+    type 'a plist = 'a list (* order irrelevant *)
+
+    type state = 
+      | Pause
+      | Not_yet_begun
+
+    let cores = 1
+
+    let init nb_proc f to_str = { nb_proc = max 1 nb_proc ; f ; to_str } 
+
+    (* This function always execute in parallel. *)
+    let filter_finished _ = failwith "To complete. Then, remove all the [filter_finished] defined after"
+
+    (* Given a list of function to execute in parallel, this function always execute the first element. *)
+    let filter_finished t = function
+      | [] -> assert false (* by convention this is empty *)
+      | (_, x) :: xs -> t, xs, (x, t.f x)
+
+    (* Given a list of function to execute in parallel, this function always ask the user which to execute in case the list contains more than one element. *)
+    let filter_finished t = function
+      | [] -> assert false (* by convention this is empty *)
+      | [_] as l -> filter_finished t l
+      | l -> 
+          Globals.msg " Choose which number to execute :\n%s\n(between 1 and %d) ? " (String.concat "\n" (List.mapi (fun i (_, x) -> Printf.sprintf "  [%d] %s" (succ i) (t.to_str x)) l)) (List.length l);
+
+          match 
+            try
+              List.split_nth ((try int_of_string (read_line ()) with _ -> 1) - 1) l
+            with
+              | _ -> List.split_nth 1 l
+          with 
+            | l1, (_, x) :: l2 ->
+                let xs = l1 @ l2 in
+                t, xs, (x, t.f x)
+            | _ -> assert false
   end
 
   let resolve t l_index map_installed request = 
@@ -481,14 +517,58 @@ module Client : CLIENT = struct
       match aux 1 l with
       | Some sol -> 
         begin
-          List.iter (proceed_todelete t) sol.Action.to_remove;
-          Action.NV_graph.PG_topo.iter (let open Action.NV_graph.PkgV in function
-            | { behavior = Do_nothing ; _ } -> ()
-            | { behavior = Action act ; _ } -> 
-              match act with
-                | Action.To_change (o, n) -> proceed_tochange t o n
-                | Action.To_delete _ -> assert false
-                | Action.To_recompile n_v -> proceed_torecompile t n_v) sol.Action.to_add;
+          List.iter 
+            (fun nv -> 
+              File.Installed.Map.modify_def (Path.installed t.home) 
+                (fun map_installed ->
+                  let () = proceed_todelete t nv map_installed in
+                  (* Remove the package from the installed package file *)
+                  N_map.remove (fst nv) map_installed))
+            sol.Action.to_remove;
+
+          (let module Graph = Action.NV_graph.PG_topo_para in
+           let include_state = List.map (fun x -> Process.Not_yet_begun, x) in
+           let rec aux proc graph = function
+            | [] -> ()
+            | l -> 
+                let proc, l, (v_end, v_res) = Process.filter_finished proc l in
+                let () = 
+                  (* NOTE we modify here the location of [Path.installed], by adding an element.
+                     This side effect is not important for futur concurrent execution in [Process.filter_finished] 
+                     because we suppose that each call to [Path.installed] is done with a different (name, version) as argument. *)
+                  match v_res with
+                    | Some (name, v) -> 
+                        (* Mark the packet as installed *)
+                        File.Installed.Map.modify_def (Path.installed t.home) (N_map.add name v)
+                    | None -> () in
+                let graph, children = Graph.children graph v_end in
+                aux proc graph (List.concat [ l ; include_state children ]) in
+           let graph, root = Graph.root sol.Action.to_add in
+           aux
+             (Process.init
+                Process.cores
+                (function { Action.NV_graph.PkgV.action ; _ } -> 
+                  (* WARNING side effects should be carefully studied as this function is executed concurrently *)
+                  match action with
+                    | Action.To_change (o, (name, v as n)) -> 
+                        let () = proceed_tochange t o n in
+                        (* Mark the packet as to be installed *)
+                        (match o with
+                          | Was_not_installed -> Some n
+                          | _ -> None)
+                    | Action.To_delete _ -> assert false
+                    | Action.To_recompile n_v -> let () = proceed_torecompile t n_v in None)
+
+                (function { Action.NV_graph.PkgV.action ; _ } ->
+                  let f msg (name, v) =
+                    Printf.sprintf "(%s) %s-%s" msg (Namespace.string_of_name name) (Namespace.string_of_version v) in
+                  match action with
+                    | Action.To_change (Was_installed _, nv) -> f "Change" nv
+                    | Action.To_change (Was_not_installed, nv) -> f "Instal" nv
+                    | Action.To_recompile nv -> f "Recomp" nv
+                    | Action.To_delete _ -> assert false))
+             graph
+             (include_state root));
         end
       | None -> ()
 
@@ -504,7 +584,7 @@ module Client : CLIENT = struct
     log "install %s" name;
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    let map_installed = File.Installed.find_map (Path.installed t.home) in
+    let map_installed = File.Installed.Map.find (Path.installed t.home) in
     let package = Namespace.name_of_string name in
 
     (* Fail if the package is already installed *)
@@ -549,7 +629,7 @@ module Client : CLIENT = struct
     log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    let installed = File.Installed.find_map (Path.installed t.home) in
+    let installed = File.Installed.Map.find (Path.installed t.home) in
 
     let dependencies = 
       NV_set.of_list
@@ -578,7 +658,7 @@ module Client : CLIENT = struct
     log "upgrade";
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    let installed = File.Installed.find_map (Path.installed t.home) in
+    let installed = File.Installed.Map.find (Path.installed t.home) in
     (* mark git repo with updates *)
     let installed =
       N_map.mapi (fun n -> function
@@ -713,7 +793,7 @@ module Client : CLIENT = struct
 
     let l_index = Path.index_list t.home in
 
-    let installed = File.Installed.find_map (Path.installed t.home) in
+    let installed = File.Installed.Map.find (Path.installed t.home) in
 
     let version name =
       match
