@@ -415,70 +415,6 @@ module Client : CLIENT = struct
             | Some v -> v = snd n_v
             | _ -> false))
 
-  module type PROCESS = 
-  sig
-    type ('a, 'b) t
-
-    type 'a plist = 'a list (* order irrelevant *)
-
-    type state = 
-      | Pause
-      | Not_yet_begun
-
-    val cores : int (* above [cores + 1], the parallel running gain is not significant *)
-
-    val init : int (* maximum number of parallel running task *) 
-      -> ('a -> 'b) (* function to execute in parallel *)
-      -> ('a -> string)
-      -> ('a, 'b) t
-
-    (** Run or continue the execution of the given list of processes. 
-        The function returns as soon as one process terminates.
-        NB The parallel running is performed on at most : [max 1 "the number of tasks indicated at [init] time"] . *)
-    val filter_finished : ('a, 'b) t -> (state * 'a) plist (** By convention : list not empty *) -> ('a, 'b) t * (state * 'a) plist * ('a * 'b (* finished *))
-  end
-
-  module Process : PROCESS =
-  struct
-    type ('a, 'b) t = { nb_proc : int ; f : 'a -> 'b ; to_str : 'a -> string }
-
-    type 'a plist = 'a list (* order irrelevant *)
-
-    type state = 
-      | Pause
-      | Not_yet_begun
-
-    let cores = 1
-
-    let init nb_proc f to_str = { nb_proc = max 1 nb_proc ; f ; to_str } 
-
-    (* This function always execute in parallel. *)
-    let filter_finished _ = failwith "To complete. Then, remove all the [filter_finished] defined after"
-
-    (* Given a list of function to execute in parallel, this function always execute the first element. *)
-    let filter_finished t = function
-      | [] -> assert false (* by convention this is empty *)
-      | (_, x) :: xs -> t, xs, (x, t.f x)
-
-    (* Given a list of function to execute in parallel, this function always ask the user which to execute in case the list contains more than one element. *)
-    let filter_finished t = function
-      | [] -> assert false (* by convention this is empty *)
-      | [_] as l -> filter_finished t l
-      | l -> 
-          Globals.msg " Choose which number to execute :\n%s\n(between 1 and %d) ? " (String.concat "\n" (List.mapi (fun i (_, x) -> Printf.sprintf "  [%d] %s" (succ i) (t.to_str x)) l)) (List.length l);
-
-          match 
-            try
-              List.split_nth ((try int_of_string (read_line ()) with _ -> 1) - 1) l
-            with
-              | _ -> List.split_nth 1 l
-          with 
-            | l1, (_, x) :: l2 ->
-                let xs = l1 @ l2 in
-                t, xs, (x, t.f x)
-            | _ -> assert false
-  end
-
   let resolve t l_index map_installed request = 
     let l_pkg = debpkg_of_nv t map_installed l_index in
 
@@ -527,20 +463,21 @@ module Client : CLIENT = struct
             sol.Action.to_remove;
 
           (let module Graph = Action.NV_graph.PG_topo_para in
+           let module Process = Run.Process in
            let include_state = List.map (fun x -> Process.Not_yet_begun, x) in
            let rec aux proc graph = function
             | [] -> ()
             | l -> 
-                let proc, l, (v_end, v_res) = Process.filter_finished proc l in
+                let proc, l, (v_end, ()) = Process.filter_finished proc l in
                 let () = 
                   (* NOTE we modify here the location of [Path.installed], by adding an element.
                      This side effect is not important for futur concurrent execution in [Process.filter_finished] 
                      because we suppose that each call to [Path.installed] is done with a different (name, version) as argument. *)
-                  match v_res with
-                    | Some (name, v) -> 
+                  match v_end with
+                    | { Action.NV_graph.PkgV.action = Action.To_change (Was_not_installed, (name, v)) ; _ } -> 
                         (* Mark the packet as installed *)
                         File.Installed.Map.modify_def (Path.installed t.home) (N_map.add name v)
-                    | None -> () in
+                    | _ -> () in
                 let graph, children = Graph.children graph v_end in
                 aux proc graph (List.concat [ l ; include_state children ]) in
            let graph, root = Graph.root sol.Action.to_add in
@@ -550,14 +487,9 @@ module Client : CLIENT = struct
                 (function { Action.NV_graph.PkgV.action ; _ } -> 
                   (* WARNING side effects should be carefully studied as this function is executed concurrently *)
                   match action with
-                    | Action.To_change (o, (name, v as n)) -> 
-                        let () = proceed_tochange t o n in
-                        (* Mark the packet as to be installed *)
-                        (match o with
-                          | Was_not_installed -> Some n
-                          | _ -> None)
+                    | Action.To_change (o, n_v) -> proceed_tochange t o n_v
                     | Action.To_delete _ -> assert false
-                    | Action.To_recompile n_v -> let () = proceed_torecompile t n_v in None)
+                    | Action.To_recompile n_v -> proceed_torecompile t n_v)
 
                 (function { Action.NV_graph.PkgV.action ; _ } ->
                   let f msg (name, v) =
