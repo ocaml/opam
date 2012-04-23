@@ -110,14 +110,14 @@ The client state is stored on the filesystem, under {\tt \$opam}:
   packages with their version for a given compiler version. The format
   of installed packages file is described in \S\ref{installed}.
 
-\item {\tt \$opam/index/NAME-VERSION.opam} are OPAM files for all
+\item {\tt \$opam/index/NAME.VERSION.spec} are specification files for all
   available versions of all available packages. The format of OPAM
   files is described in \S\ref{opam}.
 
-\item {\tt \$opam/archives/NAME-VERSION.tar.gz} are source archives
+\item {\tt \$opam/archives/NAME.VERSION.tar.gz} are source archives
   for all available versions of all available packages.
 
-\item {\tt \$build/NAME-VERSION/} are tempory folders used to
+\item {\tt \$build/NAME.VERSION/} are tempory folders used to
   decompress the corresponding archives, for all the previously and
   currently installed package versions.
 
@@ -135,14 +135,13 @@ The client state is stored on the filesystem, under {\tt \$opam}:
 
 \begin{verbatim}
 version: 1.0
-sources: HOSTNAME[:PORT]
+sources: HOSTNAME
 ocaml-version: OVERSION
 \end{verbatim}
 
 {\tt HOSTNAME} is the name of the central OPAM repository (default is
-{\tt opam.ocamlpro.com}). The {\tt PORT} number is optional to connect
-to {\tt HOSTNAME} is optional (default is {\tt 9999}). {\tt OVERSION}
-corresponds to the output of {\tt 'ocamlc -version'}.
+{\tt opam.ocamlpro.com}). {\tt OVERSION} corresponds to the output of
+{\tt 'ocamlc -version'}.
 
 \subsubsection{Installed packages}
 \label{installed}
@@ -160,10 +159,10 @@ Each line {\tt 'NAME VERSION'} in this file means that the version
 version {\tt OVERSION} and has been installed on the system in {\tt
   \$opam/OVERSION/lib/NAME}.
 
-\subsubsection{OPAM files}
-\label{opam}
+\subsubsection{Specification files}
+\label{spec}
 
-{\tt \$opam/index/NAME-VERSION.opam} has the following format:
+{\tt \$opam/index/NAME.VERSION.spec} has the following format:
 
 \begin{verbatim}
 opam-version: 1.0
@@ -195,11 +194,11 @@ response time). The state is stored under {\tt \$opamserver/}:
 
 \begin{itemize}
 
-\item {\tt \$opamserver/index/NAME-VERSION.opam} are OPAM files
+\item {\tt \$opamserver/index/NAME.VERSION.spec} are specification files
   for all available versions of all available packages. The format of
-  OPAM files is described in \S\ref{opam}.
+  specification files is described in \S\ref{spec}.
 
-\item {\tt \$opamserver/archives/NAME-VERSION.tar.gz} are the
+\item {\tt \$opamserver/archives/NAME.VERSION.tar.gz} are the
   source archives for all available versions of all available
   packages.
 
@@ -253,13 +252,11 @@ Note that when an error is raised by an arbitrary function
     type name = string
     type version = string
     type archive = string
-    type opam
+    type spec = string
 \end{verbatim}
 
-Names and version are strings. Archive are binary strings. Type {\tt
-  opam} is an in-memory representation of OPAM files described in
-\S\ref{opam}.
-
+Names and versions are strings. Archives and specification files are
+binary strings.
 
 \subsubsection{Getting the list of packages}
 \label{getList}
@@ -272,7 +269,7 @@ Names and version are strings. Archive are binary strings. Type {\tt
 packages. The collection of pairs can be computed when the server
 starts and be cached in memory.
 
-\subsubsection{Getting OPAM files}
+\subsubsection{Getting specification files}
 \label{getOpam}
 
 \begin{verbatim}
@@ -280,7 +277,7 @@ starts and be cached in memory.
 \end{verbatim}
 
 {\tt getOpam(name,version)} returns the in-memory representation of
-the OPAM file for the corresponding package version.
+the specification file for the corresponding package version.
 
 \subsubsection{Getting package archive}
 \label{getArchive}
@@ -299,7 +296,7 @@ archive as a binary string.
     val newArchive: (opam * archive) -> unit
 \end{verbatim}
 
-{\tt newArchive(opam,archive)} takes as input an OPAM file and the
+{\tt newArchive(opam,archive)} takes as input an spec file and the
 corresponding package archive (stored as binary string), and upload
 the server state.
 
@@ -338,11 +335,11 @@ where {\tt OVERSION} is obtained by calling {\tt 'ocamlc -version}
 \item create an empty {\tt \$opam/OVERSION/installed} file.
 
 \item ask the server for all the available packages using {\tt
-  getList} (\S\ref{getList}) and get all the corresponding OPAM files
+  getList} (\S\ref{getList}) and get all the corresponding spec files
   using {\tt getOpam} (\S\ref{getOpam}).
 
-\item dump all the OPAM files into {\tt
-  \$opam/index/NAME-VERSION.opam}.
+\item dump all the spec files into {\tt
+  \$opam/index/NAME.VERSION.spec}.
 
 \item create empty directories {\tt \$opam/archives}; and create {\tt
   \$lib} and {\tt \$bin} if they do not exist.
@@ -359,7 +356,7 @@ he should run:
 \end{verbatim}
 
 This command will parse {\tt \$opam/OVERSION/installed} to know the
-installed packages, and {\tt \$opam/index/*.opam} to get all the
+installed packages, and {\tt \$opam/index/*.spec} to get all the
 available packages. It will then build a summary of each packages. For
 instance, if {\tt batteries} version {\tt 1.1.3} is installed, {\tt
   ounit} version {\tt 2.3+dev} is installed and {\tt camomille} is not
@@ -381,7 +378,7 @@ he should run:
 
 This command will parse {\tt \$opam/OVERSION/installed} to get the
 installed version of {\tt NAME} and will look for {\tt
-  \$opam/index/NAME-*.opam} to get the available versions of {\tt
+  \$opam/index/NAME.*.spec} to get the available versions of {\tt
   NAME}. It can then display:
 
 \begin{verbatim}
@@ -407,7 +404,7 @@ This command will:
 
 \begin{enumerate}
 
-\item look into {\tt \$opam/index/NAME-*.opam} to find the latest
+\item look into {\tt \$opam/index/NAME.*.spec} to find the latest
   version of the package.
 
 \item compute the transitive closure of dependencies and conflicts of
@@ -428,18 +425,18 @@ This command will:
 
 \item look into the archive cache to see whether it has already been
   downloaded. The cache location is: {\tt
-    \$opam/archives/NAME-VERSION.tar.gz}.
+    \$opam/archives/NAME.VERSION.tar.gz}.
 
 \item if not, then download the archive and store it in the cache.
 
 \item decompress the archive into {\tt \$build/}. By convention, we
-  assume that this should create {\tt \$build/NAME-VERSION/}.
+  assume that this should create {\tt \$build/NAME.VERSION/}.
 
-\item run {\tt \$build/NAME-VERSION/build.sh}. By convention, package
+\item run {\tt \$build/NAME.VERSION/build.sh}. By convention, package
   archives should contains such a file.
 
 \item process {\tt
-  \$build/NAME-VERSION/NAME.install}\label{NAME.install}.  This file
+  \$build/NAME.VERSION/NAME.install}\label{NAME.install}.  This file
   has the following format:
 
 \begin{verbatim}
@@ -485,7 +482,7 @@ he will write:
 This command will ask the server the list of available packages using
 {\tt getList} (see \S\ref{getList}); then ask for the missing OPAM
 files using {\tt getOpam} (see \S\ref{getOpam}). Finally it will dump
-the missing OPAM files into {\tt \$opam/index/NAME.opam}.
+the missing spec files into {\tt \$opam/index/NAME.VERSION.spec}.
 
 \subsubsection{Upgrading installed packages}
 
@@ -526,7 +523,7 @@ When a packager wants to create a package, he should:
 
 \begin{enumerate}
 
-\item create {\tt \$package/NAME.opam} containing in the format
+\item create {\tt \$package/NAME.VERSION.spec} containing in the format
   specified in \S\ref{opam}.
 
 \item create {\tt \$package/NAME.install} containing the list of files
@@ -537,7 +534,7 @@ When a packager wants to create a package, he should:
   end-user installer. This script should configure and build the
   package on the end-user host.
 
-\item create an archive {\tt NAME-VERSION.tar.gz} of the sources he
+\item create an archive {\tt NAME.VERSION.tar.gz} of the sources he
   wants to distribute, including {\tt \$NAME.install}, {\tt
     build.sh} and optionaly {\tt \$NAME.opam}.
 
@@ -550,7 +547,7 @@ When a packager wants to create a package, he should:
 This command looks into the current directory for a file named {\tt
   NAME.opam}, and it will parse it to get the version number. Then it
 looks in the current directory for the archive {\tt
-  NAME-VERSION.tar.gz}. It will then use the server API~\ref{api} to
+  NAME.VERSION.tar.gz}. It will then use the server API~\ref{api} to
 upload the package on the server.
 
 \end{enumerate}
@@ -570,7 +567,7 @@ in OCaml.
   and it should return a consistent list of packages (with version
   numbers) to install;
 \item version information should be translated from arbitrary strings
-  (used in OPAM files, see \S\ref{opam}) to integers (used by
+  (used in spec files, see \S\ref{opam}) to integers (used by
   CUDF). We assume that version numbers are always incremented.
 \item part of the input can be cached in {\tt \$opam/index.cudf}
   if necessary.
@@ -675,7 +672,7 @@ protocol can be sketched as follows:
 \item when a packager wants to uplaod a new version of an existing
   package, he uses the function {\tt val updateArchive: (opam * string
     * string) -> bool}. {\tt updateArchive} takes as argument an OCaml
-  value representing the OPAM file contents, the archive file as a
+  value representing the spec file contents, the archive file as a
   binary string and the key as a string. The server then checks
   whether the hash of the key is equal to the one stored in {\tt
     \$opamserver/hashes/NAME}; if yes, it updates the
@@ -692,26 +689,29 @@ local packages.\\
 
 From the end-user perspective, local packages look similar to normal
 packages: their index files are stored in {\tt
-  \$opam/index/NAME-VERSION.opam} and their archive files are stored
-in {\tt \$opam/archive/NAME-VERSION.opam}. However, local package only
+  \$opam/index/NAME.VERSION.opam} and their archive files are stored
+in {\tt \$opam/archive/NAME.VERSION.opam}. However, local package only
 exist in the client state: they do not appear in the server state.
 
-\subsection{OPAM file}
+\subsection{Specification files}
 
 Local packages and normal packages are distinguished by a new field
 {\tt local} (whose default value is {\tt false}) (See \S\ref{opam} for
 a full description of the OPAM format). So for instance, a local
-package OPAM file will looks like:
+package specification file will looks like:
 
 \begin{verbatim}
-opam-version: 1.0
+%% 1.0
 
-package:     NAME
-version:     VERSION
-local:       true
-description: TEXT
-depends:     FORMULAE
-conflicts:   FORMULAE
+package NAME {
+
+   version     = VERSION
+   description = FILENAME
+   depends     = FORMULAE
+   conflicts   = FORMULAE
+   subst       = FILENAMES
+
+}
 \end{verbatim}
 
 \subsection{Creating local packages}
