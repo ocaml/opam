@@ -816,11 +816,12 @@ struct
   struct
     module M_installed = Make (Installed)
       
-    let find_map f = N_map.of_list (M_installed.Exceptionless.find f)
-      
-    let modify_def f f_map =
-      M_installed.add f (N_map.bindings (f_map (find_map f)))
-        
+    module Map = struct
+      let find f = N_map.of_list (M_installed.Exceptionless.find f)
+      let add k v = M_installed.add k (N_map.bindings v)
+      let modify_def f f_map = add f (f_map (find f))
+    end 
+
     include Installed
     include M_installed
   end
