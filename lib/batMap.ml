@@ -24,6 +24,7 @@ struct
   let of_enum l = Enum.fold (fun (k, v) -> add k v) empty l
 
   let keys map = fold (fun k _ l -> k :: l) map []
+  let values map = fold (fun _ v l -> v :: l) map []
 
   let of_list l = of_enum (List.enum l)
 end

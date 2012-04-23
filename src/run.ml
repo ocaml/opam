@@ -59,50 +59,54 @@ let read file =
 
 module type PROCESS = 
 sig
+  type 'a return
   type ('a, 'b) t
 
   type 'a plist = 'a list (* order irrelevant *)
 
   type state = 
-    | Pause
+    | Has_began of int (* pid *)
     | Not_yet_begun
 
   val cores : int (* above [cores + 1], the parallel running gain is not significant *)
 
   val init : int (* maximum number of parallel running task *) 
-    -> ('a -> 'b) (* function to execute in parallel *)
+    -> ('a -> 'b return) (* function to execute in parallel *)
     -> ('a -> string)
     -> ('a, 'b) t
 
   (** Run or continue the execution of the given list of processes. 
       The function returns as soon as one process terminates.
       NB The parallel running is performed on at most : [max 1 "the number of tasks indicated at [init] time"] . *)
-  val filter_finished : ('a, 'b) t -> (state * 'a) plist (** By convention : list not empty *) -> ('a, 'b) t * (state * 'a) plist * ('a * 'b (* finished *))
+  val filter_finished : ('a, 'b) t -> (state * 'a) plist (** By convention : list not empty *) -> ('a, 'b) t * (state * 'a) plist * ('a * 'b return (* finished *))
 end
 
-module Process : PROCESS =
+module Process : PROCESS with type 'a return = 'a =
 struct
   type ('a, 'b) t = { nb_proc : int ; f : 'a -> 'b ; to_str : 'a -> string }
 
   type 'a plist = 'a list (* order irrelevant *)
 
   type state = 
-    | Pause
+    | Has_began of int
     | Not_yet_begun
+
+  type 'a return = 'a
 
   let cores = 1
 
-  let init nb_proc f to_str = { nb_proc = max 1 nb_proc ; f ; to_str } 
-
-  (* This function always execute in parallel. *)
-  let filter_finished _ = failwith "To complete. Then, remove all the [filter_finished] defined after"
+  let init nb_proc f to_str = 
+    if nb_proc = 1 then
+      { nb_proc = max 1 nb_proc ; f ; to_str } 
+    else
+      Globals.error_and_exit "The number of processor requested is not implemented in this module."
 
   (* Given a list of function to execute in parallel, this function always execute the first element. *)
   let filter_finished t = function
     | [] -> assert false (* by convention this is empty *)
     | (_, x) :: xs -> t, xs, (x, t.f x)
 
-  (* Given a list of function to execute in parallel, this function always ask the user which to execute in case the list contains more than one element. *)
+  (* Given a list of function to execute in parallel, this function always asks the user which to execute in case the list contains more than one element. *)
   let filter_finished t = function
     | [] -> assert false (* by convention this is empty *)
     | [_] as l -> filter_finished t l

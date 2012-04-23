@@ -468,16 +468,16 @@ module Client : CLIENT = struct
            let rec aux proc graph = function
             | [] -> ()
             | l -> 
-                let proc, l, (v_end, v_res) = Process.filter_finished proc l in
+                let proc, l, (v_end, ()) = Process.filter_finished proc l in
                 let () = 
                   (* NOTE we modify here the location of [Path.installed], by adding an element.
                      This side effect is not important for futur concurrent execution in [Process.filter_finished] 
                      because we suppose that each call to [Path.installed] is done with a different (name, version) as argument. *)
-                  match v_res with
-                    | Some (name, v) -> 
+                  match v_end with
+                    | { Action.NV_graph.PkgV.action = Action.To_change (Was_not_installed, (name, v)) ; _ } -> 
                         (* Mark the packet as installed *)
                         File.Installed.Map.modify_def (Path.installed t.home) (N_map.add name v)
-                    | None -> () in
+                    | _ -> () in
                 let graph, children = Graph.children graph v_end in
                 aux proc graph (List.concat [ l ; include_state children ]) in
            let graph, root = Graph.root sol.Action.to_add in
@@ -487,14 +487,9 @@ module Client : CLIENT = struct
                 (function { Action.NV_graph.PkgV.action ; _ } -> 
                   (* WARNING side effects should be carefully studied as this function is executed concurrently *)
                   match action with
-                    | Action.To_change (o, (name, v as n)) -> 
-                        let () = proceed_tochange t o n in
-                        (* Mark the packet as to be installed *)
-                        (match o with
-                          | Was_not_installed -> Some n
-                          | _ -> None)
+                    | Action.To_change (o, n_v) -> proceed_tochange t o n_v
                     | Action.To_delete _ -> assert false
-                    | Action.To_recompile n_v -> let () = proceed_torecompile t n_v in None)
+                    | Action.To_recompile n_v -> proceed_torecompile t n_v)
 
                 (function { Action.NV_graph.PkgV.action ; _ } ->
                   let f msg (name, v) =
