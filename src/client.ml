@@ -154,7 +154,7 @@ module Client : CLIENT = struct
           urls
           (Version Globals.ocaml_version) in
       File.Config.add config_f config;
-      File.Installed.add (Path.installed home) File.Installed.empty;
+      File.Installed.add (Path.O.installed home) File.Installed.empty;
       try update ()
       with Connection_error msg ->
         Run.safe_rmdir !Globals.root_path;
@@ -187,7 +187,7 @@ module Client : CLIENT = struct
     log "list";
     let t = load_state () in
     (* Get all the installed packages *)
-    let installed = File.Installed.find_err (Path.installed t.home) in
+    let installed = File.Installed.find_err (Path.O.installed t.home) in
     let install_set = NV_set.of_list installed in
     let map, max_n, max_v = 
       List.fold_left
@@ -227,7 +227,7 @@ module Client : CLIENT = struct
     log "info %s" (Namespace.string_of_name package);
     let t = load_state () in
     let find_from_name = find_from_name package in
-    let installed = File.Installed.find_err (Path.installed t.home) in
+    let installed = File.Installed.find_err (Path.O.installed t.home) in
     let o_v = 
       Option.map
         V_set.choose (* By definition, there is exactly 1 element, we choose it. *) 
@@ -277,11 +277,11 @@ module Client : CLIENT = struct
 
   let iter_toinstall f_add_rec t (name, v) = 
 
-    let to_install = File.To_install.find_err (Path.to_install t.home (name, v)) in
+    let to_install = File.To_install.find_err (Path.O.to_install t.home (name, v)) in
 
     let filename_of_path_relative t path = 
       Path.R_filename (File.To_install.filename_of_path_relative
-                         (Path.build t.home (Some (name, v))) 
+                         (Path.O.build t.home (Some (name, v))) 
                          path) in
     
     let add_rec f_lib t path = 
@@ -290,11 +290,11 @@ module Client : CLIENT = struct
         (filename_of_path_relative t path) in
 
     (* lib *) 
-    List.iter (add_rec Path.lib t) (File.To_install.lib to_install);
+    List.iter (add_rec Path.O.lib t) (File.To_install.lib to_install);
   
     (* bin *) 
     List.iter (fun m ->
-      let root = Path.build t.home (Some (name, v)) in
+      let root = Path.O.build t.home (Some (name, v)) in
       let src = File.To_install.path_from m in
       let src = match File.To_install.filename_of_path_relative root src with
         | [f] -> f
@@ -302,7 +302,7 @@ module Client : CLIENT = struct
 
       let dst = File.To_install.path_to m in
       let dst = match dst with
-        | (Relative, [], Exact s) -> Path.concat (Path.bin t.home) (B s)
+        | (Relative, [], Exact s) -> Path.concat (Path.O.bin t.home) (B s)
         | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
 
       (* XXX: use the API *)
@@ -327,15 +327,15 @@ module Client : CLIENT = struct
     match N_map.Exceptionless.find n map_installed with
       | Some v when v = v0 ->
           (* Remove the libraries *)
-          Path.remove (Path.lib t.home n);
+          Path.remove (Path.O.lib t.home n);
           
           (* Remove the binaries *)
           let to_install =
-            File.To_install.find_err (Path.to_install t.home (n, v0)) in
+            File.To_install.find_err (Path.O.to_install t.home (n, v0)) in
           let bins =
             let file m =
               File.To_install.filename_of_path
-                (Path.bin t.home)
+                (Path.O.bin t.home)
                 (File.To_install.path_to m) in
             List.flatten (List.map file (File.To_install.bin to_install)) in
           List.iter Path.remove bins;
@@ -366,7 +366,7 @@ module Client : CLIENT = struct
     aux servers
 
   let proceed_tochange t nv_old (name, v as nv) =
-    let map_installed = File.Installed.Map.find (Path.installed t.home) in
+    let map_installed = File.Installed.Map.find (Path.O.installed t.home) in
     (* First, uninstall any previous version *)
     (match nv_old with 
     | Was_installed nv_old -> proceed_todelete t nv_old map_installed
@@ -375,7 +375,7 @@ module Client : CLIENT = struct
     let spec = File.Spec.find_err (Path.index t.home (Some nv)) in
 
     (* Then, untar the archive *)
-    let p_build = Path.build t.home (Some nv) in
+    let p_build = Path.O.build t.home (Some nv) in
     Path.remove p_build;
     (* XXX: maybe we want to follow the external urls first *)
     (* XXX: at one point, we would need to check SHA1 consistencies as well *)
@@ -455,7 +455,7 @@ module Client : CLIENT = struct
         begin
           List.iter 
             (fun nv -> 
-              File.Installed.Map.modify_def (Path.installed t.home) 
+              File.Installed.Map.modify_def (Path.O.installed t.home) 
                 (fun map_installed ->
                   let () = proceed_todelete t nv map_installed in
                   (* Remove the package from the installed package file *)
@@ -470,13 +470,13 @@ module Client : CLIENT = struct
             | l -> 
                 let proc, l, (v_end, ()) = Process.filter_finished proc l in
                 let () = 
-                  (* NOTE we modify here the location of [Path.installed], by adding an element.
+                  (* NOTE we modify here the location of [Path.O.installed], by adding an element.
                      This side effect is not important for futur concurrent execution in [Process.filter_finished] 
-                     because we suppose that each call to [Path.installed] is done with a different (name, version) as argument. *)
+                     because we suppose that each call to [Path.O.installed] is done with a different (name, version) as argument. *)
                   match v_end with
                     | { Action.NV_graph.PkgV.action = Action.To_change (Was_not_installed, (name, v)) ; _ } -> 
                         (* Mark the packet as installed *)
-                        File.Installed.Map.modify_def (Path.installed t.home) (N_map.add name v)
+                        File.Installed.Map.modify_def (Path.O.installed t.home) (N_map.add name v)
                     | _ -> () in
                 let graph, children = Graph.children graph v_end in
                 aux proc graph (List.concat [ l ; include_state children ]) in
@@ -516,7 +516,7 @@ module Client : CLIENT = struct
     log "install %s" name;
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    let map_installed = File.Installed.Map.find (Path.installed t.home) in
+    let map_installed = File.Installed.Map.find (Path.O.installed t.home) in
     let package = Namespace.name_of_string name in
 
     (* Fail if the package is already installed *)
@@ -561,7 +561,7 @@ module Client : CLIENT = struct
     log "remove %s" (Namespace.string_of_name name);
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    let installed = File.Installed.Map.find (Path.installed t.home) in
+    let installed = File.Installed.Map.find (Path.O.installed t.home) in
 
     let dependencies = 
       NV_set.of_list
@@ -590,7 +590,7 @@ module Client : CLIENT = struct
     log "upgrade";
     let t = load_state () in
     let l_index = Path.index_list t.home in
-    let installed = File.Installed.Map.find (Path.installed t.home) in
+    let installed = File.Installed.Map.find (Path.O.installed t.home) in
     (* mark git repo with updates *)
     let installed =
       N_map.mapi (fun n -> function
@@ -725,7 +725,7 @@ module Client : CLIENT = struct
 
     let l_index = Path.index_list t.home in
 
-    let installed = File.Installed.Map.find (Path.installed t.home) in
+    let installed = File.Installed.Map.find (Path.O.installed t.home) in
 
     let version name =
       match
@@ -767,7 +767,7 @@ module Client : CLIENT = struct
       List.map  Namespace.nv_of_dpkg depends in
 
     let libraries_of_nv (name, version) =
-      match File.PConfig.find (Path.pconfig t.home (name, version)) with
+      match File.PConfig.find (Path.O.pconfig t.home (name, version)) with
       | None        -> []
       | Some config -> File.PConfig.library_names config in
 
@@ -791,7 +791,7 @@ module Client : CLIENT = struct
               lib path requires in
           List.iter one libraries
       | link    ->
-          let config = File.PConfig.find_err (Path.pconfig t.home (name, version)) in
+          let config = File.PConfig.find_err (Path.O.pconfig t.home (name, version)) in
           let libraries = File.PConfig.library_names config in
           let link_options = File.PConfig.link_options config in
           let asmlink_options = File.PConfig.link_options config in
