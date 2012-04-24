@@ -50,9 +50,8 @@ users.
 
 \subsection*{Conventions}
 
-In this document, {\tt \$home}, {\tt \$opam}, {\tt \$lib}, {\tt
-  \$bin}, {\tt \$build}, {\tt \$opamserver} and {\tt \$package} are
-assumed to be set as follows:
+In this document, {\tt \$home}, {\tt \$opam}, {\tt \$opamserver} and
+{\tt \$package} are assumed to be defined as follows:
 
 \begin{itemize}
 
@@ -64,22 +63,6 @@ assumed to be set as follows:
 \item {\tt \$opam} refers to the filesystem subtree containing the
   client state. Default directory is {\tt \$home/.opam}.
 
-\item {\tt \$lib} refers to where the end-user wants the libraries to
-  be installed. Default directory is {\tt \$opam/OVERSION/lib} ({\tt
-    OVERSION} is the OCaml compiler version).
-
-\item {\tt \$bin} refers to where the end-user wants the binaries to
-  be installed. Default directory is {\tt \$opam/OVERSION/bin} ({\tt
-    OVERSION} is the OCaml compiler version).
-
-\item {\tt \$build} refers to where packages are built before being
-  installed. Default directory is {\tt \$opam/OVERSION/build} ({\tt
-    OVERSION} is the OCaml compiler version).
-
-\item {\tt \$doc} refers to where package documentation is
-  installed. Default directory is {\tt \$opam/OVERSION/doc/} ({\tt
-    OVERSION} is the OCaml compiler version).
-
 \item {\tt \$opamserver} refers to the filesystem subtree containing
   the server state. Default directory is {\tt \$home/.opam-server}.
 
@@ -88,16 +71,18 @@ assumed to be set as follows:
 
 \end{itemize}
 
-Variable are written in capital letters: for instance {\tt NAME}, {\tt
-  VERSION}, {\tt OVERSION}, $\ldots$.
+User variables are written in capital letters, prefixed by \verb+$+. For
+instance package names will be written \verb+$NAME+, package versions
+\verb+$VERSION+, and the version of the ocaml compiler currently
+installed \verb+$OVERSION+.
 
 \section{Milestone 1: Foundations}
 
 The first milestone of OPAM focuses on providing a limited set of
-features, dedicated to package management of OCaml packages.  We limit
-OPAM to support the installation of one version per packages only;
-moreover, this first version of OPAM supports only one compiler
-version.
+features, dedicated to package management of OCaml packages. OPAM rely
+on external tools to compile and provide full configuration options to
+the build tools. The goal for this first milestone is to be compatible
+with {\tt ocamlfind} and {\tt oasis}.
 
 \subsection{Client state}
 \label{client}
@@ -110,48 +95,83 @@ The client state is stored on the filesystem, under {\tt \$opam}:
   the OPAM version, the repository addresses and the current compiler
   version. The file format is described in \S\ref{config}.
 
-\item {\tt \$opam/index/NAME.VERSION.opam} are OPAM specification
-  files for all available versions of all available packages. The
-  format of OPAM files is described in \S\ref{opam}.
+\item \verb+$opam/index/$NAME.$VERSION.opam+ is the OPAM specification
+  for the package \verb+$NAME+ with version \verb+$VERSION+ (which
+  might not be installed). The format of OPAM files is described in
+  \S\ref{opam}.
 
-\item {\tt \$opam/descr/NAME.VERSION.txt} are textual files,
-  containing the description for each available packages. The first
-  line of this file is the package synopsis.
+\item \verb+$opam/descr/$NAME.$VERSION+ is the textual description of
+  the version \verb+$VERSION+ of package \verb+$NAME+ (which might not
+  be installed). The first line of this file is the package synopsis.
 
-\item {\tt \$opam/OVERSION/installed} is the list of installed
-  packages with their version for a given compiler version. The format
-  of installed packages file is described in \S\ref{installed}.
+\item \verb+$opam/$OVERSION/installed+ is the list of installed
+  packages for the compiler version \verb+$OVERSION+. The file format
+  is described in \S\ref{installed}.
 
-\item {\tt \$opam/OVERSION/config/NAME.config} are package configuration
-  files, containing environment variables for each installed
-  packages. The file format is described in \S\ref{pconfig}.
+\item \verb+$opam/$OVERSION/config/$NAME.config+ is a
+  platform-specific configuration file of for the installed package
+  \verb+$NAME+ with the compiler version \verb+$OVERSION+. The file
+  format is described in \S\ref{pconfig}.
+  \verb+$opam/$OVERSION/config/+ can be shortened to \verb+$config/+
+  for more readability.
 
-\item {\tt \$opam/OVERSION/install/NAME.install} are package installation
-  files, containing the installed files for each installed
-  packages. The file format is described in \S\ref{install}.
+\item \verb+$opam/$OVERSION/install/$NAME.install+ is a
+  platform-specific package installation file for the installed
+  package \verb+$NAME+ with the compiler version \verb+$OVERSION+. The
+  file format is described in \S\ref{install}.
+  \verb+$opam/$OVERSION/install+ can be shortened to \verb+$install/+
+  for more readability.
 
-\item {\tt \$opam/archives/NAME.VERSION.tar.gz} are source archives
-  for all available versions of all available packages.
+\item \verb+$opam/$OVERSION/lib/$NAME/+ contains the libraries
+  associated to the installed package \verb+$NAME+ with the compiler
+  version \verb+$OVERSION+. \verb+$opam/$OVERSION/lib/+ can be
+  shortened to \verb+$lib/+ for more readability.
 
-\item {\tt \$build/NAME.VERSION/} are tempory folders used to
-  decompress the corresponding archives, for all the previously and
-  currently installed package versions.
+\item \verb+$opam/$OVERSION/doc/$NAME/+ contains the documentation
+  associated to the installed package {\tt NAME} with the compiler
+  version \verb+$OVERSION+. /\verb+$opam/OVERSION/doc/+ can be
+  shortened to \verb+$doc/+ for more readability.
 
-\item {\tt \$bin/} contains the installed binaries.
+\item \verb+$opam/$OVERSION/bin/+ contains the program files for all
+  installed packages with the compiler version
+  \verb+$OVERSION+. \verb+$opam/$OVERSION/bin/+ can be shortened to
+  \verb+$bin/+ for more readability.
 
-\item {\tt \$lib/NAME/} contains the installed libraries for the
-  package {\tt NAME}.
+\item \verb+$opam/archives/$NAME.$VERSION.tar.gz+ contains the archive
+  of source files for the version \verb+$VERSION+ of package
+  \verb+$NAME+.
+
+\item \verb+$opam/$OVERSION/build/$NAME.$VERSION/+ is a tempory folder
+  used to build package \verb+$NAME+ with version \verb+$VERSION+,
+  with compiler version \verb+$OVERSION+.\verb+$opam/$OVERSION/build/+
+  can be shortened to \verb+$build/+ for more readability.
 
 \end{itemize}
 
 \subsection{File Syntax}
+
+\subsubsection{Installed packages}
+\label{installed}
+
+\verb+$opam/$OVERSION/installed+ follows a very simple syntax: the
+file is a list of lines which each has a name and a version, separated
+by a single space. Each line \verb+$NAME $VERSION+ means that the
+version \verb+$VERSION+ of package \verb+$NAME+ has been compiled with
+OCaml version \verb+$OVERSION+ and has been installed on the system in
+\verb+$lib/$NAME+ and \verb+$bin/+.
+
+\subsubsection{General Syntax}
 \label{syntax}
+
+Most of the files in the client and server states share the same
+syntax defined in this section.
 
 \begin{description}
 
 \item[Base types] The base types are:
 
 \begin{itemize}
+\item {\tt BOOL} either {\tt true} or {\tt false}
 \item {\tt STRING} a doubly-quoted OCaml string, for instance: {\tt "foo"}
 \item {\tt SYMBOL} a symbol contains only non-letter and non-digit
   characters, for instance: {\tt <=}
@@ -184,6 +204,7 @@ The client state is stored on the filesystem, under {\tt \$opam}:
 
 \item a {\tt value} is either:
 \begin{itemize}
+\item {\tt BOOL}
 \item {\tt STRING}
 \item {\tt SYMBOL}
 \item {\tt [ VALUE ]}
@@ -196,82 +217,55 @@ The client state is stored on the filesystem, under {\tt \$opam}:
 \subsubsection{Configuration files}
 \label{config}
 
-{\tt \$opam/config} has the following format:
+\verb+$opam/config+ has the following format:
 
 \begin{verbatim}
-opam-version = 1.0
+opam-version = "1.0"
 sources = [ STRING ]
 ocaml-version = STRING
 \end{verbatim}
 
 The field {\tt sources} contains the list of OPAM repositories
-(default is {\tt "opam.ocamlpro.com"}). Initially, the field {\tt
-  ocaml-version} corresponds to the output of {\tt 'ocamlc
-  -version'}. \\
-
-There are two kinds of repository sources:
-
-\begin{itemize}
-
-\item READ-ONLY repositories with {\tt https://}, {\tt http://} and
-  {\tt ftp://} as prefix. They are synchronized using {\tt rsync}.
-
-\item READ-WRITE repositories: they have {\tt opam://} as prefix. They
-  are synchronized using a custom protocol. The server should run {\tt
-    opam-server} on port 9999 to accept client connections.
-
-%% \item {\bf (optional)} READ-ONLY repositories with {\tt git://} as
-%%   prefix or {\tt .git} as suffix. They are synchronized using {\tt
-%%   git}.
-
-\end{itemize}
-
-\subsubsection{Installed packages}
-\label{installed}
-
-{\tt \$opam/OVERSION/installed} has the following format:
-
-\begin{verbatim}
-STRING = STRING
-STRING = STRING
-...
-\end{verbatim}
-
-Each line \verb+NAME = VERSION+ in this file means that the version
-{\tt VERSION} of package {\tt NAME} has been compiled with OCaml
-version {\tt OVERSION} and has been installed on the system in {\tt
-  \$opam/OVERSION/lib/NAME}.
+(default is {\tt "http://opam.ocamlpro.com/pub/"}). Initially, the
+field {\tt ocaml-version} corresponds to the output of {\tt 'ocamlc
+  -version'}.
 
 \subsubsection{OPAM files}
 \label{opam}
 
-{\tt \$opam/index/NAME.VERSION.opam} has the following format:
+\verb+$opam/index/$NAME.$VERSION.opam+ follows the syntax defined in
+\S\ref{syntax}, restricted to the following subset:
 
 \begin{verbatim}
 opam-version = 1.0
 
 package NAME {
   version     = STRING
-  description = STRING
   maintainer  = STRING
+  build       = [ STRING ]
   depends     = VALUE
   conflicts   = VALUE
-  libraries  = [ STRING ]
-  syntax     = [ STRING ]
+  libraries   = [ STRING ]
+  syntax      = [ STRING ]
 }
 \end{verbatim}
 
-The first line specifies the OPAM version. \\
+\begin{itemize}
 
-The contents of {\tt version} is {\tt VERSION}. The contents of {\tt
-  description} is the name of the file, among the package files,
-containing the package textual description. The first line of this
-file is interpreted as the package synopsis. {\tt maintainer} contains
-the contact address of the package maintainer. \\
+\item The first line specifies the OPAM version.
 
-The {\tt depends} and {\tt conflicts} fields contain expressions over
-package names, optionally parametrized by version constrains. An
-expression is either:
+\item The contents of {\tt version} is {\tt VERSION}. {\tt maintainer}
+  contains the contact address of the package maintainer.
+
+\item The content of {\tt build} is the command to run in order to
+  build the package libraries. The build script should build all the
+  libraries and syntax extensions exported by the package, but it
+  should also build and run the tests (if any) and build the
+  documentation (if any).
+
+\item The {\tt depends} and {\tt conflicts} fields contain expressions
+  over package names, optionally parametrized by version
+  constrains. An expression is either:
 
 \begin{itemize}
 \item A package name: {\tt "foo"};
@@ -288,13 +282,16 @@ is a valid formula whose semantic is: {\em a version of package
   package {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}
 \\
 
-The {\tt libraries} and {\tt syntax} fields contain the libraries and
-syntax extensions defined by the package.
+\item The {\tt libraries} and {\tt syntax} fields contain the
+  libraries and syntax extensions defined by the package.
 
-\subsection{Configuration files}
+\end{itemize}
+
+\subsubsection{Configuration files}
 \label{pconfig}
 
-\verb+$opam/OVERSION/config/NAME.config+ has the following syntax:
+\verb+$opam/OVERSION/config/NAME.config+ follows the syntax defined in
+\S\ref{syntax}, restricted to the following subset:
 
 \begin{verbatim}
 library STRING {
@@ -303,6 +300,10 @@ library STRING {
   bytelink = [ STRING ]
   requires = [ STRING ( STRING ) ]
   pp       = [ STRING ( STRING ) ]
+  IDENT = BOOL
+  IDENT = STRING
+  IDENT = [ STRING ]
+  ...
 }
 
 syntax STRING {
@@ -311,17 +312,29 @@ syntax STRING {
   bytelink = [ STRING ]
   requires = [ STRING ( STRING ) ]
   pp       = [ STRING ( STRING ) ]
+  IDENT = BOOL
+  IDENT = STRING
+  IDENT = [ STRING ]
+  ...
 }
 
+IDENT = BOOL
 IDENT = STRING
 IDENT = [ STRING ]
 ...
 \end{verbatim}
 
-Each {\tt library} and {\tt syntax} block defines full compile-time
-options to use when linking with this library (not including the
-dependencies options, which will be built dynamically using the {\tt
-  requires} and {\tt pp} fields).\\
+Each {\tt library} block defines the compilation options to use when
+linking with this library. Options associated to library dependencies
+are dynamically computed using the {\tt requires} field.\\
+
+Each {\tt syntax} block defines the pre-processing options to use when
+using this syntax extension. Options associated to pre-processor
+dependencies are dynamically computed using the {\tt pp} field. The
+full pre-processor command line is then passed to the compiler with
+{\tt -pp}.\\
+
+More details on the semantic of each field:
 
 \begin{itemize}
 
@@ -350,95 +363,470 @@ dependencies options, which will be built dynamically using the {\tt
 
 \end{itemize}
 
-The remaining fields {\tt IDENT = STRING} or {\tt IDENT = [ STRING ]}
-are used to defined global variables associated to this package,
-and are used to substitute variables in template files (using the
-syntax \verb+%{PACKAGE}:VAR%+, see \S\ref{opam-config}.
+The remaining fields {\tt IDENT = BOOL}, {\tt IDENT = STRING} or {\tt
+  IDENT = [ STRING ]}, where {\tt IDENT} are in {\em capitalized
+  letters}, are used to defined global variables associated to this
+package, and are used to substitute variables in template files:
 
-XXXX
-
+\begin{itemize}
+\item \verb+%{$NAME}$VAR%+ will refer to the variable \verb+$VAR+
+  defined the file \verb+$config/NAME.config+
+\item \verb+%{$NAME.$LIB}$VAR%+ will refer to the variable \verb+$VAR+
+  defined in the library or syntax section \verb+$LIB+ in the file
+  \verb+$config/$NAME.config+.
+\end{itemize}
 
 \subsubsection{Install files}
 \label{install}
 
-\verb+$opam/OVERSION/install/NAME.install+ has the following format:
+\verb+$opam/OVERSION/install/NAME.install+ follows the syntax defined
+in \S\ref{syntax}, but restricted to the following subset:
 
 \begin{verbatim}
-lib  = [ "name.cmi" "name.cmo" "name.cmx" "name.o" ]
-bin  = [ "foo.byte" ("foo") ]
-doc  = [ "doc" ]
-misc = [
-  [ "foo.el" "/usr/share/emacs/site-lib"         ]
-]
+lib  = [ STRING ]
+bin  = [ STRING ( STRING ) ]
+doc  = [ STRING ]
+misc = [ [ STRING STRING ] ]
 \end{verbatim}
 
-Files listed under {\tt lib} should be copied to {\tt
-  \$lib/NAME/}. File listed under {\tt bin} should be copied to {\tt
-  \$bin/}. Files listed under {\tt doc} should be copied to {\tt \$doc/NAME/}.
+Files listed under {\tt lib} are copied to \verb+$lib/$NAME/+. File
+listed under {\tt bin} are copied to \verb+$bin/+.
+Files listed under {\tt doc} are copied to \verb+$doc/$NAME/+.
 Files listed under {\tt misc} should be processed as
-follows: for each line {\tt FILE DST}, the tool should ask the user if
-he wants to install {\tt FILE} to the absolute path {\tt DST}.
+follows: for each pair \verb+$FILE $DST+, the tool should ask the user if
+he wants to install \verb+$FILE+ to the absolute path \verb+$DST+.
+
+\subsubsection{Substitution files}
+\label{subst}
+
+All of the previous files can be generated using a special mode of
+{\tt opam} which can perform tests and substitution variables (see
+\S\ref{opam-config}). The syntax defined in \S\ref{syntax} is extended
+as follows:
+
+\begin{itemize}
+\item A value can also be of the form \verb+%{IDENT}IDENT%+. The
+ semantic of \verb+%{PACKAGE}VAR%+ is the value of the variable {\tt
+ VAR} defined in \verb+$config/PACKAGE.config+
+\item A value can also be of the form
+  \verb+%{IDENT}{IDENT}IDENT%+. The semantic of
+  \verb+%{PACKAGE}{LIB}VAR%+ is the value of the variable {\tt VAR}
+  defined in the {\tt LIB} section in \verb+$config/PACKAGE.config$+
+\item An item can also be of the form \verb+IF test { item }+ or
+  \verb+IF test { item } THEN { item }+
+  where {\tt test} is:
+\begin{itemize}
+\item either a value of type {\tt BOOL}
+\item or a variable whose value is a boolean
+\item or an expression {\tt VALUE = VALUE} where the contents of both
+  values is compared structurally
+\end{itemize}
+\end{itemize}
 
 \subsection{Server state}
 
 The filesystem of OPAM repositories are mirrored on the client
-filesystem under {\tt \$opamserver/HOSTNAME} for each remote {\tt
-  HOSTNAME}. This filesystem contains:
+filesystem under \verb$opamserver/$HOSTNAME+ for each remote
+repository named \verb+$HOSTNAME+. This filesystem contains:
 
 \begin{itemize}
 
-\item {\tt \$opamserver/HOSTNAME/index/NAME.VERSION.opam}, which are
+\item \verb+$opamserver/$HOSTNAME/index/$NAME.$VERSION.opam+, which are
   OPAM files for all available versions of all available packages. The
   format of specification files is described in \S\ref{opam}.
 
-\item {\tt \$opamserver/HOSTNAME/archives/NAME.VERSION.tar.gz} are the
-  source archives for all available versions of all available
-  packages.
+\item \verb+$opamserver/$HOSTNAME/descr/$NAME.$VERSION+, which are
+  textual description files for all available versions of all
+  available packages.
+
+\item \verb+$opamserver/update+ is the script which will be run each
+  time the repository is updated. It should return a list of lines
+  following the same format as described in \S\ref{installed} and
+  containing the new packages.
+
+\item \verb+$opamserver/getArchive+ is a script which will be run to
+  get an the archive corresponding to a package. It takes as argument
+  a package name and a package version and it returns the downloaded
+  filename.
+
+\item \verb+$opamserver/setArchive+ is a script which will be run
+  to upload a new archive. It takes as argument a package name, a
+  package version and the archive to upload.
 
 \end{itemize}
 
-Depending on the kind of OPAM repository, the most adapted
-synchronization tools will be run between the server and client
-filesystems. Moreover, the server files are installed at the right
-place in the client state using symbolic links when it is possible
-(ie. not on windows ...).
+\subsection{Client commands}
 
-\subsection{Server API}
+\subsubsection{Creating a fresh client state}
+
+When an end-user starts OPAM for the first time, he needs to
+initialize \verb+$opam/+ in a consistent state. In order to do so, he
+should run:
+
+\begin{verbatim}
+    $ opam init HOSTNAMES
+\end{verbatim}
+
+Where {\tt HOSTNAMES} is a (possibly empty) list of OPAM
+repositories. If no OPAM repository is specified, default is
+\verb+"opam://opam.ocamlpro.com"+.
+
+This command will:
+
+\begin{enumerate}
+
+\item create the file \verb+$opam/config+ (as specified in
+  \S\ref{pconfig})
+
+\item create an empty \verb+$opam/$OVERSION/installed+ file.
+
+\item ask all the server in sequence for all available packages using
+  {\tt getList} (\S\ref{getList}) and get all the corresponding spec
+  files using {\tt getOPAM} (\S\ref{getOPAM}).
+
+\item dump all the spec files into
+  \verb+$opam/index/$NAME.$VERSION.opam+.
+
+\item create empty directories \verb+$opam/archives+; and create
+  \verb+$lib/+ and \verb+$bin/+ if they do not exist.
+
+\end{enumerate}
+
+\subsubsection{Listing packages}
+
+When an end-user wants to have information on all available packages,
+he should run:
+
+\begin{verbatim}
+    $ opam list
+\end{verbatim}
+
+This command will parse \verb+$opam/OVERSION/installed+ to know the
+installed packages, and \verb+$opam/index/*.opam+ to get all the
+available packages. It will then build a summary of each packages. For
+instance, if {\tt batteries} version {\tt 1.1.3} is installed, {\tt
+  ounit} version {\tt 2.3+dev} is installed and {\tt camomille} is not
+installed, then running the previous command should display:
+
+\begin{verbatim}
+    batteries   1.1.3  Batteries is a standard library replacement
+    ounit     2.3+dev  Test framework
+    camomille      --  Unicode support
+\end{verbatim}
+
+
+In case the end-user wants a more details view of a specific package,
+he should run:
+
+\begin{verbatim}
+    $ opam info NAME
+\end{verbatim}
+
+This command will parse \verb+$opam/$OVERSION/installed+ to get the
+installed version of \verb+$NAME+ and will look for
+\verb+$opam/index/$NAME.*.opam+ to get available versions of
+\verb+$NAME+. It can then display:
+
+\begin{verbatim}
+    package:  $NAME
+    version:  $VERSION                 # '--' if not installed
+    versions: $VERSION1, $VERSION2, ...
+    libraries: $LIB1, $LIB2, ...
+    syntax: $SYNTAX1, $SYNTAX2, ...
+    description:
+      $SYNOPSIS
+
+      $LINE1
+      $LINE2
+      $LINE3
+\end{verbatim}
+
+\subsubsection{Installing a package}
+\label{opam-install}
+
+When an end-user wants to install a new package, he should run:
+
+\begin{verbatim}
+    $ opam install NAME
+\end{verbatim}
+
+This command will:
+
+\begin{enumerate}
+
+\item look into \verb+$opam/index/$NAME.*.opam+ to find the latest
+  version of the package.
+
+\item compute the transitive closure of dependencies and conflicts of
+  packages using the dependency solver (see \S\ref{deps}). If the
+  dependency solver returns more than one answer, the tool will ask
+  the user to pick one, otherwise it will proceed directly.
+
+\item the dependency solver should have sorted the collections of
+  packages in topological order. Them, for each of them do:
+
+\begin{enumerate}
+
+\item check whether the package archive is installed by looking for
+  the line \verb+$NAME $VERSION+ in \verb+$opam/$OVERSION/installed+.
+  If not, then:
+
+\begin{enumerate}
+
+\item look into the archive cache to see whether it has already been
+  downloaded. The cache location is: {\tt
+    \$opam/archives/NAME.VERSION.tar.gz}.
+
+\item if not, then download the archive and store it in the cache.
+
+\item decompress the archive into \verb+$build/+. By convention, we
+  assume that this should create \verb+$build/$NAME.$VERSION/+.
+
+\item run \verb+$build/$NAME.$VERSION/build.sh+. By convention, package
+  archives should contains such a file.
+
+\item process {\tt
+  \$build/NAME.VERSION/NAME.install}\label{NAME.install}.  The file
+  format is described in \S\ref{install}.
+
+\end{enumerate}
+\end{enumerate}
+\end{enumerate}
+
+\begin{remark}
+This installation scheme is not always correct, as installing a new
+package should uninstall all packages depending on that one. For
+instance, let us consider 3 packages {\tt A}, {\tt B} and {\tt C};
+{\tt B} and {\tt C} depend on {\tt A}; {\tt C} depends on {\tt B}.
+{\tt A} and {\tt B} are installed, and the user request {\tt C} to be
+installed. If the version of {\tt A} is not correct one but the
+version of {\tt B} is, the tool should: install the latest version of
+{\tt A}, recompile {\tt B}, compile {\tt C}. It is understood that,
+with this first milestone, {\tt B} will not be recompiled. This issue
+will be fixed in next milestones of OPAM.
+\end{remark}
+
+\subsubsection{Updating index files}
+
+When an end-user wants to know what are the latest packages available,
+he will write:
+
+\begin{verbatim}
+    $ opam update
+\end{verbatim}
+
+This command will ask the server the list of available packages using
+{\tt getList} (see \S\ref{getList}); then ask for the missing OPAM
+files using {\tt getOPAM} (see \S\ref{getOPAM}). Finally it will dump
+the missing OPAM files into \verb+$opam/index/$NAME.$VERSION.opam+.
+
+\subsubsection{Upgrading installed packages}
+
+When an end-user wants to upgrade the packages installed on his host,
+he will write:
+
+\begin{verbatim}
+    $ opam upgrade
+\end{verbatim}
+
+This command will call the dependency solver (see \S\ref{deps}) to
+find a consistent state where {\em most} of the installed packages are
+upgraded to their latest version. It will install each non-installed
+packages in topological order, similar to what it is done during the
+install step, See \S\ref{install}.
+
+\subsubsection{Getting package configuration}
+\label{opam-config}
+
+The first version of OPAM contains the minimal information to be able
+to use installed libraries. In order to do so, the end-user (or the
+packager) should run:
+
+\begin{verbatim}
+    $ opam config -list-vars
+    $ opam config -var {$NAME}$VAR+
+    $ opam config -var {$NAME.$LIB}$VAR+
+    $ opam config -subst $FILENAME+
+\end{verbatim}
+
+%%   $ opam config [-r] -I $NAME+
+%%   $ opam config [-r] -bytelink $NAME.$LIB+
+%%   $ opam config [-r] -asmlink $NAME.$LIB+
+%%   $ opam config [-r] -pp $NAME.$LIB+
+%%   $ opam config -ocp $NAME
+
+\begin{itemize}
+
+\item \verb+-list-vars+ will return the list of all variables defined
+  in installed packages (see \S\ref{pconfig})
+\item \verb+-var {$NAME}$VAR+ will return the value of the variable
+  \verb+$VAR+ defined in \verb+$config/NAME.config+
+\item \verb+-var {$NAME.$LIB}$VAR+ will return the value of the
+  variable \verb+$VAR+ defined in the section \verb+$LIB+ in
+  \verb+$config/NAME.config+
+\item \verb+-subst $FILENAME+ replace any occurrence of
+  \verb+%{$NAME}$VAR%+ and \verb+%{$NAME.$LIB}$VAR%+ from
+  \verb+$FILENAME.in+ to create \verb+$FILENAME+.
+%% \item \verb+-I $NAME+ will return the list of paths to include when
+%%   compiling a project using the package \verb+$NAME+ (\verb+-r+ gives
+%%   a result taking into account the transitive closure of dependencies).
+%% \item \verb+-bytelink $NAME.LIB+ and \verb+-asmlink $NAME.$LIB$+ will
+%%   return the list of libraries to include with linking with a project
+%%   using the library \verb+$LIB+ in package \verb+$NAME+.
+
+%% \item the file {\tt FILENAME} where every occurrence of
+%%   \verb+%{NAME:VAR%}+ in {\tt FILENAME.in} is replaced by its content
+\end{itemize}
+
+
+\subsubsection{Uploading packages}
+\label{upload}
+
+When a packager wants to create a package, he should:
+
+\begin{enumerate}
+
+\item create \verb+$package/$NAME.$VERSION.opam+ containing in the format
+  specified in \S\ref{opam}.
+
+\item create \verb+$package/$NAME.install+ containing the list of files
+  to install. File format is described in \ref{NAME.install});
+  filnames should be relative to \verb+$package+.
+
+\item create the script {\tt ./build.sh} which will be called by the
+  end-user installer. This script should configure and build the
+  package on the end-user host.
+
+\item create an archive \verb+$NAME.$VERSION.tar.gz+ of the sources he
+  wants to distribute.
+
+\item run the following command:
+
+\begin{verbatim}
+    $ opam upload $FILENAME $ARCHIVE
+\end{verbatim}
+
+This command looks into the current directory for a file named 
+\verb+$FILE+, and it will parse it to get the package name and version
+number. Then it checks that \verb+$ARCHIVE$+ corresponds to
+\verb+$NAME.$VERSION.tar.gz+. It will then use the server API~\ref{api} to
+upload the package on the server.
+
+This command will work only for READ-WRITE repositories.
+
+\end{enumerate}
+
+\subsection{Removing packages}
+
+When the user wants to remove a package, he should write:
+
+\begin{verbatim}
+    $ opam-remove $NAME
+\end{verbatim}
+
+This command will check whether the package \verb+$NAME+ is installed,
+and if yes, it will display to the user the list packages that will be
+uninstalled (ie. the transitive closure of all forward-dependencies).
+If the user accepts the list, all the packages should be uninstalled,
+and the client state should be let in a consistent state.
+
+\subsection{Dependency solver}
+\label{deps}
+
+Dependency solving is a hard problem and we do not plan to start from
+scratch implementing a new SAT solver. Thus our plan to integrate (as
+a library) the Debian depency solver for CUDF files, which is written
+in OCaml.
+
+\begin{itemize}
+\item the dependency solver should run on the client; and
+\item the dependency solver should take as input a list of packages
+  (with some optional version information) the user wants to install,
+  upgrade and remove and it should return a consistent list of
+  packages (with version numbers) to install, upgrade, recompile and
+  remove.
+\end{itemize}
+
+\subsection{Getting package options}
+
+The user should be able to run:
+
+\begin{verbatim}
+    XXX
+\end{verbatim}
+
+This command will return the list of link options to pass to {\tt
+  ocamlc} when linking with libraries exported by {\tt NAME}.
+
+In order to be able to do so, packagers should provide a file {\tt
+  NAME.descr} which gives link information such as:
+
+\begin{verbatim}
+    library foo {
+      requires: bar, gni
+      link: -linkall
+      asmlink: -cclib -lfoo
+     }
+\end{verbatim}
+
+\subsection{Getting package recursive configuration}
+
+The user should be able to run:
+
+\begin{verbatim}
+    $ opam-config -r -dir NAME
+    $ opam-config -r -bytelink NAME
+    $ opam-config -r -asmlink NAME
+\end{verbatim}
+
+This command will return the good options to use for package {\tt
+  NAME} and all its dependencies, in a form suitable to be used by
+OCaml compilers.
+
+\section{Milestone 2: Custom Client-Server Protocol}
 \label{api}
 
-In this section all function are defined for a given OPAM repository.
-
-\subsubsection{Basic types}
-
-\begin{verbatim}
-    type repo    = string
-    type name    = string
-    type version = string
-    type opam
-    type archive
-\end{verbatim}
-
-Names and versions are strings. Archives and specification files are
-either binary strings or filenames.
+All the kinds of OPAM repositories should be available using the same
+API (however, some functions will not be available for some backends).
 
 \subsubsection{Getting the list of packages}
-\label{getList}
 
+\label{getList}
 \begin{verbatim}
-    val getList: repo -> (name * version) list
+    val getList   : repo -> (name * version) list 
+    val updateList: repo -> (name * version) list
 \end{verbatim}
 
-{\tt getList repo} updates the given repository and returns the list of
-available versions for all packages.
+\verb+getList $HOSTNAME+ returns the full list of available packages. This
+command is intended to be run only once, when the repository
+\verb+$HOSTNAME+ is initialized.\\
 
-\subsubsection{Getting specification files}
-\label{getOpam}
+\verb+updateList $HOSTNAME+ updates the given repository and returns
+the list of newly available packages. For repositories not using the
+custom OPAM protocol (eg. not starting by \verb+opam://+) this means
+running the script \verb+$opamserver/$HOSTNAME/update+ which should
+return a list of lines of (package name, version) pairs using the same
+format as described in \S\ref{installed}.
+
+\subsubsection{Getting OPAM files}
+\label{getOPAM}
 
 \begin{verbatim}
     val getOPAM: repo -> (name * version) -> opam
 \end{verbatim}
 
-{\tt getOPAM repo (name,version)} returns the corresponding OPAM file.
+{\tt getOPAM repo (name,version)} returns the corresponding OPAM
+filename as an absolute location in the filesystem (which should be .
+
+\subsubsection{Getting description files}
+\label{getOPAM}
+
+\begin{verbatim}
+    val getDescr: repo -> (name * version) -> descr
+\end{verbatim}
+
+{\tt getDescr repo (name,version)} returns the corresponding
+description file.
 
 \subsubsection{Getting package archive}
 \label{getArchive}
@@ -541,340 +929,18 @@ of available \\
 \end{tabular}
 }
 
+\end{itemize}
+
 Note that when an error is raised by an arbitrary function
  at server side, the client receives \verb|Error _|.
 
-\subsection{Client commands}
 
-\subsubsection{Creating a fresh client state}
-
-When an end-user starts OPAM for the first time, he needs to
-initialize {\tt \$opam/} in a consistent state. In order to do so, he
-should run:
-
-\begin{verbatim}
-    $ opam init [HOSTNAME]*
-\end{verbatim}
-
-Where {\tt HOSTNAME} are OPAM repositories. If no OPAM repository is
-specified, default is {\tt opam://opam.ocamlpro.com}.
-
-This command will:
-
-\begin{enumerate}
-
-\item create the file {\tt \$opam/config} containing:
-
-\begin{verbatim}
-version: 1.0
-sources: [HOSTNAME]+
-ocaml-version: OVERSION
-\end{verbatim}
-
-where {\tt OVERSION} is obtained by calling {\tt 'ocamlc -version}
-(ie. we assume the user have already installed the OCaml compiler).
-
-\item create an empty {\tt \$opam/OVERSION/installed} file.
-
-\item ask the server for all available packages using {\tt
-  getList} (\S\ref{getList}) and get all the corresponding spec files
-  using {\tt getOpam} (\S\ref{getOpam}).
-
-\item dump all the spec files into {\tt
-  \$opam/index/NAME.VERSION.opam}.
-
-\item create empty directories {\tt \$opam/archives}; and create {\tt
-  \$lib} and {\tt \$bin} if they do not exist.
-
-\end{enumerate}
-
-\subsubsection{Listing packages}
-
-When an end-user wants to have information on all available packages,
-he should run:
-
-\begin{verbatim}
-    $ opam list
-\end{verbatim}
-
-This command will parse {\tt \$opam/OVERSION/installed} to know the
-installed packages, and {\tt \$opam/index/*.opam} to get all the
-available packages. It will then build a summary of each packages. For
-instance, if {\tt batteries} version {\tt 1.1.3} is installed, {\tt
-  ounit} version {\tt 2.3+dev} is installed and {\tt camomille} is not
-installed, then running the previous command should display:
-
-\begin{verbatim}
-    batteries   1.1.3  Batteries is a standard library replacement
-    ounit     2.3+dev  Test framework
-    camomille      --  Unicode support
-\end{verbatim}
-
-
-In case the end-user wants a more details view of a specific package,
-he should run:
-
-\begin{verbatim}
-    $ opam info NAME
-\end{verbatim}
-
-This command will parse {\tt \$opam/OVERSION/installed} to get the
-installed version of {\tt NAME} and will look for {\tt
-  \$opam/index/NAME.*.opam} to get available versions of {\tt
-  NAME}. It can then display:
-
-\begin{verbatim}
-    package:  NAME
-    version:  VERSION                 # '--' if not installed
-    versions: VERSION1, VERSION2, ...
-    description:
-      LINE1
-      LINE2
-      LINE3
-\end{verbatim}
-
-\subsubsection{Installing a package}
-\label{install}
-
-When an end-user wants to install a new package, he should run:
-
-\begin{verbatim}
-    $ opam install NAME
-\end{verbatim}
-
-This command will:
-
-\begin{enumerate}
-
-\item look into {\tt \$opam/index/NAME.*.opam} to find the latest
-  version of the package.
-
-\item compute the transitive closure of dependencies and conflicts of
-  packages using the dependency solver (see \S\ref{deps}). If the
-  dependency solver returns more than one answer, the tool will ask
-  the user to pick one, otherwise it will proceed directly.
-
-\item the dependency solver should have sorted the collections of
-  packages in topological order. Them, for each of them do:
-
-\begin{enumerate}
-
-\item check whether the package archive is installed by looking for
-  the line {\tt NAME VERSION} in {\tt \$opam/OVERSION/installed}. If
-  not, then:
-
-\begin{enumerate}
-
-\item look into the archive cache to see whether it has already been
-  downloaded. The cache location is: {\tt
-    \$opam/archives/NAME.VERSION.tar.gz}.
-
-\item if not, then download the archive and store it in the cache.
-
-\item decompress the archive into {\tt \$build/}. By convention, we
-  assume that this should create {\tt \$build/NAME.VERSION/}.
-
-\item run {\tt \$build/NAME.VERSION/build.sh}. By convention, package
-  archives should contains such a file.
-
-\item process {\tt
-  \$build/NAME.VERSION/NAME.install}\label{NAME.install}.  The file
-  format is described in \S\ref{install}.
-
-\end{enumerate}
-\end{enumerate}
-\end{enumerate}
-
-\begin{remark}
-This installation scheme is not always correct, as installing a new
-package should uninstall all packages depending on that one. For
-instance, let us consider 3 packages {\tt A}, {\tt B} and {\tt C};
-{\tt B} and {\tt C} depend on {\tt A}; {\tt C} depends on {\tt B}.
-{\tt A} and {\tt B} are installed, and the user request {\tt C} to be
-installed. If the version of {\tt A} is not correct one but the
-version of {\tt B} is, the tool should: install the latest version of
-{\tt A}, recompile {\tt B}, compile {\tt C}. It is understood that,
-with this first milestone, {\tt B} will not be recompiled. This issue
-will be fixed in next milestones of OPAM.
-\end{remark}
-
-\subsubsection{Updating index files}
-
-When an end-user wants to know what are the latest packages available,
-he will write:
-
-\begin{verbatim}
-    $ opam update
-\end{verbatim}
-
-This command will ask the server the list of available packages using
-{\tt getList} (see \S\ref{getList}); then ask for the missing OPAM
-files using {\tt getOpam} (see \S\ref{getOpam}). Finally it will dump
-the missing OPAM files into {\tt \$opam/index/NAME.VERSION.opam}.
-
-\subsubsection{Upgrading installed packages}
-
-When an end-user wants to upgrade the packages installed on his host,
-he will write:
-
-\begin{verbatim}
-    $ opam upgrade
-\end{verbatim}
-
-This command will call the dependency solver (see \S\ref{deps}) to
-find a consistent state where {\em most} of the installed packages are
-upgraded to their latest version. It will install each non-installed
-packages in topological order, similar to what it is done during the
-install step, See \S\ref{install}.
-
-\subsubsection{Getting package configuration}
-
-The first version of OPAM contains the minimal information to be able
-to use installed libraries. In order to do so, the end-user (or the
-packager) should run:
-
-\begin{verbatim}
-    $ opam config [-list|-var NAME:VAR|-subst FILENAME]
-\end{verbatim}
-
-This command will return:
-
-\begin{itemize}
-\item the list of all variables defined in installed packages
-\item the content of variable {\tt VAR} defined in installed package
-  {\tt NAME}
-\item the file {\tt FILENAME} where every occurrence of
-  \verb+%{NAME:VAR%}+ in {\tt FILENAME.in} is replaced by its content
-\end{itemize}
-
-XXXX
-
-
-\subsubsection{Uploading packages}
-\label{upload}
-
-When a packager wants to create a package, he should:
-
-\begin{enumerate}
-
-\item create {\tt \$package/NAME.VERSION.opam} containing in the format
-  specified in \S\ref{opam}.
-
-\item create {\tt \$package/NAME.install} containing the list of files
-  to install. File format is described in \ref{NAME.install});
-  filnames should be relative to {\tt \$package}.
-
-\item create the script {\tt ./build.sh} which will be called by the
-  end-user installer. This script should configure and build the
-  package on the end-user host.
-
-\item create an archive {\tt NAME.VERSION.tar.gz} of the sources he
-  wants to distribute, including {\tt \$NAME.install}, {\tt
-    build.sh} and optionaly {\tt \$NAME.opam}.
-
-\item run the following command:
-
-\begin{verbatim}
-    $ opam-upload NAME
-\end{verbatim}
-
-This command looks into the current directory for a file named {\tt
-  NAME.opam}, and it will parse it to get the version number. Then it
-looks in the current directory for the archive {\tt
-  NAME.VERSION.tar.gz}. It will then use the server API~\ref{api} to
-upload the package on the server.
-
-\end{enumerate}
-
-\subsection{Dependency solver}
-\label{deps}
-
-Dependency solving is a hard problem and we do not plan to start from
-scratch implementing a new SAT solver. Thus our plan to integrate (as
-a library) the Debian depency solver for CUDF files, which is written
-in OCaml.
-
-\begin{itemize}
-\item the dependency solver should run on the client;
-\item the dependency solver should take as input a list of packages
-  (with some optional version information) the user wants to install
-  and it should return a consistent list of packages (with version
-  numbers) to install;
-\item version information should be translated from arbitrary strings
-  (used in OPAM files, see \S\ref{opam}) to integers (used by
-  CUDF). We assume that version numbers are always incremented.
-\item part of the input can be cached in {\tt \$opam/index.cudf}
-  if necessary.
-\end{itemize}
-
-\section{Milestone 2: Correctness of Installation}
-
-This milestone focus on correctness of installation and upgrade.
-
-\subsection{Upgrading \& installing are always correct}
-
-When the user wants to upgrade, he gets a list of packages in
-topological order to install. When a package version is different from
-the installed package version, the package should be built and should
-replace the previous one. Then, all the packages depending on this
-package should be recursively reinstalled (even if they have correct
-version numbers).
-
-\subsection{Removing packages}
-
-When the user wants to remove a package, he should write:
-
-\begin{verbatim}
-    $ opam-remove NAME
-\end{verbatim}
-
-This command will check whether the package {\tt NAME} is installed,
-and if yes, it will display to the user the list packages that will be
-uninstalled (ie. the transitive closure of all forward-dependencies).
-If the user accepts the list, all the packages should be uninstalled,
-and the client state should be let in a consistent state.
 
 \section{Milestone 3: Link Information}
 
 This milestone focuses on adding the right level of linking
 information, in order to be able to use packages more easily.
 
-\subsection{Getting package link options}
-
-The user should be able to run:
-
-\begin{verbatim}
-    $ opam-config -bytelink NAME
-    $ opam-config -asmlink NAME
-\end{verbatim}
-
-This command will return the list of link options to pass to {\tt
-  ocamlc} when linking with libraries exported by {\tt NAME}.
-
-In order to be able to do so, packagers should provide a file {\tt
-  NAME.descr} which gives link information such as:
-
-\begin{verbatim}
-    library foo {
-      requires: bar, gni
-      link: -linkall
-      asmlink: -cclib -lfoo
-     }
-\end{verbatim}
-
-\subsection{Getting package recursive configuration}
-
-The user should be able to run:
-
-\begin{verbatim}
-    $ opam-config -r -dir NAME
-    $ opam-config -r -bytelink NAME
-    $ opam-config -r -asmlink NAME
-\end{verbatim}
-
-This command will return the good options to use for package {\tt
-  NAME} and all its dependencies, in a form suitable to be used by
-OCaml compilers.
 
 \section{Milestone 4: Server Authentication}
 
