@@ -549,3 +549,34 @@ let real_path p =
     (Sys.getcwd ()) / dir / base
   else
     dir / base
+
+module type OCAMLC =
+sig
+  type t
+    
+  val init : string (* path leading to the binary "ocamlc" *) -> t
+
+  val from_path : t
+
+  val version : t -> string
+  val which : t -> string
+end
+
+module Ocamlc : OCAMLC = 
+struct
+
+  type t = { ocamlc : string }
+
+  let init ocamlc = { ocamlc }
+
+  let from_path = { ocamlc = "ocamlc" }
+
+  let ocamlc opt t = 
+    let s_c = Printf.sprintf "%s %s" t.ocamlc opt in
+    match read_command_output_ s_c with
+      | Some (ocaml_version :: _) -> ocaml_version
+      | _ -> Globals.error_and_exit "command %S failed" s_c
+
+  let version = ocamlc "-version"
+  let which = ocamlc "-which"
+end

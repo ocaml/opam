@@ -112,26 +112,29 @@ sig
   type t
   type filename 
     
+  (** change the version of OCaml used *)
+  val set_version : t -> string (* OVERSION *) -> t
+
   (** installed libraries for the package (at most one version installed) *)
-  val lib : t -> name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
+  val lib : t -> name -> filename (* $HOME_OPAM/OVERSION/lib/NAME *)
 
   (** contain installed binaries *)
-  val bin : t -> filename (* $HOME_OPAM_OVERSION/bin *)
+  val bin : t -> filename (* $HOME_OPAM/OVERSION/bin *)
 
   (** list of installed packages with their version *)
-  val installed : t -> filename (* $HOME_OPAM_OVERSION/installed *)
+  val installed : t -> filename (* $HOME_OPAM/OVERSION/installed *)
 
   (** tempory folders used to decompress the corresponding archives *)
-  val build : t -> name_version option -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION *)
-  (* [None] : $HOME_OPAM_OVERSION/build *)
+  val build : t -> name_version option -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION *)
+  (* [None] : $HOME_OPAM/OVERSION/build *)
 
   (** compiled files in the extracted archive to install *)
   (* XXX: P.install should be installed in their own path *)
-  val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
+  val to_install : t -> name_version -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION/NAME.install *)
 
   (** package configuration for compile and link options *)
   (* XXX: P.config should be installed in their own path *)
-  val pconfig : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.config *)
+  val pconfig : t -> name_version -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION/NAME.config *)
 end
 
 module type PATH =
@@ -154,7 +157,6 @@ sig
                                   2. this function is executed. *)
 
   val init : string (* $HOME_OPAM *) -> t
-  (* $HOME_OPAM_OVERSION = $HOME_OPAM/OVERSION *)
 
   (** definitions of some shortcuts *)
 
@@ -264,8 +266,8 @@ module Path : PATH = struct
       | Normalized of string
       | Raw of string
 
-    type t = { home : string
-             ; home_ocamlversion : string }
+    type t = { home : string 
+             ; home_ocamlversion : string option }
 
     type 'a contents = 
       | Directory of basename list
@@ -299,23 +301,27 @@ module Path : PATH = struct
 
   module O =
   struct
-    type filename = Base.filename
-    type t = Base.t
+    include Base
 
-    open Base
+    let set_version t ocaml_version =
+      { t with home_ocamlversion = Some (t.home // ocaml_version) }
 
-    let lib t (Name n) = Raw (t.home_ocamlversion // "lib" // n)
-    let bin t = Raw (t.home_ocamlversion // "bin")
-    let installed t = Raw (t.home_ocamlversion // "installed")
-    let build t = mk_name_version_o t.home_ocamlversion "build" ""
+    let ocaml t = 
+      match t.home_ocamlversion with
+        | None -> Globals.error_and_exit "OCaml version has not been initialized."
+        | Some v -> v
+
+    let lib t (Name n) = Raw (ocaml t // "lib" // n)
+    let bin t = Raw (ocaml t // "bin")
+    let installed t = Raw (ocaml t // "installed")
+    let build t = mk_name_version_o (ocaml t) "build" ""
     let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
     let pconfig t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".config")
   end
 
   include Base
 
-  let init home = 
-    { home ; home_ocamlversion = home // Globals.ocaml_version }
+  let init home = { home ; home_ocamlversion = None }
 
   let root = Raw "/"
   let cwd = Normalized (Run.normalize ".")

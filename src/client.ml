@@ -90,7 +90,8 @@ module Client : CLIENT = struct
     let home = Path.init !Globals.root_path in
     let config = File.Config.find_err (Path.config home) in
     let servers = File.Config.sources config in
-    { servers ; home }
+    let Version v = File.Config.ocaml_version config in
+    { servers ; home = Path.O.set_version home v }
 
   let update_remote server home =
     log "update-remote-server %s%s"
@@ -148,12 +149,14 @@ module Client : CLIENT = struct
     | Some c ->
         Globals.error_and_exit "%s already exist" (Path.string_of_filename config_f)
     | None   ->
+      let Version ocaml_version = File.Config.ocaml_version File.Config.empty in
       let config =
         File.Config.create
           Globals.api_version
           urls
-          (Version Globals.ocaml_version) in
+          (Version ocaml_version) in
       File.Config.add config_f config;
+      let home = Path.O.set_version home ocaml_version in
       File.Installed.add (Path.O.installed home) File.Installed.empty;
       try update ()
       with Connection_error msg ->

@@ -182,7 +182,7 @@ struct
     let empty = {
       version = Globals.api_version;
       sources = [url Globals.default_hostname];
-      ocaml_version = Version Sys.ocaml_version
+      ocaml_version = Version (Run.Ocamlc.version Run.Ocamlc.from_path)
     }
 
    let to_string t =
