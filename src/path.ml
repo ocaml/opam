@@ -107,6 +107,36 @@ module Random_key : RANDOM_KEY = struct
     k
 end
 
+module type PATH_OCAMLVERSION = 
+sig
+  type t
+  type filename 
+    
+  (** change the version of OCaml used *)
+  val set_version : t -> internal_version (* OVERSION *) -> t
+
+  (** installed libraries for the package (at most one version installed) *)
+  val lib : t -> name -> filename (* $HOME_OPAM/OVERSION/lib/NAME *)
+
+  (** contain installed binaries *)
+  val bin : t -> filename (* $HOME_OPAM/OVERSION/bin *)
+
+  (** list of installed packages with their version *)
+  val installed : t -> filename (* $HOME_OPAM/OVERSION/installed *)
+
+  (** tempory folders used to decompress the corresponding archives *)
+  val build : t -> name_version option -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION *)
+  (* [None] : $HOME_OPAM/OVERSION/build *)
+
+  (** compiled files in the extracted archive to install *)
+  (* XXX: P.install should be installed in their own path *)
+  val to_install : t -> name_version -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION/NAME.install *)
+
+  (** package configuration for compile and link options *)
+  (* XXX: P.config should be installed in their own path *)
+  val pconfig : t -> name_version -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION/NAME.config *)
+end
+
 module type PATH =
 sig
 
@@ -127,7 +157,6 @@ sig
                                   2. this function is executed. *)
 
   val init : string (* $HOME_OPAM *) -> t
-  (* $HOME_OPAM_OVERSION = $HOME_OPAM/OVERSION *)
 
   (** definitions of some shortcuts *)
 
@@ -138,18 +167,9 @@ sig
 
   (** path in the packager filesystem, contains the collection of libraries and programs *)
   val package : t -> string (* computed from $PWD *) -> filename
-
-  (** installed libraries for the package (at most one version installed) *)
-  val lib : t -> name -> filename (* $HOME_OPAM_OVERSION/lib/NAME *)
-
-  (** contain installed binaries *)
-  val bin : t -> filename (* $HOME_OPAM_OVERSION/bin *)
-  
+   
   (** main configuration file *)
   val config : t -> filename (* $HOME_OPAM/config *)
-
-  (** list of installed packages with their version *)
-  val installed : t -> filename (* $HOME_OPAM_OVERSION/installed *)
 
   (** OPAM files considered for an arbitrary version and package *)
   val index : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.spec *)
@@ -165,24 +185,13 @@ sig
   val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
   (* [None] : $HOME_OPAM/archives *)
 
-  (** tempory folders used to decompress the corresponding archives *)
-  val build : t -> name_version option -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION *)
-  (* [None] : $HOME_OPAM_OVERSION/build *)
-
-  (** compiled files in the extracted archive to install *)
-  (* XXX: P.install should be installed in their own path *)
-  val to_install : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.install *)
-
-  (** package configuration for compile and link options *)
-  (* XXX: P.config should be installed in their own path *)
-  val pconfig : t -> name_version -> filename (* $HOME_OPAM_OVERSION/build/NAME-VERSION/NAME.config *)
-
   (** security keys related to package name *)
   val keys : t -> name -> filename (* $HOME_OPAM/keys/NAME *)
 
   (** similar as [keys] *)
   val hashes : t -> name -> filename (* $HOME_OPAM/hashes/NAME *)
 
+  module O : PATH_OCAMLVERSION with type t = t with type filename = filename
 
   (** Path utilities **)
 
@@ -251,37 +260,68 @@ end
 module Path : PATH = struct
   open Printf
 
-  type filename = 
-    | Normalized of string
-    | Raw of string
+  module Base = 
+  struct
+    type filename = 
+      | Normalized of string
+      | Raw of string
 
-  type t = { home : string
-           ; home_ocamlversion : string }
+    type t = { home : string 
+             ; home_ocamlversion : string option }
 
-  type 'a contents = 
-    | Directory of basename list
-    | File of 'a
-    | Not_found of string
+    type 'a contents = 
+      | Directory of basename list
+      | File of 'a
+      | Not_found of string
 
-  type 'a contents_rec = 
-    | R_directory of (basename * 'a contents_rec) Enum.t
-    | R_file of 'a
-    | R_filename of filename list
-    | R_lazy of (unit -> unit) 
+    type 'a contents_rec = 
+      | R_directory of (basename * 'a contents_rec) Enum.t
+      | R_file of 'a
+      | R_filename of filename list
+      | R_lazy of (unit -> unit) 
         
-  let s_of_filename = function
-  | Normalized s -> s
-  | Raw s -> s
+    let s_of_filename = function
+      | Normalized s -> s
+      | Raw s -> s
 
-  let filename_map f = function
-  | Normalized s -> Normalized (f s)
-  | Raw s -> Raw (f s)
+    let filename_map f = function
+      | Normalized s -> Normalized (f s)
+      | Raw s -> Raw (f s)
 
-  let (//) = sprintf "%s/%s"
-  let concat f (B s) = filename_map (function "/" -> "" // s | filename -> filename // s) f
-  let (///) = concat
-  let init home = 
-    { home ; home_ocamlversion = home // Globals.ocaml_version }
+    let (//) = sprintf "%s/%s"
+    let concat f (B s) = filename_map (function "/" -> "" // s | filename -> filename // s) f
+    let (///) = concat
+
+    let mk_name_version t_home d ext n v = Raw (t_home // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
+
+    let mk_name_version_o t_home name ext = function
+      | None -> Raw (t_home // name)
+      | Some (n, v) -> mk_name_version t_home name ext n v
+  end
+
+  module O =
+  struct
+    include Base
+
+    let set_version t (Version ocaml_version) =
+      { t with home_ocamlversion = Some (t.home // ocaml_version) }
+
+    let ocaml t = 
+      match t.home_ocamlversion with
+        | None -> Globals.error_and_exit "OCaml version has not been initialized."
+        | Some v -> v
+
+    let lib t (Name n) = Raw (ocaml t // "lib" // n)
+    let bin t = Raw (ocaml t // "bin")
+    let installed t = Raw (ocaml t // "installed")
+    let build t = mk_name_version_o (ocaml t) "build" ""
+    let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
+    let pconfig t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".config")
+  end
+
+  include Base
+
+  let init home = { home ; home_ocamlversion = None }
 
   let root = Raw "/"
   let cwd = Normalized (Run.normalize ".")
@@ -290,15 +330,6 @@ module Path : PATH = struct
     (* REMARK this should be normalized *)
     Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (String.strip ~chars:"/" s))
 
-  let lib t (Name n) = Raw (t.home_ocamlversion // "lib" // n)
-  let bin t = Raw (t.home_ocamlversion // "bin")
-
-  let mk_name_version t_home d ext n v = Raw (t_home // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
-
-  let mk_name_version_o t_home name ext = 
-    function
-    | None -> Raw (t_home // name)
-    | Some (n, v) -> mk_name_version t_home name ext n v
 
   let index t = mk_name_version_o t.home "index" ".spec"
 
@@ -306,13 +337,7 @@ module Path : PATH = struct
 
   let archives_targz t = mk_name_version_o t.home "archives" ".tar.gz"
 
-  let build t = mk_name_version_o t.home_ocamlversion "build" ""
-  let installed t = Raw (t.home_ocamlversion // "installed")
   let config t = Raw (t.home // "config")
-
-  let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
-
-  let pconfig t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".config")
 
   let keys t n = Raw (t.home // "keys" // Namespace.string_of_name n)
   let hashes t n = Raw (t.home // "hashes" // Namespace.string_of_name n)
@@ -434,8 +459,8 @@ module Path : PATH = struct
     | Not_found s -> ()
 
   let exec t n_v = 
-    Run.in_dir (s_of_filename (build t (Some n_v)))
-      (Run.sys_commands_general (s_of_filename (bin t))) 
+    Run.in_dir (s_of_filename (O.build t (Some n_v)))
+      (Run.sys_commands_general (s_of_filename (O.bin t) :: match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s])) 
 
   let basename s = B (Filename.basename (s_of_filename s))
 
@@ -574,7 +599,7 @@ module Path : PATH = struct
       | _ -> failwith "tar creation failed"
 
   let ocaml_options_of_library t name = 
-    I (Printf.sprintf "%s" (s_of_filename (lib t name)))
+    I (Printf.sprintf "%s" (s_of_filename (O.lib t name)))
 
   let string_of_filename = s_of_filename
 
