@@ -1,8 +1,8 @@
 (* Uncomment to use with TypeRex *)
-
+(*
    ocamlc   = [ "ocp-ocamlc.opt" ]
    ocamlopt = [ "ocp-ocamlopt.opt" ]
-
+*)
  
 comp = [ "-g" ]
 link = [ "-g" ]
