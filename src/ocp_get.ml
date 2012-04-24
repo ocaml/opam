@@ -50,6 +50,8 @@ let global_args = [
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version,      " Display version information";
 
+  "--ocamlc", Arg.String (fun s -> Globals.ocamlc := Some s),
+  (Printf.sprintf " Binary use to construct packages (default is \"ocamlc\" from the path if found)") (* Moreover, the directory containing 'ocamlc' must contain 'ocamlopt', default binaries from the OCaml source... *);
   "--root"   , Arg.Set_string Globals.root_path,
   (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
 ]

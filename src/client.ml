@@ -83,6 +83,11 @@ module Client : CLIENT = struct
       { servers: url list
       ; home   : Path.t (* ~/.opam *) }
 
+  let find_ocaml_version config = 
+    match !Globals.ocamlc with
+      | None -> File.Config.ocaml_version config
+      | Some v -> Version (Run.Ocamlc.version (Run.Ocamlc.init v))
+
   (* Look into the content of ~/.opam/config to build the client state *)
   (* Do not call RemoteServer functions here, as it implies a
      network roundtrip *)
@@ -90,8 +95,8 @@ module Client : CLIENT = struct
     let home = Path.init !Globals.root_path in
     let config = File.Config.find_err (Path.config home) in
     let servers = File.Config.sources config in
-    let Version v = File.Config.ocaml_version config in
-    { servers ; home = Path.O.set_version home v }
+    { servers 
+    ; home = Path.O.set_version home (find_ocaml_version config) }
 
   let update_remote server home =
     log "update-remote-server %s%s"
@@ -149,12 +154,8 @@ module Client : CLIENT = struct
     | Some c ->
         Globals.error_and_exit "%s already exist" (Path.string_of_filename config_f)
     | None   ->
-      let Version ocaml_version = File.Config.ocaml_version File.Config.empty in
-      let config =
-        File.Config.create
-          Globals.api_version
-          urls
-          (Version ocaml_version) in
+      let ocaml_version = Version (Run.Ocamlc.version (match !Globals.ocamlc with None -> Run.Ocamlc.from_path | Some s -> Run.Ocamlc.init s)) in
+      let config = File.Config.create Globals.api_version urls ocaml_version in
       File.Config.add config_f config;
       let home = Path.O.set_version home ocaml_version in
       File.Installed.add (Path.O.installed home) File.Installed.empty;

@@ -308,29 +308,22 @@ type command =
   | Sh of string list
   | OCaml of string
 
-let sys_command fmt =
-  Printf.kprintf (fun str ->
-    log "cwd=%s '%s'" (Unix.getcwd ()) str;
-    Sys.command str;
-  ) fmt
+let add_path bins = 
+  let path = ref "<not set>" in
+  let env = Unix.environment () in
+  for i = 0 to Array.length env - 1 do
+    let k,v = String.split env.(i) "=" in
+    if k = "PATH" then
+      let new_path = String.concat ":" (List.filter Sys.file_exists bins) ^ ":" ^ v in
+      env.(i) <- "PATH=" ^ new_path;
+      path := new_path;
+  done;
+  env, !path
 
-let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
-
-let sys_commands = fold_0 (sys_command "%s")
-
-let sys_command_with_bin bin fmt =
+let sys_command_with_bins bins fmt =
   Printf.kprintf (fun cmd ->
-    if Sys.file_exists bin then begin
-      let path = ref "<not set>" in
-      let env = Unix.environment () in
-      for i = 0 to Array.length env - 1 do
-        let k,v = String.split env.(i) "=" in
-        if k = "PATH" then
-          let new_path = bin ^ ":" ^ v in
-          env.(i) <- "PATH=" ^ new_path;
-          path := new_path;
-      done;
-      log "cwd=%s path=%s %s" (Unix.getcwd ()) !path cmd;
+      let env, path = add_path bins in 
+      log "cwd=%s path=%s %s" (Unix.getcwd ()) path cmd;
       let (o,i,e as chans) = Unix.open_process_full cmd env in
       (* we MUST read the input_channels otherwise [close_process] will fail *)
       let err = read_lines e in
@@ -341,11 +334,16 @@ let sys_command_with_bin bin fmt =
       | Unix.WEXITED 0 -> 0
       | Unix.WEXITED i -> msg (); i
       | _              -> msg (); 1
-    end else
-      sys_command "%s" cmd
   ) fmt
 
-let sys_commands_with_bin bin = fold_0 (sys_command_with_bin bin "%s")
+let sys_command fmt = 
+  sys_command_with_bins (match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s]) fmt
+
+let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
+
+let sys_commands = fold_0 (sys_command "%s")
+
+let sys_commands_with_bins bins = fold_0 (sys_command_with_bins bins "%s")
 
 let ocpget_config s_lib = 
   Printf.kprintf read_command_output_ "ocp-get --root %s config -I %s 2>/dev/null" !Globals.root_path s_lib
@@ -373,9 +371,9 @@ let sys_commands_general =
     ; "dose", None
     ; "ocpget", Some [ "ocp-get-lib" ; "ocp-get" ] ] in
 
-  fun bin ->
+  fun bins ->
     fold_0 (function 
-      | Sh l -> sys_command_with_bin bin "%s" (String.concat " " l)
+      | Sh l -> sys_command_with_bins bins "%s" (String.concat " " l)
       | OCaml s -> 
 
         (* construct the OCaml program *)

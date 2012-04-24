@@ -113,7 +113,7 @@ sig
   type filename 
     
   (** change the version of OCaml used *)
-  val set_version : t -> string (* OVERSION *) -> t
+  val set_version : t -> internal_version (* OVERSION *) -> t
 
   (** installed libraries for the package (at most one version installed) *)
   val lib : t -> name -> filename (* $HOME_OPAM/OVERSION/lib/NAME *)
@@ -303,7 +303,7 @@ module Path : PATH = struct
   struct
     include Base
 
-    let set_version t ocaml_version =
+    let set_version t (Version ocaml_version) =
       { t with home_ocamlversion = Some (t.home // ocaml_version) }
 
     let ocaml t = 
@@ -460,7 +460,7 @@ module Path : PATH = struct
 
   let exec t n_v = 
     Run.in_dir (s_of_filename (O.build t (Some n_v)))
-      (Run.sys_commands_general (s_of_filename (O.bin t))) 
+      (Run.sys_commands_general (s_of_filename (O.bin t) :: match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s])) 
 
   let basename s = B (Filename.basename (s_of_filename s))
 
