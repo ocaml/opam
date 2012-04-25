@@ -314,7 +314,10 @@ let add_path bins =
   for i = 0 to Array.length env - 1 do
     let k,v = String.split env.(i) "=" in
     if k = "PATH" then
-      let new_path = String.concat ":" (List.filter Sys.file_exists bins) ^ ":" ^ v in
+      let new_path = 
+        match List.filter Sys.file_exists bins with
+          | [] -> v
+          | l -> String.concat ":" l ^ ":" ^ v in
       env.(i) <- "PATH=" ^ new_path;
       path := new_path;
   done;
