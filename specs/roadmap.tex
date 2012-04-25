@@ -215,22 +215,22 @@ All structured OPAM files share the same syntax:
 
 {\small
 \begin{Verbatim}[frame=single]
+<file>  := <item>*
+
+<item>  := IDENT : <value>
+         | ?IDENT: <value>
+         | IDENT STRING { <item>+ }
+
 <value> := BOOL
          | STRING
          | SYMBOL
          | IDENT
          | [ <value>+ ]
          | value ( <value>+ )
-
-<item> := IDENT : <value>
-        | ?IDENT: <value>
-        | IDENT STRING { <item>+ }
-
-<file>  := <item>*
 \end{Verbatim}
 }
 
-\subsubsection{Configuration files}
+\subsubsection{Global configuration file}
 \label{config}
 
 \verb+$opam/config+ follows the syntax defined in \S\ref{syntax} with
@@ -250,19 +250,20 @@ repositories\footnote{default is {\tt
     "http://opam.ocamlpro.com/pub/"}}. Initially, the field {\tt
   ocaml-version} corresponds to the output of {\tt 'ocamlc -version'}.
 
-\subsubsection{OPAM files}
+\subsubsection{Package specification files: {\tt .opam}}
 \label{opam}
 
 \verb+$opam/index/$NAME.$VERSION.opam+ follows the syntax defined in
-\S\ref{syntax} with the following restriction:
+\S\ref{syntax} with the following restrictions:
 
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
     opam-version: 1.0
-    package NAME {
+    package STRING {
       version:    STRING
       maintainer: STRING
+      ?subst:     [ STRING+ ]
       ?build:     [ command+ ]
       ?depends:   <formula>
       ?conflicts: <formula>
@@ -290,31 +291,38 @@ repositories\footnote{default is {\tt
 
 \item The first line specifies the OPAM version.
 
+\item The string after {\tt package} should not contain any dot ({\tt
+  '.'}) nor space ({\tt ' '}).
+
 \item The contents of {\tt version} is \verb+$VERSION+. The content of
   {\tt maintainer} is the contact address of the package maintainer.
+
+\item The content of {\tt subst} is the list of files to substitute
+  variable (see \S\ref{subst} for the file format and
+  \S\ref{opam-config} for the semantic of file substitution).
 
 \item The content of {\tt build} is the list of commands to run in
   order to build the package libraries. The build script should build
   all the libraries and syntax extensions exported by the package and
   it should produce the platform-specific configuration and install
-  files \verb+$NAME.config+ and \verb+$NAME.install+ (see
+  files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
   \S\ref{pconfig} and \S\ref{install}).
 
-\item The {\tt depends} and {\tt conflicts} fields contain expressions
+\item The {\tt depends} and {\tt conflicts} fields contain formulas
   over package names, optionally parametrized by version
-  constrains. An expression is either:
+  constraints. An expression is either:
 
 \begin{itemize}
 \item A package name: {\tt "foo"};
 \item A package name with version constraints:
   \verb+"foo" (>= "1.2" & <= "3.4")+
-\item A disjunction of expressions: \verb+E | F+
-\item A conjunction of expressions: \verb+E & F+
-\item An expression with parenthesis: \verb+( E )+
+\item A disjunction of formulas: \verb+E | F+
+\item A conjunction of formulas: \verb+E & F+
+\item A formula with parenthesis: \verb+( E )+
 \end{itemize}
 
 For instance \verb+ "foo" (<= "1.2") & ("bar" | "gna" (= "3.14"))+
-is a valid formula whose semantic is: {\em a version of package
+is a valid formula whose semantic is: {\em any version of package
   {\tt "foo"} lesser or equal to $1.2$ and either any version of
   package {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}
 \\
@@ -324,7 +332,7 @@ is a valid formula whose semantic is: {\em a version of package
 
 \end{itemize}
 
-\subsubsection{Configuration files}
+\subsubsection{Package configuration files: {\tt .conf}}
 \label{pconfig}
 
 \verb+$opam/OVERSION/config/NAME.config+ follows the syntax defined in
@@ -332,9 +340,9 @@ is a valid formula whose semantic is: {\em a version of package
 
 {\small
 \begin{Verbatim}[frame=single]
-<file>  := <item>*
-<item>  := <def> | <block>
-<block> :=
+<file>    := <item>*
+<item>    := <def> | <section>
+<section> :=
     <kind> STRING {
       ?asmcomp:  [ STRING+ ]
       ?bytecomp: [ STRING+ ]
@@ -343,12 +351,12 @@ is a valid formula whose semantic is: {\em a version of package
       ?requires: [ <dep>+ ]
       <def>*
     }
-<dep>   := STRING 
-         | STRING ( STRING+ )
-<kind>  := library | syntax
-<def>   := IDENT: BOOL
-         | IDENT: STRING
-         | IDENT: [ STRING+ ]
+<dep>     := STRING 
+           | STRING ( STRING+ )
+<kind>    := library | syntax
+<def>     := IDENT: BOOL
+           | IDENT: STRING
+           | IDENT: [ STRING+ ]
 \end{Verbatim}
 }
 
@@ -369,15 +377,22 @@ package, and are used to substitute variables in template files (see
   defined at the root of the configuration file \verb+$config/NAME.config+.
 
 \item \verb+%{$NAME.$LIB}$VAR%+ will refer to the variable \verb+$VAR+
-  defined in the library or syntax block named \verb+$LIB+ in the
-  configuration file \verb+$config/$NAME.config+.
+  defined in the {\tt library} or {\tt syntax} section named
+  \verb+$LIB+ in the configuration file \verb+$config/$NAME.config+.
 
 \end{itemize}
 
-\paragraph{Library and syntax and blocks}
+\paragraph{Library and syntax sections}
 
-Each {\tt library} block defines the specific compilation flags to
-enable when using and linking with this library.
+Each {\tt library} and {\tt syntax} section defines the specific
+compilation flags to enable when using and linking with this library.
+
+The distinction between libraries and syntax extensions is only useful
+at compile time to know whether the options should be used as
+compilation or pre-processing arguments. This is the responsibility of
+the build tool to do the right thing. \\
+
+The available options are:
 
 \begin{itemize}
 \item {\tt asmcomp} are compilation options to give to the native
@@ -402,15 +417,11 @@ enable when using and linking with this library.
   \end{itemize}
 \end{itemize}
 
-The distinction between libraries and syntax extensions is only useful
-at compile time to know whether the options should be used as
-compilation or pre-processing arguments.
-
-\subsubsection{Install files}
+\subsubsection{Package installation files: {\tt .install}}
 \label{install}
 
 \verb+$opam/OVERSION/install/NAME.install+ follows the syntax defined
-in \S\ref{syntax}, but restricted to the following subset:
+in \S\ref{syntax} with the following restrictions:
 
 {\small
 \begin{Verbatim}[frame=single]
