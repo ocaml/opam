@@ -19,43 +19,157 @@ open Namespace
 open Uri
 
 let log fmt = Globals.log "RUN" fmt
+let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
-let mkdir f f_to = 
-  let rec aux f_to = 
-    if not (Sys.file_exists f_to) then begin
-      aux (Filename.dirname f_to);
-      Unix.mkdir f_to 0o755;
-    end in
-  aux (Filename.dirname f_to);
-  f f_to
+module U = struct
+  
+  let mkdir f f_to = 
+    let rec aux f_to = 
+      if not (Sys.file_exists f_to) then begin
+        aux (Filename.dirname f_to);
+        Unix.mkdir f_to 0o755;
+      end in
+    aux (Filename.dirname f_to);
+    f f_to
+  
+  let copy src dst =
+    log "Copying %s to %s" src dst;
+    let n = 1024 in
+    let b = String.create n in
+    let read = ref min_int in
+    let ic = open_in_bin src in
+    let oc =
+      if Sys.file_exists dst then
+        open_out_bin dst
+      else
+        let perm = (Unix.stat src).Unix.st_perm in
+        mkdir (open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm) dst
+    in
+    while !read <>0 do
+      read := input ic b 0 n;
+      output oc b 0 !read;
+    done;
+    close_in ic;
+    close_out oc
+  
+  let read file =
+    let ic = open_in file in
+    let n = in_channel_length ic in
+    let s = String.create n in
+    really_input ic s 0 n;
+    close_in ic;
+    s
 
-let copy src dst =
-  log "Copying %s to %s" src dst;
-  let n = 1024 in
-  let b = String.create n in
-  let read = ref min_int in
-  let ic = open_in_bin src in
-  let oc =
-    if Sys.file_exists dst then
-      open_out_bin dst
+  (* the [Unix.wait] could return a processus which has not been created by [Unix.fork]. This part waits until a known pid is returned. *)
+  let wait map_pid = 
+    let open BatMap in
+    let rec aux () = 
+      let pid, error = Unix.wait () in
+      if IntMap.mem pid map_pid then
+        pid, error
+      else
+        aux () in
+    aux ()
+
+  (**************************)
+  (* from ocplib-system ... *)
+  (**************************)
+  
+  let in_dir dir fn x =
+    let cwd = Unix.getcwd () in
+    Unix.chdir dir;
+    try
+      let r = fn x in
+      Unix.chdir cwd;
+      r
+    with e ->
+      Unix.chdir cwd;
+      raise e
+  
+  let directories () =
+    let d = Sys.readdir (Unix.getcwd ()) in
+    let d = Array.to_list d in
+    List.filter (fun f -> try Sys.is_directory f with _ -> false) d
+  
+  let files () =
+    let d = Sys.readdir (Unix.getcwd ()) in
+    let d = Array.to_list d in
+    List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
+  
+  let safe_unlink file =
+    try Unix.unlink file
+    with Unix.Unix_error _ -> ()
+  
+  let rec safe_rmdir dir =
+    if Sys.file_exists dir then begin
+      in_dir dir (fun () ->
+        let dirs = directories () in
+        let files = files () in
+        List.iter safe_unlink files;
+        List.iter safe_rmdir dirs;
+      ) ();
+      Unix.rmdir dir;
+    end
+  
+  let safe_rm file =
+    if Sys.file_exists file && Sys.is_directory file then
+      safe_rmdir file
     else
-      let perm = (Unix.stat src).Unix.st_perm in
-      mkdir (open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm) dst
-  in
-  while !read <>0 do
-    read := input ic b 0 n;
-    output oc b 0 !read;
-  done;
-  close_in ic;
-  close_out oc
+      safe_unlink file
+  
+  let getchdir s = 
+    let p = Unix.getcwd () in
+    let () = Unix.chdir s in
+    p
+  
+  let rec root path =
+    let d = Filename.dirname path in
+    if d = path || d = "" || d = "." then
+      path
+    else
+      root d
+  
+  (* XXX: blocking function *)
+  let read_lines ic =
+    let lines = ref [] in
+    try while true do
+      let line = input_line ic in
+      if not (Filename.concat line "" = line) then
+        lines := line :: !lines;
+      done;
+      !lines
+    with _ ->
+      !lines
+  
+  let read_command_output_ cmd =
+    let ic = Unix.open_process_in cmd in
+    let lines = read_lines ic in
+    if Unix.close_process_in ic <> Unix.WEXITED 0 then
+      None
+    else
+      Some lines
+  
+  let read_command_output cmd =
+    match read_command_output_ cmd with
+      | None -> Globals.error_and_exit "command %s failed" cmd
+      | Some lines -> lines
 
-let read file =
-  let ic = open_in file in
-  let n = in_channel_length ic in
-  let s = String.create n in
-  really_input ic s 0 n;
-  close_in ic;
-  s
+  let normalize s =
+    if Sys.file_exists s then
+      getchdir (getchdir s)
+    else
+      s
+
+  let real_path p =
+    let dir = Filename.dirname p in
+    let dir = normalize dir in
+    let base = Filename.basename p in
+    let (/) = Filename.concat in
+    if Filename.is_relative dir then
+      (Sys.getcwd ()) / dir / base
+    else
+      dir / base
+end
 
 module type PROCESS = 
 sig
@@ -81,7 +195,7 @@ sig
   val filter_finished : ('a, 'b) t -> (state * 'a) plist (** By convention : list not empty *) -> ('a, 'b) t * (state * 'a) plist * ('a * 'b return (* finished *))
 end
 
-module Process : PROCESS with type 'a return = unit =
+module Process_multi : PROCESS with type 'a return = unit =
 struct
   open BatMap
 
@@ -100,21 +214,6 @@ struct
 
   let init cores_max f to_str = { cores_max = max 1 cores_max ; running = zero_running ; f ; to_str } 
 
-  module Unix2 =
-  struct
-    include Unix
-
-    (* the [Unix.wait] could return a processus which has not been created by [Unix.fork]. This part waits until a known pid is returned. *)
-    let wait map_pid = 
-      let rec aux () = 
-        let pid, error = Unix.wait () in
-        if IntMap.mem pid map_pid then
-          pid, error
-        else
-          aux () in
-      aux ()
-  end
-
   (* This function always execute in parallel. *)
   let filter_finished t l = 
     let rec aux map_pid = function
@@ -126,7 +225,7 @@ struct
             | pid -> aux (IntMap.add pid (Has_began pid, x) map_pid) (pred nb, xs) in
 
     let nb_remained, l_not_begun, map_pid = aux IntMap.empty (t.cores_max - t.running, l) in
-    let pid, error = Unix2.wait map_pid in
+    let pid, error = U.wait map_pid in
     let _, x = IntMap.find pid map_pid in
     match error with
       | Unix.WEXITED 0 -> 
@@ -180,377 +279,6 @@ struct
           | _ -> assert false
 end
 
-(**************************)
-(* from ocplib-system ... *)
-(**************************)
-
-let in_dir dir fn x =
-  let cwd = Unix.getcwd () in
-  Unix.chdir dir;
-  try
-    let r = fn x in
-    Unix.chdir cwd;
-    r
-  with e ->
-    Unix.chdir cwd;
-    raise e
-
-let directories () =
-  let d = Sys.readdir (Unix.getcwd ()) in
-  let d = Array.to_list d in
-  List.filter (fun f -> try Sys.is_directory f with _ -> false) d
-
-let files () =
-  let d = Sys.readdir (Unix.getcwd ()) in
-  let d = Array.to_list d in
-  List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
-
-let safe_unlink file =
-  try Unix.unlink file
-  with Unix.Unix_error _ -> ()
-
-let rec safe_rmdir dir =
-  if Sys.file_exists dir then begin
-    in_dir dir (fun () ->
-      let dirs = directories () in
-      let files = files () in
-      List.iter safe_unlink files;
-      List.iter safe_rmdir dirs;
-    ) ();
-    Unix.rmdir dir;
-  end
-
-let safe_rm file =
-  if Sys.file_exists file && Sys.is_directory file then
-    safe_rmdir file
-  else
-    safe_unlink file
-
-let getchdir s = 
-  let p = Unix.getcwd () in
-  let () = Unix.chdir s in
-  p
-
-let rec root path =
-  let d = Filename.dirname path in
-  if d = path || d = "" || d = "." then
-    path
-  else
-    root d
-
-(* XXX: blocking function *)
-let read_lines ic =
-  let lines = ref [] in
-  try while true do
-    let line = input_line ic in
-    if not (Filename.concat line "" = line) then
-      lines := line :: !lines;
-    done;
-    !lines
-  with _ ->
-    !lines
-
-let read_command_output_ cmd =
-  let ic = Unix.open_process_in cmd in
-  let lines = read_lines ic in
-  if Unix.close_process_in ic <> Unix.WEXITED 0 then
-    None
-  else
-    Some lines
-
-let read_command_output cmd =
-  match read_command_output_ cmd with
-    | None -> Globals.error_and_exit "command %s failed" cmd
-    | Some lines -> lines
-
-let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
-
-let normalize s =
-  if Sys.file_exists s then
-    getchdir (getchdir s)
-  else
-    s
-
-let is_archive file =
-  if List.exists (Filename.check_suffix file) [ "tar.gz" ; "tgz" ] then
-    Some (fun tmp_dir -> Sys.command (Printf.sprintf "tar xvfz %s -C %s" file tmp_dir))
-  else if List.exists (Filename.check_suffix file) [ "tar.bz2" ; "tbz" ] then
-    Some (fun tmp_dir -> Sys.command (Printf.sprintf "tar xvfj %s -C %s" file tmp_dir))
-  else
-    None
-
-let untar file nv =
-  log "untar %s" file;
-  let files = read_command_output ("tar tf " ^ file) in
-  log "%d files found: %s" (List.length files) (String.concat ", " files);
-  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
-  let aux name =
-    if String.starts_with name dirname then
-      Filename.concat tmp_dir name, name
-    else
-      let root = root name in
-      let n = String.length root in
-      let rest = String.sub name n (String.length name - n) in 
-      Filename.concat tmp_dir name, dirname ^  rest in
-  let moves = List.map aux files in
-  if not (Sys.file_exists tmp_dir) then
-    Unix.mkdir tmp_dir 0o750;
-  let err =
-    match is_archive file with
-      | Some f_cmd -> f_cmd tmp_dir
-      | None -> Globals.error_and_exit "%s is not a valid archive" file in
-  List.iter (fun (src, dst) ->
-    mkdir (copy src) dst
-  ) moves;
-  err
-
-type command = 
-  | Sh of string list
-  | OCaml of string
-
-let add_path bins = 
-  let path = ref "<not set>" in
-  let env = Unix.environment () in
-  for i = 0 to Array.length env - 1 do
-    let k,v = String.split env.(i) "=" in
-    if k = "PATH" then
-      let new_path = 
-        match List.filter Sys.file_exists bins with
-          | [] -> v
-          | l -> String.concat ":" l ^ ":" ^ v in
-      env.(i) <- "PATH=" ^ new_path;
-      path := new_path;
-  done;
-  env, !path
-
-let sys_command_with_bins bins fmt =
-  Printf.kprintf (fun cmd ->
-      let env, path = add_path bins in 
-      log "cwd=%s path=%s %s" (Unix.getcwd ()) path cmd;
-      let (o,i,e as chans) = Unix.open_process_full cmd env in
-      (* we MUST read the input_channels otherwise [close_process] will fail *)
-      let err = read_lines e in
-      let out = read_lines o in
-      let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
-      let msg () = Globals.msg "%s\n" (str ()) in
-      match Unix.close_process_full chans with
-      | Unix.WEXITED 0 -> 0
-      | Unix.WEXITED i -> msg (); i
-      | _              -> msg (); 1
-  ) fmt
-
-let sys_command fmt = 
-  sys_command_with_bins (match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s]) fmt
-
-let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
-
-let sys_commands = fold_0 (sys_command "%s")
-
-let sys_commands_with_bins bins = fold_0 (sys_command_with_bins bins "%s")
-
-let ocpget_config s_lib = 
-  Printf.kprintf read_command_output_ "ocp-get --root %s config -I %s 2>/dev/null" !Globals.root_path s_lib
-
-let sys_commands_general =
-  let get_tmp_ml = 
-    (* Return a temporary file. 
-       The first call sets the name. Next calls will return that name. *)
-    let ml = ref None in 
-    fun () -> 
-      match !ml with 
-        | None -> 
-          let tmp = Filename.temp_file "ocpget" ".ml" in
-          let _ = ml := Some tmp in
-          tmp
-        | Some ml -> ml in
-
-  let ocpget_lib = 
-    (* library that is loaded by default with 'ocaml' *)
-    [ "extlib", None
-    ; "cudf", None
-    ; "ocamlre", Some [ "re" ]
-    ; "ocpgetboot", Some [ "pcre" ; "bat" ]
-    ; "ocamlgraph", Some [ "graph" ]
-    ; "dose", None
-    ; "ocpget", Some [ "ocp-get-lib" ; "ocp-get" ] ] in
-
-  fun bins ->
-    fold_0 (function 
-      | Sh l -> sys_command_with_bins bins "%s" (String.concat " " l)
-      | OCaml s -> 
-
-        (* construct the OCaml program *)
-        let ml = get_tmp_ml () in
-        let oc = open_out ml in
-        let _ = Printf.fprintf oc "%s%!" s in
-        let _ = close_out oc in
-
-        (* compute the "-I ..." to give to 'ocaml' from the [ocpget_lib] *)
-        (* NOTE We normally take from [ocpget_lib]. It would be interesting to also add all the cma that depends this library. *)
-        let s_include, ocpget_lib = 
-          List.fold_left (fun (acc, ocpget_lib) (s_lib, o_lib) -> 
-            match ocpget_config s_lib with
-              | None -> acc, ocpget_lib
-              | Some l -> Printf.sprintf "%s%s " acc (String.concat " " l), (s_lib, o_lib) :: ocpget_lib
-          ) ("", []) ocpget_lib in
-        let ocpget_lib = List.rev ocpget_lib in
-
-        (* execute the 'ocaml' command *)
-        sys_command "ocaml %s %s %s" 
-          s_include
-
-          ((* cma *)
-           List.fold_left
-             (fun acc l_lib -> 
-               List.fold_left
-                 (fun acc s_lib -> 
-                   Printf.sprintf "%s%s.cma " acc s_lib)
-                 acc
-                 (match l_lib with s_lib, None -> [ s_lib ] | _, Some l -> l))
-             ""
-             (("unix", None) :: ("str", None) :: ocpget_lib))
-
-          ml)
-
-(* Git wrappers *)
-module Git = struct
-
-  (* Init a git repository in [dirname] *)
-  let init dirname =
-    in_dir dirname (fun () ->
-      let (_ : int) = sys_command "git init" in
-      ()
-    ) ()
-
-  (* tentative to build a unique branch name from a repo name *)
-  (*  ':' is forbidden and it cannot start by '/'  *)
-  let remote_name url =
-    let name = "R" ^ snd (uri_of_url url) in
-    for i = 0 to String.length name - 1 do
-      if name.[i] = ':' then
-        name.[i] <- 'T';
-    done;
-    name
-
-  (* Add a remote url in dirname *)
-  let remote_add dirname url =
-    in_dir dirname (fun () ->
-      sys_command "git remote add %s %s" (remote_name url) url
-    ) ()
-
-  (* internal command *)
-  let get_remotes dirname =
-    in_dir dirname read_command_output "git remote" 
-
-  let safe_remote_add dirname url =
-    let name = remote_name url in
-    log "name=%s" name;
-    if List.mem name (get_remotes dirname) then
-      (* Globals.error_and_exit "%s is already a remote branch in %s" name dirname; *)
-      ()
-    else if remote_add dirname url <> 0 then
-      Globals.error_and_exit "cannot add remote branch %s in %s" name dirname
-
-  let remote_rm dirname url =
-    in_dir dirname (sys_command "git remote rm %s") (remote_name url)
-
-  let safe_remote_rm dirname url =
-    let name = remote_name url in
-    if not (List.mem name (get_remotes dirname)) then
-      (* Globals.error_and_exit "%s is not a remote branch in %s" name dirname; *)
-      ()
-    else if remote_rm dirname url <> 0 then
-      Globals.error_and_exit "cannot remove remote branch %s in %s" name dirname
-          
-  (* Return the list of modified files of the git repository located
-     at [dirname] *)
-  let get_updates dirname =
-    in_dir dirname (fun () ->
-      let fetches = List.map (Printf.sprintf "git fetch %s") (get_remotes dirname) in
-      let diff remote =
-        read_command_output (Printf.sprintf "git diff remotes/%s/master --name-only" remote) in
-      if sys_commands fetches = 0 then
-        List.flatten (List.map diff (get_remotes dirname))
-      else
-        Globals.error_and_exit "Cannot fetch git repository %s" dirname
-    ) ()
-
-  (* Update the git repository located at [dirname] *)
-  let update dirname =
-    in_dir dirname (fun () ->
-      let commands = List.map (Printf.sprintf "git pull %s master") (get_remotes dirname) in
-      if sys_commands commands <> 0 then
-        Globals.error_and_exit "Cannot update git repository %s" dirname
-    ) ()
-
-  (* Clone [repo] into the directory [dst] *)
-  let clone repo dst =
-    sys_command "git clone %s %s" repo dst
- 
-end
-
-type download_result = 
-  | From_http of string (* file *)
-  | From_git
-  | Url_error
-
-let clone repo last_pwd nv =
-  let b_name = Filename.chop_extension (Filename.basename repo) in
-  let dst_git = Filename.concat tmp_dir b_name in
-  log "cloning %s into %s" repo dst_git;
-  if Sys.file_exists dst_git then
-    safe_rm dst_git;
-  let err = Git.clone repo b_name in
-  if err = 0 then
-    let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
-    let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
-    if sys_command "mv -i %s %s" s_from s_to = 0 then
-      From_git
-    else
-      Globals.error_and_exit "moving failed"
-  else
-    Globals.error_and_exit "cloning failed"
-
-let exec_download = 
-  let http s_wget url _ _ = 
-    log "download %s" url;
-    let dst = Filename.concat tmp_dir (Filename.basename url) in
-    if Sys.file_exists dst then
-      safe_rm dst;
-    if sys_command "%s %s" s_wget url = 0 then
-      From_http dst
-    else
-      Url_error in
-  function
-  | (Http|Https as uri), url ->
-      (match Globals.os with
-      | Globals.Darwin -> http "ftp"  (Uri.to_string (Some uri, url))
-      | _              -> http "wget" (Uri.to_string (Some uri, url)))
-  | Git, repo -> clone repo
-  | Local, _  -> assert false
-
-let download url nv =
-  if not (Sys.file_exists tmp_dir) then
-    Unix.mkdir tmp_dir 0o750;
-  in_dir tmp_dir (fun s -> exec_download url s nv) (Unix.getcwd ())
-
-let patch p nv =
-  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
-  log "patching %s using %s" dirname p;
-  in_dir dirname (fun () ->
-    sys_command "patch -p1 -f -i %s" p
-  ) ()
-
-let real_path p =
-  let dir = Filename.dirname p in
-  let dir = normalize dir in
-  let base = Filename.basename p in
-  let (/) = Filename.concat in
-  if Filename.is_relative dir then
-    (Sys.getcwd ()) / dir / base
-  else
-    dir / base
-
 module type OCAMLC =
 sig
   type t
@@ -574,10 +302,295 @@ struct
 
   let ocamlc opt t = 
     let s_c = Printf.sprintf "%s %s" t.ocamlc opt in
-    match read_command_output_ s_c with
+    match U.read_command_output_ s_c with
       | Some (ocaml_version :: _) -> ocaml_version
       | _ -> Globals.error_and_exit "command %S failed" s_c
 
   let version = ocamlc "-version"
   let which = ocamlc "-which"
 end
+
+type command = 
+  | Sh of string list
+  | OCaml of string
+
+module Sys_command = 
+struct
+
+  let add_path bins = 
+    let path = ref "<not set>" in
+    let env = Unix.environment () in
+    for i = 0 to Array.length env - 1 do
+      let k,v = String.split env.(i) "=" in
+      if k = "PATH" then
+        let new_path = 
+          match List.filter Sys.file_exists bins with
+            | [] -> v
+            | l -> String.concat ":" l ^ ":" ^ v in
+        env.(i) <- "PATH=" ^ new_path;
+        path := new_path;
+    done;
+    env, !path
+
+  let sys_command_with_bins bins fmt =
+    Printf.kprintf (fun cmd ->
+      let env, path = add_path bins in 
+      log "cwd=%s path=%s %s" (Unix.getcwd ()) path cmd;
+      let (o,i,e as chans) = Unix.open_process_full cmd env in
+      (* we MUST read the input_channels otherwise [close_process] will fail *)
+      let err = U.read_lines e in
+      let out = U.read_lines o in
+      let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
+      let msg () = Globals.msg "%s\n" (str ()) in
+      match Unix.close_process_full chans with
+      | Unix.WEXITED 0 -> 0
+      | Unix.WEXITED i -> msg (); i
+      | _              -> msg (); 1
+    ) fmt
+
+  let sys_command fmt = 
+    sys_command_with_bins (match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s]) fmt
+
+  let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
+
+  let sys_commands = fold_0 (sys_command "%s")
+
+  let sys_commands_with_bins bins = fold_0 (sys_command_with_bins bins "%s")
+
+  module Ocpget = struct
+
+    let config s_lib = 
+      Printf.kprintf U.read_command_output_ "ocp-get --root %s config -I %s 2>/dev/null" !Globals.root_path s_lib
+
+    let lib = (* library that is loaded by default with 'ocaml' *)
+      [ "extlib", None
+      ; "cudf", None
+      ; "ocamlre", Some [ "re" ]
+      ; "ocpgetboot", Some [ "pcre" ; "bat" ]
+      ; "ocamlgraph", Some [ "graph" ]
+      ; "dose", None
+      ; "ocpget", Some [ "ocp-get-lib" ; "ocp-get" ] ]
+
+    let prefix_tmp = "ocpget"
+  end
+
+  let sys_commands_general =
+    let get_tmp_ml = 
+      (* Return a temporary file. 
+         The first call sets the name. Next calls will return that name. *)
+      let ml = ref None in 
+      fun () -> 
+        match !ml with 
+          | None -> 
+            let tmp = Filename.temp_file Ocpget.prefix_tmp ".ml" in
+            let _ = ml := Some tmp in
+            tmp
+          | Some ml -> ml in
+  
+    fun bins ->
+      fold_0 (function 
+        | Sh l -> sys_command_with_bins bins "%s" (String.concat " " l)
+        | OCaml s -> 
+  
+          (* construct the OCaml program *)
+          let ml = get_tmp_ml () in
+          let oc = open_out ml in
+          let _ = Printf.fprintf oc "%s%!" s in
+          let _ = close_out oc in
+  
+          (* compute the "-I ..." to give to 'ocaml' from the [ocpget_lib] *)
+          (* NOTE We normally take from [ocpget_lib]. It would be interesting to also add all the cma that depends this library. *)
+          let s_include, ocpget_lib = 
+            List.fold_left (fun (acc, ocpget_lib) (s_lib, o_lib) -> 
+              match Ocpget.config s_lib with
+                | None -> acc, ocpget_lib
+                | Some l -> Printf.sprintf "%s%s " acc (String.concat " " l), (s_lib, o_lib) :: ocpget_lib
+            ) ("", []) Ocpget.lib in
+          let ocpget_lib = List.rev ocpget_lib in
+  
+          (* execute the 'ocaml' command *)
+          sys_command "ocaml %s %s %s" 
+            s_include
+  
+            ((* cma *)
+             List.fold_left
+               (fun acc l_lib -> 
+                 List.fold_left
+                   (fun acc s_lib -> 
+                     Printf.sprintf "%s%s.cma " acc s_lib)
+                   acc
+                   (match l_lib with s_lib, None -> [ s_lib ] | _, Some l -> l))
+               ""
+               (("unix", None) :: ("str", None) :: ocpget_lib))
+  
+            ml)
+end
+
+(* Git wrappers *)
+module Git = struct
+
+  (* Init a git repository in [dirname] *)
+  let init dirname =
+    U.in_dir dirname (fun () ->
+      let (_ : int) = Sys_command.sys_command "git init" in
+      ()
+    ) ()
+
+  (* tentative to build a unique branch name from a repo name *)
+  (*  ':' is forbidden and it cannot start by '/'  *)
+  let remote_name url =
+    let name = "R" ^ snd (uri_of_url url) in
+    for i = 0 to String.length name - 1 do
+      if name.[i] = ':' then
+        name.[i] <- 'T';
+    done;
+    name
+
+  (* Add a remote url in dirname *)
+  let remote_add dirname url =
+    U.in_dir dirname (fun () ->
+      Sys_command.sys_command "git remote add %s %s" (remote_name url) url
+    ) ()
+
+  (* internal command *)
+  let get_remotes dirname =
+    U.in_dir dirname U.read_command_output "git remote" 
+
+  let safe_remote_add dirname url =
+    let name = remote_name url in
+    log "name=%s" name;
+    if List.mem name (get_remotes dirname) then
+      (* Globals.error_and_exit "%s is already a remote branch in %s" name dirname; *)
+      ()
+    else if remote_add dirname url <> 0 then
+      Globals.error_and_exit "cannot add remote branch %s in %s" name dirname
+
+  let remote_rm dirname url =
+    U.in_dir dirname (Sys_command.sys_command "git remote rm %s") (remote_name url)
+
+  let safe_remote_rm dirname url =
+    let name = remote_name url in
+    if not (List.mem name (get_remotes dirname)) then
+      (* Globals.error_and_exit "%s is not a remote branch in %s" name dirname; *)
+      ()
+    else if remote_rm dirname url <> 0 then
+      Globals.error_and_exit "cannot remove remote branch %s in %s" name dirname
+          
+  (* Return the list of modified files of the git repository located
+     at [dirname] *)
+  let get_updates dirname =
+    U.in_dir dirname (fun () ->
+      let fetches = List.map (Printf.sprintf "git fetch %s") (get_remotes dirname) in
+      let diff remote =
+        U.read_command_output (Printf.sprintf "git diff remotes/%s/master --name-only" remote) in
+      if Sys_command.sys_commands fetches = 0 then
+        List.flatten (List.map diff (get_remotes dirname))
+      else
+        Globals.error_and_exit "Cannot fetch git repository %s" dirname
+    ) ()
+
+  (* Update the git repository located at [dirname] *)
+  let update dirname =
+    U.in_dir dirname (fun () ->
+      let commands = List.map (Printf.sprintf "git pull %s master") (get_remotes dirname) in
+      if Sys_command.sys_commands commands <> 0 then
+        Globals.error_and_exit "Cannot update git repository %s" dirname
+    ) ()
+
+  (* Clone [repo] into the directory [dst] *)
+  let clone repo dst =
+    Sys_command.sys_command "git clone %s %s" repo dst
+ 
+end
+
+let is_archive file =
+  List.fold_left
+    (function
+      | Some s -> fun _ -> Some s
+      | None -> fun (ext, c) -> 
+        if List.exists (Filename.check_suffix file) ext then
+          Some (Printf.kprintf Sys.command "tar xvf%c %s -C %s" c file)
+        else
+          None)
+    None
+    [ [ "tar.gz" ; "tgz" ], 'z'
+    ; [ "tar.bz2" ; "tbz" ], 'j' ]
+
+let untar file nv =
+  log "untar %s" file;
+  let files = U.read_command_output ("tar tf " ^ file) in
+  log "%d files found: %s" (List.length files) (String.concat ", " files);
+  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  let aux name =
+    if String.starts_with name dirname then
+      Filename.concat tmp_dir name, name
+    else
+      let root = U.root name in
+      let n = String.length root in
+      let rest = String.sub name n (String.length name - n) in 
+      Filename.concat tmp_dir name, dirname ^  rest in
+  let moves = List.map aux files in
+  if not (Sys.file_exists tmp_dir) then
+    Unix.mkdir tmp_dir 0o750;
+  let err =
+    match is_archive file with
+      | Some f_cmd -> f_cmd tmp_dir
+      | None -> Globals.error_and_exit "%s is not a valid archive" file in
+  List.iter (fun (src, dst) ->
+    U.mkdir (U.copy src) dst
+  ) moves;
+  err
+
+type download_result = 
+  | From_http of string (* file *)
+  | From_git
+  | Url_error
+
+let clone repo last_pwd nv =
+  let b_name = Filename.chop_extension (Filename.basename repo) in
+  let dst_git = Filename.concat tmp_dir b_name in
+  log "cloning %s into %s" repo dst_git;
+  if Sys.file_exists dst_git then
+    U.safe_rm dst_git;
+  let err = Git.clone repo b_name in
+  if err = 0 then
+    let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
+    let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
+    if Sys_command.sys_command "mv -i %s %s" s_from s_to = 0 then
+      From_git
+    else
+      Globals.error_and_exit "moving failed"
+  else
+    Globals.error_and_exit "cloning failed"
+
+let exec_download = 
+  let http s_wget url _ _ = 
+    log "download %s" url;
+    let dst = Filename.concat tmp_dir (Filename.basename url) in
+    if Sys.file_exists dst then
+      U.safe_rm dst;
+    if Sys_command.sys_command "%s %s" s_wget url = 0 then
+      From_http dst
+    else
+      Url_error in
+  function
+  | (Http|Https as uri), url ->
+      (match Globals.os with
+      | Globals.Darwin -> http "ftp"  (Uri.to_string (Some uri, url))
+      | _              -> http "wget" (Uri.to_string (Some uri, url)))
+  | Git, repo -> clone repo
+  | Local, _  -> assert false
+
+let download url nv =
+  if not (Sys.file_exists tmp_dir) then
+    Unix.mkdir tmp_dir 0o750;
+  U.in_dir tmp_dir (fun s -> exec_download url s nv) (Unix.getcwd ())
+
+let patch p nv =
+  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
+  log "patching %s using %s" dirname p;
+  U.in_dir dirname (fun () ->
+    Sys_command.sys_command "patch -p1 -f -i %s" p
+  ) ()
+
+
