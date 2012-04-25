@@ -314,116 +314,139 @@ type command =
   | Sh of string list
   | OCaml of string
 
-module Sys_command = 
+module type SYSTEM =
+sig
+  val one : ('a, unit, string, int) format4 -> 'a
+  val seq : string list -> int
+(*  val para : string list -> int *)
+  val seq_env : string list (* to add to $PATH *) -> command list -> int
+end
+
+module System = 
 struct
 
-  let add_path bins = 
-    let path = ref "<not set>" in
-    let env = Unix.environment () in
-    for i = 0 to Array.length env - 1 do
-      let k,v = String.split env.(i) "=" in
-      if k = "PATH" then
-        let new_path = 
-          match List.filter Sys.file_exists bins with
-            | [] -> v
-            | l -> String.concat ":" l ^ ":" ^ v in
-        env.(i) <- "PATH=" ^ new_path;
-        path := new_path;
-    done;
-    env, !path
+  module M (Bin : sig val init : string option end) : SYSTEM = struct
 
-  let sys_command_with_bins bins fmt =
-    Printf.kprintf (fun cmd ->
-      let env, path = add_path bins in 
-      log "cwd=%s path=%s %s" (Unix.getcwd ()) path cmd;
-      let (o,i,e as chans) = Unix.open_process_full cmd env in
-      (* we MUST read the input_channels otherwise [close_process] will fail *)
-      let err = U.read_lines e in
-      let out = U.read_lines o in
-      let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
-      let msg () = Globals.msg "%s\n" (str ()) in
-      match Unix.close_process_full chans with
-      | Unix.WEXITED 0 -> 0
-      | Unix.WEXITED i -> msg (); i
-      | _              -> msg (); 1
-    ) fmt
-
-  let sys_command fmt = 
-    sys_command_with_bins (match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s]) fmt
-
-  let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
-
-  let sys_commands = fold_0 (sys_command "%s")
-
-  let sys_commands_with_bins bins = fold_0 (sys_command_with_bins bins "%s")
-
-  module Ocpget = struct
-
-    let config s_lib = 
-      Printf.kprintf U.read_command_output_ "ocp-get --root %s config -I %s 2>/dev/null" !Globals.root_path s_lib
-
-    let lib = (* library that is loaded by default with 'ocaml' *)
-      [ "extlib", None
-      ; "cudf", None
-      ; "ocamlre", Some [ "re" ]
-      ; "ocpgetboot", Some [ "pcre" ; "bat" ]
-      ; "ocamlgraph", Some [ "graph" ]
-      ; "dose", None
-      ; "ocpget", Some [ "ocp-get-lib" ; "ocp-get" ] ]
-
-    let prefix_tmp = "ocpget"
+    let add_path bins = 
+      let path = ref "<not set>" in
+      let env = Unix.environment () in
+      for i = 0 to Array.length env - 1 do
+        let k,v = String.split env.(i) "=" in
+        if k = "PATH" then
+          let new_path = 
+            match List.filter Sys.file_exists (match Bin.init with None -> bins | Some s -> s :: bins) with
+              | [] -> v
+              | l -> String.concat ":" l ^ ":" ^ v in
+          env.(i) <- "PATH=" ^ new_path;
+          path := new_path;
+      done;
+      env, !path
+  
+    let command_with_bins bins fmt =
+      Printf.kprintf (fun cmd ->
+        let env, path = add_path bins in 
+        log "cwd=%s path=%s %s" (Unix.getcwd ()) path cmd;
+        let (o,i,e as chans) = Unix.open_process_full cmd env in
+        (* we MUST read the input_channels otherwise [close_process] will fail *)
+        let err = U.read_lines e in
+        let out = U.read_lines o in
+        let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
+        let msg () = Globals.msg "%s\n" (str ()) in
+        match Unix.close_process_full chans with
+        | Unix.WEXITED 0 -> 0
+        | Unix.WEXITED i -> msg (); i
+        | _              -> msg (); 1
+      ) fmt
+ 
+     let one fmt =
+      match Bin.init with
+        | None -> 
+            Printf.kprintf (fun str ->
+              log "cwd=%s '%s'" (Unix.getcwd ()) str;
+              Sys.command str;
+            ) fmt
+        | Some _ -> 
+          command_with_bins (match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s]) fmt
+  
+    let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
+  
+    let seq = fold_0 (one "%s")
+  
+    let commands_with_bins bins = fold_0 (command_with_bins bins "%s")
+  
+    module Ocpget = struct
+  
+      let config s_lib = 
+        Printf.kprintf U.read_command_output_ "ocp-get --root %s config -I %s 2>/dev/null" !Globals.root_path s_lib
+  
+      let lib = (* library that is loaded by default with 'ocaml' *)
+        [ "extlib", None
+        ; "cudf", None
+        ; "ocamlre", Some [ "re" ]
+        ; "ocpgetboot", Some [ "pcre" ; "bat" ]
+        ; "ocamlgraph", Some [ "graph" ]
+        ; "dose", None
+        ; "ocpget", Some [ "ocp-get-lib" ; "ocp-get" ] ]
+  
+      let prefix_tmp = "ocpget"
+  
+      let default_open_lib = [ "unix" ; "str" ]
+    end
+  
+    let seq_env =
+      let get_tmp_ml = 
+        (* Return a temporary file. 
+           The first call sets the name. Next calls will return that name. *)
+        let ml = ref None in 
+        fun () -> 
+          match !ml with 
+            | None -> 
+              let tmp = Filename.temp_file Ocpget.prefix_tmp ".ml" in
+              let _ = ml := Some tmp in
+              tmp
+            | Some ml -> ml in
+    
+      fun bins ->
+        fold_0 (function 
+          | Sh l -> command_with_bins bins "%s" (String.concat " " l)
+          | OCaml s -> 
+    
+            (* construct the OCaml program *)
+            let ml = get_tmp_ml () in
+            let oc = open_out ml in
+            let _ = Printf.fprintf oc "%s%!" s in
+            let _ = close_out oc in
+    
+            (* compute the "-I ..." to give to 'ocaml' from the [ocpget_lib] *)
+            (* NOTE We normally take from [ocpget_lib]. It would be interesting to also add all the cma that depends this library. *)
+            let s_include, ocpget_lib = 
+              List.fold_left (fun (acc, ocpget_lib) (s_lib, o_lib) -> 
+                match Ocpget.config s_lib with
+                  | None -> acc, ocpget_lib
+                  | Some l -> Printf.sprintf "%s%s " acc (String.concat " " l), (s_lib, o_lib) :: ocpget_lib
+              ) ("", []) Ocpget.lib in
+            let ocpget_lib = List.rev ocpget_lib in
+    
+            (* execute the 'ocaml' command *)
+            one "ocaml %s %s %s" 
+              s_include
+    
+              ((* cma *)
+               List.fold_left
+                 (fun acc l_lib -> 
+                   List.fold_left
+                     (fun acc s_lib -> 
+                       Printf.sprintf "%s%s.cma " acc s_lib)
+                     acc
+                     (match l_lib with s_lib, None -> [ s_lib ] | _, Some l -> l))
+                 ""
+                 (List.fold_right (fun x ocpget_lib -> (x, None) :: ocpget_lib) Ocpget.default_open_lib ocpget_lib))
+    
+              ml)
   end
 
-  let sys_commands_general =
-    let get_tmp_ml = 
-      (* Return a temporary file. 
-         The first call sets the name. Next calls will return that name. *)
-      let ml = ref None in 
-      fun () -> 
-        match !ml with 
-          | None -> 
-            let tmp = Filename.temp_file Ocpget.prefix_tmp ".ml" in
-            let _ = ml := Some tmp in
-            tmp
-          | Some ml -> ml in
-  
-    fun bins ->
-      fold_0 (function 
-        | Sh l -> sys_command_with_bins bins "%s" (String.concat " " l)
-        | OCaml s -> 
-  
-          (* construct the OCaml program *)
-          let ml = get_tmp_ml () in
-          let oc = open_out ml in
-          let _ = Printf.fprintf oc "%s%!" s in
-          let _ = close_out oc in
-  
-          (* compute the "-I ..." to give to 'ocaml' from the [ocpget_lib] *)
-          (* NOTE We normally take from [ocpget_lib]. It would be interesting to also add all the cma that depends this library. *)
-          let s_include, ocpget_lib = 
-            List.fold_left (fun (acc, ocpget_lib) (s_lib, o_lib) -> 
-              match Ocpget.config s_lib with
-                | None -> acc, ocpget_lib
-                | Some l -> Printf.sprintf "%s%s " acc (String.concat " " l), (s_lib, o_lib) :: ocpget_lib
-            ) ("", []) Ocpget.lib in
-          let ocpget_lib = List.rev ocpget_lib in
-  
-          (* execute the 'ocaml' command *)
-          sys_command "ocaml %s %s %s" 
-            s_include
-  
-            ((* cma *)
-             List.fold_left
-               (fun acc l_lib -> 
-                 List.fold_left
-                   (fun acc s_lib -> 
-                     Printf.sprintf "%s%s.cma " acc s_lib)
-                   acc
-                   (match l_lib with s_lib, None -> [ s_lib ] | _, Some l -> l))
-               ""
-               (("unix", None) :: ("str", None) :: ocpget_lib))
-  
-            ml)
+  module Command = M (struct let init = None end)
+  module With_ocaml = M (struct let init = Option.map Filename.dirname !Globals.ocamlc end)
 end
 
 (* Git wrappers *)
@@ -432,7 +455,7 @@ module Git = struct
   (* Init a git repository in [dirname] *)
   let init dirname =
     U.in_dir dirname (fun () ->
-      let (_ : int) = Sys_command.sys_command "git init" in
+      let (_ : int) = System.Command.one "git init" in
       ()
     ) ()
 
@@ -449,7 +472,7 @@ module Git = struct
   (* Add a remote url in dirname *)
   let remote_add dirname url =
     U.in_dir dirname (fun () ->
-      Sys_command.sys_command "git remote add %s %s" (remote_name url) url
+      System.Command.one "git remote add %s %s" (remote_name url) url
     ) ()
 
   (* internal command *)
@@ -466,7 +489,7 @@ module Git = struct
       Globals.error_and_exit "cannot add remote branch %s in %s" name dirname
 
   let remote_rm dirname url =
-    U.in_dir dirname (Sys_command.sys_command "git remote rm %s") (remote_name url)
+    U.in_dir dirname (System.Command.one "git remote rm %s") (remote_name url)
 
   let safe_remote_rm dirname url =
     let name = remote_name url in
@@ -483,7 +506,7 @@ module Git = struct
       let fetches = List.map (Printf.sprintf "git fetch %s") (get_remotes dirname) in
       let diff remote =
         U.read_command_output (Printf.sprintf "git diff remotes/%s/master --name-only" remote) in
-      if Sys_command.sys_commands fetches = 0 then
+      if System.Command.seq fetches = 0 then
         List.flatten (List.map diff (get_remotes dirname))
       else
         Globals.error_and_exit "Cannot fetch git repository %s" dirname
@@ -493,13 +516,13 @@ module Git = struct
   let update dirname =
     U.in_dir dirname (fun () ->
       let commands = List.map (Printf.sprintf "git pull %s master") (get_remotes dirname) in
-      if Sys_command.sys_commands commands <> 0 then
+      if System.Command.seq commands <> 0 then
         Globals.error_and_exit "Cannot update git repository %s" dirname
     ) ()
 
   (* Clone [repo] into the directory [dst] *)
   let clone repo dst =
-    Sys_command.sys_command "git clone %s %s" repo dst
+    System.Command.one "git clone %s %s" repo dst
  
 end
 
@@ -556,7 +579,7 @@ let clone repo last_pwd nv =
   if err = 0 then
     let s_from = Printf.sprintf "%s/%s" (Unix.getcwd ()) b_name in
     let s_to = Printf.sprintf "%s/%s" last_pwd (Namespace.string_of_nv (fst nv) (snd nv)) in
-    if Sys_command.sys_command "mv -i %s %s" s_from s_to = 0 then
+    if System.Command.one "mv -i %s %s" s_from s_to = 0 then
       From_git
     else
       Globals.error_and_exit "moving failed"
@@ -569,7 +592,7 @@ let exec_download =
     let dst = Filename.concat tmp_dir (Filename.basename url) in
     if Sys.file_exists dst then
       U.safe_rm dst;
-    if Sys_command.sys_command "%s %s" s_wget url = 0 then
+    if System.Command.one "%s %s" s_wget url = 0 then
       From_http dst
     else
       Url_error in
@@ -590,7 +613,7 @@ let patch p nv =
   let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
   log "patching %s using %s" dirname p;
   U.in_dir dirname (fun () ->
-    Sys_command.sys_command "patch -p1 -f -i %s" p
+    System.Command.one "patch -p1 -f -i %s" p
   ) ()
 
 

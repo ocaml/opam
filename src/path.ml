@@ -460,7 +460,7 @@ module Path : PATH = struct
 
   let exec t n_v = 
     Run.U.in_dir (s_of_filename (O.build t (Some n_v)))
-      (Run.Sys_command.sys_commands_general (s_of_filename (O.bin t) :: match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s])) 
+      (Run.System.With_ocaml.seq_env [s_of_filename (O.bin t)]) 
 
   let basename s = B (Filename.basename (s_of_filename s))
 
