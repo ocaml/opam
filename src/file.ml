@@ -317,7 +317,7 @@ struct
     let real_path = 
       List.map
         (function
-          | Internal s, o -> Internal (Run.real_path s), o
+          | Internal s, o -> Internal (Run.U.real_path s), o
           | External (s1, s2), o -> External (s1, s2), o)
 
     let description t = t.description
@@ -776,7 +776,7 @@ struct
     if not (Sys.file_exists dirname) then
       None
     else
-      Run.in_dir (Filename.dirname filename) (function
+      Run.U.in_dir (Filename.dirname filename) (function
         | Path.File (Raw_binary s)     -> Some (F.parse s)
         | Path.Not_found _             -> None
         | Path.Directory _             -> raise Directory_found

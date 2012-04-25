@@ -161,7 +161,7 @@ module Client : CLIENT = struct
       File.Installed.add (Path.O.installed home) File.Installed.empty;
       try update ()
       with Connection_error msg ->
-        Run.safe_rmdir !Globals.root_path;
+        Run.U.safe_rmdir !Globals.root_path;
         Globals.error_and_exit "%s" msg
 
   let indent_left s nb =
@@ -310,7 +310,7 @@ module Client : CLIENT = struct
         | p -> Globals.error_and_exit "invalid program name %s" (string_of_path p) in
 
       (* XXX: use the API *)
-      Run.copy (Path.string_of_filename src) (Path.string_of_filename dst)
+      Run.U.copy (Path.string_of_filename src) (Path.string_of_filename dst)
     ) (File.To_install.bin to_install);
   
     (* misc *)
@@ -467,7 +467,7 @@ module Client : CLIENT = struct
             sol.Action.to_remove;
 
           (let module Graph = Action.NV_graph.PG_topo_para in
-           let module Process = Run.Process in
+           let module Process = Run.Process_multi in
            let include_state = List.map (fun x -> Process.Not_yet_begun, x) in
            let rec aux proc graph = function
             | [] -> ()
@@ -667,7 +667,7 @@ module Client : CLIENT = struct
         name
       else
         name ^ ".spec" in
-    let spec_s = Run.read spec_f in
+    let spec_s = Run.U.read spec_f in
     let spec = File.Spec.parse spec_s in
     let version = File.Spec.version spec in
     let name = File.Spec.name spec in
@@ -677,7 +677,7 @@ module Client : CLIENT = struct
     let archive_filename = Namespace.string_of_nv name version ^ ".tar.gz" in
     let archive =
       if Sys.file_exists archive_filename then
-        Raw_binary (Run.read archive_filename)
+        Raw_binary (Run.U.read archive_filename)
       else
         let sources = File.Spec.sources spec in
         let patches = File.Spec.patches spec in
@@ -691,7 +691,7 @@ module Client : CLIENT = struct
             List.iter
               (function Internal p, _ ->
                 if not (Sys.is_directory p) && Filename.check_suffix p "install" then
-                  (try ignore (File.To_install.parse (Run.read p)) with e -> 
+                  (try ignore (File.To_install.parse (Run.U.read p)) with e -> 
                     Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)
                 else
                   () (* TODO perform the recursive check for a directory. 
@@ -704,7 +704,7 @@ module Client : CLIENT = struct
             Path.to_archive archive_filename tmp_nv;
             Path.remove tmp_nv;
           end in
-        Raw_binary (Run.read archive_filename) in
+        Raw_binary (Run.U.read archive_filename) in
 
     (* Upload both files to the server and update the client
        filesystem to reflect the new uploaded packages *)
@@ -867,7 +867,7 @@ module Client : CLIENT = struct
         add_url url
 
     | Rm s     ->
-        let s = Run.normalize s in
+        let s = Run.U.normalize s in
         let server =
           try List.find (fun t -> string_of_url t = s || t.hostname = s) t.servers
           with Not_found ->
@@ -885,7 +885,7 @@ module Client : CLIENT = struct
       failwith "TODO" in
     if Filename.check_suffix name ".compil" then begin
       (* we switch to a fresh OCaml install *)
-      let compil = File.Compil.parse (Run.read name) in
+      let compil = File.Compil.parse (Run.U.read name) in
       let name = File.Compil.name compil in
       let compil_f = Path.compil t.home name in
       if Path.file_exists compil_f then

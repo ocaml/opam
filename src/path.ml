@@ -35,7 +35,7 @@ let hostname_port hostname =
   with _ -> hostname, None
 
 let url ?uri ?port hostname =
-  let hostname = Run.normalize hostname in
+  let hostname = Run.U.normalize hostname in
   let hostname, port2 = hostname_port hostname in
   let uri, hostname = match uri with
     | None     -> uri_of_url hostname
@@ -324,7 +324,7 @@ module Path : PATH = struct
   let init home = { home ; home_ocamlversion = None }
 
   let root = Raw "/"
-  let cwd = Normalized (Run.normalize ".")
+  let cwd = Normalized (Run.U.normalize ".")
 
   let package _ s =
     (* REMARK this should be normalized *)
@@ -357,7 +357,7 @@ module Path : PATH = struct
 
   let find = find_ (fun fic -> Filename (Internal fic))
 
-  let find_binary = find_ (fun fic -> Raw_binary (Run.read fic))
+  let find_binary = find_ (fun fic -> Raw_binary (Run.U.read fic))
 
   let find_filename = find_ (fun fic -> Internal fic)
 
@@ -420,17 +420,17 @@ module Path : PATH = struct
     | Directory d -> failwith "to complete !"
     | File (Binary (Raw_binary cts)) -> 
         let fic = s_of_filename  f in
-        Run.mkdir
+        Run.U.mkdir
           (fun fic -> 
             begin
-              Run.safe_unlink fic; 
+              Run.U.safe_unlink fic; 
               BatFile.with_file_out fic (fun oc -> BatString.print oc cts);
             end)
           fic
     | File (Filename (Internal fic)) ->
         begin match (Unix.lstat fic).Unix.st_kind with
         | Unix.S_DIR -> 
-            Run.safe_rmdir fic;
+            Run.U.safe_rmdir fic;
             let rec aux f_from f_to = 
               (match (Unix.lstat f_from).Unix.st_kind with
               | Unix.S_DIR -> Enum.fold (fun b _ -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
@@ -440,15 +440,15 @@ module Path : PATH = struct
                       Unix.unlink f_to
                     else
                       () in
-                  Run.copy f_from f_to
+                  Run.U.copy f_from f_to
               | _ -> failwith "to complete !") in
             aux fic (s_of_filename f)
         | Unix.S_REG ->
-          Run.mkdir 
+          Run.U.mkdir 
             (fun f_to -> 
               begin
-                Run.safe_unlink f_to;
-                Run.copy fic f_to;
+                Run.U.safe_unlink f_to;
+                Run.U.copy fic f_to;
               end)
             (s_of_filename f)
         | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
@@ -459,8 +459,8 @@ module Path : PATH = struct
     | Not_found s -> ()
 
   let exec t n_v = 
-    Run.in_dir (s_of_filename (O.build t (Some n_v)))
-      (Run.sys_commands_general (s_of_filename (O.bin t) :: match !Globals.ocamlc with None -> [] | Some s -> [Filename.dirname s])) 
+    Run.U.in_dir (s_of_filename (O.build t (Some n_v)))
+      (Run.System.With_ocaml.seq_env [s_of_filename (O.bin t)]) 
 
   let basename s = B (Filename.basename (s_of_filename s))
 
@@ -505,8 +505,8 @@ module Path : PATH = struct
     | R_filename l -> 
         List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)
     | R_lazy write_contents ->
-        Run.mkdir (fun fic -> 
-          Run.in_dir (Filename.dirname fic) write_contents ()
+        Run.U.mkdir (fun fic -> 
+          Run.U.in_dir (Filename.dirname fic) write_contents ()
         ) (s_of_filename (f /// name)) in
 
     function
@@ -547,7 +547,7 @@ module Path : PATH = struct
             let dir = Namespace.to_string nv in
             let () = add_rec (Raw dir) (R_filename [Raw p]) in
             function
-              | Some p_name -> Run.in_dir dir (Unix.rename (Filename.basename p)) p_name
+              | Some p_name -> Run.U.in_dir dir (Unix.rename (Filename.basename p)) p_name
               | None -> () in
         let apply p =
           if Run.patch p nv <> 0 then
@@ -592,7 +592,7 @@ module Path : PATH = struct
   let to_archive archive_filename tmp_nv = 
     let fic = s_of_filename tmp_nv in
     match
-      Run.in_dir (Filename.dirname fic) 
+      Run.U.in_dir (Filename.dirname fic) 
         Sys.command (Printf.sprintf "tar czvf %s %s" archive_filename (Filename.basename fic))
     with
       | 0 -> ()
