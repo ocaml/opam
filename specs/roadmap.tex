@@ -90,13 +90,15 @@ with {\tt ocamlfind} and {\tt oasis}.
 
 The client state is stored on the filesystem, under {\tt \$opam}:
 
+\subsubsection{Global state}
+
 \begin{itemize}
 
 \item {\tt \$opam/config} is the main configuration file. It defines
   the OPAM version, the repository addresses and the current compiler
   version. The file format is described in \S\ref{config}.
 
-\item \verb+$opam/index/$NAME.$VERSION.opam+ is the OPAM specification
+\item \verb+$opam/opam/$NAME.$VERSION.opam+ is the OPAM specification
   for the package \verb+$NAME+ with version \verb+$VERSION+ (which
   might not be installed). The format of OPAM files is described in
   \S\ref{opam}.
@@ -105,6 +107,24 @@ The client state is stored on the filesystem, under {\tt \$opam}:
   the version \verb+$VERSION+ of package \verb+$NAME+ (which might not
   be installed). The first line of this file is the package synopsis.
 
+\item \verb+$opam/archives/$NAME.$VERSION.tar.gz+ contains the archive
+  of sources for the version \verb+$VERSION+ of package \verb+$NAME+.
+
+\item \verb+$opam/reinstall+ contains the list of packages wich has been
+  changed upstream since the last upgrade. Every package appearing in
+  the file will be reinstalled (or upgraded) during the next
+  upgrade. The file format is similar to the one described in
+  \S\ref{installed}.
+
+\end{itemize}
+
+\subsubsection{Compiler-specific state}
+
+Configuration files for a specific version of OCaml (for instance
+\verb+$OVERSION+) are stored in \verb+$opam/$OVERSION+.
+
+\begin{itemize}
+
 \item \verb+$opam/$OVERSION/installed+ is the list of installed
   packages for the compiler version \verb+$OVERSION+. The file format
   is described in \S\ref{installed}.
@@ -112,14 +132,14 @@ The client state is stored on the filesystem, under {\tt \$opam}:
 \item \verb+$opam/$OVERSION/config/$NAME.config+ is a
   platform-specific configuration file of for the installed package
   \verb+$NAME+ with the compiler version \verb+$OVERSION+. The file
-  format is described in \S\ref{pconfig}.
+  format is described in \S\ref{dotconfig}.
   \verb+$opam/$OVERSION/config/+ can be shortened to \verb+$config/+
   for more readability.
 
 \item \verb+$opam/$OVERSION/install/$NAME.install+ is a
   platform-specific package installation file for the installed
   package \verb+$NAME+ with the compiler version \verb+$OVERSION+. The
-  file format is described in \S\ref{install}.
+  file format is described in \S\ref{dotinstall}.
   \verb+$opam/$OVERSION/install+ can be shortened to \verb+$install/+
   for more readability.
 
@@ -138,14 +158,54 @@ The client state is stored on the filesystem, under {\tt \$opam}:
   \verb+$OVERSION+. \verb+$opam/$OVERSION/bin/+ can be shortened to
   \verb+$bin/+ for more readability.
 
-\item \verb+$opam/archives/$NAME.$VERSION.tar.gz+ contains the archive
-  of source files for the version \verb+$VERSION+ of package
-  \verb+$NAME+.
-
 \item \verb+$opam/$OVERSION/build/$NAME.$VERSION/+ is a tempory folder
   used to build package \verb+$NAME+ with version \verb+$VERSION+,
   with compiler version \verb+$OVERSION+.\verb+$opam/$OVERSION/build/+
   can be shortened to \verb+$build/+ for more readability.
+
+\end{itemize}
+
+\subsubsection{Repository-specific state}
+
+Configuration files for OPAM repositories (for instance \verb+REPO+)
+are stored in \verb+$opam/repo/$REPO+.
+
+\begin{itemize}
+
+\item \verb+$opam/repo/index+ contains the location of packages
+  (ie. in which repositories they can be found and the priority
+  between repositories). The file format is described in
+  \ref{index}.
+
+\item \verb+$opam/repo/$REPO/opam/$NAME.$VERSION.opam+ is the OPAM
+  specification for the package \verb+$NAME+ with version
+  \verb+$VERSION+ (which might not be installed). The format of OPAM
+  files is described in \S\ref{dotopam}.
+
+\item \verb+$opam/repo/$REPO/descr/$NAME.$VERSION+ is the textual
+  description of the version \verb+$VERSION+ of package \verb+$NAME+
+  (which might not be installed). The first line of this file is the
+  package synopsis.
+
+\item \verb+$opam/repo/$REPO/archives/$NAME.$VERSION.tar.gz+ contains
+  the archive of sources for the version \verb+$VERSION+ of package
+  \verb+$NAME+.
+
+\item \verb+$opam/repo/$REPO/updates+ contains the new available
+  packages which have not yet been synchronized with the client state,
+  which happen after calling the {\tt opam-<kind>-update} script (see
+  \S\ref{script-update}). If the file empty, this means that the
+  client state is up-to-date. The file format is the same as the one
+  described in \S\ref{installed}.
+
+\item \verb+$opam/repo/$REPO/upload/$NAME.$VERSION/+ contains the
+  OPAM, description and archive files to upload to the OPAM
+  repository for the version \verb+$VERSION+ of package
+  \verb+$NAME+. If the {\tt upload/} folder is not not empty, this
+  mean that the repository state is not up-to-date with the remote
+  OPAM repository. The upload sync is done via the {\tt
+    opam-<kind>-update} script (see \S\ref{scrip-upload}.
+
 
 \end{itemize}
 
@@ -251,9 +311,9 @@ repositories\footnote{default is {\tt
   ocaml-version} corresponds to the output of {\tt 'ocamlc -version'}.
 
 \subsubsection{Package specification files: {\tt .opam}}
-\label{opam}
+\label{dotopam}
 
-\verb+$opam/index/$NAME.$VERSION.opam+ follows the syntax defined in
+\verb+$opam/opam/$NAME.$VERSION.opam+ follows the syntax defined in
 \S\ref{syntax} with the following restrictions:
 
 {\small
@@ -306,7 +366,7 @@ repositories\footnote{default is {\tt
   all the libraries and syntax extensions exported by the package and
   it should produce the platform-specific configuration and install
   files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
-  \S\ref{pconfig} and \S\ref{install}).
+  \S\ref{dotconfig} and \S\ref{dotinstall}).
 
 \item The {\tt depends} and {\tt conflicts} fields contain formulas
   over package names, optionally parametrized by version
@@ -332,8 +392,8 @@ is a valid formula whose semantic is: {\em any version of package
 
 \end{itemize}
 
-\subsubsection{Package configuration files: {\tt .conf}}
-\label{pconfig}
+\subsubsection{Package configuration files: {\tt .config}}
+\label{dotconfig}
 
 \verb+$opam/OVERSION/config/NAME.config+ follows the syntax defined in
 \S\ref{syntax}, with the following restrictions:
@@ -418,7 +478,7 @@ The available options are:
 \end{itemize}
 
 \subsubsection{Package installation files: {\tt .install}}
-\label{install}
+\label{dotinstall}
 
 \verb+$opam/OVERSION/install/NAME.install+ follows the syntax defined
 in \S\ref{syntax} with the following restrictions:
@@ -501,16 +561,16 @@ This command will:
 
 \begin{enumerate}
 
-\item create the file \verb+$opam/config+ (as specified in
-  \S\ref{pconfig})
+\item Create the file \verb+$opam/config+ (as specified in
+  \S\ref{dotconfig})
 
-\item create an empty \verb+$opam/$OVERSION/installed+ file.
+\item Create an empty \verb+$opam/$OVERSION/installed+ file.
 
-\item download the OPAM files available at \verb+$HOSTNAME/index/+ into
-  \verb+$opam/index/+
+\item Initialize the repository local state \verb+$opam/repo/$HOSTNAME+ (see
+  \S\ref{repository-update})
 
-\item download the description files available at
-  \verb+$HOSTNAME/descr/+ into \verb+$opam/index/+
+\item Copy the \item download the description files available at
+  \verb+$HOSTNAME/descr/+ into \verb+$opam/opam/+
 
 \item create the empty directories \verb+$opam/archives+,
   \verb+$lib/+, \verb+$bin/+ and \verb+$doc+.
@@ -527,7 +587,7 @@ he should run:
 \end{verbatim}
 
 This command will parse \verb+$opam/$OVERSION/installed+ to know the
-installed packages, and \verb+$opam/index/*.opam+ to get all the
+installed packages, and \verb+$opam/opam/*.opam+ to get all the
 available packages. It will then build a summary of each packages. The
 description of each package will be read in \verb+$opam/descr/+ if it
 exists.
@@ -553,7 +613,7 @@ he should run:
 
 This command will parse \verb+$opam/$OVERSION/installed+ to get the
 installed version of \verb+$NAME+ and will look for
-\verb+$opam/index/$NAME.*.opam+ to get available versions of
+\verb+$opam/opam/$NAME.*.opam+ to get available versions of
 \verb+$NAME+. It can then display:
 
 \begin{verbatim}
@@ -622,9 +682,6 @@ This command will:
 \end{enumerate}
 \end{enumerate}
 
-\begin{remark}
-\end{remark}
-
 \subsubsection{Updating index files}
 
 When an end-user wants to know what are the latest packages available,
@@ -673,7 +730,7 @@ packager) should run:
 
 \begin{itemize}
 \item \verb+-list-vars+ will return the list of all variables defined
-  in installed packages (see \S\ref{pconfig})
+  in installed packages (see \S\ref{dotconfig})
 \item \verb+-var $var+ will return the value associated to the
   variable \verb+$var+
 \item \verb+-subst $FILENAME+ replace any occurrence of
@@ -692,14 +749,14 @@ packager) should run:
 
 
 \subsubsection{Uploading packages}
-\label{upload}
+\label{opam-upload}
 
 When a packager wants to create a package, he should:
 
 \begin{enumerate}
 
 \item create \verb+$package/$NAME.$VERSION.opam+ containing in the format
-  specified in \S\ref{opam}.
+  specified in \S\ref{dotopam}.
 
 \item create a file describing the package
 
@@ -709,10 +766,10 @@ When a packager wants to create a package, he should:
   \verb+$package/$NAME.$VERSION.opam+
 \item generates a valid \verb+$package/$NAME.install+ containing the
   list of files to install (the file format is described in
-  \ref{install}).
+  \ref{dotinstall}).
 \item generates a valid \verb+$package/$NAME.config+ containing the
   configuration flags for libraries exported by this package (the file
-  format is described in \ref{config})
+  format is described in \ref{dotconfig})
 \end{itemize}
 
 \item create an archive \verb+$NAME.$VERSION.tar.gz+ of the sources he
@@ -769,6 +826,7 @@ in OCaml.
 \end{itemize}
 
 \subsection{OPAM repositories}
+\label{repository}
 
 \subsubsection{Server state}
 
@@ -778,9 +836,9 @@ repository named \verb+$HOSTNAME+. This filesystem contains:
 
 \begin{itemize}
 
-\item \verb+$opamserver/$HOSTNAME/index/$NAME.$VERSION.opam+, which are
+\item \verb+$opamserver/$HOSTNAME/opam/$NAME.$VERSION.opam+, which are
   OPAM files for all available versions of all available packages. The
-  format of specification files is described in \S\ref{opam}.
+  format of specification files is described in \S\ref{dotopam}.
 
 \item \verb+$opamserver/$HOSTNAME/descr/$NAME.$VERSION+, which are
   textual description files for all available versions of all
