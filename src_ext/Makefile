@@ -34,7 +34,7 @@ ocaml-arg:
 ocamlgraph:
 	$(WGET) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
 	tar xfz ocamlgraph-1.8.1.tar.gz
-	mv -u ocamlgraph-1.8.1 ocamlgraph
+	mv ocamlgraph-1.8.1 ocamlgraph
 
 ocaml-re:
 	$(WGET) http://www.ocamlpro.com/pub/ocaml-re.tar.bz2
