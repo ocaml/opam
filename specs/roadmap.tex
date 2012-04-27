@@ -89,6 +89,7 @@ possible compatible with any existing build system (including {\tt
 The client state is stored on the filesystem, under {\tt \$opam}:
 
 \subsubsection{Global state}
+\label{state-global}
 
 \begin{itemize}
 
@@ -1074,83 +1075,50 @@ The first Milestone includes the necessary scripts to support {\tt
 \section{Milestone 2: OPAM server}
 \label{server}
 
-The only OPAM repository kind available in Milestone 1 is {\tt http}.
-This second milestone describes the implementation of an OPAM
-repository using a custom binary protocol (ie. not relying on HTTP)
-between a client and a server. This is intended to be the preferred
-way to upload new packages to OPAM repositories.
+The only OPAM repository kind available in Milestone 1 is {\tt rsync}.
 
-\subsubsection{Server state}
+This second milestone describes a new kind of repository: {\tt
+  server}. The OPAM server uses a custom binary protocol between a
+client (the {\tt opam-server-*} scripts) and a server ({\tt
+  opam-server} which is run on the server). This is intended to be the
+preferred way to upload new packages to OPAM repositories as it does
+not requires any external authentification mechanisms.
+
+\subsection{Server state}
+\label{server-state}
 
 In this section, {\tt \$opamserver} refers to the filesystem subtree
 containing the server state. Default directory is {\tt
-  \$home/.opam-server}.
+  \$home/.opam-server}. The state is similar to what is described in
+\S\ref{state-global}:
 
-\subsubsection{Getting the list of packages}
+\begin{itemize}
+\item \verb+$opamserver/opam/$NAME.$VERSION.opam+ is the OPAM
+  specification for the package \verb+$NAME+ with version
+  \verb+$VERSION+ (which might not be installed). The format of OPAM
+  files is described in \S\ref{dotopam}.
 
-\label{getList}
-\begin{verbatim}
-    val getList   : repo -> (name * version) list 
-    val updateList: repo -> (name * version) list
-\end{verbatim}
+\item \verb+$opamserver/descr/$NAME.$VERSION+ contains the description
+  for the version \verb+$VERSION+ of package \verb+$NAME+ (which might
+  not be installed). The first line of this file is the package
+  synopsis.
 
-\verb+getList $HOSTNAME+ returns the full list of available packages. This
-command is intended to be run only once, when the repository
-\verb+$HOSTNAME+ is initialized.\\
+\item \verb+$opamserver/archives/$NAME.$VERSION.tar.gz+ contains the
+  source archives for the version \verb+$VERSION+ of package
+  \verb+$NAME+.
 
-\verb+updateList $HOSTNAME+ updates the given repository and returns
-the list of newly available packages. For repositories not using the
-custom OPAM protocol (eg. not starting by \verb+opam://+) this means
-running the script \verb+$opamserver/$HOSTNAME/update+ which should
-return a list of lines of (package name, version) pairs using the same
-format as described in \S\ref{installed}.
+\end{itemize}
 
-\subsubsection{Getting OPAM files}
-\label{getOPAM}
+\subsection{Binary Protocol}
+\label{binary-protocol}
 
-\begin{verbatim}
-    val getOPAM: repo -> (name * version) -> opam
-\end{verbatim}
-
-{\tt getOPAM repo (name,version)} returns the corresponding OPAM
-filename as an absolute location in the filesystem (which should be .
-
-\subsubsection{Getting description files}
-\label{getOPAM}
-
-\begin{verbatim}
-    val getDescr: repo -> (name * version) -> descr
-\end{verbatim}
-
-{\tt getDescr repo (name,version)} returns the corresponding
-description file.
-
-\subsubsection{Getting package archive}
-\label{getArchive}
-
-\begin{verbatim}
-    val getArchive: repo -> (name * version) -> archive
-\end{verbatim}
-
-{\tt getArchive repo (name,version)} returns the corresponding package
-archive.
-
-\subsubsection{Uploading new archives}
-\label{newArchive}
-
-\begin{verbatim}
-    val newArchive: repo -> (opam * archive) -> unit
-\end{verbatim}
-
-{\tt newArchive(opam,archive)} takes as input an OPAM file and the
-corresponding package archive, and upload the server state. This
-function works only for READ-WRITE repository. In case of a READ-ONLY
-one, a suitable error message is returned to the user.
-
-\subsubsection{Binary Protocol}
-
-In case of READ-WRITE repositories, the server state can be queried
-and modified by any OPAM clients, using the following binary protocol
+The protocol is very simple, there is one kind of messages
+corresponding to each basic client actions (which will be used by the
+{\tt opam-server-*} scripts). The only ``complex'' parts resides in
+the basic authentication mechanisms: the server stores a key for each
+package (every version shares the same key); the key is sent to the
+client the first time a new package is uploaded and key consistency is
+checked each time a new version of the package is uploaded.
 
 \begin{itemize}
 
@@ -1158,70 +1126,80 @@ and modified by any OPAM clients, using the following binary protocol
 hand-shake to agree on the protocol version.
 
 \item All the basic values (names, versions and binary data) are
-  represented as OCaml strings.
+  represented as in OCaml strings and are marshaled as an 64-bits
+  integer (the string size) followed by the string contents.
 
-\item More complex values are marshaled using a simple binary
-  protocol: the first byte represents the message number, and then
-  each message argument is stacked in the message with its size as
-  prefix. The list of messages {\em from the client to server} is:
+\item Messages are marshaled using a simple binary protocol: the first
+  byte represents the message number, and then each string argument is
+  stacked sequentially.
+  The list of messages {\em from the client to server} is:
 
 {\small
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-Client-to-Server Message & Arguments & Description \\
+\# & Client-to-Server Message & Contents & Description \\
 \hline
 \hline
-\verb+GetList+ & -- & Ask for the list of all OPAM files \\
+0 & \verb+ClientVersion+ & \verb+version: string+ & Send the client version to the server \\
 \hline
-\verb+GetOPAM+ & \verb+name   : string+ & Ask for the binary representation of \\
-               & \verb+version: string+ & a given OPAM file \\
+1 & \verb+InitList+ & -- & Ask for the list of all available OPAM files \\
 \hline
-\verb+GetArchive+ & \verb+name   : string+ & Ask for the binary representation of \\
-                  & \verb+version: string+ & a given archive file \\
+2 & \verb+UpdateList+ & -- & Ask for the list of updated OPAM files \\
 \hline
-\verb+NewArchive+ & \verb+name   : string+ & Create a new package on the
-server. \\
-                  & \verb+version: string+ & The client should provide
-the OPAM file \\
-                  & \verb+opam   : string+ & and the source archive. \\
-                  & \verb+archive: string+ & \\
+3 & \verb+GetOPAM+ & \verb+name   : string+ & Ask for the binary representation of \\
+  &                & \verb+version: string+ & a given OPAM file \\
 \hline
-\verb+UpdateArchive+ &  \verb+name   : string+ & Update a new version
-of a given \\
-                  & \verb+version: string+ & package on the
-server. The client \\
-                  & \verb+opam   : string+ & should also provide a security key\\
-                  & \verb+archive: string+ & \\
-                  & \verb+key    : string+ & \\
+4 & \verb+GetDescr+ & \verb+name   : string+ & Ask for the binary representation of \\
+  &                 & \verb+version: string+ & a given description file \\
+\hline
+5 & \verb+GetArchive+ & \verb+name   : string+ & Ask for the binary representation of \\
+  &                   & \verb+version: string+ & a given archive file \\
+\hline
+6 & \verb+NewPackage+ & \verb+name   : string+ & Create a new package on the server. \\
+  &                   & \verb+version: string+ & The client should provide the OPAM and \\
+  &                   & \verb+opam   : string+ & descr files and the source archive. \\
+  &                   & \verb+descr  : string+ & \\
+  &                   & \verb+archive: string+ & \\
+\hline
+7 & \verb+NewVersion+ & \verb+name   : string+ & Upload a new version of an already existing \\
+  &                   & \verb+version: string+ & package on the server. The client \\
+  &                   & \verb+opam   : string+ & should also provide a security key\\
+  &                   & \verb+descr  : string+ & \\
+  &                   & \verb+archive: string+ & \\
+  &                   & \verb+key    : string+ & \\
 \hline
 \end{tabular}
 }
 
 \item Answers from the server are encoded in the same way (ie, a byte
-  for the message number, followed by optional arguments prefixed by
-  their size). List arguments are encoded by stacking first the
-  lenght, and then all the elements of the list in sequential order.
-  The list of messages {\em from servers to clients} is:
+  for the message number, followed by the sequential marshaling of the
+  arguments). Pairs are stacked sequentially. List are encoded by
+  stacking first the list length in a 64-bit integer and then all
+  the elements of the list in sequential order. The list of messages
+  {\em from servers to clients} is:
 
 {\small
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|l|l|}
 \hline
-Server-to-Client Message & Arguments & Description \\
+\# & Server-to-Client Message & Contents & Description \\
 \hline
 \hline
-\verb+GetList+      & \verb+list   : (string*string) list+ & Return the list
-of available \\
- & & package names and versions \\
+0 & \verb+ServerVersion+ & \verb+version: string+  & Return the server version \\
 \hline
-\verb+GetOPAM+      & \verb+opam   : string+ & Return an OPAM file \\
+1 & \verb+PackageList+  & \verb+list   : (string*string) list+ & Return the list of available \\
+  &                     &                                      & package names and versions \\
 \hline
-\verb+GetArchivwe+  & \verb+archive: string+ & Return an archive file \\
+2 & \verb+OPAM+         & \verb+opam   : string+ & Return an OPAM file
+\\
+3 & \verb+Descr+        & \verb+descr  : string+ & Return an OPAM file \\
 \hline
-\verb+NewArchive+   & \verb+key    : string+ & Return a security key \\
+4 & \verb+Archive+      & \verb+archive: string+ & Return an archive file \\
 \hline
-\verb+UpdateArchive+& --                     & The update went OK \\
+5 & \verb+Key+          & \verb+key    : string+ & Return a security key \\
 \hline
-\verb+Error+        & \verb+error  : string+ & An error occurred \\
+6 & \verb+OK+           & --                     & The update went OK \\
+\hline
+7 & \verb+Error+        & \verb+error  : string+ & An error occurred \\
 \hline
 \end{tabular}
 }
@@ -1229,24 +1207,7 @@ of available \\
 \end{itemize}
 
 Note that when an error is raised by an arbitrary function
- at server side, the client receives \verb|Error _|.
-
-
-
-\section{Milestone 3: Link Information}
-
-This milestone focuses on adding the right level of linking
-information, in order to be able to use packages more easily.
-
-
-\section{Milestone 4: Server Authentication}
-
-This version focuses on server authentication.
-
-\subsection{RPC protocol}
-
-The protocol should be specified (using either a binary format or a
-JSON format).
+ at server side, the client receives \verb|Error|.
 
 \subsection{Server authentication}
 
@@ -1261,109 +1222,170 @@ protocol can be sketched as follows:
 \item the server stores key hashes in {\tt
   \$opamserver/hashes/NAME}.
 
-\item when a packager wants to upload a fresh package, he still uses
-  {\tt newArchive}. However, the return type of this function is
-  changed in order to return a random key. OPAM clients then stores
-  that key in {\tt \$opam/keys/NAME}.
+\item when a packager uploads a fresh package the server returns a
+  random key. Clients then stores that key in {\tt \$opam/keys/NAME}.
 
 \item when a packager wants to uplaod a new version of an existing
-  package, he uses the function {\tt val updateArchive: (opam * string
-    * string) -> bool}. {\tt updateArchive} takes as argument an OCaml
-  value representing the OPAM file contents, the archive file as a
-  binary string and the key as a string. The server then checks
+  package, the client also sends the key. The server then checks
   whether the hash of the key is equal to the one stored in {\tt
     \$opamserver/hashes/NAME}; if yes, it updates the
-  package and return {\tt true}, if no if it returns {\tt false}.
-
-\item packager email should be specified in {\tt NAME.opam}:
+  package and return {\tt OK}, if no if it returns an {\tt Error}.
 
 \end{itemize}
 
-\section{Milestones 6: Pre-Processors Information}
+\subsection{Scripts}
 
-This milestone focus on the support of pre-processors.
+The initialization script: {\tt opam-server-init}, the update script:
+{\tt opam-server-update}, the download script: {\tt
+  opam-server-download} and the upload script:{\tt opam-server-upload} will work as
+expected, using the binary protocol defined in
+\S\ref{binary-protocol} in order to correctly update the client state as
+defined in \S\ref{scripts}.
 
-\subsection{Getting package preprocessor options}
 
-The user should be able to run:
-
-\begin{verbatim}
-    $ opam-config -bytepp NAME
-    $ opam-config -asmpp NAME
-\end{verbatim}
-
-This command will return the command line option to build the
-preprocessor exported by package {\tt NAME}.
-
-In order to do so, packagers should describe exported preprocessors in
-the corresponding {\tt NAME}.descr:
-
-\begin{verbatim}
-syntax foo {
-  requires: bar, gni         // list of syntax dependencies
-  pp: -parser o -printer p   // common options to asmpp and bytepp
-  bytepp: ...
-}
-\end{verbatim}
-
-\section{Milestones 7: Support of Multiple Compiler Versions}
+\section{Milestone 3: Multiple compiler versions}
 
 This milestone focus on the support of multiple compiler versions.
 
 \subsection{Compiler Description Files}
 
-For each compiler version {\tt OVERSION}, the client and server states
-will be extended with the following files:
+For each compiler version {\tt OVERSION}, the client state will be
+extended with the following files:
 
 \begin{itemize}
 \item {\tt \$opam/compilers/OVERSION.comp}
-\item {\tt \$opamserver/compilers/OVERSION.comp}
 \end{itemize}
 
-Each {\tt .comp} file contains:
+The syntax of {\tt .comp} files follows the one described in
+\S\ref{syntax} with the following restrictions:
 
+{
+\begin{Verbatim}[frame=single]
+<file> :=
+    src:        STRING
+    ?patches:   [ STRING+ ]
+    ?configure: [ STRING+ ]
+    ?make:      [ STRING+ ]
+    ?bytecomp:  [ STRING+ ]
+    ?asmcomp:   [ STRING+ ]
+    ?bytelink:  [ STRING+ ]
+    ?asmlink:   [ STRING+ ]
+    ?packages:  [ STRING+ ]
+    ?requires:  [ <dep>+ ]
+    ?pp:        [ <ppflag>+ ]
+
+<dep>    := STRING
+          | STRING ( STRING+ )
+
+<ppflag> := CAMLP4 ( <dep>+ )
+          | <flag>
+\end{Verbatim}
+}
 \begin{itemize}
 
-\item the location where this version can be downloaded. It can be an
-  archive available via {\tt http} or using CVS such as {\tt svn} or
-  {\tt git}.
+\item {\tt src} is the location where this version can be downloaded. It can be:
+\begin{itemize}
+\item an archive available in the local filesystem
+\item an archive available via {\tt http} or {\tt ftp}
+\item a version-controlled repository under {\tt svn} or {\tt git}
+  (with the expectation that these tools are installed on the user host).
+\end{itemize}
 
-\item eventual options to pass to the configure script. {\tt
-  --prefix=\$opam/OVERSION/} will be automatically added to these
-  options.
+\item {\tt patches} are optional patch addresses, available via {\tt http}, 1{\tt ftp}
+  or locally on the filesystem.
 
-\item options to pass to {\tt make}.
+\item {\tt configure} are the optional flags to pass to the configure
+  script. {\tt --prefix=\$opam/OVERSION/} will be automatically added
+  to these options.
 
-\item eventual patch address, available via {\tt http} or locally on
-  the filesystem
+\item {\tt make} are the flags to pass to {\tt make}.
+
+\item {\tt packages} is the list of packages
+
+\item {\tt bytecomp}, {\tt asmcomp}, {\tt bytelink} and {\tt asmlink}
+  are the compilation and linking flags to pass to the OCaml
+  compiler. They will be taken into account by the \verb+opam config+
+  command (see \S\ref{opam-config}).
+
+\item {\tt packages} is the list of packages to install just after the
+  compiler installation finished. These libraries will not consider
+  what is in the {\tt requires} nor {\tt pp} (as {\tt requires} and
+  {\tt pp} might want to use things already installed with {\tt
+    packages}).
+
+\item {\tt requires} is a list of package dependencies which will be
+  added to every packages installed with this compiler. All the
+  packages should be present in {\tt packages}.
+  A package dependency is either {\tt "foo"}: {\em I depend on every
+  libraries and syntax extensions in the package "foo"} or {\tt "foo"
+    ("bar" "gna")}: {\em I depend on the libraries (or syntax
+    extensions) "bar" and "gna" in the package "foo"}.
+
+\item {\tt pp} is the command to use with the {\tt -pp} command-line
+  argument. It is either a single flag or a {\tt camlp4} command,
+  such as {\tt CAMLP4 [ pp-trace ]}: this will look for the
+  compilation flags for the syntax extension {\tt pp-trace} and expand
+  the {\tt camlp4} command-line accordingly. All the packages should
+  be present in {\tt packages}.
 
 \end{itemize}
 
-For instance, {\tt 3.12.1+memprof.comp} (OCaml version $3.12.1$ with
-the memory profiling patch) looks like:
+For instance the file, {\tt 3.12.1+memprof.comp} describes OCaml,
+version $3.12.1$ with the memory profiling patch enabled:
 
 \begin{verbatim}
-src:       http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz
-build:     world world.opt
-patches:   http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch
+src:       "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
+build:     [ "world" "world.opt" ]
+patches:   [ "http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch" ]
 \end{verbatim}
 
-And {\tt trunk-tk-byte.comp} (OCaml from SVN trunk, with no {\em tk}
-support and only in bytecode) looks like:
+And the file {\tt trunk-g-notk-byte.comp} describes OCaml from SVN
+trunk, with no {\em tk} support and only in bytecode, and all the
+libraries built with {\tt -g}:
 
 \begin{verbatim}
-src:       http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz
-configure: -no-tk
-build:     world
+src:       "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
+configure: [ "-no-tk" ]
+build:     [ "world" ]
+bytecomp:  [ "-g" ]
+bytelink:  [ "-g" ]
 \end{verbatim}
 
-\subsection{Milestone 8: Version Pinning}
+\subsection{Switching compiler version}
 
-\subsection{Milestones 9: Parallel Build}
+If the user wants to switch to an other compiler version, he should run:
 
-\subsection{Milestone 10: Version Comparison Scheme}
+\begin{verbatim}
+    $ opam switch $OVERSION
+\end{verbatim}
 
-\subsection{Milestone 11: Database of Installed Files}
+This command will:
+
+\begin{itemize}
+\item Look for an existing \verb+$opam/$OVERSION+ directory. If it
+  exists, then change the {\tt ocaml-version} content to
+  \verb+$OVERSION+ in  \verb+$opam/config+.
+
+\item If it does not exist, look for an existing
+  \verb+$opam/compilers/OVERSION.comp+. If the file does not exists,
+  the command will fail with a well-defined error.
+
+\item If the file exist, then build the new compiler with the right
+  options (and pass \verb+--prefix $opam/$OVERSION+ to
+  \verb+./configure+).
+
+\end{itemize}
+
+\section{Milestone 4: OPAM and git}
+
+\subsection{OPAM repository under git}
+
+\subsection{Package repository under git}
+
+
+\section{Milestone 9: Parallel Build}
+
+\section{Milestone 8: Version Pinning}
 
 
 \end{document}
