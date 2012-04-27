@@ -51,8 +51,8 @@ users.
 
 \subsection*{Conventions}
 
-In this document, \verb+$home+, \verb+$opam+ and \verb+$package+ are
-assumed to be defined as follows:
+In this document, \verb+$home+, \verb+$opam+, \verb+$package+ and 
+\verb+$path+ are assumed to be defined as follows:
 
 \begin{itemize}
 
@@ -66,6 +66,10 @@ assumed to be defined as follows:
 
 \item {\tt \$package} refers to a path in the packager filesystem, where
   lives the collection of libraries and programs he wants to package.
+
+\item {\tt \$path} refers to a list of paths in the packager filesystem, where
+  lives the collection of programs ({\tt ocamlc}, {\tt ocamldep}, {\tt ocamlopt}, 
+  {\tt ocamlbuild}, ...).
 
 \end{itemize}
 
@@ -604,13 +608,16 @@ initialize \verb+$opam/+ in a consistent state. In order to do so, he
 should run:
 
 \begin{verbatim}
-    $ opam init [-kind $KIND] $REPO $ADDRESS
+    $ opam init [-kind $KIND] [-ocamlc $OCAMLC] $REPO $ADDRESS
 \end{verbatim}
 
 Where:
 \begin{itemize}
 \item \verb+$KIND+ is the kind of OPAM repository (default is {\tt
   http});
+\item \verb+$OCAMLC+ is the complete filename leading to the
+  {\tt ocamlc} compiler (default is the first binary found from
+  \verb+$path+, if found);
 \item \verb+$REPO+ is the name of the repository (default is {\tt
   default}); and
 \item \verb+ADDRESS+ is the repository address (default is
@@ -624,7 +631,10 @@ This command will:
 \item Create the file \verb+$opam/config+ (as specified in
   \S\ref{dotconfig})
 
-\item Create an empty \verb+$opam/$OVERSION/installed+ file.
+\item Create an empty \verb+$opam/$OVERSION/installed+ file,
+  \verb+$OVERSION+ being the result of ``{\tt ocamlc -version}''.
+  In case, the \verb+-ocamlc+ is not set or if there is no such 
+  compiler in \verb+$path+, a well-defined error is returned.
 
 \item Initialize \verb+$opam/repo/$REPO+ by running
   \verb+'opam-$KIND-init $ADDRESS'+ (see \S\ref{script-update}). If
