@@ -265,13 +265,15 @@ available packages (e.g. not only on the installed one). \\
 
 For instance, if {\tt batteries} version {\tt 1.0+beta} is available
 in the {\tt testing} repository and {\tt ocamlfind} version {\tt 1.2}
-is available in the {\tt default} repository, then
-\verb+$opam/repo/index+ will contain:
+is available in the {\tt default} and testing repositories (where {\tt
+  default} is one being used), then \verb+$opam/repo/index+ will
+contain:
 
 {\small
 \begin{Verbatim}[frame=single]
 testing batteries 1.0+beta
 default ocamlfind 1.2
+testing ocamlfind 1.2
 \end{Verbatim}
 }
 
@@ -944,9 +946,9 @@ When the user wants to manage OPAM repositories, he should write:
   \verb+$opam/config+
 \item \verb+$-rm $REPO$+ deletes \verb+$opam/repo/$REPO+ and removes
   \verb+$REPO+ from the {\tt repositories} list in \verb+$opam/config+.
-  Then, for each package in \verb+$opam/repo/index+ it update the link
+  Then, for each package in \verb+$opam/repo/index+ it updates the link
   between packages and repositories (ie. it either deletes packages or
-  associates them to an other repository)
+  symlink them to the nex repository containing the package).
 
 \item \verb+$-add [-kind $KIND] $REPO $ADDRESS+ initializes
   \verb+$REPO+ as described in \S\ref{opam-init}.
