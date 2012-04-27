@@ -1036,37 +1036,38 @@ contents when it's done.
 In case any of the above scripts return with a non-zero exit code, the
 full error message will be stored into \verb+opam/repo/$REPO/error+
 
-\subsubsection{HTTP repository}
+\subsubsection{RSYNC repository}
 
 The first Milestone includes the necessary scripts to support {\tt
-  http} repositories. In order to do so:
+  rsync} repositories. In order to do so:
 
 \begin{itemize}
 
-\item The HTTP repository should export a filesystem identical to the
-  one which will be created in \verb+$opam/repo/$REPO+.
+\item The OPAM repository is a filesystem similar to what
+  is described in \verb+$opam/repo/$REPO+.
 
-\item \verb+opam-http-init $PATH $ADDRESS+ simply runs something like:
+\item \verb+opam-rsync-init $PATH $ADDRESS+ simply runs something like:
 
 \begin{verbatim}
-    $ cd $PATH && wget $ADDRESS/opam && wget $ADDRESS/descr
+    $ cd $PATH && rsync [..] $ADDRESS/opam && rsync [..] $ADDRESS/descr
 \end{verbatim}
 
-(it might use {\tt rsync} or {\tt ftp} instead of {\tt wget})
-
-\item \verb+opam-http-download $PATH $NAME $VERSION+ will simply run
+\item \verb+opam-rsync-download $PATH $NAME $VERSION+ will simply run
   something like:
 
 \begin{verbatim}
-    $ cd $PATH && wget $ADDRESS/archives/$NAME.$VERSION.tar.gz
+    $ cd $PATH && rsync [..] $ADDRESS/archives/$NAME.$VERSION.tar.gz
 \end{verbatim}
 
-\item \verb+opam-http-update $PATH+ will also run {\tt wget} and
-  filter the command output to populate \verb+$opam/repo/$REPO/updated+ accordingly.
+\item \verb+opam-rsync-update $PATH+ will also run {\tt rsync} and
+  filter the command output to populate
+  \verb+$opam/repo/$REPO/updated+ accordingly.
 
-\item \verb+opam-http-upload $PATH+ will return an error: the server
-  state can only be updated manually by copying the new files in the
-  right place on the server filesystem.
+\item \verb+opam-rsync-upload $PATH+ will return an error if the OPAM
+  repository is not writable (for instance if the repository if an
+  HTTP server). In this cas the server state can be updated manually
+  by copying the new files in the right place on the server
+  filesystem.
 
 \end{itemize}
 
