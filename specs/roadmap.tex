@@ -143,7 +143,7 @@ specific \verb+$OVERSION+ of the OCaml compiler are stored in
 
 \item \verb+$opam/$OVERSION/doc/$NAME/+ contains the documentation
   associated to the installed package {\tt NAME} with the compiler
-  version \verb+$OVERSION+. /\verb+$opam/OVERSION/doc/+ can be
+  version \verb+$OVERSION+. \verb+$opam/OVERSION/doc/+ can be
   shortened to \verb+$doc/+ for more readability.
 
 \item \verb+$opam/$OVERSION/bin/+ contains the program files for all
@@ -153,11 +153,11 @@ specific \verb+$OVERSION+ of the OCaml compiler are stored in
 
 \item \verb+$opam/$OVERSION/build/$NAME.$VERSION/+ is a tempory folder
   used to build package \verb+$NAME+ with version \verb+$VERSION+,
-  with compiler version \verb+$OVERSION+.\verb+$opam/$OVERSION/build/+
+  with compiler version \verb+$OVERSION+. \verb+$opam/$OVERSION/build/+
   can be shortened to \verb+$build/+ for more readability.
 
 \item \verb+$opam/$OVERSION/reinstall+ contains the list of packages
-  wich has been changed upstream since the last upgrade. This can
+  which has been changed upstream since the last upgrade. This can
   happen for instance when a packager uploads a new archive or fix the
   OPAM file for a specific package version. Every package appearing in
   this file will be reinstalled (or upgraded if a new version is
@@ -293,8 +293,8 @@ syntax defined in this section.
   "foo"}, {\tt "foo-bar"}, $\ldots$
 \item {\tt SYMBOL} contains only non-letter and non-digit characters,
   for instance: {\tt =}, {\tt <=}, $\ldots$ Some symbols have a special
-  meaning and thus are not valid {\tt SYMBOL}s: \verb+(+ \verb+)+
-  \verb+[+ \verb+]+ \verb+{+ \verb+}+ \verb+:+
+  meaning and thus are not valid {\tt SYMBOL}s: ``\verb+(+ \verb+)+
+  \verb+[+ \verb+]+ \verb+{+ \verb+}+ \verb+:+''.
 \item {\tt IDENT} starts by a letter and is followed by any number of
   letters, digit and symbols, for instance: {\tt foo}, {\tt foo-bar},
   $\ldots$. 
@@ -469,13 +469,13 @@ is a valid formula whose semantic is: {\em any version of package
 }
 
 \verb+$NAME.config+ contains platform-dependent information which can
-be useful for other libraries or syntax extensions wants to use
+be useful for other libraries or syntax extensions that want to use
 libraries defined in the package \verb+$NAME+.
 
 \paragraph{Local and global variables}
 
-The definitions {\tt IDENT: BOOL}, {\tt IDENT: STRING} and {\tt IDENT:
-  [ STRING+ ]}, are used to defined variables associated to this
+The definitions ``{\tt IDENT: BOOL}'', ``{\tt IDENT: STRING}'' and ``{\tt IDENT:
+  [ STRING+ ]}'', are used to defined variables associated to this
 package, and are used to substitute variables in template files (see
 \S\ref{subst}):
 
@@ -519,7 +519,7 @@ The available options are:
   and linking options is built by looking at the transitive closure of
   dependencies.
 
-  The contents of {\tt deps} is either:
+  The contents of {\tt dep}s is either:
   \begin{itemize}
   \item {\tt "foo"} the block is depending on all the syntax
     extensions and libraries defined in the package {\tt "foo"}; or
@@ -640,7 +640,7 @@ This command will:
   append the line \verb+'$REPO $NAME $VERSION'+ to the file.
 
 \item Create the empty directories \verb+$opam/archives+,
-  \verb+$lib/+, \verb+$bin/+ and \verb+$doc+/.
+  \verb+$lib/+, \verb+$bin/+ and \verb+$doc/+.
 
 \end{enumerate}
 
@@ -721,7 +721,7 @@ This command will:
   dependency solver should also mark the packages to recompile.
 
 \item The dependency solver sorts the collections of packages in
-  topological order. Them, for each of them do:
+  topological order. Then, for each of them do:
 
 \begin{enumerate}
 
@@ -739,7 +739,7 @@ This command will:
   repository to download the archive by calling
   \verb+opam-$KIND-download+ (see \S\ref{script-download}).
 
-  Once this is done, symlink the archive in in \verb+$opam/archives+.
+  Once this is done, symlink the archive in \verb+$opam/archives+.
 
 \item Decompress the archive into \verb+$build/$NAME.$VERSION/+.
 
@@ -769,7 +769,7 @@ he will write:
     $ opam update
 \end{verbatim}
 
-This command will follows the following steps:
+This command will follow the following steps:
 
 \begin{itemize}
 
@@ -903,7 +903,7 @@ When a packager wants to create a package, he should:
     $ opam upload -opam $OPAM -descr $DESC -archive $ARCHIVE -repo $REPO
 \end{verbatim}
 
-This command will parser \verb+$OPAM+ to get the package name and
+This command will parse \verb+$OPAM+ to get the package name and
 version and it will move \verb+$OPAM$+, \verb+$DESC+ and
 \verb+$ARCHIVE+ in \verb+$opam/repo/$REPO/upload/$NAME.$VERSION+ (with
 the right filenames). It will then call \verb+opam-$KIND-upload+ to
@@ -944,13 +944,13 @@ When the user wants to manage OPAM repositories, he should write:
 \begin{itemize}
 \item \verb+-list+ lists the current repositories by looking at
   \verb+$opam/config+
-\item \verb+$-rm $REPO$+ deletes \verb+$opam/repo/$REPO+ and removes
+\item \verb+-rm $REPO+ deletes \verb+$opam/repo/$REPO+ and removes
   \verb+$REPO+ from the {\tt repositories} list in \verb+$opam/config+.
   Then, for each package in \verb+$opam/repo/index+ it updates the link
   between packages and repositories (ie. it either deletes packages or
-  symlink them to the nex repository containing the package).
+  symlink them to the new repository containing the package).
 
-\item \verb+$-add [-kind $KIND] $REPO $ADDRESS+ initializes
+\item \verb+-add [-kind $KIND] $REPO $ADDRESS+ initializes
   \verb+$REPO+ as described in \S\ref{opam-init}.
 
 \end{itemize}
@@ -1065,7 +1065,7 @@ The first Milestone includes the necessary scripts to support {\tt
 
 \item \verb+opam-rsync-upload $PATH+ will return an error if the OPAM
   repository is not writable (for instance if the repository if an
-  HTTP server). In this cas the server state can be updated manually
+  HTTP server). In this case the server state can be updated manually
   by copying the new files in the right place on the server
   filesystem.
 
