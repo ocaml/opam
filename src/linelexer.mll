@@ -25,21 +25,3 @@ rule main words lines = parse
 {
   let main = main [] []
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
