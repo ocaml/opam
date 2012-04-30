@@ -12,15 +12,14 @@ begin library "get"
   comp   += [ "-annot" "-warn-error" "A" ]
   files   = [
     "globals.ml"
-    "uri.ml"
-    "namespace.ml"
+    "types.ml"
     "run.ml"
     "file_format.ml"
     "lexer.mll"
+    "linelexer.mll"
     "parser.mly"
     "path.ml"
     "file.ml"
-    "protocol.ml"
     "server.ml" 
   ]
 
@@ -32,6 +31,7 @@ begin library "get"
     "extlib"
     "arg"
     "graph"
+    "uri"
   ]
 end
 

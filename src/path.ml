@@ -30,8 +30,11 @@ let b str = Basename.of_string str
 (* Raw file contents *)
 module Raw : Abstract = Base
 
+(* Keep a link to [Filename] for the standard library *)
+module F = Filename
+
 (* non-directory files *)
-module File : sig
+module Filename : sig
 
   type t
 
@@ -64,7 +67,7 @@ end = struct
   let create dirname basename = { dirname; basename }
     
   let to_string t =
-    Filename.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
+    F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
 
   let read filename =
     let str = Run.read (to_string filename) in
@@ -83,14 +86,14 @@ end = struct
     let raw = read filename in
     fn raw
 end
-type filename = File.t
+type filename = Filename.t
 
 let (/) d1 d2 =
   let s1 = Dirname.to_string d1 in
   let s2 = Dirname.to_string d2 in
-  Dirname.of_string (Filename.concat s1 s2)
+  Dirname.of_string (F.concat s1 s2)
 
-let (//) = File.create
+let (//) = Filename.create
 
 (** Global state *)
 module type GLOBAL = sig

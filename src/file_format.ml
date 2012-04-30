@@ -35,14 +35,14 @@ let variables items =
   let l = List.fold_left (fun accu -> function
     | Variable (k,v) -> (k,v) :: accu
     | _              -> accu
-  ) [] section.items in
+  ) [] items in
   List.rev l
 
 let sections items =
   let l = List.fold_left (fun accu -> function
     | Section s -> (s.kind, s) :: accu
     | _          -> accu
-  ) [] section.items in
+  ) [] items in
   List.rev l
 
 type file = item list
@@ -50,7 +50,7 @@ type file = item list
 let bad_format fmt =
   Printf.kprintf (Globals.error_and_exit "Bad format: %s") fmt
 
-let is_valid items fields =
+let rec is_valid items fields =
   List.for_all (function
     | Variable (f, _) ->  List.mem f fields
     | Section s       -> is_valid s.items fields
@@ -99,7 +99,7 @@ let parse_option fnk fnv = function
   | Option (k,v) -> fnk, fnv v
   | x            -> bad_format "expecting an option, got %s" (kind x)
 
-let (|>) f g x = f (g x) 
+let (|>) f g x = g (f x) 
 
 let make_string str = String str
 
@@ -143,7 +143,7 @@ let assoc s n parse =
   with Not_found -> bad_format "field  %S is missing" n
 
 let assoc_section s n =
-  try List.assoc_all n (sections s.items)
+  try List.find_all (fun (k,_) -> k=n) (sections s.items)
   with Not_found -> bad_format "section %S is missing" n
 
 let assoc_option s n parse =
@@ -153,6 +153,9 @@ let assoc_option s n parse =
 let assoc_list s n parse =
   try parse (List.assoc n (variables s.items))
   with Not_found -> []
+
+let assoc_string_list s n =
+  assoc_list s n (parse_list parse_string)
 
 (* Parsing of dependency formulas *)
 let rec parse_constraints name = function

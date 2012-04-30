@@ -19,8 +19,8 @@ module type Abstract = sig
   type t
   val of_string: string -> t
   val to_string: t -> string
-  module Set: Set.S
-  module Map: Map.S
+  module Set: Set.S with type elt = t
+  module Map: Map.S with type key = t
 end
 
 module Base = struct
@@ -51,7 +51,7 @@ module V : Abstract = Base
 (** (Name, Version) pairs *)
 module NV : sig
   include Abstract
-  val name   : t -> N.t
+  val name : t -> N.t
   val version: t -> V.t
   val create: N.t -> V.t -> t
   val of_dpkg: Debian.Packages.package -> t

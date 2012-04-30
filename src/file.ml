@@ -13,8 +13,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtString
-open ExtList
 open Types
 open Path
 open File_format
@@ -33,10 +31,10 @@ module type IO_FILE = sig
   val empty : t
 
   (** Parse a string or raise the exception [Parsing _]. *)
-  val of_string : string -> t
+  val of_string : Raw.t -> t
 
-  (** Return the content of a file as a string *)
-  val to_string : t -> string
+  (** Return the raw content of a file as a string *)
+  val to_string : t -> Raw.t
 
 end
 
@@ -50,53 +48,46 @@ module Lines : IO_FILE with type t = string list list = struct
   let empty = []
 
   let of_string raw =
-    let ic = BatIO.of_string (Raw.to_string raw) in
-    let split s = String.nspint s " \t" in
-    let lines = ref [] in
-    let fini = ref false in
-    let rec aux () =
-      match
-        try Some read_line ic
-        with _ -> None
-      with
-      | None   -> ()
-      | Some l -> lines := split l :: !lines; aux () in
-    aux ();
-    close_in ic;
-    List.rev !lines
+    let lexbuf = Lexing.from_string (Raw.to_string raw) in
+    Linelexer.main lexbuf
 
   let to_string lines =
     let buf = Buffer.create 1024 in
     List.iter (fun l ->
       Buffer.add_string buf (String.concat " " l);
       Buffer.add_string buf "\n"
-    ) lines in
-  Buffer.contents buf
+    ) lines;
+  Raw.of_string (Buffer.contents buf)
 
 end
 
 module Installed : sig
-  include IO_FILE with type t = name_version list
+  include IO_FILE with type t = V.t N.Map.t
 end = struct
 
   let kind = "installed"
 
-  type t = NV.t list
+  type t = V.t N.Map.t
 
-  let empty = []
+  let empty = N.Map.empty
     
   let of_string s =
     let lines = Lines.of_string s in
-    List.map (function
-      | [name; version] -> NV.create (N.of_string name) (V.of_string version)
+    let map = ref empty in
+    let add n v = map := N.Map.add n v !map in
+    List.iter (function
+      | [name; version] -> add (N.of_string name) (V.of_string version)
       | _               -> Globals.error_and_exit "installed"
-    ) lines
+    ) lines;
+    !map
 
-    let to_string lines =
-      let lines =
-        List.map
-          (fun (n,v) -> Printf.sprintf "%s %s" (N.to_string n) (V.to_string v))
-          lines in
+  let to_string t =
+    let buf = Buffer.create 1024 in
+    N.Map.iter
+      (fun n v -> Printf.bprintf buf "%s %s\n" (N.to_string n) (V.to_string v))
+      t;
+    Raw.of_string (Buffer.contents buf)
+
 end
 
 module Cudf = struct
@@ -125,7 +116,7 @@ end = struct
     if not (File_format.is_valid f fields) then
       Globals.error_and_exit "The following file contains fields not in {%s}:\n%s"
         (String.concat "," fields)
-        (to_string f)
+        (Filename.to_string f)
 end
 
 module Config : sig
@@ -313,7 +304,7 @@ end = struct
         items = [
           Variable (s_version, String (V.to_string t.version));
           Variable (s_maintainer, t.maintainer);
-          Variable (s_substs, make_list (make_string |> File.to_string) t.substs);
+          Variable (s_substs, make_list (make_string |> Filename.to_string) t.substs);
           Variable (s_build, make_list (make_list make_string) t.build);
           Variable (s_depends, make_or_formula t.depends);
           Variable (s_conflicts, make_and_formula t.conflicts);
@@ -327,364 +318,261 @@ end = struct
   let of_string str =
     let s = Syntax.of_line str in
     Syntax.check s valid_fields;
-    let ocaml_version = assoc s s_ocaml_version parse_string in
+    let opam_version = assoc s s_opam_version parse_string in
+    if opam_version <> Globals.opam_version then
+      Globals.error_and_exit "%s is not a supported OPAM version" opam_version;
     match assoc_section s "package" with
     | [ name, s ] ->
         let s = s.items in
-        let version = assoc s s_version (parse_string |> V.of_string) in
+        let version    = assoc s s_version (parse_string |> V.of_string) in
         let maintainer = assoc s s_maintainer parse_string in
-        let substs = assoc s s_substs (parse_list (parse_string |> File.of_string)) in
-        let build = assoc s s_build (parse_list (parse_list parse_string)) in
-        let depends = assoc s s_build parse_or_formula in
-        let conflicts = assoc s s_build parse_and_formula in
-        let libraries = assoc s s_libraries (parse_list parse_string) in
-        let syntax = assoc s s s_libraries (parse_list parse_string) in
+        let substs     = assoc_list s s_substs (parse_string |> Filename.of_string) in
+        let build      = assoc_list s s_build (parse_list parse_string) in
+        let depends    = assoc_list s s_depends parse_or_formula in
+        let conflicts  = assoc_list s s_conflicts parse_and_formula in
+        let libraries  = assoc_list s s_libraries parse_string in
+        let syntax     = assoc s s s_libraries parse_string in
         { name; version; maintainer; substs; build;
           depends; conflicts; libraries; syntax }
 end
 
-XXX
+module Install : sig
 
+  include IO_FILE
 
-  module type TO_INSTALL =
-  sig
-    include IO_FILE
+  type move = {
+    src: filename;
+    dst: [`absolute|`relative] * filename;
+  }
 
-    (** destruct *)
-    val lib : t -> path list
-    val bin : t -> move list
-    val misc : t -> move list
+  (** destruct *)
+  val lib:  t -> filename list
+  val bin:  t -> move list
+  val misc: t -> move list
 
-    val path_from : move -> path
-    val path_to : move -> path
-    val string_of_move : move -> string
+  val string_of_move : move -> string
 
-    val filename_of_path_relative : Path.filename (* prefix *) -> path -> Path.filename list
-    val filename_of_path_absolute : path -> Path.filename list
-    val filename_of_path : Path.filename -> path -> Path.filename list
+end = struct
 
-    (** construct *)
-  end
+  let kind = "to_install"
+    
+  type move = {
+    src: filename;
+    dst: [`absolute|`relative] * filename;
+  }
 
-  module To_install : TO_INSTALL =
-  struct
-    let internal_name = "to_install"
+  type t =  {
+    lib : path list ;
+    bin : move list ;
+    misc: move list ;
+  }
 
-    type t = 
-        { lib : path list
-        ; bin : move list
-        ; misc: move list }
+  let lib t = t.lib
+  let bin t = t.bin
+  let misc t = t.misc
 
-    let lib t = t.lib
-    let bin t = t.bin
-    let misc t = t.misc
-    let path_from m = m.p_from
-    let path_to m = m.p_to
+  let string_of_move m =
+    let src = Filename.to_string m.src in
+    let dst = match src.dst with
+      | `absolute, dst -> dst
+      | `relative, dst -> Printf.sprintf "R:%s" dst in
+    Printf.sprintf "%s => %s" src dst
 
-    let string_of_move m = 
-      Printf.sprintf "from %s to %s" (string_of_path m.p_from) (string_of_path m.p_to)
+  let empty = {
+    lib  = [] ;
+    bin  = [] ;
+    misc = [] ;
+  }
 
-    let filename_of_path f l_b suff = 
-      let f = List.fold_left Path.concat f l_b in
-      List.map (Path.concat f)
-        (match suff with
-          | Exact name -> [ B name ]
-          | Suffix suff ->
-            List.filter 
-              (fun (B name) -> 
-                (try Some (snd (BatString.split name ".")) with _ -> None) = Some suff)
-              (match Path.find f with Path.Directory l -> l | _ -> []))
+  let s_lib = "lib"
+  let s_bin = "bin"
+  let s_misc = "misc"
 
-    let filename_of_path_relative f = function
-      | Relative, l_b, suff -> filename_of_path f l_b suff
-      | Absolute, _, _ -> assert false
+  let valid_fields = [
+    s_lib;
+    s_bin;
+    s_misc;
+  ]
 
-    let filename_of_path_absolute = function
-      | Absolute, l_b, suff -> filename_of_path Path.root l_b suff
-      | _ -> assert false
+  let to_string t =
+    let make_move m =
+      if m.src = snd m.dst then
+        String m.src
+      else
+        Option (String m.src, [String m.dst]) in
+    let s = [
+      Variable (s_lib, make_list make_string t.lib);
+      Variable (s_bin, make_list make_move t.bin);
+      Variable (s_misc, make_list make_move t.misc);
+    ] in
+    Filename.to_string s
 
-    let filename_of_path f p = match p with
-      | Absolute, _, _ -> filename_of_path_absolute p
-      | Relative, _, _ -> filename_of_path_relative f p
+  let of_string str =
+    let s = Syntax.of_string str in
+    Syntax.check s valid_fields;
+    let parse_move kind = function
+      | String s -> { src = s; dst = (`relative, s) }
+      | Option (src, [String dst]) -> { src; dst = (kind, dst) } in
+    let lib = assoc s s_lib (parse_list parse_string) in
+    let bin = assoc s s_bin (parse_list (parse_move `relative)) in
+    let misc = assoc s s_bin (parse_list (parse_move `absolute)) in
+    { lib; bin; misc }
 
-    let empty = { lib  = []
-                ; bin  = []
-                ; misc = [] }
-
-    let b_of_string abs s = 
-      let l = String.nsplit (String.strip ~chars:" /" s) "/" in
-      match List.rev l with
-        | x :: xs ->
-          abs,
-          List.map (fun s -> B s) (List.rev xs), 
-          (match BatString.Exceptionless.split x "*." with
-            | Some ("", suff) -> Suffix suff
-            | _ -> Exact x)
-        | [] -> abs, [], Exact ""
-
-    let relative_path_of_string = b_of_string Relative
-
-    let parse s =
-      let file = Parser.main Lexer.token (Lexing.from_string s) in
-      let one accu s =
-        if s.kind <> "install" then
-          Globals.error_and_exit "Bad format: expecting 'install', got %s" s.kind;
-        let cp = List.map relative_path_of_string in
-        let mv f_to = List.map
-          (fun (k,v) -> { p_from = relative_path_of_string k;
-                          p_to   = f_to v }) in
-        { lib  = cp (string_list "lib" s)  @ accu.lib;
-          bin  = mv relative_path_of_string (pair_opt_list "bin"  s) @ accu.bin;
-          misc = mv (b_of_string Absolute)  (pair_list "misc" s) @ accu.misc } in
-      List.fold_left one empty file.statements
-
-    let to_string t =
-
-      let print (pref, l_base, base) = 
-        let prefix = match pref with Absolute -> "/" | Relative -> "" in
-        let path = match l_base with
-          | [] -> ""
-          | _  -> String.concat "/" (List.map (fun (B base) -> base) l_base) in
-        let suffix = match base with Suffix s -> Printf.sprintf "*.%s" s | Exact s -> s in
-        Printf.sprintf "%s%s%s" prefix path suffix in
-
-      let print_list = List.map print in
-      let print_moves = 
-        List.map (fun m ->
-          Printf.sprintf "%s %s" (print m.p_from) (print m.p_to)
-        ) in
-      Printf.sprintf "\
-        lib: %s\n\
-        bin: %s\n\
-        misc:\n\
-        %s"
-        (String.concat ", " (print_list t.lib))
-        (String.concat ", " (print_moves t.bin))
-        (String.concat "\n" (print_moves t.misc))
-  end
-
-
-
-  (* Package config X.config *)
-  module type PCONFIG =
-  sig
-    include IO_FILE
-
-    val library_names   : t -> string list
-    val link_options    : t -> string list
-    val asmlink_options : t -> string list
-    val bytelink_options: t -> string list
-  end
-
-  module PConfig : PCONFIG =
-  struct
-    let internal_name = "pconfig"
-
-    type library =
-        { name    : string
-        ; link    : string list
-        ; bytelink: string list
-        ; asmlink : string list }
-
-    type elt = Library of library
-
-    type t = elt list
-
-    open ExtString
-
-    let libraries t =
-      List.fold_left (fun accu -> function Library l -> l :: accu) [] t
-
-    let library_names t = List.map (fun l -> l.name) (libraries t)
-
-    let options f t = List.flatten (List.map (fun l -> f l) (libraries t))
-
-    let link_options = options (fun l -> l.link)
-
-    let asmlink_options = options (fun l -> l.asmlink)
-
-    let bytelink_options = options (fun l -> l.bytelink)
-
-    let parse_library s =
-      { name     = s.File_format.name;
-        link     = string_list "link" s;
-        bytelink = string_list "bytelink" s;
-        asmlink  = string_list "bytelink" s }
-
-    let parse s =
-      let file = Parser.main Lexer.token (Lexing.from_string s) in
-      let parse_statement s = match s.kind with
-        | "library" -> Library (parse_library s)
-        | _         -> Globals.error_and_exit "Bad format: unknown kind '%s'" s.kind in
-      List.map parse_statement file.statements
-
-    let string_of_string_list l =
-      let p = Printf.sprintf "%S" in
-      match l with
-      | [] -> "[]"
-      | _  ->
-        let elts = List.map p l in
-        Printf.sprintf "[ %s ]" (String.concat "; " elts)
-
-    let string_of_library t =
-      let p (k,v) = match v with
-        | [] -> ""
-        | _  -> Printf.sprintf "  %s = %s;\n" k (string_of_string_list v) in
-      let fields = List.map p [
-        ("link"    , t.link);
-        ("bytelink", t.bytelink);
-        ("asmlink", t.asmlink);
-      ] in
-      Printf.sprintf "library %s {\n%s}\n" t.name (String.concat "" fields)
-
-    let to_string l =
-      let aux (Library l) = string_of_library l in
-      String.concat "\n\n" (List.map aux l)
-
-    let empty = []
-  end
-
-  module type SECURITY_KEY =
-  sig
-    include IO_FILE with type t = security_key
-  end
-
-  module Security_key : SECURITY_KEY =
-  struct
-    let internal_name = "security_key"
-
-    type t = security_key
-
-    let parse s = Random s
-    let to_string (Random s) = s
-
-    let empty = Random ""
-  end
-
-  module type COMPIL = sig
-    include IO_FILE
-
-    val name: t -> string
-    val source: t -> url
-    val configure: t -> string list
-    val make: t -> string list
-    val patches: t -> url list
-
-  end
-
-  module Compil : COMPIL = struct
-
-    let internal_name = "compiler"
-
-    type t = {
-      name: string;
-      source: url;
-      patches: url list;
-      configure: string list;
-      make: string list;
-    }
-
-    let empty = {
-      name = "<none>";
-      source = url "<none>";
-      patches = [];
-      configure = [];
-      make = [];
-    }
-
-    let name t = t.name
-    let source t = t.source
-    let patches t = t.patches
-    let configure t = t.configure
-    let make t = t.make
-
-    let to_string t =
-      Printf.sprintf "\
-name: %s
-source: %s
-patches: %s
-configure: %s
-make: %s
-"
-        t.name
-        (string_of_url t.source)
-        (String.concat ", " (List.map string_of_url t.patches))
-        (String.concat ", " t.configure)
-        (String.concat ", " t.make)
-
-    let parse contents =
-      let file = Parse.colon contents in
-      let name = Parse.assoc_parsed "name" file in
-      let source = url (Parse.assoc_parsed "source" file) in
-      let patches = match Parse.Exceptionless.assoc_parsed "patches" file with
-      | None   -> []
-      | Some s -> List.map url (Parse.split_comma s) in
-      let configure = match Parse.Exceptionless.assoc_parsed "configure" file with
-      | None   -> []
-      | Some s -> Parse.split_comma s in
-      let make = match Parse.Exceptionless.assoc_parsed "make" file with
-      | None   -> []
-      | Some s -> Parse.split_comma s in
-      { name; source; patches; configure; make }
-        
-  end
 end
 
-exception Directory_found
+(* Package config X.config *)
+module PConfig : sig
+  
+  include IO_FILE
 
-module Make (F : Base.IO_FILE) = 
-struct
-  let log = Globals.log ("FILE." ^ F.internal_name)
+  module Variable : Abstract
 
-  (** Add a file *)
-  let add f v =
-    log "add %s" (Path.string_of_filename f);
-    Path.add f (Path.File (Binary (Raw_binary (F.to_string v))))
+  type value =
+    | B of bool
+    | S of string
 
-  (** Find a file. Return [None] if the file does not exists.
-      Raise [Parsing] or [Directory_found] in case an error happens. *)
-  let find f =
-    let filename = Path.string_of_filename f in
-    log "find %s" filename;
-    let dirname = Filename.dirname filename in
-    if not (Sys.file_exists dirname) then
-      None
+  module type Section = sig
+    type section
+    val asmcomp : t -> section -> string list
+    val bytecomp: t -> section -> string list
+    val asmlink : t -> section -> string list
+    val bytelink: t -> section -> string list
+    val variable: t -> section -> Variable.t  -> value
+    include Abstract with type t = section
+  end
+
+  module Library : Section
+  module Syntax  : Section
+
+  val variable: t -> Variable.t  -> value
+
+end = struct
+
+  let kind = ".config"
+
+  type value =
+    | B of bool
+    | S of string
+
+  type section = { 
+    name     : string ;
+    bytecomp : string list ;
+    asmcomp  : string list ;
+    bytelink : string list ;
+    asmlink  : string list ; 
+    variables: (string * value) list;
+  }
+
+  type item = {
+    libraries: section list;
+    syntax   : section list;
+    variables: (sting * value) list;
+  }
+
+  let empty = {
+    libraries = [];
+    syntax    = [];
+    variables = [];
+  }
+
+  module Section (M : sig val get : t -> section list end) = struct
+    include Base
+
+    let find t s =
+      List.assoc s (M.get t)
+
+    let bytecomp t s = (find t s).bytecomp
+    let asmcomp  t s = (find t s).asmcomp
+    let bytelink t s = (find t s).bytelink
+    let asmlink  t s = (find t s).asmlink
+
+    let variable t s = List.assoc s t.variables
+  end
+
+  module Library = Section (struct let get t = t.libraries end)
+  module Syntax  = Section (struct let get t = t.syntax end)
+
+  let s_bytecomp = "bytecomp"
+  let s_asmcomp  = "asmcomp"
+  let s_bytelink = "bytelink"
+  let s_asmlink  = "asmlink"
+
+  let valid_fields = [
+    s_bytecomp;
+    s_asmcomp;
+    s_bytelink;
+    s_asmlink;
+  ]
+
+  let of_string str =
+    let s = Syntax.of_string str in
+    let parse_value = function
+      | String s -> S s
+      | Bool   b -> B b in
+    let parse_section s =
+      let name = s.name in
+      let bytecomp = assoc_string_list s.items s_bytecomp in
+      let asmcomp  = assoc_string_list s.items s_asmcomp  in
+      let bytelink = assoc_string_list s.items s_bytecomp in
+      let asmlink  = assoc_string_list s.items s_asmlink  in
+      let variables =
+        List.filter (fun x -> not (List.mem x valid_fields)) (variables s) in
+      { name; bytecomp; asmcomp; bytelink; asmlink; variables } in
+    let libraries = List.map parse_section (sections s "library") in
+    let syntax    = List.map parse_section (sections s "syntax") in
+    let variables = variables s parse_value in
+    { libraries; syntax; variables }
+
+  let rec to_string t =
+    let of_value = function
+      | B b -> Bool b
+      | S s -> String s in
+    let of_variables l =
+      List.map (fun (k,v) -> Variable (k, of_value v)) l in
+    let of_section kind s =
+      Section
+        { kind;
+          name = s.name;
+          items = [
+            Variable (s_bytecomp, make_list make_string s.bytecomp);
+            Variable (s_asmcomp , make_list make_string s.asmcomp);
+            Variable (s_bytelink, make_list make_string s.bytelink);
+            Variable (s_asmlink , make_list make_string s.asmlink);
+          ] @ of_variables s.variables 
+        } in
+    let of_library l = of_section "library" l in
+    let of_syntax s = of_section "syntax" l in
+    of_variables t.variables
+    @ List.map of_library t.libraries
+    @ List.map of_syntax t.syntax
+
+end
+
+module Make (F : IO_FILE) = struct
+  let log = Globals.log ("FILE." ^ F.kind)
+
+  (** Write some contents to a file *)
+  let write f v =
+    log "write %s" (Filename.to_string f);
+    Filename.write f (Raw.of_string (F.to_string v))
+
+  (** Read file contents *)
+  let read f =
+    let filename = Filename.to_string f in
+    log "read_opt %s" filename;
+    if Filename.exists f then
+      F.of_string (Raw.of_string (Filename.read f))
     else
-      Run.U.in_dir (Filename.dirname filename) (function
-        | Path.File (Raw_binary s)     -> Some (F.parse s)
-        | Path.Not_found _             -> None
-        | Path.Directory _             -> raise Directory_found
-      ) (Path.find_binary f)
-
-
-  (** Find a file. Exit the program if the file does not exists.
-      Raise [Parsing] or [Directory] in case another error happen. *)
-  let find_err = Path.read find
-
-  module Exceptionless =
-  struct
-    (** Find a file. Return a default value [v0] if the file does not exists. 
-        In general, forall [v1], [compare v0 v1] < 0. *)
-    let default def f = 
-      match try Some (find f) with _ -> None with
-      | Some (Some t) -> t
-      | _ -> def
-          
-    let find = default F.empty
-  end
+      Globals.error_and_exit "File %s does not exit" (Filename.to_string f)
 end
 
 
-module File =
-struct
-  open Base
+module File = struct
 
   module Config = struct include Config include Make (Config) end
-  module Spec = struct include Spec include Make (Spec) end
-  module To_install = struct include To_install include Make (To_install) end
+  module OPAM = struct include Spec include Make (OPAM) end
+  module Install = struct include To_install include Make (Install) end
   module PConfig = struct include PConfig include Make (PConfig) end
-  module Security_key = struct include Security_key include Make (Security_key) end
-  module Compil = struct include Compil include Make (Compil) end
 
   module Installed =
   struct
@@ -700,3 +588,4 @@ struct
     include M_installed
   end
 end
+
