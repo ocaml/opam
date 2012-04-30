@@ -17,16 +17,19 @@
 open File_format
 %}
 
-%token <string> STRING IDENT
-%token <int> INT
+%token <string> STRING IDENT SYMBOL
+%token <bool> BOOL
 %token EOF
-%token AT
-%token SEMI
-%token LBRACKET
-%token RBRACKET
-%token LBRACE
-%token RBRACE
-%token EQUAL
+%token LBRACKET RBRACKET
+%token LPAR RPAR
+%token LBRACE RBRACE
+%token COLON
+
+%left LPAR RPAR
+%left LBRACE RBRACE
+%left LBRACKET RBRACKET
+%left STRING IDENT BOOL SYMBOL
+%left COLON
 
 %start main
 %type <File_format.file> main
@@ -34,39 +37,31 @@ open File_format
 %%
 
 main:
-| version statements EOF { {version = $1; statements = $2} }
+| items EOF { $1 }
 ;
 
-version:
-| AT INT { $2 }
-|        { Globals.api_version  }
+items:
+| item items { $1 :: $2 }
+|            { [] }
 ;
 
-statements:
-| statement statements { $1 :: $2 }
-|                      { [] }
+item:
+| IDENT COLON value                { Variable ($1, $3) }
+| IDENT STRING LBRACE items RBRACE { Section {kind=$1; name=$2; items= $4} }
 ;
 
-statement:
-| IDENT STRING                        { {kind=$1; name=$2; contents= []} }
-| IDENT STRING LBRACE contents RBRACE { {kind=$1; name=$2; contents= $4} }
+value:
+| BOOL                     { Bool $1 }
+| STRING                   { String $1 }
+| SYMBOL                   { Symbol $1 }
+| IDENT                    { Ident $1 }
+| value LPAR values RPAR   { Option ($1, $3) }
+| RBRACKET values LBRACKET { List $2 }
 ;
 
-contents:
-|                                    { [] }
-| IDENT EQUAL content contents       { ($1, $3) :: $4 }
-| IDENT EQUAL content SEMI contents  { ($1, $3) :: $5 }
-;
-
-content:
-| STRING                        { String $1 }
-| LBRACKET contentlist RBRACKET { List $2 }
-;
-
-contentlist:
-|                          { [] }
-| content                  { [$1] }
-| content SEMI contentlist { $1 :: $3 }
+values:
+|              { [] }
+| value values { $1 :: $2 }
 ;
 
 %%
@@ -84,3 +79,5 @@ let main t l =
   try main t l
   with _ ->
     lexer_error l
+
+

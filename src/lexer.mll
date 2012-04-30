@@ -24,52 +24,41 @@ let space = [' ' '\t' '\r' '\n']
 let alpha = ['a'-'z' 'A'-'Z' '_']
 let digit = ['0'-'9']
 let ident = alpha (alpha | digit)*
+let symbol = ['=' '<' '>' '!']+
 let number = '-'? ('.'['0'-'9']+ | ['0'-'9']+('.'['0'-'9']*)? )
 
 rule token = parse
 | space  { token lexbuf }
 | "\n"   { newline lexbuf; token lexbuf }
-| "@"    { AT }
-| "="    { EQUAL }
+| ":"    { COLON }
 | "{"    { LBRACE }
 | "}"    { RBRACE }
 | "["    { LBRACKET }
 | "]"    { RBRACKET }
-| ";"    { SEMI }
-| '"'    { let s = string1 "" lexbuf in
-           STRING s }
-| '#'    { let s = string2 "" lexbuf in
+| "("    { LPAR }
+| ")"    { RPAR }
+| '"'    { let s = string "" lexbuf in
            STRING s }
 | "(*"   { comment 1 lexbuf; token lexbuf }
-| number { INT (int_of_string (Lexing.lexeme lexbuf)) }
+| "true" { BOOL true }
+| "false"{ BOOL false }
 | ident  { IDENT (Lexing.lexeme lexbuf) }
-| eof     { EOF }
-| _       { let token = Lexing.lexeme lexbuf in
-            Globals.error_and_exit "lexer error: '%s' is not a valid tokenm" token }
+| symbol { SYMBOL (Lexing.lexeme lexbuf) }
+| eof    { EOF }
+| _      { let token = Lexing.lexeme lexbuf in
+           Globals.error_and_exit "lexer error: '%s' is not a valid token" token }
 
 (* XXX: not optimal at all *)
-and string1 s = parse
-| '"'  { s }
-| "\n" { newline lexbuf;
-         string1 (s ^ Lexing.lexeme lexbuf) lexbuf }
-| "\\\"" { string1 (s ^ "\"") lexbuf }
-| "\\\\" { string1 (s ^ "\\") lexbuf }
-| "\\" [^ '"' '\\']+
-       { string1 (s ^ Lexing.lexeme lexbuf) lexbuf }
+and string s = parse
+| '"'    { s }
+| "\n"   { newline lexbuf;
+           string (s ^ Lexing.lexeme lexbuf) lexbuf }
+| "\\\"" { string (s ^ "\"") lexbuf }
+| "\\\\" { string (s ^ "\\") lexbuf }
+| "\\"   [^ '"' '\\']+
+          { string (s ^ Lexing.lexeme lexbuf) lexbuf }
 | eof  { s }
-| _    { string1 (s ^ Lexing.lexeme lexbuf) lexbuf }
-
-(* XXX: not optimal at all *)
-and string2 s = parse
-| '#'  { s }
-| "\n" { newline lexbuf;
-         string2 (s ^ Lexing.lexeme lexbuf) lexbuf }
-| "\\#" { string2 (s ^ "#") lexbuf }
-| "\\\\" { string2 (s ^ "\\") lexbuf }
-| "\\" [^ '#' '\\']+
-       { string2 (s ^ Lexing.lexeme lexbuf) lexbuf }
-| eof  { s }
-| _    { string2 (s ^ Lexing.lexeme lexbuf) lexbuf }
+| _    { string (s ^ Lexing.lexeme lexbuf) lexbuf }
 
 and comment n = parse
 | "*)" { if n > 1 then comment (n-1) lexbuf }
@@ -77,23 +66,3 @@ and comment n = parse
 | eof  { }
 | "\n" { newline lexbuf; comment n lexbuf }
 | _    { comment n lexbuf }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

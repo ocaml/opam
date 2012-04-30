@@ -13,35 +13,41 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtString
+module type RANDOM_KEY = sig
+  type t
+  val new_key : unit -> t
+  val to_string : t -> string
+end
 
-(* XXX: config:// andn install:// are weird URI *)
-type uri = 
-  | Http
-  | Https
-  | Git
-  | Local
+module Random_key : RANDOM_KEY = struct
+  type t = string
 
-let uri_of_url s =
-  let git = Filename.check_suffix s ".git" in
-  try let s1, s2 = String.split s "://" in
-    match s1 with
-    | _ when git -> Some Git    , s
-    | "git"      -> Some Git    , s2
-    | "local"    -> Some Local  , s2
-    | "https"    -> Some Https  , s2
-    | "http"     -> Some Http   , s2
-    | _          -> None        , s2
-  with _->
-    None, s
+  let make n =
+    String.implode (List.init n (fun _ -> char_of_int (Random.int 255)))
 
-let string_of_uri = function
-  | Local   -> "local://"
-  | Http    -> "http://"
-  | Https   -> "https://"
-  | Git     -> "git://"
+  let len = 128
 
-let to_string (uri, url) =
-  match uri with
-  | None   -> url
-  | Some u -> Printf.sprintf "%s%s" (string_of_uri u) url
+  let n = ref (make len)
+
+  let new_key _ = 
+    let k = !n in
+    let () = n := make len in
+    k
+
+  let to_string x = x
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

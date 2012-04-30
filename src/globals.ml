@@ -14,20 +14,18 @@
 (***********************************************************************)
 
 let debug = ref (
-  try let (_:string) = Sys.getenv "OCPGETDEBUG" in true
+  try let (_:string) = Sys.getenv "OPAMDEBUG" in true
   with _ -> false
 )
 
 let version = "0.1+dev"
 
-let default_hostname = "opam.ocamlpro.com"
-let default_port = 9999
+let default_repository = "http://opam.ocamlpro.com"
+let default_repository_kind = "rsync"
 
-let ocamlc : string option ref = ref None
-let api_version = 1
+let opam_version = "1"
 
 let home = Unix.getenv "HOME"
-let default_opam_server_path = Filename.concat home ".opam-server"
 let default_opam_path = Filename.concat home ".opam"
 
 let root_path = ref default_opam_path

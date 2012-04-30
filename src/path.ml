@@ -15,598 +15,218 @@
 
 open ExtList
 open ExtString
-open Namespace
-open Uri
-open Protocol
+open Types
 
-let log fmt =
-  Globals.log "PATH" fmt
+let log fmt = Globals.log "PATH" fmt
 
-type url = {
-  uri: uri option;
-  hostname: string;
-  port: int option;
-}
+module Dirname : Abstract = Base
+type dirname = Dirname.t
+let d str = Dirname.of_string str
 
-let hostname_port hostname =
-  try
-    let u, p = BatString.split hostname ":" in
-    u, Some (int_of_string p)
-  with _ -> hostname, None
+module Basename : Abstract = Base
+type basename = Basename.t
+let b str = Basename.of_string str
 
-let url ?uri ?port hostname =
-  let hostname = Run.U.normalize hostname in
-  let hostname, port2 = hostname_port hostname in
-  let uri, hostname = match uri with
-    | None     -> uri_of_url hostname
-    | Some uri -> Some uri, hostname in
-  let port = match port, port2, uri with
-    | Some p, _     , _
-    | None  , Some p, _ -> Some p
-    | _                 -> None in
-  { uri; hostname; port }
+(* Raw file contents *)
+module Raw : Abstract = Base
 
-let string_of_url url =
-  let uri = match url.uri with
-    | None   -> ""
-    | Some u -> string_of_uri u in
-  let port = match url.port with
-    | None   -> ""
-    | Some p -> ":" ^ string_of_int p in
-  Printf.sprintf "%s%s%s" uri url.hostname port
-
-type 'a ocaml_options = 
-  | I of 'a
-
-type raw_filename =
-  | External of uri * string
-  | Internal of string (* pointer to the local contents *)
-
-type binary_data = 
-  | Binary   of raw_binary
-  | Filename of raw_filename
-
-type links = (raw_filename * string option (* target_name *)) list
-
-type links_order = {
-  sources: links; (* list OR of archive to download *)
-  patches: links; (* list AND of patch to apply *)
-} (* at execution, "list OR" will be first considered, 
-     then it is "list AND". *)
-
-type 'a archive = 
-  | Archive of 'a
-  | Links   of links_order
-
-type basename = B of string
-
-(** Type used to represent an internal form of version, which is in
-    particular not related to the version of a particular package *)
-type internal_version = Version of string
-
-let is_patch = function
-  | Internal p
-  | External (_,p) ->
-      Filename.check_suffix p ".patch"
-      || Filename.check_suffix p ".diff"
-
-module type RANDOM_KEY = sig
-  val new_key : unit -> security_key
-end
-
-module Random_key : RANDOM_KEY = struct
-  let make n = Random (String.implode (List.init n (fun _ -> char_of_int (Random.int 255))))
-
-  let len = 128
-
-  let n = ref (make len)
-
-  let new_key _ = 
-    let k = !n in
-    let () = n := make len in
-    k
-end
-
-module type PATH_OCAMLVERSION = 
-sig
-  type t
-  type filename 
-    
-  (** change the version of OCaml used *)
-  val set_version : t -> internal_version (* OVERSION *) -> t
-
-  (** installed libraries for the package (at most one version installed) *)
-  val lib : t -> name -> filename (* $HOME_OPAM/OVERSION/lib/NAME *)
-
-  (** contain installed binaries *)
-  val bin : t -> filename (* $HOME_OPAM/OVERSION/bin *)
-
-  (** list of installed packages with their version *)
-  val installed : t -> filename (* $HOME_OPAM/OVERSION/installed *)
-
-  (** tempory folders used to decompress the corresponding archives *)
-  val build : t -> name_version option -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION *)
-  (* [None] : $HOME_OPAM/OVERSION/build *)
-
-  (** compiled files in the extracted archive to install *)
-  (* XXX: P.install should be installed in their own path *)
-  val to_install : t -> name_version -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION/NAME.install *)
-
-  (** package configuration for compile and link options *)
-  (* XXX: P.config should be installed in their own path *)
-  val pconfig : t -> name_version -> filename (* $HOME_OPAM/OVERSION/build/NAME-VERSION/NAME.config *)
-end
-
-module type PATH =
-sig
+(* non-directory files *)
+module File : sig
 
   type t
-  type filename
 
-  type 'a contents = 
-    | Directory of basename list
-    | File of 'a
-    | Not_found of string
+  val to_string: t -> string
 
-  type 'a contents_rec = 
-    | R_directory of (basename * 'a contents_rec) Enum.t
-    | R_file of 'a
-    | R_filename of filename list
-    | R_lazy of (unit -> unit) (* The data describing the contents will appear as soon as : 
-                                  1. the current directory is the directory where one would the contents appear,
-                                  2. this function is executed. *)
-
-  val init : string (* $HOME_OPAM *) -> t
-
-  (** definitions of some shortcuts *)
-
-  (** the root of every path *)
-  val root : filename (* ~/ *)
-
-  val cwd : filename (* $PWD *)
-
-  (** path in the packager filesystem, contains the collection of libraries and programs *)
-  val package : t -> string (* computed from $PWD *) -> filename
-   
-  (** main configuration file *)
-  val config : t -> filename (* $HOME_OPAM/config *)
-
-  (** OPAM files considered for an arbitrary version and package *)
-  val index : t -> name_version option -> filename (* $HOME_OPAM/index/NAME-VERSION.spec *)
-  (* [None] : $HOME_OPAM/index *)
-
-  val compil : t -> string -> filename
-  (* $HOME_OPAM/compilers/[oversion].compil *)
-
-  (** list of spec files *)
-  val index_list : t -> name_version list (* [ $HOME_OPAM/index/NAME-VERSION.spec ] -> [ NAME, VERSION ] *)
-
-  (** source archives for all versions of all packages *)
-  val archives_targz : t -> name_version option -> filename (* $HOME_OPAM/archives/NAME-VERSION.tar.gz *)
-  (* [None] : $HOME_OPAM/archives *)
-
-  (** security keys related to package name *)
-  val keys : t -> name -> filename (* $HOME_OPAM/keys/NAME *)
-
-  (** similar as [keys] *)
-  val hashes : t -> name -> filename (* $HOME_OPAM/hashes/NAME *)
-
-  module O : PATH_OCAMLVERSION with type t = t with type filename = filename
-
-  (** Path utilities **)
+  val create: dirname -> basename -> t
 
   (** Retrieves the contents from the hard disk. *)
-  val find : filename -> binary_data contents
-
-  (** see [find] *)
-  val find_binary : filename -> raw_binary contents
-
-  (** see [find] *)
-  val find_filename : filename -> raw_filename contents
+  val read : t -> Raw.t
 
   (** Removes everything in [filename] if existed. *)
-  val remove : filename -> unit
+  val remove : t -> unit
 
   (** Removes everything in [filename] if existed, then write [contents] instead. *)
-  val add : filename -> binary_data contents -> unit
-
-  (** Removes everything in [filename] if existed, then write [contents_rec] inside [filename]. *)
-  val add_rec : filename -> binary_data contents_rec -> unit
-
-  (** Returns the same meaning as [archive] but extracted in the right path (corresponding to name_version) . *)
-  val extract : name_version -> raw_binary archive -> binary_data contents_rec
-
-  (** Creates an archive entitled [string] 
-      in the same directory as [filename] (which is also a directory). *)
-  val to_archive : string (* archive name *) -> filename -> unit
-
-  (** Executes an arbitrary list of command inside "build/NAME-VERSION". 
-      For the [int], see [Sys.command]. 
-      In particular, the execution continues as long as each command returns 0. *)
-  val exec : t -> name_version -> Run.command list -> int
-  
-  (** see [Filename.dirname] *)
-  val dirname : filename -> filename
-
-  (** see [Filename.basename] *)
-  val basename : filename -> basename
-
-  (** We iterate [Filename.chop_extension] on [basename] until a fix
-      point is reached.  When [basename] is not of the form
-      "NAME-VERSION", or when we can not extract the version, [string]
-      is returned as version. *)
-  val nv_of_extension : string (* version *) -> basename -> name * version
-
-  (** see [Filename.concat] *)
-  val concat : filename -> basename -> filename
+  val write : t -> Raw.t -> unit
 
   (** see [Sys.file_exists] *)
-  val file_exists : filename -> bool
+  val exists : t -> bool
 
-  (** [None] : not a directory *)
-  val is_directory : filename -> raw_filename option
+  (** Apply a function on the contents of a file *)
+  val with_raw: (Raw.t -> 'a) -> t -> 'a
 
-  (** Returns the exact path to give to the OCaml compiler (ie. -I ...) *)
-  val ocaml_options_of_library : t -> name -> string ocaml_options 
-  (* $HOME_OPAM/lib/NAME *)
+end = struct
 
-  val string_of_filename: filename -> string
+  type t = {
+    dirname:  Dirname.t;
+    basename: Basename.t;
+  }
 
-  val file_not_found: filename -> 'a
+  let create dirname basename = { dirname; basename }
+    
+  let to_string t =
+    Filename.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
 
-  val read: (filename -> 'a option) -> filename -> 'a
+  let read filename =
+    let str = Run.read (to_string filename) in
+    Raw.of_string str
+
+  let write filename raw =
+    Run.write (to_string filename) (Raw.to_string raw)
+
+  let remove filename =
+    Run.safe_rm (to_string filename)
+
+  let exists filename =
+    Sys.file_exists (to_string filename)
+
+  let with_raw fn filename =
+    let raw = read filename in
+    fn raw
+end
+type filename = File.t
+
+let (/) d1 d2 =
+  let s1 = Dirname.to_string d1 in
+  let s2 = Dirname.to_string d2 in
+  Dirname.of_string (Filename.concat s1 s2)
+
+let (//) = File.create
+
+(** Global state *)
+module type GLOBAL = sig
+
+  (** Contains [$opam] *)
+  type t
+
+  val create: dirname -> t
+
+  (** Main configuration file: [$opam/config] *)
+  val config: t -> filename
+
+  (** OPAM files: [$opam/opam/$NAME.$VERSION.opam] *)
+  val opam: t -> NV.t -> filename
+    
+  (** Description file: [$opam/descr/$NAME.$VERSION] *)
+  val descr: t -> NV.t -> filename
+
+  (** Archives files: [$opam/archives/$NAME.$VERSION.tar.gz] *)
+  val archive: t -> NV.t -> filename
+
+  (** OPAM files folder: [$opam/opam/] *)
+  val opam_dir: t -> dirname
+
+  (** Description files folder: [$opam/descr/] *)
+  val descr_dir: t -> dirname
+
+  (** Archives files folder: [$opam/archives/] *)
+  val archive_dir: t -> dirname
 end
 
-module Path : PATH = struct
-  open Printf
+module Global : GLOBAL = struct
+  type t = dirname
 
-  module Base = 
-  struct
-    type filename = 
-      | Normalized of string
-      | Raw of string
+  let create opam = opam
 
-    type t = { home : string 
-             ; home_ocamlversion : string option }
+  let dirname_of_nv nv = Dirname.of_string (NV.to_string nv)
 
-    type 'a contents = 
-      | Directory of basename list
-      | File of 'a
-      | Not_found of string
+  let config t = t // b "config"
 
-    type 'a contents_rec = 
-      | R_directory of (basename * 'a contents_rec) Enum.t
-      | R_file of 'a
-      | R_filename of filename list
-      | R_lazy of (unit -> unit) 
-        
-    let s_of_filename = function
-      | Normalized s -> s
-      | Raw s -> s
+  let opam_dir t = t / d "opam"
 
-    let filename_map f = function
-      | Normalized s -> Normalized (f s)
-      | Raw s -> Raw (f s)
+  let opam t nv = opam_dir t // b (NV.to_string nv)
 
-    let (//) = sprintf "%s/%s"
-    let concat f (B s) = filename_map (function "/" -> "" // s | filename -> filename // s) f
-    let (///) = concat
+  let descr_dir t = t / d "descr"
 
-    let mk_name_version t_home d ext n v = Raw (t_home // d // sprintf "%s%s" (Namespace.string_of_nv n v) ext)
+  let descr t nv = descr_dir t // b (NV.to_string nv)
 
-    let mk_name_version_o t_home name ext = function
-      | None -> Raw (t_home // name)
-      | Some (n, v) -> mk_name_version t_home name ext n v
-  end
+  let archive_dir t = t / d "archive"
 
-  module O =
-  struct
-    include Base
-
-    let set_version t (Version ocaml_version) =
-      { t with home_ocamlversion = Some (t.home // ocaml_version) }
-
-    let ocaml t = 
-      match t.home_ocamlversion with
-        | None -> Globals.error_and_exit "OCaml version has not been initialized."
-        | Some v -> v
-
-    let lib t (Name n) = Raw (ocaml t // "lib" // n)
-    let bin t = Raw (ocaml t // "bin")
-    let installed t = Raw (ocaml t // "installed")
-    let build t = mk_name_version_o (ocaml t) "build" ""
-    let to_install t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".install")
-    let pconfig t (n, v) = build t (Some (n, v)) /// B (Namespace.string_of_name n ^ ".config")
-  end
-
-  include Base
-
-  let init home = { home ; home_ocamlversion = None }
-
-  let root = Raw "/"
-  let cwd = Normalized (Run.U.normalize ".")
-
-  let package _ s =
-    (* REMARK this should be normalized *)
-    Raw (Printf.sprintf "%s%s" (if s <> "" && s.[0] = '/' then "/" else "") (String.strip ~chars:"/" s))
-
-
-  let index t = mk_name_version_o t.home "index" ".spec"
-
-  let compil t c = Raw (t.home // "compilers" // c ^ ".compil")
-
-  let archives_targz t = mk_name_version_o t.home "archives" ".tar.gz"
-
-  let config t = Raw (t.home // "config")
-
-  let keys t n = Raw (t.home // "keys" // Namespace.string_of_name n)
-  let hashes t n = Raw (t.home // "hashes" // Namespace.string_of_name n)
-
-  let contents f_dir f_fic f_notfound f =
-    let fic = s_of_filename f in
-    if Sys.file_exists fic then
-      (if Sys.is_directory fic then f_dir else f_fic) fic
-    else
-      f_notfound fic
-
-  let find_ f_fic = 
-    contents
-      (fun fic -> Directory (List.of_enum (Enum.map (fun s -> B s) (BatSys.files_of fic))))
-      (fun fic -> File (f_fic fic))
-      (fun fic -> Not_found fic)
-
-  let find = find_ (fun fic -> Filename (Internal fic))
-
-  let find_binary = find_ (fun fic -> Raw_binary (Run.U.read fic))
-
-  let find_filename = find_ (fun fic -> Internal fic)
-
-  let nv_of_extension version (B s) = 
-    let s = 
-      match BatString.right_chop s ".spec" with
-        | Some s -> s
-        | _ ->
-          let rec aux s =
-            match try Some (Filename.chop_extension s) with _ -> None with 
-              | Some s -> aux s
-              | _ -> s in
-          aux s in
-
-    match try Some (Namespace.nv_of_string s) with _ -> None with
-    | Some nv -> nv
-    | None -> Name s, Namespace.version_of_string version
-
-  let file_exists f = Sys.file_exists (s_of_filename f)
-
-  let is_directory f = 
-    let s = s_of_filename f in
-    if Sys.is_directory s then
-      Some (Internal s)
-    else
-      None
-
-  let check_suffix f suff =
-    Filename.check_suffix (s_of_filename f) suff
-
-  let index_list t =
-    let index_path = index t None in
-    let is_spec f =
-      let file = concat index_path f in
-      is_directory file = None 
-      && check_suffix file ".spec" in
-    let files =
-      match find index_path with
-      | Directory l -> List.filter is_spec l
-      | File _
-      | Not_found _ -> [] in
-    List.map (nv_of_extension Namespace.default_version) files
-
-  let remove f = 
-    let rec aux fic = 
-      log "remove %s" fic;
-      if Sys.file_exists fic then
-        match (Unix.lstat fic).Unix.st_kind with
-        | Unix.S_DIR -> 
-            let () = Enum.iter (fun f -> aux (fic // f)) (BatSys.files_of fic) in
-            Unix.rmdir fic
-        | Unix.S_REG
-        | Unix.S_LNK -> Unix.unlink fic
-        | _          -> failwith "to complete!" in
-    aux (s_of_filename f)
-
-  let add f content =
-    log "add %s" (s_of_filename f);
-    match content with
-    | Directory d -> failwith "to complete !"
-    | File (Binary (Raw_binary cts)) -> 
-        let fic = s_of_filename  f in
-        Run.U.mkdir
-          (fun fic -> 
-            begin
-              Run.U.safe_unlink fic; 
-              BatFile.with_file_out fic (fun oc -> BatString.print oc cts);
-            end)
-          fic
-    | File (Filename (Internal fic)) ->
-        begin match (Unix.lstat fic).Unix.st_kind with
-        | Unix.S_DIR -> 
-            Run.U.safe_rmdir fic;
-            let rec aux f_from f_to = 
-              (match (Unix.lstat f_from).Unix.st_kind with
-              | Unix.S_DIR -> Enum.fold (fun b _ -> aux (f_from // b) (f_to // b)) () (BatSys.files_of f_from)
-              | Unix.S_REG -> 
-                  let () = 
-                    if Sys.file_exists f_to then
-                      Unix.unlink f_to
-                    else
-                      () in
-                  Run.U.copy f_from f_to
-              | _ -> failwith "to complete !") in
-            aux fic (s_of_filename f)
-        | Unix.S_REG ->
-          Run.U.mkdir 
-            (fun f_to -> 
-              begin
-                Run.U.safe_unlink f_to;
-                Run.U.copy fic f_to;
-              end)
-            (s_of_filename f)
-        | _ -> Printf.kprintf failwith "to complete ! copy the given filename %s" fic
-        end
-
-    | File (Filename(External _)) -> ()
-
-    | Not_found s -> ()
-
-  let exec t n_v = 
-    Run.U.in_dir (s_of_filename (O.build t (Some n_v)))
-      (Run.System.With_ocaml.seq_env [s_of_filename (O.bin t)]) 
-
-  let basename s = B (Filename.basename (s_of_filename s))
-
-  let lstat s = Unix.lstat (s_of_filename s)
-  let files_of f = BatSys.files_of (s_of_filename f)
-
-  let dirname = filename_map Filename.dirname
-
-  let add_rec f = 
-    log "add_rec %s" (s_of_filename f);
-    let () = (* check that [f] is not a file *)
-      contents
-        (fun _ -> ())
-        (fun _ -> failwith "to complete !") 
-        (fun _ -> ())
-        f in
-
-    let f_filename f f_basename = 
-      List.map
-        (fun fic ->
-          if Sys.file_exists (s_of_filename fic) then begin
-            f, 
-            f_basename fic,
-            match (lstat fic).Unix.st_kind with
-            | Unix.S_DIR ->
-                R_directory (Enum.map 
-                               (fun f -> 
-                                 let f = B f in
-                                 f, R_filename [fic /// f])
-                               (files_of fic))
-            | Unix.S_REG -> R_file (Filename (Internal (s_of_filename fic)))
-            | _ -> failwith "to complete !"
-          end else
-            Globals.error_and_exit "File %s does not exist." (s_of_filename fic))
-    in
-
-    let rec aux f (* <- filename dir *) name (* name of the value that will be destructed*) = function
-    | R_directory l ->
-        let f = f /// name in
-        Enum.iter (fun (b, cts) -> aux f b cts) l
-    | R_file cts -> add (f /// name) (File cts)
-    | R_filename l -> 
-        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f basename l)
-    | R_lazy write_contents ->
-        Run.U.mkdir (fun fic -> 
-          Run.U.in_dir (Filename.dirname fic) write_contents ()
-        ) (s_of_filename (f /// name)) in
-
-    function
-      | R_filename l -> 
-        List.iter (fun (f, base_f, data) -> aux f base_f data) (f_filename f (basename) l)
-      | R_lazy _ as r_lazy -> 
-        let f, name = dirname f, basename f in
-        aux f name r_lazy
-      | _ -> failwith "to complete !"
-
-
-  exception Extraction of string
-
-  (* This function is called by the client after he receives a package
-     archive from the server *)
-  let extract nv = function
-  | Archive (Raw_binary bin) -> 
-      R_lazy (fun () ->
-        (* As we received the binary from the server, it is "safe" to
-           assume that the file will be untared at the right place
-           (ie. in NAME-VERSION/) *)
-        let oc = BatUnix.open_process_out "tar xzv" in
-        BatIO.write_string oc bin;
-        BatIO.close_out oc)
-        
-  | Links links ->
-      R_lazy (fun () -> 
-        if links.sources = [] && links.patches = [] then
-          Globals.error_and_exit "The package contains no content";
-
-        let error_and_exit fmt = Printf.kprintf (fun s -> raise (Extraction s)) fmt in
-
-        let add p =
-          let file = Printf.sprintf "%s/%s" (Namespace.to_string nv) p in
-          if Sys.file_exists file then
-            error_and_exit "%s already exits" file
-          else
-            let dir = Namespace.to_string nv in
-            let () = add_rec (Raw dir) (R_filename [Raw p]) in
-            function
-              | Some p_name -> Run.U.in_dir dir (Unix.rename (Filename.basename p)) p_name
-              | None -> () in
-        let apply p =
-          if Run.patch p nv <> 0 then
-            error_and_exit "Unable to apply path %S" p in
-
-        let process_link (p, p_name) =
-          let l = 
-            match p with
-              | Internal p -> Some p
-              | External (uri, url) ->
-                  match Run.download (uri, url) nv with
-                    | Run.Url_error   -> error_and_exit "Patch %S is unavailable" url
-                    | Run.From_git    -> None 
-                    | Run.From_http p -> Some p
-          in
-
-          match l, is_patch p with
-            | Some l, true -> apply l
-            | Some l, false when Run.is_archive l <> None ->
-              if Run.untar l nv <> 0 then
-                error_and_exit "Unable to extract %S" l
-            | Some l, _ -> add l p_name
-            | _ -> () in
-        
-        let rec links_or = function
-          | [] -> ()
-          | x :: xs -> 
-            (* WARNING nothing is done in case [x] represents a "git://" *)
-            try process_link x with
-              | Extraction s -> 
-                let () = Globals.warning "%s" s in
-                links_or xs in
-
-        let links_and ln = 
-          try List.iter process_link ln with
-            | Extraction s -> Globals.error_and_exit "%s" s in
-
-        links_or links.sources;
-        links_and links.patches;
-      )
-
-  let to_archive archive_filename tmp_nv = 
-    let fic = s_of_filename tmp_nv in
-    match
-      Run.U.in_dir (Filename.dirname fic) 
-        Sys.command (Printf.sprintf "tar czvf %s %s" archive_filename (Filename.basename fic))
-    with
-      | 0 -> ()
-      | _ -> failwith "tar creation failed"
-
-  let ocaml_options_of_library t name = 
-    I (Printf.sprintf "%s" (s_of_filename (O.lib t name)))
-
-  let string_of_filename = s_of_filename
-
-  let file_not_found f =
-    Globals.error_and_exit "%s not found" (string_of_filename f)
-
-  let read f n = match f n with
-  | None   -> file_not_found n
-  | Some a -> a
+  let archive t nv = archive_dir t // b (NV.to_string nv ^ ".tar.gz")
 end
+
+(** Compiler-version related state *)
+module type COMPILER = sig
+
+  (** Contains [$opam] and [$OVERSION] *)
+  type t
+    
+  val create: dirname -> V.t -> t
+
+  (** Installed libraries for the package: [$opam/$OVERSION/lib/NAME] *)
+  val lib: t -> N.t -> dirname
+
+  (** Installed binaries: [$opam/$OVERSION/bin] *)
+  val bin: t -> dirname
+
+  (** List of installed packages with their version: [$opam/$OVERSION/installed] *)
+  val installed: t -> filename
+
+  (** Tempory folders used to decompress the corresponding archives:
+      [$opam/$OVERSION/build/$NAME-$VERSION] *)
+  val build: t -> NV.t -> dirname
+
+  (** Tempory folder: [$opam/$OVERSION/build] *)
+  val build_dir: t -> dirname
+
+  (** Installed files for a given package: [$opam/$OVERSION/install/$NAME.install] *)
+  val install: t -> N.t -> filename
+
+  (** Installed files: [$opam/$OVERSION/install/] *)
+  val install_dir: t -> dirname
+    
+  (** Packages to reinstall on next upgrade: [$opam/$OVERSION/reinstall]  *)
+  val reinstall: t -> filename
+
+  (** Compile and link flags for a given package:
+      [$opam/$OVERSION/config/$NAME.config] *)
+  val config: t -> N.t -> filename
+
+  (** Configuration folder: [$opam/$OVERSION/config] *)
+  val config_dir: t -> dirname
+end
+
+module Compiler : COMPILER = struct
+  type t = dirname
+
+  let create opam oversion =
+    Dirname.of_string (V.to_string oversion)
+
+    let lib t n = t / d "lib" / d (N.to_string n)
+
+    let bin t = t / d "bin"
+
+    let installed t = t // b "installed"
+
+    let build_dir t = t / d "build"
+
+    let build t nv = build_dir t / d (NV.to_string nv)
+
+    let install_dir t = t / d "install"
+
+    let install t n = install_dir t // b (N.to_string n ^ ".install")
+
+    let reinstall t = t // b "reinstall"
+
+    let config_dir t = t / d "config"
+
+    let config t n = config_dir t // b (N.to_string n ^ ".config")
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

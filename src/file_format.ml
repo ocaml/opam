@@ -13,118 +13,172 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtString
-open Uri
-
-type content =
+type value =
+  | Bool of bool
   | String of string
-  | List of content list
+  | Symbol of string
+  | Ident of string
+  | List of value list
+  | Option of value * value list
 
-type statement = {
-  kind: string;
-  name: string;
-  contents: (string * content) list
+type section = {
+  kind : string;
+  name : string;
+  items: item list
 }
 
-type file = {
-  version: int;
-  statements: statement list;
-}
+and item =
+  | Section of section
+  | Variable of string * value
 
-let bad_format fmt = Printf.kprintf (Globals.error_and_exit "Bad format: %s") fmt
+let variables items =
+  let l = List.fold_left (fun accu -> function
+    | Variable (k,v) -> (k,v) :: accu
+    | _              -> accu
+  ) [] section.items in
+  List.rev l
 
-let is_valid s fields =
-  List.for_all (fun f -> List.mem f fields) (List.map fst s.contents)
+let sections items =
+  let l = List.fold_left (fun accu -> function
+    | Section s -> (s.kind, s) :: accu
+    | _          -> accu
+  ) [] section.items in
+  List.rev l
+
+type file = item list
+
+let bad_format fmt =
+  Printf.kprintf (Globals.error_and_exit "Bad format: %s") fmt
+
+let is_valid items fields =
+  List.for_all (function
+    | Variable (f, _) ->  List.mem f fields
+    | Section s       -> is_valid s.items fields
+  ) items
+
+let kind = function
+  | Bool _   -> "bool"
+  | Ident _  -> "ident"
+  | Symbol _ -> "symbol"
+  | String _ -> "string"
+  | List _   -> "list"
+  | Option _ -> "option"
+
+let kinds l =
+  String.concat "," (List.map kind l)
+
+(* Base parsing functions *)
+let parse_bool = function
+  | Bool b -> b
+  | x      -> bad_format "expecting a bool, got %s" (kind x)
+
+let parse_ident = function
+  | Ident i -> i
+  | x       -> bad_format "expecting an ident, got %s" (kind x)
+
+let parse_ident = function
+  | Symbol s -> s
+  | x       -> bad_format "expecting a symbol, got %s" (kind x)
 
 let parse_string = function
   | String s -> s
-  | _        -> bad_format "expecting a string, got a list"
+  | x        -> bad_format "expecting a string, got %s" (kind x)
 
-let parse_string_list = function
-  | List l -> List.map parse_string l
-  | _      -> bad_format "expecting a list, got a string"
+let parse_list fn = function
+  | List s -> List.map fn s
+  | x      -> bad_format "expecting a list, got %s" (kind x)
 
-let parse_pair_opt = function
-  | List[String k; String v] -> k, Some v
-  | List[String k]
-  | String k                 -> k, None
-  | _                        -> bad_format "expecting a pair"
+let parse_singleton fn = function
+  | List [s] -> fn s
+  | List l   -> bad_format "expecting a singleton, gat list of size %d" (List.length l)
+  | x        -> bad_format "expecting a singleton, got %s" (kind x)
 
-let parse_pair = function
-  | List[String k; String v] -> (k, v)
-  | _                        -> bad_format "expecting a pair"
+let parse_string_list = parse_list parse_string
 
-let parse_pair_list_ parse_pair = function
-  | List l -> List.map parse_pair l
-  | _      -> bad_format "expecting a list, got a string"
+let parse_option fnk fnv = function
+  | Option (k,v) -> fnk, fnv v
+  | x            -> bad_format "expecting an option, got %s" (kind x)
 
-let parse_pair_list = parse_pair_list_ parse_pair
-let parse_pair_opt_list = 
-  parse_pair_list_ 
-    (fun x -> 
-      match parse_pair_opt x with
-        | k, Some v -> k, v
-        | k, None -> k, Filename.basename k)
+let (|>) f g x = f (g x) 
 
-let string_list n s =
-  try parse_string_list (List.assoc n s.contents)
-  with Not_found -> []
+let make_string str = String str
 
-let pair_list_ parse_pair_list n s =
-  try parse_pair_list (List.assoc n s.contents)
-  with Not_found -> []
+let make_ident str = Ident str
 
-let pair_list = pair_list_ parse_pair_list
-let pair_opt_list = pair_list_ parse_pair_opt_list
+let make_symbol str = Symbol str
 
-let string n s =
-  try parse_string (List.assoc n s.contents)
-  with Not_found -> bad_format "field'%S is missing" n
+let make_bool b = Bool b
 
-let string_option n s =
-  try Some (parse_string (List.assoc n s.contents))
+let make_list fn l = List (List.map fn l)
+
+let make_option fk fv k v = Option (fk k, fv v)
+
+(* Printing *)
+
+let rec string_of_value = function
+  | Symbol s
+  | Ident s     -> Printf.sprintf "%s" s
+  | Bool b      -> Printf.sprintf "%b" b
+  | String s    -> Printf.sprintf "%S" s
+  | List l      -> Printf.sprintf "[%s]" (string_of_values l)
+  | Option(v,l) -> Printf.sprintf "%s ( %s )" (string_of_value v) (string_of_values l)
+
+and string_of_values l =
+  String.concat " "  (List.map string_of_value l)
+
+let rec string_of_item = function
+  | Variable (i, v) -> Printf.sprintf "%s: %s\n" i (string_of_value v)
+  | Section s       ->
+      Printf.sprintf "%s %S {\n%s\n}\n" s.kind s.name (string_of_items s.items)
+
+and string_of_items is =
+  String.concat "\n" (List.map string_of_item is)
+
+let string_of_file = string_of_items
+
+(* Reading section contents *)
+
+let assoc s n parse =
+  try parse (List.assoc n (variables s.items))
+  with Not_found -> bad_format "field  %S is missing" n
+
+let assoc_section s n =
+  try List.assoc_all n (sections s.items)
+  with Not_found -> bad_format "section %S is missing" n
+
+let assoc_option s n parse =
+  try parse (List.assoc n (variables s.items))
   with Not_found -> None
 
-let rec string_of_content = function
-  | String s -> Printf.sprintf "%S" s
-  | List l   ->
-      Printf.sprintf "[%s]"
-        (String.concat "; "  (List.map string_of_content l))
+let assoc_list s n parse =
+  try parse (List.assoc n (variables s.items))
+  with Not_found -> []
 
-let parse_l_url n s =
-  List.map (fun (s, o) ->
-    (match uri_of_url s with
-      | None      , s2
-      | Some Local, s2 -> Path.Internal s2
-      | Some uri  , s2 -> Path.External (uri, s2)), o
-  ) (pair_list_ (parse_pair_list_ parse_pair_opt) n s)
+(* Parsing of dependency formulas *)
+let rec parse_constraints name = function
+  | [] -> []
+  | [Symbol r; String v] ->
+      [ (name, Some (r, v)) ]
+  | Symbol r :: String v :: Symbol "&" :: t ->
+      (name, Some (r, v)) :: parse_constraints name t
+  | x -> bad_format "expecting a constraint, got %s" (kinds x)
 
-let raw_list n s = 
-  match try List.assoc n s.contents with Not_found -> List [] with
-    | List l -> l
-    | _ -> bad_format "expecting a list, got a string"
+let rec parse_and_formula = function 
+  | String name             -> [ (name, None) ]
+  | Option (String name, l) -> parse_constraints name l
+  | List l                  -> List.flatten (List.map parse_and_formula l)
+  | x                       -> bad_format "expecting an AND formala, got %s" (kind x)
 
-let command n s = 
-  List.map 
-    (function 
-      | List l -> Run.Sh (parse_string_list (List l))
-      | s -> Run.OCaml (parse_string s))
-    (raw_list n s)
+let parse_or_formula = function
+  | List l -> List.map parse_and_formula l
+  | x      -> [ parse_and_formula x ]
 
-let parse_vpkglist = function 
-  | String name -> name, None
-  | List l -> 
-      match parse_string_list (List l) with
-        | [ name ] -> name, None
-        | [ name ; relop ; version ] -> name, Some (relop, version)
-        | _ -> bad_format "Not of the form [name ; relop ; version]"
+let make_constraint = function
+  | name, None       -> String name
+  | name, Some (r,v) -> Option (String name, [Symbol r; String v])
 
-let vpkglist n s = List.map parse_vpkglist (raw_list n s)
+let make_and_formula l =
+  List (List.map make_constraint l)
 
-let vpkgformula n s =
-  List.map
-    (function 
-      | List l -> List.map parse_vpkglist l
-      | _ -> bad_format "expecting a list, got a string")
-    (raw_list n s)
-  
+let make_or_formula l =
+  List (List.map make_and_formula l)

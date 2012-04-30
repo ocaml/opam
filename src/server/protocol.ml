@@ -13,29 +13,20 @@
 (*                                                                     *)
 (***********************************************************************)
 
-module Lib =
-struct
-  module Cudf_types = struct type pkgname = string end
 
-  module Debian = struct
-    module Format822 = struct type version = string end
-  end
+module String = struct
+  type t = string
+  let mk x = x
+  let to_sting x = x
+  let write x oc = failwith "TODO"
+  let read ic = failwith "TODO"
 end
 
-open Lib
-
-type name = Name of Cudf_types.pkgname
-
-type version =
-  | Deb of Debian.Format822.version
-  | Head of [`uptodate|`behind] (* Head of a version controled repository *)
-
-type name_version = name * version
-
-type raw_binary = 
-  | Raw_binary of string (* contents *)
-
-type security_key = Random of string
+module Name : S = String
+module Version : S = String
+module Key : S = String
+module Descr : S = String
+module Archive : S = String
 
 type client_to_server =
   | C2S_apidVersion   of int
