@@ -171,11 +171,3 @@ begin library "dose"
    ]
 
 end
-
-begin library "uri"
-  files = [
-    "ocaml-uri/lib/uri_re.ml"
-    "ocaml-uri/lib/uri.ml"
-  ]
-  requires = [ "re" ]
-end
