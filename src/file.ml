@@ -61,6 +61,28 @@ module Lines : IO_FILE with type t = string list list = struct
 
 end
 
+module Address : sig
+
+  include IO_FILE
+
+end = struct
+
+  let kind = "address"
+
+  type t = string
+
+  let empty = Globals.default_repository_address
+
+  let of_string filename t =
+    match Lines.of_string filename t with
+    | [[a]] -> a
+    | _     -> Globals.error_and_exit "address: bad contents"
+
+  let to_string filename a =
+    Lines.to_string filename [[a]]
+
+end
+
 module Installed : sig
   include IO_FILE with type t = V.t N.Map.t
 end = struct
@@ -128,10 +150,7 @@ module Config : sig
 
   include IO_FILE
 
-  type repository = {
-    path: string;
-    kind: string;
-  }
+  type repository = Types.repository
 
   (** destruct *)
   val opam_version : t -> V.t
@@ -145,19 +164,16 @@ end = struct
 
     let kind = "config"
 
-    type repository = {
-      path: string;
-      kind: string;
-    }
+    type repository = Types.repository
 
-    let to_repo (path, kind) =
-      let kind = match kind with
+    let to_repo (repo_name, repo_kind) =
+      let repo_kind = match repo_kind with
         | None   -> Globals.default_repository_kind
         | Some k -> k in
-      { path; kind }
+      { repo_name; repo_kind }
 
     let of_repo r =
-      Option (String r.path, [ String r.kind ])
+      Option (String r.repo_name, [ String r.repo_kind ])
 
     type t = {
       opam_version  : V.t ; (* opam version *)
@@ -175,8 +191,8 @@ end = struct
     let empty = {
       opam_version = V.of_string Globals.opam_version;
       repositories = [ { 
-        path = Globals.default_repository;
-        kind = Globals.default_repository_kind;
+        repo_name = Globals.default_repository_name;
+        repo_kind = Globals.default_repository_kind;
       } ];
       ocaml_version = V.of_string Sys.ocaml_version;
     }
@@ -471,8 +487,6 @@ module PConfig : sig
     | B of bool
     | S of string
 
-  module Variable : Abstract
-
   module Section  : Abstract
 
   module type SECTION = sig
@@ -499,8 +513,6 @@ end = struct
 
   let s str = S str
   let b bool = B bool
-
-  module Variable : Abstract = Base
 
   module Section  : Abstract = Base
 

@@ -2,7 +2,7 @@ OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 OCAMLC=ocamlc
 SRC_EXT=src_ext
 
-TARGET = ocp-get ocp-get-server
+TARGET = opam
 
 .PHONY: all
 
@@ -21,24 +21,18 @@ opt: ./_obuild/unixrun
 	mkdir -p ./_obuild
 	$(OCAMLC) -o ./_obuild/unixrun -make-runtime unix.cma str.cma
 
-bootstrap: _obuild/unixrun _obuild/ocp-get/ocp-get.byte
-	rm -f boot/ocp-get.boot
-	ocp-bytehack -static _obuild/ocp-get/ocp-get.byte -o boot/ocp-get.boot
+bootstrap: _obuild/unixrun _obuild/opam/opam.byte
+	rm -f boot/opam.boot
+	ocp-bytehack -static _obuild/opam/opam.byte -o boot/opam.boot
 
-link: ocp-get ocp-get-server
+link: opam
 	@
 
-_obuild/ocp-get-server/ocp-get-server.asm:
-	$(OCPBUILD) ocp-get-server
+_obuild/opam/opam.asm _obuild/opam/opam.byte:
+	$(OCPBUILD) opam
 
-_obuild/ocp-get/ocp-get.asm:
-	$(OCPBUILD) ocp-get
-
-ocp-get-server: _obuild/ocp-get-server/ocp-get-server.asm
-	ln -s $^ ocp-get-server
-
-ocp-get: _obuild/ocp-get/ocp-get.asm
-	ln -s $^ ocp-get
+opam: _obuild/opam/opam.asm
+	ln -s $^ opam
 
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
@@ -50,7 +44,7 @@ clone:
 clean:
 	rm -rf _obuild
 	rm -rf src/*.annot bat/*.annot
-	rm -f ocp-get ocp-get-server
+	rm -f opam
 	rm -f ocp-build.*
 	$(MAKE) -C $(SRC_EXT) clean
 

@@ -13,20 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtList
-open Namespace
+open Types
 open Path
-open Server
-open Protocol
 
 let log fmt = Globals.log "SOLVER" fmt
 
-type 'a installed_status =
-  | Was_installed of 'a
-  | Was_not_installed
-
 module Parallel_fold =
 struct
+
   module type G =
   sig
     include Graph.Topological.G
@@ -36,119 +30,124 @@ struct
 
   module type TOPOLOGICAL =
   sig
-    (* This module considers the graph to fold as a forest where the children of each node are topologically ordered after their parent. *)
+
+    (** This module considers the graph to fold as a forest where the
+        children of each node are topologically ordered after their
+        parent. *)
 
     module G : G
+    module S : Set.S with type elt = G.V.t
 
-    type 'a plist = 'a list (* nodes with minimal in-degree are proposed simultaneously *)
+    (** Optimized structure to get easily all the nodes with null
+        in-degree *)
     type t
 
-    val root : G.t -> t * G.V.t plist (** several proposed choices that can be considered in parallel *)
+    (** Create an optimized structure *)
+    val init: G.t -> t
 
-    (** [Invalid_argument _] in case the children of [G.V.t] has already been requested before. *)
-    val children : t -> G.V.t (** answers that we have consumed *) -> t * G.V.t plist (* new choices resulting from the consumption that we can append with [root] or with any previous calls to [children] *)
+    (** Get the null in-degree nodes from the optimized structure *)
+    val roots: t -> S.t
+
+    (** [remove t n] removes the node [n] from [t] and returns the new
+        optimized structure. It raises [Invalid_argument _] if [n] is
+        neither a root node or if has already been visited *)
+    val remove : t -> G.V.t -> t 
+
   end
 
   module Make (G : G) : TOPOLOGICAL with module G = G = struct
 
-    module H = Hashtbl.Make (G.V)
+    module V = struct include G.V let compare = compare end
+    module M = Map.Make (V)
+    module S = Set.Make (V)
+
     module G = G
 
     module IntSet = Set.Make (struct type t = int let compare = compare end)
 
     type 'a plist = 'a list (* nodes with minimal in-degree are proposed simultaneously *)
-    type t = 
-        { graph : G.t
-        ; visited_node : IntSet.t (* [int] represents the hash of [G.V.t] *)
-        ; queue_size : int
-        ; degree : int H.t }
+    type t = {
+      graph : G.t ;
+      visited_node : IntSet.t ; (* [int] represents the hash of [G.V.t] *)
+      queue_size : int ;
+      roots : S.t ;
+      degree : int M.t ;
+    }
 
-    let root graph = 
-      let degree = H.create 997 in
-      let l, queue_size = 
+    let roots t = t.roots
+
+    let init graph = 
+      let degree = ref M.empty in
+      let add_degree v d = degree := M.add v d !degree in
+      let roots, queue_size = 
         G.fold_vertex
           (fun v (todo, queue_size) ->
             let d = G.in_degree graph v in
-            if d = 0 then v :: todo, succ queue_size
-            else let () = H.add degree v d in todo, queue_size)
+            if d = 0 then
+              S.add v todo, succ queue_size
+            else (
+              add_degree v d;
+              todo, queue_size
+            )
+          )
           graph
-          ([], 0) in
-      { graph ; degree ; queue_size ; visited_node = IntSet.empty }, l
+          (S.empty, 0) in
+      { graph ; roots ; degree = !degree ; queue_size ; visited_node = IntSet.empty }
       
-    let children t x =
-      let t = 
-        if IntSet.mem (G.V.hash x) t.visited_node then
-          invalid_arg "This node has already been visited."
-        else
-          { t with visited_node = IntSet.add (G.V.hash x) t.visited_node } in
-      let t, l = 
-        (* simulate the removing of [x] and the adding of the children of [x] *)
-        let l, queue_size = 
-          G.fold_succ
-            (fun x (l, queue_size) ->
-              try
-                let d = H.find t.degree x in
-                if d = 1 then 
-                  let () = H.remove t.degree x in 
-                  x :: l, succ queue_size
-                else
-                  let () = H.replace t.degree x (d-1) in 
-                  l, queue_size
-              with Not_found ->
-                (* [x] already visited *)
-                l, queue_size)
-            t.graph
-            x
-            ([], pred t.queue_size) in
-        { t with queue_size }, l in
+    let remove t x =
+      if IntSet.mem (G.V.hash x) t.visited_node then
+        invalid_arg "This node has already been visited.";
+      if not (S.mem x t.roots) then
+        invalid_arg "This node is not a root node";
+      (* Add the node to the list of visited nodes *)
+      let t = { t with visited_node = IntSet.add (G.V.hash x) t.visited_node } in
+      (* Remove the node from the list of root nodes *)
+      let roots = S.remove x t.roots in
+      let degree = ref t.degree in
+      let remove_degree x = degree := M.remove x !degree in
+      let replace_degree x d = degree := M.add x d (M.remove x !degree) in
+      (* Update the children of the node by decreasing by 1 their in-degree *)
+      let roots, queue_size = 
+        G.fold_succ
+          (fun x (l, queue_size) ->
+            let d = M.find x t.degree in
+            if d = 1 then (
+              remove_degree x;
+              S.add x l, succ queue_size
+            ) else (
+              replace_degree x (d-1);
+              l, queue_size
+            ))
+          t.graph
+          x
+          (roots, pred t.queue_size) in
+      { t with queue_size; roots }
 
-      match t.queue_size, l with
-        | 0, [] -> 
-          (* let's find any nodes of minimal degree *)
-          let min =
-            H.fold
-              (fun v d acc ->
-                 match acc with
-                 | None -> Some ([v], d)
-                 | Some (l, min) -> 
-                     if d < min then
-                       Some ([v], d) 
-                     else if d = min then
-                       Some (v :: l, min) 
-                     else
-                       acc)
-              t.degree
-              None
-          in
-          let l = 
-            match min with
-              | None -> []
-              | Some (l, min) -> 
-                  let () = List.iter (H.remove t.degree) l in 
-                  l in
-          { t with queue_size = List.length l }, l
-        | _ -> t, l
   end
 end
 
 module Action = 
 struct
 
+  type 'a installed_status =
+    | Was_installed of 'a
+    | Was_not_installed
+
   type 'a request =
       { wish_install : 'a list
-      ; wish_remove : 'a list
+      ; wish_remove  : 'a list
       ; wish_upgrade : 'a list }
 
   type 'a action = 
     (* The package must be installed. The package could have been present or not, 
        but if present, it is another version than the proposed solution. *)
-    | To_change of 'a installed_status * 'a 
+    | To_change of 'a installed_status * 'a
 
     (* The package must be deleted. *)
     | To_delete of 'a
 
     (* The package is already installed, but it must be recompiled. *)
-    | To_recompile of 'a 
+    | To_recompile of 'a
 
   module NV_graph =
   struct
@@ -156,7 +155,7 @@ struct
     struct
       type t = 
           { cudf : Cudf.package 
-          ; action : name_version action }
+          ; action : NV.t action }
       (* NOTE the field [action] currently does not need to contain a boolean sum type
          (i.e. something isomorphic to [name_version action option] where [None] means an action not to perform) 
          because the graph containing all these nodes is composed of 2 parts :
@@ -172,20 +171,20 @@ struct
 
     module PG = Graph.Imperative.Digraph.ConcreteBidirectional (PkgV)
     module PG_topo = Graph.Topological.Make (PG)
-    module PG_topo_para = Parallel_fold.Make (PG)
+(*    module PG_topo_para = Parallel_fold.Make (PG) *)
   end
 
   type solution = 
-      { to_remove : name_version list
+      { to_remove : NV.t list
       ; to_add : NV_graph.PG.t }
 
-  let action_map f = function
+  let map_action f = function
     | To_change (Was_installed p1, p2) -> To_change (Was_installed (f p1), f p2)
     | To_change (Was_not_installed, p) -> To_change (Was_not_installed, f p)
     | To_delete p                      -> To_delete (f p)
     | To_recompile p                   -> To_recompile (f p)
 
-  let solution_print f t =
+  let print_solution f t =
     let pf = Globals.msg in
     if t.to_remove = [] && NV_graph.PG.is_empty t.to_add then
       pf "No actions will be performed, the current state satisfies the request.\n"
@@ -393,8 +392,8 @@ module Solver : SOLVER = struct
     let filter_dependencies f_direction pkg_l l_pkg_pb =
       let pkg_map = 
         List.fold_left
-          (fun map pkg -> NV_map.add (Namespace.nv_of_dpkg pkg) pkg map)
-          NV_map.empty
+          (fun map pkg -> NV.Map.add (NV.of_dpkg pkg) pkg map)
+          NV.Map.empty
           l_pkg_pb in
       get_table l_pkg_pb
         (fun table pkglist ->
@@ -419,61 +418,55 @@ module Solver : SOLVER = struct
                 else
                   set, l)
               g (pkg_set, []) in
-          List.map (fun pkg -> 
-            NV_map.find 
-              (Namespace.name_of_string pkg.Cudf.package, 
-               Namespace.version_of_string
-                 (Debian.Debcudf.get_real_version
-                    table
-                    (pkg.Cudf.package, pkg.Cudf.version))
-              ) pkg_map) l)
+          List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map) l)
 
     let filter_backward_dependencies = filter_dependencies (fun x -> x)
     let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
-    open BatMap
-
     let resolve l_pkg_pb req = 
       get_table l_pkg_pb 
-      (fun table pkglist ->
-      let package_map pkg =
-        Namespace.name_of_string pkg.Cudf.package,
-        Namespace.version_of_string
-          (Debian.Debcudf.get_real_version
-             table
-             (pkg.Cudf.package, pkg.Cudf.version)) in
-      let universe = Cudf.load_universe pkglist in 
+        (fun table pkglist ->
+          let package_map pkg = NV.of_cudf table pkg in
+          let universe = Cudf.load_universe pkglist in 
 
-      BatOption.bind 
-        (let cons pkg act = Some (pkg, act) in
-         fun l -> 
-           let l_del_p, l_del = 
-             List.filter_map (function
-               | To_change (Was_installed pkg, _) 
-               | To_delete pkg -> Some pkg
-               | _ -> None) l,
-             List.filter_map (function
-               | To_delete pkg -> Some pkg
-               | _ -> None) l in
+          match
+            CudfDiff.resolve_diff universe 
+              (request_map
+                 (fun x -> 
+                   match Debian.Debcudf.ltocudf table [x] with
+                   | [x] -> x
+                   | _ -> failwith "to complete !") req)
+          with
+          | Some l ->
 
-          let map_add = 
-            PkgMap.of_list (List.filter_map (function 
-              | To_change (_, pkg) as act -> cons pkg act
+            let l_del_p, l_del = 
+              Utils.filter_map (function
+              | To_change (Was_installed pkg, _) 
+              | To_delete pkg -> Some pkg
+              | _ -> None) l,
+              Utils.filter_map (function
+              | To_delete pkg -> Some pkg
+              | _ -> None) l in
+
+            let map_add = 
+              Utils.map_of_list PkgMap.empty PkgMap.add (Utils.filter_map (function 
+              | To_change (_, pkg) as act -> Some (pkg, act)
               | To_delete _ -> None
               | To_recompile _ -> assert false) l) in
 
-          let graph_installed = 
-            PO.O.mirror 
-              (dep_reduction 
-                 (Cudf.get_packages 
-                    ~filter:(fun p -> p.Cudf.installed || PkgMap.mem p map_add) 
-                    universe)) in
+            let graph_installed = 
+              PO.O.mirror 
+                (dep_reduction 
+                   (Cudf.get_packages 
+                      ~filter:(fun p -> p.Cudf.installed || PkgMap.mem p map_add) 
+                      universe)) in
 
-          let graph_installed =
-            let graph_installed = PG.copy graph_installed in
-            let () = List.iter (PG.remove_vertex graph_installed) l_del_p in
-            graph_installed in
-          let _, map_act = 
+            let graph_installed =
+              let graph_installed = PG.copy graph_installed in
+              List.iter (PG.remove_vertex graph_installed) l_del_p;
+              graph_installed in
+
+            let _, map_act = 
             let open NV_graph.PkgV in
             PG_topo.fold
               (fun pkg (set_recompile, l_act) ->
@@ -483,7 +476,7 @@ module Solver : SOLVER = struct
                      List.fold_left
                        (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg)
                    with _ -> set), 
-                  IntMap.add (PG.V.hash pkg) { cudf = pkg ; action = action_map package_map act } l_act in
+                  Utils.IntMap.add (PG.V.hash pkg) { cudf = pkg ; action = map_action package_map act } l_act in
                 
                 match PkgMap.Exceptionless.find pkg map_add with
                   | Some act -> 
@@ -495,35 +488,28 @@ module Solver : SOLVER = struct
                       set_recompile, l_act)
               
               graph_installed
-              (PkgSet.empty, IntMap.empty) in
-          let graph = NV_graph.PG.create () in
-          let () =
-            begin
-              IntMap.iter (fun _ -> NV_graph.PG.add_vertex graph) map_act;
-              PG.iter_edges
-                (fun v1 v2 -> 
-                  match 
-                    IntMap.Exceptionless.find (PG.V.hash v1) map_act, 
-                    IntMap.Exceptionless.find (PG.V.hash v2) map_act 
-                  with
-                    | Some v1, Some v2 -> NV_graph.PG.add_edge graph v1 v2
-                    | _ -> ())
-                graph_installed;
-            end in
-          Some { to_remove = List.rev_map package_map l_del ; to_add = graph })
+              (PkgSet.empty, Utils.IntMap.empty) in
+            let graph = NV_graph.PG.create () in
+            Utils.IntMap.iter (fun _ -> NV_graph.PG.add_vertex graph) map_act;
+            PG.iter_edges
+              (fun v1 v2 ->
+                try
+                  let v1 = Utils.IntMap.find (PG.V.hash v1) map_act in
+                  let v2 = Utils.IntMap.find (PG.V.hash v2) map_act in
+                  NV_graph.PG.add_edge graph v1 v2
+                with Not_found ->
+                  ())
+              graph_installed;
+            Some { to_remove = List.rev_map package_map l_del ; to_add = graph }
 
-        (CudfDiff.resolve_diff universe 
-           (request_map
-              (fun x -> 
-                match Debian.Debcudf.ltocudf table [x] with
-                  | [x] -> x
-                  | _ -> failwith "to complete !") req)))
+          | None -> None)
+
   end
 
   let filter_backward_dependencies = Graph.filter_backward_dependencies
   let filter_forward_dependencies = Graph.filter_forward_dependencies
   let resolve = Graph.resolve
-  let resolve_list pkg = List.filter_map (resolve pkg)
+  let resolve_list pkg = Utils.filter_map (resolve pkg)
 
   let delete_or_update t =
     t.to_remove <> []

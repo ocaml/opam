@@ -7,11 +7,12 @@
 comp = [ "-g" ]
 link = [ "-g" ]
 
-begin library "get"
+begin library "opam-lib"
   dirname = [ "src" ]
   comp   += [ "-annot" "-warn-error" "A" ]
   files   = [
     "globals.ml"
+    "utils.ml"
     "types.ml"
     "run.ml"
     "file_format.ml"
@@ -20,7 +21,7 @@ begin library "get"
     "parser.mly"
     "path.ml"
     "file.ml"
-    "server.ml" 
+    "repositories.ml"
   ]
 
   requires = [
@@ -34,20 +35,13 @@ begin library "get"
   ]
 end
 
-begin program "ocp-get"
+begin program "opam"
   dirname  = [ "src" ]
   comp    += [ "-annot" "-warn-error" "A" ]
   files    = [
     "solver.ml"
     "client.ml"
-    "ocp_get.ml"
+    "opam.ml"
   ]
-  requires = [ "get" ]
-end
-
-begin program "ocp-get-server"
-  dirname  = [ "src" ]
-  comp    += [ "-annot" "-warn-error" "A" ]
-  files    = [ "ocp_get_server.ml" ]
-  requires = [ "get" ]
+  requires = [ "opam-lib" ]
 end

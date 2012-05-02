@@ -13,48 +13,59 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtList
-open Namespace
+open Types
 open Path
-open Server
 open Solver
-open Uri
-open Protocol
 
 let log fmt =
   Globals.log "CLIENT" fmt
 
-type remote_action =
+type remote_request =
   | List
   | Add of string
-  | AddGit of string
   | Rm of string
 
-type config_recursive = 
-  | Not_recursive
-  | Recursive_large (* package + dependencies *)
-  | Recursive_strict (* only dependencies, not package *)
+type options =
+  | Include  of N.t list
+  | Bytecomp of (N.t * string) list
+  | Asmcomp  of (N.t * string) list
+  | Bytelink of (N.t * string) list
+  | Asmlink  of (N.t * string) list
 
-type config_request = Include | Bytelink | Asmlink | Ocp
+type compil_option = {
+  recursive: bool;
+  options  : options;
+}
+
+type config_request =
+  | Compil   of compil_option
+  | Variable of (N.t * Variable.t) list
+  | Subst    of Filename.t list
+
+type upload_request = {
+  opam   : Filename.t;
+  descr  : Filename.t;
+  archive: Filename.t;
+}
 
 module type CLIENT =
 sig
   type t
 
   (** Initializes the client a consistent state. *)
-  val init : url list -> unit
+  val init : repository list -> unit
 
   (** Displays all available packages *)
   val list : unit -> unit
 
   (** Displays a general summary of a package. *)
-  val info : name -> unit
+  val info : N.t -> unit
 
   (** Depending on request, returns options or directories where the package is installed. *)
-  val config : config_recursive (* search power *) -> config_request -> name list -> unit
+  val config : config_request -> unit
 
   (** Installs the given package. *)
-  val install : string -> unit
+  val install : N.t -> unit
 
   (** Downloads the latest packages available. *)
   val update : unit -> unit
@@ -64,39 +75,34 @@ sig
   val upgrade : unit -> unit
 
   (** Sends a new created package to the server. *)
-  val upload : string -> unit
+  val upload : upload_request -> unit
 
   (** Removes the given package. *)
-  val remove : name -> unit
+  val remove : N.t -> unit
 
-  (** Manage remote indexes *)
-  val remote : remote_action -> unit
+  (** Manage remote repositories *)
+  val remote : remote_request -> unit
 
-  (** Switch to an other version of ocaml *)
-  val switch : string -> unit
 end
 
 module Client : CLIENT = struct
   open File
 
-  type t = 
-      { servers: url list
-      ; home   : Path.t (* ~/.opam *) }
-
-  let find_ocaml_version config = 
-    match !Globals.ocamlc with
-      | None -> File.Config.ocaml_version config
-      | Some v -> Version (Run.Ocamlc.version (Run.Ocamlc.init v))
+  type t = {
+    global   : Path.Global.t;   (* ~/.opam/ *)
+    compiler : Path.Compiler.t; (* ~/.opam/<oversion>/ *)
+    config   : File.Config.t;   (* ~/.opam/config contents *)
+  }
 
   (* Look into the content of ~/.opam/config to build the client state *)
   (* Do not call RemoteServer functions here, as it implies a
      network roundtrip *)
   let load_state () =
-    let home = Path.init !Globals.root_path in
-    let config = File.Config.find_err (Path.config home) in
-    let servers = File.Config.sources config in
-    { servers 
-    ; home = Path.O.set_version home (find_ocaml_version config) }
+    let global = Global.create (d !Globals.root_path) in
+    let config = File.Config.read (Global.config global) in
+    let ocaml_version = File.Config.ocaml_version config in
+    let compiler = Compiler.create (Global.root global) ocaml_version in
+    { global; compiler; config }
 
   let update_remote server home =
     log "update-remote-server %s%s"

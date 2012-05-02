@@ -55,6 +55,7 @@ module NV : sig
   val version: t -> V.t
   val create: N.t -> V.t -> t
   val of_dpkg: Debian.Packages.package -> t
+  val of_cudf: Debian.Debcudf.tables -> Cudf.package -> t
 end = struct
 
   type t = {
@@ -81,6 +82,14 @@ end = struct
     { name    = N.of_string d.Debian.Packages.name;
       version = V.of_string d.Debian.Packages.version }
 
+  let of_cudf table pkg =
+    let real_version =
+      Debian.Debcudf.get_real_version
+        table
+        (pkg.Cudf.package, pkg.Cudf.version) in
+    { name    = N.of_string pkg.Cudf.package;
+      version = V.of_string real_version; }
+
   let to_string t =
     Printf.sprintf "%s%c%s" (N.to_string t.name) sep (V.to_string t.version)
 
@@ -91,14 +100,13 @@ end = struct
 end
 
 (** OPAM repositories *)
-module R : Abstract = Base
+type repository = {
+  repo_name: string;
+  repo_kind: string;
+}
 
+let string_of_repository r =
+  Printf.sprintf "%s(%s)" r.repo_name r.repo_kind
 
-
-
-
-
-
-
-
-
+(** Variable names *)
+module Variable : Abstract = Base

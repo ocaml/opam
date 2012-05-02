@@ -59,7 +59,7 @@ let global_args = [
 let parse_args fn () =
   fn (List.rev !ano_args)
 
-(* ocp-get init [HOSTNAME[:PORT]]*)
+(* opam init [HOSTNAME[:PORT]]*)
 let init =
   let git_repo = ref false in
   {
@@ -87,7 +87,7 @@ let init =
     | _ -> bad_argument "init" "Too many remote server")
 }
 
-(* ocp-get list *)
+(* opam list *)
 let list = {
   name     = "list";
   usage    = "";
@@ -98,7 +98,7 @@ let list = {
   main     = Client.list;
 }
 
-(* ocp-get info [PACKAGE] *)
+(* opam info [PACKAGE] *)
 let info = {
   name     = "info";
   usage    = "[package]+";
@@ -112,23 +112,19 @@ let info = {
     | l  -> List.iter (fun name -> Client.info (Namespace.name_of_string name)) l)
 }
 
-(* ocp-get config [R] [Include|Bytelink|Asmlink] PACKAGE *)
+(* opam config [R] [Include|Bytelink|Asmlink] PACKAGE *)
 let config =
-  let recursive = ref Not_recursive in
+  let recursive = ref false in
   let command = ref None in
-  let set_include   () = command := Some Include in
-  let set_asmlink   () = command := Some Asmlink in
-  let set_bytelink  () = command := Some Bytelink in
-  let set_ocp       () = command := Some Ocp in
-  let set_rec_large  () = recursive := Recursive_large in
-  let set_rec_strict () = recursive := Recursive_strict in
+  let set c   () = command := Some c in
+  let set_rec () = recursive := true in
   let specs = [
-      ("-r", Arg.Unit set_rec_large        , " Recursive search (large)");
-      ("-rstrict", Arg.Unit set_rec_strict , " Recursive search (strict)");
-      ("-I", Arg.Unit set_include        , " Display include options");
-      ("-bytelink", Arg.Unit set_bytelink, " Display bytecode link options");
-      ("-asmlink" , Arg.Unit set_asmlink , " Display native link options");
-      ("-ocp"     , Arg.Unit set_ocp     , " Display ocp-build configuration");
+      ("-r"       , Arg.Unit set_rec       , " Recursive search (large)");
+      ("-I"       , Arg.Unit (set Include) , " Display native compile options");
+      ("-bytecomp", Arg.Unit (set Bytecomp), " Display bytecode compile options");
+      ("-asmcomp" , Arg.Unit (set Asmcomp) , " Display native link options");
+      ("-bytelink", Arg.Unit (set Bytelink), " Display bytecode link options");
+      ("-asmlink" , Arg.Unit (set Asmlink) , " Display native link options");
     ] in
   {
     name     = "config";
@@ -141,11 +137,11 @@ let config =
       function () ->
         let names = List.rev !ano_args in
         let command = match !command with
-        | None   -> 
-          bad_argument
-            "config"  "Missing command [%s]" 
-            (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
-        | Some c -> c in
+          | None   -> 
+            bad_argument
+              "config"  "Missing command [%s]" 
+              (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
+          | Some c -> c in
         Client.config !recursive command (List.map (fun n -> Name n) names);
   }
 

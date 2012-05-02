@@ -113,6 +113,9 @@ module type GLOBAL = sig
 
   val create: dirname -> t
 
+  (** Root dir: [$opam/] *)
+  val root: t -> dirname
+
   (** Main configuration file: [$opam/config] *)
   val config: t -> filename
 
@@ -139,6 +142,8 @@ module Global : GLOBAL = struct
   type t = dirname
 
   let create opam = opam
+
+  let root opam = opam
 
   let dirname_of_nv nv = Dirname.of_string (NV.to_string nv)
 
@@ -199,6 +204,7 @@ module type COMPILER = sig
 end
 
 module Compiler : COMPILER = struct
+
   type t = dirname
 
   let create opam oversion =
@@ -225,7 +231,90 @@ module Compiler : COMPILER = struct
     let config t n = config_dir t // b (N.to_string n ^ ".config")
 end
 
+module type REPOSITORY = sig
+  type t
 
+  val create: dirname -> repository -> t
+
+  (** Return the repository folder: [$opam/repo/$repo] *)
+  val root: t -> dirname
+
+  (** Return the repository index: [$opam/repo/index] *)
+  val index: t -> dirname
+
+  (** Return the repository kind: [$opam/repo/$repo/kind] *)
+  val kind: t -> filename
+
+  (** Return the repository address: [$opam/repo/$repo/address] *)
+  val address: t -> filename
+
+  (** Return the OPAM file for a given package: [$opam/repo/$repo/opam/$NAME.$VERSION.opam] *)
+  val opam: t -> NV.t -> filename
+
+  (** Return the OPAM folder: [$opam/repo/$repo/opam/] *)
+  val opam_dir: t -> dirname
+
+  (** Return the description file for a given package: [$opam/repo/$repo/descr/$NAME.VERSION] *)
+  val descr: t -> NV.t -> filename
+
+  (** Return the description folder *)
+  val descr_dir: t -> dirname
+
+  (** Return the archive for a giben package: [$opam/repo/$repo/archives/$NAME.$VERSION.tar.gz *)
+  val archive: t -> NV.t -> filename
+
+  (** Return the archive folder: [$opam/repo/$repo/archives/] *)
+  val archive_dir: t -> dirname
+
+  (** Return the list of updated packages: [$opam/repo/$repo/updated] *)
+  val updated: t -> filename
+
+  (** Return the upload folder for a given version: [$opam/repo/$repo/upload/$NAME.$VERSION/] *)
+  val upload: t -> NV.t -> dirname
+
+  (** Return the upload folder: [$opam/repo/$repo/upload] *)
+  val upload_dir: t -> dirname
+
+end
+
+module Repository : REPOSITORY = struct
+  type t = {
+    root: dirname; (* [$opam/] *)
+    repo: dirname; (* [$opam/repo/$repo] *)
+  }
+
+  let create root r = {
+    root;
+    repo = root / d "repo" / d r.repo_name;
+  }
+
+  let root t = t.repo
+
+  let index t = t.root / d "repo" / d "index"
+
+  let kind t = t.repo // b "kind"
+
+  let address t = t.repo // b "address"
+
+  let opam_dir t = t.repo / d "opam"
+
+  let opam t nv = opam_dir t // b (NV.to_string nv ^ ".opam")
+
+  let descr_dir t = t.repo / d "descr"
+
+  let descr t nv = descr_dir t // b (NV.to_string nv)
+
+  let archive_dir t = t.repo / d "archives"
+
+  let archive t nv = archive_dir t // b (NV.to_string nv ^ ".tar.gz")
+
+  let updated t = t.repo // b "updated"
+
+  let upload_dir t = t.repo / d "upload"
+
+  let upload t nv = upload_dir t / d (NV.to_string nv)
+
+end
 
 
 
