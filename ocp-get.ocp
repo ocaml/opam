@@ -31,7 +31,6 @@ begin library "get"
     "extlib"
     "arg"
     "graph"
-    "uri"
   ]
 end
 

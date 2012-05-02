@@ -15,6 +15,7 @@
 (***********************************************************************)
 
 open File_format
+
 %}
 
 %token <string> STRING IDENT SYMBOL
@@ -32,12 +33,12 @@ open File_format
 %left COLON
 
 %start main
-%type <File_format.file> main
+%type <string -> File_format.file> main
 
 %%
 
 main:
-| items EOF { $1 }
+| items EOF { fun filename -> { contents = $1; filename } }
 ;
 
 items:
@@ -51,12 +52,13 @@ item:
 ;
 
 value:
-| BOOL                     { Bool $1 }
-| STRING                   { String $1 }
-| SYMBOL                   { Symbol $1 }
-| IDENT                    { Ident $1 }
-| value LPAR values RPAR   { Option ($1, $3) }
-| RBRACKET values LBRACKET { List $2 }
+| BOOL                       { Bool $1 }
+| STRING                     { String $1 }
+| SYMBOL                     { Symbol $1 }
+| IDENT                      { Ident $1 }
+| LPAR values RPAR           { Group $2 }
+| RBRACKET values LBRACKET   { List $2 }
+| value RBRACE values LBRACE { Option ($1, $3) }
 ;
 
 values:
@@ -75,9 +77,9 @@ let lexer_error lexbuf =
   let tok = Lexing.lexeme lexbuf in
   raise (Error (line,cnum,tok))
 
-let main t l =
-  try main t l
+open Lexing
+
+let main t l f =
+  try main t l f
   with _ ->
     lexer_error l
-
-

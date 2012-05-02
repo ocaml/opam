@@ -5,7 +5,10 @@ else
 WGET ?= wget -qN
 endif
 
-all: clone
+all: clone depends.ocp
+
+depends.ocp: depends.ocp.boot
+	cp $< $@
 
 clone: cudf extlib ocaml-re ocamlgraph dose ocaml-arg
 
@@ -14,7 +17,7 @@ cudf:
 	tar xfj cudf.tar.bz2
 
 extlib:
-	$(WGET) http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz;
+	$(WGET) http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz
 	tar xfz extlib-1.5.2.tar.gz
 	mv extlib-1.5.2 extlib
 
@@ -25,11 +28,6 @@ dose:
 ocaml-arg:
 	$(WGET) http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2
 	tar xfj ocaml-arg.tar.bz2
-
-# ocaml-pcre:
-# 	$(WGET) http://hg.ocaml.info/release/pcre-ocaml/archive/release-6.2.5.tar.gz
-# 	tar xfvz release-6.2.5.tar.gz
-# 	mv pcre-ocaml-release-6.2.5 ocaml-pcre
 
 ocamlgraph:
 	$(WGET) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
@@ -45,5 +43,6 @@ clean:
 
 distclean: clean
 	rm -rf cudf extlib ocaml-re ocamlgraph dose ocaml-arg
+	rm -f depends.ocp
 	rm -rf *.tar.gz
 	rm -rf *.bz2

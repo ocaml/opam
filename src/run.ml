@@ -16,9 +16,9 @@
 open ExtString
 open ExtList
 open Types
-open Uri
 
 let log fmt = Globals.log "RUN" fmt
+
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
 let mkdir f f_to = 
@@ -197,8 +197,12 @@ let command_with_path bins fmt =
     (* we MUST read the input_channels otherwise [close_process] will fail *)
     let err = read_lines e in
     let out = read_lines o in
-    let str () = Printf.sprintf "out: %s\nerr: %s" (String.concat "\n" out) (String.concat "\n" err) in
-    let msg () = Globals.msg "%s\n" (str ()) in
+    let str () =
+      Printf.sprintf "out: %s\nerr: %s"
+        (String.concat "\n" out)
+        (String.concat "\n" err) in
+    let msg () =
+      Globals.msg "%s\n" (str ()) in
     match Unix.close_process_full chans with
       | Unix.WEXITED 0 -> 0
       | Unix.WEXITED i -> msg (); i
@@ -210,32 +214,12 @@ let command fmt =
     log "cwd=%s '%s'" (Unix.getcwd ()) str;
     Sys.command str;
   ) fmt
-  
-(* not used anymore *)
-(*
-let clone cmd repo cwd nv =
-  let b_name = Filename.chop_extension (Filename.basename repo) in
-  let dst_git = Filename.concat tmp_dir b_name in
-  log "cloning %s into %s" repo dst_git;
-  if Sys.file_exists dst_git then
-    safe_rm dst_git;
-  let err = cmd repo b_name in
-  if err = 0 then
-    let s_from = Filename.concat (Unix.getcwd ()) b_name in
-    let s_to = Filename.concat cwd (Namespace.string_of_nv (fst nv) (snd nv)) in
-    (* XXX: mv -i will surely not work on windows *)
-    if command "mv -i %s %s" s_from s_to = 0 then
-      Folder s_to
-    else
-      Globals.error_and_exit "moving failed"
-  else
-    Globals.error_and_exit "cloning failed"
-*)
 
-let fold_0 f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
+let fold f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
 
-let commands = fold_0 (command "%s")
-let commands_with_path bins = fold_0 (command_with_path bins "%s")
+let commands = fold (command "%s")
+
+let commands_with_path bins = fold (command_with_path bins "%s")
 
 let is_archive file =
   List.fold_left
@@ -274,38 +258,6 @@ let untar file nv =
     mkdir (copy src) dst
   ) moves;
   err
-
-(* Unused for now on *)
-(*
-let download_aux uri dst = 
-  let aux cmd =
-    let file = Uri.to_string uri in
-    let path = Uri.path uri in
-    log "download %s" file;
-    let dst = Filename.concat tmp_dir (Filename.basename path) in
-    if Sys.file_exists dst then
-      safe_rm dst;
-    if command "%s %s" cmd file = 0 then
-      dst
-    else
-      Globals.error_and_exit "download failed" in
-  match Uri.scheme, Globals.os with
-    | ("http" | "https"), Globals.Darwin -> aux "ftp" 
-    | ("http" | "https"), _              -> aux "wget"
-    | s, _ -> Globals.error_and_exit "unknown uri scheme: %s" s
-
-let download url nv =
-  if not (Sys.file_exists tmp_dir) then
-    Unix.mkdir tmp_dir 0o750;
-  in_dir tmp_dir (fun s -> download_aux url s nv) (Unix.getcwd ())
-
-let patch p nv =
-  let dirname = Namespace.string_of_nv (fst nv) (snd nv) in
-  log "patching %s using %s" dirname p;
-  in_dir dirname (fun () ->
-    System.Command.one "patch -p1 -f -i %s" p
-  ) ()
-*)
 
 
 

@@ -36,9 +36,7 @@ module F = Filename
 (* non-directory files *)
 module Filename : sig
 
-  type t
-
-  val to_string: t -> string
+  include Abstract
 
   val create: dirname -> basename -> t
 
@@ -69,6 +67,14 @@ end = struct
   let to_string t =
     F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
 
+  let of_string s =
+    let dirname = Filename.dirname s in
+    let basename = Filename.basename s in
+    {
+      dirname  = Dirname.of_string dirname;
+      basename = Basename.of_string basename;
+    }
+
   let read filename =
     let str = Run.read (to_string filename) in
     Raw.of_string str
@@ -85,6 +91,10 @@ end = struct
   let with_raw fn filename =
     let raw = read filename in
     fn raw
+
+  module O = struct type tmp = t type t = tmp let compare = compare end
+  module Map = Map.Make(O)
+  module Set = Set.Make(O)
 end
 type filename = Filename.t
 

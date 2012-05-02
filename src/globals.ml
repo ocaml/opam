@@ -77,14 +77,3 @@ let os =
   | "Win32"  -> Win32
   | "Cygwin" -> Cygwin
   | _        -> assert false
-
-
-
-
-
-
-
-
-
-
-
