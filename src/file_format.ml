@@ -126,8 +126,6 @@ let rec parse_or fns v =
       try h v
       with _ -> parse_or t v
 
-let (|>) f g x = g (f x) 
-
 let make_string str = String str
 
 let make_ident str = Ident str

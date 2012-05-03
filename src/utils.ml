@@ -26,3 +26,6 @@ let map_of_list empty add l =
   List.fold_left (fun map (k,v) -> add k v map) empty l
 
 module IntMap = Map.Make(struct type t = int let compare = compare end)  
+module IntSet = Set.Make(struct type t = int let compare = compare end)  
+
+let (|>) f g x = g (f x) 

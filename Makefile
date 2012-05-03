@@ -2,11 +2,11 @@ OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 OCAMLC=ocamlc
 SRC_EXT=src_ext
 
-TARGET = opam
+TARGETS = opam
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile link clone
+all: ./_obuild/unixrun compile clone $(TARGETS)
 	@
 
 scan: ./_obuild/unixrun
@@ -25,14 +25,8 @@ bootstrap: _obuild/unixrun _obuild/opam/opam.byte
 	rm -f boot/opam.boot
 	ocp-bytehack -static _obuild/opam/opam.byte -o boot/opam.boot
 
-link: opam
-	@
-
-_obuild/opam/opam.asm _obuild/opam/opam.byte:
+opam:
 	$(OCPBUILD) opam
-
-opam: _obuild/opam/opam.asm
-	ln -s $^ opam
 
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)

@@ -66,8 +66,7 @@ type os =
   | Win32
   | Unix
 
-let os =
-  match Sys.os_type with
+let os = match Sys.os_type with
   | "Unix" -> begin
     match input_line (Unix.open_process_in "uname -s") with
     | "Darwin"  -> Darwin
@@ -78,3 +77,6 @@ let os =
   | "Win32"  -> Win32
   | "Cygwin" -> Cygwin
   | _        -> assert false
+
+(* XXX: put that in ~/.opam/config *)
+let cores = 4

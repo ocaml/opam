@@ -13,22 +13,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtString
-open ExtList
-open Types
-
 let log fmt = Globals.log "RUN" fmt
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
-let mkdir f f_to = 
-  let rec aux f_to = 
-    if not (Sys.file_exists f_to) then begin
-      aux (Filename.dirname f_to);
-      Unix.mkdir f_to 0o755;
+let mkdir dir = 
+  let rec aux dir = 
+    if not (Sys.file_exists dir) then begin
+      aux (Filename.dirname dir);
+      Unix.mkdir dir 0o755;
     end in
-  aux (Filename.dirname f_to);
-  f f_to
+  aux dir
   
 let copy src dst =
   log "Copying %s to %s" src dst;
@@ -41,7 +36,8 @@ let copy src dst =
     open_out_bin dst
     else
     let perm = (Unix.stat src).Unix.st_perm in
-    mkdir (open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm) dst
+    mkdir (Filename.dirname dst);
+    open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm dst
   in
   while !read <>0 do
     read := input ic b 0 n;
@@ -49,7 +45,7 @@ let copy src dst =
   done;
   close_in ic;
   close_out oc
-  
+
 let read file =
   let ic = open_in file in
   let n = in_channel_length ic in
@@ -63,64 +59,47 @@ let write file contents =
   output_string oc contents;
   close_out oc
 
-(* the [Unix.wait] could return a processus which has not been
-   created by [Unix.fork]. This part waits until a known pid is
-   returned. *)
-(* XXX: this will not work under windows *)
-let wait map_pid = 
-  let open BatMap in
-      let rec aux () = 
-        let pid, error = Unix.wait () in
-        if IntMap.mem pid map_pid then
-        pid, error
-        else
-        aux () in
-      aux ()
-
-(**************************)
-(* from ocplib-system ... *)
-(**************************)
-let in_dir dir fn x =
+let in_dir dir fn =
   let cwd = Unix.getcwd () in
   Unix.chdir dir;
   try
-    let r = fn x in
+    let r = fn () in
     Unix.chdir cwd;
     r
   with e ->
     Unix.chdir cwd;
     raise e
       
-let directories () =
-  let d = Sys.readdir (Unix.getcwd ()) in
-  let d = Array.to_list d in
-  List.filter (fun f -> try Sys.is_directory f with _ -> false) d
+let directories dir =
+  in_dir dir (fun () ->
+    let d = Sys.readdir (Unix.getcwd ()) in
+    let d = Array.to_list d in
+    List.filter (fun f -> try Sys.is_directory f with _ -> false) d
+  )
     
-let files () =
-  let d = Sys.readdir (Unix.getcwd ()) in
-  let d = Array.to_list d in
-  List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
+let files dir =
+  in_dir dir (fun () ->
+    let d = Sys.readdir (Unix.getcwd ()) in
+    let d = Array.to_list d in
+    List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
+  )
     
-let safe_unlink file =
+let remove_file file =
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
     
-let rec safe_rmdir dir =
+let rec remove_dir dir =
   if Sys.file_exists dir then begin
-    in_dir dir (fun () ->
-      let dirs = directories () in
-      let files = files () in
-      List.iter safe_unlink files;
-      List.iter safe_rmdir dirs;
-    ) ();
+    List.iter remove_file (files dir);
+    List.iter remove_dir (directories dir);
     Unix.rmdir dir;
   end
   
-let safe_rm file =
+let remove file =
   if Sys.file_exists file && Sys.is_directory file then
-    safe_rmdir file
+    remove_dir file
   else
-    safe_unlink file
+    remove_file file
     
 let getchdir s = 
   let p = Unix.getcwd () in
@@ -130,9 +109,9 @@ let getchdir s =
 let rec root path =
   let d = Filename.dirname path in
   if d = path || d = "" || d = "." then
-  path
+    path
   else
-  root d
+    root d
     
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines ic =
@@ -179,7 +158,7 @@ let add_path bins =
   let path = ref "<not set>" in
   let env = Unix.environment () in
   for i = 0 to Array.length env - 1 do
-    let k,v = String.split env.(i) "=" in
+    let k,v = ExtString.String.split env.(i) "=" in
     if k = "PATH" then
     let new_path = match List.filter Sys.file_exists bins with
       | [] -> v
@@ -227,45 +206,39 @@ let is_archive file =
       | Some s -> fun _ -> Some s
       | None -> fun (ext, c) -> 
         if List.exists (Filename.check_suffix file) ext then
-          Some (Printf.kprintf Sys.command "tar xvf%c %s -C %s" c file)
+          Some (command "tar xvf%c %s -C %s" c file)
         else
           None)
     None
     [ [ "tar.gz" ; "tgz" ], 'z'
     ; [ "tar.bz2" ; "tbz" ], 'j' ]
 
-let untar file nv =
+let extract file dst =
   log "untar %s" file;
   let files = read_command_output ("tar tf " ^ file) in
   log "%d files found: %s" (List.length files) (String.concat ", " files);
-  let dirname = NV.to_string nv in
   let aux name =
-    if String.starts_with name dirname then
-      Filename.concat tmp_dir name, name
+    if root name = Filename.basename dst then
+      Filename.concat tmp_dir name, Filename.concat dst name
     else
       let root = root name in
       let n = String.length root in
       let rest = String.sub name n (String.length name - n) in 
-      Filename.concat tmp_dir name, dirname ^  rest in
+      Filename.concat tmp_dir name, dst ^  rest in
   let moves = List.map aux files in
-  if not (Sys.file_exists tmp_dir) then
-    Unix.mkdir tmp_dir 0o750;
+  mkdir tmp_dir;
   let err =
     match is_archive file with
       | Some f_cmd -> f_cmd tmp_dir
       | None -> Globals.error_and_exit "%s is not a valid archive" file in
-  List.iter (fun (src, dst) ->
-    mkdir (copy src) dst
-  ) moves;
-  err
+  if err <> 0 then
+    Globals.error_and_exit "Error while extracting %s" file
+  else
+    List.iter (fun (src, dst) ->
+      mkdir (Filename.dirname dst);
+      copy src dst
+    ) moves
 
-
-
-
-
-
-
-
-
-
-
+let link src dst =
+  log "Linking %s to %s" src dst;
+  Unix.link src dst

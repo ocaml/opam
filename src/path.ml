@@ -13,97 +13,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open ExtList
-open ExtString
 open Types
 
 let log fmt = Globals.log "PATH" fmt
-
-module Dirname : Abstract = Base
-type dirname = Dirname.t
-let d str = Dirname.of_string str
-
-module Basename : Abstract = Base
-type basename = Basename.t
-let b str = Basename.of_string str
-
-(* Raw file contents *)
-module Raw : Abstract = Base
-
-(* Keep a link to [Filename] for the standard library *)
-module F = Filename
-
-(* non-directory files *)
-module Filename : sig
-
-  include Abstract
-
-  val create: dirname -> basename -> t
-
-  (** Retrieves the contents from the hard disk. *)
-  val read : t -> Raw.t
-
-  (** Removes everything in [filename] if existed. *)
-  val remove : t -> unit
-
-  (** Removes everything in [filename] if existed, then write [contents] instead. *)
-  val write : t -> Raw.t -> unit
-
-  (** see [Sys.file_exists] *)
-  val exists : t -> bool
-
-  (** Apply a function on the contents of a file *)
-  val with_raw: (Raw.t -> 'a) -> t -> 'a
-
-end = struct
-
-  type t = {
-    dirname:  Dirname.t;
-    basename: Basename.t;
-  }
-
-  let create dirname basename = { dirname; basename }
-    
-  let to_string t =
-    F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
-
-  let of_string s =
-    let dirname = Filename.dirname s in
-    let basename = Filename.basename s in
-    {
-      dirname  = Dirname.of_string dirname;
-      basename = Basename.of_string basename;
-    }
-
-  let read filename =
-    let str = Run.read (to_string filename) in
-    Raw.of_string str
-
-  let write filename raw =
-    Run.write (to_string filename) (Raw.to_string raw)
-
-  let remove filename =
-    Run.safe_rm (to_string filename)
-
-  let exists filename =
-    Sys.file_exists (to_string filename)
-
-  let with_raw fn filename =
-    let raw = read filename in
-    fn raw
-
-  module O = struct type tmp = t type t = tmp let compare = compare end
-  module Map = Map.Make(O)
-  module Set = Set.Make(O)
-end
-type filename = Filename.t
-
-let (/) d1 d2 =
-  let s1 = Dirname.to_string d1 in
-  let s2 = Dirname.to_string d2 in
-  Dirname.of_string (F.concat s1 s2)
-
-let (//) = Filename.create
 
 (** Global state *)
 module type GLOBAL = sig
@@ -121,7 +33,10 @@ module type GLOBAL = sig
 
   (** OPAM files: [$opam/opam/$NAME.$VERSION.opam] *)
   val opam: t -> NV.t -> filename
-    
+
+  (** List all the available packages: [$opam/opam/$NAME.$VERSION.opam] *)
+  val available: t -> NV.Set.t
+
   (** Description file: [$opam/descr/$NAME.$VERSION] *)
   val descr: t -> NV.t -> filename
 
@@ -136,9 +51,12 @@ module type GLOBAL = sig
 
   (** Archives files folder: [$opam/archives/] *)
   val archive_dir: t -> dirname
+
+  (** Return the repository index: [$opam/repo/index] *)
+  val repo_index: t -> filename
 end
 
-module Global : GLOBAL = struct
+module G : GLOBAL = struct
   type t = dirname
 
   let create opam = opam
@@ -153,6 +71,11 @@ module Global : GLOBAL = struct
 
   let opam t nv = opam_dir t // b (NV.to_string nv)
 
+  let available t =
+    let files = Filename.list (opam_dir t) in
+    let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
+    List.fold_left (fun set file -> NV.Set.add (NV.of_file file) set) NV.Set.empty files
+
   let descr_dir t = t / d "descr"
 
   let descr t nv = descr_dir t // b (NV.to_string nv)
@@ -160,6 +83,9 @@ module Global : GLOBAL = struct
   let archive_dir t = t / d "archive"
 
   let archive t nv = archive_dir t // b (NV.to_string nv ^ ".tar.gz")
+
+  let repo_index t = t / d "repo" // b "index"
+
 end
 
 (** Compiler-version related state *)
@@ -168,7 +94,7 @@ module type COMPILER = sig
   (** Contains [$opam] and [$OVERSION] *)
   type t
     
-  val create: dirname -> V.t -> t
+  val create: G.t -> OCaml_V.t -> t
 
   (** Installed libraries for the package: [$opam/$OVERSION/lib/NAME] *)
   val lib: t -> N.t -> dirname
@@ -201,46 +127,46 @@ module type COMPILER = sig
 
   (** Configuration folder: [$opam/$OVERSION/config] *)
   val config_dir: t -> dirname
+
 end
 
-module Compiler : COMPILER = struct
+module C : COMPILER = struct
 
   type t = dirname
 
-  let create opam oversion =
-    Dirname.of_string (V.to_string oversion)
+  let create global oversion =
+    let root = G.root global in
+    root / d (OCaml_V.to_string oversion)
 
-    let lib t n = t / d "lib" / d (N.to_string n)
+  let lib t n = t / d "lib" / d (N.to_string n)
 
-    let bin t = t / d "bin"
+  let bin t = t / d "bin"
 
-    let installed t = t // b "installed"
+  let installed t = t // b "installed"
 
-    let build_dir t = t / d "build"
+  let build_dir t = t / d "build"
 
-    let build t nv = build_dir t / d (NV.to_string nv)
+  let build t nv = build_dir t / d (NV.to_string nv)
 
-    let install_dir t = t / d "install"
+  let install_dir t = t / d "install"
 
-    let install t n = install_dir t // b (N.to_string n ^ ".install")
+  let install t n = install_dir t // b (N.to_string n ^ ".install")
 
-    let reinstall t = t // b "reinstall"
+  let reinstall t = t // b "reinstall"
 
-    let config_dir t = t / d "config"
+  let config_dir t = t / d "config"
 
-    let config t n = config_dir t // b (N.to_string n ^ ".config")
+  let config t n = config_dir t // b (N.to_string n ^ ".config")
+
 end
 
 module type REPOSITORY = sig
   type t
 
-  val create: dirname -> repository -> t
+  val create: G.t -> repository -> t
 
   (** Return the repository folder: [$opam/repo/$repo] *)
   val root: t -> dirname
-
-  (** Return the repository index: [$opam/repo/index] *)
-  val index: t -> dirname
 
   (** Return the repository kind: [$opam/repo/$repo/kind] *)
   val kind: t -> filename
@@ -277,20 +203,20 @@ module type REPOSITORY = sig
 
 end
 
-module Repository : REPOSITORY = struct
+module R : REPOSITORY = struct
   type t = {
     root: dirname; (* [$opam/] *)
     repo: dirname; (* [$opam/repo/$repo] *)
   }
 
-  let create root r = {
-    root;
-    repo = root / d "repo" / d r.repo_name;
-  }
+  let create global r =
+    let root = G.root global in
+    {
+      root;
+      repo = root / d "repo" / d (Repository.name r);
+    }
 
   let root t = t.repo
-
-  let index t = t.root / d "repo" / d "index"
 
   let kind t = t.repo // b "kind"
 
