@@ -91,9 +91,10 @@ module Client : CLIENT = struct
     global      : Path.G.t;                     (* ~/.opam/ *)
     compiler    : Path.C.t;                     (* ~/.opam/$oversion/ *)
     repositories: (repository * Path.R.t) list; (* ~/.opam/repo/$repo/ *)
+    available   : NV.Set.t;                     (* ~/.opam/opam/ files *)
     installed   : NV.Set.t;                     (* ~/.opam/$oversion/installed contents *)
     config      : File.Config.t;                (* ~/.opam/config contents *)
-    repo_index  : File.Repo_index.t;            (* ~/.opam/repo/index contents *)
+    repo_index  : repository N.Map.t;           (* ~/.opam/repo/index contents *)
   }
 
   (* Look into the content of ~/.opam/config to build the client state *)
@@ -108,7 +109,8 @@ module Client : CLIENT = struct
     let repositories = List.map (fun r -> r, Path.R.create global r) repositories in
     let repo_index = File.Repo_index.read (Path.G.repo_index global) in
     let installed = File.Installed.read (Path.C.installed compiler) in
-    { global; compiler; repositories; installed; repo_index; config }
+    let available = Path.G.available global in
+    { global; compiler; repositories; available; installed; repo_index; config }
 
   let update () =
     let t = load_state () in
@@ -318,15 +320,13 @@ module Client : CLIENT = struct
   let proceed_torecompile t nv =
     proceed_tochange t (Was_installed nv) nv
 
-  let debpkg_of_nv t =
-    List.map
-      (fun nv ->
-        let opam = File.OPAM.read (Path.G.opam t.global nv) in
-        let installed = NV.Set.mem nv t.installed in
-        File.OPAM.to_package opam installed)
+  let debpkg_of_nv t nv =
+    let opam = File.OPAM.read (Path.G.opam t.global nv) in
+    let installed = NV.Set.mem nv t.installed in
+    File.OPAM.to_package opam installed
 
-  let resolve t l_index map_installed request = 
-    let l_pkg = debpkg_of_nv t l_index in
+  let resolve t request = 
+    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
 
     match Solver.resolve_list l_pkg request with
     | [] -> Globals.msg "No solution has been found.\n"
@@ -419,131 +419,92 @@ module Client : CLIENT = struct
     Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
 
   let install name = 
-    log "install %s" name;
+    log "install %s" (N.to_string name);
     let t = load_state () in
-    let l_index = Path.index_list t.home in
-    let map_installed = File.Installed.Map.find (Path.O.installed t.home) in
-    let package = Namespace.name_of_string name in
+    let available = NV.to_map (Path.G.available t.global) in
+    let map_installed = NV.to_map t.installed in
 
     (* Fail if the package is already installed *)
-    if N_map.mem package map_installed then
+    if N.Map.mem name map_installed then
       Globals.error_and_exit
         "Package %s is already installed (current version is %s)"
-        name
-        (Namespace.string_of_version (N_map.find package map_installed));
+        (N.to_string name)
+        (V.to_string (V.Set.choose (N.Map.find name map_installed)));
 
-    match find_from_name package l_index with
+    let nv =
+      try
+        if N.Map.mem name available then
+          NV.create name (V.Set.max_elt (N.Map.find name available))
+        else
+          unknown_package name
+      with Not_found ->
+        (* consider 'name' to be 'name.version' *)
+        let nv = NV.of_string (N.to_string name) in
+        let sname = NV.name nv in
+        let sversion = NV.version nv in
+        Globals.msg
+          "Package %s not found, looking for package %s version %s\n"
+          (N.to_string name) (N.to_string sname) (V.to_string sversion);
+        if N.Map.mem sname map_installed
+        && V.Set.mem sversion (N.Map.find sname map_installed) then
+          nv
+        else
+          unknown_package name in
 
-      | None   ->
-          if Namespace.is_valid_nv name then begin
-            let n, v = Namespace.nv_of_string name in
-            Globals.msg
-              "Package %s not found, looking for package %s version %s\n"
-              name (Namespace.string_of_name n) (Namespace.string_of_version v);
-            (match File.Spec.find (Path.index t.home (Some (n, v))) with
-            | None   -> unknown_package n
-            | Some _ ->
-              resolve t
-                l_index
-                map_installed
-                [ { Action.wish_install = 
-                    List.map vpkg_of_nv ((n, v) :: N_map.bindings (N_map.remove n map_installed))
-                  ; wish_remove = [] 
-                  ; wish_upgrade = [] } ])
-          end else
-            unknown_package (Namespace.name_of_string name)
+    (* remove any old packages from the list of packages to install *)
+    let map_installed =
+      List.map
+        (fun (x,y) -> NV.create x (V.Set.choose y))
+        (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
 
-      | Some v ->
-          let name = Namespace.name_of_string name in
-          resolve t
-            l_index
-            map_installed
-            [ { Action.wish_install = 
-                List.map vpkg_of_nv ((name, V_set.max_elt v) :: N_map.bindings (N_map.remove name map_installed))
-              ; wish_remove = [] 
-              ; wish_upgrade = [] } ]
+    resolve t
+      [ { wish_install = List.map vpkg_of_nv (nv :: map_installed)
+        ; wish_remove = [] 
+        ; wish_upgrade = [] } ]
 
   let remove name =
-    log "remove %s" (Namespace.string_of_name name);
+    log "remove %s" (N.to_string name);
     let t = load_state () in
-    let l_index = Path.index_list t.home in
-    let installed = File.Installed.Map.find (Path.O.installed t.home) in
+    let map_installed = NV.to_map t.installed in
+    if not (N.Map.mem name map_installed) then
+      Globals.error_and_exit "Package %s is not installed" (N.to_string name);
+    let nv = NV.create name (V.Set.choose (N.Map.find name map_installed)) in
+    let universe = NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available [] in
+    let depends = Solver.filter_forward_dependencies [debpkg_of_nv t nv] universe in
+    let depends =
+      List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
 
-    let dependencies = 
-      NV_set.of_list
-        (List.map Namespace.nv_of_dpkg
-           (Solver.filter_forward_dependencies
-              (match N_map.Exceptionless.find name installed with 
-                | None -> []
-                | Some v -> debpkg_of_nv t installed [name, v])
-              (debpkg_of_nv t installed l_index))) in
+    (* XXX: do we really want to call the solver here ? *)
+
+    let wish_install =
+      List.fold_left
+        (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv nv)::accu)
+        []
+        (* XXX: do we need to remove nv here ? it should already be in depends *)
+        (NV.Set.elements (NV.Set.remove nv t.installed)) in
 
     resolve t 
-      l_index
-      installed
-      [ { Action.wish_install = 
-          List.filter_map 
-            (fun nv ->
-              if NV_set.mem nv dependencies then
-                None
-              else
-                Some (vpkg_of_nv nv)) 
-            (N_map.bindings (N_map.remove name installed))
-        ; wish_remove = [ Namespace.string_of_name name, None ]
+      [ { wish_install
+        ; wish_remove  = [ N.to_string name, None ]
         ; wish_upgrade = [] } ]
       
   let upgrade () =
     log "upgrade";
     let t = load_state () in
-    let l_index = Path.index_list t.home in
-    let installed = File.Installed.Map.find (Path.O.installed t.home) in
-    (* mark git repo with updates *)
-    let installed =
-      N_map.mapi (fun n -> function
-        | Head _ as v ->
-          let repo = Path.string_of_filename (Path.index t.home (Some (n, v))) in
-          if Run.Git.get_updates repo = [] then
-            Head `uptodate
-          else begin
-            Run.Git.update repo;
-            Head `behind
-          end
-        | v -> v
-      ) installed in
+    let available = NV.to_map t.available in
     resolve t
-      l_index
-      installed
-      [ { Action.wish_install = []
+      [ { wish_install = []
         ; wish_remove = []
-        ; wish_upgrade = 
+        ; wish_upgrade =
           List.map
-            (fun (name, _) -> 
-              match find_from_name name l_index with 
-                | None -> assert false (* an already installed package must figure in the index *) 
-                | Some v -> vpkg_of_nv (name, V_set.max_elt v))
-            (N_map.bindings installed) } ]
+            (fun nv ->
+              let name = NV.name nv in
+              let versions = N.Map.find name available in
+              let nv = NV.create name (V.Set.max_elt versions) in
+              vpkg_of_nv nv)
+            (NV.Set.elements t.installed) } ]
 
-  (* XXX: ask the user on which repo she wants to upload the new package *)
-  (* XXX: hanlde git repo as well ... *)
-  let iter_upload_server fn servers =
-    let one server =
-      if server.uri = Some Git then
-        None
-      else begin
-        if List.length servers <= 1 || confirm (Printf.sprintf "Upload to %s ?" server.hostname) then
-          Some (fn server)
-        else
-          None
-      end in
-    List.fold_left (fun k server ->
-      let nk = one server in
-      if k <> None && k <> nk then
-        Globals.error_and_exit "upload keys differ!"
-      else
-        nk
-    ) None servers
-
-  let newArchive servers nv spec archive =
+  let new_archive servers nv spec archive =
     iter_upload_server (fun server ->
       RemoteServer.newArchive server nv spec archive
     ) servers
