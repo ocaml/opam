@@ -13,14 +13,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open Namespace
+open Types
 open Path
-open Server
 open Solver
 open Client
 open SubCommand
-open Uri
-open Protocol
 
 let version () =
   Printf.printf "\
@@ -49,9 +46,6 @@ let () = Globals.root_path := Globals.default_opam_path
 let global_args = [
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version,      " Display version information";
-
-  "--ocamlc", Arg.String (fun s -> Globals.ocamlc := Some s),
-  (Printf.sprintf " Binary use to construct packages (default is \"ocamlc\" from the path if found)") (* Moreover, the directory containing 'ocamlc' must contain 'ocamlopt', default binaries from the OCaml source... *);
   "--root"   , Arg.Set_string Globals.root_path,
   (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
 ]
@@ -59,32 +53,23 @@ let global_args = [
 let parse_args fn () =
   fn (List.rev !ano_args)
 
-(* opam init [HOSTNAME[:PORT]]*)
-let init =
-  let git_repo = ref false in
-  {
+(* opam init [-kind $kind] $repo $adress *)
+let kind = ref Globals.default_repository_kind
+let init = {
   name     = "init";
   usage    = "";
   synopsis = "Initial setup";
   help     = "Create the initial config files";
   specs    = [
-    ("--git-repo", Arg.Set git_repo, "Get in sync with a git repository of packages")
+    ("--kind", Arg.Set_string kind, " Set the repository kind")
   ];
   anon;
   main     =
     parse_args (function
-    | []            -> Client.init [url ~port:Globals.default_port Globals.default_hostname]
-    | [ host]       ->
-        if !git_repo then
-          Client.init [url ~uri:Git host]
-        else
-          Client.init [url ~port:Globals.default_port host]
-    | [ host; port] ->
-        let port =
-          try int_of_string port
-          with _ -> failwith (port ^ " is not a valid port") in
-        Client.init [url ~port host]
-    | _ -> bad_argument "init" "Too many remote server")
+    | [repo; address]  ->
+        let repo = Repository.create repo !kind in
+        Client.init repo address
+    | _ -> bad_argument "init" "Need a repository name and address")
 }
 
 (* opam list *)
@@ -109,41 +94,49 @@ let info = {
   main     =
     parse_args (function
     | [] -> bad_argument "info" "Missing package argument"
-    | l  -> List.iter (fun name -> Client.info (Namespace.name_of_string name)) l)
+    | l  -> List.iter (fun name -> Client.info (N.of_string name)) l)
 }
 
-(* opam config [R] [Include|Bytelink|Asmlink] PACKAGE *)
-let config =
-  let recursive = ref false in
-  let command = ref None in
-  let set c   () = command := Some c in
-  let set_rec () = recursive := true in
-  let specs = [
-      ("-r"       , Arg.Unit set_rec       , " Recursive search (large)");
-      ("-I"       , Arg.Unit (set Include) , " Display native compile options");
-      ("-bytecomp", Arg.Unit (set Bytecomp), " Display bytecode compile options");
-      ("-asmcomp" , Arg.Unit (set Asmcomp) , " Display native link options");
-      ("-bytelink", Arg.Unit (set Bytelink), " Display bytecode link options");
-      ("-asmlink" , Arg.Unit (set Asmlink) , " Display native link options");
-    ] in
-  {
-    name     = "config";
-    usage    = "[package]+";
-    synopsis = "Display configuration options for packages";
-    help     = "";
-    specs;
-    anon;
-    main =
-      function () ->
-        let names = List.rev !ano_args in
-        let command = match !command with
-          | None   -> 
-            bad_argument
-              "config"  "Missing command [%s]" 
-              (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
-          | Some c -> c in
-        Client.config !recursive command (List.map (fun n -> Name n) names);
-  }
+(* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
+let recursive = ref false
+let command = ref None
+let set c   () = command := Some c
+let set_rec () = recursive := true
+let specs = [
+  ("-r"       , Arg.Unit set_rec        , " Recursive search (large)");
+  ("-I"       , Arg.Unit (set `Include) , " Display native compile options");
+  ("-bytecomp", Arg.Unit (set `Bytecomp), " Display bytecode compile options");
+  ("-asmcomp" , Arg.Unit (set `Asmcomp) , " Display native link options");
+  ("-bytelink", Arg.Unit (set `Bytelink), " Display bytecode link options");
+  ("-asmlink" , Arg.Unit (set `Asmlink) , " Display native link options");
+]
+let args n =
+  (* XXX: big hack *)
+  let nv = NV.of_string n in
+  NV.name nv, V.to_string (NV.version nv)
+let mk options =
+  Compil { recursive = !recursive; options }
+let config = {
+  name     = "config";
+  usage    = "[...]+";
+  synopsis = "Display configuration options for packages";
+  help     = "";
+  specs;
+  anon;
+  main = function () ->
+    let names = List.rev !ano_args in
+    let config = match !command with
+      | None   -> 
+          bad_argument
+            "config"  "Missing command [%s]" 
+            (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
+      | Some `Include  -> mk (Include (List.map N.of_string names))
+      | Some `Bytecomp -> mk (Bytecomp (List.map args names))
+      | Some `Bytelink -> mk (Bytelink (List.map args names))
+      | Some `Asmcomp  -> mk (Asmcomp (List.map args names))
+      | Some `Asmlink  -> mk (Asmlink (List.map args names)) in
+    Client.config config
+}
 
 (* ocp-get install PACKAGE *)
 let install = {
@@ -153,7 +146,7 @@ let install = {
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args (List.iter (fun name -> Client.install name))
+  main     = parse_args (List.iter (fun name -> Client.install (N.of_string name)))
 }
 
 (* ocp-get update *)
@@ -179,16 +172,34 @@ let upgrade = {
 }
 
 (* ocp-get upload PACKAGE *)
+let opam = ref ""
+let descr = ref ""
+let archive = ref ""
+let repo = ref ""
 let upload = {
   name     = "upload";
   usage    = "";
   synopsis = "Upload a package to the server";
   help     = "";
-  specs    = [];
-  anon;
-  main     = parse_args (function
-    | [] -> bad_argument "upload" "package name of .spec file missing"
-    | l  -> List.iter Client.upload l);
+  specs    = [
+    ("-opam"   , Arg.Set_string opam   , " specify the OPAM file to upload");
+    ("-descr"  , Arg.Set_string descr  , " specify the description file to upload");
+    ("-archive", Arg.Set_string archive, " specify the archive file to upload");
+    ("-repo"   , Arg.Set_string repo   , " (optional) specify the repository to upload")
+  ];
+  anon = noanon "upload";
+  main     = (function () ->
+    if !opam = "" then
+      bad_argument "upload" "missing OPAM file";
+    if !descr = "" then
+      bad_argument "upload" "missing description file";
+    if !archive = "" then
+      bad_argument "upload" "missing archive file";
+    let opam = Filename.of_string !opam in
+    let descr = Filename.of_string !descr in
+    let archive = Filename.of_string !archive in
+    let repo = if !repo = "" then None else Some (Repository.of_string !repo) in
+    Client.upload { opam; descr; archive } repo)
 }
 
 (* ocp-get remove PACKAGE *)
@@ -199,7 +210,7 @@ let remove = {
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args (List.iter (fun n -> Client.remove (Name n)));
+  main     = parse_args (List.iter (fun n -> Client.remove (N.of_string n)));
 }
 
 (* ocp-get remote [-list|-add <url>|-rm <url>] *)
@@ -216,7 +227,7 @@ let remote =
   anon;
   main     = parse_args (function
     | [ "list" ]     -> Client.remote List
-    | [ "add"; url ] -> Client.remote (if !git_repo then (AddGit url) else (Add url))
+    | [ "add"; url ] -> Client.remote (Add url)
     | [ "rm" ; url ] -> Client.remote (Rm url)
     | _              -> bad_argument "remote" "action missing")
 }
@@ -230,7 +241,7 @@ let switch = {
   anon;
   main     = parse_args (function
     |[]      -> bad_argument "switch" "Compiler name is missing"
-    | [name] -> Client.switch name
+    | [name] -> Client.switch (OCaml_V.of_string name)
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 

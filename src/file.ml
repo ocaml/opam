@@ -61,11 +61,7 @@ module Lines : IO_FILE with type t = string list list = struct
 
 end
 
-module Address : sig
-
-  include IO_FILE
-
-end = struct
+module Address : IO_FILE with type t = string = struct
 
   let kind = "address"
 
@@ -81,6 +77,11 @@ end = struct
   let to_string filename a =
     Lines.to_string filename [[a]]
 
+end
+
+module Kind : IO_FILE with type t = string = struct
+  let kind = "kind"
+  include Address
 end
 
 module Installed : sig
@@ -695,6 +696,16 @@ module File = struct
   module Repo_index = struct
     include Repo_index
     include Make (Repo_index)
+  end
+
+  module Address = struct
+    include Address
+    include Make (Address)
+  end
+
+  module Kind = struct
+    include Kind
+    include Make (Kind)
   end
 
   module Descr = struct

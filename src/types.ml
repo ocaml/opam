@@ -355,3 +355,73 @@ type repository = Repository.t
 
 (** Variable names are used in .config files *)
 module Variable : Abstract = Base
+
+(** {2 Command line arguments} *)
+
+(** Upload arguments *)
+type upload = {
+  opam   : filename;
+  descr  : filename;
+  archive: filename;
+}
+
+let string_of_upload u =
+  Printf.sprintf "opam=%s descr=%s archive=%s"
+    (Filename.to_string u.opam)
+    (Filename.to_string u.descr)
+    (Filename.to_string u.archive)
+
+(** Remote arguments *)
+type remote =
+  | List
+  | Add of string
+  | Rm of string
+
+let string_of_remote = function
+  | List -> "list"
+  | Add s -> Printf.sprintf "add %s" s
+  | Rm  s -> Printf.sprintf "rm %s" s
+
+type config_option =
+  | Include  of N.t list
+  | Bytecomp of (N.t * string) list
+  | Asmcomp  of (N.t * string) list
+  | Bytelink of (N.t * string) list
+  | Asmlink  of (N.t * string) list
+
+type rec_config_option = {
+  recursive: bool;
+  options  : config_option;
+}
+
+type config =
+  | Compil   of rec_config_option
+  | Variable of (N.t * Variable.t) list
+  | Subst    of Filename.t list
+
+let p msg l =
+  Printf.sprintf "%s %s"
+    msg
+    (String.concat ","
+       (List.map (fun (n,l) -> Printf.sprintf "%s.%s" (N.to_string n) l) l))
+
+let string_of_config_option = function
+  | Include l ->
+      Printf.sprintf "include %s" (String.concat "," (List.map N.to_string l))
+  | Bytecomp l -> p "bytecomp" l
+  | Asmcomp l  -> p "asmcomp" l
+  | Bytelink l -> p "bytelink" l
+  | Asmlink l  -> p "asmlink" l
+
+let string_of_rec_config_option o =
+  Printf.sprintf "%b %s" o.recursive (string_of_config_option o.options)
+
+let p l =
+  String.concat ","
+    (List.map
+       (fun (n,v) -> Printf.sprintf "%s.%s" (N.to_string n) (Variable.to_string v)) l)
+
+let string_of_config = function
+  | Compil c   -> string_of_rec_config_option c
+  | Variable l -> p l
+  | Subst l    -> String.concat "," (List.map Filename.to_string l)

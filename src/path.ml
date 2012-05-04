@@ -174,29 +174,46 @@ module type REPOSITORY = sig
   (** Return the repository address: [$opam/repo/$repo/address] *)
   val address: t -> filename
 
-  (** Return the OPAM file for a given package: [$opam/repo/$repo/opam/$NAME.$VERSION.opam] *)
+  (** Return the OPAM file for a given package:
+      [$opam/repo/$repo/opam/$NAME.$VERSION.opam] *)
   val opam: t -> NV.t -> filename
 
   (** Return the OPAM folder: [$opam/repo/$repo/opam/] *)
   val opam_dir: t -> dirname
 
-  (** Return the description file for a given package: [$opam/repo/$repo/descr/$NAME.VERSION] *)
+  (** Return the description file for a given package:
+      [$opam/repo/$repo/descr/$NAME.VERSION] *)
   val descr: t -> NV.t -> filename
 
   (** Return the description folder *)
   val descr_dir: t -> dirname
 
-  (** Return the archive for a giben package: [$opam/repo/$repo/archives/$NAME.$VERSION.tar.gz *)
+  (** Return the archive for a giben package:
+      [$opam/repo/$repo/archives/$NAME.$VERSION.tar.gz *)
   val archive: t -> NV.t -> filename
 
   (** Return the archive folder: [$opam/repo/$repo/archives/] *)
   val archive_dir: t -> dirname
 
-  (** Return the list of updated packages: [$opam/repo/$repo/updated] *)
+  (** Return the list of updated packages:
+      [$opam/repo/$repo/updated] *)
   val updated: t -> filename
 
-  (** Return the upload folder for a given version: [$opam/repo/$repo/upload/$NAME.$VERSION/] *)
+  (** Return the upload folder for a given version:
+      [$opam/repo/$repo/upload/$NAME.$VERSION/] *)
   val upload: t -> NV.t -> dirname
+
+  (** Return the upload folder for OPAM files:
+      [$opam/repo/$repo/upload/$NAME.$VERSION/$NAME.$VERSION.opam]*)
+  val upload_opam: t -> NV.t -> filename
+
+  (** Return the upload folder for descr files:
+      [$opam/repo/$repo/upload/$NAME.$VERSION/$NAME.$VERSION] *)
+  val upload_descr: t -> NV.t -> filename
+
+  (** Return the upload folder for archive files:
+      [$opam/repo/$repo/upload/$NAME.$VERSION/$NAME.$VERSION.tar.gz] *)
+  val upload_archive: t -> NV.t -> filename
 
   (** Return the upload folder: [$opam/repo/$repo/upload] *)
   val upload_dir: t -> dirname
@@ -240,7 +257,14 @@ module R : REPOSITORY = struct
 
   let upload t nv = upload_dir t / d (NV.to_string nv)
 
+  let upload_opam t nv = upload t nv // b (NV.to_string nv ^ ".opam")
+
+  let upload_descr t nv = upload t nv // b (NV.to_string nv)
+
+  let upload_archive t nv = upload t nv // b (NV.to_string nv ^ ".tar.gz")
+
 end
+
 
 
 

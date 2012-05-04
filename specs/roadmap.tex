@@ -608,16 +608,13 @@ initialize \verb+$opam/+ in a consistent state. In order to do so, he
 should run:
 
 \begin{verbatim}
-    $ opam init [-kind $KIND] [-ocamlc $OCAMLC] $REPO $ADDRESS
+    $ opam init [-kind $KIND] $REPO $ADDRESS
 \end{verbatim}
 
 Where:
 \begin{itemize}
 \item \verb+$KIND+ is the kind of OPAM repository (default is {\tt
   http});
-\item \verb+$OCAMLC+ is the complete filename leading to the
-  {\tt ocamlc} compiler (default is the first binary found from
-  \verb+$path+, if found);
 \item \verb+$REPO+ is the name of the repository (default is {\tt
   default}); and
 \item \verb+ADDRESS+ is the repository address (default is

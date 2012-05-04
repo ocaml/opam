@@ -19,40 +19,12 @@ open Solver
 let log fmt =
   Globals.log "CLIENT" fmt
 
-type remote_request =
-  | List
-  | Add of string
-  | Rm of string
-
-type options =
-  | Include  of N.t list
-  | Bytecomp of (N.t * string) list
-  | Asmcomp  of (N.t * string) list
-  | Bytelink of (N.t * string) list
-  | Asmlink  of (N.t * string) list
-
-type compil_option = {
-  recursive: bool;
-  options  : options;
-}
-
-type config_request =
-  | Compil   of compil_option
-  | Variable of (N.t * Variable.t) list
-  | Subst    of Filename.t list
-
-type upload_request = {
-  opam   : Filename.t;
-  descr  : Filename.t;
-  archive: Filename.t;
-}
-
 module type CLIENT =
 sig
   type t
 
   (** Initializes the client a consistent state. *)
-  val init : repository list -> unit
+  val init : repository -> string -> unit
 
   (** Displays all available packages *)
   val list : unit -> unit
@@ -60,8 +32,9 @@ sig
   (** Displays a general summary of a package. *)
   val info : N.t -> unit
 
-  (** Depending on request, returns options or directories where the package is installed. *)
-  val config : config_request -> unit
+  (** Depending on request, returns options or directories where the
+      package is installed. *)
+  val config : config -> unit
 
   (** Installs the given package. *)
   val install : N.t -> unit
@@ -73,15 +46,19 @@ sig
       upgraded to their latest version. *)
   val upgrade : unit -> unit
 
-  (** Sends a new created package to the server. *)
-  val upload : upload_request -> unit
+  (** Sends a new created package a remote repository. If repo is
+      [None] then look which is the main repository for the given
+      package *)
+  val upload : upload -> repository option -> unit
 
   (** Removes the given package. *)
   val remove : N.t -> unit
 
   (** Manage remote repositories *)
-  val remote : remote_request -> unit
+  val remote : remote -> unit
 
+  (** Switch to an OCaml compiler *)
+  val switch: OCaml_V.t -> unit
 end
 
 module Client : CLIENT = struct
@@ -114,10 +91,10 @@ module Client : CLIENT = struct
 
   let update () =
     let t = load_state () in
-    List.map (fun (r,p) -> Repositories.opam_update p r) t.repositories
+    List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories
 
-  let init repos =
-    log "init %s" (String.concat " " (List.map Repository.to_string repos));
+  let init repo address =
+    log "init %s %s" (Repository.to_string repo) address;
     let root = Path.G.create (Dirname.of_string !Globals.root_path) in
     let config_f = Path.G.config root in
     if Filename.exists config_f then
@@ -125,14 +102,15 @@ module Client : CLIENT = struct
     else
       let opam_version = OPAM_V.of_string Globals.opam_version in
       let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
-      let config = File.Config.create opam_version repos ocaml_version in
+      let config = File.Config.create opam_version [repo] ocaml_version in
       File.Config.write config_f config;
       let compiler = Path.C.create root ocaml_version in
       File.Installed.write (Path.C.installed compiler) File.Installed.empty;
       let repositories = File.Config.repositories config in
       List.iter (fun r ->
         let p = Path.R.create root r in
-        Repositories.opam_init p r
+        Repositories.opam_init p r;
+        File.Address.write (Path.R.address p) address;
       ) repositories
 
   let indent_left s nb =
@@ -504,96 +482,32 @@ module Client : CLIENT = struct
               vpkg_of_nv nv)
             (NV.Set.elements t.installed) } ]
 
-  let new_archive servers nv spec archive =
-    iter_upload_server (fun server ->
-      RemoteServer.newArchive server nv spec archive
-    ) servers
-
-  let updateArchive servers nv spec archive k =
-    let (_ : unit option) =
-      iter_upload_server (fun server ->
-        RemoteServer.updateArchive server nv spec archive k
-      ) servers in
-    ()
-
-  (* Upload reads NAME.spec (or NAME if it ends .spec) to get the current package version.
-     Then it looks for NAME-VERSION.tar.gz in the same directory (if it exists).
-     If not, it looks for provided URLs.
-     Then, it sends both NAME.spec and NAME-VERSION.tar.gz to the server *)
-  let upload name =
-    log "upload %s" name;
+  let upload upload repo =
+    log "upload %s" (string_of_upload upload);
     let t = load_state () in
+    let opam = File.OPAM.read upload.opam in
+    let name = File.OPAM.name opam in
+    let version = File.OPAM.version opam in
+    let nv = NV.create name version in
+    let repo = match repo with
+      | None ->
+          if N.Map.mem name t.repo_index then
+            N.Map.find name t.repo_index
+          else
+            Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
+      | Some repo -> repo in
+    let path = List.assoc repo t.repositories in
+    Filename.copy upload.opam  (Path.R.upload_opam path nv);
+    Filename.copy upload.descr (Path.R.upload_descr path nv);
+    Filename.copy upload.archive (Path.R.upload_archive path nv);
+    Repositories.opam_upload path repo
 
-    (* Get the current package version *)
-    let spec_f =
-      if Filename.check_suffix name "spec" then
-        name
-      else
-        name ^ ".spec" in
-    let spec_s = Run.U.read spec_f in
-    let spec = File.Spec.parse spec_s in
-    let version = File.Spec.version spec in
-    let name = File.Spec.name spec in
-    let spec_b = Raw_binary (File.Spec.to_string spec) in
+  let config request =
+    log "config %s" (string_of_config request);
+(*    let t = load_state () in *)
+    failwith "TODO"
 
-    (* look for the archive *)
-    let archive_filename = Namespace.string_of_nv name version ^ ".tar.gz" in
-    let archive =
-      if Sys.file_exists archive_filename then
-        Raw_binary (Run.U.read archive_filename)
-      else
-        let sources = File.Spec.sources spec in
-        let patches = File.Spec.patches spec in
-        (* the ".spec" being processed contains only local patches *)
-        let nv = name, version in
-        let tmp_nv = Path.concat Path.cwd (B (Namespace.string_of_nv (fst nv) (snd nv))) in
-        let () =
-          begin                 
-            (* try to check that patches are well-parsed before the copy.
-               Currently, only ".install" are processed. *)
-            List.iter
-              (function Internal p, _ ->
-                if not (Sys.is_directory p) && Filename.check_suffix p "install" then
-                  (try ignore (File.To_install.parse (Run.U.read p)) with e -> 
-                    Globals.error_and_exit "%s\nwhile parsing '%s'." (Printexc.to_string e) p)
-                else
-                  () (* TODO perform the recursive check for a directory. 
-                        Change [Path.add_rec] such that it accepts an optional checking function. *)
-                | _ -> ())
-              patches;
-              
-            (* include the patches inside the downloaded directory *)
-            Path.add_rec tmp_nv (Path.extract nv (Links { sources ; patches }));
-            Path.to_archive archive_filename tmp_nv;
-            Path.remove tmp_nv;
-          end in
-        Raw_binary (Run.U.read archive_filename) in
-
-    (* Upload both files to the server and update the client
-       filesystem to reflect the new uploaded packages *)
-    let local_server = server_init !Globals.root_path in
-
-    let o_key = File.Security_key.find (Path.keys t.home name) in
-    match o_key with
-    | None   ->
-        let k1 = newArchive t.servers (name, version) spec_b archive in
-        let k2 = Server.newArchive local_server (name, version) spec_b archive in
-        let k = match k1 with
-          | None   -> k2
-          | Some k -> k in
-        File.Security_key.add (Path.keys t.home name) k
-    | Some k ->
-        updateArchive t.servers (name, version) spec_b archive k;
-        Server.updateArchive local_server (name, version) spec_b archive k
-
-  let config rec_search req names =
-    log "config %s" (String.concat "," (List.map Namespace.string_of_name names));
-    let t = load_state () in
-
-    let l_index = Path.index_list t.home in
-
-    let installed = File.Installed.Map.find (Path.O.installed t.home) in
-
+(*
     let version name =
       match
         match req, N_map.Exceptionless.find name installed with
@@ -691,16 +605,14 @@ module Client : CLIENT = struct
 
       (* Otherwise, we need to compute the transitive closure of dependencies *)
       iter_with_spaces one (get_dependencies rec_search names)
-
-  let string_of_remote_action = function
-    | List     -> "list"
-    | Add s    -> Printf.sprintf "add %s" s
-    | AddGit s -> Printf.sprintf "add-git %s" s
-    | Rm s     -> Printf.sprintf "rm %s" s
+*)
 
   let remote action =
-    log "remote %s" (string_of_remote_action action);
-    let t = load_state () in
+    log "remote %s" (string_of_remote action);
+(*    let t = load_state () in *)
+    failwith "TODO"
+
+(*
     let update_config servers =
       let config = File.Config.find_err (Path.config t.home) in
       let new_config = File.Config.with_sources config servers in
@@ -740,10 +652,14 @@ module Client : CLIENT = struct
             (Path.string_of_filename (Path.index t.home None))
             server.hostname;
         update_config (List.filter ((!=) server) t.servers)
+*)
 
   let switch name =
-    log "switch %s" name;
-    let t = load_state () in
+    log "switch %s" (OCaml_V.to_string name);
+(*    let t = load_state () in *)
+    failwith "TODO"
+
+(*
     let compile compil =
       failwith "TODO" in
     if Filename.check_suffix name ".compil" then begin
@@ -760,5 +676,8 @@ module Client : CLIENT = struct
       let compil = File.Compil.find compil_f in
       compile compil
     end
+*)
       
 end
+
+
