@@ -66,9 +66,10 @@ let init = {
   anon;
   main     =
     parse_args (function
-    | [repo; address]  ->
-        let repo = Repository.create repo !kind in
-        Client.init repo address
+    | [] ->
+        Client.init Repository.default
+    | [name; address]  ->
+        Client.init (Repository.create ~name ~address ~kind:!kind)
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 
@@ -130,7 +131,7 @@ let config = {
           bad_argument
             "config"  "Missing command [%s]" 
             (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
-      | Some `Include  -> mk (Include (List.map N.of_string names))
+      | Some `Include  -> mk (Includes (List.map N.of_string names))
       | Some `Bytecomp -> mk (Bytecomp (List.map args names))
       | Some `Bytelink -> mk (Bytelink (List.map args names))
       | Some `Asmcomp  -> mk (Asmcomp (List.map args names))

@@ -54,6 +54,17 @@ val command: ('a, unit, string, int) format4 -> 'a
     one command fails. *)
 val commands: string list -> int
 
+(** [read_command_output fmt] executes the command [fmt] and return
+    the lines from stdout *)
+val read_command_output: ('a, unit, string, string list) format4 -> 'a
+
 (** [extract filename dirname] untar the archive [filename] to
     [dirname] *)
 val extract: string -> string -> unit
+
+(** Return the current working directory *)
+val cwd: unit -> string
+
+(** Create a directory. Do not fail if the directory already
+    exist. *)
+val mkdir: string -> unit

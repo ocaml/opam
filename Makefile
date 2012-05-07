@@ -1,12 +1,12 @@
+BIN = /usr/local/bin
 OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 OCAMLC=ocamlc
 SRC_EXT=src_ext
-
-TARGETS = opam
+TARGETS = opam opam-rsync-init opam-rsync-update
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile clone $(TARGETS)
+all: ./_obuild/unixrun compile clone build
 	@
 
 scan: ./_obuild/unixrun
@@ -25,8 +25,8 @@ bootstrap: _obuild/unixrun _obuild/opam/opam.byte
 	rm -f boot/opam.boot
 	ocp-bytehack -static _obuild/opam/opam.byte -o boot/opam.boot
 
-opam:
-	$(OCPBUILD) opam
+build:
+	$(OCPBUILD) $(TARGETS)
 
 compile: ./_obuild/unixrun clone
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
@@ -53,3 +53,10 @@ tests:
 
 tests-runserver:
 	$(MAKE) -C tests runserver
+
+%-install:
+	cp _obuild/$*/$*.asm $(BIN)/$*
+
+.PHONY: install
+install: $(TARGETS:%=%-install)
+	@

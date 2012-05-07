@@ -68,10 +68,16 @@ val parse_group : (value -> 'a) -> value -> 'a list
 val parse_option : (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b list
 
 (** Parse a string with an optional argument *)
-val parse_string_option : value -> string * string option
+val parse_string_option : (value list -> 'a) -> value -> string * 'a option
 
 (** Parse a list of strings *)
 val parse_string_list : value -> string list
+
+(** Parse a single string *)
+val parse_single_string: value list -> string
+
+(** Parse a pair of strings *)
+val parse_string_pair: value list -> string * string
 
 (** Try to parse the value using function from the list. All the
     parsing functions are tried until one succeeds. *)

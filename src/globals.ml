@@ -34,7 +34,7 @@ let root_path = ref default_opam_path
 let log section fmt =
   Printf.kprintf (fun str ->
     if !debug then
-      Printf.eprintf " %-20s %s\n%!" section str
+      Printf.eprintf "[%d] %-20s %s\n%!" (Unix.getpid ()) section str
   ) fmt
 
 let error fmt =

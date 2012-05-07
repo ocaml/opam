@@ -24,7 +24,7 @@ sig
   type t
 
   (** Initializes the client a consistent state. *)
-  val init : repository -> string -> unit
+  val init : repository -> unit
 
   (** Displays all available packages *)
   val list : unit -> unit
@@ -71,14 +71,14 @@ module Client : CLIENT = struct
     available   : NV.Set.t;                     (* ~/.opam/opam/ files *)
     installed   : NV.Set.t;                     (* ~/.opam/$oversion/installed contents *)
     config      : File.Config.t;                (* ~/.opam/config contents *)
-    repo_index  : repository N.Map.t;           (* ~/.opam/repo/index contents *)
+    repo_index  : string N.Map.t;               (* ~/.opam/repo/index contents *)
   }
 
   (* Look into the content of ~/.opam/config to build the client state *)
   (* Do not call RemoteServer functions here, as it implies a
      network roundtrip *)
   let load_state () =
-    let global = Path.G.create (d !Globals.root_path) in
+    let global = Path.G.create (Dirname.of_string !Globals.root_path) in
     let config = File.Config.read (Path.G.config global) in
     let ocaml_version = File.Config.ocaml_version config in
     let compiler = Path.C.create global ocaml_version in
@@ -89,12 +89,35 @@ module Client : CLIENT = struct
     let available = Path.G.available global in
     { global; compiler; repositories; available; installed; repo_index; config }
 
-  let update () =
-    let t = load_state () in
-    List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories
 
-  let init repo address =
-    log "init %s %s" (Repository.to_string repo) address;
+  let find_repository_path t name =
+    let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
+    r
+
+  let find_repository t name =
+    let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
+    r
+
+  let update () =
+    log "update";
+    let t = load_state () in
+    (* first update all the repo *)
+    List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories;
+    (* the update $opam/repo/index *)
+    let repo_index =
+      List.fold_left (fun repo_index (r,p) ->
+        NV.Set.fold (fun nv repo_index ->
+          let name = NV.name nv in
+          if not (N.Map.mem name repo_index) then
+            N.Map.add name (Repository.name r) repo_index
+          else
+            repo_index
+        ) (Path.R.available p) repo_index
+      ) t.repo_index t.repositories in
+    File.Repo_index.write (Path.G.repo_index t.global) repo_index
+
+  let init repo =
+    log "init %s" (Repository.to_string repo);
     let root = Path.G.create (Dirname.of_string !Globals.root_path) in
     let config_f = Path.G.config root in
     if Filename.exists config_f then
@@ -103,15 +126,19 @@ module Client : CLIENT = struct
       let opam_version = OPAM_V.of_string Globals.opam_version in
       let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
       let config = File.Config.create opam_version [repo] ocaml_version in
-      File.Config.write config_f config;
       let compiler = Path.C.create root ocaml_version in
+      let repo_p = Path.R.create root repo in
+      (* Create (possibly empty) configuration files *)
+      File.Config.write config_f config;
       File.Installed.write (Path.C.installed compiler) File.Installed.empty;
-      let repositories = File.Config.repositories config in
-      List.iter (fun r ->
-        let p = Path.R.create root r in
-        Repositories.opam_init p r;
-        File.Address.write (Path.R.address p) address;
-      ) repositories
+      File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
+      File.Repo_config.write (Path.R.config repo_p) repo;
+      Repositories.opam_init repo_p repo;
+      Dirname.mkdir (Path.G.opam_dir root);
+      Dirname.mkdir (Path.G.descr_dir root);
+      Dirname.mkdir (Path.G.archive_dir root);
+      (* Update the configuration files *)
+      update ()
 
   let indent_left s nb =
     let nb = nb - String.length s in
@@ -217,14 +244,14 @@ module Client : CLIENT = struct
   let proceed_toinstall t nv = 
 
     let name = NV.name nv in
-    let to_install = File.To_install.read (Path.C.install t.compiler name) in
+    let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
 
     (* lib *) 
     let lib = Path.C.lib t.compiler name in
-    List.iter (fun f -> Filename.copy_in f lib) (File.To_install.lib to_install);
+    List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib to_install);
   
     (* bin *) 
-    List.iter (fun (src, dst) -> Filename.copy src dst) (File.To_install.bin to_install);
+    List.iter (fun (src, dst) -> Filename.copy src dst) (File.Dot_install.bin to_install);
   
     (* misc *)
     List.iter 
@@ -236,18 +263,18 @@ module Client : CLIENT = struct
           if confirm "Continue ?" then
             Filename.copy src dst
         end
-      ) (File.To_install.misc to_install)
+      ) (File.Dot_install.misc to_install)
 
   let proceed_todelete t nv =
     log "deleting %s" (NV.to_string nv);
     let name = NV.name nv in
 
     (* Remove the libraries *)
-    Dirname.remove (Path.C.lib t.compiler name);
+    Dirname.rmdir (Path.C.lib t.compiler name);
           
     (* Remove the binaries *)
-    let to_install = File.To_install.read (Path.C.install t.compiler name) in
-    List.iter (fun (_,dst) -> Filename.remove dst) (File.To_install.bin to_install);
+    let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
+    List.iter (fun (_,dst) -> Filename.remove dst) (File.Dot_install.bin to_install);
 
     (* Remove the misc files *)
     List.iter (fun (_,dst) ->
@@ -256,13 +283,14 @@ module Client : CLIENT = struct
         if confirm "Continue ?" then
           Filename.remove dst
       end
-    ) (File.To_install.misc to_install)
+    ) (File.Dot_install.misc to_install)
 
   let get_archive t nv =
     log "get_archive %s" (NV.to_string nv);
     let name = NV.name nv in
     let repo = N.Map.find name t.repo_index in
-    let src = Path.R.archive (List.assoc repo t.repositories) nv in
+    let repo_p = find_repository_path t repo in
+    let src = Path.R.archive repo_p nv in
     let dst = Path.G.archive t.global nv in
     Filename.link src dst;
     dst
@@ -275,7 +303,7 @@ module Client : CLIENT = struct
 
     (* Then, untar the archive *)
     let p_build = Path.C.build t.compiler nv in
-    Dirname.remove p_build;
+    Dirname.rmdir p_build;
     Filename.extract (get_archive t nv) p_build;
 
     (* Call the build script and copy the output files *)
@@ -492,15 +520,15 @@ module Client : CLIENT = struct
     let repo = match repo with
       | None ->
           if N.Map.mem name t.repo_index then
-            N.Map.find name t.repo_index
+            find_repository t (N.Map.find name t.repo_index)
           else
             Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
       | Some repo -> repo in
-    let path = List.assoc repo t.repositories in
-    Filename.copy upload.opam  (Path.R.upload_opam path nv);
-    Filename.copy upload.descr (Path.R.upload_descr path nv);
-    Filename.copy upload.archive (Path.R.upload_archive path nv);
-    Repositories.opam_upload path repo
+    let repo_p = List.assoc repo t.repositories in
+    Filename.copy upload.opam  (Path.R.upload_opam repo_p nv);
+    Filename.copy upload.descr (Path.R.upload_descr repo_p nv);
+    Filename.copy upload.archive (Path.R.upload_archive repo_p nv);
+    Repositories.opam_upload repo_p repo
 
   let config request =
     log "config %s" (string_of_config request);

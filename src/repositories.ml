@@ -17,42 +17,37 @@ open Types
 
 let log fmt = Globals.log "REPO" fmt
 
-module Script = struct
-  let opam_init     r = Printf.sprintf "opam-%s-init"     (Repository.kind r)
-  let opam_update   r = Printf.sprintf "opam-%s-update"   (Repository.kind r)
-  let opam_download r = Printf.sprintf "opam-%s-download" (Repository.kind r)
-  let opam_upload   r = Printf.sprintf "opam-%s-upload"   (Repository.kind r)
-end
-
-let run fn root repo =
+let run cmd root repo =
+  log "opam-%s: %s" cmd (Repository.to_string repo);
   let path = Path.R.root root in
+  let cmd =  Printf.sprintf "opam-%s-%s" (Repository.kind repo) cmd in
   let i = Run.in_dir (Dirname.to_string path) (fun () ->
-    Run.command "%s" (fn repo);
+    Run.command "%s %s" cmd (Repository.address repo);
   ) in
   if i <> 0 then
-    Globals.error_and_exit "%s failed" (fn repo)
+    Globals.error_and_exit "%s failed" cmd
 
 let opam_init root r =
-  log "opam-init: %s" (Repository.to_string r);
-  run Script.opam_init root r;
+  run "init" root r;
+  File.Repo_config.write (Path.R.config root) r;
+  Dirname.mkdir (Path.R.opam_dir root);
+  Dirname.mkdir (Path.R.descr_dir root);
+  Dirname.mkdir (Path.R.archive_dir root);
   (* XXX *)
   ()
 
 (* Generic repository pluggins *)
 let opam_update root r =
-  log "opam-update: %s" (Repository.to_string r);
-  run Script.opam_update root r;
+  run "update" root r;
   (* XXX *)
   ()
 
 let opam_download root r =
-  log "opam-download: %s" (Repository.to_string r);
-  run Script.opam_download root r;
+  run "download" root r;
   (* XXX *)
   ()
 
 let opam_upload root r =
-  log "opam-upload: %s" (Repository.to_string r);
-  run Script.opam_upload root r;
+  run "upload" root r;
   (* XXX *)
   ()

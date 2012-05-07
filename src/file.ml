@@ -19,28 +19,9 @@ open File_format
 
 exception Parsing of string
 
-module type IO_FILE = sig
+module Lines = struct
 
-  (** kind of IO file, for debugging purposes *)
-  val kind : string
-
-  (** File contents *)
-  type t
-
-  (** An empty file *)
-  val empty : t
-
-  (** Parse a string or raise the exception [Parsing _]. *)
-  val of_string : Filename.t -> Raw.t -> t
-
-  (** Return the raw content of a file as a string *)
-  val to_string : Filename.t -> t -> Raw.t
-
-end
-
-module Lines : IO_FILE with type t = string list list = struct
-
-  let kind = "lines"
+  let internal = "lines"
 
   (* Lines of space separated words *)
   type t = string list list
@@ -61,136 +42,10 @@ module Lines : IO_FILE with type t = string list list = struct
 
 end
 
-module Address : IO_FILE with type t = string = struct
 
-  let kind = "address"
+module Syntax = struct
 
-  type t = string
-
-  let empty = Globals.default_repository_address
-
-  let of_string filename t =
-    match Lines.of_string filename t with
-    | [[a]] -> a
-    | _     -> Globals.error_and_exit "address: bad contents"
-
-  let to_string filename a =
-    Lines.to_string filename [[a]]
-
-end
-
-module Kind : IO_FILE with type t = string = struct
-  let kind = "kind"
-  include Address
-end
-
-module Installed : sig
-  include IO_FILE with type t = NV.Set.t
-end = struct
-
-  let kind = "installed"
-
-  type t = NV.Set.t
-
-  let empty = NV.Set.empty
-    
-  let of_string f s =
-    let lines = Lines.of_string f s in
-    let map = ref empty in
-    let add n v = map := NV.Set.add (NV.create n v) !map in
-    List.iter (function
-      | [name; version] -> add (N.of_string name) (V.of_string version)
-      | _               -> Globals.error_and_exit "installed"
-    ) lines;
-    !map
-
-  let to_string _ t =
-    let buf = Buffer.create 1024 in
-    NV.Set.iter
-      (fun nv -> Printf.bprintf buf "%s %s\n" (N.to_string (NV.name nv)) (V.to_string (NV.version nv)))
-      t;
-    Raw.of_string (Buffer.contents buf)
-
-end
-
-module Reinstall : sig
-  include IO_FILE with type t = NV.Set.t
-end = struct
-  include Installed
-end
-
-module Repo_index : sig
-
-  include IO_FILE with type t = repository N.Map.t
-  
-end = struct
-
-  let kind = "repo-index"
-
-  type t = repository N.Map.t
-
-  let empty = N.Map.empty
-
-  let of_string filename str =
-    let lines = Lines.of_string filename str in
-    List.fold_left (fun map -> function
-      | [name_s; repo_s] ->
-          let repo = Repository.of_string repo_s in
-          let name = N.of_string name_s in
-          if N.Map.mem name map then
-            Globals.error_and_exit "multiple lines for package %s" name_s
-          else
-            N.Map.add name repo map
-      | x ->
-          Globals.error_and_exit "'%s' is not a valid repository index line" (String.concat " " x)
-    ) N.Map.empty lines
-
-  let to_string filename map =
-    let lines = N.Map.fold (fun name repo lines ->
-      [ N.to_string name; Repository.to_string repo] :: lines
-    ) map [] in
-    Lines.to_string filename (List.rev lines)
-
-end          
-
-module Descr : sig
-
-  include IO_FILE
-
-  val synopsis: t -> string
-  val full: t -> string
-
-end = struct
-
-  let kind = "descr"
-
-  type t = Lines.t
-
-  let empty = []
-
-  let synopsis = function
-    | []   -> ""
-    | h::_ -> String.concat " " h
-
-  let full l =
-    let one l = String.concat " " l in
-    String.concat "\n" (List.map one l)
-
-  let of_string = Lines.of_string
-
-  let to_string = Lines.to_string
-
-end
-
-module Syntax : sig
-
-  include IO_FILE with type t = File_format.file
-
-  val check: t -> string list -> unit
-
-end = struct
-
-  let kind = "syntax"
+  let internal = "syntax"
 
   type t = File_format.file
 
@@ -210,34 +65,150 @@ end = struct
         f.filename
 end
 
-module Config : sig
+module X = struct
 
-  include IO_FILE
+module Installed = struct
 
-  type repository = Types.repository
+  let internal = "installed"
 
-  (** destruct *)
-  val opam_version : t  -> OPAM_V.t
-  val repositories : t  -> repository list
-  val ocaml_version : t -> OCaml_V.t
+  type t = NV.Set.t
 
-  (** construct *)
-  val create : OPAM_V.t -> repository list -> OCaml_V.t -> t
+  let empty = NV.Set.empty
 
-end = struct
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    let map = ref empty in
+    let add n v = map := NV.Set.add (NV.create n v) !map in
+    List.iter (function
+      | [name; version] -> add (N.of_string name) (V.of_string version)
+      | _               -> Globals.error_and_exit "installed"
+    ) lines;
+    !map
 
-    let kind = "config"
+  let to_string _ t =
+    let buf = Buffer.create 1024 in
+    NV.Set.iter
+      (fun nv -> Printf.bprintf buf "%s %s\n" (N.to_string (NV.name nv)) (V.to_string (NV.version nv)))
+      t;
+    Raw.of_string (Buffer.contents buf)
 
-    type repository = Types.repository
+end
 
-    let to_repo (name, kind) =
-      let kind = match kind with
-        | None   -> Globals.default_repository_kind
-        | Some k -> k in
-      Repository.create ~name ~kind
+module Reinstall = struct
+
+  include Installed
+
+  let internal = "reinstall"
+
+end
+
+module Updated = struct
+
+  include Installed
+
+  let internal = "updated"
+
+end
+
+module Repo_index = struct
+    
+  let internal = "repo-index"
+
+  type t = string N.Map.t
+
+  let empty = N.Map.empty
+
+  let of_string filename str =
+    let lines = Lines.of_string filename str in
+    List.fold_left (fun map -> function
+      | [name_s; repo_s] ->
+          let name = N.of_string name_s in
+          if N.Map.mem name map then
+            Globals.error_and_exit "multiple lines for package %s" name_s
+          else
+            N.Map.add name repo_s map
+      | x ->
+          Globals.error_and_exit "'%s' is not a valid repository index line" (String.concat " " x)
+    ) N.Map.empty lines
+
+  let to_string filename map =
+    let lines = N.Map.fold (fun name repo lines ->
+      [ N.to_string name; repo] :: lines
+    ) map [] in
+    Lines.to_string filename (List.rev lines)
+
+end
+
+module Repo_config = struct
+
+  let internal = "repo-config"
+
+  type t = repository
+
+  let empty =
+    Repository.create ~name:"<none>" ~address:"<none>" ~kind:"<none>"
+
+  let s_name = "name"
+  let s_kind = "kind"
+  let s_address = "address"
+
+  let of_string filename str =
+    let s = Syntax.of_string filename str in
+    let name = assoc s.contents s_name parse_string in
+    let address = assoc s.contents s_address parse_string in
+    let kind = assoc s.contents s_kind parse_string in
+    Repository.create ~name ~address ~kind
+
+  let to_string filename t =
+    let s = {
+      filename = Filename.to_string filename;
+      contents = [
+        Variable (s_name   , String (Repository.name t));
+        Variable (s_address, String (Repository.address t));
+        Variable (s_kind   , String (Repository.kind t));
+      ] } in
+    Syntax.to_string filename s
+
+end
+
+module Descr = struct
+
+  let internal = "descr"
+
+  type t = Lines.t
+
+  let empty = []
+
+  let synopsis = function
+    | []   -> ""
+    | h::_ -> String.concat " " h
+
+  let full l =
+    let one l = String.concat " " l in
+    String.concat "\n" (List.map one l)
+
+  let of_string = Lines.of_string
+
+  let to_string = Lines.to_string
+
+end
+
+module Config = struct
+
+    let internal = "config"
+
+    let to_repo (name, option) =
+      let address, kind = match option with
+        | Some (address, kind) -> address, kind
+        | None                 -> 
+            Globals.default_repository_kind,
+            Globals.default_repository_address in
+      Repository.create ~name ~address ~kind
 
     let of_repo r =
-      Option (String (Repository.name r), [ String (Repository.kind r)])
+      Option (String (Repository.name r),
+              [ String (Repository.address r);
+                String (Repository.kind r) ])
 
     type t = {
       opam_version  : OPAM_V.t ;
@@ -254,9 +225,7 @@ end = struct
 
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
-      repositories = [ Repository.create
-                         ~name:Globals.default_repository_name
-                         ~kind:Globals.default_repository_kind ];
+      repositories = [];
       ocaml_version = OCaml_V.of_string Sys.ocaml_version;
     }
 
@@ -264,7 +233,7 @@ end = struct
 
     let s_opam_version = "opam-version"
     let s_repositories = "repositories"
-    let s_ocaml_version = "ocaml_version"
+    let s_ocaml_version = "ocaml-version"
 
     let valid_fields = [
       s_opam_version;
@@ -278,7 +247,8 @@ end = struct
       let opam_version =
         assoc s.contents s_opam_version (parse_string |> OPAM_V.of_string) in
       let repositories =
-        assoc s.contents s_repositories (parse_list (parse_string_option |> to_repo)) in
+        assoc s.contents s_repositories
+          (parse_list (parse_string_option parse_string_pair |> to_repo)) in
       let ocaml_version =
         assoc s.contents s_ocaml_version (parse_string |> OCaml_V.of_string) in
       { opam_version; repositories; ocaml_version }
@@ -295,27 +265,9 @@ end = struct
      Syntax.to_string filename s
 end
 
-module OPAM : sig 
+module OPAM = struct
 
-  include IO_FILE
-
-  (** destruct *)
-  val name        : t -> N.t
-  val version     : t -> V.t
-  val maintainer  : t -> string
-  val substs      : t -> filename list
-  val build       : t -> string list list
-  val depends     : t -> Debian.Format822.vpkgformula
-  val conflicts   : t -> Debian.Format822.vpkglist
-  val libraries   : t -> string list
-  val syntax      : t -> string list
-
-  (** Convert to Debian packages to feed the solver *)
-  val to_package : t -> bool (* true : installed *) -> Debian.Packages.package
-
-end = struct
-
-  let kind = "opam"
+  let internal = "opam"
 
   type t = {
     name       : N.t;
@@ -389,7 +341,7 @@ end = struct
       D.depends   = t.depends ;
       D.conflicts = t.conflicts }
 
-  let to_package t installed =
+  let to_package t ~installed =
     let p = default_package t in
     if installed then 
       { p with D.extras = (s_status, s_installed) :: p.D.extras }
@@ -441,18 +393,9 @@ end = struct
       depends; conflicts; libraries; syntax }
 end
 
-module To_install : sig
+module Dot_install = struct
 
-  include IO_FILE
-
-  (** destruct *)
-  val lib:  t -> filename list
-  val bin:  t -> (filename * filename) list
-  val misc: t -> (filename * filename) list
-
-end = struct
-
-  let kind = "install"
+  let internal = "install"
     
   type t =  {
     lib : filename list ;
@@ -506,7 +449,7 @@ end = struct
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
     let parse_move v =
-      match parse_string_option v with
+      match parse_string_option parse_single_string v with
       | s  , None     -> let f = Filename.of_string s in (f, f)
       | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
     let lib = assoc_list s.contents s_lib (parse_list (parse_string |> Filename.of_string)) in
@@ -516,34 +459,9 @@ end = struct
 
 end
 
-(* Package config X.config *)
-module PConfig : sig
-  
-  include IO_FILE
+module Dot_config = struct
 
-  type value =
-    | B of bool
-    | S of string
-
-  module Section  : Abstract
-
-  module type SECTION = sig
-    val asmcomp : t -> Section.t -> string list
-    val bytecomp: t -> Section.t -> string list
-    val asmlink : t -> Section.t -> string list
-    val bytelink: t -> Section.t -> string list
-    val variable: t -> Section.t -> Variable.t  -> value
-  end
-
-  module Library : SECTION
-
-  module Syntax  : SECTION
-
-  val variables: t -> Variable.t  -> value
-
-end = struct
-
-  let kind = ".config"
+  let internal = ".config"
 
   type value =
     | B of bool
@@ -552,10 +470,9 @@ end = struct
   let s str = S str
   let b bool = B bool
 
-  module Section  : Abstract = Base
-
   type section = { 
-    name      : Section.t ;
+    name      : string ;
+    includes  : string list ;
     bytecomp  : string list ;
     asmcomp   : string list ;
     bytelink  : string list ;
@@ -575,12 +492,14 @@ end = struct
     variables = [];
   }
 
+  let s_includes = "includes"
   let s_bytecomp = "bytecomp"
   let s_asmcomp  = "asmcomp"
   let s_bytelink = "bytelink"
   let s_asmlink  = "asmlink"
 
   let valid_fields = [
+    s_includes;
     s_bytecomp;
     s_asmcomp;
     s_bytelink;
@@ -594,7 +513,8 @@ end = struct
       (parse_bool   |> b);
     ] in
     let parse_section s =
-      let name = Section.of_string s.File_format.name in
+      let name = s.File_format.name in
+      let includes = assoc_string_list s.items s_includes in
       let bytecomp = assoc_string_list s.items s_bytecomp in
       let asmcomp  = assoc_string_list s.items s_asmcomp  in
       let bytelink = assoc_string_list s.items s_bytecomp in
@@ -603,7 +523,7 @@ end = struct
         List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables s.items) in
       let lvariables =
         List.map (fun (k,v) -> Variable.of_string k, parse_value v) lvariables in
-      { name; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
+      { name; includes; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
     let libraries = assoc_sections file.contents "library" parse_section in
     let syntax    = assoc_sections file.contents "syntax" parse_section in
     let variables =
@@ -621,8 +541,9 @@ end = struct
     let of_section kind s =
       Section
         { File_format.kind;
-          name = Section.to_string s.name;
+          name = s.name;
           items = [
+            Variable (s_includes, make_list make_string s.includes);
             Variable (s_bytecomp, make_list make_string s.bytecomp);
             Variable (s_asmcomp , make_list make_string s.asmcomp);
             Variable (s_bytelink, make_list make_string s.bytelink);
@@ -642,18 +563,20 @@ end = struct
   let variables t s = List.assoc s t.variables
 
   module type SECTION = sig
-    val asmcomp : t -> Section.t -> string list
-    val bytecomp: t -> Section.t -> string list
-    val asmlink : t -> Section.t -> string list
-    val bytelink: t -> Section.t -> string list
-    val variable: t -> Section.t -> Variable.t  -> value
+    val includes: t -> string -> string list
+    val asmcomp : t -> string -> string list
+    val bytecomp: t -> string -> string list
+    val asmlink : t -> string -> string list
+    val bytelink: t -> string -> string list
+    val variable: t -> string -> Variable.t  -> value
   end
 
-  module Make (M : sig val get : t -> section list end) : SECTION = struct
+  module Section (M : sig val get : t -> section list end) : SECTION = struct
 
     let find t name =
       List.find (fun s -> s.name = name) (M.get t)
 
+    let includes t s = (find t s).includes
     let bytecomp t s = (find t s).bytecomp
     let asmcomp  t s = (find t s).asmcomp
     let bytelink t s = (find t s).bytelink
@@ -661,13 +584,23 @@ end = struct
     let variable t n s = List.assoc s (find t n).lvariables
   end
 
-  module Library = Make (struct let get t = t.libraries end)
-  module Syntax  = Make (struct let get t = t.syntax    end)
+  module Library = Section (struct let get t = t.libraries end)
+  module Syntax  = Section (struct let get t = t.syntax    end)
 end
 
-module Make (F : IO_FILE) = struct
+end
 
-  let log = Globals.log ("FILE." ^ F.kind)
+module type F = sig
+  val internal : string
+  type t
+  val empty : t
+  val of_string : Filename.t -> Raw.t -> t
+  val to_string : Filename.t -> t -> Raw.t
+end
+
+module Make (F : F) = struct
+
+  let log = Globals.log ("FILE." ^ F.internal)
 
   (** Write some contents to a file *)
   let write f v =
@@ -677,7 +610,7 @@ module Make (F : IO_FILE) = struct
   (** Read file contents *)
   let read f =
     let filename = Filename.to_string f in
-    log "read_opt %s" filename;
+    log "read %s" filename;
     if Filename.exists f then
       F.of_string f (Filename.read f)
     else
@@ -685,59 +618,61 @@ module Make (F : IO_FILE) = struct
 
 end
 
+open X
 
-module File = struct
-
-  module Config = struct
-    include Config
-    include Make (Config)
-  end
-
-  module Repo_index = struct
-    include Repo_index
-    include Make (Repo_index)
-  end
-
-  module Address = struct
-    include Address
-    include Make (Address)
-  end
-
-  module Kind = struct
-    include Kind
-    include Make (Kind)
-  end
-
-  module Descr = struct
-    include Descr
-    include Make (Descr)
-  end
-
-  module Reinstall = struct
-    include Reinstall
-    include Make (Reinstall)
-  end
-
-  module OPAM = struct
-    include OPAM
-    include Make (OPAM)
-  end
-
-  module To_install = struct
-    include To_install
-    include Make (To_install)
-  end
-
-  module PConfig = struct
-    include PConfig
-    include Make (PConfig)
-  end
-
-  module Installed = struct
-    include Installed
-    include Make (Installed)
-  end
-
+module type IO_FILE = sig
+  type t
+  val empty: t
+  val write: filename -> t -> unit
+  val read : filename -> t
 end
 
-open File
+module Config = struct
+  include Config
+  include Make (Config)
+end
+
+module Repo_index = struct
+  include Repo_index
+  include Make (Repo_index)
+end
+
+module Repo_config = struct
+  include Repo_config
+  include Make (Repo_config)
+end
+
+module Descr = struct
+  include Descr
+  include Make (Descr)
+end
+
+module Reinstall = struct
+  include Reinstall
+  include Make (Reinstall)
+end
+
+module OPAM = struct
+  include OPAM
+  include Make (OPAM)
+end
+
+module Dot_install = struct
+  include Dot_install
+  include Make (Dot_install)
+end
+
+module Dot_config = struct
+  include Dot_config
+  include Make (Dot_config)
+end
+
+module Installed = struct
+  include Installed
+  include Make (Installed)
+end
+
+module Updated = struct
+  include Updated
+  include Make (Updated)
+end

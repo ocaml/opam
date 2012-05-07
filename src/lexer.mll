@@ -23,7 +23,8 @@ let escape_sharp = '#' (* FIXME replace every '#' below by [escape_sharp] *)
 let space = [' ' '\t' '\r' '\n']
 let alpha = ['a'-'z' 'A'-'Z' '_']
 let digit = ['0'-'9']
-let ident = alpha (alpha | digit)*
+let char  = ['-']
+let ident = alpha (alpha | digit | char)*
 let symbol = ['=' '<' '>' '!']+
 let number = '-'? ('.'['0'-'9']+ | ['0'-'9']+('.'['0'-'9']*)? )
 

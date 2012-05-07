@@ -17,7 +17,8 @@ let log fmt = Globals.log "RUN" fmt
 
 let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
 
-let mkdir dir = 
+let mkdir dir =
+  log "mkdir %s" dir;
   let rec aux dir = 
     if not (Sys.file_exists dir) then begin
       aux (Filename.dirname dir);
@@ -47,6 +48,7 @@ let copy src dst =
   close_out oc
 
 let read file =
+  log "read %s" file;
   let ic = open_in file in
   let n = in_channel_length ic in
   let s = String.create n in
@@ -55,9 +57,13 @@ let read file =
   s
 
 let write file contents =
+  mkdir (Filename.dirname file);
+  log "write %s" file;
   let oc = open_out file in
   output_string oc contents;
   close_out oc
+
+let cwd = Unix.getcwd
 
 let in_dir dir fn =
   let cwd = Unix.getcwd () in
@@ -129,14 +135,16 @@ let read_command_output_ cmd =
   let ic = Unix.open_process_in cmd in
   let lines = read_lines ic in
   if Unix.close_process_in ic <> Unix.WEXITED 0 then
-  None
+    None
   else
-  Some lines
+    Some lines
     
-let read_command_output cmd =
-  match read_command_output_ cmd with
-  | None -> Globals.error_and_exit "command %s failed" cmd
-  | Some lines -> lines
+let read_command_output fmt =
+  Printf.kprintf (fun cmd ->
+    match read_command_output_ cmd with
+    | None -> Globals.error_and_exit "command %s failed" cmd
+    | Some lines -> lines
+  ) fmt
 
 let normalize s =
   if Sys.file_exists s then
@@ -215,7 +223,7 @@ let is_archive file =
 
 let extract file dst =
   log "untar %s" file;
-  let files = read_command_output ("tar tf " ^ file) in
+  let files = read_command_output "tar tf %s" file in
   log "%d files found: %s" (List.length files) (String.concat ", " files);
   let aux name =
     if root name = Filename.basename dst then

@@ -112,12 +112,19 @@ let parse_option f g = function
   | Option (k,l) -> f k, List.map g l
   | k            -> f k, []
 
-let parse_string_option = function
-  | Option (String k, [String v]) -> k, Some v
-  | String k                      -> k, None
-  | x -> bad_format "expecting a string option, got %s" (kind x)
+let parse_string_option f = function
+  | Option (k,l) -> parse_string k, Some (f l)
+  | k            -> parse_string k, None
 
 let parse_string_list = parse_list parse_string
+
+let parse_string_pair = function
+  | [String x; String y] -> (x,y)
+  | x                    -> bad_format "expecting a pair of strings, got %s" (kinds x)
+
+let parse_single_string = function
+  | [String x] -> x
+  | x          -> bad_format "expecting a single string, got %s" (kinds x)
 
 let rec parse_or fns v =
   match fns with
@@ -155,9 +162,9 @@ and string_of_values l =
   String.concat " "  (List.map string_of_value l)
 
 let rec string_of_item = function
-  | Variable (i, v) -> Printf.sprintf "%s: %s\n" i (string_of_value v)
+  | Variable (i, v) -> Printf.sprintf "%s: %s" i (string_of_value v)
   | Section s       ->
-      Printf.sprintf "%s %S {\n%s\n}\n" s.kind s.name (string_of_items s.items)
+      Printf.sprintf "%s %S {\n%s\n}" s.kind s.name (string_of_items s.items)
 
 and string_of_items is =
   String.concat "\n" (List.map string_of_item is)

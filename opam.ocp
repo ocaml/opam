@@ -46,3 +46,15 @@ begin program "opam"
   ]
   requires = [ "opam-lib" ]
 end
+
+(* Repository Scripts *)
+
+begin program "opam-rsync-init"
+  files = [ "src/repo/rsync/init.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-rsync-update"
+  files = [ "src/repo/rsync/update.ml" ]
+  requires = [ "opam-lib" ]
+end

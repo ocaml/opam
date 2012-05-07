@@ -57,8 +57,8 @@ value:
 | SYMBOL                     { Symbol $1 }
 | IDENT                      { Ident $1 }
 | LPAR values RPAR           { Group $2 }
-| RBRACKET values LBRACKET   { List $2 }
-| value RBRACE values LBRACE { Option ($1, $3) }
+| LBRACKET values RBRACKET   { List $2 }
+| value LBRACE values RBRACE { Option ($1, $3) }
 ;
 
 values:
