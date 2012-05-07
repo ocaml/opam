@@ -14,232 +14,188 @@
 (***********************************************************************)
 
 open Types
-open Solver
 
 let log fmt =
   Globals.log "CLIENT" fmt
 
-module type CLIENT =
-sig
-  type t
+open Solver
+open File
+open Path
 
-  (** Initializes the client a consistent state. *)
-  val init : repository -> unit
+type t = {
+  global      : G.t;                     (* ~/.opam/ *)
+  compiler    : C.t;                     (* ~/.opam/$oversion/ *)
+  repositories: (repository * R.t) list; (* ~/.opam/repo/$repo/ *)
+  available   : NV.Set.t;                (* ~/.opam/opam/ files *)
+  installed   : NV.Set.t;                (* ~/.opam/$oversion/installed contents *)
+  config      : Config.t;                (* ~/.opam/config contents *)
+  repo_index  : string N.Map.t;          (* ~/.opam/repo/index contents *)
+}
 
-  (** Displays all available packages *)
-  val list : unit -> unit
-
-  (** Displays a general summary of a package. *)
-  val info : N.t -> unit
-
-  (** Depending on request, returns options or directories where the
-      package is installed. *)
-  val config : config -> unit
-
-  (** Installs the given package. *)
-  val install : N.t -> unit
-
-  (** Downloads the latest packages available. *)
-  val update : unit -> unit
-
-  (** Finds a consistent state where most of the installed packages are
-      upgraded to their latest version. *)
-  val upgrade : unit -> unit
-
-  (** Sends a new created package a remote repository. If repo is
-      [None] then look which is the main repository for the given
-      package *)
-  val upload : upload -> repository option -> unit
-
-  (** Removes the given package. *)
-  val remove : N.t -> unit
-
-  (** Manage remote repositories *)
-  val remote : remote -> unit
-
-  (** Switch to an OCaml compiler *)
-  val switch: OCaml_V.t -> unit
-end
-
-module Client : CLIENT = struct
-  open File
-
-  type t = {
-    global      : Path.G.t;                     (* ~/.opam/ *)
-    compiler    : Path.C.t;                     (* ~/.opam/$oversion/ *)
-    repositories: (repository * Path.R.t) list; (* ~/.opam/repo/$repo/ *)
-    available   : NV.Set.t;                     (* ~/.opam/opam/ files *)
-    installed   : NV.Set.t;                     (* ~/.opam/$oversion/installed contents *)
-    config      : File.Config.t;                (* ~/.opam/config contents *)
-    repo_index  : string N.Map.t;               (* ~/.opam/repo/index contents *)
-  }
-
-  (* Look into the content of ~/.opam/config to build the client state *)
-  (* Do not call RemoteServer functions here, as it implies a
-     network roundtrip *)
-  let load_state () =
-    let global = Path.G.create (Dirname.of_string !Globals.root_path) in
-    let config = File.Config.read (Path.G.config global) in
-    let ocaml_version = File.Config.ocaml_version config in
-    let compiler = Path.C.create global ocaml_version in
-    let repositories = File.Config.repositories config in
-    let repositories = List.map (fun r -> r, Path.R.create global r) repositories in
-    let repo_index = File.Repo_index.read (Path.G.repo_index global) in
-    let installed = File.Installed.read (Path.C.installed compiler) in
-    let available = Path.G.available global in
-    { global; compiler; repositories; available; installed; repo_index; config }
+(* Look into the content of ~/.opam/config to build the client
+   state *)
+let load_state () =
+  let global = Path.G.create (Dirname.of_string !Globals.root_path) in
+  let config = File.Config.read (Path.G.config global) in
+  let ocaml_version = File.Config.ocaml_version config in
+  let compiler = Path.C.create global ocaml_version in
+  let repositories = File.Config.repositories config in
+  let repositories = List.map (fun r -> r, Path.R.create global r) repositories in
+  let repo_index = File.Repo_index.read (Path.G.repo_index global) in
+  let installed = File.Installed.read (Path.C.installed compiler) in
+  let available = Path.G.available global in
+  { global; compiler; repositories; available; installed; repo_index; config }
 
 
-  let find_repository_path t name =
-    let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
-    r
+let find_repository_path t name =
+  let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
+  r
 
-  let find_repository t name =
-    let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
-    r
+let find_repository t name =
+  let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
+  r
 
-  let update () =
-    log "update";
-    let t = load_state () in
-    (* first update all the repo *)
-    List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories;
-    (* then update $opam/repo/index *)
-    let repo_index =
-      List.fold_left (fun repo_index (r,p) ->
-        NV.Set.fold (fun nv repo_index ->
-          let name = NV.name nv in
-          if not (N.Map.mem name repo_index) then
-            N.Map.add name (Repository.name r) repo_index
-          else
-            repo_index
-        ) (Path.R.available p) repo_index
-      ) t.repo_index t.repositories in
-    File.Repo_index.write (Path.G.repo_index t.global) repo_index;
-    (* finally create symbolic links from $repo dirs to main dir *)
-    N.Map.iter (fun n r ->
-      let repo_p = find_repository_path t r in
-      let available_versions = Path.R.available_versions repo_p n in
-      V.Set.iter (fun v ->
-        let nv = NV.create n v in
-        let opam_dir = Path.G.opam_dir t.global in
-        let opam = Path.R.opam repo_p nv in
-        let descr_dir = Path.G.descr_dir t.global in
-        let descr = Path.R.descr repo_p nv in
-        Filename.link_in opam opam_dir;
-        if Filename.exists descr then
-          Filename.link_in descr descr_dir
+let update () =
+  log "update";
+  let t = load_state () in
+  (* first update all the repo *)
+  List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories;
+  (* then update $opam/repo/index *)
+  let repo_index =
+    List.fold_left (fun repo_index (r,p) ->
+      NV.Set.fold (fun nv repo_index ->
+        let name = NV.name nv in
+        if not (N.Map.mem name repo_index) then
+          N.Map.add name (Repository.name r) repo_index
         else
-          Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
-      ) available_versions
-    ) repo_index
+          repo_index
+      ) (Path.R.available p) repo_index
+    ) t.repo_index t.repositories in
+  File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+  (* finally create symbolic links from $repo dirs to main dir *)
+  N.Map.iter (fun n r ->
+    let repo_p = find_repository_path t r in
+    let available_versions = Path.R.available_versions repo_p n in
+    V.Set.iter (fun v ->
+      let nv = NV.create n v in
+      let opam_dir = Path.G.opam_dir t.global in
+      let opam = Path.R.opam repo_p nv in
+      let descr_dir = Path.G.descr_dir t.global in
+      let descr = Path.R.descr repo_p nv in
+      Filename.link_in opam opam_dir;
+      if Filename.exists descr then
+        Filename.link_in descr descr_dir
+      else
+        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
+    ) available_versions
+  ) repo_index
 
-  let init repo =
-    log "init %s" (Repository.to_string repo);
-    let root = Path.G.create (Dirname.of_string !Globals.root_path) in
-    let config_f = Path.G.config root in
-    if Filename.exists config_f then
-      Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
-    else
-      let opam_version = OPAM_V.of_string Globals.opam_version in
-      let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
-      let config = File.Config.create opam_version [repo] ocaml_version in
-      let compiler = Path.C.create root ocaml_version in
-      let repo_p = Path.R.create root repo in
-      (* Create (possibly empty) configuration files *)
-      File.Config.write config_f config;
-      File.Installed.write (Path.C.installed compiler) File.Installed.empty;
-      File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
-      File.Repo_config.write (Path.R.config repo_p) repo;
-      Repositories.opam_init repo_p repo;
-      Dirname.mkdir (Path.G.opam_dir root);
-      Dirname.mkdir (Path.G.descr_dir root);
-      Dirname.mkdir (Path.G.archive_dir root);
-      (* Update the configuration files *)
-      update ()
+let init repo =
+  log "init %s" (Repository.to_string repo);
+  let root = Path.G.create (Dirname.of_string !Globals.root_path) in
+  let config_f = Path.G.config root in
+  if Filename.exists config_f then
+    Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
+  else
+    let opam_version = OPAM_V.of_string Globals.opam_version in
+    let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
+    let config = File.Config.create opam_version [repo] ocaml_version in
+    let compiler = Path.C.create root ocaml_version in
+    let repo_p = Path.R.create root repo in
+    (* Create (possibly empty) configuration files *)
+    File.Config.write config_f config;
+    File.Installed.write (Path.C.installed compiler) File.Installed.empty;
+    File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
+    File.Repo_config.write (Path.R.config repo_p) repo;
+    Repositories.opam_init repo_p repo;
+    Dirname.mkdir (Path.G.opam_dir root);
+    Dirname.mkdir (Path.G.descr_dir root);
+    Dirname.mkdir (Path.G.archive_dir root);
+    (* Update the configuration files *)
+    update ()
 
-  let indent_left s nb =
-    let nb = nb - String.length s in
-    if nb <= 0 then
-      s
-    else
-      s ^ String.make nb ' '
+let indent_left s nb =
+  let nb = nb - String.length s in
+  if nb <= 0 then
+    s
+  else
+    s ^ String.make nb ' '
 
-  let indent_right s nb =
-    let nb = nb - String.length s in
-    if nb <= 0 then
-      s
-    else
-      String.make nb ' ' ^ s
+let indent_right s nb =
+  let nb = nb - String.length s in
+  if nb <= 0 then
+    s
+  else
+    String.make nb ' ' ^ s
 
-  let find_from_name name l =
-    List.find_all (fun (n,_) -> n = name) l
+let find_from_name name l =
+  List.find_all (fun (n,_) -> n = name) l
 
-  let s_not_installed = "--"
+let s_not_installed = "--"
 
-  let list () =
-    log "list";
-    let t = load_state () in
-    (* Get all the installed packages *)
+let list () =
+  log "list";
+  let t = load_state () in
+  (* Get all the installed packages *)
+  let installed = File.Installed.read (Path.C.installed t.compiler) in
+  let map, max_n, max_v = 
+    NV.Set.fold
+      (fun nv (map, max_n, max_v) ->
+        let name = NV.name nv in
+        let version = NV.version nv in
+        if N.Map.mem name map then
+          map, max_n, max_v
+        else
+          (* If the packet has not been processed yet or 
+             if it has been processed but the version processed was not installed *)
+          let is_installed = NV.Set.mem nv installed in
+          let descr_f = File.Descr.read (Path.G.descr t.global nv) in
+          let synopsis = File.Descr.synopsis descr_f in
+          let map = N.Map.add name ((if is_installed then Some version else None), synopsis) map in
+          let max_n = max max_n (String.length (N.to_string name)) in
+          let max_v = if is_installed then max max_v (String.length (V.to_string version)) else max_v in
+          map, max_n, max_v)
+      (Path.G.available t.global)
+      (N.Map.empty, min_int, String.length s_not_installed)
+  in
+  N.Map.iter (fun name (version, description) ->
+    let version = match version with
+    | None   -> s_not_installed
+    | Some v -> V.to_string v in
+    Globals.msg "%s  %s  %s\n" 
+      (indent_left (N.to_string name) max_n)
+      (indent_right version max_v)
+      description) map
+
+let info package =
+  log "info %s" (N.to_string package);
+  let t = load_state () in
+
+  let o_v =
     let installed = File.Installed.read (Path.C.installed t.compiler) in
-    let map, max_n, max_v = 
-      NV.Set.fold
-        (fun nv (map, max_n, max_v) ->
-          let name = NV.name nv in
-          let version = NV.version nv in
-          if N.Map.mem name map then
-            map, max_n, max_v
-          else
-            (* If the packet has not been processed yet or 
-               if it has been processed but the version processed was not installed *)
-            let is_installed = NV.Set.mem nv installed in
-            let descr_f = File.Descr.read (Path.G.descr t.global nv) in
-            let synopsis = File.Descr.synopsis descr_f in
-            let map = N.Map.add name ((if is_installed then Some version else None), synopsis) map in
-            let max_n = max max_n (String.length (N.to_string name)) in
-            let max_v = if is_installed then max max_v (String.length (V.to_string version)) else max_v in
-            map, max_n, max_v)
-        (Path.G.available t.global)
-        (N.Map.empty, min_int, String.length s_not_installed)
-    in
+    try Some (V.Set.choose (N.Map.find package (NV.to_map installed)))
+    with Not_found -> None in
 
-    N.Map.iter (fun name (version, description) ->
-      let version = match version with
-        | None   -> s_not_installed
-        | Some v -> V.to_string v in
-      Globals.msg "%s  %s  %s\n" 
-        (indent_left (N.to_string name) max_n)
-        (indent_right version max_v)
-        description) map
+  let v_set =
+    let v_set = 
+      try Path.G.available_versions t.global package
+      with Not_found ->
+        Globals.error_and_exit "unknown package %s" (N.to_string package) in
+    match o_v with
+      | None   -> v_set
+      | Some v -> V.Set.remove v v_set in
 
-  let info package =
-    log "info %s" (N.to_string package);
-    let t = load_state () in
+  List.iter
+    (fun (tit, desc) -> Globals.msg "%12s: %s\n" tit desc)
+    (   ("package", N.to_string package)
 
-    let o_v =
-      let installed = File.Installed.read (Path.C.installed t.compiler) in
-      try Some (V.Set.choose (N.Map.find package (NV.to_map installed)))
-      with Not_found -> None in
+        :: ("version",
+            match o_v with
+            | None   -> s_not_installed
+            | Some v -> V.to_string v)
 
-    let v_set =
-      let v_set = 
-        try Path.G.available_versions t.global package
-        with Not_found ->
-          Globals.error_and_exit "unknown package %s" (N.to_string package) in
-      match o_v with
-        | None   -> v_set
-        | Some v -> V.Set.remove v v_set in
-
-    List.iter
-      (fun (tit, desc) -> Globals.msg "%12s: %s\n" tit desc)
-      (   ("package", N.to_string package)
-
-       :: ("version",
-           match o_v with
-           | None   -> s_not_installed
-           | Some v -> V.to_string v)
-
-       :: ("versions",
-           String.concat " " (List.map V.to_string (V.Set.elements v_set)))
+        :: ("versions",
+            String.concat " " (List.map V.to_string (V.Set.elements v_set)))
 
        :: let latest = match o_v with
            | None   -> V.Set.max_elt v_set
@@ -248,308 +204,304 @@ module Client : CLIENT = struct
           [ "description", "\n  " ^ File.Descr.full descr ]
       )
 
-  let confirm fmt = 
-    Printf.kprintf (fun msg ->
-      Globals.msg "%s [Y/n] " msg;
-      match read_line () with
-        | "y" | "Y"
-        | "" -> true
-        | _  -> false
-    ) fmt
+let confirm fmt = 
+  Printf.kprintf (fun msg ->
+    Globals.msg "%s [Y/n] " msg;
+    match read_line () with
+    | "y" | "Y"
+    | "" -> true
+    | _  -> false
+  ) fmt
 
-  let proceed_toinstall t nv = 
+let proceed_toinstall t nv = 
 
-    let name = NV.name nv in
-    let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
+  let name = NV.name nv in
+  let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
 
-    (* lib *) 
-    let lib = Path.C.lib t.compiler name in
-    List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib to_install);
+  (* lib *) 
+  let lib = Path.C.lib t.compiler name in
+  List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib to_install);
   
-    (* bin *) 
-    List.iter (fun (src, dst) -> Filename.copy src dst) (File.Dot_install.bin to_install);
+  (* bin *) 
+  List.iter (fun (src, dst) -> Filename.copy src dst) (File.Dot_install.bin to_install);
   
-    (* misc *)
-    List.iter 
-      (fun (src, dst) ->
-        if Filename.exists dst && confirm "Overwriting %s ?" (Filename.to_string dst) then
-          Filename.copy src dst
-        else begin
-          Globals.msg "Installing %s to %s.\n" (Filename.to_string src) (Filename.to_string dst);
-          if confirm "Continue ?" then
-            Filename.copy src dst
-        end
-      ) (File.Dot_install.misc to_install)
-
-  let proceed_todelete t nv =
-    log "deleting %s" (NV.to_string nv);
-    let name = NV.name nv in
-
-    (* Remove the libraries *)
-    Dirname.rmdir (Path.C.lib t.compiler name);
-          
-    (* Remove the binaries *)
-    let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
-    List.iter (fun (_,dst) -> Filename.remove dst) (File.Dot_install.bin to_install);
-
-    (* Remove the misc files *)
-    List.iter (fun (_,dst) ->
-      if Filename.exists dst then begin
-        Globals.msg "Removing %s." (Filename.to_string dst);
+  (* misc *)
+  List.iter 
+    (fun (src, dst) ->
+      if Filename.exists dst && confirm "Overwriting %s ?" (Filename.to_string dst) then
+        Filename.copy src dst
+      else begin
+        Globals.msg "Installing %s to %s.\n" (Filename.to_string src) (Filename.to_string dst);
         if confirm "Continue ?" then
-          Filename.remove dst
+          Filename.copy src dst
       end
     ) (File.Dot_install.misc to_install)
 
-  let get_archive t nv =
-    log "get_archive %s" (NV.to_string nv);
-    let name = NV.name nv in
-    let repo = N.Map.find name t.repo_index in
-    let repo_p = find_repository_path t repo in
-    let src = Path.R.archive repo_p nv in
-    let dst = Path.G.archive t.global nv in
-    Filename.link src dst;
-    dst
+let proceed_todelete t nv =
+  log "deleting %s" (NV.to_string nv);
+  let name = NV.name nv in
 
-  let proceed_tochange t nv_old nv =
-    (* First, uninstall any previous version *)
-    (match nv_old with 
-      | Was_installed nv_old -> proceed_todelete t nv_old
-      | Was_not_installed    -> ());
+  (* Remove the libraries *)
+  Dirname.rmdir (Path.C.lib t.compiler name);
+  
+  (* Remove the binaries *)
+  let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
+  List.iter (fun (_,dst) -> Filename.remove dst) (File.Dot_install.bin to_install);
 
-    (* Then, untar the archive *)
-    let p_build = Path.C.build t.compiler nv in
-    Dirname.rmdir p_build;
-    Filename.extract (get_archive t nv) p_build;
+  (* Remove the misc files *)
+  List.iter (fun (_,dst) ->
+    if Filename.exists dst then begin
+      Globals.msg "Removing %s." (Filename.to_string dst);
+      if confirm "Continue ?" then
+        Filename.remove dst
+    end
+  ) (File.Dot_install.misc to_install)
 
-    (* Call the build script and copy the output files *)
-    let opam = File.OPAM.read (Path.G.opam t.global nv) in
-    let commands =
-      List.map
-        (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
-        (File.OPAM.build opam) in
-    let err = Run.commands commands in
-    if err = 0 then
-      proceed_toinstall t nv
-    else
-      Globals.error_and_exit
-        "Compilation failed with error %d" err
+let get_archive t nv =
+  log "get_archive %s" (NV.to_string nv);
+  let name = NV.name nv in
+  let repo = N.Map.find name t.repo_index in
+  let repo_p = find_repository_path t repo in
+  let src = Path.R.archive repo_p nv in
+  let dst = Path.G.archive t.global nv in
+  Filename.link src dst;
+  dst
 
-  (* We need to clean-up things before recompiling.
+let proceed_tochange t nv_old nv =
+  (* First, uninstall any previous version *)
+  (match nv_old with 
+  | Some nv_old -> proceed_todelete t nv_old
+  | None        -> ());
 
-     NB: Currently, the implementation follows only a simple parallelism scheme.
-     Determine if we need to clean-up when the parallelism scheme is full. *)
-  let proceed_torecompile t nv =
-    proceed_tochange t (Was_installed nv) nv
+  (* Then, untar the archive *)
+  let p_build = Path.C.build t.compiler nv in
+  Dirname.rmdir p_build;
+  Filename.extract (get_archive t nv) p_build;
 
-  let debpkg_of_nv t nv =
-    let opam = File.OPAM.read (Path.G.opam t.global nv) in
-    let installed = NV.Set.mem nv t.installed in
-    File.OPAM.to_package opam installed
+  (* Call the build script and copy the output files *)
+  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let commands =
+    List.map
+      (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
+      (File.OPAM.build opam) in
+  let err = Run.commands commands in
+  if err = 0 then
+    proceed_toinstall t nv
+  else
+    Globals.error_and_exit
+      "Compilation failed with error %d" err
 
-  let resolve t request = 
-    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
+(* We need to clean-up things before recompiling. *)
+let proceed_torecompile t nv =
+  proceed_tochange t (Some nv) nv
 
-    match Solver.resolve_list l_pkg request with
-    | [] -> Globals.msg "No solution has been found.\n"
-    | l -> 
-        let nb_sol = List.length l in
+let debpkg_of_nv t nv =
+  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let installed = NV.Set.mem nv t.installed in
+  File.OPAM.to_package opam installed
 
-        let rec aux pos = 
-          Globals.msg "[%d/%d] The following solution has been found:\n" pos nb_sol;
-          function
-          | [x] ->
-              (* Only 1 solution exists *)
-              print_solution NV.to_string x;
-              if Solver.delete_or_update x then
-                if confirm "Continue ?" then
-                  Some x
-                else
-                  None
-              else
+let resolve t request = 
+  let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
+
+  match Solver.resolve_list (Solver.U l_pkg) request with
+  | [] -> Globals.msg "No solution has been found.\n"
+  | l -> 
+      let nb_sol = List.length l in
+
+      let rec aux pos = 
+        Globals.msg "[%d/%d] The following solution has been found:\n" pos nb_sol;
+        function
+        | [x] ->
+            (* Only 1 solution exists *)
+            print_solution x;
+            if Solver.delete_or_update x then
+              if confirm "Continue ?" then
                 Some x
-
-          | x :: xs ->
-              (* Multiple solution exist *)
-              print_solution NV.to_string x;
-              if Solver.delete_or_update x then
-                if confirm "Continue ? (press [n] to try another solution)" then
-                  Some x
-                else
-                  aux (succ pos) xs
               else
+                None
+            else
+              Some x
+
+        | x :: xs ->
+            (* Multiple solution exist *)
+            print_solution x;
+            if Solver.delete_or_update x then
+              if confirm "Continue ? (press [n] to try another solution)" then
                 Some x
+              else
+                aux (succ pos) xs
+            else
+              Some x
 
-          | [] -> assert false in
+        | [] -> assert false in
 
-        match aux 1 l with
-        | None -> ()
-        | Some sol -> 
+      match aux 1 l with
+      | None -> ()
+      | Some sol -> 
 
-            let installed = ref t.installed in
-            let write_installed () =
-              File.Installed.write (Path.C.installed t.compiler) !installed in
+          let installed = ref t.installed in
+          let write_installed () =
+            File.Installed.write (Path.C.installed t.compiler) !installed in
 
-            (* Delete some packages *)
-            (* In case of errors, we try to keep the list of installed packages up-to-date *)
-            List.iter
-              (fun nv ->
-                if NV.Set.mem nv !installed then begin
-                  proceed_todelete t nv;
-                  installed := NV.Set.remove nv !installed;
-                  write_installed ()
-                end)
-              sol.to_remove;
-
-            (* Install or recompile some packages on the child process *)
-            let child n = match n.action with
-              | To_change (o, nv) -> proceed_tochange t o nv
-              | To_recompile nv   -> proceed_torecompile t nv
-              | To_delete _       -> assert false in
-
-            let pre _ = () in
-
-            (* Update the installed file in the parent process *)
-            let post n = match n.action with
-              | To_delete _    -> assert false
-              | To_recompile _ -> ()
-              | To_change (Was_not_installed, nv) ->
-                  installed := NV.Set.add nv !installed;
-                  write_installed ()
-              | To_change (Was_installed o, nv)   ->
-                  installed := NV.Set.add nv (NV.Set.remove o !installed);
-                  write_installed () in
-
-            let error n =
-              let f msg nv =
-                Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
-              match n.action with
-              | To_change (Was_installed _, nv)   -> f "upgrading" nv
-              | To_change (Was_not_installed, nv) -> f "installing" nv
-              | To_recompile nv -> f "recompiling" nv
-              | To_delete _     -> assert false in
-
-            try G.P.iter Globals.cores sol.to_add ~pre ~child ~post
-            with G.P.Error n -> error n
-
-  let vpkg_of_nv nv =
-    let name = NV.name nv in
-    let version = NV.version nv in
-    N.to_string name, Some ("=", V.to_string version)
-
-  let unknown_package name =
-    Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
-
-  let install name = 
-    log "install %s" (N.to_string name);
-    let t = load_state () in
-    let available = NV.to_map (Path.G.available t.global) in
-    let map_installed = NV.to_map t.installed in
-
-    (* Fail if the package is already installed *)
-    if N.Map.mem name map_installed then
-      Globals.error_and_exit
-        "Package %s is already installed (current version is %s)"
-        (N.to_string name)
-        (V.to_string (V.Set.choose (N.Map.find name map_installed)));
-
-    let nv =
-      try
-        if N.Map.mem name available then
-          NV.create name (V.Set.max_elt (N.Map.find name available))
-        else
-          unknown_package name
-      with Not_found ->
-        (* consider 'name' to be 'name.version' *)
-        let nv = NV.of_string (N.to_string name) in
-        let sname = NV.name nv in
-        let sversion = NV.version nv in
-        Globals.msg
-          "Package %s not found, looking for package %s version %s\n"
-          (N.to_string name) (N.to_string sname) (V.to_string sversion);
-        if N.Map.mem sname map_installed
-        && V.Set.mem sversion (N.Map.find sname map_installed) then
-          nv
-        else
-          unknown_package name in
-
-    (* remove any old packages from the list of packages to install *)
-    let map_installed =
-      List.map
-        (fun (x,y) -> NV.create x (V.Set.choose y))
-        (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
-
-    resolve t
-      [ { wish_install = List.map vpkg_of_nv (nv :: map_installed)
-        ; wish_remove = [] 
-        ; wish_upgrade = [] } ]
-
-  let remove name =
-    log "remove %s" (N.to_string name);
-    let t = load_state () in
-    let map_installed = NV.to_map t.installed in
-    if not (N.Map.mem name map_installed) then
-      Globals.error_and_exit "Package %s is not installed" (N.to_string name);
-    let nv = NV.create name (V.Set.choose (N.Map.find name map_installed)) in
-    let universe = NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available [] in
-    let depends = Solver.filter_forward_dependencies [debpkg_of_nv t nv] universe in
-    let depends =
-      List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
-
-    (* XXX: do we really want to call the solver here ? *)
-
-    let wish_install =
-      List.fold_left
-        (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv nv)::accu)
-        []
-        (* XXX: do we need to remove nv here ? it should already be in depends *)
-        (NV.Set.elements (NV.Set.remove nv t.installed)) in
-
-    resolve t 
-      [ { wish_install
-        ; wish_remove  = [ N.to_string name, None ]
-        ; wish_upgrade = [] } ]
-      
-  let upgrade () =
-    log "upgrade";
-    let t = load_state () in
-    let available = NV.to_map t.available in
-    resolve t
-      [ { wish_install = []
-        ; wish_remove = []
-        ; wish_upgrade =
-          List.map
+          (* Delete some packages *)
+          (* In case of errors, we try to keep the list of installed packages up-to-date *)
+          List.iter
             (fun nv ->
-              let name = NV.name nv in
-              let versions = N.Map.find name available in
-              let nv = NV.create name (V.Set.max_elt versions) in
-              vpkg_of_nv nv)
-            (NV.Set.elements t.installed) } ]
+              if NV.Set.mem nv !installed then begin
+                proceed_todelete t nv;
+                installed := NV.Set.remove nv !installed;
+                write_installed ()
+              end)
+            sol.to_remove;
 
-  let upload upload repo =
-    log "upload %s" (string_of_upload upload);
-    let t = load_state () in
-    let opam = File.OPAM.read upload.opam in
-    let name = File.OPAM.name opam in
-    let version = File.OPAM.version opam in
-    let nv = NV.create name version in
-    let repo = match repo with
-      | None ->
-          if N.Map.mem name t.repo_index then
-            find_repository t (N.Map.find name t.repo_index)
-          else
-            Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
-      | Some repo -> repo in
-    let repo_p = List.assoc repo t.repositories in
-    Filename.copy upload.opam  (Path.R.upload_opam repo_p nv);
-    Filename.copy upload.descr (Path.R.upload_descr repo_p nv);
-    Filename.copy upload.archive (Path.R.upload_archive repo_p nv);
-    Repositories.opam_upload repo_p repo
+          (* Install or recompile some packages on the child process *)
+          let child n = match action n with
+          | To_change (o, nv) -> proceed_tochange t o nv
+          | To_recompile nv   -> proceed_torecompile t nv
+          | To_delete _       -> assert false in
 
-  let config request =
-    log "config %s" (string_of_config request);
-(*    let t = load_state () in *)
-    failwith "TODO"
+          let pre _ = () in
+
+          (* Update the installed file in the parent process *)
+          let post n = match action n with
+          | To_delete _    -> assert false
+          | To_recompile _ -> ()
+          | To_change (None, nv) ->
+              installed := NV.Set.add nv !installed;
+              write_installed ()
+          | To_change (Some o, nv)   ->
+              installed := NV.Set.add nv (NV.Set.remove o !installed);
+              write_installed () in
+
+          let error n =
+            let f msg nv =
+              Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
+            match action n with
+            | To_change (Some _, nv) -> f "upgrading" nv
+            | To_change (None, nv)   -> f "installing" nv
+            | To_recompile nv        -> f "recompiling" nv
+            | To_delete _            -> assert false in
+
+          try PA_graph.Parallel.iter Globals.cores sol.to_add ~pre ~child ~post
+          with PA_graph.Parallel.Error n -> error n
+
+let vpkg_of_nv nv =
+  let name = NV.name nv in
+  let version = NV.version nv in
+  N.to_string name, Some ("=", V.to_string version)
+
+let unknown_package name =
+  Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
+
+let install name = 
+  log "install %s" (N.to_string name);
+  let t = load_state () in
+  let available = NV.to_map (Path.G.available t.global) in
+  let map_installed = NV.to_map t.installed in
+
+  (* Fail if the package is already installed *)
+  if N.Map.mem name map_installed then
+    Globals.error_and_exit
+      "Package %s is already installed (current version is %s)"
+      (N.to_string name)
+      (V.to_string (V.Set.choose (N.Map.find name map_installed)));
+
+  let nv =
+    try
+      if N.Map.mem name available then
+        NV.create name (V.Set.max_elt (N.Map.find name available))
+      else
+        unknown_package name
+    with Not_found ->
+      (* consider 'name' to be 'name.version' *)
+      let nv = NV.of_string (N.to_string name) in
+      let sname = NV.name nv in
+      let sversion = NV.version nv in
+      Globals.msg
+        "Package %s not found, looking for package %s version %s\n"
+        (N.to_string name) (N.to_string sname) (V.to_string sversion);
+      if N.Map.mem sname map_installed
+        && V.Set.mem sversion (N.Map.find sname map_installed) then
+        nv
+      else
+        unknown_package name in
+
+  (* remove any old packages from the list of packages to install *)
+  let map_installed =
+    List.map
+      (fun (x,y) -> NV.create x (V.Set.choose y))
+      (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
+
+  resolve t
+    [ { wish_install = List.map vpkg_of_nv (nv :: map_installed)
+      ; wish_remove = [] 
+      ; wish_upgrade = [] } ]
+
+let remove name =
+  log "remove %s" (N.to_string name);
+  let t = load_state () in
+  let map_installed = NV.to_map t.installed in
+  if not (N.Map.mem name map_installed) then
+    Globals.error_and_exit "Package %s is not installed" (N.to_string name);
+  let nv = NV.create name (V.Set.choose (N.Map.find name map_installed)) in
+  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available []) in
+  let Solver.P depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv t nv]) in
+  let depends =
+    List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
+
+  (* XXX: do we really want to call the solver here ? *)
+  let wish_install =
+    List.fold_left
+      (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv nv)::accu)
+      []
+      (* XXX: do we need to remove nv here ? it should already be in depends *)
+      (NV.Set.elements (NV.Set.remove nv t.installed)) in
+
+  resolve t 
+    [ { wish_install
+      ; wish_remove  = [ N.to_string name, None ]
+      ; wish_upgrade = [] } ]
+      
+let upgrade () =
+  log "upgrade";
+  let t = load_state () in
+  let available = NV.to_map t.available in
+  resolve t
+    [ { wish_install = []
+      ; wish_remove = []
+      ; wish_upgrade =
+        List.map
+          (fun nv ->
+            let name = NV.name nv in
+            let versions = N.Map.find name available in
+            let nv = NV.create name (V.Set.max_elt versions) in
+            vpkg_of_nv nv)
+          (NV.Set.elements t.installed) } ]
+
+let upload upload repo =
+  log "upload %s" (string_of_upload upload);
+  let t = load_state () in
+  let opam = File.OPAM.read upload.opam in
+  let name = File.OPAM.name opam in
+  let version = File.OPAM.version opam in
+  let nv = NV.create name version in
+  let repo = match repo with
+  | None ->
+      if N.Map.mem name t.repo_index then
+        find_repository t (N.Map.find name t.repo_index)
+      else
+        Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
+  | Some repo -> repo in
+  let repo_p = List.assoc repo t.repositories in
+  Filename.copy upload.opam  (Path.R.upload_opam repo_p nv);
+  Filename.copy upload.descr (Path.R.upload_descr repo_p nv);
+  Filename.copy upload.archive (Path.R.upload_archive repo_p nv);
+  Repositories.opam_upload repo_p repo
+
+let config request =
+  log "config %s" (string_of_config request);
+  (*    let t = load_state () in *)
+  failwith "TODO"
 
 (*
     let version name =
@@ -651,10 +603,10 @@ module Client : CLIENT = struct
       iter_with_spaces one (get_dependencies rec_search names)
 *)
 
-  let remote action =
-    log "remote %s" (string_of_remote action);
-(*    let t = load_state () in *)
-    failwith "TODO"
+let remote action =
+  log "remote %s" (string_of_remote action);
+  (*    let t = load_state () in *)
+  failwith "TODO"
 
 (*
     let update_config servers =
@@ -698,10 +650,10 @@ module Client : CLIENT = struct
         update_config (List.filter ((!=) server) t.servers)
 *)
 
-  let switch name =
-    log "switch %s" (OCaml_V.to_string name);
-(*    let t = load_state () in *)
-    failwith "TODO"
+let switch name =
+  log "switch %s" (OCaml_V.to_string name);
+  (*    let t = load_state () in *)
+  failwith "TODO"
 
 (*
     let compile compil =
@@ -721,7 +673,3 @@ module Client : CLIENT = struct
       compile compil
     end
 *)
-      
-end
-
-

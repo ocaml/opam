@@ -18,32 +18,19 @@ open Path
 
 let log fmt = Globals.log "SOLVER" fmt
 
-type 'a installed_status =
-  | Was_installed of 'a
-  | Was_not_installed
+type action = (* NV.t internal_action *)
+  | To_change of NV.t option * NV.t
+  | To_delete of NV.t
+  | To_recompile of NV.t
 
-type 'a request =
-    { wish_install : 'a list
-    ; wish_remove  : 'a list
-    ; wish_upgrade : 'a list }
+type package_action = {
+  cudf   : Cudf.package;
+  action : action;
+}
 
-type 'a action = 
-  (* The package must be installed. The package could have been present or not, 
-     but if present, it is another version than the proposed solution. *)
-  | To_change of 'a installed_status * 'a
+let action t = t.action
 
-  (* The package must be deleted. *)
-  | To_delete of 'a
-
-  (* The package is already installed, but it must be recompiled. *)
-  | To_recompile of 'a
-
-type package_action = 
-    { cudf : Cudf.package 
-    ; action : NV.t action }
-
-(* Graphs of actions *)
-module G = struct
+module PA_graph = struct
 
   module PkgV =  struct
 
@@ -61,106 +48,106 @@ module G = struct
   end
 
   module PG = Graph.Imperative.Digraph.ConcreteBidirectional (PkgV)
-  module T = Graph.Topological.Make (PG)
-  module P = Parallel.Make(struct
+  module Topological = Graph.Topological.Make (PG)
+  module Parallel = Parallel.Make(struct
     include PG
-    include T
+    include Topological
   end)
   include PG
+
 end
 
-type solution = 
-    { to_remove : NV.t list
-    ; to_add : G.t }
+type request = {
+  wish_install:  Debian.Format822.vpkg list;
+  wish_remove :  Debian.Format822.vpkg list;
+  wish_upgrade:  Debian.Format822.vpkg list;
+}
 
-let map_action f = function
-  | To_change (Was_installed p1, p2) -> To_change (Was_installed (f p1), f p2)
-  | To_change (Was_not_installed, p) -> To_change (Was_not_installed, f p)
-  | To_delete p                      -> To_delete (f p)
-  | To_recompile p                   -> To_recompile (f p)
+type solution = {
+  to_remove: NV.t list;
+  to_add   : PA_graph.t;
+}
 
-let print_solution f t =
+let print_solution t =
   let pf = Globals.msg in
-  if t.to_remove = [] && G.is_empty t.to_add then
+  if t.to_remove = [] && PA_graph.is_empty t.to_add then
     pf "No actions will be performed, the current state satisfies the request.\n"
   else
-    let pf f = Printf.kprintf (pf " %s") f in
-    begin
-      List.iter (fun p -> pf "Remove: %s\n" (f p)) t.to_remove;
-      G.T.iter
-        (function { action ; _ } -> 
-          match action with
-          | To_recompile p                   -> pf "Recompile: %s\n" (f p)
-          | To_delete p                      -> assert false (* items to delete are in t.remove *)
-          | To_change (Was_not_installed, p) -> pf "Install: %s\n" (f p)
-          | To_change (Was_installed o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
-        ) t.to_add;
-      end
+    let f = NV.to_string in
+    List.iter (fun p -> pf "Remove: %s\n" (f p)) t.to_remove;
+    PA_graph.Topological.iter
+      (function { action ; _ } -> 
+        match action with
+        | To_recompile p          -> pf "Recompile: %s\n" (f p)
+        | To_delete p             -> assert false (* items to delete are in t.remove *)
+        | To_change (None, p)     -> pf "Install: %s\n" (f p)
+        | To_change (Some o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
+      ) t.to_add;
 
-module type SOLVER = sig
 
-  val request_map : ('a -> 'b) -> 'a request -> 'b request
 
-  (** Given a description of packages, return a solution preserving
-      the consistency of the initial description.
-      [None] : No solution found. *)
-  val resolve :
-    Debian.Packages.package list -> Debian.Format822.vpkg request
-    -> solution option
+module Solver = struct
 
-  (** Same as [resolve], but each element of the list of solutions does not precise
-      which request in the initial list was satisfied. *)
-  val resolve_list : 
-    Debian.Packages.package list -> Debian.Format822.vpkg request list
-    -> solution list
+  type 'a internal_action = 
+    | I_to_change of 'a option * 'a
+    | I_to_delete of 'a
+    | I_to_recompile of 'a
 
-  (** Return the recursive dependencies of a package
-      Note : the given package exists in the list in input because this list describes the entire universe. 
-      By convention, it also appears in output. *)
-  val filter_backward_dependencies :
-    Debian.Packages.package list (* few packages from the universe *)
-    -> Debian.Packages.package list (* universe *)
-    -> Debian.Packages.package list
+  let action_map f = function
+    | I_to_change (Some x, y) -> To_change (Some (f x), f y)
+    | I_to_change (None, y)   -> To_change (None, f y)
+    | I_to_delete y           -> To_delete (f y)
+    | I_to_recompile y        -> To_recompile (f y)
 
-  (** Same as [filter_backward_dependencies] but for forward dependencies *)
-  val filter_forward_dependencies :
-    Debian.Packages.package list (* few packages from the universe *)
-    -> Debian.Packages.package list (* universe *)
-    -> Debian.Packages.package list
-
-  val delete_or_update : solution -> bool
-end
-
-module Solver : SOLVER = struct
+  type 'a internal_request = {
+    i_wish_install:  'a list;
+    i_wish_remove :  'a list;
+    i_wish_upgrade:  'a list;
+  }
 
   let request_map f r = 
     let f = List.map f in
-    { wish_install = f r.wish_install
-    ; wish_remove = f r.wish_remove
-    ; wish_upgrade = f r.wish_upgrade }
+    { i_wish_install = f r.wish_install
+    ; i_wish_remove  = f r.wish_remove
+    ; i_wish_upgrade = f r.wish_upgrade }
 
-  module type CUDFDIFF = 
-  sig
+  (** Universe of packages *)
+  type universe = U of Debian.Packages.package list
+
+  (** Subset of packages *)
+  type packages = P of Debian.Packages.package list
+
+  module CudfDiff : sig
+
     val resolve_diff :
-      Cudf.universe -> Cudf_types.vpkg request -> Cudf.package action list option
+      Cudf.universe ->
+      Cudf_types.vpkg internal_request ->
+      Cudf.package internal_action list option
 
-    val resolve_summary : Cudf.universe -> Cudf_types.vpkg request ->
-      ( Cudf.package list
-        * (Cudf.package * Cudf.package) list
-        * (Cudf.package * Cudf.package) list
-        * Cudf.package list ) option
-  end
+  end = struct
+      
+    module Cudf_set = struct
+      module S = Common.CudfAdd.Cudf_set
 
-  module CudfDiff : CUDFDIFF = struct
+      let choose_one s = 
+        match S.cardinal s with
+          | 0 -> raise Not_found
+          | 1 -> S.choose s
+          | _ -> failwith "TODO"
+      (* Apparently the returned sets are always singleton.
+         XXX: check that it is always the case *)
+
+      include S
+    end
 
     let to_cudf_doc univ req = 
       None, 
       Cudf.fold_packages (fun l x -> x :: l) [] univ, 
-      { Cudf.request_id = "" 
-      ; install = req.wish_install
-      ; remove = req.wish_remove
-      ; upgrade = req.wish_upgrade
-      ; req_extra = [] }
+      { Cudf.request_id = "";
+        install   = req.i_wish_install;
+        remove    = req.i_wish_remove;
+        upgrade   = req.i_wish_upgrade;
+        req_extra = [] }
 
     let cudf_resolve univ req = 
       let open Algo in
@@ -172,47 +159,36 @@ module Solver : SOLVER = struct
       else
         None
 
-    module Cudf_set = struct
-      module S = Common.CudfAdd.Cudf_set
-
-      let choose_one s = 
-        match S.cardinal s with
-          | 0 -> raise Not_found
-          | 1 -> S.choose s
-          | _ ->
-            failwith "to complete ! Determine if it suffices to remove one arbitrary element from the \"removed\" class, or remove completely every element."
-
-      include S
-    end
-
-    let resolve f_diff univ_init req = 
-      BatOption.bind
-        (fun l_pkg_sol -> 
-          BatOption.bind 
-            (f_diff univ_init)
-            (try Some (Common.CudfDiff.diff univ_init (Cudf.load_universe l_pkg_sol))
-             with Cudf.Constraint_violation _ -> None))
-        (cudf_resolve univ_init req)
-
-    let resolve_diff = 
-      resolve
-        (fun _ diff -> 
-          match 
-            Hashtbl.fold (fun pkgname s acc ->
-              let add x = x :: acc in
-              match 
-                (try Some (Cudf_set.choose_one s.Common.CudfDiff.removed) with Not_found -> None), 
-                try Some (Cudf_set.choose s.Common.CudfDiff.installed) with Not_found -> None
-              with
-                | None, Some p -> add (To_change (Was_not_installed, p))
-                | Some p, None -> add (To_delete p)
-                | Some p_old, Some p_new -> add (To_change (Was_installed p_old, p_new))
-                | None, None -> acc) diff []
+    let resolve f_diff univ_init req =
+      let sol = cudf_resolve univ_init req in
+      match sol with
+      | None   -> None
+      | Some l ->
+          try 
+            let diff = Common.CudfDiff.diff univ_init (Cudf.load_universe l) in
+            Some (f_diff diff)
           with
-            | [] -> None
-            | l -> Some l)
+            Cudf.Constraint_violation _ -> None
 
-    let resolve_summary = resolve (fun univ_init diff -> Some (Common.CudfDiff.summary univ_init diff))
+    let resolve_diff =
+      let f_diff diff =
+        Hashtbl.fold (fun pkgname s acc ->
+          let add x = x :: acc in
+          let removed =
+            try Some (Cudf_set.choose_one s.Common.CudfDiff.removed)
+            with Not_found -> None in
+          let installed =
+            try Some (Cudf_set.choose s.Common.CudfDiff.installed)
+            with Not_found -> None in
+          match removed, installed with
+          | None      , Some p     -> add (I_to_change (None, p))
+          | Some p    , None       -> add (I_to_delete p)
+          | Some p_old, Some p_new -> add (I_to_change (Some p_old, p_new))
+          | None      , None       -> acc
+        ) diff []
+      in
+      resolve f_diff
+
   end
 
   module Graph = 
@@ -245,8 +221,8 @@ module Solver : SOLVER = struct
       let fold f acc g = 
         let rec aux acc iter = 
           match try Some (F.get iter, F.step iter) with Exit -> None with
-            | None -> acc
-            | Some (x, iter) -> aux (f acc x) iter in
+          | None -> acc
+          | Some (x, iter) -> aux (f acc x) iter in
         aux acc (F.start g)
     end
 
@@ -282,7 +258,7 @@ module Solver : SOLVER = struct
       let () = Debian.Debcudf.clear table in
       v
 
-    let filter_dependencies f_direction pkg_l l_pkg_pb =
+    let filter_dependencies f_direction (U l_pkg_pb) (P pkg_l) =
       let pkg_map = 
         List.fold_left
           (fun map pkg -> NV.Map.add (NV.of_dpkg pkg) pkg map)
@@ -311,41 +287,44 @@ module Solver : SOLVER = struct
                 else
                   set, l)
               g (pkg_set, []) in
-          List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map) l)
+          let l = List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map) l in
+          P l)
 
     let filter_backward_dependencies = filter_dependencies (fun x -> x)
     let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
-    let resolve l_pkg_pb req = 
+    let resolve (U l_pkg_pb) req = 
       get_table l_pkg_pb 
         (fun table pkglist ->
           let package_map pkg = NV.of_cudf table pkg in
           let universe = Cudf.load_universe pkglist in 
-
-          match
+          let sol_o =
             CudfDiff.resolve_diff universe 
               (request_map
                  (fun x -> 
                    match Debian.Debcudf.ltocudf table [x] with
                    | [x] -> x
-                   | _ -> failwith "to complete !") req)
-          with
-          | Some l ->
+                   | _   -> failwith "TOD"
+                 ) req) in
+
+          match sol_o with
+          | None    -> None
+          | Some l  ->
 
               let l_del_p, l_del = 
                 Utils.filter_map (function
-                | To_change (Was_installed pkg, _) 
-                | To_delete pkg -> Some pkg
+                | I_to_change (Some pkg, _) 
+                | I_to_delete pkg -> Some pkg
                 | _ -> None) l,
                 Utils.filter_map (function
-                | To_delete pkg -> Some pkg
+                | I_to_delete pkg -> Some pkg
                 | _ -> None) l in
 
               let map_add = 
                 Utils.map_of_list PkgMap.empty PkgMap.add (Utils.filter_map (function 
-                | To_change (_, pkg) as act -> Some (pkg, act)
-                | To_delete _ -> None
-                | To_recompile _ -> assert false) l) in
+                | I_to_change (_, pkg) as act -> Some (pkg, act)
+                | I_to_delete _ -> None
+                | I_to_recompile _ -> assert false) l) in
 
               let graph_installed = 
                 PO.O.mirror 
@@ -370,34 +349,33 @@ module Solver : SOLVER = struct
                        with _ -> set), 
                       Utils.IntMap.add
                         (PG.V.hash pkg)
-                        { cudf = pkg ; action = map_action package_map act } l_act in
+                        { cudf = pkg ; action = action_map package_map act } l_act in
                     
                     match PkgMap.Exceptionless.find pkg map_add with
                     | Some act -> 
                         add_succ_rem pkg set_recompile act
                     | None ->
                         if PkgSet.mem pkg set_recompile then
-                          add_succ_rem pkg set_recompile (To_recompile pkg)
+                          add_succ_rem pkg set_recompile (I_to_recompile pkg)
                         else
                           set_recompile, l_act)
                   
                   graph_installed
                   (PkgSet.empty, Utils.IntMap.empty) in
 
-              let graph = G.create () in
-              Utils.IntMap.iter (fun _ -> G.add_vertex graph) map_act;
+              let graph = PA_graph.create () in
+              Utils.IntMap.iter (fun _ -> PA_graph.add_vertex graph) map_act;
               PG.iter_edges
                 (fun v1 v2 ->
                   try
                     let v1 = Utils.IntMap.find (PG.V.hash v1) map_act in
                     let v2 = Utils.IntMap.find (PG.V.hash v2) map_act in
-                    G.add_edge graph v1 v2
+                    PA_graph.add_edge graph v1 v2
                   with Not_found ->
                     ())
                 graph_installed;
-              Some { to_remove = List.rev_map package_map l_del ; to_add = graph }
+              Some { to_remove = List.rev_map package_map l_del ; to_add = graph })
 
-          | None -> None)
   end
 
   let filter_backward_dependencies = Graph.filter_backward_dependencies
@@ -408,9 +386,9 @@ module Solver : SOLVER = struct
   let delete_or_update t =
     t.to_remove <> []
     || 
-      G.fold_vertex
+      PA_graph.fold_vertex
       (fun v acc ->
-        acc || match v.action with To_change (Was_installed _, _) -> true | _ -> false)
+        acc || match v.action with To_change (Some _, _) -> true | _ -> false)
       t.to_add
       false
 end

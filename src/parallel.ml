@@ -20,7 +20,7 @@ module type G = sig
   include Graph.Topological.G with type t := t and module V := V
 end
 
-module type PARALLEL = sig
+module type SIG = sig
 
   module G : G
 
@@ -39,7 +39,7 @@ module type PARALLEL = sig
 
 end
 
-module Make (G : G) : PARALLEL with module G = G = struct
+module Make (G : G) : SIG with module G = G = struct
 
   module G = G
 
