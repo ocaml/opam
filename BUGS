@@ -1,4 +1,0 @@
-* .install and .config files should be installed in a specific path (and not let in
-  build dir). That's because the build dir is supposed to be a tempory location to
-  build packages
-
