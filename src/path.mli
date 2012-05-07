@@ -32,8 +32,13 @@ module G : sig
   (** OPAM files: [$opam/opam/$NAME.$VERSION.opam] *)
   val opam: t -> NV.t -> filename
 
-  (** List all the available packages: [$opam/opam/$NAME.$VERSION.opam] *)
+  (** List all the available packages:
+      [$opam/opam/$NAME.$VERSION.opam] *)
   val available: t -> NV.Set.t
+
+  (** List all the available packages:
+      [$opam/opam/$NAME.$VERSION.opam] *)
+  val available_versions: t -> N.t -> V.Set.t
 
   (** Description file: [$opam/descr/$NAME.$VERSION] *)
   val descr: t -> NV.t -> filename
@@ -63,13 +68,15 @@ module C : sig
     
   val create: G.t -> OCaml_V.t -> t
 
-  (** Installed libraries for the package: [$opam/$OVERSION/lib/NAME] *)
+  (** Installed libraries for the package:
+      [$opam/$OVERSION/lib/NAME] *)
   val lib: t -> N.t -> dirname
 
   (** Installed binaries: [$opam/$OVERSION/bin] *)
   val bin: t -> dirname
 
-  (** List of installed packages with their version: [$opam/$OVERSION/installed] *)
+  (** List of installed packages with their version:
+      [$opam/$OVERSION/installed] *)
   val installed: t -> filename
 
   (** Tempory folders used to decompress the corresponding archives:
@@ -79,13 +86,15 @@ module C : sig
   (** Tempory folder: [$opam/$OVERSION/build] *)
   val build_dir: t -> dirname
 
-  (** Installed files for a given package: [$opam/$OVERSION/install/$NAME.install] *)
+  (** Installed files for a given package:
+      [$opam/$OVERSION/install/$NAME.install] *)
   val install: t -> N.t -> filename
 
   (** Installed files: [$opam/$OVERSION/install/] *)
   val install_dir: t -> dirname
     
-  (** Packages to reinstall on next upgrade: [$opam/$OVERSION/reinstall]  *)
+  (** Packages to reinstall on next upgrade:
+      [$opam/$OVERSION/reinstall] *)
   val reinstall: t -> filename
 
   (** Compile and link flags for a given package:
@@ -123,6 +132,10 @@ module R : sig
   (** List all the available packages:
       [$opam/repo/$repo/$NAME.$VERSION.opam] *)
   val available: t -> NV.Set.t
+
+  (** List all the available versions for a given package:
+      [$opam/repo/$repo/$name.$VERSION.opam] *)
+  val available_versions: t -> N.t -> V.Set.t
 
   (** Return the description file for a given package:
       [$opam/repo/$repo/descr/$NAME.VERSION] *)

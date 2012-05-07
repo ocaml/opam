@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+let log fmt = Globals.log "TYPES" fmt
+
 module type Abstract = sig
   type t
   val of_string: string -> t
@@ -123,7 +125,7 @@ module Filename = struct
 
   let link_in src dst =
     let src_s = to_string src in
-    let dst = F.concat src_s (F.basename src_s) in
+    let dst = F.concat dst (F.basename src_s) in
     link src (of_string dst)
 
   let extract filename dirname =

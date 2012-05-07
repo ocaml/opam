@@ -249,4 +249,5 @@ let extract file dst =
 
 let link src dst =
   log "Linking %s to %s" src dst;
+  mkdir (Filename.dirname dst);
   Unix.link src dst

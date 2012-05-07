@@ -26,6 +26,9 @@ let available dir =
     | Some nv -> NV.Set.add nv set
   ) NV.Set.empty files
 
+let versions nvset =
+  NV.Set.fold (fun nv vset -> V.Set.add (NV.version nv) vset) nvset V.Set.empty
+
 module G = struct
 
   type t = dirname (* [$opam/] *)
@@ -40,9 +43,13 @@ module G = struct
 
   let opam_dir t = t / "opam"
 
-  let opam t nv = opam_dir t // NV.to_string nv
+  let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
 
   let available t = available (opam_dir t)
+
+  let available_versions t n =
+    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
+    
 
   let descr_dir t = t / "descr"
 
@@ -103,6 +110,9 @@ module R = struct
   let opam_dir t = t / "opam"
 
   let available t = available (opam_dir t)
+
+  let available_versions t n =
+    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
 
   let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
 

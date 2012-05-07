@@ -103,7 +103,7 @@ module Client : CLIENT = struct
     let t = load_state () in
     (* first update all the repo *)
     List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories;
-    (* the update $opam/repo/index *)
+    (* then update $opam/repo/index *)
     let repo_index =
       List.fold_left (fun repo_index (r,p) ->
         NV.Set.fold (fun nv repo_index ->
@@ -114,7 +114,24 @@ module Client : CLIENT = struct
             repo_index
         ) (Path.R.available p) repo_index
       ) t.repo_index t.repositories in
-    File.Repo_index.write (Path.G.repo_index t.global) repo_index
+    File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+    (* finally create symbolic links from $repo dirs to main dir *)
+    N.Map.iter (fun n r ->
+      let repo_p = find_repository_path t r in
+      let available_versions = Path.R.available_versions repo_p n in
+      V.Set.iter (fun v ->
+        let nv = NV.create n v in
+        let opam_dir = Path.G.opam_dir t.global in
+        let opam = Path.R.opam repo_p nv in
+        let descr_dir = Path.G.descr_dir t.global in
+        let descr = Path.R.descr repo_p nv in
+        Filename.link_in opam opam_dir;
+        if Filename.exists descr then
+          Filename.link_in descr descr_dir
+        else
+          Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
+      ) available_versions
+    ) repo_index
 
   let init repo =
     log "init %s" (Repository.to_string repo);
@@ -204,9 +221,8 @@ module Client : CLIENT = struct
       with Not_found -> None in
 
     let v_set =
-      let available = Path.G.available t.global in
       let v_set = 
-        try N.Map.find package (NV.to_map available)
+        try Path.G.available_versions t.global package
         with Not_found ->
           Globals.error_and_exit "unknown package %s" (N.to_string package) in
       match o_v with
