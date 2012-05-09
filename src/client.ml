@@ -19,17 +19,31 @@ let log fmt =
   Globals.log "CLIENT" fmt
 
 open Solver
-open File
-open Path
 
 type t = {
-  global      : G.t;                     (* ~/.opam/ *)
-  compiler    : C.t;                     (* ~/.opam/$oversion/ *)
-  repositories: (repository * R.t) list; (* ~/.opam/repo/$repo/ *)
-  available   : NV.Set.t;                (* ~/.opam/opam/ files *)
-  installed   : NV.Set.t;                (* ~/.opam/$oversion/installed contents *)
-  config      : Config.t;                (* ~/.opam/config contents *)
-  repo_index  : string N.Map.t;          (* ~/.opam/repo/index contents *)
+  (* ~/.opam/ *)
+  global: Path.G.t;
+
+  (* ~/.opam/$oversion/ *)
+  compiler: Path.C.t;
+
+  (* ~/.opam/repo/$repo/ *)
+  repositories: (repository * Path.R.t) list;
+
+  (* ~/.opam/opam/ files *)
+  available: NV.Set.t;
+
+  (* ~/.opam/$oversion/installed contents *)
+  installed: NV.Set.t;
+
+  (* ~/.opam/$oversion/reinstall contents *)
+  reinstall: NV.Set.t;
+
+  (* ~/.opam/config contents *)
+  config: File.Config.t;
+
+  (* ~/.opam/repo/index contents *)
+  repo_index: string N.Map.t;
 }
 
 (* Look into the content of ~/.opam/config to build the client
@@ -43,9 +57,11 @@ let load_state () =
   let repositories = List.map (fun r -> r, Path.R.create global r) repositories in
   let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
+  let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
   let available = Path.G.available global in
-  { global; compiler; repositories; available; installed; repo_index; config }
-
+  { global; compiler; repositories;
+    available; installed; reinstall;
+    repo_index; config }
 
 let find_repository_path t name =
   let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
@@ -72,6 +88,18 @@ let update () =
       ) (Path.R.available p) repo_index
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+  (* update $opam/$oversion/reinstall *)
+  let reinstall =
+    List.fold_left (fun reinstall (r,p) ->
+      let updated = File.Updated.safe_read (Path.R.updated p) in
+      NV.Set.fold (fun nv reinstall ->
+        if NV.Set.mem nv t.installed then
+          NV.Set.add nv reinstall
+        else
+          reinstall
+      ) updated reinstall
+    ) t.reinstall t.repositories in
+  File.Reinstall.write (Path.C.reinstall t.compiler) reinstall;
   (* finally create symbolic links from $repo dirs to main dir *)
   N.Map.iter (fun n r ->
     let repo_p = find_repository_path t r in
