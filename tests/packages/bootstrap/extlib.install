@@ -1,8 +1,0 @@
-install "extlib" {
-  lib = [
-    "_obuild/extlib/*.cma";
-    "_obuild/extlib/*.cmxa";
-    "_obuild/extlib/*.a";
-    "_obuild/extlib/*.cmi";
-  ]
-}

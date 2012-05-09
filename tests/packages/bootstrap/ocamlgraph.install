@@ -1,6 +1,0 @@
-install "ocamlgraph" {
-  lib = [
-    "_obuild/graph/graph.cma";
-    "_obuild/graph/graph.cmi";
-  ]
-}

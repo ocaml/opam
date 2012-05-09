@@ -1,0 +1,7 @@
+opam-version: "1"
+
+package "P4" {
+  version:    "1"
+  maintainer: "contact@ocamlpro.com"
+  depends:    [ "P2" "P3" ]
+}

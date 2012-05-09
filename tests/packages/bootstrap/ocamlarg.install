@@ -1,8 +1,0 @@
-install "ocamlarg" {
-  lib = [
-    "_obuild/ocaml-arg/*.cma";
-    "_obuild/ocaml-arg/*.cmxa";
-    "_obuild/ocaml-arg/*.a";
-    "_obuild/ocaml-arg/*.cmi";
-  ]
-}

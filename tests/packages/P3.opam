@@ -1,0 +1,7 @@
+opam-version: "1"
+
+package "P3" {
+  version: "1~weird-version.test"
+  maintainer: "contact@ocamlpro.com"
+  depends: [ "P1" ]
+}
