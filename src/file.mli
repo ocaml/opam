@@ -11,8 +11,11 @@ module type IO_FILE = sig
   (** Write some contents to a file *)
   val write: filename -> t -> unit
   
-  (** Read file contents *)
+  (** Read file contents. Raise an error if the file does not exist. *)
   val read: filename -> t
+
+  (** Read file contents. Return [empty] if the file does not exist. *)
+  val safe_read: filename -> t
 
 end
 

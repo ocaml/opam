@@ -602,12 +602,10 @@ module Make (F : F) = struct
 
   let log = Globals.log ("FILE." ^ F.internal)
 
-  (** Write some contents to a file *)
   let write f v =
     log "write %s" (Filename.to_string f);
     Filename.write f (F.to_string f v)
 
-  (** Read file contents *)
   let read f =
     let filename = Filename.to_string f in
     log "read %s" filename;
@@ -615,6 +613,14 @@ module Make (F : F) = struct
       F.of_string f (Filename.read f)
     else
       Globals.error_and_exit "File %s does not exit" (Filename.to_string f)
+
+  let safe_read f =
+    let filename = Filename.to_string f in
+    log "read %s" filename;
+    if Filename.exists f then
+      F.of_string f (Filename.read f)
+    else
+      F.empty
 
 end
 
@@ -625,6 +631,7 @@ module type IO_FILE = sig
   val empty: t
   val write: filename -> t -> unit
   val read : filename -> t
+  val safe_read: filename -> t
 end
 
 module Config = struct

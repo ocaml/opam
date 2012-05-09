@@ -41,8 +41,8 @@ let load_state () =
   let compiler = Path.C.create global ocaml_version in
   let repositories = File.Config.repositories config in
   let repositories = List.map (fun r -> r, Path.R.create global r) repositories in
-  let repo_index = File.Repo_index.read (Path.G.repo_index global) in
-  let installed = File.Installed.read (Path.C.installed compiler) in
+  let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
+  let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let available = Path.G.available global in
   { global; compiler; repositories; available; installed; repo_index; config }
 
