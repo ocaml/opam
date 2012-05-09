@@ -113,6 +113,11 @@ The client state is stored on the filesystem, under {\tt \$opam}:
 \item \verb+$opam/archives/$NAME.$VERSION.tar.gz+ contains the source
   archives for the version \verb+$VERSION+ of package \verb+$NAME+.
 
+\item \verb+$opam/repo/index+ contains the location of packages
+  (ie. in which repositories they can be found and the priority
+  between repositories). The file format is described in
+  \ref{index}.
+
 \end{itemize}
 
 \subsubsection{Compiler-specific state}
@@ -187,11 +192,6 @@ data between the client and the corresponding OPAM repository.
 
 \begin{itemize}
 
-\item \verb+$opam/repo/index+ contains the location of packages
-  (ie. in which repositories they can be found and the priority
-  between repositories). The file format is described in
-  \ref{index}.
-
 \item \verb+$opam/repo/$REPO/kind+ contains the kind associated to the
   OPAM repository \verb+$REPO+ have. The kind is stored as a single
   word (containing only letters and digits) and specifies which {\tt
@@ -262,11 +262,10 @@ ocamlfind 1.2
 \label{index}
 
 \verb+$opam/repo/index+ follows a very simple syntax: each line of the
-file contains a space separated list of words
-\verb+$REPO $NAME $VERSION+ specifying that the version
-\verb+$VERSION+ of package \verb+$NAME+ is available in the OPAM
-repository \verb+$REPO+. The file contains information on all
-available packages (e.g. not only on the installed one). \\
+file contains a space separated list of words \verb+$NAME $REPO+
+specifying that all the versions of package \verb+$NAME+ are available
+in the OPAM repository \verb+$REPO+. The file contains information on
+all available packages (e.g. not only on the installed one). \\
 
 For instance, if {\tt batteries} version {\tt 1.0+beta} is available
 in the {\tt testing} repository and {\tt ocamlfind} version {\tt 1.2}
@@ -276,9 +275,8 @@ contain:
 
 {\small
 \begin{Verbatim}[frame=single]
-testing batteries 1.0+beta
-default ocamlfind 1.2
-testing ocamlfind 1.2
+batteries testing
+ocamlfind default
 \end{Verbatim}
 }
 
@@ -336,7 +334,7 @@ All structured OPAM files share the same syntax:
          | SYMBOL
          | IDENT
          | [ <value>+ ]
-         | value ( <value>+ )
+         | value { <value>+ }
 \end{Verbatim}
 }
 
@@ -353,7 +351,7 @@ the following restrictions:
     ?repositories: [ <repo>+ ]
     ocaml-version: STRING
 
-<repo> := STRING ( STRING )
+<repo> := STRING { STRING }
 \end{Verbatim}
 }
 
@@ -378,22 +376,22 @@ compiler (available in the path).
       maintainer: STRING
       ?subst:     [ STRING+ ]
       ?build:     [ command+ ]
-      ?depends:   <formula>
-      ?conflicts: <formula>
+      ?depends:   <or-formula>
+      ?conflicts: <and-formula>
       ?libraries: [ STRING+ ]
       ?syntax:    [ STRING+ ]
     }
 
-<formula>    := STRING
-              | STRING ( <constraint> )
-              | <formula> '|' <formula>
-              | <formula> '&' <formula>
-              | ( <formula> )
+<or-formula>  := <or-formula> '|' <or-formula>
+               | ( <or-formula> )
+               | <and-formula>
 
-<constraint> := <comp> STRING
-              | <constraint> '|' <constraint>
-              | <constraint> '&' <constraint>
-              | ( <constraint> )
+<and-formula> := STRING
+               | STRING { <constraints> }
+               | <and-formula> <and-formula>
+
+<constraints> := <comp> STRING
+               | <constraints> <constraints>
 
 <comp>       := '=' | '<' | '>' | '>=' | '<='
 <command>    := [ STRING+ ]
@@ -421,24 +419,24 @@ compiler (available in the path).
   files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
   \S\ref{dotconfig} and \S\ref{dotinstall}).
 
-\item The {\tt depends} and {\tt conflicts} fields contain formulas
-  over package names, optionally parametrized by version
-  constraints. An expression is either:
+\item The {\tt depends} and {\tt conflicts} fields contain
+  respectively {\em or-} and {\em and-}formulas over package names,
+  optionally parametrized by version constraints. An expression is
+  either:
 
 \begin{itemize}
 \item A package name: {\tt "foo"};
 \item A package name with version constraints:
   \verb+"foo" (>= "1.2" & <= "3.4")+
 \item A disjunction of formulas: \verb+E | F+
-\item A conjunction of formulas: \verb+E & F+
-\item A formula with parenthesis: \verb+( E )+
+\item A conjunction of formulas: \verb+E F+
+\item A formula between parenthesis: \verb+( E )+
 \end{itemize}
 
-For instance \verb+ "foo" (<= "1.2") & ("bar" | "gna" (= "3.14"))+
-is a valid formula whose semantic is: {\em any version of package
-  {\tt "foo"} lesser or equal to $1.2$ and either any version of
-  package {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}
-\\
+For instance \verb+ "foo" {<= "1.2"} | ("bar" "gna" {= "3.14"})+ is a
+valid formula whose semantic is: {\em either any version of package
+  {\tt "foo"} lesser or equal to $1.2$ or both any version of package
+  {\tt "bar"} and the version $3.14$ of package {\tt "gna"}.}  \\
 
 \item The {\tt libraries} and {\tt syntax} fields contain the
   libraries and syntax extensions defined by the package.
@@ -465,7 +463,7 @@ is a valid formula whose semantic is: {\em any version of package
       <def>*
     }
 <dep>     := STRING 
-           | STRING ( STRING+ )
+           | STRING { STRING+ }
 <kind>    := library | syntax
 <def>     := IDENT: BOOL
            | IDENT: STRING
@@ -549,19 +547,19 @@ in \S\ref{syntax} with the following restrictions:
     ?misc: [ <mv>+ ]
 
 <mv> := STRING
-      | STRING ( STRING )
+      | STRING { STRING }
 \end{Verbatim}
 }
 
 \begin{itemize}
 \item Files listed under {\tt lib} are copied to \verb+$lib/$NAME/+.
 \item Files listed under {\tt bin} are copied to \verb+$bin/+ (they
-  can be renamed using \verb+$SRC ( $DST )+; in this case \verb+$SRC+
+  can be renamed using \verb+$SRC { $DST }+; in this case \verb+$SRC+
   should be a simple filename, ie. it should not start with a
   directory name).
 \item Files listed under {\tt doc} are copied to \verb+$doc/$NAME/+.
 \item Files listed under {\tt misc} should be processed as follows:
-  for each pair \verb+$SRC ( $DST )+, the tool should ask the user if
+  for each pair \verb+$SRC { $DST }+, the tool should ask the user if
   he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
 \end{itemize}
 
@@ -993,38 +991,39 @@ below.
 \label{script-init}
 
 \begin{verbatim}
-    $ opam-$KIND-init $opam/repo/$REPO $ADDRESS
+    $ opam-$KIND-init $ADDRESS
 \end{verbatim}
 
 This script should contact the OPAM repository located at address
-\verb+$ADDRESS+ and create \verb+$opam/repo/$REPO+ as specified in
+\verb+$ADDRESS+ and populate its local state (ie. \verb+./opam/+,
+\verb+./descr/+ and \verb+archives+) as specified in
 \S\ref{state-repo}.
 
 \subsubsection{Update script}
 \label{script-update}
 
 \begin{verbatim}
-    $ opam-$KIND-update $opam/repo/$REPO
+    $ opam-$KIND-update $ADDRESS
 \end{verbatim}
 
 This script should get the list of newly available packages, by
-contacting the OPAM repository whose address is specified in
-\verb+$opam/repo/$REPO/address+. It should then create (or update)
-\verb+$opam/repo/$REPO/updated+ accordingly. It should also create (or
-update) the OPAM files stored in \verb+$opam/repo/$REPO/opam+ and the
-description files stored in \verb+$opam/repo/$REPO/descr+.
+contacting the OPAM repository located at address \verb+$ADDRESS+
+and update \verb+$./opam+ and \verb+./descr+.
+
+It should then create (or update) \verb+./updated+ to reflect the
+newly available packages and the one who changed uptstream..
 
 \subsubsection{Download script}
 \label{script-download}
 
 \begin{verbatim}
-    $ opam-$KIND-download $opam/repo/$REPO $NAME $VERSION
+    $ opam-$KIND-download $ADDRESS $NAME.$VERSION
 \end{verbatim}
 
 This script should get \verb+$NAME.$VERSION.tar.gz+ from the OPAM
-repository whose address is stored in \verb+$opam/repo/$REPO/address+.
-It should then move the archive file into \verb+$opam/repo/$REPO/archives/+ and
-overwrite the previous file if one is already there.
+repository located at address \verb+ADDRESS+ and store it into
+\verb+$opam/repo/$REPO/archives/+ (this should overwrite any
+previously existing file if one is already there).
 
 \subsubsection{Upload script}
 \label{script-upload}
@@ -1282,9 +1281,9 @@ The syntax of {\tt .comp} files follows the one described in
     ?pp:        [ <ppflag>+ ]
 
 <dep>    := STRING
-          | STRING ( STRING+ )
+          | STRING { STRING+ }
 
-<ppflag> := CAMLP4 ( <dep>+ )
+<ppflag> := CAMLP4 { <dep>+ }
           | <flag>
 \end{Verbatim}
 }
