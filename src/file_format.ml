@@ -56,16 +56,22 @@ let sections items =
   ) [] items in
   List.rev l
 
-exception Bad_format of string
-
 let bad_format fmt =
-  Printf.kprintf (fun str -> raise (Bad_format str)) fmt
+  Printf.kprintf
+    (fun str -> Globals.error_and_exit "Bad format! %s" str)
+    fmt
 
 let rec is_valid items fields =
   List.for_all (function
     | Variable (f, _) -> List.mem f fields
     | Section s       -> is_valid s.items fields
   ) items
+
+let invalid_fields items fields =
+  let rec aux accu = function
+    | Variable(f,_) -> if List.mem f fields then accu else f :: accu
+    | Section s     -> List.fold_left aux accu s.items in
+  List.fold_left aux [] items
 
 let kind = function
   | Bool _   -> "bool"
@@ -77,36 +83,36 @@ let kind = function
   | Option _ -> "option"
 
 let kinds l =
-  String.concat "," (List.map kind l)
+  Printf.sprintf "[%s]" (String.concat "; " (List.map kind l))
 
 (* Base parsing functions *)
 let parse_bool = function
   | Bool b -> b
-  | x      -> bad_format "expecting a bool, got %s" (kind x)
+  | x      -> bad_format "Expecting a bool, got %s" (kind x)
 
 let parse_ident = function
   | Ident i -> i
-  | x       -> bad_format "expecting an ident, got %s" (kind x)
+  | x       -> bad_format "Expecting an ident, got %s" (kind x)
 
 let parse_symbol = function
   | Symbol s -> s
-  | x        -> bad_format "expecting a symbol, got %s" (kind x)
+  | x        -> bad_format "Expecting a symbol, got %s" (kind x)
 
 let parse_ident = function
   | Symbol s -> s
-  | x       -> bad_format "expecting a symbol, got %s" (kind x)
+  | x       -> bad_format "Expecting a symbol, got %s" (kind x)
 
 let parse_string = function
   | String s -> s
-  | x        -> bad_format "expecting a string, got %s" (kind x)
+  | x        -> bad_format "Expecting a string, got %s" (kind x)
 
 let parse_list fn = function
   | List s -> List.map fn s
-  | x      -> bad_format "expecting a list, got %s" (kind x)
+  | x      -> bad_format "Expecting a list, got %s" (kind x)
 
 let parse_group fn = function
   | Group g -> List.map fn g
-  | x        -> bad_format "expecting a group, got %s" (kind x)
+  | x        -> bad_format "Expecting a group, got %s" (kind x)
 
 let parse_option f g = function
   | Option (k,l) -> f k, List.map g l
@@ -120,15 +126,15 @@ let parse_string_list = parse_list parse_string
 
 let parse_string_pair = function
   | [String x; String y] -> (x,y)
-  | x                    -> bad_format "expecting a pair of strings, got %s" (kinds x)
+  | x                    -> bad_format "Expecting a pair of strings, got %s" (kinds x)
 
 let parse_single_string = function
   | [String x] -> x
-  | x          -> bad_format "expecting a single string, got %s" (kinds x)
+  | x          -> bad_format "Expecting a single string, got %s" (kinds x)
 
 let rec parse_or fns v =
   match fns with
-  | []   -> bad_format "cannot parse %s" (kind v)
+  | []   -> bad_format "Cannot parse %s" (kind v)
   | h::t ->
       try h v
       with _ -> parse_or t v
@@ -175,15 +181,15 @@ let string_of_file f = string_of_items f.contents
 
 let assoc items n parse =
   try parse (List.assoc n (variables items))
-  with Not_found -> bad_format "field  %S is missing" n
+  with Not_found -> bad_format "Field %S is missing" n
 
 let get_all_section_by_kind items kind =
   try List.map snd (List.find_all (fun (k,_) -> k=kind) (sections items))
-  with Not_found -> bad_format "section kind=%S is missing" kind
+  with Not_found -> bad_format "Section kind %S is missing" kind
 
 let get_section_by_kind items kind =
   try snd (List.find (fun (k,_) -> k=kind) (sections items))
-  with Not_found -> bad_format "section kind=%S is missing" kind
+  with Not_found -> bad_format "Section kind %S is missing" kind
 
 let assoc_sections items kind parse =
   List.map parse (get_all_section_by_kind items kind)
@@ -191,6 +197,10 @@ let assoc_sections items kind parse =
 let assoc_option items n parse =
   try Some (parse (List.assoc n (variables items)))
   with Not_found -> None
+
+let assoc_default d items n parse =
+  try parse (List.assoc n (variables items))
+  with Not_found -> d
 
 let assoc_list items n parse =
   try parse (List.assoc n (variables items))
@@ -206,7 +216,7 @@ let rec parse_constraints name = function
       [ (name, Some (r, v)) ]
   | (Symbol r) :: (String v) :: (Symbol ",") :: t ->
       (name, Some (r, v)) :: parse_constraints name t
-  | x -> bad_format "expecting a constraint, got %s" (kinds x)
+  | x -> bad_format "Expecting a constraint, got %s" (kinds x)
 
 (* contains only "," *)
 let rec parse_and_formula_aux = function
@@ -214,22 +224,20 @@ let rec parse_and_formula_aux = function
   | [String name]          -> [ (name, None) ]
   | [String name; Group g] -> parse_constraints name g
   | [Group g]              -> parse_and_formula_aux g
-  | e1 :: Symbol "," :: e2 -> parse_and_formula_aux [e1] @ parse_and_formula_aux e2
-  | x -> bad_format "expecting an AND formula, got %s" (kinds x)
+  | e1               :: e2 -> parse_and_formula_aux [e1] @ parse_and_formula_aux e2
 
 let parse_and_formula = function
   | List l -> parse_and_formula_aux l
-  | x      -> bad_format "expecting list, got %s" (kind x)
+  | x      -> bad_format "Expecting list, got %s" (kind x)
 
 (* contains only toplevel "|" *)
 let rec parse_or_formula_aux = function
-  | [f]                    -> [parse_and_formula_aux [f]]
-  | e1 :: Symbol "|" :: e2 -> parse_and_formula_aux [e1] :: parse_or_formula_aux e2 
-  | x -> bad_format "expecting an OR formula, got %s" (kinds x)
+  | e1 :: Symbol "|" :: e2 -> parse_and_formula_aux [e1] :: parse_or_formula_aux e2
+  | e                      -> [parse_and_formula_aux e]
 
 let parse_or_formula = function
   | List l -> parse_or_formula_aux l
-  | x      -> bad_format "expecting list, got %s" (kind x)
+  | x      -> bad_format "Expecting list, got %s" (kind x)
 
 let make_constraint = function
   | name, None       -> [String name]

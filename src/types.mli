@@ -49,6 +49,9 @@ module Dirname : sig
   (** Create a directory *)
   val mkdir: t -> unit
 
+  (** Execute a list of commands in a given directory *)
+  val exec: t -> string list -> int
+
 end
 
 (** Shortcut to directory type *)
@@ -68,6 +71,11 @@ module Raw : Abstract
 
 (** Shortcut to raw file content type *)
 type raw = Raw.t
+
+(** Stdlib [Filename] module *)
+module Stdlib_filename : sig
+  val concat: string -> string -> string
+end
 
 (** non-directory filenames *)
 module Filename : sig
@@ -157,6 +165,8 @@ module NV : sig
   (** Convert a set of pairs to a map [name -> versions] *)
   val to_map: Set.t -> V.Set.t N.Map.t
 
+  (** Convert a set of pairs to a string *)
+  val string_of_set: Set.t -> string
 end
 
 (** OCaml version *)

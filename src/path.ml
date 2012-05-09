@@ -22,7 +22,7 @@ let available dir =
   let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
   List.fold_left (fun set file ->
     match NV.of_filename file with
-    | None    -> set
+    | None    -> log "XXX %s" (Filename.to_string file); set
     | Some nv -> NV.Set.add nv set
   ) NV.Set.empty files
 
@@ -70,6 +70,8 @@ module C = struct
   let create global oversion =
     let root = G.root global in
     root / OCaml_V.to_string oversion
+
+  let root x = x
 
   let lib t n = t / "lib" / N.to_string n
 
@@ -126,14 +128,12 @@ module R = struct
 
   let updated t = t // "updated"
 
-  let upload_dir t = t / "upload"
+  let upload t = t / "upload"
 
-  let upload t nv = upload_dir t / NV.to_string nv
+  let upload_opam t nv = upload t / "opam" // (NV.to_string nv ^ ".opam")
 
-  let upload_opam t nv = upload t nv // (NV.to_string nv ^ ".opam")
+  let upload_descr t nv = upload t / "descr" // NV.to_string nv
 
-  let upload_descr t nv = upload t nv // NV.to_string nv
-
-  let upload_archive t nv = upload t nv // (NV.to_string nv ^ ".tar.gz")
+  let upload_archives t nv = upload t / "archives" // (NV.to_string nv ^ ".tar.gz")
 
 end

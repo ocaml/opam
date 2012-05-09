@@ -87,10 +87,12 @@ let files dir =
   in_dir dir (fun () ->
     let d = Sys.readdir (Unix.getcwd ()) in
     let d = Array.to_list d in
-    List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d
+    let l = List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d in
+    List.map (Filename.concat dir) l
   )
     
 let remove_file file =
+  log "remove_file %s" file;
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
     
@@ -98,27 +100,28 @@ let rec remove_dir dir =
   if Sys.file_exists dir then begin
     List.iter remove_file (files dir);
     List.iter remove_dir (directories dir);
+    log "remove_dir %s" dir;
     Unix.rmdir dir;
   end
-  
+
 let remove file =
   if Sys.file_exists file && Sys.is_directory file then
     remove_dir file
   else
     remove_file file
-    
-let getchdir s = 
+
+let getchdir s =
   let p = Unix.getcwd () in
   let () = Unix.chdir s in
   p
-    
+
 let rec root path =
   let d = Filename.dirname path in
   if d = path || d = "" || d = "." then
     path
   else
     root d
-    
+
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines ic =
   let lines = ref [] in
@@ -130,7 +133,7 @@ let read_lines ic =
       !lines
   with _ ->
     !lines
-      
+
 let read_command_output_ cmd =
   let ic = Unix.open_process_in cmd in
   let lines = read_lines ic in
@@ -138,7 +141,7 @@ let read_command_output_ cmd =
     None
   else
     Some lines
-    
+
 let read_command_output fmt =
   Printf.kprintf (fun cmd ->
     match read_command_output_ cmd with
@@ -146,6 +149,7 @@ let read_command_output fmt =
     | Some lines -> lines
   ) fmt
 
+(** Expand '..' and '.' *)
 let normalize s =
   if Sys.file_exists s then
     getchdir (getchdir s)
@@ -153,15 +157,19 @@ let normalize s =
     s
 
 let real_path p =
-  let dir = Filename.dirname p in
-  let dir = normalize dir in
-  let base = Filename.basename p in
   let (/) = Filename.concat in
-  if Filename.is_relative dir then
-  (Sys.getcwd ()) / dir / base
+  let dir = normalize (Filename.dirname p) in
+  let dir =
+    if Filename.is_relative dir then
+      Sys.getcwd () / dir
+    else
+      dir in
+  let base = Filename.basename p in
+  if base = "." then
+    dir
   else
-  dir / base
- 
+    dir / base
+
 let add_path bins = 
   let path = ref "<not set>" in
   let env = Unix.environment () in

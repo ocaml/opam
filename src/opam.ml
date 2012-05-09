@@ -199,7 +199,7 @@ let upload = {
     let opam = Filename.of_string !opam in
     let descr = Filename.of_string !descr in
     let archive = Filename.of_string !archive in
-    let repo = if !repo = "" then None else Some (Repository.of_string !repo) in
+    let repo = if !repo = "" then None else Some !repo in
     Client.upload { opam; descr; archive } repo)
 }
 
@@ -260,9 +260,7 @@ let commands = [
   switch;
 ]
 
-
 let () =
-  Globals.log "CLIENT" "Root path is %s" !Globals.root_path;
   List.iter SubCommand.register commands;
   try ArgExt.parse global_args
   with

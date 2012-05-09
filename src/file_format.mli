@@ -40,11 +40,10 @@ val sections : item list -> (string * section) list
 (** Check whether a list of items contains only valid variable definitions *)
 val is_valid : item list -> string list -> bool
 
-(** {2 Parsing functions} *)
+(** Find all the invalid fields *)
+val invalid_fields : item list -> string list -> string list
 
-(** All the functions in this section can raise [Bad_format] in case
-    something goes wrong *)
-exception Bad_format of string
+(** {2 Parsing functions} *)
 
 (** Parse a boolean *)
 val parse_bool : value -> bool
@@ -125,12 +124,16 @@ val string_of_file : file -> string
 
 (** {2 Finding functions} *)
 
-(** Get the value associated to variable defintion *)
+(** Get the value of a field *)
 val assoc : item list -> string -> (value -> 'a) -> 'a
 
-(** Get the value associated to a variable. If the variable does not
-    exist, return None *)
-val assoc_option : item list -> string -> (value -> 'a) ->'a option
+(** Get the value of a field. If the field does not exist, return
+    None *)
+val assoc_option : item list -> string -> (value -> 'a) -> 'a option
+
+(** Get the value of a field. If the variable does not exist, return a
+    default value *)
+val assoc_default : 'a -> item list -> string -> (value -> 'a) -> 'a 
 
 (** Get the value associated to a variable. If the variable does not
     exists, return [] *)

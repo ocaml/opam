@@ -46,9 +46,29 @@ type t = {
   repo_index: string N.Map.t;
 }
 
+let print_state t =
+  let string_of_repos r =
+    let s (r,p) =
+      Printf.sprintf "%s:%s"
+        (Repository.to_string r)
+        (Dirname.to_string (Path.R.root p)) in
+    String.concat ", " (List.map s r) in
+  let string_of_nmap m =
+    let s (n,r) = Printf.sprintf "%s:%s" (N.to_string n) r in
+    let l = N.Map.fold (fun n r l -> s (n,r)::l) m [] in
+    String.concat ", " l in
+  log "GLOBAL    : %s" (Dirname.to_string (Path.G.root t.global));
+  log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
+  log "REPO      : %s" (string_of_repos t.repositories);
+  log "AVAILABLE : %s" (NV.string_of_set t.available);
+  log "INSTALLED : %s" (NV.string_of_set t.installed);
+  log "REINSTALL : %s" (NV.string_of_set t.reinstall);
+  log "REPO_INDEX: %s" (string_of_nmap t.repo_index)
+
 (* Look into the content of ~/.opam/config to build the client
    state *)
 let load_state () =
+  log "root path is %s" !Globals.root_path;
   let global = Path.G.create (Dirname.of_string !Globals.root_path) in
   let config = File.Config.read (Path.G.config global) in
   let ocaml_version = File.Config.ocaml_version config in
@@ -59,9 +79,13 @@ let load_state () =
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
   let available = Path.G.available global in
-  { global; compiler; repositories;
+  let t = {
+    global; compiler; repositories;
     available; installed; reinstall;
-    repo_index; config }
+    repo_index; config
+  } in
+  print_state t;
+  t
 
 let find_repository_path t name =
   let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
@@ -75,17 +99,19 @@ let update () =
   log "update";
   let t = load_state () in
   (* first update all the repo *)
-  List.iter (fun (r,p) -> Repositories.opam_update p r) t.repositories;
+  List.iter (fun (r,p) -> Repositories.update p r) t.repositories;
   (* then update $opam/repo/index *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
+      let available = Path.R.available p in
+      log "repo=%s packages=%s" (Repository.name r) (NV.string_of_set available);
       NV.Set.fold (fun nv repo_index ->
         let name = NV.name nv in
         if not (N.Map.mem name repo_index) then
           N.Map.add name (Repository.name r) repo_index
         else
           repo_index
-      ) (Path.R.available p) repo_index
+      ) available repo_index
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
   (* update $opam/$oversion/reinstall *)
@@ -99,7 +125,8 @@ let update () =
           reinstall
       ) updated reinstall
     ) t.reinstall t.repositories in
-  File.Reinstall.write (Path.C.reinstall t.compiler) reinstall;
+  if not (NV.Set.is_empty reinstall) then
+    File.Reinstall.write (Path.C.reinstall t.compiler) reinstall;
   (* finally create symbolic links from $repo dirs to main dir *)
   N.Map.iter (fun n r ->
     let repo_p = find_repository_path t r in
@@ -135,7 +162,7 @@ let init repo =
     File.Installed.write (Path.C.installed compiler) File.Installed.empty;
     File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
     File.Repo_config.write (Path.R.config repo_p) repo;
-    Repositories.opam_init repo_p repo;
+    Repositories.init repo_p repo;
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
@@ -290,6 +317,8 @@ let get_archive t nv =
   let name = NV.name nv in
   let repo = N.Map.find name t.repo_index in
   let repo_p = find_repository_path t repo in
+  let repo = find_repository t repo in
+  Repositories.download repo_p repo nv;
   let src = Path.R.archive repo_p nv in
   let dst = Path.G.archive t.global nv in
   Filename.link src dst;
@@ -312,7 +341,7 @@ let proceed_tochange t nv_old nv =
     List.map
       (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
       (File.OPAM.build opam) in
-  let err = Run.commands commands in
+  let err = Dirname.exec p_build commands in
   if err = 0 then
     proceed_toinstall t nv
   else
@@ -519,12 +548,18 @@ let upload upload repo =
         find_repository t (N.Map.find name t.repo_index)
       else
         Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
-  | Some repo -> repo in
+  | Some repo -> find_repository t repo in
   let repo_p = List.assoc repo t.repositories in
-  Filename.copy upload.opam  (Path.R.upload_opam repo_p nv);
-  Filename.copy upload.descr (Path.R.upload_descr repo_p nv);
-  Filename.copy upload.archive (Path.R.upload_archive repo_p nv);
-  Repositories.opam_upload repo_p repo
+  let upload_opam = Path.R.upload_opam repo_p nv in
+  let upload_descr = Path.R.upload_descr repo_p nv in
+  let upload_archives = Path.R.upload_archives repo_p nv in
+  Filename.copy upload.opam upload_opam;
+  Filename.copy upload.descr upload_descr;
+  Filename.copy upload.archive upload_archives;
+  Repositories.upload repo_p repo;
+  Filename.remove upload_opam;
+  Filename.remove upload_descr;
+  Filename.remove upload_archives
 
 let config request =
   log "config %s" (string_of_config request);

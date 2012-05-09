@@ -60,9 +60,10 @@ module Syntax = struct
 
   let check f fields =
     if not (File_format.is_valid f.contents fields) then
-      Globals.error_and_exit "The following file contains fields not in {%s}:\n%s"
-        (String.concat "," fields)
+      Globals.error_and_exit "{ %s } are invalid field names in %s. Valid fields are { %s }"
+        (String.concat ", " (invalid_fields f.contents fields))
         f.filename
+        (String.concat ", " fields)
 end
 
 module X = struct
@@ -312,6 +313,7 @@ module OPAM = struct
   let s_installed   = "  installed" 
 
   let valid_fields = [
+    s_opam_version;
     s_version;
     s_maintainer;
     s_substs;
@@ -384,7 +386,9 @@ module OPAM = struct
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
       assoc_list s s_substs (parse_list (parse_string |> Filename.of_string)) in
-    let build      = assoc_list s s_build (parse_list (parse_list parse_string)) in
+    let build      =
+      assoc_default Globals.default_build_command
+        s s_build (parse_list (parse_list parse_string)) in
     let depends    = assoc_list s s_depends parse_or_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries parse_string_list in

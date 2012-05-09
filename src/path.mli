@@ -65,7 +65,11 @@ module C : sig
 
   (** Contains [$opam] and [$OVERSION] *)
   type t
+
+  (** Root dir: [$opam/$oversion] *)
+  val root: t -> dirname
     
+  (** Create a compiler path *)
   val create: G.t -> OCaml_V.t -> t
 
   (** Installed libraries for the package:
@@ -156,22 +160,19 @@ module R : sig
   val updated: t -> filename
 
   (** Return the upload folder for a given version:
-      [$opam/repo/$repo/upload/$NAME.$VERSION/] *)
-  val upload: t -> NV.t -> dirname
+      [$opam/repo/$repo/upload/] *)
+  val upload: t -> dirname
 
   (** Return the upload folder for OPAM files:
-      [$opam/repo/$repo/upload/$NAME.$VERSION/$NAME.$VERSION.opam]*)
+      [$opam/repo/$repo/upload/opam/$NAME.$VERSION.opam]*)
   val upload_opam: t -> NV.t -> filename
 
   (** Return the upload folder for descr files:
-      [$opam/repo/$repo/upload/$NAME.$VERSION/$NAME.$VERSION] *)
+      [$opam/repo/$repo/upload/descr/$NAME.$VERSION] *)
   val upload_descr: t -> NV.t -> filename
 
   (** Return the upload folder for archive files:
-      [$opam/repo/$repo/upload/$NAME.$VERSION/$NAME.$VERSION.tar.gz] *)
-  val upload_archive: t -> NV.t -> filename
-
-  (** Return the upload folder: [$opam/repo/$repo/upload] *)
-  val upload_dir: t -> dirname
+      [$opam/repo/$repo/upload/archives/$NAME.$VERSION.tar.gz] *)
+  val upload_archives: t -> NV.t -> filename
 
 end

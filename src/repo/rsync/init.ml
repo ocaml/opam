@@ -11,10 +11,25 @@ let remote_address = Sys.argv.(1)
 let rsync dir =
   Run.mkdir "opam";
   let err =
-    Run.command "rsync -ar %s%s/ %s/" remote_address dir dir in
+    Run.command "rsync -ar %s/ %s/"
+      (Filename.concat remote_address dir) dir in
   if err <> 0 then
     Globals.error_and_exit "rsync failed with code %d" err
 
-let _ =
+let () =
   rsync "opam";
   rsync "descr"
+
+
+
+
+
+
+
+
+
+
+
+
+
+

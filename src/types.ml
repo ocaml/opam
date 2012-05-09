@@ -50,6 +50,8 @@ module Dirname = struct
   let mkdir dirname =
     Run.mkdir (to_string dirname)
 
+  let exec dirname cmds =
+    Run.in_dir (to_string dirname) (fun () -> Run.commands cmds)
 end
     
 type dirname = Dirname.t
@@ -64,6 +66,8 @@ type raw = Raw.t
 
 (* Keep a link to [Filename] for the standard library *)
 module F = Filename
+
+module Stdlib_filename = F
 
 module Filename = struct
 
@@ -120,7 +124,7 @@ module Filename = struct
 
   let copy_in src dst =
     let src_s = to_string src in
-    let dst = F.concat src_s (F.basename src_s) in
+    let dst = F.concat dst (F.basename src_s) in
     copy src (of_string dst)
 
   let link_in src dst =
@@ -169,7 +173,7 @@ module NV = struct
 
   let check s =
       try
-        let i = String.rindex s sep in
+        let i = String.index s sep in
         let name = String.sub s 0 i in
         let version = String.sub s (i+1) (String.length s - i - 1) in
         Some {name; version}
@@ -220,6 +224,10 @@ module NV = struct
           V.Set.empty in
       N.Map.add name (V.Set.add version versions) (N.Map.remove name map)
     ) nv N.Map.empty
+
+  let string_of_set s =
+    let l = Set.fold (fun nv l -> to_string nv :: l) s [] in
+    Printf.sprintf "{ %s }" (String.concat ", " l)
 
 end
 

@@ -17,18 +17,18 @@ open Types
 
 let log fmt = Globals.log "REPO" fmt
 
-let run cmd root repo =
-  log "opam-%s: %s" cmd (Repository.to_string repo);
+let run cmd root repo args =
+  log "opam-%s: %s %s" cmd (Repository.to_string repo) (String.concat " " args);
   let path = Path.R.root root in
   let cmd =  Printf.sprintf "opam-%s-%s" (Repository.kind repo) cmd in
   let i = Run.in_dir (Dirname.to_string path) (fun () ->
-    Run.command "%s %s" cmd (Repository.address repo);
+    Run.command "%s %s %s" cmd (Repository.address repo) (String.concat " " args);
   ) in
   if i <> 0 then
     Globals.error_and_exit "%s failed" cmd
 
-let opam_init root r =
-  run "init" root r;
+let init root r =
+  run "init" root r [];
   File.Repo_config.write (Path.R.config root) r;
   Dirname.mkdir (Path.R.opam_dir root);
   Dirname.mkdir (Path.R.descr_dir root);
@@ -37,17 +37,17 @@ let opam_init root r =
   ()
 
 (* Generic repository pluggins *)
-let opam_update root r =
-  run "update" root r;
+let update root r =
+  run "update" root r [];
   (* XXX *)
   ()
 
-let opam_download root r =
-  run "download" root r;
+let download root r nv =
+  run "download" root r [NV.to_string nv];
   (* XXX *)
   ()
 
-let opam_upload root r =
-  run "upload" root r;
+let upload root r =
+  run "upload" root r [];
   (* XXX *)
   ()

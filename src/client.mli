@@ -39,8 +39,10 @@ val update : unit -> unit
 val upgrade : unit -> unit
 
 (** Upload a package to a remote repository. If repo is [None] then it
-    will look for the repository associated with the package name. *)
-val upload : upload -> repository option -> unit
+    will look for the repository associated with the package
+    name. Otherwise, it will look for a repository having the right
+    name.*)
+val upload : upload -> string option -> unit
 
 (** Removes the given package. *)
 val remove : N.t -> unit
