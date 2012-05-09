@@ -906,14 +906,19 @@ When a packager wants to create a package, he should:
 \item run the following command:
 
 \begin{verbatim}
-    $ opam upload -opam $OPAM -descr $DESC -archive $ARCHIVE -repo $REPO
+    $ opam upload -opam $OPAM -descr $DESCR -archive $ARCHIVE -repo $REPO
 \end{verbatim}
 
 This command will parse \verb+$OPAM+ to get the package name and
-version and it will move \verb+$OPAM$+, \verb+$DESC+ and
-\verb+$ARCHIVE+ in \verb+$opam/repo/$REPO/upload/$NAME.$VERSION+ (with
-the right filenames). It will then call \verb+opam-$KIND-upload+ to
-upload the files upstream (see \S\ref{script-upload}).
+version and it will:
+\begin{itemize}
+\item move \verb+$OPAM+ to \verb+$opam/repo/$REPO/upload/$NAME.$VERSION.opam+
+\item move \verb+$DESCR+ to \verb+$opam/repo/$REPO/descr/$NAME.$VERSION+
+\item move \verb+$ARCHIVE+ to \verb+$opam/repo/$REPO/archives/$NAME.$VERSION.tar.gz+
+\end{itemize}
+
+It will then call \verb+opam-$KIND-upload+ to upload the files
+upstream (see \S\ref{script-upload}).
 
 This command will work only for writable repositories; in case of
 errors (for instance if the repository is read-only) the script
