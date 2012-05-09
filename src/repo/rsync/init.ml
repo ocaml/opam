@@ -19,17 +19,3 @@ let rsync dir =
 let () =
   rsync "opam";
   rsync "descr"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
