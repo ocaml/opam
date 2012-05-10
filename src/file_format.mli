@@ -45,6 +45,10 @@ val invalid_fields : item list -> string list -> string list
 
 (** {2 Parsing functions} *)
 
+(** All the following parsing function raise [Bad_format] in case the
+    input does not have the right format. *)
+exception Bad_format of string
+
 (** Parse a boolean *)
 val parse_bool : value -> bool
 

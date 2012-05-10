@@ -194,6 +194,8 @@ module Descr = struct
 
 end
 
+let s_opam_version = "opam-version"
+
 module Config = struct
 
     let internal = "config"
@@ -232,7 +234,6 @@ module Config = struct
 
     open File_format
 
-    let s_opam_version = "opam-version"
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
 
@@ -293,8 +294,6 @@ module OPAM = struct
     libraries  = [];
     syntax     = [];
   }
-
-  let s_opam_version = "opam-version"
 
   let s_version     = "version"
   let s_maintainer  = "maintainer"
@@ -427,6 +426,7 @@ module Dot_install = struct
   let s_misc = "misc"
 
   let valid_fields = [
+    s_opam_version;
     s_lib;
     s_bin;
     s_misc;
@@ -467,10 +467,6 @@ module Dot_config = struct
 
   let internal = ".config"
 
-  type value =
-    | B of bool
-    | S of string
-
   let s str = S str
   let b bool = B bool
 
@@ -481,13 +477,13 @@ module Dot_config = struct
     asmcomp   : string list ;
     bytelink  : string list ;
     asmlink   : string list ; 
-    lvariables: (Variable.t * value) list;
+    lvariables: (variable * variable_contents) list;
   }
 
   type t = {
     libraries: section list;
     syntax   : section list;
-    variables: (Variable.t * value) list;
+    variables: (variable * variable_contents) list;
   }
 
   let empty = {
@@ -503,6 +499,7 @@ module Dot_config = struct
   let s_asmlink  = "asmlink"
 
   let valid_fields = [
+    s_opam_version;
     s_includes;
     s_bytecomp;
     s_asmcomp;
@@ -564,15 +561,19 @@ module Dot_config = struct
         @ List.map of_syntax t.syntax
     }
 
-  let variables t s = List.assoc s t.variables
+  let variables t = List.map fst t.variables
+
+  let variable t s = List.assoc s t.variables
 
   module type SECTION = sig
-    val includes: t -> string -> string list
-    val asmcomp : t -> string -> string list
-    val bytecomp: t -> string -> string list
-    val asmlink : t -> string -> string list
-    val bytelink: t -> string -> string list
-    val variable: t -> string -> Variable.t  -> value
+    val available: t -> string list
+    val includes : t -> string -> string list
+    val asmcomp  : t -> string -> string list
+    val bytecomp : t -> string -> string list
+    val asmlink  : t -> string -> string list
+    val bytelink : t -> string -> string list
+    val variable : t -> string -> variable -> variable_contents
+    val variables: t -> string -> variable list
   end
 
   module Section (M : sig val get : t -> section list end) : SECTION = struct
@@ -580,12 +581,14 @@ module Dot_config = struct
     let find t name =
       List.find (fun s -> s.name = name) (M.get t)
 
+    let available t = List.map (fun s -> s.name) (M.get t)
     let includes t s = (find t s).includes
     let bytecomp t s = (find t s).bytecomp
     let asmcomp  t s = (find t s).asmcomp
     let bytelink t s = (find t s).bytelink
     let asmlink  t s = (find t s).asmlink
     let variable t n s = List.assoc s (find t n).lvariables
+    let variables t n = List.map fst (find t n).lvariables
   end
 
   module Library = Section (struct let get t = t.libraries end)
@@ -604,7 +607,7 @@ end
 
 module Make (F : F) = struct
 
-  let log = Globals.log ("FILE." ^ F.internal)
+  let log = Globals.log (Printf.sprintf "FILE(%s)" F.internal)
 
   let write f v =
     log "write %s" (Filename.to_string f);
@@ -614,7 +617,8 @@ module Make (F : F) = struct
     let filename = Filename.to_string f in
     log "read %s" filename;
     if Filename.exists f then
-      F.of_string f (Filename.read f)
+      try F.of_string f (Filename.read f)
+      with Bad_format msg -> Globals.error_and_exit "%s" msg
     else
       Globals.error_and_exit "File %s does not exit" (Filename.to_string f)
 

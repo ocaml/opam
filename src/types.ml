@@ -286,7 +286,16 @@ type repository = Repository.t
 
 (** Variable names are used in .config files *)
 module Variable = Base
+
 type variable = Variable.t
+
+type variable_contents =
+  | B of bool
+  | S of string
+
+let string_of_variable_contents = function
+  | B b -> string_of_bool b
+  | S s -> s
 
 (** {2 Command line arguments} *)
 
@@ -328,8 +337,9 @@ type rec_config_option = {
 
 type config =
   | Compil   of rec_config_option
-  | Variable of (N.t * Variable.t) list
-  | Subst    of Filename.t list
+  | List_vars
+  | Variable of (N.t * string option * variable) list
+  | Subst of Filename.t list
 
 let p msg l =
   Printf.sprintf "%s %s"
@@ -351,9 +361,15 @@ let string_of_rec_config_option o =
 let p l =
   String.concat ","
     (List.map
-       (fun (n,v) -> Printf.sprintf "%s.%s" (N.to_string n) (Variable.to_string v)) l)
+       (function
+         | (n,None  ,v) ->
+             Printf.sprintf "{%s}.%s" (N.to_string n) (Variable.to_string v)
+         | (n,Some l,v) ->
+             Printf.sprintf "{%s.%s}.%s" (N.to_string n) l (Variable.to_string v)
+       ) l)
 
 let string_of_config = function
   | Compil c   -> string_of_rec_config_option c
+  | List_vars  -> "list-vars"
   | Variable l -> p l
   | Subst l    -> String.concat "," (List.map Filename.to_string l)

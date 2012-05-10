@@ -56,9 +56,11 @@ let sections items =
   ) [] items in
   List.rev l
 
+exception Bad_format of string
+
 let bad_format fmt =
   Printf.kprintf
-    (fun str -> Globals.error_and_exit "Bad format! %s" str)
+    (fun str -> raise (Bad_format (Printf.sprintf "Bad format! %s" str)))
     fmt
 
 let rec is_valid items fields =
@@ -137,7 +139,7 @@ let rec parse_or fns v =
   | []   -> bad_format "Cannot parse %s" (kind v)
   | h::t ->
       try h v
-      with _ -> parse_or t v
+      with Bad_format _ -> parse_or t v
 
 let make_string str = String str
 

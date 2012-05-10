@@ -576,9 +576,51 @@ let upload upload repo =
 
 let config request =
   log "config %s" (string_of_config request);
-  (*    let t = load_state () in *)
-  failwith "TODO"
-
+  let t = load_state () in
+  let module FC = File.Dot_config in
+  match request with
+  (* List all the available variables *)
+  | List_vars ->
+      let configs =
+        NV.Set.fold (fun nv l ->
+          let file = Path.C.config t.compiler (NV.name nv) in
+          (nv, FC.safe_read file) :: l
+        ) t.available [] in
+      let variables =
+        List.fold_left (fun accu (nv, c) ->
+          let name = NV.name nv in
+          let globals =
+            List.fold_left (fun accu v ->
+              (name, None, v, FC.variable c v) :: accu
+            ) accu (FC.variables c) in
+          let local accu available vars var =
+            List.fold_left
+              (fun accu n ->
+                let variables = vars c n in
+                List.fold_left (fun accu v ->
+                  (name, Some n, v, var c n v) :: accu
+                ) accu variables
+              ) accu (available c) in
+          local
+            (local globals
+               FC.Library.available
+               FC.Library.variables
+               FC.Library.variable)
+            FC.Syntax.available
+            FC.Syntax.variables
+            FC.Syntax.variable
+        ) [] configs in
+      List.iter (fun (name, lib, v, x) ->
+        let lib = match lib with
+          | None   -> ""
+          | Some l -> "." ^ l in
+        Globals.msg "{%s%s}%s = %s\n"
+          (N.to_string name) lib
+          (Variable.to_string v)
+          (string_of_variable_contents x)
+      ) (List.rev variables)
+  | _ -> failwith "TODO"
+            
 (*
     let version name =
       match

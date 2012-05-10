@@ -215,6 +215,14 @@ module Variable : Abstract
 (** Shortcut to variable type *)
 type variable = Variable.t
 
+(** Content of user-defined variables *)
+type variable_contents =
+  | B of bool
+  | S of string
+
+(** Convert the content of a variable to a string *)
+val string_of_variable_contents: variable_contents -> string
+
 (** {2 Command line arguments} *)
 
 (** Upload arguments *)
@@ -251,8 +259,9 @@ type rec_config_option = {
 
 type config =
   | Compil   of rec_config_option
-  | Variable of (N.t * Variable.t) list
-  | Subst    of Filename.t list
+  | List_vars
+  | Variable of (N.t * string option * variable) list
+  | Subst of Filename.t list
 
 (** Pretty-print *)
 val string_of_config: config -> string

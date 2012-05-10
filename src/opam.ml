@@ -104,12 +104,13 @@ let command = ref None
 let set c   () = command := Some c
 let set_rec () = recursive := true
 let specs = [
-  ("-r"       , Arg.Unit set_rec        , " Recursive search (large)");
-  ("-I"       , Arg.Unit (set `Include) , " Display native compile options");
-  ("-bytecomp", Arg.Unit (set `Bytecomp), " Display bytecode compile options");
-  ("-asmcomp" , Arg.Unit (set `Asmcomp) , " Display native link options");
-  ("-bytelink", Arg.Unit (set `Bytelink), " Display bytecode link options");
-  ("-asmlink" , Arg.Unit (set `Asmlink) , " Display native link options");
+  ("-r"        , Arg.Unit set_rec        , " Recursive search (large)");
+  ("-I"        , Arg.Unit (set `Include) , " Display native compile options");
+  ("-bytecomp" , Arg.Unit (set `Bytecomp), " Display bytecode compile options");
+  ("-asmcomp"  , Arg.Unit (set `Asmcomp) , " Display native link options");
+  ("-bytelink" , Arg.Unit (set `Bytelink), " Display bytecode link options");
+  ("-asmlink"  , Arg.Unit (set `Asmlink) , " Display native link options");
+  ("-list-vars", Arg.Unit (set `ListVars), " Display the list of variables");
 ]
 let args n =
   (* XXX: big hack *)
@@ -135,7 +136,8 @@ let config = {
       | Some `Bytecomp -> mk (Bytecomp (List.map args names))
       | Some `Bytelink -> mk (Bytelink (List.map args names))
       | Some `Asmcomp  -> mk (Asmcomp (List.map args names))
-      | Some `Asmlink  -> mk (Asmlink (List.map args names)) in
+      | Some `Asmlink  -> mk (Asmlink (List.map args names))
+      | Some `ListVars -> List_vars in
     Client.config config
 }
 
