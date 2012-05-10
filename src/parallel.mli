@@ -16,6 +16,7 @@
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
+  val string_of_vertex: V.t -> string
 end
 
 module type SIG = sig

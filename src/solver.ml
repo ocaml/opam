@@ -23,6 +23,14 @@ type action = (* NV.t internal_action *)
   | To_delete of NV.t
   | To_recompile of NV.t
 
+let string_of_action = function
+  | To_change (None, p)   -> Printf.sprintf "Install: %s" (NV.to_string p)
+  | To_change (Some o, p) ->
+      Printf.sprintf "Update: %s (Remove) -> %s (Install)"
+        (NV.to_string o) (NV.to_string p)
+  | To_recompile p        -> Printf.sprintf "Recompile: %s" (NV.to_string p)
+  | To_delete p           -> Printf.sprintf "Delete: %s" (NV.to_string p)
+
 type package_action = {
   cudf   : Cudf.package;
   action : action;
@@ -52,6 +60,7 @@ module PA_graph = struct
   module Parallel = Parallel.Make(struct
     include PG
     include Topological
+    let string_of_vertex v = string_of_action v.action
   end)
   include PG
 
@@ -69,22 +78,14 @@ type solution = {
 }
 
 let print_solution t =
-  let pf = Globals.msg in
   if t.to_remove = [] && PA_graph.is_empty t.to_add then
-    pf "No actions will be performed, the current state satisfies the request.\n"
+    Globals.msg "No actions will be performed, the current state satisfies the request.\n"
   else
     let f = NV.to_string in
-    List.iter (fun p -> pf "Remove: %s\n" (f p)) t.to_remove;
+    List.iter (fun p -> Globals.msg "Remove: %s\n" (f p)) t.to_remove;
     PA_graph.Topological.iter
-      (function { action ; _ } -> 
-        match action with
-        | To_recompile p          -> pf "Recompile: %s\n" (f p)
-        | To_delete p             -> assert false (* items to delete are in t.remove *)
-        | To_change (None, p)     -> pf "Install: %s\n" (f p)
-        | To_change (Some o, p)   -> pf "Update: %s (Remove) -> %s (Install)\n" (f o) (f p)
-      ) t.to_add;
-
-
+      (function { action ; _ } -> Globals.msg "%s\n" (string_of_action action))
+      t.to_add
 
 module Solver = struct
 

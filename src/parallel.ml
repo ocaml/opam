@@ -15,9 +15,12 @@
 
 open Utils
 
+let log fmt = Globals.log "PARALLEL" fmt
+
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
+  val string_of_vertex: V.t -> string
 end
 
 module type SIG = sig
@@ -39,7 +42,7 @@ module type SIG = sig
 
 end
 
-module Make (G : G) : SIG with module G = G = struct
+module Make (G : G) = struct
 
   module G = G
 
@@ -50,28 +53,36 @@ module Make (G : G) : SIG with module G = G = struct
   type t = {
     graph       : G.t ;
     visited_node: IntSet.t ; (* [int] represents the hash of [G.V.t] *)
-    queue_size  : int ;
     roots       : S.t ;
     degree      : int M.t ;
   }
 
+  let print_state t =
+    let string_of_set s =
+      let l = S.fold (fun v l -> G.string_of_vertex v :: l) s [] in
+      String.concat ", " l in
+    let string_of_imap m =
+      let s v i = Printf.sprintf "%s:%d" (G.string_of_vertex v) i in
+      let l = M.fold (fun v i l -> s v i :: l) m [] in
+      String.concat ", " l in
+    log "ROOTS:  %s" (string_of_set t.roots);
+    log "DEGREE: %s" (string_of_imap t.degree)
+
   let init graph = 
     let degree = ref M.empty in
     let add_degree v d = degree := M.add v d !degree in
-    let roots, queue_size = 
+    let roots = 
       G.fold_vertex
-        (fun v (todo, queue_size) ->
+        (fun v todo ->
           let d = G.in_degree graph v in
           if d = 0 then
-            S.add v todo, succ queue_size
+            S.add v todo
           else (
             add_degree v d;
-            todo, queue_size
+            todo
           )
-        )
-        graph
-        (S.empty, 0) in
-    { graph ; roots ; degree = !degree ; queue_size ; visited_node = IntSet.empty }
+        ) graph S.empty in
+    { graph ; roots ; degree = !degree ; visited_node = IntSet.empty }
       
   let visit t x =
     if IntSet.mem (G.V.hash x) t.visited_node then
@@ -86,21 +97,19 @@ module Make (G : G) : SIG with module G = G = struct
     let remove_degree x = degree := M.remove x !degree in
     let replace_degree x d = degree := M.add x d (M.remove x !degree) in
       (* Update the children of the node by decreasing by 1 their in-degree *)
-    let roots, queue_size = 
+    let roots = 
       G.fold_succ
-        (fun x (l, queue_size) ->
+        (fun x l ->
           let d = M.find x t.degree in
           if d = 1 then (
             remove_degree x;
-            S.add x l, succ queue_size
+            S.add x l
           ) else (
             replace_degree x (d-1);
-            l, queue_size
-          ))
-        t.graph
-        x
-        (roots, pred t.queue_size) in
-    { t with queue_size; roots }
+            l
+          )
+        ) t.graph x roots in
+    { t with roots; degree = !degree }
 
   (* the [Unix.wait] might return a processus which has not been created
      by [Unix.fork]. [wait pids] waits until a process in [pids]
@@ -122,10 +131,15 @@ module Make (G : G) : SIG with module G = G = struct
     let pids = ref IntMap.empty in
     let todo = ref (!t.roots) in
 
+(*    let print_pids m =
+      let s i n = Printf.sprintf "%d:%s" i (G.string_of_vertex n) in
+      let l = IntMap.fold (fun i n l -> s i n :: l) m [] in
+      log "PIDS:   %s" (String.concat ", " l) in *)
+
     (* nslots is the number of free slots *)
     let rec loop nslots =
 
-      if nslots <= 0 then
+      if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
 
         (* if no slots are available, wait for a child process to finish *)
         let pid, status = wait !pids in
@@ -138,7 +152,7 @@ module Make (G : G) : SIG with module G = G = struct
             loop (nslots + 1)
         | _ -> raise (Error n)
 
-      else
+      ) else (
 
         (* otherwise, look at the todo list *)
         if S.is_empty !todo then begin
@@ -152,12 +166,13 @@ module Make (G : G) : SIG with module G = G = struct
           let n = S.choose !todo in
           todo := S.remove n !todo;
           match Unix.fork () with
-          | 0   -> child n; exit 0
+          | 0   -> child n
           | pid ->
               pids := IntMap.add pid n !pids;
               pre n;
               loop (nslots - 1)
         end
+      )
     in
     loop n
 

@@ -27,7 +27,7 @@ let mkdir dir =
   aux dir
   
 let copy src dst =
-  log "Copying %s to %s" src dst;
+  log "copying %s to %s" src dst;
   let n = 1024 in
   let b = String.create n in
   let read = ref min_int in
@@ -256,6 +256,6 @@ let extract file dst =
     ) moves
 
 let link src dst =
-  log "Linking %s to %s" src dst;
+  log "linking %s to %s" src dst;
   mkdir (Filename.dirname dst);
   Unix.link src dst
