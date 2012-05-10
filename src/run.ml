@@ -75,22 +75,21 @@ let in_dir dir fn =
   with e ->
     Unix.chdir cwd;
     raise e
-      
-let directories dir =
-  in_dir dir (fun () ->
-    let d = Sys.readdir (Unix.getcwd ()) in
-    let d = Array.to_list d in
-    List.filter (fun f -> try Sys.is_directory f with _ -> false) d
-  )
     
-let files dir =
+let list kind dir =
   in_dir dir (fun () ->
     let d = Sys.readdir (Unix.getcwd ()) in
     let d = Array.to_list d in
-    let l = List.filter (fun f -> try not (Sys.is_directory f) with _ -> true) d in
+    let l = List.filter kind d in
     List.map (Filename.concat dir) l
   )
-    
+
+let files =
+  list (fun f -> try not (Sys.is_directory f) with _ -> true)
+
+let directories =
+  list (fun f -> try Sys.is_directory f with _ -> false)
+
 let remove_file file =
   log "remove_file %s" file;
   try Unix.unlink file
@@ -258,4 +257,6 @@ let extract file dst =
 let link src dst =
   log "linking %s to %s" src dst;
   mkdir (Filename.dirname dst);
+  if Sys.file_exists dst then
+    remove_file dst;
   Unix.link src dst

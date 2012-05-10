@@ -90,6 +90,14 @@ module C : sig
   (** Tempory folder: [$opam/$OVERSION/build] *)
   val build_dir: t -> dirname
 
+  (** Tempory location of install files:
+      [$opam/$OVERSION/build/$NAME.$VERSION/$NAME.install] *)
+  val build_install: t -> NV.t -> filename
+
+(** Tempory location of config files:
+      [$opam/$OVERSION/build/$NAME.$VERSION/$NAME.config] *)
+  val build_config: t -> NV.t -> filename
+
   (** Installed files for a given package:
       [$opam/$OVERSION/install/$NAME.install] *)
   val install: t -> N.t -> filename

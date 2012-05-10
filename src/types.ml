@@ -52,6 +52,10 @@ module Dirname = struct
 
   let exec dirname cmds =
     Run.in_dir (to_string dirname) (fun () -> Run.commands cmds)
+
+  let chdir dirname =
+    Unix.chdir (to_string dirname)
+
 end
     
 type dirname = Dirname.t
@@ -88,6 +92,8 @@ module Filename = struct
       dirname  = Dirname.of_string dirname;
       basename = Basename.of_string basename;
     }
+
+  let dirname t = t.dirname
 
   let read filename =
     let str = Run.read (to_string filename) in

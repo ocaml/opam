@@ -52,6 +52,8 @@ module Dirname : sig
   (** Execute a list of commands in a given directory *)
   val exec: t -> string list -> int
 
+  (** Change the current directory *)
+  val chdir: t -> unit
 end
 
 (** Shortcut to directory type *)
@@ -84,6 +86,9 @@ module Filename : sig
 
   (** Create a filename from a dirname and a basename *)
   val create: dirname -> basename -> t
+
+  (** Return the directory name *)
+  val dirname: t -> dirname
 
   (** Retrieves the contents from the hard disk. *)
   val read: t -> Raw.t

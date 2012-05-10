@@ -271,7 +271,16 @@ let confirm fmt =
 let proceed_toinstall t nv = 
 
   let name = NV.name nv in
-  let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
+
+  Dirname.chdir (Path.C.build t.compiler nv);
+  
+  (* .install *)
+  let to_install = File.Dot_install.read (Path.C.build_install t.compiler nv) in
+  File.Dot_install.write (Path.C.install t.compiler name) to_install;
+
+  (* .config *)
+  let config = File.Dot_config.read (Path.C.build_config t.compiler nv) in
+  File.Dot_config.write (Path.C.config t.compiler name) config;
 
   (* lib *) 
   let lib = Path.C.lib t.compiler name in
@@ -310,7 +319,11 @@ let proceed_todelete t nv =
       if confirm "Continue ?" then
         Filename.remove dst
     end
-  ) (File.Dot_install.misc to_install)
+  ) (File.Dot_install.misc to_install);
+
+  (* Remove .config and .install *)
+  Filename.remove (Path.C.install t.compiler name);
+  Filename.remove (Path.C.config t.compiler name)
 
 let get_archive t nv =
   log "get_archive %s" (NV.to_string nv);

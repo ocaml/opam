@@ -50,12 +50,11 @@ module G = struct
   let available_versions t n =
     versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
     
-
   let descr_dir t = t / "descr"
 
   let descr t nv = descr_dir t // NV.to_string nv
 
-  let archive_dir t = t / "archive"
+  let archive_dir t = t / "archives"
 
   let archive t nv = archive_dir t // (NV.to_string nv ^ ".tar.gz")
 
@@ -82,6 +81,10 @@ module C = struct
   let build_dir t = t / "build"
 
   let build t nv = build_dir t / NV.to_string nv
+
+  let build_install t nv = build t nv // (N.to_string (NV.name nv) ^ ".install")
+
+  let build_config t nv = build t nv // (N.to_string (NV.name nv) ^ ".config")
 
   let install_dir t = t / "install"
 
