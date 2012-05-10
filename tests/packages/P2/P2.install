@@ -1,8 +1,6 @@
-install "P2" {
-  lib = [
-    "p2.cma";
-    "p2.cmxa";
-    "p2.a";
-    "p2.cmi";
-  ]
-}
+lib: [
+  "p2.cma"
+  "p2.cmxa"
+  "p2.a"
+  "p2.cmi"
+]
