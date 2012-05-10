@@ -13,6 +13,7 @@
 \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
 
 \title{
+
 OPAM: a Package Management Systems for OCaml\\
 Version 1.0.0 Roadmap\\ ~\ \\
 THIS DOCUMENT IS A DRAFT\\
@@ -347,7 +348,7 @@ the following restrictions:
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1.0"
+    opam-version: "1"
     ?repositories: [ <repo>+ ]
     ocaml-version: STRING
 
@@ -370,7 +371,7 @@ compiler (available in the path).
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: 1.0
+    opam-version: "1"
     package STRING {
       version:    STRING
       maintainer: STRING
@@ -451,7 +452,9 @@ valid formula whose semantic is: {\em either any version of package
 
 {\small
 \begin{Verbatim}[frame=single]
-<file>    := <item>*
+<file>    :=
+    opam-version: "1"
+    <item>*
 <item>    := <def> | <section>
 <section> :=
     <kind> STRING {
@@ -541,6 +544,7 @@ in \S\ref{syntax} with the following restrictions:
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
+    opam-version: "1"
     ?lib:  [ STRING+ ]
     ?bin:  [ <mv>+ ]
     ?doc:  [ STRING+ ]
@@ -1273,6 +1277,7 @@ The syntax of {\tt .comp} files follows the one described in
 {
 \begin{Verbatim}[frame=single]
 <file> :=
+    opam-version: "1"
     src:        STRING
     ?patches:   [ STRING+ ]
     ?configure: [ STRING+ ]
