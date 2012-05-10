@@ -139,7 +139,10 @@ module Make (G : G) = struct
     (* nslots is the number of free slots *)
     let rec loop nslots =
 
-      if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
+      if S.is_empty !t.roots then
+        () (* Nothing more to be done *)
+
+      else if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
 
         (* if no slots are available, wait for a child process to finish *)
         let pid, status = wait !pids in
@@ -152,28 +155,23 @@ module Make (G : G) = struct
             loop (nslots + 1)
         | _ -> raise (Error n)
 
-      ) else (
+      ) else if S.is_empty !todo then (
+        (* otherwise, if the todo list is empty, refill it if *)
+        todo := IntMap.fold (fun _ n accu -> S.remove n accu) !pids !t.roots;
+        loop nslots
 
-        (* otherwise, look at the todo list *)
-        if S.is_empty !todo then begin
-            (* refill the todo list if it is empty *)
-            if not (S.is_empty !t.roots) then begin
-              todo := IntMap.fold (fun _ n accu -> S.remove n accu) !pids !t.roots;
-              loop nslots
-            end
-        end else begin
-          (* if the todo list contains at least a node action, process it *)
-          let n = S.choose !todo in
-          todo := S.remove n !todo;
-          match Unix.fork () with
-          | 0   -> child n
-          | pid ->
-              pids := IntMap.add pid n !pids;
-              pre n;
-              loop (nslots - 1)
-        end
-      )
-    in
+      ) else (
+        (* finally, if the todo list contains at least a node action,
+           then simply process it *)
+        let n = S.choose !todo in
+        todo := S.remove n !todo;
+        match Unix.fork () with
+        | 0   -> child n
+        | pid ->
+            pids := IntMap.add pid n !pids;
+            pre n;
+            loop (nslots - 1)
+      ) in
     loop n
 
 end
