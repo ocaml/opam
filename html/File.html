@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Client.html">
+<link rel="next" href="File_format.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><link title="Configuration files" rel="Section" href="#2_Configurationfiles">
+<link title="Repository files" rel="Section" href="#2_Repositoryfiles">
+<title>File</title>
+</head>
+<body>
+<div class="navbar"><a href="Client.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="File_format.html">Next</a>
+</div>
+<center><h1>Module <a href="type_File.html">File</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> File: <code class="code">sig</code> <a href="File.html">..</a> <code class="code">end</code></pre>Functions to file read and write configuration files in a typed
+    way.<br>
+<hr width="100%">
+<br>
+Functions to file read and write configuration files in a typed
+    way.<br>
+<pre><span class="keyword">module type</span> <a href="File.IO_FILE.html">IO_FILE</a> = <code class="code">sig</code> <a href="File.IO_FILE.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="File.Config.html">Config</a>: <code class="code">sig</code> <a href="File.Config.html">..</a> <code class="code">end</code></pre><div class="info">
+Configuration file: <code class="code">$opam/config</code>
+</div>
+<pre><span class="keyword">module</span> <a href="File.OPAM.html">OPAM</a>: <code class="code">sig</code> <a href="File.OPAM.html">..</a> <code class="code">end</code></pre><div class="info">
+OPAM files
+</div>
+<pre><span class="keyword">module</span> <a href="File.Descr.html">Descr</a>: <code class="code">sig</code> <a href="File.Descr.html">..</a> <code class="code">end</code></pre><div class="info">
+Package descriptions: <code class="code">$opam/descr/</code>
+</div>
+<pre><span class="keyword">module</span> <a href="File.Installed.html">Installed</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
+List of installed packages: <code class="code">$opam/$oversion/installed</code>
+</div>
+<pre><span class="keyword">module</span> <a href="File.Reinstall.html">Reinstall</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
+List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code>
+</div>
+<pre><span class="keyword">module</span> <a href="File.Updated.html">Updated</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
+List of updated packages: <code class="code">$opam/$repo/$repo/updated</code>
+</div>
+<br>
+<span id="2_Configurationfiles"><h2>Configuration files</h2></span><br>
+<pre><span class="keyword">module</span> <a href="File.Dot_install.html">Dot_install</a>: <code class="code">sig</code> <a href="File.Dot_install.html">..</a> <code class="code">end</code></pre><div class="info">
+.install files
+</div>
+<pre><span class="keyword">module</span> <a href="File.Dot_config.html">Dot_config</a>: <code class="code">sig</code> <a href="File.Dot_config.html">..</a> <code class="code">end</code></pre><div class="info">
+.config files
+</div>
+<br>
+<span id="2_Repositoryfiles"><h2>Repository files</h2></span><br>
+<pre><span class="keyword">module</span> <a href="File.Repo_index.html">Repo_index</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = string N.Map.t</code></pre><div class="info">
+Association between package names and repository: <code class="code">$opam/repo/index</code>
+</div>
+<pre><span class="keyword">module</span> <a href="File.Repo_config.html">Repo_config</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = repository</code></pre><div class="info">
+Repository config: <code class="code">$opam/repo/$repo/config</code>
+</div>
+</body></html>

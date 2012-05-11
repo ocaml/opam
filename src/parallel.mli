@@ -13,12 +13,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(** Parallel traversal of a graph, respecting the topological
+    order. *)
+
+(** Functor argument *)
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
   val string_of_vertex: V.t -> string
 end
 
+(** Functor signature *)
 module type SIG = sig
 
   module G : G
@@ -38,5 +43,15 @@ module type SIG = sig
 
 end
 
-
+(** Functor *)
 module Make (G : G) : SIG with module G = G
+
+
+
+
+
+
+
+
+
+

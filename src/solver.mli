@@ -13,8 +13,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open Types
+(** SAT-solver for package dependencies and conflicts. *)
 
+open Types
 
 (** {2 Package actions} *)
 

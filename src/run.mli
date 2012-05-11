@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(** Low-level untyped system operations. *)
+
 (** [copy src dst] copies [src] to [dst] *)
 val copy: string -> string -> unit
 

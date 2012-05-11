@@ -1,6 +1,7 @@
 open Types
 
-(** Functions related to file reading and writing *)
+(** Functions to file read and write configuration files in a typed
+    way. *)
 
 module type IO_FILE = sig
 

@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Parallel.html">
+<link rel="next" href="Path.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Parser</title>
+</head>
+<body>
+<div class="navbar"><a href="Parallel.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Path.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Parser.html">Parser</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Parser: <code class="code">sig</code> <a href="Parser.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<br><code><span id="TYPEtoken"><span class="keyword">type</span> <code class="type"></code>token</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">STRING</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">IDENT</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">SYMBOL</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">BOOL</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">EOF</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">LBRACKET</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">RBRACKET</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">LPAR</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">RPAR</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">LBRACE</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">RBRACE</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">COLON</span></code></td>
+
+</tr></table>
+
+
+<pre><span id="VALmain"><span class="keyword">val</span> main</span> : <code class="type">(Lexing.lexbuf -> <a href="Parser.html#TYPEtoken">token</a>) -><br>       Lexing.lexbuf -> string -> <a href="File_format.html#TYPEfile">File_format.file</a></code></pre></body></html>

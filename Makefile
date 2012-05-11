@@ -60,3 +60,11 @@ tests-runserver:
 .PHONY: install
 install: $(TARGETS:%=%-install)
 	@
+
+doc: compile
+	mkdir -p html/
+	ocamldoc \
+	  -I _obuild/opam-lib -I _obuild/cudf -I _obuild/dose \
+	  -I _obuild/bat -I _obuild/unix -I _obuild/extlib \
+	  -I _obuild/arg -I _obuild/graph \
+	  src/*.mli -html -d html/

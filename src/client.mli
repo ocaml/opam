@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(** OPAM client. *)
+
 open Types
 
 (** Initializes the client a consistent state. *)

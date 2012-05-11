@@ -1,4 +1,4 @@
-(** Generic file format *)
+(** Untyped generic file format. *)
 
 (** Base values *)
 type value =

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="File_format.html">
+<link rel="next" href="Parser.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Parallel</title>
+</head>
+<body>
+<div class="navbar"><a href="File_format.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Parser.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Parallel.html">Parallel</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Parallel: <code class="code">sig</code> <a href="Parallel.html">..</a> <code class="code">end</code></pre>Parallel traversal of a graph, respecting the topological
+    order.<br>
+<hr width="100%">
+<pre><span class="keyword">module type</span> <a href="Parallel.G.html">G</a> = <code class="code">sig</code> <a href="Parallel.G.html">..</a> <code class="code">end</code></pre><div class="info">
+Functor argument
+</div>
+<pre><span class="keyword">module type</span> <a href="Parallel.SIG.html">SIG</a> = <code class="code">sig</code> <a href="Parallel.SIG.html">..</a> <code class="code">end</code></pre><div class="info">
+Functor signature
+</div>
+<pre><span class="keyword">module</span> <a href="Parallel.Make.html">Make</a>: <div class="sig_block"><code class="code">functor (</code><code class="code">G</code><code class="code"> : </code><code class="type"><a href="Parallel.G.html">G</a></code><code class="code">) -&gt; </code><code class="type"><a href="Parallel.SIG.html">SIG</a></code><code class="type">  with module G = G</code></div></pre><div class="info">
+Functor
+</div>
+</body></html>

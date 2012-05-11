@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="File.Dot_config.Library.html">
+<link rel="Up" href="File.Dot_config.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>File.Dot_config.Sections</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="File.Dot_config.html">Up</a>
+&nbsp;<a href="File.Dot_config.Library.html">Next</a>
+</div>
+<center><h1>Module <a href="type_File.Dot_config.Sections.html">File.Dot_config.Sections</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Sections: <code class="type"><a href="File.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre>All library and syntax sections<br>
+<hr width="100%">
+<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> list</code></pre><div class="info">
+List the available sections<br>
+</div>
+<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string</code></pre><div class="info">
+Return the section kind<br>
+</div>
+<pre><span id="VALincludes"><span class="keyword">val</span> includes</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string list</code></pre><div class="info">
+Return the list of included directory for a given section<br>
+</div>
+<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string list</code></pre><div class="info">
+Return the list of native-compiler options<br>
+</div>
+<pre><span id="VALbytecomp"><span class="keyword">val</span> bytecomp</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string list</code></pre><div class="info">
+Return the list of bytecode-compiler options<br>
+</div>
+<pre><span id="VALasmlink"><span class="keyword">val</span> asmlink</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string list</code></pre><div class="info">
+Return the list of native-code linking options<br>
+</div>
+<pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string list</code></pre><div class="info">
+Return the list of bytecode linking options<br>
+</div>
+<pre><span id="VALvariable"><span class="keyword">val</span> variable</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> <a href="Types.html#TYPEvariable">Types.variable</a> -> <a href="Types.html#TYPEvariable_contents">Types.variable_contents</a></code></pre><div class="info">
+Return the value of variables<br>
+</div>
+<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> <a href="Types.html#TYPEvariable">Types.variable</a> list</code></pre><div class="info">
+The list of local variables<br>
+</div>
+</body></html>

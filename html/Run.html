@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Path.html">
+<link rel="next" href="Solver.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Run</title>
+</head>
+<body>
+<div class="navbar"><a href="Path.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Solver.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Run.html">Run</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Run: <code class="code">sig</code> <a href="Run.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations.<br>
+<hr width="100%">
+<pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code><br>
+</div>
+<pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code><br>
+</div>
+<pre><span id="VALreal_path"><span class="keyword">val</span> real_path</span> : <code class="type">string -> string</code></pre><div class="info">
+<code class="code">real_path p</code> returns the real path associated to <code class="code">p</code>: <code class="code">..</code> are
+    expanded and relative paths become absolute.<br>
+</div>
+<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">string -> string</code></pre><div class="info">
+<code class="code">read filename</code> returns the contents of <code class="code">filename</code><br>
+</div>
+<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<code class="code">write filename contents</code> write <code class="code">contents</code> to <code class="code">filename</code><br>
+</div>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">string -> unit</code></pre><div class="info">
+<code class="code">remove filename</code> removes <code class="code">filename</code>. Works whether <code class="code">filename</code> is
+    a file or a directory<br>
+</div>
+<pre><span id="VALremove_file"><span class="keyword">val</span> remove_file</span> : <code class="type">string -> unit</code></pre><div class="info">
+<code class="code">remove_file filename</code> removes <code class="code">filename</code>. Works only for normal
+    files<br>
+</div>
+<pre><span id="VALremove_dir"><span class="keyword">val</span> remove_dir</span> : <code class="type">string -> unit</code></pre><div class="info">
+<code class="code">remove_dir filename</code> removes <code class="code">filename</code>. Works only for
+    directory.<br>
+</div>
+<pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">string -> (unit -> 'a) -> 'a</code></pre><div class="info">
+<code class="code">in_dir dir fn</code> evaluates <code class="code">fn</code> in the directory <code class="code">dir</code><br>
+</div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info">
+<code class="code">files dir</code> returns the files in the directory <code class="code">dir</code><br>
+</div>
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">('a, unit, string, int) Pervasives.format4 -> 'a</code></pre><div class="info">
+<code class="code">command fmt</code> executes the command <code class="code">fmt</code><br>
+</div>
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">string list -> int</code></pre><div class="info">
+<code class="code">commands cmds</code> executes the commands <code class="code">cmds</code>. It stops whenever
+    one command fails.<br>
+</div>
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">('a, unit, string, string list) Pervasives.format4 -> 'a</code></pre><div class="info">
+<code class="code">read_command_output fmt</code> executes the command <code class="code">fmt</code> and return
+    the lines from stdout<br>
+</div>
+<pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<code class="code">extract filename dirname</code> untar the archive <code class="code">filename</code> to
+    <code class="code">dirname</code><br>
+</div>
+<pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> string</code></pre><div class="info">
+Return the current working directory<br>
+</div>
+<pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">string -> unit</code></pre><div class="info">
+Create a directory. Do not fail if the directory already
+    exist.<br>
+</div>
+</body></html>

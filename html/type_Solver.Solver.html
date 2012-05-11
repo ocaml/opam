@@ -1,0 +1,35 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Solver.Solver</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;universe&nbsp;=&nbsp;<span class="constructor">U</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Packages</span>.package&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;packages&nbsp;=&nbsp;<span class="constructor">P</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Packages</span>.package&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve_list&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.request&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_backward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.packages<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_forward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.packages<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;delete_or_update&nbsp;:&nbsp;<span class="constructor">Solver</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+<span class="keyword">end</span></code></body></html>

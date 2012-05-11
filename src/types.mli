@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Define the basic types on which OPAM operates *)
+(** The OPAM types and then main function which operates on them. *)
 
 (** {2 Abstract types} *)
 
@@ -162,9 +162,9 @@ module NV: sig
   (** Create a new pair (name x version) *)
   val create: name -> version -> t
 
-  (** Create a new pair from a filename. This function extracts
-      [$name] and [$version] from [/path/to/$name.$version.XXX with
-      various heuristics.*)
+  (** Create a new pair from a filename. This function extracts {i
+      $name} and {i $version} from {i /path/to/$name.$version.XXX}
+      with various heuristics.*)
   val of_filename: filename -> t option
 
   (** Create a new pair from a debian package *)

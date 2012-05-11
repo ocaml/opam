@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Types.Variable.html">
+<link rel="next" href="Types.Full_variable.html">
+<link rel="Up" href="Types.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Types.Section</title>
+</head>
+<body>
+<div class="navbar"><a href="Types.Variable.html">Previous</a>
+&nbsp;<a href="Types.html">Up</a>
+&nbsp;<a href="Types.Full_variable.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Types.Section.html">Types.Section</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Section: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre>Section names<br>
+<hr width="100%">
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info">
+Abstract type<br>
+</div>
+
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> <a href="Types.Abstract.html#TYPEt">t</a></code></pre><div class="info">
+Create an abstract value from a string<br>
+</div>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Types.Abstract.html#TYPEt">t</a> -> string</code></pre><div class="info">
+Convert an abstract value to a string<br>
+</div>
+<pre><span class="keyword">module</span> <a href="Types.Abstract.Set.html">Set</a>: <code class="type">Set.S</code><code class="type">  with type elt = t</code></pre><div class="info">
+Collection of abstract values
+</div>
+<pre><span class="keyword">module</span> <a href="Types.Abstract.Map.html">Map</a>: <code class="type">Map.S</code><code class="type">  with type key = t</code></pre><div class="info">
+Dictionaries of abstract values
+</div>
+</body></html>

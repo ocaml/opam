@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Run.html">
+<link rel="next" href="Types.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><link title="Package actions" rel="Section" href="#2_Packageactions">
+<link title="Solver" rel="Section" href="#2_Solver">
+<title>Solver</title>
+</head>
+<body>
+<div class="navbar"><a href="Run.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Types.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Solver.html">Solver</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Solver: <code class="code">sig</code> <a href="Solver.html">..</a> <code class="code">end</code></pre>SAT-solver for package dependencies and conflicts.<br>
+<hr width="100%">
+<br>
+<span id="2_Packageactions"><h2>Package actions</h2></span><br>
+<br><code><span id="TYPEaction"><span class="keyword">type</span> <code class="type"></code>action</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">To_change</span> <span class="keyword">of</span> <code class="type">Types.NV.t option * Types.NV.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">To_delete</span> <span class="keyword">of</span> <code class="type">Types.NV.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">To_recompile</span> <span class="keyword">of</span> <code class="type">Types.NV.t</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Build action<br>
+</div>
+
+<pre><span id="TYPEpackage_action"><span class="keyword">type</span> <code class="type"></code>package_action</span> </pre>
+<div class="info">
+Package with associated build action<br>
+</div>
+
+<pre><span id="VALaction"><span class="keyword">val</span> action</span> : <code class="type"><a href="Solver.html#TYPEpackage_action">package_action</a> -> <a href="Solver.html#TYPEaction">action</a></code></pre><div class="info">
+Return the corresponding build action<br>
+</div>
+<pre><span class="keyword">module</span> <a href="Solver.PA_graph.html">PA_graph</a>: <code class="code">sig</code> <a href="Solver.PA_graph.html">..</a> <code class="code">end</code></pre><div class="info">
+Package action graph
+</div>
+<br>
+<span id="2_Solver"><h2>Solver</h2></span><br>
+<br><code><span id="TYPErequest"><span class="keyword">type</span> <code class="type"></code>request</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>wish_install&nbsp;: <code class="type">Debian.Format822.vpkg list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>wish_remove&nbsp;: <code class="type">Debian.Format822.vpkg list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>wish_upgrade&nbsp;: <code class="type">Debian.Format822.vpkg list</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Solver request<br>
+</div>
+
+<br><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>to_remove&nbsp;: <code class="type">Types.NV.t list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>to_add&nbsp;: <code class="type">PA_graph.t</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Solver solution<br>
+</div>
+
+<pre><span id="VALprint_solution"><span class="keyword">val</span> print_solution</span> : <code class="type"><a href="Solver.html#TYPEsolution">solution</a> -> unit</code></pre><div class="info">
+Display a solution<br>
+</div>
+<pre><span class="keyword">module</span> <a href="Solver.Solver.html">Solver</a>: <code class="code">sig</code> <a href="Solver.Solver.html">..</a> <code class="code">end</code></pre></body></html>

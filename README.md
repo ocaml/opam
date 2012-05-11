@@ -32,3 +32,9 @@ In order to run the test you should run:
 ```
 make tests
 ```
+
+## Documentation
+
+* the API is available in html/
+
+* The design documents are available in specs/

@@ -1,0 +1,312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="File.html">
+<link rel="next" href="Parallel.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><link title="Parsing functions" rel="Section" href="#2_Parsingfunctions">
+<link title="Creation functions" rel="Section" href="#2_Creationfunctions">
+<link title="Printing functions" rel="Section" href="#2_Printingfunctions">
+<link title="Finding functions" rel="Section" href="#2_Findingfunctions">
+<link title="Formula" rel="Section" href="#2_Formula">
+<title>File_format</title>
+</head>
+<body>
+<div class="navbar"><a href="File.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Parallel.html">Next</a>
+</div>
+<center><h1>Module <a href="type_File_format.html">File_format</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> File_format: <code class="code">sig</code> <a href="File_format.html">..</a> <code class="code">end</code></pre>Untyped generic file format.<br>
+<hr width="100%">
+<br><code><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Bool</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">String</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Symbol</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Ident</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">List</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Group</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Option</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> * <a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Base values<br>
+</div>
+
+<br><code><span id="TYPEsection"><span class="keyword">type</span> <code class="type"></code>section</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>kind&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>name&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>items&nbsp;: <code class="type"><a href="File_format.html#TYPEitem">item</a> list</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+A file section<br>
+</div>
+
+<br><code><span id="TYPEitem"><span class="keyword">type</span> <code class="type"></code>item</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Section</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEsection">section</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Variable</span> <span class="keyword">of</span> <code class="type">string * <a href="File_format.html#TYPEvalue">value</a></code></code></td>
+
+</tr></table>
+
+<div class="info">
+A file is composed of sections and variable definitions<br>
+</div>
+
+<br><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>contents&nbsp;: <code class="type"><a href="File_format.html#TYPEitem">item</a> list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>filename&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+A file is a list of items and the filename<br>
+</div>
+
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="File_format.html#TYPEfile">file</a></code></pre><div class="info">
+The empty file<br>
+</div>
+<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> (string * <a href="File_format.html#TYPEvalue">value</a>) list</code></pre><div class="info">
+Get all the variable definitions from a list of items<br>
+</div>
+<pre><span id="VALsections"><span class="keyword">val</span> sections</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> (string * <a href="File_format.html#TYPEsection">section</a>) list</code></pre><div class="info">
+Get all the sections from a list of items<br>
+</div>
+<pre><span id="VALis_valid"><span class="keyword">val</span> is_valid</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string list -> bool</code></pre><div class="info">
+Check whether a list of items contains only valid variable definitions<br>
+</div>
+<pre><span id="VALinvalid_fields"><span class="keyword">val</span> invalid_fields</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string list -> string list</code></pre><div class="info">
+Find all the invalid fields<br>
+</div>
+<br>
+<span id="2_Parsingfunctions"><h2>Parsing functions</h2></span><br>
+<pre><span id="EXCEPTIONBad_format"><span class="keyword">exception</span> Bad_format</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+All the following parsing function raise <code class="code">Bad_format</code> in case the
+    input does not have the right format.<br>
+</div>
+<pre><span id="VALparse_bool"><span class="keyword">val</span> parse_bool</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> bool</code></pre><div class="info">
+Parse a boolean<br>
+</div>
+<pre><span id="VALparse_ident"><span class="keyword">val</span> parse_ident</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string</code></pre><div class="info">
+Parse an ident<br>
+</div>
+<pre><span id="VALparse_symbol"><span class="keyword">val</span> parse_symbol</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string</code></pre><div class="info">
+Parse a symbol<br>
+</div>
+<pre><span id="VALparse_string"><span class="keyword">val</span> parse_string</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string</code></pre><div class="info">
+Parse a string<br>
+</div>
+<pre><span id="VALparse_list"><span class="keyword">val</span> parse_list</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) -> <a href="File_format.html#TYPEvalue">value</a> -> 'a list</code></pre><div class="info">
+Parse a list of 'things'<br>
+</div>
+<pre><span id="VALparse_group"><span class="keyword">val</span> parse_group</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) -> <a href="File_format.html#TYPEvalue">value</a> -> 'a list</code></pre><div class="info">
+Parse a group of 'things'<br>
+</div>
+<pre><span id="VALparse_option"><span class="keyword">val</span> parse_option</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) -><br>       (<a href="File_format.html#TYPEvalue">value</a> -> 'b) -> <a href="File_format.html#TYPEvalue">value</a> -> 'a * 'b list</code></pre><div class="info">
+Parse a value and its option of 'things'<br>
+</div>
+<pre><span id="VALparse_string_option"><span class="keyword">val</span> parse_string_option</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> list -> 'a) -> <a href="File_format.html#TYPEvalue">value</a> -> string * 'a option</code></pre><div class="info">
+Parse a string with an optional argument<br>
+</div>
+<pre><span id="VALparse_string_list"><span class="keyword">val</span> parse_string_list</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string list</code></pre><div class="info">
+Parse a list of strings<br>
+</div>
+<pre><span id="VALparse_single_string"><span class="keyword">val</span> parse_single_string</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string</code></pre><div class="info">
+Parse a single string<br>
+</div>
+<pre><span id="VALparse_string_pair"><span class="keyword">val</span> parse_string_pair</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string * string</code></pre><div class="info">
+Parse a pair of strings<br>
+</div>
+<pre><span id="VALparse_or"><span class="keyword">val</span> parse_or</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) list -> <a href="File_format.html#TYPEvalue">value</a> -> 'a</code></pre><div class="info">
+Try to parse the value using function from the list. All the
+    parsing functions are tried until one succeeds.<br>
+</div>
+<br>
+<span id="2_Creationfunctions"><h2>Creation functions</h2></span><br>
+<pre><span id="VALmake_bool"><span class="keyword">val</span> make_bool</span> : <code class="type">bool -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a boolean<br>
+</div>
+<pre><span id="VALmake_ident"><span class="keyword">val</span> make_ident</span> : <code class="type">string -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create an ident<br>
+</div>
+<pre><span id="VALmake_symbol"><span class="keyword">val</span> make_symbol</span> : <code class="type">string -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a symbol<br>
+</div>
+<pre><span id="VALmake_string"><span class="keyword">val</span> make_string</span> : <code class="type">string -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a string<br>
+</div>
+<pre><span id="VALmake_list"><span class="keyword">val</span> make_list</span> : <code class="type">('a -> <a href="File_format.html#TYPEvalue">value</a>) -> 'a list -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a list of 'things'<br>
+</div>
+<pre><span id="VALmake_group"><span class="keyword">val</span> make_group</span> : <code class="type">('a -> <a href="File_format.html#TYPEvalue">value</a>) -> 'a list -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a group of 'things'<br>
+</div>
+<pre><span id="VALmake_option"><span class="keyword">val</span> make_option</span> : <code class="type">('a -> <a href="File_format.html#TYPEvalue">value</a>) -><br>       ('b -> <a href="File_format.html#TYPEvalue">value</a>) -> 'a * 'b list -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a value and its optional arguments<br>
+</div>
+<br>
+<span id="2_Printingfunctions"><h2>Printing functions</h2></span><br>
+<pre><span id="VALstring_of_value"><span class="keyword">val</span> string_of_value</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string</code></pre><div class="info">
+Print a value<br>
+</div>
+<pre><span id="VALstring_of_values"><span class="keyword">val</span> string_of_values</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string</code></pre><div class="info">
+Print a list of values<br>
+</div>
+<pre><span id="VALstring_of_item"><span class="keyword">val</span> string_of_item</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> -> string</code></pre><div class="info">
+Print an item<br>
+</div>
+<pre><span id="VALstring_of_items"><span class="keyword">val</span> string_of_items</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string</code></pre><div class="info">
+Print a list of items<br>
+</div>
+<pre><span id="VALstring_of_file"><span class="keyword">val</span> string_of_file</span> : <code class="type"><a href="File_format.html#TYPEfile">file</a> -> string</code></pre><div class="info">
+Print a file<br>
+</div>
+<br>
+<span id="2_Findingfunctions"><h2>Finding functions</h2></span><br>
+<pre><span id="VALassoc"><span class="keyword">val</span> assoc</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> (<a href="File_format.html#TYPEvalue">value</a> -> 'a) -> 'a</code></pre><div class="info">
+Get the value of a field<br>
+</div>
+<pre><span id="VALassoc_option"><span class="keyword">val</span> assoc_option</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> (<a href="File_format.html#TYPEvalue">value</a> -> 'a) -> 'a option</code></pre><div class="info">
+Get the value of a field. If the field does not exist, return
+    None<br>
+</div>
+<pre><span id="VALassoc_default"><span class="keyword">val</span> assoc_default</span> : <code class="type">'a -> <a href="File_format.html#TYPEitem">item</a> list -> string -> (<a href="File_format.html#TYPEvalue">value</a> -> 'a) -> 'a</code></pre><div class="info">
+Get the value of a field. If the variable does not exist, return a
+    default value<br>
+</div>
+<pre><span id="VALassoc_list"><span class="keyword">val</span> assoc_list</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> (<a href="File_format.html#TYPEvalue">value</a> -> 'a list) -> 'a list</code></pre><div class="info">
+Get the value associated to a variable. If the variable does not
+    exists, return []<br>
+</div>
+<pre><span id="VALassoc_string_list"><span class="keyword">val</span> assoc_string_list</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> string list</code></pre><div class="info">
+Get the string list associated to a variable. If the variable does
+    not exist, return []<br>
+</div>
+<pre><span id="VALget_section_by_kind"><span class="keyword">val</span> get_section_by_kind</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> <a href="File_format.html#TYPEsection">section</a></code></pre><div class="info">
+Get one section of a certain kind<br>
+</div>
+<pre><span id="VALget_all_section_by_kind"><span class="keyword">val</span> get_all_section_by_kind</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> <a href="File_format.html#TYPEsection">section</a> list</code></pre><div class="info">
+Get all the sections of a certain kind<br>
+</div>
+<pre><span id="VALassoc_sections"><span class="keyword">val</span> assoc_sections</span> : <code class="type"><a href="File_format.html#TYPEitem">item</a> list -> string -> (<a href="File_format.html#TYPEsection">section</a> -> 'a) -> 'a list</code></pre><div class="info">
+Get sections<br>
+</div>
+<br>
+<span id="2_Formula"><h2>Formula</h2></span><br>
+<br>
+This section is dedicated to the parsing and creatin of dependency
+    and conflict formaulas. It's maybe easier to do that directly in
+    the parser ...<br>
+<pre><span id="VALparse_and_formula"><span class="keyword">val</span> parse_and_formula</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> Debian.Format822.vpkglist</code></pre><div class="info">
+Parse an AND formala such as
+    <code class="code">"foo", "bar" (&lt;"1", &gt;"2"), "aa" </code><br>
+</div>
+<pre><span id="VALparse_or_formula"><span class="keyword">val</span> parse_or_formula</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> Debian.Format822.vpkgformula</code></pre><div class="info">
+Parse an OR formula (which contains only toplevel OR) such as
+    <code class="code">("foo", "bar"(&lt;"1")) | "bar" (&gt;"2")</code><br>
+</div>
+<pre><span id="VALmake_and_formula"><span class="keyword">val</span> make_and_formula</span> : <code class="type">Debian.Format822.vpkglist -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Build an AND formula<br>
+</div>
+<pre><span id="VALmake_or_formula"><span class="keyword">val</span> make_or_formula</span> : <code class="type">Debian.Format822.vpkgformula -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Build an OR formula<br>
+</div>
+</body></html>
