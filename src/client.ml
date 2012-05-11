@@ -154,7 +154,7 @@ let install_initial_package () =
   let opam = File.OPAM.create nv in
   File.OPAM.write (Path.G.opam t.global nv) opam;
   (* description *)
-  let descr = File.Descr.create "Compiler configuration file" in
+  let descr = File.Descr.create "Compiler configuration flags" in
   File.Descr.write (Path.G.descr t.global nv) descr;
   (* .config *)
   let vars = [

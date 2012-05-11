@@ -135,7 +135,13 @@ let request_map f r =
 type package = Debian.Packages.package
 
 let string_of_package p =
-  NV.to_string (NV.of_dpkg p)
+  let installed =
+    if List.mem_assoc "status" p.Debian.Packages.extras
+      && List.assoc "status" p.Debian.Packages.extras = "installed"
+    then "installed"
+    else "not-installed" in
+  Printf.sprintf "%s.%s(%s)"
+    p.Debian.Packages.name p.Debian.Packages.version installed
 
 let string_of_packages l =
   Printf.sprintf "{%s}"
@@ -163,7 +169,8 @@ type packages = P of package list
 let string_of_universe u =
   let l =
     Cudf.fold_packages (fun accu p ->
-      Printf.sprintf "%s.%d" p.Cudf.package p.Cudf.version :: accu
+      let installed = if p.Cudf.installed then "installed" else "not-installed" in
+      Printf.sprintf "%s.%d(%s)" p.Cudf.package p.Cudf.version installed :: accu
     ) [] u in
   Printf.sprintf "{%s}" (String.concat ", " l)
     
@@ -300,8 +307,8 @@ struct
     g
 
   let tocudf table pkg = 
-    let p = Debian.Debcudf.tocudf table pkg in
-    { p with Cudf.conflicts = List.tl p.Cudf.conflicts }
+    Debian.Debcudf.tocudf table pkg
+(*    { p with Cudf.conflicts = List.tl p.Cudf.conflicts } *)
     (* we cancel the 'self package conflict' notion introduced in
        [loadlc] in debcudf.ml *)
 
