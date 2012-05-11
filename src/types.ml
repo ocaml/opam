@@ -431,8 +431,27 @@ end
 
 type full_variable = Full_variable.t
 
+module Config_variable: Abstract with type t = name * section = struct
 
+  type t = name * section
 
+  let of_string str =
+    match cut_at str '.' with
+    | Some (n,s) -> N.of_string n, Section.of_string s
+    | None       ->
+        N.of_string Globals.default_package, Section.of_string str
+
+  let to_string (n, s) =
+    if N.to_string n = Globals.default_package then
+      Section.to_string s
+    else
+      Printf.sprintf "%s.%s" (N.to_string n) (Section.to_string s)
+
+  module O = struct type tmp = t type t = tmp let compare = compare end
+  module Set = Set.Make (O)
+  module Map = Map.Make (O)
+
+end
 
 (* Command line arguments *)
 
@@ -460,43 +479,31 @@ let string_of_remote = function
   | Add s -> Printf.sprintf "add %s" s
   | Rm  s -> Printf.sprintf "rm %s" s
 
-type config_option =
-  | Includes of N.t list
-  | Bytecomp of (N.t * string) list
-  | Asmcomp  of (N.t * string) list
-  | Bytelink of (N.t * string) list
-  | Asmlink  of (N.t * string) list
-
-type rec_config_option = {
-  recursive: bool;
-  options  : config_option;
+type config_option = {
+  is_rec : bool;
+  is_byte: bool;
+  is_link: bool;
+  options: (name * section) list;
 }
 
 type config =
   | List_vars
   | Variable of full_variable
-  | Compil   of rec_config_option
+  | Includes of name list
+  | Compil   of config_option
   | Subst    of filename list
 
-let p msg l =
-  Printf.sprintf "%s %s"
-    msg
-    (String.concat ","
-       (List.map (fun (n,l) -> Printf.sprintf "%s.%s" (N.to_string n) l) l))
+let config_variables l =
+  String.concat " " (List.map Config_variable.to_string l)
 
-let string_of_config_option = function
-  | Includes l ->
-      Printf.sprintf "include %s" (String.concat "," (List.map N.to_string l))
-  | Bytecomp l -> p "bytecomp" l
-  | Asmcomp l  -> p "asmcomp" l
-  | Bytelink l -> p "bytelink" l
-  | Asmlink l  -> p "asmlink" l
-
-let string_of_rec_config_option o =
-  Printf.sprintf "%b %s" o.recursive (string_of_config_option o.options)
+let string_of_config_option t =
+  Printf.sprintf "rec=%b bytecode=%b link=%b options=%s"
+    t.is_rec t.is_byte t.is_link (config_variables t.options)
 
 let string_of_config = function
   | List_vars  -> "list-vars"
-  | Variable v -> Printf.sprintf "var %s" (Full_variable.to_string v)
-  | Compil c   -> string_of_rec_config_option c
+  | Variable v -> Printf.sprintf "var(%s)" (Full_variable.to_string v)
+  | Compil c   -> string_of_config_option c
   | Subst l    -> String.concat "," (List.map Filename.to_string l)
+  | Includes l ->
+      Printf.sprintf "include(%s)" (String.concat "," (List.map N.to_string l))

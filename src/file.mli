@@ -129,9 +129,6 @@ module Dot_config: sig
     (** Return the section kind *)
     val kind: t -> section -> string
 
-    (** Return the list of included directory for a given section *)
-    val includes: t -> section -> string list
-
     (** Return the list of native-compiler options *)
     val asmcomp: t -> section -> string list
 

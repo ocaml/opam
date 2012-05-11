@@ -474,7 +474,6 @@ module Dot_config = struct
   type s = { 
     name      : section;
     kind      : string ;
-    includes  : string list ;
     bytecomp  : string list ;
     asmcomp   : string list ;
     bytelink  : string list ;
@@ -492,7 +491,6 @@ module Dot_config = struct
     variables = [];
   }
 
-  let s_includes = "includes"
   let s_bytecomp = "bytecomp"
   let s_asmcomp  = "asmcomp"
   let s_bytelink = "bytelink"
@@ -500,7 +498,6 @@ module Dot_config = struct
 
   let valid_fields = [
     s_opam_version;
-    s_includes;
     s_bytecomp;
     s_asmcomp;
     s_bytelink;
@@ -518,13 +515,12 @@ module Dot_config = struct
       List.map (fun (k,v) -> Variable.of_string k, parse_value v) l in
     let parse_section kind s =
       let name =  Section.of_string s.File_format.name in
-      let includes = assoc_string_list s.items s_includes in
       let bytecomp = assoc_string_list s.items s_bytecomp in
       let asmcomp  = assoc_string_list s.items s_asmcomp  in
       let bytelink = assoc_string_list s.items s_bytecomp in
       let asmlink  = assoc_string_list s.items s_asmlink  in
       let lvariables = parse_variables s.items in
-      { name; kind; includes; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
+      { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
     let libraries = assoc_sections file.contents "library" (parse_section "library") in
     let syntax    = assoc_sections file.contents "syntax" (parse_section "syntax") in
     let sections  = libraries @ syntax in
@@ -542,7 +538,6 @@ module Dot_config = struct
         { File_format.name = Section.to_string s.name;
           kind  = s.kind;
           items = [
-            Variable (s_includes, make_list make_string s.includes);
             Variable (s_bytecomp, make_list make_string s.bytecomp);
             Variable (s_asmcomp , make_list make_string s.asmcomp);
             Variable (s_bytelink, make_list make_string s.bytelink);
@@ -563,7 +558,6 @@ module Dot_config = struct
   module type SECTION = sig
     val available: t -> section list
     val kind     : t -> section -> string
-    val includes : t -> section -> string list
     val asmcomp  : t -> section -> string list
     val bytecomp : t -> section -> string list
     val asmlink  : t -> section -> string list
@@ -579,7 +573,6 @@ module Dot_config = struct
 
     let available t = List.map (fun s -> s.name) (M.get t)
     let kind t s = (find t s).kind
-    let includes t s = (find t s).includes
     let bytecomp t s = (find t s).bytecomp
     let asmcomp  t s = (find t s).asmcomp
     let bytelink t s = (find t s).bytelink

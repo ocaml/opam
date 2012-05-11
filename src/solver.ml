@@ -112,11 +112,12 @@ module Solver = struct
     ; i_wish_remove  = f r.wish_remove
     ; i_wish_upgrade = f r.wish_upgrade }
 
-  (** Universe of packages *)
-  type universe = U of Debian.Packages.package list
+  type package = Debian.Packages.package
+  (* Universe of packages *)
+  type universe = U of package list
 
-  (** Subset of packages *)
-  type packages = P of Debian.Packages.package list
+  (* Subset of packages *)
+  type packages = P of package list
 
   module CudfDiff : sig
 
@@ -288,8 +289,7 @@ module Solver = struct
                 else
                   set, l)
               g (pkg_set, []) in
-          let l = List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map) l in
-          P l)
+          List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map) l)
 
     let filter_backward_dependencies = filter_dependencies (fun x -> x)
     let filter_forward_dependencies = filter_dependencies PO.O.mirror

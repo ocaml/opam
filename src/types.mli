@@ -267,6 +267,10 @@ type variable_contents =
 (** Convert the content of a variable to a string *)
 val string_of_variable_contents: variable_contents -> string
 
+(** Config variables *)
+module Config_variable: Abstract with type t = name * section
+
+
 (** {2 Command line arguments} *)
 
 (** Upload arguments *)
@@ -289,22 +293,18 @@ type remote =
 val string_of_remote: remote -> string
 
 (** Configuration requests *)
-type config_option =
-  | Includes of name list
-  | Bytecomp of (name * string) list
-  | Asmcomp  of (name * string) list
-  | Bytelink of (name * string) list
-  | Asmlink  of (name * string) list
-
-type rec_config_option = {
-  recursive: bool;
-  options  : config_option;
+type config_option = {
+  is_rec : bool;
+  is_byte: bool;
+  is_link: bool;
+  options: (name * section) list;
 }
 
 type config =
   | List_vars
   | Variable of full_variable
-  | Compil   of rec_config_option
+  | Includes of name list
+  | Compil   of config_option
   | Subst    of filename list
 
 (** Pretty-print *)

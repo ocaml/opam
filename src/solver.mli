@@ -67,11 +67,13 @@ val print_solution: solution -> unit
 
 module Solver : sig
 
+  type package = Debian.Packages.package
+
   (** Universe of packages *)
-  type universe = U of Debian.Packages.package list
+  type universe = U of package list
 
   (** Subset of packages *)
-  type packages = P of Debian.Packages.package list
+  type packages = P of package list
 
   (** Given a description of packages, return a solution preserving
       the consistency of the initial description.
@@ -85,10 +87,10 @@ module Solver : sig
   (** Return the recursive dependencies of a package
       Note : the given package exists in the list in input because this list describes the entire universe. 
       By convention, it also appears in output. *)
-  val filter_backward_dependencies : universe -> packages -> packages
+  val filter_backward_dependencies : universe -> packages -> package list
 
   (** Same as [filter_backward_dependencies] but for forward dependencies *)
-  val filter_forward_dependencies : universe -> packages -> packages
+  val filter_forward_dependencies : universe -> packages -> package list
 
   (** Does the solution implies deleting or updating a package *)
   val delete_or_update : solution -> bool

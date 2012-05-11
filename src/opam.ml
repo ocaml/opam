@@ -99,27 +99,39 @@ let info = {
 }
 
 (* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
-let recursive = ref false
+let has_cmd = ref false
+let is_rec = ref false
+let is_link = ref false
+let is_byte = ref false
+let bytecomp () = is_byte := true ; is_link := false
+let bytelink () = is_byte := true ; is_link := true
+let asmcomp  () = is_byte := false; is_link := false
+let asmlink  () = is_byte := false; is_link := true
 let command = ref None
-let set c   () = command := Some c
-let set_rec () = recursive := true
+let set cmd () =
+  has_cmd := true;
+  command := Some cmd
 let specs = [
-  ("-r"        , Arg.Unit set_rec        , " Recursive search (large)");
-  ("-I"        , Arg.Unit (set `Include) , " Display native compile options");
-  ("-bytecomp" , Arg.Unit (set `Bytecomp), " Display bytecode compile options");
-  ("-asmcomp"  , Arg.Unit (set `Asmcomp) , " Display native link options");
-  ("-bytelink" , Arg.Unit (set `Bytelink), " Display bytecode link options");
-  ("-asmlink"  , Arg.Unit (set `Asmlink) , " Display native link options");
-  ("-list-vars", Arg.Unit (set `ListVars), " Display the contents of all available variables");
-  ("-var"      , Arg.Unit (set `Var)     , " Display the content of a variable");
-  ("-subst"    , Arg.Unit (set `Subst)   , " Substitute variables in files");
+  ("-r"        , Arg.Set is_rec       , " Recursive search (large)");
+  ("-I"        , Arg.Unit (set `I)    , " Display native compile options");
+  ("-bytecomp" , Arg.Unit bytecomp    , " Display bytecode compile options");
+  ("-asmcomp"  , Arg.Unit asmcomp     , " Display native link options");
+  ("-bytelink" , Arg.Unit bytelink    , " Display bytecode link options");
+  ("-asmlink"  , Arg.Unit asmlink     , " Display native link options");
+  ("-list-vars", Arg.Unit (set `List) , " Display the contents of all available variables");
+  ("-var"      , Arg.Unit (set `Var)  , " Display the content of a variable");
+  ("-subst"    , Arg.Unit (set `Subst), " Substitute variables in files");
 ]
-let args n =
-  (* XXX: big hack *)
-  let nv = NV.of_string n in
-  NV.name nv, V.to_string (NV.version nv)
 let mk options =
-  Compil { recursive = !recursive; options }
+  if not !has_cmd then
+    bad_argument "config" "Wrong options"
+  else
+    Compil {
+      is_rec  = !is_rec;
+      is_link = !is_link;
+      is_byte = !is_byte;
+      options = List.map Config_variable.of_string options;
+    }
 let config = {
   name     = "config";
   usage    = "[...]+";
@@ -130,21 +142,14 @@ let config = {
   main = function () ->
     let names = List.rev !ano_args in
     let config = match !command with
-      | None   -> 
-          bad_argument
-            "config"  "Missing command [%s]" 
-            (String.concat "|" (List.map (fun (s,_,_) -> s) specs))
-      | Some `Include  -> mk (Includes (List.map N.of_string names))
-      | Some `Bytecomp -> mk (Bytecomp (List.map args names))
-      | Some `Bytelink -> mk (Bytelink (List.map args names))
-      | Some `Asmcomp  -> mk (Asmcomp (List.map args names))
-      | Some `Asmlink  -> mk (Asmlink (List.map args names))
-      | Some `ListVars -> List_vars
+      | Some `I     -> Includes (List.map N.of_string names)
+      | Some `List  -> List_vars
       | Some `Var when List.length names = 1
-                       -> Variable (Full_variable.of_string (List.hd names))
-      | Some `Var      ->
+                    -> Variable (Full_variable.of_string (List.hd names))
+      | Some `Var   ->
           bad_argument "config" "-var takes exactly one parameter"
-      | Some `Subst    -> Subst (List.map Filename.of_string names) in
+      | Some `Subst -> Subst (List.map Filename.of_string names)
+      | None        -> mk names in
     Client.config config
 }
 

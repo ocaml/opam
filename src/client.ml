@@ -183,8 +183,8 @@ let indent_right s nb =
   else
     String.make nb ' ' ^ s
 
-let find_package_from_name name set =
-  List.find(fun nv -> NV.name nv = name) (NV.Set.elements set)
+let find_package_by_name set name =
+  NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) set)
 
 let s_not_installed = "--"
 
@@ -342,7 +342,7 @@ let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
   let _nv =
-    try find_package_from_name name t.installed
+    try find_package_by_name t.installed name
     with Not_found ->
       Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
   let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
@@ -544,7 +544,7 @@ let remove name =
     Globals.error_and_exit "Package %s is not installed" (N.to_string name);
   let nv = NV.create name (V.Set.choose (N.Map.find name map_installed)) in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available []) in
-  let Solver.P depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv t nv]) in
+  let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv t nv]) in
   let depends =
     List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
 
@@ -603,7 +603,15 @@ let upload upload repo =
   Filename.remove upload_descr;
   Filename.remove upload_archives
 
-module FC = File.Dot_config
+(* Return the transitive closure of dependencies *)
+let get_transitive_dependencies t names =
+  let universe =
+    Solver.U (List.map (debpkg_of_nv t) (NV.Set.elements t.installed)) in
+  (* Compute the transitive closure of dependencies *)
+  let pkg_of_name n = debpkg_of_nv t (find_package_by_name t.installed n) in
+  let request = Solver.P (List.map pkg_of_name names) in
+  let depends = Solver.filter_backward_dependencies universe request in
+  List.map NV.of_dpkg depends
 
 let config request =
   log "config %s" (string_of_config request);
@@ -615,7 +623,7 @@ let config request =
       let configs =
         NV.Set.fold (fun nv l ->
           let file = Path.C.config t.compiler (NV.name nv) in
-          (nv, FC.safe_read file) :: l
+          (nv, File.Dot_config.safe_read file) :: l
         ) t.installed [] in
       let variables =
         List.fold_left (fun accu (nv, c) ->
@@ -623,16 +631,16 @@ let config request =
           (* add all the global variables *)
           let globals =
             List.fold_left (fun accu v ->
-              (Full_variable.create_global name v, FC.variable c v) :: accu
-            ) accu (FC.variables c) in
+              (Full_variable.create_global name v, File.Dot_config.variable c v) :: accu
+            ) accu (File.Dot_config.variables c) in
           (* then add the local variables *)
           List.fold_left
             (fun accu n ->
-              let variables = FC.Sections.variables c n in
+              let variables = File.Dot_config.Sections.variables c n in
               List.fold_left (fun accu v ->
-                (Full_variable.create_local name n v, FC.Sections.variable c n v) :: accu
+                (Full_variable.create_local name n v, File.Dot_config.Sections.variable c n v) :: accu
               ) accu variables
-            ) globals (FC.Sections.available c)
+            ) globals (File.Dot_config.Sections.available c)
         ) [] configs in
       List.iter (fun (fv, contents) ->
         Globals.msg "%-20s : %s\n"
@@ -646,7 +654,19 @@ let config request =
 
   | Subst fs -> List.iter (substitute_file t) fs
           
-  | _ -> failwith "TODO"
+  | Includes names ->
+      let deps = get_transitive_dependencies t names in
+      let includes =
+        List.fold_left (fun accu nv ->
+          Dirname.to_string (Path.C.lib t.compiler (NV.name nv)) :: accu
+        ) [] deps in
+      Globals.msg "%s\n" (String.concat " " includes)
+
+  | Compil c ->
+
+      match c.options with
+
+      | _ -> failwith "TODO"
             
 (*
     let version name =
