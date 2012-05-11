@@ -145,6 +145,30 @@ let update () =
     ) available_versions
   ) repo_index
 
+let install_initial_package () =
+  let t = load_state () in
+  let name = N.of_string Globals.default_package in
+  let version = V.of_string (OCaml_V.to_string (File.Config.ocaml_version t.config)) in
+  let nv = NV.create name version in
+  (* .opam *)
+  let opam = File.OPAM.create nv in
+  File.OPAM.write (Path.G.opam t.global nv) opam;
+  (* description *)
+  let descr = File.Descr.create "Compiler configuration file" in
+  File.Descr.write (Path.G.descr t.global nv) descr;
+  (* .config *)
+  let vars = [
+    Variable.of_string "lib",
+    S (Dirname.to_string (Path.C.lib_dir t.compiler))
+  ] in
+  let config = File.Dot_config.create vars in
+  File.Dot_config.write (Path.C.config t.compiler name) config;
+  (* installed *)
+  let installed_p = Path.C.installed t.compiler in
+  let installed = File.Installed.safe_read installed_p in
+  let installed = NV.Set.add nv installed in
+  File.Installed.write installed_p installed
+
 let init repo =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create (Dirname.of_string !Globals.root_path) in
@@ -167,7 +191,9 @@ let init repo =
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
     (* Update the configuration files *)
-    update ()
+    update ();
+    (* Install the initial package *)
+    install_initial_package ()
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -401,90 +427,69 @@ let debpkg_of_nv t nv =
   let installed = NV.Set.mem nv t.installed in
   File.OPAM.to_package opam installed
 
-let resolve t request = 
+let resolve t request =
   let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
 
-  match Solver.resolve_list (Solver.U l_pkg) request with
-  | [] -> Globals.msg "No solution has been found.\n"
-  | l -> 
-      let nb_sol = List.length l in
+  match Solver.resolve (Solver.U l_pkg) request with
+  | None     -> Globals.msg "No solution has been found.\n"
+  | Some sol -> 
 
-      let rec aux pos = 
-        Globals.msg "[%d/%d] The following solution has been found:\n" pos nb_sol;
-        function
-        | [x] ->
-            (* Only 1 solution exists *)
-            print_solution x;
-            if Solver.delete_or_update x then
-              if confirm "Continue ?" then
-                Some x
-              else
-                None
-            else
-              Some x
+      Globals.msg "The following solution has been found:\n";
+      print_solution sol;
+      let continue =
+        if Solver.delete_or_update sol then
+          confirm "Continue ?"
+        else
+          true in
 
-        | x :: xs ->
-            (* Multiple solution exist *)
-            print_solution x;
-            if Solver.delete_or_update x then
-              if confirm "Continue ? (press [n] to try another solution)" then
-                Some x
-              else
-                aux (succ pos) xs
-            else
-              Some x
+      if continue then (
 
-        | [] -> assert false in
+        let installed = ref t.installed in
+        let write_installed () =
+          File.Installed.write (Path.C.installed t.compiler) !installed in
 
-      match aux 1 l with
-      | None -> ()
-      | Some sol -> 
-
-          let installed = ref t.installed in
-          let write_installed () =
-            File.Installed.write (Path.C.installed t.compiler) !installed in
-
-          (* Delete some packages *)
-          (* In case of errors, we try to keep the list of installed packages up-to-date *)
-          List.iter
-            (fun nv ->
-              if NV.Set.mem nv !installed then begin
-                proceed_todelete t nv;
-                installed := NV.Set.remove nv !installed;
-                write_installed ()
-              end)
-            sol.to_remove;
-
-          (* Install or recompile some packages on the child process *)
-          let child n = match action n with
-          | To_change (o, nv) -> proceed_tochange t o nv
-          | To_recompile nv   -> proceed_torecompile t nv
-          | To_delete _       -> assert false in
-
-          let pre _ = () in
-
-          (* Update the installed file in the parent process *)
-          let post n = match action n with
-          | To_delete _    -> assert false
-          | To_recompile _ -> ()
-          | To_change (None, nv) ->
-              installed := NV.Set.add nv !installed;
+        (* Delete some packages *)
+        (* In case of errors, we try to keep the list of installed packages up-to-date *)
+        List.iter
+          (fun nv ->
+            if NV.Set.mem nv !installed then begin
+              proceed_todelete t nv;
+              installed := NV.Set.remove nv !installed;
               write_installed ()
-          | To_change (Some o, nv)   ->
-              installed := NV.Set.add nv (NV.Set.remove o !installed);
-              write_installed () in
+            end)
+          sol.to_remove;
 
-          let error n =
-            let f msg nv =
-              Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
-            match action n with
-            | To_change (Some _, nv) -> f "upgrading" nv
-            | To_change (None, nv)   -> f "installing" nv
-            | To_recompile nv        -> f "recompiling" nv
-            | To_delete _            -> assert false in
+        (* Install or recompile some packages on the child process *)
+        let child n = match action n with
+        | To_change (o, nv) -> proceed_tochange t o nv
+        | To_recompile nv   -> proceed_torecompile t nv
+        | To_delete _       -> assert false in
 
-          try PA_graph.Parallel.iter Globals.cores sol.to_add ~pre ~child ~post
-          with PA_graph.Parallel.Error n -> error n
+        let pre _ = () in
+
+        (* Update the installed file in the parent process *)
+        let post n = match action n with
+        | To_delete _    -> assert false
+        | To_recompile _ -> ()
+        | To_change (None, nv) ->
+            installed := NV.Set.add nv !installed;
+            write_installed ()
+        | To_change (Some o, nv)   ->
+            installed := NV.Set.add nv (NV.Set.remove o !installed);
+            write_installed () in
+
+        let error n =
+          let f msg nv =
+            Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
+          match action n with
+          | To_change (Some _, nv) -> f "upgrading" nv
+          | To_change (None, nv)   -> f "installing" nv
+          | To_recompile nv        -> f "recompiling" nv
+          | To_delete _            -> assert false in
+
+        try PA_graph.Parallel.iter Globals.cores sol.to_add ~pre ~child ~post
+        with PA_graph.Parallel.Error n -> error n
+      )
 
 let vpkg_of_nv nv =
   let name = NV.name nv in
@@ -534,9 +539,9 @@ let install name =
       (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
 
   resolve t
-    [ { wish_install = List.map vpkg_of_nv (nv :: map_installed)
-      ; wish_remove = [] 
-      ; wish_upgrade = [] } ]
+    { wish_install = List.map vpkg_of_nv (nv :: map_installed)
+    ; wish_remove = [] 
+    ; wish_upgrade = [] }
 
 let remove name =
   log "remove %s" (N.to_string name);
@@ -559,25 +564,25 @@ let remove name =
       (NV.Set.elements (NV.Set.remove nv t.installed)) in
 
   resolve t 
-    [ { wish_install
-      ; wish_remove  = [ N.to_string name, None ]
-      ; wish_upgrade = [] } ]
+    { wish_install
+    ; wish_remove  = [ N.to_string name, None ]
+    ; wish_upgrade = [] }
       
 let upgrade () =
   log "upgrade";
   let t = load_state () in
   let available = NV.to_map t.available in
   resolve t
-    [ { wish_install = []
-      ; wish_remove = []
-      ; wish_upgrade =
+    { wish_install = []
+    ; wish_remove = []
+    ; wish_upgrade =
         List.map
           (fun nv ->
             let name = NV.name nv in
             let versions = N.Map.find name available in
             let nv = NV.create name (V.Set.max_elt versions) in
             vpkg_of_nv nv)
-          (NV.Set.elements t.installed) } ]
+          (NV.Set.elements t.installed) }
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);

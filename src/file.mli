@@ -46,11 +46,14 @@ module OPAM: sig
 
   include IO_FILE
 
+  (** Create an opam file *)
+  val create: nv -> t
+
   (** Package name *)
-  val name: t -> N.t
+  val name: t -> name
 
   (** Package version *)
-  val version: t -> V.t
+  val version: t -> version
 
   (** Package maintainer *)
   val maintainer: t -> string
@@ -81,6 +84,9 @@ end
 (** Package descriptions: [$opam/descr/] *)
 module Descr: sig
   include IO_FILE
+
+  (** Create a description file *)
+  val create: string -> t
 
   (** Return the first line *)
   val synopsis: t -> string
@@ -120,6 +126,9 @@ end
 module Dot_config: sig
   
   include IO_FILE
+
+  (** Create a new .config file (containing only variables) *)
+  val create: (variable * variable_contents) list -> t
 
   module type SECTION = sig
 

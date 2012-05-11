@@ -13,8 +13,8 @@ depends.ocp: depends.ocp.boot
 clone: cudf extlib ocaml-re ocamlgraph dose ocaml-arg
 
 cudf:
-	$(WGET) http://www.ocamlpro.com/pub/cudf.tar.bz2
-	tar xfj cudf.tar.bz2
+	$(WGET) http://www.ocamlpro.com/pub/cudf.tar.gz
+	tar xfz cudf.tar.gz
 
 extlib:
 	$(WGET) http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz
@@ -22,8 +22,8 @@ extlib:
 	mv extlib-1.5.2 extlib
 
 dose:
-	$(WGET) http://www.ocamlpro.com/pub/dose.tar.bz2
-	tar xfj dose.tar.bz2
+	$(WGET) http://www.ocamlpro.com/pub/dose.tar.gz
+	tar xfz dose.tar.gz
 
 ocaml-arg:
 	$(WGET) http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2

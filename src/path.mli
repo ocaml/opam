@@ -74,9 +74,12 @@ module C : sig
   (** Create a compiler path *)
   val create: G.t -> OCaml_V.t -> t
 
-  (** Installed libraries for the package:
+  (** Library path for a given package:
       {i $opam/$OVERSION/lib/NAME} *)
   val lib: t -> N.t -> dirname
+
+  (** Library path: {i $opam/$OVERSION/lib/} *)
+  val lib_dir: t -> dirname
 
   (** Installed binaries: {i $opam/$OVERSION/bin} *)
   val bin: t -> dirname
@@ -96,8 +99,8 @@ module C : sig
       {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.install} *)
   val build_install: t -> NV.t -> filename
 
-(** Tempory location of config files:
-      {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.config} *)
+  (** Tempory location of config files: {i
+      $opam/$OVERSION/build/$NAME.$VERSION/$NAME.config} *)
   val build_config: t -> NV.t -> filename
 
   (** Installed files for a given package:

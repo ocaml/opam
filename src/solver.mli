@@ -56,43 +56,40 @@ type request = {
   wish_upgrade:  Debian.Format822.vpkg list;
 }
 
+(** Convert a request to a string *)
+val string_of_request: request -> string
+
 (** Solver solution *)
 type solution = {
   to_remove: NV.t list;
   to_add   : PA_graph.t;
 }
 
+(** Does the solution implies deleting or updating a package *)
+val delete_or_update : solution -> bool
+
 (** Display a solution *)
 val print_solution: solution -> unit
 
-module Solver : sig
+(** Package *)
+type package = Debian.Packages.package
 
-  type package = Debian.Packages.package
+(** Universe of packages *)
+type universe = U of package list
 
-  (** Universe of packages *)
-  type universe = U of package list
+(** Subset of packages *)
+type packages = P of package list
 
-  (** Subset of packages *)
-  type packages = P of package list
+(** Given a description of packages, return a solution preserving the
+    consistency of the initial description.  [None] : No solution
+    found. *)
+val resolve : universe -> request -> solution option
 
-  (** Given a description of packages, return a solution preserving
-      the consistency of the initial description.
-      [None] : No solution found. *)
-  val resolve : universe -> request -> solution option
+(** Return the recursive dependencies of a package Note : the given
+    package exists in the list in input because this list describes
+    the entire universe.  By convention, it also appears in output. *)
+val filter_backward_dependencies : universe -> packages -> package list
 
-  (** Same as [resolve], but each element of the list of solutions does not precise
-      which request in the initial list was satisfied. *)
-  val resolve_list :  universe -> request list -> solution list
-
-  (** Return the recursive dependencies of a package
-      Note : the given package exists in the list in input because this list describes the entire universe. 
-      By convention, it also appears in output. *)
-  val filter_backward_dependencies : universe -> packages -> package list
-
-  (** Same as [filter_backward_dependencies] but for forward dependencies *)
-  val filter_forward_dependencies : universe -> packages -> package list
-
-  (** Does the solution implies deleting or updating a package *)
-  val delete_or_update : solution -> bool
-
-end
+(** Same as [filter_backward_dependencies] but for forward
+    dependencies *)
+val filter_forward_dependencies : universe -> packages -> package list

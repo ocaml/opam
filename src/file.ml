@@ -180,6 +180,9 @@ module Descr = struct
 
   let empty = []
 
+  let create str =
+    [[str]]
+
   let synopsis = function
     | []   -> ""
     | h::_ -> String.concat " " h
@@ -294,6 +297,11 @@ module OPAM = struct
     libraries  = [];
     syntax     = [];
   }
+
+  let create nv =
+    let name = NV.name nv in
+    let version = NV.version nv in
+    { empty with name; version }
 
   let s_version     = "version"
   let s_maintainer  = "maintainer"
@@ -486,6 +494,9 @@ module Dot_config = struct
     variables: (variable * variable_contents) list;
   }
 
+  let create variables =
+    { variables; sections = [] }
+
   let empty = {
     sections  = [];
     variables = [];
@@ -599,32 +610,13 @@ module Subst = struct
 
   let to_string filename t = t
 
-  let pcre_replace ~pat ~templ str =
-    let r = Re_perl.compile_pat pat in
-    let b = Buffer.create 1024 in
-    let rec loop pos =
-      if pos >= String.length str then
-        Buffer.contents b
-      else if Re.execp ~pos r str then (
-        let ss = Re.exec ~pos r str in
-        let start, fin = Re.get_ofs ss 0 in
-        let pat = Re.get ss 0 in
-        Buffer.add_substring b str pos (start - pos);
-        Buffer.add_string b (templ pat);
-        loop fin
-      ) else (
-        Buffer.add_substring b str pos (String.length str - pos);
-        loop (String.length str)
-      )
-    in
-    loop 0
-
   let replace t f =
-    let templ str =
+    let subst str =
       let str = String.sub str 2 (String.length str - 4) in
       let v = Full_variable.of_string str in
       string_of_variable_contents (f v) in
-    let str = pcre_replace ~pat:"%\\{[^%]+\\}%" ~templ (Raw.to_string t) in
+    let rex = Re_perl.compile_pat "%\\{[^%]+\\}%" in
+    let str = Pcre.substitute ~rex ~subst (Raw.to_string t) in
     Raw.of_string str
 
 end

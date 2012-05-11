@@ -72,7 +72,9 @@ module C = struct
 
   let root x = x
 
-  let lib t n = t / "lib" / N.to_string n
+  let lib_dir t = t / "lib"
+
+  let lib t n = lib_dir t / "lib" / N.to_string n
 
   let bin t = t / "bin"
 
