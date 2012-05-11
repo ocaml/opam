@@ -38,9 +38,19 @@ Concatenate a directory and a string to create a filename
 Return the corresponding build action
 </div>
 </td></tr>
+<tr><td><a href="Types.Filename.html#VALadd_extension">add_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Remove the file suffix
+</div>
+</td></tr>
 <tr><td><a href="Types.Repository.html#VALaddress">address</a> [<a href="Types.Repository.html">Types.Repository</a>]</td>
 <td><div class="info">
 Get the repository address
+</div>
+</td></tr>
+<tr><td><a href="Types.Full_section.html#VALall">all</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
+<td><div class="info">
+All the sections in a package
 </div>
 </td></tr>
 <tr><td><a href="Path.R.html#VALarchive">archive</a> [<a href="Path.R.html">Path.R</a>]</td>
@@ -252,6 +262,11 @@ Copy a file
 Copy a file in a directory
 </div>
 </td></tr>
+<tr><td><a href="Types.Full_section.html#VALcreate">create</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
+<td><div class="info">
+Create a fully qualified section
+</div>
+</td></tr>
 <tr><td><a href="Types.Repository.html#VALcreate">create</a> [<a href="Types.Repository.html">Types.Repository</a>]</td>
 <td><div class="info">
 Create a repository
@@ -411,11 +426,6 @@ Get one section of a certain kind
 <tr><td><a href="Run.html#VALin_dir">in_dir</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">in_dir dir fn</code> evaluates <code class="code">fn</code> in the directory <code class="code">dir</code>
-</div>
-</td></tr>
-<tr><td><a href="File.Dot_config.SECTION.html#VALincludes">includes</a> [<a href="File.Dot_config.SECTION.html">File.Dot_config.SECTION</a>]</td>
-<td><div class="info">
-Return the list of included directory for a given section
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALinfo">info</a> [<a href="Client.html">Client</a>]</td>
@@ -666,6 +676,11 @@ Return the OPAM version
 Return the package the variable is defined in
 </div>
 </td></tr>
+<tr><td><a href="Types.Full_section.html#VALpackage">package</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
+<td><div class="info">
+Return the package name in which the section is
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_and_formula">parse_and_formula</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse an AND formala such as
@@ -807,6 +822,11 @@ Removes the given package.
 <code class="code">remove_file filename</code> removes <code class="code">filename</code>.
 </div>
 </td></tr>
+<tr><td><a href="File.Subst.html#VALreplace">replace</a> [<a href="File.Subst.html">File.Subst</a>]</td>
+<td><div class="info">
+Substitute the variable appearing in a file
+</div>
+</td></tr>
 <tr><td><a href="Path.G.html#VALrepo_index">repo_index</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Return the repository index: <i>$opam/repo/index</i>
@@ -859,6 +879,12 @@ Read file contents.
 <td><div class="info">
 Return the section (library or syntax extension) the package is
       defined in
+</div>
+</td></tr>
+<tr><td><a href="Types.Full_section.html#VALsection">section</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
+<td><div class="info">
+Return the optional section name: <code class="code">None</code> means all available
+      sections.
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALsections">sections</a> [<a href="File_format.html">File_format</a>]</td>

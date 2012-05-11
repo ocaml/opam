@@ -28,12 +28,14 @@
 <center><h1>Module <a href="type_Solver.Solver.html">Solver.Solver</a></h1></center>
 <br>
 <pre><span class="keyword">module</span> Solver: <code class="code">sig</code> <a href="Solver.Solver.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="TYPEpackage"><span class="keyword">type</span> <code class="type"></code>package</span> = <code class="type">Debian.Packages.package</code> </pre>
+
 <br><code><span id="TYPEuniverse"><span class="keyword">type</span> <code class="type"></code>universe</span> = </code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">U</span> <span class="keyword">of</span> <code class="type">Debian.Packages.package list</code></code></td>
+<code><span class="constructor">U</span> <span class="keyword">of</span> <code class="type"><a href="Solver.Solver.html#TYPEpackage">package</a> list</code></code></td>
 
 </tr></table>
 
@@ -46,7 +48,7 @@ Universe of packages<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">P</span> <span class="keyword">of</span> <code class="type">Debian.Packages.package list</code></code></td>
+<code><span class="constructor">P</span> <span class="keyword">of</span> <code class="type"><a href="Solver.Solver.html#TYPEpackage">package</a> list</code></code></td>
 
 </tr></table>
 
@@ -63,12 +65,12 @@ Given a description of packages, return a solution preserving
 Same as <code class="code">resolve</code>, but each element of the list of solutions does not precise
       which request in the initial list was satisfied.<br>
 </div>
-<pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type"><a href="Solver.Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.Solver.html#TYPEpackages">packages</a> -> <a href="Solver.Solver.html#TYPEpackages">packages</a></code></pre><div class="info">
+<pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type"><a href="Solver.Solver.html#TYPEuniverse">universe</a> -><br>       <a href="Solver.Solver.html#TYPEpackages">packages</a> -> <a href="Solver.Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
 Return the recursive dependencies of a package
       Note : the given package exists in the list in input because this list describes the entire universe. 
       By convention, it also appears in output.<br>
 </div>
-<pre><span id="VALfilter_forward_dependencies"><span class="keyword">val</span> filter_forward_dependencies</span> : <code class="type"><a href="Solver.Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.Solver.html#TYPEpackages">packages</a> -> <a href="Solver.Solver.html#TYPEpackages">packages</a></code></pre><div class="info">
+<pre><span id="VALfilter_forward_dependencies"><span class="keyword">val</span> filter_forward_dependencies</span> : <code class="type"><a href="Solver.Solver.html#TYPEuniverse">universe</a> -><br>       <a href="Solver.Solver.html#TYPEpackages">packages</a> -> <a href="Solver.Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
 Same as <code class="code">filter_backward_dependencies</code> but for forward dependencies<br>
 </div>
 <pre><span id="VALdelete_or_update"><span class="keyword">val</span> delete_or_update</span> : <code class="type"><a href="Solver.html#TYPEsolution">Solver.solution</a> -> bool</code></pre><div class="info">

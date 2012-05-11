@@ -143,6 +143,11 @@ Section names
 Shortcut to section names<br>
 </div>
 
+<pre><span class="keyword">module</span> <a href="Types.Full_section.html">Full_section</a>: <code class="code">sig</code> <a href="Types.Full_section.html">..</a> <code class="code">end</code></pre><div class="info">
+Fully qualified sections
+</div>
+<pre><span id="TYPEfull_section"><span class="keyword">type</span> <code class="type"></code>full_section</span> = <code class="type">Full_section.t</code> </pre>
+
 <pre><span class="keyword">module</span> <a href="Types.Full_variable.html">Full_variable</a>: <code class="code">sig</code> <a href="Types.Full_variable.html">..</a> <code class="code">end</code></pre><div class="info">
 Fully qualified variables
 </div>
@@ -237,64 +242,40 @@ Remote arguments<br>
 <pre><span id="VALstring_of_remote"><span class="keyword">val</span> string_of_remote</span> : <code class="type"><a href="Types.html#TYPEremote">remote</a> -> string</code></pre><div class="info">
 Pretty-print<br>
 </div>
-<br><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = </code><table class="typetable">
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Includes</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEname">name</a> list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Bytecomp</span> <span class="keyword">of</span> <code class="type">(<a href="Types.html#TYPEname">name</a> * string) list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Asmcomp</span> <span class="keyword">of</span> <code class="type">(<a href="Types.html#TYPEname">name</a> * string) list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Bytelink</span> <span class="keyword">of</span> <code class="type">(<a href="Types.html#TYPEname">name</a> * string) list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Asmlink</span> <span class="keyword">of</span> <code class="type">(<a href="Types.html#TYPEname">name</a> * string) list</code></code></td>
-
-</tr></table>
-
-<div class="info">
-Configuration requests<br>
-</div>
-
-<br><code><span id="TYPErec_config_option"><span class="keyword">type</span> <code class="type"></code>rec_config_option</span> = {</code><table class="typetable">
+<br><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>recursive&nbsp;: <code class="type">bool</code>;</code></td>
+<code>is_rec&nbsp;: <code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>options&nbsp;: <code class="type"><a href="Types.html#TYPEconfig_option">config_option</a></code>;</code></td>
+<code>is_byte&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>is_link&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>options&nbsp;: <code class="type"><a href="Types.html#TYPEfull_section">full_section</a> list</code>;</code></td>
 
 </tr></table>
 }
 
+<div class="info">
+Configuration requests<br>
+</div>
 
 <br><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = </code><table class="typetable">
 <tr>
@@ -315,7 +296,14 @@ Configuration requests<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Compil</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPErec_config_option">rec_config_option</a></code></code></td>
+<code><span class="constructor">Includes</span> <span class="keyword">of</span> <code class="type">bool * <a href="Types.html#TYPEname">name</a> list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Compil</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEconfig_option">config_option</a></code></code></td>
 
 </tr>
 <tr>

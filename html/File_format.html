@@ -215,9 +215,10 @@ Parse a single string<br>
 <pre><span id="VALparse_string_pair"><span class="keyword">val</span> parse_string_pair</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string * string</code></pre><div class="info">
 Parse a pair of strings<br>
 </div>
-<pre><span id="VALparse_or"><span class="keyword">val</span> parse_or</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) list -> <a href="File_format.html#TYPEvalue">value</a> -> 'a</code></pre><div class="info">
+<pre><span id="VALparse_or"><span class="keyword">val</span> parse_or</span> : <code class="type">(string * (<a href="File_format.html#TYPEvalue">value</a> -> 'a)) list -> <a href="File_format.html#TYPEvalue">value</a> -> 'a</code></pre><div class="info">
 Try to parse the value using function from the list. All the
-    parsing functions are tried until one succeeds.<br>
+    parsing functions are tried until one succeeds. The first argument
+    is a debug message.<br>
 </div>
 <br>
 <span id="2_Creationfunctions"><h2>Creation functions</h2></span><br>
