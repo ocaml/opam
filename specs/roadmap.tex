@@ -13,7 +13,6 @@
 \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
 
 \title{
-
 OPAM: a Package Management Systems for OCaml\\
 Version 1.0.0 Roadmap\\ ~\ \\
 THIS DOCUMENT IS A DRAFT\\
@@ -487,10 +486,10 @@ package, and are used to substitute variables in template files (see
 
 \begin{itemize}
 
-\item \verb+%{$NAME}$VAR%+ will refer to the variable \verb+$VAR+
+\item \verb+%{$NAME:$VAR}%+ will refer to the variable \verb+$VAR+
   defined at the root of the configuration file \verb+$config/NAME.config+.
 
-\item \verb+%{$NAME.$LIB}$VAR%+ will refer to the variable \verb+$VAR+
+\item \verb+%{$NAME.$LIB:$VAR}%+ will refer to the variable \verb+$VAR+
   defined in the {\tt library} or {\tt syntax} section named
   \verb+$LIB+ in the configuration file \verb+$config/$NAME.config+.
 
@@ -578,11 +577,11 @@ syntax of templates is the following:
 
 \begin{itemize}
 
-\item templates such as \verb+%{$NAME}$VAR%+ are replaced by the value
+\item templates such as \verb+%{$NAME:$VAR}%+ are replaced by the value
   of the variable \verb+$VAR+ defined at the root of the file
   \verb+$config/NAME.config+.
 
-\item templates such as \verb+%{$NAME.$LIB}$VAR%+ are replaced by the
+\item templates such as \verb+%{$NAME.$LIB:$VAR}%+ are replaced by the
   value of the variable \verb+$VAR+ defined in the \verb+$LIB+ section
   in the file \verb+$config/PACKAGE.config$+
 
@@ -850,8 +849,8 @@ packager) should run:
 
 \begin{verbatim}
     $ opam config -list-vars
-    $ opam config -var {$NAME}$VAR
-    $ opam config -var {$NAME.$LIB}$VAR
+    $ opam config -var $NAME:$VAR
+    $ opam config -var $NAME.$LIB:$VAR
     $ opam config -subst $FILENAME+
     $ opam config [-r] -I        $NAME+
     $ opam config [-r] -bytecomp $NAME.$LIB+
@@ -866,7 +865,7 @@ packager) should run:
 \item \verb+-var $var+ will return the value associated to the
   variable \verb+$var+
 \item \verb+-subst $FILENAME+ replace any occurrence of
-  \verb+%{$NAME}$VAR%+ and \verb+%{$NAME.$LIB}$VAR%+ as specified in
+  \verb+%{$NAME:$VAR}%+ and \verb+%{$NAME.$LIB:$VAR}%+ as specified in
   \S\ref{subst} in \verb+$FILENAME.in+ to create \verb+$FILENAME+.
 \item \verb+-I $NAME+ will return the list of paths to include when
   compiling a project using the package \verb+$NAME+ (\verb+-r+ gives
