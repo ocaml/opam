@@ -234,8 +234,8 @@ module Solver = struct
     *)
 
     module O_pkg = struct type t = Cudf.package let compare = compare end
-    module PkgMap = BatMap.Make (O_pkg)
-    module PkgSet = BatSet.Make (O_pkg)
+    module PkgMap = Map.Make (O_pkg)
+    module PkgSet = Set.Make (O_pkg)
 
     let dep_reduction v =
       let g = Defaultgraphs.PackageGraph.dependency_graph (Cudf.load_universe v) in
@@ -352,15 +352,15 @@ module Solver = struct
                         (PG.V.hash pkg)
                         { cudf = pkg ; action = action_map package_map act } l_act in
                     
-                    match PkgMap.Exceptionless.find pkg map_add with
-                    | Some act -> 
-                        add_succ_rem pkg set_recompile act
-                    | None ->
-                        if PkgSet.mem pkg set_recompile then
-                          add_succ_rem pkg set_recompile (I_to_recompile pkg)
-                        else
-                          set_recompile, l_act)
-                  
+                    try
+                      let act = PkgMap.find pkg map_add in
+                      add_succ_rem pkg set_recompile act
+                    with Not_found ->
+                      if PkgSet.mem pkg set_recompile then
+                        add_succ_rem pkg set_recompile (I_to_recompile pkg)
+                      else
+                        set_recompile, l_act
+                  )
                   graph_installed
                   (PkgSet.empty, Utils.IntMap.empty) in
 

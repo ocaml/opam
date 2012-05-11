@@ -28,7 +28,6 @@ begin library "opam-lib"
   requires = [
     "cudf"
     "dose"
-    "bat"
     "unix"
     "extlib"
     "arg"

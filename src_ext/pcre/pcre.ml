@@ -41,20 +41,3 @@ let quote s =
     | c -> String.unsafe_set buf !pos c; incr pos
   done;
   string_unsafe_sub buf 0 !pos
-
-(* XXX: quick hack, untested *)
-let qreplace ~pat ~templ str =
-  let r = Re_perl.compile_pat pat in
-  let ss = Re.exec r str in
-  let ofs = Re.get_all_ofs ss in
-  let b = Buffer.create (String.length str) in
-  let prev = ref 0 in
-  for i = 0 to Array.length ofs - 1 do
-    let orig, off = ofs.(i) in
-    Buffer.add_substring b str !prev (orig - !prev);
-    Buffer.add_string b templ;
-    prev := orig + off;
-  done;
-  if !prev <> String.length str then
-    Buffer.add_substring b str !prev (String.length str - !prev);
-  Buffer.contents b

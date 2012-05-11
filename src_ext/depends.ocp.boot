@@ -29,7 +29,6 @@ end
 begin library "re"
    sort = true
    files = [
-     "../lib/pcre.ml"
      "ocaml-re/lib/re_str.ml"
      "ocaml-re/lib/re_posix.ml"
      "ocaml-re/lib/re_perl.ml"
@@ -39,6 +38,11 @@ begin library "re"
      "ocaml-re/lib/cset.ml"
      "ocaml-re/lib/automata.ml"
    ]
+end
+
+begin library "pcre"
+  files    = [ "pcre/pcre.ml" ]
+  requires = [ "re" ]
 end
 
 begin library "arg"
@@ -164,10 +168,12 @@ begin library "dose"
    ]]
 
    requires = [
-     "re"
+     "pcre"
      "extlib"
      "cudf"
      "graph"
+     "unix"
+     "str"
    ]
 
 end
