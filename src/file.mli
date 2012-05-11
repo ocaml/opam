@@ -176,3 +176,15 @@ module Repo_index: IO_FILE with type t = string N.Map.t
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
+
+(** {2 Substitution files} *)
+
+(** Substitution files *)
+module Subst: sig
+
+  include IO_FILE
+
+  (** Substitute the variable appearing in a file *)
+  val replace: t -> (full_variable -> variable_contents) -> t
+
+end

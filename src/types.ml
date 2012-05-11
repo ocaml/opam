@@ -91,6 +91,7 @@ module Filename: sig
   val write: t -> Raw.t -> unit
   val exists: t -> bool
   val check_suffix: t -> string -> bool
+  val add_extension: t -> string -> t
   val list: dirname -> t list
   val with_raw: (Raw.t -> 'a) -> t -> 'a
   val copy_in: t -> dirname -> unit
@@ -139,6 +140,9 @@ end = struct
 
   let check_suffix filename s =
     F.check_suffix (to_string filename) s
+
+  let add_extension filename suffix =
+    of_string ((to_string filename) ^ "." ^ suffix)
 
   let list d =
     let fs = Run.files (Dirname.to_string d) in
@@ -472,7 +476,7 @@ type config =
   | List_vars
   | Variable of full_variable
   | Compil   of rec_config_option
-  | Subst    of Filename.t list
+  | Subst    of filename list
 
 let p msg l =
   Printf.sprintf "%s %s"

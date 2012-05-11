@@ -105,6 +105,9 @@ module Filename: sig
   (** Check whether a file has a given suffix *)
   val check_suffix: t -> string -> bool
 
+  (** Remove the file suffix *)
+  val add_extension: t -> string -> t
+
   (** List all the filenames (ie. which are not directories) in a directory *)
   val list: dirname -> t list
 

@@ -337,6 +337,28 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
+(* Return the contents of a fully qualified variable *)
+let contents_of_variable t v =
+  let name = Full_variable.package v in
+  let var = Full_variable.variable v in
+  let _nv =
+    try find_package_from_name name t.installed
+    with Not_found ->
+      Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
+  let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+  try match Full_variable.section v with
+  | None   -> File.Dot_config.variable c var
+  | Some s -> File.Dot_config.Sections.variable c s var
+  with Not_found ->
+    Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
+
+(* Substitute the file contents *)
+let substitute_file t f =
+  let src = Filename.add_extension f "in" in
+  let contents = File.Subst.read src in
+  let newcontents = File.Subst.replace contents (contents_of_variable t) in
+  File.Subst.write f newcontents
+
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with 
@@ -348,8 +370,15 @@ let proceed_tochange t nv_old nv =
   Dirname.rmdir p_build;
   Filename.extract (get_archive t nv) p_build;
 
-  (* Call the build script and copy the output files *)
+  (* OPAM files should be read in the right directory to get the
+     correct absolute path for the substitution files *)
+  Dirname.chdir (Path.C.build t.compiler nv);
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
+
+  (* Substitute the configuration files *)
+  List.iter (substitute_file t) (File.OPAM.substs opam);
+
+  (* Call the build script and copy the output files *)
   let commands =
     List.map
       (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
@@ -574,10 +603,12 @@ let upload upload repo =
   Filename.remove upload_descr;
   Filename.remove upload_archives
 
+module FC = File.Dot_config
+
 let config request =
   log "config %s" (string_of_config request);
   let t = load_state () in
-  let module FC = File.Dot_config in
+
   match request with
   (* List all the available variables *)
   | List_vars ->
@@ -608,21 +639,13 @@ let config request =
           (Full_variable.to_string fv)
           (string_of_variable_contents contents)
       ) (List.rev variables)
+
   | Variable v ->
-      let name = Full_variable.package v in
-      let var = Full_variable.variable v in
-      let _nv =
-        try find_package_from_name name t.installed
-        with Not_found ->
-          Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
-      let c = FC.safe_read (Path.C.config t.compiler name) in
-      let contents =
-        try match Full_variable.section v with
-          | None   -> FC.variable c var
-          | Some s -> FC.Sections.variable c s var
-        with Not_found ->
-          Globals.error_and_exit "%s is not defined" (Full_variable.to_string v) in
+      let contents = contents_of_variable t v in
       Globals.msg "%s\n" (string_of_variable_contents contents)
+
+  | Subst fs -> List.iter (substitute_file t) fs
+          
   | _ -> failwith "TODO"
             
 (*

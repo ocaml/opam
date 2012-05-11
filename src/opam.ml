@@ -112,6 +112,7 @@ let specs = [
   ("-asmlink"  , Arg.Unit (set `Asmlink) , " Display native link options");
   ("-list-vars", Arg.Unit (set `ListVars), " Display the contents of all available variables");
   ("-var"      , Arg.Unit (set `Var)     , " Display the content of a variable");
+  ("-subst"    , Arg.Unit (set `Subst)   , " Substitute variables in files");
 ]
 let args n =
   (* XXX: big hack *)
@@ -142,7 +143,8 @@ let config = {
       | Some `Var when List.length names = 1
                        -> Variable (Full_variable.of_string (List.hd names))
       | Some `Var      ->
-          bad_argument "config" "-var takes exactly one parameter" in
+          bad_argument "config" "-var takes exactly one parameter"
+      | Some `Subst    -> Subst (List.map Filename.of_string names) in
     Client.config config
 }
 

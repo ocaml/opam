@@ -594,6 +594,48 @@ module Dot_config = struct
   module Sections = MK (struct let get t = t.sections end)
 end
 
+module Subst = struct
+
+  let internal = "subst"
+
+  type t = Raw.t
+
+  let empty = Raw.of_string ""
+
+  let of_string filename str = str
+
+  let to_string filename t = t
+
+  let pcre_replace ~pat ~templ str =
+    let r = Re_perl.compile_pat pat in
+    let b = Buffer.create 1024 in
+    let rec loop pos =
+      if pos >= String.length str then
+        Buffer.contents b
+      else if Re.execp ~pos r str then (
+        let ss = Re.exec ~pos r str in
+        let start, fin = Re.get_ofs ss 0 in
+        let pat = Re.get ss 0 in
+        Buffer.add_substring b str pos (start - pos);
+        Buffer.add_string b (templ pat);
+        loop fin
+      ) else (
+        Buffer.add_substring b str pos (String.length str - pos);
+        loop (String.length str)
+      )
+    in
+    loop 0
+
+  let replace t f =
+    let templ str =
+      let str = String.sub str 2 (String.length str - 4) in
+      let v = Full_variable.of_string str in
+      string_of_variable_contents (f v) in
+    let str = pcre_replace ~pat:"%\\{[^%]+\\}%" ~templ (Raw.to_string t) in
+    Raw.of_string str
+
+end
+
 end
 
 module type F = sig
@@ -689,4 +731,9 @@ end
 module Updated = struct
   include Updated
   include Make (Updated)
+end
+
+module Subst = struct
+  include Subst
+  include Make (Subst)
 end
