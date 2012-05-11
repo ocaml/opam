@@ -58,3 +58,14 @@ begin program "opam-rsync-update"
   files = [ "src/repo/rsync/update.ml" ]
   requires = [ "opam-lib" ]
 end
+
+begin program "opam-rsync-download"
+  files = [ "src/repo/rsync/download.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-rsync-upload"
+  files = [ "src/repo/rsync/upload.ml" ]
+  requires = [ "opam-lib" ]
+end
+
