@@ -183,8 +183,10 @@ let indent_right s nb =
   else
     String.make nb ' ' ^ s
 
-let find_package_by_name set name =
-  NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) set)
+let find_package_by_name t name =
+  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
+  with Not_found ->
+    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
 let s_not_installed = "--"
 
@@ -275,11 +277,11 @@ let proceed_toinstall t nv =
   Dirname.chdir (Path.C.build t.compiler nv);
   
   (* .install *)
-  let to_install = File.Dot_install.read (Path.C.build_install t.compiler nv) in
+  let to_install = File.Dot_install.safe_read (Path.C.build_install t.compiler nv) in
   File.Dot_install.write (Path.C.install t.compiler name) to_install;
 
   (* .config *)
-  let config = File.Dot_config.read (Path.C.build_config t.compiler nv) in
+  let config = File.Dot_config.safe_read (Path.C.build_config t.compiler nv) in
   File.Dot_config.write (Path.C.config t.compiler name) config;
 
   (* lib *) 
@@ -342,7 +344,7 @@ let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
   let _nv =
-    try find_package_by_name t.installed name
+    try find_package_by_name t name
     with Not_found ->
       Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
   let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
@@ -608,7 +610,7 @@ let get_transitive_dependencies t names =
   let universe =
     Solver.U (List.map (debpkg_of_nv t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
-  let pkg_of_name n = debpkg_of_nv t (find_package_by_name t.installed n) in
+  let pkg_of_name n = debpkg_of_nv t (find_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
   let depends = Solver.filter_backward_dependencies universe request in
   List.map NV.of_dpkg depends
@@ -654,19 +656,53 @@ let config request =
 
   | Subst fs -> List.iter (substitute_file t) fs
           
-  | Includes names ->
-      let deps = get_transitive_dependencies t names in
+  | Includes (is_rec, names) ->
+      let deps =
+        if is_rec then
+          List.map NV.name (get_transitive_dependencies t names)
+        else
+          names in
       let includes =
-        List.fold_left (fun accu nv ->
-          Dirname.to_string (Path.C.lib t.compiler (NV.name nv)) :: accu
+        List.fold_left (fun accu n ->
+          "-I" :: Dirname.to_string (Path.C.lib t.compiler n) :: accu
         ) [] deps in
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
-
-      match c.options with
-
-      | _ -> failwith "TODO"
+      let names = List.map Full_section.package c.options in
+      let deps =
+        if c.is_rec then
+          List.map NV.name (get_transitive_dependencies t names)
+        else
+          N.Set.elements (List.fold_right N.Set.add names N.Set.empty) in
+      (* XXX: this needs some more thoughts *)
+      let options =
+        let pred name s = Full_section.package s = name in
+        List.fold_left (fun accu name ->
+          if List.exists (pred name) c.options then
+            let sections = List.find_all (pred name) c.options in
+            sections @ accu
+          else
+            Full_section.all name :: accu
+        ) [] deps in
+      let fn = match c.is_byte, c.is_link with
+        | true , true  -> File.Dot_config.Sections.bytelink
+        | true , false -> File.Dot_config.Sections.bytecomp
+        | false, true  -> File.Dot_config.Sections.asmlink
+        | false, false -> File.Dot_config.Sections.asmcomp in
+      let strs =
+        List.fold_left (fun accu s ->
+          let name = Full_section.package s in
+          let config = File.Dot_config.read (Path.C.config t.compiler name) in
+          match Full_section.section s with
+          | None ->
+              let sections =  File.Dot_config.Sections.available config in
+              List.map (fn config) sections @ accu
+          | Some s ->
+              fn config s :: accu
+        ) [] options in
+      let strs = List.map (String.concat " ") strs in
+      Globals.msg "%s\n" (String.concat " " (List.rev strs))
             
 (*
     let version name =

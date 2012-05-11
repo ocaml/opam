@@ -365,33 +365,78 @@ module Section: Abstract = Base
 
 type section = Section.t
 
+module Full_section: sig
+  include Abstract
+  val package: t -> name
+  val section: t -> section option
+  val create: name -> section -> t
+  val all: name -> t
+end = struct
+
+  type t = {
+    package: name;
+    section: section option;
+  }
+
+  let create package section = 
+    { package; section = Some section }
+
+  let all package =
+    { package; section = None }
+
+  let package t = t.package
+
+  let section t = t.section
+
+  let of_string str =
+    match cut_at str '.' with
+    | Some (n,s) ->
+        { package = N.of_string n;
+          section = Some (Section.of_string s) }
+    | None ->
+        { package = N.of_string str;
+          section = None }
+
+  let to_string t =
+    let n = N.to_string t.package in
+    match t.section with
+    | None   -> n
+    | Some s -> Printf.sprintf "%s.%s" n (Section.to_string s)
+
+  module O = struct type tmp = t type t = tmp let compare = compare end
+  module Set = Set.Make (O)
+  module Map = Map.Make (O)
+
+end
+
+type full_section = Full_section.t
+
 module Full_variable: sig
   include Abstract
   val create_local: name -> section -> variable -> t
   val create_global: name -> variable -> t
   val package: t -> name
   val section: t -> section option
+  val full_section: t -> full_section
   val variable: t -> variable
 end = struct
 
   type t = {
-    package : name;
-    section : section option;
+    full_section: full_section;
     variable: variable;
   }
 
-  let package t = t.package
-  let section t = t.section
   let variable t = t.variable
+  let full_section t = t.full_section
+  let section t = Full_section.section t.full_section
+  let package t = Full_section.package t.full_section
 
   let create_local package section variable =
-    { package;
-      section = Some section;
+    { full_section = Full_section.create package section;
       variable }
 
   let create_global package variable =
-    { package;
-      section = None;
+    { full_section = Full_section.all package;
       variable }
 
   let of_string s =
@@ -408,11 +453,12 @@ end = struct
 
   let to_string t =
     let package =
-      if N.to_string t.package = Globals.default_package then
+      let n = N.to_string (package t) in
+      if n = Globals.default_package then
         ""
       else
-        N.to_string t.package in
-    let section = match t.section with
+        n in
+    let section = match section t with
       | None   -> ""
       | Some s -> "." ^ Section.to_string s in
     let prefix = package ^ section in
@@ -430,28 +476,6 @@ end = struct
 end
 
 type full_variable = Full_variable.t
-
-module Config_variable: Abstract with type t = name * section = struct
-
-  type t = name * section
-
-  let of_string str =
-    match cut_at str '.' with
-    | Some (n,s) -> N.of_string n, Section.of_string s
-    | None       ->
-        N.of_string Globals.default_package, Section.of_string str
-
-  let to_string (n, s) =
-    if N.to_string n = Globals.default_package then
-      Section.to_string s
-    else
-      Printf.sprintf "%s.%s" (N.to_string n) (Section.to_string s)
-
-  module O = struct type tmp = t type t = tmp let compare = compare end
-  module Set = Set.Make (O)
-  module Map = Map.Make (O)
-
-end
 
 (* Command line arguments *)
 
@@ -483,27 +507,28 @@ type config_option = {
   is_rec : bool;
   is_byte: bool;
   is_link: bool;
-  options: (name * section) list;
+  options: full_section list;
 }
 
 type config =
   | List_vars
   | Variable of full_variable
-  | Includes of name list
+  | Includes of bool * (name list)
   | Compil   of config_option
   | Subst    of filename list
 
-let config_variables l =
-  String.concat " " (List.map Config_variable.to_string l)
+let full_sections l =
+  String.concat " " (List.map Full_section.to_string l)
 
 let string_of_config_option t =
   Printf.sprintf "rec=%b bytecode=%b link=%b options=%s"
-    t.is_rec t.is_byte t.is_link (config_variables t.options)
+    t.is_rec t.is_byte t.is_link (full_sections t.options)
 
 let string_of_config = function
   | List_vars  -> "list-vars"
   | Variable v -> Printf.sprintf "var(%s)" (Full_variable.to_string v)
   | Compil c   -> string_of_config_option c
   | Subst l    -> String.concat "," (List.map Filename.to_string l)
-  | Includes l ->
-      Printf.sprintf "include(%s)" (String.concat "," (List.map N.to_string l))
+  | Includes (b,l) ->
+      Printf.sprintf "include(%b,%s)"
+        b (String.concat "," (List.map N.to_string l))

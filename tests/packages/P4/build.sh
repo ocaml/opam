@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OCPGET="ocp-get --root ${OPAM_ROOT}"
+OCPGET="opam --root ${OPAM_ROOT}"
 INCLUDES0="`${OCPGET} config -r -I P2 P3`"
 LINK0="`${OCPGET} config -r -asmlink P2 P3`"
 

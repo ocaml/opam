@@ -103,10 +103,10 @@ let has_cmd = ref false
 let is_rec = ref false
 let is_link = ref false
 let is_byte = ref false
-let bytecomp () = is_byte := true ; is_link := false
-let bytelink () = is_byte := true ; is_link := true
-let asmcomp  () = is_byte := false; is_link := false
-let asmlink  () = is_byte := false; is_link := true
+let bytecomp () =  has_cmd := true; is_byte := true ; is_link := false
+let bytelink () =  has_cmd := true; is_byte := true ; is_link := true
+let asmcomp  () =  has_cmd := true; is_byte := false; is_link := false
+let asmlink  () =  has_cmd := true; is_byte := false; is_link := true
 let command = ref None
 let set cmd () =
   has_cmd := true;
@@ -124,13 +124,15 @@ let specs = [
 ]
 let mk options =
   if not !has_cmd then
-    bad_argument "config" "Wrong options"
+    bad_argument "config"
+      "Wrong options (has_cmd=%b is_rec=%b,is_link=%b,is_byte=%b)"
+      !has_cmd !is_rec !is_link !is_byte
   else
     Compil {
       is_rec  = !is_rec;
       is_link = !is_link;
       is_byte = !is_byte;
-      options = List.map Config_variable.of_string options;
+      options = List.map Full_section.of_string options;
     }
 let config = {
   name     = "config";
@@ -142,7 +144,7 @@ let config = {
   main = function () ->
     let names = List.rev !ano_args in
     let config = match !command with
-      | Some `I     -> Includes (List.map N.of_string names)
+      | Some `I     -> Includes (!is_rec, List.map N.of_string names)
       | Some `List  -> List_vars
       | Some `Var when List.length names = 1
                     -> Variable (Full_variable.of_string (List.hd names))

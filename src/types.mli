@@ -233,6 +233,28 @@ module Section: Abstract
 (** Shortcut to section names *)
 type section = Section.t
 
+(** Fully qualified sections *)
+module Full_section: sig
+
+  include Abstract
+
+  (** Create a fully qualified section *)
+  val create: name -> section -> t
+
+  (** All the sections in a package *)
+  val all: name ->  t
+
+  (** Return the package name in which the section is *)
+  val package: t -> name
+
+  (** Return the optional section name: [None] means all available
+      sections. *)
+  val section: t -> section option
+
+end
+
+type full_section = Full_section.t
+
 (** Fully qualified variables *)
 module Full_variable: sig
 
@@ -267,10 +289,6 @@ type variable_contents =
 (** Convert the content of a variable to a string *)
 val string_of_variable_contents: variable_contents -> string
 
-(** Config variables *)
-module Config_variable: Abstract with type t = name * section
-
-
 (** {2 Command line arguments} *)
 
 (** Upload arguments *)
@@ -297,13 +315,13 @@ type config_option = {
   is_rec : bool;
   is_byte: bool;
   is_link: bool;
-  options: (name * section) list;
+  options: full_section list;
 }
 
 type config =
   | List_vars
   | Variable of full_variable
-  | Includes of name list
+  | Includes of bool * (name list)
   | Compil   of config_option
   | Subst    of filename list
 
