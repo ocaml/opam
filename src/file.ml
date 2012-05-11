@@ -469,9 +469,11 @@ module Dot_config = struct
 
   let s str = S str
   let b bool = B bool
+  type section = Types.section
 
-  type section = { 
-    name      : string ;
+  type s = { 
+    name      : section;
+    kind      : string ;
     includes  : string list ;
     bytecomp  : string list ;
     asmcomp   : string list ;
@@ -481,14 +483,12 @@ module Dot_config = struct
   }
 
   type t = {
-    libraries: section list;
-    syntax   : section list;
+    sections : s list;
     variables: (variable * variable_contents) list;
   }
 
   let empty = {
-    libraries = [];
-    syntax    = [];
+    sections  = [];
     variables = [];
   }
 
@@ -513,25 +513,23 @@ module Dot_config = struct
       (parse_string |> s);
       (parse_bool   |> b);
     ] in
-    let parse_section s =
-      let name = s.File_format.name in
+    let parse_variables items =
+      let l = List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables items) in
+      List.map (fun (k,v) -> Variable.of_string k, parse_value v) l in
+    let parse_section kind s =
+      let name =  Section.of_string s.File_format.name in
       let includes = assoc_string_list s.items s_includes in
       let bytecomp = assoc_string_list s.items s_bytecomp in
       let asmcomp  = assoc_string_list s.items s_asmcomp  in
       let bytelink = assoc_string_list s.items s_bytecomp in
       let asmlink  = assoc_string_list s.items s_asmlink  in
-      let lvariables =
-        List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables s.items) in
-      let lvariables =
-        List.map (fun (k,v) -> Variable.of_string k, parse_value v) lvariables in
-      { name; includes; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
-    let libraries = assoc_sections file.contents "library" parse_section in
-    let syntax    = assoc_sections file.contents "syntax" parse_section in
-    let variables =
-      List.map
-        (fun (k,v) -> Variable.of_string k, parse_value v)
-        (variables file.contents) in
-    { libraries; syntax; variables }
+      let lvariables = parse_variables s.items in
+      { name; kind; includes; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
+    let libraries = assoc_sections file.contents "library" (parse_section "library") in
+    let syntax    = assoc_sections file.contents "syntax" (parse_section "syntax") in
+    let sections  = libraries @ syntax in
+    let variables = parse_variables file.contents in
+    { sections; variables }
 
   let rec to_string filename t =
     let of_value = function
@@ -539,10 +537,10 @@ module Dot_config = struct
       | S s -> String s in
     let of_variables l =
       List.map (fun (k,v) -> Variable (Variable.to_string k, of_value v)) l in
-    let of_section kind s =
+    let of_section s =
       Section
-        { File_format.kind;
-          name = s.name;
+        { File_format.name = Section.to_string s.name;
+          kind  = s.kind;
           items = [
             Variable (s_includes, make_list make_string s.includes);
             Variable (s_bytecomp, make_list make_string s.bytecomp);
@@ -551,14 +549,11 @@ module Dot_config = struct
             Variable (s_asmlink , make_list make_string s.asmlink);
           ] @ of_variables s.lvariables 
         } in
-    let of_library l = of_section "library" l in
-    let of_syntax s = of_section "syntax" s in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents =
         of_variables t.variables
-        @ List.map of_library t.libraries
-        @ List.map of_syntax t.syntax
+        @ List.map of_section t.sections
     }
 
   let variables t = List.map fst t.variables
@@ -566,22 +561,24 @@ module Dot_config = struct
   let variable t s = List.assoc s t.variables
 
   module type SECTION = sig
-    val available: t -> string list
-    val includes : t -> string -> string list
-    val asmcomp  : t -> string -> string list
-    val bytecomp : t -> string -> string list
-    val asmlink  : t -> string -> string list
-    val bytelink : t -> string -> string list
-    val variable : t -> string -> variable -> variable_contents
-    val variables: t -> string -> variable list
+    val available: t -> section list
+    val kind     : t -> section -> string
+    val includes : t -> section -> string list
+    val asmcomp  : t -> section -> string list
+    val bytecomp : t -> section -> string list
+    val asmlink  : t -> section -> string list
+    val bytelink : t -> section -> string list
+    val variable : t -> section -> variable -> variable_contents
+    val variables: t -> section -> variable list
   end
 
-  module Section (M : sig val get : t -> section list end) : SECTION = struct
+  module MK (M : sig val get : t -> s list end) : SECTION = struct
 
     let find t name =
       List.find (fun s -> s.name = name) (M.get t)
 
     let available t = List.map (fun s -> s.name) (M.get t)
+    let kind t s = (find t s).kind
     let includes t s = (find t s).includes
     let bytecomp t s = (find t s).bytecomp
     let asmcomp  t s = (find t s).asmcomp
@@ -591,8 +588,10 @@ module Dot_config = struct
     let variables t n = List.map fst (find t n).lvariables
   end
 
-  module Library = Section (struct let get t = t.libraries end)
-  module Syntax  = Section (struct let get t = t.syntax    end)
+  let filter t n = List.filter (fun s -> s.kind = n) t.sections
+  module Library  = MK (struct let get t = filter t "library" end)
+  module Syntax   = MK (struct let get t = filter t "syntax"  end)
+  module Sections = MK (struct let get t = t.sections end)
 end
 
 end

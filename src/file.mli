@@ -123,30 +123,36 @@ module Dot_config: sig
   module type SECTION = sig
 
     (** List the available sections *)
-    val available: t -> string list
-      
+    val available: t -> section list
+
+    (** Return the section kind *)
+    val kind: t -> section -> string
+
     (** Return the list of included directory for a given section *)
-    val includes: t -> string -> string list
+    val includes: t -> section -> string list
 
     (** Return the list of native-compiler options *)
-    val asmcomp: t -> string -> string list
+    val asmcomp: t -> section -> string list
 
     (** Return the list of bytecode-compiler options *)
-    val bytecomp: t -> string -> string list
+    val bytecomp: t -> section -> string list
 
     (** Return the list of native-code linking options *)
-    val asmlink: t -> string -> string list
+    val asmlink: t -> section -> string list
 
     (** Return the list of bytecode linking options *)
-    val bytelink: t -> string -> string list
+    val bytelink: t -> section -> string list
 
     (** Return the value of variables *)
-    val variable: t -> string -> variable  -> variable_contents
+    val variable: t -> section -> variable  -> variable_contents
 
     (** The list of local variables *)
-    val variables: t -> string -> variable list
+    val variables: t -> section -> variable list
 
   end
+
+  (** All library and syntax sections *)
+  module Sections: SECTION
 
   (** Sections starting by [library] *)
   module Library: SECTION

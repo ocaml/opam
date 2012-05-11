@@ -39,7 +39,7 @@ end
 (** {2 Filenames} *)
 
 (** Absolute directory names *)
-module Dirname : sig
+module Dirname: sig
 
   include Abstract
 
@@ -63,24 +63,24 @@ type dirname = Dirname.t
 val (/): dirname -> string -> dirname
 
 (** Basenames *)
-module Basename : Abstract
+module Basename: Abstract
 
 (** Shortcut to basename type *)
 type basename = Basename.t
 
 (** Raw file contents *)
-module Raw : Abstract
+module Raw: Abstract
 
 (** Shortcut to raw file content type *)
 type raw = Raw.t
 
 (** Stdlib [Filename] module *)
-module Stdlib_filename : sig
+module Stdlib_filename: sig
   val concat: string -> string -> string
 end
 
 (** non-directory filenames *)
-module Filename : sig
+module Filename: sig
 
   include Abstract
 
@@ -138,23 +138,29 @@ val (//): dirname -> string -> filename
 (** {2 Package name and versions} *)
 
 (** Versions *)
-module V : Abstract
+module V: Abstract
+
+(** Shortcut to V.t *)
+type version = V.t
 
 (** Names *)
-module N : Abstract
+module N: Abstract
+
+(** Shortcut to N.t *)
+type name = N.t
 
 (** Package (name x version) pairs *)
-module NV : sig
+module NV: sig
   include Abstract
 
   (** Return the package name *)
-  val name : t -> N.t
+  val name: t -> name
 
   (** Return the version name *)
-  val version: t -> V.t
+  val version: t -> version
 
   (** Create a new pair (name x version) *)
-  val create: N.t -> V.t -> t
+  val create: name -> version -> t
 
   (** Create a new pair from a filename. This function extracts
       [$name] and [$version] from [/path/to/$name.$version.XXX with
@@ -174,16 +180,19 @@ module NV : sig
   val string_of_set: Set.t -> string
 end
 
+(** Shortcut to NV.t *)
+type nv = NV.t
+
 (** OCaml version *)
-module OCaml_V : Abstract
+module OCaml_V: Abstract
 
 (** OPAM version *)
-module OPAM_V : Abstract
+module OPAM_V: Abstract
 
 (** {2 Repositories} *)
 
 (** OPAM repositories *)
-module Repository : sig
+module Repository: sig
 
   include Abstract
 
@@ -210,10 +219,42 @@ type repository = Repository.t
 (** {2 Variable names} *)
 
 (** Variable names are used in .config files *)
-module Variable : Abstract
+module Variable: Abstract
 
 (** Shortcut to variable type *)
 type variable = Variable.t
+
+(** Section names *)
+module Section: Abstract
+
+(** Shortcut to section names *)
+type section = Section.t
+
+(** Fully qualified variables *)
+module Full_variable: sig
+
+  include Abstract
+  
+  (** Create a variable local for a given library/syntax extension *)
+  val create_local: name -> section -> variable -> t
+
+  (** Create a global variable for a package *)
+  val create_global: name -> variable -> t
+
+  (** Return the package the variable is defined in *)
+  val package: t -> name
+
+  (** Return the section (library or syntax extension) the package is
+      defined in *)
+  val section: t -> section option
+
+  (** Return the variable name *)
+  val variable: t -> variable
+
+end
+
+(** Shortcut to fully qualified variables *)
+type full_variable = Full_variable.t
 
 (** Content of user-defined variables *)
 type variable_contents =
@@ -246,11 +287,11 @@ val string_of_remote: remote -> string
 
 (** Configuration requests *)
 type config_option =
-  | Includes of N.t list
-  | Bytecomp of (N.t * string) list
-  | Asmcomp  of (N.t * string) list
-  | Bytelink of (N.t * string) list
-  | Asmlink  of (N.t * string) list
+  | Includes of name list
+  | Bytecomp of (name * string) list
+  | Asmcomp  of (name * string) list
+  | Bytelink of (name * string) list
+  | Asmlink  of (name * string) list
 
 type rec_config_option = {
   recursive: bool;
@@ -258,10 +299,10 @@ type rec_config_option = {
 }
 
 type config =
-  | Compil   of rec_config_option
   | List_vars
-  | Variable of (N.t * string option * variable) list
-  | Subst of Filename.t list
+  | Variable of full_variable
+  | Compil   of rec_config_option
+  | Subst    of filename list
 
 (** Pretty-print *)
 val string_of_config: config -> string

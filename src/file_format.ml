@@ -169,13 +169,20 @@ let rec string_of_value = function
 and string_of_values l =
   String.concat " "  (List.map string_of_value l)
 
-let rec string_of_item = function
-  | Variable (i, v) -> Printf.sprintf "%s: %s" i (string_of_value v)
-  | Section s       ->
-      Printf.sprintf "%s %S {\n%s\n}" s.kind s.name (string_of_items s.items)
+let incr tab = "  " ^ tab
 
-and string_of_items is =
-  String.concat "\n" (List.map string_of_item is)
+let rec string_of_item_aux tab = function
+  | Variable (i, v) -> Printf.sprintf "%s%s: %s" tab i (string_of_value v)
+  | Section s       ->
+      Printf.sprintf "%s%s %S {\n%s\n}"
+        tab s.kind s.name
+        (string_of_items_aux (incr tab) s.items)
+
+and string_of_items_aux tab is =
+  String.concat "\n" (List.map (string_of_item_aux tab) is)
+
+let string_of_item = string_of_item_aux ""
+let string_of_items = string_of_items_aux ""
 
 let string_of_file f = string_of_items f.contents
 

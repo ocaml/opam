@@ -26,6 +26,8 @@ let default_repository_kind    = "rsync"
 
 let default_build_command = [ [ "./build.sh" ] ]
 
+let default_package = "conf-ocaml"
+
 let opam_version = "1"
 
 let home = Unix.getenv "HOME"

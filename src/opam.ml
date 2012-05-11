@@ -110,7 +110,8 @@ let specs = [
   ("-asmcomp"  , Arg.Unit (set `Asmcomp) , " Display native link options");
   ("-bytelink" , Arg.Unit (set `Bytelink), " Display bytecode link options");
   ("-asmlink"  , Arg.Unit (set `Asmlink) , " Display native link options");
-  ("-list-vars", Arg.Unit (set `ListVars), " Display the list of variables");
+  ("-list-vars", Arg.Unit (set `ListVars), " Display the contents of all available variables");
+  ("-var"      , Arg.Unit (set `Var)     , " Display the content of a variable");
 ]
 let args n =
   (* XXX: big hack *)
@@ -137,7 +138,11 @@ let config = {
       | Some `Bytelink -> mk (Bytelink (List.map args names))
       | Some `Asmcomp  -> mk (Asmcomp (List.map args names))
       | Some `Asmlink  -> mk (Asmlink (List.map args names))
-      | Some `ListVars -> List_vars in
+      | Some `ListVars -> List_vars
+      | Some `Var when List.length names = 1
+                       -> Variable (Full_variable.of_string (List.hd names))
+      | Some `Var      ->
+          bad_argument "config" "-var takes exactly one parameter" in
     Client.config config
 }
 

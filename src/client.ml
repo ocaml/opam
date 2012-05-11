@@ -183,8 +183,8 @@ let indent_right s nb =
   else
     String.make nb ' ' ^ s
 
-let find_from_name name l =
-  List.find_all (fun (n,_) -> n = name) l
+let find_package_from_name name set =
+  List.find(fun nv -> NV.name nv = name) (NV.Set.elements set)
 
 let s_not_installed = "--"
 
@@ -585,40 +585,44 @@ let config request =
         NV.Set.fold (fun nv l ->
           let file = Path.C.config t.compiler (NV.name nv) in
           (nv, FC.safe_read file) :: l
-        ) t.available [] in
+        ) t.installed [] in
       let variables =
         List.fold_left (fun accu (nv, c) ->
           let name = NV.name nv in
+          (* add all the global variables *)
           let globals =
             List.fold_left (fun accu v ->
-              (name, None, v, FC.variable c v) :: accu
+              (Full_variable.create_global name v, FC.variable c v) :: accu
             ) accu (FC.variables c) in
-          let local accu available vars var =
-            List.fold_left
-              (fun accu n ->
-                let variables = vars c n in
-                List.fold_left (fun accu v ->
-                  (name, Some n, v, var c n v) :: accu
-                ) accu variables
-              ) accu (available c) in
-          local
-            (local globals
-               FC.Library.available
-               FC.Library.variables
-               FC.Library.variable)
-            FC.Syntax.available
-            FC.Syntax.variables
-            FC.Syntax.variable
+          (* then add the local variables *)
+          List.fold_left
+            (fun accu n ->
+              let variables = FC.Sections.variables c n in
+              List.fold_left (fun accu v ->
+                (Full_variable.create_local name n v, FC.Sections.variable c n v) :: accu
+              ) accu variables
+            ) globals (FC.Sections.available c)
         ) [] configs in
-      List.iter (fun (name, lib, v, x) ->
-        let lib = match lib with
-          | None   -> ""
-          | Some l -> "." ^ l in
-        Globals.msg "{%s%s}%s = %s\n"
-          (N.to_string name) lib
-          (Variable.to_string v)
-          (string_of_variable_contents x)
+      List.iter (fun (fv, contents) ->
+        Globals.msg "%-20s : %s\n"
+          (Full_variable.to_string fv)
+          (string_of_variable_contents contents)
       ) (List.rev variables)
+  | Variable v ->
+      let name = Full_variable.package v in
+      let var = Full_variable.variable v in
+      let _nv =
+        try find_package_from_name name t.installed
+        with Not_found ->
+          Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
+      let c = FC.safe_read (Path.C.config t.compiler name) in
+      let contents =
+        try match Full_variable.section v with
+          | None   -> FC.variable c var
+          | Some s -> FC.Sections.variable c s var
+        with Not_found ->
+          Globals.error_and_exit "%s is not defined" (Full_variable.to_string v) in
+      Globals.msg "%s\n" (string_of_variable_contents contents)
   | _ -> failwith "TODO"
             
 (*

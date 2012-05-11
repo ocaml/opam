@@ -34,10 +34,19 @@ module Base = struct
   module Map = Map.Make(O)
 end
 
-(** {2 Filenames} *)
+
+
+
+(* Filenames *)
 
 (* Absolute directory names *)
-module Dirname = struct
+module Dirname: sig
+  include Abstract
+  val rmdir: t -> unit
+  val mkdir: t -> unit
+  val exec: t -> string list -> int
+  val chdir: t -> unit
+end = struct
 
   include Base
 
@@ -60,12 +69,12 @@ end
     
 type dirname = Dirname.t
 
-(** Basenames *)
-module Basename = Base
+(* Basenames *)
+module Basename: Abstract = Base
 type basename = Basename.t
 
-(** Raw file contents *)
-module Raw = Base
+(* Raw file contents *)
+module Raw: Abstract = Base
 type raw = Raw.t
 
 (* Keep a link to [Filename] for the standard library *)
@@ -73,7 +82,23 @@ module F = Filename
 
 module Stdlib_filename = F
 
-module Filename = struct
+module Filename: sig
+  include Abstract
+  val create: dirname -> basename -> t
+  val dirname: t -> dirname
+  val read: t -> Raw.t
+  val remove: t -> unit
+  val write: t -> Raw.t -> unit
+  val exists: t -> bool
+  val check_suffix: t -> string -> bool
+  val list: dirname -> t list
+  val with_raw: (Raw.t -> 'a) -> t -> 'a
+  val copy_in: t -> dirname -> unit
+  val link_in: t -> dirname -> unit
+  val copy: t -> t -> unit
+  val link: t -> t -> unit
+  val extract: t -> dirname -> unit
+end = struct
 
   type t = {
     dirname:  Dirname.t;
@@ -128,15 +153,14 @@ module Filename = struct
     else
       Run.link (to_string src) (to_string dst)
 
-  let copy_in src dst =
+  let process_in fn src dst =
     let src_s = to_string src in
-    let dst = F.concat dst (F.basename src_s) in
-    copy src (of_string dst)
+    let dst = F.concat (Dirname.to_string dst) (F.basename src_s) in
+    fn src (of_string dst)
 
-  let link_in src dst =
-    let src_s = to_string src in
-    let dst = F.concat dst (F.basename src_s) in
-    link src (of_string dst)
+  let copy_in = process_in copy
+
+  let link_in = process_in link
 
   let extract filename dirname =
     Run.extract (to_string filename) (Dirname.to_string dirname)
@@ -154,19 +178,46 @@ let (/) d1 s2 =
 let (//) d1 s2 =
   Filename.create d1 (Basename.of_string s2)
 
-(** {2 Package name and versions} *)
 
-(** Versions *)
-module V = Base
 
-(** Names *)
-module N = Base
+(* Package name and versions *)
 
-module NV = struct
+(* Versions *)
+module V: Abstract = Base
+type version = V.t
+
+(* Names *)
+module N: Abstract = Base
+type name = N.t
+
+let cut_at_aux fn s sep =
+  try
+    let i = String.index s sep in
+    let name = String.sub s 0 i in
+    let version = String.sub s (i+1) (String.length s - i - 1) in
+    Some (name, version)
+  with _ ->
+    None
+
+let cut_at = cut_at_aux String.index
+
+let rcut_at = cut_at_aux String.rindex
+
+module NV: sig
+  include Abstract
+  val name: t -> name
+  val version: t -> version
+  val create: name -> version -> t
+  val of_filename: filename -> t option
+  val of_dpkg: Debian.Packages.package -> t
+  val of_cudf: Debian.Debcudf.tables -> Cudf.package -> t
+  val to_map: Set.t -> V.Set.t N.Map.t
+  val string_of_set: Set.t -> string
+end = struct
 
   type t = {
-    name   : N.t;
-    version: V.t;
+    name   : name;
+    version: version;
   }
 
   let create name version = { name; version }
@@ -178,13 +229,9 @@ module NV = struct
   let sep = '.'
 
   let check s =
-      try
-        let i = String.index s sep in
-        let name = String.sub s 0 i in
-        let version = String.sub s (i+1) (String.length s - i - 1) in
-        Some {name; version}
-      with _ ->
-        None
+    match cut_at s sep with
+    | None        -> None
+    | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
 
   let of_string s = match check s with
     | Some x -> x
@@ -237,16 +284,27 @@ module NV = struct
 
 end
 
-(** OCaml version *)
-module OCaml_V = Base
+type nv = NV.t
 
-(** OPAM version *)
-module OPAM_V = Base
+(* OCaml version *)
+module OCaml_V: Abstract = Base
 
-(** {2 Repositories} *)
+(* OPAM version *)
+module OPAM_V: Abstract = Base
 
-(** OPAM repositories *)
-module Repository = struct
+
+
+(* Repositories *)
+
+(* OPAM repositories *)
+module Repository: sig
+  include Abstract
+  val create: name:string -> kind:string -> address:string -> t
+  val default: t
+  val name: t -> string
+  val kind: t -> string
+  val address: t -> string
+end = struct
 
   type t = {
     name: string;
@@ -281,11 +339,13 @@ module Repository = struct
 
 end
 type repository = Repository.t
-      
-(** {2 Variable names} *)
 
-(** Variable names are used in .config files *)
-module Variable = Base
+
+
+(* Variable names *)
+
+(* Variable names are used in .config files *)
+module Variable: Abstract = Base
 
 type variable = Variable.t
 
@@ -297,9 +357,82 @@ let string_of_variable_contents = function
   | B b -> string_of_bool b
   | S s -> s
 
-(** {2 Command line arguments} *)
+module Section: Abstract = Base
 
-(** Upload arguments *)
+type section = Section.t
+
+module Full_variable: sig
+  include Abstract
+  val create_local: name -> section -> variable -> t
+  val create_global: name -> variable -> t
+  val package: t -> name
+  val section: t -> section option
+  val variable: t -> variable
+end = struct
+
+  type t = {
+    package : name;
+    section : section option;
+    variable: variable;
+  }
+
+  let package t = t.package
+  let section t = t.section
+  let variable t = t.variable
+
+  let create_local package section variable =
+    { package;
+      section = Some section;
+      variable }
+
+  let create_global package variable =
+    { package;
+      section = None;
+      variable }
+
+  let of_string s =
+      match rcut_at s ':' with
+      | None ->
+          create_global
+            (N.of_string Globals.default_package)
+            (Variable.of_string s)
+      | Some (p,v) ->
+          let v = Variable.of_string v in
+          match cut_at p '.' with
+          | None -> create_global (N.of_string p) v
+          | Some (p,s) -> create_local (N.of_string p) (Section.of_string s) v
+
+  let to_string t =
+    let package =
+      if N.to_string t.package = Globals.default_package then
+        ""
+      else
+        N.to_string t.package in
+    let section = match t.section with
+      | None   -> ""
+      | Some s -> "." ^ Section.to_string s in
+    let prefix = package ^ section in
+    let prefix =
+      if prefix = "" then
+        ""
+      else
+        prefix ^ ":" in
+    prefix ^ Variable.to_string t.variable
+
+  module O = struct type tmp = t type t = tmp let compare = compare end
+  module Set = Set.Make(O)
+  module Map = Map.Make(O)
+
+end
+
+type full_variable = Full_variable.t
+
+
+
+
+(* Command line arguments *)
+
+(* Upload arguments *)
 type upload = {
   opam   : filename;
   descr  : filename;
@@ -312,7 +445,7 @@ let string_of_upload u =
     (Filename.to_string u.descr)
     (Filename.to_string u.archive)
 
-(** Remote arguments *)
+(* Remote arguments *)
 type remote =
   | List
   | Add of string
@@ -336,10 +469,10 @@ type rec_config_option = {
 }
 
 type config =
-  | Compil   of rec_config_option
   | List_vars
-  | Variable of (N.t * string option * variable) list
-  | Subst of Filename.t list
+  | Variable of full_variable
+  | Compil   of rec_config_option
+  | Subst    of Filename.t list
 
 let p msg l =
   Printf.sprintf "%s %s"
@@ -358,18 +491,8 @@ let string_of_config_option = function
 let string_of_rec_config_option o =
   Printf.sprintf "%b %s" o.recursive (string_of_config_option o.options)
 
-let p l =
-  String.concat ","
-    (List.map
-       (function
-         | (n,None  ,v) ->
-             Printf.sprintf "{%s}.%s" (N.to_string n) (Variable.to_string v)
-         | (n,Some l,v) ->
-             Printf.sprintf "{%s.%s}.%s" (N.to_string n) l (Variable.to_string v)
-       ) l)
-
 let string_of_config = function
-  | Compil c   -> string_of_rec_config_option c
   | List_vars  -> "list-vars"
-  | Variable l -> p l
+  | Variable v -> Printf.sprintf "var %s" (Full_variable.to_string v)
+  | Compil c   -> string_of_rec_config_option c
   | Subst l    -> String.concat "," (List.map Filename.to_string l)
