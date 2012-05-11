@@ -507,8 +507,8 @@ module Dot_config = struct
   let of_string filename str =
     let file = Syntax.of_string filename str in
     let parse_value = parse_or [
-      (parse_string |> s);
-      (parse_bool   |> b);
+      "string", (parse_string |> s);
+      "bool"  , (parse_bool   |> b);
     ] in
     let parse_variables items =
       let l = List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables items) in

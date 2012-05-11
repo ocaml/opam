@@ -83,8 +83,9 @@ val parse_single_string: value list -> string
 val parse_string_pair: value list -> string * string
 
 (** Try to parse the value using function from the list. All the
-    parsing functions are tried until one succeeds. *)
-val parse_or: (value -> 'a) list -> value -> 'a
+    parsing functions are tried until one succeeds. The first argument
+    is a debug message. *)
+val parse_or: (string * (value -> 'a)) list -> value -> 'a
 
 (** {2 Creation functions} *)
 

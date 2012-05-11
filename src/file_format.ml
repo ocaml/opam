@@ -134,12 +134,15 @@ let parse_single_string = function
   | [String x] -> x
   | x          -> bad_format "Expecting a single string, got %s" (kinds x)
 
-let rec parse_or fns v =
-  match fns with
-  | []   -> bad_format "Cannot parse %s" (kind v)
-  | h::t ->
-      try h v
-      with Bad_format _ -> parse_or t v
+let parse_or fns v =
+  let dbg = List.map fst fns in
+  let rec aux = function
+    | []   ->
+        bad_format "Expecting %s, got %s" (String.concat " or " dbg) (kind v)
+    | (_,h)::t ->
+        try h v
+        with Bad_format _ -> aux t in
+  aux fns
 
 let make_string str = String str
 
