@@ -44,7 +44,7 @@ upload: $(ARCHIVES) init
 	$(OPAM) upload -opam P3.opam -descr P3/README -archive P3.tar.gz -repo $(REPO)
 	cd packages && \
 	$(OPAM) upload -opam P4-1.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
-	$(OPAM) update # update the list of available packages with the one being upadated
+	$(OPAM) update # update the list of available packages with the one being updated
 
 list: upload
 	$(OPAM) list
@@ -66,7 +66,8 @@ upload-new: install
 	$(OPAM) upload -opam P4-2.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
 	cd packages && \
 	$(OPAM) upload -opam P4-3.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
-	$(OPAM) update # update the list of available packages with the one being upadated
+	$(OPAM) update # update the list of available packages with the one being updated
+
 upgrade: upload-new
 	$(OPAM) list
 	$(OPAM) upgrade
