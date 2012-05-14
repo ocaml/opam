@@ -2,7 +2,7 @@ BIN = /usr/local/bin
 OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 OCAMLC=ocamlc
 SRC_EXT=src_ext
-TARGETS = opam opam-rsync-init opam-rsync-update
+TARGETS = opam opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload
 
 .PHONY: all
 
