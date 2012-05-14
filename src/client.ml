@@ -767,10 +767,11 @@ let config request =
         (* Init the graph with vertices from the command-line *)
         List.iter (fun s ->
           let name = Full_section.package s in
-          let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
           let sections = match Full_section.section s with
-          | None   -> File.Dot_config.Section.available config 
-          | Some s -> [s] in
+            | None   ->
+                let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+                File.Dot_config.Section.available config 
+            | Some s -> [s] in
           List.iter (fun s ->
             let node = Full_section.create name s in
             Full_section.G.add_vertex graph node;
@@ -786,8 +787,8 @@ let config request =
             let name = Full_section.package fs in
             let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
             let section = match Full_section.section fs with
-            | None   -> assert false
-            | Some s -> s in
+              | None   -> assert false
+              | Some s -> s in
             let childs = File.Dot_config.Section.requires config section in
             (* keep only the build reqs which are in the package dependency list
                and the ones we haven't already seen *)
