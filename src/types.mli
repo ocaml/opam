@@ -304,7 +304,7 @@ val string_of_upload: upload -> string
 (** Remote arguments *)
 type remote =
   | List
-  | Add of string
+  | Add of repository
   | Rm of string
 
 (** Pretty-print *)

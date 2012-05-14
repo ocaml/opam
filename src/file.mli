@@ -30,6 +30,9 @@ module Config: sig
   (** Creation *)
   val create: OPAM_V.t -> repository list -> OCaml_V.t -> t
 
+  (** Repository updates *)
+  val with_repositories: t -> repository list -> t
+
   (** Return the OPAM version *)
   val opam_version: t  -> OPAM_V.t
 

@@ -231,22 +231,29 @@ let remove = {
 }
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
-let remote =
-  let git_repo = ref false in
-  {
+let kind = ref Globals.default_repository_kind
+let command : [`add|`list|`rm] option ref = ref None
+let set c () = command := Some c
+let remote = {
   name     = "remote";
-  usage    = "[list|add <url>|add-git <url>|rm <url>]";
+  usage    = "[-list|add <name> <address>|rm <name>]";
   synopsis = "Manage remote servers";
   help     = "";
   specs    = [
-    ("--git-repo", Arg.Set git_repo, " Consider the given url as a git repository")
+    ("-list", Arg.Unit (set `list), " List the repositories");
+    ("-add" , Arg.Unit (set `add) , " Add a new repository");
+    ("-rm"  , Arg.Unit (set `rm)  , " Remove a remote repository");
+    ("-kind", Arg.Set_string kind , " (optional) Specify the repository kind");
   ];
   anon;
-  main     = parse_args (function
-    | [ "list" ]     -> Client.remote List
-    | [ "add"; url ] -> Client.remote (Add url)
-    | [ "rm" ; url ] -> Client.remote (Rm url)
-    | _              -> bad_argument "remote" "action missing")
+  main     = parse_args (fun args ->
+    match !command, args with
+    | Some `list, []                -> Client.remote List
+    | Some `rm,   [ name ]          -> Client.remote (Rm name)
+    | Some `add , [ name; address ] ->
+        Client.remote (Add (Repository.create ~name ~kind:!kind ~address))
+    | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
+    | _        -> bad_argument "remote" "Wrong arguments")
 }
 
 let switch = {

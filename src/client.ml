@@ -753,50 +753,37 @@ let config request =
 
 let remote action =
   log "remote %s" (string_of_remote action);
-  (*    let t = load_state () in *)
-  failwith "TODO"
-
-(*
-    let update_config servers =
-      let config = File.Config.find_err (Path.config t.home) in
-      let new_config = File.Config.with_sources config servers in
-      File.Config.add (Path.config t.home) new_config in
-    let add_url url =
-      if List.mem url t.servers then
-        Globals.error_and_exit "%s is already in the list of remote indexes" (string_of_url url)
-      else
-        update_config (url :: t.servers) in
-
-    match action with
-
-    | List ->
-      List.iter (fun url ->
-        match url.uri with
-        | Some Git -> Globals.msg "git   %s\n" url.hostname
-        | _        -> Globals.msg "OPAM  %s\n" (string_of_url url)
-      ) t.servers
-
-    | Add s    -> add_url (url s)
-
-    | AddGit s ->
-        let url = url ~uri:Git s in
-        Run.Git.safe_remote_add
-          (Path.string_of_filename (Path.index t.home None))
-          url.hostname;
-        add_url url
-
-    | Rm s     ->
-        let s = Run.U.normalize s in
-        let server =
-          try List.find (fun t -> string_of_url t = s || t.hostname = s) t.servers
-          with Not_found ->
-            Globals.error_and_exit "%s is not a remote index" s in
-        if server.uri = Some Git then
-          Run.Git.safe_remote_rm
-            (Path.string_of_filename (Path.index t.home None))
-            server.hostname;
-        update_config (List.filter ((!=) server) t.servers)
-*)
+  let t = load_state () in
+  let repos = File.Config.repositories t.config in
+  let update_config repos =
+    let new_config = File.Config.with_repositories t.config repos in
+    File.Config.write (Path.G.config t.global) new_config in
+  let add repo =
+    let name = Repository.name repo in
+    if List.exists (fun r -> Repository.name r = name) repos then
+      Globals.error_and_exit "%s is already a remote repository" name
+    else
+      update_config (repo :: repos) in
+  match action with
+  | List  ->
+      let pretty_print r =
+        Globals.msg "| %-10s| %-40s| %-10s |\n"
+          (Repository.name r)
+          (Repository.address r)
+          (Repository.kind r) in
+      let line = String.make 68 '-' in
+      line.[0] <- '|'; line.[12] <- '|'; line.[54] <- '|'; line.[67] <- '|';
+      Globals.msg "%s\n| %-10s| %-40s| %-10s |\n%s\n"
+        line "NAME" "ADDRESS" "KIND" line;
+      List.iter pretty_print repos;
+      Globals.msg "%s\n" line
+  | Add r -> add r
+  | Rm n  ->
+      let repo =
+        try List.find (fun r -> Repository.name r = n) repos
+        with Not_found ->
+          Globals.error_and_exit "%s is not a remote index" n in
+      update_config (List.filter ((!=) repo) repos)
 
 let switch name =
   log "switch %s" (OCaml_V.to_string name);

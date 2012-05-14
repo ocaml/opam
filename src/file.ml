@@ -222,6 +222,8 @@ module Config = struct
       ocaml_version : OCaml_V.t ;
     }
 
+    let with_repositories t repositories = { t with repositories }
+
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let ocaml_version t = t.ocaml_version
