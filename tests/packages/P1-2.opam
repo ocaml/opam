@@ -1,7 +1,8 @@
 opam-version: "1"
 
 package "P1" {
-  version: "2"
+  version:    "2"
   maintainer: "contact@ocamlpro.com"
-  substs: [ "P1.config" ]
+  substs:     [ "P1.config" ]
+  libraries:  [ "p1" ]
 }

@@ -8,5 +8,9 @@ package "P1" {
 
   maintainer: "contact@ocamlpro.com"
 
+  (* List of files to substitute env variables *)
   substs: [ "P1.config" ]
+
+  (* Libraries *)
+  libraries: [ "p1" ]
 }

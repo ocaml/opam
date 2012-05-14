@@ -268,24 +268,36 @@ let info package =
       | None   -> v_set
       | Some v -> V.Set.remove v v_set in
 
+  let installed_version = match o_v with
+    | None   -> []
+    | Some v -> [ "installed-version", V.to_string v ] in
+
+  let libraries, syntax = match o_v with
+    | None   -> [], []
+    | Some v ->
+        let opam = File.OPAM.read (Path.G.opam t.global (NV.create package v)) in
+        let libraries = match File.OPAM.libraries opam with
+          | [] -> []
+          | l  -> [ "libraries", String.concat ", " l ] in
+        let syntax = match File.OPAM.syntax opam with
+          | [] -> []
+          | l  -> [ "syntax", String.concat ", " l ] in
+        libraries, syntax in
+
   List.iter
-    (fun (tit, desc) -> Globals.msg "%12s: %s\n" tit desc)
-    (   ("package", N.to_string package)
-
-        :: ("version",
-            match o_v with
-            | None   -> s_not_installed
-            | Some v -> V.to_string v)
-
-        :: ("versions",
-            String.concat " " (List.map V.to_string (V.Set.elements v_set)))
-
-       :: let latest = match o_v with
-           | None   -> V.Set.max_elt v_set
-           | Some v -> v in
-          let descr = File.Descr.read (Path.G.descr t.global (NV.create package latest)) in
-          [ "description", "\n  " ^ File.Descr.full descr ]
-      )
+    (fun (tit, desc) -> Globals.msg "%20s: %s\n" tit desc)
+    ( [ "package", N.to_string package ]
+     @ installed_version
+     @ [("available-versions",
+         String.concat ", " (List.map V.to_string (V.Set.elements v_set)))]
+     @ libraries
+     @ syntax
+     @ let latest = match o_v with
+         | None   -> V.Set.max_elt v_set
+         | Some v -> v in
+       let descr = File.Descr.read (Path.G.descr t.global (NV.create package latest)) in
+       [ "description", File.Descr.full descr ]
+    )
 
 let confirm fmt = 
   Printf.kprintf (fun msg ->
@@ -299,15 +311,39 @@ let confirm fmt =
 let proceed_toinstall t nv = 
 
   let name = NV.name nv in
+  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let config = File.Dot_config.safe_read (Path.C.build_config t.compiler nv) in
+  let to_install = File.Dot_install.safe_read (Path.C.build_install t.compiler nv) in
 
   Dirname.chdir (Path.C.build t.compiler nv);
   
+  (* check that .OPAM and .config files are in sync *)
+  let check kind config_sections opam_sections =
+    List.iter (fun cs ->
+      if not (List.mem (Section.to_string cs) opam_sections) then
+        Globals.error_and_exit "The %s %s does not appear in %s"
+          kind
+          (Section.to_string cs)
+          (Filename.to_string (Path.G.opam t.global nv))
+      ) config_sections;
+    List.iter (fun os ->
+      if not (List.mem (Section.of_string os) config_sections) then
+        Globals.error_and_exit "The %s %s does not appear in %s"
+          kind
+          os
+          (Filename.to_string (Path.C.build_config t.compiler nv))
+    ) opam_sections in
+  check "library"
+    (File.Dot_config.Library.available config)
+    (File.OPAM.libraries opam);
+  check "syntax"
+    (File.Dot_config.Syntax.available config)
+    (File.OPAM.syntax opam);
+
   (* .install *)
-  let to_install = File.Dot_install.safe_read (Path.C.build_install t.compiler nv) in
   File.Dot_install.write (Path.C.install t.compiler name) to_install;
 
   (* .config *)
-  let config = File.Dot_config.safe_read (Path.C.build_config t.compiler nv) in
   File.Dot_config.write (Path.C.config t.compiler name) config;
 
   (* lib *) 

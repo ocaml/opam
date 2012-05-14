@@ -5,4 +5,5 @@ package "P2" {
   maintainer: "contact@ocamlpro.com"
   substs:     [ "config" "P2.config" ]
   depends:    [ "P1" ]
+  libraries:  [ "p2" ]
 }

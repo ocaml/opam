@@ -19,7 +19,7 @@ ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: fresh init upload list install upload-new upgrade downgrade ocpbuild remove
+all: fresh init upload list install upload-new upgrade downgrade remove
 	@
 
 $(BINARIES_): $(BUILDS)
@@ -28,21 +28,12 @@ $(BINARIES_): $(BUILDS)
 	  cp ../_obuild/$$bin/$$bin.asm $(BIN)/$$bin ; \
 	done
 
-$(BIN)/ocp-build: ../_obuild/unixrun
-	mkdir -p $(BIN)
-	cp ../_obuild/unixrun $(BIN)/unixrun
-	cp ../boot/ocp-build.boot $(BIN)/ocp-build.boot
-	echo 'exec $(BIN)/unixrun $(BIN)/ocp-build.boot "$$@"' > $(BIN)/ocp-build
-	chmod +x $(BIN)/ocp-build
-
 init: fresh $(BIN)/opam $(SCRIPTS:%=$(BIN)/%)
 	mkdir $(OPAM_REPO)
 	mkdir $(OPAM_REPO)/opam
 	mkdir $(OPAM_REPO)/descr
 	mkdir $(OPAM_REPO)/archive
 	$(OPAM) init $(REPO) $(OPAM_REPO)
-
-ocpbuild: $(BIN)/ocp-build
 
 upload: $(ARCHIVES) init
 	cd packages && \
