@@ -226,11 +226,16 @@ let list () =
       (fun nv (map, max_n, max_v) ->
         let name = NV.name nv in
         let version = NV.version nv in
-        if N.Map.mem name map then
+        if
+          N.Map.mem name map (* If the packet has been processed yet *)
+          && 
+          fst (N.Map.find name map) <> None 
+            (* If moreover the version processed was the version that is installed.
+               NB at the time of writing there is at most only 1 [version] 
+               installed for a given [name]. *)
+        then
           map, max_n, max_v
         else
-          (* If the packet has not been processed yet or 
-             if it has been processed but the version processed was not installed *)
           let is_installed = NV.Set.mem nv installed in
           let descr_f = File.Descr.read (Path.G.descr t.global nv) in
           let synopsis = File.Descr.synopsis descr_f in

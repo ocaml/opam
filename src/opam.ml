@@ -155,7 +155,7 @@ let config = {
     Client.config config
 }
 
-(* ocp-get install PACKAGE *)
+(* opam install PACKAGE *)
 let install = {
   name     = "install";
   usage    = "[package]+";
@@ -166,7 +166,7 @@ let install = {
   main     = parse_args (List.iter (fun name -> Client.install (N.of_string name)))
 }
 
-(* ocp-get update *)
+(* opam update *)
 let update = {
   name     = "update";
   usage    = "[package]+";
@@ -177,7 +177,7 @@ let update = {
   main     = Client.update;
 }
 
-(* ocp-get upgrade *)
+(* opam upgrade *)
 let upgrade = {
   name     = "upgrade";
   usage    = "";
@@ -188,7 +188,7 @@ let upgrade = {
   main     = Client.upgrade;
 }
 
-(* ocp-get upload PACKAGE *)
+(* opam upload PACKAGE *)
 let opam = ref ""
 let descr = ref ""
 let archive = ref ""
@@ -219,7 +219,7 @@ let upload = {
     Client.upload { opam; descr; archive } repo)
 }
 
-(* ocp-get remove PACKAGE *)
+(* opam remove PACKAGE *)
 let remove = {
   name     = "remove";
   usage    = "";
@@ -230,7 +230,7 @@ let remove = {
   main     = parse_args (List.iter (fun n -> Client.remove (N.of_string n)));
 }
 
-(* ocp-get remote [-list|-add <url>|-rm <url>] *)
+(* opam remote [-list|-add <url>|-rm <url>] *)
 let remote =
   let git_repo = ref false in
   {
