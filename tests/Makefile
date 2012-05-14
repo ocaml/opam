@@ -75,7 +75,7 @@ upload-new: install
 	$(OPAM) upload -opam P4-2.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
 	cd packages && \
 	$(OPAM) upload -opam P4-3.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
-
+	$(OPAM) update # update the list of available packages with the one being upadated
 upgrade: upload-new
 	$(OPAM) list
 	$(OPAM) upgrade

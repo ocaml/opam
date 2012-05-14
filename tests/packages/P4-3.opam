@@ -1,7 +1,7 @@
 opam-version: "1"
 
 package "P4" {
-  version:     "3"
-  description: "Testing constraints"
-  depends:     [ "P2" "P3" ]
+  version:    "3"
+  maintainer: "contact@ocamlpro.com"
+  depends:    [ "P2" "P3" ]
 }

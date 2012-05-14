@@ -8,4 +8,5 @@ package "P1" {
 
   maintainer: "contact@ocamlpro.com"
 
+  substs: [ "P1.config" ]
 }

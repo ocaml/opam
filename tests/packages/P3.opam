@@ -4,4 +4,5 @@ package "P3" {
   version: "1~weird-version.test"
   maintainer: "contact@ocamlpro.com"
   depends: [ "P1" ]
+  substs: [ "P3.config" ]
 }

@@ -1,0 +1,6 @@
+library "p2" {
+  asmcomp:  ["-I" "%{lib}%/p2"]
+  bytecomp: ["-I" "%{lib}%/p2"]
+  asmlink:  ["-I" "%{lib}%/p2" "p2.cmxa"]
+  bytelink: ["-I" "%{lib}%/p2" "p2.cma"]
+}
