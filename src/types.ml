@@ -86,12 +86,14 @@ module Filename: sig
   include Abstract
   val create: dirname -> basename -> t
   val dirname: t -> dirname
+  val basename: t -> basename
   val read: t -> Raw.t
   val remove: t -> unit
   val write: t -> Raw.t -> unit
   val exists: t -> bool
   val check_suffix: t -> string -> bool
   val add_extension: t -> string -> t
+  val chop_extension: t -> t
   val list: dirname -> t list
   val with_raw: (Raw.t -> 'a) -> t -> 'a
   val copy_in: t -> dirname -> unit
@@ -121,6 +123,8 @@ end = struct
 
   let dirname t = t.dirname
 
+  let basename t = t.basename
+
   let read filename =
     let str = Run.read (to_string filename) in
     Raw.of_string str
@@ -143,6 +147,9 @@ end = struct
 
   let add_extension filename suffix =
     of_string ((to_string filename) ^ "." ^ suffix)
+
+  let chop_extension filename =
+    of_string (F.chop_extension (to_string filename))
 
   let list d =
     let fs = Run.files (Dirname.to_string d) in
@@ -371,6 +378,8 @@ module Full_section: sig
   val section: t -> section option
   val create: name -> section -> t
   val all: name -> t
+  module G : Graph.Sig.I with type V.t = t
+  val graph_iter : (G.V.t -> unit) -> G.t -> unit
 end = struct
 
   type t = {
@@ -378,7 +387,7 @@ end = struct
     section: section option;
   }
 
-  let create package section = 
+  let create package section =
     { package; section = Some section }
 
   let all package =
@@ -403,10 +412,18 @@ end = struct
     | None   -> n
     | Some s -> Printf.sprintf "%s.%s" n (Section.to_string s)
 
-  module O = struct type tmp = t type t = tmp let compare = compare end
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let compare = compare
+    let hash = Hashtbl.hash
+    let equal = (=)
+  end
   module Set = Set.Make (O)
   module Map = Map.Make (O)
-
+  module G = Graph.Imperative.Digraph.ConcreteBidirectional(O)
+  module Topo = Graph.Topological.Make (G)
+  let graph_iter = Topo.iter
 end
 
 type full_section = Full_section.t

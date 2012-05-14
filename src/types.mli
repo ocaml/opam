@@ -90,6 +90,9 @@ module Filename: sig
   (** Return the directory name *)
   val dirname: t -> dirname
 
+  (** Return the base name *)
+  val basename: t -> basename
+
   (** Retrieves the contents from the hard disk. *)
   val read: t -> Raw.t
 
@@ -105,8 +108,11 @@ module Filename: sig
   (** Check whether a file has a given suffix *)
   val check_suffix: t -> string -> bool
 
-  (** Remove the file suffix *)
+  (** Add a file extension *)
   val add_extension: t -> string -> t
+
+  (** Remove the file extension *)
+  val chop_extension: t -> t
 
   (** List all the filenames (ie. which are not directories) in a directory *)
   val list: dirname -> t list
@@ -251,6 +257,11 @@ module Full_section: sig
       sections. *)
   val section: t -> section option
 
+  (** Graph of fully-qualified sections *)
+  module G : Graph.Sig.I with type V.t = t
+
+  (** Iteration in topological order *)
+  val graph_iter : (G.V.t -> unit) -> G.t -> unit
 end
 
 type full_section = Full_section.t

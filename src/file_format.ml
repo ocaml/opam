@@ -120,6 +120,10 @@ let parse_option f g = function
   | Option (k,l) -> f k, List.map g l
   | k            -> f k, []
 
+let parse_single_option f g = function
+  | Option (k,[v]) -> f k, Some (g v)
+  | k              -> f k, None
+
 let parse_string_option f = function
   | Option (k,l) -> parse_string k, Some (f l)
   | k            -> parse_string k, None

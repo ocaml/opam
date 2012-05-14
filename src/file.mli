@@ -153,6 +153,9 @@ module Dot_config: sig
     (** Return the list of bytecode linking options *)
     val bytelink: t -> section -> string list
 
+    (** Return the build requirements *)
+    val requires: t -> section -> full_section list
+
     (** Return the value of variables *)
     val variable: t -> section -> variable  -> variable_contents
 
@@ -162,7 +165,7 @@ module Dot_config: sig
   end
 
   (** All library and syntax sections *)
-  module Sections: SECTION
+  module Section: SECTION
 
   (** Sections starting by [library] *)
   module Library: SECTION

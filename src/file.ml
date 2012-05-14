@@ -488,6 +488,7 @@ module Dot_config = struct
     asmcomp   : string list ;
     bytelink  : string list ;
     asmlink   : string list ; 
+    requires  : full_section list;
     lvariables: (variable * variable_contents) list;
   }
 
@@ -508,6 +509,7 @@ module Dot_config = struct
   let s_asmcomp  = "asmcomp"
   let s_bytelink = "bytelink"
   let s_asmlink  = "asmlink"
+  let s_requires = "requires"
 
   let valid_fields = [
     s_opam_version;
@@ -515,10 +517,16 @@ module Dot_config = struct
     s_asmcomp;
     s_bytelink;
     s_asmlink;
+    s_requires;
   ]
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
+    (* XXX: not very clean ... *)
+    let package =
+      N.of_string
+        (Basename.to_string 
+           (Filename.basename (Filename.chop_extension filename))) in
     let parse_value = parse_or [
       "string", (parse_string |> s);
       "bool"  , (parse_bool   |> b);
@@ -526,14 +534,24 @@ module Dot_config = struct
     let parse_variables items =
       let l = List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables items) in
       List.map (fun (k,v) -> Variable.of_string k, parse_value v) l in
+    let parse_require v =
+      let raw =
+        parse_single_option
+          (parse_string |> Section.of_string)
+          (parse_string |> N.of_string)
+          v in
+      match raw with
+      | s, None   -> Full_section.create package s
+      | s, Some n -> Full_section.create n s in
     let parse_section kind s =
       let name =  Section.of_string s.File_format.name in
       let bytecomp = assoc_string_list s.items s_bytecomp in
       let asmcomp  = assoc_string_list s.items s_asmcomp  in
       let bytelink = assoc_string_list s.items s_bytecomp in
       let asmlink  = assoc_string_list s.items s_asmlink  in
+      let requires = assoc_list s.items s_requires (parse_list parse_require) in
       let lvariables = parse_variables s.items in
-      { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
+      { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables; requires } in
     let libraries = assoc_sections file.contents "library" (parse_section "library") in
     let syntax    = assoc_sections file.contents "syntax" (parse_section "syntax") in
     let sections  = libraries @ syntax in
@@ -546,6 +564,14 @@ module Dot_config = struct
       | S s -> String s in
     let of_variables l =
       List.map (fun (k,v) -> Variable (Variable.to_string k, of_value v)) l in
+    let make_require fs =
+      make_option
+        (Section.to_string |> make_string)
+        (Full_section.package |> N.to_string |> make_string)
+        ((match Full_section.section fs with
+          | None   -> assert false
+          | Some s -> s),
+         [fs]) in
     let of_section s =
       Section
         { File_format.name = Section.to_string s.name;
@@ -555,6 +581,7 @@ module Dot_config = struct
             Variable (s_asmcomp , make_list make_string s.asmcomp);
             Variable (s_bytelink, make_list make_string s.bytelink);
             Variable (s_asmlink , make_list make_string s.asmlink);
+            Variable (s_requires, make_list make_require s.requires);
           ] @ of_variables s.lvariables 
         } in
     Syntax.to_string filename {
@@ -575,6 +602,7 @@ module Dot_config = struct
     val bytecomp : t -> section -> string list
     val asmlink  : t -> section -> string list
     val bytelink : t -> section -> string list
+    val requires : t -> section -> full_section list
     val variable : t -> section -> variable -> variable_contents
     val variables: t -> section -> variable list
   end
@@ -590,6 +618,7 @@ module Dot_config = struct
     let asmcomp  t s = (find t s).asmcomp
     let bytelink t s = (find t s).bytelink
     let asmlink  t s = (find t s).asmlink
+    let requires t s = (find t s).requires
     let variable t n s = List.assoc s (find t n).lvariables
     let variables t n = List.map fst (find t n).lvariables
   end
@@ -597,7 +626,7 @@ module Dot_config = struct
   let filter t n = List.filter (fun s -> s.kind = n) t.sections
   module Library  = MK (struct let get t = filter t "library" end)
   module Syntax   = MK (struct let get t = filter t "syntax"  end)
-  module Sections = MK (struct let get t = t.sections end)
+  module Section  = MK (struct let get t = t.sections end)
 end
 
 module Subst = struct

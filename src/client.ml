@@ -209,7 +209,7 @@ let indent_right s nb =
   else
     String.make nb ' ' ^ s
 
-let find_package_by_name t name =
+let find_installed_package_by_name t name =
   try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
   with Not_found ->
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
@@ -311,27 +311,27 @@ let confirm fmt =
 let proceed_toinstall t nv = 
 
   let name = NV.name nv in
-  let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let config = File.Dot_config.safe_read (Path.C.build_config t.compiler nv) in
-  let to_install = File.Dot_install.safe_read (Path.C.build_install t.compiler nv) in
+  let opam_f = Path.G.opam t.global nv in
+  let opam = File.OPAM.read opam_f in
+  let config_f = Path.C.build_config t.compiler nv in
+  let config = File.Dot_config.safe_read config_f in
+  let install_f = Path.C.build_install t.compiler nv in
+  let install = File.Dot_install.safe_read install_f in
 
   Dirname.chdir (Path.C.build t.compiler nv);
   
-  (* check that .OPAM and .config files are in sync *)
+  (* check that libraries and syntax extensions specified in .opam and
+     .config are in sync *)
   let check kind config_sections opam_sections =
     List.iter (fun cs ->
       if not (List.mem (Section.to_string cs) opam_sections) then
         Globals.error_and_exit "The %s %s does not appear in %s"
-          kind
-          (Section.to_string cs)
-          (Filename.to_string (Path.G.opam t.global nv))
-      ) config_sections;
+          kind (Section.to_string cs) (Filename.to_string opam_f)
+    ) config_sections;
     List.iter (fun os ->
       if not (List.mem (Section.of_string os) config_sections) then
         Globals.error_and_exit "The %s %s does not appear in %s"
-          kind
-          os
-          (Filename.to_string (Path.C.build_config t.compiler nv))
+          kind os (Filename.to_string config_f)
     ) opam_sections in
   check "library"
     (File.Dot_config.Library.available config)
@@ -340,18 +340,54 @@ let proceed_toinstall t nv =
     (File.Dot_config.Syntax.available config)
     (File.OPAM.syntax opam);
 
+  (* check that depends (in .opam) and requires (in .config) fields
+     are in almost in sync *)
+  (* NOTES: the check is partial as we don't know which clause is valid
+     in depends (XXX there is surely a way to get it from the solver) *)
+  let packages_in_opam =
+    List.fold_left (fun accu l ->
+      List.fold_left (fun accu (elt,_) ->
+        N.Set.add (N.of_string elt) accu
+      ) accu l
+    ) N.Set.empty (File.OPAM.depends opam) in
+  let packages_in_config =
+    let sections = File.Dot_config.Section.available config in
+    List.fold_left (fun accu s ->
+      List.fold_left (fun accu fs ->
+        let n = Full_section.package fs in
+        if name = n then (
+          match Full_section.section fs with
+          | None   -> assert false
+          | Some s ->
+              if not (List.mem s sections) then
+                Globals.error_and_exit
+                  "No section with name %s in %s"
+                  (Section.to_string s)
+                  (Filename.to_string config_f));
+        N.Set.add name accu
+      ) accu (File.Dot_config.Section.requires config s)
+    ) N.Set.empty sections in
+  N.Set.iter (fun n ->
+    if n <> name && not (N.Set.mem n packages_in_opam) then
+      Globals.error_and_exit
+        "%s appears as a package dependency in %s, but not in %s"
+        (N.to_string n)
+        (Filename.to_string (Path.C.build_config t.compiler nv))
+        (Filename.to_string (Path.G.opam t.global nv))
+  ) packages_in_config;
+
   (* .install *)
-  File.Dot_install.write (Path.C.install t.compiler name) to_install;
+  File.Dot_install.write (Path.C.install t.compiler name) install;
 
   (* .config *)
   File.Dot_config.write (Path.C.config t.compiler name) config;
 
   (* lib *) 
   let lib = Path.C.lib t.compiler name in
-  List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib to_install);
+  List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
   
   (* bin *) 
-  List.iter (fun (src, dst) -> Filename.copy src dst) (File.Dot_install.bin to_install);
+  List.iter (fun (src, dst) -> Filename.copy src dst) (File.Dot_install.bin install);
   
   (* misc *)
   List.iter 
@@ -363,7 +399,7 @@ let proceed_toinstall t nv =
         if confirm "Continue ?" then
           Filename.copy src dst
       end
-    ) (File.Dot_install.misc to_install)
+    ) (File.Dot_install.misc install)
 
 let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
@@ -373,8 +409,8 @@ let proceed_todelete t nv =
   Dirname.rmdir (Path.C.lib t.compiler name);
   
   (* Remove the binaries *)
-  let to_install = File.Dot_install.read (Path.C.install t.compiler name) in
-  List.iter (fun (_,dst) -> Filename.remove dst) (File.Dot_install.bin to_install);
+  let install = File.Dot_install.read (Path.C.install t.compiler name) in
+  List.iter (fun (_,dst) -> Filename.remove dst) (File.Dot_install.bin install);
 
   (* Remove the misc files *)
   List.iter (fun (_,dst) ->
@@ -383,7 +419,7 @@ let proceed_todelete t nv =
       if confirm "Continue ?" then
         Filename.remove dst
     end
-  ) (File.Dot_install.misc to_install);
+  ) (File.Dot_install.misc install);
 
   (* Remove .config and .install *)
   Filename.remove (Path.C.install t.compiler name);
@@ -406,13 +442,13 @@ let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
   let _nv =
-    try find_package_by_name t name
+    try find_installed_package_by_name t name
     with Not_found ->
       Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
   let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
   try match Full_variable.section v with
   | None   -> File.Dot_config.variable c var
-  | Some s -> File.Dot_config.Sections.variable c s var
+  | Some s -> File.Dot_config.Section.variable c s var
   with Not_found ->
     Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
 
@@ -651,7 +687,7 @@ let get_transitive_dependencies t names =
   let universe =
     Solver.U (List.map (debpkg_of_nv t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
-  let pkg_of_name n = debpkg_of_nv t (find_package_by_name t n) in
+  let pkg_of_name n = debpkg_of_nv t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
   let depends = Solver.filter_backward_dependencies universe request in
   List.map NV.of_dpkg depends
@@ -679,12 +715,12 @@ let config request =
           (* then add the local variables *)
           List.fold_left
             (fun accu n ->
-              let variables = File.Dot_config.Sections.variables c n in
+              let variables = File.Dot_config.Section.variables c n in
               List.fold_left (fun accu v ->
                 (Full_variable.create_local name n v,
-                 File.Dot_config.Sections.variable c n v) :: accu
+                 File.Dot_config.Section.variable c n v) :: accu
               ) accu variables
-            ) globals (File.Dot_config.Sections.available c)
+            ) globals (File.Dot_config.Section.available c)
         ) [] configs in
       List.iter (fun (fv, contents) ->
         Globals.msg "%-20s : %s\n"
@@ -712,39 +748,76 @@ let config request =
 
   | Compil c ->
       let names = List.map Full_section.package c.options in
-      let deps =
+      (* Compute the transitive closure of package dependencies *)
+      let package_deps =
         if c.is_rec then
           List.map NV.name (get_transitive_dependencies t names)
         else
-          N.Set.elements (List.fold_right N.Set.add names N.Set.empty) in
-      (* XXX: this needs some more thoughts *)
-      let options =
-        let pred name s = Full_section.package s = name in
-        List.fold_left (fun accu name ->
-          if List.exists (pred name) c.options then
-            let sections = List.find_all (pred name) c.options in
-            sections @ accu
-          else
-            Full_section.all name :: accu
-        ) [] deps in
+          N.Set.elements (List.fold_right N.Set.add [] N.Set.empty) in
+      (* Compute the transitive closure of libraries dependencies *)
+      let library_deps =
+        let graph = Full_section.G.create () in
+        let todo = ref Full_section.Set.empty in
+        let seen = ref Full_section.Set.empty in
+        (* Init the graph with vertices from the command-line *)
+        List.iter (fun s ->
+          let name = Full_section.package s in
+          let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+          let sections = match Full_section.section s with
+          | None   -> File.Dot_config.Section.available config 
+          | Some s -> [s] in
+          List.iter (fun s ->
+            let node = Full_section.create name s in
+            Full_section.G.add_vertex graph node;
+            todo := Full_section.Set.add node !todo
+          ) sections
+        ) c.options;
+        (* Least fix-point to add edges and missing vertices *)
+        let rec loop () =
+          if not (Full_section.Set.is_empty !todo) then
+            let fs = Full_section.Set.choose !todo in
+            todo := Full_section.Set.remove fs !todo;
+            seen := Full_section.Set.add fs !seen;
+            let name = Full_section.package fs in
+            let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+            let section = match Full_section.section fs with
+            | None   -> assert false
+            | Some s -> s in
+            let childs = File.Dot_config.Section.requires config section in
+            (* keep only the build reqs which are in the package dependency list
+               and the ones we haven't already seen *)
+            let childs =
+              List.filter (fun fs ->
+                List.mem (Full_section.package fs) package_deps
+                && not (Full_section.Set.mem fs !seen)
+              ) childs in
+            List.iter (fun child ->
+                Full_section.G.add_vertex graph child;
+                Full_section.G.add_edge graph child fs;
+                todo := Full_section.Set.add child !todo;
+            ) childs;
+            loop ()
+        in
+        loop ();
+        let nodes = ref [] in
+        !nodes in
       let fn = match c.is_byte, c.is_link with
-        | true , true  -> File.Dot_config.Sections.bytelink
-        | true , false -> File.Dot_config.Sections.bytecomp
-        | false, true  -> File.Dot_config.Sections.asmlink
-        | false, false -> File.Dot_config.Sections.asmcomp in
+        | true , true  -> File.Dot_config.Section.bytelink
+        | true , false -> File.Dot_config.Section.bytecomp
+        | false, true  -> File.Dot_config.Section.asmlink
+        | false, false -> File.Dot_config.Section.asmcomp in
       let strs =
         List.fold_left (fun accu s ->
           let name = Full_section.package s in
           let config = File.Dot_config.read (Path.C.config t.compiler name) in
           match Full_section.section s with
-          | None ->
-              let sections =  File.Dot_config.Sections.available config in
-              List.map (fn config) sections @ accu
-          | Some s ->
-              fn config s :: accu
-        ) [] options in
+          | None   -> assert false
+          | Some s -> fn config s :: accu
+        ) [] library_deps in
       let strs = List.map (String.concat " ") strs in
-      Globals.msg "%s\n" (String.concat " " strs)
+      let output = String.concat " " strs in
+      log "OUTPUT: %s" output;
+      Globals.msg "%s\n" output
 
 let remote action =
   log "remote %s" (string_of_remote action);
