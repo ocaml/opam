@@ -645,7 +645,8 @@ let config request =
             (fun accu n ->
               let variables = File.Dot_config.Sections.variables c n in
               List.fold_left (fun accu v ->
-                (Full_variable.create_local name n v, File.Dot_config.Sections.variable c n v) :: accu
+                (Full_variable.create_local name n v,
+                 File.Dot_config.Sections.variable c n v) :: accu
               ) accu variables
             ) globals (File.Dot_config.Sections.available c)
         ) [] configs in
@@ -707,107 +708,7 @@ let config request =
               fn config s :: accu
         ) [] options in
       let strs = List.map (String.concat " ") strs in
-      Globals.msg "%s\n" (String.concat " " (List.rev strs))
-            
-(*
-    let version name =
-      match
-        match req, N_map.Exceptionless.find name installed with
-          | Ocp, None -> Option.map V_set.max_elt (find_from_name name l_index)
-          | _, o -> o
-      with
-        | None -> unknown_package name
-        | Some v -> v in
-
-    let rec iter_with_spaces f = function
-      | []   -> ()
-      | [h]  -> f h 
-      | h::t -> f h; Globals.msg " "; iter_with_spaces f t in
-
-    (* Get the list of installed packages *)
-    let l_deb = debpkg_of_nv t installed l_index in
-
-    (* return the dependencies of [names] *)
-    let get_dependencies rec_search names =
-      let versions = List.map (fun n -> n, version n) names in
-      (* Get the packages we are looking for in the list of debian packages *)
-      let l_pkg =
-        List.filter
-          (fun pkg ->
-            let name, version = Namespace.nv_of_dpkg pkg in
-            List.exists (fun (n,v) -> n=name && v=version) versions)
-          l_deb in
-      (* Compute the transitive closure of dependencies *)
-      let depends =
-        let d = 
-          Solver.filter_backward_dependencies l_pkg l_deb in
-        if rec_search = Recursive_large then 
-          d
-        else
-          List.filter (fun p -> not (List.mem (fst (Namespace.nv_of_dpkg p)) names)) d in
-(*      log "get_depends: %s => %s" (String.concat "," (List.map Namespace.string_of_name names))
-        (String.concat ", " (List.map (fun k -> Namespace.to_string (Namespace.nv_of_dpkg k)) depends)); *)
-      List.map  Namespace.nv_of_dpkg depends in
-
-    let libraries_of_nv (name, version) =
-      match File.PConfig.find (Path.O.pconfig t.home (name, version)) with
-      | None        -> []
-      | Some config -> File.PConfig.library_names config in
-
-    let one (name, version) =
-      let path = match Path.ocaml_options_of_library t.home name with I s -> s in
-      match req with
-      | Include -> Globals.msg "-I %s" path
-      | Ocp     ->
-          let libraries = libraries_of_nv (name, version) in
-          let rec_search = match rec_search with Not_recursive -> Not_recursive | _ -> Recursive_strict in
-          let depends = get_dependencies rec_search [name] in
-          let requires =
-            List.fold_left
-              (fun accu dep -> libraries_of_nv dep @ accu)
-              []
-              depends in
-          let requires = String.concat " " (List.map (Printf.sprintf "%S") requires) in
-          let one lib =
-            Globals.msg
-              "begin library %S\n  generated=true\n  dirname=%S\n  requires=[%s]\nend\n\n"
-              lib path requires in
-          List.iter one libraries
-      | link    ->
-          let config = File.PConfig.find_err (Path.O.pconfig t.home (name, version)) in
-          let libraries = File.PConfig.library_names config in
-          let link_options = File.PConfig.link_options config in
-          let asmlink_options = File.PConfig.link_options config in
-          let bytelink_options = File.PConfig.link_options config in
-          let options = function
-            | [] -> ""
-            | l  -> String.concat " " l ^ " " in
-          let files ext  = String.concat " " (List.map (fun f -> f ^ ext) libraries) in
-          match link with
-          | Asmlink ->
-              Globals.msg "-I %s %s%s"
-                path
-                (options (link_options@asmlink_options))
-                (files ".cmxa")
-          | Bytelink ->
-              Globals.msg "-I %s %s%s"
-                path
-                (options (link_options@bytelink_options))
-                (files ".cma")
-          | _ -> assert false in
-
-    match rec_search with
-      | Not_recursive ->
-
-      (* If we don't need to look at the dependencies, simply call [one] for
-         each pair (name x version) *)
-      iter_with_spaces one (List.map (fun n -> n, version n) names)
-
-      | _ ->
-
-      (* Otherwise, we need to compute the transitive closure of dependencies *)
-      iter_with_spaces one (get_dependencies rec_search names)
-*)
+      Globals.msg "%s\n" (String.concat " " strs)
 
 let remote action =
   log "remote %s" (string_of_remote action);
