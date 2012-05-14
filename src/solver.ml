@@ -137,7 +137,7 @@ type package = Debian.Packages.package
 let string_of_package p =
   let installed =
     if List.mem_assoc "status" p.Debian.Packages.extras
-      && List.assoc "status" p.Debian.Packages.extras = "installed"
+      && List.assoc "status" p.Debian.Packages.extras = "  installed"
     then "installed"
     else "not-installed" in
   Printf.sprintf "%s.%s(%s)"
@@ -211,10 +211,7 @@ end = struct
       (string_of_internal_request string_of_cudf req);
     let open Algo in
     let r = Depsolver.check_request (to_cudf_doc univ req) in
-    Format.fprintf Format.std_formatter "XXXXXX\n";
-    Diagnostic.fprintf Format.std_formatter r;
-    Format.fprintf Format.std_formatter "\nXXXXXX\n";
-    flush stdout;
+    (* Diagnostic.fprintf Format.std_formatter r; *)
     if Diagnostic.is_solution r then
       match r with
       | { Diagnostic.result = Diagnostic.Success f } -> Some (f ~all:true ())
