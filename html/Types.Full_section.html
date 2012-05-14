@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Types.Section.html">
+<link rel="next" href="Types.Full_variable.html">
+<link rel="Up" href="Types.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Types.Full_section</title>
+</head>
+<body>
+<div class="navbar"><a href="Types.Section.html">Previous</a>
+&nbsp;<a href="Types.html">Up</a>
+&nbsp;<a href="Types.Full_variable.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Types.Full_section.html">Types.Full_section</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Full_section: <code class="code">sig</code> <a href="Types.Full_section.html">..</a> <code class="code">end</code></pre>Fully qualified sections<br>
+<hr width="100%">
+<pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPEname">Types.name</a> -> <a href="Types.html#TYPEsection">Types.section</a> -> t</code></pre><div class="info">
+Create a fully qualified section<br>
+</div>
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type"><a href="Types.html#TYPEname">Types.name</a> -> t</code></pre><div class="info">
+All the sections in a package<br>
+</div>
+<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type">t -> <a href="Types.html#TYPEname">Types.name</a></code></pre><div class="info">
+Return the package name in which the section is<br>
+</div>
+<pre><span id="VALsection"><span class="keyword">val</span> section</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> option</code></pre><div class="info">
+Return the optional section name: <code class="code">None</code> means all available
+      sections.<br>
+</div>
+<pre><span class="keyword">module</span> <a href="Types.Full_section.G.html">G</a>: <code class="type">Graph.Sig.I</code><code class="type">  with type V.t = t</code></pre><div class="info">
+Graph of fully-qualified sections
+</div>
+<pre><span id="VALgraph_iter"><span class="keyword">val</span> graph_iter</span> : <code class="type">(G.V.t -> unit) -> G.t -> unit</code></pre><div class="info">
+Iteration in topological order<br>
+</div>
+</body></html>
