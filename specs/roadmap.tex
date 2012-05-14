@@ -465,7 +465,7 @@ valid formula whose semantic is: {\em either any version of package
       <def>*
     }
 <dep>     := STRING 
-           | STRING { STRING+ }
+           | STRING { STRING }
 <kind>    := library | syntax
 <def>     := IDENT: BOOL
            | IDENT: STRING
@@ -526,11 +526,10 @@ The available options are:
 
   The contents of {\tt dep}s is either:
   \begin{itemize}
-  \item {\tt "foo"} the block is depending on all the syntax
-    extensions and libraries defined in the package {\tt "foo"}; or
-  \item {\tt "foo" ("bar" "gna")} the block is depending only on the
-    libraries {\tt "bar"} and {\tt "gna"} defined in the package {\tt
-      "foo"}.
+  \item {\tt "foo"} the block is depending on the library {\tt "foo"}
+    defined in the current package; or
+  \item \verb+"foo" { "bar" }+ the block is depending on the
+    library {\tt "foo"} defined in the package {\tt "bar"}.
   \end{itemize}
 \end{itemize}
 
