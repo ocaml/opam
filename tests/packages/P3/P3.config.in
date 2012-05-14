@@ -1,14 +1,13 @@
 library "p3" {
-  asmcomp : ["-I" "%{lib}%/p3"]
-  asmlink : ["-I" "%{lib}%/p3" "p3.cmxa"]
-  bytecomp: ["-I" "%{lib}%/p3"]
-  bytelink: ["-I" "%{lib}%/p3" "p3.cma"]
+  asmcomp : ["-I" "%{lib}%/P3"]
+  bytecomp: ["-I" "%{lib}%/P3"]
+  asmlink : ["-I" "%{lib}%/P3" "p3.cmxa"]
+  bytelink: ["-I" "%{lib}%/P3" "p3.cma"]
 }
 
 library "p3_bar" {
-  asmcomp : ["-I" "%{lib}%/p3"]
-  asmlink : ["-I" "%{lib}%/p3" "p3_bar.cmxa"]
-  bytecomp: ["-I" "%{lib}%/p3"]
-  bytelink: ["-I" "%{lib}%/p3" "p3_bar.cma"]
-
+  asmcomp : ["-I" "%{lib}%/P3"]
+  asmlink : ["-I" "%{lib}%/P3" "p3_bar.cmxa"]
+  bytecomp: ["-I" "%{lib}%/P3"]
+  bytelink: ["-I" "%{lib}%/P3" "p3_bar.cma"]
 }

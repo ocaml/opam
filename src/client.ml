@@ -513,24 +513,24 @@ let install name =
       (V.to_string (V.Set.choose (N.Map.find name map_installed)));
 
   let nv =
-    try
-      if N.Map.mem name available then
-        NV.create name (V.Set.max_elt (N.Map.find name available))
-      else
-        unknown_package name
-    with Not_found ->
+    if N.Map.mem name available then
+      NV.create name (V.Set.max_elt (N.Map.find name available))
+    else (
       (* consider 'name' to be 'name.version' *)
-      let nv = NV.of_string (N.to_string name) in
+      let nv =
+        try NV.of_string (N.to_string name)
+        with Not_found -> unknown_package name in
       let sname = NV.name nv in
       let sversion = NV.version nv in
       Globals.msg
         "Package %s not found, looking for package %s version %s\n"
         (N.to_string name) (N.to_string sname) (V.to_string sversion);
-      if N.Map.mem sname map_installed
-        && V.Set.mem sversion (N.Map.find sname map_installed) then
+      if N.Map.mem sname available
+        && V.Set.mem sversion (N.Map.find sname available) then
         nv
       else
-        unknown_package name in
+        unknown_package sname
+    ) in
 
   (* remove any old packages from the list of packages to install *)
   let map_installed =
