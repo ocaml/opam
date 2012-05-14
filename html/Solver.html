@@ -103,6 +103,9 @@ Package action graph
 Solver request<br>
 </div>
 
+<pre><span id="VALstring_of_request"><span class="keyword">val</span> string_of_request</span> : <code class="type"><a href="Solver.html#TYPErequest">request</a> -> string</code></pre><div class="info">
+Convert a request to a string<br>
+</div>
 <br><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = {</code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -124,7 +127,55 @@ Solver request<br>
 Solver solution<br>
 </div>
 
+<pre><span id="VALdelete_or_update"><span class="keyword">val</span> delete_or_update</span> : <code class="type"><a href="Solver.html#TYPEsolution">solution</a> -> bool</code></pre><div class="info">
+Does the solution implies deleting or updating a package<br>
+</div>
 <pre><span id="VALprint_solution"><span class="keyword">val</span> print_solution</span> : <code class="type"><a href="Solver.html#TYPEsolution">solution</a> -> unit</code></pre><div class="info">
 Display a solution<br>
 </div>
-<pre><span class="keyword">module</span> <a href="Solver.Solver.html">Solver</a>: <code class="code">sig</code> <a href="Solver.Solver.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><span id="TYPEpackage"><span class="keyword">type</span> <code class="type"></code>package</span> = <code class="type">Debian.Packages.package</code> </pre>
+<div class="info">
+Package<br>
+</div>
+
+<br><code><span id="TYPEuniverse"><span class="keyword">type</span> <code class="type"></code>universe</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">U</span> <span class="keyword">of</span> <code class="type"><a href="Solver.html#TYPEpackage">package</a> list</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Universe of packages<br>
+</div>
+
+<br><code><span id="TYPEpackages"><span class="keyword">type</span> <code class="type"></code>packages</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">P</span> <span class="keyword">of</span> <code class="type"><a href="Solver.html#TYPEpackage">package</a> list</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Subset of packages<br>
+</div>
+
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPErequest">request</a> -> <a href="Solver.html#TYPEsolution">solution</a> option</code></pre><div class="info">
+Given a description of packages, return a solution preserving the
+    consistency of the initial description.  <code class="code">None</code> : No solution
+    found.<br>
+</div>
+<pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+Return the recursive dependencies of a package Note : the given
+    package exists in the list in input because this list describes
+    the entire universe.  By convention, it also appears in output.<br>
+</div>
+<pre><span id="VALfilter_forward_dependencies"><span class="keyword">val</span> filter_forward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+Same as <code class="code">filter_backward_dependencies</code> but for forward
+    dependencies<br>
+</div>
+</body></html>

@@ -43,8 +43,11 @@ Root dir: <i>$opam/$oversion</i><br>
 Create a compiler path<br>
 </div>
 <pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.N.t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Installed libraries for the package:
+Library path for a given package:
       <i>$opam/$OVERSION/lib/NAME</i><br>
+</div>
+<pre><span id="VALlib_dir"><span class="keyword">val</span> lib_dir</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Library path: <i>$opam/$OVERSION/lib/</i><br>
 </div>
 <pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Installed binaries: <i>$opam/$OVERSION/bin</i><br>
@@ -65,8 +68,7 @@ Tempory location of install files:
       <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.install</i><br>
 </div>
 <pre><span id="VALbuild_config"><span class="keyword">val</span> build_config</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-Tempory location of config files:
-      <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.config</i><br>
+Tempory location of config files: <i>      $opam/$OVERSION/build/$NAME.$VERSION/$NAME.config</i><br>
 </div>
 <pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.N.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Installed files for a given package:

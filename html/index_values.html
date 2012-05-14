@@ -40,7 +40,7 @@ Return the corresponding build action
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALadd_extension">add_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
-Remove the file suffix
+Add a file extension
 </div>
 </td></tr>
 <tr><td><a href="Types.Repository.html#VALaddress">address</a> [<a href="Types.Repository.html">Types.Repository</a>]</td>
@@ -144,6 +144,11 @@ List all the available packages:
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
+<tr><td><a href="Types.Filename.html#VALbasename">basename</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Return the base name
+</div>
+</td></tr>
 <tr><td><a href="Path.C.html#VALbin">bin</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Installed binaries: <i>$opam/$OVERSION/bin</i>
@@ -167,8 +172,7 @@ List of command to run for building the package
 </td></tr>
 <tr><td><a href="Path.C.html#VALbuild_config">build_config</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-Tempory location of config files:
-      <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.config</i>
+Tempory location of config files: <i>      $opam/$OVERSION/build/$NAME.$VERSION/$NAME.config</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALbuild_dir">build_dir</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -201,6 +205,11 @@ Change the current directory
 <tr><td><a href="Types.Filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Check whether a file has a given suffix
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALchop_extension">chop_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Remove the file extension
 </div>
 </td></tr>
 <tr><td><a href="Run.html#VALcommand">command</a> [<a href="Run.html">Run</a>]</td>
@@ -294,6 +303,21 @@ Create a compiler path
 </td></tr>
 <tr><td><a href="Path.G.html#VALcreate">create</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td></td></tr>
+<tr><td><a href="File.Dot_config.html#VALcreate">create</a> [<a href="File.Dot_config.html">File.Dot_config</a>]</td>
+<td><div class="info">
+Create a new .config file (containing only variables)
+</div>
+</td></tr>
+<tr><td><a href="File.Descr.html#VALcreate">create</a> [<a href="File.Descr.html">File.Descr</a>]</td>
+<td><div class="info">
+Create a description file
+</div>
+</td></tr>
+<tr><td><a href="File.OPAM.html#VALcreate">create</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Create an opam file
+</div>
+</td></tr>
 <tr><td><a href="File.Config.html#VALcreate">create</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 Creation
@@ -320,7 +344,7 @@ Return the current working directory
 Default repository
 </div>
 </td></tr>
-<tr><td><a href="Solver.Solver.html#VALdelete_or_update">delete_or_update</a> [<a href="Solver.Solver.html">Solver.Solver</a>]</td>
+<tr><td><a href="Solver.html#VALdelete_or_update">delete_or_update</a> [<a href="Solver.html">Solver</a>]</td>
 <td><div class="info">
 Does the solution implies deleting or updating a package
 </div>
@@ -395,15 +419,17 @@ Extract an archive in a given directory (it rewrites the root to
 <code class="code">files dir</code> returns the files in the directory <code class="code">dir</code>
 </div>
 </td></tr>
-<tr><td><a href="Solver.Solver.html#VALfilter_backward_dependencies">filter_backward_dependencies</a> [<a href="Solver.Solver.html">Solver.Solver</a>]</td>
+<tr><td><a href="Solver.html#VALfilter_backward_dependencies">filter_backward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
 <td><div class="info">
-Return the recursive dependencies of a package
-      Note : the given package exists in the list in input because this list describes the entire universe.
+Return the recursive dependencies of a package Note : the given
+    package exists in the list in input because this list describes
+    the entire universe.
 </div>
 </td></tr>
-<tr><td><a href="Solver.Solver.html#VALfilter_forward_dependencies">filter_forward_dependencies</a> [<a href="Solver.Solver.html">Solver.Solver</a>]</td>
+<tr><td><a href="Solver.html#VALfilter_forward_dependencies">filter_forward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
 <td><div class="info">
-Same as <code class="code">filter_backward_dependencies</code> but for forward dependencies
+Same as <code class="code">filter_backward_dependencies</code> but for forward
+    dependencies
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALfull">full</a> [<a href="File.Descr.html">File.Descr</a>]</td>
@@ -420,6 +446,11 @@ Get all the sections of a certain kind
 <tr><td><a href="File_format.html#VALget_section_by_kind">get_section_by_kind</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Get one section of a certain kind
+</div>
+</td></tr>
+<tr><td><a href="Types.Full_section.html#VALgraph_iter">graph_iter</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
+<td><div class="info">
+Iteration in topological order
 </div>
 </td></tr>
 <tr><td align="left"><br>I</td></tr>
@@ -490,13 +521,18 @@ Return the section kind
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="Path.C.html#VALlib">lib</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-Installed libraries for the package:
+Library path for a given package:
       <i>$opam/$OVERSION/lib/NAME</i>
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_install.html#VALlib">lib</a> [<a href="File.Dot_install.html">File.Dot_install</a>]</td>
 <td><div class="info">
 List of files to install in $lib/
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALlib_dir">lib_dir</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Library path: <i>$opam/$OVERSION/lib/</i>
 </div>
 </td></tr>
 <tr><td><a href="File.OPAM.html#VALlibraries">libraries</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
@@ -723,6 +759,11 @@ Parse an OR formula (which contains only toplevel OR) such as
     <code class="code">("foo", "bar"(&lt;"1")) | "bar" (&gt;"2")</code>
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALparse_single_option">parse_single_option</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Parse a value and a single optional value
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_single_string">parse_single_string</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse a single string
@@ -837,16 +878,15 @@ Return the repository index: <i>$opam/repo/index</i>
 Return the list of repository
 </div>
 </td></tr>
-<tr><td><a href="Solver.Solver.html#VALresolve">resolve</a> [<a href="Solver.Solver.html">Solver.Solver</a>]</td>
+<tr><td><a href="File.Dot_config.SECTION.html#VALrequires">requires</a> [<a href="File.Dot_config.SECTION.html">File.Dot_config.SECTION</a>]</td>
 <td><div class="info">
-Given a description of packages, return a solution preserving
-      the consistency of the initial description.
+Return the build requirements
 </div>
 </td></tr>
-<tr><td><a href="Solver.Solver.html#VALresolve_list">resolve_list</a> [<a href="Solver.Solver.html">Solver.Solver</a>]</td>
+<tr><td><a href="Solver.html#VALresolve">resolve</a> [<a href="Solver.html">Solver</a>]</td>
 <td><div class="info">
-Same as <code class="code">resolve</code>, but each element of the list of solutions does not precise
-      which request in the initial list was satisfied.
+Given a description of packages, return a solution preserving the
+    consistency of the initial description.
 </div>
 </td></tr>
 <tr><td><a href="Types.Dirname.html#VALrmdir">rmdir</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
@@ -915,6 +955,11 @@ Print a list of items
 <tr><td><a href="Types.html#VALstring_of_remote">string_of_remote</a> [<a href="Types.html">Types</a>]</td>
 <td><div class="info">
 Pretty-print
+</div>
+</td></tr>
+<tr><td><a href="Solver.html#VALstring_of_request">string_of_request</a> [<a href="Solver.html">Solver</a>]</td>
+<td><div class="info">
+Convert a request to a string
 </div>
 </td></tr>
 <tr><td><a href="Types.NV.html#VALstring_of_set">string_of_set</a> [<a href="Types.NV.html">Types.NV</a>]</td>
@@ -1072,6 +1117,11 @@ Package version
 <tr><td><a href="Types.Filename.html#VALwith_raw">with_raw</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Apply a function on the contents of a file
+</div>
+</td></tr>
+<tr><td><a href="File.Config.html#VALwith_repositories">with_repositories</a> [<a href="File.Config.html">File.Config</a>]</td>
+<td><div class="info">
+Repository updates
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALwrite">write</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>

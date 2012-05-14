@@ -32,7 +32,10 @@
 <pre><span class="keyword">module</span> Dot_config: <code class="code">sig</code> <a href="File.Dot_config.html">..</a> <code class="code">end</code></pre>.config files<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
-<pre><span class="keyword">module type</span> <a href="File.Dot_config.SECTION.html">SECTION</a> = <code class="code">sig</code> <a href="File.Dot_config.SECTION.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="File.Dot_config.Sections.html">Sections</a>: <code class="type"><a href="File.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">(<a href="Types.html#TYPEvariable">Types.variable</a> * <a href="Types.html#TYPEvariable_contents">Types.variable_contents</a>) list -> t</code></pre><div class="info">
+Create a new .config file (containing only variables)<br>
+</div>
+<pre><span class="keyword">module type</span> <a href="File.Dot_config.SECTION.html">SECTION</a> = <code class="code">sig</code> <a href="File.Dot_config.SECTION.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="File.Dot_config.Section.html">Section</a>: <code class="type"><a href="File.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info">
 All library and syntax sections
 </div>
 <pre><span class="keyword">module</span> <a href="File.Dot_config.Library.html">Library</a>: <code class="type"><a href="File.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info">

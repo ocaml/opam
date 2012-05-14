@@ -32,10 +32,13 @@
 <pre><span class="keyword">module</span> OPAM: <code class="code">sig</code> <a href="File.OPAM.html">..</a> <code class="code">end</code></pre>OPAM files<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
-<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> Types.N.t</code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPEnv">Types.nv</a> -> t</code></pre><div class="info">
+Create an opam file<br>
+</div>
+<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="Types.html#TYPEname">Types.name</a></code></pre><div class="info">
 Package name<br>
 </div>
-<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> Types.V.t</code></pre><div class="info">
+<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> <a href="Types.html#TYPEversion">Types.version</a></code></pre><div class="info">
 Package version<br>
 </div>
 <pre><span id="VALmaintainer"><span class="keyword">val</span> maintainer</span> : <code class="type">t -> string</code></pre><div class="info">

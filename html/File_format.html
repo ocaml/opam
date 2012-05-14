@@ -203,6 +203,9 @@ Parse a group of 'things'<br>
 <pre><span id="VALparse_option"><span class="keyword">val</span> parse_option</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) -><br>       (<a href="File_format.html#TYPEvalue">value</a> -> 'b) -> <a href="File_format.html#TYPEvalue">value</a> -> 'a * 'b list</code></pre><div class="info">
 Parse a value and its option of 'things'<br>
 </div>
+<pre><span id="VALparse_single_option"><span class="keyword">val</span> parse_single_option</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> -> 'a) -><br>       (<a href="File_format.html#TYPEvalue">value</a> -> 'b) -> <a href="File_format.html#TYPEvalue">value</a> -> 'a * 'b option</code></pre><div class="info">
+Parse a value and a single optional value<br>
+</div>
 <pre><span id="VALparse_string_option"><span class="keyword">val</span> parse_string_option</span> : <code class="type">(<a href="File_format.html#TYPEvalue">value</a> list -> 'a) -> <a href="File_format.html#TYPEvalue">value</a> -> string * 'a option</code></pre><div class="info">
 Parse a string with an optional argument<br>
 </div>

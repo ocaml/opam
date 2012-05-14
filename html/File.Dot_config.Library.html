@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="File.Dot_config.Sections.html">
+<link rel="previous" href="File.Dot_config.Section.html">
 <link rel="next" href="File.Dot_config.Syntax.html">
 <link rel="Up" href="File.Dot_config.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -23,7 +23,7 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>File.Dot_config.Library</title>
 </head>
 <body>
-<div class="navbar"><a href="File.Dot_config.Sections.html">Previous</a>
+<div class="navbar"><a href="File.Dot_config.Section.html">Previous</a>
 &nbsp;<a href="File.Dot_config.html">Up</a>
 &nbsp;<a href="File.Dot_config.Syntax.html">Next</a>
 </div>
@@ -48,6 +48,9 @@ Return the list of native-code linking options<br>
 </div>
 <pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> string list</code></pre><div class="info">
 Return the list of bytecode linking options<br>
+</div>
+<pre><span id="VALrequires"><span class="keyword">val</span> requires</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> <a href="Types.html#TYPEfull_section">Types.full_section</a> list</code></pre><div class="info">
+Return the build requirements<br>
 </div>
 <pre><span id="VALvariable"><span class="keyword">val</span> variable</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> -> <a href="Types.html#TYPEvariable">Types.variable</a> -> <a href="Types.html#TYPEvariable_contents">Types.variable_contents</a></code></pre><div class="info">
 Return the value of variables<br>
