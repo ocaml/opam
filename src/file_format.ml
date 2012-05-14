@@ -232,11 +232,12 @@ let rec parse_constraints name = function
 
 (* contains only "," *)
 let rec parse_and_formula_aux = function
-  | []                     -> []
-  | [String name]          -> [ (name, None) ]
-  | [String name; Group g] -> parse_constraints name g
-  | [Group g]              -> parse_and_formula_aux g
-  | e1               :: e2 -> parse_and_formula_aux [e1] @ parse_and_formula_aux e2
+  | []                       -> []
+  | [String name]            -> [ (name, None) ]
+  | [Option(String name, g)] -> parse_constraints name g
+  | [Group g]                -> parse_and_formula_aux g
+  | [ x ]                    -> bad_format "Expecting string or group, got %s" (kind x)
+  | e1 :: e2                 -> parse_and_formula_aux [e1] @ parse_and_formula_aux e2
 
 let parse_and_formula = function
   | List l -> parse_and_formula_aux l
@@ -244,6 +245,7 @@ let parse_and_formula = function
 
 (* contains only toplevel "|" *)
 let rec parse_or_formula_aux = function
+  | []                     -> []
   | e1 :: Symbol "|" :: e2 -> parse_and_formula_aux [e1] :: parse_or_formula_aux e2
   | e                      -> [parse_and_formula_aux e]
 
@@ -259,7 +261,7 @@ let make_and_formula_aux l =
   let l = List.map make_constraint l in
   List.fold_right (fun elt -> function
     | []   -> elt
-    | accu -> accu @ [Symbol ","] @ elt
+    | accu -> accu @ elt
   ) l []
 
 let make_and_formula l =
@@ -267,8 +269,9 @@ let make_and_formula l =
 
 let make_or_formula l =
   let l = List.map make_and_formula_aux l in
-  let l = List.fold_right (fun elt -> function
+  let l = List.fold_left (fun accu elt ->
+    match accu with
     | []   -> elt
     | accu -> [ Group accu ; Symbol "|" ; Group elt ]
-  ) l [] in
+  ) [] l in
   List l
