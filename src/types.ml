@@ -495,12 +495,12 @@ let string_of_upload u =
 (* Remote arguments *)
 type remote =
   | List
-  | Add of string
+  | Add of repository
   | Rm of string
 
 let string_of_remote = function
-  | List -> "list"
-  | Add s -> Printf.sprintf "add %s" s
+  | List  -> "list"
+  | Add s -> Printf.sprintf "add %s" (Repository.to_string s)
   | Rm  s -> Printf.sprintf "rm %s" s
 
 type config_option = {
