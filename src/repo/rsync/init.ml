@@ -9,7 +9,7 @@ let _ =
 let remote_address = Sys.argv.(1)
 
 let rsync dir =
-  Run.mkdir "opam";
+  Run.mkdir dir;
   let err =
     Run.command "rsync -ar %s/ %s/"
       (Filename.concat remote_address dir) dir in

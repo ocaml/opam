@@ -49,6 +49,9 @@ val in_dir: string -> (unit -> 'a) -> 'a
 (** [files dir] returns the files in the directory [dir] *)
 val files: string -> string list
 
+(** [files dir] returns the directories in the directory [dir] *)
+val directories: string -> string list
+
 (** [command fmt] executes the command [fmt] *)
 val command: ('a, unit, string, int) format4 -> 'a
 

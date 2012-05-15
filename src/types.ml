@@ -46,6 +46,7 @@ module Dirname: sig
   val mkdir: t -> unit
   val exec: t -> string list -> int
   val chdir: t -> unit
+  val basename: t -> string
 end = struct
 
   include Base
@@ -64,6 +65,9 @@ end = struct
 
   let chdir dirname =
     Unix.chdir (to_string dirname)
+
+  let basename dirname =
+    Filename.basename (to_string dirname)
 
 end
     
@@ -220,6 +224,7 @@ module NV: sig
   val version: t -> version
   val create: name -> version -> t
   val of_filename: filename -> t option
+  val of_dirname: dirname -> t option
   val of_dpkg: Debian.Packages.package -> t
   val of_cudf: Debian.Debcudf.tables -> Cudf.package -> t
   val to_map: Set.t -> V.Set.t N.Map.t
@@ -256,7 +261,10 @@ end = struct
     else if F.check_suffix b ".tar.gz" then
       check (F.chop_suffix b ".tar.gz")
     else
-      None
+      check b
+
+  let of_dirname d =
+    check (Dirname.basename d)
 
   let of_dpkg d =
     { name    = N.of_string d.Debian.Packages.name;

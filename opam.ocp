@@ -48,6 +48,7 @@ end
 
 (* Repository Scripts *)
 
+(* RSYNC *)
 begin program "opam-rsync-init"
   files = [ "src/repo/rsync/init.ml" ]
   requires = [ "opam-lib" ]
@@ -65,6 +66,28 @@ end
 
 begin program "opam-rsync-upload"
   files = [ "src/repo/rsync/upload.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+
+(* GIT *)
+begin program "opam-git-init"
+  files = [ "src/repo/git/init.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-git-update"
+  files = [ "src/repo/git/update.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-git-download"
+  files = [ "src/repo/git/download.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-git-upload"
+  files = [ "src/repo/git/upload.ml" ]
   requires = [ "opam-lib" ]
 end
 

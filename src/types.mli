@@ -176,6 +176,10 @@ module NV: sig
       with various heuristics.*)
   val of_filename: filename -> t option
 
+  (** Create a new pair from a directory name. This function extracts {i
+      $name} and {i $version} from {i /path/to/$name.$version/} *)
+  val of_dirname: dirname -> t option
+
   (** Create a new pair from a debian package *)
   val of_dpkg: Debian.Packages.package -> t
 
