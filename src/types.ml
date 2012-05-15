@@ -261,7 +261,7 @@ end = struct
     else if F.check_suffix b ".tar.gz" then
       check (F.chop_suffix b ".tar.gz")
     else
-      check b
+      None
 
   let of_dirname d =
     check (Dirname.basename d)
