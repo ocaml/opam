@@ -1,10 +1,10 @@
 #!/bin/bash
 
-OCPGET="opam --root ${OPAM_ROOT}"
-INCLUDES0="`${OCPGET} config -r -I P2 P3`"
-LINK0="`${OCPGET} config -r -asmlink P2 P3`"
+OPAM="opam --root ${OPAM_ROOT}"
+COMP0="`${OPAM} config -r -asmcomp P2 P3`"
+LINK0="`${OPAM} config -r -asmlink P2 P3`"
 
-INCLUDES=${INCLUDES0// /,}
+COMP=${COMP0// /,}
 LINK=${LINK0// /,}
 
-ocamlbuild -cflags ${INCLUDES} -lflags ${LINK} p4.native
+ocamlbuild -cflags ${COMP} -lflags ${LINK} p4.native
