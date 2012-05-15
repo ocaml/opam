@@ -20,6 +20,12 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
+  (** Return the file contents *)
+  val to_raw: t -> raw
+
+  (** Convert a raw string into a file *)
+  val of_raw: raw -> t
+
 end
 
 (** Configuration file: [$opam/config] *)

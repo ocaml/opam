@@ -1155,26 +1155,24 @@ hand-shake to agree on the protocol version.
 \hline
 0 & \verb+ClientVersion+ & \verb+version: string+ & Send the client version to the server \\
 \hline
-1 & \verb+InitList+ & -- & Ask for the list of all available OPAM files \\
+1 & \verb+GetList+ & -- & Ask for the list of all available OPAM files \\
 \hline
-2 & \verb+UpdateList+ & -- & Ask for the list of updated OPAM files \\
-\hline
-3 & \verb+GetOPAM+ & \verb+name   : string+ & Ask for the binary representation of \\
+2 & \verb+GetOPAM+ & \verb+name   : string+ & Ask for the binary representation of \\
   &                & \verb+version: string+ & a given OPAM file \\
 \hline
-4 & \verb+GetDescr+ & \verb+name   : string+ & Ask for the binary representation of \\
+3 & \verb+GetDescr+ & \verb+name   : string+ & Ask for the binary representation of \\
   &                 & \verb+version: string+ & a given description file \\
 \hline
-5 & \verb+GetArchive+ & \verb+name   : string+ & Ask for the binary representation of \\
+4 & \verb+GetArchive+ & \verb+name   : string+ & Ask for the binary representation of \\
   &                   & \verb+version: string+ & a given archive file \\
 \hline
-6 & \verb+NewPackage+ & \verb+name   : string+ & Create a new package on the server. \\
+5 & \verb+NewPackage+ & \verb+name   : string+ & Create a new package on the server. \\
   &                   & \verb+version: string+ & The client should provide the OPAM and \\
   &                   & \verb+opam   : string+ & descr files and the source archive. \\
   &                   & \verb+descr  : string+ & \\
   &                   & \verb+archive: string+ & \\
 \hline
-7 & \verb+NewVersion+ & \verb+name   : string+ & Upload a new version of an already existing \\
+6 & \verb+NewVersion+ & \verb+name   : string+ & Upload a new version of an already existing \\
   &                   & \verb+version: string+ & package on the server. The client \\
   &                   & \verb+opam   : string+ & should also provide a security key\\
   &                   & \verb+descr  : string+ & \\
@@ -1202,8 +1200,8 @@ hand-shake to agree on the protocol version.
 1 & \verb+PackageList+  & \verb+list   : (string*string) list+ & Return the list of available \\
   &                     &                                      & package names and versions \\
 \hline
-2 & \verb+OPAM+         & \verb+opam   : string+ & Return an OPAM file
-\\
+2 & \verb+OPAM+         & \verb+opam   : string+ & Return an OPAM file \\
+\hline
 3 & \verb+Descr+        & \verb+descr  : string+ & Return an OPAM file \\
 \hline
 4 & \verb+Archive+      & \verb+archive: string+ & Return an archive file \\

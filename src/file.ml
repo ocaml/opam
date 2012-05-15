@@ -687,6 +687,14 @@ module Make (F : F) = struct
     else
       F.empty
 
+  let filename = Filename.of_string "/dummy/"
+
+  let of_raw raw =
+    F.of_string filename raw
+
+  let to_raw t =
+    F.to_string filename t
+
 end
 
 open X
@@ -697,6 +705,8 @@ module type IO_FILE = sig
   val write: filename -> t -> unit
   val read : filename -> t
   val safe_read: filename -> t
+  val to_raw: t -> raw
+  val of_raw: raw -> t
 end
 
 module Config = struct

@@ -13,41 +13,24 @@
 (*                                                                     *)
 (***********************************************************************)
 
-module type RANDOM_KEY = sig
-  type t
-  val new_key : unit -> t
-  val to_string : t -> string
-end
+open Types
 
-module Random_key : RANDOM_KEY = struct
-  type t = string
+(** Security keys *)
 
-  let make n =
-    String.implode (List.init n (fun _ -> char_of_int (Random.int 255)))
+(** Type for keys *)
+type t
 
-  let len = 128
+(** Create a new key *)
+val create: unit -> t
 
-  let n = ref (make len)
+(** Convert the key to string *)
+val to_string: t -> string
 
-  let new_key _ = 
-    let k = !n in
-    let () = n := make len in
-    k
+(** Convert a string to a key *)
+val of_string: string -> t
 
-  let to_string x = x
-end
+(** Read key hash in {i $opam-server/hashes/$name} *)
+val read: name -> string
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(** Write key hash in {i $opam-server/keys/$name} *)
+val write: name -> t -> unit

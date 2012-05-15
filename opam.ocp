@@ -91,3 +91,39 @@ begin program "opam-git-upload"
   requires = [ "opam-lib" ]
 end
 
+
+(* SERVER *)
+begin library "opam-server-lib"
+  files = [
+    "src/repo/server/protocol.ml"
+    "src/repo/server/key.ml"
+    "src/repo/server/daemon.ml"
+    "src/repo/server/client.ml"
+  ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-server"
+  files = [ "src/repo/server/server.ml" ]
+  requires = [ "opam-server-lib" ]
+end
+
+begin program "opam-server-init"
+  files = [ "src/repo/server/init.ml" ]
+  requires = [ "opam-server-lib" ]
+end
+
+begin program "opam-server-update"
+  files = [ "src/repo/server/update.ml" ]
+  requires = [ "opam-server-lib" ]
+end
+
+begin program "opam-server-download"
+  files = [ "src/repo/server/download.ml" ]
+  requires = [ "opam-server-lib" ]
+end
+
+begin program "opam-server-upload"
+  files = [ "src/repo/server/upload.ml" ]
+  requires = [ "opam-server-lib" ]
+end
