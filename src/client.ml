@@ -806,6 +806,7 @@ let config request =
         in
         loop ();
         let nodes = ref [] in
+        Full_section.graph_iter (fun n -> nodes := n :: !nodes) graph;
         !nodes in
       let fn = match c.is_byte, c.is_link with
         | true , true  -> File.Dot_config.Section.bytelink
