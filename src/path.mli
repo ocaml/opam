@@ -23,7 +23,8 @@ module G : sig
   (** Contains {i $opam} *)
   type t
 
-  val create: dirname -> t
+  (** Create a global path *)
+  val create: unit -> t
 
   (** Root dir: {i $opam/} *)
   val root: t -> dirname
@@ -68,12 +69,12 @@ module C : sig
   (** Contains {i $opam} and {i $OVERSION} *)
   type t
 
+  (** Create a compiler path *)
+  val create: OCaml_V.t -> t
+
   (** Root dir: {i $opam/$oversion} *)
   val root: t -> dirname
-    
-  (** Create a compiler path *)
-  val create: G.t -> OCaml_V.t -> t
-
+   
   (** Library path for a given package:
       {i $opam/$OVERSION/lib/NAME} *)
   val lib: t -> N.t -> dirname

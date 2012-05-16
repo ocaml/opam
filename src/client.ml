@@ -69,10 +69,10 @@ let print_state t =
    state *)
 let load_state () =
   log "root path is %s" !Globals.root_path;
-  let global = Path.G.create (Dirname.of_string !Globals.root_path) in
+  let global = Path.G.create () in
   let config = File.Config.read (Path.G.config global) in
   let ocaml_version = File.Config.ocaml_version config in
-  let compiler = Path.C.create global ocaml_version in
+  let compiler = Path.C.create ocaml_version in
   let repositories = File.Config.repositories config in
   let repositories = List.map (fun r -> r, Path.R.create r) repositories in
   let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
@@ -171,7 +171,7 @@ let install_initial_package () =
 
 let init repo =
   log "init %s" (Repository.to_string repo);
-  let root = Path.G.create (Dirname.of_string !Globals.root_path) in
+  let root = Path.G.create () in
   let config_f = Path.G.config root in
   if Filename.exists config_f then
     Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
@@ -179,7 +179,7 @@ let init repo =
     let opam_version = OPAM_V.of_string Globals.opam_version in
     let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
     let config = File.Config.create opam_version [repo] ocaml_version in
-    let compiler = Path.C.create root ocaml_version in
+    let compiler = Path.C.create ocaml_version in
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;

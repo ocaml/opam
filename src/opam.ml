@@ -240,10 +240,10 @@ let remote = {
   synopsis = "Manage remote servers";
   help     = "";
   specs    = [
-    ("-list", Arg.Unit (set `list), " List the repositories");
-    ("-add" , Arg.Unit (set `add) , " Add a new repository");
-    ("-rm"  , Arg.Unit (set `rm)  , " Remove a remote repository");
-    ("-kind", Arg.Set_string kind , " (optional) Specify the repository kind");
+    ("-list" , Arg.Unit (set `list), " List the repositories");
+    ("-add"  , Arg.Unit (set `add) , " Add a new repository");
+    ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
+    ("--kind", Arg.Set_string kind , " (optional) Specify the repository kind");
   ];
   anon;
   main     = parse_args (fun args ->

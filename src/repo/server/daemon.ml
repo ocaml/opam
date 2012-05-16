@@ -28,14 +28,15 @@ type t = {
 
 let init () =
   log "init server state";
-  let global = Path.G.create (Dirname.of_string !Globals.root_path) in
+  let global = Path.G.create (
+) in
   Dirname.mkdir (Path.G.opam_dir global);
   Dirname.mkdir (Path.G.descr_dir global);
   Dirname.mkdir (Path.G.archive_dir global);
   Dirname.mkdir (Key.hashes_dir ())
 
 let load_state () =
-  let global = Path.G.create (Dirname.of_string !Globals.root_path) in
+  let global = Path.G.create () in
   let available = Path.G.available global in
   { global; available }
 

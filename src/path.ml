@@ -33,7 +33,7 @@ module G = struct
 
   type t = dirname (* [$opam/] *)
 
-  let create opam = opam
+  let create () = Dirname.of_string !Globals.root_path
 
   let root opam = opam
 
@@ -66,9 +66,8 @@ module C = struct
 
   type t = dirname (* [$opam/$oversion/ *)
 
-  let create global oversion =
-    let root = G.root global in
-    root / OCaml_V.to_string oversion
+  let create oversion =
+    Dirname.of_string !Globals.root_path / OCaml_V.to_string oversion
 
   let root x = x
 
