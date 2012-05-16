@@ -14,6 +14,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Index of values</title>
@@ -202,6 +203,11 @@ Return the list of bytecode linking options
 Change the current directory
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALchdir">chdir</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+Change the current working directory
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Check whether a file has a given suffix
@@ -302,7 +308,10 @@ Create a compiler path
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALcreate">create</a> [<a href="Path.G.html">Path.G</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Create a global path
+</div>
+</td></tr>
 <tr><td><a href="File.Dot_config.html#VALcreate">create</a> [<a href="File.Dot_config.html">File.Dot_config</a>]</td>
 <td><div class="info">
 Create a new .config file (containing only variables)
@@ -375,9 +384,19 @@ Return the description folder
 Description files folder: <i>$opam/descr/</i>
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALdirectories">directories</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">files dir</code> returns the directories in the directory <code class="code">dir</code>
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALdirname">dirname</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Return the directory name
+</div>
+</td></tr>
+<tr><td><a href="Repositories.html#VALdownload">download</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td><div class="info">
+Run <i>opam-$kind-download</i> in <i>$opam/repo/$repo</i>
 </div>
 </td></tr>
 <tr><td align="left"><br>E</td></tr>
@@ -448,7 +467,7 @@ Get all the sections of a certain kind
 Get one section of a certain kind
 </div>
 </td></tr>
-<tr><td><a href="Types.Full_section.html#VALgraph_iter">graph_iter</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
+<tr><td><a href="Types.Section.html#VALgraph_iter">graph_iter</a> [<a href="Types.Section.html">Types.Section</a>]</td>
 <td><div class="info">
 Iteration in topological order
 </div>
@@ -462,6 +481,11 @@ Iteration in topological order
 <tr><td><a href="Client.html#VALinfo">info</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
 Displays a general summary of a package.
+</div>
+</td></tr>
+<tr><td><a href="Repositories.html#VALinit">init</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td><div class="info">
+Run <i>opam-$kind-init</i> in <i>$opam/repo/$repo</i>
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALinit">init</a> [<a href="Client.html">Client</a>]</td>
@@ -655,9 +679,20 @@ Package name
 Return the OCaml version
 </div>
 </td></tr>
+<tr><td><a href="Types.Filename.html#VALof_basename">of_basename</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Create a file from a basename and the current working directory
+      as dirname
+</div>
+</td></tr>
 <tr><td><a href="Types.NV.html#VALof_cudf">of_cudf</a> [<a href="Types.NV.html">Types.NV</a>]</td>
 <td><div class="info">
 Create a new pair from a cudf package
+</div>
+</td></tr>
+<tr><td><a href="Types.NV.html#VALof_dirname">of_dirname</a> [<a href="Types.NV.html">Types.NV</a>]</td>
+<td><div class="info">
+Create a new pair from a directory name.
 </div>
 </td></tr>
 <tr><td><a href="Types.NV.html#VALof_dpkg">of_dpkg</a> [<a href="Types.NV.html">Types.NV</a>]</td>
@@ -673,6 +708,11 @@ Create a new pair from a filename.
 <tr><td><a href="Path.R.html#VALof_path">of_path</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Transform a directory name into a repository path
+</div>
+</td></tr>
+<tr><td><a href="File.IO_FILE.html#VALof_raw">of_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
+<td><div class="info">
+Convert a raw string into a file
 </div>
 </td></tr>
 <tr><td><a href="Types.Abstract.html#VALof_string">of_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
@@ -1020,12 +1060,22 @@ Convert a set of pairs to a map <code class="code">name -&gt; versions</code>
 Convert to Debian packages to feed the solver
 </div>
 </td></tr>
+<tr><td><a href="File.IO_FILE.html#VALto_raw">to_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
+<td><div class="info">
+Return the file contents
+</div>
+</td></tr>
 <tr><td><a href="Types.Abstract.html#VALto_string">to_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
 <td><div class="info">
 Convert an abstract value to a string
 </div>
 </td></tr>
 <tr><td align="left"><br>U</td></tr>
+<tr><td><a href="Repositories.html#VALupdate">update</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td><div class="info">
+Run <i>opam-$kind-update</i> in <i>$opam/repo/$repo</i>
+</div>
+</td></tr>
 <tr><td><a href="Client.html#VALupdate">update</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
 Refresh the available packages.
@@ -1041,6 +1091,11 @@ Return the list of updated packages:
 <td><div class="info">
 Finds a consistent state where most of the installed packages are
     upgraded to their latest version.
+</div>
+</td></tr>
+<tr><td><a href="Repositories.html#VALupload">upload</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td><div class="info">
+Run <i>opam-$kind-upload</i> in <i>$opam/repo/$repo</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.R.html#VALupload">upload</a> [<a href="Path.R.html">Path.R</a>]</td>
@@ -1060,16 +1115,34 @@ Return the upload folder for archive files:
       <i>$opam/repo/$repo/upload/archives/$NAME.$VERSION.tar.gz</i>
 </div>
 </td></tr>
+<tr><td><a href="Path.R.html#VALupload_archives_dir">upload_archives_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Return the upload folder for archive files:
+      <i>$opam/repo/$repo/upload/archives/</i>
+</div>
+</td></tr>
 <tr><td><a href="Path.R.html#VALupload_descr">upload_descr</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the upload folder for descr files:
       <i>$opam/repo/$repo/upload/descr/$NAME.$VERSION</i>
 </div>
 </td></tr>
+<tr><td><a href="Path.R.html#VALupload_descr_dir">upload_descr_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Return the upload folder for descr files:
+      <i>$opam/repo/$repo/upload/descr/</i>
+</div>
+</td></tr>
 <tr><td><a href="Path.R.html#VALupload_opam">upload_opam</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the upload folder for OPAM files:
       <i>$opam/repo/$repo/upload/opam/$NAME.$VERSION.opam</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALupload_opam_dir">upload_opam_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Return the upload folder for OPAM files:
+      <i>$opam/repo/$repo/upload/opam/</i>
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>

@@ -20,14 +20,14 @@
 
 open Types
 
-(** Run {$ opam-$kind-init} in {i $opam/repo/$repo} *)
+(** Run {i opam-$kind-init} in {i $opam/repo/$repo} *)
 val init: repository -> unit
 
-(** Run {$ opam-$kind-update} in {i $opam/repo/$repo} *)
+(** Run {i opam-$kind-update} in {i $opam/repo/$repo} *)
 val update: repository -> unit
 
-(** Run {$ opam-$kind-download} in {i $opam/repo/$repo} *)
+(** Run {i opam-$kind-download} in {i $opam/repo/$repo} *)
 val download: repository -> nv -> unit
 
-(** Run {$ opam-$kind-upload} in {i $opam/repo/$repo} *)
+(** Run {i opam-$kind-upload} in {i $opam/repo/$repo} *)
 val upload: repository -> unit

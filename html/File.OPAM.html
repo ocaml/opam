@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>File.OPAM</title>
@@ -44,7 +45,7 @@ Package version<br>
 <pre><span id="VALmaintainer"><span class="keyword">val</span> maintainer</span> : <code class="type">t -> string</code></pre><div class="info">
 Package maintainer<br>
 </div>
-<pre><span id="VALsubsts"><span class="keyword">val</span> substs</span> : <code class="type">t -> <a href="Types.html#TYPEfilename">Types.filename</a> list</code></pre><div class="info">
+<pre><span id="VALsubsts"><span class="keyword">val</span> substs</span> : <code class="type">t -> <a href="Types.html#TYPEbasename">Types.basename</a> list</code></pre><div class="info">
 File substitutions<br>
 </div>
 <pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> string list list</code></pre><div class="info">
@@ -56,10 +57,10 @@ Package dependencies<br>
 <pre><span id="VALconflicts"><span class="keyword">val</span> conflicts</span> : <code class="type">t -> Debian.Format822.vpkglist</code></pre><div class="info">
 Package conflicts<br>
 </div>
-<pre><span id="VALlibraries"><span class="keyword">val</span> libraries</span> : <code class="type">t -> string list</code></pre><div class="info">
+<pre><span id="VALlibraries"><span class="keyword">val</span> libraries</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> list</code></pre><div class="info">
 List of exported libraries<br>
 </div>
-<pre><span id="VALsyntax"><span class="keyword">val</span> syntax</span> : <code class="type">t -> string list</code></pre><div class="info">
+<pre><span id="VALsyntax"><span class="keyword">val</span> syntax</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> list</code></pre><div class="info">
 List of exported syntax extensions<br>
 </div>
 <pre><span id="VALto_package"><span class="keyword">val</span> to_package</span> : <code class="type">t -> installed:bool -> Debian.Packages.package</code></pre><div class="info">

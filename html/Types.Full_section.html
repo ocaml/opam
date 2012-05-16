@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Full_section</title>
@@ -44,11 +45,5 @@ Return the package name in which the section is<br>
 <pre><span id="VALsection"><span class="keyword">val</span> section</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> option</code></pre><div class="info">
 Return the optional section name: <code class="code">None</code> means all available
       sections.<br>
-</div>
-<pre><span class="keyword">module</span> <a href="Types.Full_section.G.html">G</a>: <code class="type">Graph.Sig.I</code><code class="type">  with type V.t = t</code></pre><div class="info">
-Graph of fully-qualified sections
-</div>
-<pre><span id="VALgraph_iter"><span class="keyword">val</span> graph_iter</span> : <code class="type">(G.V.t -> unit) -> G.t -> unit</code></pre><div class="info">
-Iteration in topological order<br>
 </div>
 </body></html>

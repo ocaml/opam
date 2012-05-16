@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Filename</title>
@@ -34,6 +35,10 @@
 <pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Types.html#TYPEbasename">Types.basename</a> -> t</code></pre><div class="info">
 Create a filename from a dirname and a basename<br>
+</div>
+<pre><span id="VALof_basename"><span class="keyword">val</span> of_basename</span> : <code class="type"><a href="Types.html#TYPEbasename">Types.basename</a> -> t</code></pre><div class="info">
+Create a file from a basename and the current working directory
+      as dirname<br>
 </div>
 <pre><span id="VALdirname"><span class="keyword">val</span> dirname</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the directory name<br>

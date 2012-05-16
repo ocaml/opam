@@ -17,6 +17,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Path.R</title>
@@ -30,7 +31,7 @@
 <pre><span class="keyword">module</span> R: <code class="code">sig</code> <a href="Path.R.html">..</a> <code class="code">end</code></pre><hr width="100%">
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Path.G.html#TYPEt">Path.G.t</a> -> <a href="Types.html#TYPErepository">Types.repository</a> -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
 Create a repository path<br>
 </div>
 <pre><span id="VALof_path"><span class="keyword">val</span> of_path</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
@@ -78,6 +79,18 @@ Return the list of updated packages:
 <pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the upload folder for a given version:
       <i>$opam/repo/$repo/upload/</i><br>
+</div>
+<pre><span id="VALupload_opam_dir"><span class="keyword">val</span> upload_opam_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Return the upload folder for OPAM files:
+      <i>$opam/repo/$repo/upload/opam/</i><br>
+</div>
+<pre><span id="VALupload_descr_dir"><span class="keyword">val</span> upload_descr_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Return the upload folder for descr files:
+      <i>$opam/repo/$repo/upload/descr/</i><br>
+</div>
+<pre><span id="VALupload_archives_dir"><span class="keyword">val</span> upload_archives_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Return the upload folder for archive files:
+      <i>$opam/repo/$repo/upload/archives/</i><br>
 </div>
 <pre><span id="VALupload_opam"><span class="keyword">val</span> upload_opam</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the upload folder for OPAM files:

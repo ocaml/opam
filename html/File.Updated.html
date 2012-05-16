@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>File.Updated</title>
@@ -47,5 +48,11 @@ Read file contents. Raise an error if the file does not exist.<br>
 </div>
 <pre><span id="VALsafe_read"><span class="keyword">val</span> safe_read</span> : <code class="type"><a href="Types.html#TYPEfilename">Types.filename</a> -> <a href="File.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Read file contents. Return <code class="code">empty</code> if the file does not exist.<br>
+</div>
+<pre><span id="VALto_raw"><span class="keyword">val</span> to_raw</span> : <code class="type"><a href="File.IO_FILE.html#TYPEt">t</a> -> <a href="Types.html#TYPEraw">Types.raw</a></code></pre><div class="info">
+Return the file contents<br>
+</div>
+<pre><span id="VALof_raw"><span class="keyword">val</span> of_raw</span> : <code class="type"><a href="Types.html#TYPEraw">Types.raw</a> -> <a href="File.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
+Convert a raw string into a file<br>
 </div>
 </body></html>

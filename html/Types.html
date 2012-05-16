@@ -17,6 +17,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><link title="Abstract types" rel="Section" href="#2_Abstracttypes">
@@ -135,7 +136,7 @@ Variable names are used in .config files
 Shortcut to variable type<br>
 </div>
 
-<pre><span class="keyword">module</span> <a href="Types.Section.html">Section</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="Types.Section.html">Section</a>: <code class="code">sig</code> <a href="Types.Section.html">..</a> <code class="code">end</code></pre><div class="info">
 Section names
 </div>
 <pre><span id="TYPEsection"><span class="keyword">type</span> <code class="type"></code>section</span> = <code class="type">Section.t</code> </pre>
@@ -310,7 +311,7 @@ Configuration requests<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Subst</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEfilename">filename</a> list</code></code></td>
+<code><span class="constructor">Subst</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEbasename">basename</a> list</code></code></td>
 
 </tr></table>
 
