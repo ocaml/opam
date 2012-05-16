@@ -80,10 +80,10 @@ module OPAM: sig
   val conflicts: t -> Debian.Format822.vpkglist
 
   (** List of exported libraries *)
-  val libraries: t -> string list
+  val libraries: t -> section list
 
   (** List of exported syntax extensions *)
-  val syntax: t -> string list
+  val syntax: t -> section list
 
   (** Convert to Debian packages to feed the solver *)
   val to_package: t -> installed:bool -> Debian.Packages.package
@@ -160,7 +160,7 @@ module Dot_config: sig
     val bytelink: t -> section -> string list
 
     (** Return the build requirements *)
-    val requires: t -> section -> full_section list
+    val requires: t -> section -> section list
 
     (** Return the value of variables *)
     val variable: t -> section -> variable  -> variable_contents

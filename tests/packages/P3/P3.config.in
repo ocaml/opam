@@ -3,7 +3,7 @@ library "p3" {
   bytecomp: ["-I" "%{lib}%/P3"]
   asmlink : ["-I" "%{lib}%/P3" "p3.cmxa"]
   bytelink: ["-I" "%{lib}%/P3" "p3.cma"]
-  requires: ["p1" { "P1" } ]
+  requires: ["p1"]
 }
 
 library "p3_bar" {
@@ -11,5 +11,5 @@ library "p3_bar" {
   asmlink : ["-I" "%{lib}%/P3" "p3_bar.cmxa"]
   bytecomp: ["-I" "%{lib}%/P3"]
   bytelink: ["-I" "%{lib}%/P3" "p3_bar.cma"]
-  requires: [ "p3" (* no package name means the current package *) ]
+  requires: [ "p3"]
 }

@@ -238,7 +238,16 @@ module Variable: Abstract
 type variable = Variable.t
 
 (** Section names *)
-module Section: Abstract
+module Section: sig 
+
+  include Abstract
+
+  (** Graph of fully-qualified sections *)
+  module G : Graph.Sig.I with type V.t = t
+
+  (** Iteration in topological order *)
+  val graph_iter : (G.V.t -> unit) -> G.t -> unit
+end
 
 (** Shortcut to section names *)
 type section = Section.t
@@ -261,11 +270,6 @@ module Full_section: sig
       sections. *)
   val section: t -> section option
 
-  (** Graph of fully-qualified sections *)
-  module G : Graph.Sig.I with type V.t = t
-
-  (** Iteration in topological order *)
-  val graph_iter : (G.V.t -> unit) -> G.t -> unit
 end
 
 type full_section = Full_section.t

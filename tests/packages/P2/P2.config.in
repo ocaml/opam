@@ -3,5 +3,5 @@ library "p2" {
   bytecomp: ["-I" "%{lib}%/P2"]
   asmlink:  ["-I" "%{lib}%/P2" "p2.cmxa"]
   bytelink: ["-I" "%{lib}%/P2" "p2.cma"]
-  requires: ["p1" { "P1" } ]
+  requires: ["p1"]
 }

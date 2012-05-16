@@ -276,6 +276,8 @@ module OPAM = struct
 
   let internal = "opam"
 
+  type section = Types.section
+
   type t = {
     name       : N.t;
     version    : V.t;
@@ -284,8 +286,8 @@ module OPAM = struct
     build      : string list list;
     depends    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
-    libraries  : string list;
-    syntax     : string list;
+    libraries  : section list;
+    syntax     : section list;
   }
 
   let empty = {
@@ -374,8 +376,8 @@ module OPAM = struct
             Variable (s_build, make_list (make_list make_string) t.build);
             Variable (s_depends, make_or_formula t.depends);
             Variable (s_conflicts, make_and_formula t.conflicts);
-            Variable (s_libraries, make_list make_string t.libraries);
-            Variable (s_syntax, make_list make_string t.syntax);
+            Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
+            Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
           ]
         }
       ] 
@@ -400,8 +402,8 @@ module OPAM = struct
         s s_build (parse_list (parse_list parse_string)) in
     let depends    = assoc_list s s_depends parse_or_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
-    let libraries  = assoc_list s s_libraries parse_string_list in
-    let syntax     = assoc_list s s_syntax parse_string_list in
+    let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
+    let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
     { name; version; maintainer; substs; build;
       depends; conflicts; libraries; syntax }
 end
@@ -488,7 +490,7 @@ module Dot_config = struct
     asmcomp   : string list ;
     bytelink  : string list ;
     asmlink   : string list ; 
-    requires  : full_section list;
+    requires  : section list;
     lvariables: (variable * variable_contents) list;
   }
 
@@ -522,11 +524,6 @@ module Dot_config = struct
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
-    (* XXX: not very clean ... *)
-    let package =
-      N.of_string
-        (Basename.to_string 
-           (Filename.basename (Filename.chop_extension filename))) in
     let parse_value = parse_or [
       "string", (parse_string |> s);
       "bool"  , (parse_bool   |> b);
@@ -534,22 +531,14 @@ module Dot_config = struct
     let parse_variables items =
       let l = List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables items) in
       List.map (fun (k,v) -> Variable.of_string k, parse_value v) l in
-    let parse_require v =
-      let raw =
-        parse_single_option
-          (parse_string |> Section.of_string)
-          (parse_string |> N.of_string)
-          v in
-      match raw with
-      | s, None   -> Full_section.create package s
-      | s, Some n -> Full_section.create n s in
+    let parse_requires = parse_list (parse_string |> Section.of_string) in
     let parse_section kind s =
       let name =  Section.of_string s.File_format.name in
       let bytecomp = assoc_string_list s.items s_bytecomp in
       let asmcomp  = assoc_string_list s.items s_asmcomp  in
       let bytelink = assoc_string_list s.items s_bytecomp in
       let asmlink  = assoc_string_list s.items s_asmlink  in
-      let requires = assoc_list s.items s_requires (parse_list parse_require) in
+      let requires = assoc_list s.items s_requires parse_requires in
       let lvariables = parse_variables s.items in
       { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables; requires } in
     let libraries = assoc_sections file.contents "library" (parse_section "library") in
@@ -564,14 +553,7 @@ module Dot_config = struct
       | S s -> String s in
     let of_variables l =
       List.map (fun (k,v) -> Variable (Variable.to_string k, of_value v)) l in
-    let make_require fs =
-      make_option
-        (Section.to_string |> make_string)
-        (Full_section.package |> N.to_string |> make_string)
-        ((match Full_section.section fs with
-          | None   -> assert false
-          | Some s -> s),
-         [fs]) in
+    let make_require = Section.to_string |> make_string in
     let of_section s =
       Section
         { File_format.name = Section.to_string s.name;
@@ -602,7 +584,7 @@ module Dot_config = struct
     val bytecomp : t -> section -> string list
     val asmlink  : t -> section -> string list
     val bytelink : t -> section -> string list
-    val requires : t -> section -> full_section list
+    val requires : t -> section -> section list
     val variable : t -> section -> variable -> variable_contents
     val variables: t -> section -> variable list
   end

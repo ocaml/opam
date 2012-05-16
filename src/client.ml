@@ -283,10 +283,10 @@ let info package =
         let opam = File.OPAM.read (Path.G.opam t.global (NV.create package v)) in
         let libraries = match File.OPAM.libraries opam with
           | [] -> []
-          | l  -> [ "libraries", String.concat ", " l ] in
+          | l  -> [ "libraries", String.concat ", " (List.map Section.to_string l) ] in
         let syntax = match File.OPAM.syntax opam with
           | [] -> []
-          | l  -> [ "syntax", String.concat ", " l ] in
+          | l  -> [ "syntax", String.concat ", " (List.map Section.to_string l) ] in
         libraries, syntax in
 
   List.iter
@@ -329,14 +329,14 @@ let proceed_toinstall t nv =
      .config are in sync *)
   let check kind config_sections opam_sections =
     List.iter (fun cs ->
-      if not (List.mem (Section.to_string cs) opam_sections) then
+      if not (List.mem cs opam_sections) then
         Globals.error_and_exit "The %s %s does not appear in %s"
           kind (Section.to_string cs) (Filename.to_string opam_f)
     ) config_sections;
     List.iter (fun os ->
-      if not (List.mem (Section.of_string os) config_sections) then
+      if not (List.mem os config_sections) then
         Globals.error_and_exit "The %s %s does not appear in %s"
-          kind os (Filename.to_string config_f)
+          kind (Section.to_string os) (Filename.to_string config_f)
     ) opam_sections in
   check "library"
     (File.Dot_config.Library.available config)
@@ -349,37 +349,39 @@ let proceed_toinstall t nv =
      are in almost in sync *)
   (* NOTES: the check is partial as we don't know which clause is valid
      in depends (XXX there is surely a way to get it from the solver) *)
-  let packages_in_opam =
+  let local_sections = File.Dot_config.Section.available config in
+  let libraries_in_opam =
     List.fold_left (fun accu l ->
-      List.fold_left (fun accu (elt,_) ->
-        N.Set.add (N.of_string elt) accu
+      List.fold_left (fun accu (n,_) ->
+        let n = N.of_string n in
+        let nv = find_installed_package_by_name t n in
+        let opam = File.OPAM.read (Path.G.opam t.global nv) in
+        let libs = File.OPAM.libraries opam in
+        let syntax = File.OPAM.syntax opam in
+        List.fold_right Section.Set.add (libs @ syntax) accu
       ) accu l
-    ) N.Set.empty (File.OPAM.depends opam) in
-  let packages_in_config =
-    let sections = File.Dot_config.Section.available config in
+    ) Section.Set.empty (File.OPAM.depends opam) in
+  let libraries_in_config =
     List.fold_left (fun accu s ->
-      List.fold_left (fun accu fs ->
-        let n = Full_section.package fs in
-        if name = n then (
-          match Full_section.section fs with
-          | None   -> assert false
-          | Some s ->
-              if not (List.mem s sections) then
-                Globals.error_and_exit
-                  "No section with name %s in %s"
-                  (Section.to_string s)
-                  (Filename.to_string config_f));
-        N.Set.add name accu
+      List.fold_left (fun accu r ->
+        Section.Set.add r accu
       ) accu (File.Dot_config.Section.requires config s)
-    ) N.Set.empty sections in
-  N.Set.iter (fun n ->
-    if n <> name && not (N.Set.mem n packages_in_opam) then
+    ) Section.Set.empty local_sections in
+  Section.Set.iter (fun s ->
+    if not (List.mem s local_sections)
+    && not (Section.Set.mem s libraries_in_opam) then
+      let config_f = Filename.to_string (Path.C.build_config t.compiler nv) in
+      let opam_f = Filename.to_string (Path.G.opam t.global nv) in
+      let local_sections = List.map Section.to_string local_sections in
+      let opam_sections = List.map Section.to_string (Section.Set.elements libraries_in_opam) in
       Globals.error_and_exit
-        "%s appears as a package dependency in %s, but not in %s"
-        (N.to_string n)
-        (Filename.to_string (Path.C.build_config t.compiler nv))
-        (Filename.to_string (Path.G.opam t.global nv))
-  ) packages_in_config;
+        "%s appears as a library dependency in %s, but:\n\
+             - %s defines the libraries {%s}\n\
+             - Packages in %s defines the libraries {%s}"
+        (Section.to_string s) config_f
+        config_f (String.concat ", " local_sections)
+        opam_f (String.concat ", " opam_sections)
+  ) libraries_in_config;
 
   (* .install *)
   File.Dot_install.write (Path.C.install t.compiler name) install;
@@ -759,11 +761,30 @@ let config request =
           List.map NV.name (get_transitive_dependencies t names)
         else
           N.Set.elements (List.fold_right N.Set.add [] N.Set.empty) in
+      (* Map from libraries to package *)
+      (* NOTES: we check that the set of packages/libraries given on
+         the command line is consistent, ie. there isn't two libraries
+         with the same name in the transitive closure of
+         depedencies *)
+      let library_map =
+        List.fold_left (fun accu n ->
+          let nv = find_installed_package_by_name t n in
+          let opam = File.OPAM.read (Path.G.opam t.global nv) in
+          let sections = (File.OPAM.libraries opam) @ (File.OPAM.syntax opam) in
+          List.iter (fun s ->
+            if Section.Map.mem s accu then
+              Globals.error_and_exit "Conflict: the library %s appears in %s and %s"
+                (Section.to_string s)
+                (N.to_string n)
+                (N.to_string (Section.Map.find s accu))
+          ) sections;
+          List.fold_left (fun accu s -> Section.Map.add s n accu) accu sections
+        ) Section.Map.empty package_deps in
       (* Compute the transitive closure of libraries dependencies *)
       let library_deps =
-        let graph = Full_section.G.create () in
-        let todo = ref Full_section.Set.empty in
-        let seen = ref Full_section.Set.empty in
+        let graph = Section.G.create () in
+        let todo = ref Section.Set.empty in
+        let seen = ref Section.Set.empty in
         (* Init the graph with vertices from the command-line *)
         List.iter (fun s ->
           let name = Full_section.package s in
@@ -773,40 +794,35 @@ let config request =
                 File.Dot_config.Section.available config 
             | Some s -> [s] in
           List.iter (fun s ->
-            let node = Full_section.create name s in
-            Full_section.G.add_vertex graph node;
-            todo := Full_section.Set.add node !todo
+            Section.G.add_vertex graph s;
+            todo := Section.Set.add s !todo
           ) sections
         ) c.options;
         (* Least fix-point to add edges and missing vertices *)
         let rec loop () =
-          if not (Full_section.Set.is_empty !todo) then
-            let fs = Full_section.Set.choose !todo in
-            todo := Full_section.Set.remove fs !todo;
-            seen := Full_section.Set.add fs !seen;
-            let name = Full_section.package fs in
+          if not (Section.Set.is_empty !todo) then
+            let s = Section.Set.choose !todo in
+            todo := Section.Set.remove s !todo;
+            seen := Section.Set.add s !seen;
+            let name = Section.Map.find s library_map in
             let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-            let section = match Full_section.section fs with
-              | None   -> assert false
-              | Some s -> s in
-            let childs = File.Dot_config.Section.requires config section in
+            let childs = File.Dot_config.Section.requires config s in
             (* keep only the build reqs which are in the package dependency list
                and the ones we haven't already seen *)
             let childs =
-              List.filter (fun fs ->
-                List.mem (Full_section.package fs) package_deps
-                && not (Full_section.Set.mem fs !seen)
+              List.filter (fun s ->
+                Section.Map.mem s library_map && not (Section.Set.mem s !seen)
               ) childs in
             List.iter (fun child ->
-                Full_section.G.add_vertex graph child;
-                Full_section.G.add_edge graph child fs;
-                todo := Full_section.Set.add child !todo;
+                Section.G.add_vertex graph child;
+                Section.G.add_edge graph child s;
+                todo := Section.Set.add child !todo;
             ) childs;
             loop ()
         in
         loop ();
         let nodes = ref [] in
-        Full_section.graph_iter (fun n -> nodes := n :: !nodes) graph;
+        Section.graph_iter (fun n -> nodes := n :: !nodes) graph;
         !nodes in
       let fn = match c.is_byte, c.is_link with
         | true , true  -> File.Dot_config.Section.bytelink
@@ -815,11 +831,9 @@ let config request =
         | false, false -> File.Dot_config.Section.asmcomp in
       let strs =
         List.fold_left (fun accu s ->
-          let name = Full_section.package s in
+          let name = Section.Map.find s library_map in
           let config = File.Dot_config.read (Path.C.config t.compiler name) in
-          match Full_section.section s with
-          | None   -> assert false
-          | Some s -> fn config s :: accu
+          fn config s :: accu
         ) [] library_deps in
       let strs = List.map (String.concat " ") strs in
       let output = String.concat " " strs in

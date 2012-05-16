@@ -376,7 +376,21 @@ let string_of_variable_contents = function
   | B b -> string_of_bool b
   | S s -> s
 
-module Section: Abstract = Base
+module Section: sig
+  include Abstract
+  module G : Graph.Sig.I with type V.t = t
+  val graph_iter : (G.V.t -> unit) -> G.t -> unit
+end = struct
+  include Base
+  module C = struct
+    include O
+    let equal = (=)
+    let hash = Hashtbl.hash
+  end
+  module G = Graph.Imperative.Digraph.ConcreteBidirectional(C)
+  module Topo = Graph.Topological.Make (G)
+  let graph_iter = Topo.iter
+end
 
 type section = Section.t
 
@@ -386,8 +400,6 @@ module Full_section: sig
   val section: t -> section option
   val create: name -> section -> t
   val all: name -> t
-  module G : Graph.Sig.I with type V.t = t
-  val graph_iter : (G.V.t -> unit) -> G.t -> unit
 end = struct
 
   type t = {
@@ -424,14 +436,9 @@ end = struct
     type tmp = t
     type t = tmp
     let compare = compare
-    let hash = Hashtbl.hash
-    let equal = (=)
   end
   module Set = Set.Make (O)
   module Map = Map.Make (O)
-  module G = Graph.Imperative.Digraph.ConcreteBidirectional(O)
-  module Topo = Graph.Topological.Make (G)
-  let graph_iter = Topo.iter
 end
 
 type full_section = Full_section.t
