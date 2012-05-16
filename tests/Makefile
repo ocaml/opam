@@ -5,8 +5,15 @@ OPAM_ROOT = $(TEST_DIR)/OPAM.CLIENT
 OPAM_REPO = $(TEST_DIR)/OPAM.REPO
 BIN       = $(TEST_DIR)/OPAM.BIN
 REPO      = test
+REPOKIND ?= rsync
 
-BINARIES  = opam opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload
+# To test OPAM server repositories
+OPAM_SERVER_ROOT = $(TEST_DIR)/OPAM.SERVER
+OPAM_SERVER      = 127.0.0.1
+
+BINARIES  = opam opam-server \
+	    opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
+	    opam-server-init opam-server-update opam-server-download opam-server-upload
 PACKAGES  = P1-1 P1-2 P2 P3 P4
 
 # opam in the path should not be a requirement
@@ -22,6 +29,12 @@ ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 all: fresh init upload list install upload-new upgrade downgrade remove
 	@
 
+server: fresh $(BIN)/opam-server
+	rm -rf $(OPAM_SERVER_ROOT)
+	($(ENV) opam-server --root $(OPAM_SERVER_ROOT) & \
+	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) all \
+	  && killall opam-server || killall opam-server))
+
 $(BINARIES_): $(BUILDS)
 	mkdir -p $(BIN)
 	for bin in $(BINARIES); do \
@@ -29,11 +42,13 @@ $(BINARIES_): $(BUILDS)
 	done
 
 init: fresh $(BIN)/opam $(SCRIPTS:%=$(BIN)/%)
+ifeq ($(REPOKIND),rsync)
 	mkdir $(OPAM_REPO)
 	mkdir $(OPAM_REPO)/opam
 	mkdir $(OPAM_REPO)/descr
 	mkdir $(OPAM_REPO)/archive
-	$(OPAM) init $(REPO) $(OPAM_REPO)
+endif
+	$(OPAM) init $(REPO) $(OPAM_REPO) --kind $(REPOKIND)
 
 upload: $(ARCHIVES) init
 	cd packages && \
