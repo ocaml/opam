@@ -2,7 +2,7 @@
 
 let _ =
   if Array.length Sys.argv <> 3 then (
-    Printf.eprintf "Usage: opam-rsync-init <remote-address> <package>";
+    Printf.eprintf "Usage: %s <remote-address> <package>" Sys.argv.(0);
     exit 1
   )
 
