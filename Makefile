@@ -50,9 +50,12 @@ distclean: clean
 	rm -rf _obuild _build
 	$(MAKE) -C $(SRC_EXT) distclean
 
-.PHONY: tests
+.PHONY: tests tests-server
 tests:
 	$(MAKE) -C tests
+
+tests-server:
+	$(MAKE) -C tests server
 
 tests-runserver:
 	$(MAKE) -C tests runserver

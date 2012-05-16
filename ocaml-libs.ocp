@@ -46,4 +46,8 @@ begin
     has_asm  = true
   end
 
+  begin library "threads"
+    has_byte = true
+    has_asm  = true
+  end
 end
