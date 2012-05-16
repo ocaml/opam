@@ -43,6 +43,9 @@ val remove_file: string -> unit
     directory. *)
 val remove_dir: string -> unit
 
+(** Change the current working directory *)
+val chdir: string -> unit
+
 (** [in_dir dir fn] evaluates [fn] in the directory [dir] *)
 val in_dir: string -> (unit -> 'a) -> 'a
 

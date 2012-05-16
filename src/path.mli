@@ -128,7 +128,7 @@ module R : sig
   type t
 
   (** Create a repository path *)
-  val create: G.t -> repository -> t
+  val create: repository -> t
 
   (** Transform a directory name into a repository path *)
   val of_path: dirname -> t
@@ -175,6 +175,18 @@ module R : sig
   (** Return the upload folder for a given version:
       {i $opam/repo/$repo/upload/} *)
   val upload: t -> dirname
+
+  (** Return the upload folder for OPAM files:
+      {i $opam/repo/$repo/upload/opam/}*)
+  val upload_opam_dir: t -> dirname
+
+  (** Return the upload folder for descr files:
+      {i $opam/repo/$repo/upload/descr/} *)
+  val upload_descr_dir: t -> dirname
+
+  (** Return the upload folder for archive files:
+      {i $opam/repo/$repo/upload/archives/} *)
+  val upload_archives_dir: t -> dirname
 
   (** Return the upload folder for OPAM files:
       {i $opam/repo/$repo/upload/opam/$NAME.$VERSION.opam}*)

@@ -87,6 +87,10 @@ module Filename: sig
   (** Create a filename from a dirname and a basename *)
   val create: dirname -> basename -> t
 
+  (** Create a file from a basename and the current working directory
+      as dirname *)
+  val of_basename: basename -> t
+
   (** Return the directory name *)
   val dirname: t -> dirname
 
@@ -342,7 +346,7 @@ type config =
   | Variable of full_variable
   | Includes of bool * (name list)
   | Compil   of config_option
-  | Subst    of filename list
+  | Subst    of basename list
 
 (** Pretty-print *)
 val string_of_config: config -> string

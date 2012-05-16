@@ -150,7 +150,7 @@ let config = {
                     -> Variable (Full_variable.of_string (List.hd names))
       | Some `Var   ->
           bad_argument "config" "-var takes exactly one parameter"
-      | Some `Subst -> Subst (List.map Filename.of_string names)
+      | Some `Subst -> Subst (List.map Basename.of_string names)
       | None        -> mk names in
     Client.config config
 }

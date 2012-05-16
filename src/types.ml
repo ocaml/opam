@@ -64,7 +64,7 @@ end = struct
     Run.in_dir (to_string dirname) (fun () -> Run.commands cmds)
 
   let chdir dirname =
-    Unix.chdir (to_string dirname)
+    Run.chdir (to_string dirname)
 
   let basename dirname =
     Filename.basename (to_string dirname)
@@ -89,6 +89,7 @@ module Stdlib_filename = F
 module Filename: sig
   include Abstract
   val create: dirname -> basename -> t
+  val of_basename: basename -> t
   val dirname: t -> dirname
   val basename: t -> basename
   val read: t -> Raw.t
@@ -113,7 +114,11 @@ end = struct
   }
 
   let create dirname basename = { dirname; basename }
-    
+
+  let of_basename basename =
+    let dirname = Dirname.of_string "." in
+    { dirname; basename }
+
   let to_string t =
     F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
 
@@ -547,7 +552,7 @@ type config =
   | Variable of full_variable
   | Includes of bool * (name list)
   | Compil   of config_option
-  | Subst    of filename list
+  | Subst    of basename list
 
 let full_sections l =
   String.concat " " (List.map Full_section.to_string l)
@@ -560,7 +565,7 @@ let string_of_config = function
   | List_vars  -> "list-vars"
   | Variable v -> Printf.sprintf "var(%s)" (Full_variable.to_string v)
   | Compil c   -> string_of_config_option c
-  | Subst l    -> String.concat "," (List.map Filename.to_string l)
+  | Subst l    -> String.concat "," (List.map Basename.to_string l)
   | Includes (b,l) ->
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map N.to_string l))

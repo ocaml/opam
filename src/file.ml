@@ -282,7 +282,7 @@ module OPAM = struct
     name       : N.t;
     version    : V.t;
     maintainer : string;
-    substs     : filename list;
+    substs     : basename list;
     build      : string list list;
     depends    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
@@ -372,7 +372,7 @@ module OPAM = struct
           items = [
             Variable (s_version, String (V.to_string t.version));
             Variable (s_maintainer, String t.maintainer);
-            Variable (s_substs, make_list (Filename.to_string |> make_string) t.substs);
+            Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
             Variable (s_build, make_list (make_list make_string) t.build);
             Variable (s_depends, make_or_formula t.depends);
             Variable (s_conflicts, make_and_formula t.conflicts);
@@ -396,7 +396,7 @@ module OPAM = struct
     let version    = assoc s s_version (parse_string |> V.of_string) in
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
-      assoc_list s s_substs (parse_list (parse_string |> Filename.of_string)) in
+      assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
     let build      =
       assoc_default Globals.default_build_command
         s s_build (parse_list (parse_list parse_string)) in

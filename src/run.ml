@@ -65,15 +65,19 @@ let write file contents =
 
 let cwd = Unix.getcwd
 
+let chdir dir =
+  log "chdir %s" dir;
+  Unix.chdir dir
+
 let in_dir dir fn =
   let cwd = Unix.getcwd () in
-  Unix.chdir dir;
+  chdir dir;
   try
     let r = fn () in
-    Unix.chdir cwd;
+    chdir cwd;
     r
   with e ->
-    Unix.chdir cwd;
+    chdir cwd;
     raise e
     
 let list kind dir =
@@ -81,7 +85,7 @@ let list kind dir =
     let d = Sys.readdir (Unix.getcwd ()) in
     let d = Array.to_list d in
     let l = List.filter kind d in
-    List.map (Filename.concat dir) l
+    List.sort compare (List.map (Filename.concat dir) l)
   )
 
 let files =
@@ -111,7 +115,7 @@ let remove file =
 
 let getchdir s =
   let p = Unix.getcwd () in
-  let () = Unix.chdir s in
+  let () = chdir s in
   p
 
 let rec root path =

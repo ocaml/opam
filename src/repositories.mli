@@ -13,19 +13,21 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Server daemon *)
+(** Generic repository pluggin *)
 
-open Protocol
+(** The following functions are wrapper to the corresponding
+    scripts *)
 
-(** Initialize the server state *)
-val init: unit -> unit
+open Types
 
-(** Main request processing function. [process_request id req]
-    processes the client request [req] and procuces a server
-    answer. Eventual log messages are tagged with [id]. *)
-val process_request: string -> client_to_server -> server_to_client
+(** Run {$ opam-$kind-init} in {i $opam/repo/$repo} *)
+val init: repository -> unit
 
-(** Synchronous processing of client requests. [process channels fn]
-    will read incoming requests on channels, compute the server
-    response using [fn] and write the result to the channels. *)
-val process: (in_channel * out_channel) -> (client_to_server -> server_to_client) -> unit
+(** Run {$ opam-$kind-update} in {i $opam/repo/$repo} *)
+val update: repository -> unit
+
+(** Run {$ opam-$kind-download} in {i $opam/repo/$repo} *)
+val download: repository -> nv -> unit
+
+(** Run {$ opam-$kind-upload} in {i $opam/repo/$repo} *)
+val upload: repository -> unit

@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+let log fmt = Globals.log "PROTOCOL" fmt
+
 type client_to_server =
   | ClientVersion of string (* client version *)
   | GetList
@@ -45,7 +47,7 @@ let unpack_byte b =
   input_byte b
 
 (* Adapted from core binary_packing.ml *)
-let pack_of_int i =
+let pack_int b i =
   let v = Int64.of_int i in
   let top3 = Int64.to_int (Int64.shift_right v 40) in
   let mid3 = Int64.to_int (Int64.shift_right v 16) in
@@ -59,10 +61,7 @@ let pack_of_int i =
   buf.[5] <- Char.unsafe_chr (0xFF land mid3);
   buf.[6] <- Char.unsafe_chr (0xFF land (bot2 lsr 8));
   buf.[7] <- Char.unsafe_chr (0xFF land bot2);
-  buf
-
-let pack_int b i =
-  output_string b (pack_of_int i)
+  output_string b buf
 
 (* Adapted from core binary_packing.ml *)
 let unpack_int b =
@@ -101,27 +100,27 @@ exception Bad_packet of int
 
 module Client_to_server = struct
 
-  let int_of_t = function
-    | ClientVersion _ -> 0
-    | GetList         -> 1
-    | GetOPAM _       -> 2
-    | GetDescr _      -> 3
-    | GetArchive _    -> 4
-    | NewPackage _    -> 5
-    | NewVersion _    -> 6
+  let pack_header chan = function
+    | ClientVersion _ -> pack_byte chan 0
+    | GetList         -> pack_byte chan 1
+    | GetOPAM _       -> pack_byte chan 2
+    | GetDescr _      -> pack_byte chan 3
+    | GetArchive _    -> pack_byte chan 4
+    | NewPackage _    -> pack_byte chan 5
+    | NewVersion _    -> pack_byte chan 6
 
-  let args_of_t = function
-    | ClientVersion v -> [v]
-    | GetList -> []
+  let pack_args chan = function
+    | ClientVersion v -> pack_string chan v
+    | GetList -> ()
     | GetOPAM (n,v)
     | GetDescr (n,v)
-    | GetArchive (n,v)-> [n;v]
-    | NewPackage (n,v,o,d,a) -> [n;v;o;d;a]
-    | NewVersion (n,v,o,d,a,k) -> [n;v;o;d;a;k]
+    | GetArchive (n,v)-> pack_strings chan [n;v]
+    | NewPackage (n,v,o,d,a) -> pack_strings chan [n;v;o;d;a]
+    | NewVersion (n,v,o,d,a,k) -> pack_strings chan [n;v;o;d;a;k]
 
   let to_channel chan t =
-    pack_byte chan (int_of_t t);
-    pack_strings chan (args_of_t t)
+    pack_header chan t;
+    pack_args chan t
 
   let of_channel chan =
     match unpack_byte chan with
@@ -161,32 +160,34 @@ end
 
 module Server_to_client = struct
 
+  let pack_header chan = function
+    | ServerVersion _ -> pack_byte chan 0
+    | PackageList _   -> pack_byte chan 1
+    | OPAM _          -> pack_byte chan 2
+    | Descr _         -> pack_byte chan 3
+    | Archive _       -> pack_byte chan 4
+    | Key _           -> pack_byte chan 5
+    | OK              -> pack_byte chan 6
+    | Error _         -> pack_byte chan 7
 
-  let int_of_t = function
-    | ServerVersion _ -> 0
-    | PackageList _   -> 1
-    | OPAM _          -> 2
-    | Descr _         -> 3
-    | Archive _       -> 4
-    | Key _           -> 5
-    | OK              -> 6
-    | Error _         -> 7
-
-  let args_of_t = function
+  let pack_args chan = function
     | PackageList l ->
-        let p accu (n,v) = v :: n :: accu in
-        pack_of_int (List.length l) :: List.fold_left p [] l
+        let pack_pair (n,v) =
+          pack_string chan n;
+          pack_string chan v in
+        pack_int chan (List.length l);
+        List.iter pack_pair l
     | ServerVersion s
     | OPAM s
     | Descr s
     | Archive s
     | Key s
-    | Error s -> [s]
-    | OK -> []
+    | Error s -> pack_string chan s
+    | OK -> ()
 
   let to_channel chan t =
-    pack_byte chan (int_of_t t);
-    pack_strings chan (args_of_t t)
+    pack_header chan t;
+    pack_args chan t
 
   let of_channel chan =
     match unpack_byte chan with
@@ -211,6 +212,8 @@ end
 
 module Client = struct
 
+  let log fmt = Globals.log "CLIENT" fmt
+
   let write stdout t =
     Client_to_server.to_channel stdout t;
     flush stdout
@@ -219,14 +222,20 @@ module Client = struct
     Server_to_client.of_channel stdin
 
   let process (stdin, stdout) t =
+    log "client writing ...";
     write stdout t;
-    read stdin
+    log "client reading ...";
+    let res = read stdin in
+    log "client OK";
+    res
 
 end
 
 let process_client = Client.process
 
 module Server = struct
+
+  let log fmt = Globals.log "SERVER" fmt
 
   let write stdout t =
     Server_to_client.to_channel stdout t;
@@ -236,8 +245,12 @@ module Server = struct
     Client_to_server.of_channel stdin
 
   let process (stdin, stdout) fn =
+    log "server reading ...";
     let r = read stdin in
-    write stdout (fn r)
+    let out = fn r in
+    log "server writing ...";
+    write stdout out;
+    log "server OK"
 
 end
 

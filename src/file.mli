@@ -68,7 +68,7 @@ module OPAM: sig
   val maintainer: t -> string
 
   (** File substitutions *)
-  val substs: t -> filename list
+  val substs: t -> basename list
 
   (** List of command to run for building the package *)
   val build: t -> string list list

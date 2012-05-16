@@ -17,6 +17,8 @@ open Sys
 open Unix
 open File
 
+let log fmt = Globals.log "SERVER" fmt
+
 let default_root_path = Filename.concat Globals.home ".opam-server"
 
 let usage =
@@ -58,21 +60,33 @@ let args = Arg.align [
 
 let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 
-(* Each time a client request is coming, a process is forked to run
-   this function. Hence, we really need to init the random generator
-   with a new seed, otherwise, all forked processes will have the same
-   id (the first random number with the given seed). *)
 let process_connection stdin stdout =
-  Random.self_init();
   let id = string_of_int (Random.int 1024) in
+  log "Processing a new request (id=%s)" id;
   Daemon.process (stdin, stdout) (Daemon.process_request id)
 
-let run_server () =
+let init_server () =
   let addr = ADDR_INET (!host, !port) in
+  let socket = Unix.socket PF_INET SOCK_STREAM 0 in
+  Unix.setsockopt socket Unix.SO_REUSEADDR true ;
+  Unix.bind socket addr;
+  Unix.listen socket 10;
+  socket
+
+let run_server () =
+  let socket = init_server () in
   if !Globals.debug then
-    Globals.msg "Root path is %s.\nListening on port %d (%s) ...\n%!"
+    log "Root path is %s.\nListening on port %d (%s) ..."
       !Globals.root_path !port (string_of_inet_addr !host);
-  establish_server process_connection addr
+  while true do
+    let fd, addr = Unix.accept socket in    
+    let ic = Unix.in_channel_of_descr fd in
+    let oc = Unix.out_channel_of_descr fd in
+    let (_ : Thread.t) =
+      Thread.create (fun () -> process_connection ic oc) () in
+    ()
+  done
 
 let _ =
+  Daemon.init ();
   handle_unix_error run_server ()

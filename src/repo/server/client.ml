@@ -17,6 +17,8 @@ open Unix
 open Protocol
 open Types
 
+let log fmt = Globals.log "CLIENT" fmt
+
 let rpc host =
    let addr = ADDR_INET (host, default_port) in
    process_client (open_connection addr)

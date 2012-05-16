@@ -74,7 +74,7 @@ let load_state () =
   let ocaml_version = File.Config.ocaml_version config in
   let compiler = Path.C.create global ocaml_version in
   let repositories = File.Config.repositories config in
-  let repositories = List.map (fun r -> r, Path.R.create global r) repositories in
+  let repositories = List.map (fun r -> r, Path.R.create r) repositories in
   let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
@@ -99,7 +99,7 @@ let update () =
   log "update";
   let t = load_state () in
   (* first update all the repo *)
-  List.iter (fun (r,p) -> Repositories.update p r) t.repositories;
+  List.iter (fun (r,_) -> Repositories.update r) t.repositories;
   (* then update $opam/repo/index *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
@@ -180,13 +180,13 @@ let init repo =
     let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
     let config = File.Config.create opam_version [repo] ocaml_version in
     let compiler = Path.C.create root ocaml_version in
-    let repo_p = Path.R.create root repo in
+    let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;
     File.Installed.write (Path.C.installed compiler) File.Installed.empty;
     File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
     File.Repo_config.write (Path.R.config repo_p) repo;
-    Repositories.init repo_p repo;
+    Repositories.init repo;
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
@@ -438,7 +438,7 @@ let get_archive t nv =
   let repo = N.Map.find name t.repo_index in
   let repo_p = find_repository_path t repo in
   let repo = find_repository t repo in
-  Repositories.download repo_p repo nv;
+  Repositories.download repo nv;
   let src = Path.R.archive repo_p nv in
   let dst = Path.G.archive t.global nv in
   Filename.link src dst;
@@ -461,6 +461,7 @@ let contents_of_variable t v =
 
 (* Substitute the file contents *)
 let substitute_file t f =
+  let f = Filename.of_basename f in
   let src = Filename.add_extension f "in" in
   let contents = File.Subst.read src in
   let newcontents = File.Subst.replace contents (contents_of_variable t) in
@@ -477,12 +478,12 @@ let proceed_tochange t nv_old nv =
   Dirname.rmdir p_build;
   Filename.extract (get_archive t nv) p_build;
 
-  (* OPAM files should be read in the right directory to get the
-     correct absolute path for the substitution files *)
-  Dirname.chdir (Path.C.build t.compiler nv);
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
 
-  (* Substitute the configuration files *)
+  (* Substitute the configuration files. We should be in the right
+     directory to get the correct absolute path for the substitution
+     files (see [substitute_file] and [Filename.of_basename]. *)
+  Dirname.chdir (Path.C.build t.compiler nv);
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Call the build script and copy the output files *)
@@ -684,7 +685,7 @@ let upload upload repo =
   Filename.copy upload.opam upload_opam;
   Filename.copy upload.descr upload_descr;
   Filename.copy upload.archive upload_archives;
-  Repositories.upload repo_p repo;
+  Repositories.upload repo;
   Filename.remove upload_opam;
   Filename.remove upload_descr;
   Filename.remove upload_archives
