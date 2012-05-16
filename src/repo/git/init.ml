@@ -12,7 +12,7 @@
 
 let _ =
   if Array.length Sys.argv <> 2 then (
-    Printf.eprintf "Usage: opam-git-init <remote-address>";
+    Printf.eprintf "Usage: %s <remote-address>" Sys.argv.(0);
     exit 1
   )
 
