@@ -57,8 +57,8 @@ tests:
 tests-server:
 	$(MAKE) -C tests server
 
-tests-runserver:
-	$(MAKE) -C tests runserver
+tests-git:
+	$(MAKE) -C tests git
 
 %-install:
 	cp _obuild/$*/$*.asm $(BIN)/$*
