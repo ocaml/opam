@@ -137,3 +137,15 @@ begin program "opam-server-upload"
 end
 
 end
+
+(* Helpers *)
+
+begin program "opam-mk-config"
+  files = [ "src/opam_mk_config.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-mk-install"
+  files = [ "src/opam_mk_install.ml" ]
+  requires = [ "opam-lib" ]
+end
