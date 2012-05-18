@@ -42,6 +42,7 @@ end
 (* Absolute directory names *)
 module Dirname: sig
   include Abstract
+  val cwd: unit -> t
   val rmdir: t -> unit
   val mkdir: t -> unit
   val exec: t -> string list -> int
@@ -56,6 +57,9 @@ end = struct
 
   let rmdir dirname =
     Run.remove (to_string dirname)
+
+  let cwd () =
+    of_string (Run.cwd ())
 
   let mkdir dirname =
     Run.mkdir (to_string dirname)

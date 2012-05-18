@@ -141,11 +141,16 @@ end
 (* Helpers *)
 
 begin program "opam-mk-config"
-  files = [ "src/opam_mk_config.ml" ]
+  files = [ "src/scripts/opam_mk_config.ml" ]
   requires = [ "opam-lib" ]
 end
 
 begin program "opam-mk-install"
-  files = [ "src/opam_mk_install.ml" ]
+  files = [ "src/scripts/opam_mk_install.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-mk-repo"
+  files = [ "src/scripts/opam_mk_repo.ml" ]
   requires = [ "opam-lib" ]
 end

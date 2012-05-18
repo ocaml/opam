@@ -176,7 +176,7 @@ let init repo =
   let config_f = Path.G.config root in
   if Filename.exists config_f then
     Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
-  else
+  else try
     let opam_version = OPAM_V.of_string Globals.opam_version in
     let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
     let config = File.Config.create opam_version [repo] ocaml_version in
@@ -195,6 +195,8 @@ let init repo =
     update ();
     (* Install the initial package *)
     install_initial_package ()
+  with _ ->
+    Dirname.rmdir (Path.G.root root)
 
 let indent_left s nb =
   let nb = nb - String.length s in

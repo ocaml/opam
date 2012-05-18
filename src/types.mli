@@ -43,6 +43,9 @@ module Dirname: sig
 
   include Abstract
 
+  (** Return the current working directory *)
+  val cwd: unit -> t
+
   (** Remove a directory *)
   val rmdir: t -> unit
 
