@@ -57,6 +57,10 @@ module Dirname: sig
 
   (** Change the current directory *)
   val chdir: t -> unit
+
+  (** Does the directory exists ? *)
+  val exists: t -> bool
+
 end
 
 (** Shortcut to directory type *)

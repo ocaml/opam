@@ -48,6 +48,7 @@ module Dirname: sig
   val exec: t -> string list -> int
   val chdir: t -> unit
   val basename: t -> string
+  val exists: t -> bool
 end = struct
 
   include Base
@@ -73,6 +74,8 @@ end = struct
   let basename dirname =
     Filename.basename (to_string dirname)
 
+  let exists dirname =
+    Sys.file_exists (to_string dirname)
 end
     
 type dirname = Dirname.t

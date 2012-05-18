@@ -28,7 +28,7 @@
 
 module F = Filename
 
-let tmp_dir = F.concat F.temp_dir_name "opam-mk-repo"
+let tmp_dir0 = F.concat F.temp_dir_name "opam-mk-repo"
 
 open Types
 
@@ -36,22 +36,30 @@ let root = Path.R.of_path (Dirname.cwd ())
 
 let opams = Path.R.available root
 
-let archives =
+let opams =
   NV.Set.filter (fun nv ->
     not (Filename.exists (Path.R.archive root nv))
   ) opams
 
 let url nv =
-  Raw.to_string (Filename.read (Path.R.root root / "url" // NV.to_string nv))
+  let f = Path.R.root root / "url" // NV.to_string nv in
+  if Filename.exists f then
+    Some (Utils.string_strip (Raw.to_string (Filename.read f)))
+  else
+    None
 
 let files nv =
-  Path.R.root root / "files" / NV.to_string nv
+  let d = Path.R.root root / "files" / NV.to_string nv in
+  if Dirname.exists d then
+    Filename.list d
+  else
+    []
 
 let tmp nv =
   Path.R.root root / "tmp" / NV.to_string nv
 
 let tmp_dir nv =
-  Dirname.of_string tmp_dir / NV.to_string nv
+  Dirname.of_string tmp_dir0 / NV.to_string nv
 
 let wget src =
   match Globals.os with
@@ -61,23 +69,28 @@ let wget src =
 let () =
   Dirname.mkdir (Path.R.archive_dir root);
   NV.Set.iter (fun nv ->
-    let url = url nv in
     let tmp_dir = tmp_dir nv in
-    let err = Dirname.exec (tmp nv) [ wget url ] in
-    if err = 0 then (
-      Dirname.rmdir tmp_dir;
-      Filename.extract (tmp nv // F.basename url) tmp_dir;
-      List.iter (fun f ->
-        Filename.copy_in f tmp_dir
-      ) (Filename.list (files nv));
-      let err = Dirname.exec (Path.R.archive_dir root)
-        [ Printf.sprintf
-            "tar cz %s > %s.tar.gz"
-            (Dirname.to_string tmp_dir)
-            (NV.to_string nv)
-        ] in
-      if err <> 0 then
-        Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
-    ) else
-      Globals.error_and_exit "Cannot get %s" url;
+    Dirname.rmdir tmp_dir;
+    Dirname.mkdir tmp_dir;
+    begin match url nv with
+    | None     -> ()
+    | Some url ->
+        Dirname.mkdir (tmp nv);
+        let err = Dirname.exec (tmp nv) [ wget url ] in
+        if err = 0 then (
+          Filename.extract (tmp nv // F.basename url) tmp_dir;
+        ) else
+          Globals.error_and_exit "Cannot get %s" url;
+    end;
+    List.iter (fun f ->
+      Filename.copy_in f tmp_dir
+    ) (files nv);
+    let err = Dirname.exec (Dirname.of_string tmp_dir0)
+      [ Printf.sprintf
+          "tar cz %s/ > %s"
+          (NV.to_string nv)
+          (Filename.to_string (Path.R.archive root nv))
+      ] in
+    if err <> 0 then
+      Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
   ) opams
