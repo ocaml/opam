@@ -286,10 +286,13 @@ let commands = [
 let () =
   List.iter SubCommand.register commands;
   try ArgExt.parse global_args
-  with
-  | Bad (cmd, msg) ->
-    ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
-    Printf.eprintf "ERROR: %s\n%!" msg
-  | Failure ("no subcommand defined" as s) ->
-    ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
-    Printf.eprintf "ERROR: %s\n%!" s
+  with e ->
+    Printf.eprintf "ERROR: %s\n" (String.concat " " (Array.to_list Sys.argv));
+    match e with
+    | Bad (cmd, msg) ->
+        ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
+        Printf.eprintf "ERROR: %s\n%!" msg
+    | Failure ("no subcommand defined" as s) ->
+        ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
+        Printf.eprintf "ERROR: %s\n%!" s
+    | e -> raise e
