@@ -13,7 +13,7 @@ let _ =
 
 let local_path = Run.cwd ()
 let remote_address = Sys.argv.(1)
-let repositories = Filename.concat local_path "repositories"
+let repositories = Filename.concat local_path "packages"
 
 (* Return the list of modified files of the git repository located
    at [dirname] *)
@@ -46,6 +46,7 @@ let () =
   let repo_updates =
     Utils.filter_map (fun f -> NV.of_filename (Filename.of_string f)) repo_updates in
   let repo_updates = List.fold_right NV.Set.add repo_updates NV.Set.empty in
+  update local_path;
 
   (* Look at already cloned packages *)
   let dirs = Run.directories repositories in

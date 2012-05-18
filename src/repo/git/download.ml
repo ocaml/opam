@@ -19,7 +19,7 @@ let git_archive () =
     let url =
       let p = local_path / "url" / package in
       if Sys.file_exists p then
-        Run.read p
+        Utils.string_strip (Run.read p)
       else
         Globals.error_and_exit "Cannot find %s" p in
     Run.mkdir "git";
@@ -32,7 +32,7 @@ let git_archive () =
   (* Then run git-archive to get a tar.gz *)
   Run.in_dir dirname (fun () ->
     let err =
-      Run.command "git archive --format=tar --prefix=%s HEAD | gzip > %s.tar.gz" package package in
+      Run.command "git archive --format=tar --prefix=%s/ HEAD | gzip > %s.tar.gz" package package in
     if err <> 0 then
       Globals.error_and_exit "Cannot run git-archive in %s" dirname
   )
@@ -42,7 +42,7 @@ let () =
   git_archive ();
 
   (* and copy the archive at the right place *)
-  Run.mkdir (local_path / "archive");
+  Run.mkdir (local_path / "archives");
   Run.copy
     (local_path / "git" / package / package ^ ".tar.gz")
-    (local_path / "archive" / package ^ ".tar.gz")
+    (local_path / "archives" / package ^ ".tar.gz")

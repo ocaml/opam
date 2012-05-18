@@ -22,7 +22,7 @@ let available dir =
   let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
   List.fold_left (fun set file ->
     match NV.of_filename file with
-    | None    -> log "XXX %s" (Filename.to_string file); set
+    | None    -> log "%s is not a valid package filename!" (Filename.to_string file); set
     | Some nv -> NV.Set.add nv set
   ) NV.Set.empty files
 

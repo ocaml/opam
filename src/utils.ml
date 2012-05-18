@@ -29,3 +29,19 @@ module IntMap = Map.Make(struct type t = int let compare = compare end)
 module IntSet = Set.Make(struct type t = int let compare = compare end)  
 
 let (|>) f g x = g (f x) 
+
+let string_strip str =
+  let p = ref 0 in
+  let l = String.length str in
+  let fn = function
+    | ' ' | '\t' | '\r' | '\n' -> true
+    | _ -> false in 
+  while !p < l && fn (String.unsafe_get str !p) do
+    incr p;
+  done;
+  let p = !p in
+  let l = ref (l - 1) in
+  while !l >= p && fn (String.unsafe_get str !l) do
+    decr l;
+  done;
+  String.sub str p (!l - p + 1)

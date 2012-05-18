@@ -66,7 +66,7 @@ let write file contents =
 let cwd = Unix.getcwd
 
 let chdir dir =
-  log "chdir %s" dir;
+(*   log "chdir %s" dir; *)
   Unix.chdir dir
 
 let in_dir dir fn =
@@ -225,7 +225,7 @@ let is_archive file =
       | Some s -> fun _ -> Some s
       | None -> fun (ext, c) -> 
         if List.exists (Filename.check_suffix file) ext then
-          Some (command "tar xvf%c %s -C %s" c file)
+          Some (command "tar xf%c %s -C %s" c file)
         else
           None)
     None
@@ -235,16 +235,14 @@ let is_archive file =
 let extract file dst =
   log "untar %s" file;
   let files = read_command_output "tar tf %s" file in
-  log "%d files found: %s" (List.length files) (String.concat ", " files);
+  log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
   let aux name =
-    if root name = Filename.basename dst then
-      Filename.concat tmp_dir name, Filename.concat dst name
-    else
-      let root = root name in
-      let n = String.length root in
-      let rest = String.sub name n (String.length name - n) in 
-      Filename.concat tmp_dir name, dst ^  rest in
+    let root = root name in
+    let n = String.length root in
+    let rest = String.sub name n (String.length name - n) in 
+    Filename.concat tmp_dir name, dst ^  rest in
   let moves = List.map aux files in
+  remove_dir tmp_dir;
   mkdir tmp_dir;
   let err =
     match is_archive file with

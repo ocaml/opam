@@ -1,13 +1,13 @@
 (* Init script for git repositories *)
 
 (* Git repositories should have the following structure:
-   - opam/                 contains the OPAM files
-   - descr/                contains the description files
-   - url/$name.$version    contains the git url for package
-                           $name.version
-   - git/$name.$version/   will contain the git repo for the
-                           package $name.$version when it will
-                           be cloned
+   - opam/                     contains the OPAM files
+   - descr/                   contains the description files
+   - url/$name.$version       contains the git url for package
+                              $name.version
+   - packages/$name.$version/ will contain the git repo for the
+                              package $name.$version when it will
+                              be cloned
 *)
 
 let _ =
@@ -20,8 +20,13 @@ let remote_address = Sys.argv.(1)
 
 let git_clone () =
   let err =
-    Run.command "git clone %s ./" remote_address in
+    Run.commands [
+      "git init";
+      Printf.sprintf "git remote add origin %s" remote_address;
+      "git pull origin master"
+    ] in
   exit err
 
 let () =
+  Run.mkdir "packages";
   git_clone ()
