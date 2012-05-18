@@ -288,6 +288,7 @@ module OPAM = struct
     conflicts  : Debian.Format822.vpkglist;
     libraries  : section list;
     syntax     : section list;
+    others     : (string * value) list;
   }
 
   let empty = {
@@ -300,6 +301,7 @@ module OPAM = struct
     conflicts  = [];
     libraries  = [];
     syntax     = [];
+    others     = [];
   }
 
   let create nv =
@@ -315,6 +317,9 @@ module OPAM = struct
   let s_conflicts   = "conflicts"
   let s_libraries   = "libraries"
   let s_syntax      = "syntax"
+  let s_license     = "license"
+  let s_authors     = "authors"
+  let s_homepage    = "homepage"
     
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
@@ -323,7 +328,7 @@ module OPAM = struct
   (* see [Debcudf.add_inst] for more details about the format *)
   let s_installed   = "  installed" 
 
-  let valid_fields = [
+  let useful_fields = [
     s_opam_version;
     s_version;
     s_maintainer;
@@ -334,6 +339,13 @@ module OPAM = struct
     s_libraries;
     s_syntax;
   ]
+
+  let valid_fields =
+    useful_fields @ [
+      s_license;
+      s_authors;
+      s_homepage;
+    ]
 
   let name t = t.name
   let maintainer t = t.maintainer
@@ -378,7 +390,7 @@ module OPAM = struct
             Variable (s_conflicts, make_and_formula t.conflicts);
             Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
             Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
-          ]
+          ] @ List.map (fun (s, v) -> Variable (s, v)) t.others;
         }
       ] 
     } in
@@ -404,8 +416,13 @@ module OPAM = struct
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
+    let others     =
+      Utils.filter_map (function
+        | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
+        | _              -> None
+      ) s in
     { name; version; maintainer; substs; build;
-      depends; conflicts; libraries; syntax }
+      depends; conflicts; libraries; syntax; others }
 end
 
 module Dot_install = struct
