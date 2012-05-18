@@ -115,6 +115,7 @@ let update () =
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
   (* update $opam/$oversion/reinstall *)
+  (* XXX: we should iterated over all existing $oversions *)
   let reinstall =
     List.fold_left (fun reinstall (r,p) ->
       let updated = File.Updated.safe_read (Path.R.updated p) in
@@ -504,7 +505,9 @@ let proceed_torecompile t nv =
 
 let debpkg_of_nv t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let installed = NV.Set.mem nv t.installed in
+  let installed =
+    not (NV.Set.mem nv t.reinstall)
+     &&  NV.Set.mem nv t.installed in
   File.OPAM.to_package opam installed
 
 let resolve t request =
@@ -652,17 +655,16 @@ let upgrade () =
   log "upgrade";
   let t = load_state () in
   let available = NV.to_map t.available in
+  let aux nv =
+    let name = NV.name nv in
+    let versions = N.Map.find name available in
+    let nv = NV.create name (V.Set.max_elt versions) in
+    vpkg_of_nv nv in
   resolve t
     { wish_install = []
-    ; wish_remove = []
-    ; wish_upgrade =
-        List.map
-          (fun nv ->
-            let name = NV.name nv in
-            let versions = N.Map.find name available in
-            let nv = NV.create name (V.Set.max_elt versions) in
-            vpkg_of_nv nv)
-          (NV.Set.elements t.installed) }
+    ; wish_remove  = []
+    ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
+  Filename.remove (Path.C.reinstall t.compiler)
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
