@@ -201,6 +201,9 @@ let install_initial_package () =
   let installed = NV.Set.add nv installed in
   File.Installed.write installed_p installed
 
+let init_ocaml compiler = 
+  File.Installed.write (Path.C.installed compiler) File.Installed.empty
+
 let init repo =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create () in
@@ -215,7 +218,7 @@ let init repo =
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;
-    File.Installed.write (Path.C.installed compiler) File.Installed.empty;
+    init_ocaml compiler;
     File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
     File.Repo_config.write (Path.R.config repo_p) repo;
     Repositories.init repo;
@@ -930,7 +933,8 @@ let switch oversion =
   let t = load_state () in
 
   let () = 
-    if Dirname.exists (Path.C.root (Path.C.create oversion)) then
+    let new_oversion = Path.C.create oversion in
+    if Dirname.exists (Path.C.root new_oversion) then
       ()
     else
       (* The chosen version does not exist. We build it. *)
@@ -957,7 +961,7 @@ let switch oversion =
           ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
           ; Printf.sprintf "make install" ] 
       with
-        | 0 -> ()
+        | 0 -> init_ocaml new_oversion
         | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
   File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion)
 

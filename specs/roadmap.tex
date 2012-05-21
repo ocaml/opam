@@ -1377,7 +1377,8 @@ This command will:
 
 \item If the file exist, then build the new compiler with the right
   options (and pass \verb+--prefix $opam/$OVERSION+ to
-  \verb+./configure+).
+  \verb+./configure+) and initialize everything in \verb+$opam/+ 
+  in a consistent state as if ``\verb+opam init+'' has just been called.
 
 \end{itemize}
 
