@@ -291,9 +291,11 @@ let () =
     match e with
     | Bad (cmd, msg) ->
         ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
-        Globals.error "%s" msg
+        Globals.error "%s" msg;
+        exit 1;
     | Failure ("no subcommand defined" as s) ->
         ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
-        Globals.error "%s" s
-    | Globals.Error -> exit 1
+        Globals.error "%s" s;
+        exit 2
+    | Globals.Error -> exit 3
     | e -> raise e
