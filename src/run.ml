@@ -237,21 +237,24 @@ let extract file dst =
   log "untar %s" file;
   let files = read_command_output "tar tf %s" file in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
-  let aux name =
-    let root = root name in
-    let n = String.length root in
-    let rest = String.sub name n (String.length name - n) in 
-    Filename.concat tmp_dir name, dst ^  rest in
-  let moves = List.map aux files in
   remove_dir tmp_dir;
   mkdir tmp_dir;
   let err =
     match is_archive file with
-      | Some f_cmd -> f_cmd tmp_dir
-      | None -> Globals.error_and_exit "%s is not a valid archive" file in
+    | Some f_cmd -> f_cmd tmp_dir
+    | None       -> Globals.error_and_exit "%s is not a valid archive" file in
   if err <> 0 then
     Globals.error_and_exit "Error while extracting %s" file
   else
+    let aux accu name =
+      if not (Sys.is_directory (Filename.concat tmp_dir name)) then
+        let root = root name in
+        let n = String.length root in
+        let rest = String.sub name n (String.length name - n) in 
+        (Filename.concat tmp_dir name, dst ^  rest) :: accu
+      else
+        accu in
+    let moves = List.fold_left aux [] files in
     List.iter (fun (src, dst) ->
       mkdir (Filename.dirname dst);
       copy src dst

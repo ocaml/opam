@@ -37,8 +37,11 @@ let add_l x = add ("lib", x)
 let add_s x = add ("lib", x)
 let add_b x = add ("bin", x)
 
+let pr = ref ""
+
 let specs = Arg.align [
   ("-version", Arg.Unit version, " display version information");
+  ("-prefix" , Arg.Set_string pr,"<prefix> build path");
   ("-bin"    , Arg.String add_b, "<name> add a library");
   ("-lib"    , Arg.String add_l, "<name> add a library");
   ("-syntax" , Arg.String add_s, "<name> add a syntax extension");
@@ -62,13 +65,20 @@ let package =
 
 let sections = List.rev !sections
 
+let prefix = !pr
+
 let () =
   let oc = open_out (package ^ ".install") in
   let libs = List.filter (fun (s,_) -> s = "lib") sections in
   let bins = List.filter (fun (s,_) -> s = "bin") sections in
   if libs <> [] then (
-    Printf.fprintf oc "lib: [";
-    List.iter (fun (_, name) -> Printf.fprintf oc "%S " name) libs;
+    Printf.fprintf oc "lib: [\n";
+    List.iter (fun (_, name) ->
+      Printf.fprintf oc "  %S\n" (Filename.concat prefix (name ^ ".cma"));
+      Printf.fprintf oc "  %S\n" (Filename.concat prefix (name ^ ".cmi"));
+      Printf.fprintf oc "  %S\n" (Filename.concat prefix (name ^ ".cmxa"));
+      Printf.fprintf oc "  %S\n" (Filename.concat prefix (name ^ ".a"));
+    ) libs;
     Printf.fprintf oc "]\n"
   );
   if bins <> [] then (
