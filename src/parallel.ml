@@ -116,8 +116,8 @@ module Make (G : G) = struct
      terminates. *)
   (* XXX: this will not work under windows *)
   let wait pids = 
-    let rec aux () = 
-      let pid, status = Unix.wait () in
+    let rec aux () =  
+     let pid, status = Unix.wait () in
       if IntMap.mem pid pids then
         pid, status
       else
@@ -130,6 +130,8 @@ module Make (G : G) = struct
     let t = ref (init g) in
     let pids = ref IntMap.empty in
     let todo = ref (!t.roots) in
+    
+    log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
 (*    let print_pids m =
       let s i n = Printf.sprintf "%d:%s" i (G.string_of_vertex n) in
