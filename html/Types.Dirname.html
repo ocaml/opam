@@ -17,6 +17,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Dirname</title>
@@ -30,6 +31,9 @@
 <pre><span class="keyword">module</span> Dirname: <code class="code">sig</code> <a href="Types.Dirname.html">..</a> <code class="code">end</code></pre>Absolute directory names<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> t</code></pre><div class="info">
+Return the current working directory<br>
+</div>
 <pre><span id="VALrmdir"><span class="keyword">val</span> rmdir</span> : <code class="type">t -> unit</code></pre><div class="info">
 Remove a directory<br>
 </div>
@@ -41,5 +45,8 @@ Execute a list of commands in a given directory<br>
 </div>
 <pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">t -> unit</code></pre><div class="info">
 Change the current directory<br>
+</div>
+<pre><span id="VALexists"><span class="keyword">val</span> exists</span> : <code class="type">t -> bool</code></pre><div class="info">
+Does the directory exists ?<br>
 </div>
 </body></html>

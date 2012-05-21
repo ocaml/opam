@@ -65,15 +65,19 @@ let write file contents =
 
 let cwd = Unix.getcwd
 
+let chdir dir =
+(*   log "chdir %s" dir; *)
+  Unix.chdir dir
+
 let in_dir dir fn =
   let cwd = Unix.getcwd () in
-  Unix.chdir dir;
+  chdir dir;
   try
     let r = fn () in
-    Unix.chdir cwd;
+    chdir cwd;
     r
   with e ->
-    Unix.chdir cwd;
+    chdir cwd;
     raise e
     
 let list kind dir =
@@ -81,7 +85,7 @@ let list kind dir =
     let d = Sys.readdir (Unix.getcwd ()) in
     let d = Array.to_list d in
     let l = List.filter kind d in
-    List.map (Filename.concat dir) l
+    List.sort compare (List.map (Filename.concat dir) l)
   )
 
 let files =
@@ -111,7 +115,7 @@ let remove file =
 
 let getchdir s =
   let p = Unix.getcwd () in
-  let () = Unix.chdir s in
+  let () = chdir s in
   p
 
 let rec root path =
@@ -124,14 +128,15 @@ let rec root path =
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines ic =
   let lines = ref [] in
-  try while true do
-      let line = input_line ic in
-      if not (Filename.concat line "" = line) then
-      lines := line :: !lines;
-    done;
-      !lines
-  with _ ->
-    !lines
+  begin
+    try
+      while true do
+        let line = input_line ic in
+        lines := line :: !lines;
+      done
+    with _ -> ()
+  end;
+  List.rev !lines
 
 let read_command_output_ cmd =
   let ic = Unix.open_process_in cmd in
@@ -221,7 +226,7 @@ let is_archive file =
       | Some s -> fun _ -> Some s
       | None -> fun (ext, c) -> 
         if List.exists (Filename.check_suffix file) ext then
-          Some (command "tar xvf%c %s -C %s" c file)
+          Some (command "tar xf%c %s -C %s" c file)
         else
           None)
     None
@@ -231,16 +236,14 @@ let is_archive file =
 let extract file dst =
   log "untar %s" file;
   let files = read_command_output "tar tf %s" file in
-  log "%d files found: %s" (List.length files) (String.concat ", " files);
+  log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
   let aux name =
-    if root name = Filename.basename dst then
-      Filename.concat tmp_dir name, Filename.concat dst name
-    else
-      let root = root name in
-      let n = String.length root in
-      let rest = String.sub name n (String.length name - n) in 
-      Filename.concat tmp_dir name, dst ^  rest in
+    let root = root name in
+    let n = String.length root in
+    let rest = String.sub name n (String.length name - n) in 
+    Filename.concat tmp_dir name, dst ^  rest in
   let moves = List.map aux files in
+  remove_dir tmp_dir;
   mkdir tmp_dir;
   let err =
     match is_archive file with
@@ -260,3 +263,47 @@ let link src dst =
   if Sys.file_exists dst then
     remove_file dst;
   Unix.link src dst
+
+let file () = Filename.concat !Globals.root_path "opam.lock"
+
+let flock () =
+  let l = ref 0 in
+  let file = file () in
+  let id = string_of_int (Unix.getpid ()) in
+  let rec loop () =
+    if Sys.file_exists file && !l < 5 then begin
+      Globals.log id "Filesytem busy. Waiting 1s (%d)" !l;
+      Unix.sleep 1;
+      loop ()
+    end else if Sys.file_exists file then begin
+      Globals.log id "Too many attemps. Cancelling ...";
+      Globals.error_and_exit "Too many attemps. Cancelling ...";
+    end else begin
+      let oc = open_out file in
+      output_string oc id;
+      flush oc;
+      close_out oc;
+      Globals.log id "locking %s" file;
+    end in
+  loop ()
+    
+let funlock () =
+  let file = file () in
+  let id = string_of_int (Unix.getpid ()) in
+  if Sys.file_exists file then
+    let ic = open_in file in
+    let s = input_line ic in
+    if s = id then begin
+      Globals.log id "unlocking %s" file;
+      Unix.unlink file;
+    end
+
+let with_flock f x =
+  try
+    flock ();
+    let r = f x in
+    funlock ();
+    r
+  with e ->
+    funlock ();
+    raise e

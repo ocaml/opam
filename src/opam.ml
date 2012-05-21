@@ -150,7 +150,7 @@ let config = {
                     -> Variable (Full_variable.of_string (List.hd names))
       | Some `Var   ->
           bad_argument "config" "-var takes exactly one parameter"
-      | Some `Subst -> Subst (List.map Filename.of_string names)
+      | Some `Subst -> Subst (List.map Basename.of_string names)
       | None        -> mk names in
     Client.config config
 }
@@ -240,10 +240,10 @@ let remote = {
   synopsis = "Manage remote servers";
   help     = "";
   specs    = [
-    ("-list", Arg.Unit (set `list), " List the repositories");
-    ("-add" , Arg.Unit (set `add) , " Add a new repository");
-    ("-rm"  , Arg.Unit (set `rm)  , " Remove a remote repository");
-    ("-kind", Arg.Set_string kind , " (optional) Specify the repository kind");
+    ("-list" , Arg.Unit (set `list), " List the repositories");
+    ("-add"  , Arg.Unit (set `add) , " Add a new repository");
+    ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
+    ("--kind", Arg.Set_string kind , " (optional) Specify the repository kind");
   ];
   anon;
   main     = parse_args (fun args ->
@@ -286,10 +286,13 @@ let commands = [
 let () =
   List.iter SubCommand.register commands;
   try ArgExt.parse global_args
-  with
-  | Bad (cmd, msg) ->
-    ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
-    Printf.eprintf "ERROR: %s\n%!" msg
-  | Failure ("no subcommand defined" as s) ->
-    ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
-    Printf.eprintf "ERROR: %s\n%!" s
+  with e ->
+    Globals.error "'%s' failed" (String.concat " " (Array.to_list Sys.argv));
+    match e with
+    | Bad (cmd, msg) ->
+        ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
+        Globals.error "%s" msg
+    | Failure ("no subcommand defined" as s) ->
+        ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
+        Globals.error "%s" s
+    | e -> raise e

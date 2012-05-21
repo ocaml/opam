@@ -120,6 +120,10 @@ let parse_option f g = function
   | Option (k,l) -> f k, List.map g l
   | k            -> f k, []
 
+let parse_single_option f g = function
+  | Option (k,[v]) -> f k, Some (g v)
+  | k              -> f k, None
+
 let parse_string_option f = function
   | Option (k,l) -> parse_string k, Some (f l)
   | k            -> parse_string k, None
@@ -254,15 +258,11 @@ let parse_or_formula = function
   | x      -> bad_format "Expecting list, got %s" (kind x)
 
 let make_constraint = function
-  | name, None       -> [String name]
-  | name, Some (r,v) -> [String name; Group [Symbol r; String v]]
+  | name, None       -> String name
+  | name, Some (r,v) -> Option (String name, [Symbol r; String v])
 
 let make_and_formula_aux l =
-  let l = List.map make_constraint l in
-  List.fold_right (fun elt -> function
-    | []   -> elt
-    | accu -> accu @ elt
-  ) l []
+  List.map make_constraint l
 
 let make_and_formula l =
   List (make_and_formula_aux l)

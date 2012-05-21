@@ -16,8 +16,10 @@
 open Sys
 open Unix
 open File
-open Server
-open Protocol 
+
+let log fmt = Globals.log "SERVER" fmt
+
+let default_root_path = Filename.concat Globals.home ".opam-server"
 
 let usage =
   Printf.sprintf "%s -p <port> [--debug]" Sys.argv.(0)
@@ -36,44 +38,55 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
     Sys.argv.(0) Globals.version
 
-let port  = ref Globals.default_port
+let port  = ref Protocol.default_port
 let host  = ref (inet_addr_of_string "127.0.0.1")
 let set_host h =
   try host := inet_addr_of_string h
   with exn -> raise (Arg.Bad ("invalid [-i] IP: " ^ h))
   
 let _ =
-  Globals.root_path := Globals.default_opam_server_path
+  Globals.root_path := default_root_path
 
 let args = Arg.align [
   "-p"       , Arg.Set_int port     , " Set up the listening port (default: 9999)";
-  "-i"       , Arg.String set_host  , " Set up the listening IP address (default: "^(Unix.string_of_inet_addr !host)^")";
+  "-i"       , Arg.String set_host  , " Set up the listening IP address (default: "
+                                      ^(Unix.string_of_inet_addr !host)^")";
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version     , " Display version information";
 
   "--root"   , Arg.Set_string Globals.root_path,
-  (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
+  (Printf.sprintf " Change root path (default is %s)" default_root_path)
 ]
 
 let _ = Arg.parse args (fun s -> Printf.eprintf "%s: Unknown\n" s) usage
 
-let server fn =
-  let addr = ADDR_INET (!host, !port) in
-  let state = server_init !Globals.root_path in
-  if !Globals.debug then
-    Globals.msg "Root path is %s.\nListening on port %d (%s) ...\n%!"
-      !Globals.root_path !port (string_of_inet_addr !host);
-
-  establish_server (fn state) addr
-
-let log id fmt =
-  Globals.log (Printf.sprintf "REQUEST [%d]" id) fmt
-
-
-let fn state =
-  Random.self_init();
+let process_connection stdin stdout =
   let id = string_of_int (Random.int 1024) in
-  Protocol.add (Daemon.process state id)
+  log "Processing a new request (id=%s)" id;
+  Daemon.process (stdin, stdout) (Daemon.process_request id)
+
+let init_server () =
+  let addr = ADDR_INET (!host, !port) in
+  let socket = Unix.socket PF_INET SOCK_STREAM 0 in
+  Unix.setsockopt socket Unix.SO_REUSEADDR true ;
+  Unix.bind socket addr;
+  Unix.listen socket 10;
+  socket
+
+let run_server () =
+  let socket = init_server () in
+  if !Globals.debug then
+    log "Root path is %s.\nListening on port %d (%s) ..."
+      !Globals.root_path !port (string_of_inet_addr !host);
+  while true do
+    let fd, addr = Unix.accept socket in    
+    let ic = Unix.in_channel_of_descr fd in
+    let oc = Unix.out_channel_of_descr fd in
+    let (_ : Thread.t) =
+      Thread.create (fun () -> process_connection ic oc) () in
+    ()
+  done
 
 let _ =
-  handle_unix_error server fn
+  Daemon.init ();
+  handle_unix_error run_server ()

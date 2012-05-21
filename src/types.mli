@@ -43,6 +43,9 @@ module Dirname: sig
 
   include Abstract
 
+  (** Return the current working directory *)
+  val cwd: unit -> t
+
   (** Remove a directory *)
   val rmdir: t -> unit
 
@@ -55,8 +58,9 @@ module Dirname: sig
   (** Change the current directory *)
   val chdir: t -> unit
 
-  (** see [Sys.file_exists] *)
+  (** Does the directory exists ? *)
   val exists: t -> bool
+
 end
 
 (** Shortcut to directory type *)
@@ -91,8 +95,15 @@ module Filename: sig
   (** Create a filename from a dirname and a basename *)
   val create: dirname -> basename -> t
 
+  (** Create a file from a basename and the current working directory
+      as dirname *)
+  val of_basename: basename -> t
+
   (** Return the directory name *)
   val dirname: t -> dirname
+
+  (** Return the base name *)
+  val basename: t -> basename
 
   (** Retrieves the contents from the hard disk. *)
   val read: t -> Raw.t
@@ -109,8 +120,11 @@ module Filename: sig
   (** Check whether a file has a given suffix *)
   val check_suffix: t -> string -> bool
 
-  (** Remove the file suffix *)
+  (** Add a file extension *)
   val add_extension: t -> string -> t
+
+  (** Remove the file extension *)
+  val chop_extension: t -> t
 
   (** List all the filenames (ie. which are not directories) in a directory *)
   val list: dirname -> t list
@@ -174,6 +188,10 @@ module NV: sig
       with various heuristics.*)
   val of_filename: filename -> t option
 
+  (** Create a new pair from a directory name. This function extracts {i
+      $name} and {i $version} from {i /path/to/$name.$version/} *)
+  val of_dirname: dirname -> t option
+
   (** Create a new pair from a debian package *)
   val of_dpkg: Debian.Packages.package -> t
 
@@ -232,7 +250,16 @@ module Variable: Abstract
 type variable = Variable.t
 
 (** Section names *)
-module Section: Abstract
+module Section: sig 
+
+  include Abstract
+
+  (** Graph of fully-qualified sections *)
+  module G : Graph.Sig.I with type V.t = t
+
+  (** Iteration in topological order *)
+  val graph_iter : (G.V.t -> unit) -> G.t -> unit
+end
 
 (** Shortcut to section names *)
 type section = Section.t
@@ -327,7 +354,7 @@ type config =
   | Variable of full_variable
   | Includes of bool * (name list)
   | Compil   of config_option
-  | Subst    of filename list
+  | Subst    of basename list
 
 (** Pretty-print *)
 val string_of_config: config -> string

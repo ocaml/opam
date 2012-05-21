@@ -22,7 +22,7 @@ let available dir =
   let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
   List.fold_left (fun set file ->
     match NV.of_filename file with
-    | None    -> log "XXX %s" (Filename.to_string file); set
+    | None    -> log "%s is not a valid package filename!" (Filename.to_string file); set
     | Some nv -> NV.Set.add nv set
   ) NV.Set.empty files
 
@@ -33,7 +33,7 @@ module G = struct
 
   type t = dirname (* [$opam/] *)
 
-  let create opam = opam
+  let create () = Dirname.of_string !Globals.root_path
 
   let root opam = opam
 
@@ -70,9 +70,8 @@ module C = struct
 
   type t = dirname (* [$opam/$oversion/ *)
 
-  let create global oversion =
-    let root = G.root global in
-    root / OCaml_V.to_string oversion
+  let create oversion =
+    Dirname.of_string !Globals.root_path / OCaml_V.to_string oversion
 
   let root x = x
 
@@ -113,8 +112,8 @@ module R = struct
 
   type t = dirname (* [$opam/repo/$repo/] *)
 
-  let create global r =
-    G.root global / "repo" / Repository.name r
+  let create r =
+    Dirname.of_string !Globals.root_path / "repo" / Repository.name r
 
   let of_path path = path
     
@@ -143,10 +142,16 @@ module R = struct
 
   let upload t = t / "upload"
 
-  let upload_opam t nv = upload t / "opam" // (NV.to_string nv ^ ".opam")
+  let upload_opam_dir t = upload t / "opam"
 
-  let upload_descr t nv = upload t / "descr" // NV.to_string nv
+  let upload_descr_dir t = upload t / "descr"
 
-  let upload_archives t nv = upload t / "archives" // (NV.to_string nv ^ ".tar.gz")
+  let upload_archives_dir t = upload t / "archives"
+
+  let upload_opam t nv = upload_opam_dir t // (NV.to_string nv ^ ".opam")
+
+  let upload_descr t nv = upload_descr_dir t // NV.to_string nv
+
+  let upload_archives t nv = upload_archives_dir t // (NV.to_string nv ^ ".tar.gz")
 
 end

@@ -13,41 +13,19 @@
 (*                                                                     *)
 (***********************************************************************)
 
-module type RANDOM_KEY = sig
-  type t
-  val new_key : unit -> t
-  val to_string : t -> string
-end
+(** Server daemon *)
 
-module Random_key : RANDOM_KEY = struct
-  type t = string
+open Protocol
 
-  let make n =
-    String.implode (List.init n (fun _ -> char_of_int (Random.int 255)))
+(** Initialize the server state *)
+val init: unit -> unit
 
-  let len = 128
+(** Main request processing function. [process_request id req]
+    processes the client request [req] and procuces a server
+    answer. Eventual log messages are tagged with [id]. *)
+val process_request: string -> client_to_server -> server_to_client
 
-  let n = ref (make len)
-
-  let new_key _ = 
-    let k = !n in
-    let () = n := make len in
-    k
-
-  let to_string x = x
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(** Synchronous processing of client requests. [process channels fn]
+    will read incoming requests on channels, compute the server
+    response using [fn] and write the result to the channels. *)
+val process: (in_channel * out_channel) -> (client_to_server -> server_to_client) -> unit

@@ -35,6 +35,12 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
+  (** Return the file contents *)
+  val to_raw: t -> raw
+
+  (** Convert a raw string into a file *)
+  val of_raw: raw -> t
+
 end
 
 (** Configuration file: [$opam/config] *)
@@ -81,7 +87,7 @@ module OPAM: sig
   val maintainer: t -> string
 
   (** File substitutions *)
-  val substs: t -> filename list
+  val substs: t -> basename list
 
   (** List of command to run for building the package *)
   val build: t -> string list list
@@ -93,10 +99,10 @@ module OPAM: sig
   val conflicts: t -> Debian.Format822.vpkglist
 
   (** List of exported libraries *)
-  val libraries: t -> string list
+  val libraries: t -> section list
 
   (** List of exported syntax extensions *)
-  val syntax: t -> string list
+  val syntax: t -> section list
 
   (** Convert to Debian packages to feed the solver *)
   val to_package: t -> installed:bool -> Debian.Packages.package
@@ -188,6 +194,9 @@ module Dot_config: sig
     (** Return the list of bytecode linking options *)
     val bytelink: t -> section -> string list
 
+    (** Return the build requirements *)
+    val requires: t -> section -> section list
+
     (** Return the value of variables *)
     val variable: t -> section -> variable  -> variable_contents
 
@@ -197,7 +206,7 @@ module Dot_config: sig
   end
 
   (** All library and syntax sections *)
-  module Sections: SECTION
+  module Section: SECTION
 
   (** Sections starting by [library] *)
   module Library: SECTION

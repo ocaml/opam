@@ -17,6 +17,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>File.Config</title>
@@ -32,6 +33,12 @@
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Types.OPAM_V.t -> <a href="Types.html#TYPErepository">Types.repository</a> list -> Types.OCaml_V.t -> t</code></pre><div class="info">
 Creation<br>
+</div>
+<pre><span id="VALwith_ocaml_version"><span class="keyword">val</span> with_ocaml_version</span> : <code class="type">t -> Types.OCaml_V.t -> t</code></pre><div class="info">
+OCaml version updates<br>
+</div>
+<pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> <a href="Types.html#TYPErepository">Types.repository</a> list -> t</code></pre><div class="info">
+Repository updates<br>
 </div>
 <pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> Types.OPAM_V.t</code></pre><div class="info">
 Return the OPAM version<br>

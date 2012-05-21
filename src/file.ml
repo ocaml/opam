@@ -81,6 +81,7 @@ module Installed = struct
     let map = ref empty in
     let add n v = map := NV.Set.add (NV.create n v) !map in
     List.iter (function
+      | []              -> ()
       | [name; version] -> add (N.of_string name) (V.of_string version)
       | _               -> Globals.error_and_exit "installed"
     ) lines;
@@ -128,7 +129,8 @@ module Repo_index = struct
             Globals.error_and_exit "multiple lines for package %s" name_s
           else
             N.Map.add name repo_s map
-      | x ->
+      | [] -> map
+      | x  ->
           Globals.error_and_exit "'%s' is not a valid repository index line" (String.concat " " x)
     ) N.Map.empty lines
 
@@ -277,16 +279,19 @@ module OPAM = struct
 
   let internal = "opam"
 
+  type section = Types.section
+
   type t = {
     name       : N.t;
     version    : V.t;
     maintainer : string;
-    substs     : filename list;
+    substs     : basename list;
     build      : string list list;
     depends    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
-    libraries  : string list;
-    syntax     : string list;
+    libraries  : section list;
+    syntax     : section list;
+    others     : (string * value) list;
   }
 
   let empty = {
@@ -299,6 +304,7 @@ module OPAM = struct
     conflicts  = [];
     libraries  = [];
     syntax     = [];
+    others     = [];
   }
 
   let create nv =
@@ -314,6 +320,9 @@ module OPAM = struct
   let s_conflicts   = "conflicts"
   let s_libraries   = "libraries"
   let s_syntax      = "syntax"
+  let s_license     = "license"
+  let s_authors     = "authors"
+  let s_homepage    = "homepage"
     
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
@@ -322,7 +331,7 @@ module OPAM = struct
   (* see [Debcudf.add_inst] for more details about the format *)
   let s_installed   = "  installed" 
 
-  let valid_fields = [
+  let useful_fields = [
     s_opam_version;
     s_version;
     s_maintainer;
@@ -333,6 +342,13 @@ module OPAM = struct
     s_libraries;
     s_syntax;
   ]
+
+  let valid_fields =
+    useful_fields @ [
+      s_license;
+      s_authors;
+      s_homepage;
+    ]
 
   let name t = t.name
   let maintainer t = t.maintainer
@@ -371,13 +387,13 @@ module OPAM = struct
           items = [
             Variable (s_version, String (V.to_string t.version));
             Variable (s_maintainer, String t.maintainer);
-            Variable (s_substs, make_list (Filename.to_string |> make_string) t.substs);
+            Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
             Variable (s_build, make_list (make_list make_string) t.build);
             Variable (s_depends, make_or_formula t.depends);
             Variable (s_conflicts, make_and_formula t.conflicts);
-            Variable (s_libraries, make_list make_string t.libraries);
-            Variable (s_syntax, make_list make_string t.syntax);
-          ]
+            Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
+            Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
+          ] @ List.map (fun (s, v) -> Variable (s, v)) t.others;
         }
       ] 
     } in
@@ -395,16 +411,21 @@ module OPAM = struct
     let version    = assoc s s_version (parse_string |> V.of_string) in
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
-      assoc_list s s_substs (parse_list (parse_string |> Filename.of_string)) in
+      assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
     let build      =
       assoc_default Globals.default_build_command
         s s_build (parse_list (parse_list parse_string)) in
     let depends    = assoc_list s s_depends parse_or_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
-    let libraries  = assoc_list s s_libraries parse_string_list in
-    let syntax     = assoc_list s s_syntax parse_string_list in
+    let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
+    let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
+    let others     =
+      Utils.filter_map (function
+        | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
+        | _              -> None
+      ) s in
     { name; version; maintainer; substs; build;
-      depends; conflicts; libraries; syntax }
+      depends; conflicts; libraries; syntax; others }
 end
 
 module Dot_install = struct
@@ -489,6 +510,7 @@ module Dot_config = struct
     asmcomp   : string list ;
     bytelink  : string list ;
     asmlink   : string list ; 
+    requires  : section list;
     lvariables: (variable * variable_contents) list;
   }
 
@@ -509,6 +531,7 @@ module Dot_config = struct
   let s_asmcomp  = "asmcomp"
   let s_bytelink = "bytelink"
   let s_asmlink  = "asmlink"
+  let s_requires = "requires"
 
   let valid_fields = [
     s_opam_version;
@@ -516,6 +539,7 @@ module Dot_config = struct
     s_asmcomp;
     s_bytelink;
     s_asmlink;
+    s_requires;
   ]
 
   let of_string filename str =
@@ -527,14 +551,16 @@ module Dot_config = struct
     let parse_variables items =
       let l = List.filter (fun (x,_) -> not (List.mem x valid_fields)) (variables items) in
       List.map (fun (k,v) -> Variable.of_string k, parse_value v) l in
+    let parse_requires = parse_list (parse_string |> Section.of_string) in
     let parse_section kind s =
       let name =  Section.of_string s.File_format.name in
       let bytecomp = assoc_string_list s.items s_bytecomp in
       let asmcomp  = assoc_string_list s.items s_asmcomp  in
       let bytelink = assoc_string_list s.items s_bytecomp in
       let asmlink  = assoc_string_list s.items s_asmlink  in
+      let requires = assoc_list s.items s_requires parse_requires in
       let lvariables = parse_variables s.items in
-      { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables } in
+      { name; kind; bytecomp; asmcomp; bytelink; asmlink; lvariables; requires } in
     let libraries = assoc_sections file.contents "library" (parse_section "library") in
     let syntax    = assoc_sections file.contents "syntax" (parse_section "syntax") in
     let sections  = libraries @ syntax in
@@ -547,6 +573,7 @@ module Dot_config = struct
       | S s -> String s in
     let of_variables l =
       List.map (fun (k,v) -> Variable (Variable.to_string k, of_value v)) l in
+    let make_require = Section.to_string |> make_string in
     let of_section s =
       Section
         { File_format.name = Section.to_string s.name;
@@ -556,6 +583,7 @@ module Dot_config = struct
             Variable (s_asmcomp , make_list make_string s.asmcomp);
             Variable (s_bytelink, make_list make_string s.bytelink);
             Variable (s_asmlink , make_list make_string s.asmlink);
+            Variable (s_requires, make_list make_require s.requires);
           ] @ of_variables s.lvariables 
         } in
     Syntax.to_string filename {
@@ -576,6 +604,7 @@ module Dot_config = struct
     val bytecomp : t -> section -> string list
     val asmlink  : t -> section -> string list
     val bytelink : t -> section -> string list
+    val requires : t -> section -> section list
     val variable : t -> section -> variable -> variable_contents
     val variables: t -> section -> variable list
   (* val requires *)
@@ -592,6 +621,7 @@ module Dot_config = struct
     let asmcomp  t s = (find t s).asmcomp
     let bytelink t s = (find t s).bytelink
     let asmlink  t s = (find t s).asmlink
+    let requires t s = (find t s).requires
     let variable t n s = List.assoc s (find t n).lvariables
     let variables t n = List.map fst (find t n).lvariables
   end
@@ -599,7 +629,7 @@ module Dot_config = struct
   let filter t n = List.filter (fun s -> s.kind = n) t.sections
   module Library  = MK (struct let get t = filter t "library" end)
   module Syntax   = MK (struct let get t = filter t "syntax"  end)
-  module Sections = MK (struct let get t = t.sections end)
+  module Section  = MK (struct let get t = t.sections end)
 end
 
 module Comp = struct
@@ -747,6 +777,14 @@ module Make (F : F) = struct
     else
       F.empty
 
+  let filename = Filename.of_string "/dummy/"
+
+  let of_raw raw =
+    F.of_string filename raw
+
+  let to_raw t =
+    F.to_string filename t
+
 end
 
 open X
@@ -757,6 +795,8 @@ module type IO_FILE = sig
   val write: filename -> t -> unit
   val read : filename -> t
   val safe_read: filename -> t
+  val to_raw: t -> raw
+  val of_raw: raw -> t
 end
 
 module Config = struct

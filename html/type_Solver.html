@@ -13,6 +13,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Solver</title>
@@ -164,26 +165,19 @@
 &nbsp;&nbsp;&nbsp;&nbsp;wish_remove&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkg&nbsp;list;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;wish_upgrade&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkg&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_request&nbsp;:&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solution&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;to_remove&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t&nbsp;list;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;to_add&nbsp;:&nbsp;<span class="constructor">Solver</span>.<span class="constructor">PA_graph</span>.t;<br>
 &nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;delete_or_update&nbsp;:&nbsp;<span class="constructor">Solver</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;print_solution&nbsp;:&nbsp;<span class="constructor">Solver</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Solver</span>&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package&nbsp;=&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Packages</span>.package<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;universe&nbsp;=&nbsp;<span class="constructor">U</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.package&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;packages&nbsp;=&nbsp;<span class="constructor">P</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.package&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;option<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve_list&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.request&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_backward_dependencies&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.package&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_forward_dependencies&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.<span class="constructor">Solver</span>.package&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;delete_or_update&nbsp;:&nbsp;<span class="constructor">Solver</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package&nbsp;=&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Packages</span>.package<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;universe&nbsp;=&nbsp;<span class="constructor">U</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;packages&nbsp;=&nbsp;<span class="constructor">P</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_backward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_forward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
 <span class="keyword">end</span></code></body></html>

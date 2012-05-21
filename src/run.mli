@@ -43,11 +43,17 @@ val remove_file: string -> unit
     directory. *)
 val remove_dir: string -> unit
 
+(** Change the current working directory *)
+val chdir: string -> unit
+
 (** [in_dir dir fn] evaluates [fn] in the directory [dir] *)
 val in_dir: string -> (unit -> 'a) -> 'a
 
 (** [files dir] returns the files in the directory [dir] *)
 val files: string -> string list
+
+(** [files dir] returns the directories in the directory [dir] *)
+val directories: string -> string list
 
 (** [command fmt] executes the command [fmt] *)
 val command: ('a, unit, string, int) format4 -> 'a
@@ -70,3 +76,17 @@ val cwd: unit -> string
 (** Create a directory. Do not fail if the directory already
     exist. *)
 val mkdir: string -> unit
+
+(** {2 File locking function} *)
+
+(** [flock ()] takes the global file lock. If the lock is already
+    taken, sleep for 1s and then retry. Abort after 5 tentatives. *)
+val flock: unit -> unit
+
+(** [funlock ()] unlocks the global file lock. Work only if the
+    current processus is the same as the one who took the lock at the
+    first place. *)
+val funlock: unit -> unit
+
+(** Functional version of [flock / funlock] *)
+val with_flock: ('a -> 'b) -> 'a -> 'b

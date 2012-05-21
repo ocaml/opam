@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Path.html">
+<link rel="next" href="Run.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Repositories</title>
+</head>
+<body>
+<div class="navbar"><a href="Path.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Run.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Repositories.html">Repositories</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Repositories: <code class="code">sig</code> <a href="Repositories.html">..</a> <code class="code">end</code></pre>Generic repository pluggin<br>
+<hr width="100%">
+<br>
+The following functions are wrapper to the corresponding
+    scripts<br>
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> unit</code></pre><div class="info">
+Run <i>opam-$kind-init</i> in <i>$opam/repo/$repo</i><br>
+</div>
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> unit</code></pre><div class="info">
+Run <i>opam-$kind-update</i> in <i>$opam/repo/$repo</i><br>
+</div>
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> unit</code></pre><div class="info">
+Run <i>opam-$kind-download</i> in <i>$opam/repo/$repo</i><br>
+</div>
+<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> unit</code></pre><div class="info">
+Run <i>opam-$kind-upload</i> in <i>$opam/repo/$repo</i><br>
+</div>
+<pre><span class="keyword">module</span> <a href="Repositories.Raw.html">Raw</a>: <code class="code">sig</code> <a href="Repositories.Raw.html">..</a> <code class="code">end</code></pre></body></html>

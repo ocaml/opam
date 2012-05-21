@@ -14,6 +14,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Index of modules</title>
@@ -36,6 +37,11 @@ Compiler-version related state
 <tr><td><a href="Client.html">Client</a> </td>
 <td><div class="info">
 OPAM client.
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html">Comp</a> [<a href="File.html">File</a>]</td>
+<td><div class="info">
+Compiler version <code class="code">$opam/compilers/</code>
 </div>
 </td></tr>
 <tr><td><a href="File.Config.html">Config</a> [<a href="File.html">File</a>]</td>
@@ -92,6 +98,11 @@ Fully qualified variables
 </div>
 </td></tr>
 <tr><td align="left"><br>G</td></tr>
+<tr><td><a href="Types.Section.G.html">G</a> [<a href="Types.Section.html">Types.Section</a>]</td>
+<td><div class="info">
+Graph of fully-qualified sections
+</div>
+</td></tr>
 <tr><td><a href="Path.G.html">G</a> [<a href="Path.html">Path</a>]</td>
 <td><div class="info">
 Global state
@@ -178,6 +189,8 @@ Typed filename management.
 Raw file contents
 </div>
 </td></tr>
+<tr><td><a href="Repositories.Raw.html">Raw</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td></td></tr>
 <tr><td><a href="File.Reinstall.html">Reinstall</a> [<a href="File.html">File</a>]</td>
 <td><div class="info">
 List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code>
@@ -191,6 +204,11 @@ Repository config: <code class="code">$opam/repo/$repo/config</code>
 <tr><td><a href="File.Repo_index.html">Repo_index</a> [<a href="File.html">File</a>]</td>
 <td><div class="info">
 Association between package names and repository: <code class="code">$opam/repo/index</code>
+</div>
+</td></tr>
+<tr><td><a href="Repositories.html">Repositories</a> </td>
+<td><div class="info">
+Generic repository pluggin
 </div>
 </td></tr>
 <tr><td><a href="Types.Repository.html">Repository</a> [<a href="Types.html">Types</a>]</td>
@@ -209,7 +227,7 @@ Low-level untyped system operations.
 Section names
 </div>
 </td></tr>
-<tr><td><a href="File.Dot_config.Sections.html">Sections</a> [<a href="File.Dot_config.html">File.Dot_config</a>]</td>
+<tr><td><a href="File.Dot_config.Section.html">Section</a> [<a href="File.Dot_config.html">File.Dot_config</a>]</td>
 <td><div class="info">
 All library and syntax sections
 </div>
@@ -219,8 +237,6 @@ All library and syntax sections
 Collection of abstract values
 </div>
 </td></tr>
-<tr><td><a href="Solver.Solver.html">Solver</a> </td>
-<td></td></tr>
 <tr><td><a href="Solver.html">Solver</a> </td>
 <td><div class="info">
 SAT-solver for package dependencies and conflicts.

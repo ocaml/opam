@@ -42,10 +42,12 @@ end
 (* Absolute directory names *)
 module Dirname: sig
   include Abstract
+  val cwd: unit -> t
   val rmdir: t -> unit
   val mkdir: t -> unit
   val exec: t -> string list -> int
   val chdir: t -> unit
+  val basename: t -> string
   val exists: t -> bool
 end = struct
 
@@ -57,6 +59,9 @@ end = struct
   let rmdir dirname =
     Run.remove (to_string dirname)
 
+  let cwd () =
+    of_string (Run.cwd ())
+
   let mkdir dirname =
     Run.mkdir (to_string dirname)
 
@@ -64,11 +69,13 @@ end = struct
     Run.in_dir (to_string dirname) (fun () -> Run.commands cmds)
 
   let chdir dirname =
-    Unix.chdir (to_string dirname)
+    Run.chdir (to_string dirname)
+
+  let basename dirname =
+    Filename.basename (to_string dirname)
 
   let exists dirname =
     Sys.file_exists (to_string dirname)
-
 end
     
 type dirname = Dirname.t
@@ -89,13 +96,16 @@ module Stdlib_filename = F
 module Filename: sig
   include Abstract
   val create: dirname -> basename -> t
+  val of_basename: basename -> t
   val dirname: t -> dirname
+  val basename: t -> basename
   val read: t -> Raw.t
   val remove: t -> unit
   val write: t -> Raw.t -> unit
   val exists: t -> bool
   val check_suffix: t -> string -> bool
   val add_extension: t -> string -> t
+  val chop_extension: t -> t
   val list: dirname -> t list
   val with_raw: (Raw.t -> 'a) -> t -> 'a
   val copy_in: t -> dirname -> unit
@@ -111,7 +121,11 @@ end = struct
   }
 
   let create dirname basename = { dirname; basename }
-    
+
+  let of_basename basename =
+    let dirname = Dirname.of_string "." in
+    { dirname; basename }
+
   let to_string t =
     F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
 
@@ -124,6 +138,8 @@ end = struct
     }
 
   let dirname t = t.dirname
+
+  let basename t = t.basename
 
   let read filename =
     let str = Run.read (to_string filename) in
@@ -147,6 +163,9 @@ end = struct
 
   let add_extension filename suffix =
     of_string ((to_string filename) ^ "." ^ suffix)
+
+  let chop_extension filename =
+    of_string (F.chop_extension (to_string filename))
 
   let list d =
     let fs = Run.files (Dirname.to_string d) in
@@ -217,6 +236,7 @@ module NV: sig
   val version: t -> version
   val create: name -> version -> t
   val of_filename: filename -> t option
+  val of_dirname: dirname -> t option
   val of_dpkg: Debian.Packages.package -> t
   val of_cudf: Debian.Debcudf.tables -> Cudf.package -> t
   val to_map: Set.t -> V.Set.t N.Map.t
@@ -254,6 +274,9 @@ end = struct
       check (F.chop_suffix b ".tar.gz")
     else
       None
+
+  let of_dirname d =
+    check (Dirname.basename d)
 
   let of_dpkg d =
     { name    = N.of_string d.Debian.Packages.name;
@@ -321,6 +344,7 @@ end = struct
   }
 
   let create ~name ~kind ~address =
+    let address = Run.real_path address in
     { name; kind; address }
 
   let of_string _ =
@@ -365,7 +389,21 @@ let string_of_variable_contents = function
   | B b -> string_of_bool b
   | S s -> s
 
-module Section: Abstract = Base
+module Section: sig
+  include Abstract
+  module G : Graph.Sig.I with type V.t = t
+  val graph_iter : (G.V.t -> unit) -> G.t -> unit
+end = struct
+  include Base
+  module C = struct
+    include O
+    let equal = (=)
+    let hash = Hashtbl.hash
+  end
+  module G = Graph.Imperative.Digraph.ConcreteBidirectional(C)
+  module Topo = Graph.Topological.Make (G)
+  let graph_iter = Topo.iter
+end
 
 type section = Section.t
 
@@ -382,7 +420,7 @@ end = struct
     section: section option;
   }
 
-  let create package section = 
+  let create package section =
     { package; section = Some section }
 
   let all package =
@@ -407,10 +445,13 @@ end = struct
     | None   -> n
     | Some s -> Printf.sprintf "%s.%s" n (Section.to_string s)
 
-  module O = struct type tmp = t type t = tmp let compare = compare end
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let compare = compare
+  end
   module Set = Set.Make (O)
   module Map = Map.Make (O)
-
 end
 
 type full_section = Full_section.t
@@ -519,7 +560,7 @@ type config =
   | Variable of full_variable
   | Includes of bool * (name list)
   | Compil   of config_option
-  | Subst    of filename list
+  | Subst    of basename list
 
 let full_sections l =
   String.concat " " (List.map Full_section.to_string l)
@@ -532,7 +573,7 @@ let string_of_config = function
   | List_vars  -> "list-vars"
   | Variable v -> Printf.sprintf "var(%s)" (Full_variable.to_string v)
   | Compil c   -> string_of_config_option c
-  | Subst l    -> String.concat "," (List.map Filename.to_string l)
+  | Subst l    -> String.concat "," (List.map Basename.to_string l)
   | Includes (b,l) ->
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map N.to_string l))

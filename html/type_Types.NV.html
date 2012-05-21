@@ -13,6 +13,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.NV</title>
@@ -85,6 +86,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;version&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.version<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">Types</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.version&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_filename&nbsp;:&nbsp;<span class="constructor">Types</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_dirname&nbsp;:&nbsp;<span class="constructor">Types</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_dpkg&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Packages</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_cudf&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Debcudf</span>.tables&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_map&nbsp;:&nbsp;<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.<span class="constructor">Set</span>.t&nbsp;<span class="constructor">N</span>.<span class="constructor">Map</span>.t<br>

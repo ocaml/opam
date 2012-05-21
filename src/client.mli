@@ -30,27 +30,27 @@ val info : N.t -> unit
     package is installed. *)
 val config : config -> unit
 
-(** Installs the given package. *)
+(** Installs the given package. Take the global file lock. *)
 val install : N.t -> unit
 
-(** Refresh the available packages. *)
+(** Refresh the available packages. Take the global file lock. *)
 val update : unit -> unit
 
 (** Finds a consistent state where most of the installed packages are
-    upgraded to their latest version. *)
+    upgraded to their latest version. Take the global file lock. *)
 val upgrade : unit -> unit
 
 (** Upload a package to a remote repository. If repo is [None] then it
     will look for the repository associated with the package
     name. Otherwise, it will look for a repository having the right
-    name.*)
+    name. Take the global file lock. *)
 val upload : upload -> string option -> unit
 
-(** Removes the given package. *)
+(** Removes the given package. Take the global file lock. *)
 val remove : N.t -> unit
 
-(** Manage remote repositories *)
+(** Manage remote repositories. Take the global file lock. *)
 val remote : remote -> unit
 
-(** Switch to an OCaml compiler *)
+(** Switch to an OCaml compiler. *)
 val switch: OCaml_V.t -> unit

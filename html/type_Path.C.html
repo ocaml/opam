@@ -13,6 +13,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Path.C</title>
@@ -20,12 +21,15 @@
 <body>
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;root&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lib&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">N</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lib_dir&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;bin&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;ocaml&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;installed&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;build&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;build_ocaml&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;build_dir&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;build_install&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;build_config&nbsp;:&nbsp;<span class="constructor">Path</span>.<span class="constructor">C</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename<br>

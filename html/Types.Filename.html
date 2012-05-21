@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Filename</title>
@@ -35,8 +36,15 @@
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Types.html#TYPEbasename">Types.basename</a> -> t</code></pre><div class="info">
 Create a filename from a dirname and a basename<br>
 </div>
+<pre><span id="VALof_basename"><span class="keyword">val</span> of_basename</span> : <code class="type"><a href="Types.html#TYPEbasename">Types.basename</a> -> t</code></pre><div class="info">
+Create a file from a basename and the current working directory
+      as dirname<br>
+</div>
 <pre><span id="VALdirname"><span class="keyword">val</span> dirname</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the directory name<br>
+</div>
+<pre><span id="VALbasename"><span class="keyword">val</span> basename</span> : <code class="type">t -> <a href="Types.html#TYPEbasename">Types.basename</a></code></pre><div class="info">
+Return the base name<br>
 </div>
 <pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">t -> Raw.t</code></pre><div class="info">
 Retrieves the contents from the hard disk.<br>
@@ -54,7 +62,10 @@ see <code class="code">Sys.file_exists</code><br>
 Check whether a file has a given suffix<br>
 </div>
 <pre><span id="VALadd_extension"><span class="keyword">val</span> add_extension</span> : <code class="type">t -> string -> t</code></pre><div class="info">
-Remove the file suffix<br>
+Add a file extension<br>
+</div>
+<pre><span id="VALchop_extension"><span class="keyword">val</span> chop_extension</span> : <code class="type">t -> t</code></pre><div class="info">
+Remove the file extension<br>
 </div>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> t list</code></pre><div class="info">
 List all the filenames (ie. which are not directories) in a directory<br>

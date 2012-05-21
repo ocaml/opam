@@ -461,11 +461,9 @@ valid formula whose semantic is: {\em either any version of package
       ?bytecomp: [ STRING+ ]
       ?asmlink : [ STRING+ ]
       ?bytelink: [ STRING+ ]
-      ?requires: [ <dep>+ ]
+      ?requires: [ STRING+ ]
       <def>*
     }
-<dep>     := STRING 
-           | STRING { STRING+ }
 <kind>    := library | syntax
 <def>     := IDENT: BOOL
            | IDENT: STRING
@@ -522,16 +520,11 @@ The available options are:
 \item {\tt requires} is the list of libraries and syntax extensions
   the current block is depending on. The full list of compilation
   and linking options is built by looking at the transitive closure of
-  dependencies.
-
-  The contents of {\tt dep}s is either:
-  \begin{itemize}
-  \item {\tt "foo"} the block is depending on all the syntax
-    extensions and libraries defined in the package {\tt "foo"}; or
-  \item {\tt "foo" ("bar" "gna")} the block is depending only on the
-    libraries {\tt "bar"} and {\tt "gna"} defined in the package {\tt
-      "foo"}.
-  \end{itemize}
+  dependencies. The contents of {\tt dep}s is the list of libraries or
+  syntax extension the current section depends on. Note that we do not
+  refer here to any package name, as multiple packages can expose libraries
+  with the same name and interface and thus we want the user to be able
+  to switch between them easily.
 \end{itemize}
 
 \subsubsection{Package installation files: {\tt .install}}
@@ -1157,26 +1150,24 @@ hand-shake to agree on the protocol version.
 \hline
 0 & \verb+ClientVersion+ & \verb+version: string+ & Send the client version to the server \\
 \hline
-1 & \verb+InitList+ & -- & Ask for the list of all available OPAM files \\
+1 & \verb+GetList+ & -- & Ask for the list of all available OPAM files \\
 \hline
-2 & \verb+UpdateList+ & -- & Ask for the list of updated OPAM files \\
-\hline
-3 & \verb+GetOPAM+ & \verb+name   : string+ & Ask for the binary representation of \\
+2 & \verb+GetOPAM+ & \verb+name   : string+ & Ask for the binary representation of \\
   &                & \verb+version: string+ & a given OPAM file \\
 \hline
-4 & \verb+GetDescr+ & \verb+name   : string+ & Ask for the binary representation of \\
+3 & \verb+GetDescr+ & \verb+name   : string+ & Ask for the binary representation of \\
   &                 & \verb+version: string+ & a given description file \\
 \hline
-5 & \verb+GetArchive+ & \verb+name   : string+ & Ask for the binary representation of \\
+4 & \verb+GetArchive+ & \verb+name   : string+ & Ask for the binary representation of \\
   &                   & \verb+version: string+ & a given archive file \\
 \hline
-6 & \verb+NewPackage+ & \verb+name   : string+ & Create a new package on the server. \\
+5 & \verb+NewPackage+ & \verb+name   : string+ & Create a new package on the server. \\
   &                   & \verb+version: string+ & The client should provide the OPAM and \\
   &                   & \verb+opam   : string+ & descr files and the source archive. \\
   &                   & \verb+descr  : string+ & \\
   &                   & \verb+archive: string+ & \\
 \hline
-7 & \verb+NewVersion+ & \verb+name   : string+ & Upload a new version of an already existing \\
+6 & \verb+NewVersion+ & \verb+name   : string+ & Upload a new version of an already existing \\
   &                   & \verb+version: string+ & package on the server. The client \\
   &                   & \verb+opam   : string+ & should also provide a security key\\
   &                   & \verb+descr  : string+ & \\
@@ -1204,8 +1195,8 @@ hand-shake to agree on the protocol version.
 1 & \verb+PackageList+  & \verb+list   : (string*string) list+ & Return the list of available \\
   &                     &                                      & package names and versions \\
 \hline
-2 & \verb+OPAM+         & \verb+opam   : string+ & Return an OPAM file
-\\
+2 & \verb+OPAM+         & \verb+opam   : string+ & Return an OPAM file \\
+\hline
 3 & \verb+Descr+        & \verb+descr  : string+ & Return an OPAM file \\
 \hline
 4 & \verb+Archive+      & \verb+archive: string+ & Return an archive file \\
@@ -1287,11 +1278,8 @@ The syntax of {\tt .comp} files follows the one described in
     ?bytelink:  [ STRING+ ]
     ?asmlink:   [ STRING+ ]
     ?packages:  [ STRING+ ]
-    ?requires:  [ <dep>+ ]
+    ?requires:  [ STRING+ ]
     ?pp:        [ <ppflag>+ ]
-
-<dep>    := STRING
-          | STRING { STRING+ }
 
 <ppflag> := CAMLP4 { <dep>+ }
           | <flag>
@@ -1332,13 +1320,11 @@ The syntax of {\tt .comp} files follows the one described in
   {\tt pp} might want to use things already installed with {\tt
     packages}).
 
-\item {\tt requires} is a list of package dependencies which will be
-  added to every packages installed with this compiler. All the
-  packages should be present in {\tt packages}.
-  A package dependency is either {\tt "foo"}: {\em I depend on every
-  libraries and syntax extensions in the package "foo"} or {\tt "foo"
-    ("bar" "gna")}: {\em I depend on the libraries (or syntax
-    extensions) "bar" and "gna" in the package "foo"}.
+\item {\tt requires} is a list of libraries and syntax extensions
+  dependencies which will be added to every packages installed with
+  this compiler. The libraries and syntax extensions should be present
+  in packages defined in {\tt packages}, othewise an error should be
+  thrown.
 
 \item {\tt pp} is the command to use with the {\tt -pp} command-line
   argument. It is either a single flag or a {\tt camlp4} command,

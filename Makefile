@@ -2,7 +2,11 @@ BIN = /usr/local/bin
 OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 OCAMLC=ocamlc
 SRC_EXT=src_ext
-TARGETS = opam opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload
+TARGETS = opam opam-server \
+	  opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
+	  opam-git-init opam-git-update opam-git-download opam-git-upload \
+	  opam-server-init opam-server-update opam-server-download opam-server-upload \
+	  opam-mk-config opam-mk-install opam-mk-repo
 
 .PHONY: all
 
@@ -47,12 +51,15 @@ distclean: clean
 	rm -rf _obuild _build
 	$(MAKE) -C $(SRC_EXT) distclean
 
-.PHONY: tests
+.PHONY: tests tests-server
 tests:
 	$(MAKE) -C tests
 
-tests-runserver:
-	$(MAKE) -C tests runserver
+tests-server:
+	$(MAKE) -C tests server
+
+tests-git:
+	$(MAKE) -C tests git
 
 %-install:
 	cp _obuild/$*/$*.asm $(BIN)/$*

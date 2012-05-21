@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Section</title>
@@ -29,23 +30,13 @@
 </div>
 <center><h1>Module <a href="type_Types.Section.html">Types.Section</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Section: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre>Section names<br>
+<pre><span class="keyword">module</span> Section: <code class="code">sig</code> <a href="Types.Section.html">..</a> <code class="code">end</code></pre>Section names<br>
 <hr width="100%">
-<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
-<div class="info">
-Abstract type<br>
+<pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span class="keyword">module</span> <a href="Types.Section.G.html">G</a>: <code class="type">Graph.Sig.I</code><code class="type">  with type V.t = t</code></pre><div class="info">
+Graph of fully-qualified sections
 </div>
-
-<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> <a href="Types.Abstract.html#TYPEt">t</a></code></pre><div class="info">
-Create an abstract value from a string<br>
-</div>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Types.Abstract.html#TYPEt">t</a> -> string</code></pre><div class="info">
-Convert an abstract value to a string<br>
-</div>
-<pre><span class="keyword">module</span> <a href="Types.Abstract.Set.html">Set</a>: <code class="type">Set.S</code><code class="type">  with type elt = t</code></pre><div class="info">
-Collection of abstract values
-</div>
-<pre><span class="keyword">module</span> <a href="Types.Abstract.Map.html">Map</a>: <code class="type">Map.S</code><code class="type">  with type key = t</code></pre><div class="info">
-Dictionaries of abstract values
+<pre><span id="VALgraph_iter"><span class="keyword">val</span> graph_iter</span> : <code class="type">(G.V.t -> unit) -> G.t -> unit</code></pre><div class="info">
+Iteration in topological order<br>
 </div>
 </body></html>

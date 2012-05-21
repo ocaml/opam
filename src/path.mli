@@ -23,7 +23,8 @@ module G : sig
   (** Contains {i $opam} *)
   type t
 
-  val create: dirname -> t
+  (** Create a global path *)
+  val create: unit -> t
 
   (** Root dir: {i $opam/} *)
   val root: t -> dirname
@@ -74,12 +75,12 @@ module C : sig
   (** Contains {i $opam} and {i $OVERSION} *)
   type t
 
+  (** Create a compiler path *)
+  val create: OCaml_V.t -> t
+
   (** Root dir: {i $opam/$OVERSION} *)
   val root: t -> dirname
-    
-  (** Create a compiler path *)
-  val create: G.t -> OCaml_V.t -> t
-
+   
   (** Library path for a given package:
       {i $opam/$OVERSION/lib/NAME} *)
   val lib: t -> N.t -> dirname
@@ -144,7 +145,7 @@ module R : sig
   type t
 
   (** Create a repository path *)
-  val create: G.t -> repository -> t
+  val create: repository -> t
 
   (** Transform a directory name into a repository path *)
   val of_path: dirname -> t
@@ -191,6 +192,18 @@ module R : sig
   (** Return the upload folder for a given version:
       {i $opam/repo/$repo/upload/} *)
   val upload: t -> dirname
+
+  (** Return the upload folder for OPAM files:
+      {i $opam/repo/$repo/upload/opam/}*)
+  val upload_opam_dir: t -> dirname
+
+  (** Return the upload folder for descr files:
+      {i $opam/repo/$repo/upload/descr/} *)
+  val upload_descr_dir: t -> dirname
+
+  (** Return the upload folder for archive files:
+      {i $opam/repo/$repo/upload/archives/} *)
+  val upload_archives_dir: t -> dirname
 
   (** Return the upload folder for OPAM files:
       {i $opam/repo/$repo/upload/opam/$NAME.$VERSION.opam}*)

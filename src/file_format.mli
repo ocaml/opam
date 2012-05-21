@@ -85,6 +85,9 @@ val parse_group : (value -> 'a) -> value -> 'a list
 (** Parse a value and its option of 'things' *)
 val parse_option : (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b list
 
+(** Parse a value and a single optional value *)
+val parse_single_option : (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b option
+
 (** Parse a string with an optional argument *)
 val parse_string_option : (value list -> 'a) -> value -> string * 'a option
 

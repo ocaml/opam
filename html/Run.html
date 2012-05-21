@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Path.html">
+<link rel="previous" href="Repositories.html">
 <link rel="next" href="Solver.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -18,12 +18,14 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
-<link title="Types" rel="Chapter" href="Types.html"><title>Run</title>
+<link title="Types" rel="Chapter" href="Types.html"><link title="File locking function" rel="Section" href="#2_Filelockingfunction">
+<title>Run</title>
 </head>
 <body>
-<div class="navbar"><a href="Path.html">Previous</a>
+<div class="navbar"><a href="Repositories.html">Previous</a>
 &nbsp;<a href="index.html">Up</a>
 &nbsp;<a href="Solver.html">Next</a>
 </div>
@@ -59,11 +61,17 @@
 <code class="code">remove_dir filename</code> removes <code class="code">filename</code>. Works only for
     directory.<br>
 </div>
+<pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">string -> unit</code></pre><div class="info">
+Change the current working directory<br>
+</div>
 <pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">string -> (unit -> 'a) -> 'a</code></pre><div class="info">
 <code class="code">in_dir dir fn</code> evaluates <code class="code">fn</code> in the directory <code class="code">dir</code><br>
 </div>
 <pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">files dir</code> returns the files in the directory <code class="code">dir</code><br>
+</div>
+<pre><span id="VALdirectories"><span class="keyword">val</span> directories</span> : <code class="type">string -> string list</code></pre><div class="info">
+<code class="code">files dir</code> returns the directories in the directory <code class="code">dir</code><br>
 </div>
 <pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">('a, unit, string, int) Pervasives.format4 -> 'a</code></pre><div class="info">
 <code class="code">command fmt</code> executes the command <code class="code">fmt</code><br>
@@ -86,5 +94,19 @@ Return the current working directory<br>
 <pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">string -> unit</code></pre><div class="info">
 Create a directory. Do not fail if the directory already
     exist.<br>
+</div>
+<br>
+<span id="2_Filelockingfunction"><h2>File locking function</h2></span><br>
+<pre><span id="VALflock"><span class="keyword">val</span> flock</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<code class="code">flock ()</code> takes the global file lock. If the lock is already
+    taken, sleep for 1s and then retry. Abort after 5 tentatives.<br>
+</div>
+<pre><span id="VALfunlock"><span class="keyword">val</span> funlock</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<code class="code">funlock ()</code> unlocks the global file lock. Work only if the
+    current processus is the same as the one who took the lock at the
+    first place.<br>
+</div>
+<pre><span id="VALwith_flock"><span class="keyword">val</span> with_flock</span> : <code class="type">('a -> 'b) -> 'a -> 'b</code></pre><div class="info">
+Functional version of <code class="code">flock / funlock</code><br>
 </div>
 </body></html>

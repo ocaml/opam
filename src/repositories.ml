@@ -17,9 +17,9 @@ open Types
 
 let log fmt = Globals.log "REPO" fmt
 
-let run cmd root repo args =
+let run cmd repo args =
   log "opam-%s: %s %s" cmd (Repository.to_string repo) (String.concat " " args);
-  let path = Path.R.root root in
+  let path = Path.R.root (Path.R.create repo) in
   let cmd =  Printf.sprintf "opam-%s-%s" (Repository.kind repo) cmd in
   let i = Run.in_dir (Dirname.to_string path) (fun () ->
     Run.command "%s %s %s" cmd (Repository.address repo) (String.concat " " args);
@@ -27,30 +27,22 @@ let run cmd root repo args =
   if i <> 0 then
     Globals.error_and_exit "%s failed" cmd
 
-let init root r =
-  run "init" root r [];
+let init r =
+  run "init" r [];
+  let root = Path.R.create r in
   File.Repo_config.write (Path.R.config root) r;
   Dirname.mkdir (Path.R.opam_dir root);
   Dirname.mkdir (Path.R.descr_dir root);
-  Dirname.mkdir (Path.R.archive_dir root);
-  (* XXX *)
-  ()
+  Dirname.mkdir (Path.R.archive_dir root)
 
-(* Generic repository pluggins *)
-let update root r =
-  run "update" root r [];
-  (* XXX *)
-  ()
+let update r =
+  run "update" r []
 
-let download root r nv =
-  run "download" root r [NV.to_string nv];
-  (* XXX *)
-  ()
+let download r nv =
+  run "download" r [NV.to_string nv]
 
-let upload root r =
-  run "upload" root r [];
-  (* XXX *)
-  ()
+let upload r =
+  run "upload" r []
 
 module Raw = struct
 

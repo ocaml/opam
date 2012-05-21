@@ -13,14 +13,24 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open Types
-open Path
-open File
+(** Generic repository pluggin *)
 
-val init : R.t -> Repo_config.t -> unit
-val update : R.t -> Repo_config.t -> unit
-val upload : R.t -> Repo_config.t -> unit
-val download : R.t -> Repo_config.t -> NV.t -> unit
+(** The following functions are wrapper to the corresponding
+    scripts *)
+
+open Types
+
+(** Run {i opam-$kind-init} in {i $opam/repo/$repo} *)
+val init: repository -> unit
+
+(** Run {i opam-$kind-update} in {i $opam/repo/$repo} *)
+val update: repository -> unit
+
+(** Run {i opam-$kind-download} in {i $opam/repo/$repo} *)
+val download: repository -> nv -> unit
+
+(** Run {i opam-$kind-upload} in {i $opam/repo/$repo} *)
+val upload: repository -> unit
 
 module Raw : sig (* MOVE each value in a [repo/$REPO/raw.ml] file ? *)
 
