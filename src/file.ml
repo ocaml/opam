@@ -607,7 +607,6 @@ module Dot_config = struct
     val requires : t -> section -> section list
     val variable : t -> section -> variable -> variable_contents
     val variables: t -> section -> variable list
-  (* val requires *)
   end
 
   module MK (M : sig val get : t -> s list end) : SECTION = struct

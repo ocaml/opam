@@ -45,7 +45,7 @@ all:
 	$(MAKE) upgrade && \
 	$(MAKE) list && \
 	$(MAKE) downgrade && \
-	$(MAKE) list
+	$(MAKE) list 
 
 server:
 	$(MAKE) fresh
