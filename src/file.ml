@@ -81,6 +81,7 @@ module Installed = struct
     let map = ref empty in
     let add n v = map := NV.Set.add (NV.create n v) !map in
     List.iter (function
+      | []              -> ()
       | [name; version] -> add (N.of_string name) (V.of_string version)
       | _               -> Globals.error_and_exit "installed"
     ) lines;
@@ -128,7 +129,8 @@ module Repo_index = struct
             Globals.error_and_exit "multiple lines for package %s" name_s
           else
             N.Map.add name repo_s map
-      | x ->
+      | [] -> map
+      | x  ->
           Globals.error_and_exit "'%s' is not a valid repository index line" (String.concat " " x)
     ) N.Map.empty lines
 
