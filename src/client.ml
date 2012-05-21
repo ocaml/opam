@@ -936,7 +936,7 @@ let switch oversion =
         Dirname.exec build_dir
           [ Printf.sprintf "./configure %s -prefix %s" (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
               (String.concat " " (File.Comp.configure comp))
-              (Dirname.to_string (Path.C.ocaml t.compiler))
+              (Dirname.to_string (Path.C.root t.compiler))
             (* NOTE In case it exists 2 '-prefix', in general the script ./configure will only consider the last one, others will be discarded. *)
           ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
           ; Printf.sprintf "make install" ] 

@@ -91,10 +91,6 @@ module C : sig
   (** Installed binaries: {i $opam/$OVERSION/bin} *)
   val bin: t -> dirname
 
-  (** Directory containing "bin" and "lib" 
-      {i $opam/$OVERSION/ocaml} *)
-  val ocaml : t -> dirname
-
   (** List of installed packages with their version:
       {i $opam/$OVERSION/installed} *)
   val installed: t -> filename

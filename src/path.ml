@@ -81,8 +81,6 @@ module C = struct
 
   let bin t = t / "bin"
 
-  let ocaml t = t / "ocaml"
-
   let installed t = t // "installed"
 
   let build_dir t = t / "build"
