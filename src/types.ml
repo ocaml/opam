@@ -344,6 +344,7 @@ end = struct
   }
 
   let create ~name ~kind ~address =
+    let address = Run.real_path address in
     { name; kind; address }
 
   let of_string _ =
