@@ -47,6 +47,12 @@ Main configuration file: <i>$opam/config</i><br>
 <pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 OPAM files: <i>$opam/opam/$NAME.$VERSION.opam</i><br>
 </div>
+<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+Compiler files : <i>$opam/compilers/$OVERSION.comp</i><br>
+</div>
+<pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Compiler files : <i>$opam/compilers/</i><br>
+</div>
 <pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
 List all the available packages:
       <i>$opam/opam/$NAME.$VERSION.opam</i><br>

@@ -31,3 +31,10 @@ val download: repository -> nv -> unit
 
 (** Run {i opam-$kind-upload} in {i $opam/repo/$repo} *)
 val upload: repository -> unit
+
+module Raw : sig (* MOVE each value in a [repo/$REPO/raw.ml] file ? *)
+
+  val rsync : [ `A | `R ] list -> string -> filename -> unit
+(* val svn : *)
+(* val git : *)
+end

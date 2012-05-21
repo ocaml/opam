@@ -225,6 +225,7 @@ module Config = struct
     }
 
     let with_repositories t repositories = { t with repositories }
+    let with_ocaml_version t ocaml_version = { t with ocaml_version }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
@@ -429,7 +430,7 @@ end
 
 module Dot_install = struct
 
-  let internal = "install"
+  let internal = ".install"
     
   type t =  {
     lib : filename list ;
@@ -606,6 +607,7 @@ module Dot_config = struct
     val requires : t -> section -> section list
     val variable : t -> section -> variable -> variable_contents
     val variables: t -> section -> variable list
+  (* val requires *)
   end
 
   module MK (M : sig val get : t -> s list end) : SECTION = struct
@@ -628,6 +630,93 @@ module Dot_config = struct
   module Library  = MK (struct let get t = filter t "library" end)
   module Syntax   = MK (struct let get t = filter t "syntax"  end)
   module Section  = MK (struct let get t = t.sections end)
+end
+
+module Comp = struct
+
+  let internal = "comp"
+
+  type t = { 
+    opam_version : OPAM_V.t ;
+    src          : string ;
+
+    patches      : string list ;
+    configure    : string list ;
+    make         : string list ;
+    bytecomp     : string list ;
+    asmcomp      : string list ;
+    bytelink     : string list ;
+    asmlink      : string list ;
+    packages     : string list ;
+
+    (*requires :*) 
+    (*pp : *) 
+  }
+
+  let empty = {
+    opam_version = OPAM_V.of_string Globals.opam_version;
+    src = "";
+
+    patches = [];
+    configure = [];
+    make = [];
+    bytecomp = [];
+    asmcomp = [];
+    bytelink = [];
+    asmlink = [];
+    packages = [];
+  }
+
+  let s_src = "src"
+  let s_patches = "patches"
+  let s_configure = "configure"
+  let s_make = "make"
+  let s_bytecomp = "bytecomp"
+  let s_asmcomp  = "asmcomp"
+  let s_bytelink = "bytelink"
+  let s_asmlink  = "asmlink"
+  let s_packages = "packages"
+
+  let configure t = t.configure
+  let make t = t.make
+  let src t = t.src
+
+  let of_string filename str =
+    let file = Syntax.of_string filename str in
+    let s = file.contents in
+
+    let opam_version =
+      assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
+    let src = assoc s s_src parse_string in 
+
+    let patches   = assoc_string_list s s_patches   in
+    let configure = assoc_string_list s s_configure in
+    let make      = assoc_string_list s s_make      in
+    let bytecomp  = assoc_string_list s s_bytecomp  in
+    let asmcomp   = assoc_string_list s s_asmcomp   in
+    let bytelink  = assoc_string_list s s_bytecomp  in
+    let asmlink   = assoc_string_list s s_asmlink   in
+    let packages  = assoc_string_list s s_packages  in
+
+    { opam_version; src; 
+      patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages; 
+    }
+
+  let to_string filename s =
+    Syntax.to_string filename {
+      filename = Filename.to_string filename;
+      contents = [
+              Variable (s_patches  , make_list make_string s.patches);
+              Variable (s_configure, make_list make_string s.configure);
+              Variable (s_make     , make_list make_string s.make);
+              Variable (s_bytecomp , make_list make_string s.bytecomp);
+              Variable (s_asmcomp  , make_list make_string s.asmcomp);
+              Variable (s_bytelink , make_list make_string s.bytelink);
+              Variable (s_asmlink  , make_list make_string s.asmlink);
+              Variable (s_packages , make_list make_string s.packages);
+            ] 
+    }
+
 end
 
 module Subst = struct
@@ -763,4 +852,9 @@ end
 module Subst = struct
   include Subst
   include Make (Subst)
+end
+
+module Comp = struct
+  include Comp
+  include Make (Comp)
 end

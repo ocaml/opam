@@ -162,7 +162,8 @@ List of files to install in $bin/
 </td></tr>
 <tr><td><a href="Path.C.html#VALbuild">build</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-Tempory folders used to decompress the corresponding archives:
+Tempory folders used to decompress and compile 
+      the corresponding archives:
       <i>$opam/$OVERSION/build/$NAME-$VERSION</i>
 </div>
 </td></tr>
@@ -185,6 +186,13 @@ Tempory folder: <i>$opam/$OVERSION/build</i>
 <td><div class="info">
 Tempory location of install files:
       <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.install</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALbuild_ocaml">build_ocaml</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Tempory folders used to decompress and compile 
+      the OCaml compiler:
+      <i>$opam/$OVERSION/build/_</i>
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_config.SECTION.html#VALbytecomp">bytecomp</a> [<a href="File.Dot_config.SECTION.html">File.Dot_config.SECTION</a>]</td>
@@ -213,6 +221,8 @@ Change the current working directory
 Check whether a file has a given suffix
 </div>
 </td></tr>
+<tr><td><a href="Types.Stdlib_filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
+<td></td></tr>
 <tr><td><a href="Types.Filename.html#VALchop_extension">chop_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Remove the file extension
@@ -226,6 +236,16 @@ Remove the file extension
 <tr><td><a href="Run.html#VALcommands">commands</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">commands cmds</code> executes the commands <code class="code">cmds</code>.
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALcompilers">compilers</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+Compiler files : <i>$opam/compilers/$OVERSION.comp</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALcompilers_dir">compilers_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+Compiler files : <i>$opam/compilers/</i>
 </div>
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALconcat">concat</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
@@ -255,6 +275,11 @@ Depending on request, returns options or directories where the
 <tr><td><a href="Path.C.html#VALconfig_dir">config_dir</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Configuration folder: <i>$opam/$OVERSION/config</i>
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html#VALconfigure">configure</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Options to give to the "./configure" command
 </div>
 </td></tr>
 <tr><td><a href="File.OPAM.html#VALconflicts">conflicts</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
@@ -342,6 +367,11 @@ Create a global variable for a package
 Create a variable local for a given library/syntax extension
 </div>
 </td></tr>
+<tr><td><a href="Types.Dirname.html#VALcwd">cwd</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Return the current working directory
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALcwd">cwd</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 Return the current working directory
@@ -420,6 +450,11 @@ Execute a list of commands in a given directory
 see <code class="code">Sys.file_exists</code>
 </div>
 </td></tr>
+<tr><td><a href="Types.Dirname.html#VALexists">exists</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Does the directory exists ?
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALextract">extract</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Extract an archive in a given directory (it rewrites the root to
@@ -451,9 +486,19 @@ Same as <code class="code">filter_backward_dependencies</code> but for forward
     dependencies
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALflock">flock</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">flock ()</code> takes the global file lock.
+</div>
+</td></tr>
 <tr><td><a href="File.Descr.html#VALfull">full</a> [<a href="File.Descr.html">File.Descr</a>]</td>
 <td><div class="info">
 Return the full description
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALfunlock">funlock</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">funlock ()</code> unlocks the global file lock.
 </div>
 </td></tr>
 <tr><td align="left"><br>G</td></tr>
@@ -597,6 +642,11 @@ Displays all available packages
 Package maintainer
 </div>
 </td></tr>
+<tr><td><a href="File.Comp.html#VALmake">make</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Options to give to the "make" command
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALmake_and_formula">make_and_formula</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Build an AND formula
@@ -674,6 +724,12 @@ Package name
 </div>
 </td></tr>
 <tr><td align="left"><br>O</td></tr>
+<tr><td><a href="Path.C.html#VALocaml">ocaml</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Directory containing "bin" and "lib" 
+      <i>$opam/$OVERSION/ocaml</i>
+</div>
+</td></tr>
 <tr><td><a href="File.Config.html#VALocaml_version">ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 Return the OCaml version
@@ -875,7 +931,7 @@ Packages to reinstall on next upgrade:
 </td></tr>
 <tr><td><a href="Client.html#VALremote">remote</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Manage remote repositories
+Manage remote repositories.
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALremove">remove</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
@@ -941,7 +997,7 @@ Return the repository folder: <i>$opam/repo/$repo</i>
 </td></tr>
 <tr><td><a href="Path.C.html#VALroot">root</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-Root dir: <i>$opam/$oversion</i>
+Root dir: <i>$opam/$OVERSION</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALroot">root</a> [<a href="Path.G.html">Path.G</a>]</td>
@@ -949,6 +1005,8 @@ Root dir: <i>$opam/$oversion</i>
 Root dir: <i>$opam/</i>
 </div>
 </td></tr>
+<tr><td><a href="Repositories.Raw.html#VALrsync">rsync</a> [<a href="Repositories.Raw.html">Repositories.Raw</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>S</td></tr>
 <tr><td><a href="File.IO_FILE.html#VALsafe_read">safe_read</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
@@ -970,6 +1028,11 @@ Return the optional section name: <code class="code">None</code> means all avail
 <tr><td><a href="File_format.html#VALsections">sections</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Get all the sections from a list of items
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html#VALsrc">src</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Return the url of the compiler
 </div>
 </td></tr>
 <tr><td><a href="Types.html#VALstring_of_config">string_of_config</a> [<a href="Types.html">Types</a>]</td>
@@ -1036,7 +1099,7 @@ File substitutions
 </td></tr>
 <tr><td><a href="Client.html#VALswitch">switch</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Switch to an OCaml compiler
+Switch to an OCaml compiler.
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALsynopsis">synopsis</a> [<a href="File.Descr.html">File.Descr</a>]</td>
@@ -1187,6 +1250,16 @@ Package version
 </div>
 </td></tr>
 <tr><td align="left"><br>W</td></tr>
+<tr><td><a href="Run.html#VALwith_flock">with_flock</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+Functional version of <code class="code">flock / funlock</code>
+</div>
+</td></tr>
+<tr><td><a href="File.Config.html#VALwith_ocaml_version">with_ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
+<td><div class="info">
+OCaml version updates
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALwith_raw">with_raw</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Apply a function on the contents of a file

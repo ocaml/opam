@@ -925,26 +925,42 @@ let remote action =
   check ();
   Run.with_flock remote action
 
-let switch name =
-  log "switch %s" (OCaml_V.to_string name);
-  (*    let t = load_state () in *)
-  failwith "TODO"
+let switch oversion =
+  log "switch %s" (OCaml_V.to_string oversion);
+  let t = load_state () in
 
-(*
-    let compile compil =
-      failwith "TODO" in
-    if Filename.check_suffix name ".compil" then begin
-      (* we switch to a fresh OCaml install *)
-      let compil = File.Compil.parse (Run.U.read name) in
-      let name = File.Compil.name compil in
-      let compil_f = Path.compil t.home name in
-      if Path.file_exists compil_f then
-        Globals.error_and_exit "Compiler spec %s already exists" name;
-      File.Compil.add compil_f compil;
-      compile compil
-    end else begin
-      let compil_f = Path.compil t.home name in
-      let compil = File.Compil.find compil_f in
-      compile compil
-    end
-*)
+  let () = 
+    if Dirname.exists (Path.C.root (Path.C.create oversion)) then
+      ()
+    else
+      (* The chosen version does not exist. We build it. *)
+      let comp = File.Comp.read (Path.G.compilers t.global oversion) in
+      let comp_src = File.Comp.src comp in
+      let ocaml_tgz = 
+        Path.G.compilers_dir t.global // Printf.sprintf "%s%s" 
+          (OCaml_V.to_string oversion)
+          (let suff = ".tar.gz" in 
+           if Stdlib_filename.check_suffix comp_src suff then
+             suff
+           else
+             Globals.error_and_exit "Unknown file format (%s)" comp_src) in
+      let () = Repositories.Raw.rsync [`A ; `R] comp_src ocaml_tgz in
+      let build_dir = Path.C.build_ocaml t.compiler in
+      let () = Filename.extract ocaml_tgz build_dir in
+      
+      match
+        Dirname.exec build_dir
+          [ Printf.sprintf "./configure %s -prefix %s" (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
+              (String.concat " " (File.Comp.configure comp))
+              (Dirname.to_string (Path.C.ocaml t.compiler))
+            (* NOTE In case it exists 2 '-prefix', in general the script ./configure will only consider the last one, others will be discarded. *)
+          ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
+          ; Printf.sprintf "make install" ] 
+      with
+        | 0 -> ()
+        | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
+  File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion)
+
+let switch oversion =
+  check ();
+  Run.with_flock switch oversion

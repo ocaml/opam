@@ -24,4 +24,6 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upload&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Raw</span>&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span>&nbsp;<span class="keyword">val</span>&nbsp;rsync&nbsp;:&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">A</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">R</span>&nbsp;]&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keyword">end</span><br>
 <span class="keyword">end</span></code></body></html>

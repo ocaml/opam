@@ -45,6 +45,10 @@ module G = struct
 
   let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
 
+  let compilers_dir t = t / "compilers"
+
+  let compilers t ov = compilers_dir t // (OCaml_V.to_string ov ^ ".comp")
+
   let available t = available (opam_dir t)
 
   let available_versions t n =
@@ -77,11 +81,15 @@ module C = struct
 
   let bin t = t / "bin"
 
+  let ocaml t = t / "ocaml"
+
   let installed t = t // "installed"
 
   let build_dir t = t / "build"
 
   let build t nv = build_dir t / NV.to_string nv
+
+  let build_ocaml t = build_dir t / "_"
 
   let build_install t nv = build t nv // (N.to_string (NV.name nv) ^ ".install")
 

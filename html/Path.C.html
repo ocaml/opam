@@ -41,7 +41,7 @@ Contains <i>$opam</i> and <i>$OVERSION</i><br>
 Create a compiler path<br>
 </div>
 <pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Root dir: <i>$opam/$oversion</i><br>
+Root dir: <i>$opam/$OVERSION</i><br>
 </div>
 <pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.N.t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Library path for a given package:
@@ -53,13 +53,23 @@ Library path: <i>$opam/$OVERSION/lib/</i><br>
 <pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Installed binaries: <i>$opam/$OVERSION/bin</i><br>
 </div>
+<pre><span id="VALocaml"><span class="keyword">val</span> ocaml</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Directory containing "bin" and "lib" 
+      <i>$opam/$OVERSION/ocaml</i><br>
+</div>
 <pre><span id="VALinstalled"><span class="keyword">val</span> installed</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 List of installed packages with their version:
       <i>$opam/$OVERSION/installed</i><br>
 </div>
 <pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Tempory folders used to decompress the corresponding archives:
+Tempory folders used to decompress and compile 
+      the corresponding archives:
       <i>$opam/$OVERSION/build/$NAME-$VERSION</i><br>
+</div>
+<pre><span id="VALbuild_ocaml"><span class="keyword">val</span> build_ocaml</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Tempory folders used to decompress and compile 
+      the OCaml compiler:
+      <i>$opam/$OVERSION/build/_</i><br>
 </div>
 <pre><span id="VALbuild_dir"><span class="keyword">val</span> build_dir</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Tempory folder: <i>$opam/$OVERSION/build</i><br>

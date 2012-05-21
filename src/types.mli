@@ -83,6 +83,7 @@ type raw = Raw.t
 
 (** Stdlib [Filename] module *)
 module Stdlib_filename: sig
+  val check_suffix: string -> string -> bool
   val concat: string -> string -> string
 end
 

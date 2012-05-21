@@ -28,7 +28,7 @@ BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
-.PHONY: fresh init upload list install upload-new upgrade downgrade remove
+.PHONY: fresh init upload list install upload-new upgrade downgrade remove switch
 
 all:
 	$(MAKE) fresh && \
@@ -45,6 +45,8 @@ all:
 	$(MAKE) upgrade && \
 	$(MAKE) list && \
 	$(MAKE) downgrade && \
+	$(MAKE) list && \
+	$(MAKE) switch && \
 	$(MAKE) list
 
 server:
@@ -161,6 +163,12 @@ upgrade:
 
 downgrade:
 	$(OPAM) install P4.2
+
+switch:
+	mkdir -p /tmp/opam-archives && wget -P /tmp/opam-archives -qN http://caml.inria.fr/pub/distrib/ocaml-3.11/ocaml-3.11.2.tar.gz
+	mkdir -p $(OPAM_ROOT)/compilers
+	cp packages/3.11.2.comp $(OPAM_ROOT)/compilers
+	$(OPAM) switch 3.11.2
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz

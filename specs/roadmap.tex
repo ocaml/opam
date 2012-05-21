@@ -623,9 +623,10 @@ This command will:
   \S\ref{dotconfig})
 
 \item Create an empty \verb+$opam/$OVERSION/installed+ file,
-  \verb+$OVERSION+ being the result of ``{\tt ocamlc -version}''.
-  In case, the \verb+-ocamlc+ is not set or if there is no such 
-  compiler in \verb+$path+, a well-defined error is returned.
+  \verb+$OVERSION+ %being the result of ``{\tt ocamlc -version}''.
+  is the version from the OCaml used to compile \verb+$opam+.
+  In particular, we will not fail now 
+  if there is no \verb+ocamlc+ in \verb+$path+.
 
 \item Initialize \verb+$opam/repo/$REPO+ by running
   \verb+'opam-$KIND-init $ADDRESS'+ (see \S\ref{script-update}). If
@@ -1269,9 +1270,9 @@ The syntax of {\tt .comp} files follows the one described in
 <file> :=
     opam-version: "1"
     src:        STRING
+    make:       [ STRING+ ]
     ?patches:   [ STRING+ ]
     ?configure: [ STRING+ ]
-    ?make:      [ STRING+ ]
     ?bytecomp:  [ STRING+ ]
     ?asmcomp:   [ STRING+ ]
     ?bytelink:  [ STRING+ ]
@@ -1294,14 +1295,17 @@ The syntax of {\tt .comp} files follows the one described in
   (with the expectation that these tools are installed on the user host).
 \end{itemize}
 
-\item {\tt patches} are optional patch addresses, available via {\tt http}, 1{\tt ftp}
+\item {\tt patches} are optional patch addresses, available via {\tt http}, {\tt ftp}
   or locally on the filesystem.
 
 \item {\tt configure} are the optional flags to pass to the configure
-  script. {\tt --prefix=\$opam/OVERSION/} will be automatically added
-  to these options.
+  script. The order is relevant: {\tt --prefix=\$opam/OVERSION/} will be automatically 
+  added at the end to these options.
+  Remark that if these flags contain {\tt --bindir}, {\tt --libdir}, 
+  and {\tt --mandir}, then every {\tt --prefix} will be ignored by {\tt configure}.
 
-\item {\tt make} are the flags to pass to {\tt make}.
+\item {\tt make} are the flags to pass to {\tt make}. 
+  It must at least contain some target like {\tt world} or {\tt world.opt}.
 
 \item {\tt packages} is the list of packages
 
@@ -1336,7 +1340,7 @@ version $3.12.1$ with the memory profiling patch enabled:
 
 \begin{verbatim}
 src:       "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
-build:     [ "world" "world.opt" ]
+make:     [ "world" "world.opt" ]
 patches:   [ "http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch" ]
 \end{verbatim}
 
@@ -1347,7 +1351,7 @@ libraries built with {\tt -g}:
 \begin{verbatim}
 src:       "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 configure: [ "-no-tk" ]
-build:     [ "world" ]
+make:     [ "world" ]
 bytecomp:  [ "-g" ]
 bytelink:  [ "-g" ]
 \end{verbatim}

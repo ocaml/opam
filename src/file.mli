@@ -1,3 +1,18 @@
+(***********************************************************************)
+(*                                                                     *)
+(*    Copyright 2012 OCamlPro                                          *)
+(*    Copyright 2012 INRIA                                             *)
+(*                                                                     *)
+(*  All rights reserved.  This file is distributed under the terms of  *)
+(*  the GNU Public License version 3.0.                                *)
+(*                                                                     *)
+(*  TypeRex is distributed in the hope that it will be useful,         *)
+(*  but WITHOUT ANY WARRANTY; without even the implied warranty of     *)
+(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      *)
+(*  GNU General Public License for more details.                       *)
+(*                                                                     *)
+(***********************************************************************)
+
 open Types
 
 (** Functions to file read and write configuration files in a typed
@@ -36,8 +51,12 @@ module Config: sig
   (** Creation *)
   val create: OPAM_V.t -> repository list -> OCaml_V.t -> t
 
+  (** OCaml version updates *)
+  val with_ocaml_version : t -> OCaml_V.t -> t
+
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
+
 
   (** Return the OPAM version *)
   val opam_version: t  -> OPAM_V.t
@@ -92,6 +111,7 @@ end
 
 (** Package descriptions: [$opam/descr/] *)
 module Descr: sig
+
   include IO_FILE
 
   (** Create a description file *)
@@ -112,6 +132,21 @@ module Reinstall: IO_FILE with type t = NV.Set.t
 
 (** List of updated packages: [$opam/$repo/$repo/updated] *)
 module Updated: IO_FILE with type t = NV.Set.t
+
+(** Compiler version [$opam/compilers/] *)
+module Comp : sig
+
+  include IO_FILE
+
+  (** Return the url of the compiler *)
+  val src : t -> string
+
+  (** Options to give to the "./configure" command *)
+  val configure : t -> string list
+
+  (** Options to give to the "make" command *)
+  val make : t -> string list
+end
 
 (** {2 Configuration files} *)
 
