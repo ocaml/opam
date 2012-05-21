@@ -43,12 +43,12 @@ let log section fmt =
 
 let error fmt =
   Printf.kprintf (fun str ->
-    Printf.eprintf "ERROR: %s\n%!" str
+    Printf.eprintf "[%d] ERROR: %s\n%!" (Unix.getpid ()) str
   ) fmt
 
 let warning fmt =
   Printf.kprintf (fun str ->
-    Printf.eprintf "WARNING: %s\n%!" str
+    Printf.eprintf "[%d] WARNING: %s\n%!" (Unix.getpid ()) str
   ) fmt
   
 let error_and_exit fmt =
