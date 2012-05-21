@@ -36,9 +36,21 @@ let root = Path.R.of_path (Dirname.cwd ())
 
 let opams = Path.R.available root
 
+let () =
+  Globals.msg "Available:\n";
+  NV.Set.iter (fun nv ->
+    Globals.msg " - %s\n" (NV.to_string nv)
+  ) opams
+
 let opams =
   NV.Set.filter (fun nv ->
     not (Filename.exists (Path.R.archive root nv))
+  ) opams
+
+let () =
+  Globals.msg "To update:\n";
+  NV.Set.iter (fun nv ->
+    Globals.msg " - %s\n" (NV.to_string nv)
   ) opams
 
 let url nv =
