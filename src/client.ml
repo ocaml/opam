@@ -87,6 +87,12 @@ let load_state () =
   print_state t;
   t
 
+let check () =
+  if not (Dirname.exists (Dirname.of_string !Globals.root_path)) then
+    Globals.error_and_exit
+      "Cannot find %s. Have you run 'opam init first ?"
+      !Globals.root_path
+  
 let find_repository_path t name =
   let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
   r
@@ -145,6 +151,10 @@ let update () =
         Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
     ) available_versions
   ) repo_index
+
+let update () =
+  check ();
+  Run.with_flock update ()
 
 let install_initial_package () =
   let t = load_state () in
@@ -628,6 +638,10 @@ let install name =
     ; wish_remove = [] 
     ; wish_upgrade = [] }
 
+let install name =
+  check ();
+  Run.with_flock install name
+
 let remove name =
   log "remove %s" (N.to_string name);
   let t = load_state () in
@@ -653,6 +667,10 @@ let remove name =
     ; wish_remove  = [ N.to_string name, None ]
     ; wish_upgrade = [] }
       
+let remove name =
+  check ();
+  Run.with_flock remove name
+
 let upgrade () =
   log "upgrade";
   let t = load_state () in
@@ -667,6 +685,10 @@ let upgrade () =
     ; wish_remove  = []
     ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
   Filename.remove (Path.C.reinstall t.compiler)
+
+let upgrade () =
+  check ();
+  Run.with_flock upgrade ()
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
@@ -693,6 +715,10 @@ let upload upload repo =
   Filename.remove upload_opam;
   Filename.remove upload_descr;
   Filename.remove upload_archives
+
+let upload u r =
+  check ();
+  Run.with_flock upload u r
 
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
@@ -878,6 +904,10 @@ let remote action =
         with Not_found ->
           Globals.error_and_exit "%s is not a remote index" n in
       update_config (List.filter ((!=) repo) repos)
+
+let remote action =
+  check ();
+  Run.with_flock remote action
 
 let switch name =
   log "switch %s" (OCaml_V.to_string name);

@@ -76,3 +76,17 @@ val cwd: unit -> string
 (** Create a directory. Do not fail if the directory already
     exist. *)
 val mkdir: string -> unit
+
+(** {2 File locking function} *)
+
+(** [flock ()] takes the global file lock. If the lock is already
+    taken, sleep for 1s and then retry. Abort after 5 tentatives. *)
+val flock: unit -> unit
+
+(** [funlock ()] unlocks the global file lock. Work only if the
+    current processus is the same as the one who took the lock at the
+    first place. *)
+val funlock: unit -> unit
+
+(** Functional version of [flock / funlock] *)
+val with_flock: ('a -> 'b) -> 'a -> 'b

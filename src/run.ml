@@ -128,14 +128,15 @@ let rec root path =
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines ic =
   let lines = ref [] in
-  try while true do
-      let line = input_line ic in
-      if not (Filename.concat line "" = line) then
-      lines := line :: !lines;
-    done;
-      !lines
-  with _ ->
-    !lines
+  begin
+    try
+      while true do
+        let line = input_line ic in
+        lines := line :: !lines;
+      done
+    with _ -> ()
+  end;
+  List.rev !lines
 
 let read_command_output_ cmd =
   let ic = Unix.open_process_in cmd in
@@ -262,3 +263,47 @@ let link src dst =
   if Sys.file_exists dst then
     remove_file dst;
   Unix.link src dst
+
+let file () = Filename.concat !Globals.root_path "opam.lock"
+
+let flock () =
+  let l = ref 0 in
+  let file = file () in
+  let id = string_of_int (Unix.getpid ()) in
+  let rec loop () =
+    if Sys.file_exists file && !l < 5 then begin
+      Globals.log id "Filesytem busy. Waiting 1s (%d)" !l;
+      Unix.sleep 1;
+      loop ()
+    end else if Sys.file_exists file then begin
+      Globals.log id "Too many attemps. Cancelling ...";
+      Globals.error_and_exit "Too many attemps. Cancelling ...";
+    end else begin
+      let oc = open_out file in
+      output_string oc id;
+      flush oc;
+      close_out oc;
+      Globals.log id "locking %s" file;
+    end in
+  loop ()
+    
+let funlock () =
+  let file = file () in
+  let id = string_of_int (Unix.getpid ()) in
+  if Sys.file_exists file then
+    let ic = open_in file in
+    let s = input_line ic in
+    if s = id then begin
+      Globals.log id "unlocking %s" file;
+      Unix.unlink file;
+    end
+
+let with_flock f x =
+  try
+    flock ();
+    let r = f x in
+    funlock ();
+    r
+  with e ->
+    funlock ();
+    raise e
