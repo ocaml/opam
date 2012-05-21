@@ -66,6 +66,22 @@ let wget src =
   | Globals.Darwin -> Printf.sprintf "ftp %s" src
   | _ -> Printf.sprintf "wget %s" src
 
+let archive_name src =
+  let name = F.basename src in
+  if F.check_suffix name ".tar.gz" then
+    name
+  else if F.check_suffix name ".tar.bz2" then
+    name
+  else
+    Printf.sprintf "%s.tar.gz" name
+
+let mv src =
+  let name = archive_name src in
+  if (F.basename src) = name then
+    ""
+  else
+    Printf.sprintf "mv %s %s" (F.basename src) name
+
 let () =
   Dirname.mkdir (Path.R.archive_dir root);
   NV.Set.iter (fun nv ->
@@ -76,11 +92,13 @@ let () =
     | None     -> ()
     | Some url ->
         Dirname.mkdir (tmp nv);
-        let err = Dirname.exec (tmp nv) [ wget url ] in
-        if err = 0 then (
-          Filename.extract (tmp nv // F.basename url) tmp_dir;
-        ) else
+        let err = Dirname.exec (tmp nv) [
+          wget url;
+          mv url;
+        ] in
+        if err <> 0 then
           Globals.error_and_exit "Cannot get %s" url;
+        Filename.extract (tmp nv // archive_name url) tmp_dir;
     end;
     List.iter (fun f ->
       Filename.copy_in f tmp_dir

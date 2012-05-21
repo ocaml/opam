@@ -295,4 +295,5 @@ let () =
     | Failure ("no subcommand defined" as s) ->
         ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
         Globals.error "%s" s
+    | Globals.Error -> exit 1
     | e -> raise e

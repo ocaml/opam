@@ -10,7 +10,7 @@ TARGETS = opam opam-server \
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile clone build
+all: ./_obuild/unixrun compile clone
 	@
 
 scan: ./_obuild/unixrun
@@ -29,12 +29,8 @@ bootstrap: _obuild/unixrun _obuild/opam/opam.byte
 	rm -f boot/opam.boot
 	ocp-bytehack -static _obuild/opam/opam.byte -o boot/opam.boot
 
-build:
-	$(OCPBUILD) $(TARGETS)
-
-compile: ./_obuild/unixrun clone
+compile: ./_obuild/unixrun
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
-
 
 clone: 
 	$(MAKE) -C $(SRC_EXT)

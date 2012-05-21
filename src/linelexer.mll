@@ -20,7 +20,7 @@ rule main words lines = parse
 | [' ' '\t']+       { main words lines lexbuf }
 | [^' ' '\t' '\n']+ { main (Lexing.lexeme lexbuf :: words) lines lexbuf }
 | _                 { assert false }
-| eof               { List.rev (words :: lines) }
+| eof               { List.rev (List.rev words :: lines) }
 
 {
   let main = main [] []
