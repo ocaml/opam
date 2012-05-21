@@ -45,8 +45,12 @@ module Config: sig
   (** Creation *)
   val create: OPAM_V.t -> repository list -> OCaml_V.t -> t
 
+  (** OCaml version updates *)
+  val with_ocaml_version : t -> OCaml_V.t -> t
+
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
+
 
   (** Return the OPAM version *)
   val opam_version: t  -> OPAM_V.t
@@ -122,6 +126,21 @@ module Reinstall: IO_FILE with type t = NV.Set.t
 
 (** List of updated packages: [$opam/$repo/$repo/updated] *)
 module Updated: IO_FILE with type t = NV.Set.t
+
+(** Compiler version [$opam/compilers/] *)
+module Comp : sig
+
+  include IO_FILE
+
+  (** Return the url of the compiler *)
+  val src : t -> string
+
+  (** Options to give to the "./configure" command *)
+  val configure : t -> string list
+
+  (** Options to give to the "make" command *)
+  val make : t -> string list
+end
 
 (** {2 Configuration files} *)
 

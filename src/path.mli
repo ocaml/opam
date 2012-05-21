@@ -34,6 +34,12 @@ module G : sig
   (** OPAM files: {i $opam/opam/$NAME.$VERSION.opam} *)
   val opam: t -> NV.t -> filename
 
+  (** Compiler files : {i $opam/compilers/$OVERSION.comp} *)
+  val compilers: t -> OCaml_V.t -> filename
+
+  (** Compiler files : {i $opam/compilers/} *)
+  val compilers_dir: t -> dirname
+
   (** List all the available packages:
       {i $opam/opam/$NAME.$VERSION.opam} *)
   val available: t -> NV.Set.t
@@ -84,6 +90,10 @@ module C : sig
   (** Installed binaries: {i $opam/$OVERSION/bin} *)
   val bin: t -> dirname
 
+  (** Directory containing "bin" and "lib" 
+      {i $opam/$OVERSION/ocaml} *)
+  val ocaml : t -> dirname
+
   (** List of installed packages with their version:
       {i $opam/$OVERSION/installed} *)
   val installed: t -> filename
@@ -92,6 +102,11 @@ module C : sig
       the corresponding archives:
       {i $opam/$OVERSION/build/$NAME-$VERSION} *)
   val build: t -> NV.t -> dirname
+
+  (** Tempory folders used to decompress and compile 
+      the OCaml compiler:
+      {i $opam/$OVERSION/build/_} *)
+  val build_ocaml: t -> dirname
 
   (** Tempory folder: {i $opam/$OVERSION/build} *)
   val build_dir: t -> dirname

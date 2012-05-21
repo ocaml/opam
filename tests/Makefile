@@ -19,7 +19,7 @@ ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
 .PHONY: all upload
 
-all: fresh init upload list install upload-new upgrade downgrade remove
+all: fresh init upload list install upload-new upgrade downgrade remove switch
 	@
 
 $(BINARIES_): $(BUILDS)
@@ -76,6 +76,12 @@ upgrade: upload-new
 downgrade: upgrade
 	$(OPAM) install P4.2
 	$(OPAM) list
+
+switch: downgrade
+	mkdir -p /tmp/opam-archives && wget -P /tmp/opam-archives -qN http://caml.inria.fr/pub/distrib/ocaml-3.11/ocaml-3.11.2.tar.gz
+	mkdir -p $(OPAM_ROOT)/compilers
+	cp packages/3.11.2.comp $(OPAM_ROOT)/compilers
+	$(OPAM) switch 3.11.2
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz
