@@ -17,7 +17,6 @@
 open Parser
 
 let newline lexbuf = Lexing.new_line lexbuf
-let escape_sharp = '#' (* FIXME replace every '#' below by [escape_sharp] *)
 }
 
 let space = [' ' '\t' '\r' '\n']

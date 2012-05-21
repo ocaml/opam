@@ -68,7 +68,7 @@ module C : sig
   (** Contains {i $opam} and {i $OVERSION} *)
   type t
 
-  (** Root dir: {i $opam/$oversion} *)
+  (** Root dir: {i $opam/$OVERSION} *)
   val root: t -> dirname
     
   (** Create a compiler path *)
@@ -88,7 +88,8 @@ module C : sig
       {i $opam/$OVERSION/installed} *)
   val installed: t -> filename
 
-  (** Tempory folders used to decompress the corresponding archives:
+  (** Tempory folders used to decompress and compile 
+      the corresponding archives:
       {i $opam/$OVERSION/build/$NAME-$VERSION} *)
   val build: t -> NV.t -> dirname
 

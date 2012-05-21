@@ -408,7 +408,7 @@ end
 
 module Dot_install = struct
 
-  let internal = "install"
+  let internal = ".install"
     
   type t =  {
     lib : filename list ;
@@ -577,6 +577,7 @@ module Dot_config = struct
     val bytelink : t -> section -> string list
     val variable : t -> section -> variable -> variable_contents
     val variables: t -> section -> variable list
+  (* val requires *)
   end
 
   module MK (M : sig val get : t -> s list end) : SECTION = struct
