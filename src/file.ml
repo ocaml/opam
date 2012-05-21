@@ -52,8 +52,12 @@ module Syntax = struct
   let empty = File_format.empty
 
   let of_string f str =
-    let lexbuf = Lexing.from_string (Raw.to_string str) in
-    Parser.main Lexer.token lexbuf (Filename.to_string f)
+    try
+      let lexbuf = Lexing.from_string (Raw.to_string str) in
+      Parser.main Lexer.token lexbuf (Filename.to_string f)
+    with e ->
+      Globals.error "Parsing error while reading %s" (Filename.to_string f);
+      raise e
 
   let to_string _ t =
     Raw.of_string (File_format.string_of_file t)
