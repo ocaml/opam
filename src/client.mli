@@ -52,5 +52,5 @@ val remove : N.t -> unit
 (** Manage remote repositories. Take the global file lock. *)
 val remote : remote -> unit
 
-(** Switch to an OCaml compiler. *)
+(** Switch to an OCaml compiler. Take the global file lock. *)
 val switch: OCaml_V.t -> unit
