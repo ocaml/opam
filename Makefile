@@ -10,8 +10,9 @@ TARGETS = opam opam-server \
 
 .PHONY: all
 
-all: ./_obuild/unixrun compile clone
-	@
+all: ./_obuild/unixrun
+	$(MAKE) clone
+	$(MAKE) compile
 
 scan: ./_obuild/unixrun
 	$(OCPBUILD) -scan

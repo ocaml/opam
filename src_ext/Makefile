@@ -35,8 +35,8 @@ ocamlgraph:
 	mv ocamlgraph-1.8.1 ocamlgraph
 
 ocaml-re:
-	$(WGET) http://www.ocamlpro.com/pub/ocaml-re.tar.bz2
-	tar xfj ocaml-re.tar.bz2
+	$(WGET) http://www.ocamlpro.com/pub/ocaml-re.tar.gz
+	tar xfz ocaml-re.tar.gz
 
 clean:
 	rm -rf *~
