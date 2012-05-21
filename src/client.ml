@@ -101,6 +101,20 @@ let find_repository t name =
   let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
   r
 
+let find_installed_package_by_name t name =
+  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
+  with Not_found ->
+    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+
+(* We bypass the cache *)
+let find_available_package_by_name t name =
+  let available = Path.G.available t.global in
+  let s = NV.Set.filter (fun nv -> NV.name nv = name) available in
+  if NV.Set.is_empty s then
+    None
+  else
+    Some s
+
 let update () =
   log "update";
   let t = load_state () in
@@ -141,10 +155,17 @@ let update () =
     V.Set.iter (fun v ->
       let nv = NV.create n v in
       let opam_dir = Path.G.opam_dir t.global in
-      let opam = Path.R.opam repo_p nv in
+      let opam_f = Path.R.opam repo_p nv in
+      let opam = File.OPAM.read opam_f in
+      (* Check some consistency *)
+      List.iter (List.iter (fun (n,_) ->
+        match find_available_package_by_name t (N.of_string n) with
+        | None   -> Globals.error_and_exit "Unknown package %s" n
+        | Some _ -> ()
+      )) (File.OPAM.depends opam);
       let descr_dir = Path.G.descr_dir t.global in
       let descr = Path.R.descr repo_p nv in
-      Filename.link_in opam opam_dir;
+      Filename.link_in opam_f opam_dir;
       if Filename.exists descr then
         Filename.link_in descr descr_dir
       else
@@ -221,11 +242,6 @@ let indent_right s nb =
     s
   else
     String.make nb ' ' ^ s
-
-let find_installed_package_by_name t name =
-  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
-  with Not_found ->
-    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
 let s_not_installed = "--"
 
