@@ -156,13 +156,6 @@ let update () =
       let nv = NV.create n v in
       let opam_dir = Path.G.opam_dir t.global in
       let opam_f = Path.R.opam repo_p nv in
-      let opam = File.OPAM.read opam_f in
-      (* Check some consistency *)
-      List.iter (List.iter (fun (n,_) ->
-        match find_available_package_by_name t (N.of_string n) with
-        | None   -> Globals.error_and_exit "Unknown package %s" n
-        | Some _ -> ()
-      )) (File.OPAM.depends opam);
       let descr_dir = Path.G.descr_dir t.global in
       let descr = Path.R.descr repo_p nv in
       Filename.link_in opam_f opam_dir;
@@ -171,7 +164,21 @@ let update () =
       else
         Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
     ) available_versions
-  ) repo_index
+  ) repo_index;
+  (* Check some consistency *)
+  let available = Path.G.available t.global in
+  NV.Set.iter (fun nv ->
+    let opam = File.OPAM.read (Path.G.opam t.global nv) in
+    let depends = File.OPAM.depends opam in
+    List.iter (List.iter (fun (d,_) ->
+      match find_available_package_by_name t (N.of_string d) with
+        | None   ->
+            Globals.error_and_exit
+              "Package %s depends on the unknown package %s"
+              (N.to_string (NV.name nv)) d
+        | Some _ -> ()
+    )) depends
+  ) available
 
 let update () =
   check ();
