@@ -237,7 +237,6 @@ let extract file dst =
   log "untar %s" file;
   let files = read_command_output "tar tf %s" file in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
-  remove_dir tmp_dir;
   mkdir tmp_dir;
   let err =
     match is_archive file with
