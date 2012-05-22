@@ -751,6 +751,9 @@ module Subst = struct
     let str = Pcre.substitute ~rex ~subst (Raw.to_string t) in
     Raw.of_string str
 
+  let replace_string s f =
+    Raw.to_string (replace (Raw.of_string s) f)
+
 end
 
 end

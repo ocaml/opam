@@ -514,6 +514,10 @@ let contents_of_variable t v =
   with Not_found ->
     Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
 
+(* Substitue the string contents *)
+let substitute_string t s =
+  File.Subst.replace_string s (contents_of_variable t)
+
 (* Substitute the file contents *)
 let substitute_file t f =
   let f = Filename.of_basename f in
@@ -542,10 +546,11 @@ let proceed_tochange t nv_old nv =
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Call the build script and copy the output files *)
+  let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
   let commands =
     List.map
       (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
-      (File.OPAM.build opam) in
+      commands in
   let err = Dirname.exec p_build commands in
   if err = 0 then
     proceed_toinstall t nv
