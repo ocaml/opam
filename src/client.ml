@@ -924,8 +924,11 @@ let remote action =
     let name = Repository.name repo in
     if List.exists (fun r -> Repository.name r = name) repos then
       Globals.error_and_exit "%s is already a remote repository" name
-    else
-      update_config (repo :: repos) in
+    else (
+      log "Adding %s" (Repository.to_string repo);
+      Repositories.init repo;
+      update_config (repo :: repos)
+    ) in
   match action with
   | List  ->
       let pretty_print r =
