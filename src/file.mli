@@ -237,7 +237,10 @@ module Subst: sig
 
   include IO_FILE
 
-  (** Substitute the variable appearing in a file *)
-  val replace: t -> (full_variable -> variable_contents) -> t
+  (** Substitute the variables appearing in a file *)
+  val replace: t ->  (full_variable -> variable_contents)-> t
+
+  (** Substitute the variables appearing in a string *)
+  val replace_string: string -> (full_variable -> variable_contents) -> string
 
 end

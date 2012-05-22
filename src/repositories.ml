@@ -28,8 +28,9 @@ let run cmd repo args =
     Globals.error_and_exit "%s failed" cmd
 
 let init r =
-  run "init" r [];
   let root = Path.R.create r in
+  Dirname.mkdir (Path.R.root root);
+  run "init" r [];
   File.Repo_config.write (Path.R.config root) r;
   Dirname.mkdir (Path.R.opam_dir root);
   Dirname.mkdir (Path.R.descr_dir root);

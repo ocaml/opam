@@ -203,10 +203,13 @@ let install_initial_package () =
   let descr = File.Descr.create "Compiler configuration flags" in
   File.Descr.write (Path.G.descr t.global nv) descr;
   (* .config *)
-  let vars = [
-    Variable.of_string "lib",
-    S (Dirname.to_string (Path.C.lib_dir t.compiler))
-  ] in
+  let vars = List.map
+    (fun (s,p) -> Variable.of_string s, S (Dirname.to_string p))
+    [
+      ("lib", Path.C.lib_dir t.compiler);
+      ("bin", Path.C.bin t.compiler);
+      ("doc", Path.C.doc_dir t.compiler);
+    ] in
   let config = File.Dot_config.create vars in
   File.Dot_config.write (Path.C.config t.compiler name) config;
   (* installed *)
@@ -514,6 +517,10 @@ let contents_of_variable t v =
   with Not_found ->
     Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
 
+(* Substitue the string contents *)
+let substitute_string t s =
+  File.Subst.replace_string s (contents_of_variable t)
+
 (* Substitute the file contents *)
 let substitute_file t f =
   let f = Filename.of_basename f in
@@ -542,10 +549,12 @@ let proceed_tochange t nv_old nv =
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Call the build script and copy the output files *)
+  let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
   let commands =
     List.map
       (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
-      (File.OPAM.build opam) in
+      commands in
+  Globals.msg "Build command: %s\n" (String.concat ";" commands);
   let err = Dirname.exec p_build commands in
   if err = 0 then
     proceed_toinstall t nv
@@ -924,8 +933,11 @@ let remote action =
     let name = Repository.name repo in
     if List.exists (fun r -> Repository.name r = name) repos then
       Globals.error_and_exit "%s is already a remote repository" name
-    else
-      update_config (repo :: repos) in
+    else (
+      log "Adding %s" (Repository.to_string repo);
+      Repositories.init repo;
+      update_config (repo :: repos)
+    ) in
   match action with
   | List  ->
       let pretty_print r =
