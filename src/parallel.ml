@@ -168,7 +168,13 @@ module Make (G : G) = struct
         let n = S.choose !todo in
         todo := S.remove n !todo;
         match Unix.fork () with
-        | 0   -> child n; exit 0
+        | 0   ->
+            begin
+              try child n; exit 0
+              with e ->
+                Globals.error "%s" (Printexc.to_string e);
+                exit 1
+            end
         | pid ->
             pids := IntMap.add pid n !pids;
             pre n;
