@@ -302,9 +302,9 @@ let funlock () =
       Globals.log id "unlocking %s" file;
       Unix.unlink file;
     end else
-      Globals.log id "can not unlock %s" s
+      Globals.error_and_exit "cannot unlock %s (%s)" file s
   end else
-    Globals.log id "attempted to unlock but no file"
+    Globals.error_and_exit "Cannot find %s" file
 
 
 let with_flock f x =
