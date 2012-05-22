@@ -38,7 +38,7 @@ module type SIG = sig
     post:(G.V.t -> unit) ->
     unit
 
-  exception Error of G.V.t
+  exception Errors of G.V.t list
 
 end
 
@@ -115,49 +115,64 @@ module Make (G : G) = struct
      by [Unix.fork]. [wait pids] waits until a process in [pids]
      terminates. *)
   (* XXX: this will not work under windows *)
+
+  let string_of_pids pids =
+    Printf.sprintf "{%s}"
+      (String.concat ","
+         (IntMap.fold (fun e _ l -> string_of_int e :: l) pids []))
+
   let wait pids = 
-    let rec aux () =  
-     let pid, status = Unix.wait () in
-      if IntMap.mem pid pids then
+    let rec aux () =
+      let pid, status = Unix.wait () in
+      if IntMap.mem pid pids then (
+        log "%d is dead" pid;
         pid, status
-      else
-        aux () in
+      ) else (
+        log "%d: unknown child (pids=%s)!"
+          pid
+          (string_of_pids pids);
+        aux ()
+      ) in
     aux ()
 
-  exception Error of G.V.t
+  exception Errors of G.V.t list
 
   let iter n g ~pre ~child ~post =
     let t = ref (init g) in
     let pids = ref IntMap.empty in
     let todo = ref (!t.roots) in
+    let errors = ref [] in
     
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
-
-(*    let print_pids m =
-      let s i n = Printf.sprintf "%d:%s" i (G.string_of_vertex n) in
-      let l = IntMap.fold (fun i n l -> s i n :: l) m [] in
-      log "PIDS:   %s" (String.concat ", " l) in *)
 
     (* nslots is the number of free slots *)
     let rec loop nslots =
 
-      if S.is_empty !t.roots then
-        () (* Nothing more to be done *)
+      if S.is_empty !t.roots || List.length !errors = S.cardinal !t.roots then (
+        
+        (* Nothing more to do *)
+        log "loop completed";
+        if !errors <> [] then raise (Errors !errors)
 
-      else if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
+      ) else if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
 
         (* if no slots are available, wait for a child process to finish *)
+        log "waiting for a child process to finish";
         let pid, status = wait !pids in
         let n = IntMap.find pid !pids in
+        pids := IntMap.remove pid !pids;
         match status with
         | Unix.WEXITED 0 ->
-            pids := IntMap.remove pid !pids;
             t := visit !t n;
             post n;
             loop (nslots + 1)
-        | _ -> raise (Error n)
+        | _ ->
+            errors := n :: !errors;
+            loop nslots
 
       ) else if S.is_empty !todo then (
+
+        log "refilling the TODO list";
         (* otherwise, if the todo list is empty, refill it if *)
         todo := IntMap.fold (fun _ n accu -> S.remove n accu) !pids !t.roots;
         loop nslots
@@ -168,14 +183,17 @@ module Make (G : G) = struct
         let n = S.choose !todo in
         todo := S.remove n !todo;
         match Unix.fork () with
+        | -1  -> Globals.error_and_exit "Cannot fork a new process"
         | 0   ->
+            log "Spawning a new process";
             begin
-              try child n; exit 0
+              try child n; log "OK"; exit 0
               with e ->
                 Globals.error "%s" (Printexc.to_string e);
                 exit 1
             end
         | pid ->
+            log "Creating process %d" pid;
             pids := IntMap.add pid n !pids;
             pre n;
             loop (nslots - 1)

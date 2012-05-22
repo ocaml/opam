@@ -634,7 +634,7 @@ let resolve t request =
           | To_delete _            -> assert false in
 
         try PA_graph.Parallel.iter Globals.cores sol.to_add ~pre ~child ~post
-        with PA_graph.Parallel.Error n -> error n
+        with PA_graph.Parallel.Errors n -> List.iter error n
       )
 
 let vpkg_of_nv nv =
