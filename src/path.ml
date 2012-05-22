@@ -79,6 +79,10 @@ module C = struct
 
   let lib t n = lib_dir t / N.to_string n
 
+  let doc_dir t = t / "doc"
+
+  let doc t n = doc_dir t / N.to_string n
+
   let bin t = t / "bin"
 
   let installed t = t // "installed"

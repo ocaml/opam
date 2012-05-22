@@ -208,6 +208,7 @@ let install_initial_package () =
     [
       ("lib", Path.C.lib_dir t.compiler);
       ("bin", Path.C.bin t.compiler);
+      ("doc", Path.C.doc_dir t.compiler);
     ] in
   let config = File.Dot_config.create vars in
   File.Dot_config.write (Path.C.config t.compiler name) config;
