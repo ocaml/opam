@@ -139,6 +139,13 @@ let update () =
   let reinstall =
     List.fold_left (fun reinstall (r,p) ->
       let updated = File.Updated.safe_read (Path.R.updated p) in
+      if not (NV.Set.is_empty updated) then
+        Globals.msg "New packages available:\n";
+      NV.Set.iter (fun nv ->
+        Globals.msg " - %s%s\n"
+          (NV.to_string nv)
+          (if NV.Set.mem nv t.installed then " (*)" else "")
+      ) updated;
       NV.Set.fold (fun nv reinstall ->
         if NV.Set.mem nv t.installed then
           NV.Set.add nv reinstall
