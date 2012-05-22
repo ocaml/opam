@@ -103,6 +103,7 @@ let () =
     begin match url nv with
     | None     -> ()
     | Some url ->
+        Filename.remove (tmp nv // archive_name url);
         Dirname.mkdir (tmp nv);
         let err = Dirname.exec (tmp nv) [
           wget url;
