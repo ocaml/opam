@@ -187,12 +187,12 @@ open Debian.Format822
     ["foo", "bar" (<"1", >"2"), "aa" ] *)
 val parse_and_formula : value -> vpkglist
 
-(** Parse an OR formula (which contains only toplevel OR) such as
-    [("foo", "bar"(<"1")) | "bar" (>"2")] *)
-val parse_or_formula : value -> vpkgformula
+(** Parse an CNF formula (which contains only inlevel OR) such as
+    ["foo" ("bar"(<"1") | "bar" (>"2"))] *)
+val parse_cnf_formula : value -> vpkgformula
 
 (** Build an AND formula *)
 val make_and_formula : vpkglist -> value
 
-(** Build an OR formula *)
-val make_or_formula : vpkgformula -> value
+(** Build a CNF formula *)
+val make_cnf_formula : vpkgformula -> value

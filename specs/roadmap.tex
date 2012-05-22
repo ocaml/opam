@@ -376,15 +376,19 @@ compiler (available in the path).
       maintainer: STRING
       ?subst:     [ STRING+ ]
       ?build:     [ command+ ]
-      ?depends:   <or-formula>
+      ?depends:   <cnf-formula>
       ?conflicts: <and-formula>
       ?libraries: [ STRING+ ]
       ?syntax:    [ STRING+ ]
     }
 
-<or-formula>  := <or-formula> '|' <or-formula>
-               | ( <or-formula> )
-               | <and-formula>
+<cnf-formula>  := <cnf-formula> <cnf-formula>
+                | ( <cnf-formula> )
+                | <or-formula>
+
+<or-formula> := STRING
+              | STRING { <constraints> }
+              | <or-formula> '|' <or-formula>
 
 <and-formula> := STRING
                | STRING { <constraints> }
@@ -420,7 +424,7 @@ compiler (available in the path).
   \S\ref{dotconfig} and \S\ref{dotinstall}).
 
 \item The {\tt depends} and {\tt conflicts} fields contain
-  respectively {\em or-} and {\em and-}formulas over package names,
+  respectively {\em cnf-} and {\em and-}formulas over package names,
   optionally parametrized by version constraints. An expression is
   either:
 
@@ -433,10 +437,10 @@ compiler (available in the path).
 \item A formula between parenthesis: \verb+( E )+
 \end{itemize}
 
-For instance \verb+ "foo" {<= "1.2"} | ("bar" "gna" {= "3.14"})+ is a
-valid formula whose semantic is: {\em either any version of package
-  {\tt "foo"} lesser or equal to $1.2$ or both any version of package
-  {\tt "bar"} and the version $3.14$ of package {\tt "gna"}.}  \\
+For instance \verb+ "foo" {<= "1.2"} ("bar" | "gna" {= "3.14"})+ is a
+valid formula whose semantic is: {\em both any version of package
+  {\tt "foo"} lesser or equal to $1.2$ and either any version of package
+  {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}  \\
 
 \item The {\tt libraries} and {\tt syntax} fields contain the
   libraries and syntax extensions defined by the package.

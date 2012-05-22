@@ -393,7 +393,7 @@ module OPAM = struct
             Variable (s_maintainer, String t.maintainer);
             Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
             Variable (s_build, make_list (make_list make_string) t.build);
-            Variable (s_depends, make_or_formula t.depends);
+            Variable (s_depends, make_cnf_formula t.depends);
             Variable (s_conflicts, make_and_formula t.conflicts);
             Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
             Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
@@ -419,7 +419,7 @@ module OPAM = struct
     let build      =
       assoc_default Globals.default_build_command
         s s_build (parse_list (parse_list parse_string)) in
-    let depends    = assoc_list s s_depends parse_or_formula in
+    let depends    = assoc_list s s_depends parse_cnf_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in

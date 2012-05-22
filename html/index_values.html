@@ -238,6 +238,12 @@ Remove the file extension
 <code class="code">commands cmds</code> executes the commands <code class="code">cmds</code>.
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALcommands_with_path">commands_with_path</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">commands_with_path</code> behaves like <code class="code">commands</code> except that the 
+    runnning commands include the environment from <code class="code">Unix.getenv "PATH"</code>.
+</div>
+</td></tr>
 <tr><td><a href="Path.G.html#VALcompilers">compilers</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Compiler files : <i>$opam/compilers/$OVERSION.comp</i>
@@ -657,6 +663,11 @@ Build an AND formula
 Create a boolean
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALmake_cnf_formula">make_cnf_formula</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Build a CNF formula
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALmake_group">make_group</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Create a group of 'things'
@@ -675,11 +686,6 @@ Create a list of 'things'
 <tr><td><a href="File_format.html#VALmake_option">make_option</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Create a value and its optional arguments
-</div>
-</td></tr>
-<tr><td><a href="File_format.html#VALmake_or_formula">make_or_formula</a> [<a href="File_format.html">File_format</a>]</td>
-<td><div class="info">
-Build an OR formula
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALmake_string">make_string</a> [<a href="File_format.html">File_format</a>]</td>
@@ -818,6 +824,12 @@ Parse an AND formala such as
 Parse a boolean
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALparse_cnf_formula">parse_cnf_formula</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Parse an CNF formula (which contains only inlevel OR) such as
+    <code class="code">"foo" ("bar"(&lt;"1") | "bar" (&gt;"2"))</code>
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_group">parse_group</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse a group of 'things'
@@ -841,12 +853,6 @@ Parse a value and its option of 'things'
 <tr><td><a href="File_format.html#VALparse_or">parse_or</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Try to parse the value using function from the list.
-</div>
-</td></tr>
-<tr><td><a href="File_format.html#VALparse_or_formula">parse_or_formula</a> [<a href="File_format.html">File_format</a>]</td>
-<td><div class="info">
-Parse an OR formula (which contains only toplevel OR) such as
-    <code class="code">("foo", "bar"(&lt;"1")) | "bar" (&gt;"2")</code>
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALparse_single_option">parse_single_option</a> [<a href="File_format.html">File_format</a>]</td>

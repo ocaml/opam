@@ -247,14 +247,26 @@ let parse_and_formula = function
   | List l -> parse_and_formula_aux l
   | x      -> bad_format "Expecting list, got %s" (kind x)
 
-(* contains only toplevel "|" *)
+(* contains only "|" *)
 let rec parse_or_formula_aux = function
-  | []                     -> []
-  | e1 :: Symbol "|" :: e2 -> parse_and_formula_aux [e1] :: parse_or_formula_aux e2
-  | e                      -> [parse_and_formula_aux e]
+  | []                       -> []
+  | [String name]            -> [ ((name,None), None) ]
+  | [Option(String name, g)] -> parse_constraints name g
+  | [Group g]                -> parse_or_formula_aux g
+  | [ x ]                    -> bad_format "Expecting string or group, got %s" (kind x)
+  | e1 :: Symbol "|" :: e2   -> parse_or_formula_aux [e1] @ parse_or_formula_aux e2
+  | _ -> bad_format "Expecting a 'or' formula"
 
 let parse_or_formula = function
   | List l -> parse_or_formula_aux l
+  | x      -> bad_format "Expecting list, got %s" (kind x)
+
+let rec parse_cnf_formula_aux = function
+  | []                     -> []
+  | e1 :: e2               -> parse_or_formula_aux [e1] :: parse_cnf_formula_aux e2
+
+let parse_cnf_formula = function
+  | List l -> parse_cnf_formula_aux l
   | x      -> bad_format "Expecting list, got %s" (kind x)
 
 let make_constraint = function
@@ -267,11 +279,12 @@ let make_and_formula_aux l =
 let make_and_formula l =
   List (make_and_formula_aux l)
 
-let make_or_formula l =
-  let l = List.map make_and_formula_aux l in
-  let l = List.fold_left (fun accu elt ->
-    match accu with
-    | []   -> elt
-    | accu -> [ Group accu ; Symbol "|" ; Group elt ]
-  ) [] l in
-  List l
+let make_cnf_formula l =
+  List (List.map (fun l ->
+    let l = List.map make_constraint l in
+    let l = List.fold_left (fun accu elt ->
+      match accu with
+        | []   -> [elt]
+        | accu -> [ Group accu ; Symbol "|" ; Group [elt] ]
+    ) [] l in
+    List l) l)

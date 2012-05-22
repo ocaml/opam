@@ -304,14 +304,14 @@ This section is dedicated to the parsing and creatin of dependency
 Parse an AND formala such as
     <code class="code">"foo", "bar" (&lt;"1", &gt;"2"), "aa" </code><br>
 </div>
-<pre><span id="VALparse_or_formula"><span class="keyword">val</span> parse_or_formula</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> Debian.Format822.vpkgformula</code></pre><div class="info">
-Parse an OR formula (which contains only toplevel OR) such as
-    <code class="code">("foo", "bar"(&lt;"1")) | "bar" (&gt;"2")</code><br>
+<pre><span id="VALparse_cnf_formula"><span class="keyword">val</span> parse_cnf_formula</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> Debian.Format822.vpkgformula</code></pre><div class="info">
+Parse an CNF formula (which contains only inlevel OR) such as
+    <code class="code">"foo" ("bar"(&lt;"1") | "bar" (&gt;"2"))</code><br>
 </div>
 <pre><span id="VALmake_and_formula"><span class="keyword">val</span> make_and_formula</span> : <code class="type">Debian.Format822.vpkglist -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
 Build an AND formula<br>
 </div>
-<pre><span id="VALmake_or_formula"><span class="keyword">val</span> make_or_formula</span> : <code class="type">Debian.Format822.vpkgformula -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
-Build an OR formula<br>
+<pre><span id="VALmake_cnf_formula"><span class="keyword">val</span> make_cnf_formula</span> : <code class="type">Debian.Format822.vpkgformula -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Build a CNF formula<br>
 </div>
 </body></html>
