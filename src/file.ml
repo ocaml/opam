@@ -488,20 +488,18 @@ module Dot_install = struct
     Syntax.to_string filename s
 
   let of_string filename str =
-    Printf.eprintf "XXXXXXXXXXXXXXXX\n%!";
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
     let parse_bin v =
       match parse_string_option parse_single_string v with
       | s  , None     -> let f = Filename.of_string s in (f, Filename.basename f)
-      | src, Some dst -> Globals.msg "FFFF\n"; (Filename.of_string src, Basename.of_string dst) in
+      | src, Some dst -> (Filename.of_string src, Basename.of_string dst) in
     let parse_misc v =
       match parse_string_option parse_single_string v with
       | s  , None     -> let f = Filename.of_string s in (f, f)
       | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
     let lib = assoc_list s.contents s_lib (parse_list (parse_string |> Filename.of_string)) in
     let bin = assoc_list s.contents s_bin (parse_list parse_bin) in
-    Globals.msg "BIN %d\n%!" (List.length bin);
     let misc = assoc_list s.contents s_misc (parse_list parse_misc) in
     { lib; bin; misc }
 
