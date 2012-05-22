@@ -106,10 +106,8 @@ let find_installed_package_by_name t name =
   with Not_found ->
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
-(* We bypass the cache *)
 let find_available_package_by_name t name =
-  let available = Path.G.available t.global in
-  let s = NV.Set.filter (fun nv -> NV.name nv = name) available in
+  let s = NV.Set.filter (fun nv -> NV.name nv = name) t.available in
   if NV.Set.is_empty s then
     None
   else
@@ -174,6 +172,7 @@ let update () =
   ) repo_index;
   (* Check some consistency *)
   let available = Path.G.available t.global in
+  let t = load_state () in
   NV.Set.iter (fun nv ->
     let opam = File.OPAM.read (Path.G.opam t.global nv) in
     let depends = File.OPAM.depends opam in
@@ -367,6 +366,7 @@ let confirm fmt =
 
 let proceed_toinstall t nv = 
 
+  let t = load_state () in
   let name = NV.name nv in
   let opam_f = Path.G.opam t.global nv in
   let opam = File.OPAM.read opam_f in
@@ -606,10 +606,12 @@ let resolve t request =
           sol.to_remove;
 
         (* Install or recompile some packages on the child process *)
-        let child n = match action n with
-        | To_change (o, nv) -> proceed_tochange t o nv
-        | To_recompile nv   -> proceed_torecompile t nv
-        | To_delete _       -> assert false in
+        let child n =
+          let t = load_state () in
+          match action n with
+          | To_change (o, nv) -> proceed_tochange t o nv
+          | To_recompile nv   -> proceed_torecompile t nv
+          | To_delete _       -> assert false in
 
         let pre _ = () in
 
