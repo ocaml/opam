@@ -277,6 +277,7 @@ let flock () =
     if Sys.file_exists file && !l < 5 then begin
       Globals.log id "Filesytem busy. Waiting 1s (%d)" !l;
       Unix.sleep 1;
+      incr l;
       loop ()
     end else if Sys.file_exists file then begin
       Globals.log id "Too many attemps. Cancelling ...";
@@ -291,15 +292,20 @@ let flock () =
   loop ()
     
 let funlock () =
-  let file = file () in
   let id = string_of_int (Unix.getpid ()) in
-  if Sys.file_exists file then
+  let file = file () in
+  if Sys.file_exists file then begin
     let ic = open_in file in
     let s = input_line ic in
+    close_in ic;
     if s = id then begin
       Globals.log id "unlocking %s" file;
       Unix.unlink file;
-    end
+    end else
+      Globals.log id "can not unlock %s" s
+  end else
+    Globals.log id "attempted to unlock but no file"
+
 
 let with_flock f x =
   try
