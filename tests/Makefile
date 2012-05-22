@@ -22,7 +22,7 @@ PACKAGES  = P1-1 P1-2 P2 P3 P4
 
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
-OPAM = $(ENV) opam --root $(OPAM_ROOT)
+OPAM = $(ENV) opam --yes --root $(OPAM_ROOT)
 
 BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)

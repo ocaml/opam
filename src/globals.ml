@@ -18,6 +18,8 @@ let debug = ref (
   with _ -> false
 )
 
+let yes = ref false
+
 let version = "0.1+dev"
 
 let default_repository_name    = "default"

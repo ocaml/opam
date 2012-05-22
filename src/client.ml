@@ -346,10 +346,13 @@ let info package =
 let confirm fmt = 
   Printf.kprintf (fun msg ->
     Globals.msg "%s [Y/n] " msg;
-    match read_line () with
-    | "y" | "Y"
-    | "" -> true
-    | _  -> false
+    if not !Globals.yes then
+      match read_line () with
+      | "y" | "Y"
+      | "" -> true
+      | _  -> false
+    else
+      true
   ) fmt
 
 let proceed_toinstall t nv = 

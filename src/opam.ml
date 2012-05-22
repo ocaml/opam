@@ -46,6 +46,7 @@ let () = Globals.root_path := Globals.default_opam_path
 let global_args = [
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
   "--version", Arg.Unit version,      " Display version information";
+  "--yes"    , Arg.Set Globals.yes,   " Answer yes to all questions";
   "--root"   , Arg.Set_string Globals.root_path,
   (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
 ]
