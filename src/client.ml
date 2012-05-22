@@ -433,7 +433,10 @@ let proceed_toinstall t nv =
   List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
   
   (* bin *) 
-  List.iter (fun (src, dst) -> Filename.copy src dst) (File.Dot_install.bin install);
+  List.iter (fun (src, dst) ->
+    let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
+    Filename.copy src dst
+  ) (File.Dot_install.bin install);
   
   (* misc *)
   List.iter 
@@ -456,7 +459,10 @@ let proceed_todelete t nv =
   
   (* Remove the binaries *)
   let install = File.Dot_install.read (Path.C.install t.compiler name) in
-  List.iter (fun (_,dst) -> Filename.remove dst) (File.Dot_install.bin install);
+  List.iter (fun (_,dst) ->
+    let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
+    Filename.remove dst
+  ) (File.Dot_install.bin install);
 
   (* Remove the misc files *)
   List.iter (fun (_,dst) ->

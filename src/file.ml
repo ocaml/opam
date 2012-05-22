@@ -438,7 +438,7 @@ module Dot_install = struct
     
   type t =  {
     lib : filename list ;
-    bin : (filename * filename) list ;
+    bin : (filename * basename) list ;
     misc: (filename * filename) list ;
   }
 
@@ -470,31 +470,39 @@ module Dot_install = struct
 
   let to_string filename t =
     let string f = String (Filename.to_string f) in
-    let make_move (src, dst) =
-      if src = dst then
+    let make_bin (src, dst) =
+      if Filename.basename src = dst then
         string src
       else
-        Option (string src, [string dst]) in
+        Option (string src, [String (Basename.to_string dst)]) in
+    let make_misc (src, dst) =
+      Option (string src, [string dst]) in
     let s = {
       filename = Filename.to_string filename;
       contents = [
         Variable (s_lib , make_list (Filename.to_string |> make_string) t.lib);
-        Variable (s_bin , make_list make_move t.bin);
-        Variable (s_misc, make_list make_move t.misc);
+        Variable (s_bin , make_list make_bin t.bin);
+        Variable (s_misc, make_list make_misc t.misc);
       ]
     } in
     Syntax.to_string filename s
 
   let of_string filename str =
+    Printf.eprintf "XXXXXXXXXXXXXXXX\n%!";
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
-    let parse_move v =
+    let parse_bin v =
+      match parse_string_option parse_single_string v with
+      | s  , None     -> let f = Filename.of_string s in (f, Filename.basename f)
+      | src, Some dst -> Globals.msg "FFFF\n"; (Filename.of_string src, Basename.of_string dst) in
+    let parse_misc v =
       match parse_string_option parse_single_string v with
       | s  , None     -> let f = Filename.of_string s in (f, f)
       | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
     let lib = assoc_list s.contents s_lib (parse_list (parse_string |> Filename.of_string)) in
-    let bin = assoc_list s.contents s_bin (parse_list parse_move) in
-    let misc = assoc_list s.contents s_misc (parse_list parse_move) in
+    let bin = assoc_list s.contents s_bin (parse_list parse_bin) in
+    Globals.msg "BIN %d\n%!" (List.length bin);
+    let misc = assoc_list s.contents s_misc (parse_list parse_misc) in
     { lib; bin; misc }
 
 end
@@ -777,8 +785,10 @@ module Make (F : F) = struct
     log "read %s" filename;
     if Filename.exists f then
       F.of_string f (Filename.read f)
-    else
+    else (
+      log "Cannot find %s" (Filename.to_string f);
       F.empty
+    )
 
   let filename = Filename.of_string "/dummy/"
 

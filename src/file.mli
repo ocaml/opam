@@ -159,7 +159,7 @@ module Dot_install: sig
   val lib:  t -> filename list
 
   (** List of files to install in $bin/ *)
-  val bin:  t -> (filename * filename) list
+  val bin:  t -> (filename * basename) list
 
   (** List of other files to install *)
   val misc: t -> (filename * filename) list
