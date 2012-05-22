@@ -203,10 +203,12 @@ let install_initial_package () =
   let descr = File.Descr.create "Compiler configuration flags" in
   File.Descr.write (Path.G.descr t.global nv) descr;
   (* .config *)
-  let vars = [
-    Variable.of_string "lib",
-    S (Dirname.to_string (Path.C.lib_dir t.compiler))
-  ] in
+  let vars = List.map
+    (fun (s,p) -> Variable.of_string s, S (Dirname.to_string p))
+    [
+      ("lib", Path.C.lib_dir t.compiler);
+      ("bin", Path.C.bin t.compiler);
+    ] in
   let config = File.Dot_config.create vars in
   File.Dot_config.write (Path.C.config t.compiler name) config;
   (* installed *)
