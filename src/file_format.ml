@@ -229,15 +229,15 @@ let assoc_string_list s n =
 let rec parse_constraints name = function
   | [] -> []
   | (Symbol r) :: (String v) :: [] ->
-      [ (name, Some (r, v)) ]
+      [ ((name,None), Some (r, v)) ]
   | (Symbol r) :: (String v) :: (Symbol ",") :: t ->
-      (name, Some (r, v)) :: parse_constraints name t
+      ((name,None), Some (r, v)) :: parse_constraints name t
   | x -> bad_format "Expecting a constraint, got %s" (kinds x)
 
 (* contains only "," *)
 let rec parse_and_formula_aux = function
   | []                       -> []
-  | [String name]            -> [ (name, None) ]
+  | [String name]            -> [ ((name,None), None) ]
   | [Option(String name, g)] -> parse_constraints name g
   | [Group g]                -> parse_and_formula_aux g
   | [ x ]                    -> bad_format "Expecting string or group, got %s" (kind x)
@@ -258,8 +258,8 @@ let parse_or_formula = function
   | x      -> bad_format "Expecting list, got %s" (kind x)
 
 let make_constraint = function
-  | name, None       -> String name
-  | name, Some (r,v) -> Option (String name, [Symbol r; String v])
+  | (name,_), None       -> String name
+  | (name,_), Some (r,v) -> Option (String name, [Symbol r; String v])
 
 let make_and_formula_aux l =
   List.map make_constraint l

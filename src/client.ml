@@ -177,7 +177,7 @@ let update () =
   NV.Set.iter (fun nv ->
     let opam = File.OPAM.read (Path.G.opam t.global nv) in
     let depends = File.OPAM.depends opam in
-    List.iter (List.iter (fun (d,_) ->
+    List.iter (List.iter (fun ((d,_),_) ->
       match find_available_package_by_name t (N.of_string d) with
         | None   ->
             Globals.error_and_exit
@@ -401,7 +401,7 @@ let proceed_toinstall t nv =
   let local_sections = File.Dot_config.Section.available config in
   let libraries_in_opam =
     List.fold_left (fun accu l ->
-      List.fold_left (fun accu (n,_) ->
+      List.fold_left (fun accu ((n,_),_) ->
         let n = N.of_string n in
         let nv = find_installed_package_by_name t n in
         let opam = File.OPAM.read (Path.G.opam t.global nv) in
@@ -631,7 +631,7 @@ let resolve t request =
 let vpkg_of_nv nv =
   let name = NV.name nv in
   let version = NV.version nv in
-  N.to_string name, Some ("=", V.to_string version)
+  (N.to_string name, None), Some ("=", V.to_string version)
 
 let unknown_package name =
   Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
@@ -706,7 +706,7 @@ let remove name =
 
   resolve t 
     { wish_install
-    ; wish_remove  = [ N.to_string name, None ]
+    ; wish_remove  = [ (N.to_string name, None), None ]
     ; wish_upgrade = [] }
       
 let remove name =

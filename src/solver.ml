@@ -73,8 +73,8 @@ type request = {
 }
 
 let string_of_vpkg = function
-  | (n, None)       -> n
-  | (n, Some (r,c)) -> Printf.sprintf "%s %s %s" n r c
+  | ((n,_), None)       -> n
+  | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c
 
 let string_of_list f l =
   Printf.sprintf "{%s}"
