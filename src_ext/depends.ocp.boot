@@ -26,17 +26,14 @@ begin library "extlib"
      ]
 end
 
-begin library "re"
+begin library "re_perl"
    sort = true
    files = [
-     "ocaml-re/lib/re_posix.ml"
-     "ocaml-re/lib/re_perl.ml"
-     "ocaml-re/lib/re_glob.ml"
-     "ocaml-re/lib/re_emacs.ml"
-     "ocaml-re/lib/re.ml"
-     "ocaml-re/lib/pcre.ml"
      "ocaml-re/lib/cset.ml"
      "ocaml-re/lib/automata.ml"
+     "ocaml-re/lib/re.ml"
+     "ocaml-re/lib/re_perl.ml"
+     "ocaml-re/lib/pcre.ml"
    ]
 end
 
@@ -164,12 +161,11 @@ begin library "dose"
    ]]
 
    requires = [
-     "re"
+     "re_perl"
      "extlib"
      "cudf"
      "graph"
      "unix"
-     "str"
    ]
 
 end
