@@ -709,8 +709,7 @@ let remove name =
     List.fold_left
       (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv nv)::accu)
       []
-      (* XXX: do we need to remove nv here ? it should already be in depends *)
-      (NV.Set.elements (NV.Set.remove nv t.installed)) in
+      (NV.Set.elements t.installed) in
 
   resolve t 
     { wish_install
