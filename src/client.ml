@@ -245,8 +245,11 @@ let init repo =
     update ();
     (* Install the initial package *)
     install_initial_package ()
-  with _ ->
-    Dirname.rmdir (Path.G.root root)
+  with e ->
+    begin
+      Dirname.rmdir (Path.G.root root);
+      raise e;
+    end
 
 let indent_left s nb =
   let nb = nb - String.length s in
