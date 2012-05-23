@@ -1365,13 +1365,16 @@ bytelink:  [ "-g" ]
 If the user wants to switch to an other compiler version, he should run:
 
 \begin{verbatim}
-    $ opam switch $OVERSION
+    $ opam switch [-clone] $OVERSION
 \end{verbatim}
 
 This command will:
 
 \begin{itemize}
-\item Look for an existing \verb+$opam/$OVERSION+ directory. If it
+\item Look for an existing \verb+$opam/$OVERSION+ directory. 
+
+\begin{itemize}
+\item If it
   exists, then change the {\tt ocaml-version} content to
   \verb+$OVERSION+ in  \verb+$opam/config+.
 
@@ -1383,6 +1386,15 @@ This command will:
   options (and pass \verb+--prefix $opam/$OVERSION+ to
   \verb+./configure+) and initialize everything in \verb+$opam/+ 
   in a consistent state as if ``\verb+opam init+'' has just been called.
+
+\end{itemize}
+\item Moreover, if the \verb+-clone+ option is set, the command will
+  replicate the previous state of installed packages. 
+
+  In particular, it will try to remove / install the maximum of packages 
+  that were previously removed / installed.
+  The success depends on the compatibility of the existing packages 
+  with respect to this new \verb+$OVERSION+.
 
 \end{itemize}
 
