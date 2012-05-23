@@ -32,7 +32,7 @@ ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
 all:
 	$(MAKE) fresh && \
-	$(MAKE) $(BINARIES_) && \
+	$(MAKE) binaries && \
 	$(MAKE) init && \
 	$(MAKE) list && \
 	$(MAKE) upload && \
@@ -64,12 +64,13 @@ $(BINARIES_): $(BUILDS)
 	  cp ../_obuild/$$bin/$$bin.asm $(BIN)/$$bin ; \
 	done
 
+binaries: $(BINARIES_)
+
 init:
 ifeq ($(REPOKIND),rsync)
 	mkdir -p $(OPAM_REPO)
 	mkdir $(OPAM_REPO)/opam
 	mkdir $(OPAM_REPO)/descr
-	mkdir $(OPAM_REPO)/archive
 endif
 ifeq ($(REPOKIND), git)
 	rm -rf $(OPAM_REPO)

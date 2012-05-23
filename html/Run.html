@@ -76,13 +76,10 @@ Change the current working directory<br>
 <pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">('a, unit, string, int) Pervasives.format4 -> 'a</code></pre><div class="info">
 <code class="code">command fmt</code> executes the command <code class="code">fmt</code><br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">string list -> int</code></pre><div class="info">
-<code class="code">commands cmds</code> executes the commands <code class="code">cmds</code>. It stops whenever
-    one command fails.<br>
-</div>
-<pre><span id="VALcommands_with_path"><span class="keyword">val</span> commands_with_path</span> : <code class="type">string list -> string list -> int</code></pre><div class="info">
-<code class="code">commands_with_path</code> behaves like <code class="code">commands</code> except that the 
-    runnning commands include the environment from <code class="code">Unix.getenv "PATH"</code>.<br>
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?add_to_path:string list -> string list -> int</code></pre><div class="info">
+<code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
+    in a context where $PATH contains <code class="code">add_to_path</code> at the beginning. 
+    It stops whenever one command fails.<br>
 </div>
 <pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">('a, unit, string, string list) Pervasives.format4 -> 'a</code></pre><div class="info">
 <code class="code">read_command_output fmt</code> executes the command <code class="code">fmt</code> and return

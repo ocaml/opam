@@ -53,7 +53,7 @@ module Dirname: sig
   val mkdir: t -> unit
 
   (** Execute a list of commands in a given directory *)
-  val exec: t -> string list -> int
+  val exec: t -> ?add_to_path:t list -> string list -> int
 
   (** Change the current directory *)
   val chdir: t -> unit

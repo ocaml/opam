@@ -58,9 +58,10 @@ val directories: string -> string list
 (** [command fmt] executes the command [fmt] *)
 val command: ('a, unit, string, int) format4 -> 'a
 
-(** [commands cmds] executes the commands [cmds]. It stops whenever
-    one command fails. *)
-val commands: string list -> int
+(** [commands ~add_to_path cmds] executes the commands [cmds] 
+    in a context where $PATH contains [add_to_path] at the beginning. 
+    It stops whenever one command fails. *)
+val commands: ?add_to_path:string list -> string list -> int
 
 (** [read_command_output fmt] executes the command [fmt] and return
     the lines from stdout *)
