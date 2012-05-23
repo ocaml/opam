@@ -169,3 +169,27 @@ begin library "dose"
    ]
 
 end
+
+(*
+
+begin program "cnftocudf"
+  pp = "camlp4o Camlp4MacroParser.cmo"
+  files    = [
+    pack Eclipse [
+      "dose/eclipse/version.ml"
+      "dose/eclipse/packages.ml"
+      "dose/eclipse/eclipsecudf.ml"
+    ]
+    pack Csw [
+      "dose/opencsw/version.ml"
+      "dose/opencsw/packages.ml"
+      "dose/opencsw/cswcudf.ml"
+    ]
+    "dose/common/versionInfo.ml" (ml = true)
+    "dose/doseparse/boilerplateNoRpm.ml"
+    "dose/experimental/cnftocudf.ml"
+  ]
+  requires = [ "dose" ]
+end
+
+*)
