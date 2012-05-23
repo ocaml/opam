@@ -287,7 +287,7 @@ end = struct
       Debian.Debcudf.get_real_version
         table
         (pkg.Cudf.package, pkg.Cudf.version) in
-    { name    = N.of_string pkg.Cudf.package;
+    { name    = N.of_string (Common.CudfAdd.decode pkg.Cudf.package);
       version = V.of_string real_version; }
 
   let to_string t =
