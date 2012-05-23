@@ -40,7 +40,7 @@ Remove a directory<br>
 <pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">t -> unit</code></pre><div class="info">
 Create a directory<br>
 </div>
-<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">t -> string list -> int</code></pre><div class="info">
+<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">t -> ?add_to_path:t list -> string list -> int</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
 <pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">t -> unit</code></pre><div class="info">

@@ -235,13 +235,8 @@ Remove the file extension
 </td></tr>
 <tr><td><a href="Run.html#VALcommands">commands</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">commands cmds</code> executes the commands <code class="code">cmds</code>.
-</div>
-</td></tr>
-<tr><td><a href="Run.html#VALcommands_with_path">commands_with_path</a> [<a href="Run.html">Run</a>]</td>
-<td><div class="info">
-<code class="code">commands_with_path</code> behaves like <code class="code">commands</code> except that the 
-    runnning commands include the environment from <code class="code">Unix.getenv "PATH"</code>.
+<code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
+    in a context where $PATH contains <code class="code">add_to_path</code> at the beginning.
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALcompilers">compilers</a> [<a href="Path.G.html">Path.G</a>]</td>

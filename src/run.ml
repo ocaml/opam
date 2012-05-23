@@ -222,9 +222,11 @@ let command fmt =
 
 let fold f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
 
-let commands = fold (command "%s")
-
-let commands_with_path bins = fold (command_with_path bins "%s")
+let commands ?(add_to_path = []) = 
+  fold
+    (match add_to_path with
+      | [] -> command "%s"
+      | _ -> command_with_path add_to_path "%s")
 
 let is_archive file =
   List.fold_left

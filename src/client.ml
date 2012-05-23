@@ -558,7 +558,7 @@ let proceed_tochange t nv_old nv =
       (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
       commands in
   Globals.msg "Build command: %s\n" (String.concat ";" commands);
-  let err = Dirname.exec p_build commands in
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then
     proceed_toinstall t nv
   else
