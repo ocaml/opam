@@ -39,7 +39,7 @@ module type SIG = sig
     post:(G.V.t -> unit) ->
     unit
 
-  exception Error of G.V.t
+  exception Errors of G.V.t list
 
 end
 

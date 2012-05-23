@@ -178,7 +178,13 @@ let add_path bins =
   let path = ref "<not set>" in
   let env = Unix.environment () in
   for i = 0 to Array.length env - 1 do
-    let k,v = ExtString.String.split env.(i) "=" in
+    let k,v =
+      try
+        let n = String.index env.(i) '=' in
+        String.sub env.(i) 0 n,
+        String.sub env.(i) (n+1) (String.length env.(i) - n - 1)
+      with _ ->
+        assert false in
     if k = "PATH" then
     let new_path = match List.filter Sys.file_exists bins with
       | [] -> v

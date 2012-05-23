@@ -26,8 +26,8 @@ dose:
 	tar xfz dose.tar.gz
 
 ocaml-arg:
-	$(WGET) http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2
-	tar xfj ocaml-arg.tar.bz2
+	$(WGET) http://www.ocamlpro.com/pub/ocaml-arg.tar.gz
+	tar xfz ocaml-arg.tar.gz
 
 ocamlgraph:
 	$(WGET) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
@@ -45,4 +45,3 @@ distclean: clean
 	rm -rf cudf extlib ocaml-re ocamlgraph dose ocaml-arg
 	rm -f depends.ocp
 	rm -rf *.tar.gz
-	rm -rf *.bz2
