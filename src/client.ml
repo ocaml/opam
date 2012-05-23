@@ -186,10 +186,6 @@ let update () =
     )) depends
   ) available
 
-let update () =
-  check ();
-  Run.with_flock update ()
-
 let install_initial_package () =
   let t = load_state () in
   let name = N.of_string Globals.default_package in
@@ -218,7 +214,17 @@ let install_initial_package () =
   File.Installed.write installed_p installed
 
 let init_ocaml compiler = 
-  File.Installed.write (Path.C.installed compiler) File.Installed.empty
+  begin
+    File.Installed.write (Path.C.installed compiler) File.Installed.empty;
+    (* Update the configuration files *)
+    update (); (* WARNING we could be here inside a [Run.with_flock]. In this case, this [update] will fail to lock. *)
+    (* Install the initial package *)
+    install_initial_package ();
+  end
+
+let update () =
+  check ();
+  Run.with_flock update ()
 
 let init repo =
   log "init %s" (Repository.to_string repo);
@@ -234,17 +240,13 @@ let init repo =
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;
-    init_ocaml compiler;
     File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
     File.Repo_config.write (Path.R.config repo_p) repo;
     Repositories.init repo;
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
-    (* Update the configuration files *)
-    update ();
-    (* Install the initial package *)
-    install_initial_package ()
+    init_ocaml compiler;
   with e ->
     begin
       Dirname.rmdir (Path.G.root root);
@@ -972,10 +974,10 @@ let switch oversion =
   log "switch %s" (OCaml_V.to_string oversion);
   let t = load_state () in
 
-  let () = 
+  let f_init = 
     let new_oversion = Path.C.create oversion in
     if Dirname.exists (Path.C.root new_oversion) then
-      ()
+      None
     else
       (* The chosen version does not exist. We build it. *)
       let comp = File.Comp.read (Path.G.compilers t.global oversion) in
@@ -996,14 +998,24 @@ let switch oversion =
         Dirname.exec build_dir
           [ Printf.sprintf "./configure %s -prefix %s" (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
               (String.concat " " (File.Comp.configure comp))
-              (Dirname.to_string (Path.C.root t.compiler))
+              (Dirname.to_string (Path.C.root new_oversion))
             (* NOTE In case it exists 2 '-prefix', in general the script ./configure will only consider the last one, others will be discarded. *)
           ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
-          ; Printf.sprintf "make install" ] 
+          ; Printf.sprintf "make install" ]
       with
-        | 0 -> init_ocaml new_oversion
+        | 0 -> 
+          Some (fun _ -> try init_ocaml new_oversion with e -> 
+              begin 
+                File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
+                Dirname.rmdir (Path.C.root new_oversion); 
+                raise e;
+              end)
         | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
-  File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion)
+
+  File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion);
+  match f_init with
+    | None -> ()
+    | Some f -> f ()
 
 let switch oversion =
   check ();
