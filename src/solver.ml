@@ -166,12 +166,17 @@ type universe = U of package list
 (* Subset of packages *)
 type packages = P of package list
 
+let string_of_package p =
+  let installed = if p.Cudf.installed then "installed" else "not-installed" in
+  Printf.sprintf "%s.%d(%s)"
+    (Common.CudfAdd.decode p.Cudf.package)
+    p.Cudf.version installed
+
 let string_of_universe u =
   let l =
-    Cudf.fold_packages (fun accu p ->
-      let installed = if p.Cudf.installed then "installed" else "not-installed" in
-      Printf.sprintf "%s.%d(%s)" p.Cudf.package p.Cudf.version installed :: accu
-    ) [] u in
+    Cudf.fold_packages
+      (fun accu p -> string_of_package p :: accu)
+      [] u in
   Printf.sprintf "{%s}" (String.concat ", " l)
     
 module CudfDiff : sig
@@ -189,9 +194,13 @@ end = struct
     let choose_one s = match S.cardinal s with
       | 0 -> raise Not_found
       | 1 -> S.choose s
-      | _ -> failwith "TODO"
-    (* Apparently the returned sets are always singleton.
-       XXX: check that it is always the case *)
+      | _ -> assert false
+          (* As we have always at most one version of a package installed,
+             the set is always either empty or a singleton *)
+
+    let to_string s =
+      Printf.sprintf "{%s}"
+        (String.concat "," (List.map string_of_package (S.elements s)))
 
     include S
   end
@@ -206,12 +215,13 @@ end = struct
       req_extra = [] }
 
   let cudf_resolve univ req = 
-    log "universe=%s request=<%s>"
+    log "(INTERNAL) universe=%s request=<%s>"
       (string_of_universe univ)
       (string_of_internal_request string_of_cudf req);
     let open Algo in
     let r = Depsolver.check_request (to_cudf_doc univ req) in
-    (* Diagnostic.fprintf Format.std_formatter r; *)
+(*    Diagnostic.fprintf ~explain:true ~failure:true ~success:true Format.err_formatter r;
+      Format.pp_print_flush Format.err_formatter (); *)
     if Diagnostic.is_solution r then
       match r with
       | { Diagnostic.result = Diagnostic.Success f } -> Some (f ~all:true ())
@@ -233,11 +243,15 @@ end = struct
     let f_diff diff =
       Hashtbl.fold (fun pkgname s acc ->
         let add x = x :: acc in
+(*        log "%s removed=%s installed=%s"
+          pkgname
+          (Cudf_set.to_string s.Common.CudfDiff.removed)
+          (Cudf_set.to_string s.Common.CudfDiff.installed); *)
         let removed =
           try Some (Cudf_set.choose_one s.Common.CudfDiff.removed)
           with Not_found -> None in
         let installed =
-          try Some (Cudf_set.choose s.Common.CudfDiff.installed)
+          try Some (Cudf_set.choose_one s.Common.CudfDiff.installed)
           with Not_found -> None in
         match removed, installed with
         | None      , Some p     -> add (I_to_change (None, p))
@@ -303,13 +317,7 @@ struct
        Defaultgraphs.PackageGraph.D.output_graph stdout g; *)
     g
 
-  let tocudf table pkg = 
-    Debian.Debcudf.tocudf table pkg
-(*    { p with Cudf.conflicts = List.tl p.Cudf.conflicts } *)
-    (* we cancel the 'self package conflict' notion introduced in
-       [loadlc] in debcudf.ml *)
-
-  let cudfpkg_of_debpkg table = List.map (tocudf table)
+  let cudfpkg_of_debpkg table = List.map (Debian.Debcudf.tocudf table)
       
   let get_table l_pkg_pb f = 
     let table = Debian.Debcudf.init_tables l_pkg_pb in
@@ -326,7 +334,7 @@ struct
     get_table l_pkg_pb
       (fun table pkglist ->
         let pkg_set = List.fold_left
-          (fun accu pkg -> PkgSet.add (tocudf table pkg) accu)
+          (fun accu pkg -> PkgSet.add (Debian.Debcudf.tocudf table pkg) accu)
           PkgSet.empty
           pkg_l in
         let g = f_direction (dep_reduction pkglist) in
@@ -352,7 +360,9 @@ struct
   let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
   let resolve (U l_pkg_pb) req =
-    log "universe=%s req=%s" (string_of_packages l_pkg_pb) (string_of_request req);
+    log "universe=%s request=<%s>"
+      (string_of_packages l_pkg_pb)
+      (string_of_request req);
     get_table l_pkg_pb 
       (fun table pkglist ->
         let package_map pkg = NV.of_cudf table pkg in
