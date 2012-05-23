@@ -175,6 +175,14 @@ let update () =
   let t = load_state () in
   NV.Set.iter (fun nv ->
     let opam = File.OPAM.read (Path.G.opam t.global nv) in
+    let name = File.OPAM.name opam in
+    let version = File.OPAM.version opam in
+    if nv <> NV.create name version then
+      Globals.error_and_exit
+        "The file %s is not consistent with the package %s (%s)"
+        (Filename.to_string (Path.G.opam t.global nv))
+        (N.to_string name)
+        (V.to_string version);
     let depends = File.OPAM.depends opam in
     List.iter (List.iter (fun ((d,_),_) ->
       match find_available_package_by_name t (N.of_string d) with
