@@ -33,7 +33,7 @@ begin library "opam-lib"
     "unix"
     "arg"
     "graph"
-    "re"
+    "re_perl"
   ]
 end
 
