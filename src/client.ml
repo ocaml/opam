@@ -222,10 +222,6 @@ let init_ocaml compiler =
     install_initial_package ();
   end
 
-let update () =
-  check ();
-  Run.with_flock update ()
-
 let init repo =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create () in
@@ -696,10 +692,6 @@ let install name =
     ; wish_remove = [] 
     ; wish_upgrade = [] }
 
-let install name =
-  check ();
-  Run.with_flock install name
-
 let remove name =
   log "remove %s" (N.to_string name);
   let t = load_state () in
@@ -725,10 +717,6 @@ let remove name =
     ; wish_remove  = [ (N.to_string name, None), None ]
     ; wish_upgrade = [] }
       
-let remove name =
-  check ();
-  Run.with_flock remove name
-
 let upgrade () =
   log "upgrade";
   let t = load_state () in
@@ -743,10 +731,6 @@ let upgrade () =
     ; wish_remove  = []
     ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
   Filename.remove (Path.C.reinstall t.compiler)
-
-let upgrade () =
-  check ();
-  Run.with_flock upgrade ()
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
@@ -773,10 +757,6 @@ let upload upload repo =
   Filename.remove upload_opam;
   Filename.remove upload_descr;
   Filename.remove upload_archives
-
-let upload u r =
-  check ();
-  Run.with_flock upload u r
 
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
@@ -966,10 +946,6 @@ let remote action =
           Globals.error_and_exit "%s is not a remote index" n in
       update_config (List.filter ((!=) repo) repos)
 
-let remote action =
-  check ();
-  Run.with_flock remote action
-
 let switch oversion =
   log "switch %s" (OCaml_V.to_string oversion);
   let t = load_state () in
@@ -1016,6 +992,33 @@ let switch oversion =
   match f_init with
     | None -> ()
     | Some f -> f ()
+
+
+(** We protect each main functions with a lock. *)
+
+let update () =
+  check ();
+  Run.with_flock update ()
+
+let install name =
+  check ();
+  Run.with_flock install name
+
+let remove name =
+  check ();
+  Run.with_flock remove name
+
+let upgrade () =
+  check ();
+  Run.with_flock upgrade ()
+
+let upload u r =
+  check ();
+  Run.with_flock upload u r
+
+let remote action =
+  check ();
+  Run.with_flock remote action
 
 let switch oversion =
   check ();
