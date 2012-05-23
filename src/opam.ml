@@ -113,10 +113,10 @@ let set cmd () =
   has_cmd := true;
   command := Some cmd
 let specs = [
-  ("-r"        , Arg.Set is_rec       , " Recursive search (large)");
-  ("-I"        , Arg.Unit (set `I)    , " Display native compile options");
+  ("-r"        , Arg.Set is_rec       , " Recursive search");
+  ("-I"        , Arg.Unit (set `I)    , " Display include options");
   ("-bytecomp" , Arg.Unit bytecomp    , " Display bytecode compile options");
-  ("-asmcomp"  , Arg.Unit asmcomp     , " Display native link options");
+  ("-asmcomp"  , Arg.Unit asmcomp     , " Display native compile options");
   ("-bytelink" , Arg.Unit bytelink    , " Display bytecode link options");
   ("-asmlink"  , Arg.Unit asmlink     , " Display native link options");
   ("-list-vars", Arg.Unit (set `List) , " Display the contents of all available variables");
