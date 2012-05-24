@@ -596,6 +596,9 @@ let proceed_tochange t nv_old nv =
 let proceed_torecompile t nv =
   proceed_tochange t (Some nv) nv
 
+(* XXX: the reinstall trick must be done only when upgrading.
+   So currently there is a weird bug where you can't uninstall
+   a package when it is present in the reinstall list *)
 let debpkg_of_nv t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let installed =
