@@ -166,16 +166,16 @@ type universe = U of package list
 (* Subset of packages *)
 type packages = P of package list
 
-let string_of_package p =
+let string_of_cudf_package p =
   let installed = if p.Cudf.installed then "installed" else "not-installed" in
   Printf.sprintf "%s.%d(%s)"
-    (Common.CudfAdd.decode p.Cudf.package)
+    p.Cudf.package
     p.Cudf.version installed
 
 let string_of_universe u =
   let l =
     Cudf.fold_packages
-      (fun accu p -> string_of_package p :: accu)
+      (fun accu p -> string_of_cudf_package p :: accu)
       [] u in
   Printf.sprintf "{%s}" (String.concat ", " l)
     
@@ -200,7 +200,7 @@ end = struct
 
     let to_string s =
       Printf.sprintf "{%s}"
-        (String.concat "," (List.map string_of_package (S.elements s)))
+        (String.concat "," (List.map string_of_cudf_package (S.elements s)))
 
     include S
   end

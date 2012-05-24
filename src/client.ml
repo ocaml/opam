@@ -707,7 +707,7 @@ let install name =
       (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
 
   resolve t
-    { wish_install = vpkg_of_nv_eq nv :: List.map vpkg_of_nv_any (nv :: map_installed)
+    { wish_install = vpkg_of_nv_eq nv :: List.map vpkg_of_nv_any map_installed
     ; wish_remove = [] 
     ; wish_upgrade = [] }
 
