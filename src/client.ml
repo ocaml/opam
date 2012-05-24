@@ -1042,19 +1042,27 @@ let switch to_replicate oversion =
   end
 
 
-(** We protect each main functions with a lock. *)
+(** We protect each main functions with a lock depending on its access on some read/write data. *)
 
-let update () =
+let list () = 
   check ();
-  Run.with_flock update ()
+  list ()
+
+let info package = 
+  check ();
+  info package
+
+let config request =
+  check ();
+  config request
 
 let install name =
   check ();
   Run.with_flock install name
 
-let remove name =
+let update () =
   check ();
-  Run.with_flock remove name
+  Run.with_flock update ()
 
 let upgrade () =
   check ();
@@ -1063,6 +1071,10 @@ let upgrade () =
 let upload u r =
   check ();
   Run.with_flock upload u r
+
+let remove name =
+  check ();
+  Run.with_flock remove name
 
 let remote action =
   check ();
