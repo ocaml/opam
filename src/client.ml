@@ -102,7 +102,7 @@ let find_repository t name =
   r
 
 let find_installed_package_by_name t name =
-  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
+  try NV.Set.choose_one (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
   with Not_found ->
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
@@ -318,7 +318,7 @@ let info package =
 
   let o_v =
     let installed = File.Installed.read (Path.C.installed t.compiler) in
-    try Some (V.Set.choose (N.Map.find package (NV.to_map installed)))
+    try Some (V.Set.choose_one (N.Map.find package (NV.to_map installed)))
     with Not_found -> None in
 
   let v_set =
@@ -674,7 +674,7 @@ let install name =
     Globals.error_and_exit
       "Package %s is already installed (current version is %s)"
       (N.to_string name)
-      (V.to_string (V.Set.choose (N.Map.find name map_installed)));
+      (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
 
   let nv =
     if N.Map.mem name available then
@@ -699,7 +699,7 @@ let install name =
   (* remove any old packages from the list of packages to install *)
   let map_installed =
     List.map
-      (fun (x,y) -> NV.create x (V.Set.choose y))
+      (fun (x,y) -> NV.create x (V.Set.choose_one y))
       (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
 
   resolve t
@@ -713,7 +713,7 @@ let remove name =
   let map_installed = NV.to_map t.installed in
   if not (N.Map.mem name map_installed) then
     Globals.error_and_exit "Package %s is not installed" (N.to_string name);
-  let nv = NV.create name (V.Set.choose (N.Map.find name map_installed)) in
+  let nv = NV.create name (V.Set.choose_one (N.Map.find name map_installed)) in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available []) in
   let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv t nv]) in
   let depends =
@@ -1016,7 +1016,7 @@ let switch to_replicate oversion =
         resolve t_new
           { wish_install = 
               List.map 
-                (fun (n, v) -> vpkg_of_nv (NV.create n (V.Set.choose_one v)))
+                (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
                 (N.Map.bindings 
                    (NV.Set.fold
                       (fun nv map ->
