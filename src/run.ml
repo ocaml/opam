@@ -280,15 +280,21 @@ let flock () =
   let l = ref 0 in
   let file = file () in
   let id = string_of_int (Unix.getpid ()) in
+  let max_l = 5 in
   let rec loop () =
-    if Sys.file_exists file && !l < 5 then begin
-      Globals.log id "Filesytem busy. Waiting 1s (%d)" !l;
+    if Sys.file_exists file && !l < max_l then begin
+      let ic = open_in file in
+      let pid = input_line ic in
+      close_in ic;
+      Globals.msg
+        "An other process (%s) has already locked %S. Retrying in 1s (%d/%d)\n"
+        pid file !l max_l;
       Unix.sleep 1;
       incr l;
       loop ()
     end else if Sys.file_exists file then begin
-      Globals.log id "Too many attemps. Cancelling ...";
-      Globals.error_and_exit "Too many attemps. Cancelling ...";
+      Globals.msg "Too many attemps. Cancelling ...\n";
+      exit 1
     end else begin
       let oc = open_out file in
       output_string oc id;
