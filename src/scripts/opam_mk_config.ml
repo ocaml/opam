@@ -66,7 +66,6 @@ let () =
   bytelink: [ \"-I\" \"%%{lib}%%/%s\" ]  
   asmlink:  [ \"-I\" \"%%{lib}%%/%s\" \"%s.cmxa\" ]
   bytelink: [ \"-I\" \"%%{lib}%%/%s\" \"%s.cma\" ]
-  requires: [ XXX ]
 }\n\n"
       section name
       package

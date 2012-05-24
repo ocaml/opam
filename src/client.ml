@@ -219,7 +219,15 @@ let install_initial_package () =
   let installed_p = Path.C.installed t.compiler in
   let installed = File.Installed.safe_read installed_p in
   let installed = NV.Set.add nv installed in
-  File.Installed.write installed_p installed
+  File.Installed.write installed_p installed;
+  (* stublibs *)
+  let stublibs = Path.C.stublibs t.compiler in
+  Dirname.mkdir stublibs;
+  (* XXX: check whether it is necessary to display the message *)
+  Globals.msg
+    "Please verify that %S is in your ld.conf.\n"
+    (Dirname.to_string stublibs)
+
 
 let init_ocaml compiler = 
   begin
@@ -399,6 +407,12 @@ let proceed_toinstall t nv =
         Globals.error_and_exit "The %s %s does not appear in %s"
           kind (Section.to_string os) (Filename.to_string config_f)
     ) opam_sections in
+  if not (Filename.exists config_f) &&
+    (File.OPAM.libraries opam <> [] || File.OPAM.syntax opam <> []) then
+    Globals.error_and_exit
+      "%s does not exists but %s defines some libraries and syntax extensions"
+      (Filename.to_string config_f)
+      (Filename.to_string opam_f);
   check "library"
     (File.Dot_config.Library.available config)
     (File.OPAM.libraries opam);
@@ -559,10 +573,7 @@ let proceed_tochange t nv_old nv =
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
-  let commands =
-    List.map
-      (fun cmd -> String.concat " " (List.map (Printf.sprintf "'%s'") cmd))
-      commands in
+  let commands = List.map (fun cmd -> String.concat " " cmd)  commands in
   Globals.msg "Build command: %s\n" (String.concat ";" commands);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then

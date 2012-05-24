@@ -88,6 +88,9 @@ module C : sig
   (** Library path: {i $opam/$OVERSION/lib/} *)
   val lib_dir: t -> dirname
 
+  (** DLL paths *)
+  val stublibs: t -> dirname
+
   (** Documentation path for a given package:
       {i $opam/$OVERSION/doc/NAME} *)
   val doc: t -> N.t -> dirname
