@@ -223,6 +223,11 @@ Check whether a file has a given suffix
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
 <td></td></tr>
+<tr><td><a href="Types.Set.S.html#VALchoose_one">choose_one</a> [<a href="Types.Set.S.html">Types.Set.S</a>]</td>
+<td><div class="info">
+Like <code class="code">choose</code> and <code class="code">Assert_failure _</code> in case the set is not a singleton.
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALchop_extension">chop_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Remove the file extension
@@ -1110,7 +1115,8 @@ File substitutions
 </td></tr>
 <tr><td><a href="Client.html#VALswitch">switch</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Switch to an OCaml compiler.
+<code class="code">switch and_clone</code> switch to an OCaml compiler 
+    and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>.
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALsynopsis">synopsis</a> [<a href="File.Descr.html">File.Descr</a>]</td>

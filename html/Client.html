@@ -65,7 +65,9 @@ Removes the given package. Take the global file lock.<br>
 <pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="Types.html#TYPEremote">Types.remote</a> -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">Types.OCaml_V.t -> unit</code></pre><div class="info">
-Switch to an OCaml compiler. Take the global file lock.<br>
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> Types.OCaml_V.t -> unit</code></pre><div class="info">
+<code class="code">switch and_clone</code> switch to an OCaml compiler 
+    and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>.
+    Take the global file lock.<br>
 </div>
 </body></html>
