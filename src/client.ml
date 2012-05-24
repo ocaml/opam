@@ -870,6 +870,7 @@ let config request =
         let todo = ref Section.Set.empty in
         let seen = ref Section.Set.empty in
         (* Init the graph with vertices from the command-line *)
+        (* NOTES: we check that [todo] is initialized before the [loop] *)
         List.iter (fun s ->
           let name = Full_section.package s in
           let sections = match Full_section.section s with
@@ -879,7 +880,11 @@ let config request =
             | Some s -> [s] in
           List.iter (fun s ->
             Section.G.add_vertex graph s;
-            todo := Section.Set.add s !todo
+            todo := 
+              if Section.Map.mem s library_map then
+                Section.Set.add s !todo
+              else
+                Globals.error_and_exit "Unbound section %S" (Section.to_string s)
           ) sections
         ) c.options;
         (* Least fix-point to add edges and missing vertices *)
