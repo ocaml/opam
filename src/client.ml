@@ -399,6 +399,12 @@ let proceed_toinstall t nv =
         Globals.error_and_exit "The %s %s does not appear in %s"
           kind (Section.to_string os) (Filename.to_string config_f)
     ) opam_sections in
+  if not (Filename.exists config_f) &&
+    (File.OPAM.libraries opam <> [] || File.OPAM.syntax opam <> []) then
+    Globals.error_and_exit
+      "%s does not exists but %s defines some libraries and syntax extensions"
+      (Filename.to_string config_f)
+      (Filename.to_string opam_f);
   check "library"
     (File.Dot_config.Library.available config)
     (File.OPAM.libraries opam);
