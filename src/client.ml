@@ -709,6 +709,9 @@ let install name =
 
 let remove name =
   log "remove %s" (N.to_string name);
+  if name = N.of_string Globals.default_package then
+    Globals.error_and_exit "Package %s can not be removed without specifying its new version. \
+      Use 'opam switch' and enter another OCaml version." (N.to_string name);
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
   if not (N.Map.mem name map_installed) then
