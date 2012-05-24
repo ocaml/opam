@@ -407,6 +407,12 @@ module OPAM = struct
     } in
     Syntax.to_string filename s
 
+  let parse_command =
+    parse_or [
+      ("string", parse_string |> Printf.sprintf "'%s'");
+      ("symbol", parse_symbol)
+    ]
+
   let of_string filename str =
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
@@ -422,7 +428,7 @@ module OPAM = struct
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
     let build      =
       assoc_default Globals.default_build_command
-        s s_build (parse_list (parse_list parse_string)) in
+        s s_build (parse_list (parse_list parse_command)) in
     let depends    = assoc_list s s_depends parse_cnf_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
