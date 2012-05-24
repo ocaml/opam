@@ -368,7 +368,7 @@ struct
             (request_map
                (fun x -> 
                  match Debian.Debcudf.ltocudf table [x] with
-                 | [x] -> x
+                 | [n,c] -> Common.CudfAdd.encode n, c
                  | _   -> failwith "TODO"
                ) req) in
 
