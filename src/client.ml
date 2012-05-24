@@ -382,6 +382,7 @@ let confirm fmt =
   ) fmt
 
 let proceed_toinstall t nv = 
+  Globals.msg "Installing %s ...\n" (NV.to_string nv);
 
   let t = load_state () in
   let name = NV.name nv in
@@ -605,7 +606,7 @@ let debpkg_of_nv t nv =
 let resolve t request =
   let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
 
-  match Solver.resolve (Solver.U l_pkg) request with
+  match Solver.resolve (Solver.U l_pkg) request t.reinstall with
   | None     -> Globals.msg "No solution has been found.\n"
   | Some sol -> 
 
