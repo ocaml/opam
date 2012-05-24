@@ -291,6 +291,7 @@ module OPAM = struct
     maintainer : string;
     substs     : basename list;
     build      : string list list;
+    remove     : string list;
     depends    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
     libraries  : section list;
@@ -304,6 +305,7 @@ module OPAM = struct
     maintainer = "<none>";
     substs     = [];
     build      = [];
+    remove     = [];
     depends    = [];
     conflicts  = [];
     libraries  = [];
@@ -320,6 +322,7 @@ module OPAM = struct
   let s_maintainer  = "maintainer"
   let s_substs      = "substs"
   let s_build       = "build"
+  let s_remove      = "remove"
   let s_depends     = "depends"
   let s_conflicts   = "conflicts"
   let s_libraries   = "libraries"
@@ -341,6 +344,7 @@ module OPAM = struct
     s_maintainer;
     s_substs;
     s_build;
+    s_remove;
     s_depends;
     s_conflicts;
     s_libraries;
@@ -359,6 +363,7 @@ module OPAM = struct
   let version t = t.version
   let substs t = t.substs
   let build t = t.build
+  let remove t = t.remove
   let depends t = t.depends
   let conflicts t = t.conflicts
   let libraries t = t.libraries
@@ -429,6 +434,7 @@ module OPAM = struct
     let build      =
       assoc_default Globals.default_build_command
         s s_build (parse_list (parse_list parse_command)) in
+    let remove     = assoc_list s s_remove (parse_list parse_command) in
     let depends    = assoc_list s s_depends parse_cnf_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
@@ -438,7 +444,7 @@ module OPAM = struct
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
         | _              -> None
       ) s in
-    { name; version; maintainer; substs; build;
+    { name; version; maintainer; substs; build; remove;
       depends; conflicts; libraries; syntax; others }
 end
 

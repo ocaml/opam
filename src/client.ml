@@ -490,11 +490,18 @@ let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
   let name = NV.name nv in
 
+  (* Run the remove script *)
+  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let remove = String.concat " " (File.OPAM.remove opam) in
+  let err = Dirname.exec (Path.C.lib_dir t.compiler) [remove] in
+  if err <> 0 then
+    Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
+
   (* Remove the libraries *)
   Dirname.rmdir (Path.C.lib t.compiler name);
   
   (* Remove the binaries *)
-  let install = File.Dot_install.read (Path.C.install t.compiler name) in
+  let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
     let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
     Filename.remove dst
@@ -578,9 +585,11 @@ let proceed_tochange t nv_old nv =
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then
     proceed_toinstall t nv
-  else
+  else (
+    proceed_todelete t nv;
     Globals.error_and_exit
       "Compilation failed with error %d" err
+  )
 
 (* We need to clean-up things before recompiling. *)
 let proceed_torecompile t nv =
