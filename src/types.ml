@@ -29,6 +29,7 @@ module Set = struct
     let choose_one s = 
       match elements s with
         | [x] -> x
+        | [] -> raise Not_found
         | _ -> assert false
   end
 
