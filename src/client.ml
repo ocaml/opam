@@ -696,16 +696,13 @@ let install name =
       (N.to_string name)
       (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
 
-  let nv = install_nv_of_n t name in
-
-  (* remove any old packages from the list of packages to install *)
   let map_installed =
     List.map
       (fun (x,y) -> NV.create x (V.Set.choose_one y))
-      (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
+      (N.Map.bindings map_installed) in
 
   resolve t
-    { wish_install = vpkg_of_nv_eq nv :: List.map vpkg_of_nv_any map_installed
+    { wish_install = vpkg_of_nv_eq (install_nv_of_n t name) :: List.map vpkg_of_nv_any map_installed
     ; wish_remove = [] 
     ; wish_upgrade = [] }
 
