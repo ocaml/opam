@@ -693,6 +693,7 @@ module Comp = struct
   let configure t = t.configure
   let make t = t.make
   let src t = t.src
+  let packages t = t.packages
 
   let of_string filename str =
     let file = Syntax.of_string filename str in

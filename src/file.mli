@@ -146,6 +146,9 @@ module Comp : sig
 
   (** Options to give to the "make" command *)
   val make : t -> string list
+
+  (** Packages to install immediately after the creation of OCaml *)
+  val packages : t -> string list
 end
 
 (** {2 Configuration files} *)

@@ -663,10 +663,30 @@ let vpkg_of_nv_any = vpkg_of_nv None
 let unknown_package name =
   Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
 
+let install_nv_of_n t name =
+  let available = NV.to_map (Path.G.available t.global) in
+  if N.Map.mem name available then
+    NV.create name (V.Set.max_elt (N.Map.find name available))
+  else (
+    (* consider 'name' to be 'name.version' *)
+    let nv =
+      try NV.of_string (N.to_string name)
+      with Not_found -> unknown_package name in
+    let sname = NV.name nv in
+    let sversion = NV.version nv in
+    Globals.msg
+      "Package %s not found, looking for package %s version %s\n"
+      (N.to_string name) (N.to_string sname) (V.to_string sversion);
+    if N.Map.mem sname available
+      && V.Set.mem sversion (N.Map.find sname available) then
+      nv
+    else
+      unknown_package sname
+  )
+
 let install name = 
   log "install %s" (N.to_string name);
   let t = load_state () in
-  let available = NV.to_map (Path.G.available t.global) in
   let map_installed = NV.to_map t.installed in
 
   (* Fail if the package is already installed *)
@@ -676,25 +696,7 @@ let install name =
       (N.to_string name)
       (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
 
-  let nv =
-    if N.Map.mem name available then
-      NV.create name (V.Set.max_elt (N.Map.find name available))
-    else (
-      (* consider 'name' to be 'name.version' *)
-      let nv =
-        try NV.of_string (N.to_string name)
-        with Not_found -> unknown_package name in
-      let sname = NV.name nv in
-      let sversion = NV.version nv in
-      Globals.msg
-        "Package %s not found, looking for package %s version %s\n"
-        (N.to_string name) (N.to_string sname) (V.to_string sversion);
-      if N.Map.mem sname available
-        && V.Set.mem sversion (N.Map.find sname available) then
-        nv
-      else
-        unknown_package sname
-    ) in
+  let nv = install_nv_of_n t name in
 
   (* remove any old packages from the list of packages to install *)
   let map_installed =
@@ -966,10 +968,10 @@ let switch to_replicate oversion =
   log "switch %B %s" to_replicate (OCaml_V.to_string oversion);
   let t = load_state () in
 
-  let f_init = 
+  let f_init, nv_to_install = 
     let new_oversion = Path.C.create oversion in
     if Dirname.exists (Path.C.root new_oversion) then
-      None
+      None, fun _ -> NV.Set.empty
     else
       (* The chosen version does not exist. We build it. *)
       let comp = File.Comp.read (Path.G.compilers t.global oversion) in
@@ -1001,7 +1003,12 @@ let switch to_replicate oversion =
                 File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
                 Dirname.rmdir (Path.C.root new_oversion); 
                 raise e;
-              end)
+              end), 
+          fun t_new -> 
+            List.fold_left 
+              (fun set name -> NV.Set.add (install_nv_of_n t_new (N.of_string name)) set) 
+              NV.Set.empty
+              (File.Comp.packages comp)
         | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
 
   begin
@@ -1013,26 +1020,28 @@ let switch to_replicate oversion =
       | None -> ()
       | Some f -> f ());
 
-    (if to_replicate then
-        (* attempt to replicate the previous state *)
-        let t_new = load_state () in
-        resolve t_new
-          { wish_install = 
-              List.map 
-                (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
-                (N.Map.bindings 
-                   (NV.Set.fold
-                      (fun nv map ->
-                        let name, version = NV.name nv, NV.version nv in
-                        if name = N.of_string Globals.default_package then
-                          (* [Globals.default_package] has already been installed for this new version (automatically), we skip it *)
-                          map
-                        else
-                          N.Map.add name (try N.Map.find name map with Not_found -> V.Set.singleton version) map)
-                      t.installed
-                      (NV.to_map t_new.installed)))
-          ; wish_remove = [] 
-          ; wish_upgrade = [] });
+    (* - install in priority packages specified in [nv_to_install]
+       - also attempt to replicate the previous state, if required *)
+    (let t_new = load_state () in
+     resolve t_new
+       { wish_install = 
+           List.map 
+             (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
+             (N.Map.bindings 
+                (NV.Set.fold
+                   (fun nv map ->
+                     let name, version = NV.name nv, NV.version nv in
+                     if name = N.of_string Globals.default_package then
+                       (* [Globals.default_package] has already been installed for this new version (automatically), we skip it *)
+                       map
+                     else
+                       N.Map.add name (try N.Map.find name map with Not_found -> V.Set.singleton version) map)
+                   (NV.Set.union
+                      (if to_replicate then t.installed else NV.Set.empty)
+                      (nv_to_install t_new))
+                   (NV.to_map t_new.installed)))
+       ; wish_remove = [] 
+       ; wish_upgrade = [] });
   end
 
 
