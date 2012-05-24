@@ -1388,11 +1388,14 @@ This command will:
   in a consistent state as if ``\verb+opam init+'' has just been called.
 
 \end{itemize}
-\item Moreover, if the \verb+-clone+ option is set, the command will
-  replicate the previous state of installed packages. 
+\item If the \verb+-clone+ option is set, the command will try to install
+  the packages that were installed before switching 
+  (that are not currently installed).
+  In case the new version contains installed packages 
+  that were not installed before switching, it will try to keep them.
 
-  In particular, it will try to remove / install the maximum of packages 
-  that were previously removed / installed.
+  In short, the heuristic is to install the maximum of previous packages 
+  and remove the minimum.
   The success depends on the compatibility of the existing packages 
   with respect to this new \verb+$OVERSION+.
 
