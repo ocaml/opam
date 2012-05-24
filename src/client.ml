@@ -102,7 +102,7 @@ let find_repository t name =
   r
 
 let find_installed_package_by_name t name =
-  try NV.Set.choose_one (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
+  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
   with Not_found ->
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
