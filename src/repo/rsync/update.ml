@@ -19,15 +19,19 @@ let rsync ?fn dir =
     | None   -> "" , (fun _ -> None)
     | Some f -> "v",  f in
   let lines =
-    Run.read_command_output "rsync -ar%s %s/ %s/" option (remote_address / dir) dir in
+    Run.read_command_output "rsync -ar%s %s %s" option (remote_address / dir) dir in
   let files = Utils.filter_map filter lines in
   List.iter (fun x -> log "updated: %s" (NV.to_string x)) files;
   List.fold_left (fun set f -> NV.Set.add f set) NV.Set.empty files
 
 let () =
-  let opam = rsync ~fn:(fun str -> NV.of_filename (Filename.of_string str)) "opam" in
-  let descr = rsync "descr" in
-  let updates = NV.Set.union opam descr in
+  let fn str = NV.of_filename (Filename.of_string str) in
+  let opam = rsync ~fn "opam/" in
+  let descr = rsync "descr/" in
+  let archives =
+    let files = Run.files "archives" in
+    List.fold_left (fun set f -> NV.Set.union (rsync ~fn f) set) NV.Set.empty files in
+  let updates = NV.Set.union archives (NV.Set.union opam descr) in
   File.Updated.write
     (Path.R.updated (Path.R.of_path (Dirname.of_string local_path)))
     updates
