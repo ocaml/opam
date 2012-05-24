@@ -782,15 +782,16 @@ module Make (F : F) = struct
     log "read %s" filename;
     if Filename.exists f then
       try F.of_string f (Filename.read f)
-      with Bad_format msg -> Globals.error_and_exit "%s" msg
+      with Bad_format msg ->
+        Globals.error_and_exit "File %s: %s" (Filename.to_string f) msg
     else
       Globals.error_and_exit "File %s does not exit" (Filename.to_string f)
 
   let safe_read f =
     let filename = Filename.to_string f in
-    log "read %s" filename;
+    log "safe_read %s" filename;
     if Filename.exists f then
-      F.of_string f (Filename.read f)
+      read f
     else (
       log "Cannot find %s" (Filename.to_string f);
       F.empty
