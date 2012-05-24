@@ -183,18 +183,7 @@ module CudfDiff : sig
 
 end = struct
     
-  module Cudf_set = struct
-    module S = Common.CudfAdd.Cudf_set
-
-    let choose_one s = match S.cardinal s with
-      | 0 -> raise Not_found
-      | 1 -> S.choose s
-      | _ -> failwith "TODO"
-    (* Apparently the returned sets are always singleton.
-       XXX: check that it is always the case *)
-
-    include S
-  end
+  module Cudf_set = Set.MK (Common.CudfAdd.Cudf_set)
 
   let to_cudf_doc univ req = 
     None, 

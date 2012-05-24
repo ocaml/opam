@@ -15,6 +15,28 @@
 
 let log fmt = Globals.log "TYPES" fmt
 
+module Set = struct
+  module type S = sig
+    include Set.S
+
+    (** Like [choose] and [Assert_failure _] in case the set is not a singleton. *)
+    val choose_one : t -> elt
+  end
+
+  module MK (S : Set.S) = struct
+    include S
+
+    let choose_one s = 
+      match elements s with
+        | [x] -> x
+        | _ -> assert false
+  end
+
+  module Make (O : Set.OrderedType) = struct
+    include MK (Set.Make (O))
+  end
+end
+
 module type Abstract = sig
   type t
   val of_string: string -> t

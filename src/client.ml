@@ -945,8 +945,8 @@ let remote action =
           Globals.error_and_exit "%s is not a remote index" n in
       update_config (List.filter ((!=) repo) repos)
 
-let switch oversion =
-  log "switch %s" (OCaml_V.to_string oversion);
+let switch to_replicate oversion =
+  log "switch %B %s" to_replicate (OCaml_V.to_string oversion);
   let t = load_state () in
 
   let f_init = 
@@ -966,7 +966,7 @@ let switch oversion =
            else
              Globals.error_and_exit "Unknown file format (%s)" comp_src) in
       let () = Repositories.Raw.rsync [`A ; `R] comp_src ocaml_tgz in
-      let build_dir = Path.C.build_ocaml t.compiler in
+      let build_dir = Path.C.build_ocaml new_oversion in
       let () = Filename.extract ocaml_tgz build_dir in
       
       match
@@ -987,10 +987,36 @@ let switch oversion =
               end)
         | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
 
-  File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion);
-  match f_init with
-    | None -> ()
-    | Some f -> f ()
+  begin
+    (* [1/2] initialization: write the new version in the configuration file *)
+    File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion);
+
+    (* [2/2] initialization: initialize everything as if "opam init" has been called *)
+    (match f_init with
+      | None -> ()
+      | Some f -> f ());
+
+    (if to_replicate then
+        (* attempt to replicate the previous state *)
+        let t_new = load_state () in
+        resolve t_new
+          { wish_install = 
+              List.map 
+                (fun (n, v) -> vpkg_of_nv (NV.create n (V.Set.choose_one v)))
+                (N.Map.bindings 
+                   (NV.Set.fold
+                      (fun nv map ->
+                        let name, version = NV.name nv, NV.version nv in
+                        if name = N.of_string Globals.default_package then
+                          (* [Globals.default_package] has already been installed for this new version (automatically), we skip it *)
+                          map
+                        else
+                          N.Map.add name (try N.Map.find name map with Not_found -> V.Set.singleton version) map)
+                      t.installed
+                      (NV.to_map t_new.installed)))
+          ; wish_remove = [] 
+          ; wish_upgrade = [] });
+  end
 
 
 (** We protect each main functions with a lock. *)

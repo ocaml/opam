@@ -55,8 +55,9 @@ let parse_args fn () =
   fn (List.rev !ano_args)
 
 (* opam init [-kind $kind] $repo $adress *)
-let kind = ref Globals.default_repository_kind
-let init = {
+let init = 
+  let kind = ref Globals.default_repository_kind in
+{
   name     = "init";
   usage    = "";
   synopsis = "Initial setup";
@@ -190,11 +191,12 @@ let upgrade = {
 }
 
 (* opam upload PACKAGE *)
-let opam = ref ""
-let descr = ref ""
-let archive = ref ""
-let repo = ref ""
-let upload = {
+let upload = 
+  let opam = ref "" in
+  let descr = ref "" in
+  let archive = ref "" in
+  let repo = ref "" in
+{
   name     = "upload";
   usage    = "";
   synopsis = "Upload a package to the server";
@@ -232,10 +234,11 @@ let remove = {
 }
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
-let kind = ref Globals.default_repository_kind
-let command : [`add|`list|`rm] option ref = ref None
-let set c () = command := Some c
-let remote = {
+let remote = 
+  let kind = ref Globals.default_repository_kind in
+  let command : [`add|`list|`rm] option ref = ref None in
+  let set c () = command := Some c in
+{
   name     = "remote";
   usage    = "[-list|add <name> <address>|rm <name>]";
   synopsis = "Manage remote servers";
@@ -257,16 +260,23 @@ let remote = {
     | _        -> bad_argument "remote" "Wrong arguments")
 }
 
-let switch = {
+(* opam switch [-clone] OVERSION *)
+let switch = 
+  let command : [`clone] option ref = ref None in
+  let set c () = command := Some c in
+{
   name     = "switch";
   usage    = "[compiler-name]";
   synopsis = "Switch to an other compiler version";
   help     = "";
-  specs    = [];
+  specs    = [
+    ("-clone" , Arg.Unit (set `clone), " List the repositories");
+  ];
   anon;
-  main     = parse_args (function
-    |[]      -> bad_argument "switch" "Compiler name is missing"
-    | [name] -> Client.switch (OCaml_V.of_string name)
+  main     = parse_args (fun args ->
+    match args with
+    | []     -> bad_argument "switch" "Compiler name is missing"
+    | [name] -> Client.switch (!command <> None) (OCaml_V.of_string name)
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 
