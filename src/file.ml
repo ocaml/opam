@@ -366,12 +366,16 @@ module OPAM = struct
     
   module D = Debian.Packages
 
+  (* XXX: Pre-encode the depends and conflict fields to avoid
+     headaches when interfacing with the solver *)
+  let lencode = List.map (fun ((n,a),c) -> (Common.CudfAdd.encode n,a), c)
+
   let default_package t =
     { D.default_package with 
       D.name      = N.to_string t.name ;
       D.version   = V.to_string t.version ;
-      D.depends   = t.depends ;
-      D.conflicts = t.conflicts }
+      D.depends   = List.map lencode t.depends ;
+      D.conflicts = lencode t.conflicts }
 
   let to_package t ~installed =
     let p = default_package t in

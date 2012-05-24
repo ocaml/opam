@@ -175,6 +175,14 @@ let update () =
   let t = load_state () in
   NV.Set.iter (fun nv ->
     let opam = File.OPAM.read (Path.G.opam t.global nv) in
+    let name = File.OPAM.name opam in
+    let version = File.OPAM.version opam in
+    if nv <> NV.create name version then
+      Globals.error_and_exit
+        "The file %s is not consistent with the package %s (%s)"
+        (Filename.to_string (Path.G.opam t.global nv))
+        (N.to_string name)
+        (V.to_string version);
     let depends = File.OPAM.depends opam in
     List.iter (List.iter (fun ((d,_),_) ->
       match find_available_package_by_name t (N.of_string d) with
@@ -640,10 +648,17 @@ let resolve t request =
         with PA_graph.Parallel.Errors n -> List.iter error n
       )
 
-let vpkg_of_nv nv =
+let vpkg_of_nv op nv =
   let name = NV.name nv in
-  let version = NV.version nv in
-  (N.to_string name, None), Some ("=", V.to_string version)
+  let constr =
+    match op with
+    | Some op -> Some (op, V.to_string (NV.version nv))
+    | None    -> None in
+  (N.to_string name, None), constr
+
+let vpkg_of_nv_eq = vpkg_of_nv (Some "=")
+let vpkg_of_nv_ge = vpkg_of_nv (Some ">=")
+let vpkg_of_nv_any = vpkg_of_nv None
 
 let unknown_package name =
   Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
@@ -688,7 +703,7 @@ let install name =
       (N.Map.bindings (N.Map.remove (NV.name nv) map_installed)) in
 
   resolve t
-    { wish_install = List.map vpkg_of_nv (nv :: map_installed)
+    { wish_install = vpkg_of_nv_eq nv :: List.map vpkg_of_nv_any map_installed
     ; wish_remove = [] 
     ; wish_upgrade = [] }
 
@@ -704,10 +719,9 @@ let remove name =
   let depends =
     List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
 
-  (* XXX: do we really want to call the solver here ? *)
   let wish_install =
     List.fold_left
-      (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv nv)::accu)
+      (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv_eq nv)::accu)
       []
       (NV.Set.elements t.installed) in
 
@@ -724,7 +738,7 @@ let upgrade () =
     let name = NV.name nv in
     let versions = N.Map.find name available in
     let nv = NV.create name (V.Set.max_elt versions) in
-    vpkg_of_nv nv in
+    vpkg_of_nv_ge nv in
   resolve t
     { wish_install = []
     ; wish_remove  = []
@@ -828,7 +842,7 @@ let config request =
         if c.is_rec then
           List.map NV.name (get_transitive_dependencies t names)
         else
-          N.Set.elements (List.fold_right N.Set.add [] N.Set.empty) in
+          names in
       (* Map from libraries to package *)
       (* NOTES: we check that the set of packages/libraries given on
          the command line is consistent, ie. there isn't two libraries
