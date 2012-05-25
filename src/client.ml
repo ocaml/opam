@@ -756,9 +756,12 @@ let remove name =
 
   let wish_install =
     List.fold_left
-      (fun accu nv -> if NV.Set.mem nv depends then accu else (log "keep %s" (NV.to_string nv); (vpkg_of_nv_eq nv)::accu))
-      []
-      (NV.Set.elements t.installed) in
+      (fun accu nv ->
+        if NV.Set.mem nv depends then
+          accu
+        else
+          vpkg_of_nv_eq nv :: accu
+      ) [] (NV.Set.elements t.installed) in
 
   resolve `remove t 
     { wish_install
@@ -871,7 +874,12 @@ let config request =
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
-      let names = List.map Full_section.package c.options in
+      let comp =
+        let oversion = File.Config.ocaml_version t.config in
+        File.Comp.safe_read (Path.G.compilers t.global oversion) in
+      let names =
+        File.Comp.packages comp
+        @ List.map Full_section.package c.options in
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
         if c.is_rec then
@@ -901,6 +909,11 @@ let config request =
       let library_deps =
         let graph = Section.G.create () in
         let todo = ref Section.Set.empty in
+        let add_todo s =
+          if Section.Map.mem s library_map then
+            todo := Section.Set.add s !todo
+          else
+            Globals.error_and_exit "Unbound section %S" (Section.to_string s) in
         let seen = ref Section.Set.empty in
         (* Init the graph with vertices from the command-line *)
         (* NOTES: we check that [todo] is initialized before the [loop] *)
@@ -913,13 +926,14 @@ let config request =
             | Some s -> [s] in
           List.iter (fun s ->
             Section.G.add_vertex graph s;
-            todo := 
-              if Section.Map.mem s library_map then
-                Section.Set.add s !todo
-              else
-                Globals.error_and_exit "Unbound section %S" (Section.to_string s)
+            add_todo s;
           ) sections
         ) c.options;
+        (* Also add the [requires] field of the compiler description *)
+        List.iter (fun s ->
+          Section.G.add_vertex graph s;
+          add_todo s
+        ) (File.Comp.requires comp);
         (* Least fix-point to add edges and missing vertices *)
         let rec loop () =
           if not (Section.Set.is_empty !todo) then
@@ -946,12 +960,18 @@ let config request =
         let nodes = ref [] in
         Section.graph_iter (fun n -> nodes := n :: !nodes) graph;
         !nodes in
+      let fn_comp = match c.is_byte, c.is_link with
+        | true , true  -> File.Comp.bytelink
+        | true , false -> File.Comp.bytecomp
+        | false, true  -> File.Comp.asmlink
+        | false, false -> File.Comp.asmcomp in
       let fn = match c.is_byte, c.is_link with
         | true , true  -> File.Dot_config.Section.bytelink
         | true , false -> File.Dot_config.Section.bytecomp
         | false, true  -> File.Dot_config.Section.asmlink
         | false, false -> File.Dot_config.Section.asmcomp in
       let strs =
+        fn_comp comp ::
         List.fold_left (fun accu s ->
           let name = Section.Map.find s library_map in
           let config = File.Dot_config.read (Path.C.config t.compiler name) in
@@ -1044,7 +1064,7 @@ let switch to_replicate oversion =
               end), 
           fun t_new -> 
             List.fold_left 
-              (fun set name -> NV.Set.add (install_nv_of_n t_new (N.of_string name)) set) 
+              (fun set name -> NV.Set.add (install_nv_of_n t_new name) set) 
               NV.Set.empty
               (File.Comp.packages comp)
         | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in

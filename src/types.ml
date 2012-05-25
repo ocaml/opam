@@ -533,6 +533,10 @@ end
 
 type full_variable = Full_variable.t
 
+type ppflag =
+  | Camlp4 of string list
+  | Cmd of string list
+
 (* Command line arguments *)
 
 (* Upload arguments *)

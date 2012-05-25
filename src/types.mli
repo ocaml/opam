@@ -322,6 +322,11 @@ type variable_contents =
 (** Convert the content of a variable to a string *)
 val string_of_variable_contents: variable_contents -> string
 
+(** Content of [pp] variables *)
+type ppflag =
+  | Camlp4 of string list
+  | Cmd of string list
+
 (** {2 Command line arguments} *)
 
 (** Upload arguments *)

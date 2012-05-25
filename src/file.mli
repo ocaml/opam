@@ -142,16 +142,38 @@ module Comp : sig
   include IO_FILE
 
   (** Return the url of the compiler *)
-  val src : t -> string
+  val src: t -> string
 
   (** Options to give to the "./configure" command *)
-  val configure : t -> string list
+  val configure: t -> string list
 
   (** Options to give to the "make" command *)
-  val make : t -> string list
+  val make: t -> string list
 
   (** Packages to install immediately after the creation of OCaml *)
-  val packages : t -> string list
+  val packages: t -> name list
+
+  (** Linking options to give to the native code compiler *)
+  val asmlink: t -> string list
+
+  (** Compilation options to give to the native code compiler *)
+  val asmcomp: t -> string list
+
+  (** Linking options to give to the bytecode compiler *)
+  val bytelink: t -> string list
+
+  (** Compilation options to give to the bytecode compiler *)
+  val bytecomp: t -> string list
+
+  (** Linking options to give to the native code compiler *)
+  val asmcomp: t -> string list
+
+  (** Libraries to link with *)
+  val requires: t -> section list
+
+  (** Preprocessing options *)
+  val pp: t -> ppflag option
+
 end
 
 (** {2 Configuration files} *)
