@@ -498,7 +498,7 @@ let proceed_todelete t nv =
 
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let remove = String.concat " " (File.OPAM.remove opam) in
+  let remove = File.OPAM.remove opam in
   let err = Dirname.exec (Path.C.lib_dir t.compiler) [remove] in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
@@ -586,11 +586,14 @@ let proceed_tochange t nv_old nv =
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
-  let commands = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "Build command: %s\n" (String.concat ";" commands);
+  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
+  Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then
-    proceed_toinstall t nv
+    try proceed_toinstall t nv
+    with e ->
+      proceed_todelete t nv;
+      raise e
   else (
     proceed_todelete t nv;
     Globals.error_and_exit
@@ -601,18 +604,18 @@ let proceed_tochange t nv_old nv =
 let proceed_torecompile t nv =
   proceed_tochange t (Some nv) nv
 
-(* XXX: the reinstall trick must be done only when upgrading.
-   So currently there is a weird bug where you can't uninstall
-   a package when it is present in the reinstall list *)
-let debpkg_of_nv t nv =
+let debpkg_of_nv action t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let installed =
-    not (NV.Set.mem nv t.reinstall)
-     &&  NV.Set.mem nv t.installed in
+    if action = `update then
+      NV.Set.mem nv t.installed
+    else
+      not (NV.Set.mem nv t.reinstall)
+      &&  NV.Set.mem nv t.installed in
   File.OPAM.to_package opam installed
 
-let resolve t request =
-  let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
+let resolve action_k t request =
+  let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
 
   match Solver.resolve (Solver.U l_pkg) request t.reinstall with
   | None     -> Globals.msg "No solution has been found.\n"
@@ -718,19 +721,21 @@ let install name =
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
 
-  (* Fail if the package is already installed *)
-  if N.Map.mem name map_installed then
-    Globals.error_and_exit
-      "Package %s is already installed (current version is %s)"
+  (* Exit if the package is already installed *)
+  if N.Map.mem name map_installed then (
+    Globals.msg
+      "Package %s is already installed (current version is %s)\n"
       (N.to_string name)
       (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
+    Globals.exit 1
+  );
 
   let map_installed =
     List.map
       (fun (x,y) -> NV.create x (V.Set.choose_one y))
       (N.Map.bindings map_installed) in
 
-  resolve t
+  resolve `install t
     { wish_install = vpkg_of_nv_eq (install_nv_of_n t name) :: List.map vpkg_of_nv_any map_installed
     ; wish_remove = [] 
     ; wish_upgrade = [] }
@@ -738,15 +743,14 @@ let install name =
 let remove name =
   log "remove %s" (N.to_string name);
   if name = N.of_string Globals.default_package then
-    Globals.error_and_exit "Package %s can not be removed without specifying its new version. \
-      Use 'opam switch' and enter another OCaml version." (N.to_string name);
+    Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
   if not (N.Map.mem name map_installed) then
     Globals.error_and_exit "Package %s is not installed" (N.to_string name);
   let nv = NV.create name (V.Set.choose_one (N.Map.find name map_installed)) in
-  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available []) in
-  let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv t nv]) in
+  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
+  let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv `remove t nv]) in
   let depends =
     List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
 
@@ -756,7 +760,7 @@ let remove name =
       []
       (NV.Set.elements t.installed) in
 
-  resolve t 
+  resolve `remove t 
     { wish_install
     ; wish_remove  = [ (N.to_string name, None), None ]
     ; wish_upgrade = [] }
@@ -770,7 +774,7 @@ let upgrade () =
     let versions = N.Map.find name available in
     let nv = NV.create name (V.Set.max_elt versions) in
     vpkg_of_nv_ge nv in
-  resolve t
+  resolve `upgrade t
     { wish_install = []
     ; wish_remove  = []
     ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
@@ -805,9 +809,9 @@ let upload upload repo =
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
   let universe =
-    Solver.U (List.map (debpkg_of_nv t) (NV.Set.elements t.installed)) in
+    Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
-  let pkg_of_name n = debpkg_of_nv t (find_installed_package_by_name t n) in
+  let pkg_of_name n = debpkg_of_nv `config t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
   let depends = Solver.filter_backward_dependencies universe request in
   List.map NV.of_dpkg depends
@@ -1021,17 +1025,20 @@ let switch to_replicate oversion =
       
       match
         Dirname.exec build_dir
-          [ Printf.sprintf "./configure %s -prefix %s" (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
-              (String.concat " " (File.Comp.configure comp))
-              (Dirname.to_string (Path.C.root new_oversion))
-            (* NOTE In case it exists 2 '-prefix', in general the script ./configure will only consider the last one, others will be discarded. *)
-          ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
-          ; Printf.sprintf "make install" ]
+          [ ( "./configure" :: File.Comp.configure comp )
+            @ [ "-prefix";  Dirname.to_string (Path.C.root new_oversion) ]
+              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
+          (* NOTE In case it exists 2 '-prefix', in general the script
+             ./configure will only consider the last one, others will be
+             discarded. *)
+          ; ( "make" :: File.Comp.make comp )
+          ; [ "make" ; "install" ]
+          ]
       with
-        | 0 -> 
+      | 0 -> 
           Some (fun _ -> try init_ocaml new_oversion with e -> 
-              begin 
-                File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
+            begin 
+              File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
                 Dirname.rmdir (Path.C.root new_oversion); 
                 raise e;
               end), 
@@ -1054,7 +1061,7 @@ let switch to_replicate oversion =
     (* - install in priority packages specified in [nv_to_install]
        - also attempt to replicate the previous state, if required *)
     (let t_new = load_state () in
-     resolve t_new
+     resolve `switch t_new
        { wish_install = 
            List.map 
              (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))

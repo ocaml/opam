@@ -19,7 +19,9 @@ let rsync ?fn dir =
     | None   -> "" , (fun _ -> None)
     | Some f -> "v",  f in
   let lines =
-    Run.read_command_output "rsync -ar%s %s %s" option (remote_address / dir) dir in
+    Run.read_command_output [
+      "rsync"; "-ar"^option ; option ; (remote_address / dir) ; dir
+    ] in
   let files = Utils.filter_map filter lines in
   List.iter (fun x -> log "updated: %s" (NV.to_string x)) files;
   List.fold_left (fun set f -> NV.Set.add f set) NV.Set.empty files

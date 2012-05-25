@@ -21,9 +21,9 @@ let remote_address = Sys.argv.(1)
 let git_clone () =
   let err =
     Run.commands [
-      "git init";
-      Printf.sprintf "git remote add origin %s" remote_address;
-      "git pull origin master"
+      [ "git" ; "init" ] ;
+      [ "git" ; "remote" ; "add" ; "origin" ; remote_address ] ;
+      [ "git" ; "pull" ; "origin" ; "master" ]
     ] in
   exit err
 

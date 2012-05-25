@@ -75,8 +75,8 @@ let tmp_dir nv =
 
 let wget src =
   match Globals.os with
-  | Globals.Darwin -> Printf.sprintf "ftp %s" src
-  | _ -> Printf.sprintf "wget %s" src
+  | Globals.Darwin -> [ "ftp" ; src ]
+  | _              -> [ "wget"; src ]
 
 let archive_name src =
   let name = F.basename src in
@@ -90,9 +90,9 @@ let archive_name src =
 let mv src =
   let name = archive_name src in
   if (F.basename src) = name then
-    ""
+    []
   else
-    Printf.sprintf "mv %s %s" (F.basename src) name
+    [ "mv" ; F.basename src ; name ]
 
 let () =
   Dirname.mkdir (Path.R.archive_dir root);
@@ -116,12 +116,9 @@ let () =
     List.iter (fun f ->
       Filename.copy_in f tmp_dir
     ) (files nv);
-    let err = Dirname.exec (Dirname.of_string tmp_dir0)
-      [ Printf.sprintf
-          "tar cz %s/ > %s"
-          (NV.to_string nv)
-          (Filename.to_string (Path.R.archive root nv))
-      ] in
+    let err = Dirname.exec (Dirname.of_string tmp_dir0) [
+      [ "tar" ; "cz" ; NV.to_string nv ; "-f" ; Filename.to_string (Path.R.archive root nv) ]
+    ] in
     if err <> 0 then
       Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
   ) opams

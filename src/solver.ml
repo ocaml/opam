@@ -203,7 +203,7 @@ module CudfDiff : sig
 end = struct
     
   module Cudf_set = struct
-    module S = Set.MK (Common.CudfAdd.Cudf_set)
+    module S = Utils.Set.MK (Common.CudfAdd.Cudf_set)
 
     let to_string s =
       Printf.sprintf "{%s}"
