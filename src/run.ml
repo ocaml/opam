@@ -59,7 +59,7 @@ let copy src dst =
 
 let read file =
   log "read %s" file;
-  let ic = open_in file in
+  let ic = open_in_bin file in
   let n = in_channel_length ic in
   let s = String.create n in
   really_input ic s 0 n;
@@ -69,7 +69,7 @@ let read file =
 let write file contents =
   mkdir (Filename.dirname file);
   log "write %s" file;
-  let oc = open_out file in
+  let oc = open_out_bin file in
   output_string oc contents;
   close_out oc
 
