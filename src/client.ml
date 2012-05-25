@@ -590,7 +590,10 @@ let proceed_tochange t nv_old nv =
   Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then
-    proceed_toinstall t nv
+    try proceed_toinstall t nv
+    with e ->
+      proceed_todelete t nv;
+      raise e
   else (
     proceed_todelete t nv;
     Globals.error_and_exit
