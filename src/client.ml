@@ -727,7 +727,7 @@ let install name =
       "Package %s is already installed (current version is %s)\n"
       (N.to_string name)
       (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
-    exit 0
+    Globals.exit 1
   );
 
   let map_installed =

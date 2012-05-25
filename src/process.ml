@@ -109,7 +109,7 @@ let wait p =
     iter ()
   with e ->
     Printf.printf "Exception %s in waitpid\n%!" (Printexc.to_string e);
-    exit 2
+    raise (Globals.Exit 2)
 
 let output_lines oc lines =
   List.iter (fun line ->
