@@ -117,7 +117,7 @@ let () =
       Filename.copy_in f tmp_dir
     ) (files nv);
     let err = Dirname.exec (Dirname.of_string tmp_dir0) [
-      [ "tar" ; "cz" ; NV.to_string nv ; ">" ; Filename.to_string (Path.R.archive root nv) ]
+      [ "tar" ; "cz" ; NV.to_string nv ; "-f" ; Filename.to_string (Path.R.archive root nv) ]
     ] in
     if err <> 0 then
       Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
