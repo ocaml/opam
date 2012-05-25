@@ -15,7 +15,17 @@
 
 let log fmt = Globals.log "RUN" fmt
 
-let tmp_dir = Filename.concat Filename.temp_dir_name "opam-archives"
+let (/) = Filename.concat
+
+let tmp_dir = Filename.temp_dir_name / "opam-archives"
+
+let lock_file () =
+  !Globals.root_path / "opam.lock"
+
+let log_file () =
+  Random.self_init ();
+  let f = "command" ^ string_of_int (Random.int 2048) in
+  !Globals.root_path / "log" / f
 
 let mkdir dir =
   log "mkdir %s" dir;
@@ -125,34 +135,6 @@ let rec root path =
   else
     root d
 
-(* XXX: the function might block for ever for some channels kinds *)
-let read_lines ic =
-  let lines = ref [] in
-  begin
-    try
-      while true do
-        let line = input_line ic in
-        lines := line :: !lines;
-      done
-    with _ -> ()
-  end;
-  List.rev !lines
-
-let read_command_output_ cmd =
-  let ic = Unix.open_process_in cmd in
-  let lines = read_lines ic in
-  if Unix.close_process_in ic <> Unix.WEXITED 0 then
-    None
-  else
-    Some lines
-
-let read_command_output fmt =
-  Printf.kprintf (fun cmd ->
-    match read_command_output_ cmd with
-    | None -> Globals.error_and_exit "command %s failed" cmd
-    | Some lines -> lines
-  ) fmt
-
 (** Expand '..' and '.' *)
 let normalize s =
   if Sys.file_exists s then
@@ -161,7 +143,6 @@ let normalize s =
     s
 
 let real_path p =
-  let (/) = Filename.concat in
   let dir = normalize (Filename.dirname p) in
   let dir =
     if Filename.is_relative dir then
@@ -193,40 +174,43 @@ let add_path bins =
     path := new_path;
   done;
   env, !path
-  
-let command_with_path bins fmt =
-  Printf.kprintf (fun cmd ->
-    let env, path = add_path bins in 
-    log "cwd=%s path=%s %s" (Unix.getcwd ()) path cmd;
-    let (o,i,e as chans) = Unix.open_process_full cmd env in
-    (* we MUST read the input_channels otherwise [close_process] will fail *)
-    let err = read_lines e in
-    let out = read_lines o in
-    let str () =
-      Printf.sprintf "out: %s\nerr: %s"
-        (String.concat "\n" out)
-        (String.concat "\n" err) in
-    let msg () =
-      Globals.msg "%s\n" (str ()) in
-    match Unix.close_process_full chans with
-      | Unix.WEXITED 0 -> 0
-      | Unix.WEXITED i -> msg (); i
-      | _              -> msg (); 1
-  ) fmt
- 
-let command fmt =
-  Printf.kprintf (fun str ->
-    log "cwd=%s '%s'" (Unix.getcwd ()) str;
-    Sys.command str;
-  ) fmt
 
-let fold f = List.fold_left (function 0 -> f | err -> fun _ -> err) 0
+type command = string list
+
+let run_process ?(add_to_path = []) = function
+  | []           -> invalid_arg "run_process"
+  | cmd :: args ->
+      let env, path = add_path add_to_path in
+      let name = log_file () in
+      mkdir (Filename.dirname name);
+      let str = String.concat " " (cmd :: args) in
+      log "cwd=%s path=%s %s" (Unix.getcwd ()) path str;
+      let r = Process.run ~env ~name cmd args in
+      if Process.is_failure r then (
+        Globals.error "Command %S failed (see %s.{info,err,out})" str name;
+        List.iter (Globals.error "%s") r.Process.r_stderr;
+      ) else
+        Process.clean_files r;
+      r
+
+let command ?(add_to_path = []) cmd =
+  let r = run_process ~add_to_path cmd in
+  r.Process.r_code
+
+let fold f =
+  List.fold_left (fun err cmd ->
+    match err, cmd with
+    | _  , [] -> err
+    | 0  , _  -> f cmd
+    | err, _  -> err
+  ) 0
 
 let commands ?(add_to_path = []) = 
-  fold
-    (match add_to_path with
-      | [] -> command "%s"
-      | _ -> command_with_path add_to_path "%s")
+  fold (command ~add_to_path)
+
+let read_command_output ?(add_to_path = []) cmd =
+  let r = run_process ~add_to_path cmd in
+  r.Process.r_stdout
 
 let is_archive file =
   List.fold_left
@@ -234,16 +218,16 @@ let is_archive file =
       | Some s -> fun _ -> Some s
       | None -> fun (ext, c) -> 
         if List.exists (Filename.check_suffix file) ext then
-          Some (command "tar xf%c %s -C %s" c file)
+          Some (fun dir -> command  [ "tar" ; "xf"^c ; file; "-C" ; dir ])
         else
           None)
     None
-    [ [ "tar.gz" ; "tgz" ], 'z'
-    ; [ "tar.bz2" ; "tbz" ], 'j' ]
+    [ [ "tar.gz" ; "tgz" ], "z"
+    ; [ "tar.bz2" ; "tbz" ], "j" ]
 
 let extract file dst =
   log "untar %s" file;
-  let files = read_command_output "tar tf %s" file in
+  let files = read_command_output [ "tar" ; "tf" ; file ] in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
   mkdir tmp_dir;
   let err =
@@ -254,11 +238,11 @@ let extract file dst =
     Globals.error_and_exit "Error while extracting %s" file
   else
     let aux accu name =
-      if not (Sys.is_directory (Filename.concat tmp_dir name)) then
+      if not (Sys.is_directory (tmp_dir / name)) then
         let root = root name in
         let n = String.length root in
         let rest = String.sub name n (String.length name - n) in 
-        (Filename.concat tmp_dir name, dst ^  rest) :: accu
+        (tmp_dir / name, dst ^  rest) :: accu
       else
         accu in
     let moves = List.fold_left aux [] files in
@@ -274,11 +258,9 @@ let link src dst =
     remove_file dst;
   Unix.link src dst
 
-let file () = Filename.concat !Globals.root_path "opam.lock"
-
 let flock () =
   let l = ref 0 in
-  let file = file () in
+  let file = lock_file () in
   let id = string_of_int (Unix.getpid ()) in
   let max_l = 5 in
   let rec loop () =
@@ -306,7 +288,7 @@ let flock () =
     
 let funlock () =
   let id = string_of_int (Unix.getpid ()) in
-  let file = file () in
+  let file = lock_file () in
   if Sys.file_exists file then begin
     let ic = open_in file in
     let s = input_line ic in

@@ -414,7 +414,7 @@ module OPAM = struct
 
   let parse_command =
     parse_or [
-      ("string", parse_string |> Printf.sprintf "'%s'");
+      ("string", parse_string);
       ("symbol", parse_symbol)
     ]
 
@@ -812,7 +812,9 @@ module Make (F : F) = struct
   let filename = Filename.of_string "/dummy/"
 
   let of_raw raw =
-    F.of_string filename raw
+    try F.of_string filename raw
+    with Bad_format msg ->
+      Globals.error_and_exit "%s:\n%s" msg (Raw.to_string raw)
 
   let to_raw t =
     F.to_string filename t

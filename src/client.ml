@@ -498,7 +498,7 @@ let proceed_todelete t nv =
 
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let remove = String.concat " " (File.OPAM.remove opam) in
+  let remove = File.OPAM.remove opam in
   let err = Dirname.exec (Path.C.lib_dir t.compiler) [remove] in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
@@ -586,8 +586,8 @@ let proceed_tochange t nv_old nv =
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
-  let commands = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "Build command: %s\n" (String.concat ";" commands);
+  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
+  Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then
     proceed_toinstall t nv
@@ -1021,17 +1021,20 @@ let switch to_replicate oversion =
       
       match
         Dirname.exec build_dir
-          [ Printf.sprintf "./configure %s -prefix %s" (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
-              (String.concat " " (File.Comp.configure comp))
-              (Dirname.to_string (Path.C.root new_oversion))
-            (* NOTE In case it exists 2 '-prefix', in general the script ./configure will only consider the last one, others will be discarded. *)
-          ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
-          ; Printf.sprintf "make install" ]
+          [ ( "./configure" :: File.Comp.configure comp )
+            @ [ "-prefix";  Dirname.to_string (Path.C.root new_oversion) ]
+              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
+          (* NOTE In case it exists 2 '-prefix', in general the script
+             ./configure will only consider the last one, others will be
+             discarded. *)
+          ; ( "make" :: File.Comp.make comp )
+          ; [ "make" ; "install" ]
+          ]
       with
-        | 0 -> 
+      | 0 -> 
           Some (fun _ -> try init_ocaml new_oversion with e -> 
-              begin 
-                File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
+            begin 
+              File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
                 Dirname.rmdir (Path.C.root new_oversion); 
                 raise e;
               end), 
