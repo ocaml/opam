@@ -69,7 +69,7 @@ let read file =
 let write file contents =
   mkdir (Filename.dirname file);
   log "write %s" file;
-  let oc = open_out file in
+  let oc = open_out_bin file in
   output_string oc contents;
   close_out oc
 
