@@ -1289,8 +1289,8 @@ The syntax of {\tt .comp} files follows the one described in
     ?requires:  [ STRING+ ]
     ?pp:        [ <ppflag>+ ]
 
-<ppflag> := CAMLP4 { <dep>+ }
-          | <flag>
+<ppflag> := CAMLP4 { STRING+ }
+          | STRING+
 \end{Verbatim}
 }
 \begin{itemize}
@@ -1335,11 +1335,11 @@ The syntax of {\tt .comp} files follows the one described in
   thrown.
 
 \item {\tt pp} is the command to use with the {\tt -pp} command-line
-  argument. It is either a single flag or a {\tt camlp4} command,
-  such as {\tt CAMLP4 [ pp-trace ]}: this will look for the
-  compilation flags for the syntax extension {\tt pp-trace} and expand
-  the {\tt camlp4} command-line accordingly. All the packages should
-  be present in {\tt packages}.
+  argument. It is either a full command line or a {\tt camlp4} command,
+  such as \verb+CAMLP4 [ "pp-trace" ]+: this will look for the
+  compilation flags for the syntax extension \verb+"pp-trace"+ and expand
+  the {\tt camlp4} command-line accordingly. All the syntax extensions used
+  should be present in {\tt packages}.
 
 \end{itemize}
 
