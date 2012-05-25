@@ -342,6 +342,12 @@ let info package =
     | None   -> []
     | Some v -> [ "installed-version", V.to_string v ] in
 
+  let available_versions =
+    match List.map V.to_string (V.Set.elements v_set) with
+    | []  -> []
+    | [v] -> [ "available-version" , v ]
+    | l   -> [ "available-versions", String.concat ", " l ] in
+
   let libraries, syntax = match o_v with
     | None   -> [], []
     | Some v ->
@@ -358,8 +364,7 @@ let info package =
     (fun (tit, desc) -> Globals.msg "%20s: %s\n" tit desc)
     ( [ "package", N.to_string package ]
      @ installed_version
-     @ [("available-versions",
-         String.concat ", " (List.map V.to_string (V.Set.elements v_set)))]
+     @ available_versions
      @ libraries
      @ syntax
      @ let latest = match o_v with
@@ -747,7 +752,7 @@ let remove name =
 
   let wish_install =
     List.fold_left
-      (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv_eq nv)::accu)
+      (fun accu nv -> if NV.Set.mem nv depends then accu else (log "keep %s" (NV.to_string nv); (vpkg_of_nv_eq nv)::accu))
       []
       (NV.Set.elements t.installed) in
 
