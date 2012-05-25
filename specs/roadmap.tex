@@ -376,6 +376,7 @@ compiler (available in the path).
       maintainer: STRING
       ?subst:     [ STRING+ ]
       ?build:     [ command+ ]
+      ?remove:    command
       ?depends:   <cnf-formula>
       ?conflicts: <and-formula>
       ?libraries: [ STRING+ ]
@@ -422,6 +423,9 @@ compiler (available in the path).
   it should produce the platform-specific configuration and install
   files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
   \S\ref{dotconfig} and \S\ref{dotinstall}).
+
+\item The content of {\tt remove} is the command to run before deleting
+  the installed file.
 
 \item The {\tt depends} and {\tt conflicts} fields contain
   respectively {\em cnf-} and {\em and-}formulas over package names,
