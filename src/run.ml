@@ -49,7 +49,7 @@ let copy src dst =
 
 let read file =
   log "read %s" file;
-  let ic = open_in file in
+  let ic = open_in_bin file in
   let n = in_channel_length ic in
   let s = String.create n in
   really_input ic s 0 n;
