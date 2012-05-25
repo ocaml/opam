@@ -721,12 +721,14 @@ let install name =
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
 
-  (* Fail if the package is already installed *)
-  if N.Map.mem name map_installed then
-    Globals.error_and_exit
-      "Package %s is already installed (current version is %s)"
+  (* Exit if the package is already installed *)
+  if N.Map.mem name map_installed then (
+    Globals.msg
+      "Package %s is already installed (current version is %s)\n"
       (N.to_string name)
       (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
+    exit 0
+  );
 
   let map_installed =
     List.map
@@ -741,8 +743,7 @@ let install name =
 let remove name =
   log "remove %s" (N.to_string name);
   if name = N.of_string Globals.default_package then
-    Globals.error_and_exit "Package %s can not be removed without specifying its new version. \
-      Use 'opam switch' and enter another OCaml version." (N.to_string name);
+    Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
   if not (N.Map.mem name map_installed) then
