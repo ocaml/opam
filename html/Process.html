@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Path.html">
+<link rel="next" href="Repositories.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Process" rel="Chapter" href="Process.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Process</title>
+</head>
+<body>
+<div class="navbar"><a href="Path.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Repositories.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Process.html">Process</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Process: <code class="code">sig</code> <a href="Process.html">..</a> <code class="code">end</code></pre>Process handling<br>
+<hr width="100%">
+<br><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_name&nbsp;: <code class="type">string</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Command name</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_args&nbsp;: <code class="type">string list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Command args</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_pid&nbsp;: <code class="type">int</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process PID</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_time&nbsp;: <code class="type">float</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process start time</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_stdout&nbsp;: <code class="type">string option</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >stdout dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_stderr&nbsp;: <code class="type">string option</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >stderr dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>p_info&nbsp;: <code class="type">string option</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >dump info file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+<div class="info">
+The type for processes<br>
+</div>
+
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?info:string -><br>       ?stdout:string -><br>       ?stderr:string -> ?env:string array -> string -> string list -> <a href="Process.html#TYPEt">t</a></code></pre><div class="info">
+<code class="code">create cmd args</code> create a new process to execute the command
+    <code class="code">cmd</code> with arguments <code class="code">args</code>.  If stdout/stderr are set, the
+    channels are redirected to files. The current environment can also
+    be overriden if <code class="code">env</code> is set.<br>
+</div>
+<br><code><span id="TYPEresult"><span class="keyword">type</span> <code class="type"></code>result</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>r_proc&nbsp;: <code class="type"><a href="Process.html#TYPEt">t</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>r_code&nbsp;: <code class="type">int</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process exit code</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>r_duration&nbsp;: <code class="type">float</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process duration</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>r_stdout&nbsp;: <code class="type">string list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Content of stdout dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>r_stderr&nbsp;: <code class="type">string list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Content of stderr dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+<div class="info">
+The type for result processes<br>
+</div>
+
+<pre><span id="VALwait"><span class="keyword">val</span> wait</span> : <code class="type"><a href="Process.html#TYPEt">t</a> -> <a href="Process.html#TYPEresult">result</a></code></pre><div class="info">
+<code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results<br>
+</div>
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?env:string array -> name:string -> string -> string list -> <a href="Process.html#TYPEresult">result</a></code></pre><div class="info">
+<code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
+    arguments <code class="code">args</code>. It waits until the process is finished. The file
+    <code class="code">name.out</code>, <code class="code">name.err</code> and <code class="code">name.info</code> are created, which contains
+    the standard output, the standart error and some process info
+    respectively<br>
+</div>
+<pre><span id="VALis_success"><span class="keyword">val</span> is_success</span> : <code class="type"><a href="Process.html#TYPEresult">result</a> -> bool</code></pre><div class="info">
+Is the process result a success ?<br>
+</div>
+<pre><span id="VALis_failure"><span class="keyword">val</span> is_failure</span> : <code class="type"><a href="Process.html#TYPEresult">result</a> -> bool</code></pre><div class="info">
+Is the process result a failure ?<br>
+</div>
+<pre><span id="VALclean_files"><span class="keyword">val</span> clean_files</span> : <code class="type"><a href="Process.html#TYPEresult">result</a> -> unit</code></pre><div class="info">
+Clean-up process result files<br>
+</div>
+</body></html>

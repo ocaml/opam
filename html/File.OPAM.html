@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
@@ -50,6 +51,9 @@ File substitutions<br>
 </div>
 <pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> string list list</code></pre><div class="info">
 List of command to run for building the package<br>
+</div>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">t -> string list</code></pre><div class="info">
+Command to run to remove the package<br>
 </div>
 <pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">t -> Debian.Format822.vpkgformula</code></pre><div class="info">
 Package dependencies<br>

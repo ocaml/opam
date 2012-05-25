@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
@@ -73,16 +74,21 @@ Change the current working directory<br>
 <pre><span id="VALdirectories"><span class="keyword">val</span> directories</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">files dir</code> returns the directories in the directory <code class="code">dir</code><br>
 </div>
-<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">('a, unit, string, int) Pervasives.format4 -> 'a</code></pre><div class="info">
-<code class="code">command fmt</code> executes the command <code class="code">fmt</code><br>
+<pre><span id="TYPEcommand"><span class="keyword">type</span> <code class="type"></code>command</span> = <code class="type">string list</code> </pre>
+<div class="info">
+a command is a list of words<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?add_to_path:string list -> string list -> int</code></pre><div class="info">
+
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> int</code></pre><div class="info">
+<code class="code">command cmd</code> executes the command <code class="code">cmd</code>. Return the exit code.<br>
+</div>
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> int</code></pre><div class="info">
 <code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning. 
     It stops whenever one command fails.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">('a, unit, string, string list) Pervasives.format4 -> 'a</code></pre><div class="info">
-<code class="code">read_command_output fmt</code> executes the command <code class="code">fmt</code> and return
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
+<code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> and return
     the lines from stdout<br>
 </div>
 <pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
