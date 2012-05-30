@@ -378,6 +378,7 @@ compiler (available in the path).
       ?build:     [ command+ ]
       ?remove:    command
       ?depends:   <cnf-formula>
+      ?optdeps:   <cnf-formula>
       ?conflicts: <and-formula>
       ?libraries: [ STRING+ ]
       ?syntax:    [ STRING+ ]
@@ -445,6 +446,14 @@ For instance \verb+ "foo" {<= "1.2"} ("bar" | "gna" {= "3.14"})+ is a
 valid formula whose semantic is: {\em both any version of package
   {\tt "foo"} lesser or equal to $1.2$ and either any version of package
   {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}  \\
+
+\item The {\tt optdeps} field contains a {\em cnf-}formula over
+  package names, optionally parametrized by version constraints. When
+  installing a package, OPAM will not try to install the optional
+  dependencies.  However, it will check if the package is an optional
+  dependency of already installed packages. If it is the case, it will
+  re-install the packages (and their transitive forward-dependency
+  closure).
 
 \item The {\tt libraries} and {\tt syntax} fields contain the
   libraries and syntax extensions defined by the package.
