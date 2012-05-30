@@ -327,8 +327,17 @@ struct
        Defaultgraphs.PackageGraph.D.output_graph stdout g; *)
     g
 
-  let cudfpkg_of_debpkg table = List.map (Debian.Debcudf.tocudf table)
-      
+  let tocudf table pkg =
+    let options = {
+      Debian.Debcudf.default_options with
+        Debian.Debcudf.extras_opt = [
+          File.OPAM.s_depopts, (File.OPAM.s_depopts, `String None)
+        ]
+    } in
+    Debian.Debcudf.tocudf ~options table pkg
+
+  let cudfpkg_of_debpkg table = List.map (tocudf table)
+
   let get_table l_pkg_pb f = 
     let table = Debian.Debcudf.init_tables l_pkg_pb in
     let v = f table (cudfpkg_of_debpkg table l_pkg_pb) in
@@ -344,7 +353,7 @@ struct
     get_table l_pkg_pb
       (fun table pkglist ->
         let pkg_set = List.fold_left
-          (fun accu pkg -> PkgSet.add (Debian.Debcudf.tocudf table pkg) accu)
+          (fun accu pkg -> PkgSet.add (tocudf table pkg) accu)
           PkgSet.empty
           pkg_l in
         let g = f_direction (dep_reduction pkglist) in
@@ -369,6 +378,27 @@ struct
   let filter_backward_dependencies = filter_dependencies (fun x -> x)
   let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
+  (* Add the optional dependencies to the list of dependencies *)
+  (* The dependencies are encoded in the pkg_extra of cudf packages,
+     as a raw string. So we need to parse the string and convert it
+     to cudf list of package dependencies.
+     NOTE: the cudf encoding (to replace '_' by '%5f' is done in
+     file.ml when we create the debian package. It could make sense
+     to do it here. *)
+  let extended_dependencies table pkg =
+    let opt = File.OPAM.s_depopts in
+    if List.mem_assoc opt pkg.Cudf.pkg_extra then
+      match List.assoc opt pkg.Cudf.pkg_extra with
+      | `String s ->
+          Globals.msg "foo\n";
+          let deps = File_format.parse_cnf_formula
+            (Parser.value Lexer.token (Lexing.from_string s)) in
+          let deps = Debian.Debcudf.lltocudf table deps in
+          { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
+      | _ -> assert false
+    else
+      pkg
+
   let resolve (U l_pkg_pb) req reinstall =
     log "universe=%s request=<%s>"
       (string_of_packages l_pkg_pb)
@@ -376,7 +406,7 @@ struct
     get_table l_pkg_pb 
       (fun table pkglist ->
         let package_map pkg = NV.of_cudf table pkg in
-        let universe = Cudf.load_universe pkglist in 
+        let universe = Cudf.load_universe pkglist in
         let sol_o =
           CudfDiff.resolve_diff universe 
             (request_map
@@ -389,6 +419,10 @@ struct
         match sol_o with
         | None   -> None
         | Some l ->
+
+            (* Load an universe with all the optional dependencies *)
+            let pkglist = List.map (extended_dependencies table) pkglist in
+            let universe = Cudf.load_universe pkglist in
 
             let l_del_p, l_del = 
               Utils.filter_map (function
@@ -424,7 +458,8 @@ struct
                     (let set = PkgSet.remove pkg set in
                      try
                        List.fold_left
-                         (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg)
+                         (fun set x -> PkgSet.add x set)
+                         set (PG.succ graph_installed pkg)
                      with _ -> set), 
                     Utils.IntMap.add
                       (PG.V.hash pkg)

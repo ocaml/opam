@@ -295,7 +295,7 @@ end = struct
         (pkg.Cudf.package, pkg.Cudf.version) in
     { name    = N.of_string (Common.CudfAdd.decode pkg.Cudf.package);
       version = V.of_string real_version; }
-
+    
   let to_string t =
     Printf.sprintf "%s%c%s" (N.to_string t.name) sep (V.to_string t.version)
 

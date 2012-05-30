@@ -110,6 +110,9 @@ module OPAM: sig
   (** Convert to Debian packages to feed the solver *)
   val to_package: t -> installed:bool -> Debian.Packages.package
 
+  (** deptopts (optional dependencies) string *)
+  val s_depopts: string
+
 end
 
 (** Package descriptions: [$opam/descr/] *)
