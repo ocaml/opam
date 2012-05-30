@@ -28,9 +28,12 @@ BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
-.PHONY: fresh init upload list install upload-new upgrade downgrade remove switch
+.PHONY: all rsync server git
 
-all:
+all: rsync server git
+	@
+
+run:
 	$(MAKE) fresh && \
 	$(MAKE) binaries && \
 	$(MAKE) init && \
@@ -47,16 +50,19 @@ all:
 	$(MAKE) downgrade && \
 	$(MAKE) list 
 
+rsync:
+	$(MAKE) REPOKIND=rsync run
+
 server:
 	$(MAKE) fresh
 	$(MAKE) binaries
 	rm -rf $(OPAM_SERVER_ROOT)
 	($(ENV) opam-server --root $(OPAM_SERVER_ROOT) & \
-	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) all \
+	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) run \
 	  && killall opam-server || killall opam-server))
 
 git:
-	$(MAKE) REPOKIND=git all
+	$(MAKE) REPOKIND=git run
 
 $(BINARIES_): $(BUILDS)
 	mkdir -p $(BIN)
