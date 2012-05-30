@@ -23,20 +23,37 @@ This command will download and extract the following archives:
 
 To compile `opam`, simply run:
 
-    make
+```
+make
+```
 
-This will download the necessary archives if they are not already downloaded and then build OPAM.
+This will download the necessary archives if they are not already
+downloaded and then build OPAM.
 
 ## Tests
 
 In order to run the test you should run:
 
 ```
+make tests-rsync
+make tests-git
+make tests-server
+```
+
+Or alternatively:
+
+```
 make tests
 ```
+## Scripts
+
+Some helper scripts are located in `src/scrips`:
+
+* `opam-mk-install` helps to create `.install` files
+* `opam-mk-config` helps to create `.config.in` files
+* `opam-mk-repo` helps to create OPAM repositories
 
 ## Documentation
 
-* the API is available in html/
-
-* The design documents are available in specs/
+* the API is available in `html/`
+* The design documents are available in `specs/`
