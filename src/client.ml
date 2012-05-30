@@ -977,9 +977,8 @@ let config request =
           let config = File.Dot_config.read (Path.C.config t.compiler name) in
           fn config s :: accu
         ) [] library_deps in
-      let strs = List.map (String.concat " ") strs in
-      let output = String.concat " " strs in
-      log "OUTPUT: %s" output;
+      let output = String.concat " " (List.flatten strs) in
+      log "OUTPUT: %S" output;
       Globals.msg "%s\n" output
 
 let remote action =
