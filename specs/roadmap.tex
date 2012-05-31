@@ -1286,6 +1286,7 @@ The syntax of {\tt .comp} files follows the one described in
 \begin{Verbatim}[frame=single]
 <file> :=
     opam-version: "1"
+    name:       STRING
     src:        STRING
     make:       [ STRING+ ]
     ?patches:   [ STRING+ ]
@@ -1304,6 +1305,7 @@ The syntax of {\tt .comp} files follows the one described in
 }
 \begin{itemize}
 
+\item {\tt name} is the compiler name, it should be identical to the filename.
 \item {\tt src} is the location where this version can be downloaded. It can be:
 \begin{itemize}
 \item an archive available in the local filesystem
@@ -1356,9 +1358,11 @@ For instance the file, {\tt 3.12.1+memprof.comp} describes OCaml,
 version $3.12.1$ with the memory profiling patch enabled:
 
 \begin{verbatim}
-src:       "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
-make:     [ "world" "world.opt" ]
-patches:   [ "http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch" ]
+opam-version: "1"
+name:         "3.12.1" 
+src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
+make:         [ "world" "world.opt" ]
+patches:      [ "http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch" ]
 \end{verbatim}
 
 And the file {\tt trunk-g-notk-byte.comp} describes OCaml from SVN
@@ -1366,11 +1370,13 @@ trunk, with no {\em tk} support and only in bytecode, and all the
 libraries built with {\tt -g}:
 
 \begin{verbatim}
-src:       "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
-configure: [ "-no-tk" ]
-make:     [ "world" ]
-bytecomp:  [ "-g" ]
-bytelink:  [ "-g" ]
+opam-version: "1"
+name:         "trunk-g-notk-byte"
+src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
+configure:    [ "-no-tk" ]
+make:         [ "world" ]
+bytecomp:     [ "-g" ]
+bytelink:     [ "-g" ]
 \end{verbatim}
 
 \subsection{Switching compiler version}
@@ -1413,6 +1419,17 @@ This command will:
   with respect to this new \verb+$OVERSION+.
 
 \end{itemize}
+
+\subsection{OPAM repositories}
+
+The state of OPAM repositories is extended with the directory
+\verb+$opam/repo/$repo/compiler+ containing the compiler description
+files. When a repository is updated, this directory is updated as
+well. It is advised to no have two different compiler description
+files with the same name in two different repositories.
+
+The binary protocol between client and OPAM server is also updated to
+deal with compiler description updates.
 
 \section{Milestone 4: OPAM and git}
 
