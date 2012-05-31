@@ -14,6 +14,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
@@ -223,19 +224,19 @@ Check whether a file has a given suffix
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
 <td></td></tr>
-<tr><td><a href="Types.Set.S.html#VALchoose_one">choose_one</a> [<a href="Types.Set.S.html">Types.Set.S</a>]</td>
-<td><div class="info">
-Like <code class="code">choose</code> and <code class="code">Assert_failure _</code> in case the set is not a singleton.
-</div>
-</td></tr>
 <tr><td><a href="Types.Filename.html#VALchop_extension">chop_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Remove the file extension
 </div>
 </td></tr>
+<tr><td><a href="Process.html#VALclean_files">clean_files</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+Clean-up process result files
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALcommand">command</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">command fmt</code> executes the command <code class="code">fmt</code>
+<code class="code">command cmd</code> executes the command <code class="code">cmd</code>.
 </div>
 </td></tr>
 <tr><td><a href="Run.html#VALcommands">commands</a> [<a href="Run.html">Run</a>]</td>
@@ -326,6 +327,12 @@ Create a new pair (name x version)
 <tr><td><a href="Types.Filename.html#VALcreate">create</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Create a filename from a dirname and a basename
+</div>
+</td></tr>
+<tr><td><a href="Process.html#VALcreate">create</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+<code class="code">create cmd args</code> create a new process to execute the command
+    <code class="code">cmd</code> with arguments <code class="code">args</code>.
 </div>
 </td></tr>
 <tr><td><a href="Path.R.html#VALcreate">create</a> [<a href="Path.R.html">Path.R</a>]</td>
@@ -582,6 +589,16 @@ List of installed packages with their version:
 Find all the invalid fields
 </div>
 </td></tr>
+<tr><td><a href="Process.html#VALis_failure">is_failure</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+Is the process result a failure ?
+</div>
+</td></tr>
+<tr><td><a href="Process.html#VALis_success">is_success</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+Is the process result a success ?
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALis_valid">is_valid</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Check whether a list of items contains only valid variable definitions
@@ -824,6 +841,11 @@ Return the package the variable is defined in
 Return the package name in which the section is
 </div>
 </td></tr>
+<tr><td><a href="File.Comp.html#VALpackages">packages</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Packages to install immediately after the creation of OCaml
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_and_formula">parse_and_formula</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse an AND formala such as
@@ -924,7 +946,7 @@ Read file contents.
 </td></tr>
 <tr><td><a href="Run.html#VALread_command_output">read_command_output</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">read_command_output fmt</code> executes the command <code class="code">fmt</code> and return
+<code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> and return
     the lines from stdout
 </div>
 </td></tr>
@@ -953,6 +975,11 @@ Removes everything in <code class="code">filename</code> if existed.
 <tr><td><a href="Run.html#VALremove">remove</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">remove filename</code> removes <code class="code">filename</code>.
+</div>
+</td></tr>
+<tr><td><a href="File.OPAM.html#VALremove">remove</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Command to run to remove the package
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALremove">remove</a> [<a href="Client.html">Client</a>]</td>
@@ -1023,6 +1050,12 @@ Root dir: <i>$opam/</i>
 </td></tr>
 <tr><td><a href="Repositories.Raw.html#VALrsync">rsync</a> [<a href="Repositories.Raw.html">Repositories.Raw</a>]</td>
 <td></td></tr>
+<tr><td><a href="Process.html#VALrun">run</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+<code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
+    arguments <code class="code">args</code>.
+</div>
+</td></tr>
 <tr><td align="left"><br>S</td></tr>
 <tr><td><a href="File.IO_FILE.html#VALsafe_read">safe_read</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
@@ -1108,6 +1141,11 @@ Convert the content of a variable to a string
 </td></tr>
 <tr><td><a href="Parallel.G.html#VALstring_of_vertex">string_of_vertex</a> [<a href="Parallel.G.html">Parallel.G</a>]</td>
 <td></td></tr>
+<tr><td><a href="Path.C.html#VALstublibs">stublibs</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+DLL paths
+</div>
+</td></tr>
 <tr><td><a href="File.OPAM.html#VALsubsts">substs</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
 <td><div class="info">
 File substitutions
@@ -1267,6 +1305,11 @@ Package version
 </div>
 </td></tr>
 <tr><td align="left"><br>W</td></tr>
+<tr><td><a href="Process.html#VALwait">wait</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+<code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALwith_flock">with_flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 Functional version of <code class="code">flock / funlock</code>

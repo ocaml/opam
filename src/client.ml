@@ -342,6 +342,12 @@ let info package =
     | None   -> []
     | Some v -> [ "installed-version", V.to_string v ] in
 
+  let available_versions =
+    match List.map V.to_string (V.Set.elements v_set) with
+    | []  -> []
+    | [v] -> [ "available-version" , v ]
+    | l   -> [ "available-versions", String.concat ", " l ] in
+
   let libraries, syntax = match o_v with
     | None   -> [], []
     | Some v ->
@@ -358,8 +364,7 @@ let info package =
     (fun (tit, desc) -> Globals.msg "%20s: %s\n" tit desc)
     ( [ "package", N.to_string package ]
      @ installed_version
-     @ [("available-versions",
-         String.concat ", " (List.map V.to_string (V.Set.elements v_set)))]
+     @ available_versions
      @ libraries
      @ syntax
      @ let latest = match o_v with
@@ -382,6 +387,7 @@ let confirm fmt =
   ) fmt
 
 let proceed_toinstall t nv = 
+  Globals.msg "Installing %s ...\n" (NV.to_string nv);
 
   let t = load_state () in
   let name = NV.name nv in
@@ -490,11 +496,18 @@ let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
   let name = NV.name nv in
 
+  (* Run the remove script *)
+  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let remove = File.OPAM.remove opam in
+  let err = Dirname.exec (Path.C.lib_dir t.compiler) [remove] in
+  if err <> 0 then
+    Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
+
   (* Remove the libraries *)
   Dirname.rmdir (Path.C.lib t.compiler name);
   
   (* Remove the binaries *)
-  let install = File.Dot_install.read (Path.C.install t.compiler name) in
+  let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
     let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
     Filename.remove dst
@@ -573,30 +586,38 @@ let proceed_tochange t nv_old nv =
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
-  let commands = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "Build command: %s\n" (String.concat ";" commands);
+  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
+  Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
   if err = 0 then
-    proceed_toinstall t nv
-  else
+    try proceed_toinstall t nv
+    with e ->
+      proceed_todelete t nv;
+      raise e
+  else (
+    proceed_todelete t nv;
     Globals.error_and_exit
       "Compilation failed with error %d" err
+  )
 
 (* We need to clean-up things before recompiling. *)
 let proceed_torecompile t nv =
   proceed_tochange t (Some nv) nv
 
-let debpkg_of_nv t nv =
+let debpkg_of_nv action t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let installed =
-    not (NV.Set.mem nv t.reinstall)
-     &&  NV.Set.mem nv t.installed in
+    if action = `update then
+      NV.Set.mem nv t.installed
+    else
+      not (NV.Set.mem nv t.reinstall)
+      &&  NV.Set.mem nv t.installed in
   File.OPAM.to_package opam installed
 
-let resolve t request =
-  let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv t nv :: l) t.available [] in
+let resolve action_k t request =
+  let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
 
-  match Solver.resolve (Solver.U l_pkg) request with
+  match Solver.resolve (Solver.U l_pkg) request t.reinstall with
   | None     -> Globals.msg "No solution has been found.\n"
   | Some sol -> 
 
@@ -700,19 +721,21 @@ let install name =
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
 
-  (* Fail if the package is already installed *)
-  if N.Map.mem name map_installed then
-    Globals.error_and_exit
-      "Package %s is already installed (current version is %s)"
+  (* Exit if the package is already installed *)
+  if N.Map.mem name map_installed then (
+    Globals.msg
+      "Package %s is already installed (current version is %s)\n"
       (N.to_string name)
       (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
+    Globals.exit 1
+  );
 
   let map_installed =
     List.map
       (fun (x,y) -> NV.create x (V.Set.choose_one y))
       (N.Map.bindings map_installed) in
 
-  resolve t
+  resolve `install t
     { wish_install = vpkg_of_nv_eq (install_nv_of_n t name) :: List.map vpkg_of_nv_any map_installed
     ; wish_remove = [] 
     ; wish_upgrade = [] }
@@ -720,25 +743,27 @@ let install name =
 let remove name =
   log "remove %s" (N.to_string name);
   if name = N.of_string Globals.default_package then
-    Globals.error_and_exit "Package %s can not be removed without specifying its new version. \
-      Use 'opam switch' and enter another OCaml version." (N.to_string name);
+    Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
   if not (N.Map.mem name map_installed) then
     Globals.error_and_exit "Package %s is not installed" (N.to_string name);
   let nv = NV.create name (V.Set.choose_one (N.Map.find name map_installed)) in
-  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv t nv) :: l) t.available []) in
-  let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv t nv]) in
+  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
+  let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv `remove t nv]) in
   let depends =
     List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
 
   let wish_install =
     List.fold_left
-      (fun accu nv -> if NV.Set.mem nv depends then accu else (vpkg_of_nv_eq nv)::accu)
-      []
-      (NV.Set.elements t.installed) in
+      (fun accu nv ->
+        if NV.Set.mem nv depends then
+          accu
+        else
+          vpkg_of_nv_eq nv :: accu
+      ) [] (NV.Set.elements t.installed) in
 
-  resolve t 
+  resolve `remove t 
     { wish_install
     ; wish_remove  = [ (N.to_string name, None), None ]
     ; wish_upgrade = [] }
@@ -752,7 +777,7 @@ let upgrade () =
     let versions = N.Map.find name available in
     let nv = NV.create name (V.Set.max_elt versions) in
     vpkg_of_nv_ge nv in
-  resolve t
+  resolve `upgrade t
     { wish_install = []
     ; wish_remove  = []
     ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
@@ -787,9 +812,9 @@ let upload upload repo =
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
   let universe =
-    Solver.U (List.map (debpkg_of_nv t) (NV.Set.elements t.installed)) in
+    Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
-  let pkg_of_name n = debpkg_of_nv t (find_installed_package_by_name t n) in
+  let pkg_of_name n = debpkg_of_nv `config t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
   let depends = Solver.filter_backward_dependencies universe request in
   List.map NV.of_dpkg depends
@@ -849,7 +874,12 @@ let config request =
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
-      let names = List.map Full_section.package c.options in
+      let comp =
+        let oversion = File.Config.ocaml_version t.config in
+        File.Comp.safe_read (Path.G.compilers t.global oversion) in
+      let names =
+        File.Comp.packages comp
+        @ List.map Full_section.package c.options in
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
         if c.is_rec then
@@ -879,6 +909,11 @@ let config request =
       let library_deps =
         let graph = Section.G.create () in
         let todo = ref Section.Set.empty in
+        let add_todo s =
+          if Section.Map.mem s library_map then
+            todo := Section.Set.add s !todo
+          else
+            Globals.error_and_exit "Unbound section %S" (Section.to_string s) in
         let seen = ref Section.Set.empty in
         (* Init the graph with vertices from the command-line *)
         (* NOTES: we check that [todo] is initialized before the [loop] *)
@@ -891,13 +926,14 @@ let config request =
             | Some s -> [s] in
           List.iter (fun s ->
             Section.G.add_vertex graph s;
-            todo := 
-              if Section.Map.mem s library_map then
-                Section.Set.add s !todo
-              else
-                Globals.error_and_exit "Unbound section %S" (Section.to_string s)
+            add_todo s;
           ) sections
         ) c.options;
+        (* Also add the [requires] field of the compiler description *)
+        List.iter (fun s ->
+          Section.G.add_vertex graph s;
+          add_todo s
+        ) (File.Comp.requires comp);
         (* Least fix-point to add edges and missing vertices *)
         let rec loop () =
           if not (Section.Set.is_empty !todo) then
@@ -924,12 +960,18 @@ let config request =
         let nodes = ref [] in
         Section.graph_iter (fun n -> nodes := n :: !nodes) graph;
         !nodes in
+      let fn_comp = match c.is_byte, c.is_link with
+        | true , true  -> File.Comp.bytelink
+        | true , false -> File.Comp.bytecomp
+        | false, true  -> File.Comp.asmlink
+        | false, false -> File.Comp.asmcomp in
       let fn = match c.is_byte, c.is_link with
         | true , true  -> File.Dot_config.Section.bytelink
         | true , false -> File.Dot_config.Section.bytecomp
         | false, true  -> File.Dot_config.Section.asmlink
         | false, false -> File.Dot_config.Section.asmcomp in
       let strs =
+        fn_comp comp ::
         List.fold_left (fun accu s ->
           let name = Section.Map.find s library_map in
           let config = File.Dot_config.read (Path.C.config t.compiler name) in
@@ -1003,23 +1045,26 @@ let switch to_replicate oversion =
       
       match
         Dirname.exec build_dir
-          [ Printf.sprintf "./configure %s -prefix %s" (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
-              (String.concat " " (File.Comp.configure comp))
-              (Dirname.to_string (Path.C.root new_oversion))
-            (* NOTE In case it exists 2 '-prefix', in general the script ./configure will only consider the last one, others will be discarded. *)
-          ; Printf.sprintf "make %s" (String.concat " " (File.Comp.make comp))
-          ; Printf.sprintf "make install" ]
+          [ ( "./configure" :: File.Comp.configure comp )
+            @ [ "-prefix";  Dirname.to_string (Path.C.root new_oversion) ]
+              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
+          (* NOTE In case it exists 2 '-prefix', in general the script
+             ./configure will only consider the last one, others will be
+             discarded. *)
+          ; ( "make" :: File.Comp.make comp )
+          ; [ "make" ; "install" ]
+          ]
       with
-        | 0 -> 
+      | 0 -> 
           Some (fun _ -> try init_ocaml new_oversion with e -> 
-              begin 
-                File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
+            begin 
+              File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
                 Dirname.rmdir (Path.C.root new_oversion); 
                 raise e;
               end), 
           fun t_new -> 
             List.fold_left 
-              (fun set name -> NV.Set.add (install_nv_of_n t_new (N.of_string name)) set) 
+              (fun set name -> NV.Set.add (install_nv_of_n t_new name) set) 
               NV.Set.empty
               (File.Comp.packages comp)
         | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
@@ -1036,7 +1081,7 @@ let switch to_replicate oversion =
     (* - install in priority packages specified in [nv_to_install]
        - also attempt to replicate the previous state, if required *)
     (let t_new = load_state () in
-     resolve t_new
+     resolve `switch t_new
        { wish_install = 
            List.map 
              (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))

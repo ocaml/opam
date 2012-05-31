@@ -18,6 +18,7 @@
 <link title="Parallel" rel="Chapter" href="Parallel.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
+<link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
@@ -165,10 +166,10 @@ Universe of packages<br>
 Subset of packages<br>
 </div>
 
-<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPErequest">request</a> -> <a href="Solver.html#TYPEsolution">solution</a> option</code></pre><div class="info">
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPErequest">request</a> -> Types.NV.Set.t -> <a href="Solver.html#TYPEsolution">solution</a> option</code></pre><div class="info">
 Given a description of packages, return a solution preserving the
     consistency of the initial description.  <code class="code">None</code> : No solution
-    found.<br>
+    found. The last argument is the set of packages to reinstall.<br>
 </div>
 <pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
 Return the recursive dependencies of a package Note : the given

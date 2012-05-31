@@ -10,6 +10,8 @@ open Types
 open Protocol
 open Unix
 
+let log fmt = Globals.log Sys.argv.(0) fmt
+
 let local_path = Path.R.of_path (Dirname.of_string (Run.cwd ()))
 let remote_address =
   try inet_addr_of_string Sys.argv.(1)

@@ -82,8 +82,8 @@ type packages = P of package list
 
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description.  [None] : No solution
-    found. *)
-val resolve : universe -> request -> solution option
+    found. The last argument is the set of packages to reinstall. *)
+val resolve : universe -> request -> NV.Set.t -> solution option
 
 (** Return the recursive dependencies of a package Note : the given
     package exists in the list in input because this list describes

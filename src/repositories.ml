@@ -22,7 +22,7 @@ let run cmd repo args =
   let path = Path.R.root (Path.R.create repo) in
   let cmd =  Printf.sprintf "opam-%s-%s" (Repository.kind repo) cmd in
   let i = Run.in_dir (Dirname.to_string path) (fun () ->
-    Run.command "%s %s %s" cmd (Repository.address repo) (String.concat " " args);
+    Run.command ( cmd :: Repository.address repo :: args );
   ) in
   if i <> 0 then
     Globals.error_and_exit "%s failed" cmd
@@ -52,7 +52,7 @@ module Raw = struct
       | [`A ; `R] | [`R ; `A] ->
           let dst = Filename.to_string dst in
           let err =
-            Run.command "rsync -ar %s %s" src dst in
+            Run.command [ "rsync" ; "-ar" ; src ; dst ] in
           if err <> 0 then
             Globals.error_and_exit "rsync (%S, %S) command failed (%d)" src dst err
       | _ -> failwith "TODO"

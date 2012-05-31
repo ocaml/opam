@@ -291,6 +291,7 @@ module OPAM = struct
     maintainer : string;
     substs     : basename list;
     build      : string list list;
+    remove     : string list;
     depends    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
     libraries  : section list;
@@ -304,6 +305,7 @@ module OPAM = struct
     maintainer = "<none>";
     substs     = [];
     build      = [];
+    remove     = [];
     depends    = [];
     conflicts  = [];
     libraries  = [];
@@ -320,6 +322,7 @@ module OPAM = struct
   let s_maintainer  = "maintainer"
   let s_substs      = "substs"
   let s_build       = "build"
+  let s_remove      = "remove"
   let s_depends     = "depends"
   let s_conflicts   = "conflicts"
   let s_libraries   = "libraries"
@@ -341,6 +344,7 @@ module OPAM = struct
     s_maintainer;
     s_substs;
     s_build;
+    s_remove;
     s_depends;
     s_conflicts;
     s_libraries;
@@ -359,6 +363,7 @@ module OPAM = struct
   let version t = t.version
   let substs t = t.substs
   let build t = t.build
+  let remove t = t.remove
   let depends t = t.depends
   let conflicts t = t.conflicts
   let libraries t = t.libraries
@@ -409,7 +414,7 @@ module OPAM = struct
 
   let parse_command =
     parse_or [
-      ("string", parse_string |> Printf.sprintf "'%s'");
+      ("string", parse_string);
       ("symbol", parse_symbol)
     ]
 
@@ -429,6 +434,7 @@ module OPAM = struct
     let build      =
       assoc_default Globals.default_build_command
         s s_build (parse_list (parse_list parse_command)) in
+    let remove     = assoc_list s s_remove (parse_list parse_command) in
     let depends    = assoc_list s s_depends parse_cnf_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
@@ -438,7 +444,7 @@ module OPAM = struct
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
         | _              -> None
       ) s in
-    { name; version; maintainer; substs; build;
+    { name; version; maintainer; substs; build; remove;
       depends; conflicts; libraries; syntax; others }
 end
 
@@ -655,10 +661,11 @@ module Comp = struct
 
   let internal = "comp"
 
+  type section = Types.section
+
   type t = { 
     opam_version : OPAM_V.t ;
     src          : string ;
-
     patches      : string list ;
     configure    : string list ;
     make         : string list ;
@@ -666,24 +673,25 @@ module Comp = struct
     asmcomp      : string list ;
     bytelink     : string list ;
     asmlink      : string list ;
-    packages     : string list ;
-
-    (*requires :*) 
-    (*pp : *) 
+    packages     : name list ;
+    requires     : section list; 
+    pp           : ppflag option;
   }
 
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
     src = "";
 
-    patches = [];
+    patches   = [];
     configure = [];
-    make = [];
-    bytecomp = [];
-    asmcomp = [];
-    bytelink = [];
-    asmlink = [];
-    packages = [];
+    make      = [];
+    bytecomp  = [];
+    asmcomp   = [];
+    bytelink  = [];
+    asmlink   = [];
+    packages  = [];
+    requires  = [];
+    pp        = None;
   }
 
   let s_src = "src"
@@ -695,20 +703,35 @@ module Comp = struct
   let s_bytelink = "bytelink"
   let s_asmlink  = "asmlink"
   let s_packages = "packages"
+  let s_requires = "requires"
+  let s_pp = "pp"
 
   let configure t = t.configure
   let make t = t.make
   let src t = t.src
   let packages t = t.packages
+  let asmlink t = t.asmlink
+  let asmcomp t = t.asmcomp
+  let bytelink t = t.bytelink
+  let bytecomp t = t.bytecomp
+  let requires t = t.requires
+  let pp t = t.pp
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
     let s = file.contents in
-
+    let parse_camlp4 = function
+      | List ( Ident "CAMLP4" :: l ) ->
+          Some (Camlp4 (parse_string_list (List l)))
+      | _ -> raise (Bad_format "camlp4") in
+    let parse_ppflags = parse_or [
+      ("camlp4"     , parse_camlp4);
+      ("string-list", parse_string_list |> fun x -> Some (Cmd x));
+    ] in
+      
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let src = assoc s s_src parse_string in 
-
     let patches   = assoc_string_list s s_patches   in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
@@ -716,13 +739,21 @@ module Comp = struct
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
     let asmlink   = assoc_string_list s s_asmlink   in
-    let packages  = assoc_string_list s s_packages  in
+    let packages  =
+      assoc_list s s_packages (parse_list (parse_string |> N.of_string)) in
+    let requires  =
+      assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
+    let pp = assoc_default None s s_pp parse_ppflags in
 
     { opam_version; src; 
-      patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages; 
+      patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages;
+      requires; pp;
     }
 
   let to_string filename s =
+    let make_ppflag = function
+      | Cmd l    -> make_list make_string l
+      | Camlp4 l -> List (Symbol "CAMLP4" :: List.map make_string l) in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [
@@ -733,8 +764,11 @@ module Comp = struct
               Variable (s_asmcomp  , make_list make_string s.asmcomp);
               Variable (s_bytelink , make_list make_string s.bytelink);
               Variable (s_asmlink  , make_list make_string s.asmlink);
-              Variable (s_packages , make_list make_string s.packages);
-            ] 
+              Variable (s_packages , make_list (N.to_string |> make_string) s.packages);
+              Variable (s_requires , make_list (Section.to_string |> make_string) s.requires);
+      ] @ match s.pp with
+         | None    -> []
+         | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
     }
 
 end
@@ -806,7 +840,9 @@ module Make (F : F) = struct
   let filename = Filename.of_string "/dummy/"
 
   let of_raw raw =
-    F.of_string filename raw
+    try F.of_string filename raw
+    with Bad_format msg ->
+      Globals.error_and_exit "%s:\n%s" msg (Raw.to_string raw)
 
   let to_raw t =
     F.to_string filename t

@@ -15,28 +15,7 @@
 
 let log fmt = Globals.log "TYPES" fmt
 
-module Set = struct
-  module type S = sig
-    include Set.S
-
-    (** Like [choose] and [Assert_failure _] in case the set is not a singleton. *)
-    val choose_one : t -> elt
-  end
-
-  module MK (S : Set.S) = struct
-    include S
-
-    let choose_one s = 
-      match elements s with
-        | [x] -> x
-        | [] -> raise Not_found
-        | _ -> assert false
-  end
-
-  module Make (O : Set.OrderedType) = struct
-    include MK (Set.Make (O))
-  end
-end
+open Utils
 
 module type Abstract = sig
   type t
@@ -68,7 +47,7 @@ module Dirname: sig
   val cwd: unit -> t
   val rmdir: t -> unit
   val mkdir: t -> unit
-  val exec: t -> ?add_to_path:t list -> string list -> int
+  val exec: t -> ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
   val basename: t -> string
   val exists: t -> bool
@@ -92,7 +71,8 @@ end = struct
     Run.in_dir (to_string dirname) 
       (fun () -> 
         Run.commands
-          ~add_to_path:(List.map of_string add_to_path) cmds)
+          ~add_to_path:(List.map of_string add_to_path)
+          cmds)
 
   let chdir dirname =
     Run.chdir (to_string dirname)
@@ -370,7 +350,12 @@ end = struct
   }
 
   let create ~name ~kind ~address =
-    let address = Run.real_path address in
+    let address =
+      if Pcre.pmatch (Pcre.regexp "://") address
+      || Utils.is_inet_address address then
+        address
+      else
+        Run.real_path address in
     { name; kind; address }
 
   let of_string _ =
@@ -547,6 +532,10 @@ end = struct
 end
 
 type full_variable = Full_variable.t
+
+type ppflag =
+  | Camlp4 of string list
+  | Cmd of string list
 
 (* Command line arguments *)
 

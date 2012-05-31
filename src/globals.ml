@@ -53,13 +53,15 @@ let warning fmt =
     Printf.eprintf "[%d] WARNING: %s\n%!" (Unix.getpid ()) str
   ) fmt
 
-exception Error
+exception Exit of int
   
 let error_and_exit fmt =
   Printf.kprintf (fun str ->
     error "%s" str;
-    raise Error
+    raise (Exit 66)
   ) fmt
+
+let exit i = raise (Exit i)
 
 let msg fmt =
   Printf.kprintf (fun str ->

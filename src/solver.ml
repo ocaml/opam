@@ -23,6 +23,15 @@ type action = (* NV.t internal_action *)
   | To_delete of NV.t
   | To_recompile of NV.t
 
+let map_reinstall reinstall a =
+  match a with
+  | To_change (None, nv) ->
+      if NV.Set.mem nv reinstall then
+        To_recompile nv
+      else
+        a
+  | _ -> a
+
 let string_of_action = function
   | To_change (None, p)   -> Printf.sprintf "Install: %s" (NV.to_string p)
   | To_change (Some o, p) ->
@@ -32,8 +41,8 @@ let string_of_action = function
   | To_delete p           -> Printf.sprintf "Delete: %s" (NV.to_string p)
 
 type package_action = {
-  cudf   : Cudf.package;
-  action : action;
+  cudf: Cudf.package;
+  mutable action: action;
 }
 
 let action t = t.action
@@ -63,6 +72,11 @@ module PA_graph = struct
     let string_of_vertex v = string_of_action v.action
   end)
   include PG
+
+  let iter_update_reinstall reinstall g =
+    PG.iter_vertex (fun v ->
+      v.action <- map_reinstall reinstall v.action
+    ) g
 
 end
 
@@ -189,7 +203,7 @@ module CudfDiff : sig
 end = struct
     
   module Cudf_set = struct
-    module S = Set.MK (Common.CudfAdd.Cudf_set)
+    module S = Utils.Set.MK (Common.CudfAdd.Cudf_set)
 
     let to_string s =
       Printf.sprintf "{%s}"
@@ -355,7 +369,7 @@ struct
   let filter_backward_dependencies = filter_dependencies (fun x -> x)
   let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
-  let resolve (U l_pkg_pb) req =
+  let resolve (U l_pkg_pb) req reinstall =
     log "universe=%s request=<%s>"
       (string_of_packages l_pkg_pb)
       (string_of_request req);
@@ -438,6 +452,7 @@ struct
                 with Not_found ->
                   ())
               graph_installed;
+            PA_graph.iter_update_reinstall reinstall graph;
             Some { to_remove = List.rev_map package_map l_del ; to_add = graph })
 
 end

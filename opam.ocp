@@ -4,17 +4,16 @@
    ocamlopt = [ "ocp-ocamlopt.opt" ]
 *)
  
-comp = [ "-g" ]
-link = [ "-g" ]
-
 begin
-  comp   += [ "-annot" "-warn-error" "A" ]
+  comp += [ "-g" "-annot" "-warn-error" "A" ]
+  link += [ "-g" ]
 
 begin library "opam-lib"
   dirname = [ "src" ]
   files   = [
     "globals.ml"
     "utils.ml"
+    "process.ml"
     "run.ml"
     "parallel.ml"
     "types.ml"
@@ -136,8 +135,6 @@ begin program "opam-server-upload"
   requires = [ "opam-server-lib" ]
 end
 
-end
-
 (* Helpers *)
 
 begin program "opam-mk-config"
@@ -153,4 +150,6 @@ end
 begin program "opam-mk-repo"
   files = [ "src/scripts/opam_mk_repo.ml" ]
   requires = [ "opam-lib" ]
+end
+
 end

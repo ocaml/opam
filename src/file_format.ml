@@ -280,11 +280,18 @@ let make_and_formula l =
   List (make_and_formula_aux l)
 
 let make_cnf_formula l =
-  List (List.map (fun l ->
-    let l = List.map make_constraint l in
-    let l = List.fold_left (fun accu elt ->
-      match accu with
-        | []   -> [elt]
-        | accu -> [ Group accu ; Symbol "|" ; Group [elt] ]
+  let cnf =
+    List.fold_left (fun cnf l ->
+      let orl = List.map make_constraint l in
+      let orl =
+        List.fold_left (fun orl elt ->
+          match orl with
+          | [] -> [elt]
+          | _  -> elt :: Symbol "|" :: orl
+        ) [] orl in
+      match orl with
+      | []  -> cnf
+      | [c] -> c :: cnf
+      | _   -> (Group orl) :: cnf
     ) [] l in
-    List l) l)
+  List cnf

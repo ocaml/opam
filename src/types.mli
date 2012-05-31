@@ -15,21 +15,7 @@
 
 (** The OPAM types and then main function which operates on them. *)
 
-(** {2 Pervasives} *)
-
-module Set : sig
-  module type S = sig
-    include Set.S
-
-    (** Like [choose] and [Assert_failure _] in case the set is not a singleton. *)
-    val choose_one : t -> elt
-  end
-
-  module MK : functor (S : Set.S) -> S 
-    with type t = S.t with type elt = S.elt
-  module Make : functor (Ord : Set.OrderedType) -> S 
-    with type elt = Ord.t
-end
+open Utils
 
 (** {2 Abstract types} *)
 
@@ -69,7 +55,7 @@ module Dirname: sig
   val mkdir: t -> unit
 
   (** Execute a list of commands in a given directory *)
-  val exec: t -> ?add_to_path:t list -> string list -> int
+  val exec: t -> ?add_to_path:t list -> string list list -> int
 
   (** Change the current directory *)
   val chdir: t -> unit
@@ -335,6 +321,11 @@ type variable_contents =
 
 (** Convert the content of a variable to a string *)
 val string_of_variable_contents: variable_contents -> string
+
+(** Content of [pp] variables *)
+type ppflag =
+  | Camlp4 of string list
+  | Cmd of string list
 
 (** {2 Command line arguments} *)
 
