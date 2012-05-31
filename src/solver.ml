@@ -390,7 +390,6 @@ struct
     if List.mem_assoc opt pkg.Cudf.pkg_extra then
       match List.assoc opt pkg.Cudf.pkg_extra with
       | `String s ->
-          Globals.msg "foo\n";
           let deps = File_format.parse_cnf_formula
             (Parser.value Lexer.token (Lexing.from_string s)) in
           let deps = Debian.Debcudf.lltocudf table deps in
