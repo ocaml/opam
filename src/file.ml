@@ -675,6 +675,7 @@ module Comp = struct
 
   type t = { 
     opam_version : OPAM_V.t ;
+    name         : OCaml_V.t ;
     src          : string ;
     patches      : string list ;
     configure    : string list ;
@@ -690,6 +691,7 @@ module Comp = struct
 
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
+    name = OCaml_V.of_string "<none>";
     src = "";
 
     patches   = [];
@@ -704,18 +706,20 @@ module Comp = struct
     pp        = None;
   }
 
-  let s_src = "src"
-  let s_patches = "patches"
+  let s_name      = "name"
+  let s_src       = "src"
+  let s_patches   = "patches"
   let s_configure = "configure"
-  let s_make = "make"
-  let s_bytecomp = "bytecomp"
-  let s_asmcomp  = "asmcomp"
-  let s_bytelink = "bytelink"
-  let s_asmlink  = "asmlink"
-  let s_packages = "packages"
-  let s_requires = "requires"
-  let s_pp = "pp"
+  let s_make      = "make"
+  let s_bytecomp  = "bytecomp"
+  let s_asmcomp   = "asmcomp"
+  let s_bytelink  = "bytelink"
+  let s_asmlink   = "asmlink"
+  let s_packages  = "packages"
+  let s_requires  = "requires"
+  let s_pp        = "pp"
 
+  let name t = t.name
   let configure t = t.configure
   let make t = t.make
   let src t = t.src
@@ -741,7 +745,8 @@ module Comp = struct
       
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
-    let src = assoc s s_src parse_string in 
+    let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
+    let src       = assoc s s_src parse_string in 
     let patches   = assoc_string_list s s_patches   in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
@@ -755,7 +760,7 @@ module Comp = struct
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
 
-    { opam_version; src; 
+    { opam_version; name; src;
       patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages;
       requires; pp;
     }
@@ -767,15 +772,18 @@ module Comp = struct
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [
-              Variable (s_patches  , make_list make_string s.patches);
-              Variable (s_configure, make_list make_string s.configure);
-              Variable (s_make     , make_list make_string s.make);
-              Variable (s_bytecomp , make_list make_string s.bytecomp);
-              Variable (s_asmcomp  , make_list make_string s.asmcomp);
-              Variable (s_bytelink , make_list make_string s.bytelink);
-              Variable (s_asmlink  , make_list make_string s.asmlink);
-              Variable (s_packages , make_list (N.to_string |> make_string) s.packages);
-              Variable (s_requires , make_list (Section.to_string |> make_string) s.requires);
+        Variable (s_name        , make_string (OCaml_V.to_string s.name));
+        Variable (s_src         , make_string s.src);
+        Variable (s_opam_version, make_string (OPAM_V.to_string s.opam_version));
+        Variable (s_patches     , make_list make_string s.patches);
+        Variable (s_configure   , make_list make_string s.configure);
+        Variable (s_make        , make_list make_string s.make);
+        Variable (s_bytecomp    , make_list make_string s.bytecomp);
+        Variable (s_asmcomp     , make_list make_string s.asmcomp);
+        Variable (s_bytelink    , make_list make_string s.bytelink);
+        Variable (s_asmlink     , make_list make_string s.asmlink);
+        Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
+        Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]

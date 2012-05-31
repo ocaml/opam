@@ -44,4 +44,9 @@ let () =
       File.Descr.write (Path.R.descr local_path nv) c
     )
   ) descrs;
-  File.Updated.write (Path.R.updated local_path) !updates
+  File.Updated.write (Path.R.updated local_path) !updates;
+  let compilers = Client.get_compilers remote_address in
+  List.iter (fun c ->
+    let filename = Path.R.compiler local_path (File.Comp.name c) in
+    File.Comp.write filename c
+  ) compilers

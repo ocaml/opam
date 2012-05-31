@@ -26,6 +26,7 @@ type client_to_server =
   | NewVersion of string (* name *) * string (* version *)
                 * string (* opam *) * string (* descr *)
                 * string (* archive *) * string (* key *)
+  | GetCompilers
 
 (** Message exchanged between the server and the client *)
 type server_to_client =
@@ -37,6 +38,7 @@ type server_to_client =
   | Key           of string (* key *)
   | OK
   | Error         of string (* server error *)
+  | Compilers     of string list (* file contents of compiler descriptions *)
 
 (** Default port *)
 val default_port: int

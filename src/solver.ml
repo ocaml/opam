@@ -411,6 +411,17 @@ struct
       pkg
 
   let resolve (U l_pkg_pb) req reinstall =
+    (* filter-out the default package from the universe *)
+    let l_pkg_pb =
+      List.filter
+        (fun pkg -> pkg.Debian.Packages.name <> Globals.default_package)
+        l_pkg_pb in
+    let filter ((n,_),_) = n <> Globals.default_package in
+    let req = {
+      wish_install = List.filter filter req.wish_install;
+      wish_remove  = List.filter filter req.wish_remove;
+      wish_upgrade = List.filter filter req.wish_upgrade;
+    } in
     log "universe=%s request=<%s>"
       (string_of_packages l_pkg_pb)
       (string_of_request req);

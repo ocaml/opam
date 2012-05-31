@@ -144,6 +144,9 @@ module Comp : sig
 
   include IO_FILE
 
+  (** Return the compiler name *)
+  val name: t -> OCaml_V.t
+
   (** Return the url of the compiler *)
   val src: t -> string
 

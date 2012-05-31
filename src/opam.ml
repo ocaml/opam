@@ -262,21 +262,24 @@ let remote =
 
 (* opam switch [-clone] OVERSION *)
 let switch = 
-  let command : [`clone] option ref = ref None in
-  let set c () = command := Some c in
+  let command : [`switch|`list] ref = ref `switch in
+  let clone = ref false in
+  let set c () = command := c in
 {
   name     = "switch";
   usage    = "[compiler-name]";
   synopsis = "Switch to an other compiler version";
   help     = "";
   specs    = [
-    ("-clone" , Arg.Unit (set `clone), " List the repositories");
+    ("-clone" , Arg.Set clone        , " Try to keep the same installed packages");
+    ("-list"  , Arg.Unit (set `list) , " List the available compiler descriptions");
   ];
   anon;
   main     = parse_args (fun args ->
-    match args with
-    | []     -> bad_argument "switch" "Compiler name is missing"
-    | [name] -> Client.switch (!command <> None) (OCaml_V.of_string name)
+    match !command, args with
+    | `list  , []     -> Client.compiler_list ()
+    | `switch, []     -> bad_argument "switch" "Compiler name is missing"
+    | `switch, [name] -> Client.switch !clone (OCaml_V.of_string name)
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 

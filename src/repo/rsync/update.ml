@@ -20,7 +20,7 @@ let rsync ?fn dir =
     | Some f -> "v",  f in
   let lines =
     Run.read_command_output [
-      "rsync"; "-ar"^option ; option ; (remote_address / dir) ; dir
+      "rsync"; "-ar"^option ; (remote_address / dir) ; dir
     ] in
   let files = Utils.filter_map filter lines in
   List.iter (fun x -> log "updated: %s" (NV.to_string x)) files;
@@ -36,4 +36,8 @@ let () =
   let updates = NV.Set.union archives (NV.Set.union opam descr) in
   File.Updated.write
     (Path.R.updated (Path.R.of_path (Dirname.of_string local_path)))
-    updates
+    updates;
+
+  (* Update compiler descriptions *)
+  let _comps = rsync "compilers/" in
+  ()

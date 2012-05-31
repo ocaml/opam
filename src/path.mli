@@ -18,7 +18,7 @@
 open Types
 
 (** Global state *)
-module G : sig
+module G: sig
 
   (** Contains {i $opam} *)
   type t
@@ -35,11 +35,14 @@ module G : sig
   (** OPAM files: {i $opam/opam/$NAME.$VERSION.opam} *)
   val opam: t -> NV.t -> filename
 
-  (** Compiler files : {i $opam/compilers/$OVERSION.comp} *)
-  val compilers: t -> OCaml_V.t -> filename
+  (** Compiler files: {i $opam/compilers/$OVERSION.comp} *)
+  val compiler: t -> OCaml_V.t -> filename
 
-  (** Compiler files : {i $opam/compilers/} *)
-  val compilers_dir: t -> dirname
+  (** Compiler files: {i $opam/compilers/} *)
+  val compiler_dir: t -> dirname
+
+  (** All the compiler files *)
+  val compiler_list: t -> OCaml_V.Set.t
 
   (** List all the available packages:
       {i $opam/opam/$NAME.$VERSION.opam} *)
@@ -70,7 +73,7 @@ module G : sig
 end
 
 (** Compiler-version related state *)
-module C : sig
+module C: sig
 
   (** Contains {i $opam} and {i $OVERSION} *)
   type t
@@ -146,7 +149,7 @@ module C : sig
 
 end
 
-module R : sig
+module R: sig
 
   type t
 
@@ -222,5 +225,14 @@ module R : sig
   (** Return the upload folder for archive files:
       {i $opam/repo/$repo/upload/archives/$NAME.$VERSION.tar.gz} *)
   val upload_archives: t -> NV.t -> filename
+
+  (** Compiler files: {i $opam/repo/$repo/compilers/$OVERSION.comp} *)
+  val compiler: t -> OCaml_V.t -> filename
+
+  (** Compiler files: {i $opam/repo/$repo/compilers/} *)
+  val compiler_dir: t -> dirname
+
+  (** All the compiler files *)
+  val compiler_list: t -> OCaml_V.Set.t
 
 end

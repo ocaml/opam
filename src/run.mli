@@ -94,3 +94,10 @@ val funlock: unit -> unit
 
 (** Functional version of [flock / funlock] *)
 val with_flock: ('a -> 'b) -> 'a -> 'b
+
+(** {2 Function used only by the switch commnand} *)
+
+(** download compiler sources.
+    Currently support only tar.gz/tar.bz2, but should be able to support
+    git and svn as well. *)
+val download: string -> string -> unit

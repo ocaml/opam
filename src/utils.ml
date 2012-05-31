@@ -58,6 +58,7 @@ module Set = struct
 
     (* Like [choose] and [Assert_failure _] in case the set is not a singleton. *)
     val choose_one : t -> elt
+    val of_list: elt list -> t
   end
 
   module MK (S : Set.S) = struct
@@ -68,6 +69,9 @@ module Set = struct
         | [x] -> x
         | [] -> raise Not_found
         | _ -> assert false
+
+    let of_list l =
+      List.fold_left (fun set e -> add e set) empty l
   end
 
   module Make (O : Set.OrderedType) = struct

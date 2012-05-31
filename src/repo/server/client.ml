@@ -90,4 +90,8 @@ let new_version host opam descr archive key =
   | OK -> ()
   | x  -> protocol_error x "new_package"
 
-      
+let get_compilers host =
+  client_version host;
+  match rpc host GetCompilers with
+  | Compilers l -> List.map (fun s -> File.Comp.of_raw (Raw.of_string s)) l
+  | x -> protocol_error x "get_compilers"
