@@ -396,8 +396,6 @@ end = struct
 end
 type repository = Repository.t
 
-type installed = { conf_ocaml : V.t list ; user : NV.Set.t }
-
 (* Variable names *)
 
 (* Variable names are used in .config files *)
