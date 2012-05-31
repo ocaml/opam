@@ -75,16 +75,12 @@ $(BINARIES_): $(BUILDS)
 binaries: $(BINARIES_)
 
 init:
-ifeq ($(REPOKIND),rsync)
-	mkdir -p $(OPAM_REPO)
-	mkdir $(OPAM_REPO)/opam
-	mkdir $(OPAM_REPO)/descr
-endif
-ifeq ($(REPOKIND), git)
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
 	mkdir $(OPAM_REPO)/opam
 	mkdir $(OPAM_REPO)/descr
+	mkdir $(OPAM_REPO)/compilers
+ifeq ($(REPOKIND), git)
 	mkdir $(OPAM_REPO)/url
 	cd $(OPAM_REPO) && git init && \
 	  touch README && git add README && \
@@ -114,6 +110,8 @@ ifeq ($(REPOKIND), git)
 	cp packages/P5/README     $(OPAM_REPO)/descr/P5.1
 	echo '$(OPAM_GIT)/P5'   > $(OPAM_REPO)/url/P5.1
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P5"
+	cp compilers/*            $(OPAM_REPO)/compilers/
+	cd $(OPAM_REPO)/compilers && git add * && git commit -a -m "Adding compilers"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
 	mkdir $(OPAM_GIT)/P1-1 && cp packages/P1-1/* $(OPAM_GIT)/P1-1/
 	mkdir $(OPAM_GIT)/P2   && cp packages/P2/*   $(OPAM_GIT)/P2/
@@ -137,6 +135,7 @@ else
 	cd packages && \
 	$(OPAM) upload -opam P5.opam -descr P5/README -archive P5.tar.gz -repo $(REPO)
 endif
+	cp compilers/* $(OPAM_REPO)/compilers/
 	$(OPAM) update # update the list of available packages with the one being updated
 
 list:
@@ -187,10 +186,13 @@ downgrade:
 	$(OPAM) install P4.2
 
 switch:
-	mkdir -p /tmp/opam-archives && wget -P /tmp/opam-archives -qN http://caml.inria.fr/pub/distrib/ocaml-3.11/ocaml-3.11.2.tar.gz
-	mkdir -p $(OPAM_ROOT)/compilers
-	cp packages/3.11.2.comp $(OPAM_ROOT)/compilers
-	$(OPAM) switch 3.11.2
+	$(MAKE) fresh
+	$(MAKE) binaries
+	$(MAKE) init
+	$(MAKE) upload
+	$(MAKE) install
+	$(OPAM) switch -list
+	$(OPAM) switch -clone 3.12.1-byte
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz

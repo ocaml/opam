@@ -1,0 +1,4 @@
+opam-version: "1"
+name: "3.12.1-byte"
+src: "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
+make: [ "world" ]
