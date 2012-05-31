@@ -75,7 +75,8 @@ let tmp_dir nv =
 
 let wget src =
   match Globals.os with
-  | Globals.Darwin -> [ "ftp" ; src ]
+  (* ftp cannot read https github tarball address *)
+  (*  | Globals.Darwin -> [ "ftp" ; src ] *)
   | _              -> [ "wget"; src ]
 
 let archive_name src =
@@ -117,7 +118,7 @@ let () =
       Filename.copy_in f tmp_dir
     ) (files nv);
     let err = Dirname.exec (Dirname.of_string tmp_dir0) [
-      [ "tar" ; "cz" ; NV.to_string nv ; "-f" ; Filename.to_string (Path.R.archive root nv) ]
+      [ "tar" ; "czf" ; Filename.to_string (Path.R.archive root nv) ; NV.to_string nv ]
     ] in
     if err <> 0 then
       Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
