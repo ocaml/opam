@@ -161,6 +161,11 @@ List all the available packages:
 Return the base name
 </div>
 </td></tr>
+<tr><td><a href="Types.Dirname.html#VALbasename">basename</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Return the deeper directory name
+</div>
+</td></tr>
 <tr><td><a href="Path.C.html#VALbin">bin</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Installed binaries: <i>$opam/$OVERSION/bin</i>
@@ -265,18 +270,48 @@ Clean-up process result files
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning.
 </div>
 </td></tr>
-<tr><td><a href="Path.G.html#VALcompilers">compilers</a> [<a href="Path.G.html">Path.G</a>]</td>
+<tr><td><a href="Path.R.html#VALcompiler">compiler</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
-Compiler files : <i>$opam/compilers/$OVERSION.comp</i>
+Compiler files: <i>$opam/repo/$repo/compilers/$OVERSION.comp</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.G.html#VALcompilers_dir">compilers_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
+<tr><td><a href="Path.G.html#VALcompiler">compiler</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
-Compiler files : <i>$opam/compilers/</i>
+Compiler files: <i>$opam/compilers/$OVERSION.comp</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALcompiler_dir">compiler_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Compiler files: <i>$opam/repo/$repo/compilers/</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALcompiler_dir">compiler_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+Compiler files: <i>$opam/compilers/</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALcompiler_list">compiler_list</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+All the compiler files
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALcompiler_list">compiler_list</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+All the compiler files
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALcompiler_list">compiler_list</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+<code class="code">compiler_list</code> list the available compiler descriptions
 </div>
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALconcat">concat</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
 <td></td></tr>
+<tr><td><a href="File.Installed.html#VALconf_ocaml">conf_ocaml</a> [<a href="File.Installed.html">File.Installed</a>]</td>
+<td><div class="info">
+Default package that is installed depending on the OCaml version set
+</div>
+</td></tr>
 <tr><td><a href="Path.R.html#VALconfig">config</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the repository config: <i>$opam/repo/$repo/config</i>
@@ -468,6 +503,11 @@ Documentation path for a given package:
 Documentation path: <i>$opam/$OVERSION/doc/</i>
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALdownload">download</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+download compiler sources.
+</div>
+</td></tr>
 <tr><td><a href="Repositories.html#VALdownload">download</a> [<a href="Repositories.html">Repositories</a>]</td>
 <td><div class="info">
 Run <i>opam-$kind-download</i> in <i>$opam/repo/$repo</i>
@@ -549,6 +589,11 @@ Return the full description
 <tr><td><a href="File_format.html#VALget_all_section_by_kind">get_all_section_by_kind</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Get all the sections of a certain kind
+</div>
+</td></tr>
+<tr><td><a href="File.Installed.html#VALget_conf">get_conf</a> [<a href="File.Installed.html">File.Installed</a>]</td>
+<td><div class="info">
+Return the current conf-ocaml (raise exceptions like <code class="code">NV.Set.choose_one</code>)
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALget_section_by_kind">get_section_by_kind</a> [<a href="File_format.html">File_format</a>]</td>
@@ -683,6 +728,11 @@ Symlink a file in a directory
 List all the filenames (ie.
 </div>
 </td></tr>
+<tr><td><a href="Types.Dirname.html#VALlist">list</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+List the directory
+</div>
+</td></tr>
 <tr><td><a href="Client.html#VALlist">list</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
 Displays all available packages
@@ -746,6 +796,11 @@ Create a string
 Create a symbol
 </div>
 </td></tr>
+<tr><td><a href="File.Installed.html#VALmem">mem</a> [<a href="File.Installed.html">File.Installed</a>]</td>
+<td><div class="info">
+Like <code class="code">NV.Set.mem</code> (also take into account the <code class="code">conf_ocaml</code>)
+</div>
+</td></tr>
 <tr><td><a href="File.Dot_install.html#VALmisc">misc</a> [<a href="File.Dot_install.html">File.Dot_install</a>]</td>
 <td><div class="info">
 List of other files to install
@@ -770,6 +825,11 @@ Get the repository name
 <tr><td><a href="Types.NV.html#VALname">name</a> [<a href="Types.NV.html">Types.NV</a>]</td>
 <td><div class="info">
 Return the package name
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html#VALname">name</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Return the compiler name
 </div>
 </td></tr>
 <tr><td><a href="File.OPAM.html#VALname">name</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
@@ -817,6 +877,11 @@ Transform a directory name into a repository path
 <tr><td><a href="File.IO_FILE.html#VALof_raw">of_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
 Convert a raw string into a file
+</div>
+</td></tr>
+<tr><td><a href="File.Installed.html#VALof_set">of_set</a> [<a href="File.Installed.html">File.Installed</a>]</td>
+<td><div class="info">
+Basic conversion.
 </div>
 </td></tr>
 <tr><td><a href="Types.Abstract.html#VALof_string">of_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
@@ -1087,6 +1152,11 @@ Root dir: <i>$opam/</i>
 </div>
 </td></tr>
 <tr><td align="left"><br>S</td></tr>
+<tr><td><a href="File.OPAM.html#VALs_depopts">s_depopts</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+deptopts (optional dependencies) string
+</div>
+</td></tr>
 <tr><td><a href="File.IO_FILE.html#VALsafe_read">safe_read</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
 Read file contents.
@@ -1183,7 +1253,7 @@ File substitutions
 </td></tr>
 <tr><td><a href="Client.html#VALswitch">switch</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-<code class="code">switch and_clone</code> switch to an OCaml compiler 
+<code class="code">switch and_clone alias descr</code> switch to an OCaml compiler 
     and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>.
 </div>
 </td></tr>
@@ -1211,6 +1281,11 @@ Convert to Debian packages to feed the solver
 <tr><td><a href="File.IO_FILE.html#VALto_raw">to_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
 Return the file contents
+</div>
+</td></tr>
+<tr><td><a href="File.Installed.html#VALto_set">to_set</a> [<a href="File.Installed.html">File.Installed</a>]</td>
+<td><div class="info">
+Basic conversion.
 </div>
 </td></tr>
 <tr><td><a href="Types.Abstract.html#VALto_string">to_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
@@ -1294,6 +1369,8 @@ Return the upload folder for OPAM files:
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>
+<tr><td><a href="Parser.html#VALvalue">value</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
 <tr><td><a href="Types.Full_variable.html#VALvariable">variable</a> [<a href="Types.Full_variable.html">Types.Full_variable</a>]</td>
 <td><div class="info">
 Return the variable name

@@ -4,7 +4,8 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="next" href="Types.Basename.html">
+<link rel="previous" href="Types.Basename.html">
+<link rel="next" href="Types.Raw.html">
 <link rel="Up" href="Types.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -24,8 +25,9 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Dirname</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="Types.html">Up</a>
-&nbsp;<a href="Types.Basename.html">Next</a>
+<div class="navbar"><a href="Types.Basename.html">Previous</a>
+&nbsp;<a href="Types.html">Up</a>
+&nbsp;<a href="Types.Raw.html">Next</a>
 </div>
 <center><h1>Module <a href="type_Types.Dirname.html">Types.Dirname</a></h1></center>
 <br>
@@ -41,6 +43,9 @@ Remove a directory<br>
 <pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">t -> unit</code></pre><div class="info">
 Create a directory<br>
 </div>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">t -> t list</code></pre><div class="info">
+List the directory<br>
+</div>
 <pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">t -> ?add_to_path:t list -> string list list -> int</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
@@ -49,5 +54,8 @@ Change the current directory<br>
 </div>
 <pre><span id="VALexists"><span class="keyword">val</span> exists</span> : <code class="type">t -> bool</code></pre><div class="info">
 Does the directory exists ?<br>
+</div>
+<pre><span id="VALbasename"><span class="keyword">val</span> basename</span> : <code class="type">t -> <a href="Types.html#TYPEbasename">Types.basename</a></code></pre><div class="info">
+Return the deeper directory name<br>
 </div>
 </body></html>

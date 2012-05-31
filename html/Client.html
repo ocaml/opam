@@ -66,9 +66,14 @@ Removes the given package. Take the global file lock.<br>
 <pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="Types.html#TYPEremote">Types.remote</a> -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> Types.OCaml_V.t -> unit</code></pre><div class="info">
-<code class="code">switch and_clone</code> switch to an OCaml compiler 
-    and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>.
-    Take the global file lock.<br>
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> Types.OCaml_V.t -> Types.OCaml_V.t -> unit</code></pre><div class="info">
+<code class="code">switch and_clone alias descr</code> switch to an OCaml compiler 
+    and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>. It creates
+    <i>$opam/$alias</i> if it does not exists by reading the contents
+    of <i>$opam/compilers/$descr.comp</i>.
+    It takes the global file lock.<br>
+</div>
+<pre><span id="VALcompiler_list"><span class="keyword">val</span> compiler_list</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<code class="code">compiler_list</code> list the available compiler descriptions<br>
 </div>
 </body></html>

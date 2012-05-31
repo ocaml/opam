@@ -49,13 +49,10 @@ OPAM files
 <pre><span class="keyword">module</span> <a href="File.Descr.html">Descr</a>: <code class="code">sig</code> <a href="File.Descr.html">..</a> <code class="code">end</code></pre><div class="info">
 Package descriptions: <code class="code">$opam/descr/</code>
 </div>
-<pre><span class="keyword">module</span> <a href="File.Installed.html">Installed</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="File.Installed.html">Installed</a>: <code class="code">sig</code> <a href="File.Installed.html">..</a> <code class="code">end</code></pre><div class="info">
 List of installed packages: <code class="code">$opam/$oversion/installed</code>
 </div>
-<pre><span class="keyword">module</span> <a href="File.Reinstall.html">Reinstall</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
-List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code>
-</div>
-<pre><span class="keyword">module</span> <a href="File.Updated.html">Updated</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="File.Reinstall.html">Reinstall</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><pre><span class="keyword">module</span> <a href="File.Updated.html">Updated</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
 List of updated packages: <code class="code">$opam/$repo/$repo/updated</code>
 </div>
 <pre><span class="keyword">module</span> <a href="File.Comp.html">Comp</a>: <code class="code">sig</code> <a href="File.Comp.html">..</a> <code class="code">end</code></pre><div class="info">

@@ -31,29 +31,24 @@
 </div>
 <center><h1>Module <a href="type_File.Installed.html">File.Installed</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Installed: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre>List of installed packages: <code class="code">$opam/$oversion/installed</code><br>
+<pre><span class="keyword">module</span> Installed: <code class="code">sig</code> <a href="File.Installed.html">..</a> <code class="code">end</code></pre>List of installed packages: <code class="code">$opam/$oversion/installed</code>
+<p>
+List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code><br>
 <hr width="100%">
-<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
-<div class="info">
-File contents<br>
+<pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
+<pre><span id="VALconf_ocaml"><span class="keyword">val</span> conf_ocaml</span> : <code class="type">Types.N.t</code></pre><div class="info">
+Default package that is installed depending on the OCaml version set<br>
 </div>
-
-<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="File.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
-Empty file<br>
+<pre><span id="VALget_conf"><span class="keyword">val</span> get_conf</span> : <code class="type">t -> Types.NV.t</code></pre><div class="info">
+Return the current conf-ocaml (raise exceptions like <code class="code">NV.Set.choose_one</code>)<br>
 </div>
-<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type"><a href="Types.html#TYPEfilename">Types.filename</a> -> <a href="File.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info">
-Write some contents to a file<br>
+<pre><span id="VALof_set"><span class="keyword">val</span> of_set</span> : <code class="type">Types.NV.Set.t -> t</code></pre><div class="info">
+Basic conversion.<br>
 </div>
-<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type"><a href="Types.html#TYPEfilename">Types.filename</a> -> <a href="File.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
-Read file contents. Raise an error if the file does not exist.<br>
+<pre><span id="VALto_set"><span class="keyword">val</span> to_set</span> : <code class="type">t -> Types.NV.Set.t</code></pre><div class="info">
+Basic conversion.<br>
 </div>
-<pre><span id="VALsafe_read"><span class="keyword">val</span> safe_read</span> : <code class="type"><a href="Types.html#TYPEfilename">Types.filename</a> -> <a href="File.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
-Read file contents. Return <code class="code">empty</code> if the file does not exist.<br>
-</div>
-<pre><span id="VALto_raw"><span class="keyword">val</span> to_raw</span> : <code class="type"><a href="File.IO_FILE.html#TYPEt">t</a> -> <a href="Types.html#TYPEraw">Types.raw</a></code></pre><div class="info">
-Return the file contents<br>
-</div>
-<pre><span id="VALof_raw"><span class="keyword">val</span> of_raw</span> : <code class="type"><a href="Types.html#TYPEraw">Types.raw</a> -> <a href="File.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
-Convert a raw string into a file<br>
+<pre><span id="VALmem"><span class="keyword">val</span> mem</span> : <code class="type">Types.NV.t -> t -> bool</code></pre><div class="info">
+Like <code class="code">NV.Set.mem</code> (also take into account the <code class="code">conf_ocaml</code>)<br>
 </div>
 </body></html>
