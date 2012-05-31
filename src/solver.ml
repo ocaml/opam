@@ -322,7 +322,12 @@ struct
     module PG_dfs = Make_fs (Graph.Traverse.Dfs (PG))
  *)
 
-  module O_pkg = struct type t = Cudf.package let compare = compare end
+  module O_pkg = struct
+    type t = Cudf.package
+    let summary pkg = pkg.Cudf.package, pkg.Cudf.version
+    let compare pkg1 pkg2 =
+      compare (summary pkg1) (summary pkg2)
+  end
   module PkgMap = Map.Make (O_pkg)
   module PkgSet = Set.Make (O_pkg)
 
