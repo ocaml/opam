@@ -208,7 +208,7 @@ let update () =
 let install_initial_package () =
   let t = load_state () in
   let name = N.of_string Globals.default_package in
-  let version = V.of_string (OCaml_V.to_string (File.Config.ocaml_version t.config)) in
+  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
   let nv = NV.create name version in
   (* .opam *)
   let opam = File.OPAM.create nv in
@@ -239,15 +239,50 @@ let install_initial_package () =
     "Please verify that %S is in your ld.conf.\n"
     (Dirname.to_string stublibs)
 
+(* We assume that we have the right ocaml-version in $opam/config. Then we:
+   - create $opam/$alias
+   - compiles and install $opam/compiler/$descr.comp if $descr <> current version *)
+let init_ocaml alias ocaml_version =
+  let alias_p = Path.C.create alias in
+  if not (Dirname.exists (Path.C.root alias_p)) then begin
+    Dirname.mkdir (Path.C.root alias_p);
+    File.Installed.write (Path.C.installed alias_p) File.Installed.empty;
+    (* Update the configuration files *)
+    update ();
+    (* Install the initial package *)
+    install_initial_package ();
+    (* install the compiler if necessary *)
+    let t = load_state () in
+    let aliases_f = Path.G.aliases t.global in
+    let aliases = File.Aliases.safe_read aliases_f in
+    File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
+    if OCaml_V.current () <> Some ocaml_version then begin
+      let comp = File.Comp.read (Path.G.compiler t.global ocaml_version) in
+      let comp_src = File.Comp.src comp in
+      let build_dir = Path.C.build_ocaml alias_p in
+      Run.download comp_src (Dirname.to_string build_dir);
+      let err =
+        Dirname.exec build_dir
+          [ ( "./configure" :: File.Comp.configure comp )
+            @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
+          (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+          (* NOTE In case it exists 2 '-prefix', in general the script
+             ./configure will only consider the last one, others will be
+             discarded. *)
+          ; ( "make" :: File.Comp.make comp )
+          ; [ "make" ; "install" ]
+          ] in
+      if err <> 0 then
+        Globals.error_and_exit
+          "The compilation of compiler version %s failed"
+          (OCaml_V.to_string ocaml_version)
+    end else
+      File.Comp.write
+        (Path.G.compiler t.global ocaml_version)
+        (File.Comp.create_preinstalled ocaml_version) 
+  end
 
-let init_ocaml compiler =
-  File.Installed.write (Path.C.installed compiler) File.Installed.empty;
-  (* Update the configuration files *)
-  update ();
-  (* Install the initial package *)
-  install_initial_package ()
-
-let init repo =
+let init repo alias ocaml_version =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create () in
   let config_f = Path.G.config root in
@@ -255,9 +290,7 @@ let init repo =
     Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
   else try
     let opam_version = OPAM_V.of_string Globals.opam_version in
-    let ocaml_version = OCaml_V.of_string Sys.ocaml_version in
-    let config = File.Config.create opam_version [repo] ocaml_version in
-    let compiler = Path.C.create ocaml_version in
+    let config = File.Config.create opam_version [repo] alias in
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;
@@ -268,7 +301,7 @@ let init repo =
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
     Dirname.mkdir (Path.G.compiler_dir root);
-    init_ocaml compiler;
+    init_ocaml alias ocaml_version;
   with e ->
     if not !Globals.debug then
       Dirname.rmdir (Path.G.root root);
@@ -632,7 +665,7 @@ let resolve action_k t request =
   | None     -> Globals.msg "No solution has been found.\n"
   | Some sol ->
 
-      Globals.msg "The following solution has been found:\n";
+(*    Globals.msg "The following solution has been found:\n"; *)
       print_solution sol;
       let continue =
         if Solver.delete_or_update sol then
@@ -701,6 +734,7 @@ let vpkg_of_nv op nv =
 
 let vpkg_of_nv_eq = vpkg_of_nv (Some "=")
 let vpkg_of_nv_ge = vpkg_of_nv (Some ">=")
+let vpkg_of_nv_le = vpkg_of_nv (Some "<=")
 let vpkg_of_nv_any = vpkg_of_nv None
 
 let unknown_package name =
@@ -890,7 +924,9 @@ let config request =
 
   | Compil c ->
       let comp =
-        let oversion = File.Config.ocaml_version t.config in
+        let alias = File.Config.ocaml_version t.config in
+        let aliases = File.Aliases.read (Path.G.aliases t.global) in
+        let oversion = List.assoc alias aliases in
         File.Comp.safe_read (Path.G.compiler t.global oversion) in
       let names =
         File.Comp.packages comp
@@ -1036,100 +1072,71 @@ let remote action =
 let compiler_list () =
   log "compiler_list";
   let t = load_state () in
-  let set = Path.G.compiler_list t.global in
-  let initial_version = OCaml_V.of_string Sys.ocaml_version in
-  let all = OCaml_V.Set.add initial_version set in
+  let descrs = Path.G.compiler_list t.global in
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  Globals.msg "--- Compilers installed ---\n";
+  List.iter (fun (n,c) ->
+    let current = if n = File.Config.ocaml_version t.config then "*" else " " in
+    Globals.msg "%s %s (%s)\n" current (Alias.to_string n) (OCaml_V.to_string c)
+  ) aliases;
+  Globals.msg "\n--- Compilers available ---\n";
   OCaml_V.Set.iter (fun c ->
-    let exists =
-      let dir = Path.C.root (Path.C.create c) in
-      if c = File.Config.ocaml_version t.config then "*"
-      else if Dirname.exists dir then "+"
-      else " " in
-    Globals.msg "%-3s %s\n" exists (OCaml_V.to_string c)
-  ) all 
+    let comp = File.Comp.read (Path.G.compiler t.global c) in
+    let preinstalled = if File.Comp.preinstalled comp then "~" else " " in
+    Globals.msg "%s  %s\n" preinstalled (OCaml_V.to_string c)
+  ) descrs
   
-let switch clone alias oversion =
-  log "switch %B %s %s" clone (OCaml_V.to_string alias) (OCaml_V.to_string oversion);
+let switch clone alias ocaml_version =
+  log "switch %B %s %s" clone
+    (Alias.to_string alias)
+    (OCaml_V.to_string ocaml_version);
   let t = load_state () in
+  let alias_p = Path.C.create alias in
 
-  let f_init, nv_to_install =
-
-    let path = Path.C.create alias in
-    let f_init  () = 
-      try init_ocaml path
-      with e -> 
-        (* restore the previous configuration *)
-        File.Config.write (Path.G.config t.global) t.config; 
-        Dirname.rmdir (Path.C.root path); 
-        raise e in
-
-    if Dirname.exists (Path.C.root path) then
-      None, fun _ -> NV.Set.empty
-
-    else if oversion = OCaml_V.of_string Sys.ocaml_version then
-      (* The version of ocaml is the one being installed *)
-      Some f_init, fun _ -> NV.Set.empty
-
-    else
-      (* The chosen version does not exist. We build it. *)
-      let comp = File.Comp.read (Path.G.compiler t.global oversion) in
-      let comp_src = File.Comp.src comp in
-      let build_dir = Path.C.build_ocaml path in
-      Run.download comp_src (Dirname.to_string build_dir);
-      let err =
-        Dirname.exec build_dir
-          [ ( "./configure" :: File.Comp.configure comp )
-            @ [ "-prefix";  Dirname.to_string (Path.C.root path) ]
-              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-          (* NOTE In case it exists 2 '-prefix', in general the script
-             ./configure will only consider the last one, others will be
-             discarded. *)
-          ; ( "make" :: File.Comp.make comp )
-          ; [ "make" ; "install" ]
-          ] in
-      if err = 0 then
-        let nv_to_install t_new =
-          List.fold_left 
-            (fun set name -> NV.Set.add (nv_of_name t_new name) set) 
-            NV.Set.empty
-            (File.Comp.packages comp) in
-        Some f_init, nv_to_install
-      else
-      Globals.error_and_exit "compilation of OCaml failed (%d)" err in
-
-  (* [1/2] initialization: write the new version in the configuration file *)
+  (* [1/3] write the new version in the configuration file *)
   File.Config.write
     (Path.G.config t.global)
-    (File.Config.with_ocaml_version t.config oversion);
-  
-  (* [2/2] initialization: initialize everything as if "opam init" has been called *)
-  (match f_init with
-  | None -> ()
-  | Some f -> f ());
+    (File.Config.with_ocaml_version t.config alias);
 
-  (* - install in priority packages specified in [nv_to_install]
-     - also attempt to replicate the previous state, if required *)
+  (* [2/3] install the new OCaml version *)
+  let exists = Dirname.exists (Path.C.root alias_p) in
+  if not exists then begin
+    try init_ocaml alias ocaml_version;
+    with e ->
+      (* restore the previous configuration *)
+      File.Config.write (Path.G.config t.global) t.config; 
+      Dirname.rmdir (Path.C.root alias_p); 
+      raise e
+  end;
+
+  (* [3/3] install new packagew
+     - the packages specified in the compiler descripton file if
+       the compiler was not previously installed
+     - also attempt to replicate the previous state, if required
+       with -clone *)
   let t_new = load_state () in
-  let wish_install =
-    List.map 
-      (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
-      (N.Map.bindings 
-         (NV.Set.fold
-            (fun nv map ->
-              let name, version = NV.name nv, NV.version nv in
-              if name = N.of_string Globals.default_package then
-                (* [Globals.default_package] has already been installed for
-                   this new version (automatically), so we skip it *)
-                map
-              else
-                let versions =
-                  try N.Map.find name map
-                  with Not_found -> V.Set.singleton version in
-                N.Map.add name versions map)
-            (NV.Set.union
-               (if clone then t.installed else NV.Set.empty)
-               (nv_to_install t_new))
-            (NV.to_map t_new.installed))) in
+  let comp_packages =
+    if exists then
+       t_new.installed
+    else
+      let comp_f = Path.G.compiler t.global ocaml_version in
+      let comp = File.Comp.read comp_f in
+      List.fold_left 
+        (fun set name -> NV.Set.add (nv_of_name t_new name) set) 
+        NV.Set.empty
+        (File.Comp.packages comp) in
+  let cloned_packages =
+    if clone then
+      t.installed
+    else
+      NV.Set.empty in
+  let packages = NV.Set.union comp_packages cloned_packages in
+  let packages = NV.to_map packages in
+  let packages =
+    N.Map.fold (fun name versions list ->
+      (NV.create name (V.Set.max_elt versions)) :: list
+    ) packages [] in
+  let wish_install = List.map vpkg_of_nv_le packages in
 
   resolve `switch t_new
     { wish_install

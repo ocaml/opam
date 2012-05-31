@@ -49,10 +49,10 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: OPAM_V.t -> repository list -> OCaml_V.t -> t
+  val create: OPAM_V.t -> repository list -> Alias.t -> t
 
   (** OCaml version updates *)
-  val with_ocaml_version : t -> OCaml_V.t -> t
+  val with_ocaml_version : t -> Alias.t -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
@@ -65,7 +65,7 @@ module Config: sig
   val repositories: t  -> repository list
 
   (** Return the OCaml version *)
-  val ocaml_version: t -> OCaml_V.t
+  val ocaml_version: t -> Alias.t
 
 end
 
@@ -130,6 +130,9 @@ module Descr: sig
   val full: t -> string
 end
 
+(** Compiler aliases: [$opam/aliases] *)
+module Aliases: IO_FILE with type t = (Alias.t * OCaml_V.t) list
+
 (** List of installed packages: [$opam/$oversion/installed] *)
 module Installed: IO_FILE with type t = NV.Set.t
 
@@ -143,6 +146,12 @@ module Updated: IO_FILE with type t = NV.Set.t
 module Comp : sig
 
   include IO_FILE
+
+  (** Create a pre-installed compiler description file *)
+  val create_preinstalled: OCaml_V.t -> t
+
+  (** Is it a pre-installed compiler description file *)
+  val preinstalled: t -> bool
 
   (** Return the compiler name *)
   val name: t -> OCaml_V.t

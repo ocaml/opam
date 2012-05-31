@@ -32,6 +32,9 @@ module G: sig
   (** Main configuration file: {i $opam/config} *)
   val config: t -> filename
 
+  (** Compiler aliases *)
+  val aliases: t -> filename
+
   (** OPAM files: {i $opam/opam/$NAME.$VERSION.opam} *)
   val opam: t -> NV.t -> filename
 
@@ -79,7 +82,7 @@ module C: sig
   type t
 
   (** Create a compiler path *)
-  val create: OCaml_V.t -> t
+  val create: Alias.t -> t
 
   (** Root dir: {i $opam/$OVERSION} *)
   val root: t -> dirname

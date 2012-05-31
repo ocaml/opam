@@ -38,7 +38,6 @@ end
 
 
 
-
 (* Filenames *)
 
 (* Basenames *)
@@ -329,7 +328,18 @@ end
 type nv = NV.t
 
 (* OCaml version *)
-module OCaml_V: Abstract = Base
+module OCaml_V: sig
+  include Abstract
+  val current: unit -> t option
+end = struct
+  include Base
+  let current () =
+    match Run.ocaml_version () with
+    | None   -> None
+    | Some o -> Some (of_string o)
+end
+
+module Alias: Abstract = Base
 
 (* OPAM version *)
 module OPAM_V: Abstract = Base

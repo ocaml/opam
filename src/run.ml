@@ -313,6 +313,13 @@ let with_flock f x =
     funlock ();
     raise e
 
+let ocaml_version () =
+  try
+    let s = read_command_output [ "ocamlc" ; "-version" ] in
+    Some (Utils.string_strip (List.hd s))
+  with _ ->
+    None
+
 (* Only used by the compiler switch stuff *)
 let download src dst =
   if Filename.check_suffix src "tar.gz"

@@ -205,6 +205,31 @@ end
 
 let s_opam_version = "opam-version"
 
+module Aliases = struct
+
+  let internal = "aliases"
+
+  type t = (Alias.t * OCaml_V.t) list
+
+  let empty = []
+
+  let to_string filename t =
+    let l =
+      List.map
+        (fun (alias,oversion) -> [Alias.to_string alias; OCaml_V.to_string oversion])
+        t in
+    Lines.to_string filename l
+
+  let of_string filename s =
+    let l = Lines.of_string filename s in
+    List.fold_left (fun accu -> function
+      | []                -> accu
+      | [alias; oversion] -> (Alias.of_string alias, OCaml_V.of_string oversion) :: accu
+      | _                 -> failwith "switches"
+    ) [] l
+
+end
+
 module Config = struct
 
     let internal = "config"
@@ -225,7 +250,7 @@ module Config = struct
     type t = {
       opam_version  : OPAM_V.t ;
       repositories  : repository list ;
-      ocaml_version : OCaml_V.t ;
+      ocaml_version : Alias.t ;
     }
 
     let with_repositories t repositories = { t with repositories }
@@ -241,7 +266,7 @@ module Config = struct
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
       repositories = [];
-      ocaml_version = OCaml_V.of_string Sys.ocaml_version;
+      ocaml_version = Alias.of_string "<none>";
     }
 
     open File_format
@@ -264,7 +289,7 @@ module Config = struct
         assoc s.contents s_repositories
           (parse_list (parse_string_option parse_string_pair |> to_repo)) in
       let ocaml_version =
-        assoc s.contents s_ocaml_version (parse_string |> OCaml_V.of_string) in
+        assoc s.contents s_ocaml_version (parse_string |> Alias.of_string) in
       { opam_version; repositories; ocaml_version }
 
    let to_string filename t =
@@ -273,7 +298,7 @@ module Config = struct
        contents = [ 
          Variable (s_opam_version , String (OPAM_V.to_string t.opam_version));
          Variable (s_repositories , make_list of_repo t.repositories);
-         Variable (s_ocaml_version, String (OCaml_V.to_string t.ocaml_version));
+         Variable (s_ocaml_version, String (Alias.to_string t.ocaml_version));
        ] 
      } in
      Syntax.to_string filename s
@@ -676,6 +701,7 @@ module Comp = struct
   type t = { 
     opam_version : OPAM_V.t ;
     name         : OCaml_V.t ;
+    preinstalled : bool;
     src          : string ;
     patches      : string list ;
     configure    : string list ;
@@ -691,9 +717,9 @@ module Comp = struct
 
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
-    name = OCaml_V.of_string "<none>";
-    src = "";
-
+    name         = OCaml_V.of_string "<none>";
+    src          = "";
+    preinstalled = false;
     patches   = [];
     configure = [];
     make      = [];
@@ -705,6 +731,9 @@ module Comp = struct
     requires  = [];
     pp        = None;
   }
+
+  let create_preinstalled name =
+    { empty with name; preinstalled = true }
 
   let s_name      = "name"
   let s_src       = "src"
@@ -718,6 +747,7 @@ module Comp = struct
   let s_packages  = "packages"
   let s_requires  = "requires"
   let s_pp        = "pp"
+  let s_preinstalled = "preinstalled"
 
   let name t = t.name
   let configure t = t.configure
@@ -730,6 +760,7 @@ module Comp = struct
   let bytecomp t = t.bytecomp
   let requires t = t.requires
   let pp t = t.pp
+  let preinstalled t = t.preinstalled
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
@@ -759,10 +790,11 @@ module Comp = struct
     let requires  =
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
-
+    let preinstalled = assoc_default false  s s_preinstalled parse_bool in
     { opam_version; name; src;
       patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages;
       requires; pp;
+      preinstalled;
     }
 
   let to_string filename s =
@@ -775,6 +807,7 @@ module Comp = struct
         Variable (s_name        , make_string (OCaml_V.to_string s.name));
         Variable (s_src         , make_string s.src);
         Variable (s_opam_version, make_string (OPAM_V.to_string s.opam_version));
+        Variable (s_preinstalled, make_bool s.preinstalled);
         Variable (s_patches     , make_list make_string s.patches);
         Variable (s_configure   , make_list make_string s.configure);
         Variable (s_make        , make_list make_string s.make);
@@ -897,6 +930,11 @@ end
 module Descr = struct
   include Descr
   include Make (Descr)
+end
+
+module Aliases = struct
+  include Aliases
+  include Make (Aliases)
 end
 
 module Reinstall = struct

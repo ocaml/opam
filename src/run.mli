@@ -52,6 +52,10 @@ val in_dir: string -> (unit -> 'a) -> 'a
 (** [files dir] returns the files in the directory [dir] *)
 val files: string -> string list
 
+(** Return the version of the current OCaml compiler. If no OCaml
+    compiler is present in the path, then it returns [None]. *)
+val ocaml_version: unit -> string option
+
 (** [files dir] returns the directories in the directory [dir] *)
 val directories: string -> string list
 

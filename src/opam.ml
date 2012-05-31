@@ -57,21 +57,38 @@ let parse_args fn () =
 (* opam init [-kind $kind] $repo $adress *)
 let init = 
   let kind = ref Globals.default_repository_kind in
+  let alias = ref "" in
+  let comp = ref "" in
+  let init () =
+    let comp =
+      if !comp <> "" then OCaml_V.of_string !comp
+      else match OCaml_V.current () with
+        | None   -> bad_argument "init" "No OCaml compiler found in path"
+        | Some c -> c in
+    let alias =
+      if !alias <> "" then Alias.of_string !alias
+      else Alias.of_string (OCaml_V.to_string comp) in
+    alias, comp in
 {
   name     = "init";
   usage    = "";
   synopsis = "Initial setup";
   help     = "Create the initial config files";
   specs    = [
-    ("--kind", Arg.Set_string kind, " Set the repository kind")
+    ("-comp" , Arg.Set_string comp , " Which compiler version to use");
+    ("-alias", Arg.Set_string alias, " Set the compiler alias name");
+    ("--kind", Arg.Set_string kind , " Set the repository kind")
   ];
   anon;
   main     =
     parse_args (function
     | [] ->
-        Client.init Repository.default
+        let alias, comp = init () in
+        Client.init Repository.default alias comp
     | [name; address]  ->
-        Client.init (Repository.create ~name ~address ~kind:!kind)
+        let alias, comp = init () in
+        let repo = Repository.create ~name ~address ~kind:!kind in
+        Client.init repo alias comp
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 
@@ -283,7 +300,7 @@ let switch =
     | `switch, []     -> bad_argument "switch" "Compiler name is missing"
     | `switch, [name] ->
         let alias = if !alias = "" then name else !alias in
-        Client.switch !clone (OCaml_V.of_string alias) (OCaml_V.of_string name)
+        Client.switch !clone (Alias.of_string alias) (OCaml_V.of_string name)
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 

@@ -109,7 +109,9 @@ type solution = {
 
 let print_solution t =
   if t.to_remove = [] && PA_graph.is_empty t.to_add then
-    Globals.msg "No actions will be performed, the current state satisfies the request.\n"
+    ()
+  (*Globals.msg
+    "No actions will be performed, the current state satisfies the request.\n"*)
   else
     let f = NV.to_string in
     List.iter (fun p -> Globals.msg "Remove: %s\n" (f p)) t.to_remove;

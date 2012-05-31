@@ -217,7 +217,12 @@ end
 type nv = NV.t
 
 (** OCaml version *)
-module OCaml_V: Abstract
+module OCaml_V: sig
+  include Abstract
+
+  (** Return the version of the compiler currently installed *)
+  val current: unit -> t option
+end
 
 (** OPAM version *)
 module OPAM_V: Abstract
@@ -371,3 +376,6 @@ type config =
 
 (** Pretty-print *)
 val string_of_config: config -> string
+
+(** Compiler aliases *)
+module Alias: Abstract

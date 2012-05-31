@@ -61,6 +61,8 @@ module G = struct
 
   let opam_dir t = t / "opam"
 
+  let aliases t = t // "aliases"
+
   let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
 
   let compiler_dir t = t / "compilers"
@@ -91,7 +93,7 @@ module C = struct
   type t = dirname (* [$opam/$oversion/ *)
 
   let create oversion =
-    Dirname.of_string !Globals.root_path / OCaml_V.to_string oversion
+    Dirname.of_string !Globals.root_path / Alias.to_string oversion
 
   let root x = x
 
