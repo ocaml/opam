@@ -44,6 +44,14 @@ All abstract types should implement this signature
 </div>
 <br>
 <span id="2_Filenames"><h2>Filenames</h2></span><br>
+<pre><span class="keyword">module</span> <a href="Types.Basename.html">Basename</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
+Basenames
+</div>
+<pre><span id="TYPEbasename"><span class="keyword">type</span> <code class="type"></code>basename</span> = <code class="type">Basename.t</code> </pre>
+<div class="info">
+Shortcut to basename type<br>
+</div>
+
 <pre><span class="keyword">module</span> <a href="Types.Dirname.html">Dirname</a>: <code class="code">sig</code> <a href="Types.Dirname.html">..</a> <code class="code">end</code></pre><div class="info">
 Absolute directory names
 </div>
@@ -55,14 +63,6 @@ Shortcut to directory type<br>
 <pre><span id="VAL(/)"><span class="keyword">val</span> (/)</span> : <code class="type"><a href="Types.html#TYPEdirname">dirname</a> -> string -> <a href="Types.html#TYPEdirname">dirname</a></code></pre><div class="info">
 Concatenate a directory and a string<br>
 </div>
-<pre><span class="keyword">module</span> <a href="Types.Basename.html">Basename</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
-Basenames
-</div>
-<pre><span id="TYPEbasename"><span class="keyword">type</span> <code class="type"></code>basename</span> = <code class="type">Basename.t</code> </pre>
-<div class="info">
-Shortcut to basename type<br>
-</div>
-
 <pre><span class="keyword">module</span> <a href="Types.Raw.html">Raw</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
 Raw file contents
 </div>
@@ -111,12 +111,33 @@ Package (name x version) pairs
 Shortcut to NV.t<br>
 </div>
 
-<pre><span class="keyword">module</span> <a href="Types.OCaml_V.html">OCaml_V</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="Types.OCaml_V.html">OCaml_V</a>: <code class="code">sig</code> <a href="Types.OCaml_V.html">..</a> <code class="code">end</code></pre><div class="info">
 OCaml version
 </div>
 <pre><span class="keyword">module</span> <a href="Types.OPAM_V.html">OPAM_V</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
 OPAM version
 </div>
+<br><code><span id="TYPEinstalled"><span class="keyword">type</span> <code class="type"></code>installed</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>conf_ocaml&nbsp;: <code class="type">V.t list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>user&nbsp;: <code class="type">NV.Set.t</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Set of installed packages<br>
+</div>
+
 <br>
 <span id="2_Repositories"><h2>Repositories</h2></span><br>
 <pre><span class="keyword">module</span> <a href="Types.Repository.html">Repository</a>: <code class="code">sig</code> <a href="Types.Repository.html">..</a> <code class="code">end</code></pre><div class="info">
@@ -339,5 +360,8 @@ Configuration requests<br>
 
 <pre><span id="VALstring_of_config"><span class="keyword">val</span> string_of_config</span> : <code class="type"><a href="Types.html#TYPEconfig">config</a> -> string</code></pre><div class="info">
 Pretty-print<br>
+</div>
+<pre><span class="keyword">module</span> <a href="Types.Alias.html">Alias</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
+Compiler aliases
 </div>
 </body></html>

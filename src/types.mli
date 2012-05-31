@@ -227,6 +227,10 @@ end
 (** OPAM version *)
 module OPAM_V: Abstract
 
+(** Set of installed packages *)
+type installed = { conf_ocaml : V.t list ; user : NV.Set.t }
+  (* we distinguish "conf-ocaml" from the [user] packages to remember that it needs to be treated specially *)
+
 (** {2 Repositories} *)
 
 (** OPAM repositories *)

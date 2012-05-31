@@ -34,6 +34,15 @@
 <pre><span class="keyword">module</span> Comp: <code class="code">sig</code> <a href="File.Comp.html">..</a> <code class="code">end</code></pre>Compiler version <code class="code">$opam/compilers/</code><br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
+<pre><span id="VALcreate_preinstalled"><span class="keyword">val</span> create_preinstalled</span> : <code class="type">Types.OCaml_V.t -> t</code></pre><div class="info">
+Create a pre-installed compiler description file<br>
+</div>
+<pre><span id="VALpreinstalled"><span class="keyword">val</span> preinstalled</span> : <code class="type">t -> bool</code></pre><div class="info">
+Is it a pre-installed compiler description file<br>
+</div>
+<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> Types.OCaml_V.t</code></pre><div class="info">
+Return the compiler name<br>
+</div>
 <pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type">t -> string</code></pre><div class="info">
 Return the url of the compiler<br>
 </div>

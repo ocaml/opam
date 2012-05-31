@@ -45,14 +45,20 @@ Root dir: <i>$opam/</i><br>
 <pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Main configuration file: <i>$opam/config</i><br>
 </div>
+<pre><span id="VALaliases"><span class="keyword">val</span> aliases</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+Compiler aliases<br>
+</div>
 <pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 OPAM files: <i>$opam/opam/$NAME.$VERSION.opam</i><br>
 </div>
-<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-Compiler files : <i>$opam/compilers/$OVERSION.comp</i><br>
+<pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+Compiler files: <i>$opam/compilers/$OVERSION.comp</i><br>
 </div>
-<pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Compiler files : <i>$opam/compilers/</i><br>
+<pre><span id="VALcompiler_dir"><span class="keyword">val</span> compiler_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Compiler files: <i>$opam/compilers/</i><br>
+</div>
+<pre><span id="VALcompiler_list"><span class="keyword">val</span> compiler_list</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.Set.t</code></pre><div class="info">
+All the compiler files<br>
 </div>
 <pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
 List all the available packages:

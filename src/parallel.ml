@@ -152,7 +152,11 @@ module Make (G : G) = struct
         
         (* Nothing more to do *)
         log "loop completed";
-        if !errors <> [] then raise (Errors !errors)
+        if !errors <> [] then begin
+          (* wait until every element in [pids] finishes before leaving *)
+          IntMap.iter (fun _ _ -> pids := IntMap.remove (fst (wait !pids)) !pids) !pids;
+          raise (Errors !errors)
+        end
 
       ) else if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
 

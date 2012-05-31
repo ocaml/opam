@@ -49,6 +49,9 @@ OPAM files
 <pre><span class="keyword">module</span> <a href="File.Descr.html">Descr</a>: <code class="code">sig</code> <a href="File.Descr.html">..</a> <code class="code">end</code></pre><div class="info">
 Package descriptions: <code class="code">$opam/descr/</code>
 </div>
+<pre><span class="keyword">module</span> <a href="File.Aliases.html">Aliases</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = (Alias.t * OCaml_V.t) list</code></pre><div class="info">
+Compiler aliases: <code class="code">$opam/aliases</code>
+</div>
 <pre><span class="keyword">module</span> <a href="File.Installed.html">Installed</a>: <code class="type"><a href="File.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = NV.Set.t</code></pre><div class="info">
 List of installed packages: <code class="code">$opam/$oversion/installed</code>
 </div>

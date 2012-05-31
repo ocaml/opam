@@ -344,8 +344,6 @@ module Alias: Abstract = Base
 (* OPAM version *)
 module OPAM_V: Abstract = Base
 
-
-
 (* Repositories *)
 
 (* OPAM repositories *)
@@ -398,7 +396,7 @@ end = struct
 end
 type repository = Repository.t
 
-
+type installed = { conf_ocaml : V.t list ; user : NV.Set.t }
 
 (* Variable names *)
 
