@@ -45,6 +45,14 @@ programs.
 ## Code style
 
 - Lines should be no longer than 80 characters
+- "open X" should be used only for:
+  - modules in libraries, that define a type with labels or constructors
+  - the xxxTypes module of the project
+- In toplevel definitions, all function arguments should be specified, i.e.
+    the arity of the function should be easily guessed syntactically
+   (after "let f x y z = ...;;", "let g = f 3;;" should be rewritten as
+     "let g y z = f 3 y z")
+
 
 ## GIT
 
