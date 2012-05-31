@@ -329,7 +329,7 @@ module OCaml_V: Abstract = Base
 (* OPAM version *)
 module OPAM_V: Abstract = Base
 
-
+type installed = { conf_ocaml : V.t list ; user : NV.Set.t }
 
 (* Repositories *)
 

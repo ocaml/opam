@@ -34,7 +34,7 @@ type t = {
   available: NV.Set.t;
 
   (* ~/.opam/$oversion/installed contents *)
-  installed: NV.Set.t;
+  installed: installed;
 
   (* ~/.opam/$oversion/reinstall contents *)
   reinstall: NV.Set.t;
@@ -61,7 +61,7 @@ let print_state t =
   log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
   log "REPO      : %s" (string_of_repos t.repositories);
   log "AVAILABLE : %s" (NV.string_of_set t.available);
-  log "INSTALLED : %s" (NV.string_of_set t.installed);
+  log "INSTALLED : %s" (NV.string_of_set (File.Installed.to_set t.installed));
   log "REINSTALL : %s" (NV.string_of_set t.reinstall);
   log "REPO_INDEX: %s" (string_of_nmap t.repo_index)
 
@@ -102,7 +102,7 @@ let find_repository t name =
   r
 
 let find_installed_package_by_name t name =
-  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
+  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) (File.Installed.to_set t.installed))
   with Not_found ->
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
@@ -142,10 +142,10 @@ let update () =
       NV.Set.iter (fun nv ->
         Globals.msg " - %s%s\n"
           (NV.to_string nv)
-          (if NV.Set.mem nv t.installed then " (*)" else "")
+          (if NV.Set.mem nv t.installed.user then " (*)" else "")
       ) updated;
       NV.Set.fold (fun nv reinstall ->
-        if NV.Set.mem nv t.installed then
+        if NV.Set.mem nv t.installed.user then
           NV.Set.add nv reinstall
         else
           reinstall
@@ -218,7 +218,9 @@ let install_initial_package () =
   (* installed *)
   let installed_p = Path.C.installed t.compiler in
   let installed = File.Installed.safe_read installed_p in
-  let installed = NV.Set.add nv installed in
+  let installed = 
+    assert (installed.conf_ocaml = []);
+    { installed with conf_ocaml = [version] } in
   File.Installed.write installed_p installed;
   (* stublibs *)
   let stublibs = Path.C.stublibs t.compiler in
@@ -301,7 +303,7 @@ let list () =
         then
           map, max_n, max_v
         else
-          let is_installed = NV.Set.mem nv installed in
+          let is_installed = NV.Set.mem nv (File.Installed.to_set installed) in
           let descr_f = File.Descr.read (Path.G.descr t.global nv) in
           let synopsis = File.Descr.synopsis descr_f in
           let map = N.Map.add name ((if is_installed then Some version else None), synopsis) map in
@@ -325,7 +327,7 @@ let info package =
   let t = load_state () in
 
   let o_v =
-    let installed = File.Installed.read (Path.C.installed t.compiler) in
+    let installed = File.Installed.to_set (File.Installed.read (Path.C.installed t.compiler)) in
     try Some (V.Set.choose_one (N.Map.find package (NV.to_map installed)))
     with Not_found -> None in
 
@@ -608,10 +610,10 @@ let debpkg_of_nv action t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let installed =
     if action = `update then
-      NV.Set.mem nv t.installed
+      File.Installed.mem nv t.installed
     else
       not (NV.Set.mem nv t.reinstall)
-      &&  NV.Set.mem nv t.installed in
+      &&  File.Installed.mem nv t.installed in
   File.OPAM.to_package opam installed
 
 let resolve action_k t request =
@@ -639,11 +641,13 @@ let resolve action_k t request =
         (* In case of errors, we try to keep the list of installed packages up-to-date *)
         List.iter
           (fun nv ->
-            if NV.Set.mem nv !installed then begin
+            if NV.Set.mem nv !installed.user then begin
               proceed_todelete t nv;
-              installed := NV.Set.remove nv !installed;
+              installed := { !installed with user = NV.Set.remove nv !installed.user };
               write_installed ()
-            end)
+            end
+            else
+              Globals.error_and_exit "Trying to remove a not existing package: %s" (N.to_string (NV.name nv)))
           sol.to_remove;
 
         (* Install or recompile some packages on the child process *)
@@ -661,10 +665,10 @@ let resolve action_k t request =
         | To_delete _    -> assert false
         | To_recompile _ -> ()
         | To_change (None, nv) ->
-            installed := NV.Set.add nv !installed;
+            installed := { !installed with user = NV.Set.add nv !installed.user };
             write_installed ()
         | To_change (Some o, nv)   ->
-            installed := NV.Set.add nv (NV.Set.remove o !installed);
+            installed := { !installed with user = NV.Set.add nv (NV.Set.remove o !installed.user) };
             write_installed () in
 
         let error n =
@@ -719,14 +723,17 @@ let install_nv_of_n t name =
 let install name = 
   log "install %s" (N.to_string name);
   let t = load_state () in
-  let map_installed = NV.to_map t.installed in
+  let map_installed = NV.to_map t.installed.user in
 
   (* Exit if the package is already installed *)
-  if N.Map.mem name map_installed then (
+  if name = File.Installed.conf_ocaml || N.Map.mem name map_installed then (
     Globals.msg
-      "Package %s is already installed (current version is %s)\n"
+      "Package %s is already installed%s\n"
       (N.to_string name)
-      (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
+      (if name = File.Installed.conf_ocaml then ""
+       else 
+          Printf.sprintf " (current version is %s)" 
+            (V.to_string (V.Set.choose_one (N.Map.find name map_installed))));
     Globals.exit 1
   );
 
@@ -736,7 +743,10 @@ let install name =
       (N.Map.bindings map_installed) in
 
   resolve `install t
-    { wish_install = vpkg_of_nv_eq (install_nv_of_n t name) :: List.map vpkg_of_nv_any map_installed
+    { wish_install = 
+        vpkg_of_nv_eq (install_nv_of_n t name) :: 
+        vpkg_of_nv_eq (File.Installed.get_conf t.installed) :: 
+        List.map vpkg_of_nv_any map_installed
     ; wish_remove = [] 
     ; wish_upgrade = [] }
 
@@ -745,7 +755,7 @@ let remove name =
   if name = N.of_string Globals.default_package then
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = load_state () in
-  let map_installed = NV.to_map t.installed in
+  let map_installed = NV.to_map t.installed.user in
   if not (N.Map.mem name map_installed) then
     Globals.error_and_exit "Package %s is not installed" (N.to_string name);
   let nv = NV.create name (V.Set.choose_one (N.Map.find name map_installed)) in
@@ -761,7 +771,7 @@ let remove name =
           accu
         else
           vpkg_of_nv_eq nv :: accu
-      ) [] (NV.Set.elements t.installed) in
+      ) [vpkg_of_nv_eq (File.Installed.get_conf t.installed)] (NV.Set.elements t.installed.user) in
 
   resolve `remove t 
     { wish_install
@@ -778,9 +788,9 @@ let upgrade () =
     let nv = NV.create name (V.Set.max_elt versions) in
     vpkg_of_nv_ge nv in
   resolve `upgrade t
-    { wish_install = []
+    { wish_install = [vpkg_of_nv_eq (File.Installed.get_conf t.installed)]
     ; wish_remove  = []
-    ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
+    ; wish_upgrade = List.map aux (NV.Set.elements t.installed.user) };
   Filename.remove (Path.C.reinstall t.compiler)
 
 let upload upload repo =
@@ -812,7 +822,7 @@ let upload upload repo =
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
   let universe =
-    Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements t.installed)) in
+    Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements (File.Installed.to_set t.installed))) in
   (* Compute the transitive closure of dependencies *)
   let pkg_of_name n = debpkg_of_nv `config t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
@@ -830,7 +840,7 @@ let config request =
         NV.Set.fold (fun nv l ->
           let file = Path.C.config t.compiler (NV.name nv) in
           (nv, File.Dot_config.safe_read file) :: l
-        ) t.installed [] in
+        ) (File.Installed.to_set t.installed) [] in
       let variables =
         List.fold_left (fun accu (nv, c) ->
           let name = NV.name nv in
@@ -1086,22 +1096,18 @@ let switch to_replicate oversion =
        - also attempt to replicate the previous state, if required *)
     (let t_new = load_state () in
      resolve `switch t_new
-       { wish_install = 
+       { wish_install = vpkg_of_nv_eq (File.Installed.get_conf t_new.installed) :: 
            List.map 
              (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
              (N.Map.bindings 
                 (NV.Set.fold
                    (fun nv map ->
                      let name, version = NV.name nv, NV.version nv in
-                     if name = N.of_string Globals.default_package then
-                       (* [Globals.default_package] has already been installed for this new version (automatically), we skip it *)
-                       map
-                     else
-                       N.Map.add name (try N.Map.find name map with Not_found -> V.Set.singleton version) map)
+                     N.Map.add name (try N.Map.find name map with Not_found -> V.Set.singleton version) map)
                    (NV.Set.union
-                      (if to_replicate then t.installed else NV.Set.empty)
+                      (if to_replicate then t.installed.user else NV.Set.empty)
                       (nv_to_install t_new))
-                   (NV.to_map t_new.installed)))
+                   (NV.to_map t_new.installed.user)))
        ; wish_remove = [] 
        ; wish_upgrade = [] });
   end

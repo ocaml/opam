@@ -72,9 +72,9 @@ end
 
 module X = struct
 
-module Installed = struct
+module Reinstall = struct
 
-  let internal = "installed"
+  let internal = "reinstall"
 
   type t = NV.Set.t
 
@@ -87,7 +87,7 @@ module Installed = struct
     List.iter (function
       | []              -> ()
       | [name; version] -> add (N.of_string name) (V.of_string version)
-      | _               -> Globals.error_and_exit "installed"
+      | _               -> Globals.error_and_exit "%s" internal
     ) lines;
     !map
 
@@ -100,17 +100,48 @@ module Installed = struct
 
 end
 
-module Reinstall = struct
+module Installed = struct
 
-  include Installed
+  type t = installed
 
-  let internal = "reinstall"
+  let empty = { conf_ocaml = [] ; user = Reinstall.empty }
+
+  let conf_ocaml = N.of_string Globals.default_package
+
+  let of_set set = 
+    let conf_ocaml, user = 
+      NV.Set.partition (fun nv -> NV.name nv = conf_ocaml) set in
+    
+    { conf_ocaml = List.map NV.version (NV.Set.elements conf_ocaml)
+    ; user }
+
+  let to_set t = 
+    List.fold_left
+      (fun set v -> NV.Set.add (NV.create conf_ocaml v) set) 
+      t.user
+      t.conf_ocaml
+
+  let get_conf t = 
+    match t.conf_ocaml with
+      | [x] -> NV.create conf_ocaml x
+      | [] -> raise Not_found
+      | _ -> assert false
+
+  let mem nv t = 
+    NV.Set.mem nv t.user
+    || NV.name nv = conf_ocaml && List.exists ((=) (NV.version nv)) t.conf_ocaml
+
+  let of_string f s = of_set (Reinstall.of_string f s)
+
+  let to_string f t = Reinstall.to_string f (to_set t)
+    
+  let internal = "installed"
 
 end
 
 module Updated = struct
 
-  include Installed
+  include Reinstall
 
   let internal = "updated"
 

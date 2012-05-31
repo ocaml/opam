@@ -128,8 +128,24 @@ module Descr: sig
 end
 
 (** List of installed packages: [$opam/$oversion/installed] *)
-module Installed: IO_FILE with type t = NV.Set.t
+module Installed: sig
+  include IO_FILE with type t = installed
 
+  (** Default package that is installed depending on the OCaml version set *)
+  val conf_ocaml: N.t
+
+  (** Return the current conf-ocaml (raise exceptions like [NV.Set.choose_one]) *)
+  val get_conf: t -> NV.t
+
+  (** Basic conversion. *)
+  val of_set: NV.Set.t -> t
+
+  (** Basic conversion. *)
+  val to_set: t -> NV.Set.t
+
+  (** Like [NV.Set.mem] (also take into account the [conf_ocaml]) *)
+  val mem: NV.t -> t -> bool
+end
 (** List of packages to reinstall: [$opam/$oversion/reinstall] *)
 module Reinstall: IO_FILE with type t = NV.Set.t
 
