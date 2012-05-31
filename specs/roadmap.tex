@@ -948,9 +948,9 @@ and the client state should be let in a consistent state.
 When the user wants to manage OPAM repositories, he should write:
 
 \begin{verbatim}
-    $ opam repository -list
-    $ opam repository -rm $REPO
-    $ opam repository -add [-kind $KIND] $REPO $ADRESS
+    $ opam remote -list
+    $ opam remote -rm $REPO
+    $ opam remote -add [-kind $KIND] $REPO $ADRESS
 \end{verbatim}
 
 \begin{itemize}
@@ -1311,8 +1311,6 @@ The syntax of {\tt .comp} files follows the one described in
 \item {\tt make} are the flags to pass to {\tt make}. 
   It must at least contain some target like {\tt world} or {\tt world.opt}.
 
-\item {\tt packages} is the list of packages
-
 \item {\tt bytecomp}, {\tt asmcomp}, {\tt bytelink} and {\tt asmlink}
   are the compilation and linking flags to pass to the OCaml
   compiler. They will be taken into account by the \verb+opam config+
@@ -1327,7 +1325,7 @@ The syntax of {\tt .comp} files follows the one described in
 \item {\tt requires} is a list of libraries and syntax extensions
   dependencies which will be added to every packages installed with
   this compiler. The libraries and syntax extensions should be present
-  in packages defined in {\tt packages}, othewise an error should be
+  in packages defined in {\tt packages}, otherwise an error should be
   thrown.
 
 \item {\tt pp} is the command to use with the {\tt -pp} command-line
