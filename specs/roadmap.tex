@@ -1298,6 +1298,7 @@ The syntax of {\tt .comp} files follows the one described in
     ?packages:  [ STRING+ ]
     ?requires:  [ STRING+ ]
     ?pp:        [ <ppflag>+ ]
+    ?preinstalled: BOOL
 
 <ppflag> := CAMLP4 { STRING+ }
           | STRING+
@@ -1352,6 +1353,8 @@ The syntax of {\tt .comp} files follows the one described in
   the {\tt camlp4} command-line accordingly. All the syntax extensions used
   should be present in {\tt packages}.
 
+\item {\tt preinstall} is {\tt true} when the version of the compiler available
+  in the path is the same as {\tt name}.
 \end{itemize}
 
 For instance the file, {\tt 3.12.1+memprof.comp} describes OCaml,
@@ -1384,29 +1387,36 @@ bytelink:     [ "-g" ]
 If the user wants to switch to an other compiler version, he should run:
 
 \begin{verbatim}
-    $ opam switch [-clone] $OVERSION
+    $ opam switch [-clone] [-alias $ALIAS] $OVERSION
 \end{verbatim}
 
 This command will:
 
 \begin{itemize}
-\item Look for an existing \verb+$opam/$OVERSION+ directory. 
+
+\item If \verb+$ALIAS+ is not set, set it to \verb+$OVERSION+
+
+\item Look for an existing \verb+$opam/$ALIAS+ directory. 
 
 \begin{itemize}
 \item If it
   exists, then change the {\tt ocaml-version} content to
-  \verb+$OVERSION+ in  \verb+$opam/config+.
+  \verb+$ALIAS+ in  \verb+$opam/config+.
 
 \item If it does not exist, look for an existing
   \verb+$opam/compilers/OVERSION.comp+. If the file does not exists,
   the command will fail with a well-defined error.
 
 \item If the file exist, then build the new compiler with the right
-  options (and pass \verb+--prefix $opam/$OVERSION+ to
+  options (and pass \verb+--prefix $opam/$ALIAS+ to
   \verb+./configure+) and initialize everything in \verb+$opam/+ 
   in a consistent state as if ``\verb+opam init+'' has just been called.
 
+\item Update the file \verb+$opam/aliases+ with the line
+  \verb+$ALIAS $OVERSION+
+
 \end{itemize}
+
 \item If the \verb+-clone+ option is set, the command will try to install
   the packages that were installed before switching 
   (that are not currently installed).
