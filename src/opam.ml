@@ -264,6 +264,7 @@ let remote =
 let switch = 
   let command : [`switch|`list] ref = ref `switch in
   let clone = ref false in
+  let alias = ref "" in
   let set c () = command := c in
 {
   name     = "switch";
@@ -273,13 +274,16 @@ let switch =
   specs    = [
     ("-clone" , Arg.Set clone        , " Try to keep the same installed packages");
     ("-list"  , Arg.Unit (set `list) , " List the available compiler descriptions");
+    ("-alias" , Arg.Set_string alias , " Set the compiler name");
   ];
   anon;
   main     = parse_args (fun args ->
     match !command, args with
     | `list  , []     -> Client.compiler_list ()
     | `switch, []     -> bad_argument "switch" "Compiler name is missing"
-    | `switch, [name] -> Client.switch !clone (OCaml_V.of_string name)
+    | `switch, [name] ->
+        let alias = if !alias = "" then name else !alias in
+        Client.switch !clone (OCaml_V.of_string alias) (OCaml_V.of_string name)
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 

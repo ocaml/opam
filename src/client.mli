@@ -52,10 +52,12 @@ val remove : N.t -> unit
 (** Manage remote repositories. Take the global file lock. *)
 val remote : remote -> unit
 
-(** [switch and_clone] switch to an OCaml compiler 
-    and clone at the end in case [and_clone] is [true].
-    Take the global file lock. *)
-val switch: bool -> OCaml_V.t -> unit
+(** [switch and_clone alias descr] switch to an OCaml compiler 
+    and clone at the end in case [and_clone] is [true]. It creates
+    {i $opam/$alias} if it does not exists by reading the contents
+    of {i $opam/compilers/$descr.comp}.
+    It takes the global file lock. *)
+val switch: bool -> OCaml_V.t -> OCaml_V.t -> unit
 
 (** [compiler_list] list the available compiler descriptions *)
 val compiler_list: unit -> unit

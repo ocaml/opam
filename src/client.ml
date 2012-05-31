@@ -1048,24 +1048,38 @@ let compiler_list () =
     Globals.msg "%-3s %s\n" exists (OCaml_V.to_string c)
   ) all 
   
-let switch clone oversion =
-  log "switch %B %s" clone (OCaml_V.to_string oversion);
+let switch clone alias oversion =
+  log "switch %B %s %s" clone (OCaml_V.to_string alias) (OCaml_V.to_string oversion);
   let t = load_state () in
 
   let f_init, nv_to_install =
-    let new_oversion = Path.C.create oversion in
-    if Dirname.exists (Path.C.root new_oversion) then
+
+    let path = Path.C.create alias in
+    let f_init  () = 
+      try init_ocaml path
+      with e -> 
+        (* restore the previous configuration *)
+        File.Config.write (Path.G.config t.global) t.config; 
+        Dirname.rmdir (Path.C.root path); 
+        raise e in
+
+    if Dirname.exists (Path.C.root path) then
       None, fun _ -> NV.Set.empty
+
+    else if oversion = OCaml_V.of_string Sys.ocaml_version then
+      (* The version of ocaml is the one being installed *)
+      Some f_init, fun _ -> NV.Set.empty
+
     else
       (* The chosen version does not exist. We build it. *)
       let comp = File.Comp.read (Path.G.compiler t.global oversion) in
       let comp_src = File.Comp.src comp in
-      let build_dir = Path.C.build_ocaml new_oversion in
+      let build_dir = Path.C.build_ocaml path in
       Run.download comp_src (Dirname.to_string build_dir);
       let err =
         Dirname.exec build_dir
           [ ( "./configure" :: File.Comp.configure comp )
-            @ [ "-prefix";  Dirname.to_string (Path.C.root new_oversion) ]
+            @ [ "-prefix";  Dirname.to_string (Path.C.root path) ]
               (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
@@ -1074,13 +1088,6 @@ let switch clone oversion =
           ; [ "make" ; "install" ]
           ] in
       if err = 0 then
-        let f_init  _ = 
-          try init_ocaml new_oversion
-          with e -> 
-            (* restore the previous configuration *)
-            File.Config.write (Path.G.config t.global) t.config; 
-            Dirname.rmdir (Path.C.root new_oversion); 
-            raise e in
         let nv_to_install t_new =
           List.fold_left 
             (fun set name -> NV.Set.add (nv_of_name t_new name) set) 
