@@ -1105,7 +1105,7 @@ let switch clone alias oversion =
         Some f_init, nv_to_install
       else
         (if not !Globals.debug then
-          Dirname.rmdir (Path.C.root new_oversion);
+          Dirname.rmdir (Path.C.root path);
          Globals.error_and_exit "compilation of OCaml failed (%d)" err) in
 
   (* [1/2] initialization: write the new version in the configuration file *)
