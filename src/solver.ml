@@ -122,6 +122,13 @@ type 'a internal_action =
   | I_to_delete of 'a
   | I_to_recompile of 'a
 
+let string_of_internal_action f = function
+  | I_to_change (None, p)   -> Printf.sprintf "Install: %s" (f p)
+  | I_to_change (Some o, p) ->
+      Printf.sprintf "Update: %s (Remove) -> %s (Install)" (f o) (f p)
+  | I_to_recompile p        -> Printf.sprintf "Recompile: %s" (f p)
+  | I_to_delete p           -> Printf.sprintf "Delete: %s" (f p)
+
 let action_map f = function
   | I_to_change (Some x, y) -> To_change (Some (f x), f y)
   | I_to_change (None, y)   -> To_change (None, f y)
@@ -419,9 +426,15 @@ struct
         | None   -> None
         | Some l ->
 
+            let l_s =
+              String.concat " "
+                (List.map (string_of_internal_action string_of_cudf_package)  l) in
+            log "SOLUTION: %s" l_s;
+
             (* Load an universe with all the optional dependencies *)
             let pkglist = List.map (extended_dependencies table) pkglist in
             let universe = Cudf.load_universe pkglist in
+            log "full-universe: %s" (string_of_universe universe);
 
             let l_del_p, l_del = 
               Utils.filter_map (function
