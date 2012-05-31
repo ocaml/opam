@@ -30,7 +30,8 @@ doc : documentation on the project
 - When possible, the following suffixes should be used :
    - xxxMisc.ml : functions that are generic enough to be useful for another
                   project
-   - xxxTypes.ml : all the types defined by the project
+   - xxxTypes.ml : all the types defined by the project. The ONLY functions
+        allowed in this file are conversion functions.
    - xxxGlobals.ml : global values of the program
    - xxxArgs.ml : the variables that store the arguments values
    - xxxMain.ml : definition of arguments, parsing and call
