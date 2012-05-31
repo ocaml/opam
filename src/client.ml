@@ -14,6 +14,7 @@
 (***********************************************************************)
 
 open Types
+open Utils
 
 let log fmt =
   Globals.log "CLIENT" fmt
@@ -92,7 +93,7 @@ let check () =
     Globals.error_and_exit
       "Cannot find %s. Have you run 'opam init first ?"
       !Globals.root_path
-  
+
 let find_repository_path t name =
   let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
   r
@@ -170,6 +171,16 @@ let update () =
         Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
     ) available_versions
   ) repo_index;
+  (* XXX: we could have a special index for compiler descriptions as
+  well, but that's become a bit too heavy *)
+  List.iter (fun (r,p) ->
+    let comps = Path.R.compiler_list p in
+    let comp_dir = Path.G.compiler_dir t.global in
+    OCaml_V.Set.iter (fun o ->
+      let comp_f = Path.R.compiler p o in
+      Filename.link_in comp_f comp_dir
+    ) comps
+  ) t.repositories;
   (* Check some consistency *)
   let available = Path.G.available t.global in
   let t = load_state () in
@@ -231,14 +242,12 @@ let install_initial_package () =
     (Dirname.to_string stublibs)
 
 
-let init_ocaml compiler = 
-  begin
-    File.Installed.write (Path.C.installed compiler) File.Installed.empty;
-    (* Update the configuration files *)
-    update (); (* WARNING we could be here inside a [Run.with_flock]. In this case, this [update] will fail to lock. *)
-    (* Install the initial package *)
-    install_initial_package ();
-  end
+let init_ocaml compiler =
+  File.Installed.write (Path.C.installed compiler) File.Installed.empty;
+  (* Update the configuration files *)
+  update ();
+  (* Install the initial package *)
+  install_initial_package ()
 
 let init repo =
   log "init %s" (Repository.to_string repo);
@@ -260,12 +269,12 @@ let init repo =
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
+    Dirname.mkdir (Path.G.compiler_dir root);
     init_ocaml compiler;
   with e ->
-    begin
+    if not !Globals.debug then
       Dirname.rmdir (Path.G.root root);
-      raise e;
-    end
+    raise e
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -288,17 +297,17 @@ let list () =
   let t = load_state () in
   (* Get all the installed packages *)
   let installed = File.Installed.read (Path.C.installed t.compiler) in
-  let map, max_n, max_v = 
+  let map, max_n, max_v =
     NV.Set.fold
       (fun nv (map, max_n, max_v) ->
         let name = NV.name nv in
         let version = NV.version nv in
         if
           N.Map.mem name map (* If the packet has been processed yet *)
-          && 
-          fst (N.Map.find name map) <> None 
+          &&
+          fst (N.Map.find name map) <> None
             (* If moreover the version processed was the version that is installed.
-               NB at the time of writing there is at most only 1 [version] 
+               NB at the time of writing there is at most only 1 [version]
                installed for a given [name]. *)
         then
           map, max_n, max_v
@@ -317,7 +326,7 @@ let list () =
     let version = match version with
     | None   -> s_not_installed
     | Some v -> V.to_string v in
-    Globals.msg "%s  %s  %s\n" 
+    Globals.msg "%s  %s  %s\n"
       (indent_left (N.to_string name) max_n)
       (indent_right version max_v)
       description) map
@@ -332,7 +341,7 @@ let info package =
     with Not_found -> None in
 
   let v_set =
-    let v_set = 
+    let v_set =
       try Path.G.available_versions t.global package
       with Not_found ->
         Globals.error_and_exit "unknown package %s" (N.to_string package) in
@@ -376,7 +385,7 @@ let info package =
        [ "description", File.Descr.full descr ]
     )
 
-let confirm fmt = 
+let confirm fmt =
   Printf.kprintf (fun msg ->
     Globals.msg "%s [Y/n] " msg;
     if not !Globals.yes then
@@ -388,7 +397,7 @@ let confirm fmt =
       true
   ) fmt
 
-let proceed_toinstall t nv = 
+let proceed_toinstall t nv =
   Globals.msg "Installing %s ...\n" (NV.to_string nv);
 
   let t = load_state () in
@@ -401,7 +410,7 @@ let proceed_toinstall t nv =
   let install = File.Dot_install.safe_read install_f in
 
   Dirname.chdir (Path.C.build t.compiler nv);
-  
+
   (* check that libraries and syntax extensions specified in .opam and
      .config are in sync *)
   let check kind config_sections opam_sections =
@@ -472,18 +481,18 @@ let proceed_toinstall t nv =
   (* .config *)
   File.Dot_config.write (Path.C.config t.compiler name) config;
 
-  (* lib *) 
+  (* lib *)
   let lib = Path.C.lib t.compiler name in
   List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
-  
-  (* bin *) 
+
+  (* bin *)
   List.iter (fun (src, dst) ->
     let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
     Filename.copy src dst
   ) (File.Dot_install.bin install);
-  
+
   (* misc *)
-  List.iter 
+  List.iter
     (fun (src, dst) ->
       if Filename.exists dst && confirm "Overwriting %s ?" (Filename.to_string dst) then
         Filename.copy src dst
@@ -507,7 +516,7 @@ let proceed_todelete t nv =
 
   (* Remove the libraries *)
   Dirname.rmdir (Path.C.lib t.compiler name);
-  
+
   (* Remove the binaries *)
   let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
@@ -569,7 +578,7 @@ let substitute_file t f =
 
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
-  (match nv_old with 
+  (match nv_old with
   | Some nv_old -> proceed_todelete t nv_old
   | None        -> ());
 
@@ -587,10 +596,12 @@ let proceed_tochange t nv_old nv =
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Call the build script and copy the output files *)
-  let commands = List.map (List.map (substitute_string t)) (File.OPAM.build opam) in
+  let commands = List.map (List.map (substitute_string t))
+    (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build commands in
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build
+    commands in
   if err = 0 then
     try proceed_toinstall t nv
     with e ->
@@ -621,7 +632,7 @@ let resolve action_k t request =
 
   match Solver.resolve (Solver.U l_pkg) request t.reinstall with
   | None     -> Globals.msg "No solution has been found.\n"
-  | Some sol -> 
+  | Some sol ->
 
       Globals.msg "The following solution has been found:\n";
       print_solution sol;
@@ -699,7 +710,10 @@ let vpkg_of_nv_any = vpkg_of_nv None
 let unknown_package name =
   Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
 
-let install_nv_of_n t name =
+(* transform a name into:
+   - <name, installed version> package
+   - <$n,$v> package, where name = $n.$v *)
+let nv_of_name t name =
   let available = NV.to_map (Path.G.available t.global) in
   if N.Map.mem name available then
     NV.create name (V.Set.max_elt (N.Map.find name available))
@@ -720,7 +734,7 @@ let install_nv_of_n t name =
       unknown_package sname
   )
 
-let install name = 
+let install name =
   log "install %s" (N.to_string name);
   let t = load_state () in
   let map_installed = NV.to_map t.installed.user in
@@ -743,11 +757,11 @@ let install name =
       (N.Map.bindings map_installed) in
 
   resolve `install t
-    { wish_install = 
-        vpkg_of_nv_eq (install_nv_of_n t name) :: 
-        vpkg_of_nv_eq (File.Installed.get_conf t.installed) :: 
+    { wish_install =
+        vpkg_of_nv_eq (nv_of_name t name) ::
+        vpkg_of_nv_eq (File.Installed.get_conf t.installed) ::
         List.map vpkg_of_nv_any map_installed
-    ; wish_remove = [] 
+    ; wish_remove = []
     ; wish_upgrade = [] }
 
 let remove name =
@@ -773,11 +787,11 @@ let remove name =
           vpkg_of_nv_eq nv :: accu
       ) [vpkg_of_nv_eq (File.Installed.get_conf t.installed)] (NV.Set.elements t.installed.user) in
 
-  resolve `remove t 
+  resolve `remove t
     { wish_install
     ; wish_remove  = [ (N.to_string name, None), None ]
     ; wish_upgrade = [] }
-      
+
 let upgrade () =
   log "upgrade";
   let t = load_state () in
@@ -870,7 +884,7 @@ let config request =
       Globals.msg "%s\n" (string_of_variable_contents contents)
 
   | Subst fs -> List.iter (substitute_file t) fs
-          
+
   | Includes (is_rec, names) ->
       let deps =
         if is_rec then
@@ -886,7 +900,7 @@ let config request =
   | Compil c ->
       let comp =
         let oversion = File.Config.ocaml_version t.config in
-        File.Comp.safe_read (Path.G.compilers t.global oversion) in
+        File.Comp.safe_read (Path.G.compiler t.global oversion) in
       let names =
         File.Comp.packages comp
         @ List.map Full_section.package c.options in
@@ -932,7 +946,7 @@ let config request =
           let sections = match Full_section.section s with
             | None   ->
                 let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-                File.Dot_config.Section.available config 
+                File.Dot_config.Section.available config
             | Some s -> [s] in
           List.iter (fun s ->
             Section.G.add_vertex graph s;
@@ -987,9 +1001,8 @@ let config request =
           let config = File.Dot_config.read (Path.C.config t.compiler name) in
           fn config s :: accu
         ) [] library_deps in
-      let strs = List.map (String.concat " ") strs in
-      let output = String.concat " " strs in
-      log "OUTPUT: %s" output;
+      let output = String.concat " " (List.flatten strs) in
+      log "OUTPUT: %S" output;
       Globals.msg "%s\n" output
 
 let remote action =
@@ -1029,97 +1042,107 @@ let remote action =
           Globals.error_and_exit "%s is not a remote index" n in
       update_config (List.filter ((!=) repo) repos)
 
-let switch to_replicate oversion =
-  log "switch %B %s" to_replicate (OCaml_V.to_string oversion);
+let compiler_list () =
+  log "compiler_list";
+  let t = load_state () in
+  let set = Path.G.compiler_list t.global in
+  let initial_version = OCaml_V.of_string Sys.ocaml_version in
+  let all = OCaml_V.Set.add initial_version set in
+  OCaml_V.Set.iter (fun c ->
+    let exists =
+      let dir = Path.C.root (Path.C.create c) in
+      if c = File.Config.ocaml_version t.config then "*"
+      else if Dirname.exists dir then "+"
+      else " " in
+    Globals.msg "%-3s %s\n" exists (OCaml_V.to_string c)
+  ) all 
+  
+let switch clone oversion =
+  log "switch %B %s" clone (OCaml_V.to_string oversion);
   let t = load_state () in
 
-  let f_init, nv_to_install = 
+  let f_init, nv_to_install =
     let new_oversion = Path.C.create oversion in
     if Dirname.exists (Path.C.root new_oversion) then
       None, fun _ -> NV.Set.empty
     else
       (* The chosen version does not exist. We build it. *)
-      let comp = File.Comp.read (Path.G.compilers t.global oversion) in
+      let comp = File.Comp.read (Path.G.compiler t.global oversion) in
       let comp_src = File.Comp.src comp in
-      let ocaml_tgz = 
-        Path.G.compilers_dir t.global // Printf.sprintf "%s%s" 
-          (OCaml_V.to_string oversion)
-          (let suff = ".tar.gz" in 
-           if Stdlib_filename.check_suffix comp_src suff then
-             suff
-           else
-             Globals.error_and_exit "Unknown file format (%s)" comp_src) in
-      let () = Repositories.Raw.rsync [`A ; `R] comp_src ocaml_tgz in
       let build_dir = Path.C.build_ocaml new_oversion in
-      let () = Filename.extract ocaml_tgz build_dir in
-      
-      match
+      Run.download comp_src (Dirname.to_string build_dir);
+      let err =
         Dirname.exec build_dir
           [ ( "./configure" :: File.Comp.configure comp )
             @ [ "-prefix";  Dirname.to_string (Path.C.root new_oversion) ]
-              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*) 
+              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
              discarded. *)
           ; ( "make" :: File.Comp.make comp )
           ; [ "make" ; "install" ]
-          ]
-      with
-      | 0 -> 
-          Some (fun _ -> try init_ocaml new_oversion with e -> 
-            begin 
-              File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
-              Dirname.rmdir (Path.C.root new_oversion); 
-              raise e;
-            end), 
-          fun t_new -> 
-            List.fold_left 
-              (fun set name -> NV.Set.add (install_nv_of_n t_new name) set) 
-              NV.Set.empty
-              (File.Comp.packages comp)
-      | error -> 
-          begin
-            Dirname.rmdir (Path.C.root new_oversion);
-            Globals.error_and_exit "compilation of OCaml failed (%d)" error;
-          end in
+          ] in
+      if err = 0 then
+        let f_init  _ = 
+          try init_ocaml new_oversion
+          with e -> 
+            (* restore the previous configuration *)
+            File.Config.write (Path.G.config t.global) t.config; 
+            Dirname.rmdir (Path.C.root new_oversion); 
+            raise e in
+        let nv_to_install t_new =
+          List.fold_left 
+            (fun set name -> NV.Set.add (nv_of_name t_new name) set) 
+            NV.Set.empty
+            (File.Comp.packages comp) in
+        Some f_init, nv_to_install
+      else
+        (if not !Globals.debug then
+          Dirname.rmdir (Path.C.root new_oversion);
+         Globals.error_and_exit "compilation of OCaml failed (%d)" err) in
 
-  begin
-    (* [1/2] initialization: write the new version in the configuration file *)
-    File.Config.write (Path.G.config t.global) (File.Config.with_ocaml_version t.config oversion);
+  (* [1/2] initialization: write the new version in the configuration file *)
+  File.Config.write
+    (Path.G.config t.global)
+    (File.Config.with_ocaml_version t.config oversion);
 
-    (* [2/2] initialization: initialize everything as if "opam init" has been called *)
-    (match f_init with
-      | None -> ()
-      | Some f -> f ());
+  (* [2/2] initialization: initialize everything as if "opam init" has been called *)
+  (match f_init with
+  | None -> ()
+  | Some f -> f ());
 
-    (* - install in priority packages specified in [nv_to_install]
-       - also attempt to replicate the previous state, if required *)
-    (let t_new = load_state () in
-     resolve `switch t_new
-       { wish_install = vpkg_of_nv_eq (File.Installed.get_conf t_new.installed) :: 
-           List.map 
-             (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
-             (N.Map.bindings 
-                (NV.Set.fold
-                   (fun nv map ->
-                     let name, version = NV.name nv, NV.version nv in
-                     N.Map.add name (try N.Map.find name map with Not_found -> V.Set.singleton version) map)
-                   (NV.Set.union
-                      (if to_replicate then t.installed.user else NV.Set.empty)
-                      (nv_to_install t_new))
-                   (NV.to_map t_new.installed.user)))
-       ; wish_remove = [] 
-       ; wish_upgrade = [] });
-  end
+  (* - install in priority packages specified in [nv_to_install]
+     - also attempt to replicate the previous state, if required *)
+  let t_new = load_state () in
+  let wish_install =
+    vpkg_of_nv_eq (File.Installed.get_conf t_new.installed) :: 
+    List.map 
+      (fun (n, v) -> vpkg_of_nv_any (NV.create n (V.Set.choose_one v)))
+      (N.Map.bindings 
+         (NV.Set.fold
+            (fun nv map ->
+              let name, version = NV.name nv, NV.version nv in
+              let version = 
+                try N.Map.find name map with Not_found -> V.Set.singleton version in
+              N.Map.add name version map)
+            (NV.Set.union
+               (if clone then t.installed.user else NV.Set.empty)
+               (nv_to_install t_new))
+            (NV.to_map t_new.installed.user))) in
 
+  resolve `switch t_new
+    { wish_install
+    ; wish_remove = [] 
+    ; wish_upgrade = [] }
 
-(** We protect each main functions with a lock depending on its access on some read/write data. *)
+(** We protect each main functions with a lock depending on its access
+on some read/write data. *)
 
-let list () = 
+let list () =
   check ();
   list ()
 
-let info package = 
+let info package =
   check ();
   info package
 

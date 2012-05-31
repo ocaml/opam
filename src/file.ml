@@ -324,6 +324,7 @@ module OPAM = struct
     build      : string list list;
     remove     : string list;
     depends    : Debian.Format822.vpkgformula;
+    depopts    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
     libraries  : section list;
     syntax     : section list;
@@ -338,6 +339,7 @@ module OPAM = struct
     build      = [];
     remove     = [];
     depends    = [];
+    depopts    = [];
     conflicts  = [];
     libraries  = [];
     syntax     = [];
@@ -355,6 +357,7 @@ module OPAM = struct
   let s_build       = "build"
   let s_remove      = "remove"
   let s_depends     = "depends"
+  let s_depopts     = "depopts"
   let s_conflicts   = "conflicts"
   let s_libraries   = "libraries"
   let s_syntax      = "syntax"
@@ -377,6 +380,7 @@ module OPAM = struct
     s_build;
     s_remove;
     s_depends;
+    s_depopts;
     s_conflicts;
     s_libraries;
     s_syntax;
@@ -405,17 +409,21 @@ module OPAM = struct
   (* XXX: Pre-encode the depends and conflict fields to avoid
      headaches when interfacing with the solver *)
   let lencode = List.map (fun ((n,a),c) -> (Common.CudfAdd.encode n,a), c)
+  let llencode = List.map lencode
 
   let default_package t =
+    let depopts =
+      string_of_value (File_format.make_cnf_formula (llencode t.depopts)) in
     { D.default_package with 
       D.name      = N.to_string t.name ;
       D.version   = V.to_string t.version ;
-      D.depends   = List.map lencode t.depends ;
-      D.conflicts = lencode t.conflicts }
+      D.depends   = llencode t.depends ;
+      D.conflicts = lencode t.conflicts ;
+      D.extras    = (s_depopts, depopts) :: D.default_package.D.extras }
 
   let to_package t ~installed =
     let p = default_package t in
-    if installed then 
+    if installed then
       { p with D.extras = (s_status, s_installed) :: p.D.extras }
     else
       p
@@ -434,6 +442,7 @@ module OPAM = struct
             Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
             Variable (s_build, make_list (make_list make_string) t.build);
             Variable (s_depends, make_cnf_formula t.depends);
+            Variable (s_depopts, make_cnf_formula t.depopts);
             Variable (s_conflicts, make_and_formula t.conflicts);
             Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
             Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
@@ -467,6 +476,7 @@ module OPAM = struct
         s s_build (parse_list (parse_list parse_command)) in
     let remove     = assoc_list s s_remove (parse_list parse_command) in
     let depends    = assoc_list s s_depends parse_cnf_formula in
+    let depopts    = assoc_list s s_depopts parse_cnf_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
@@ -476,7 +486,7 @@ module OPAM = struct
         | _              -> None
       ) s in
     { name; version; maintainer; substs; build; remove;
-      depends; conflicts; libraries; syntax; others }
+      depends; depopts; conflicts; libraries; syntax; others }
 end
 
 module Dot_install = struct
@@ -696,6 +706,7 @@ module Comp = struct
 
   type t = { 
     opam_version : OPAM_V.t ;
+    name         : OCaml_V.t ;
     src          : string ;
     patches      : string list ;
     configure    : string list ;
@@ -711,6 +722,7 @@ module Comp = struct
 
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
+    name = OCaml_V.of_string "<none>";
     src = "";
 
     patches   = [];
@@ -725,18 +737,20 @@ module Comp = struct
     pp        = None;
   }
 
-  let s_src = "src"
-  let s_patches = "patches"
+  let s_name      = "name"
+  let s_src       = "src"
+  let s_patches   = "patches"
   let s_configure = "configure"
-  let s_make = "make"
-  let s_bytecomp = "bytecomp"
-  let s_asmcomp  = "asmcomp"
-  let s_bytelink = "bytelink"
-  let s_asmlink  = "asmlink"
-  let s_packages = "packages"
-  let s_requires = "requires"
-  let s_pp = "pp"
+  let s_make      = "make"
+  let s_bytecomp  = "bytecomp"
+  let s_asmcomp   = "asmcomp"
+  let s_bytelink  = "bytelink"
+  let s_asmlink   = "asmlink"
+  let s_packages  = "packages"
+  let s_requires  = "requires"
+  let s_pp        = "pp"
 
+  let name t = t.name
   let configure t = t.configure
   let make t = t.make
   let src t = t.src
@@ -762,7 +776,8 @@ module Comp = struct
       
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
-    let src = assoc s s_src parse_string in 
+    let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
+    let src       = assoc s s_src parse_string in 
     let patches   = assoc_string_list s s_patches   in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
@@ -783,7 +798,7 @@ module Comp = struct
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
 
-    { opam_version; src; 
+    { opam_version; name; src;
       patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages;
       requires; pp;
     }
@@ -795,15 +810,18 @@ module Comp = struct
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [
-              Variable (s_patches  , make_list make_string s.patches);
-              Variable (s_configure, make_list make_string s.configure);
-              Variable (s_make     , make_list make_string s.make);
-              Variable (s_bytecomp , make_list make_string s.bytecomp);
-              Variable (s_asmcomp  , make_list make_string s.asmcomp);
-              Variable (s_bytelink , make_list make_string s.bytelink);
-              Variable (s_asmlink  , make_list make_string s.asmlink);
-              Variable (s_packages , make_list (N.to_string |> make_string) s.packages);
-              Variable (s_requires , make_list (Section.to_string |> make_string) s.requires);
+        Variable (s_name        , make_string (OCaml_V.to_string s.name));
+        Variable (s_src         , make_string s.src);
+        Variable (s_opam_version, make_string (OPAM_V.to_string s.opam_version));
+        Variable (s_patches     , make_list make_string s.patches);
+        Variable (s_configure   , make_list make_string s.configure);
+        Variable (s_make        , make_list make_string s.make);
+        Variable (s_bytecomp    , make_list make_string s.bytecomp);
+        Variable (s_asmcomp     , make_list make_string s.asmcomp);
+        Variable (s_bytelink    , make_list make_string s.bytelink);
+        Variable (s_asmlink     , make_list make_string s.asmlink);
+        Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
+        Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]

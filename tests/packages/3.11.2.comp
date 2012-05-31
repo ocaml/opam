@@ -1,3 +1,0 @@
-opam-version: "1"
-src: "/tmp/opam-archives/ocaml-3.11.2.tar.gz"
-make: ["world.opt"]

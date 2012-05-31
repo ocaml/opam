@@ -40,6 +40,12 @@ end
 
 (** {2 Filenames} *)
 
+(** Basenames *)
+module Basename: Abstract
+
+(** Shortcut to basename type *)
+type basename = Basename.t
+
 (** Absolute directory names *)
 module Dirname: sig
 
@@ -54,6 +60,9 @@ module Dirname: sig
   (** Create a directory *)
   val mkdir: t -> unit
 
+  (** List the directory *)
+  val list: t -> t list
+
   (** Execute a list of commands in a given directory *)
   val exec: t -> ?add_to_path:t list -> string list list -> int
 
@@ -63,6 +72,9 @@ module Dirname: sig
   (** Does the directory exists ? *)
   val exists: t -> bool
 
+  (** Return the deeper directory name *)
+  val basename: t -> basename
+
 end
 
 (** Shortcut to directory type *)
@@ -70,12 +82,6 @@ type dirname = Dirname.t
 
 (** Concatenate a directory and a string *)
 val (/): dirname -> string -> dirname
-
-(** Basenames *)
-module Basename: Abstract
-
-(** Shortcut to basename type *)
-type basename = Basename.t
 
 (** Raw file contents *)
 module Raw: Abstract

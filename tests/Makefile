@@ -18,7 +18,7 @@ BINARIES  = opam opam-server \
 	    opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
 	    opam-server-init opam-server-update opam-server-download opam-server-upload \
 	    opam-git-init opam-git-update opam-git-download opam-git-upload
-PACKAGES  = P1-1 P1-2 P2 P3 P4
+PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
@@ -28,15 +28,20 @@ BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
-.PHONY: fresh init upload list install upload-new upgrade downgrade remove switch
+.PHONY: all rsync server git
 
-all:
+all: rsync server git
+	@
+
+run:
 	$(MAKE) fresh && \
 	$(MAKE) binaries && \
 	$(MAKE) init && \
 	$(MAKE) list && \
 	$(MAKE) upload && \
 	$(MAKE) install-remove && \
+	$(MAKE) list && \
+	$(MAKE) install-opt && \
 	$(MAKE) list && \
 	$(MAKE) install && \
 	$(MAKE) list && \
@@ -47,16 +52,19 @@ all:
 	$(MAKE) downgrade && \
 	$(MAKE) list 
 
+rsync:
+	$(MAKE) REPOKIND=rsync run
+
 server:
 	$(MAKE) fresh
 	$(MAKE) binaries
 	rm -rf $(OPAM_SERVER_ROOT)
 	($(ENV) opam-server --root $(OPAM_SERVER_ROOT) & \
-	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) all \
+	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) run \
 	  && killall opam-server || killall opam-server))
 
 git:
-	$(MAKE) REPOKIND=git all
+	$(MAKE) REPOKIND=git run
 
 $(BINARIES_): $(BUILDS)
 	mkdir -p $(BIN)
@@ -67,16 +75,12 @@ $(BINARIES_): $(BUILDS)
 binaries: $(BINARIES_)
 
 init:
-ifeq ($(REPOKIND),rsync)
-	mkdir -p $(OPAM_REPO)
-	mkdir $(OPAM_REPO)/opam
-	mkdir $(OPAM_REPO)/descr
-endif
-ifeq ($(REPOKIND), git)
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
 	mkdir $(OPAM_REPO)/opam
 	mkdir $(OPAM_REPO)/descr
+	mkdir $(OPAM_REPO)/compilers
+ifeq ($(REPOKIND), git)
 	mkdir $(OPAM_REPO)/url
 	cd $(OPAM_REPO) && git init && \
 	  touch README && git add README && \
@@ -102,15 +106,23 @@ ifeq ($(REPOKIND), git)
 	cp packages/P4/README     $(OPAM_REPO)/descr/P4.1
 	echo '$(OPAM_GIT)/P4'   > $(OPAM_REPO)/url/P4.1
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4"
+	cp packages/P5.opam       $(OPAM_REPO)/opam/P5.1.opam
+	cp packages/P5/README     $(OPAM_REPO)/descr/P5.1
+	echo '$(OPAM_GIT)/P5'   > $(OPAM_REPO)/url/P5.1
+	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P5"
+	cp compilers/*            $(OPAM_REPO)/compilers/
+	cd $(OPAM_REPO)/compilers && git add * && git commit -a -m "Adding compilers"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
 	mkdir $(OPAM_GIT)/P1-1 && cp packages/P1-1/* $(OPAM_GIT)/P1-1/
 	mkdir $(OPAM_GIT)/P2   && cp packages/P2/*   $(OPAM_GIT)/P2/
 	mkdir $(OPAM_GIT)/P3   && cp packages/P3/*   $(OPAM_GIT)/P3/
 	mkdir $(OPAM_GIT)/P4   && cp packages/P4/*   $(OPAM_GIT)/P4/
+	mkdir $(OPAM_GIT)/P5   && cp packages/P5/*   $(OPAM_GIT)/P5/
 	cd $(OPAM_GIT)/P1-1 && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P2   && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P3   && git init && git add * && git commit -a -m "initial commit"
 	cd $(OPAM_GIT)/P4   && git init && git add * && git commit -a -m "initial commit"
+	cd $(OPAM_GIT)/P5   && git init && git add * && git commit -a -m "initial commit"
 else
 	cd packages && \
 	$(OPAM) upload -opam P1-1.opam -descr P1-1/README -archive P1-1.tar.gz -repo $(REPO)
@@ -120,7 +132,10 @@ else
 	$(OPAM) upload -opam P3.opam -descr P3/README -archive P3.tar.gz -repo $(REPO)
 	cd packages && \
 	$(OPAM) upload -opam P4-1.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
+	cd packages && \
+	$(OPAM) upload -opam P5.opam -descr P5/README -archive P5.tar.gz -repo $(REPO)
 endif
+	cp compilers/* $(OPAM_REPO)/compilers/
 	$(OPAM) update # update the list of available packages with the one being updated
 
 list:
@@ -128,6 +143,13 @@ list:
 
 install-remove:
 	cd packages && $(OPAM) install P1
+	cd packages && $(OPAM) remove P1
+
+install-opt:
+	cd packages && $(OPAM) install P5
+	cd packages && $(OPAM) install P2
+	cd packages && $(OPAM) remove P5
+	cd packages && $(OPAM) remove P2
 	cd packages && $(OPAM) remove P1
 
 install:
@@ -164,10 +186,13 @@ downgrade:
 	$(OPAM) install P4.2
 
 switch:
-	mkdir -p /tmp/opam-archives && wget -P /tmp/opam-archives -qN http://caml.inria.fr/pub/distrib/ocaml-3.11/ocaml-3.11.2.tar.gz
-	mkdir -p $(OPAM_ROOT)/compilers
-	cp packages/3.11.2.comp $(OPAM_ROOT)/compilers
-	$(OPAM) switch 3.11.2
+	$(MAKE) fresh
+	$(MAKE) binaries
+	$(MAKE) init
+	$(MAKE) upload
+	$(MAKE) install
+	$(OPAM) switch -list
+	$(OPAM) switch -clone 3.12.1-byte
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz

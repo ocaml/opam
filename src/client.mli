@@ -56,3 +56,6 @@ val remote : remote -> unit
     and clone at the end in case [and_clone] is [true].
     Take the global file lock. *)
 val switch: bool -> OCaml_V.t -> unit
+
+(** [compiler_list] list the available compiler descriptions *)
+val compiler_list: unit -> unit

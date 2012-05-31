@@ -14,6 +14,7 @@
 (***********************************************************************)
 
 open Types
+open Utils
 
 let log fmt = Globals.log "PATH" fmt
 
@@ -22,9 +23,26 @@ let available dir =
   let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
   List.fold_left (fun set file ->
     match NV.of_filename file with
-    | None    -> log "%s is not a valid package filename!" (Filename.to_string file); set
+    | None    ->
+        log "%s is not a valid package filename!" (Filename.to_string file);
+        set
     | Some nv -> NV.Set.add nv set
   ) NV.Set.empty files
+
+let compiler_list dir =
+  if Dirname.exists dir then (
+    let files = Filename.list dir in
+    let files = List.filter (fun f -> Filename.check_suffix f ".comp") files in
+    let l =
+      List.map
+        (Filename.chop_extension
+         |> Filename.basename
+         |> Basename.to_string
+         |> OCaml_V.of_string)
+        files in
+    OCaml_V.Set.of_list l
+  ) else
+    OCaml_V.Set.empty
 
 let versions nvset =
   NV.Set.fold (fun nv vset -> V.Set.add (NV.version nv) vset) nvset V.Set.empty
@@ -45,9 +63,11 @@ module G = struct
 
   let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
 
-  let compilers_dir t = t / "compilers"
+  let compiler_dir t = t / "compilers"
 
-  let compilers t ov = compilers_dir t // (OCaml_V.to_string ov ^ ".comp")
+  let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
+
+  let compiler_list t = compiler_list (compiler_dir t)
 
   let available t = available (opam_dir t)
 
@@ -157,5 +177,11 @@ module R = struct
   let upload_descr t nv = upload_descr_dir t // NV.to_string nv
 
   let upload_archives t nv = upload_archives_dir t // (NV.to_string nv ^ ".tar.gz")
+
+  let compiler_dir t = t / "compilers"
+
+  let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
+
+  let compiler_list t = compiler_list (compiler_dir t)
 
 end

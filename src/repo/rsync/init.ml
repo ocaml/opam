@@ -11,4 +11,5 @@ let remote_address = Sys.argv.(1)
 let () =
   Run.mkdir "opam";
   Run.mkdir "descr";
-  Run.mkdir "archives"
+  Run.mkdir "archives";
+  Run.mkdir "compilers"

@@ -43,7 +43,28 @@ Options to give to the "./configure" command<br>
 <pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">t -> string list</code></pre><div class="info">
 Options to give to the "make" command<br>
 </div>
-<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type">t -> string list</code></pre><div class="info">
+<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type">t -> <a href="Types.html#TYPEname">Types.name</a> list</code></pre><div class="info">
 Packages to install immediately after the creation of OCaml<br>
+</div>
+<pre><span id="VALasmlink"><span class="keyword">val</span> asmlink</span> : <code class="type">t -> string list</code></pre><div class="info">
+Linking options to give to the native code compiler<br>
+</div>
+<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> string list</code></pre><div class="info">
+Compilation options to give to the native code compiler<br>
+</div>
+<pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> string list</code></pre><div class="info">
+Linking options to give to the bytecode compiler<br>
+</div>
+<pre><span id="VALbytecomp"><span class="keyword">val</span> bytecomp</span> : <code class="type">t -> string list</code></pre><div class="info">
+Compilation options to give to the bytecode compiler<br>
+</div>
+<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> string list</code></pre><div class="info">
+Linking options to give to the native code compiler<br>
+</div>
+<pre><span id="VALrequires"><span class="keyword">val</span> requires</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> list</code></pre><div class="info">
+Libraries to link with<br>
+</div>
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">t -> <a href="Types.html#TYPEppflag">Types.ppflag</a> option</code></pre><div class="info">
+Preprocessing options<br>
 </div>
 </body></html>

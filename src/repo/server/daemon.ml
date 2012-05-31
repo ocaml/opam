@@ -15,6 +15,7 @@
 
 open Protocol
 open Types
+open Utils
 
 let log fmt = Globals.log "DAEMON" fmt
 
@@ -100,6 +101,15 @@ let process_request id = function
           Error (n ^ ": wrong key")
       else
         Error (n ^ ": unknown package")
+  | GetCompilers ->
+      log "getCompilers";
+      let t = load_state () in
+      let set = Path.G.compiler_list t.global in
+      let list = OCaml_V.Set.elements set in
+      let files = List.map (Path.G.compiler t.global) list in
+      let contents =
+        List.map (File.Comp.read |> File.Comp.to_raw |> Raw.to_string) files in
+      Compilers contents
 
 let process (stdin, stdout) fn =
  process_server (stdin, stdout) fn

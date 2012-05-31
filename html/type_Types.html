@@ -700,6 +700,7 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;full_variable&nbsp;=&nbsp;<span class="constructor">Types</span>.<span class="constructor">Full_variable</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;variable_contents&nbsp;=&nbsp;<span class="constructor">B</span>&nbsp;<span class="keyword">of</span>&nbsp;bool&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">S</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_variable_contents&nbsp;:&nbsp;<span class="constructor">Types</span>.variable_contents&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ppflag&nbsp;=&nbsp;<span class="constructor">Camlp4</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Cmd</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;upload&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;opam&nbsp;:&nbsp;<span class="constructor">Types</span>.filename;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;descr&nbsp;:&nbsp;<span class="constructor">Types</span>.filename;<br>

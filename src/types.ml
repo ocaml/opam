@@ -41,15 +41,20 @@ end
 
 (* Filenames *)
 
+(* Basenames *)
+module Basename: Abstract = Base
+type basename = Basename.t
+
 (* Absolute directory names *)
 module Dirname: sig
   include Abstract
   val cwd: unit -> t
   val rmdir: t -> unit
   val mkdir: t -> unit
+  val list: t -> t list
   val exec: t -> ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
-  val basename: t -> string
+  val basename: t -> basename
   val exists: t -> bool
 end = struct
 
@@ -67,6 +72,10 @@ end = struct
   let mkdir dirname =
     Run.mkdir (to_string dirname)
 
+  let list d =
+    let fs = Run.directories (to_string d) in
+    List.map of_string fs
+
   let exec dirname ?(add_to_path = []) cmds =
     Run.in_dir (to_string dirname) 
       (fun () -> 
@@ -78,17 +87,13 @@ end = struct
     Run.chdir (to_string dirname)
 
   let basename dirname =
-    Filename.basename (to_string dirname)
+    Basename.of_string (Filename.basename (to_string dirname))
 
   let exists dirname =
     Sys.file_exists (to_string dirname)
 end
     
 type dirname = Dirname.t
-
-(* Basenames *)
-module Basename: Abstract = Base
-type basename = Basename.t
 
 (* Raw file contents *)
 module Raw: Abstract = Base
@@ -282,7 +287,7 @@ end = struct
       None
 
   let of_dirname d =
-    check (Dirname.basename d)
+    check (Basename.to_string (Dirname.basename d))
 
   let of_dpkg d =
     { name    = N.of_string d.Debian.Packages.name;
@@ -295,7 +300,7 @@ end = struct
         (pkg.Cudf.package, pkg.Cudf.version) in
     { name    = N.of_string (Common.CudfAdd.decode pkg.Cudf.package);
       version = V.of_string real_version; }
-
+    
   let to_string t =
     Printf.sprintf "%s%c%s" (N.to_string t.name) sep (V.to_string t.version)
 

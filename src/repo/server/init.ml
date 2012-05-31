@@ -10,4 +10,5 @@ let () =
   Run.mkdir "opam";
   Run.mkdir "descr";
   Run.mkdir "archives";
+  Run.mkdir "compilers";
   Run.mkdir "keys"

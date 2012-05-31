@@ -32,8 +32,9 @@ open File_format
 %left STRING IDENT BOOL SYMBOL
 %left COLON
 
-%start main
+%start main value
 %type <string -> File_format.file> main
+%type <File_format.value> value
 
 %%
 

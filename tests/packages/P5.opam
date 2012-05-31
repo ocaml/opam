@@ -1,0 +1,11 @@
+(* API version *)
+opam-version: "1"
+
+package "P5" {
+
+  version: "1"
+  maintainer: "contact@ocamlpro.com"
+  depends: [ "P1" ]
+  depopts: [ "P2" ]
+
+}

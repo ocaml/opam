@@ -34,3 +34,6 @@ val new_package: Unix.inet_addr -> File.OPAM.t -> File.Descr.t -> raw -> Key.t
 
 (** Upload a new package version *)
 val new_version: Unix.inet_addr -> File.OPAM.t -> File.Descr.t -> raw -> Key.t -> unit
+
+(** Get the compiler description files *)
+val get_compilers: Unix.inet_addr -> File.Comp.t list

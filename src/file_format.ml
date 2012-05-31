@@ -75,17 +75,17 @@ let invalid_fields items fields =
     | Section s     -> List.fold_left aux accu s.items in
   List.fold_left aux [] items
 
-let kind = function
-  | Bool _   -> "bool"
-  | Ident _  -> "ident"
-  | Symbol _ -> "symbol"
-  | String _ -> "string"
-  | List _   -> "list"
-  | Group _  -> "group"
-  | Option _ -> "option"
+let rec kind = function
+  | Bool b   -> Printf.sprintf "bool(%b)" b
+  | Ident i  -> Printf.sprintf "ident(%s)" i
+  | Symbol s -> Printf.sprintf "symbol(%s)" s
+  | String s -> Printf.sprintf "string(%S)" s
+  | List l   -> Printf.sprintf "list(%s)" (kinds l)
+  | Group g  -> Printf.sprintf "group(%s)" (kinds g)
+  | Option(o,l) -> Printf.sprintf "option(%s,%s)" (kind o) (kinds l)
 
-let kinds l =
-  Printf.sprintf "[%s]" (String.concat "; " (List.map kind l))
+and kinds l =
+  Printf.sprintf "{%s}" (String.concat " " (List.map kind l))
 
 (* Base parsing functions *)
 let parse_bool = function

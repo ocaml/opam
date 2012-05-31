@@ -110,6 +110,9 @@ module OPAM: sig
   (** Convert to Debian packages to feed the solver *)
   val to_package: t -> installed:bool -> Debian.Packages.package
 
+  (** deptopts (optional dependencies) string *)
+  val s_depopts: string
+
 end
 
 (** Package descriptions: [$opam/descr/] *)
@@ -156,6 +159,9 @@ module Updated: IO_FILE with type t = NV.Set.t
 module Comp : sig
 
   include IO_FILE
+
+  (** Return the compiler name *)
+  val name: t -> OCaml_V.t
 
   (** Return the url of the compiler *)
   val src: t -> string

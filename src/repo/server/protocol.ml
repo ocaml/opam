@@ -27,6 +27,7 @@ type client_to_server =
   | NewVersion of string (* name *) * string (* version *)
                 * string (* opam *) * string (* descr *)
                 * string (* archive *) * string (* key *)
+  | GetCompilers
 
 type server_to_client =
   | ServerVersion of string (* server version *)
@@ -37,6 +38,7 @@ type server_to_client =
   | Key           of string (* key *)
   | OK
   | Error         of string (* server error *)
+  | Compilers     of string list (* file contents for compiler descriptions *)
 
 let default_port = 9999
 
@@ -108,6 +110,7 @@ module Client_to_server = struct
     | GetArchive _    -> pack_byte chan 4
     | NewPackage _    -> pack_byte chan 5
     | NewVersion _    -> pack_byte chan 6
+    | GetCompilers    -> pack_byte chan 7
 
   let pack_args chan = function
     | ClientVersion v -> pack_string chan v
@@ -117,6 +120,7 @@ module Client_to_server = struct
     | GetArchive (n,v)-> pack_strings chan [n;v]
     | NewPackage (n,v,o,d,a) -> pack_strings chan [n;v;o;d;a]
     | NewVersion (n,v,o,d,a,k) -> pack_strings chan [n;v;o;d;a;k]
+    | GetCompilers -> ()
 
   let to_channel chan t =
     pack_header chan t;
@@ -153,8 +157,8 @@ module Client_to_server = struct
         let a = unpack_string chan in
         let k = unpack_string chan in
         NewVersion (n, v, o, d, a, k)
-    | i ->
-        raise (Bad_packet i)
+    | 7 -> GetCompilers
+    | i -> raise (Bad_packet i)
 
 end
 
@@ -169,14 +173,18 @@ module Server_to_client = struct
     | Key _           -> pack_byte chan 5
     | OK              -> pack_byte chan 6
     | Error _         -> pack_byte chan 7
+    | Compilers _     -> pack_byte chan 8
+
+  let pack_pair chan (n,v) =
+    pack_string chan n;
+    pack_string chan v
+
+  let pack_list chan f l =
+    pack_int chan (List.length l);
+    List.iter (f chan) l
 
   let pack_args chan = function
-    | PackageList l ->
-        let pack_pair (n,v) =
-          pack_string chan n;
-          pack_string chan v in
-        pack_int chan (List.length l);
-        List.iter pack_pair l
+    | PackageList l -> pack_list chan pack_pair l
     | ServerVersion s
     | OPAM s
     | Descr s
@@ -184,29 +192,35 @@ module Server_to_client = struct
     | Key s
     | Error s -> pack_string chan s
     | OK -> ()
+    | Compilers l -> pack_list chan pack_string l
 
   let to_channel chan t =
     pack_header chan t;
     pack_args chan t
 
+  let unpack_list chan f =
+    let n = unpack_int chan in
+    let rec aux accu = function
+      | 0 -> List.rev accu
+      | k -> aux (f chan :: accu) (k-1) in
+    aux [] n
+
+  let unpack_pair chan =
+    let n = unpack_string chan in
+    let v = unpack_string chan in
+    (n, v)
+
   let of_channel chan =
     match unpack_byte chan with
     | 0 -> ServerVersion (unpack_string chan)
-    | 1 ->
-        let n = unpack_int chan in
-        let rec aux accu = function
-          | 0 -> List.rev accu
-          | k ->
-              let n = unpack_string chan in
-              let v = unpack_string chan in
-              aux ((n, v) :: accu) (k-1) in
-        PackageList (aux [] n)
+    | 1 -> PackageList (unpack_list chan unpack_pair)
     | 2 -> OPAM (unpack_string chan)
     | 3 -> Descr (unpack_string chan)
     | 4 -> Archive (unpack_string chan)
     | 5 -> Key (unpack_string chan)
     | 6 -> OK
     | 7 -> Error (unpack_string chan)
+    | 8 -> Compilers (unpack_list chan unpack_string)
     | i -> raise (Bad_packet i)
 end
 

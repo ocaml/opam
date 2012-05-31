@@ -76,8 +76,10 @@ let write file contents =
 let cwd = Unix.getcwd
 
 let chdir dir =
-(*   log "chdir %s" dir; *)
-  Unix.chdir dir
+  if Sys.file_exists dir then
+    Unix.chdir dir
+  else
+    Globals.error_and_exit "%s does not exists!" dir
 
 let in_dir dir fn =
   let cwd = Unix.getcwd () in
@@ -184,12 +186,12 @@ let run_process ?(add_to_path = []) = function
       let name = log_file () in
       mkdir (Filename.dirname name);
       let str = String.concat " " (cmd :: args) in
-      log "cwd=%s path=%s %s" (Unix.getcwd ()) path str;
+      log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
         Globals.error "Command %S failed (see %s.{info,err,out})" str name;
         List.iter (Globals.error "%s") r.Process.r_stderr;
-      ) else
+      ) else if not !Globals.debug then
         Process.clean_files r;
       r
 
@@ -301,7 +303,6 @@ let funlock () =
   end else
     Globals.error_and_exit "Cannot find %s" file
 
-
 let with_flock f x =
   try
     flock ();
@@ -311,3 +312,16 @@ let with_flock f x =
   with e ->
     funlock ();
     raise e
+
+(* Only used by the compiler switch stuff *)
+let download src dst =
+  if Filename.check_suffix src "tar.gz"
+  || Filename.check_suffix src "tar.bz2" then
+    let cmd = match Globals.os with
+      | Globals.Darwin -> "ftp"
+      | _              -> "wget" in
+    let e = in_dir tmp_dir (fun () -> command [ cmd; src ]) in
+    if e = 0 then
+      extract (tmp_dir / Filename.basename src) dst
+    else
+      Globals.error_and_exit "Cannot download %s" src

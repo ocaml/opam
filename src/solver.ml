@@ -122,6 +122,13 @@ type 'a internal_action =
   | I_to_delete of 'a
   | I_to_recompile of 'a
 
+let string_of_internal_action f = function
+  | I_to_change (None, p)   -> Printf.sprintf "Install: %s" (f p)
+  | I_to_change (Some o, p) ->
+      Printf.sprintf "Update: %s (Remove) -> %s (Install)" (f o) (f p)
+  | I_to_recompile p        -> Printf.sprintf "Recompile: %s" (f p)
+  | I_to_delete p           -> Printf.sprintf "Delete: %s" (f p)
+
 let action_map f = function
   | I_to_change (Some x, y) -> To_change (Some (f x), f y)
   | I_to_change (None, y)   -> To_change (None, f y)
@@ -315,7 +322,12 @@ struct
     module PG_dfs = Make_fs (Graph.Traverse.Dfs (PG))
  *)
 
-  module O_pkg = struct type t = Cudf.package let compare = compare end
+  module O_pkg = struct
+    type t = Cudf.package
+    let summary pkg = pkg.Cudf.package, pkg.Cudf.version
+    let compare pkg1 pkg2 =
+      compare (summary pkg1) (summary pkg2)
+  end
   module PkgMap = Map.Make (O_pkg)
   module PkgSet = Set.Make (O_pkg)
 
@@ -327,8 +339,17 @@ struct
        Defaultgraphs.PackageGraph.D.output_graph stdout g; *)
     g
 
-  let cudfpkg_of_debpkg table = List.map (Debian.Debcudf.tocudf table)
-      
+  let tocudf table pkg =
+    let options = {
+      Debian.Debcudf.default_options with
+        Debian.Debcudf.extras_opt = [
+          File.OPAM.s_depopts, (File.OPAM.s_depopts, `String None)
+        ]
+    } in
+    Debian.Debcudf.tocudf ~options table pkg
+
+  let cudfpkg_of_debpkg table = List.map (tocudf table)
+
   let get_table l_pkg_pb f = 
     let table = Debian.Debcudf.init_tables l_pkg_pb in
     let v = f table (cudfpkg_of_debpkg table l_pkg_pb) in
@@ -344,7 +365,7 @@ struct
     get_table l_pkg_pb
       (fun table pkglist ->
         let pkg_set = List.fold_left
-          (fun accu pkg -> PkgSet.add (Debian.Debcudf.tocudf table pkg) accu)
+          (fun accu pkg -> PkgSet.add (tocudf table pkg) accu)
           PkgSet.empty
           pkg_l in
         let g = f_direction (dep_reduction pkglist) in
@@ -369,14 +390,45 @@ struct
   let filter_backward_dependencies = filter_dependencies (fun x -> x)
   let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
+  (* Add the optional dependencies to the list of dependencies *)
+  (* The dependencies are encoded in the pkg_extra of cudf packages,
+     as a raw string. So we need to parse the string and convert it
+     to cudf list of package dependencies.
+     NOTE: the cudf encoding (to replace '_' by '%5f' is done in
+     file.ml when we create the debian package. It could make sense
+     to do it here. *)
+  let extended_dependencies table pkg =
+    let opt = File.OPAM.s_depopts in
+    if List.mem_assoc opt pkg.Cudf.pkg_extra then
+      match List.assoc opt pkg.Cudf.pkg_extra with
+      | `String s ->
+          let deps = File_format.parse_cnf_formula
+            (Parser.value Lexer.token (Lexing.from_string s)) in
+          let deps = Debian.Debcudf.lltocudf table deps in
+          { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
+      | _ -> assert false
+    else
+      pkg
+
   let resolve (U l_pkg_pb) req reinstall =
+    (* filter-out the default package from the universe *)
+    let l_pkg_pb =
+      List.filter
+        (fun pkg -> pkg.Debian.Packages.name <> Globals.default_package)
+        l_pkg_pb in
+    let filter ((n,_),_) = n <> Globals.default_package in
+    let req = {
+      wish_install = List.filter filter req.wish_install;
+      wish_remove  = List.filter filter req.wish_remove;
+      wish_upgrade = List.filter filter req.wish_upgrade;
+    } in
     log "universe=%s request=<%s>"
       (string_of_packages l_pkg_pb)
       (string_of_request req);
     get_table l_pkg_pb 
       (fun table pkglist ->
         let package_map pkg = NV.of_cudf table pkg in
-        let universe = Cudf.load_universe pkglist in 
+        let universe = Cudf.load_universe pkglist in
         let sol_o =
           CudfDiff.resolve_diff universe 
             (request_map
@@ -389,6 +441,16 @@ struct
         match sol_o with
         | None   -> None
         | Some l ->
+
+            let l_s =
+              String.concat " "
+                (List.map (string_of_internal_action string_of_cudf_package)  l) in
+            log "SOLUTION: %s" l_s;
+
+            (* Load an universe with all the optional dependencies *)
+            let pkglist = List.map (extended_dependencies table) pkglist in
+            let universe = Cudf.load_universe pkglist in
+            log "full-universe: %s" (string_of_universe universe);
 
             let l_del_p, l_del = 
               Utils.filter_map (function
@@ -424,7 +486,8 @@ struct
                     (let set = PkgSet.remove pkg set in
                      try
                        List.fold_left
-                         (fun set x -> PkgSet.add x set) set (PG.succ graph_installed pkg)
+                         (fun set x -> PkgSet.add x set)
+                         set (PG.succ graph_installed pkg)
                      with _ -> set), 
                     Utils.IntMap.add
                       (PG.V.hash pkg)
