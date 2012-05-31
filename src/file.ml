@@ -740,7 +740,14 @@ module Comp = struct
     let bytelink  = assoc_string_list s s_bytecomp  in
     let asmlink   = assoc_string_list s s_asmlink   in
     let packages  =
-      assoc_list s s_packages (parse_list (parse_string |> N.of_string)) in
+      assoc_list s s_packages
+        (parse_list
+           (parse_string |> 
+               (fun name -> 
+                 if name = Globals.default_package then 
+                   Globals.error_and_exit "%S is an internal reserved name. Indeed, this package will be installed at the beginning and automatically." Globals.default_package
+                 else
+                   N.of_string name))) in
     let requires  =
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
