@@ -41,9 +41,9 @@ run:
 	$(MAKE) upload && \
 	$(MAKE) install-remove && \
 	$(MAKE) list && \
-	$(MAKE) install && \
-	$(MAKE) list && \
 	$(MAKE) install-opt && \
+	$(MAKE) list && \
+	$(MAKE) install && \
 	$(MAKE) list && \
 	$(MAKE) upload-new && \
 	$(MAKE) list && \
@@ -151,6 +151,7 @@ install-opt:
 	cd packages && $(OPAM) install P2
 	cd packages && $(OPAM) remove P5
 	cd packages && $(OPAM) remove P2
+	cd packages && $(OPAM) remove P1
 
 install:
 	$(OPAM) install P1 && \
