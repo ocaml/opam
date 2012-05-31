@@ -45,4 +45,16 @@ programs.
 
 - Lines should be no longer than 80 characters
 
+## GIT
+
+- When multiple users are working on the same project, they should
+work in different branches (their name/login should appear in the
+branch name, with possibly a word explaining the purpose of the
+branch, like "fabrice-master", "fabrice-windows", etc.), and
+synchronise when merging their branch in a common branch (like
+"master" or "next").
+
+- Renaming branches is forbidden. Branches should always be merged, so that
+users can easily upgrade their repositories.
+
 
