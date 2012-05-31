@@ -1059,15 +1059,19 @@ let switch to_replicate oversion =
           Some (fun _ -> try init_ocaml new_oversion with e -> 
             begin 
               File.Config.write (Path.G.config t.global) t.config; (* restore the previous configuration *)
-                Dirname.rmdir (Path.C.root new_oversion); 
-                raise e;
-              end), 
+              Dirname.rmdir (Path.C.root new_oversion); 
+              raise e;
+            end), 
           fun t_new -> 
             List.fold_left 
               (fun set name -> NV.Set.add (install_nv_of_n t_new name) set) 
               NV.Set.empty
               (File.Comp.packages comp)
-        | error -> Globals.error_and_exit "compilation of OCaml failed (%d)" error in
+      | error -> 
+          begin
+            Dirname.rmdir (Path.C.root new_oversion);
+            Globals.error_and_exit "compilation of OCaml failed (%d)" error;
+          end in
 
   begin
     (* [1/2] initialization: write the new version in the configuration file *)
