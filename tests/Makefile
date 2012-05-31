@@ -110,9 +110,9 @@ ifeq ($(REPOKIND), git)
 	cp packages/P4/README     $(OPAM_REPO)/descr/P4.1
 	echo '$(OPAM_GIT)/P4'   > $(OPAM_REPO)/url/P4.1
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4"
-	cp packages/P5.opam       $(OPAM_REPO)/opam/P5.opam
-	cp packages/P5/README     $(OPAM_REPO)/descr/P5
-	echo '$(OPAM_GIT)/P5'   > $(OPAM_REPO)/url/P5
+	cp packages/P5.opam       $(OPAM_REPO)/opam/P5.1.opam
+	cp packages/P5/README     $(OPAM_REPO)/descr/P5.1
+	echo '$(OPAM_GIT)/P5'   > $(OPAM_REPO)/url/P5.1
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P5"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
 	mkdir $(OPAM_GIT)/P1-1 && cp packages/P1-1/* $(OPAM_GIT)/P1-1/
