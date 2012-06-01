@@ -634,7 +634,9 @@ let proceed_tochange t nv_old nv =
   let commands = List.map (List.map (substitute_string t))
     (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
+  Globals.msg "[%s] Build commands:\n  %s\n"
+    (NV.to_string nv)
+    (String.concat "\n  " commands_s);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build
     commands in
   if err = 0 then
