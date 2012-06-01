@@ -18,6 +18,7 @@
 (** Base values *)
 type value =
   | Bool of bool
+  | Int of int
   | String of string
   | Symbol of string
   | Ident of string
@@ -67,6 +68,9 @@ exception Bad_format of string
 (** Parse a boolean *)
 val parse_bool : value -> bool
 
+(** Parse an integer *)
+val parse_int: value -> int
+
 (** Parse an ident *)
 val parse_ident : value -> string
 
@@ -109,6 +113,9 @@ val parse_or: (string * (value -> 'a)) list -> value -> 'a
 
 (** Create a boolean *)
 val make_bool : bool -> value
+
+(** Create an integer *)
+val make_int: int -> value
 
 (** Create an ident *)
 val make_ident : string -> value

@@ -17,8 +17,13 @@
 
 open Types
 
-(** Initializes the client a consistent state. *)
-val init : repository -> Alias.t -> OCaml_V.t -> unit
+(** Initializes the client a consistent state.
+    [init repo alias oversion cores] means:
+    - [repo] is the initial repository description,
+    - [alias] the compiler alias
+    - [oversion] is the version of the compiler
+    - [cores] is the number of cores *)
+val init : repository -> Alias.t -> OCaml_V.t -> int -> unit
 
 (** Displays all available packages *)
 val list : unit -> unit

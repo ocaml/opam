@@ -282,7 +282,7 @@ let init_ocaml alias ocaml_version =
         (File.Comp.create_preinstalled ocaml_version) 
   end
 
-let init repo alias ocaml_version =
+let init repo alias ocaml_version cores =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create () in
   let config_f = Path.G.config root in
@@ -290,7 +290,7 @@ let init repo alias ocaml_version =
     Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
   else try
     let opam_version = OPAM_V.of_string Globals.opam_version in
-    let config = File.Config.create opam_version [repo] alias in
+    let config = File.Config.create opam_version [repo] alias cores in
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;
@@ -720,7 +720,8 @@ let resolve action_k t request =
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
 
-        try PA_graph.Parallel.iter Globals.cores sol.to_add ~pre ~child ~post
+        let cores = File.Config.cores t.config in
+        try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       )
 
