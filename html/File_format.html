@@ -50,6 +50,13 @@
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span class="constructor">Int</span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span class="constructor">String</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
@@ -187,6 +194,9 @@ All the following parsing function raise <code class="code">Bad_format</code> in
 <pre><span id="VALparse_bool"><span class="keyword">val</span> parse_bool</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> bool</code></pre><div class="info">
 Parse a boolean<br>
 </div>
+<pre><span id="VALparse_int"><span class="keyword">val</span> parse_int</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> int</code></pre><div class="info">
+Parse an integer<br>
+</div>
 <pre><span id="VALparse_ident"><span class="keyword">val</span> parse_ident</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string</code></pre><div class="info">
 Parse an ident<br>
 </div>
@@ -229,6 +239,9 @@ Try to parse the value using function from the list. All the
 <span id="2_Creationfunctions"><h2>Creation functions</h2></span><br>
 <pre><span id="VALmake_bool"><span class="keyword">val</span> make_bool</span> : <code class="type">bool -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
 Create a boolean<br>
+</div>
+<pre><span id="VALmake_int"><span class="keyword">val</span> make_int</span> : <code class="type">int -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create an integer<br>
 </div>
 <pre><span id="VALmake_ident"><span class="keyword">val</span> make_ident</span> : <code class="type">string -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
 Create an ident<br>
