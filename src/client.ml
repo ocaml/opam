@@ -541,7 +541,10 @@ let proceed_todelete t nv =
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let remove = File.OPAM.remove opam in
-  let err = Dirname.exec (Path.C.lib_dir t.compiler) [remove] in
+  let root = Path.G.root t.global in
+  (* we don't really care in which directory we run the remove scripts,
+     but we just need to be sure the directory exists. *)
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root [remove] in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
 
