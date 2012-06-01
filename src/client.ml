@@ -181,7 +181,7 @@ let update () =
       Filename.link_in comp_f comp_dir
     ) comps
   ) t.repositories;
-  (* Check some consistency *)
+  (* Check all the dependencies exist *)
   let available = Path.G.available t.global in
   let t = load_state () in
   NV.Set.iter (fun nv ->
@@ -195,6 +195,7 @@ let update () =
         (N.to_string name)
         (V.to_string version);
     let depends = File.OPAM.depends opam in
+    let depopts = File.OPAM.depopts opam in
     List.iter (List.iter (fun ((d,_),_) ->
       match find_available_package_by_name t (N.of_string d) with
         | None   ->
@@ -202,7 +203,7 @@ let update () =
               "Package %s depends on the unknown package %s"
               (N.to_string (NV.name nv)) d
         | Some _ -> ()
-    )) depends
+    )) (depends @ depopts)
   ) available
 
 let install_initial_package () =
