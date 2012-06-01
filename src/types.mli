@@ -257,7 +257,15 @@ type repository = Repository.t
 (** {2 Variable names} *)
 
 (** Variable names are used in .config files *)
-module Variable: Abstract
+module Variable: sig
+  include Abstract
+
+  (** the variable [enable] *)
+  val enable: t
+
+  (** the variable [installed] *)
+  val installed: t
+end
 
 (** Shortcut to variable type *)
 type variable = Variable.t

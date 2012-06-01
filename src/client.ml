@@ -102,6 +102,9 @@ let find_repository t name =
   let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
   r
 
+let mem_installed_package_by_name t name =
+  not (NV.Set.is_empty (NV.Set.filter (fun nv -> NV.name nv = name) t.installed))
+
 let find_installed_package_by_name t name =
   try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
   with Not_found ->
@@ -588,16 +591,23 @@ let get_archive t nv =
 let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
-  let _nv =
-    try find_installed_package_by_name t name
+  let installed = mem_installed_package_by_name t name in
+  if var = Variable.enable && installed then
+    S "enable"
+  else if var = Variable.enable && not installed then
+    S "disable"
+  else if var = Variable.installed then
+    B installed
+  else if not installed then
+    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+  else begin
+    let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+    try match Full_variable.section v with
+      | None   -> File.Dot_config.variable c var
+      | Some s -> File.Dot_config.Section.variable c s var
     with Not_found ->
-      Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
-  let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-  try match Full_variable.section v with
-  | None   -> File.Dot_config.variable c var
-  | Some s -> File.Dot_config.Section.variable c s var
-  with Not_found ->
-    Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
+      Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
+  end
 
 (* Substitue the string contents *)
 let substitute_string t s =

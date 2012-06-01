@@ -399,7 +399,15 @@ type repository = Repository.t
 (* Variable names *)
 
 (* Variable names are used in .config files *)
-module Variable: Abstract = Base
+module Variable: sig
+  include Abstract
+  val installed: t
+  val enable: t
+end = struct
+  include Base
+  let installed = of_string "installed"
+  let enable = of_string "enable"
+end
 
 type variable = Variable.t
 
