@@ -401,6 +401,7 @@ module OPAM = struct
   let build t = t.build
   let remove t = t.remove
   let depends t = t.depends
+  let depopts t = t.depopts
   let conflicts t = t.conflicts
   let libraries t = t.libraries
   let syntax t = t.syntax

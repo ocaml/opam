@@ -101,6 +101,9 @@ module OPAM: sig
   (** Package dependencies *)
   val depends: t -> Debian.Format822.vpkgformula
 
+  (** Optional dependencies *)
+  val depopts: t -> Debian.Format822.vpkgformula
+
   (** Package conflicts *)
   val conflicts: t -> Debian.Format822.vpkglist
 
