@@ -81,11 +81,12 @@ let wget src =
 
 let archive_name src =
   let name = F.basename src in
-  if F.check_suffix name ".tar.gz" then
+  if F.check_suffix name ".tar.gz"
+  || F.check_suffix name ".tar.bz2"
+  || F.check_suffix name ".tgz"
+  || F.check_suffix name ".tbz" then
     name
-  else if F.check_suffix name ".tar.bz2" then
-    name
-  else
+  else    
     Printf.sprintf "%s.tar.gz" name
 
 let mv src =
@@ -98,6 +99,7 @@ let mv src =
 let () =
   Dirname.mkdir (Path.R.archive_dir root);
   NV.Set.iter (fun nv ->
+    Globals.msg "Processing %-40s ." (NV.to_string nv);
     let tmp_dir = tmp_dir nv in
     Dirname.rmdir tmp_dir;
     Dirname.mkdir tmp_dir;
@@ -114,12 +116,15 @@ let () =
           Globals.error_and_exit "Cannot get %s" url;
         Filename.extract (tmp nv // archive_name url) tmp_dir;
     end;
+    Globals.msg ".";
     List.iter (fun f ->
       Filename.copy_in f tmp_dir
     ) (files nv);
+    Globals.msg ".";
     let err = Dirname.exec (Dirname.of_string tmp_dir0) [
       [ "tar" ; "czf" ; Filename.to_string (Path.R.archive root nv) ; NV.to_string nv ]
     ] in
     if err <> 0 then
-      Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
+      Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir);
+    Globals.msg " OK\n";
   ) opams

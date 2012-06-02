@@ -15,6 +15,7 @@
 
 type value =
   | Bool of bool
+  | Int of int
   | String of string
   | Symbol of string
   | Ident of string
@@ -77,6 +78,7 @@ let invalid_fields items fields =
 
 let rec kind = function
   | Bool b   -> Printf.sprintf "bool(%b)" b
+  | Int i    -> Printf.sprintf "int(%d)" i
   | Ident i  -> Printf.sprintf "ident(%s)" i
   | Symbol s -> Printf.sprintf "symbol(%s)" s
   | String s -> Printf.sprintf "string(%S)" s
@@ -91,6 +93,10 @@ and kinds l =
 let parse_bool = function
   | Bool b -> b
   | x      -> bad_format "Expecting a bool, got %s" (kind x)
+
+let parse_int = function
+  | Int i -> i
+  | x     -> bad_format "Expecting an int, got %s" (kind x)
 
 let parse_ident = function
   | Ident i -> i
@@ -156,6 +162,8 @@ let make_symbol str = Symbol str
 
 let make_bool b = Bool b
 
+let make_int i = Int i
+
 let make_list fn l = List (List.map fn l)
 
 let make_group fn g = Group (List.map fn g)
@@ -167,6 +175,7 @@ let make_option f g (v,l) = Option (f v, List.map g l)
 let rec string_of_value = function
   | Symbol s
   | Ident s     -> Printf.sprintf "%s" s
+  | Int i       -> Printf.sprintf "%d" i
   | Bool b      -> Printf.sprintf "%b" b
   | String s    -> Printf.sprintf "%S" s
   | List l      -> Printf.sprintf "[%s]" (string_of_values l)

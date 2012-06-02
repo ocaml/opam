@@ -102,6 +102,9 @@ let find_repository t name =
   let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
   r
 
+let mem_installed_package_by_name t name =
+  not (NV.Set.is_empty (NV.Set.filter (fun nv -> NV.name nv = name) t.installed))
+
 let find_installed_package_by_name t name =
   try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
   with Not_found ->
@@ -181,7 +184,7 @@ let update () =
       Filename.link_in comp_f comp_dir
     ) comps
   ) t.repositories;
-  (* Check some consistency *)
+  (* Check all the dependencies exist *)
   let available = Path.G.available t.global in
   let t = load_state () in
   NV.Set.iter (fun nv ->
@@ -195,6 +198,7 @@ let update () =
         (N.to_string name)
         (V.to_string version);
     let depends = File.OPAM.depends opam in
+    let depopts = File.OPAM.depopts opam in
     List.iter (List.iter (fun ((d,_),_) ->
       match find_available_package_by_name t (N.of_string d) with
         | None   ->
@@ -202,7 +206,7 @@ let update () =
               "Package %s depends on the unknown package %s"
               (N.to_string (NV.name nv)) d
         | Some _ -> ()
-    )) depends
+    )) (depends @ depopts)
   ) available
 
 let install_initial_package () =
@@ -282,7 +286,7 @@ let init_ocaml alias ocaml_version =
         (File.Comp.create_preinstalled ocaml_version) 
   end
 
-let init repo alias ocaml_version =
+let init repo alias ocaml_version cores =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create () in
   let config_f = Path.G.config root in
@@ -290,7 +294,7 @@ let init repo alias ocaml_version =
     Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
   else try
     let opam_version = OPAM_V.of_string Globals.opam_version in
-    let config = File.Config.create opam_version [repo] alias in
+    let config = File.Config.create opam_version [repo] alias cores in
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     File.Config.write config_f config;
@@ -541,7 +545,10 @@ let proceed_todelete t nv =
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let remove = File.OPAM.remove opam in
-  let err = Dirname.exec (Path.C.lib_dir t.compiler) [remove] in
+  let root = Path.G.root t.global in
+  (* we don't really care in which directory we run the remove scripts,
+     but we just need to be sure the directory exists. *)
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root [remove] in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
 
@@ -584,16 +591,23 @@ let get_archive t nv =
 let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
-  let _nv =
-    try find_installed_package_by_name t name
+  let installed = mem_installed_package_by_name t name in
+  if var = Variable.enable && installed then
+    S "enable"
+  else if var = Variable.enable && not installed then
+    S "disable"
+  else if var = Variable.installed then
+    B installed
+  else if not installed then
+    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+  else begin
+    let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+    try match Full_variable.section v with
+      | None   -> File.Dot_config.variable c var
+      | Some s -> File.Dot_config.Section.variable c s var
     with Not_found ->
-      Globals.error_and_exit "Package %s is not installed" (N.to_string name) in
-  let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-  try match Full_variable.section v with
-  | None   -> File.Dot_config.variable c var
-  | Some s -> File.Dot_config.Section.variable c s var
-  with Not_found ->
-    Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
+      Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
+  end
 
 (* Substitue the string contents *)
 let substitute_string t s =
@@ -630,7 +644,9 @@ let proceed_tochange t nv_old nv =
   let commands = List.map (List.map (substitute_string t))
     (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "Build command: %s\n" (String.concat ";" commands_s);
+  Globals.msg "[%s] Build commands:\n  %s\n"
+    (NV.to_string nv)
+    (String.concat "\n  " commands_s);
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build
     commands in
   if err = 0 then
@@ -720,7 +736,8 @@ let resolve action_k t request =
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
 
-        try PA_graph.Parallel.iter Globals.cores sol.to_add ~pre ~child ~post
+        let cores = File.Config.cores t.config in
+        try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       )
 

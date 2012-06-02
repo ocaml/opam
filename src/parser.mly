@@ -25,7 +25,7 @@ open File_format
 %token LPAR RPAR
 %token LBRACE RBRACE
 %token COLON
-
+%token <int> INT
 %left LPAR RPAR
 %left LBRACE RBRACE
 %left LBRACKET RBRACKET
@@ -54,6 +54,7 @@ item:
 
 value:
 | BOOL                       { Bool $1 }
+| INT                        { Int $1 }
 | STRING                     { String $1 }
 | SYMBOL                     { Symbol $1 }
 | IDENT                      { Ident $1 }

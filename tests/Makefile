@@ -86,7 +86,7 @@ ifeq ($(REPOKIND), git)
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
 endif
-	$(OPAM) init $(REPO) $(OPAM_REPO) --kind $(REPOKIND)
+	$(OPAM) init $(REPO) $(OPAM_REPO) -kind $(REPOKIND)
 
 upload: $(ARCHIVES)
 ifeq ($(REPOKIND), git)

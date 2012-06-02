@@ -23,6 +23,7 @@
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;value&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Bool</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Int</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Symbol</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ident</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
@@ -45,6 +46,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invalid_fields&nbsp;:&nbsp;<span class="constructor">File_format</span>.item&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Bad_format</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_bool&nbsp;:&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_int&nbsp;:&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_ident&nbsp;:&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_symbol&nbsp;:&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_string&nbsp;:&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
@@ -64,6 +66,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_or&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;(string&nbsp;*&nbsp;(<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a))&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_bool&nbsp;:&nbsp;bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_int&nbsp;:&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_ident&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_symbol&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>

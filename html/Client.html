@@ -31,8 +31,15 @@
 <br>
 <pre><span class="keyword">module</span> Client: <code class="code">sig</code> <a href="Client.html">..</a> <code class="code">end</code></pre>OPAM client.<br>
 <hr width="100%">
-<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> Types.Alias.t -> Types.OCaml_V.t -> unit</code></pre><div class="info">
-Initializes the client a consistent state.<br>
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> Types.Alias.t -> Types.OCaml_V.t -> int -> unit</code></pre><div class="info">
+Initializes the client a consistent state.
+    <code class="code">init repo alias oversion cores</code> means:<ul>
+<li><code class="code">repo</code> is the initial repository description,</li>
+<li><code class="code">alias</code> the compiler alias</li>
+<li><code class="code">oversion</code> is the version of the compiler</li>
+<li><code class="code">cores</code> is the number of cores</li>
+</ul>
+<br>
 </div>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Displays all available packages<br>

@@ -49,7 +49,7 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: OPAM_V.t -> repository list -> Alias.t -> t
+  val create: OPAM_V.t -> repository list -> Alias.t -> int -> t
 
   (** OCaml version updates *)
   val with_ocaml_version : t -> Alias.t -> t
@@ -66,6 +66,9 @@ module Config: sig
 
   (** Return the OCaml version *)
   val ocaml_version: t -> Alias.t
+
+  (** Return the number of cores *)
+  val cores: t -> int
 
 end
 
@@ -97,6 +100,9 @@ module OPAM: sig
 
   (** Package dependencies *)
   val depends: t -> Debian.Format822.vpkgformula
+
+  (** Optional dependencies *)
+  val depopts: t -> Debian.Format822.vpkgformula
 
   (** Package conflicts *)
   val conflicts: t -> Debian.Format822.vpkglist

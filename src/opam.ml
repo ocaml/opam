@@ -59,6 +59,7 @@ let init =
   let kind = ref Globals.default_repository_kind in
   let alias = ref "" in
   let comp = ref "" in
+  let cores = ref Globals.default_cores in
   let init () =
     let comp =
       if !comp <> "" then OCaml_V.of_string !comp
@@ -77,18 +78,19 @@ let init =
   specs    = [
     ("-comp" , Arg.Set_string comp , " Which compiler version to use");
     ("-alias", Arg.Set_string alias, " Set the compiler alias name");
-    ("--kind", Arg.Set_string kind , " Set the repository kind")
+    ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
+    ("-kind" , Arg.Set_string kind , " Set the repository kind")
   ];
   anon;
   main     =
     parse_args (function
     | [] ->
         let alias, comp = init () in
-        Client.init Repository.default alias comp
+        Client.init Repository.default alias comp !cores
     | [name; address]  ->
         let alias, comp = init () in
         let repo = Repository.create ~name ~address ~kind:!kind in
-        Client.init repo alias comp
+        Client.init repo alias comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 
@@ -264,7 +266,7 @@ let remote =
     ("-list" , Arg.Unit (set `list), " List the repositories");
     ("-add"  , Arg.Unit (set `add) , " Add a new repository");
     ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
-    ("--kind", Arg.Set_string kind , " (optional) Specify the repository kind");
+    ("-kind" , Arg.Set_string kind , " (optional) Specify the repository kind");
   ];
   anon;
   main     = parse_args (fun args ->

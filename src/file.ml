@@ -251,6 +251,7 @@ module Config = struct
       opam_version  : OPAM_V.t ;
       repositories  : repository list ;
       ocaml_version : Alias.t ;
+      cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
@@ -259,25 +260,29 @@ module Config = struct
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let ocaml_version t = t.ocaml_version
+    let cores t = t.cores
 
-    let create opam_version repositories ocaml_version =
-      { opam_version ; repositories ; ocaml_version }
+    let create opam_version repositories ocaml_version cores =
+      { opam_version ; repositories ; ocaml_version ; cores }
 
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
       repositories = [];
       ocaml_version = Alias.of_string "<none>";
+      cores = Globals.default_cores;
     }
 
     open File_format
 
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
+    let s_cores = "cores"
 
     let valid_fields = [
       s_opam_version;
       s_repositories;
       s_ocaml_version;
+      s_cores;
     ]
 
     let of_string filename f =
@@ -290,15 +295,17 @@ module Config = struct
           (parse_list (parse_string_option parse_string_pair |> to_repo)) in
       let ocaml_version =
         assoc s.contents s_ocaml_version (parse_string |> Alias.of_string) in
-      { opam_version; repositories; ocaml_version }
+      let cores = assoc s.contents s_cores parse_int in
+      { opam_version; repositories; ocaml_version; cores }
 
    let to_string filename t =
      let s = {
        filename = Filename.to_string filename;
        contents = [ 
-         Variable (s_opam_version , String (OPAM_V.to_string t.opam_version));
+         Variable (s_opam_version , make_string (OPAM_V.to_string t.opam_version));
          Variable (s_repositories , make_list of_repo t.repositories);
-         Variable (s_ocaml_version, String (Alias.to_string t.ocaml_version));
+         Variable (s_ocaml_version, make_string (Alias.to_string t.ocaml_version));
+         Variable (s_cores        , make_int t.cores);
        ] 
      } in
      Syntax.to_string filename s
@@ -394,6 +401,7 @@ module OPAM = struct
   let build t = t.build
   let remove t = t.remove
   let depends t = t.depends
+  let depopts t = t.depopts
   let conflicts t = t.conflicts
   let libraries t = t.libraries
   let syntax t = t.syntax

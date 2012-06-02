@@ -88,5 +88,4 @@ let os = match Sys.os_type with
   | "Cygwin" -> Cygwin
   | _        -> assert false
 
-(* XXX: put that in ~/.opam/config *)
-let cores = 4
+let default_cores = 4
