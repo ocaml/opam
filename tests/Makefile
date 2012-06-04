@@ -14,7 +14,7 @@ OPAM_SERVER      = 127.0.0.1
 # To test GIT repo
 OPAM_GIT = $(TEST_DIR)/OPAM.GIT
 
-BINARIES  = opam opam-server \
+BINARIES  = opam opam-server opam-check \
 	    opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
 	    opam-server-init opam-server-update opam-server-download opam-server-upload \
 	    opam-git-init opam-git-update opam-git-download opam-git-upload
@@ -23,6 +23,7 @@ PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
 OPAM = $(ENV) opam --yes --root $(OPAM_ROOT)
+CHECK = $(ENV) opam-check --root $(OPAM_ROOT)
 
 BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
@@ -142,21 +143,29 @@ list:
 	$(OPAM) list
 
 install-remove:
-	cd packages && $(OPAM) install P1
-	cd packages && $(OPAM) remove P1
+	$(OPAM) install P1 &&\
+	$(CHECK) -l install-remove P1.1 &&\
+	$(OPAM) remove P1
 
 install-opt:
-	cd packages && $(OPAM) install P5
-	cd packages && $(OPAM) install P2
-	cd packages && $(OPAM) remove P5
-	cd packages && $(OPAM) remove P2
-	cd packages && $(OPAM) remove P1
+	$(OPAM) install P5 &&\
+	$(CHECK) -l install-opt P1.1 P5.1 &&\
+	$(OPAM) install P2 &&\
+	$(CHECK) -l install-opt P1.1 P2.1 P5.1 &&\
+	$(OPAM) remove P5 &&\
+	$(OPAM) remove P2 &&\
+	$(OPAM) remove P1 &&\
+	$(CHECK) -l install-opt
 
 install:
-	$(OPAM) install P1 && \
-	$(OPAM) install P2 && \
-	$(OPAM) install P3 && \
-	$(OPAM) install P4
+	$(OPAM) install P1 &&\
+	$(CHECK) -l install P1.1 &&\
+	$(OPAM) install P2 &&\
+	$(CHECK) -l install P1.1 P2.1 &&\
+	$(OPAM) install P3 &&\
+	$(CHECK) -l install P1.1 P2.1 P3.1~weird-version.test &&\
+	$(OPAM) install P4 &&\
+	$(CHECK) -l install P1.1 P2.1 P3.1~weird-version.test P4.1
 
 upload-new:
 ifeq ($(REPOKIND), git)
@@ -181,9 +190,15 @@ endif
 
 upgrade:
 	$(OPAM) upgrade
+ifeq ($(REPOKIND), git)
+	$(CHECK) -l upgrade P1.1 P2.1 P3.1~weird-version.test P4.3
+else
+	$(CHECK) -l upgrade P1.2 P2.1 P3.1~weird-version.test P4.3
+endif
 
 downgrade:
 	$(OPAM) install P4.2
+	$(CHECK) -l downgrade P1.1 P2.1 P3.1~weird-version.test P4.2
 
 switch:
 	$(MAKE) fresh
