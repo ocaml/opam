@@ -15,8 +15,6 @@
 
 (** The OPAM types and then main function which operates on them. *)
 
-open Utils
-
 (** {2 Abstract types} *)
 
 (** All abstract types should implement this signature *)
@@ -32,7 +30,19 @@ module type Abstract = sig
   val to_string: t -> string
 
   (** Collection of abstract values *)
-  module Set: Set.S with type elt = t
+  module Set: sig
+
+    include Set.S with type elt = t
+
+    (** Return one element. Fail if the set is not a singleton. *)
+    val choose_one : t -> elt
+
+    (** Make a set from a list *)
+    val of_list: elt list -> t
+
+    (** Pretty-print a set *)
+    val to_string: t -> string
+  end               
 
   (** Dictionaries of abstract values *)
   module Map: Map.S with type key = t
@@ -209,8 +219,6 @@ module NV: sig
   (** Convert a set of pairs to a map [name -> versions] *)
   val to_map: Set.t -> V.Set.t N.Map.t
 
-  (** Convert a set of pairs to a string *)
-  val string_of_set: Set.t -> string
 end
 
 (** Shortcut to NV.t *)

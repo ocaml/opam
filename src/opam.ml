@@ -13,6 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
+open Utils
 open Types
 open Path
 open Solver
@@ -184,7 +185,10 @@ let install = {
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args (List.iter (fun name -> Client.install (N.of_string name)))
+  main     = parse_args (fun names ->
+    let names = List.map N.of_string names in
+    Client.install (N.Set.of_list names)
+  )
 }
 
 (* opam update *)

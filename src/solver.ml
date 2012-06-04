@@ -212,13 +212,19 @@ module CudfDiff : sig
 end = struct
     
   module Cudf_set = struct
-    module S = Utils.Set.MK (Common.CudfAdd.Cudf_set)
+
+    include Common.CudfAdd.Cudf_set
 
     let to_string s =
       Printf.sprintf "{%s}"
-        (String.concat "," (List.map string_of_cudf_package (S.elements s)))
+        (String.concat "," (List.map string_of_cudf_package (elements s)))
 
-    include S
+    let choose_one s =
+      match elements s with
+      | []  -> raise Not_found
+      | [x] -> x
+      | _   -> invalid_arg "choose_one"
+
   end
 
   let to_cudf_doc univ req = 
