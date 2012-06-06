@@ -61,9 +61,9 @@ let print_state t =
   log "GLOBAL    : %s" (Dirname.to_string (Path.G.root t.global));
   log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
   log "REPO      : %s" (string_of_repos t.repositories);
-  log "AVAILABLE : %s" (NV.string_of_set t.available);
-  log "INSTALLED : %s" (NV.string_of_set t.installed);
-  log "REINSTALL : %s" (NV.string_of_set t.reinstall);
+  log "AVAILABLE : %s" (NV.Set.to_string t.available);
+  log "INSTALLED : %s" (NV.Set.to_string t.installed);
+  log "REINSTALL : %s" (NV.Set.to_string t.reinstall);
   log "REPO_INDEX: %s" (string_of_nmap t.repo_index)
 
 (* Look into the content of ~/.opam/config to build the client
@@ -126,7 +126,7 @@ let update () =
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
       let available = Path.R.available p in
-      log "repo=%s packages=%s" (Repository.name r) (NV.string_of_set available);
+      log "repo=%s packages=%s" (Repository.name r) (NV.Set.to_string available);
       NV.Set.fold (fun nv repo_index ->
         let name = NV.name nv in
         if not (N.Map.mem name repo_index) then
@@ -759,7 +759,7 @@ let unknown_package name =
 
 (* transform a name into:
    - <name, installed version> package
-   - <$n,$v> package, where name = $n.$v *)
+   - <$n,$v> package when name = $n.$v *)
 let nv_of_name t name =
   let available = NV.to_map (Path.G.available t.global) in
   if N.Map.mem name available then
@@ -781,13 +781,16 @@ let nv_of_name t name =
       unknown_package sname
   )
 
-let install name =
-  log "install %s" (N.to_string name);
+let install names =
+  log "install %s" (N.Set.to_string names);
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
 
   (* Exit if the package is already installed *)
-  if N.Map.mem name map_installed then (
+  if N.Set.exists (fun name -> N.Map.mem name map_installed) names then (
+    let name =
+      N.Set.choose
+        (N.Set.filter (fun name -> N.Map.mem name map_installed) names) in
     Globals.msg
       "Package %s is already installed (current version is %s)\n"
       (N.to_string name)
@@ -795,15 +798,16 @@ let install name =
     Globals.exit 1
   );
 
+  let new_packages =
+    List.map (fun name -> vpkg_of_nv_eq (nv_of_name t name)) (N.Set.elements names) in
   let map_installed =
     List.map
       (fun (x,y) -> NV.create x (V.Set.choose_one y))
       (N.Map.bindings map_installed) in
 
   resolve `install t
-    { wish_install =
-        vpkg_of_nv_eq (nv_of_name t name) :: List.map vpkg_of_nv_any map_installed
-    ; wish_remove = []
+    { wish_install = new_packages @ List.map vpkg_of_nv_any map_installed
+    ; wish_remove  = []
     ; wish_upgrade = [] }
 
 let remove name =

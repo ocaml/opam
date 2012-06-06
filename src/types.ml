@@ -15,15 +15,49 @@
 
 let log fmt = Globals.log "TYPES" fmt
 
-open Utils
-
 module type Abstract = sig
   type t
   val of_string: string -> t
   val to_string: t -> string
-  module Set: Set.S with type elt = t
+  module Set: sig
+    include Set.S with type elt = t
+    val choose_one : t -> elt
+    val of_list: elt list -> t
+    val to_string: t -> string
+  end               
   module Map: Map.S with type key = t
 end
+
+module Set = struct
+
+  module type OrderedType = sig
+    include Set.OrderedType
+    val to_string: t -> string
+  end
+
+  module Make (O : OrderedType) = struct
+
+    module S = Set.Make(O)
+
+    include S
+
+    let choose_one s = 
+      match elements s with
+        | [x] -> x
+        | [] -> raise Not_found
+        | _  -> invalid_arg "choose_one"
+
+    let of_list l =
+      List.fold_left (fun set e -> add e set) empty l
+
+    let to_string s =
+      let l = fold (fun nv l -> O.to_string nv :: l) s [] in
+      Printf.sprintf "{ %s }" (String.concat ", " l)
+
+  end
+
+end
+
 
 (* The basic implementation of abstract types is just abstracted
    [string] *)
@@ -31,7 +65,11 @@ module Base = struct
   type t = string
   let of_string x = x
   let to_string x = x
-  module O = struct type t = string let compare = compare end
+  module O = struct
+    type t = string
+    let to_string = to_string
+    let compare = compare
+  end
   module Set = Set.Make(O)
   module Map = Map.Make(O)
 end
@@ -202,7 +240,12 @@ end = struct
   let extract filename dirname =
     Run.extract (to_string filename) (Dirname.to_string dirname)
 
-  module O = struct type tmp = t type t = tmp let compare = compare end
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let compare = compare
+    let to_string = to_string
+  end
   module Map = Map.Make(O)
   module Set = Set.Make(O)
 end
@@ -250,7 +293,6 @@ module NV: sig
   val of_dpkg: Debian.Packages.package -> t
   val of_cudf: Debian.Debcudf.tables -> Cudf.package -> t
   val to_map: Set.t -> V.Set.t N.Map.t
-  val string_of_set: Set.t -> string
 end = struct
 
   type t = {
@@ -303,7 +345,12 @@ end = struct
   let to_string t =
     Printf.sprintf "%s%c%s" (N.to_string t.name) sep (V.to_string t.version)
 
-  module O = struct type tmp = t type t = tmp let compare = compare end
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let compare = compare
+    let to_string = to_string
+  end
   module Set = Set.Make (O)
   module Map = Map.Make (O)
 
@@ -318,10 +365,6 @@ end = struct
           V.Set.empty in
       N.Map.add name (V.Set.add version versions) (N.Map.remove name map)
     ) nv N.Map.empty
-
-  let string_of_set s =
-    let l = Set.fold (fun nv l -> to_string nv :: l) s [] in
-    Printf.sprintf "{ %s }" (String.concat ", " l)
 
 end
 
@@ -389,7 +432,12 @@ end = struct
   let to_string r =
     Printf.sprintf "%s(%s %s)" r.name r.address r.kind
 
-  module O = struct type tmp = t type t = tmp let compare = compare end
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let compare = compare
+    let to_string = to_string
+  end
   module Set = Set.Make(O)
   module Map = Map.Make(O)
 
@@ -479,6 +527,7 @@ end = struct
     type tmp = t
     type t = tmp
     let compare = compare
+    let to_string = to_string
   end
   module Set = Set.Make (O)
   module Map = Map.Make (O)
@@ -544,7 +593,12 @@ end = struct
         prefix ^ ":" in
     prefix ^ Variable.to_string t.variable
 
-  module O = struct type tmp = t type t = tmp let compare = compare end
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let compare = compare
+    let to_string = to_string
+  end
   module Set = Set.Make(O)
   module Map = Map.Make(O)
 

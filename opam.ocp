@@ -152,4 +152,9 @@ begin program "opam-mk-repo"
   requires = [ "opam-lib" ]
 end
 
+begin program "opam-check"
+  files = [ "src/scripts/opam_check.ml" ]
+  requires = [ "opam-lib" ]
+end
+
 end

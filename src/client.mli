@@ -35,8 +35,8 @@ val info : N.t -> unit
     package is installed. *)
 val config : config -> unit
 
-(** Installs the given package. Take the global file lock. *)
-val install : N.t -> unit
+(** Installs the given set of packages. Take the global file lock. *)
+val install : N.Set.t -> unit
 
 (** Refresh the available packages. Take the global file lock. *)
 val update : unit -> unit
