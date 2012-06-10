@@ -75,8 +75,7 @@ let tmp_dir nv =
 
 let wget src =
   match Globals.os with
-  (* ftp cannot read https github tarball address *)
-  (*  | Globals.Darwin -> [ "ftp" ; src ] *)
+  | Globals.Darwin -> [ "curl"; "-OL"; src ]
   | _              -> [ "wget"; src ]
 
 let archive_name src =
