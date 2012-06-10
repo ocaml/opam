@@ -18,6 +18,8 @@ let debug = ref (
   with _ -> false
 )
 
+let verbose = ref false
+
 let yes = ref false
 
 let version = "0.1+dev"
