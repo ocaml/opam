@@ -28,12 +28,23 @@ type t = {
 let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC]
 
 let create ?info ?stdout ?stderr ?env cmd args =
-  let stdout_fd = match stdout with
-    | None   -> Unix.stdout
-    | Some f -> Unix.openfile f open_flags 0o644 in
-  let stderr_fd = match stderr with
-    | None   -> Unix.stderr
-    | Some f -> Unix.openfile f open_flags 0o644 in
+  let nothing () = () in
+  let tee f =
+    let fd = Unix.openfile f open_flags 0o644 in
+    if !Globals.debug || !Globals.verbose then (
+      let chan = Unix.open_process_out ("tee " ^ f) in
+      let close () =
+        match Unix.close_process_out chan with
+        | _ -> () in
+      Unix.descr_of_out_channel chan, close
+    ) else
+      fd, nothing in
+  let stdout_fd, close_stdout = match stdout with
+    | None   -> Unix.stdout, nothing
+    | Some f -> tee f in
+  let stderr_fd, close_stderr = match stderr with
+    | None   -> Unix.stderr, nothing
+    | Some f -> tee f in
   let env = match env with
     | None   -> Unix.environment ()
     | Some e -> e in
@@ -44,8 +55,8 @@ let create ?info ?stdout ?stderr ?env cmd args =
       (Array.of_list (cmd :: args))
       env
       Unix.stdin stdout_fd stderr_fd in
-  (match stdout with None -> () | Some _ -> Unix.close stdout_fd);
-  (match stderr with None -> () | Some _ -> Unix.close stderr_fd);
+  close_stdout ();
+  close_stderr ();
   {
     p_name   = cmd;
     p_args   = args;
