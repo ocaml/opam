@@ -165,11 +165,18 @@ module Comp : sig
   (** Return the url of the compiler *)
   val src: t -> string
 
+  (** Return the list of patches to apply *)
+  val patches: t -> string list
+
   (** Options to give to the "./configure" command *)
   val configure: t -> string list
 
   (** Options to give to the "make" command *)
   val make: t -> string list
+
+  (** Options to give to build the package. If this one is provided,
+      nothing should be specified for [configure] and [make]. *)
+  val build: t -> string list list
 
   (** Packages to install immediately after the creation of OCaml *)
   val packages: t -> name list
@@ -194,6 +201,10 @@ module Comp : sig
 
   (** Preprocessing options *)
   val pp: t -> ppflag option
+
+  (** Environment variable to set-up before running commands in the
+      subtree *)
+  val env: t -> (string * string) list
 
 end
 

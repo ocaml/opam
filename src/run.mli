@@ -63,16 +63,22 @@ val directories: string -> string list
 type command = string list
 
 (** [command cmd] executes the command [cmd]. Return the exit code. *)
-val command: ?add_to_path:string list -> command -> int
+val command:
+  ?add_to_env:(string*string) list ->
+  ?add_to_path:string list -> command -> int
 
 (** [commands ~add_to_path cmds] executes the commands [cmds] 
     in a context where $PATH contains [add_to_path] at the beginning. 
     It stops whenever one command fails. *)
-val commands: ?add_to_path:string list -> command list -> int
+val commands:
+  ?add_to_env:(string*string) list ->
+  ?add_to_path:string list -> command list -> int
 
 (** [read_command_output cmd] executes the command [cmd] and return
     the lines from stdout *)
-val read_command_output: ?add_to_path:string list -> command -> string list
+val read_command_output:
+  ?add_to_env:(string*string) list ->
+  ?add_to_path:string list -> command -> string list
 
 (** [extract filename dirname] untar the archive [filename] to
     [dirname] *)
@@ -105,3 +111,6 @@ val with_flock: ('a -> 'b) -> 'a -> 'b
     Currently support only tar.gz/tar.bz2, but should be able to support
     git and svn as well. *)
 val download: string -> string -> unit
+
+(** Apply a patch file in the current directory *)
+val patch: string -> unit

@@ -89,7 +89,9 @@ module Dirname: sig
   val rmdir: t -> unit
   val mkdir: t -> unit
   val list: t -> t list
-  val exec: t -> ?add_to_path:t list -> string list list -> int
+  val exec: t ->
+    ?add_to_env:(string*string) list ->
+    ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
   val basename: t -> basename
   val exists: t -> bool
@@ -113,10 +115,11 @@ end = struct
     let fs = Run.directories (to_string d) in
     List.map of_string fs
 
-  let exec dirname ?(add_to_path = []) cmds =
+  let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
     Run.in_dir (to_string dirname) 
       (fun () -> 
         Run.commands
+          ~add_to_env
           ~add_to_path:(List.map of_string add_to_path)
           cmds)
 
