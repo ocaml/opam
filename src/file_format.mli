@@ -138,6 +138,9 @@ val make_group : ('a -> value) -> 'a list -> value
 (** Create a value and its optional arguments *)
 val make_option : ('a -> value) -> ('b -> value) -> 'a * 'b list -> value
 
+(** Create a pair *)
+val make_pair: ('a -> value) -> ('a * 'a) -> value
+
 (** {2 Printing functions} *)
 
 (** Print a value *)

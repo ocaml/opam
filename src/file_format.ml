@@ -174,6 +174,8 @@ let make_group fn g = Group (List.map fn g)
 
 let make_option f g (v,l) = Option (f v, List.map g l)
 
+let make_pair f (k,v) = List [f k; f v]
+
 (* Printing *)
 
 let rec string_of_value = function

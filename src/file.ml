@@ -763,6 +763,25 @@ module Comp = struct
   let s_env       = "env"
   let s_preinstalled = "preinstalled"
 
+  let valid_fields = [
+    s_opam_version;
+    s_name;
+    s_src;
+    s_patches;
+    s_configure;
+    s_make;
+    s_build;
+    s_bytecomp;
+    s_asmcomp;
+    s_bytelink;
+    s_asmlink;
+    s_packages;
+    s_requires;
+    s_pp;
+    s_env;
+    s_preinstalled;
+  ]
+
   let name t = t.name
   let patches t = t.patches
   let configure t = t.configure
@@ -781,6 +800,7 @@ module Comp = struct
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
+    Syntax.check file valid_fields;
     let s = file.contents in
     let parse_camlp4 = function
       | List ( Ident "CAMLP4" :: l ) ->
@@ -794,12 +814,12 @@ module Comp = struct
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
-    let src       = assoc s s_src parse_string in 
+    let src       = assoc_default "" s s_src parse_string in
     let patches   = assoc_string_list s s_patches   in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
     let build     = assoc_list s s_build (parse_list parse_string_list) in
-    let env       = assoc_default [] s s_env (parse_list parse_string_pair) in
+    let env       = assoc_list s s_env (parse_list parse_string_pair) in
     let bytecomp  = assoc_string_list s s_bytecomp  in
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
@@ -813,13 +833,18 @@ module Comp = struct
                    Globals.error_and_exit "%S is an internal reserved name. Indeed, this package will be installed at the beginning and automatically." Globals.default_package
                  else
                    N.of_string name))) in
-    if build <> [] && (configure @ make) <> [] then
-      Globals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
-                              fields at the same time.";
     let requires  =
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
     let preinstalled = assoc_default false  s s_preinstalled parse_bool in
+
+    if build <> [] && (configure @ make) <> [] then
+      Globals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
+                              fields at the same time.";
+    if not preinstalled && src = "" then
+      Globals.error_and_exit "You should either specify an url (with 'sources')  \
+                              or use 'preinstalled: true' to pick the already installed \
+                              compiler version.";
     { opam_version; name; src;
       patches; configure; make; build;
       bytecomp; asmcomp; bytelink; asmlink; packages;
@@ -848,6 +873,7 @@ module Comp = struct
         Variable (s_asmlink     , make_list make_string s.asmlink);
         Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
+        Variable (s_env         , make_list (make_pair make_string) s.env);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]

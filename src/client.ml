@@ -295,8 +295,8 @@ let init_ocaml alias ocaml_version =
     let aliases_f = Path.G.aliases t.global in
     let aliases = File.Aliases.safe_read aliases_f in
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
-    if OCaml_V.current () <> Some ocaml_version then begin
-      let comp = File.Comp.read (Path.G.compiler t.global ocaml_version) in
+    let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
+    if OCaml_V.current () <> Some ocaml_version && not (File.Comp.preinstalled comp) then begin
       let comp_src = File.Comp.src comp in
       let build_dir = Path.C.build_ocaml alias_p in
       Run.download comp_src (Dirname.to_string build_dir);
@@ -329,9 +329,9 @@ let init_ocaml alias ocaml_version =
           "The compilation of compiler version %s failed"
           (OCaml_V.to_string ocaml_version)
     end else
-      File.Comp.write
-        (Path.G.compiler t.global ocaml_version)
-        (File.Comp.create_preinstalled ocaml_version) 
+      let comp = Path.G.compiler t.global ocaml_version in
+      if not (Filename.exists comp) then
+        File.Comp.write comp (File.Comp.create_preinstalled ocaml_version)
   end
 
 let init repo alias ocaml_version cores =
@@ -837,10 +837,7 @@ let remove name =
   if name = N.of_string Globals.default_package then
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = load_state () in
-  let map_installed = NV.to_map t.installed in
-  if not (N.Map.mem name map_installed) then
-    Globals.error_and_exit "Package %s is not installed" (N.to_string name);
-  let nv = NV.create name (V.Set.choose_one (N.Map.find name map_installed)) in
+  let nv = nv_of_name t name in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
   let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv `remove t nv]) in
   let depends =

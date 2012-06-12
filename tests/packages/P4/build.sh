@@ -8,3 +8,5 @@ COMP=${COMP0// /,}
 LINK=${LINK0// /,}
 
 ocamlbuild -cflags ${COMP} -lflags ${LINK} p4.native
+
+echo "TEST=${TEST}"

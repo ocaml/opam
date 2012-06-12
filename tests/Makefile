@@ -20,6 +20,8 @@ BINARIES  = opam opam-server opam-check \
 	    opam-git-init opam-git-update opam-git-download opam-git-upload
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
+OCAMLVERSION = $(shell ocamlc -version)
+
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
 OPAM = $(ENV) opam --yes --root $(OPAM_ROOT)
@@ -51,7 +53,10 @@ run:
 	$(MAKE) upgrade && \
 	$(MAKE) list && \
 	$(MAKE) downgrade && \
-	$(MAKE) list 
+	$(MAKE) list && \
+	$(MAKE) switch-alias && \
+	$(MAKE) list && \
+	$(MAKE) switch-env
 
 rsync:
 	$(MAKE) REPOKIND=rsync run
@@ -199,6 +204,17 @@ endif
 downgrade:
 	$(OPAM) install P4.2
 	$(CHECK) -l downgrade P1.1 P2.1 P3.1~weird-version.test P4.2
+
+switch-alias:
+	$(OPAM) remove P3.1~weird-version.test P4.2
+	$(CHECK) -l switch-alias P1.1 P2.1
+	$(OPAM) switch -alias test $(OCAMLVERSION) -clone
+	$(CHECK) -l switch-alias P1.1 P2.1
+	$(OPAM) switch -list
+
+switch-env:
+	$(OPAM) switch dummy
+	$(OPAM) install P4
 
 switch:
 	$(MAKE) fresh
