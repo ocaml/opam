@@ -969,7 +969,9 @@ let config request =
         let oversion = List.assoc alias aliases in
         File.Comp.safe_read (Path.G.compiler t.global oversion) in
       let names =
-        File.Comp.packages comp
+        List.filter
+          (fun n -> NV.Set.exists (fun nv -> NV.name nv = n) t.installed)
+          (File.Comp.packages comp)
         @ List.map Full_section.package c.options in
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
@@ -1176,7 +1178,7 @@ let switch clone alias ocaml_version =
     N.Map.fold (fun name versions list ->
       (NV.create name (V.Set.max_elt versions)) :: list
     ) packages [] in
-  let wish_install = List.map vpkg_of_nv_le packages in
+  let wish_install = List.map vpkg_of_nv_eq packages in
 
   resolve `switch t_new
     { wish_install
