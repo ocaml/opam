@@ -165,14 +165,13 @@ module Make (G : G) = struct
         let pid, status = wait !pids in
         let n = IntMap.find pid !pids in
         pids := IntMap.remove pid !pids;
-        match status with
-        | Unix.WEXITED 0 ->
-            t := visit !t n;
-            post n;
-            loop (nslots + 1)
-        | _ ->
-            errors := n :: !errors;
-            loop nslots
+        (match status with
+          | Unix.WEXITED 0 ->
+              t := visit !t n;
+              post n
+          | _ ->
+              errors := n :: !errors);
+        loop (succ nslots)
 
       ) else if S.is_empty !todo then (
 
