@@ -224,6 +224,7 @@ let install_initial_package () =
   let vars = List.map
     (fun (s,p) -> Variable.of_string s, S (Dirname.to_string p))
     [
+      ("prefix", Path.C.root t.compiler);
       ("lib", Path.C.lib_dir t.compiler);
       ("bin", Path.C.bin t.compiler);
       ("doc", Path.C.doc_dir t.compiler);
@@ -243,6 +244,40 @@ let install_initial_package () =
     "Please verify that %S is in your ld.conf.\n"
     (Dirname.to_string stublibs)
 
+(* Return the contents of a fully qualified variable *)
+let contents_of_variable t v =
+  let name = Full_variable.package v in
+  let var = Full_variable.variable v in
+  let installed = mem_installed_package_by_name t name in
+  if var = Variable.enable && installed then
+    S "enable"
+  else if var = Variable.enable && not installed then
+    S "disable"
+  else if var = Variable.installed then
+    B installed
+  else if not installed then
+    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+  else begin
+    let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+    try match Full_variable.section v with
+      | None   -> File.Dot_config.variable c var
+      | Some s -> File.Dot_config.Section.variable c s var
+    with Not_found ->
+      Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
+  end
+
+(* Substitute the file contents *)
+let substitute_file t f =
+  let f = Filename.of_basename f in
+  let src = Filename.add_extension f "in" in
+  let contents = File.Subst.read src in
+  let newcontents = File.Subst.replace contents (contents_of_variable t) in
+  File.Subst.write f newcontents
+
+(* Substitue the string contents *)
+let substitute_string t s =
+  File.Subst.replace_string s (contents_of_variable t)
+
 (* We assume that we have the right ocaml-version in $opam/config. Then we:
    - create $opam/$alias
    - compiles and install $opam/compiler/$descr.comp if $descr <> current version *)
@@ -260,30 +295,43 @@ let init_ocaml alias ocaml_version =
     let aliases_f = Path.G.aliases t.global in
     let aliases = File.Aliases.safe_read aliases_f in
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
-    if OCaml_V.current () <> Some ocaml_version then begin
-      let comp = File.Comp.read (Path.G.compiler t.global ocaml_version) in
+    let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
+    if OCaml_V.current () <> Some ocaml_version && not (File.Comp.preinstalled comp) then begin
       let comp_src = File.Comp.src comp in
       let build_dir = Path.C.build_ocaml alias_p in
       Run.download comp_src (Dirname.to_string build_dir);
+      let patches = File.Comp.patches comp in
+      List.iter (fun f -> Run.download f (Dirname.to_string build_dir)) patches;
+      Run.in_dir
+        (Dirname.to_string build_dir)
+        (fun () ->
+          let patches = List.map Stdlib_filename.basename patches in
+          List.iter Run.patch patches);
       let err =
-        Dirname.exec build_dir
-          [ ( "./configure" :: File.Comp.configure comp )
-            @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
-          (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-          (* NOTE In case it exists 2 '-prefix', in general the script
-             ./configure will only consider the last one, others will be
-             discarded. *)
-          ; ( "make" :: File.Comp.make comp )
-          ; [ "make" ; "install" ]
-          ] in
+        if File.Comp.configure comp @ File.Comp.make comp <> [] then
+          Dirname.exec build_dir
+            [ ( "./configure" :: File.Comp.configure comp )
+              @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
+            (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+            (* NOTE In case it exists 2 '-prefix', in general the script
+               ./configure will only consider the last one, others will be
+               discarded. *)
+            ; ( "make" :: File.Comp.make comp )
+            ; [ "make" ; "install" ]
+          ]
+        else
+          let builds =
+            List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+          Dirname.exec build_dir builds
+      in
       if err <> 0 then
         Globals.error_and_exit
           "The compilation of compiler version %s failed"
           (OCaml_V.to_string ocaml_version)
     end else
-      File.Comp.write
-        (Path.G.compiler t.global ocaml_version)
-        (File.Comp.create_preinstalled ocaml_version) 
+      let comp = Path.G.compiler t.global ocaml_version in
+      if not (Filename.exists comp) then
+        File.Comp.write comp (File.Comp.create_preinstalled ocaml_version)
   end
 
 let init repo alias ocaml_version cores =
@@ -587,40 +635,6 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
-(* Return the contents of a fully qualified variable *)
-let contents_of_variable t v =
-  let name = Full_variable.package v in
-  let var = Full_variable.variable v in
-  let installed = mem_installed_package_by_name t name in
-  if var = Variable.enable && installed then
-    S "enable"
-  else if var = Variable.enable && not installed then
-    S "disable"
-  else if var = Variable.installed then
-    B installed
-  else if not installed then
-    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
-  else begin
-    let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-    try match Full_variable.section v with
-      | None   -> File.Dot_config.variable c var
-      | Some s -> File.Dot_config.Section.variable c s var
-    with Not_found ->
-      Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
-  end
-
-(* Substitue the string contents *)
-let substitute_string t s =
-  File.Subst.replace_string s (contents_of_variable t)
-
-(* Substitute the file contents *)
-let substitute_file t f =
-  let f = Filename.of_basename f in
-  let src = Filename.add_extension f "in" in
-  let contents = File.Subst.read src in
-  let newcontents = File.Subst.replace contents (contents_of_variable t) in
-  File.Subst.write f newcontents
-
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with
@@ -640,6 +654,14 @@ let proceed_tochange t nv_old nv =
   Dirname.chdir (Path.C.build t.compiler nv);
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
+  (* Get the env variables set up in the compiler description file *)
+  (* XXX: We should get the ones defined in the dependents packages as well *)
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
+  let comp_f = Path.G.compiler t.global ocaml_version in
+  let comp = File.Comp.read comp_f in
+  let add_to_env = File.Comp.env comp in
+
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t))
     (File.OPAM.build opam) in
@@ -647,7 +669,7 @@ let proceed_tochange t nv_old nv =
   Globals.msg "[%s] Build commands:\n  %s\n"
     (NV.to_string nv)
     (String.concat "\n  " commands_s);
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build
+  let err = Dirname.exec ~add_to_env ~add_to_path:[Path.C.bin t.compiler] p_build
     commands in
   if err = 0 then
     try proceed_toinstall t nv
@@ -815,10 +837,7 @@ let remove name =
   if name = N.of_string Globals.default_package then
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = load_state () in
-  let map_installed = NV.to_map t.installed in
-  if not (N.Map.mem name map_installed) then
-    Globals.error_and_exit "Package %s is not installed" (N.to_string name);
-  let nv = NV.create name (V.Set.choose_one (N.Map.find name map_installed)) in
+  let nv = nv_of_name t name in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
   let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv `remove t nv]) in
   let depends =
@@ -950,7 +969,9 @@ let config request =
         let oversion = List.assoc alias aliases in
         File.Comp.safe_read (Path.G.compiler t.global oversion) in
       let names =
-        File.Comp.packages comp
+        List.filter
+          (fun n -> NV.Set.exists (fun nv -> NV.name nv = n) t.installed)
+          (File.Comp.packages comp)
         @ List.map Full_section.package c.options in
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
@@ -1157,7 +1178,7 @@ let switch clone alias ocaml_version =
     N.Map.fold (fun name versions list ->
       (NV.create name (V.Set.max_elt versions)) :: list
     ) packages [] in
-  let wish_install = List.map vpkg_of_nv_le packages in
+  let wish_install = List.map vpkg_of_nv_eq packages in
 
   resolve `switch t_new
     { wish_install

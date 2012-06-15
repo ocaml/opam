@@ -179,10 +179,12 @@ let add_path bins =
 
 type command = string list
 
-let run_process ?(add_to_path = []) = function
+let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
       let env, path = add_path add_to_path in
+      let add_to_env = List.map (fun (k,v) -> k^"="^v) add_to_env in
+      let env = Array.concat [ env; Array.of_list add_to_env ] in
       let name = log_file () in
       mkdir (Filename.dirname name);
       let str = String.concat " " (cmd :: args) in
@@ -195,8 +197,8 @@ let run_process ?(add_to_path = []) = function
         Process.clean_files r;
       r
 
-let command ?(add_to_path = []) cmd =
-  let r = run_process ~add_to_path cmd in
+let command ?(add_to_env=[]) ?(add_to_path=[]) cmd =
+  let r = run_process ~add_to_env ~add_to_path cmd in
   r.Process.r_code
 
 let fold f =
@@ -207,11 +209,11 @@ let fold f =
     | err, _  -> err
   ) 0
 
-let commands ?(add_to_path = []) = 
-  fold (command ~add_to_path)
+let commands ?(add_to_env=[]) ?(add_to_path = []) = 
+  fold (command ~add_to_env ~add_to_path)
 
-let read_command_output ?(add_to_path = []) cmd =
-  let r = run_process ~add_to_path cmd in
+let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
+  let r = run_process ~add_to_env ~add_to_path cmd in
   r.Process.r_stdout
 
 let is_archive file =
@@ -330,13 +332,19 @@ let ocaml_version () =
 
 (* Only used by the compiler switch stuff *)
 let download src dst =
-  if Filename.check_suffix src "tar.gz"
-  || Filename.check_suffix src "tar.bz2" then
-    let cmd = match Globals.os with
-      | Globals.Darwin -> "ftp"
-      | _              -> "wget" in
-    let e = in_dir tmp_dir (fun () -> command [ cmd; src ]) in
-    if e = 0 then
-      extract (tmp_dir / Filename.basename src) dst
+  let cmd = match Globals.os with
+    | Globals.Darwin -> [ "curl"; "-OL"; src ]
+    | _              -> [ "wget"; src ] in
+  let e = in_dir tmp_dir (fun () -> command cmd) in
+  let tmp_file = tmp_dir / Filename.basename src in
+  if e = 0 then
+    if Filename.check_suffix src "tar.gz"
+    || Filename.check_suffix src "tar.bz2" then
+      extract tmp_file dst
     else
-      Globals.error_and_exit "Cannot download %s" src
+      copy tmp_file (dst / Filename.basename src)
+
+let patch p =
+  let err = command ["patch"; "-p0"; "-i"; p] in
+  if err <> 0 then
+    Globals.error_and_exit "Cannot apply patch %s" p

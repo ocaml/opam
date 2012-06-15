@@ -74,7 +74,9 @@ module Dirname: sig
   val list: t -> t list
 
   (** Execute a list of commands in a given directory *)
-  val exec: t -> ?add_to_path:t list -> string list list -> int
+  val exec: t
+    -> ?add_to_env:(string * string) list
+    -> ?add_to_path:t list -> string list list -> int
 
   (** Change the current directory *)
   val chdir: t -> unit
@@ -103,6 +105,7 @@ type raw = Raw.t
 module Stdlib_filename: sig
   val check_suffix: string -> string -> bool
   val concat: string -> string -> string
+  val basename: string -> string
 end
 
 (** non-directory filenames *)

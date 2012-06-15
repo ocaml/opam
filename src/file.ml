@@ -292,7 +292,7 @@ module Config = struct
         assoc s.contents s_opam_version (parse_string |> OPAM_V.of_string) in
       let repositories =
         assoc s.contents s_repositories
-          (parse_list (parse_string_option parse_string_pair |> to_repo)) in
+          (parse_list (parse_string_option parse_string_pair_of_list |> to_repo)) in
       let ocaml_version =
         assoc s.contents s_ocaml_version (parse_string |> Alias.of_string) in
       let cores = assoc s.contents s_cores parse_int in
@@ -717,6 +717,7 @@ module Comp = struct
     patches      : string list ;
     configure    : string list ;
     make         : string list ;
+    build        : string list list ;
     bytecomp     : string list ;
     asmcomp      : string list ;
     bytelink     : string list ;
@@ -724,6 +725,7 @@ module Comp = struct
     packages     : name list ;
     requires     : section list; 
     pp           : ppflag option;
+    env          : (string * string) list;
   }
 
   let empty = {
@@ -734,6 +736,7 @@ module Comp = struct
     patches   = [];
     configure = [];
     make      = [];
+    build     = [];
     bytecomp  = [];
     asmcomp   = [];
     bytelink  = [];
@@ -741,6 +744,7 @@ module Comp = struct
     packages  = [];
     requires  = [];
     pp        = None;
+    env       = [];
   }
 
   let create_preinstalled name =
@@ -751,6 +755,7 @@ module Comp = struct
   let s_patches   = "patches"
   let s_configure = "configure"
   let s_make      = "make"
+  let s_build     = "build"
   let s_bytecomp  = "bytecomp"
   let s_asmcomp   = "asmcomp"
   let s_bytelink  = "bytelink"
@@ -758,11 +763,33 @@ module Comp = struct
   let s_packages  = "packages"
   let s_requires  = "requires"
   let s_pp        = "pp"
+  let s_env       = "env"
   let s_preinstalled = "preinstalled"
 
+  let valid_fields = [
+    s_opam_version;
+    s_name;
+    s_src;
+    s_patches;
+    s_configure;
+    s_make;
+    s_build;
+    s_bytecomp;
+    s_asmcomp;
+    s_bytelink;
+    s_asmlink;
+    s_packages;
+    s_requires;
+    s_pp;
+    s_env;
+    s_preinstalled;
+  ]
+
   let name t = t.name
+  let patches t = t.patches
   let configure t = t.configure
   let make t = t.make
+  let build t = t.build
   let src t = t.src
   let packages t = t.packages
   let asmlink t = t.asmlink
@@ -772,9 +799,11 @@ module Comp = struct
   let requires t = t.requires
   let pp t = t.pp
   let preinstalled t = t.preinstalled
+  let env t = t.env
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
+    Syntax.check file valid_fields;
     let s = file.contents in
     let parse_camlp4 = function
       | List ( Ident "CAMLP4" :: l ) ->
@@ -788,10 +817,12 @@ module Comp = struct
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
-    let src       = assoc s s_src parse_string in 
+    let src       = assoc_default "" s s_src parse_string in
     let patches   = assoc_string_list s s_patches   in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
+    let build     = assoc_list s s_build (parse_list parse_string_list) in
+    let env       = assoc_list s s_env (parse_list parse_string_pair) in
     let bytecomp  = assoc_string_list s s_bytecomp  in
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
@@ -809,10 +840,19 @@ module Comp = struct
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
     let preinstalled = assoc_default false  s s_preinstalled parse_bool in
+
+    if build <> [] && (configure @ make) <> [] then
+      Globals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
+                              fields at the same time.";
+    if not preinstalled && src = "" then
+      Globals.error_and_exit "You should either specify an url (with 'sources')  \
+                              or use 'preinstalled: true' to pick the already installed \
+                              compiler version.";
     { opam_version; name; src;
-      patches; configure; make; bytecomp; asmcomp; bytelink; asmlink; packages;
+      patches; configure; make; build;
+      bytecomp; asmcomp; bytelink; asmlink; packages;
       requires; pp;
-      preinstalled;
+      preinstalled; env;
     }
 
   let to_string filename s =
@@ -829,12 +869,14 @@ module Comp = struct
         Variable (s_patches     , make_list make_string s.patches);
         Variable (s_configure   , make_list make_string s.configure);
         Variable (s_make        , make_list make_string s.make);
+        Variable (s_build       , make_list (make_list make_string) s.build);
         Variable (s_bytecomp    , make_list make_string s.bytecomp);
         Variable (s_asmcomp     , make_list make_string s.asmcomp);
         Variable (s_bytelink    , make_list make_string s.bytelink);
         Variable (s_asmlink     , make_list make_string s.asmlink);
         Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
+        Variable (s_env         , make_list (make_pair make_string) s.env);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]

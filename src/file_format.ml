@@ -136,9 +136,13 @@ let parse_string_option f = function
 
 let parse_string_list = parse_list parse_string
 
-let parse_string_pair = function
+let parse_string_pair_of_list = function
   | [String x; String y] -> (x,y)
   | x                    -> bad_format "Expecting a pair of strings, got %s" (kinds x)
+
+let parse_string_pair = function
+  | List [String x; String y] -> (x,y)
+  | x                         -> bad_format "Expecting a pair of strings, got %s"(kind x)
 
 let parse_single_string = function
   | [String x] -> x
@@ -169,6 +173,8 @@ let make_list fn l = List (List.map fn l)
 let make_group fn g = Group (List.map fn g)
 
 let make_option f g (v,l) = Option (f v, List.map g l)
+
+let make_pair f (k,v) = List [f k; f v]
 
 (* Printing *)
 

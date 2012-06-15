@@ -102,7 +102,10 @@ val parse_string_list : value -> string list
 val parse_single_string: value list -> string
 
 (** Parse a pair of strings *)
-val parse_string_pair: value list -> string * string
+val parse_string_pair: value -> string * string
+
+(** Parse a pair of strings from a list of values *)
+val parse_string_pair_of_list: value list -> string * string
 
 (** Try to parse the value using function from the list. All the
     parsing functions are tried until one succeeds. The first argument
@@ -134,6 +137,9 @@ val make_group : ('a -> value) -> 'a list -> value
 
 (** Create a value and its optional arguments *)
 val make_option : ('a -> value) -> ('b -> value) -> 'a * 'b list -> value
+
+(** Create a pair *)
+val make_pair: ('a -> value) -> ('a * 'a) -> value
 
 (** {2 Printing functions} *)
 
