@@ -240,7 +240,15 @@ let extract file dst =
     Globals.error_and_exit "Error while extracting %s" file
   else
     let aux accu name =
-      if not (Sys.is_directory (tmp_dir / name)) then
+      if
+        not 
+          (let n = tmp_dir / name in
+           try Sys.is_directory n with
+             | Sys_error s when s = Printf.sprintf "%s: No such file or directory" n 
+               (* for instance, when wrong symbolic link *) -> 
+               Globals.warning "the file %s is skipped" n;
+               true) 
+      then
         let root = root name in
         let n = String.length root in
         let rest = String.sub name n (String.length name - n) in 
