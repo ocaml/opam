@@ -405,7 +405,10 @@ module OPAM = struct
   let conflicts t = t.conflicts
   let libraries t = t.libraries
   let syntax t = t.syntax
-    
+
+  let with_depends t depends = { t with depends }
+  let with_build t build = { t with build }
+
   module D = Debian.Packages
 
   (* XXX: Pre-encode the depends and conflict fields to avoid
