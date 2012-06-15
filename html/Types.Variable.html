@@ -31,23 +31,13 @@
 </div>
 <center><h1>Module <a href="type_Types.Variable.html">Types.Variable</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Variable: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre>Variable names are used in .config files<br>
+<pre><span class="keyword">module</span> Variable: <code class="code">sig</code> <a href="Types.Variable.html">..</a> <code class="code">end</code></pre>Variable names are used in .config files<br>
 <hr width="100%">
-<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
-<div class="info">
-Abstract type<br>
+<pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span id="VALenable"><span class="keyword">val</span> enable</span> : <code class="type">t</code></pre><div class="info">
+the variable <code class="code">enable</code><br>
 </div>
-
-<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> <a href="Types.Abstract.html#TYPEt">t</a></code></pre><div class="info">
-Create an abstract value from a string<br>
-</div>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Types.Abstract.html#TYPEt">t</a> -> string</code></pre><div class="info">
-Convert an abstract value to a string<br>
-</div>
-<pre><span class="keyword">module</span> <a href="Types.Abstract.Set.html">Set</a>: <code class="type">Set.S</code><code class="type">  with type elt = t</code></pre><div class="info">
-Collection of abstract values
-</div>
-<pre><span class="keyword">module</span> <a href="Types.Abstract.Map.html">Map</a>: <code class="type">Map.S</code><code class="type">  with type key = t</code></pre><div class="info">
-Dictionaries of abstract values
+<pre><span id="VALinstalled"><span class="keyword">val</span> installed</span> : <code class="type">t</code></pre><div class="info">
+the variable <code class="code">installed</code><br>
 </div>
 </body></html>

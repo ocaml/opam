@@ -46,11 +46,18 @@ Return the compiler name<br>
 <pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type">t -> string</code></pre><div class="info">
 Return the url of the compiler<br>
 </div>
+<pre><span id="VALpatches"><span class="keyword">val</span> patches</span> : <code class="type">t -> string list</code></pre><div class="info">
+Return the list of patches to apply<br>
+</div>
 <pre><span id="VALconfigure"><span class="keyword">val</span> configure</span> : <code class="type">t -> string list</code></pre><div class="info">
 Options to give to the "./configure" command<br>
 </div>
 <pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">t -> string list</code></pre><div class="info">
 Options to give to the "make" command<br>
+</div>
+<pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> string list list</code></pre><div class="info">
+Options to give to build the package. If this one is provided,
+      nothing should be specified for <code class="code">configure</code> and <code class="code">make</code>.<br>
 </div>
 <pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type">t -> <a href="Types.html#TYPEname">Types.name</a> list</code></pre><div class="info">
 Packages to install immediately after the creation of OCaml<br>
@@ -75,5 +82,9 @@ Libraries to link with<br>
 </div>
 <pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">t -> <a href="Types.html#TYPEppflag">Types.ppflag</a> option</code></pre><div class="info">
 Preprocessing options<br>
+</div>
+<pre><span id="VALenv"><span class="keyword">val</span> env</span> : <code class="type">t -> (string * string) list</code></pre><div class="info">
+Environment variable to set-up before running commands in the
+      subtree<br>
 </div>
 </body></html>

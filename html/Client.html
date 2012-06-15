@@ -51,8 +51,8 @@ Displays a general summary of a package.<br>
 Depending on request, returns options or directories where the
     package is installed.<br>
 </div>
-<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">Types.N.t -> unit</code></pre><div class="info">
-Installs the given package. Take the global file lock.<br>
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">Types.N.Set.t -> unit</code></pre><div class="info">
+Installs the given set of packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Refresh the available packages. Take the global file lock.<br>

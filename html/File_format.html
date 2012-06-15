@@ -227,8 +227,11 @@ Parse a list of strings<br>
 <pre><span id="VALparse_single_string"><span class="keyword">val</span> parse_single_string</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string</code></pre><div class="info">
 Parse a single string<br>
 </div>
-<pre><span id="VALparse_string_pair"><span class="keyword">val</span> parse_string_pair</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string * string</code></pre><div class="info">
+<pre><span id="VALparse_string_pair"><span class="keyword">val</span> parse_string_pair</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string * string</code></pre><div class="info">
 Parse a pair of strings<br>
+</div>
+<pre><span id="VALparse_string_pair_of_list"><span class="keyword">val</span> parse_string_pair_of_list</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> list -> string * string</code></pre><div class="info">
+Parse a pair of strings from a list of values<br>
 </div>
 <pre><span id="VALparse_or"><span class="keyword">val</span> parse_or</span> : <code class="type">(string * (<a href="File_format.html#TYPEvalue">value</a> -> 'a)) list -> <a href="File_format.html#TYPEvalue">value</a> -> 'a</code></pre><div class="info">
 Try to parse the value using function from the list. All the
@@ -260,6 +263,9 @@ Create a group of 'things'<br>
 </div>
 <pre><span id="VALmake_option"><span class="keyword">val</span> make_option</span> : <code class="type">('a -> <a href="File_format.html#TYPEvalue">value</a>) -><br>       ('b -> <a href="File_format.html#TYPEvalue">value</a>) -> 'a * 'b list -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
 Create a value and its optional arguments<br>
+</div>
+<pre><span id="VALmake_pair"><span class="keyword">val</span> make_pair</span> : <code class="type">('a -> <a href="File_format.html#TYPEvalue">value</a>) -> 'a * 'a -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Create a pair<br>
 </div>
 <br>
 <span id="2_Printingfunctions"><h2>Printing functions</h2></span><br>

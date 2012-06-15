@@ -166,6 +166,8 @@ List all the available packages:
 Return the base name
 </div>
 </td></tr>
+<tr><td><a href="Types.Stdlib_filename.html#VALbasename">basename</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
+<td></td></tr>
 <tr><td><a href="Types.Dirname.html#VALbasename">basename</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
 <td><div class="info">
 Return the deeper directory name
@@ -186,6 +188,11 @@ List of files to install in $bin/
 Tempory folders used to decompress and compile 
       the corresponding archives:
       <i>$opam/$OVERSION/build/$NAME-$VERSION</i>
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html#VALbuild">build</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Options to give to build the package.
 </div>
 </td></tr>
 <tr><td><a href="File.OPAM.html#VALbuild">build</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
@@ -254,6 +261,11 @@ Check whether a file has a given suffix
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
 <td></td></tr>
+<tr><td><a href="Types.Abstract.Set.html#VALchoose_one">choose_one</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<td><div class="info">
+Return one element.
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALchop_extension">chop_extension</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Remove the file extension
@@ -476,6 +488,11 @@ Does the solution implies deleting or updating a package
 Package dependencies
 </div>
 </td></tr>
+<tr><td><a href="File.OPAM.html#VALdepopts">depopts</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Optional dependencies
+</div>
+</td></tr>
 <tr><td><a href="Path.R.html#VALdescr">descr</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the description file for a given package:
@@ -537,6 +554,17 @@ The empty file
 <tr><td><a href="File.IO_FILE.html#VALempty">empty</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
 Empty file
+</div>
+</td></tr>
+<tr><td><a href="Types.Variable.html#VALenable">enable</a> [<a href="Types.Variable.html">Types.Variable</a>]</td>
+<td><div class="info">
+the variable <code class="code">enable</code>
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html#VALenv">env</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Environment variable to set-up before running commands in the
+      subtree
 </div>
 </td></tr>
 <tr><td><a href="Types.Dirname.html#VALexec">exec</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
@@ -645,12 +673,17 @@ Installed files for a given package:
 </td></tr>
 <tr><td><a href="Client.html#VALinstall">install</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Installs the given package.
+Installs the given set of packages.
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALinstall_dir">install_dir</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Installed files: <i>$opam/$OVERSION/install/</i>
+</div>
+</td></tr>
+<tr><td><a href="Types.Variable.html#VALinstalled">installed</a> [<a href="Types.Variable.html">Types.Variable</a>]</td>
+<td><div class="info">
+the variable <code class="code">installed</code>
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALinstalled">installed</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -801,6 +834,11 @@ Create a list of 'things'
 Create a value and its optional arguments
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALmake_pair">make_pair</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Create a pair
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALmake_string">make_string</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Create a string
@@ -882,6 +920,11 @@ Create a new pair from a debian package
 <tr><td><a href="Types.NV.html#VALof_filename">of_filename</a> [<a href="Types.NV.html">Types.NV</a>]</td>
 <td><div class="info">
 Create a new pair from a filename.
+</div>
+</td></tr>
+<tr><td><a href="Types.Abstract.Set.html#VALof_list">of_list</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<td><div class="info">
+Make a set from a list
 </div>
 </td></tr>
 <tr><td><a href="Path.R.html#VALof_path">of_path</a> [<a href="Path.R.html">Path.R</a>]</td>
@@ -1018,9 +1061,24 @@ Parse a string with an optional argument
 Parse a pair of strings
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALparse_string_pair_of_list">parse_string_pair_of_list</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Parse a pair of strings from a list of values
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_symbol">parse_symbol</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse a symbol
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALpatch">patch</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+Apply a patch file in the current directory
+</div>
+</td></tr>
+<tr><td><a href="File.Comp.html#VALpatches">patches</a> [<a href="File.Comp.html">File.Comp</a>]</td>
+<td><div class="info">
+Return the list of patches to apply
 </div>
 </td></tr>
 <tr><td><a href="File.Comp.html#VALpp">pp</a> [<a href="File.Comp.html">File.Comp</a>]</td>
@@ -1234,11 +1292,6 @@ Pretty-print
 Convert a request to a string
 </div>
 </td></tr>
-<tr><td><a href="Types.NV.html#VALstring_of_set">string_of_set</a> [<a href="Types.NV.html">Types.NV</a>]</td>
-<td><div class="info">
-Convert a set of pairs to a string
-</div>
-</td></tr>
 <tr><td><a href="Types.html#VALstring_of_upload">string_of_upload</a> [<a href="Types.html">Types</a>]</td>
 <td><div class="info">
 Pretty-print
@@ -1301,6 +1354,11 @@ Convert to Debian packages to feed the solver
 <tr><td><a href="File.IO_FILE.html#VALto_raw">to_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
 <td><div class="info">
 Return the file contents
+</div>
+</td></tr>
+<tr><td><a href="Types.Abstract.Set.html#VALto_string">to_string</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<td><div class="info">
+Pretty-print a set
 </div>
 </td></tr>
 <tr><td><a href="Types.Abstract.html#VALto_string">to_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
@@ -1432,6 +1490,10 @@ Package version
 <code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results
 </div>
 </td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_build">with_build</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td></td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_depends">with_depends</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td></td></tr>
 <tr><td><a href="Run.html#VALwith_flock">with_flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 Functional version of <code class="code">flock / funlock</code>

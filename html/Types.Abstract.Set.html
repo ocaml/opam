@@ -29,6 +29,16 @@
 </div>
 <center><h1>Module <a href="type_Types.Abstract.Set.html">Types.Abstract.Set</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Set: <code class="type">Set.S</code><code class="type">  with type elt = t</code></pre>Collection of abstract values<br>
+<pre><span class="keyword">module</span> Set: <code class="code">sig</code> <a href="Types.Abstract.Set.html">..</a> <code class="code">end</code></pre>Collection of abstract values<br>
 <hr width="100%">
+<pre><span class="keyword">include</span> Set.S</pre>
+<pre><span id="VALchoose_one"><span class="keyword">val</span> choose_one</span> : <code class="type"><a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> elt</code></pre><div class="info">
+Return one element. Fail if the set is not a singleton.<br>
+</div>
+<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">elt list -> <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a></code></pre><div class="info">
+Make a set from a list<br>
+</div>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> string</code></pre><div class="info">
+Pretty-print a set<br>
+</div>
 </body></html>
