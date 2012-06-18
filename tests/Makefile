@@ -219,6 +219,8 @@ ifeq ($(REPOKIND), git)
 else
 	$(CHECK) -l switch-env-packages P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
+#	include $(OPAM_ROOT)/dummy/build/P4.3/P4.env
+#	if [ x$(TEST) != "x1" ]; then echo "wrong value for TEST"; exit 1; fi
 
 switch:
 	$(MAKE) fresh

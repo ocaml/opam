@@ -141,6 +141,9 @@ val make_option : ('a -> value) -> ('b -> value) -> 'a * 'b list -> value
 (** Create a pair *)
 val make_pair: ('a -> value) -> ('a * 'a) -> value
 
+(** Create a pair of strings *)
+val make_string_pair: string * string -> value
+
 (** {2 Printing functions} *)
 
 (** Print a value *)

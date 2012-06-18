@@ -148,8 +148,11 @@ module Reinstall: IO_FILE with type t = NV.Set.t
 (** List of updated packages: [$opam/$repo/$repo/updated] *)
 module Updated: IO_FILE with type t = NV.Set.t
 
+(** Environement variables *)
+module Env: IO_FILE with type t = (string * string) list
+
 (** Compiler version [$opam/compilers/] *)
-module Comp : sig
+module Comp: sig
 
   include IO_FILE
 

@@ -586,14 +586,16 @@ module Dot_config = struct
   type t = {
     sections : s list;
     variables: (variable * variable_contents) list;
+    env      : (string * string) list;
   }
 
   let create variables =
-    { variables; sections = [] }
+    { variables; sections = []; env = []; }
 
   let empty = {
     sections  = [];
     variables = [];
+    env       = [];
   }
 
   let s_bytecomp = "bytecomp"
@@ -601,6 +603,7 @@ module Dot_config = struct
   let s_bytelink = "bytelink"
   let s_asmlink  = "asmlink"
   let s_requires = "requires"
+  let s_env      = "env"
 
   let valid_fields = [
     s_opam_version;
@@ -609,6 +612,7 @@ module Dot_config = struct
     s_bytelink;
     s_asmlink;
     s_requires;
+    s_env;
   ]
 
   let of_string filename str =
@@ -634,7 +638,8 @@ module Dot_config = struct
     let syntax    = assoc_sections file.contents "syntax" (parse_section "syntax") in
     let sections  = libraries @ syntax in
     let variables = parse_variables file.contents in
-    { sections; variables }
+    let env       = assoc_list file.contents s_env (parse_list parse_string_pair) in
+    { sections; variables; env }
 
   let rec to_string filename t =
     let of_value = function
@@ -660,6 +665,7 @@ module Dot_config = struct
       contents =
         of_variables t.variables
         @ List.map of_section t.sections
+        @ [ Variable (s_env, make_list make_string_pair t.env) ]
     }
 
   let variables t = List.map fst t.variables
@@ -699,6 +705,32 @@ module Dot_config = struct
   module Syntax   = MK (struct let get t = filter t "syntax"  end)
   module Section  = MK (struct let get t = t.sections end)
 end
+
+module Env = struct
+
+  let internal = "env"
+
+  type t = (string * string) list
+
+  let empty = []
+
+  let of_string filename s =
+    let l = Lines.of_string filename s in
+    List.fold_left (fun accu -> function
+      | []  -> accu
+      | [s] ->
+          (match Utils.cut_at s '=' with
+          | None      -> failwith (s ^ ": invalid env variable")
+          | Some(k,v) -> (k, v) :: accu)
+      | x   -> failwith (String.concat " " x ^ ": invalid env variable")
+    ) [] l
+
+  let to_string filename t =
+    let l = List.map (fun (k,v) -> [ k^"="^v ]) t in
+    Lines.to_string filename l
+
+end
+
 
 module Comp = struct
 
@@ -873,7 +905,7 @@ module Comp = struct
         Variable (s_asmlink     , make_list make_string s.asmlink);
         Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
-        Variable (s_env         , make_list (make_pair make_string) s.env);
+        Variable (s_env         , make_list make_string_pair s.env);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
@@ -1032,4 +1064,9 @@ end
 module Comp = struct
   include Comp
   include Make (Comp)
+end
+
+module Env = struct
+  include Env
+  include Make (Env)
 end

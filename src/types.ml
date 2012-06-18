@@ -273,19 +273,6 @@ type version = V.t
 module N: Abstract = Base
 type name = N.t
 
-let cut_at_aux fn s sep =
-  try
-    let i = String.index s sep in
-    let name = String.sub s 0 i in
-    let version = String.sub s (i+1) (String.length s - i - 1) in
-    Some (name, version)
-  with _ ->
-    None
-
-let cut_at = cut_at_aux String.index
-
-let rcut_at = cut_at_aux String.rindex
-
 module NV: sig
   include Abstract
   val name: t -> name
@@ -312,7 +299,7 @@ end = struct
   let sep = '.'
 
   let check s =
-    match cut_at s sep with
+    match Utils.cut_at s sep with
     | None        -> None
     | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
 
@@ -512,7 +499,7 @@ end = struct
   let section t = t.section
 
   let of_string str =
-    match cut_at str '.' with
+    match Utils.cut_at str '.' with
     | Some (n,s) ->
         { package = N.of_string n;
           section = Some (Section.of_string s) }
@@ -567,14 +554,14 @@ end = struct
       variable }
 
   let of_string s =
-      match rcut_at s ':' with
+      match Utils.rcut_at s ':' with
       | None ->
           create_global
             (N.of_string Globals.default_package)
             (Variable.of_string s)
       | Some (p,v) ->
           let v = Variable.of_string v in
-          match cut_at p '.' with
+          match Utils.cut_at p '.' with
           | None -> create_global (N.of_string p) v
           | Some (p,s) -> create_local (N.of_string p) (Section.of_string s) v
 

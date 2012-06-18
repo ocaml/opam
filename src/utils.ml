@@ -51,3 +51,16 @@ let is_inet_address address =
     let (_:Unix.inet_addr) = Unix.inet_addr_of_string address
     in true
   with _ -> false
+
+let cut_at_aux fn s sep =
+  try
+    let i = fn s sep in
+    let name = String.sub s 0 i in
+    let version = String.sub s (i+1) (String.length s - i - 1) in
+    Some (name, version)
+  with _ ->
+    None
+
+let cut_at = cut_at_aux String.index
+
+let rcut_at = cut_at_aux String.rindex

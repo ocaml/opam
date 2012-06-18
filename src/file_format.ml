@@ -176,6 +176,8 @@ let make_option f g (v,l) = Option (f v, List.map g l)
 
 let make_pair f (k,v) = List [f k; f v]
 
+let make_string_pair = make_pair make_string
+
 (* Printing *)
 
 let rec string_of_value = function

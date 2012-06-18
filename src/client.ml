@@ -661,6 +661,17 @@ let proceed_tochange t nv_old nv =
   let comp_f = Path.G.compiler t.global ocaml_version in
   let comp = File.Comp.read comp_f in
   let add_to_env = File.Comp.env comp in
+  let add_to_path = Path.C.bin t.compiler in
+
+  (* Generate an environnement file *)
+  let env_f = Path.C.build_env t.compiler nv in
+  let old_env_f = Path.C.build_old_env t.compiler nv in
+  let old_env = List.map (fun (k,v) -> k, try Sys.getenv k with _ -> "") add_to_env in
+  let old_path = "PATH", try Sys.getenv "PATH" with _ -> "" in
+  let new_path = "PATH",
+    (try (Sys.getenv "PATH")^":" with _ -> "") ^ Dirname.to_string add_to_path in
+  File.Env.write env_f (new_path :: add_to_env);
+  File.Env.write old_env_f (old_path :: old_env);
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t))
@@ -669,7 +680,7 @@ let proceed_tochange t nv_old nv =
   Globals.msg "[%s] Build commands:\n  %s\n"
     (NV.to_string nv)
     (String.concat "\n  " commands_s);
-  let err = Dirname.exec ~add_to_env ~add_to_path:[Path.C.bin t.compiler] p_build
+  let err = Dirname.exec ~add_to_env ~add_to_path:[add_to_path] p_build
     commands in
   if err = 0 then
     try proceed_toinstall t nv
