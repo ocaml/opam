@@ -58,6 +58,9 @@ Command to run to remove the package<br>
 <pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">t -> Debian.Format822.vpkgformula</code></pre><div class="info">
 Package dependencies<br>
 </div>
+<pre><span id="VALdepopts"><span class="keyword">val</span> depopts</span> : <code class="type">t -> Debian.Format822.vpkgformula</code></pre><div class="info">
+Optional dependencies<br>
+</div>
 <pre><span id="VALconflicts"><span class="keyword">val</span> conflicts</span> : <code class="type">t -> Debian.Format822.vpkglist</code></pre><div class="info">
 Package conflicts<br>
 </div>
@@ -73,4 +76,4 @@ Convert to Debian packages to feed the solver<br>
 <pre><span id="VALs_depopts"><span class="keyword">val</span> s_depopts</span> : <code class="type">string</code></pre><div class="info">
 deptopts (optional dependencies) string<br>
 </div>
-</body></html>
+<pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> Debian.Format822.vpkgformula -> t</code></pre><pre><span id="VALwith_build"><span class="keyword">val</span> with_build</span> : <code class="type">t -> string list list -> t</code></pre></body></html>

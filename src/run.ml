@@ -55,7 +55,9 @@ let copy src dst =
     output oc b 0 !read;
   done;
   close_in ic;
-  close_out oc
+  close_out oc;
+  let st = Unix.lstat src in
+  Unix.utimes dst (st.Unix.st_atime) (st.Unix.st_mtime)
 
 let read file =
   log "read %s" file;
@@ -238,7 +240,15 @@ let extract file dst =
     Globals.error_and_exit "Error while extracting %s" file
   else
     let aux accu name =
-      if not (Sys.is_directory (tmp_dir / name)) then
+      if
+        not 
+          (let n = tmp_dir / name in
+           try Sys.is_directory n with
+             | Sys_error s when s = Printf.sprintf "%s: No such file or directory" n 
+               (* for instance, when wrong symbolic link *) -> 
+               Globals.warning "the file %s is skipped" n;
+               true) 
+      then
         let root = root name in
         let n = String.length root in
         let rest = String.sub name n (String.length name - n) in 

@@ -84,15 +84,15 @@ Return the version of the current OCaml compiler. If no OCaml
 a command is a list of words<br>
 </div>
 
-<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> int</code></pre><div class="info">
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> int</code></pre><div class="info">
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code>. Return the exit code.<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> int</code></pre><div class="info">
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> int</code></pre><div class="info">
 <code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning. 
     It stops whenever one command fails.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> and return
     the lines from stdout<br>
 </div>
@@ -127,5 +127,8 @@ Functional version of <code class="code">flock / funlock</code><br>
 download compiler sources.
     Currently support only tar.gz/tar.bz2, but should be able to support
     git and svn as well.<br>
+</div>
+<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info">
+Apply a patch file in the current directory<br>
 </div>
 </body></html>
