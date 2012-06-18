@@ -275,7 +275,7 @@ type name = N.t
 
 let cut_at_aux fn s sep =
   try
-    let i = String.index s sep in
+    let i = fn s sep in
     let name = String.sub s 0 i in
     let version = String.sub s (i+1) (String.length s - i - 1) in
     Some (name, version)
