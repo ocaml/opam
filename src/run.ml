@@ -55,7 +55,9 @@ let copy src dst =
     output oc b 0 !read;
   done;
   close_in ic;
-  close_out oc
+  close_out oc;
+  let st = Unix.lstat src in
+  Unix.utimes dst (st.Unix.st_atime) (st.Unix.st_mtime)
 
 let read file =
   log "read %s" file;
