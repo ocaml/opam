@@ -635,6 +635,32 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
+type env = {
+  add_to_env : (string * string) list;
+  add_to_path: dirname list;
+  old_env    : (string * string) list;
+  new_env    : (string * string) list;
+}
+
+(* XXX: We should get the ones defined in the dependents packages as well *)
+let get_env t =
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
+  let comp_f = Path.G.compiler t.global ocaml_version in
+  let comp = File.Comp.read comp_f in
+
+  let add_to_path = [Path.C.bin t.compiler] in
+  let new_path = "PATH",
+    String.concat ":" (List.map Dirname.to_string add_to_path)
+    ^ (try ":"^(Sys.getenv "PATH") with _ -> "") in
+  let add_to_env = File.Comp.env comp in
+  let new_env = new_path :: add_to_env in
+
+  let old_path = "PATH", try Sys.getenv "PATH" with _ -> "" in
+  let old_env = old_path :: List.map (fun (k,v) -> k, try Sys.getenv k with _ -> "") add_to_env in
+
+  { add_to_env; add_to_path; old_env; new_env }
+
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with
@@ -655,23 +681,13 @@ let proceed_tochange t nv_old nv =
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Get the env variables set up in the compiler description file *)
-  (* XXX: We should get the ones defined in the dependents packages as well *)
-  let aliases = File.Aliases.read (Path.G.aliases t.global) in
-  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
-  let comp_f = Path.G.compiler t.global ocaml_version in
-  let comp = File.Comp.read comp_f in
-  let add_to_env = File.Comp.env comp in
-  let add_to_path = Path.C.bin t.compiler in
+  let env = get_env t in
 
   (* Generate an environnement file *)
   let env_f = Path.C.build_env t.compiler nv in
+  File.Env.write env_f env.new_env;
   let old_env_f = Path.C.build_old_env t.compiler nv in
-  let old_env = List.map (fun (k,v) -> k, try Sys.getenv k with _ -> "") add_to_env in
-  let old_path = "PATH", try Sys.getenv "PATH" with _ -> "" in
-  let new_path = "PATH",
-    (try (Sys.getenv "PATH")^":" with _ -> "") ^ Dirname.to_string add_to_path in
-  File.Env.write env_f (new_path :: add_to_env);
-  File.Env.write old_env_f (old_path :: old_env);
+  File.Env.write old_env_f env.old_env;
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t))
@@ -680,8 +696,12 @@ let proceed_tochange t nv_old nv =
   Globals.msg "[%s] Build commands:\n  %s\n"
     (NV.to_string nv)
     (String.concat "\n  " commands_s);
-  let err = Dirname.exec ~add_to_env ~add_to_path:[add_to_path] p_build
-    commands in
+  let err =
+    Dirname.exec
+      ~add_to_env:env.add_to_env
+      ~add_to_path:env.add_to_path
+      p_build
+      commands in
   if err = 0 then
     try proceed_toinstall t nv
     with e ->
@@ -1194,7 +1214,12 @@ let switch clone alias ocaml_version =
   resolve `switch t_new
     { wish_install
     ; wish_remove = [] 
-    ; wish_upgrade = [] }
+    ; wish_upgrade = [] };
+
+  let env = get_env t in
+  List.iter (fun (k,v) ->
+    Globals.msg "%s=%s\n" k v
+  ) env.new_env
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
