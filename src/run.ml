@@ -333,6 +333,7 @@ let download src dst =
   let cmd = match Globals.os with
     | Globals.Darwin -> [ "curl"; "-OL"; src ]
     | _              -> [ "wget"; src ] in
+  mkdir tmp_dir;
   let e = in_dir tmp_dir (fun () -> command cmd) in
   let tmp_file = tmp_dir / Filename.basename src in
   if e = 0 then
