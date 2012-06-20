@@ -326,6 +326,7 @@ let commands = [
 ]
 
 let () =
+  Sys.catch_break true;
   List.iter SubCommand.register commands;
   try ArgExt.parse global_args
   with e ->
