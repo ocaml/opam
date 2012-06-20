@@ -669,6 +669,11 @@ let get_env t =
 
   { add_to_env; add_to_path; old_env; new_env }
 
+let print_env env =
+  List.iter (fun (k,v) ->
+    Globals.msg "%s=%s\n" k v
+  ) env.new_env
+
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with
@@ -952,6 +957,9 @@ let config request =
   let t = load_state () in
 
   match request with
+  (* Display the compiler environment variables *)
+  | Env -> print_env (get_env t)
+
   (* List all the available variables *)
   | List_vars ->
       let configs =
@@ -1225,9 +1233,7 @@ let switch clone alias ocaml_version =
     ; wish_upgrade = [] };
 
   let env = get_env (load_state ()) in
-  List.iter (fun (k,v) ->
-    Globals.msg "%s=%s\n" k v
-  ) env.new_env
+  print_env env
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)

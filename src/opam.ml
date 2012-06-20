@@ -122,18 +122,19 @@ let info = {
 }
 
 (* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
-let has_cmd = ref false
-let is_rec = ref false
-let is_link = ref false
-let is_byte = ref false
-let bytecomp () =  has_cmd := true; is_byte := true ; is_link := false
-let bytelink () =  has_cmd := true; is_byte := true ; is_link := true
-let asmcomp  () =  has_cmd := true; is_byte := false; is_link := false
-let asmlink  () =  has_cmd := true; is_byte := false; is_link := true
-let command = ref None
+let config = 
+let has_cmd = ref false in
+let is_rec = ref false in
+let is_link = ref false in
+let is_byte = ref false in
+let bytecomp () =  has_cmd := true; is_byte := true ; is_link := false in
+let bytelink () =  has_cmd := true; is_byte := true ; is_link := true in
+let asmcomp  () =  has_cmd := true; is_byte := false; is_link := false in
+let asmlink  () =  has_cmd := true; is_byte := false; is_link := true in
+let command = ref None in
 let set cmd () =
   has_cmd := true;
-  command := Some cmd
+  command := Some cmd in
 let specs = [
   ("-r"        , Arg.Set is_rec       , " Recursive search");
   ("-I"        , Arg.Unit (set `I)    , " Display include options");
@@ -144,7 +145,8 @@ let specs = [
   ("-list-vars", Arg.Unit (set `List) , " Display the contents of all available variables");
   ("-var"      , Arg.Unit (set `Var)  , " Display the content of a variable");
   ("-subst"    , Arg.Unit (set `Subst), " Substitute variables in files");
-]
+  ("-env"      , Arg.Unit (set `Env)  , " Display the compiler environment variables");
+] in
 let mk options =
   if not !has_cmd then
     bad_argument "config"
@@ -156,8 +158,8 @@ let mk options =
       is_link = !is_link;
       is_byte = !is_byte;
       options = List.map Full_section.of_string options;
-    }
-let config = {
+    } in
+{
   name     = "config";
   usage    = "[...]+";
   synopsis = "Display configuration options for packages";
@@ -167,6 +169,7 @@ let config = {
   main = function () ->
     let names = List.rev !ano_args in
     let config = match !command with
+      | Some `Env   -> Env
       | Some `I     -> Includes (!is_rec, List.map N.of_string names)
       | Some `List  -> List_vars
       | Some `Var when List.length names = 1

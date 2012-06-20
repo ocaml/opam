@@ -634,6 +634,7 @@ type config_option = {
 }
 
 type config =
+  | Env
   | List_vars
   | Variable of full_variable
   | Includes of bool * (name list)
@@ -648,6 +649,7 @@ let string_of_config_option t =
     t.is_rec t.is_byte t.is_link (full_sections t.options)
 
 let string_of_config = function
+  | Env        -> "env"
   | List_vars  -> "list-vars"
   | Variable v -> Printf.sprintf "var(%s)" (Full_variable.to_string v)
   | Compil c   -> string_of_config_option c
