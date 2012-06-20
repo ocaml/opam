@@ -238,11 +238,7 @@ let install_initial_package () =
   File.Installed.write installed_p installed;
   (* stublibs *)
   let stublibs = Path.C.stublibs t.compiler in
-  Dirname.mkdir stublibs;
-  (* XXX: check whether it is necessary to display the message *)
-  Globals.msg
-    "Please verify that %S is in your ld.conf.\n"
-    (Dirname.to_string stublibs)
+  Dirname.mkdir stublibs
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
