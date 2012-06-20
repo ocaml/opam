@@ -190,7 +190,9 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
         Globals.error "Command %S failed (see %s.{info,err,out})" str name;
-        List.iter (Globals.error "%s") r.Process.r_stderr;
+        List.iter (Globals.msg "%s\n") r.Process.r_stdout;
+        List.iter (Globals.msg "%s\n") r.Process.r_stderr;
+        Globals.exit 1
       ) else if not !Globals.debug then
         Process.clean_files r;
       r
