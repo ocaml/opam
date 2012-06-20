@@ -209,7 +209,7 @@ module Comp: sig
 
   (** Environment variable to set-up before running commands in the
       subtree *)
-  val env: t -> (string * string) list
+  val env: t -> (string * string * string) list
 
 end
 

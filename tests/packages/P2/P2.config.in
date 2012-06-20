@@ -5,5 +5,3 @@ library "p2" {
   bytelink: ["-I" "%{lib}%/P2" "p2.cma"]
   requires: ["p1"]
 }
-
-env: [ ["TESTP2" "FOO"] ]

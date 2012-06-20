@@ -112,6 +112,9 @@ val parse_string_pair_of_list: value list -> string * string
     is a debug message. *)
 val parse_or: (string * (value -> 'a)) list -> value -> 'a
 
+(** Parse a sequence of values *)
+val parse_sequence: (string * (value -> 'a)) list -> value -> 'a list
+
 (** {2 Creation functions} *)
 
 (** Create a boolean *)

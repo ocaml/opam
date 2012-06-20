@@ -24,7 +24,7 @@ let alpha = ['a'-'z' 'A'-'Z' '_']
 let digit = ['0'-'9']
 let char  = ['-']
 let ident = alpha (alpha | digit | char)*
-let symbol = ['=' '<' '>' '!']+
+let symbol = ['=' '<' '>' '!' '+' ]+
 let number = '-'? ('.'['0'-'9']+ | ['0'-'9']+('.'['0'-'9']*)? )
 
 rule token = parse

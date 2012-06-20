@@ -633,10 +633,20 @@ let get_archive t nv =
 
 type env = {
   add_to_env : (string * string) list;
-  add_to_path: dirname list;
+  add_to_path: dirname;
   old_env    : (string * string) list;
   new_env    : (string * string) list;
 }
+
+let expand_env t env =
+  List.map (fun (ident, symbol, string) ->
+    let string = substitute_string t string in
+    match symbol with
+    | "="  -> (ident, string)
+    | "+=" -> (ident, try string ^ ":" ^ Sys.getenv ident with _ -> string)
+    | "=+" -> (ident, try Sys.getenv ident ^ ":" ^ string with _ -> string)
+    | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
+  ) env
 
 (* XXX: We should get the ones defined in the dependents packages as well *)
 let get_env t =
@@ -645,15 +655,17 @@ let get_env t =
   let comp_f = Path.G.compiler t.global ocaml_version in
   let comp = File.Comp.read comp_f in
 
-  let add_to_path = [Path.C.bin t.compiler] in
-  let new_path = "PATH",
-    String.concat ":" (List.map Dirname.to_string add_to_path)
-    ^ (try ":"^(Sys.getenv "PATH") with _ -> "") in
+  let add_to_path = Path.C.bin t.compiler in
+  let new_path = "PATH", "+=", Dirname.to_string add_to_path in
   let add_to_env = File.Comp.env comp in
   let new_env = new_path :: add_to_env in
 
-  let old_path = "PATH", try Sys.getenv "PATH" with _ -> "" in
-  let old_env = old_path :: List.map (fun (k,v) -> k, try Sys.getenv k with _ -> "") add_to_env in
+  let old_path = "PATH", "=", try Sys.getenv "PATH" with _ -> "" in
+  let old_env = old_path :: List.map (fun (k,_,_) -> k, "=", try Sys.getenv k with _ -> "") add_to_env in
+
+  let add_to_env = expand_env t add_to_env in
+  let old_env = expand_env t old_env in
+  let new_env = expand_env t new_env in
 
   { add_to_env; add_to_path; old_env; new_env }
 
@@ -695,7 +707,7 @@ let proceed_tochange t nv_old nv =
   let err =
     Dirname.exec
       ~add_to_env:env.add_to_env
-      ~add_to_path:env.add_to_path
+      ~add_to_path:[env.add_to_path]
       p_build
       commands in
   if err = 0 then

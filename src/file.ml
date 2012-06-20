@@ -54,7 +54,9 @@ module Syntax = struct
   let of_string f str =
     try
       let lexbuf = Lexing.from_string (Raw.to_string str) in
-      Parser.main Lexer.token lexbuf (Filename.to_string f)
+      let filename = Filename.to_string f in
+      lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
+      Parser.main Lexer.token lexbuf filename
     with e ->
       Globals.error "Parsing error while reading %s" (Filename.to_string f);
       raise e
@@ -589,16 +591,14 @@ module Dot_config = struct
   type t = {
     sections : s list;
     variables: (variable * variable_contents) list;
-    env      : (string * string) list;
   }
 
   let create variables =
-    { variables; sections = []; env = []; }
+    { variables; sections = [] }
 
   let empty = {
     sections  = [];
     variables = [];
-    env       = [];
   }
 
   let s_bytecomp = "bytecomp"
@@ -606,7 +606,6 @@ module Dot_config = struct
   let s_bytelink = "bytelink"
   let s_asmlink  = "asmlink"
   let s_requires = "requires"
-  let s_env      = "env"
 
   let valid_fields = [
     s_opam_version;
@@ -615,7 +614,6 @@ module Dot_config = struct
     s_bytelink;
     s_asmlink;
     s_requires;
-    s_env;
   ]
 
   let of_string filename str =
@@ -641,8 +639,7 @@ module Dot_config = struct
     let syntax    = assoc_sections file.contents "syntax" (parse_section "syntax") in
     let sections  = libraries @ syntax in
     let variables = parse_variables file.contents in
-    let env       = assoc_list file.contents s_env (parse_list parse_string_pair) in
-    { sections; variables; env }
+    { sections; variables }
 
   let rec to_string filename t =
     let of_value = function
@@ -668,7 +665,6 @@ module Dot_config = struct
       contents =
         of_variables t.variables
         @ List.map of_section t.sections
-        @ [ Variable (s_env, make_list make_string_pair t.env) ]
     }
 
   let variables t = List.map fst t.variables
@@ -757,7 +753,7 @@ module Comp = struct
     packages     : name list ;
     requires     : section list; 
     pp           : ppflag option;
-    env          : (string * string) list;
+    env          : (string * string * string) list;
   }
 
   let empty = {
@@ -845,7 +841,15 @@ module Comp = struct
       ("camlp4"     , parse_camlp4);
       ("string-list", parse_string_list |> fun x -> Some (Cmd x));
     ] in
-      
+    let parse_env_variable v =
+      let l = parse_sequence [
+        ("ident" , parse_ident);
+        ("symbol", parse_symbol);
+        ("string", parse_string)
+      ] v in
+      match l with
+      | [ident; symbol; string] -> (ident, symbol, string)
+      | _ -> assert false in
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
@@ -854,7 +858,7 @@ module Comp = struct
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
     let build     = assoc_list s s_build (parse_list parse_string_list) in
-    let env       = assoc_list s s_env (parse_list parse_string_pair) in
+    let env       = assoc_list s s_env (parse_list parse_env_variable) in
     let bytecomp  = assoc_string_list s s_bytecomp  in
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
@@ -891,6 +895,8 @@ module Comp = struct
     let make_ppflag = function
       | Cmd l    -> make_list make_string l
       | Camlp4 l -> List (Symbol "CAMLP4" :: List.map make_string l) in
+    let make_env_variable (ident, symbol, string) =
+      List [make_ident ident; make_symbol symbol; make_string string] in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [
@@ -908,7 +914,7 @@ module Comp = struct
         Variable (s_asmlink     , make_list make_string s.asmlink);
         Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
-        Variable (s_env         , make_list make_string_pair s.env);
+        Variable (s_env         , make_list make_env_variable s.env);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
