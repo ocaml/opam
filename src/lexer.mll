@@ -42,6 +42,7 @@ rule token = parse
 | "(*"   { comment 1 lexbuf; token lexbuf }
 | "true" { BOOL true }
 | "false"{ BOOL false }
+| "\n"   { Lexing.new_line lexbuf; token lexbuf }
 | digit+ { INT (int_of_string (Lexing.lexeme lexbuf)) }
 | ident  { IDENT (Lexing.lexeme lexbuf) }
 | symbol { SYMBOL (Lexing.lexeme lexbuf) }
