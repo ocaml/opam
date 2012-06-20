@@ -1212,7 +1212,7 @@ let switch clone alias ocaml_version =
     ; wish_remove = [] 
     ; wish_upgrade = [] };
 
-  let env = get_env t in
+  let env = get_env (load_state ()) in
   List.iter (fun (k,v) ->
     Globals.msg "%s=%s\n" k v
   ) env.new_env
