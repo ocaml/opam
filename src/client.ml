@@ -302,10 +302,12 @@ let init_ocaml alias ocaml_version =
     (* Write the default alias *)
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
 
-    (* Update the configuration files *)
-    update ();
     (* Install the initial package *)
     install_initial_package ();
+
+    (* Update the configuration files *)
+    update ();
+
     (* Install the compiler if necessary *)
     let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
     if OCaml_V.current () <> Some ocaml_version && not (File.Comp.preinstalled comp) then begin
