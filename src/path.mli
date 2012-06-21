@@ -17,64 +17,6 @@
 
 open Types
 
-(** Global state *)
-module G: sig
-
-  (** Contains {i $opam} *)
-  type t
-
-  (** Create a global path *)
-  val create: unit -> t
-
-  (** Root dir: {i $opam/} *)
-  val root: t -> dirname
-
-  (** Main configuration file: {i $opam/config} *)
-  val config: t -> filename
-
-  (** Compiler aliases *)
-  val aliases: t -> filename
-
-  (** OPAM files: {i $opam/opam/$NAME.$VERSION.opam} *)
-  val opam: t -> NV.t -> filename
-
-  (** Compiler files: {i $opam/compilers/$OVERSION.comp} *)
-  val compiler: t -> OCaml_V.t -> filename
-
-  (** Compiler files: {i $opam/compilers/} *)
-  val compiler_dir: t -> dirname
-
-  (** All the compiler files *)
-  val compiler_list: t -> OCaml_V.Set.t
-
-  (** List all the available packages:
-      {i $opam/opam/$NAME.$VERSION.opam} *)
-  val available: t -> NV.Set.t
-
-  (** List all the available packages:
-      {i $opam/opam/$NAME.$VERSION.opam} *)
-  val available_versions: t -> N.t -> V.Set.t
-
-  (** Description file: {i $opam/descr/$NAME.$VERSION} *)
-  val descr: t -> NV.t -> filename
-
-  (** Archives files: {i $opam/archives/$NAME.$VERSION.tar.gz} *)
-  val archive: t -> NV.t -> filename
-
-  (** OPAM files folder: {i $opam/opam/} *)
-  val opam_dir: t -> dirname
-
-  (** Description files folder: {i $opam/descr/} *)
-  val descr_dir: t -> dirname
-
-  (** Archives files folder: {i $opam/archives/} *)
-  val archive_dir: t -> dirname
-
-  (** Return the repository index: {i $opam/repo/index} *)
-  val repo_index: t -> filename
-
-end
-
 (** Compiler-version related state *)
 module C: sig
 
@@ -152,6 +94,65 @@ module C: sig
 
 end
 
+(** Global state *)
+module G: sig
+
+  (** Contains {i $opam} *)
+  type t
+
+  (** Create a global path *)
+  val create: unit -> t
+
+  (** Root dir: {i $opam/} *)
+  val root: t -> dirname
+
+  (** Main configuration file: {i $opam/config} *)
+  val config: t -> filename
+
+  (** Compiler aliases *)
+  val aliases: t -> filename
+
+  (** OPAM files: {i $opam/opam/$NAME.$VERSION.opam} *)
+  val opam: t -> NV.t -> filename
+
+  (** Compiler files: {i $opam/compilers/$OVERSION.comp} *)
+  val compiler: t -> OCaml_V.t -> filename
+
+  (** Compiler files: {i $opam/compilers/} *)
+  val compiler_dir: t -> dirname
+
+  (** All the compiler files *)
+  val compiler_list: t -> OCaml_V.Set.t
+
+  (** List all the available packages:
+      {i $opam/opam/$NAME.$VERSION.opam} *)
+  val available: t -> NV.Set.t
+
+  (** List all the available packages:
+      {i $opam/opam/$NAME.$VERSION.opam} *)
+  val available_versions: t -> N.t -> V.Set.t
+
+  (** Description file: {i $opam/descr/$NAME.$VERSION} *)
+  val descr: t -> NV.t -> filename
+
+  (** Archives files: {i $opam/archives/$NAME.$VERSION.tar.gz} *)
+  val archive: t -> NV.t -> filename
+
+  (** OPAM files folder: {i $opam/opam/} *)
+  val opam_dir: t -> dirname
+
+  (** Description files folder: {i $opam/descr/} *)
+  val descr_dir: t -> dirname
+
+  (** Archives files folder: {i $opam/archives/} *)
+  val archive_dir: t -> dirname
+
+  (** Return the repository index: {i $opam/repo/index} *)
+  val repo_index: t -> filename
+
+end
+
+(** Repository related *)
 module R: sig
 
   type t

@@ -47,47 +47,6 @@ let compiler_list dir =
 let versions nvset =
   NV.Set.fold (fun nv vset -> V.Set.add (NV.version nv) vset) nvset V.Set.empty
 
-module G = struct
-
-  type t = dirname (* [$opam/] *)
-
-  let create () = Dirname.of_string !Globals.root_path
-
-  let root opam = opam
-
-  let dirname_of_nv nv = Dirname.of_string (NV.to_string nv)
-
-  let config t = t // "config"
-
-  let opam_dir t = t / "opam"
-
-  let aliases t = t // "aliases"
-
-  let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
-
-  let compiler_dir t = t / "compilers"
-
-  let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
-
-  let compiler_list t = compiler_list (compiler_dir t)
-
-  let available t = available (opam_dir t)
-
-  let available_versions t n =
-    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
-    
-  let descr_dir t = t / "descr"
-
-  let descr t nv = descr_dir t // NV.to_string nv
-
-  let archive_dir t = t / "archives"
-
-  let archive t nv = archive_dir t // (NV.to_string nv ^ ".tar.gz")
-
-  let repo_index t = t / "repo" // "index"
-
-end
-
 module C = struct
 
   type t = dirname (* [$opam/$oversion/ *)
@@ -133,6 +92,46 @@ module C = struct
 
 end
 
+module G = struct
+
+  type t = dirname (* [$opam/] *)
+
+  let create () = Dirname.of_string !Globals.root_path
+
+  let root opam = opam
+
+  let dirname_of_nv nv = Dirname.of_string (NV.to_string nv)
+
+  let config t = t // "config"
+
+  let opam_dir t = t / "opam"
+
+  let aliases t = t // "aliases"
+
+  let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
+
+  let compiler_dir t = t / "compilers"
+
+  let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
+
+  let compiler_list t = compiler_list (compiler_dir t)
+
+  let available t = available (opam_dir t)
+
+  let available_versions t n =
+    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
+    
+  let descr_dir t = t / "descr"
+
+  let descr t nv = descr_dir t // NV.to_string nv
+
+  let archive_dir t = t / "archives"
+
+  let archive t nv = archive_dir t // (NV.to_string nv ^ ".tar.gz")
+
+  let repo_index t = t / "repo" // "index"
+
+end
 
 module R = struct
 
