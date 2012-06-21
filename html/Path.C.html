@@ -81,6 +81,15 @@ Tempory folders used to decompress and compile
 <pre><span id="VALbuild_dir"><span class="keyword">val</span> build_dir</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Tempory folder: <i>$opam/$OVERSION/build</i><br>
 </div>
+<pre><span id="VALbuild_env"><span class="keyword">val</span> build_env</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+A file containing the env variables in which build command are
+      processed: <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.env</i><br>
+</div>
+<pre><span id="VALbuild_old_env"><span class="keyword">val</span> build_old_env</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+A file containing a copy of the current env variables, before 
+      the env variables for the build are set:
+      <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env</i><br>
+</div>
 <pre><span id="VALbuild_install"><span class="keyword">val</span> build_install</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Tempory location of install files:
       <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.install</i><br>

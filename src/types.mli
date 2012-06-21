@@ -387,6 +387,7 @@ type config_option = {
 }
 
 type config =
+  | Env
   | List_vars
   | Variable of full_variable
   | Includes of bool * (name list)

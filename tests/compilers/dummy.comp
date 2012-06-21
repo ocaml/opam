@@ -2,6 +2,6 @@ opam-version: "1"
 name: "test"
 preinstalled: true
 env: [
-  [ "TEST" "1" ]
+  [ TEST="1" ]
 ]
 packages: [ "P4" ]

@@ -249,11 +249,7 @@ let install_initial_package () =
   File.Installed.write installed_p installed;
   (* stublibs *)
   let stublibs = Path.C.stublibs t.compiler in
-  Dirname.mkdir stublibs;
-  (* XXX: check whether it is necessary to display the message *)
-  Globals.msg
-    "Please verify that %S is in your ld.conf.\n"
-    (Dirname.to_string stublibs)
+  Dirname.mkdir stublibs
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -647,6 +643,49 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
+type env = {
+  add_to_env : (string * string) list;
+  add_to_path: dirname;
+  old_env    : (string * string) list;
+  new_env    : (string * string) list;
+}
+
+let expand_env t env =
+  List.map (fun (ident, symbol, string) ->
+    let string = substitute_string t string in
+    match symbol with
+    | "="  -> (ident, string)
+    | "+=" -> (ident, try string ^ ":" ^ Sys.getenv ident with _ -> string)
+    | "=+" -> (ident, try Sys.getenv ident ^ ":" ^ string with _ -> string)
+    | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
+  ) env
+
+(* XXX: We should get the ones defined in the dependents packages as well *)
+let get_env t =
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
+  let comp_f = Path.G.compiler t.global ocaml_version in
+  let comp = File.Comp.read comp_f in
+
+  let add_to_path = Path.C.bin t.compiler in
+  let new_path = "PATH", "+=", Dirname.to_string add_to_path in
+  let add_to_env = File.Comp.env comp in
+  let new_env = new_path :: add_to_env in
+
+  let old_path = "PATH", "=", try Sys.getenv "PATH" with _ -> "" in
+  let old_env = old_path :: List.map (fun (k,_,_) -> k, "=", try Sys.getenv k with _ -> "") add_to_env in
+
+  let add_to_env = expand_env t add_to_env in
+  let old_env = expand_env t old_env in
+  let new_env = expand_env t new_env in
+
+  { add_to_env; add_to_path; old_env; new_env }
+
+let print_env env =
+  List.iter (fun (k,v) ->
+    Globals.msg "%s=%s\n" k v
+  ) env.new_env
+
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with
@@ -667,12 +706,13 @@ let proceed_tochange t nv_old nv =
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Get the env variables set up in the compiler description file *)
-  (* XXX: We should get the ones defined in the dependents packages as well *)
-  let aliases = File.Aliases.read (Path.G.aliases t.global) in
-  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
-  let comp_f = Path.G.compiler t.global ocaml_version in
-  let comp = File.Comp.read comp_f in
-  let add_to_env = File.Comp.env comp in
+  let env = get_env t in
+
+  (* Generate an environnement file *)
+  let env_f = Path.C.build_env t.compiler nv in
+  File.Env.write env_f env.new_env;
+  let old_env_f = Path.C.build_old_env t.compiler nv in
+  File.Env.write old_env_f env.old_env;
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t))
@@ -681,8 +721,12 @@ let proceed_tochange t nv_old nv =
   Globals.msg "[%s] Build commands:\n  %s\n"
     (NV.to_string nv)
     (String.concat "\n  " commands_s);
-  let err = Dirname.exec ~add_to_env ~add_to_path:[Path.C.bin t.compiler] p_build
-    commands in
+  let err =
+    Dirname.exec
+      ~add_to_env:env.add_to_env
+      ~add_to_path:[env.add_to_path]
+      p_build
+      commands in
   if err = 0 then
     try proceed_toinstall t nv
     with e ->
@@ -927,6 +971,9 @@ let config request =
   let t = load_state () in
 
   match request with
+  (* Display the compiler environment variables *)
+  | Env -> print_env (get_env t)
+
   (* List all the available variables *)
   | List_vars ->
       let configs =
@@ -1197,7 +1244,10 @@ let switch clone alias ocaml_version =
   resolve `switch t_new
     { wish_install
     ; wish_remove = [] 
-    ; wish_upgrade = [] }
+    ; wish_upgrade = [] };
+
+  let env = get_env (load_state ()) in
+  print_env env
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)

@@ -163,13 +163,9 @@ let add_path bins =
   let path = ref "<not set>" in
   let env = Unix.environment () in
   for i = 0 to Array.length env - 1 do
-    let k,v =
-      try
-        let n = String.index env.(i) '=' in
-        String.sub env.(i) 0 n,
-        String.sub env.(i) (n+1) (String.length env.(i) - n - 1)
-      with _ ->
-        assert false in
+    let k,v = match Utils.cut_at env.(i) '=' with
+      | Some (k,v) -> k,v
+      | None       -> assert false in
     if k = "PATH" then
     let new_path = match List.filter Sys.file_exists bins with
       | [] -> v
@@ -194,7 +190,9 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
         Globals.error "Command %S failed (see %s.{info,err,out})" str name;
-        List.iter (Globals.error "%s") r.Process.r_stderr;
+        List.iter (Globals.msg "%s\n") r.Process.r_stdout;
+        List.iter (Globals.msg "%s\n") r.Process.r_stderr;
+        Globals.exit 1
       ) else if not !Globals.debug then
         Process.clean_files r;
       r
@@ -337,6 +335,7 @@ let download src dst =
   let cmd = match Globals.os with
     | Globals.Darwin -> [ "curl"; "-OL"; src ]
     | _              -> [ "wget"; src ] in
+  mkdir tmp_dir;
   let e = in_dir tmp_dir (fun () -> command cmd) in
   let tmp_file = tmp_dir / Filename.basename src in
   if e = 0 then

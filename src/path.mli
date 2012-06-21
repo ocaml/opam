@@ -66,6 +66,15 @@ module C: sig
   (** Tempory folder: {i $opam/$OVERSION/build} *)
   val build_dir: t -> dirname
 
+  (** A file containing the env variables in which build command are
+      processed: {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.env} *)
+  val build_env: t -> NV.t -> filename
+
+  (** A file containing a copy of the current env variables, before 
+      the env variables for the build are set:
+      {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env} *)
+  val build_old_env: t -> NV.t -> filename
+
   (** Tempory location of install files:
       {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.install} *)
   val build_install: t -> NV.t -> filename

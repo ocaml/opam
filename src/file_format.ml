@@ -106,10 +106,6 @@ let parse_symbol = function
   | Symbol s -> s
   | x        -> bad_format "Expecting a symbol, got %s" (kind x)
 
-let parse_ident = function
-  | Symbol s -> s
-  | x       -> bad_format "Expecting a symbol, got %s" (kind x)
-
 let parse_string = function
   | String s -> s
   | x        -> bad_format "Expecting a string, got %s" (kind x)
@@ -158,6 +154,21 @@ let parse_or fns v =
         with Bad_format _ -> aux t in
   aux fns
 
+let parse_sequence fns v =
+  match v with
+  | List l ->
+      let rec aux = function
+        | (_,f) :: fns, h :: t -> f h :: aux (fns, t)
+        | [], [] -> []
+        | _ ->
+            bad_format
+              "Expecting %s, got %d values"
+              (String.concat ", " (List.map fst fns))
+              (List.length l) in
+      aux (fns, l)
+  | x      -> bad_format "Expecting a list, got %s" (kind x)
+
+  
 let make_string str = String str
 
 let make_ident str = Ident str
@@ -175,6 +186,8 @@ let make_group fn g = Group (List.map fn g)
 let make_option f g (v,l) = Option (f v, List.map g l)
 
 let make_pair f (k,v) = List [f k; f v]
+
+let make_string_pair = make_pair make_string
 
 (* Printing *)
 

@@ -24,7 +24,7 @@ let alpha = ['a'-'z' 'A'-'Z' '_']
 let digit = ['0'-'9']
 let char  = ['-']
 let ident = alpha (alpha | digit | char)*
-let symbol = ['=' '<' '>' '!']+
+let symbol = ['=' '<' '>' '!' '+' ]+
 let number = '-'? ('.'['0'-'9']+ | ['0'-'9']+('.'['0'-'9']*)? )
 
 rule token = parse
@@ -42,6 +42,7 @@ rule token = parse
 | "(*"   { comment 1 lexbuf; token lexbuf }
 | "true" { BOOL true }
 | "false"{ BOOL false }
+| "\n"   { Lexing.new_line lexbuf; token lexbuf }
 | digit+ { INT (int_of_string (Lexing.lexeme lexbuf)) }
 | ident  { IDENT (Lexing.lexeme lexbuf) }
 | symbol { SYMBOL (Lexing.lexeme lexbuf) }

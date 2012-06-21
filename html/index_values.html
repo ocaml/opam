@@ -210,6 +210,12 @@ Tempory location of config files: <i>      $opam/$OVERSION/build/$NAME.$VERSION/
 Tempory folder: <i>$opam/$OVERSION/build</i>
 </div>
 </td></tr>
+<tr><td><a href="Path.C.html#VALbuild_env">build_env</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+A file containing the env variables in which build command are
+      processed: <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.env</i>
+</div>
+</td></tr>
 <tr><td><a href="Path.C.html#VALbuild_install">build_install</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Tempory location of install files:
@@ -221,6 +227,13 @@ Tempory location of install files:
 Tempory folders used to decompress and compile 
       the OCaml compiler:
       <i>$opam/$OVERSION/build/_</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALbuild_old_env">build_old_env</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+A file containing a copy of the current env variables, before 
+      the env variables for the build are set:
+      <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env</i>
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_config.SECTION.html#VALbytecomp">bytecomp</a> [<a href="File.Dot_config.SECTION.html">File.Dot_config.SECTION</a>]</td>
@@ -842,6 +855,11 @@ Create a pair
 <tr><td><a href="File_format.html#VALmake_string">make_string</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Create a string
+</div>
+</td></tr>
+<tr><td><a href="File_format.html#VALmake_string_pair">make_string_pair</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Create a pair of strings
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALmake_symbol">make_symbol</a> [<a href="File_format.html">File_format</a>]</td>

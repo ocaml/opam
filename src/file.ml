@@ -54,7 +54,9 @@ module Syntax = struct
   let of_string f str =
     try
       let lexbuf = Lexing.from_string (Raw.to_string str) in
-      Parser.main Lexer.token lexbuf (Filename.to_string f)
+      let filename = Filename.to_string f in
+      lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
+      Parser.main Lexer.token lexbuf filename
     with e ->
       Globals.error "Parsing error while reading %s" (Filename.to_string f);
       raise e
@@ -703,6 +705,32 @@ module Dot_config = struct
   module Section  = MK (struct let get t = t.sections end)
 end
 
+module Env = struct
+
+  let internal = "env"
+
+  type t = (string * string) list
+
+  let empty = []
+
+  let of_string filename s =
+    let l = Lines.of_string filename s in
+    List.fold_left (fun accu -> function
+      | []  -> accu
+      | [s] ->
+          (match Utils.cut_at s '=' with
+          | None      -> failwith (s ^ ": invalid env variable")
+          | Some(k,v) -> (k, v) :: accu)
+      | x   -> failwith (String.concat " " x ^ ": invalid env variable")
+    ) [] l
+
+  let to_string filename t =
+    let l = List.map (fun (k,v) -> [ k^"="^v ]) t in
+    Lines.to_string filename l
+
+end
+
+
 module Comp = struct
 
   let internal = "comp"
@@ -725,7 +753,7 @@ module Comp = struct
     packages     : name list ;
     requires     : section list; 
     pp           : ppflag option;
-    env          : (string * string) list;
+    env          : (string * string * string) list;
   }
 
   let empty = {
@@ -813,7 +841,15 @@ module Comp = struct
       ("camlp4"     , parse_camlp4);
       ("string-list", parse_string_list |> fun x -> Some (Cmd x));
     ] in
-      
+    let parse_env_variable v =
+      let l = parse_sequence [
+        ("ident" , parse_ident);
+        ("symbol", parse_symbol);
+        ("string", parse_string)
+      ] v in
+      match l with
+      | [ident; symbol; string] -> (ident, symbol, string)
+      | _ -> assert false in
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
@@ -822,7 +858,7 @@ module Comp = struct
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
     let build     = assoc_list s s_build (parse_list parse_string_list) in
-    let env       = assoc_list s s_env (parse_list parse_string_pair) in
+    let env       = assoc_list s s_env (parse_list parse_env_variable) in
     let bytecomp  = assoc_string_list s s_bytecomp  in
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
@@ -859,6 +895,8 @@ module Comp = struct
     let make_ppflag = function
       | Cmd l    -> make_list make_string l
       | Camlp4 l -> List (Symbol "CAMLP4" :: List.map make_string l) in
+    let make_env_variable (ident, symbol, string) =
+      List [make_ident ident; make_symbol symbol; make_string string] in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [
@@ -876,7 +914,7 @@ module Comp = struct
         Variable (s_asmlink     , make_list make_string s.asmlink);
         Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
-        Variable (s_env         , make_list (make_pair make_string) s.env);
+        Variable (s_env         , make_list make_env_variable s.env);
       ] @ match s.pp with
          | None    -> []
          | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
@@ -1035,4 +1073,9 @@ end
 module Comp = struct
   include Comp
   include Make (Comp)
+end
+
+module Env = struct
+  include Env
+  include Make (Env)
 end

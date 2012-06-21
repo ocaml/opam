@@ -219,6 +219,7 @@ ifeq ($(REPOKIND), git)
 else
 	$(CHECK) -l switch-env-packages P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
+	./test-TEST.sh $(OPAM_ROOT)/dummy/build/P4.3/P4.env "1"
 
 switch:
 	$(MAKE) fresh
