@@ -66,6 +66,8 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_string_pair_of_list&nbsp;:&nbsp;<span class="constructor">File_format</span>.value&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;*&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_or&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;(string&nbsp;*&nbsp;(<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a))&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_sequence&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(string&nbsp;*&nbsp;(<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a))&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_bool&nbsp;:&nbsp;bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_int&nbsp;:&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_ident&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">File_format</span>.value<br>

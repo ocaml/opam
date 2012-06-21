@@ -138,14 +138,16 @@ The type for result processes<br>
 </div>
 
 <pre><span id="VALwait"><span class="keyword">val</span> wait</span> : <code class="type"><a href="Process.html#TYPEt">t</a> -> <a href="Process.html#TYPEresult">result</a></code></pre><div class="info">
-<code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results<br>
+<code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results.<br>
+<b>Raises</b> <code>Global.Exit</code> as only possible error<br>
 </div>
 <pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?env:string array -> name:string -> string -> string list -> <a href="Process.html#TYPEresult">result</a></code></pre><div class="info">
 <code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
     arguments <code class="code">args</code>. It waits until the process is finished. The file
     <code class="code">name.out</code>, <code class="code">name.err</code> and <code class="code">name.info</code> are created, which contains
     the standard output, the standart error and some process info
-    respectively<br>
+    respectively.<br>
+<b>Raises</b> <code>Global.Exit</code> as only possible error<br>
 </div>
 <pre><span id="VALis_success"><span class="keyword">val</span> is_success</span> : <code class="type"><a href="Process.html#TYPEresult">result</a> -> bool</code></pre><div class="info">
 Is the process result a success ?<br>

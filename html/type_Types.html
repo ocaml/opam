@@ -876,7 +876,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;options&nbsp;:&nbsp;<span class="constructor">Types</span>.full_section&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config&nbsp;=<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">List_vars</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Env</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">List_vars</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Variable</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Types</span>.full_variable<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Includes</span>&nbsp;<span class="keyword">of</span>&nbsp;bool&nbsp;*&nbsp;<span class="constructor">Types</span>.name&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Compil</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Types</span>.config_option<br>

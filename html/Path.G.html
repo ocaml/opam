@@ -4,7 +4,8 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="next" href="Path.C.html">
+<link rel="previous" href="Path.C.html">
+<link rel="next" href="Path.R.html">
 <link rel="Up" href="Path.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -24,8 +25,9 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Path.G</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="Path.html">Up</a>
-&nbsp;<a href="Path.C.html">Next</a>
+<div class="navbar"><a href="Path.C.html">Previous</a>
+&nbsp;<a href="Path.html">Up</a>
+&nbsp;<a href="Path.R.html">Next</a>
 </div>
 <center><h1>Module <a href="type_Path.G.html">Path.G</a></h1></center>
 <br>
@@ -85,5 +87,9 @@ Archives files folder: <i>$opam/archives/</i><br>
 </div>
 <pre><span id="VALrepo_index"><span class="keyword">val</span> repo_index</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the repository index: <i>$opam/repo/index</i><br>
+</div>
+<pre><span id="VALfold_compiler"><span class="keyword">val</span> fold_compiler</span> : <code class="type">('a -> <a href="Path.C.html#TYPEt">Path.C.t</a> -> 'a) -> 'a -> <a href="Path.G.html#TYPEt">t</a> -> 'a</code></pre><div class="info">
+Folding on available compiler, including the one that is currently set. 
+      The order of folding on version is not precised.<br>
 </div>
 </body></html>

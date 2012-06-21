@@ -342,15 +342,15 @@ All the compiler files
 Return the repository config: <i>$opam/repo/$repo/config</i>
 </div>
 </td></tr>
+<tr><td><a href="Path.G.html#VALconfig">config</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+Main configuration file: <i>$opam/config</i>
+</div>
+</td></tr>
 <tr><td><a href="Path.C.html#VALconfig">config</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Compile and link flags for a given package:
       <i>$opam/$OVERSION/config/$NAME.config</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.G.html#VALconfig">config</a> [<a href="Path.G.html">Path.G</a>]</td>
-<td><div class="info">
-Main configuration file: <i>$opam/config</i>
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALconfig">config</a> [<a href="Client.html">Client</a>]</td>
@@ -425,14 +425,14 @@ Create a filename from a dirname and a basename
 Create a repository path
 </div>
 </td></tr>
-<tr><td><a href="Path.C.html#VALcreate">create</a> [<a href="Path.C.html">Path.C</a>]</td>
-<td><div class="info">
-Create a compiler path
-</div>
-</td></tr>
 <tr><td><a href="Path.G.html#VALcreate">create</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Create a global path
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALcreate">create</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Create a compiler path
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_config.html#VALcreate">create</a> [<a href="File.Dot_config.html">File.Dot_config</a>]</td>
@@ -629,6 +629,11 @@ Same as <code class="code">filter_backward_dependencies</code> but for forward
 <tr><td><a href="Run.html#VALflock">flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">flock ()</code> takes the global file lock.
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALfold_compiler">fold_compiler</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+Folding on available compiler, including the one that is currently set.
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALfull">full</a> [<a href="File.Descr.html">File.Descr</a>]</td>
@@ -1049,6 +1054,11 @@ Parse a value and its option of 'things'
 Try to parse the value using function from the list.
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALparse_sequence">parse_sequence</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Parse a sequence of values
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_single_option">parse_single_option</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse a value and a single optional value
@@ -1229,14 +1239,14 @@ Remove a directory
 Return the repository folder: <i>$opam/repo/$repo</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.C.html#VALroot">root</a> [<a href="Path.C.html">Path.C</a>]</td>
-<td><div class="info">
-Root dir: <i>$opam/$OVERSION</i>
-</div>
-</td></tr>
 <tr><td><a href="Path.G.html#VALroot">root</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Root dir: <i>$opam/</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALroot">root</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Root dir: <i>$opam/$OVERSION</i>
 </div>
 </td></tr>
 <tr><td><a href="Repositories.Raw.html#VALrsync">rsync</a> [<a href="Repositories.Raw.html">Repositories.Raw</a>]</td>
@@ -1505,7 +1515,7 @@ Package version
 <tr><td align="left"><br>W</td></tr>
 <tr><td><a href="Process.html#VALwait">wait</a> [<a href="Process.html">Process</a>]</td>
 <td><div class="info">
-<code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results
+<code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results.
 </div>
 </td></tr>
 <tr><td><a href="File.OPAM.html#VALwith_build">with_build</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
