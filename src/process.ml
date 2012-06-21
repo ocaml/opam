@@ -132,24 +132,28 @@ let output_lines oc lines =
   flush oc
 
 let run ?env ~name cmd args =
-  let stdout = Printf.sprintf "%s.out" name in
-  let stderr = Printf.sprintf "%s.err" name in
-  let info   = Printf.sprintf "%s.info" name in
-  
-  let env = match env with Some e -> e | None -> Unix.environment () in
-
-  (* Write info file *)
-  let chan = open_out info in
-  output_lines chan
-    [ String.concat " " (cmd :: args) ;
-      Unix.getcwd () ;
-      String.concat "\n" (Array.to_list env)
-    ];
-  close_out chan;
-
-  let p = create ~env ~info ~stdout ~stderr cmd args in
-  wait p
-
+  try 
+    let stdout = Printf.sprintf "%s.out" name in
+    let stderr = Printf.sprintf "%s.err" name in
+    let info   = Printf.sprintf "%s.info" name in
+    
+    let env = match env with Some e -> e | None -> Unix.environment () in
+    
+    (* Write info file *)
+    let chan = open_out info in
+    output_lines chan
+      [ String.concat " " (cmd :: args) ;
+        Unix.getcwd () ;
+        String.concat "\n" (Array.to_list env)
+      ];
+    close_out chan;
+    
+    let p = create ~env ~info ~stdout ~stderr cmd args in
+    wait p
+  with e ->
+    Printf.printf "Exception %s in run\n%!" (Printexc.to_string e);
+    raise (Globals.Exit 2)
+      
 let is_success r = r.r_code = 0
 
 let is_failure r = r.r_code <> 0

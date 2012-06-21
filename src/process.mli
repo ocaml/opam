@@ -45,14 +45,16 @@ type result = {
   r_stderr   : string list; (** Content of stderr dump file *)
 }
 
-(** [wait p] waits for the processus [p] to end and returns its results *)
+(** [wait p] waits for the processus [p] to end and returns its results.
+    @raise Global.Exit as only possible error *)
 val wait : t -> result
 
 (** [run ~name cmd args] synchronously call the command [cmd] with
     arguments [args]. It waits until the process is finished. The file
     [name.out], [name.err] and [name.info] are created, which contains
     the standard output, the standart error and some process info
-    respectively *)
+    respectively.
+    @raise Global.Exit as only possible error *)
 val run : ?env:string array -> name:string -> string -> string list -> result
 
 (** Is the process result a success ? *)

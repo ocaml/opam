@@ -290,14 +290,18 @@ let substitute_string t s =
    - compiles and install $opam/compiler/$descr.comp if $descr <> current version *)
 let init_ocaml alias ocaml_version =
   let alias_p = Path.C.create alias in
-  if not (Dirname.exists (Path.C.root alias_p)) then begin
-    Dirname.mkdir (Path.C.root alias_p);
-    File.Installed.write (Path.C.installed alias_p) File.Installed.empty;
-    (* Write the default alias *)
+  if not (Dirname.exists (Path.C.root alias_p)) then 
     let t = load_state () in
     let aliases_f = Path.G.aliases t.global in
     let aliases = File.Aliases.safe_read aliases_f in
+
+  try
+    Dirname.mkdir (Path.C.root alias_p);
+    File.Installed.write (Path.C.installed alias_p) File.Installed.empty;
+
+    (* Write the default alias *)
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
+
     (* Update the configuration files *)
     update ();
     (* Install the initial package *)
@@ -340,7 +344,12 @@ let init_ocaml alias ocaml_version =
       let comp = Path.G.compiler t.global ocaml_version in
       if not (Filename.exists comp) then
         File.Comp.write comp (File.Comp.create_preinstalled ocaml_version)
-  end
+  with e -> 
+    begin
+      Dirname.rmdir (Path.C.root alias_p);
+      File.Aliases.write aliases_f aliases;
+      raise e;
+    end
 
 let init repo alias ocaml_version cores =
   log "init %s" (Repository.to_string repo);
