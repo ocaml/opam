@@ -120,8 +120,10 @@ let find_available_package_by_name t name =
 let update () =
   log "update";
   let t = load_state () in
+
   (* first update all the repo *)
   List.iter (fun (r,_) -> Repositories.update r) t.repositories;
+
   (* then update $opam/repo/index *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
@@ -136,10 +138,10 @@ let update () =
       ) available repo_index
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+
   (* update $opam/$oversion/reinstall *)
-  (* XXX: we should iterated over all existing $oversions *)
-  let reinstall =
-    List.fold_left (fun reinstall (r,p) ->
+  let updated = 
+    List.rev_map (fun (r,p) ->
       let updated = File.Updated.safe_read (Path.R.updated p) in
       if not (NV.Set.is_empty updated) then
         Globals.msg "New packages available:\n";
@@ -148,15 +150,24 @@ let update () =
           (NV.to_string nv)
           (if NV.Set.mem nv t.installed then " (*)" else "")
       ) updated;
-      NV.Set.fold (fun nv reinstall ->
-        if NV.Set.mem nv t.installed then
-          NV.Set.add nv reinstall
-        else
-          reinstall
-      ) updated reinstall
-    ) t.reinstall t.repositories in
-  if not (NV.Set.is_empty reinstall) then
-    File.Reinstall.write (Path.C.reinstall t.compiler) reinstall;
+      updated
+    ) t.repositories in  
+  Path.G.fold_compiler (fun () compiler ->
+    let installed = File.Installed.safe_read (Path.C.installed compiler) in
+    let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
+    let reinstall = 
+      List.fold_left (fun reinstall updated -> 
+        NV.Set.fold (fun nv reinstall ->
+          if NV.Set.mem nv installed then
+            NV.Set.add nv reinstall
+          else
+            reinstall
+        ) updated reinstall
+      ) reinstall updated in
+    if not (NV.Set.is_empty reinstall) then
+      File.Reinstall.write (Path.C.reinstall compiler) reinstall
+  ) () t.global;
+
   (* finally create symbolic links from $repo dirs to main dir *)
   N.Map.iter (fun n r ->
     let repo_p = find_repository_path t r in
@@ -286,15 +297,16 @@ let init_ocaml alias ocaml_version =
   if not (Dirname.exists (Path.C.root alias_p)) then begin
     Dirname.mkdir (Path.C.root alias_p);
     File.Installed.write (Path.C.installed alias_p) File.Installed.empty;
-    (* Update the configuration files *)
-    update ();
-    (* Install the initial package *)
-    install_initial_package ();
-    (* install the compiler if necessary *)
+    (* Write the default alias *)
     let t = load_state () in
     let aliases_f = Path.G.aliases t.global in
     let aliases = File.Aliases.safe_read aliases_f in
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
+    (* Update the configuration files *)
+    update ();
+    (* Install the initial package *)
+    install_initial_package ();
+    (* Install the compiler if necessary *)
     let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
     if OCaml_V.current () <> Some ocaml_version && not (File.Comp.preinstalled comp) then begin
       let comp_src = File.Comp.src comp in
@@ -689,17 +701,19 @@ let proceed_torecompile t nv =
 let debpkg_of_nv action t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let installed =
-    if action = `update then
-      NV.Set.mem nv t.installed
-    else
-      not (NV.Set.mem nv t.reinstall)
-      &&  NV.Set.mem nv t.installed in
+    (action <> `upgrade || not (NV.Set.mem nv t.reinstall))
+    && NV.Set.mem nv t.installed in
   File.OPAM.to_package opam installed
 
 let resolve action_k t request =
   let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
 
-  match Solver.resolve (Solver.U l_pkg) request t.reinstall with
+  match 
+    Solver.resolve
+      (Solver.U l_pkg) 
+      request
+      (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
+  with
   | None     -> Globals.msg "No solution has been found.\n"
   | Some sol ->
 

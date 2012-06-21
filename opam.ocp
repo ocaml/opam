@@ -21,8 +21,8 @@ begin library "opam-lib"
     "lexer.mll"
     "linelexer.mll"
     "parser.mly"
-    "path.ml"
     "file.ml"
+    "path.ml"
     "repositories.ml"
   ]
 

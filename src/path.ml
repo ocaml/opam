@@ -131,6 +131,11 @@ module G = struct
 
   let repo_index t = t / "repo" // "index"
 
+  let fold_compiler f acc t = 
+    List.fold_left
+      (fun acc (n, _) -> f acc (C.create n)) 
+      acc
+      (File.Aliases.read (aliases t))
 end
 
 module R = struct

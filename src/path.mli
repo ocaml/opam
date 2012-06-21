@@ -150,6 +150,10 @@ module G: sig
   (** Return the repository index: {i $opam/repo/index} *)
   val repo_index: t -> filename
 
+  (** Folding on available compiler, including the one that is currently set. 
+      The order of folding on version is not precised. *)
+  val fold_compiler: ('a -> C.t -> 'a) -> 'a -> t -> 'a
+
 end
 
 (** Repository related *)
