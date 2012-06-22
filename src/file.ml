@@ -410,6 +410,7 @@ module OPAM = struct
 
   let with_depends t depends = { t with depends }
   let with_build t build = { t with build }
+  let with_remove t remove = { t with remove }
 
   module D = Debian.Packages
 
@@ -448,6 +449,7 @@ module OPAM = struct
             Variable (s_maintainer, String t.maintainer);
             Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
             Variable (s_build, make_list (make_list make_string) t.build);
+            Variable (s_remove, make_list make_string t.remove);
             Variable (s_depends, make_cnf_formula t.depends);
             Variable (s_depopts, make_cnf_formula t.depopts);
             Variable (s_conflicts, make_and_formula t.conflicts);

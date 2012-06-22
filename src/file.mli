@@ -119,8 +119,14 @@ module OPAM: sig
   (** deptopts (optional dependencies) string *)
   val s_depopts: string
 
+  (** Construct as [depends] *)
   val with_depends : t -> Debian.Format822.vpkgformula -> t
+
+  (** Construct as [build] *)
   val with_build: t -> string list list -> t
+
+  (** Construct as [remove] *)
+  val with_remove : t -> string list -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)
