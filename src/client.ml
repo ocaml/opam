@@ -613,10 +613,16 @@ let proceed_todelete t nv =
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let remove = File.OPAM.remove opam in
-  let root = Path.G.root t.global in
-  (* we don't really care in which directory we run the remove scripts,
-     but we just need to be sure the directory exists. *)
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root [remove] in
+  let root_remove = 
+    let p_build = Path.C.build t.compiler nv in
+    if Dirname.exists p_build then
+      p_build
+    else
+      let () = Globals.warning "the folder '%s' does not exist anymore" (Dirname.to_string p_build) in
+      Path.G.root t.global in
+  (* We try to run the remove scripts in the folder where it was extracted
+     If it does not exist, we don't really care. *)
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root_remove [remove] in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
 
