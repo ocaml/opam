@@ -820,6 +820,7 @@ let resolve action_k t request =
 
         let error n =
           let f msg nv =
+            proceed_todelete t nv;
             Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
           match action n with
           | To_change (Some _, nv) -> f "upgrading" nv
