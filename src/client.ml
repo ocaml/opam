@@ -302,10 +302,13 @@ let init_ocaml alias ocaml_version =
     (* Write the default alias *)
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
 
+    (* Install the initial package and reload the global state *)
+    install_initial_package ();
+    let t = load_state () in
+
     (* Update the configuration files *)
     update ();
-    (* Install the initial package *)
-    install_initial_package ();
+
     (* Install the compiler if necessary *)
     let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
     if OCaml_V.current () <> Some ocaml_version && not (File.Comp.preinstalled comp) then begin
@@ -818,6 +821,7 @@ let resolve action_k t request =
 
         let error n =
           let f msg nv =
+            proceed_todelete t nv;
             Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
           match action n with
           | To_change (Some _, nv) -> f "upgrading" nv

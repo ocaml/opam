@@ -20,7 +20,7 @@ let rsync ?fn dir =
     | Some f -> "v",  f in
   let lines =
     Run.read_command_output [
-      "rsync"; "-ar"^option ; (remote_address / dir) ; dir
+      "rsync"; "--delete"; "-ar"^option ; (remote_address / dir) ; dir
     ] in
   let files = Utils.filter_map filter lines in
   List.iter (fun x -> log "updated: %s" (NV.to_string x)) files;
