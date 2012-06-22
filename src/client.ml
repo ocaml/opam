@@ -302,8 +302,9 @@ let init_ocaml alias ocaml_version =
     (* Write the default alias *)
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
 
-    (* Install the initial package *)
+    (* Install the initial package and reload the global state *)
     install_initial_package ();
+    let t = load_state () in
 
     (* Update the configuration files *)
     update ();
