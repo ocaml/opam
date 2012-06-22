@@ -39,5 +39,8 @@ let () =
     updates;
 
   (* Update compiler descriptions *)
-  let _comps = rsync "compilers/" in
+  let _comps =
+    try ignore (rsync "compilers/") with 
+      | e -> 
+        Globals.warning "%s" (Printexc.to_string e) in
   ()
