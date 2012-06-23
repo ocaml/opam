@@ -90,4 +90,4 @@ let os = match Sys.os_type with
   | "Cygwin" -> Cygwin
   | _        -> assert false
 
-let default_cores = 4
+let default_cores = 1
