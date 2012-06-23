@@ -77,18 +77,20 @@ type result = {
 
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines f =
-  let ic = open_in f in
-  let lines = ref [] in
-  begin
-    try
-      while true do
-        let line = input_line ic in
-        lines := line :: !lines;
-      done
-    with _ -> ()
-  end;
-  close_in ic;
-  List.rev !lines
+  try
+    let ic = open_in f in
+    let lines = ref [] in
+    begin
+      try
+        while true do
+          let line = input_line ic in
+          lines := line :: !lines;
+        done
+      with _ -> ()
+    end;
+    close_in ic;
+    List.rev !lines
+  with _ -> []
 
 let option_map fn = function
   | None   -> None
@@ -147,7 +149,7 @@ let run ?env ~name cmd args =
         String.concat "\n" (Array.to_list env)
       ];
     close_out chan;
-    
+   
     let p = create ~env ~info ~stdout ~stderr cmd args in
     wait p
   with e ->
