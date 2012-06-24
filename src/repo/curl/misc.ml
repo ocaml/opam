@@ -43,18 +43,28 @@ let raw_wget str =
 let wget remote_file =
   raw_wget (Filename.to_string remote_file)
 
-let remote_files =
+let remote_files, file_perms =
   let err = Dirname.exec local_path [wget index_file] in
   if err <> 0 then
     Globals.error_and_exit "Cannot get urls.txt";
   let lines = Process.read_lines "urls.txt" in
-  let lines = List.map (fun f ->
-    if Utils.starts_with "./" f then
-      String.sub f 2 (String.length f - 2)
-    else
-      f 
-  ) lines in
-  Filename.Set.of_list (List.map ((//) remote_path) lines)
+  let all =
+    Utils.filter_map (fun f ->
+      match Utils.cut_at f ' ' with
+      | None ->
+          if f <> "" then Globals.warning "ignoring the line %S" f;
+          None
+      | Some (perm, f) ->
+          let file =
+            if Utils.starts_with "./" f then
+              String.sub f 2 (String.length f - 2)
+            else
+              f in
+          let file = remote_path // file in
+          Some (file, (file, int_of_string perm))
+    ) lines in
+  let files, map = List.split all in
+  (Filename.Set.of_list files), map
 
 let download_remote_file ?(force = false) remote_file =
   if not (Filename.Set.mem remote_file remote_files) then
@@ -77,6 +87,8 @@ let download_remote_file ?(force = false) remote_file =
       if not (Filename.exists local_file) then
         (* This may happen with empty files *)
         Run.write (Filename.to_string local_file) "";
+      let perm = List.assoc remote_file file_perms in
+      Unix.chmod (Filename.to_string local_file) perm;
       Some local_file
     end
   end
