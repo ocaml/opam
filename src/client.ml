@@ -135,18 +135,9 @@ let print_compilers compilers repo =
     Globals.msg " -  %s\n" (OCaml_V.to_string v)
   ) new_compilers
 
-let update () =
-  log "update";
-  let t = load_state () in
-  let compilers = Path.G.compiler_list t.global in
+let update_repo_index t =
 
-  (* first update all the repo *)
-  List.iter (fun (r,_) -> Repositories.update r) t.repositories;
-
-  (* Display the new compilers available *)
-  List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
-
-  (* then update $opam/repo/index *)
+  (* If there are new packages, assign them to some repository *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
       let available = Path.R.available p in
@@ -160,6 +151,38 @@ let update () =
       ) available repo_index
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+
+  (* Create symbolic links from $repo dirs to main dir *)
+  N.Map.iter (fun n r ->
+    let repo_p = find_repository_path t r in
+    let available_versions = Path.R.available_versions repo_p n in
+    V.Set.iter (fun v ->
+      let nv = NV.create n v in
+      let opam_dir = Path.G.opam_dir t.global in
+      let opam_f = Path.R.opam repo_p nv in
+      let descr_dir = Path.G.descr_dir t.global in
+      let descr = Path.R.descr repo_p nv in
+      Filename.link_in opam_f opam_dir;
+      if Filename.exists descr then
+        Filename.link_in descr descr_dir
+      else
+        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
+    ) available_versions;
+  ) repo_index
+
+let update () =
+  log "update";
+  let t = load_state () in
+  let compilers = Path.G.compiler_list t.global in
+
+  (* first update all the repo *)
+  List.iter (fun (r,_) -> Repositories.update r) t.repositories;
+
+  (* Display the new compilers available *)
+  List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
+
+  (* then update $opam/repo/index *)
+  update_repo_index t;
 
   let updated = 
     List.rev_map (fun (_,p) ->
@@ -184,24 +207,6 @@ let update () =
     if not (NV.Set.is_empty reinstall) then
       File.Reinstall.write (Path.C.reinstall compiler) reinstall
   ) () t.global;
-
-  (* finally create symbolic links from $repo dirs to main dir *)
-  N.Map.iter (fun n r ->
-    let repo_p = find_repository_path t r in
-    let available_versions = Path.R.available_versions repo_p n in
-    V.Set.iter (fun v ->
-      let nv = NV.create n v in
-      let opam_dir = Path.G.opam_dir t.global in
-      let opam_f = Path.R.opam repo_p nv in
-      let descr_dir = Path.G.descr_dir t.global in
-      let descr = Path.R.descr repo_p nv in
-      Filename.link_in opam_f opam_dir;
-      if Filename.exists descr then
-        Filename.link_in descr descr_dir
-      else
-        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
-    ) available_versions
-  ) repo_index;
 
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
@@ -1185,21 +1190,6 @@ let remote action =
   let update_config repos =
     let new_config = File.Config.with_repositories t.config repos in
     File.Config.write (Path.G.config t.global) new_config in
-  let add repo =
-    let name = Repository.name repo in
-    if List.exists (fun r -> Repository.name r = name) repos then
-      Globals.error_and_exit "%s is already a remote repository" name
-    else (
-      log "Adding %s" (Repository.to_string repo);
-      let compilers = Path.G.compiler_list t.global in
-      Repositories.init repo;
-      Repositories.update repo;
-      let p = Path.R.create repo in
-      let updated = File.Updated.read (Path.R.updated p) in
-      print_updated t updated;
-      print_compilers compilers p;
-      update_config (repo :: repos)
-    ) in
   match action with
   | List  ->
       let pretty_print r =
@@ -1213,7 +1203,16 @@ let remote action =
         line "NAME" "ADDRESS" "KIND" line;
       List.iter pretty_print repos;
       Globals.msg "%s\n" line
-  | Add r -> add r
+  | Add repo ->
+      let name = Repository.name repo in
+      if List.exists (fun r -> Repository.name r = name) repos then
+        Globals.error_and_exit "%s is already a remote repository" name
+      else (
+        log "Adding %s" (Repository.to_string repo);
+        Repositories.init repo;
+        update_config (repo :: repos)
+      );
+      update ()
   | Rm n  ->
       let repo =
         try List.find (fun r -> Repository.name r = n) repos
