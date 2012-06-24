@@ -44,7 +44,7 @@ let () =
 
   (* If the archive is there, download it directly *)
   let remote_archive = Path.R.archive remote_repo nv in
-  match download_remote_file remote_archive with
+  match download_remote_file ~force:true remote_archive with
   | Some _ -> ()
   | None   ->
       log
@@ -70,7 +70,7 @@ let () =
       (* Also add the files/<package>/* to the extracted dir *)
       log "Adding the files to the archive";
       let files =
-        let _files = download_remote_dir (Path.R.files remote_repo nv) in
+        let _files = download_remote_dir ~force:true (Path.R.files remote_repo nv) in
         Path.R.available_files local_repo nv in
       List.iter (fun f -> Filename.copy_in f tmp_extract_dir) files;
       let local_archive = Path.R.archive local_repo nv in

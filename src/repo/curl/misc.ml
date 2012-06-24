@@ -56,7 +56,7 @@ let remote_files =
   ) lines in
   Filename.Set.of_list (List.map ((//) remote_path) lines)
 
-let download_remote_file remote_file =
+let download_remote_file ?(force = false) remote_file =
   if not (Filename.Set.mem remote_file remote_files) then
     None
   else begin
@@ -66,24 +66,26 @@ let download_remote_file remote_file =
     let local_file =
       let basename = Filename.remove_prefix remote_path remote_file in
       local_path // basename in
-    if Filename.exists local_file then
-      (* Overwrite the file if it is already there *)
-      Filename.remove local_file;
-    Dirname.mkdir (Filename.dirname local_file);
-    let err = Dirname.exec local_dir [wget remote_file] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot download %s" (Filename.to_string remote_file);
-    if not (Filename.exists local_file) then
-      (* This may happen with empty files *)
-      Run.write (Filename.to_string local_file) "";
-    Some local_file
+    if not force && Filename.exists local_file then
+      (* Do not overwrite the file if it is already there *)
+      None
+    else begin
+      Dirname.mkdir (Filename.dirname local_file);
+      let err = Dirname.exec local_dir [wget remote_file] in
+      if err <> 0 then
+        Globals.error_and_exit "Cannot download %s" (Filename.to_string remote_file);
+      if not (Filename.exists local_file) then
+        (* This may happen with empty files *)
+        Run.write (Filename.to_string local_file) "";
+      Some local_file
+    end
   end
 
 (* Get all the files in remote_dir *)
-let download_remote_dir remote_dir =
+let download_remote_dir ?(force = false) remote_dir =
   Filename.Set.filter (fun f ->
     if Filename.starts_with remote_dir f then begin
-      match download_remote_file f with
+      match download_remote_file ~force f with
       | Some _ -> true
       | None   -> false
     end else

@@ -185,6 +185,7 @@ let update () =
         Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
     ) available_versions
   ) repo_index;
+
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
   List.iter (fun (r,p) ->
