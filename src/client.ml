@@ -416,7 +416,7 @@ let list () =
           map, max_n, max_v
         else
           let is_installed = NV.Set.mem nv installed in
-          let descr_f = File.Descr.read (Path.G.descr t.global nv) in
+          let descr_f = File.Descr.safe_read (Path.G.descr t.global nv) in
           let synopsis = File.Descr.synopsis descr_f in
           let map = N.Map.add name ((if is_installed then Some version else None), synopsis) map in
           let max_n = max max_n (String.length (N.to_string name)) in
@@ -484,7 +484,8 @@ let info package =
      @ let latest = match o_v with
          | None   -> V.Set.max_elt v_set
          | Some v -> v in
-       let descr = File.Descr.read (Path.G.descr t.global (NV.create package latest)) in
+       let descr =
+         File.Descr.safe_read (Path.G.descr t.global (NV.create package latest)) in
        [ "description", File.Descr.full descr ]
     )
 

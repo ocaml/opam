@@ -164,7 +164,10 @@ let option_iter fn = function
   | None   -> ()
   | Some v -> fn v
 
+let safe_unlink f =
+  try Unix.unlink f with _ -> ()
+
 let clean_files r =
-  option_iter Unix.unlink r.r_proc.p_stdout;
-  option_iter Unix.unlink r.r_proc.p_stderr;
-  option_iter Unix.unlink r.r_proc.p_info
+  option_iter safe_unlink r.r_proc.p_stdout;
+  option_iter safe_unlink r.r_proc.p_stderr;
+  option_iter safe_unlink r.r_proc.p_info

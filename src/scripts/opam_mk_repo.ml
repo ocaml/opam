@@ -28,9 +28,9 @@
 
 module F = Filename
 
-let tmp_dir0 = F.concat F.temp_dir_name "opam-mk-repo"
-
 open Types
+
+let tmp_dir0 = Run.mk_temp_dir "mk-repo"
 
 let root = Path.R.of_path (Dirname.cwd ())
 

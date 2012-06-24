@@ -15,6 +15,9 @@
 
 (** Low-level untyped system operations. *)
 
+(** [mk_temp_dir str] creates a tempory directory *)
+val mk_temp_dir: string -> string
+
 (** [copy src dst] copies [src] to [dst] *)
 val copy: string -> string -> unit
 
@@ -51,6 +54,10 @@ val in_dir: string -> (unit -> 'a) -> 'a
 
 (** [files dir] returns the files in the directory [dir] *)
 val files: string -> string list
+
+(** [rec_files dir] returns the list of all files in [dir], 
+    recursively *)
+val rec_files: string -> string list
 
 (** Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns [None]. *)
