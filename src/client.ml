@@ -1174,6 +1174,7 @@ let remote action =
     else (
       log "Adding %s" (Repository.to_string repo);
       Repositories.init repo;
+      Repositories.update repo;
       update_config (repo :: repos)
     ) in
   match action with
