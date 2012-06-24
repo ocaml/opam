@@ -16,17 +16,27 @@ let _ =
     exit 1
   )
 
+open Types
+
 let remote_address = Sys.argv.(1)
+let local_dir = Dirname.cwd ()
 
 let git_clone () =
   let err =
     Run.commands [
       [ "git" ; "init" ] ;
       [ "git" ; "remote" ; "add" ; "origin" ; remote_address ] ;
-      [ "git" ; "pull" ; "origin" ; "master" ]
     ] in
-  exit err
+  if err <> 0 then
+    Globals.error_and_exit "Cannot clone %s" remote_address
+
+let packages () =
+  let all = Filename.rec_list local_dir in
+  NV.Set.of_list (Utils.filter_map NV.of_filename all)
 
 let () =
   Run.mkdir "git";
-  git_clone ()
+  git_clone ();
+  File.Updated.write
+    (Path.R.updated (Path.R.of_path local_dir))
+    (packages ())

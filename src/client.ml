@@ -117,12 +117,34 @@ let find_available_package_by_name t name =
   else
     Some s
 
+let print_updated t updated =
+  if not (NV.Set.is_empty updated) then
+    Globals.msg "New packages available:\n";
+  NV.Set.iter (fun nv ->
+    Globals.msg " - %s%s\n"
+      (NV.to_string nv)
+      (if NV.Set.mem nv t.installed then " (*)" else "")
+  ) updated
+
+let print_compilers compilers repo =
+  let repo_compilers = Path.R.compiler_list repo in
+  let new_compilers = OCaml_V.Set.diff repo_compilers compilers in
+  if not (OCaml_V.Set.is_empty new_compilers) then
+    Globals.msg "New compiler descriptions available:\n";
+  OCaml_V.Set.iter (fun v ->
+    Globals.msg " -  %s\n" (OCaml_V.to_string v)
+  ) new_compilers
+
 let update () =
   log "update";
   let t = load_state () in
+  let compilers = Path.G.compiler_list t.global in
 
   (* first update all the repo *)
   List.iter (fun (r,_) -> Repositories.update r) t.repositories;
+
+  (* Display the new compilers available *)
+  List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
 
   (* then update $opam/repo/index *)
   let repo_index =
@@ -139,19 +161,14 @@ let update () =
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
 
-  (* update $opam/$oversion/reinstall *)
   let updated = 
-    List.rev_map (fun (r,p) ->
+    List.rev_map (fun (_,p) ->
       let updated = File.Updated.safe_read (Path.R.updated p) in
-      if not (NV.Set.is_empty updated) then
-        Globals.msg "New packages available:\n";
-      NV.Set.iter (fun nv ->
-        Globals.msg " - %s%s\n"
-          (NV.to_string nv)
-          (if NV.Set.mem nv t.installed then " (*)" else "")
-      ) updated;
-      updated
+      print_updated t updated;
+      updated;
     ) t.repositories in  
+
+  (* update $opam/$oversion/reinstall *)
   Path.G.fold_compiler (fun () compiler ->
     let installed = File.Installed.safe_read (Path.C.installed compiler) in
     let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
@@ -1174,8 +1191,13 @@ let remote action =
       Globals.error_and_exit "%s is already a remote repository" name
     else (
       log "Adding %s" (Repository.to_string repo);
+      let compilers = Path.G.compiler_list t.global in
       Repositories.init repo;
       Repositories.update repo;
+      let p = Path.R.create repo in
+      let updated = File.Updated.read (Path.R.updated p) in
+      print_updated t updated;
+      print_compilers compilers p;
       update_config (repo :: repos)
     ) in
   match action with
@@ -1197,7 +1219,16 @@ let remote action =
         try List.find (fun r -> Repository.name r = n) repos
         with Not_found ->
           Globals.error_and_exit "%s is not a remote index" n in
-      update_config (List.filter ((!=) repo) repos)
+      update_config (List.filter ((!=) repo) repos);
+      let repo_index =
+        N.Map.fold (fun n r repo_index ->
+          if r = Repository.name repo then
+            repo_index
+          else
+            N.Map.add n r repo_index
+        ) t.repo_index N.Map.empty in
+        File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+      Dirname.rmdir (Path.R.root (Path.R.create repo))
 
 let compiler_list () =
   log "compiler_list";
