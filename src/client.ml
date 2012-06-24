@@ -482,10 +482,15 @@ let info package =
      @ libraries
      @ syntax
      @ let latest = match o_v with
-         | None   -> V.Set.max_elt v_set
-         | Some v -> v in
+         | Some v -> Some v
+         | None   ->
+             try Some (V.Set.max_elt v_set)
+             with Not_found -> None in
        let descr =
-         File.Descr.safe_read (Path.G.descr t.global (NV.create package latest)) in
+         match latest with
+         | None   -> File.Descr.empty
+         | Some v ->
+             File.Descr.safe_read (Path.G.descr t.global (NV.create package v)) in
        [ "description", File.Descr.full descr ]
     )
 
