@@ -616,7 +616,7 @@ let proceed_todelete t nv =
 
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let remove = List.map (substitute_string t) (File.OPAM.remove opam) in
+  let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
   let root_remove = 
     let p_build = Path.C.build t.compiler nv in
     if Dirname.exists p_build then
@@ -626,7 +626,7 @@ let proceed_todelete t nv =
       Path.G.root t.global in
   (* We try to run the remove scripts in the folder where it was extracted
      If it does not exist, we don't really care. *)
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root_remove [remove] in
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root_remove remove in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
 
