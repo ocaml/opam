@@ -325,7 +325,7 @@ module OPAM = struct
     maintainer : string;
     substs     : basename list;
     build      : string list list;
-    remove     : string list;
+    remove     : string list list;
     depends    : Debian.Format822.vpkgformula;
     depopts    : Debian.Format822.vpkgformula;
     conflicts  : Debian.Format822.vpkglist;
@@ -449,7 +449,7 @@ module OPAM = struct
             Variable (s_maintainer, String t.maintainer);
             Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
             Variable (s_build, make_list (make_list make_string) t.build);
-            Variable (s_remove, make_list make_string t.remove);
+            Variable (s_remove, make_list (make_list make_string) t.remove);
             Variable (s_depends, make_cnf_formula t.depends);
             Variable (s_depopts, make_cnf_formula t.depopts);
             Variable (s_conflicts, make_and_formula t.conflicts);
@@ -483,7 +483,7 @@ module OPAM = struct
     let build      =
       assoc_default Globals.default_build_command
         s s_build (parse_list (parse_list parse_command)) in
-    let remove     = assoc_list s s_remove (parse_list parse_command) in
+    let remove     = assoc_list s s_remove (parse_list (parse_list parse_command)) in
     let depends    = assoc_list s s_depends parse_cnf_formula in
     let depopts    = assoc_list s s_depopts parse_cnf_formula in
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
