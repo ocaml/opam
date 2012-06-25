@@ -95,8 +95,8 @@ module OPAM: sig
   (** List of command to run for building the package *)
   val build: t -> string list list
 
-  (** List of command to run for removing the package *)
-  val remove: t -> string list list
+  (** Command to run to remove the package *)
+  val remove: t -> string list
 
   (** Package dependencies *)
   val depends: t -> Debian.Format822.vpkgformula
@@ -126,7 +126,7 @@ module OPAM: sig
   val with_build: t -> string list list -> t
 
   (** Construct as [remove] *)
-  val with_remove : t -> string list list -> t
+  val with_remove : t -> string list -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)
