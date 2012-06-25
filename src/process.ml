@@ -31,14 +31,15 @@ let create ?info ?stdout ?stderr ?env cmd args =
   let nothing () = () in
   let tee f =
     let fd = Unix.openfile f open_flags 0o644 in
+    let close_fd () = Unix.close fd in
     if !Globals.debug || !Globals.verbose then (
       let chan = Unix.open_process_out ("tee " ^ f) in
       let close () =
         match Unix.close_process_out chan with
-        | _ -> () in
+        | _ -> close_fd () in
       Unix.descr_of_out_channel chan, close
     ) else
-      fd, nothing in
+      fd, close_fd in
   let stdout_fd, close_stdout = match stdout with
     | None   -> Unix.stdout, nothing
     | Some f -> tee f in
