@@ -377,31 +377,6 @@ let init_ocaml alias ocaml_version =
       raise e;
     end
 
-let init repo alias ocaml_version cores =
-  log "init %s" (Repository.to_string repo);
-  let root = Path.G.create () in
-  let config_f = Path.G.config root in
-  if Filename.exists config_f then
-    Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
-  else try
-    let opam_version = OPAM_V.of_string Globals.opam_version in
-    let config = File.Config.create opam_version [repo] alias cores in
-    let repo_p = Path.R.create repo in
-    (* Create (possibly empty) configuration files *)
-    File.Config.write config_f config;
-    File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
-    File.Repo_config.write (Path.R.config repo_p) repo;
-    Repositories.init repo;
-    Dirname.mkdir (Path.G.opam_dir root);
-    Dirname.mkdir (Path.G.descr_dir root);
-    Dirname.mkdir (Path.G.archive_dir root);
-    Dirname.mkdir (Path.G.compiler_dir root);
-    init_ocaml alias ocaml_version;
-  with e ->
-    if not !Globals.debug then
-      Dirname.rmdir (Path.G.root root);
-    raise e
-
 let indent_left s nb =
   let nb = nb - String.length s in
   if nb <= 0 then
@@ -869,6 +844,7 @@ let resolve action_k t request =
         with PA_graph.Parallel.Errors n -> List.iter error n
       )
 
+
 let vpkg_of_nv op nv =
   let name = NV.name nv in
   let constr =
@@ -908,6 +884,46 @@ let nv_of_name t name =
     else
       unknown_package sname
   )
+
+let init repo alias ocaml_version cores =
+  log "init %s" (Repository.to_string repo);
+  let root = Path.G.create () in
+  let config_f = Path.G.config root in
+  if Filename.exists config_f then
+    Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
+  else try
+    let opam_version = OPAM_V.of_string Globals.opam_version in
+    let config = File.Config.create opam_version [repo] alias cores in
+    let repo_p = Path.R.create repo in
+    (* Create (possibly empty) configuration files *)
+    File.Config.write config_f config;
+    File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
+    File.Repo_config.write (Path.R.config repo_p) repo;
+    Repositories.init repo;
+    Dirname.mkdir (Path.G.opam_dir root);
+    Dirname.mkdir (Path.G.descr_dir root);
+    Dirname.mkdir (Path.G.archive_dir root);
+    Dirname.mkdir (Path.G.compiler_dir root);
+    init_ocaml alias ocaml_version;
+    let t = load_state () in
+    let comp_f = Path.G.compiler t.global ocaml_version in
+    let comp = File.Comp.read comp_f in
+    let packages =
+      List.map
+        (fun name -> nv_of_name t name)
+        (File.Comp.packages comp) in
+    let wish_install = List.map vpkg_of_nv_eq packages in
+    resolve `init t
+      { wish_install
+      ; wish_remove = [] 
+      ; wish_upgrade = [] };
+    let env = get_env (load_state ()) in
+    print_env env
+
+  with e ->
+    if not !Globals.debug then
+      Dirname.rmdir (Path.G.root root);
+    raise e
 
 let install names =
   log "install %s" (N.Set.to_string names);
