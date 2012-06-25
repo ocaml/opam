@@ -209,7 +209,7 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
         Globals.error "Command %S failed (see %s.{info,err,out})" str name;
         List.iter (Globals.msg "%s\n") r.Process.r_stdout;
         List.iter (Globals.msg "%s\n") r.Process.r_stderr;
-        Globals.exit 1
+        Globals.exit r.Process.r_code
       ) else if not !Globals.debug then
         Process.clean_files r;
       r
