@@ -612,7 +612,7 @@ let proceed_todelete t nv =
 
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let remove = File.OPAM.remove opam in
+  let remove = List.map (substitute_string t) (File.OPAM.remove opam) in
   let root_remove = 
     let p_build = Path.C.build t.compiler nv in
     if Dirname.exists p_build then
