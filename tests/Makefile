@@ -15,9 +15,11 @@ OPAM_SERVER      = 127.0.0.1
 OPAM_GIT = $(TEST_DIR)/OPAM.GIT
 
 BINARIES  = opam opam-server opam-check \
-	    opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
+	    opam-rsync-init  opam-rsync-update  opam-rsync-download  opam-rsync-upload \
 	    opam-server-init opam-server-update opam-server-download opam-server-upload \
-	    opam-git-init opam-git-update opam-git-download opam-git-upload
+	    opam-git-init    opam-git-update    opam-git-download    opam-git-upload \
+	    opam-curl-init   opam-curl-update   opam-curl-download   opam-curl-upload
+
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
 OCAMLVERSION = $(shell ocamlc -version)
