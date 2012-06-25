@@ -26,7 +26,7 @@ let version = "0.1+dev"
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"
-let default_repository_kind    = "rsync"
+let default_repository_kind    = "curl"
 
 let default_build_command = [ [ "./build.sh" ] ]
 
@@ -90,4 +90,4 @@ let os = match Sys.os_type with
   | "Cygwin" -> Cygwin
   | _        -> assert false
 
-let default_cores = 4
+let default_cores = 1

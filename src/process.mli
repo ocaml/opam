@@ -65,3 +65,6 @@ val is_failure : result -> bool
 
 (** Clean-up process result files *)
 val clean_files : result -> unit
+
+(** {2 Misc} *)
+val read_lines: string -> string list

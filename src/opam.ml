@@ -44,9 +44,13 @@ let noanon cmd s =
 
 let () = Globals.root_path := Globals.default_opam_path
 
+(* Useful for switch, who overwrite the default verbose flag *)
+let quiet = ref false
+
 let global_args = [
   "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
-  "--verbose", Arg.Set Globals.verbose, " Display stdout/stderr of subprocesses";
+  "--verbose", Arg.Set Globals.verbose, " Display the stdout/stderr of subprocesses";
+  "--quiet"  , Arg.Clear quiet, " Not display the stdout/stderr of subprocesses";
   "--version", Arg.Unit version,      " Display version information";
   "--yes"    , Arg.Set Globals.yes,   " Answer yes to all questions";
   "--root"   , Arg.Set_string Globals.root_path,
@@ -288,7 +292,7 @@ let remote =
 }
 
 (* opam switch [-clone] OVERSION *)
-let switch = 
+let switch =
   let command : [`switch|`list] ref = ref `switch in
   let clone = ref false in
   let alias = ref "" in
@@ -305,6 +309,7 @@ let switch =
   ];
   anon;
   main     = parse_args (fun args ->
+    if not !quiet then Globals.verbose := true;
     match !command, args with
     | `list  , []     -> Client.compiler_list ()
     | `switch, []     -> bad_argument "switch" "Compiler name is missing"

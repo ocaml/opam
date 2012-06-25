@@ -46,6 +46,16 @@ let string_strip str =
   done;
   String.sub str p (!l - p + 1)
 
+let starts_with ~prefix s =
+  String.length s >= String.length prefix
+  && String.sub s 0 (String.length prefix) = prefix
+
+let remove_prefix ~prefix s =
+  if starts_with prefix s then
+    String.sub s (String.length prefix) (String.length s - String.length prefix)
+  else
+    Globals.error_and_exit "%s is not a prefix of %s" prefix s
+
 let is_inet_address address =
   try
     let (_:Unix.inet_addr) = Unix.inet_addr_of_string address
@@ -64,3 +74,5 @@ let cut_at_aux fn s sep =
 let cut_at = cut_at_aux String.index
 
 let rcut_at = cut_at_aux String.rindex
+
+

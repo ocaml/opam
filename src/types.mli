@@ -87,6 +87,11 @@ module Dirname: sig
   (** Return the deeper directory name *)
   val basename: t -> basename
 
+  (** Creation from a raw string (as {i http://<path>}) *)
+  val of_raw: string -> t
+
+  (** Remove a prefix from a directory *)
+  val remove_prefix: prefix:t -> t -> string
 end
 
 (** Shortcut to directory type *)
@@ -150,6 +155,9 @@ module Filename: sig
   (** List all the filenames (ie. which are not directories) in a directory *)
   val list: dirname -> t list
 
+  (** List all the filenames, recursively *)
+  val rec_list: dirname -> t list
+
   (** Apply a function on the contents of a file *)
   val with_raw: (Raw.t -> 'a) -> t -> 'a
 
@@ -168,6 +176,12 @@ module Filename: sig
   (** Extract an archive in a given directory (it rewrites the root to
       match [dirname] dir if needed) *)
   val extract: t -> dirname -> unit
+
+  (** Check wether a filename starts by a given dirname *)
+  val starts_with: dirname -> t -> bool
+
+  (** Remove a prefix from a file name *)
+  val remove_prefix: prefix:dirname -> t -> string
 
 end
 

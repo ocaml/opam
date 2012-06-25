@@ -17,7 +17,17 @@ let log fmt = Globals.log "RUN" fmt
 
 let (/) = Filename.concat
 
-let tmp_dir = Filename.temp_dir_name / "opam-archives"
+let rec mk_temp_dir str =
+  let s =
+    Filename.temp_dir_name /
+    Printf.sprintf "opam-%s.%d-%d" str (Unix.getpid ()) (Random.int 4096) in
+  if Sys.file_exists s then
+    mk_temp_dir str
+  else
+    s
+
+let tmp_dir =
+  mk_temp_dir "run"
 
 let lock_file () =
   !Globals.root_path / "opam.lock"
@@ -107,6 +117,13 @@ let files =
 
 let directories =
   list (fun f -> try Sys.is_directory f with _ -> false)
+
+let rec_files dir =
+  let rec aux accu dir =
+    let d = directories dir in
+    let f = files dir in
+    List.fold_left aux (f @ accu) d in
+  aux [] dir
 
 let remove_file file =
   log "remove_file %s" file;

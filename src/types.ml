@@ -94,13 +94,17 @@ module Dirname: sig
     ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
   val basename: t -> basename
+  val remove_prefix: prefix:t -> t -> string
   val exists: t -> bool
+  val of_raw: string -> t
 end = struct
 
   include Base
 
   let of_string dirname =
     Run.real_path dirname
+
+  let of_raw s = s
 
   let rmdir dirname =
     Run.remove (to_string dirname)
@@ -131,6 +135,11 @@ end = struct
 
   let exists dirname =
     Sys.file_exists (to_string dirname)
+
+  let remove_prefix ~prefix dirname =
+    let prefix = to_string prefix in
+    let dirname = to_string dirname in
+    Utils.remove_prefix ~prefix dirname
 end
     
 type dirname = Dirname.t
@@ -158,12 +167,15 @@ module Filename: sig
   val add_extension: t -> string -> t
   val chop_extension: t -> t
   val list: dirname -> t list
+  val rec_list: dirname -> t list
   val with_raw: (Raw.t -> 'a) -> t -> 'a
   val copy_in: t -> dirname -> unit
   val link_in: t -> dirname -> unit
   val copy: t -> t -> unit
   val link: t -> t -> unit
   val extract: t -> dirname -> unit
+  val starts_with: dirname -> t -> bool
+  val remove_prefix: prefix:dirname -> t -> string
 end = struct
 
   type t = {
@@ -222,6 +234,10 @@ end = struct
     let fs = Run.files (Dirname.to_string d) in
     List.map of_string fs
 
+  let rec_list d =
+    let fs = Run.rec_files (Dirname.to_string d) in
+    List.map of_string fs
+
   let copy src dst =
     Run.copy (to_string src) (to_string dst)
 
@@ -243,6 +259,14 @@ end = struct
   let extract filename dirname =
     Run.extract (to_string filename) (Dirname.to_string dirname)
 
+  let starts_with dirname filename =
+    Utils.starts_with (Dirname.to_string dirname) (to_string filename)
+
+  let remove_prefix ~prefix filename =
+    let prefix = Dirname.to_string prefix in
+    let filename = to_string filename in
+    Utils.remove_prefix ~prefix filename
+
   module O = struct
     type tmp = t
     type t = tmp
@@ -256,12 +280,15 @@ type filename = Filename.t
 
 let (/) d1 s2 =
   let s1 = Dirname.to_string d1 in
-  Dirname.of_string (F.concat s1 s2)
+  Dirname.of_raw (F.concat s1 s2)
 
 let (//) d1 s2 =
-  Filename.create d1 (Basename.of_string s2)
-
-
+  let d = Stdlib_filename.dirname s2 in
+  let b = Stdlib_filename.basename s2 in
+  if d <> "." then
+    Filename.create (d1 / d) (Basename.of_string b)
+  else
+    Filename.create d1 (Basename.of_string s2)
 
 (* Package name and versions *)
 
