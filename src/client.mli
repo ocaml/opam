@@ -51,8 +51,8 @@ val upgrade : unit -> unit
     name. Take the global file lock. *)
 val upload : upload -> string option -> unit
 
-(** Removes the given package. Take the global file lock. *)
-val remove : N.t -> unit
+(** Removes the given set of packages. Take the global file lock. *)
+val remove : N.Set.t -> unit
 
 (** Manage remote repositories. Take the global file lock. *)
 val remote : remote -> unit

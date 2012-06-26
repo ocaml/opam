@@ -954,14 +954,16 @@ let install names =
     ; wish_remove  = []
     ; wish_upgrade = [] }
 
-let remove name =
-  log "remove %s" (N.to_string name);
-  if name = N.of_string Globals.default_package then
+let remove names =
+  log "remove %s" (N.Set.to_string names);
+  if N.Set.mem (N.of_string Globals.default_package) names then
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
+  let names = N.Set.elements names in
   let t = load_state () in
-  let nv = nv_of_name t name in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
-  let depends = Solver.filter_forward_dependencies universe (Solver.P [debpkg_of_nv `remove t nv]) in
+  let depends = 
+    Solver.filter_forward_dependencies universe
+      (Solver.P (List.rev_map (fun name -> debpkg_of_nv `remove t (nv_of_name t name)) names)) in
   let depends =
     List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
 
@@ -976,7 +978,7 @@ let remove name =
 
   resolve `remove t
     { wish_install
-    ; wish_remove  = [ (N.to_string name, None), None ]
+    ; wish_remove  = List.rev_map (fun name -> (N.to_string name, None), None) names
     ; wish_upgrade = [] }
 
 let upgrade () =

@@ -189,7 +189,7 @@ let mk options =
 let install = {
   name     = "install";
   usage    = "[package]+";
-  synopsis = "Install a package";
+  synopsis = "Install a list of package";
   help     = "";
   specs    = [];
   anon;
@@ -256,12 +256,15 @@ let upload =
 (* opam remove PACKAGE *)
 let remove = {
   name     = "remove";
-  usage    = "";
-  synopsis = "Remove a package";
+  usage    = "[package]+";
+  synopsis = "Remove a list of package";
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args (List.iter (fun n -> Client.remove (N.of_string n)));
+  main     = parse_args (fun names ->
+    let names = List.map N.of_string names in
+    Client.remove (N.Set.of_list names)
+  )
 }
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
