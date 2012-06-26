@@ -93,3 +93,8 @@ val filter_backward_dependencies : universe -> packages -> package list
 (** Same as [filter_backward_dependencies] but for forward
     dependencies *)
 val filter_forward_dependencies : universe -> packages -> package list
+
+(** Return a permutation of the given set of packages :
+    if package B depends of package A then 
+    B appears before A in the resulting list *)
+val sort_by_backward_dependencies : universe -> packages -> package list

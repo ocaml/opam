@@ -17,13 +17,15 @@ let filter_map f l =
   let rec loop accu = function
     | []     -> List.rev accu
     | h :: t ->
-	match f h with
-	| None   -> loop accu t
-	| Some x -> loop (x::accu) t in
+        match f h with
+        | None   -> loop accu t
+        | Some x -> loop (x::accu) t in
   loop [] l
 
-let map_of_list empty add l =
-  List.fold_left (fun map (k,v) -> add k v map) empty l
+let set_of_list empty add l =
+  List.fold_left (fun map v -> add v map) empty l
+
+let map_of_list empty add = set_of_list empty (fun (k, v) -> add k v)
 
 module IntMap = Map.Make(struct type t = int let compare = compare end)  
 module IntSet = Set.Make(struct type t = int let compare = compare end)  

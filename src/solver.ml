@@ -103,7 +103,7 @@ let string_of_request r =
     (string_of_vpkgs r.wish_upgrade)
 
 type solution = {
-  to_remove: NV.t list;
+  to_remove: NV.t list; (* order : first element needs to be removed before the others *)
   to_add   : PA_graph.t;
 }
 
@@ -364,7 +364,27 @@ struct
     let () = Debian.Debcudf.clear table in
     v
 
-  let filter_dependencies f_direction (U l_pkg_pb) (P pkg_l) =
+  let topo_fold g pkg_set = 
+    let _, l =
+      PG_topo.fold
+        (fun p (set, l) ->
+          let add_succ_rem pkg set act =
+            (let set = PkgSet.remove pkg set in
+             try
+               List.fold_left (fun set x -> 
+                 PkgSet.add x set) set (PG.succ g pkg)
+             with _ -> set), 
+            act :: l in
+          
+          if PkgSet.mem p set then 
+            add_succ_rem p set p
+          else
+            set, l)
+        g 
+        (pkg_set, []) in
+    l
+
+  let filter_dependencies f_filter f_direction (U l_pkg_pb) (P pkg_l) =
     let pkg_map = 
       List.fold_left
         (fun map pkg -> NV.Map.add (NV.of_dpkg pkg) pkg map)
@@ -377,26 +397,19 @@ struct
           PkgSet.empty
           pkg_l in
         let g = f_direction (dep_reduction pkglist) in
-        let _, l = 
-          PG_topo.fold
-            (fun p (set, l) -> 
-              let add_succ_rem pkg set act =
-                (let set = PkgSet.remove pkg set in
-                 try
-                   List.fold_left (fun set x -> 
-                     PkgSet.add x set) set (PG.succ g pkg)
-                 with _ -> set), 
-                act :: l in
-              
-              if PkgSet.mem p set then 
-                add_succ_rem p set p
-              else
-                set, l)
-            g (pkg_set, []) in
-        List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map) l)
+        let l = topo_fold g pkg_set in
+        List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map)
+          (f_filter pkg_set l))
 
-  let filter_backward_dependencies = filter_dependencies (fun x -> x)
-  let filter_forward_dependencies = filter_dependencies PO.O.mirror
+  let filter_dep = filter_dependencies (fun _ x -> x)
+
+  let filter_backward_dependencies = filter_dep (fun x -> x)
+  let filter_forward_dependencies = filter_dep PO.O.mirror
+
+  let sort_by_backward_dependencies = 
+    filter_dependencies
+      (fun pkg_set -> List.filter (fun p -> PkgSet.mem p pkg_set))
+      (fun x -> x)
 
   (* Add the optional dependencies to the list of dependencies *)
   (* The dependencies are encoded in the pkg_extra of cudf packages,
@@ -459,15 +472,17 @@ struct
             let pkglist = List.map (extended_dependencies table) pkglist in
             let universe = Cudf.load_universe pkglist in
             log "full-universe: %s" (string_of_universe universe);
+            let create_graph filter = dep_reduction (Cudf.get_packages ~filter universe) in
 
-            let l_del_p, l_del = 
+            let l_del_p, set_del = 
               Utils.filter_map (function
                 | I_to_change (Some pkg, _) 
                 | I_to_delete pkg -> Some pkg
                 | _ -> None) l,
-              Utils.filter_map (function
-                | I_to_delete pkg -> Some pkg
-                | _ -> None) l in
+              Utils.set_of_list PkgSet.empty PkgSet.add
+                (Utils.filter_map (function
+                  | I_to_delete pkg -> Some pkg
+                  | _ -> None) l) in
 
             let map_add = 
               Utils.map_of_list PkgMap.empty PkgMap.add (Utils.filter_map (function 
@@ -475,17 +490,14 @@ struct
                 | I_to_delete _ -> None
                 | I_to_recompile _ -> assert false) l) in
 
-            let graph_installed = 
+            let graph_toinstall = 
               PO.O.mirror 
-                (dep_reduction 
-                   (Cudf.get_packages 
-                      ~filter:(fun p -> p.Cudf.installed || PkgMap.mem p map_add) 
-                      universe)) in
+                (create_graph (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
 
-            let graph_installed =
-              let graph_installed = PG.copy graph_installed in
-              List.iter (PG.remove_vertex graph_installed) l_del_p;
-              graph_installed in
+            let graph_toinstall =
+              let graph_toinstall = PG.copy graph_toinstall in
+              List.iter (PG.remove_vertex graph_toinstall) l_del_p;
+              graph_toinstall in
 
             let _, map_act = 
               PG_topo.fold
@@ -495,7 +507,7 @@ struct
                      try
                        List.fold_left
                          (fun set x -> PkgSet.add x set)
-                         set (PG.succ graph_installed pkg)
+                         set (PG.succ graph_toinstall pkg)
                      with _ -> set), 
                     Utils.IntMap.add
                       (PG.V.hash pkg)
@@ -509,7 +521,7 @@ struct
                     else
                       set_recompile, l_act
                 )
-                graph_installed
+                graph_toinstall
                 (PkgSet.empty, Utils.IntMap.empty) in
 
             let graph = PA_graph.create () in
@@ -522,14 +534,18 @@ struct
                   PA_graph.add_edge graph v1 v2
                 with Not_found ->
                   ())
-              graph_installed;
+              graph_toinstall;
             PA_graph.iter_update_reinstall reinstall graph;
-            Some { to_remove = List.rev_map package_map l_del ; to_add = graph })
+            Some { to_remove = List.rev_map package_map 
+                     (topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del)
+                 ; to_add = graph })
 
 end
 
 let filter_backward_dependencies = Graph.filter_backward_dependencies
 let filter_forward_dependencies = Graph.filter_forward_dependencies
+let sort_by_backward_dependencies = Graph.sort_by_backward_dependencies
+
 let resolve = Graph.resolve
 
 let delete_or_update t =
