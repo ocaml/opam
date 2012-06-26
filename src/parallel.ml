@@ -121,11 +121,18 @@ module Make (G : G) = struct
       (String.concat ","
          (IntMap.fold (fun e _ l -> string_of_int e :: l) pids []))
 
+  let string_of_status st = 
+    let st, n = match st with
+      | Unix.WEXITED n -> "exit", n
+      | Unix.WSIGNALED n -> "signal", n
+      | Unix.WSTOPPED n -> "stop", n in
+    Printf.sprintf "%s %d" st n
+
   let wait pids = 
     let rec aux () =
       let pid, status = Unix.wait () in
       if IntMap.mem pid pids then (
-        log "%d is dead" pid;
+        log "%d is dead (%s)" pid (string_of_status status);
         pid, status
       ) else (
         log "%d: unknown child (pids=%s)!"
@@ -154,7 +161,12 @@ module Make (G : G) = struct
         log "loop completed";
         if !errors <> [] then begin
           (* wait until every element in [pids] finishes before leaving *)
-          IntMap.iter (fun _ _ -> pids := IntMap.remove (fst (wait !pids)) !pids) !pids;
+          IntMap.iter
+            (fun _ _ -> 
+              pids := IntMap.remove 
+                (match wait !pids with
+                  | pid, Unix.WEXITED 0 -> let _ = post (IntMap.find pid !pids) in pid
+                  | pid, _ -> pid) !pids) !pids;
           raise (Errors !errors)
         end
 
