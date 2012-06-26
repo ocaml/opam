@@ -95,7 +95,7 @@ module OPAM: sig
   (** List of command to run for building the package *)
   val build: t -> string list list
 
-  (** Command to run to remove the package *)
+  (** List of command to run for removing the package *)
   val remove: t -> string list list
 
   (** Package dependencies *)
@@ -223,6 +223,24 @@ end
 
 (** .install files *)
 module Dot_install: sig
+
+  module Raw : sig 
+
+    include IO_FILE
+      
+    (** List of files to install in $lib/ *)
+    val lib:  t -> string list
+
+    (** List of files to install in $bin/ *)
+    val bin:  t -> (string * string option) list
+
+    (** List of other files to install *)
+    val misc: t -> (string * string option) list
+
+    (** Construct as [bin] *)
+    val with_bin: t -> (string * string option) list -> t
+
+  end
 
   include IO_FILE
 

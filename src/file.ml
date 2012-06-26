@@ -501,24 +501,21 @@ module OPAM = struct
       depends; depopts; conflicts; libraries; syntax; others }
 end
 
-module Dot_install = struct
+module Dot_install_raw = struct
 
-  let internal = ".install"
+  let internal = ".install(*raw*)"
     
   type t =  {
-    lib : filename list ;
-    bin : (filename * basename) list ;
-    misc: (filename * filename) list ;
+    lib : string list ;
+    bin : (string * string option) list ;
+    misc: (string * string option) list ;
   }
-
-  let string_of_move (src, dst) =
-    let src = Filename.to_string src in
-    let dst = Filename.to_string dst in
-    Printf.sprintf "%s => %s" src dst
 
   let lib t = t.lib
   let bin t = t.bin
   let misc t = t.misc
+
+  let with_bin t bin = { t with bin }
 
   let empty = {
     lib  = [] ;
@@ -538,20 +535,15 @@ module Dot_install = struct
   ]
 
   let to_string filename t =
-    let string f = String (Filename.to_string f) in
-    let make_bin (src, dst) =
-      if Filename.basename src = dst then
-        string src
-      else
-        Option (string src, [String (Basename.to_string dst)]) in
-    let make_misc (src, dst) =
-      Option (string src, [string dst]) in
+    let make_option = function
+      | src, None -> String src
+      | src, Some dst -> Option (String src, [String dst]) in
     let s = {
       filename = Filename.to_string filename;
       contents = [
-        Variable (s_lib , make_list (Filename.to_string |> make_string) t.lib);
-        Variable (s_bin , make_list make_bin t.bin);
-        Variable (s_misc, make_list make_misc t.misc);
+        Variable (s_lib , make_list make_string t.lib);
+        Variable (s_bin , make_list make_option t.bin);
+        Variable (s_misc, make_list make_option t.misc);
       ]
     } in
     Syntax.to_string filename s
@@ -559,18 +551,63 @@ module Dot_install = struct
   let of_string filename str =
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
-    let parse_bin v =
-      match parse_string_option parse_single_string v with
+    let lib = assoc_list s.contents s_lib (parse_list parse_string) in
+    let bin = assoc_list s.contents s_bin (parse_list (parse_string_option parse_single_string)) in
+    let misc = assoc_list s.contents s_misc (parse_list (parse_string_option parse_single_string)) in
+    { lib; bin; misc }
+
+end
+
+module Dot_install = struct
+
+  let internal = ".install"
+    
+  type t =  {
+    lib : filename list ;
+    bin : (filename * basename) list ;
+    misc: (filename * filename) list ;
+  }
+
+  let string_of_move (src, dst) =
+    let src = Filename.to_string src in
+    let dst = Filename.to_string dst in
+    Printf.sprintf "%s => %s" src dst
+
+  let lib t = t.lib
+  let bin t = t.bin
+  let misc t = t.misc
+
+  module R = Dot_install_raw
+
+  let empty = {
+    lib  = [] ;
+    bin  = [] ;
+    misc = [] ;
+  }
+
+  let to_string filename t =
+    let to_bin (src, dst) =
+      Filename.to_string src, 
+      if Filename.basename src = dst then None else Some (Basename.to_string dst) in
+    let to_misc (src, dst) =
+      Filename.to_string src, 
+      Some (Filename.to_string dst) in
+    R.to_string filename
+      { lib = List.map Filename.to_string t.lib
+      ; bin = List.map to_bin t.bin
+      ; R.misc = List.map to_misc t.misc }
+
+  let of_string filename str =
+    let t = R.of_string filename str in
+    let of_bin = function
       | s  , None     -> let f = Filename.of_string s in (f, Filename.basename f)
       | src, Some dst -> (Filename.of_string src, Basename.of_string dst) in
-    let parse_misc v =
-      match parse_string_option parse_single_string v with
+    let of_misc = function
       | s  , None     -> let f = Filename.of_string s in (f, f)
       | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
-    let lib = assoc_list s.contents s_lib (parse_list (parse_string |> Filename.of_string)) in
-    let bin = assoc_list s.contents s_bin (parse_list parse_bin) in
-    let misc = assoc_list s.contents s_misc (parse_list parse_misc) in
-    { lib; bin; misc }
+    { lib = List.map Filename.of_string t.R.lib
+    ; bin = List.map of_bin t.R.bin
+    ; misc = List.map of_misc t.R.misc }
 
 end
 
@@ -1053,6 +1090,10 @@ end
 module Dot_install = struct
   include Dot_install
   include Make (Dot_install)
+  module Raw = struct
+    include Dot_install_raw
+    include Make (Dot_install_raw)
+  end
 end
 
 module Dot_config = struct
