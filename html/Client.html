@@ -67,8 +67,8 @@ Upload a package to a remote repository. If repo is <code class="code">None</cod
     name. Otherwise, it will look for a repository having the right
     name. Take the global file lock.<br>
 </div>
-<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">Types.N.t -> unit</code></pre><div class="info">
-Removes the given package. Take the global file lock.<br>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">Types.N.Set.t -> unit</code></pre><div class="info">
+Removes the given set of packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="Types.html#TYPEremote">Types.remote</a> -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
