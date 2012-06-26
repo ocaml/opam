@@ -71,6 +71,9 @@ Remove the file extension<br>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> t list</code></pre><div class="info">
 List all the filenames (ie. which are not directories) in a directory<br>
 </div>
+<pre><span id="VALrec_list"><span class="keyword">val</span> rec_list</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> t list</code></pre><div class="info">
+List all the filenames, recursively<br>
+</div>
 <pre><span id="VALwith_raw"><span class="keyword">val</span> with_raw</span> : <code class="type">(Raw.t -> 'a) -> t -> 'a</code></pre><div class="info">
 Apply a function on the contents of a file<br>
 </div>
@@ -89,5 +92,11 @@ Symlink a file. If symlink is not possible on the system, use copy instead.<br>
 <pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> unit</code></pre><div class="info">
 Extract an archive in a given directory (it rewrites the root to
       match <code class="code">dirname</code> dir if needed)<br>
+</div>
+<pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> t -> bool</code></pre><div class="info">
+Check wether a filename starts by a given dirname<br>
+</div>
+<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:<a href="Types.html#TYPEdirname">Types.dirname</a> -> t -> string</code></pre><div class="info">
+Remove a prefix from a file name<br>
 </div>
 </body></html>

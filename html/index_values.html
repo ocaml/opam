@@ -877,6 +877,11 @@ Create a symbol
 List of other files to install
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALmk_temp_dir">mk_temp_dir</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">mk_temp_dir str</code> creates a tempory directory
+</div>
+</td></tr>
 <tr><td><a href="Types.Dirname.html#VALmkdir">mkdir</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
 <td><div class="info">
 Create a directory
@@ -953,6 +958,11 @@ Make a set from a list
 <tr><td><a href="Path.R.html#VALof_path">of_path</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Transform a directory name into a repository path
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALof_raw">of_raw</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 </div>
 </td></tr>
 <tr><td><a href="File.IO_FILE.html#VALof_raw">of_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
@@ -1146,10 +1156,26 @@ Read file contents.
     the lines from stdout
 </div>
 </td></tr>
+<tr><td><a href="Process.html#VALread_lines">read_lines</a> [<a href="Process.html">Process</a>]</td>
+<td><div class="info">
+Misc
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALreal_path">real_path</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">real_path p</code> returns the real path associated to <code class="code">p</code>: <code class="code">..</code> are
     expanded and relative paths become absolute.
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALrec_files">rec_files</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>, 
+    recursively
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALrec_list">rec_list</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+List all the filenames, recursively
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALreinstall">reinstall</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -1191,6 +1217,16 @@ Removes the given package.
 <tr><td><a href="Run.html#VALremove_file">remove_file</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">remove_file filename</code> removes <code class="code">filename</code>.
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALremove_prefix">remove_prefix</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Remove a prefix from a file name
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALremove_prefix">remove_prefix</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Remove a prefix from a directory
 </div>
 </td></tr>
 <tr><td><a href="File.Subst.html#VALreplace">replace</a> [<a href="File.Subst.html">File.Subst</a>]</td>
@@ -1288,6 +1324,11 @@ Get all the sections from a list of items
 <tr><td><a href="File.Comp.html#VALsrc">src</a> [<a href="File.Comp.html">File.Comp</a>]</td>
 <td><div class="info">
 Return the url of the compiler
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALstarts_with">starts_with</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Check wether a filename starts by a given dirname
 </div>
 </td></tr>
 <tr><td><a href="Types.html#VALstring_of_config">string_of_config</a> [<a href="Types.html">Types</a>]</td>
@@ -1519,9 +1560,15 @@ Package version
 </div>
 </td></tr>
 <tr><td><a href="File.OPAM.html#VALwith_build">with_build</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Construct as <code class="code">build</code>
+</div>
+</td></tr>
 <tr><td><a href="File.OPAM.html#VALwith_depends">with_depends</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Construct as <code class="code">depends</code>
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALwith_flock">with_flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 Functional version of <code class="code">flock / funlock</code>
@@ -1535,6 +1582,11 @@ OCaml version updates
 <tr><td><a href="Types.Filename.html#VALwith_raw">with_raw</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Apply a function on the contents of a file
+</div>
+</td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_remove">with_remove</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">remove</code>
 </div>
 </td></tr>
 <tr><td><a href="File.Config.html#VALwith_repositories">with_repositories</a> [<a href="File.Config.html">File.Config</a>]</td>
