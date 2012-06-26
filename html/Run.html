@@ -35,6 +35,9 @@
 <br>
 <pre><span class="keyword">module</span> Run: <code class="code">sig</code> <a href="Run.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations.<br>
 <hr width="100%">
+<pre><span id="VALmk_temp_dir"><span class="keyword">val</span> mk_temp_dir</span> : <code class="type">string -> string</code></pre><div class="info">
+<code class="code">mk_temp_dir str</code> creates a tempory directory<br>
+</div>
 <pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
 <code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code><br>
 </div>
@@ -71,6 +74,10 @@ Change the current working directory<br>
 </div>
 <pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">files dir</code> returns the files in the directory <code class="code">dir</code><br>
+</div>
+<pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">string -> string list</code></pre><div class="info">
+<code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>, 
+    recursively<br>
 </div>
 <pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Return the version of the current OCaml compiler. If no OCaml
