@@ -148,30 +148,22 @@ module Make (G : G) = struct
     let t = ref (init g) in
     let pids = ref IntMap.empty in
     let todo = ref (!t.roots) in
-    let errors = ref [] in
+    let errors = ref S.empty in
     
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
     (* nslots is the number of free slots *)
     let rec loop nslots =
 
-      if S.is_empty !t.roots || List.length !errors = S.cardinal !t.roots then (
-        
+      if S.is_empty !t.roots || not (S.is_empty !errors) && S.compare !t.roots !errors = 0 then
+
         (* Nothing more to do *)
-        log "loop completed";
-        if !errors <> [] then begin
-          (* wait until every element in [pids] finishes before leaving *)
-          IntMap.iter
-            (fun _ _ -> 
-              pids := IntMap.remove 
-                (match wait !pids with
-                  | pid, Unix.WEXITED 0 -> let _ = post (IntMap.find pid !pids) in pid
-                  | pid, _ -> pid) !pids) !pids;
-          raise (Errors !errors)
-        end
+        if S.is_empty !errors then
+          log "loop completed (without errors)"
+        else
+          raise (Errors (S.elements !errors))
 
-      ) else if nslots <= 0 || IntMap.cardinal !pids = S.cardinal !t.roots then (
-
+      else if nslots <= 0 || IntMap.cardinal !pids + S.cardinal !errors = S.cardinal !t.roots then (
         (* if no slots are available, wait for a child process to finish *)
         log "waiting for a child process to finish";
         let pid, status = wait !pids in
@@ -182,18 +174,20 @@ module Make (G : G) = struct
               t := visit !t n;
               post n
           | _ ->
-              errors := n :: !errors);
+              errors := S.add n !errors);
         loop (succ nslots)
-
-      ) else if S.is_empty !todo then (
-
-        log "refilling the TODO list";
-        (* otherwise, if the todo list is empty, refill it if *)
-        todo := IntMap.fold (fun _ n accu -> S.remove n accu) !pids !t.roots;
-        loop nslots
-
       ) else (
+
+        if S.is_empty !todo then (
+          log "refilling the TODO list";
+          (* otherwise, if the todo list is empty, refill it if *)
+          todo := 
+            S.fold S.remove !errors
+            (IntMap.fold (fun _ n accu -> S.remove n accu) !pids !t.roots)
+        );
+
         (* finally, if the todo list contains at least a node action,
+           not yet processed with errors,
            then simply process it *)
         let n = S.choose !todo in
         todo := S.remove n !todo;
