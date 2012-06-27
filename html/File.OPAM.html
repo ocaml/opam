@@ -55,13 +55,13 @@ List of command to run for building the package<br>
 <pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">t -> string list list</code></pre><div class="info">
 List of command to run for removing the package<br>
 </div>
-<pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">t -> Debian.Format822.vpkgformula</code></pre><div class="info">
+<pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">t -> <a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a></code></pre><div class="info">
 Package dependencies<br>
 </div>
-<pre><span id="VALdepopts"><span class="keyword">val</span> depopts</span> : <code class="type">t -> Debian.Format822.vpkgformula</code></pre><div class="info">
+<pre><span id="VALdepopts"><span class="keyword">val</span> depopts</span> : <code class="type">t -> <a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a></code></pre><div class="info">
 Optional dependencies<br>
 </div>
-<pre><span id="VALconflicts"><span class="keyword">val</span> conflicts</span> : <code class="type">t -> Debian.Format822.vpkglist</code></pre><div class="info">
+<pre><span id="VALconflicts"><span class="keyword">val</span> conflicts</span> : <code class="type">t -> <a href="Types.html#TYPEand_formula">Types.and_formula</a></code></pre><div class="info">
 Package conflicts<br>
 </div>
 <pre><span id="VALlibraries"><span class="keyword">val</span> libraries</span> : <code class="type">t -> <a href="Types.html#TYPEsection">Types.section</a> list</code></pre><div class="info">
@@ -76,7 +76,7 @@ Convert to Debian packages to feed the solver<br>
 <pre><span id="VALs_depopts"><span class="keyword">val</span> s_depopts</span> : <code class="type">string</code></pre><div class="info">
 deptopts (optional dependencies) string<br>
 </div>
-<pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> Debian.Format822.vpkgformula -> t</code></pre><div class="info">
+<pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> <a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a> -> t</code></pre><div class="info">
 Construct as <code class="code">depends</code><br>
 </div>
 <pre><span id="VALwith_build"><span class="keyword">val</span> with_build</span> : <code class="type">t -> string list list -> t</code></pre><div class="info">

@@ -180,4 +180,9 @@ Return the recursive dependencies of a package Note : the given
 Same as <code class="code">filter_backward_dependencies</code> but for forward
     dependencies<br>
 </div>
+<pre><span id="VALsort_by_backward_dependencies"><span class="keyword">val</span> sort_by_backward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+Return a permutation of the given set of packages :
+    if package B depends of package A then 
+    B appears before A in the resulting list<br>
+</div>
 </body></html>
