@@ -22,6 +22,8 @@ let verbose = ref false
 
 let yes = ref false
 
+let solver_version_max = ref false
+
 let version = "0.1+dev"
 
 let default_repository_name    = "default"

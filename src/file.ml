@@ -326,9 +326,9 @@ module OPAM = struct
     substs     : basename list;
     build      : string list list;
     remove     : string list list;
-    depends    : Debian.Format822.vpkgformula;
-    depopts    : Debian.Format822.vpkgformula;
-    conflicts  : Debian.Format822.vpkglist;
+    depends    : cnf_formula;
+    depopts    : cnf_formula;
+    conflicts  : and_formula;
     libraries  : section list;
     syntax     : section list;
     others     : (string * value) list;
@@ -792,7 +792,7 @@ module Comp = struct
     asmcomp      : string list ;
     bytelink     : string list ;
     asmlink      : string list ;
-    packages     : name list ;
+    packages     : and_formula ;
     requires     : section list; 
     pp           : ppflag option;
     env          : (string * string * string) list;
@@ -905,15 +905,7 @@ module Comp = struct
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
     let asmlink   = assoc_string_list s s_asmlink   in
-    let packages  =
-      assoc_list s s_packages
-        (parse_list
-           (parse_string |> 
-               (fun name -> 
-                 if name = Globals.default_package then 
-                   Globals.error_and_exit "%S is an internal reserved name. Indeed, this package will be installed at the beginning and automatically." Globals.default_package
-                 else
-                   N.of_string name))) in
+    let packages  = assoc_list s s_packages parse_and_formula in
     let requires  =
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
@@ -954,7 +946,7 @@ module Comp = struct
         Variable (s_asmcomp     , make_list make_string s.asmcomp);
         Variable (s_bytelink    , make_list make_string s.bytelink);
         Variable (s_asmlink     , make_list make_string s.asmlink);
-        Variable (s_packages    , make_list (N.to_string |> make_string) s.packages);
+        Variable (s_packages    , make_and_formula s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
         Variable (s_env         , make_list make_env_variable s.env);
       ] @ match s.pp with

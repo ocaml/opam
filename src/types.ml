@@ -684,3 +684,6 @@ let string_of_config = function
   | Includes (b,l) ->
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map N.to_string l))
+
+type and_formula = Debian.Format822.vpkglist
+type cnf_formula = Debian.Format822.vpkgformula

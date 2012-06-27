@@ -413,3 +413,6 @@ val string_of_config: config -> string
 
 (** Compiler aliases *)
 module Alias: Abstract
+
+type and_formula = Debian.Format822.vpkglist
+type cnf_formula = Debian.Format822.vpkgformula

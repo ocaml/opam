@@ -48,13 +48,15 @@ let () = Globals.root_path := Globals.default_opam_path
 let quiet = ref false
 
 let global_args = [
-  "--debug"  , Arg.Set Globals.debug, " Print more debug messages";
-  "--verbose", Arg.Set Globals.verbose, " Display the stdout/stderr of subprocesses";
-  "--quiet"  , Arg.Clear quiet, " Not display the stdout/stderr of subprocesses";
-  "--version", Arg.Unit version,      " Display version information";
-  "--yes"    , Arg.Set Globals.yes,   " Answer yes to all questions";
-  "--root"   , Arg.Set_string Globals.root_path,
-  (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path)
+  "--debug"     , Arg.Set Globals.debug, " Print more debug messages";
+  "--verbose"   , Arg.Set Globals.verbose, " Display the stdout/stderr of subprocesses";
+  "--quiet"     , Arg.Clear quiet, " Not display the stdout/stderr of subprocesses";
+  "--version"   , Arg.Unit version,      " Display version information";
+  "--yes"       , Arg.Set Globals.yes,   " Answer yes to all questions";
+  "--root"      , Arg.Set_string Globals.root_path,
+    (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path);
+  "--solver-max", Arg.Set Globals.solver_version_max,
+    " Take the max of available version in case no version is given (default : random)";
 ]
 
 let parse_args fn () =

@@ -99,13 +99,13 @@ module OPAM: sig
   val remove: t -> string list list
 
   (** Package dependencies *)
-  val depends: t -> Debian.Format822.vpkgformula
+  val depends: t -> cnf_formula
 
   (** Optional dependencies *)
-  val depopts: t -> Debian.Format822.vpkgformula
+  val depopts: t -> cnf_formula
 
   (** Package conflicts *)
-  val conflicts: t -> Debian.Format822.vpkglist
+  val conflicts: t -> and_formula
 
   (** List of exported libraries *)
   val libraries: t -> section list
@@ -120,7 +120,7 @@ module OPAM: sig
   val s_depopts: string
 
   (** Construct as [depends] *)
-  val with_depends : t -> Debian.Format822.vpkgformula -> t
+  val with_depends : t -> cnf_formula -> t
 
   (** Construct as [build] *)
   val with_build: t -> string list list -> t
@@ -190,7 +190,7 @@ module Comp: sig
   val build: t -> string list list
 
   (** Packages to install immediately after the creation of OCaml *)
-  val packages: t -> name list
+  val packages: t -> and_formula
 
   (** Linking options to give to the native code compiler *)
   val asmlink: t -> string list

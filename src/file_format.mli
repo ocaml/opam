@@ -200,18 +200,18 @@ val assoc_sections: item list -> string -> (section -> 'a) -> 'a list
     and conflict formaulas. It's maybe easier to do that directly in
     the parser ... *)
 
-open Debian.Format822
+open Types
 
 (** Parse an AND formala such as
     ["foo", "bar" (<"1", >"2"), "aa" ] *)
-val parse_and_formula : value -> vpkglist
+val parse_and_formula : value -> and_formula
 
 (** Parse an CNF formula (which contains only inlevel OR) such as
     ["foo" ("bar"(<"1") | "bar" (>"2"))] *)
-val parse_cnf_formula : value -> vpkgformula
+val parse_cnf_formula : value -> cnf_formula
 
 (** Build an AND formula *)
-val make_and_formula : vpkglist -> value
+val make_and_formula : and_formula -> value
 
 (** Build a CNF formula *)
-val make_cnf_formula : vpkgformula -> value
+val make_cnf_formula : cnf_formula -> value
