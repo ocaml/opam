@@ -829,18 +829,7 @@ module Heuristic = struct
            else None
          | Some v -> Some v)
 
-  let resolve action_k t request =
-    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
-
-    match 
-      Solver.resolve
-        (Solver.U l_pkg) 
-        request
-        (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
-    with
-      | None     -> Globals.msg "No solution has been found.\n"
-      | Some sol ->
-
+  let apply_solution t sol = 
 (*    Globals.msg "The following solution has been found:\n"; *)
       print_solution sol;
       let continue =
@@ -901,6 +890,29 @@ module Heuristic = struct
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       )
+    
+
+  let resolve action_k t l_request =
+    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
+
+    match
+      List.fold_left 
+        (function 
+          | None -> fun request -> 
+            (match 
+                Solver.resolve
+                  (Solver.U l_pkg) 
+                  request
+                  (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
+             with
+               | None     -> None
+               | Some sol -> Some (apply_solution t sol))
+          | Some acc -> fun _ -> Some acc) None l_request
+    with
+      | None -> Globals.msg "No solution has been found.\n"
+      | Some sol -> sol
+
+  let resolve action_k t request = resolve action_k t [request]
 end
 
 let init repo alias ocaml_version cores =
