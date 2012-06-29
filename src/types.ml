@@ -25,7 +25,11 @@ module type Abstract = sig
     val of_list: elt list -> t
     val to_string: t -> string
   end               
-  module Map: Map.S with type key = t
+  module Map: sig
+    include Map.S with type key = t
+    val values: 'a t -> 'a list
+    val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  end
 end
 
 module Set = struct
@@ -58,6 +62,29 @@ module Set = struct
 
 end
 
+module Map = struct
+
+  module type OrderedType = Map.OrderedType
+
+  module Make (O : OrderedType) = struct
+
+    module M = Map.Make(O)
+
+    include M
+
+    let values map = List.map snd (bindings map)
+
+    let merge_max f = 
+      merge
+        (fun k -> function 
+          | None -> fun x -> x
+          | Some o1 -> function
+              | None -> Some o1
+              | Some o2 -> f k o1 o2)
+
+  end
+
+end
 
 (* The basic implementation of abstract types is just abstracted
    [string] *)

@@ -45,7 +45,17 @@ module type Abstract = sig
   end               
 
   (** Dictionaries of abstract values *)
-  module Map: Map.S with type key = t
+  module Map: sig
+
+    include Map.S with type key = t
+
+    (** Split with [bindings] and return the [snd] component. *)
+    val values: 'a t -> 'a list
+
+    (** Same as [merge] but only keys that appear in both maps
+        are given in the merging function *)
+    val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  end
 end
 
 (** {2 Filenames} *)

@@ -771,15 +771,13 @@ let debpkg_of_nv action t nv =
     && NV.Set.mem nv t.installed in
   File.OPAM.to_package opam installed
 
-
-type ('a, 'b, 'c) version_constraint = 
-  | V_any of 'a * 'b
-  | V_eq of 'a * 'c
+type version_constraint = 
+  | V_any of name * V.Set.t (* versions available *) * version option (* version installed *)
+  | V_eq of name * version
 
 module Heuristic = struct
 
-  let vpkg_of_n op name =
-    (N.to_string name, None), op
+  let vpkg_of_n op name = (N.to_string name, None), op
 
   let vpkg_of_n_op op name v = vpkg_of_n (Some (op, V.to_string v)) name
 
@@ -789,45 +787,62 @@ module Heuristic = struct
   let vpkg_of_nv_le = vpkg_of_n_op "<="
   let vpkg_of_nv_any = vpkg_of_n None
 
+  let v_any _ _ = vpkg_of_nv_any
+  let v_eq _ set n = vpkg_of_nv_eq n (V.Set.max_elt set)
+  let v_ge _ set n = vpkg_of_nv_ge n (V.Set.max_elt set)
+  let v_eq_opt v set n = vpkg_of_nv_eq n (match v with None -> V.Set.max_elt set | Some v -> v)
+
+  let get_installed t f_h =
+    let available = NV.to_map t.available in
+    N.Map.mapi
+      (fun n v -> f_h (Some (V.Set.choose_one v)) (N.Map.find n available) n)
+      (NV.to_map t.installed)
+
+  let get_packages t ocaml_version f_h = 
+    let comp_f = Path.G.compiler t.global ocaml_version in
+    let comp = File.Comp.read comp_f in
+    let available = NV.to_map t.available in
+    List.rev_map 
+      (function 
+        | (name, _), None -> 
+            let name = N.of_string name in
+            f_h None (N.Map.find name available) name
+        | n, v -> n, v)
+      (File.Comp.packages comp)
+
+  let apply f_heuristic = 
+    List.map
+      (function 
+        | V_any (n, set, v) -> f_heuristic v set n
+        | V_eq (n, v) -> vpkg_of_nv_eq n v)
+
   let unknown_package name =
     Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
 
   (* transform a name into:
      - <name, installed version> package
      - <$n,$v> package when name = $n.$v *)
-  let nv_of_name t name =
+  let nv_of_names t =
     let available = NV.to_map (Path.G.available t.global) in
-    if N.Map.mem name available then
-      V_any (name, N.Map.find name available)
-    else (
-    (* consider 'name' to be 'name.version' *)
-      let nv =
-        try NV.of_string (N.to_string name)
-        with Not_found -> unknown_package name in
-      let sname = NV.name nv in
-      let sversion = NV.version nv in
-      Globals.msg
-        "Package %s not found, looking for package %s version %s\n"
-        (N.to_string name) (N.to_string sname) (V.to_string sversion);
-      if N.Map.mem sname available
-        && V.Set.mem sversion (N.Map.find sname available) then
-        V_eq (sname, sversion)
-      else
-        unknown_package sname
-    )
-
-  let map t = 
-    let available = NV.to_map t.available in
-    List.map 
-      (function (name, arch), v -> 
-        (name, arch),
-       let name = N.of_string name in
-       match v with
-         | None -> 
-           if !Globals.solver_version_max then 
-             Some (vpkg_eq, V.to_string (V.Set.max_elt (N.Map.find name available))) 
-           else None
-         | Some v -> Some v)
+    List.map
+      (fun name -> 
+        if N.Map.mem name available then
+          V_any (name, N.Map.find name available, None)
+        else
+          (* consider 'name' to be 'name.version' *)
+          let nv =
+            try NV.of_string (N.to_string name)
+            with Not_found -> unknown_package name in
+          let sname = NV.name nv in
+          let sversion = NV.version nv in
+          Globals.msg
+            "Package %s not found, looking for package %s version %s\n"
+            (N.to_string name) (N.to_string sname) (V.to_string sversion);
+          if N.Map.mem sname available
+            && V.Set.mem sversion (N.Map.find sname available) then
+            V_eq (sname, sversion)
+          else
+            unknown_package sname)
 
   let apply_solution t sol = 
 (*    Globals.msg "The following solution has been found:\n"; *)
@@ -890,7 +905,6 @@ module Heuristic = struct
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       )
-    
 
   let resolve action_k t l_request =
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
@@ -905,14 +919,12 @@ module Heuristic = struct
                   request
                   (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
              with
-               | None     -> None
+               | None     -> let _ = log "heuristic with no solution" in None
                | Some sol -> Some (apply_solution t sol))
           | Some acc -> fun _ -> Some acc) None l_request
     with
       | None -> Globals.msg "No solution has been found.\n"
       | Some sol -> sol
-
-  let resolve action_k t request = resolve action_k t [request]
 end
 
 let init repo alias ocaml_version cores =
@@ -936,13 +948,11 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.compiler_dir root);
     init_ocaml alias ocaml_version;
     let t = load_state () in
-    let comp_f = Path.G.compiler t.global ocaml_version in
-    let comp = File.Comp.read comp_f in
-    let wish_install = Heuristic.map t (File.Comp.packages comp) in
+    let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
-      { wish_install
-      ; wish_remove = [] 
-      ; wish_upgrade = [] };
+      [ { wish_install
+        ; wish_remove = [] 
+        ; wish_upgrade = [] } ];
     let env = get_env (load_state ()) in
     print_env env
 
@@ -956,32 +966,34 @@ let install names =
   let t = load_state () in
   let map_installed = NV.to_map t.installed in
 
-  (* Exit if the package is already installed *)
+  (* Exit if at least one package is already installed *)
   if N.Set.exists (fun name -> N.Map.mem name map_installed) names then (
-    let name =
-      N.Set.choose
-        (N.Set.filter (fun name -> N.Map.mem name map_installed) names) in
-    Globals.msg
-      "Package %s is already installed (current version is %s)\n"
-      (N.to_string name)
-      (V.to_string (V.Set.choose_one (N.Map.find name map_installed)));
+    N.Set.iter 
+      (fun name ->
+        Globals.msg
+          "Package %s is already installed (current version is %s)\n"
+          (N.to_string name)
+          (V.to_string (V.Set.choose_one (N.Map.find name map_installed))))
+      (N.Set.filter (fun name -> N.Map.mem name map_installed) names);
     Globals.exit 1
   );
 
-  let new_packages = List.map (Heuristic.nv_of_name t) (N.Set.elements names) in
-  let map_installed = List.map (fun (n, _) -> Heuristic.nv_of_name t n) (N.Map.bindings map_installed) in
-  let vpkg_apply = function 
-    | V_any (n, set) -> 
-      if !Globals.solver_version_max then 
-        Heuristic.vpkg_of_nv_eq n (V.Set.max_elt set) 
-      else
-        Heuristic.vpkg_of_nv_any n
-    | V_eq (n, v) -> Heuristic.vpkg_of_nv_eq n v in
+  let pkg_new = Heuristic.nv_of_names t (N.Set.elements names) in
+  let pkg_installed = 
+    N.Map.values (Heuristic.get_installed t (fun v set name -> V_any (name, set, v))) in
 
   Heuristic.resolve `install t
-    { wish_install = List.map vpkg_apply (new_packages @ map_installed)
-    ; wish_remove  = []
-    ; wish_upgrade = [] }
+    (List.map 
+       (fun (f_new, f_installed) -> 
+         { wish_install = Heuristic.apply f_new pkg_new @ Heuristic.apply f_installed pkg_installed
+         ; wish_remove  = []
+         ; wish_upgrade = [] })
+       (let open Heuristic in
+        [ v_eq, v_eq_opt
+        ; v_any, v_eq_opt
+        ; v_eq, v_eq
+        ; v_any, v_eq
+        ; v_any, v_any ]))
 
 let remove names =
   log "remove %s" (N.Set.to_string names);
@@ -990,43 +1002,40 @@ let remove names =
   let names = N.Set.elements names in
   let t = load_state () in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
-  let nv_of_name t name = 
-    let n, v = match Heuristic.nv_of_name t name with 
-      | V_any (n, set) -> n, V.Set.choose set
+  let choose_any_v nv = 
+    let n, v = match nv with 
+      | V_any (n, set, _) -> n, V.Set.choose set
       | V_eq (n, v) -> n, v in 
     NV.create n v in
+  let wish_remove = Heuristic.nv_of_names t names in
   let depends = 
     Solver.filter_forward_dependencies universe
-      (Solver.P (List.rev_map (fun name -> debpkg_of_nv `remove t (nv_of_name t name)) names)) in
-  let depends =
-    List.fold_left (fun set dpkg -> NV.Set.add (NV.of_dpkg dpkg) set) NV.Set.empty depends in
-
-  let wish_install =
-    List.fold_left
-      (fun accu nv ->
-        if NV.Set.mem nv depends then
-          accu
-        else
-          Heuristic.vpkg_of_nv_eq (NV.name nv) (NV.version nv) :: accu
-      ) [] (NV.Set.elements t.installed) in
+      (Solver.P (List.rev_map
+                   (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
+                   wish_remove)) in
+  let heuristic_apply = 
+    let depends = Utils.set_of_list NV.Set.empty NV.Set.add (List.rev_map NV.of_dpkg depends) in
+    let installed = List.filter (fun nv -> not (NV.Set.mem nv depends)) (NV.Set.elements t.installed) in
+    fun f_heuristic ->
+      List.rev_map (fun nv -> f_heuristic (NV.name nv) (NV.version nv)) installed in
 
   Heuristic.resolve `remove t
-    { wish_install
-    ; wish_remove  = List.rev_map (fun name -> (N.to_string name, None), None) names
-    ; wish_upgrade = [] }
+    (List.map 
+       (let wish_remove = Heuristic.apply Heuristic.v_any wish_remove in
+        fun f_h -> 
+          { wish_install = heuristic_apply f_h
+          ; wish_remove
+          ; wish_upgrade = [] })
+       [ Heuristic.vpkg_of_nv_eq
+       ; fun n _ -> Heuristic.vpkg_of_nv_any n ])
 
 let upgrade () =
   log "upgrade";
   let t = load_state () in
-  let available = NV.to_map t.available in
-  let aux nv =
-    let name = NV.name nv in
-    let versions = N.Map.find name available in
-    Heuristic.vpkg_of_nv_ge name (V.Set.max_elt versions) in
   Heuristic.resolve `upgrade t
-    { wish_install = []
-    ; wish_remove  = []
-    ; wish_upgrade = List.map aux (NV.Set.elements t.installed) };
+    [ { wish_install = []
+      ; wish_remove  = []
+      ; wish_upgrade = N.Map.values (Heuristic.get_installed t Heuristic.v_ge) } ];
   Filename.remove (Path.C.reinstall t.compiler)
 
 let upload upload repo =
@@ -1326,46 +1335,33 @@ let switch clone alias ocaml_version =
      - also attempt to replicate the previous state, if required
        with -clone *)
   let t_new = load_state () in
-  let comp_packages =
+
+  let comp_packages f_h =
     if exists then
-      let available = NV.to_map t_new.available in
-      N.Map.mapi (fun name _ ->
-        if !Globals.solver_version_max then
-          Some (Heuristic.vpkg_eq, V.to_string (V.Set.max_elt (N.Map.find name available)))
-        else
-          None) (NV.to_map t_new.installed)
+      Heuristic.get_installed t_new f_h
     else
-      let comp_f = Path.G.compiler t.global ocaml_version in
-      let comp = File.Comp.read comp_f in
-      List.fold_left 
-        (fun map ((name, _), v) -> N.Map.add (N.of_string name) v map)
+      Utils.map_of_list
         N.Map.empty
-        (Heuristic.map t_new (File.Comp.packages comp)) in
-  let cloned_packages =
-    if clone then
-      N.Map.map (fun v -> Some (Heuristic.vpkg_eq, V.to_string (V.Set.choose_one v))) (NV.to_map t.installed)
-    else
-      N.Map.empty in
-  let packages = 
-    N.Map.merge
-      (fun pkg -> function 
-        | None -> fun x -> x
-        | Some o1 -> function
-            | None -> Some o1
-            | Some _ -> 
-              Globals.warning "here, we ignore the version constraint in %s" (N.to_string pkg);
-              None)
-      cloned_packages
-      comp_packages in
-  let wish_install = 
-    List.map 
-      (fun (n, v) -> (N.to_string n, None), v)
-      (N.Map.bindings packages)  in
+        N.Map.add
+        (List.rev_map
+           (function (name, _), _ as nv -> N.of_string name, nv)
+           (Heuristic.get_packages t ocaml_version f_h)) in
+
+  let cloned_packages f_h =
+    if clone then Heuristic.get_installed t f_h else N.Map.empty in
 
   Heuristic.resolve `switch t_new
-    { wish_install
-    ; wish_remove = [] 
-    ; wish_upgrade = [] };
+    [ let packages = 
+        N.Map.merge_max
+          (fun pkg _ _ ->
+            Globals.warning "here, we ignore the version constraint in %s" (N.to_string pkg);
+            None)
+          (cloned_packages Heuristic.v_eq_opt)
+          (comp_packages Heuristic.v_eq) in
+
+      { wish_install = N.Map.values packages
+      ; wish_remove = [] 
+      ; wish_upgrade = [] } ];
 
   let env = get_env (load_state ()) in
   print_env env
