@@ -162,9 +162,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;request&nbsp;=&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;wish_install&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkg&nbsp;list;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;wish_remove&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkg&nbsp;list;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;wish_upgrade&nbsp;:&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkg&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wish_install&nbsp;:&nbsp;<span class="constructor">Types</span>.and_formula;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wish_remove&nbsp;:&nbsp;<span class="constructor">Types</span>.and_formula;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wish_upgrade&nbsp;:&nbsp;<span class="constructor">Types</span>.and_formula;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_request&nbsp;:&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solution&nbsp;=&nbsp;{<br>
