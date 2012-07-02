@@ -1324,7 +1324,8 @@ let switch clone alias ocaml_version =
     with e ->
       (* restore the previous configuration *)
       File.Config.write (Path.G.config t.global) t.config; 
-      Dirname.rmdir (Path.C.root alias_p); 
+      if not !Globals.debug then
+        Dirname.rmdir (Path.C.root alias_p); 
       raise e
   end;
 
