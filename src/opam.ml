@@ -55,8 +55,6 @@ let global_args = [
   "--yes"       , Arg.Set Globals.yes,   " Answer yes to all questions";
   "--root"      , Arg.Set_string Globals.root_path,
     (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path);
-  "--solver-max", Arg.Set Globals.solver_version_max,
-    " Take the max of available version in case no version is given (default : random)";
 ]
 
 let parse_args fn () =

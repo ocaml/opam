@@ -29,6 +29,14 @@
 &nbsp;</div>
 <center><h1>Module <a href="type_Types.Abstract.Map.html">Types.Abstract.Map</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Map: <code class="type">Map.S</code><code class="type">  with type key = t</code></pre>Dictionaries of abstract values<br>
+<pre><span class="keyword">module</span> Map: <code class="code">sig</code> <a href="Types.Abstract.Map.html">..</a> <code class="code">end</code></pre>Dictionaries of abstract values<br>
 <hr width="100%">
+<pre><span class="keyword">include</span> Map.S</pre>
+<pre><span id="VALvalues"><span class="keyword">val</span> values</span> : <code class="type">'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a list</code></pre><div class="info">
+Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.<br>
+</div>
+<pre><span id="VALmerge_max"><span class="keyword">val</span> merge_max</span> : <code class="type">(key -> 'a -> 'a -> 'a option) -><br>       'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a></code></pre><div class="info">
+Same as <code class="code">merge</code> but only keys that appear in both maps
+        are given in the merging function<br>
+</div>
 </body></html>

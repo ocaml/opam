@@ -51,9 +51,9 @@ end
 
 (** Solver request *)
 type request = {
-  wish_install:  Debian.Format822.vpkg list;
-  wish_remove :  Debian.Format822.vpkg list;
-  wish_upgrade:  Debian.Format822.vpkg list;
+  wish_install:  and_formula;
+  wish_remove :  and_formula;
+  wish_upgrade:  and_formula;
 }
 
 (** Convert a request to a string *)
