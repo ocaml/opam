@@ -221,6 +221,7 @@ let update () =
   (* Check all the dependencies exist *)
   let available = Path.G.available t.global in
   let t = load_state () in
+  let has_error = ref false in
   NV.Set.iter (fun nv ->
     let opam = File.OPAM.read (Path.G.opam t.global nv) in
     let name = File.OPAM.name opam in
@@ -236,12 +237,15 @@ let update () =
     List.iter (List.iter (fun ((d,_),_) ->
       match find_available_package_by_name t (N.of_string d) with
         | None   ->
-            Globals.error_and_exit
+            let _ = Globals.error
               "Package %s depends on the unknown package %s"
-              (N.to_string (NV.name nv)) d
+              (N.to_string (NV.name nv)) d in
+            has_error := true
         | Some _ -> ()
     )) (depends @ depopts)
-  ) available
+  ) available;
+  if !has_error then
+    Globals.exit 66
 
 let install_initial_package () =
   let t = load_state () in
