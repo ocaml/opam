@@ -375,11 +375,10 @@ let init_ocaml alias ocaml_version =
       if not (Filename.exists comp) then
         File.Comp.write comp (File.Comp.create_preinstalled ocaml_version)
   with e -> 
-    begin
+    if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);
-      File.Aliases.write aliases_f aliases;
-      raise e;
-    end
+    File.Aliases.write aliases_f aliases;
+    raise e
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -1329,7 +1328,8 @@ let switch clone alias ocaml_version =
     with e ->
       (* restore the previous configuration *)
       File.Config.write (Path.G.config t.global) t.config; 
-      Dirname.rmdir (Path.C.root alias_p); 
+      if not !Globals.debug then
+        Dirname.rmdir (Path.C.root alias_p); 
       raise e
   end;
 
