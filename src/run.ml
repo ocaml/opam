@@ -37,12 +37,16 @@ let log_file () =
   let f = "command" ^ string_of_int (Random.int 2048) in
   !Globals.root_path / "log" / f
 
+let safe_mkdir dir =
+  if not (Sys.file_exists dir) then
+    Unix.mkdir dir 0o755
+
 let mkdir dir =
   log "mkdir %s" dir;
   let rec aux dir = 
     if not (Sys.file_exists dir) then begin
       aux (Filename.dirname dir);
-      Unix.mkdir dir 0o755;
+      safe_mkdir dir;
     end in
   aux dir
   
@@ -258,26 +262,28 @@ let extract file dst =
   if err <> 0 then
     Globals.error_and_exit "Error while extracting %s" file
   else
-    let aux accu name =
-      if
-        not 
-          (let n = tmp_dir / name in
-           try Sys.is_directory n with
-             | Sys_error s when s = Printf.sprintf "%s: No such file or directory" n 
-               (* for instance, when wrong symbolic link *) -> 
-               Globals.warning "the file %s is skipped" n;
-               true) 
-      then
-        let root = root name in
-        let n = String.length root in
-        let rest = String.sub name n (String.length name - n) in 
-        (tmp_dir / name, dst ^  rest) :: accu
-      else
-        accu in
-    let moves = List.fold_left aux [] files in
+    let aux name =
+      let src = tmp_dir / name in
+      let kind =
+        try if Sys.is_directory src then Some (`dir src) else Some (`file src)
+        with Sys_error s when s = Printf.sprintf "%s: No such file or directory" src 
+          (* for instance, when wrong symbolic link *) -> 
+          Globals.warning "the file %s is skipped" src;
+          None in
+      match kind with
+      | None   -> None
+      | Some f ->
+          let root = root name in
+          let n = String.length root in
+          let rest = String.sub name n (String.length name - n) in 
+          Some (f, dst ^  rest) in
+    let moves = Utils.filter_map aux files in
     List.iter (fun (src, dst) ->
-      mkdir (Filename.dirname dst);
-      copy src dst
+      match src with
+      | `dir  _ -> mkdir dst
+      | `file f ->
+          mkdir (Filename.dirname dst);
+          copy f dst
     ) moves
 
 let link src dst =
