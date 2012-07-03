@@ -227,11 +227,12 @@ let update () =
     let name = File.OPAM.name opam in
     let version = File.OPAM.version opam in
     if nv <> NV.create name version then
-      Globals.error_and_exit
+      (Globals.error
         "The file %s is not consistent with the package %s (%s)"
         (Filename.to_string (Path.G.opam t.global nv))
         (N.to_string name)
         (V.to_string version);
+      has_error := true);
     let depends = File.OPAM.depends opam in
     let depopts = File.OPAM.depopts opam in
     List.iter (List.iter (fun ((d,_),_) ->
