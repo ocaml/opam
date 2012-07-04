@@ -111,6 +111,8 @@ Package (name x version) pairs
 Shortcut to NV.t<br>
 </div>
 
+<pre><span id="TYPErelop"><span class="keyword">type</span> <code class="type"></code>relop</span> = <code class="type">[ `Eq | `Geq | `Gt | `Leq | `Lt ]</code> </pre>
+
 <pre><span class="keyword">module</span> <a href="Types.OCaml_V.html">OCaml_V</a>: <code class="code">sig</code> <a href="Types.OCaml_V.html">..</a> <code class="code">end</code></pre><div class="info">
 OCaml version
 </div>
@@ -353,5 +355,7 @@ Compiler aliases
 <pre><span id="TYPEand_formula"><span class="keyword">type</span> <code class="type"></code>and_formula</span> = <code class="type">Debian.Format822.vpkglist</code> </pre>
 
 <pre><span id="TYPEcnf_formula"><span class="keyword">type</span> <code class="type"></code>cnf_formula</span> = <code class="type">Debian.Format822.vpkgformula</code> </pre>
+
+<pre><span id="TYPEocaml_constraint"><span class="keyword">type</span> <code class="type"></code>ocaml_constraint</span> = <code class="type"><a href="Types.html#TYPErelop">relop</a> * OCaml_V.t</code> </pre>
 
 </body></html>

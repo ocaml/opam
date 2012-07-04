@@ -371,6 +371,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_map&nbsp;:&nbsp;<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.<span class="constructor">Set</span>.t&nbsp;<span class="constructor">N</span>.<span class="constructor">Map</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;nv&nbsp;=&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;relop&nbsp;=&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">Eq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Geq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Gt</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Leq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lt</span>&nbsp;]<br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">OCaml_V</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
@@ -443,6 +444,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(key&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;current&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;option<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compare&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.relop&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">OPAM_V</span>&nbsp;:&nbsp;<span class="constructor">Abstract</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Repository</span>&nbsp;:<br>
@@ -922,4 +924,5 @@
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Alias</span>&nbsp;:&nbsp;<span class="constructor">Abstract</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;and_formula&nbsp;=&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkglist<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;cnf_formula&nbsp;=&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkgformula<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ocaml_constraint&nbsp;=&nbsp;<span class="constructor">Types</span>.relop&nbsp;*&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t<br>
 <span class="keyword">end</span></code></body></html>
