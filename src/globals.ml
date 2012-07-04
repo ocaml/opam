@@ -32,6 +32,8 @@ let default_build_command = [ [ "./build.sh" ] ]
 
 let default_package = "conf-ocaml"
 
+let default_compiler_version = "system"
+
 let opam_version = "1"
 
 let home = Unix.getenv "HOME"

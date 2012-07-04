@@ -22,7 +22,7 @@ BINARIES  = opam opam-server opam-check \
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-OCAMLVERSION = $(shell ocamlc -version)
+OCAMLVERSION = system
 
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
