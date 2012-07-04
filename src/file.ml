@@ -332,6 +332,7 @@ module OPAM = struct
     libraries  : section list;
     syntax     : section list;
     others     : (string * value) list;
+    ocaml_version: ocaml_constraint option;
   }
 
   let empty = {
@@ -347,6 +348,7 @@ module OPAM = struct
     libraries  = [];
     syntax     = [];
     others     = [];
+    ocaml_version = None;
   }
 
   let create nv =
@@ -367,6 +369,7 @@ module OPAM = struct
   let s_license     = "license"
   let s_authors     = "authors"
   let s_homepage    = "homepage"
+  let s_ocaml_version = "ocaml-version"
     
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
@@ -387,6 +390,7 @@ module OPAM = struct
     s_conflicts;
     s_libraries;
     s_syntax;
+    s_ocaml_version;
   ]
 
   let valid_fields =
@@ -407,6 +411,7 @@ module OPAM = struct
   let conflicts t = t.conflicts
   let libraries t = t.libraries
   let syntax t = t.syntax
+  let ocaml_version t = t.ocaml_version
 
   let with_depends t depends = { t with depends }
   let with_build t build = { t with build }
@@ -455,7 +460,12 @@ module OPAM = struct
             Variable (s_conflicts, make_and_formula t.conflicts);
             Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
             Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
-          ] @ List.map (fun (s, v) -> Variable (s, v)) t.others;
+          ] @ (
+            match t.ocaml_version with
+            | None   -> []
+            | Some v -> [ Variable (s_ocaml_version, make_constraint v) ]
+          ) @
+            List.map (fun (s, v) -> Variable (s, v)) t.others;
         }
       ] 
     } in
@@ -492,13 +502,15 @@ module OPAM = struct
     let conflicts  = assoc_list s s_conflicts parse_and_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
+    let ocaml_version = assoc_option s s_ocaml_version parse_constraint in
     let others     =
       Utils.filter_map (function
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
         | _              -> None
       ) s in
     { name; version; maintainer; substs; build; remove;
-      depends; depopts; conflicts; libraries; syntax; others }
+      depends; depopts; conflicts; libraries; syntax; others;
+      ocaml_version; }
 end
 
 module Dot_install_raw = struct

@@ -685,6 +685,11 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
+let current_ocaml_version t =
+  let alias = File.Config.ocaml_version t.config in
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  List.assoc alias aliases
+
 type env = {
   add_to_env : (string * string) list;
   add_to_path: dirname;
@@ -704,8 +709,7 @@ let expand_env t env =
 
 (* XXX: We should get the ones defined in the dependents packages as well *)
 let get_env t =
-  let aliases = File.Aliases.read (Path.G.aliases t.global) in
-  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
+  let ocaml_version = current_ocaml_version t in 
   let comp_f = Path.G.compiler t.global ocaml_version in
   let comp = File.Comp.read comp_f in
 
@@ -927,7 +931,22 @@ module Heuristic = struct
       )
 
   let resolve action_k t l_request =
-    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
+    (* Remove the package which does not fullfil the compiler constraints *)
+    let ocaml_version =
+      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
+        match OCaml_V.current () with
+        | None   -> assert false
+        | Some v -> v
+      else
+        current_ocaml_version t in
+    let filter nv =
+      let opam = File.OPAM.read (Path.G.opam t.global nv) in
+      match File.OPAM.ocaml_version opam with
+      | None       -> true
+      | Some (r,v) -> OCaml_V.compare ocaml_version r v in
+    let available = NV.Set.filter filter t.available in
+
+    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
 
     match
       List.fold_left 
@@ -1153,11 +1172,8 @@ let config request =
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
-      let comp =
-        let alias = File.Config.ocaml_version t.config in
-        let aliases = File.Aliases.read (Path.G.aliases t.global) in
-        let oversion = List.assoc alias aliases in
-        File.Comp.safe_read (Path.G.compiler t.global oversion) in
+      let oversion = current_ocaml_version t in
+      let comp = File.Comp.read (Path.G.compiler t.global oversion) in
       let names =
         List.filter
           (fun n -> NV.Set.exists (fun nv -> NV.name nv = n) t.installed)

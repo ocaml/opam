@@ -2,6 +2,7 @@ opam-version: "1"
 
 package "P1" {
   version:    "2"
+  ocaml-version: [ < "4.00.0" ]
   maintainer: "contact@ocamlpro.com"
   substs:     [ "P1.config" ]
   libraries:  [ "p1" ]
