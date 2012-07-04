@@ -283,7 +283,8 @@ let extract file dst =
       | `dir  _ -> mkdir dst
       | `file f ->
           mkdir (Filename.dirname dst);
-          copy f dst
+          copy f dst;
+          remove f;
     ) moves
 
 let link src dst =
