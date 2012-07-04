@@ -10,6 +10,9 @@ let remote_repo = Path.R.of_path remote_path
 
 let index_file = remote_path // "urls.txt"
 
+let local_index_archive = local_path // "index.tar.gz"
+let remote_index_archive = remote_path // "index.tar.gz"
+
 (* url/$name.$version *)
 module Path = struct
   module G = Path.G
@@ -81,6 +84,7 @@ let download_remote_file ?(force = false) remote_file =
       None
     else begin
       Dirname.mkdir (Filename.dirname local_file);
+      log "dowloading %s" (Filename.to_string remote_file);
       let err = Dirname.exec local_dir [wget remote_file] in
       if err <> 0 then
         Globals.error_and_exit "Cannot download %s" (Filename.to_string remote_file);
