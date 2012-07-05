@@ -77,4 +77,10 @@ let cut_at = cut_at_aux String.index
 
 let rcut_at = cut_at_aux String.rindex
 
+let split s c =
+  Pcre.split (Pcre.regexp (String.make 1 c)) s
 
+(* Remove from a ':' separated list of string the one which are prefix of Globals.root_path *)
+let reset_env_value v =
+  let v = split v ':' in
+  List.filter (fun v -> not (starts_with ~prefix:!Globals.root_path v)) v

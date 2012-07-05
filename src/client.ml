@@ -701,10 +701,11 @@ type env = {
 let expand_env t env =
   List.map (fun (ident, symbol, string) ->
     let string = substitute_string t string in
+    let clean_env () = try Utils.reset_env_value (Sys.getenv ident) with _ -> [] in
     match symbol with
     | "="  -> (ident, string)
-    | "+=" -> (ident, try string ^ ":" ^ Sys.getenv ident with _ -> string)
-    | "=+" -> (ident, try Sys.getenv ident ^ ":" ^ string with _ -> string)
+    | "+=" -> (ident, String.concat ":" (string :: clean_env ()))
+    | "=+" -> (ident, String.concat ":" (clean_env () @ [string]))
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 

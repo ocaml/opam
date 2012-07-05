@@ -180,7 +180,7 @@ let real_path p =
   else
     dir / base
 
-let add_path bins = 
+let replace_path bins = 
   let path = ref "<not set>" in
   let env = Unix.environment () in
   for i = 0 to Array.length env - 1 do
@@ -188,9 +188,9 @@ let add_path bins =
       | Some (k,v) -> k,v
       | None       -> assert false in
     if k = "PATH" then
-    let new_path = match List.filter Sys.file_exists bins with
-      | [] -> v
-      | l  -> String.concat ":" l ^ ":" ^ v in
+    let v = Utils.reset_env_value v in
+    let bins = List.filter Sys.file_exists bins in
+    let new_path = String.concat ":" (bins @ v) in
     env.(i) <- "PATH=" ^ new_path;
     path := new_path;
   done;
@@ -201,7 +201,7 @@ type command = string list
 let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
-      let env, path = add_path add_to_path in
+      let env, path = replace_path add_to_path in
       let add_to_env = List.map (fun (k,v) -> k^"="^v) add_to_env in
       let env = Array.concat [ env; Array.of_list add_to_env ] in
       let name = log_file () in
