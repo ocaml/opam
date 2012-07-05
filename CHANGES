@@ -1,0 +1,9 @@
+0.2 [July 2012]
+* more robust switch command
+* more robust parallel build (not yet activated by default)
+* support for compiler-constraints in packages
+* new solver heuristics
+* improved performance on init with the rsync backend
+
+0.1 [June 2012]
+* Initial version
