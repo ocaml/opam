@@ -284,7 +284,10 @@ let extract file dst =
       | `file f ->
           mkdir (Filename.dirname dst);
           copy f dst
-    ) moves
+    ) moves;
+    List.iter (function
+      | (`file f, _) -> remove f
+      | _ -> ()) moves
 
 let link src dst =
   log "linking %s to %s" src dst;
