@@ -28,7 +28,8 @@ Copyright (C) 2012 OCamlPro - INRIA
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.argv.(0) Globals.version
+    Sys.argv.(0) Globals.version;
+  exit 0
 
 let ano_args = ref []
 let anon s =
