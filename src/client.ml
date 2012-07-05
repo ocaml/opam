@@ -809,6 +809,16 @@ type version_constraint =
   | V_any of name * V.Set.t (* versions available *) * version option (* version installed *)
   | V_eq of name * version
 
+let string_of_version_constraint = function
+  | V_any (n,s,i) ->
+      Printf.sprintf
+        "{name=%s available=%s installed=%s}"
+        (N.to_string n)
+        (V.Set.to_string s)
+        (match i with None -> "<none>" | Some v -> V.to_string v)
+  | V_eq (n,v) ->
+      Printf.sprintf "{name=%s version=%s}" (N.to_string n) (V.to_string v)
+
 module Heuristic = struct
 
   let vpkg_of_n op name = (N.to_string name, None), op
@@ -858,11 +868,17 @@ module Heuristic = struct
      - <$n,$v> package when name = $n.$v *)
   let nv_of_names t =
     let available = NV.to_map (Path.G.available t.global) in
+    let installed = NV.to_map t.installed in
     List.map
       (fun name -> 
-        if N.Map.mem name available then
-          V_any (name, N.Map.find name available, None)
-        else
+        if N.Map.mem name available then begin
+          let set = N.Map.find name available in
+          if N.Map.mem name installed then
+            let version = V.Set.choose_one (N.Map.find name installed) in
+            V_any (name, set, Some version)
+          else 
+            V_any (name, set, None)
+        end else
           (* consider 'name' to be 'name.version' *)
           let nv =
             try NV.of_string (N.to_string name)
@@ -1054,17 +1070,20 @@ let remove names =
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
   let choose_any_v nv = 
     let n, v = match nv with 
-      | V_any (n, set, _) -> n, V.Set.choose set
+      | V_any (n, set, None) -> n, V.Set.choose set
+      | V_any (n, _, Some v)
       | V_eq (n, v) -> n, v in 
     NV.create n v in
   let wish_remove = Heuristic.nv_of_names t names in
-  let depends = 
+  log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
+  let depends =
     Solver.filter_forward_dependencies universe
       (Solver.P (List.rev_map
                    (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
                    wish_remove)) in
+  let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
+  log "depends=%s" (NV.Set.to_string depends);
   let heuristic_apply = 
-    let depends = Utils.set_of_list NV.Set.empty NV.Set.add (List.rev_map NV.of_dpkg depends) in
     let installed = List.filter (fun nv -> not (NV.Set.mem nv depends)) (NV.Set.elements t.installed) in
     fun f_heuristic ->
       List.rev_map (fun nv -> f_heuristic (NV.name nv) (NV.version nv)) installed in
