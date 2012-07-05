@@ -22,7 +22,7 @@ BINARIES  = opam opam-server opam-check \
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-OCAMLVERSION = $(shell ocamlc -version)
+OCAMLVERSION = system
 
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
@@ -211,17 +211,19 @@ switch-alias:
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias P1.1 P2.1
 	$(OPAM) switch -alias test $(OCAMLVERSION) -clone
-	$(CHECK) -l switch-alias P1.1 P2.1
-	$(OPAM) switch -list
+	$(CHECK) -l switch-alias-test P1.1 P2.1
+	$(OPAM) switch 4.00.0
+	$(OPAM) install P1
+	$(CHECK) -l switch-alias-4.00 P1.1
 
 switch-env-packages:
-	$(OPAM) switch dummy
+	$(OPAM) switch 3.12.1
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l switch-env-packages P1.1 P2.1 P3.1~weird-version.test P4.3
 else
 	$(CHECK) -l switch-env-packages P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
-	./test-TEST.sh $(OPAM_ROOT)/dummy/build/P4.3/P4.env "1"
+	./test-TEST.sh $(OPAM_ROOT)/3.12.1/build/P4.3/P4.env "1"
 
 switch:
 	$(MAKE) fresh

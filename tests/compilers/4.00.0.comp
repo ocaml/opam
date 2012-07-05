@@ -1,7 +1,6 @@
 opam-version: "1"
-name: "test"
+name: "4.00.0"
 preinstalled: true
 env: [
   [ TEST="1" ]
 ]
-packages: [ "P4" ]

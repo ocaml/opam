@@ -71,7 +71,10 @@ end
 
 (* CURL *)
 begin program "opam-curl-init"
-  files = [ "src/repo/curl/init.ml" ]
+  files = [
+    "src/repo/curl/misc.ml"
+    "src/repo/curl/init.ml"
+  ]
   requires = [ "opam-lib" ]
 end
 

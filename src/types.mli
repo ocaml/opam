@@ -251,12 +251,18 @@ end
 (** Shortcut to NV.t *)
 type nv = NV.t
 
+
+type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
+
 (** OCaml version *)
 module OCaml_V: sig
   include Abstract
 
   (** Return the version of the compiler currently installed *)
   val current: unit -> t option
+
+  (** Compare OCaml versions *)
+  val compare: t -> relop -> t -> bool
 end
 
 (** OPAM version *)
@@ -426,3 +432,4 @@ module Alias: Abstract
 
 type and_formula = Debian.Format822.vpkglist
 type cnf_formula = Debian.Format822.vpkgformula
+type ocaml_constraint = relop * OCaml_V.t

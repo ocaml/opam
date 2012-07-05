@@ -323,3 +323,31 @@ let make_cnf_formula l =
       | _   -> (Group orl) :: cnf
     ) [] l in
   List cnf
+
+let parse_relop = function
+  | "="  -> `Eq
+  | ">=" -> `Geq
+  | ">"  -> `Gt
+  | "<=" -> `Leq
+  | "<"  -> `Lt
+  | _    -> invalid_arg "parse_relop"
+
+let parse_constraint = function
+  | List [ Symbol r; String v ] ->
+      (try (parse_relop r, Types.OCaml_V.of_string v)
+       with _ -> bad_format "Expecting a relop, got %s" r)
+  | x -> bad_format "Expecting a constraint, got %s" (kind x)
+
+let string_of_relop = function
+  | `Eq  -> "="
+  | `Geq -> ">="
+  | `Gt  -> ">"
+  | `Leq -> "<="
+  | `Lt  -> "<"
+  | _    -> invalid_arg "parse_relop"
+
+let make_constraint (r, v) =
+  List [
+    Symbol (string_of_relop r);
+    String (Types.OCaml_V.to_string v);
+  ]

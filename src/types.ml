@@ -414,16 +414,31 @@ end
 
 type nv = NV.t
 
+type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
+
 (* OCaml version *)
 module OCaml_V: sig
   include Abstract
   val current: unit -> t option
+  val compare: t -> relop -> t -> bool
 end = struct
   include Base
+
   let current () =
     match Run.ocaml_version () with
     | None   -> None
     | Some o -> Some (of_string o)
+
+  let compare v1 r v2 =
+    let v1 = to_string v1 in
+    let v2 = to_string v2 in
+    match r with
+    | `Eq  -> Debian.Version.equal v1 v2
+    | `Geq -> Debian.Version.compare v1 v2 >= 0
+    | `Gt  -> Debian.Version.compare v1 v2 > 0
+    | `Leq -> Debian.Version.compare v1 v2 <= 0
+    | `Lt  -> Debian.Version.compare v1 v2 < 0
+
 end
 
 module Alias: Abstract = Base
@@ -714,3 +729,4 @@ let string_of_config = function
 
 type and_formula = Debian.Format822.vpkglist
 type cnf_formula = Debian.Format822.vpkgformula
+type ocaml_constraint = relop * OCaml_V.t

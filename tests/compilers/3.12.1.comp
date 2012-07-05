@@ -1,0 +1,7 @@
+opam-version: "1"
+name: "3.12.1"
+preinstalled: true
+env: [
+  [ TEST="1" ]
+]
+packages: [ "P4" ]

@@ -215,3 +215,9 @@ val make_and_formula : and_formula -> value
 
 (** Build a CNF formula *)
 val make_cnf_formula : cnf_formula -> value
+
+(** Parse a simple constraint *)
+val parse_constraint: value -> ocaml_constraint
+
+(** Build a simple constraint *)
+val make_constraint: ocaml_constraint -> value

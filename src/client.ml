@@ -34,6 +34,9 @@ type t = {
   (* ~/.opam/opam/ files *)
   available: NV.Set.t;
 
+  (* ~/.opam/aliases *)
+  aliases: (Alias.t * OCaml_V.t) list;
+
   (* ~/.opam/$oversion/installed contents *)
   installed: NV.Set.t;
 
@@ -73,6 +76,7 @@ let load_state () =
   let global = Path.G.create () in
   let config = File.Config.read (Path.G.config global) in
   let ocaml_version = File.Config.ocaml_version config in
+  let aliases = File.Aliases.safe_read (Path.G.aliases global) in
   let compiler = Path.C.create ocaml_version in
   let repositories = File.Config.repositories config in
   let repositories = List.map (fun r -> r, Path.R.create r) repositories in
@@ -83,7 +87,7 @@ let load_state () =
   let t = {
     global; compiler; repositories;
     available; installed; reinstall;
-    repo_index; config
+    repo_index; config; aliases;
   } in
   print_state t;
   t
@@ -248,7 +252,8 @@ let update () =
   if !has_error then
     Globals.exit 66
 
-let install_initial_package () =
+let install_conf_ocaml () =
+  log "installing conf-ocaml";
   let t = load_state () in
   let name = N.of_string Globals.default_package in
   let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
@@ -313,33 +318,47 @@ let substitute_file t f =
 let substitute_string t s =
   File.Subst.replace_string s (contents_of_variable t)
 
+let create_default_compiler_description t =
+  let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
+  let f = File.Comp.create_preinstalled ocaml_version in
+  let comp = Path.G.compiler t.global ocaml_version in
+  File.Comp.write comp f
+
+let add_alias t alias ocaml_version =
+  log "adding alias %s %s" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
+  let aliases_f = Path.G.aliases t.global in
+  let aliases = File.Aliases.safe_read aliases_f in
+  if not (List.mem_assoc alias aliases) then begin
+    (* Install the initial package and reload the global state *)
+    install_conf_ocaml ();
+    (* Update the list of aliases *)
+    File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
+  end
+
 (* We assume that we have the right ocaml-version in $opam/config. Then we:
    - create $opam/$alias
-   - compiles and install $opam/compiler/$descr.comp if $descr <> current version *)
+   - compiles and install $opam/compiler/$descr.comp *)
 let init_ocaml alias ocaml_version =
+  log "init_ocaml %s %s" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
+  let t = load_state () in
   let alias_p = Path.C.create alias in
-  if not (Dirname.exists (Path.C.root alias_p)) then 
-    let t = load_state () in
-    let aliases_f = Path.G.aliases t.global in
-    let aliases = File.Aliases.safe_read aliases_f in
 
-  try
+  if not (Dirname.exists (Path.C.root alias_p)) then begin
+
     Dirname.mkdir (Path.C.root alias_p);
-    File.Installed.write (Path.C.installed alias_p) File.Installed.empty;
+    add_alias t alias ocaml_version;
 
-    (* Write the default alias *)
-    File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
+    if ocaml_version = OCaml_V.of_string Globals.default_compiler_version then begin
 
-    (* Install the initial package and reload the global state *)
-    install_initial_package ();
-    let t = load_state () in
+      (* we create a dummy compiler description file the the system-wide
+         OCaml configuration *)
+      create_default_compiler_description t;
 
-    (* Update the configuration files *)
-    update ();
+    end else
+      let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
+      if not (File.Comp.preinstalled comp) then try
 
-    (* Install the compiler if necessary *)
-    let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
-    if OCaml_V.current () <> Some ocaml_version && not (File.Comp.preinstalled comp) then begin
+      (* Install the compiler *)
       let comp_src = File.Comp.src comp in
       let build_dir = Path.C.build_ocaml alias_p in
       Run.download comp_src (Dirname.to_string build_dir);
@@ -371,15 +390,13 @@ let init_ocaml alias ocaml_version =
         Globals.error_and_exit
           "The compilation of compiler version %s failed"
           (OCaml_V.to_string ocaml_version)
-    end else
-      let comp = Path.G.compiler t.global ocaml_version in
-      if not (Filename.exists comp) then
-        File.Comp.write comp (File.Comp.create_preinstalled ocaml_version)
-  with e -> 
-    if not !Globals.debug then
+
+    with e -> 
+      if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);
-    File.Aliases.write aliases_f aliases;
-    raise e
+      File.Aliases.write (Path.G.aliases t.global) t.aliases;
+      raise e
+  end
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -669,6 +686,11 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
+let current_ocaml_version t =
+  let alias = File.Config.ocaml_version t.config in
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  List.assoc alias aliases
+
 type env = {
   add_to_env : (string * string) list;
   add_to_path: dirname;
@@ -688,8 +710,7 @@ let expand_env t env =
 
 (* XXX: We should get the ones defined in the dependents packages as well *)
 let get_env t =
-  let aliases = File.Aliases.read (Path.G.aliases t.global) in
-  let ocaml_version = List.assoc (File.Config.ocaml_version t.config) aliases in 
+  let ocaml_version = current_ocaml_version t in 
   let comp_f = Path.G.compiler t.global ocaml_version in
   let comp = File.Comp.read comp_f in
 
@@ -911,7 +932,22 @@ module Heuristic = struct
       )
 
   let resolve action_k t l_request =
-    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) t.available [] in
+    (* Remove the package which does not fullfil the compiler constraints *)
+    let ocaml_version =
+      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
+        match OCaml_V.current () with
+        | None   -> assert false
+        | Some v -> v
+      else
+        current_ocaml_version t in
+    let filter nv =
+      let opam = File.OPAM.read (Path.G.opam t.global nv) in
+      match File.OPAM.ocaml_version opam with
+      | None       -> true
+      | Some (r,v) -> OCaml_V.compare ocaml_version r v in
+    let available = NV.Set.filter filter t.available in
+
+    let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
 
     match
       List.fold_left 
@@ -951,6 +987,7 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.archive_dir root);
     Dirname.mkdir (Path.G.compiler_dir root);
     init_ocaml alias ocaml_version;
+    update ();
     let t = load_state () in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
@@ -1136,11 +1173,8 @@ let config request =
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
-      let comp =
-        let alias = File.Config.ocaml_version t.config in
-        let aliases = File.Aliases.read (Path.G.aliases t.global) in
-        let oversion = List.assoc alias aliases in
-        File.Comp.safe_read (Path.G.compiler t.global oversion) in
+      let oversion = current_ocaml_version t in
+      let comp = File.Comp.read (Path.G.compiler t.global oversion) in
       let names =
         List.filter
           (fun n -> NV.Set.exists (fun nv -> NV.name nv = n) t.installed)

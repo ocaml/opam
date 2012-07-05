@@ -71,7 +71,7 @@ let init =
       if !comp <> "" then OCaml_V.of_string !comp
       else match OCaml_V.current () with
         | None   -> bad_argument "init" "No OCaml compiler found in path"
-        | Some c -> c in
+        | Some _ -> OCaml_V.of_string Globals.default_compiler_version in
     let alias =
       if !alias <> "" then Alias.of_string !alias
       else Alias.of_string (OCaml_V.to_string comp) in
