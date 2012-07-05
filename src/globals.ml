@@ -14,11 +14,14 @@
 (***********************************************************************)
 
 let debug = ref (
-  try let (_:string) = Sys.getenv "OPAMDEBUG" in true
+  try int_of_string (Sys.getenv "OPAMDEBUG") >= 2
   with _ -> false
 )
 
-let verbose = ref false
+let verbose = ref (
+  try int_of_string (Sys.getenv "OPAMDEBUG") >= 1
+  with _ -> false
+)
 
 let yes = ref false
 

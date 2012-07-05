@@ -25,7 +25,7 @@ PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 OCAMLVERSION = system
 
 # opam in the path should not be a requirement
-ENV  = OCAMLRUNPARAM=b OPAMDEBUG=1 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
+ENV  = OCAMLRUNPARAM=b OPAMDEBUG=2 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
 OPAM = $(ENV) opam --yes --root $(OPAM_ROOT)
 CHECK = $(ENV) opam-check --root $(OPAM_ROOT)
 
