@@ -3,7 +3,7 @@
 OPAM is a package manager for OCaml, based on the
 [CUDF](http://mancoosi.org/cudf/) library developped by the
 [Mancoosi](http://www.mancoosi.org/) project, which are, among other
-things, used by the Debian to manage their packages.
+things, used by Debian to manage their packages.
  
 ### Prerequisites:
 
@@ -17,10 +17,10 @@ things, used by the Debian to manage their packages.
 make
 ```
 
-This will download the necessary archives if they are not already
-downloaded and then build OPAM. If you just want to download the
-necessary dependencies without compiling the project, run `make
-clone`.
+This will fetch the necessary archives if they are not already
+downloaded and then build OPAM. If you just want to get the
+necessary dependencies without compiling the project, run
+`make clone`.
 
 ### Using opam
 
