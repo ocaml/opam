@@ -25,7 +25,7 @@ let verbose = ref (
 
 let yes = ref false
 
-let version = "0.1+dev"
+let version = "0.2"
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"
