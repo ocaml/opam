@@ -168,7 +168,7 @@ module Comp: sig
   include IO_FILE
 
   (** Create a pre-installed compiler description file *)
-  val create_preinstalled: OCaml_V.t -> t
+  val create_preinstalled: OCaml_V.t -> (string * string * string) list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool

@@ -320,7 +320,10 @@ let substitute_string t s =
 
 let create_default_compiler_description t =
   let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
-  let f = File.Comp.create_preinstalled ocaml_version in
+  let f =
+    File.Comp.create_preinstalled
+      ocaml_version
+      [ ("CAML_LD_LIBRARY_PATH", "+=", Dirname.to_string (Path.C.stublibs t.compiler))] in
   let comp = Path.G.compiler t.global ocaml_version in
   File.Comp.write comp f
 

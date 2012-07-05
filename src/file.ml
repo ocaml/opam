@@ -829,8 +829,8 @@ module Comp = struct
     env       = [];
   }
 
-  let create_preinstalled name =
-    { empty with name; preinstalled = true }
+  let create_preinstalled name env =
+    { empty with name; preinstalled = true; env }
 
   let s_name      = "name"
   let s_src       = "src"
