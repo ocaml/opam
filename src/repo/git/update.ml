@@ -49,21 +49,24 @@ let () =
   (* re-clone the repository if the url has changed *)
   let url_updates = List.filter (Utils.starts_with ~prefix:"url/") repo_updates in
   let url_updates =
-    List.map (fun url ->
-      let package = Stdlib_filename.basename url in
-      Run.remove_dir (Stdlib_filename.concat "git" package);
-      let err = Run.command ["opam-git-download"; remote_address; package ] in
-      if err <> 0 then begin
-        Globals.error "Cannot download package %s" package;
-        exit err
-      end;
-      NV.of_string package
+    Utils.filter_map (fun url ->
+      if Sys.file_exists url then begin
+        let package = Stdlib_filename.basename url in
+        Run.remove_dir (Stdlib_filename.concat "git" package);
+        let err = Run.command ["opam-git-download"; remote_address; package ] in
+        if err <> 0 then begin
+          Globals.error "Cannot download package %s" package;
+          exit err
+        end;
+        Some (NV.of_string package)
+      end else
+        None
     ) url_updates in
   let url_updates = NV.Set.of_list url_updates in
 
   let repo_updates =
     Utils.filter_map (fun f -> NV.of_filename (Filename.of_string f)) repo_updates in
-  let repo_updates = List.fold_right NV.Set.add repo_updates NV.Set.empty in
+  let repo_updates = NV.Set.of_list repo_updates in
   update local_path;
 
   (* Look at already cloned packages *)
