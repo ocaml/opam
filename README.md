@@ -1,59 +1,59 @@
 # OPAM - A package manager for OCaml
 
-*Warning* do not use this software in production, it is not yet stable
-
-## Prerequisites:
+OPAM is a package manager for OCaml, based on the
+[CUDF](http://mancoosi.org/cudf/) library developped by the
+[Mancoosi](http://www.mancoosi.org/) project, which are, among other
+things, used by the Debian to manage their packages.
+ 
+### Prerequisites:
 
 * ocaml
 
-## (optional) Preparing the build
+### Compiling OPAM
 
-    make clone
-
-This command will download and extract the following archives:
-
-* http://www.ocamlpro.com/pub/cudf.tar.gz
-* http://www.ocamlpro.com/pub/dose.tar.gz
-* http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz
-* http://www.ocamlpro.com/pub/ocaml-arg.tar.bz2
-* http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
-* http://www.ocamlpro.com/pub/ocaml-re.tar.bz2
-
-## Building OPAM
-
-To compile `opam`, simply run:
+* To compile `opam`, simply run:
 
 ```
 make
 ```
 
 This will download the necessary archives if they are not already
-downloaded and then build OPAM.
+downloaded and then build OPAM. If you just want to download the
+necessary dependencies without compiling the project, run `make
+clone`.
 
-## Tests
+### Using opam
 
-In order to run the test you should run:
-
-```
-make tests-rsync
-make tests-git
-make tests-server
-```
-
-Or alternatively:
+All of the OPAM state is held in the `~\.opam` directory in your home
+directory, including compiler installations. You should never need to
+switch to a root user to install packages. Package listings are
+obtained through remote sources, the default one being
+`opam.ocamlpro.com`:
 
 ```
-make tests
+opam init
+eval `opam config -env`
 ```
-## Scripts
 
-Some helper scripts are located in `src/scrips`:
+The first command creates `~\.opam` and set-up `opam.ocamlpro.com` as
+default repository. The second command update your local environment
+to use the packages installed by OPAM. For convenience, you can add
+this line in your `~/.profile`.
 
-* `opam-mk-install` helps to create `.install` files
-* `opam-mk-config` helps to create `.config.in` files
-* `opam-mk-repo` helps to create OPAM repositories
+```
+opam list
+```
+
+As expected, this command lists all the available packages. We can now
+install some packages (for instance `lwt`):
+
+```
+opam install lwt
+```
 
 ## Documentation
 
-* the API is available in `html/`
-* The design documents are available in `specs/`
+Some technical documentations are availables in `doc`:
+
+* the API is available in `doc/html/`
+* The design documents are available in `doc/specs/`
