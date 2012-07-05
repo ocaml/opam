@@ -324,7 +324,7 @@ let create_default_compiler_description t =
   let f =
     File.Comp.create_preinstalled
       ocaml_version
-      [ mk "base-thread"; mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
+      [ mk "base-threads"; mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
       [ ("CAML_LD_LIBRARY_PATH", "+=", Dirname.to_string (Path.C.stublibs t.compiler))] in
   let comp = Path.G.compiler t.global ocaml_version in
   File.Comp.write comp f
