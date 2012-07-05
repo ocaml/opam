@@ -52,7 +52,7 @@ opam install lwt
 
 ## Documentation
 
-Some technical documentations are availables in `doc`:
+Some technical documentations are available in `doc`:
 
 * the API is available in `doc/html/`
 * The design documents are available in `doc/specs/`
