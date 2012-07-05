@@ -27,8 +27,7 @@ necessary dependencies without compiling the project, run
 All of the OPAM state is held in the `~\.opam` directory in your home
 directory, including compiler installations. You should never need to
 switch to a root user to install packages. Package listings are
-obtained through remote sources, the default one being
-`opam.ocamlpro.com`:
+obtained through remote sources.
 
 ```
 opam init
