@@ -324,7 +324,10 @@ let create_default_compiler_description t =
   let f =
     File.Comp.create_preinstalled
       ocaml_version
-      [ mk "base-threads"; mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
+      (if !Globals.base_packages then
+        [ mk "base-threads"; mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
+       else
+        [])
       [ ("CAML_LD_LIBRARY_PATH", "+=", Dirname.to_string (Path.C.stublibs t.compiler))] in
   let comp = Path.G.compiler t.global ocaml_version in
   File.Comp.write comp f
@@ -835,7 +838,7 @@ module Heuristic = struct
     let available = NV.to_map t.available in
     List.rev_map 
       (function 
-        | (name, _), None -> 
+        | (name, _), None ->
             let name = N.of_string name in
             f_h None (N.Map.find name available) name
         | n, v -> n, v)

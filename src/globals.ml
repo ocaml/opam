@@ -23,6 +23,8 @@ let verbose = ref (
   with _ -> false
 )
 
+let base_packages = ref true
+
 let yes = ref false
 
 let version = "0.2"

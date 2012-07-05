@@ -86,7 +86,8 @@ let init =
     ("-comp" , Arg.Set_string comp , " Which compiler version to use");
     ("-alias", Arg.Set_string alias, " Set the compiler alias name");
     ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
-    ("-kind" , Arg.Set_string kind , " Set the repository kind")
+    ("-kind" , Arg.Set_string kind , " Set the repository kind");
+    ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
   ];
   anon;
   main     =
@@ -310,6 +311,7 @@ let switch =
     ("-clone" , Arg.Set clone        , " Try to keep the same installed packages");
     ("-list"  , Arg.Unit (set `list) , " List the available compiler descriptions");
     ("-alias" , Arg.Set_string alias , " Set the compiler name");
+    ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
   ];
   anon;
   main     = parse_args (fun args ->

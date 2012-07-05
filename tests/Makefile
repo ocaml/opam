@@ -94,7 +94,7 @@ ifeq ($(REPOKIND), git)
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
 endif
-	$(OPAM) init $(REPO) $(OPAM_REPO) -kind $(REPOKIND)
+	$(OPAM) init -no-base-packages $(REPO) $(OPAM_REPO) -kind $(REPOKIND)
 
 upload: $(ARCHIVES)
 ifeq ($(REPOKIND), git)
@@ -210,7 +210,7 @@ downgrade:
 switch-alias:
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias P1.1 P2.1
-	$(OPAM) switch -alias test $(OCAMLVERSION) -clone
+	$(OPAM) switch -alias test $(OCAMLVERSION) -clone -no-base-packages
 	$(CHECK) -l switch-alias-test P1.1 P2.1
 	$(OPAM) switch 4.00.0
 	$(OPAM) install P1
