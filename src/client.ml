@@ -1427,7 +1427,7 @@ let switch clone alias ocaml_version =
         N.Map.add
         (List.rev_map
            (function (name, _), _ as nv -> N.of_string name, nv)
-           (Heuristic.get_packages t ocaml_version f_h)) in
+           (Heuristic.get_packages t_new ocaml_version f_h)) in
 
   let cloned_packages f_h =
     if clone then Heuristic.get_installed t f_h else N.Map.empty in
