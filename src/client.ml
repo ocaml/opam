@@ -422,7 +422,7 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
-let list () =
+let list print_short =
   log "list";
   let t = load_state () in
   (* Get all the installed packages *)
@@ -452,14 +452,18 @@ let list () =
       (Path.G.available t.global)
       (N.Map.empty, min_int, String.length s_not_installed)
   in
-  N.Map.iter (fun name (version, description) ->
-    let version = match version with
-    | None   -> s_not_installed
-    | Some v -> V.to_string v in
-    Globals.msg "%s  %s  %s\n"
-      (indent_left (N.to_string name) max_n)
-      (indent_right version max_v)
-      description) map
+  N.Map.iter (
+    if print_short then
+      fun name _ -> Globals.msg "%s " (N.to_string name)
+    else
+      fun name (version, description) ->
+        let version = match version with
+          | None   -> s_not_installed
+          | Some v -> V.to_string v in
+        Globals.msg "%s  %s  %s\n"
+          (indent_left (N.to_string name) max_n)
+          (indent_right version max_v)
+          description) map
 
 let info package =
   log "info %s" (N.to_string package);
@@ -1447,9 +1451,9 @@ let switch clone alias ocaml_version =
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
 
-let list () =
+let list print_short =
   check ();
-  list ()
+  list print_short
 
 let info package =
   check ();

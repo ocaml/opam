@@ -103,14 +103,18 @@ let init =
 }
 
 (* opam list *)
-let list = {
+let list = 
+  let short = ref false in
+{
   name     = "list";
   usage    = "";
   synopsis = "Display information about all available packages";
   help     = "";
-  specs    = [];
+  specs    = [
+    ("-short", Arg.Set short, " Minimize the output by displaying only package name (installed and not installed)");
+  ];
   anon     = noanon "list";
-  main     = Client.list;
+  main     = parse_args (fun _ -> Client.list !short);
 }
 
 (* opam info [PACKAGE] *)

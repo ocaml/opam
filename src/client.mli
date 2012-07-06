@@ -25,8 +25,10 @@ open Types
     - [cores] is the number of cores *)
 val init : repository -> Alias.t -> OCaml_V.t -> int -> unit
 
-(** Displays all available packages *)
-val list : unit -> unit
+(** Displays all available packages. 
+    If [bool] is [true], then we only display 
+    packages that are known to exist. *)
+val list : bool -> unit
 
 (** Displays a general summary of a package. *)
 val info : N.t -> unit
