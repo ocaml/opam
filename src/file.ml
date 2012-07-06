@@ -1020,7 +1020,7 @@ module Make (F : F) = struct
       with Bad_format msg ->
         Globals.error_and_exit "File %s: %s" (Filename.to_string f) msg
     else
-      Globals.error_and_exit "File %s does not exit" (Filename.to_string f)
+      Globals.error_and_exit "File %s does not exist" (Filename.to_string f)
 
   let safe_read f =
     let filename = Filename.to_string f in

@@ -325,7 +325,7 @@ let create_default_compiler_description t =
     File.Comp.create_preinstalled
       ocaml_version
       (if !Globals.base_packages then
-        [ mk "base-threads"; mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
+        [ mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
        else
         [])
       [ ("CAML_LD_LIBRARY_PATH", "+=", Dirname.to_string (Path.C.stublibs t.compiler))] in
@@ -1396,7 +1396,7 @@ let switch clone alias ocaml_version =
       raise e
   end;
 
-  (* [3/3] install new packagew
+  (* [3/3] install new package
      - the packages specified in the compiler descripton file if
        the compiler was not previously installed
      - also attempt to replicate the previous state, if required
