@@ -34,6 +34,15 @@ type t = {
   (* ~/.opam/opam/ files *)
   available: NV.Set.t;
 
+  (* [available] but restricted to packages that are supported by the current version of the OCaml installed *)
+  available_current: NV.Set.t option;
+    (* WARNING 
+       Instead of [option] we can put [NV.Set.t]. 
+       However, at the time of writing, the semantic will change and "make tests" will fail. 
+       This is because [load_state] calls "ocaml -version" as side effect for example. 
+
+       Note that putting [option] gives a quite optimized data structure now. *)
+
   (* ~/.opam/aliases *)
   aliases: (Alias.t * OCaml_V.t) list;
 
@@ -65,9 +74,37 @@ let print_state t =
   log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
   log "REPO      : %s" (string_of_repos t.repositories);
   log "AVAILABLE : %s" (NV.Set.to_string t.available);
+  log "AVAILABLE_CURRENT : %s" (match t.available_current with None -> "<none>" | Some set -> NV.Set.to_string set);
   log "INSTALLED : %s" (NV.Set.to_string t.installed);
   log "REINSTALL : %s" (NV.Set.to_string t.reinstall);
   log "REPO_INDEX: %s" (string_of_nmap t.repo_index)
+
+let current_ocaml_version t =
+  let alias = File.Config.ocaml_version t.config in
+  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  List.assoc alias aliases
+
+let update_available_current t = 
+  { t with available_current =     
+    (* Remove the package which does not fullfil the compiler constraints *)
+    let ocaml_version =
+      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
+        match OCaml_V.current () with
+        | None   -> assert false
+        | Some v -> v
+      else
+        current_ocaml_version t in
+    let filter nv =
+      let opam = File.OPAM.read (Path.G.opam t.global nv) in
+      match File.OPAM.ocaml_version opam with
+      | None       -> true
+      | Some (r,v) -> OCaml_V.compare ocaml_version r v in
+    Some (NV.Set.filter filter t.available) }
+
+let get_available_current t = 
+  match t.available_current with
+    | None -> assert false
+    | Some v -> v
 
 (* Look into the content of ~/.opam/config to build the client
    state *)
@@ -84,9 +121,10 @@ let load_state () =
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
   let available = Path.G.available global in
+  let available_current = None in
   let t = {
     global; compiler; repositories;
-    available; installed; reinstall;
+    available; available_current; installed; reinstall;
     repo_index; config; aliases;
   } in
   print_state t;
@@ -115,7 +153,7 @@ let find_installed_package_by_name t name =
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
 let find_available_package_by_name t name =
-  let s = NV.Set.filter (fun nv -> NV.name nv = name) t.available in
+  let s = NV.Set.filter (fun nv -> NV.name nv = name) (get_available_current t) in
   if NV.Set.is_empty s then
     None
   else
@@ -176,7 +214,7 @@ let update_repo_index t =
 
 let update () =
   log "update";
-  let t = load_state () in
+  let t = update_available_current (load_state ()) in
   let compilers = Path.G.compiler_list t.global in
 
   (* first update all the repo *)
@@ -223,8 +261,8 @@ let update () =
     ) comps
   ) t.repositories;
   (* Check all the dependencies exist *)
-  let available = Path.G.available t.global in
-  let t = load_state () in
+  let available = get_available_current t in
+  let t = update_available_current (load_state ()) in
   let has_error = ref false in
   NV.Set.iter (fun nv ->
     let opam = File.OPAM.read (Path.G.opam t.global nv) in
@@ -449,7 +487,7 @@ let list print_short =
           let max_n = max max_n (String.length (N.to_string name)) in
           let max_v = if is_installed then max max_v (String.length (V.to_string version)) else max_v in
           map, max_n, max_v)
-      (Path.G.available t.global)
+      t.available
       (N.Map.empty, min_int, String.length s_not_installed)
   in
   N.Map.iter (
@@ -698,11 +736,6 @@ let get_archive t nv =
   Filename.link src dst;
   dst
 
-let current_ocaml_version t =
-  let alias = File.Config.ocaml_version t.config in
-  let aliases = File.Aliases.read (Path.G.aliases t.global) in
-  List.assoc alias aliases
-
 type env = {
   add_to_env : (string * string) list;
   add_to_path: dirname;
@@ -841,7 +874,7 @@ module Heuristic = struct
   let v_eq_opt v set n = vpkg_of_nv_eq n (match v with None -> V.Set.max_elt set | Some v -> v)
 
   let get_installed t f_h =
-    let available = NV.to_map t.available in
+    let available = NV.to_map (get_available_current t) in
     N.Map.mapi
       (fun n v -> f_h (Some (V.Set.choose_one v)) (N.Map.find n available) n)
       (NV.to_map t.installed)
@@ -849,7 +882,7 @@ module Heuristic = struct
   let get_packages t ocaml_version f_h = 
     let comp_f = Path.G.compiler t.global ocaml_version in
     let comp = File.Comp.read comp_f in
-    let available = NV.to_map t.available in
+    let available = NV.to_map (get_available_current t) in
     if (* check that all packages in [comp] are in [available] *)
       List.fold_left
         (fun b -> function
@@ -882,7 +915,7 @@ module Heuristic = struct
      - <name, installed version> package
      - <$n,$v> package when name = $n.$v *)
   let nv_of_names t =
-    let available = NV.to_map (Path.G.available t.global) in
+    let available = NV.to_map (get_available_current t) in
     let installed = NV.to_map t.installed in
     List.map
       (fun name -> 
@@ -972,20 +1005,7 @@ module Heuristic = struct
       )
 
   let resolve action_k t l_request =
-    (* Remove the package which does not fullfil the compiler constraints *)
-    let ocaml_version =
-      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
-        match OCaml_V.current () with
-        | None   -> assert false
-        | Some v -> v
-      else
-        current_ocaml_version t in
-    let filter nv =
-      let opam = File.OPAM.read (Path.G.opam t.global nv) in
-      match File.OPAM.ocaml_version opam with
-      | None       -> true
-      | Some (r,v) -> OCaml_V.compare ocaml_version r v in
-    let available = NV.Set.filter filter t.available in
+    let available = get_available_current t in
 
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
 
@@ -1028,7 +1048,7 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.compiler_dir root);
     init_ocaml alias ocaml_version;
     update ();
-    let t = load_state () in
+    let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
       [ { wish_install
@@ -1044,7 +1064,7 @@ let init repo alias ocaml_version cores =
 
 let install names =
   log "install %s" (N.Set.to_string names);
-  let t = load_state () in
+  let t = update_available_current (load_state ()) in
   let map_installed = NV.to_map t.installed in
 
   (* Exit if at least one package is already installed *)
@@ -1081,8 +1101,8 @@ let remove names =
   if N.Set.mem (N.of_string Globals.default_package) names then
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let names = N.Set.elements names in
-  let t = load_state () in
-  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) t.available []) in
+  let t = update_available_current (load_state ()) in
+  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) (get_available_current t) []) in
   let choose_any_v nv = 
     let n, v = match nv with 
       | V_any (n, set, None) -> n, V.Set.choose set
@@ -1115,7 +1135,7 @@ let remove names =
 
 let upgrade () =
   log "upgrade";
-  let t = load_state () in
+  let t = update_available_current (load_state ()) in
   Heuristic.resolve `upgrade t
     [ { wish_install = []
       ; wish_remove  = []
@@ -1391,7 +1411,7 @@ let switch clone alias ocaml_version =
   log "switch %B %s %s" clone
     (Alias.to_string alias)
     (OCaml_V.to_string ocaml_version);
-  let t = load_state () in
+  let t = update_available_current (load_state ()) in
   let alias_p = Path.C.create alias in
 
   (* [1/3] write the new version in the configuration file *)
@@ -1412,11 +1432,11 @@ let switch clone alias ocaml_version =
   end;
 
   (* [3/3] install new package
-     - the packages specified in the compiler descripton file if
+     - the packages specified in the compiler description file if
        the compiler was not previously installed
      - also attempt to replicate the previous state, if required
        with -clone *)
-  let t_new = load_state () in
+  let t_new = update_available_current (load_state ()) in
 
   let comp_packages f_h =
     if exists then
@@ -1427,10 +1447,26 @@ let switch clone alias ocaml_version =
         N.Map.add
         (List.rev_map
            (function (name, _), _ as nv -> N.of_string name, nv)
-           (Heuristic.get_packages t ocaml_version f_h)) in
+           (Heuristic.get_packages t_new ocaml_version f_h)) in
 
   let cloned_packages f_h =
-    if clone then Heuristic.get_installed t f_h else N.Map.empty in
+    if clone then 
+      (* we filter from "futur requested packages", 
+         packages that are present in the OLD version of OCaml
+         and absent in the NEW version of OCaml *)
+      let available = NV.to_map (get_available_current t_new) in
+      let new_installed = NV.to_map t_new.installed in
+      N.Map.mapi
+        (fun n _ -> 
+          f_h 
+            (if N.Map.mem n new_installed then
+                Some (V.Set.choose_one (N.Map.find n new_installed)) 
+             else
+                None)
+            (N.Map.find n available) 
+            n)
+        (NV.to_map t.installed)
+    else N.Map.empty in
 
   Heuristic.resolve `switch t_new
     [ let packages = 
