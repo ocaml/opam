@@ -846,6 +846,17 @@ module Heuristic = struct
     let comp_f = Path.G.compiler t.global ocaml_version in
     let comp = File.Comp.read comp_f in
     let available = NV.to_map t.available in
+    if (* check that all packages in [comp] are in [available] *)
+      List.fold_left
+        (fun b -> function
+          | (name, _), None ->
+              if N.Map.mem (N.of_string name) available then b else
+                let _ = Globals.error "Package %s not found" name in
+                true
+          | _ -> b)
+        false
+        (File.Comp.packages comp)
+    then Globals.exit 66;
     List.rev_map 
       (function 
         | (name, _), None ->
