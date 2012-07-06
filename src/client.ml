@@ -1475,3 +1475,7 @@ let remote action =
 let switch oversion =
   check ();
   Run.with_flock switch oversion
+
+let compiler_list () =
+  check ();
+  compiler_list ()
