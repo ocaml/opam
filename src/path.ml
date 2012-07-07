@@ -78,7 +78,7 @@ module C = struct
 
   let build_old_env t nv = build t nv // (N.to_string (NV.name nv) ^ ".old.env")
 
-  let build_ocaml t = build_dir t / "_"
+  let build_ocaml t = build_dir t / "ocaml"
 
   let build_install t nv = build t nv // (N.to_string (NV.name nv) ^ ".install")
 
