@@ -388,11 +388,13 @@ let init_ocaml alias ocaml_version =
   log "init_ocaml %s %s" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
   let t = load_state () in
   let alias_p = Path.C.create alias in
+  let aliases = t.aliases in
 
   if not (Dirname.exists (Path.C.root alias_p)) then begin
 
     Dirname.mkdir (Path.C.root alias_p);
     add_alias t alias ocaml_version;
+    let t = load_state () in
 
     if ocaml_version = OCaml_V.of_string Globals.default_compiler_version then begin
 
@@ -450,7 +452,7 @@ let init_ocaml alias ocaml_version =
     with e -> 
       if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);
-      File.Aliases.write (Path.G.aliases t.global) t.aliases;
+      File.Aliases.write (Path.G.aliases t.global) aliases;
       raise e
   end
 
