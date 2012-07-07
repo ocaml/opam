@@ -2,7 +2,7 @@
 
 OPAM is a package manager for OCaml, based on the
 [CUDF](http://mancoosi.org/cudf/) library developped by the
-[Mancoosi](http://www.mancoosi.org/) project, which are, among other
+[Mancoosi](http://www.mancoosi.org/) project, which is, among other
 things, used by Debian to manage their packages.
  
 ### Prerequisites:
