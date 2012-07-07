@@ -400,43 +400,53 @@ let init_ocaml alias ocaml_version =
          OCaml configuration *)
       create_default_compiler_description t;
 
-    end else
-      let comp = File.Comp.safe_read (Path.G.compiler t.global ocaml_version) in
-      if not (File.Comp.preinstalled comp) then try
+    end else try
+      let comp_f = Path.G.compiler t.global ocaml_version in
+      if not (Filename.exists comp_f) then begin
+        Globals.msg
+          "  %S is not a valid compiler description. The available compilers descriptions are:\n"
+          (OCaml_V.to_string ocaml_version);
+        OCaml_V.Set.iter
+          (fun v -> Globals.msg "    - %s\n" (OCaml_V.to_string v))
+          (Path.G.compiler_list t.global);
+        Globals.exit 2
+      end;
+      let comp = File.Comp.read comp_f in
+      if not (File.Comp.preinstalled comp) then begin
 
-      (* Install the compiler *)
-      let comp_src = File.Comp.src comp in
-      let build_dir = Path.C.build_ocaml alias_p in
-      Run.download comp_src (Dirname.to_string build_dir);
-      let patches = File.Comp.patches comp in
-      List.iter (fun f -> Run.download f (Dirname.to_string build_dir)) patches;
-      Run.in_dir
-        (Dirname.to_string build_dir)
-        (fun () ->
-          let patches = List.map Stdlib_filename.basename patches in
-          List.iter Run.patch patches);
-      let err =
-        if File.Comp.configure comp @ File.Comp.make comp <> [] then
-          Dirname.exec build_dir
-            [ ( "./configure" :: File.Comp.configure comp )
-              @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
-            (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-            (* NOTE In case it exists 2 '-prefix', in general the script
-               ./configure will only consider the last one, others will be
-               discarded. *)
-            ; ( "make" :: File.Comp.make comp )
-            ; [ "make" ; "install" ]
-          ]
-        else
-          let builds =
-            List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-          Dirname.exec build_dir builds
-      in
-      if err <> 0 then
-        Globals.error_and_exit
-          "The compilation of compiler version %s failed"
-          (OCaml_V.to_string ocaml_version)
-
+        (* Install the compiler *)
+        let comp_src = File.Comp.src comp in
+        let build_dir = Path.C.build_ocaml alias_p in
+        Run.download comp_src (Dirname.to_string build_dir);
+        let patches = File.Comp.patches comp in
+        List.iter (fun f -> Run.download f (Dirname.to_string build_dir)) patches;
+        Run.in_dir
+          (Dirname.to_string build_dir)
+          (fun () ->
+            let patches = List.map Stdlib_filename.basename patches in
+            List.iter Run.patch patches);
+        let err =
+          if File.Comp.configure comp @ File.Comp.make comp <> [] then
+            Dirname.exec build_dir
+              [ ( "./configure" :: File.Comp.configure comp )
+                @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
+              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+              (* NOTE In case it exists 2 '-prefix', in general the script
+                 ./configure will only consider the last one, others will be
+                 discarded. *)
+              ; ( "make" :: File.Comp.make comp )
+              ; [ "make" ; "install" ]
+              ]
+          else
+            let builds =
+              List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+            Dirname.exec build_dir builds
+        in
+        if err <> 0 then
+          Globals.error_and_exit
+            "The compilation of compiler version %s failed"
+            (OCaml_V.to_string ocaml_version)
+      end
     with e -> 
       if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);
