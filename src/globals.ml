@@ -81,6 +81,7 @@ type os =
   | Darwin
   | Linux
   | FreeBSD
+  | OpenBSD
   | Cygwin
   | Win32
   | Unix
@@ -91,6 +92,7 @@ let os = match Sys.os_type with
     | "Darwin"  -> Darwin
     | "Linux"   -> Linux
     | "FreeBSD" -> FreeBSD
+    | "OpenBSD" -> OpenBSD
     | _         -> Unix
   end
   | "Win32"  -> Win32
