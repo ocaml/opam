@@ -252,7 +252,7 @@ let is_archive file =
 
 let extract file dst =
   log "untar %s" file;
-  let files = read_command_output [ "tar" ; "tf" ; file ] in
+  let files = read_command_output [ "tar" ; "ztf" ; file ] in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
   mkdir tmp_dir;
   let err =
@@ -358,8 +358,10 @@ let ocaml_version () =
 
 (* Only used by the compiler switch stuff *)
 let download src dst =
-  let cmd = match Globals.os with
-    | Globals.Darwin -> [ "curl"; "-OL"; src ]
+  let cmd =
+    let open Globals in
+    match os with
+    | Darwin | OpenBSD | FreeBSD -> [ "curl"; "-OL"; src ]
     | _              -> [ "wget"; src ] in
   mkdir tmp_dir;
   let e = in_dir tmp_dir (fun () -> command cmd) in

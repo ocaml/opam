@@ -74,9 +74,10 @@ let tmp_dir nv =
   Dirname.of_string tmp_dir0 / NV.to_string nv
 
 let wget src =
-  match Globals.os with
-  | Globals.Darwin -> [ "curl"; "-OL"; src ]
-  | _              -> [ "wget"; src ]
+  let open Globals in
+  match os with
+  | Darwin | FreeBSD | OpenBSD -> [ "curl"; "-OL"; src ]
+  | _ -> [ "wget"; src ]
 
 let archive_name src =
   let name = F.basename src in
