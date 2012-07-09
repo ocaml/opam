@@ -26,9 +26,6 @@ let rec mk_temp_dir str =
   else
     s
 
-let tmp_dir =
-  mk_temp_dir "run"
-
 let lock_file () =
   !Globals.root_path / "opam.lock"
 
@@ -148,6 +145,13 @@ let remove file =
   else
     remove_file file
 
+let create_tmp_dir f =
+  let dir = mk_temp_dir "run" in
+  List.iter (fun f -> f dir)
+    [ mkdir
+    ; f
+    ; remove_dir ]
+
 let getchdir s =
   let p = Unix.getcwd () in
   let () = chdir s in
@@ -250,11 +254,11 @@ let is_archive file =
     [ [ "tar.gz" ; "tgz" ], "z"
     ; [ "tar.bz2" ; "tbz" ], "j" ]
 
-let extract file dst =
+let extract o_tmp_dir file dst =
   log "untar %s" file;
   let files = read_command_output [ "tar" ; "tf" ; file ] in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
-  mkdir tmp_dir;
+  let f_tmp tmp_dir = 
   let err =
     match is_archive file with
     | Some f_cmd -> f_cmd tmp_dir
@@ -284,10 +288,10 @@ let extract file dst =
       | `file f ->
           mkdir (Filename.dirname dst);
           copy f dst
-    ) moves;
-    List.iter (function
-      | (`file f, _) -> remove f
-      | _ -> ()) moves
+    ) moves in
+  match o_tmp_dir with
+    | None -> create_tmp_dir f_tmp
+    | Some tmp_dir -> f_tmp tmp_dir
 
 let link src dst =
   log "linking %s to %s" src dst;
@@ -360,15 +364,17 @@ let download src dst =
   let cmd = match Globals.os with
     | Globals.Darwin -> [ "curl"; "-OL"; src ]
     | _              -> [ "wget"; src ] in
-  mkdir tmp_dir;
+  create_tmp_dir (fun tmp_dir ->
   let e = in_dir tmp_dir (fun () -> command cmd) in
   let tmp_file = tmp_dir / Filename.basename src in
   if e = 0 then
     if Filename.check_suffix src "tar.gz"
     || Filename.check_suffix src "tar.bz2" then
-      extract tmp_file dst
+      extract (Some tmp_dir) tmp_file dst
     else
-      copy tmp_file (dst / Filename.basename src)
+      copy tmp_file (dst / Filename.basename src))
+
+let extract = extract None
 
 let patch p =
   let err = command ["patch"; "-p0"; "-i"; p] in
