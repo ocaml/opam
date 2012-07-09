@@ -110,7 +110,7 @@ val flock: unit -> unit
 val funlock: unit -> unit
 
 (** Functional version of [flock / funlock] *)
-val with_flock: ('a -> 'b) -> 'a -> 'b
+val with_flock: (unit -> unit) -> unit
 
 (** {2 Function used only by the switch commnand} *)
 

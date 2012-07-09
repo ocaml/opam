@@ -339,12 +339,11 @@ let funlock () =
   end else
     Globals.error_and_exit "Cannot find %s" file
 
-let with_flock f x =
+let with_flock f =
   try
     flock ();
-    let r = f x in
+    f ();
     funlock ();
-    r
   with e ->
     funlock ();
     raise e

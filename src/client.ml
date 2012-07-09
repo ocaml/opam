@@ -1513,31 +1513,31 @@ let config request =
 
 let install name =
   check ();
-  Run.with_flock install name
+  Run.with_flock (fun () -> install name)
 
 let update () =
   check ();
-  Run.with_flock update ()
+  Run.with_flock update
 
 let upgrade () =
   check ();
-  Run.with_flock upgrade ()
+  Run.with_flock upgrade
 
 let upload u r =
   check ();
-  Run.with_flock upload u r
+  Run.with_flock (fun () -> upload u r)
 
 let remove name =
   check ();
-  Run.with_flock remove name
+  Run.with_flock (fun () -> remove name)
 
 let remote action =
   check ();
-  Run.with_flock remote action
+  Run.with_flock (fun () -> remote action)
 
-let switch oversion =
+let switch clone alias ocaml_version =
   check ();
-  Run.with_flock switch oversion
+  Run.with_flock (fun () -> switch clone alias ocaml_version)
 
 let compiler_list () =
   check ();
