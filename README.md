@@ -11,7 +11,7 @@ things, used by Debian to manage their packages.
 
 ### Compiling OPAM
 
-* To compile `opam`, simply run:
+To compile `opam`, simply run:
 
 ```
 make
@@ -21,6 +21,20 @@ This will fetch the necessary archives if they are not already
 downloaded and then build OPAM. If you just want to get the
 necessary dependencies without compiling the project, run
 `make clone`.
+
+### Installing OPAM
+
+To install opam in `/usr/local/bin` simply run:
+
+```
+sudo make install
+```
+
+If you want to install OPAM in a different path:
+
+```
+make BIN=$HOME/bin install
+```
 
 ### Using opam
 
