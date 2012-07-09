@@ -143,7 +143,11 @@ else
 	cd packages && \
 	$(OPAM) upload -opam P5.opam -descr P5/README -archive P5.tar.gz -repo $(REPO)
 endif
+ifeq ($(REPOKIND), server)
+	cp compilers/* $(OPAM_ROOT)/compilers/
+else
 	cp compilers/* $(OPAM_REPO)/compilers/
+endif
 	$(OPAM) update # update the list of available packages with the one being updated
 
 list:
