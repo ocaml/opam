@@ -1079,19 +1079,18 @@ let install names =
   let t = update_available_current (load_state ()) in
   let map_installed = NV.to_map t.installed in
 
-  (* Exit if at least one package is already installed *)
-  if N.Set.exists (fun name -> N.Map.mem name map_installed) names then (
-    N.Set.iter 
-      (fun name ->
-        Globals.msg
-          "Package %s is already installed (current version is %s)\n"
-          (N.to_string name)
-          (V.to_string (V.Set.choose_one (N.Map.find name map_installed))))
-      (N.Set.filter (fun name -> N.Map.mem name map_installed) names);
-    Globals.exit 1
-  );
+  let pkg_skip, pkg_new = N.Set.partition (fun name -> N.Map.mem name map_installed) names in
 
-  let pkg_new = Heuristic.nv_of_names t (N.Set.elements names) in
+  (* Display a message if at least one package is already installed *)
+  N.Set.iter 
+    (fun name ->
+      Globals.msg
+        "Package %s is already installed (current version is %s)\n"
+        (N.to_string name)
+        (V.to_string (V.Set.choose_one (N.Map.find name map_installed))))
+    pkg_skip;
+
+  let pkg_new = Heuristic.nv_of_names t (N.Set.elements pkg_new) in
   let pkg_installed = 
     N.Map.values (Heuristic.get_installed t (fun v set name -> V_any (name, set, v))) in
 
