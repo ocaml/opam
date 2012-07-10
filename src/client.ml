@@ -1091,6 +1091,32 @@ let install names =
     pkg_skip;
 
   let pkg_new = Heuristic.nv_of_names t (N.Set.elements pkg_new) in
+
+  (* Display a warning if at least one package contains
+     dependencies to some unknown packages *)
+  List.iter 
+    (let available = NV.to_map (get_available_current t) in
+     fun v_cstr ->
+       match
+         match v_cstr with
+           | V_any (_, _, Some _) -> None (* We skip. An already installed package satisfies the dependency property. *)
+           | V_any (n, s, None) -> Some (n, V.Set.choose s)
+           | V_eq (n, v) -> Some (n, v)
+       with
+         | None -> ()
+         | Some (n, v) -> 
+           let opam = File.OPAM.read (Path.G.opam t.global (NV.create n v)) in
+           let f_warn = 
+             List.iter
+               (fun ((n, _), _) -> 
+                 if not (N.Map.mem (N.of_string n) available) then
+                   Globals.warning "unknown package %S" n) in
+           List.iter (List.iter f_warn)
+             [ File.OPAM.depends opam
+             ; File.OPAM.depopts opam ];
+           f_warn (File.OPAM.conflicts opam))
+    pkg_new;
+
   let pkg_installed = 
     N.Map.values (Heuristic.get_installed t (fun v set name -> V_any (name, set, v))) in
 
