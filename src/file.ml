@@ -148,6 +148,23 @@ module Repo_index = struct
 
 end
 
+module Pinned = struct
+
+  let internal = "pinned"
+
+  type t = pin_option N.Map.t
+
+  let empty = N.Map.empty
+
+  let of_string filename str =
+    let m = Repo_index.of_string filename str in
+    N.Map.map pin_option_of_string m
+
+  let to_string filename map =
+    Repo_index.to_string filename (N.Map.map string_of_pin_option map)
+
+end
+
 module Repo_config = struct
 
   let internal = "repo-config"
@@ -1064,6 +1081,11 @@ end
 module Repo_index = struct
   include Repo_index
   include Make (Repo_index)
+end
+
+module Pinned = struct
+  include Pinned
+  include Make (Pinned)
 end
 
 module Repo_config = struct

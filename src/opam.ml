@@ -329,6 +329,24 @@ let switch =
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 
+(* opam pin [-list|-add <url>|-rm <url>] *)
+let pin =
+  let list = ref false in
+{
+  name     = "pin";
+  usage    = "<package> [<version>|<url>|none]";
+  synopsis = "Pin a given package to a specific version";
+  help     = "";
+  specs    = [
+    ("-list" ,   Arg.Set list,    " List the current status of pinned packages");
+  ];
+  anon;
+  main     = parse_args (function
+    | [] when !list    -> Client.pin_list ()
+    | [name; arg]      -> Client.pin { pin_package = N.of_string name; pin_arg = pin_option_of_string arg }
+    | _                -> bad_argument "pin" "Wrong arguments")
+}
+
 let commands = [
   init;
   list;
@@ -341,6 +359,7 @@ let commands = [
   remove;
   remote;
   switch;
+  pin;
 ]
 
 let () =

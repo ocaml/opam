@@ -94,6 +94,8 @@ module C = struct
 
   let config t n = config_dir t // (N.to_string n ^ ".config")
 
+  let pinned t = t // "pinned"
+
 end
 
 module G = struct

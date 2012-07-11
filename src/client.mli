@@ -68,3 +68,9 @@ val switch: bool -> Alias.t -> OCaml_V.t -> unit
 
 (** [compiler_list] list the available compiler descriptions *)
 val compiler_list: unit -> unit
+
+(** Pin a package to a specific version *)
+val pin: pin -> unit
+
+(** list the current pinned packages *)
+val pin_list: unit -> unit

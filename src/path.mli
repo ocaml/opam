@@ -101,6 +101,8 @@ module C: sig
   (** Configuration folder: {i $opam/$OVERSION/config} *)
   val config_dir: t -> dirname
 
+  (** Pinned package file *)
+  val pinned: t -> filename
 end
 
 (** Global state *)

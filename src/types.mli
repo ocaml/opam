@@ -405,8 +405,28 @@ type remote =
   | Add of repository
   | Rm of string
 
-(** Pretty-print *)
+(** Pretty-print or remote args *)
 val string_of_remote: remote -> string
+
+(** Pinned packages options *)
+type pin_option =
+  | Version of version
+  | Path of string
+  | Unpin
+
+(** Pinned packages *)
+type pin = {
+  pin_package: name;
+  pin_arg: pin_option;
+}
+
+(** Pretty-printing of pinned packages *)
+val string_of_pin: pin -> string
+
+(** Read pin options args *)
+val pin_option_of_string: string -> pin_option
+
+val string_of_pin_option: pin_option -> string
 
 (** Configuration requests *)
 type config_option = {

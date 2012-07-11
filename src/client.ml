@@ -46,6 +46,9 @@ type t = {
   (* ~/.opam/aliases *)
   aliases: (Alias.t * OCaml_V.t) list;
 
+  (* ~/.opam/$oversion/pinned *)
+  pinned: pin_option N.Map.t;
+
   (* ~/.opam/$oversion/installed contents *)
   installed: NV.Set.t;
 
@@ -96,9 +99,16 @@ let update_available_current t =
         current_ocaml_version t in
     let filter nv =
       let opam = File.OPAM.read (Path.G.opam t.global nv) in
-      match File.OPAM.ocaml_version opam with
-      | None       -> true
-      | Some (r,v) -> OCaml_V.compare ocaml_version r v in
+      let consistent_ocaml_version =
+        match File.OPAM.ocaml_version opam with
+        | None       -> true
+        | Some (r,v) -> OCaml_V.compare ocaml_version r v in
+      let consistent_pinned_version =
+        not (N.Map.mem (NV.name nv) t.pinned) ||
+        match N.Map.find (NV.name nv) t.pinned with
+        | Version v -> v = NV.version nv
+        | _         -> true (* any version is fine, as this will be overloaded on install *) in
+      consistent_ocaml_version && consistent_pinned_version in
     Some (NV.Set.filter filter t.available) }
 
 let get_available_current t = 
@@ -118,6 +128,7 @@ let load_state () =
   let repositories = File.Config.repositories config in
   let repositories = List.map (fun r -> r, Path.R.create r) repositories in
   let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
+  let pinned = File.Pinned.safe_read (Path.C.pinned compiler) in
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
   let available = Path.G.available global in
@@ -125,7 +136,7 @@ let load_state () =
   let t = {
     global; compiler; repositories;
     available; available_current; installed; reinstall;
-    repo_index; config; aliases;
+    repo_index; config; aliases; pinned;
   } in
   print_state t;
   t
@@ -159,14 +170,17 @@ let find_available_package_by_name t name =
   else
     Some s
 
-let print_updated t updated =
-  if not (NV.Set.is_empty updated) then
+let print_updated t updated pinned_updated =
+  if not (NV.Set.is_empty updated) && not (NV.Set.is_empty pinned_updated) then
     Globals.msg "New packages available:\n";
   NV.Set.iter (fun nv ->
     Globals.msg " - %s%s\n"
       (NV.to_string nv)
       (if NV.Set.mem nv t.installed then " (*)" else "")
-  ) updated
+  ) updated;
+  NV.Set.iter (fun nv ->
+    Globals.msg " - %s(+)\n" (N.to_string (NV.name nv))
+  ) pinned_updated
 
 let print_compilers compilers repo =
   let repo_compilers = Path.R.compiler_list repo in
@@ -223,29 +237,57 @@ let update () =
   (* Display the new compilers available *)
   List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
 
+  (* Update the pinned packages *)
+  let pinned_updated =
+    NV.Set.of_list (
+      Utils.filter_map
+        (function
+          | n, Path p ->
+              if mem_installed_package_by_name t n then
+                let nv = find_installed_package_by_name t n in
+                let build = Path.C.build t.compiler nv in
+                if Dirname.exists build then
+                  let o =
+                    Run.read_command_output
+                      [ "rsync"; "-arv"; "--delete"; p; Dirname.to_string build ] in
+                  if List.length o > 4 then
+                    Some nv
+                  else
+                    None
+                else
+                  None
+              else
+                None
+          | _ -> None)
+        (N.Map.bindings t.pinned)) in
+
   (* then update $opam/repo/index *)
   update_repo_index t;
 
-  let updated = 
-    List.rev_map (fun (_,p) ->
+  let updated =
+    List.fold_left (fun accu (_,p) ->
       let updated = File.Updated.safe_read (Path.R.updated p) in
-      print_updated t updated;
-      updated;
-    ) t.repositories in  
+      (* we do not try to upgrade pinned packages *)
+      let updated =
+        NV.Set.filter (fun nv -> NV.Set.for_all (fun nvp -> NV.name nvp = NV.name nv) pinned_updated) updated in
+      NV.Set.union updated accu;
+    ) NV.Set.empty t.repositories in  
+
+  print_updated t updated pinned_updated;
+
+  let updated = NV.Set.union pinned_updated updated in
 
   (* update $opam/$oversion/reinstall *)
   Path.G.fold_compiler (fun () compiler ->
     let installed = File.Installed.safe_read (Path.C.installed compiler) in
     let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
     let reinstall = 
-      List.fold_left (fun reinstall updated -> 
-        NV.Set.fold (fun nv reinstall ->
-          if NV.Set.mem nv installed then
-            NV.Set.add nv reinstall
-          else
-            reinstall
-        ) updated reinstall
-      ) reinstall updated in
+      NV.Set.fold (fun nv reinstall ->
+        if NV.Set.mem nv installed then
+          NV.Set.add nv reinstall
+        else
+          reinstall
+      ) updated reinstall in
     if not (NV.Set.is_empty reinstall) then
       File.Reinstall.write (Path.C.reinstall compiler) reinstall
   ) () t.global;
@@ -791,6 +833,15 @@ let print_env env =
     Globals.msg "%s=%s\n" k v
   ) env.new_env
 
+let pinned_path t nv =
+  let name = NV.name nv in
+  if N.Map.mem name t.pinned then
+    match N.Map.find name t.pinned with
+    | Path p -> Some p
+    | _      -> None
+  else
+    None
+
 let proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with
@@ -800,7 +851,15 @@ let proceed_tochange t nv_old nv =
   (* Then, untar the archive *)
   let p_build = Path.C.build t.compiler nv in
   Dirname.rmdir p_build;
-  Filename.extract (get_archive t nv) p_build;
+  (match pinned_path t nv with
+  | None   -> Filename.extract (get_archive t nv) p_build
+  | Some p ->
+      log "rsyncing locally instead of downloading the archive";
+      Dirname.mkdir p_build;
+      let err = Dirname.exec p_build [ ["rsync"; "-ar"; p; "."] ] in
+      log "rsync should be done";
+      if err <> 0 then
+        Globals.error_and_exit "Cannot rsync with %s" p);
 
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
 
@@ -1426,6 +1485,30 @@ let remote action =
         ) t.repo_index N.Map.empty in
         File.Repo_index.write (Path.G.repo_index t.global) repo_index;
       Dirname.rmdir (Path.R.root (Path.R.create repo))
+
+let pin action =
+  log "pin %s" (string_of_pin action);
+  let t = load_state () in
+  let pin_f = Path.C.pinned t.compiler in
+  let pins = File.Pinned.safe_read pin_f in
+  let update_config pins = File.Pinned.write pin_f pins in
+  let name = action.pin_package in
+  match action.pin_arg with
+  | Unpin  -> update_config (N.Map.remove name pins)
+  | Version _ | Path _ ->
+      if N.Map.mem name pins then
+        Globals.error_and_exit "%s is already associated to %s"
+          (N.to_string name)
+          (string_of_pin_option action.pin_arg);
+      log "Adding %s => %s" (string_of_pin_option action.pin_arg) (N.to_string name);
+      update_config (N.Map.add name action.pin_arg pins)
+
+let pin_list () =
+  log "pin_list";
+  let t = load_state () in
+  let pins = File.Pinned.safe_read (Path.C.pinned t.compiler) in
+  let print n a = Globals.msg "%-20s %s\n" (N.to_string n) (string_of_pin_option a) in
+  N.Map.iter print pins
 
 let compiler_list () =
   log "compiler_list";

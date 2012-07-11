@@ -323,6 +323,9 @@ module Repo_index: IO_FILE with type t = string N.Map.t
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
 
+(** Pinned package files *)
+module Pinned: IO_FILE with type t = pin_option N.Map.t
+
 (** {2 Substitution files} *)
 
 (** Substitution files *)
