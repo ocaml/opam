@@ -791,7 +791,7 @@ let print_env env =
     Globals.msg "%s=%s\n" k v
   ) env.new_env
 
-let proceed_tochange t nv_old nv =
+let rec proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
   (match nv_old with
   | Some nv_old -> proceed_todelete t nv_old
@@ -835,10 +835,22 @@ let proceed_tochange t nv_old nv =
   if err = 0 then
     try proceed_toinstall t nv
     with e ->
+      Globals.error "while copying some files of %S" (NV.to_string nv);
       proceed_todelete t nv;
       raise e
   else (
     proceed_todelete t nv;
+    (match nv_old with 
+      | Some nv_old -> 
+        if nv_old = nv then 
+          Globals.error "Recompilation failed" 
+        else 
+          (* try to restore the previous erased [nv_old] version *)
+          (try proceed_tochange t None nv_old with
+            | _ -> 
+              Globals.error "Restoration of previous version failed" 
+                (* determine if it is because some dependencies have been deleted or not... *))
+      | None -> ());
     Globals.error_and_exit
       "Compilation failed with error %d" err
   )
@@ -1005,7 +1017,7 @@ module Heuristic = struct
           let f msg nv =
             Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
           match action n with
-          | To_change (Some _, nv) -> f "upgrading" nv
+          | To_change (Some _, nv) -> f "upgrading/downgrading" nv
           | To_change (None, nv)   -> f "installing" nv
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
