@@ -217,7 +217,6 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
         Globals.error "Command %S failed (see %s.{info,err,out})" str name;
         List.iter (Globals.msg "%s\n") r.Process.r_stdout;
         List.iter (Globals.msg "%s\n") r.Process.r_stderr;
-        Globals.exit r.Process.r_code
       ) else if not !Globals.debug then
         Process.clean_files r;
       r
@@ -239,6 +238,7 @@ let commands ?(add_to_env=[]) ?(add_to_path = []) =
 
 let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ~add_to_env ~add_to_path cmd in
+  if Process.is_failure r then Globals.exit r.Process.r_code;
   r.Process.r_stdout
 
 let is_archive file =
