@@ -411,7 +411,7 @@ val string_of_remote: remote -> string
 (** Pinned packages options *)
 type pin_option =
   | Version of version
-  | Path of string
+  | Path of dirname
   | Unpin
 
 (** Pinned packages *)

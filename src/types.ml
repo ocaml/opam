@@ -704,14 +704,15 @@ type config_option = {
 
 type pin_option =
   | Version of version
-  | Path of string
+  | Path of dirname
   | Unpin
 
 let pin_option_of_string s =
+  let d = Run.real_path s in
   if s = "none" then
     Unpin
-  else if String.length s > 1 && s.[0] = '/' then
-    Path s
+  else if String.length d > 1 && d.[0] = '/' then
+    Path (Dirname.of_string s)
   else
     Version (V.of_string s)
     
@@ -722,7 +723,7 @@ type pin = {
 
 let string_of_pin_option = function
   | Version v -> V.to_string v
-  | Path p    -> p
+  | Path p    -> Dirname.to_string p
   | Unpin     -> "none"
 
 let string_of_pin p =

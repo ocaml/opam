@@ -249,7 +249,7 @@ let update () =
                 if Dirname.exists build then
                   let o =
                     Run.read_command_output
-                      [ "rsync"; "-arv"; "--delete"; p; Dirname.to_string build ] in
+                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p; Dirname.to_string build ] in
                   if List.length o > 4 then
                     Some nv
                   else
@@ -856,10 +856,10 @@ let rec proceed_tochange t nv_old nv =
   | Some p ->
       log "rsyncing locally instead of downloading the archive";
       Dirname.mkdir p_build;
-      let err = Dirname.exec p_build [ ["rsync"; "-ar"; p; "."] ] in
+      let err = Dirname.exec p_build [ ["rsync"; "-ar"; Dirname.to_string p; "."] ] in
       log "rsync should be done";
       if err <> 0 then
-        Globals.error_and_exit "Cannot rsync with %s" p);
+        Globals.error_and_exit "Cannot rsync with %s" (Dirname.to_string p));
 
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
 
