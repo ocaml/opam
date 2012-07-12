@@ -54,13 +54,13 @@ module PA_graph = struct
     type t = package_action
 
     let compare t1 t2 =
-      Algo.Defaultgraphs.PackageGraph.PkgV.compare t1.cudf t2.cudf
+      Algo.Defaultgraphs.PkgV.compare t1.cudf t2.cudf
 
     let hash t =
-      Algo.Defaultgraphs.PackageGraph.PkgV.hash t.cudf
+      Algo.Defaultgraphs.PkgV.hash t.cudf
 
     let equal t1 t2 =
-      Algo.Defaultgraphs.PackageGraph.PkgV.equal t1.cudf t2.cudf
+      Algo.Defaultgraphs.PkgV.equal t1.cudf t2.cudf
 
   end
 
@@ -204,13 +204,17 @@ let string_of_universe u =
     
 module CudfDiff : sig
 
+  type answer = Cudf.package internal_action list
+
   val resolve_diff :
     Cudf.universe ->
     Cudf_types.vpkg internal_request ->
-    Cudf.package internal_action list option
+    answer list option
 
 end = struct
     
+  type answer = Cudf.package internal_action list
+
   module Cudf_set = struct
 
     include Common.CudfAdd.Cudf_set
@@ -237,7 +241,7 @@ end = struct
       req_extra = [] }
 
   let cudf_resolve univ req = 
-    log "(INTERNAL) universe=%s request=<%s>"
+    log "INTERNAL(cudf_resolve) universe=%s request=<%s>"
       (string_of_universe univ)
       (string_of_internal_request string_of_cudf req);
     let open Algo in
@@ -255,11 +259,14 @@ end = struct
     match cudf_resolve univ_init req with
     | None   -> None
     | Some l ->
+      log "INTERNAL(resolve) %s" (String.concat " " (List.map string_of_cudf_package l));
         try 
           let diff = Common.CudfDiff.diff univ_init (Cudf.load_universe l) in
-          Some (f_diff diff)
+          Some [f_diff diff]
         with
-          Cudf.Constraint_violation _ -> None
+          Cudf.Constraint_violation _ -> 
+            log "INTERNAL(resolve) constraint violation";
+            None
 
   let resolve_diff =
     let f_diff diff =
@@ -459,10 +466,7 @@ struct
                  | _   -> failwith "TODO"
                ) req) in
 
-        match sol_o with
-        | None   -> None
-        | Some l ->
-
+        let action_of_answer l =
             let l_s =
               String.concat " "
                 (List.map (string_of_internal_action string_of_cudf_package)  l) in
@@ -536,9 +540,13 @@ struct
                   ())
               graph_toinstall;
             PA_graph.iter_update_reinstall reinstall graph;
-            Some { to_remove = List.rev_map package_map 
-                     (topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del)
-                 ; to_add = graph })
+            { to_remove = List.rev_map package_map 
+                (topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del)
+            ; to_add = graph } in
+
+        match sol_o with
+        | None   -> []
+        | Some l -> (* [l] is not empty *) List.map action_of_answer l)
 
 end
 

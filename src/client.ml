@@ -1025,7 +1025,14 @@ module Heuristic = struct
         let cores = File.Config.cores t.config in
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
-      )
+      );
+      continue
+
+  let apply_solutions t = 
+    let rec aux = function
+      | x :: xs when not (apply_solution t x) -> aux xs
+      | _ -> () in
+    aux
 
   let resolve action_k t l_request =
     let available = get_available_current t in
@@ -1042,8 +1049,8 @@ module Heuristic = struct
                   request
                   (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
              with
-               | None     -> let _ = log "heuristic with no solution" in None
-               | Some sol -> Some (apply_solution t sol))
+               | []  -> let _ = log "heuristic with no solution" in None
+               | sol -> Some (apply_solutions t sol))
           | Some acc -> fun _ -> Some acc) None l_request
     with
       | None -> Globals.msg "No solution has been found.\n"
