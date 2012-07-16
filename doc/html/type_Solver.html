@@ -178,7 +178,7 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;packages&nbsp;=&nbsp;<span class="constructor">P</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;option<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_backward_dependencies&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_forward_dependencies&nbsp;:<br>
