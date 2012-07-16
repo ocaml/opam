@@ -788,7 +788,7 @@ let get_env t =
 
 let print_env env =
   List.iter (fun (k,v) ->
-    Globals.msg "%s=%s\n" k v
+    Globals.msg "%s=%s; export %s;\n" k v k;
   ) env.new_env
 
 let rec proceed_tochange t nv_old nv =
