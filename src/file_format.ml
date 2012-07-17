@@ -351,3 +351,16 @@ let make_constraint (r, v) =
     Symbol (string_of_relop r);
     String (Types.OCaml_V.to_string v);
   ]
+
+let parse_env_variable v =
+  let l = parse_sequence [
+    ("ident" , parse_ident);
+    ("symbol", parse_symbol);
+    ("string", parse_string);
+  ] v in
+  match l with
+  | [ident; symbol; string] -> (ident, symbol, string)
+  | _ -> assert false
+
+let make_env_variable (ident, symbol, string) =
+  List [make_ident ident; make_symbol symbol; make_string string]

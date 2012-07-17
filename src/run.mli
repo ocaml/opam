@@ -63,6 +63,9 @@ val rec_files: string -> string list
     compiler is present in the path, then it returns [None]. *)
 val ocaml_version: unit -> string option
 
+(** Return the path where ocamlc library is installed *)
+val ocamlc_where: unit -> string option
+
 (** [files dir] returns the directories in the directory [dir] *)
 val directories: string -> string list
 

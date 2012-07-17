@@ -429,7 +429,13 @@ let create_default_compiler_description t =
         [ mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
        else
         [])
-      [ ("CAML_LD_LIBRARY_PATH", "+=", Dirname.to_string (Path.C.stublibs t.compiler))] in
+      [ ("CAML_LD_LIBRARY_PATH", "+=",
+           (Dirname.to_string (Path.C.stublibs t.compiler))
+           ^ ":" ^
+           (match Run.ocamlc_where () with
+           | Some d -> Stdlib_filename.concat d "stublibs"
+           | None   -> assert false))
+      ] in
   let comp = Path.G.compiler t.global ocaml_version in
   File.Comp.write comp f
 
@@ -815,22 +821,29 @@ let get_archive t nv =
 type env = {
   add_to_env : (string * string) list;
   add_to_path: dirname;
-  old_env    : (string * string) list;
   new_env    : (string * string) list;
 }
 
 let expand_env t env =
   List.map (fun (ident, symbol, string) ->
     let string = substitute_string t string in
-    let clean_env () = try Utils.reset_env_value (Sys.getenv ident) with _ -> [] in
+    let read_env () =
+      let prefix = Dirname.to_string (Path.C.root t.compiler) in
+      try Utils.reset_env_value ~prefix (Sys.getenv ident)
+      with _ -> [] in
     match symbol with
     | "="  -> (ident, string)
-    | "+=" -> (ident, String.concat ":" (string :: clean_env ()))
-    | "=+" -> (ident, String.concat ":" (clean_env () @ [string]))
+    | "+=" -> (ident, String.concat ":" (string :: read_env ()))
+    | "=+" -> (ident, String.concat ":" (read_env () @ [string]))
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
-(* XXX: We should get the ones defined in the dependents packages as well *)
+let update_env t env e =
+  let expanded = expand_env t e in
+  { env with
+    add_to_env = expanded @ env.add_to_env;
+    new_env    = expanded @ env.new_env }
+
 let get_env t =
   let ocaml_version = current_ocaml_version t in 
   let comp_f = Path.G.compiler t.global ocaml_version in
@@ -838,17 +851,14 @@ let get_env t =
 
   let add_to_path = Path.C.bin t.compiler in
   let new_path = "PATH", "+=", Dirname.to_string add_to_path in
+
   let add_to_env = File.Comp.env comp in
   let new_env = new_path :: add_to_env in
 
-  let old_path = "PATH", "=", try Sys.getenv "PATH" with _ -> "" in
-  let old_env = old_path :: List.map (fun (k,_,_) -> k, "=", try Sys.getenv k with _ -> "") add_to_env in
-
   let add_to_env = expand_env t add_to_env in
-  let old_env = expand_env t old_env in
   let new_env = expand_env t new_env in
 
-  { add_to_env; add_to_path; old_env; new_env }
+  { add_to_env; add_to_path; new_env }
 
 let print_env env =
   List.iter (fun (k,v) ->
@@ -858,11 +868,11 @@ let print_env env =
 let pinned_path t nv =
   let name = NV.name nv in
   if N.Map.mem name t.pinned then
-    match N.Map.find name t.pinned with
-    | Path p -> Some p
-    | _      -> None
+  match N.Map.find name t.pinned with
+  | Path p -> Some p
+  | _      -> None
   else
-    None
+  None
 
 let rec proceed_tochange t nv_old nv =
   (* First, uninstall any previous version *)
@@ -892,13 +902,12 @@ let rec proceed_tochange t nv_old nv =
   List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Get the env variables set up in the compiler description file *)
-  let env = get_env t in
+  let env0 = get_env t in
+  let env = update_env t env0 (File.OPAM.build_env opam) in
 
   (* Generate an environnement file *)
   let env_f = Path.C.build_env t.compiler nv in
   File.Env.write env_f env.new_env;
-  let old_env_f = Path.C.build_old_env t.compiler nv in
-  File.Env.write old_env_f env.old_env;
 
   (* Call the build script and copy the output files *)
   let commands = List.map (List.map (substitute_string t))

@@ -341,6 +341,7 @@ module OPAM = struct
     version    : V.t;
     maintainer : string;
     substs     : basename list;
+    build_env  : (string * string * string) list;
     build      : string list list;
     remove     : string list list;
     depends    : cnf_formula;
@@ -357,6 +358,7 @@ module OPAM = struct
     version    = V.of_string "<none>";
     maintainer = "<none>";
     substs     = [];
+    build_env  = [];
     build      = [];
     remove     = [];
     depends    = [];
@@ -377,6 +379,7 @@ module OPAM = struct
   let s_maintainer  = "maintainer"
   let s_substs      = "substs"
   let s_build       = "build"
+  let s_build_env   = "build-env"
   let s_remove      = "remove"
   let s_depends     = "depends"
   let s_depopts     = "depopts"
@@ -408,6 +411,7 @@ module OPAM = struct
     s_libraries;
     s_syntax;
     s_ocaml_version;
+    s_build_env;
   ]
 
   let valid_fields =
@@ -429,6 +433,7 @@ module OPAM = struct
   let libraries t = t.libraries
   let syntax t = t.syntax
   let ocaml_version t = t.ocaml_version
+  let build_env t = t.build_env
 
   let with_depends t depends = { t with depends }
   let with_build t build = { t with build }
@@ -470,6 +475,7 @@ module OPAM = struct
             Variable (s_version, String (V.to_string t.version));
             Variable (s_maintainer, String t.maintainer);
             Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
+            Variable (s_build_env, make_list make_env_variable t.build_env);
             Variable (s_build, make_list (make_list make_string) t.build);
             Variable (s_remove, make_list (make_list make_string) t.remove);
             Variable (s_depends, make_cnf_formula t.depends);
@@ -511,6 +517,7 @@ module OPAM = struct
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
+    let build_env = assoc_list s s_build_env (parse_list parse_env_variable) in
     let build      =
       assoc_default Globals.default_build_command s s_build parse_commands in
     let remove     = assoc_list s s_remove parse_commands in
@@ -527,7 +534,7 @@ module OPAM = struct
       ) s in
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
-      ocaml_version; }
+      ocaml_version; build_env }
 end
 
 module Dot_install_raw = struct
@@ -912,15 +919,6 @@ module Comp = struct
       ("camlp4"     , parse_camlp4);
       ("string-list", parse_string_list |> fun x -> Some (Cmd x));
     ] in
-    let parse_env_variable v =
-      let l = parse_sequence [
-        ("ident" , parse_ident);
-        ("symbol", parse_symbol);
-        ("string", parse_string)
-      ] v in
-      match l with
-      | [ident; symbol; string] -> (ident, symbol, string)
-      | _ -> assert false in
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
@@ -958,8 +956,6 @@ module Comp = struct
     let make_ppflag = function
       | Cmd l    -> make_list make_string l
       | Camlp4 l -> List (Symbol "CAMLP4" :: List.map make_string l) in
-    let make_env_variable (ident, symbol, string) =
-      List [make_ident ident; make_symbol symbol; make_string string] in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [

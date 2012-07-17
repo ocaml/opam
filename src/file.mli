@@ -95,6 +95,9 @@ module OPAM: sig
   (** File substitutions *)
   val substs: t -> basename list
 
+  (** List of environment variables to set-up for the build *)
+  val build_env: t -> (string * string * string) list
+
   (** List of command to run for building the package *)
   val build: t -> string list list
 

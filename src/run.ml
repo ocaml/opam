@@ -192,7 +192,7 @@ let replace_path bins =
       | Some (k,v) -> k,v
       | None       -> assert false in
     if k = "PATH" then
-    let v = Utils.reset_env_value v in
+    let v = Utils.split v ':' in
     let bins = List.filter Sys.file_exists bins in
     let new_path = String.concat ":" (bins @ v) in
     env.(i) <- "PATH=" ^ new_path;
@@ -355,6 +355,13 @@ let with_flock f =
 let ocaml_version () =
   try
     let s = read_command_output [ "ocamlc" ; "-version" ] in
+    Some (Utils.string_strip (List.hd s))
+  with _ ->
+    None
+
+let ocamlc_where () =
+  try
+    let s = read_command_output [ "ocamlc"; "-where" ] in
     Some (Utils.string_strip (List.hd s))
   with _ ->
     None
