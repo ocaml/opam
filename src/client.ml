@@ -213,6 +213,8 @@ let install_conf_ocaml () =
         ("lib", Path.C.lib_dir t.compiler);
         ("bin", Path.C.bin t.compiler);
         ("doc", Path.C.doc_dir t.compiler);
+        ("stublibs", Path.C.stublibs t.compiler);
+        ("toplevel", Path.C.toplevel t.compiler);
       ]
     @ 
     map (fun x -> x)
@@ -230,7 +232,10 @@ let install_conf_ocaml () =
   File.Installed.write installed_p installed;
   (* stublibs *)
   let stublibs = Path.C.stublibs t.compiler in
-  Dirname.mkdir stublibs
+  Dirname.mkdir stublibs;
+  (* toplevel dir *)
+  let toplevel = Path.C.toplevel t.compiler in
+  Dirname.mkdir toplevel
 
 let update_repo_index t =
 

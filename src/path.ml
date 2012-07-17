@@ -62,6 +62,8 @@ module C = struct
 
   let stublibs t = lib_dir t / "stublibs"
 
+  let toplevel t = lib_dir t / "toplevel"
+
   let doc_dir t = t / "doc"
 
   let doc t n = doc_dir t / N.to_string n

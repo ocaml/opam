@@ -39,6 +39,9 @@ module C: sig
   (** DLL paths *)
   val stublibs: t -> dirname
 
+  (** toplevel path: {i $opam/$OVERSION/lib/toplevel} *)
+  val toplevel: t -> dirname
+
   (** Documentation path for a given package:
       {i $opam/$OVERSION/doc/NAME} *)
   val doc: t -> N.t -> dirname
