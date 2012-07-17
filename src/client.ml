@@ -773,6 +773,7 @@ let proceed_todelete t nv =
 
   (* Remove the libraries *)
   Dirname.rmdir (Path.C.lib t.compiler name);
+  Dirname.rmdir (Path.C.build t.compiler nv);
 
   (* Remove the binaries *)
   let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in

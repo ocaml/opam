@@ -1,3 +1,11 @@
+0.3 [July 2012]
+* improve parallel compilation of packages
+* better recovery on compilation/installation errors
+* first draft of version pinnig
+* fix 'opam config -env' for old shells
+* install the latest version of packages when possible
+* more robust 'opam update' (ie. old files are gc-ed)
+
 0.2 [July 2012]
 * more robust switch command
 * more robust parallel build (not yet activated by default)
