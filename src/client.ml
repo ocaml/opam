@@ -849,7 +849,7 @@ let update_env t env e =
     new_env    = expanded @ env.new_env }
 
 let get_env t =
-  let ocaml_version = current_ocaml_version t in 
+  let ocaml_version = current_ocaml_version t in
   let comp_f = Path.G.compiler t.global ocaml_version in
   let comp = File.Comp.read comp_f in
 
@@ -857,7 +857,9 @@ let get_env t =
   let new_path = "PATH", "+=", Dirname.to_string add_to_path in
 
   let add_to_env = File.Comp.env comp in
-  let new_env = new_path :: add_to_env in
+  let toplevel_dir =
+    "OCAML_TOPLEVEL_PATH", "=", Dirname.to_string (Path.C.toplevel t.compiler) in
+  let new_env = new_path :: toplevel_dir :: add_to_env in
 
   let add_to_env = expand_env t add_to_env in
   let new_env = expand_env t new_env in
