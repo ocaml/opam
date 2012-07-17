@@ -257,6 +257,9 @@ module Dot_install: sig
   (** List of files to install in $bin/ *)
   val bin:  t -> (filename * basename) list
 
+  (** List of toplevel files *)
+  val toplevel: t -> filename list
+
   (** List of other files to install *)
   val misc: t -> (filename * filename) list
 

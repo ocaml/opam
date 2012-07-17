@@ -544,11 +544,13 @@ module Dot_install_raw = struct
   type t =  {
     lib : string list ;
     bin : (string * string option) list ;
+    toplevel: string list;
     misc: (string * string option) list ;
   }
 
   let lib t = t.lib
   let bin t = t.bin
+  let toplevel t = t.toplevel
   let misc t = t.misc
 
   let with_bin t bin = { t with bin }
@@ -556,17 +558,20 @@ module Dot_install_raw = struct
   let empty = {
     lib  = [] ;
     bin  = [] ;
+    toplevel = [] ;
     misc = [] ;
   }
 
   let s_lib = "lib"
   let s_bin = "bin"
   let s_misc = "misc"
+  let s_toplevel = "toplevel"
 
   let valid_fields = [
     s_opam_version;
     s_lib;
     s_bin;
+    s_toplevel;
     s_misc;
   ]
 
@@ -579,6 +584,7 @@ module Dot_install_raw = struct
       contents = [
         Variable (s_lib , make_list make_string t.lib);
         Variable (s_bin , make_list make_option t.bin);
+        Variable (s_toplevel, make_list make_string t.toplevel);
         Variable (s_misc, make_list make_option t.misc);
       ]
     } in
@@ -589,8 +595,9 @@ module Dot_install_raw = struct
     Syntax.check s valid_fields;
     let lib = assoc_list s.contents s_lib (parse_list parse_string) in
     let bin = assoc_list s.contents s_bin (parse_list (parse_string_option parse_single_string)) in
+    let toplevel = assoc_list s.contents s_toplevel (parse_list parse_string) in
     let misc = assoc_list s.contents s_misc (parse_list (parse_string_option parse_single_string)) in
-    { lib; bin; misc }
+    { lib; bin; misc; toplevel }
 
 end
 
@@ -601,6 +608,7 @@ module Dot_install = struct
   type t =  {
     lib : filename list ;
     bin : (filename * basename) list ;
+    toplevel : filename list;
     misc: (filename * filename) list ;
   }
 
@@ -612,12 +620,14 @@ module Dot_install = struct
   let lib t = t.lib
   let bin t = t.bin
   let misc t = t.misc
+  let toplevel t = t.toplevel
 
   module R = Dot_install_raw
 
   let empty = {
     lib  = [] ;
     bin  = [] ;
+    toplevel = [];
     misc = [] ;
   }
 
@@ -631,6 +641,7 @@ module Dot_install = struct
     R.to_string filename
       { lib = List.map Filename.to_string t.lib
       ; bin = List.map to_bin t.bin
+      ; toplevel = List.map Filename.to_string t.toplevel
       ; R.misc = List.map to_misc t.misc }
 
   let of_string filename str =
@@ -643,6 +654,7 @@ module Dot_install = struct
       | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
     { lib = List.map Filename.of_string t.R.lib
     ; bin = List.map of_bin t.R.bin
+    ; toplevel = List.map Filename.of_string t.R.toplevel
     ; misc = List.map of_misc t.R.misc }
 
 end

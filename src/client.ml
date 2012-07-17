@@ -744,6 +744,10 @@ let proceed_toinstall t nv =
   let lib = Path.C.lib t.compiler name in
   List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
 
+  (* toplevel *)
+  let toplevel = Path.C.toplevel t.compiler in
+  List.iter (fun f -> Filename.copy_in f toplevel) (File.Dot_install.toplevel install);
+
   (* bin *)
   List.iter (fun (src, dst) ->
     let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
