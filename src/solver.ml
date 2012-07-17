@@ -282,9 +282,18 @@ end = struct
 
         let rec aux nb_iter univ l_ans req ans =
           match
+            (** partition [ans] so that we have one group of packages with version increase-able *)
             List.partition
               (function
-                | I_to_change (None, p) -> List.exists (fun (p_wish, _) -> p.Cudf.package = p_wish) req
+                | I_to_change (None, p) -> 
+                    (match 
+                        (** determine if [p] belongs to [req] *)
+                        try Some (List.find (fun (wish_name, _) -> p.Cudf.package = wish_name) req) with Not_found -> None
+                     with
+                       | None -> false
+                       | Some (_, wish_version) -> 
+                           (** determine if the user has put a constraint on the package associated to [p] in [req] *) 
+                           wish_version <> None)
                 | I_to_change (Some _, _)
                 | I_to_delete _
                 | I_to_recompile _ -> true) 
