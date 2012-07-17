@@ -324,7 +324,22 @@ module V: Abstract = Base
 type version = V.t
 
 (* Names *)
-module N: Abstract = Base
+module N: Abstract = struct
+  type t = string
+  let of_string x = x
+  let to_string x = x
+  module O = struct
+    type t = string
+    let to_string = to_string
+    let compare n1 n2 = 
+      match compare (String.lowercase n1) (String.lowercase n2) with
+        | 0 -> compare n1 n2
+        | i -> i
+  end
+  module Set = Set.Make(O)
+  module Map = Map.Make(O)
+end
+
 type name = N.t
 
 module NV: sig
