@@ -5,6 +5,7 @@
 * fix 'opam config -env' for old shells
 * install the latest version of packages when possible
 * more robust 'opam update' (ie. old files are gc-ed)
+* add a (more or less) generic way to install and use topfind
 
 0.2 [July 2012]
 * more robust switch command
