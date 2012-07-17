@@ -303,14 +303,23 @@ let install_conf_ocaml () =
   let descr = File.Descr.create "Compiler configuration flags" in
   File.Descr.write (Path.G.descr t.global nv) descr;
   (* .config *)
-  let vars = List.map
-    (fun (s,p) -> Variable.of_string s, S (Dirname.to_string p))
-    [
-      ("prefix", Path.C.root t.compiler);
-      ("lib", Path.C.lib_dir t.compiler);
-      ("bin", Path.C.bin t.compiler);
-      ("doc", Path.C.doc_dir t.compiler);
-    ] in
+  let vars = 
+    let map f l = List.map (fun (s,p) -> Variable.of_string s, S (f p)) l in
+
+    map Dirname.to_string
+      [
+        ("prefix", Path.C.root t.compiler);
+        ("lib", Path.C.lib_dir t.compiler);
+        ("bin", Path.C.bin t.compiler);
+        ("doc", Path.C.doc_dir t.compiler);
+      ]
+    @ 
+    map (fun x -> x)
+      [
+        ("user", (Unix.getpwuid (Unix.getuid ())).Unix.pw_name);
+        ("group", (Unix.getgrgid (Unix.getgid ())).Unix.gr_name);
+      ] in
+
   let config = File.Dot_config.create vars in
   File.Dot_config.write (Path.C.config t.compiler name) config;
   (* installed *)
