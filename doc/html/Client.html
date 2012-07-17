@@ -41,8 +41,10 @@ Initializes the client a consistent state.
 </ul>
 <br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">unit -> unit</code></pre><div class="info">
-Displays all available packages<br>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">bool -> unit</code></pre><div class="info">
+Displays all available packages. 
+    If <code class="code">bool</code> is <code class="code">true</code>, then we only display 
+    packages that are known to exist.<br>
 </div>
 <pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">Types.N.t -> unit</code></pre><div class="info">
 Displays a general summary of a package.<br>

@@ -81,9 +81,13 @@ type universe = U of package list
 type packages = P of package list
 
 (** Given a description of packages, return a solution preserving the
-    consistency of the initial description.  [None] : No solution
-    found. The last argument is the set of packages to reinstall. *)
-val resolve : universe -> request -> NV.Set.t -> solution option
+    consistency of the initial description.  An empty [list] : No solution
+    found. The last argument is the set of packages to reinstall.
+
+    Every element in the solution [list] satisfies the problem given.
+    For the ordering, the first element in the list
+    is obtained by upgrading from its next element. *)
+val resolve : universe -> request -> NV.Set.t -> solution list
 
 (** Return the recursive dependencies of a package Note : the given
     package exists in the list in input because this list describes

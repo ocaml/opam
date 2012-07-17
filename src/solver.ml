@@ -54,13 +54,13 @@ module PA_graph = struct
     type t = package_action
 
     let compare t1 t2 =
-      Algo.Defaultgraphs.PackageGraph.PkgV.compare t1.cudf t2.cudf
+      Algo.Defaultgraphs.PkgV.compare t1.cudf t2.cudf
 
     let hash t =
-      Algo.Defaultgraphs.PackageGraph.PkgV.hash t.cudf
+      Algo.Defaultgraphs.PkgV.hash t.cudf
 
     let equal t1 t2 =
-      Algo.Defaultgraphs.PackageGraph.PkgV.equal t1.cudf t2.cudf
+      Algo.Defaultgraphs.PkgV.equal t1.cudf t2.cudf
 
   end
 
@@ -204,13 +204,17 @@ let string_of_universe u =
     
 module CudfDiff : sig
 
+  type answer = Cudf.package internal_action list
+
   val resolve_diff :
     Cudf.universe ->
     Cudf_types.vpkg internal_request ->
-    Cudf.package internal_action list option
+    answer list option
 
 end = struct
     
+  type answer = Cudf.package internal_action list
+
   module Cudf_set = struct
 
     include Common.CudfAdd.Cudf_set
@@ -237,7 +241,7 @@ end = struct
       req_extra = [] }
 
   let cudf_resolve univ req = 
-    log "(INTERNAL) universe=%s request=<%s>"
+    log "INTERNAL(cudf_resolve) universe=%s request=<%s>"
       (string_of_universe univ)
       (string_of_internal_request string_of_cudf req);
     let open Algo in
@@ -255,11 +259,102 @@ end = struct
     match cudf_resolve univ_init req with
     | None   -> None
     | Some l ->
+      log "INTERNAL(resolve) %s" (String.concat " " (List.map string_of_cudf_package l));
         try 
           let diff = Common.CudfDiff.diff univ_init (Cudf.load_universe l) in
           Some (f_diff diff)
         with
-          Cudf.Constraint_violation _ -> None
+          Cudf.Constraint_violation _ -> 
+            log "INTERNAL(resolve) constraint violation";
+            None
+
+  let resolve_with_optimization = 
+    let nb_iter_max = 20 in 
+    (** maximum number of request we can send to the solver 
+        before the algorithm stops and returns the current solution *)
+
+    fun f_diff univ req ->
+    let string_of_c l = 
+      String.concat " " (List.map (string_of_internal_action string_of_cudf_package) l) in
+
+    match req, resolve f_diff univ req with
+      | { i_wish_remove = [] ; i_wish_upgrade = [] ; _ }, Some ans -> 
+
+        let rec aux nb_iter univ l_ans req ans =
+          match
+            List.partition
+              (function
+                | I_to_change (None, p) -> List.exists (fun (p_wish, _) -> p.Cudf.package = p_wish) req
+                | I_to_change (Some _, _)
+                | I_to_delete _
+                | I_to_recompile _ -> true) 
+              ans
+          with
+          | _, [] -> l_ans
+          | l_p_ans, l_new_pkg ->
+              log "INTERNAL(optimization) requested=%s, new_computed=%s" (string_of_c l_p_ans) (string_of_c l_new_pkg);
+
+              (** we preserve versions of packages that were explicitely requested *)
+              let l_p_ans = 
+                Utils.filter_map
+                  (function 
+                    | I_to_change (_, p)
+                    | I_to_recompile p -> Some (p.Cudf.package, Some (`Eq, p.Cudf.version))
+                    | I_to_delete _ -> None)
+                  l_p_ans in
+
+              (** we compute the last version of every new package (not requested) *)
+              let to_continue, l_new_pkg = 
+                let univ_map = (** similar as [univ] but represented with map *)
+                  List.fold_left (fun map p -> 
+                    Utils.StringMap.add p.Cudf.package
+                      (Utils.IntMap.add 
+                         p.Cudf.version
+                         p
+                         (try Utils.StringMap.find p.Cudf.package map with Not_found -> Utils.IntMap.empty))
+                      map) Utils.StringMap.empty (Cudf.get_packages univ) in
+                
+                let find_max p univ =
+                  snd (Utils.IntMap.max_binding (Utils.StringMap.find p.Cudf.package univ)) in
+
+                List.fold_left 
+                  (fun (to_continue, l_new_pkg) -> function
+                    | I_to_change (None, p) -> 
+                        let v_max = (find_max p univ_map).Cudf.version in
+                        to_continue || p.Cudf.version <> v_max, (p.Cudf.package, Some (`Eq, v_max)) :: l_new_pkg
+                    | I_to_change (Some _, _)
+                    | I_to_delete _
+                    | I_to_recompile _ -> assert false (* already filtered before *))
+                  (false, []) 
+                  l_new_pkg in
+
+              if to_continue then 
+                let i_wish_upgrade = l_p_ans @ l_new_pkg in
+                match resolve f_diff univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } with
+                  | None -> 
+                      let () = Globals.warning "INTERNAL(optimization) no solution" in
+                      l_ans
+                  | Some ans_new -> 
+                      if ans_new = ans then (* NOTE the strict equality is a bit strong. 
+                                               For instance, we can just require that [ans_new] is a permutation of [ans]. *)
+                        l_ans
+                      else if nb_iter > nb_iter_max then
+                        let () = Globals.warning "number of iteration exceeded" in
+                        (* We stop the loop. 
+                           Even if it is correct to stop at any time, 
+                           determine if the equality above is too strong
+                           or if we have reached a cycle of answer (i1, i2, ..., iN, i1) so that (forall J, iJ <> iJ+1). *)
+                        l_ans
+                      else
+                        aux (succ nb_iter) univ (ans_new :: l_ans) i_wish_upgrade ans_new
+              else
+                let _ = log "INTERNAL(optimization) the answer does not contain some package with a more recent version to try" in
+                l_ans in
+        
+        Some (aux 0 univ [ans] req.i_wish_install ans)
+
+      | _, Some ans -> Some [ans]
+      | _, None -> None
 
   let resolve_diff =
     let f_diff diff =
@@ -285,7 +380,7 @@ end = struct
         | None      , None       -> acc
       ) diff []
     in
-    resolve f_diff
+    resolve_with_optimization f_diff
 
 end
 
@@ -444,7 +539,7 @@ struct
       wish_upgrade = List.filter filter req.wish_upgrade;
     } in
     log "universe=%s request=<%s>"
-      (string_of_packages l_pkg_pb)
+      (string_of_packages (List.rev l_pkg_pb))
       (string_of_request req);
     get_table l_pkg_pb 
       (fun table pkglist ->
@@ -459,10 +554,7 @@ struct
                  | _   -> failwith "TODO"
                ) req) in
 
-        match sol_o with
-        | None   -> None
-        | Some l ->
-
+        let action_of_answer l =
             let l_s =
               String.concat " "
                 (List.map (string_of_internal_action string_of_cudf_package)  l) in
@@ -536,9 +628,13 @@ struct
                   ())
               graph_toinstall;
             PA_graph.iter_update_reinstall reinstall graph;
-            Some { to_remove = List.rev_map package_map 
-                     (topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del)
-                 ; to_add = graph })
+            { to_remove = List.rev_map package_map 
+                (topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del)
+            ; to_add = graph } in
+
+        match sol_o with
+        | None   -> []
+        | Some l -> (* [l] is not empty *) List.map action_of_answer l)
 
 end
 
