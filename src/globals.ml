@@ -27,7 +27,7 @@ let base_packages = ref true
 
 let yes = ref false
 
-let version = "0.2"
+let version = "0.3"
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"
