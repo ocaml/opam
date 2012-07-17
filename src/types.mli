@@ -34,6 +34,9 @@ module type Abstract = sig
 
     include Set.S with type elt = t
 
+    (** auto-map *)
+    val map: (elt -> elt) -> t -> t
+
     (** Return one element. Fail if the set is not a singleton. *)
     val choose_one : t -> elt
 

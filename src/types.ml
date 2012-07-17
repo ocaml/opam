@@ -21,6 +21,7 @@ module type Abstract = sig
   val to_string: t -> string
   module Set: sig
     include Set.S with type elt = t
+    val map: (elt -> elt) -> t -> t
     val choose_one : t -> elt
     val of_list: elt list -> t
     val to_string: t -> string
@@ -57,6 +58,9 @@ module Set = struct
     let to_string s =
       let l = fold (fun nv l -> O.to_string nv :: l) s [] in
       Printf.sprintf "{ %s }" (String.concat ", " l)
+
+    let map f t =
+      of_list (List.map f (elements t))
 
   end
 
@@ -290,7 +294,9 @@ end = struct
     Utils.starts_with (Dirname.to_string dirname) (to_string filename)
 
   let remove_prefix ~prefix filename =
-    let prefix = Dirname.to_string prefix in
+    let prefix = 
+      let str = Dirname.to_string prefix in
+      if str = "" then "" else F.concat str "" in
     let filename = to_string filename in
     Utils.remove_prefix ~prefix filename
 

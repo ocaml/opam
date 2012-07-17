@@ -107,3 +107,12 @@ let download_remote_dir ?(force = false) remote_dir =
     end else
     false
   ) remote_files
+
+(* all the local files which mirror a remote file *)
+let active_local_files =
+  Filename.Set.map (fun remote_file ->
+    let basename = Filename.remove_prefix remote_path remote_file in
+    local_path // basename
+  ) remote_files
+
+let _ = log "active_local_files: %s" (Filename.Set.to_string active_local_files)

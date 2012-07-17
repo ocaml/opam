@@ -191,6 +191,47 @@ let print_compilers compilers repo =
     Globals.msg " -  %s\n" (OCaml_V.to_string v)
   ) new_compilers
 
+let install_conf_ocaml () =
+  log "installing conf-ocaml";
+  let t = load_state () in
+  let name = N.of_string Globals.default_package in
+  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
+  let nv = NV.create name version in
+  (* .opam *)
+  let opam = File.OPAM.create nv in
+  File.OPAM.write (Path.G.opam t.global nv) opam;
+  (* description *)
+  let descr = File.Descr.create "Compiler configuration flags" in
+  File.Descr.write (Path.G.descr t.global nv) descr;
+  (* .config *)
+  let vars = 
+    let map f l = List.map (fun (s,p) -> Variable.of_string s, S (f p)) l in
+
+    map Dirname.to_string
+      [
+        ("prefix", Path.C.root t.compiler);
+        ("lib", Path.C.lib_dir t.compiler);
+        ("bin", Path.C.bin t.compiler);
+        ("doc", Path.C.doc_dir t.compiler);
+      ]
+    @ 
+    map (fun x -> x)
+      [
+        ("user", (Unix.getpwuid (Unix.getuid ())).Unix.pw_name);
+        ("group", (Unix.getgrgid (Unix.getgid ())).Unix.gr_name);
+      ] in
+
+  let config = File.Dot_config.create vars in
+  File.Dot_config.write (Path.C.config t.compiler name) config;
+  (* installed *)
+  let installed_p = Path.C.installed t.compiler in
+  let installed = File.Installed.safe_read installed_p in
+  let installed = NV.Set.add nv installed in
+  File.Installed.write installed_p installed;
+  (* stublibs *)
+  let stublibs = Path.C.stublibs t.compiler in
+  Dirname.mkdir stublibs
+
 let update_repo_index t =
 
   (* If there are new packages, assign them to some repository *)
@@ -208,6 +249,13 @@ let update_repo_index t =
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
 
+  (* suppress previous links *)
+  Dirname.rmdir (Path.G.opam_dir t.global);
+  Dirname.mkdir (Path.G.opam_dir t.global);
+  Dirname.rmdir (Path.G.descr_dir t.global);
+  Dirname.mkdir (Path.G.descr_dir t.global);
+  install_conf_ocaml ();
+  
   (* Create symbolic links from $repo dirs to main dir *)
   N.Map.iter (fun n r ->
     let repo_p = find_repository_path t r in
@@ -331,47 +379,6 @@ let update () =
   ) available;
   if !has_error then
     Globals.exit 66
-
-let install_conf_ocaml () =
-  log "installing conf-ocaml";
-  let t = load_state () in
-  let name = N.of_string Globals.default_package in
-  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
-  let nv = NV.create name version in
-  (* .opam *)
-  let opam = File.OPAM.create nv in
-  File.OPAM.write (Path.G.opam t.global nv) opam;
-  (* description *)
-  let descr = File.Descr.create "Compiler configuration flags" in
-  File.Descr.write (Path.G.descr t.global nv) descr;
-  (* .config *)
-  let vars = 
-    let map f l = List.map (fun (s,p) -> Variable.of_string s, S (f p)) l in
-
-    map Dirname.to_string
-      [
-        ("prefix", Path.C.root t.compiler);
-        ("lib", Path.C.lib_dir t.compiler);
-        ("bin", Path.C.bin t.compiler);
-        ("doc", Path.C.doc_dir t.compiler);
-      ]
-    @ 
-    map (fun x -> x)
-      [
-        ("user", (Unix.getpwuid (Unix.getuid ())).Unix.pw_name);
-        ("group", (Unix.getgrgid (Unix.getgid ())).Unix.gr_name);
-      ] in
-
-  let config = File.Dot_config.create vars in
-  File.Dot_config.write (Path.C.config t.compiler name) config;
-  (* installed *)
-  let installed_p = Path.C.installed t.compiler in
-  let installed = File.Installed.safe_read installed_p in
-  let installed = NV.Set.add nv installed in
-  File.Installed.write installed_p installed;
-  (* stublibs *)
-  let stublibs = Path.C.stublibs t.compiler in
-  Dirname.mkdir stublibs
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
