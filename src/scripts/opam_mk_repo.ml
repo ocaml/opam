@@ -75,8 +75,8 @@ let tmp_dir nv =
 
 let wget src =
   match Globals.os with
-  | Globals.Darwin -> [ "curl"; "-OL"; src ]
-  | _              -> [ "wget"; src ]
+  | Globals.Darwin -> [ "curl"; "--insecure" ; "-OL"; src ]
+  | _              -> [ "wget"; "--no-check-certificate"; src ]
 
 let archive_name src =
   let name = F.basename src in
