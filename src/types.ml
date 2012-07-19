@@ -777,6 +777,11 @@ let string_of_config = function
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map N.to_string l))
 
-type and_formula = Debian.Format822.vpkglist
+type atom_formula = Debian.Format822.vpkg
+type and_formula = atom_formula list
 type cnf_formula = Debian.Format822.vpkgformula
 type ocaml_constraint = relop * OCaml_V.t
+
+let string_of_atom_formula = function
+  | ((n,_), None)       -> n
+  | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c

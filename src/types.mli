@@ -57,6 +57,8 @@ module type Abstract = sig
 
     (** Same as [merge] but only keys that appear in both maps
         are given in the merging function *)
+    (** WARNING : Besides [key], the function could receive 
+        some [v1] and some [v2] such that [v1 = v2] holds. *)
     val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   end
 end
@@ -453,6 +455,11 @@ val string_of_config: config -> string
 (** Compiler aliases *)
 module Alias: Abstract
 
-type and_formula = Debian.Format822.vpkglist
+type atom_formula = Debian.Format822.vpkg
+type and_formula = atom_formula list
+
+(** Pretty-print *)
+val string_of_atom_formula : atom_formula -> string
+
 type cnf_formula = Debian.Format822.vpkgformula
 type ocaml_constraint = relop * OCaml_V.t

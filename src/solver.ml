@@ -86,9 +86,7 @@ type request = {
   wish_upgrade:  and_formula;
 }
 
-let string_of_vpkg = function
-  | ((n,_), None)       -> n
-  | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c
+let string_of_vpkg = string_of_atom_formula
 
 let string_of_list f l =
   Printf.sprintf "{%s}"

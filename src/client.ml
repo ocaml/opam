@@ -1646,9 +1646,19 @@ let switch clone alias ocaml_version =
   Heuristic.resolve `switch t_new
     [ let packages = 
         N.Map.merge_max
-          (fun pkg _ _ ->
-            Globals.warning "here, we ignore the version constraint in %s" (N.to_string pkg);
-            None)
+          (fun pkg p_clone p_comp ->
+            (* NOTE 
+               - both [p_clone] and [p_comp] constraints are valid
+               - the intersection of these 2 constraints should not be empty *)
+            if p_clone = p_comp then 
+              Some p_comp
+            else
+              let () = Globals.warning "package %s : we reject the constraint to clone %s and we take the constraint from compiler %s" 
+                (N.to_string pkg) 
+                (string_of_atom_formula p_clone)
+                (string_of_atom_formula p_comp) in
+              (* we arbitrarily take the constraint from the compiler *)
+              Some p_comp)
           (cloned_packages Heuristic.v_eq_opt)
           (comp_packages Heuristic.v_eq) in
 
