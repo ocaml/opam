@@ -35,8 +35,11 @@
 <pre><span id="VALvalues"><span class="keyword">val</span> values</span> : <code class="type">'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a list</code></pre><div class="info">
 Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.<br>
 </div>
-<pre><span id="VALmerge_max"><span class="keyword">val</span> merge_max</span> : <code class="type">(key -> 'a -> 'a -> 'a option) -><br>       'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a></code></pre><div class="info">
+<br>
 Same as <code class="code">merge</code> but only keys that appear in both maps
         are given in the merging function<br>
+<pre><span id="VALmerge_max"><span class="keyword">val</span> merge_max</span> : <code class="type">(key -> 'a -> 'a -> 'a option) -><br>       'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> 'a <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a></code></pre><div class="info">
+WARNING : Besides <code class="code">key</code>, the function could receive 
+        some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.<br>
 </div>
 </body></html>

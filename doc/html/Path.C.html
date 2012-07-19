@@ -52,6 +52,9 @@ Library path: <i>$opam/$OVERSION/lib/</i><br>
 <pre><span id="VALstublibs"><span class="keyword">val</span> stublibs</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 DLL paths<br>
 </div>
+<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+toplevel path: <i>$opam/$OVERSION/lib/toplevel</i><br>
+</div>
 <pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.N.t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Documentation path for a given package:
       <i>$opam/$OVERSION/doc/NAME</i><br>
@@ -112,5 +115,8 @@ Compile and link flags for a given package:
 </div>
 <pre><span id="VALconfig_dir"><span class="keyword">val</span> config_dir</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Configuration folder: <i>$opam/$OVERSION/config</i><br>
+</div>
+<pre><span id="VALpinned"><span class="keyword">val</span> pinned</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+Pinned package file<br>
 </div>
 </body></html>

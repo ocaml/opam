@@ -221,6 +221,11 @@ A file containing the env variables in which build command are
       processed: <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.env</i>
 </div>
 </td></tr>
+<tr><td><a href="File.OPAM.html#VALbuild_env">build_env</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+List of environment variables to set-up for the build
+</div>
+</td></tr>
 <tr><td><a href="Path.C.html#VALbuild_install">build_install</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Tempory location of install files:
@@ -847,6 +852,11 @@ Build a CNF formula
 Build a simple constraint
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALmake_env_variable">make_env_variable</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Making
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALmake_group">make_group</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Create a group of 'things'
@@ -892,10 +902,15 @@ Create a pair of strings
 Create a symbol
 </div>
 </td></tr>
+<tr><td><a href="Types.Abstract.Set.html#VALmap">map</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<td><div class="info">
+auto-map
+</div>
+</td></tr>
 <tr><td><a href="Types.Abstract.Map.html#VALmerge_max">merge_max</a> [<a href="Types.Abstract.Map.html">Types.Abstract.Map</a>]</td>
 <td><div class="info">
-Same as <code class="code">merge</code> but only keys that appear in both maps
-        are given in the merging function
+WARNING : Besides <code class="code">key</code>, the function could receive 
+        some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_install.Raw.html#VALmisc">misc</a> [<a href="File.Dot_install.Raw.html">File.Dot_install.Raw</a>]</td>
@@ -958,6 +973,11 @@ Compiler constraint
 <tr><td><a href="File.Config.html#VALocaml_version">ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 Return the OCaml version
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALocamlc_where">ocamlc_where</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+Return the path where ocamlc library is installed
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALof_basename">of_basename</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
@@ -1075,6 +1095,11 @@ Parse an CNF formula (which contains only inlevel OR) such as
 Parse a simple constraint
 </div>
 </td></tr>
+<tr><td><a href="File_format.html#VALparse_env_variable">parse_env_variable</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Parsing
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALparse_group">parse_group</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Parse a group of 'things'
@@ -1158,6 +1183,26 @@ Apply a patch file in the current directory
 <tr><td><a href="File.Comp.html#VALpatches">patches</a> [<a href="File.Comp.html">File.Comp</a>]</td>
 <td><div class="info">
 Return the list of patches to apply
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALpin">pin</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Pin a package to a specific version
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALpin_list">pin_list</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+list the current pinned packages
+</div>
+</td></tr>
+<tr><td><a href="Types.html#VALpin_option_of_string">pin_option_of_string</a> [<a href="Types.html">Types</a>]</td>
+<td><div class="info">
+Read pin options args
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALpinned">pinned</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Pinned package file
 </div>
 </td></tr>
 <tr><td><a href="File.Comp.html#VALpp">pp</a> [<a href="File.Comp.html">File.Comp</a>]</td>
@@ -1379,6 +1424,11 @@ Return the url of the compiler
 Check wether a filename starts by a given dirname
 </div>
 </td></tr>
+<tr><td><a href="Types.html#VALstring_of_atom_formula">string_of_atom_formula</a> [<a href="Types.html">Types</a>]</td>
+<td><div class="info">
+Pretty-print
+</div>
+</td></tr>
 <tr><td><a href="Types.html#VALstring_of_config">string_of_config</a> [<a href="Types.html">Types</a>]</td>
 <td><div class="info">
 Pretty-print
@@ -1399,9 +1449,16 @@ Print an item
 Print a list of items
 </div>
 </td></tr>
+<tr><td><a href="Types.html#VALstring_of_pin">string_of_pin</a> [<a href="Types.html">Types</a>]</td>
+<td><div class="info">
+Pretty-printing of pinned packages
+</div>
+</td></tr>
+<tr><td><a href="Types.html#VALstring_of_pin_option">string_of_pin_option</a> [<a href="Types.html">Types</a>]</td>
+<td></td></tr>
 <tr><td><a href="Types.html#VALstring_of_remote">string_of_remote</a> [<a href="Types.html">Types</a>]</td>
 <td><div class="info">
-Pretty-print
+Pretty-print or remote args
 </div>
 </td></tr>
 <tr><td><a href="Solver.html#VALstring_of_request">string_of_request</a> [<a href="Solver.html">Solver</a>]</td>
@@ -1481,6 +1538,16 @@ Pretty-print a set
 <tr><td><a href="Types.Abstract.html#VALto_string">to_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
 <td><div class="info">
 Convert an abstract value to a string
+</div>
+</td></tr>
+<tr><td><a href="Path.C.html#VALtoplevel">toplevel</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+toplevel path: <i>$opam/$OVERSION/lib/toplevel</i>
+</div>
+</td></tr>
+<tr><td><a href="File.Dot_install.html#VALtoplevel">toplevel</a> [<a href="File.Dot_install.html">File.Dot_install</a>]</td>
+<td><div class="info">
+List of toplevel files
 </div>
 </td></tr>
 <tr><td align="left"><br>U</td></tr>

@@ -264,9 +264,63 @@ Remote arguments<br>
 </div>
 
 <pre><span id="VALstring_of_remote"><span class="keyword">val</span> string_of_remote</span> : <code class="type"><a href="Types.html#TYPEremote">remote</a> -> string</code></pre><div class="info">
-Pretty-print<br>
+Pretty-print or remote args<br>
 </div>
-<br><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code><table class="typetable">
+<br><code><span id="TYPEpin_option"><span class="keyword">type</span> <code class="type"></code>pin_option</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Version</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEversion">version</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Path</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEdirname">dirname</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Unpin</span></code></td>
+
+</tr></table>
+
+<div class="info">
+Pinned packages options<br>
+</div>
+
+<br><code><span id="TYPEpin"><span class="keyword">type</span> <code class="type"></code>pin</span> = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>pin_package&nbsp;: <code class="type"><a href="Types.html#TYPEname">name</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>pin_arg&nbsp;: <code class="type"><a href="Types.html#TYPEpin_option">pin_option</a></code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Pinned packages<br>
+</div>
+
+<pre><span id="VALstring_of_pin"><span class="keyword">val</span> string_of_pin</span> : <code class="type"><a href="Types.html#TYPEpin">pin</a> -> string</code></pre><div class="info">
+Pretty-printing of pinned packages<br>
+</div>
+<pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">string -> <a href="Types.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
+Read pin options args<br>
+</div>
+<pre><span id="VALstring_of_pin_option"><span class="keyword">val</span> string_of_pin_option</span> : <code class="type"><a href="Types.html#TYPEpin_option">pin_option</a> -> string</code></pre><br><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -352,8 +406,13 @@ Pretty-print<br>
 <pre><span class="keyword">module</span> <a href="Types.Alias.html">Alias</a>: <code class="type"><a href="Types.Abstract.html">Abstract</a></code><code class="type"> </code></pre><div class="info">
 Compiler aliases
 </div>
-<pre><span id="TYPEand_formula"><span class="keyword">type</span> <code class="type"></code>and_formula</span> = <code class="type">Debian.Format822.vpkglist</code> </pre>
+<pre><span id="TYPEatom_formula"><span class="keyword">type</span> <code class="type"></code>atom_formula</span> = <code class="type">Debian.Format822.vpkg</code> </pre>
 
+<pre><span id="TYPEand_formula"><span class="keyword">type</span> <code class="type"></code>and_formula</span> = <code class="type"><a href="Types.html#TYPEatom_formula">atom_formula</a> list</code> </pre>
+
+<pre><span id="VALstring_of_atom_formula"><span class="keyword">val</span> string_of_atom_formula</span> : <code class="type"><a href="Types.html#TYPEatom_formula">atom_formula</a> -> string</code></pre><div class="info">
+Pretty-print<br>
+</div>
 <pre><span id="TYPEcnf_formula"><span class="keyword">type</span> <code class="type"></code>cnf_formula</span> = <code class="type">Debian.Format822.vpkgformula</code> </pre>
 
 <pre><span id="TYPEocaml_constraint"><span class="keyword">type</span> <code class="type"></code>ocaml_constraint</span> = <code class="type"><a href="Types.html#TYPErelop">relop</a> * OCaml_V.t</code> </pre>

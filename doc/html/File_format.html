@@ -27,6 +27,7 @@
 <link title="Printing functions" rel="Section" href="#2_Printingfunctions">
 <link title="Finding functions" rel="Section" href="#2_Findingfunctions">
 <link title="Formula" rel="Section" href="#2_Formula">
+<link title="Environment variables" rel="Section" href="#2_Environmentvariables">
 <title>File_format</title>
 </head>
 <body>
@@ -345,5 +346,13 @@ Parse a simple constraint<br>
 </div>
 <pre><span id="VALmake_constraint"><span class="keyword">val</span> make_constraint</span> : <code class="type"><a href="Types.html#TYPEocaml_constraint">Types.ocaml_constraint</a> -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
 Build a simple constraint<br>
+</div>
+<br>
+<span id="2_Environmentvariables"><h2>Environment variables</h2></span><br>
+<pre><span id="VALparse_env_variable"><span class="keyword">val</span> parse_env_variable</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string * string * string</code></pre><div class="info">
+Parsing<br>
+</div>
+<pre><span id="VALmake_env_variable"><span class="keyword">val</span> make_env_variable</span> : <code class="type">string * string * string -> <a href="File_format.html#TYPEvalue">value</a></code></pre><div class="info">
+Making<br>
 </div>
 </body></html>
