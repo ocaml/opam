@@ -429,7 +429,7 @@ let create_default_compiler_description t =
         [ mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
        else
         [])
-      [ ("CAML_LD_LIBRARY_PATH", "+=",
+      [ ("CAML_LD_LIBRARY_PATH", "=",
            (Dirname.to_string (Path.C.stublibs t.compiler))
            ^ ":" ^
            (match Run.ocamlc_where () with
@@ -832,7 +832,7 @@ let expand_env t env =
   List.map (fun (ident, symbol, string) ->
     let string = substitute_string t string in
     let read_env () =
-      let prefix = Dirname.to_string (Path.C.root t.compiler) in
+      let prefix = Dirname.to_string (Path.G.root t.global) in
       try Utils.reset_env_value ~prefix (Sys.getenv ident)
       with _ -> [] in
     match symbol with
