@@ -116,8 +116,9 @@ let get_available_current t =
     | None -> assert false
     | Some v -> v
 
-(* Look into the content of ~/.opam/config to build the client
-   state *)
+(* - Look into the content of ~/.opam/config to build the client
+   state
+   - Also perform the maximum checking of consistency possible *)
 let load_state () =
   log "root path is %s" !Globals.root_path;
   let global = Path.G.create () in
@@ -127,7 +128,21 @@ let load_state () =
   let compiler = Path.C.create ocaml_version in
   let repositories = File.Config.repositories config in
   let repositories = List.map (fun r -> r, Path.R.create r) repositories in
-  let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
+  let repo_index = 
+    let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
+    let l_wrong = 
+      List.filter (fun (_, repo) -> 
+        List.for_all (fun (r, _) -> Repository.name r <> repo) repositories)
+        (N.Map.bindings repo_index) in
+    let () = List.iter 
+      (fun (n, repo) ->
+        Globals.error "File %S: unbound repository %S associated to name %S" 
+          (Filename.to_string (Path.G.repo_index global)) repo (N.to_string n))
+      l_wrong in
+    if l_wrong = [] then
+      repo_index
+    else
+      Globals.exit 66 in
   let pinned = File.Pinned.safe_read (Path.C.pinned compiler) in
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
@@ -151,9 +166,15 @@ let find_repository_path t name =
   let _, r = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
   r
 
-let find_repository t name =
-  let r, _ = List.find (fun (r,_) -> Repository.name r = name) t.repositories in
-  r
+let mem_repository, find_repository = 
+  let f name (r,_) = Repository.name r = name in
+  (fun t name -> List.exists (f name) t.repositories),
+  fun t name ->
+    let r, _ = List.find (f name) t.repositories in
+    r
+
+let string_of_repositories t = 
+  String.concat ", " (List.map (fun (r, _) -> Repository.name r) t.repositories)
 
 let mem_installed_package_by_name t name =
   not (NV.Set.is_empty (NV.Set.filter (fun nv -> NV.name nv = name) t.installed))
@@ -1054,7 +1075,7 @@ module Heuristic = struct
           let sname = NV.name nv in
           let sversion = NV.version nv in
           Globals.msg
-            "Package %s not found, looking for package %s version %s\n"
+            "The raw name %S not found, looking for package %s version %s\n"
             (N.to_string name) (N.to_string sname) (V.to_string sversion);
           if N.Map.mem sname available
             && V.Set.mem sversion (N.Map.find sname available) then
@@ -1306,7 +1327,12 @@ let upload upload repo =
         find_repository t (N.Map.find name t.repo_index)
       else
         Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
-  | Some repo -> find_repository t repo in
+  | Some repo -> 
+      if mem_repository t repo then
+        find_repository t repo
+      else
+        Globals.error_and_exit "Unbound repository %S (available = %s)" 
+          repo (string_of_repositories t) in
   let repo_p = List.assoc repo t.repositories in
   let upload_opam = Path.R.upload_opam repo_p nv in
   let upload_descr = Path.R.upload_descr repo_p nv in
