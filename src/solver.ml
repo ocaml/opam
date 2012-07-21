@@ -335,8 +335,11 @@ end = struct
                   (false, []) 
                   l_new_pkg in
 
-              if to_continue then 
-                let i_wish_upgrade = l_p_ans @ l_new_pkg in
+              if to_continue then
+                let i_wish_upgrade =
+                  let l = l_p_ans @ l_new_pkg in
+                  let s = List.filter (fun (p,_) -> not (List.mem_assoc p l)) req in
+                  l @ s in
                 match resolve f_diff univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } with
                   | None -> 
                       let () = Globals.warning "INTERNAL(optimization) no solution" in
