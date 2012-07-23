@@ -302,7 +302,7 @@ let update_repo_index t =
 
 let update () =
   log "update";
-  let t = update_available_current (load_state ()) in
+  let t = load_state () in
   let compilers = Path.G.compiler_list t.global in
 
   (* first update all the repo *)
@@ -378,7 +378,6 @@ let update () =
   ) () t.global;
 
   (* Check all the dependencies exist *)
-  let available = get_available_current t in
   let t = update_available_current (load_state ()) in
   let has_error = ref false in
   NV.Set.iter (fun nv ->
@@ -403,7 +402,7 @@ let update () =
             has_error := true
         | Some _ -> ()
     )) (depends @ depopts)
-  ) available;
+  ) (get_available_current t);
   if !has_error then
     Globals.exit 66
 
