@@ -214,7 +214,7 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
-        Globals.error "Command %S failed (see %s.{info,err,out})" str name;
+        Globals.warning "Command %S failed (see %s.{info,err,out})" str name;
         List.iter (Globals.msg "%s\n") r.Process.r_stdout;
         List.iter (Globals.msg "%s\n") r.Process.r_stderr;
       ) else if not !Globals.debug then
