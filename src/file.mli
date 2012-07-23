@@ -49,7 +49,7 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: OPAM_V.t -> repository list -> Alias.t -> int -> t
+  val create: OPAM_V.t -> repository list -> Alias.t -> OCaml_V.t option -> int -> t
 
   (** OCaml version updates *)
   val with_ocaml_version : t -> Alias.t -> t
@@ -64,8 +64,11 @@ module Config: sig
   (** Return the list of repository *)
   val repositories: t  -> repository list
 
-  (** Return the OCaml version *)
+  (** Return the OCaml alias *)
   val ocaml_version: t -> Alias.t
+
+  (** Return the OCaml version *)
+  val last_ocaml_in_path: t -> OCaml_V.t option
 
   (** Return the number of cores *)
   val cores: t -> int
@@ -127,6 +130,9 @@ module OPAM: sig
 
   (** Construct as [depends] *)
   val with_depends : t -> cnf_formula -> t
+
+  (** Construct as [depopts] *)
+  val with_depopts : t -> cnf_formula -> t
 
   (** Construct as [build] *)
   val with_build: t -> string list list -> t

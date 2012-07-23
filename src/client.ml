@@ -487,11 +487,11 @@ let init_ocaml alias (default_allowed, ocaml_version) =
   let t = load_state () in
 
   let default = OCaml_V.of_string Globals.default_compiler_version in
-  let ocaml_version = 
+  let last_ocaml, ocaml_version = 
     let current () =
       match OCaml_V.current () with
-        | None   -> Globals.error_and_exit "No OCaml compiler found in path"
-        | Some _ -> default in
+        | None -> Globals.error_and_exit "No OCaml compiler found in path"
+        | Some last_ocaml -> Some last_ocaml, default in
 
     match ocaml_version with
       | None -> current ()
@@ -510,7 +510,7 @@ let init_ocaml alias (default_allowed, ocaml_version) =
               Globals.exit 2
             end 
           else
-            ocaml_version in
+            None, ocaml_version in
 
   let alias = 
     match alias with 
@@ -570,7 +570,7 @@ let init_ocaml alias (default_allowed, ocaml_version) =
       if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);
       raise e);
-  alias, ocaml_version
+  (alias, ocaml_version), last_ocaml
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -1226,9 +1226,9 @@ let init repo alias ocaml_version cores =
           else
             ()
       | None -> ());
-    let alias, ocaml_version = init_ocaml alias (false, ocaml_version) in
+    let (alias, ocaml_version), last_ocaml = init_ocaml alias (false, ocaml_version) in
     let opam_version = OPAM_V.of_string Globals.opam_version in
-    File.Config.write config_f (File.Config.create opam_version [repo] alias cores);
+    File.Config.write config_f (File.Config.create opam_version [repo] alias last_ocaml cores);
     let t = load_state () in
     add_alias t alias ocaml_version;
     update_package ();
@@ -1661,7 +1661,7 @@ let switch clone alias ocaml_version =
   let exists = Dirname.exists (Path.C.root alias_p) in
   if not exists then begin
     try 
-      let alias, ocaml_version = init_ocaml (Some alias) (true, Some ocaml_version) in
+      let (alias, ocaml_version), _ = init_ocaml (Some alias) (true, Some ocaml_version) in
       add_alias t alias ocaml_version
     with e ->
       (* restore the previous configuration *)
