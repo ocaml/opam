@@ -351,6 +351,17 @@ let update () =
 
   let updated = NV.Set.union pinned_updated updated in
 
+  (* XXX: we could have a special index for compiler descriptions as
+  well, but that's become a bit too heavy *)
+  List.iter (fun (r,p) ->
+    let comps = Path.R.compiler_list p in
+    let comp_dir = Path.G.compiler_dir t.global in
+    OCaml_V.Set.iter (fun o ->
+      let comp_f = Path.R.compiler p o in
+      Filename.link_in comp_f comp_dir
+    ) comps
+  ) t.repositories;
+
   (* update $opam/$oversion/reinstall *)
   Path.G.fold_compiler (fun () compiler ->
     let installed = File.Installed.safe_read (Path.C.installed compiler) in
@@ -366,16 +377,6 @@ let update () =
       File.Reinstall.write (Path.C.reinstall compiler) reinstall
   ) () t.global;
 
-  (* XXX: we could have a special index for compiler descriptions as
-  well, but that's become a bit too heavy *)
-  List.iter (fun (r,p) ->
-    let comps = Path.R.compiler_list p in
-    let comp_dir = Path.G.compiler_dir t.global in
-    OCaml_V.Set.iter (fun o ->
-      let comp_f = Path.R.compiler p o in
-      Filename.link_in comp_f comp_dir
-    ) comps
-  ) t.repositories;
   (* Check all the dependencies exist *)
   let available = get_available_current t in
   let t = update_available_current (load_state ()) in
