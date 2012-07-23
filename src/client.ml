@@ -480,8 +480,6 @@ let init_ocaml alias ocaml_version =
   let alias_p = Path.C.create alias in
   let aliases = t.aliases in
 
-  if not (Dirname.exists (Path.C.root alias_p)) then begin
-
     Dirname.mkdir (Path.C.root alias_p);
     add_alias t alias ocaml_version;
     let t = load_state () in
@@ -544,7 +542,6 @@ let init_ocaml alias ocaml_version =
       Dirname.rmdir (Path.C.root alias_p);
       File.Aliases.write (Path.G.aliases t.global) aliases;
       raise e
-  end
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -1193,7 +1190,11 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
     Dirname.mkdir (Path.G.compiler_dir root);
-    init_ocaml alias ocaml_version;
+    let alias_p = Path.C.root (Path.C.create alias) in
+    if Dirname.exists alias_p then
+      Globals.warning "%s does not exist and %s already exist" (Filename.to_string config_f) (Dirname.to_string alias_p)
+    else
+      init_ocaml alias ocaml_version;
     update ();
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
