@@ -64,27 +64,17 @@ let parse_args fn () =
 (* opam init [-kind $kind] $repo $adress *)
 let init = 
   let kind = ref Globals.default_repository_kind in
-  let alias = ref "" in
-  let comp = ref "" in
+  let alias = ref None in
+  let comp = ref None in
   let cores = ref Globals.default_cores in
-  let init () =
-    let comp =
-      if !comp <> "" then OCaml_V.of_string !comp
-      else match OCaml_V.current () with
-        | None   -> bad_argument "init" "No OCaml compiler found in path"
-        | Some _ -> OCaml_V.of_string Globals.default_compiler_version in
-    let alias =
-      if !alias <> "" then Alias.of_string !alias
-      else Alias.of_string (OCaml_V.to_string comp) in
-    alias, comp in
 {
   name     = "init";
   usage    = "";
   synopsis = "Initial setup";
   help     = "Create the initial config files";
   specs    = [
-    ("-comp" , Arg.Set_string comp , " Which compiler version to use");
-    ("-alias", Arg.Set_string alias, " Set the compiler alias name");
+    ("-comp" , Arg.String (fun s -> comp := Some (OCaml_V.of_string s)), " Which compiler version to use");
+    ("-alias", Arg.String (fun s -> alias := Some (Alias.of_string s)), " Set the compiler alias name");
     ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
     ("-kind" , Arg.Set_string kind , " Set the repository kind");
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
@@ -93,12 +83,10 @@ let init =
   main     =
     parse_args (function
     | [] ->
-        let alias, comp = init () in
-        Client.init Repository.default alias comp !cores
+        Client.init Repository.default !alias !comp !cores
     | [name; address]  ->
-        let alias, comp = init () in
         let repo = Repository.create ~name ~address ~kind:!kind in
-        Client.init repo alias comp !cores
+        Client.init repo !alias !comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 

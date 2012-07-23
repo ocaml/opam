@@ -23,7 +23,7 @@ open Types
     - [alias] the compiler alias
     - [oversion] is the version of the compiler
     - [cores] is the number of cores *)
-val init : repository -> Alias.t -> OCaml_V.t -> int -> unit
+val init : repository -> Alias.t option -> OCaml_V.t option -> int -> unit
 
 (** Displays all available packages. 
     If [bool] is [true], then we only display 

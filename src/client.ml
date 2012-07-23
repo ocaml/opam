@@ -482,33 +482,54 @@ let add_alias t alias ocaml_version =
 (* We assume that we have the right ocaml-version in $opam/config. Then we:
    - create $opam/$alias
    - compiles and install $opam/compiler/$descr.comp *)
-let init_ocaml alias ocaml_version =
-  log "init_ocaml %s %s" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
+let init_ocaml alias (default_allowed, ocaml_version) =
+  log "init_ocaml";
   let t = load_state () in
+
+  let default = OCaml_V.of_string Globals.default_compiler_version in
+  let ocaml_version = 
+    let current () =
+      match OCaml_V.current () with
+        | None   -> Globals.error_and_exit "No OCaml compiler found in path"
+        | Some _ -> default in
+
+    match ocaml_version with
+      | None -> current ()
+      | Some ocaml_version when default_allowed && ocaml_version = default -> current ()
+      | Some ocaml_version -> 
+          let comp_f = Path.G.compiler t.global ocaml_version in
+          if not default_allowed && ocaml_version = default || not (Filename.exists comp_f) then 
+            begin
+              Globals.msg
+                "  %S is not a valid compiler description%s. The available compilers descriptions are:\n"
+                (OCaml_V.to_string ocaml_version)
+                (if ocaml_version = default then " (because it is a reserved name)" else "");
+              OCaml_V.Set.iter
+                (fun v -> Globals.msg "    - %s\n" (OCaml_V.to_string v))
+                (Path.G.compiler_list t.global);
+              Globals.exit 2
+            end 
+          else
+            ocaml_version in
+
+  let alias = 
+    match alias with 
+      | None -> Alias.of_string (OCaml_V.to_string ocaml_version)
+      | Some alias -> alias in
+
+  log "init_ocaml (alias=%s, ocaml_version=%s)" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
+
   let alias_p = Path.C.create alias in
-  let aliases = t.aliases in
-
     Dirname.mkdir (Path.C.root alias_p);
-    add_alias t alias ocaml_version;
-    let t = load_state () in
-
-    if ocaml_version = OCaml_V.of_string Globals.default_compiler_version then begin
+    (if ocaml_version = default then begin
 
       (* we create a dummy compiler description file the the system-wide
          OCaml configuration *)
       create_default_compiler_description t;
 
-    end else try
+    end else 
+      try
       let comp_f = Path.G.compiler t.global ocaml_version in
-      if not (Filename.exists comp_f) then begin
-        Globals.msg
-          "  %S is not a valid compiler description. The available compilers descriptions are:\n"
-          (OCaml_V.to_string ocaml_version);
-        OCaml_V.Set.iter
-          (fun v -> Globals.msg "    - %s\n" (OCaml_V.to_string v))
-          (Path.G.compiler_list t.global);
-        Globals.exit 2
-      end;
       let comp = File.Comp.read comp_f in
       if not (File.Comp.preinstalled comp) then begin
 
@@ -548,8 +569,8 @@ let init_ocaml alias ocaml_version =
     with e -> 
       if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);
-      File.Aliases.write (Path.G.aliases t.global) aliases;
-      raise e
+      raise e);
+  alias, ocaml_version
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -1186,11 +1207,9 @@ let init repo alias ocaml_version cores =
   if Filename.exists config_f then
     Globals.error_and_exit "%s already exist" (Filename.to_string config_f)
   else try
-    let opam_version = OPAM_V.of_string Globals.opam_version in
-    let config = File.Config.create opam_version [repo] alias cores in
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
-    File.Config.write config_f config;
+    File.Config.write config_f (File.Config.with_repositories File.Config.empty [repo]);
     File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
     File.Repo_config.write (Path.R.config repo_p) repo;
     Repositories.init repo;
@@ -1198,14 +1217,22 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archive_dir root);
     Dirname.mkdir (Path.G.compiler_dir root);
-    let alias_p = Path.C.root (Path.C.create alias) in
     update_repo ();
-    if Dirname.exists alias_p then
-      Globals.warning "%s does not exist and %s already exist" (Filename.to_string config_f) (Dirname.to_string alias_p)
-    else
-      init_ocaml alias ocaml_version;
+    (match alias with 
+      | Some alias ->
+          let alias_p = Path.C.root (Path.C.create alias) in
+          if Dirname.exists alias_p then
+            Globals.error_and_exit "%s does not exist and %s already exist" (Filename.to_string config_f) (Dirname.to_string alias_p)
+          else
+            ()
+      | None -> ());
+    let alias, ocaml_version = init_ocaml alias (false, ocaml_version) in
+    let opam_version = OPAM_V.of_string Globals.opam_version in
+    File.Config.write config_f (File.Config.create opam_version [repo] alias cores);
+    let t = load_state () in
+    add_alias t alias ocaml_version;
     update_package ();
-    let t = update_available_current (load_state ()) in
+    let t = update_available_current t in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
       [ { wish_install
@@ -1633,10 +1660,13 @@ let switch clone alias ocaml_version =
   (* [2/3] install the new OCaml version *)
   let exists = Dirname.exists (Path.C.root alias_p) in
   if not exists then begin
-    try init_ocaml alias ocaml_version;
+    try 
+      let alias, ocaml_version = init_ocaml (Some alias) (true, Some ocaml_version) in
+      add_alias t alias ocaml_version
     with e ->
       (* restore the previous configuration *)
       File.Config.write (Path.G.config t.global) t.config; 
+      File.Aliases.write (Path.G.aliases t.global) t.aliases;
       if not !Globals.debug then
         Dirname.rmdir (Path.C.root alias_p); 
       raise e
