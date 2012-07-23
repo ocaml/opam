@@ -300,8 +300,8 @@ let update_repo_index t =
     ) available_versions;
   ) repo_index
 
-let update () =
-  log "update";
+let update_repo () =
+  log "update_repo";
   let t = load_state () in
   let compilers = Path.G.compiler_list t.global in
 
@@ -311,6 +311,21 @@ let update () =
   (* Display the new compilers available *)
   List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
 
+  (* XXX: we could have a special index for compiler descriptions as
+  well, but that's become a bit too heavy *)
+  List.iter (fun (r,p) ->
+    let comps = Path.R.compiler_list p in
+    let comp_dir = Path.G.compiler_dir t.global in
+    OCaml_V.Set.iter (fun o ->
+      let comp_f = Path.R.compiler p o in
+      Filename.link_in comp_f comp_dir
+    ) comps
+  ) t.repositories
+
+let update_package () =
+  log "update_package";
+
+  let t = load_state () in
   (* Update the pinned packages *)
   let pinned_updated =
     NV.Set.of_list (
@@ -350,18 +365,6 @@ let update () =
   print_updated t updated pinned_updated;
 
   let updated = NV.Set.union pinned_updated updated in
-
-  (* XXX: we could have a special index for compiler descriptions as
-  well, but that's become a bit too heavy *)
-  List.iter (fun (r,p) ->
-    let comps = Path.R.compiler_list p in
-    let comp_dir = Path.G.compiler_dir t.global in
-    OCaml_V.Set.iter (fun o ->
-      let comp_f = Path.R.compiler p o in
-      Filename.link_in comp_f comp_dir
-    ) comps
-  ) t.repositories;
-
   (* update $opam/$oversion/reinstall *)
   Path.G.fold_compiler (fun () compiler ->
     let installed = File.Installed.safe_read (Path.C.installed compiler) in
@@ -405,6 +408,11 @@ let update () =
   ) (get_available_current t);
   if !has_error then
     Globals.exit 66
+
+let update () =
+  log "update";
+  update_repo ();
+  update_package ()
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -1191,11 +1199,12 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.archive_dir root);
     Dirname.mkdir (Path.G.compiler_dir root);
     let alias_p = Path.C.root (Path.C.create alias) in
+    update_repo ();
     if Dirname.exists alias_p then
       Globals.warning "%s does not exist and %s already exist" (Filename.to_string config_f) (Dirname.to_string alias_p)
     else
       init_ocaml alias ocaml_version;
-    update ();
+    update_package ();
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
