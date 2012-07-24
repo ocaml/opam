@@ -1250,7 +1250,7 @@ let init repo alias ocaml_version cores =
     let t = load_state () in
     add_alias t alias ocaml_version;
     update_package ();
-    let t = update_available_current t in
+    let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
       [ { wish_install
