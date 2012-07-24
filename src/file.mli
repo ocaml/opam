@@ -51,11 +51,14 @@ module Config: sig
   (** Creation *)
   val create: OPAM_V.t -> repository list -> Alias.t -> OCaml_V.t option -> int -> t
 
-  (** OCaml version updates *)
+  (** OCaml alias updates *)
   val with_ocaml_version : t -> Alias.t -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
+
+  (** OCaml version updates *)
+  val with_last_ocaml_in_path: t -> OCaml_V.t option -> t
 
 
   (** Return the OPAM version *)

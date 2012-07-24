@@ -276,6 +276,7 @@ module Config = struct
 
     let with_repositories t repositories = { t with repositories }
     let with_ocaml_version t ocaml_version = { t with ocaml_version }
+    let with_last_ocaml_in_path t last_ocaml_in_path = { t with last_ocaml_in_path }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories

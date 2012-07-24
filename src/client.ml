@@ -87,14 +87,44 @@ let current_ocaml_version t =
   let aliases = File.Aliases.read (Path.G.aliases t.global) in
   List.assoc alias aliases
 
+let confirm fmt =
+  Printf.kprintf (fun msg ->
+    Globals.msg "%s [Y/n] " msg;
+    if not !Globals.yes then
+      match read_line () with
+      | "y" | "Y"
+      | "" -> true
+      | _  -> false
+    else
+      true
+  ) fmt
+
 let update_available_current t = 
   { t with available_current =     
     (* Remove the package which does not fullfil the compiler constraints *)
     let ocaml_version =
       if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
-        match OCaml_V.current () with
-        | None   -> assert false
-        | Some v -> v
+        let v = 
+          match File.Config.last_ocaml_in_path t.config with
+            | None   -> (*assert false*) Globals.error_and_exit "the OCaml version from config has been manually removed"
+            | Some v -> v in
+        let current = OCaml_V.current () in
+
+        (match current with
+          | None -> 
+              if confirm "No OCaml compiler found in path. Continue ?" then
+                ()
+              else
+                Globals.exit 66
+          | Some current ->
+              if v <> current then 
+                if confirm "The current OCaml version %S is not the same as the first in config %S. Continue ?" 
+                  (OCaml_V.to_string current)
+                  (OCaml_V.to_string v) then
+                  ()
+                else
+                  Globals.exit 66);
+        v
       else
         current_ocaml_version t in
     let filter nv =
@@ -690,18 +720,6 @@ let info package =
              File.Descr.safe_read (Path.G.descr t.global (NV.create package v)) in
        [ "description", File.Descr.full descr ]
     )
-
-let confirm fmt =
-  Printf.kprintf (fun msg ->
-    Globals.msg "%s [Y/n] " msg;
-    if not !Globals.yes then
-      match read_line () with
-      | "y" | "Y"
-      | "" -> true
-      | _  -> false
-    else
-      true
-  ) fmt
 
 let proceed_toinstall t nv =
   Globals.msg "Installing %s ...\n" (NV.to_string nv);
@@ -1653,15 +1671,15 @@ let switch clone alias ocaml_version =
   let alias_p = Path.C.create alias in
 
   (* [1/3] write the new version in the configuration file *)
-  File.Config.write
-    (Path.G.config t.global)
-    (File.Config.with_ocaml_version t.config alias);
+  let config = File.Config.with_ocaml_version t.config alias in
+  File.Config.write (Path.G.config t.global) config;
 
   (* [2/3] install the new OCaml version *)
   let exists = Dirname.exists (Path.C.root alias_p) in
   if not exists then begin
     try 
-      let (alias, ocaml_version), _ = init_ocaml (Some alias) (true, Some ocaml_version) in
+      let (alias, ocaml_version), last_ocaml = init_ocaml (Some alias) (true, Some ocaml_version) in
+      File.Config.write (Path.G.config t.global) (File.Config.with_last_ocaml_in_path config last_ocaml);
       add_alias t alias ocaml_version
     with e ->
       (* restore the previous configuration *)
