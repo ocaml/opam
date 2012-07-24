@@ -478,16 +478,15 @@ let substitute_file t f =
 let substitute_string t s =
   File.Subst.replace_string s (contents_of_variable t)
 
+let base_packages = [ "base-unix"; "base-bigarray"; "base-threads" ]
+
 let create_default_compiler_description t =
   let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
   let mk name = ((name,None),None) in
   let f =
     File.Comp.create_preinstalled
       ocaml_version
-      (if !Globals.base_packages then
-        [ mk "base-unix"; mk "base-bigarray"; mk "base-threads" ]
-       else
-        [])
+      (List.map mk (if !Globals.base_packages then base_packages else []))
       [ ("CAML_LD_LIBRARY_PATH", "=",
            (Dirname.to_string (Path.C.stublibs t.compiler))
            ^ ":" ^
@@ -1068,24 +1067,35 @@ module Heuristic = struct
     let comp_f = Path.G.compiler t.global ocaml_version in
     let comp = File.Comp.read comp_f in
     let available = NV.to_map (get_available_current t) in
-    if (* check that all packages in [comp] are in [available] *)
-      List.fold_left
-        (fun b -> function
-          | (name, _), None ->
-              if N.Map.mem (N.of_string name) available then b else
-                let _ = Globals.error "Package %s not found" name in
-                true
-          | _ -> b)
-        false
-        (File.Comp.packages comp)
-    then Globals.exit 66;
+
+    let pkg_available, pkg_not = 
+      List.partition
+        (function (name, _), _ -> 
+          N.Map.mem (N.of_string name) available)
+        (File.Comp.packages comp) in
+
+    let () = (* check that all packages in [comp] are in [available]
+                except for "base-..." 
+                (depending if "-no-base-packages" is set or not) *)
+      match 
+        let pkg_not = List.rev_map (function (n, _), _ -> n) pkg_not in
+        if !Globals.base_packages then
+          pkg_not
+        else
+          List.filter (fun n -> not (List.mem n base_packages)) pkg_not
+      with
+        | [] -> ()
+        | l -> 
+            let () = List.iter (Globals.error "Package %s not found") l in
+            Globals.exit 66 in
+
     List.rev_map 
       (function 
         | (name, _), None ->
             let name = N.of_string name in
             f_h None (N.Map.find name available) name
         | n, v -> n, v)
-      (File.Comp.packages comp)
+      pkg_available
 
   let apply f_heuristic = 
     List.map
