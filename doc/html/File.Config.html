@@ -32,14 +32,17 @@
 <pre><span class="keyword">module</span> Config: <code class="code">sig</code> <a href="File.Config.html">..</a> <code class="code">end</code></pre>Configuration file: <code class="code">$opam/config</code><br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Types.OPAM_V.t -> <a href="Types.html#TYPErepository">Types.repository</a> list -> Types.Alias.t -> int -> t</code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Types.OPAM_V.t -><br>       <a href="Types.html#TYPErepository">Types.repository</a> list -> Types.Alias.t -> Types.OCaml_V.t option -> int -> t</code></pre><div class="info">
 Creation<br>
 </div>
 <pre><span id="VALwith_ocaml_version"><span class="keyword">val</span> with_ocaml_version</span> : <code class="type">t -> Types.Alias.t -> t</code></pre><div class="info">
-OCaml version updates<br>
+OCaml alias updates<br>
 </div>
 <pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> <a href="Types.html#TYPErepository">Types.repository</a> list -> t</code></pre><div class="info">
 Repository updates<br>
+</div>
+<pre><span id="VALwith_last_ocaml_in_path"><span class="keyword">val</span> with_last_ocaml_in_path</span> : <code class="type">t -> Types.OCaml_V.t option -> t</code></pre><div class="info">
+OCaml version updates<br>
 </div>
 <pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> Types.OPAM_V.t</code></pre><div class="info">
 Return the OPAM version<br>
@@ -48,6 +51,9 @@ Return the OPAM version<br>
 Return the list of repository<br>
 </div>
 <pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">t -> Types.Alias.t</code></pre><div class="info">
+Return the OCaml alias<br>
+</div>
+<pre><span id="VALlast_ocaml_in_path"><span class="keyword">val</span> last_ocaml_in_path</span> : <code class="type">t -> Types.OCaml_V.t option</code></pre><div class="info">
 Return the OCaml version<br>
 </div>
 <pre><span id="VALcores"><span class="keyword">val</span> cores</span> : <code class="type">t -> int</code></pre><div class="info">
