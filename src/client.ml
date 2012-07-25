@@ -497,8 +497,13 @@ let create_default_compiler_description t =
   let comp = Path.G.compiler t.global ocaml_version in
   File.Comp.write comp f
 
-let add_alias t alias ocaml_version =
+let add_alias alias ocaml_version =
   log "adding alias %s %s" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
+  let t = load_state () in
+  if ocaml_version = OCaml_V.of_string Globals.default_compiler_version then
+    (* we create a dummy compiler description file the the system-wide
+       OCaml configuration *)
+    create_default_compiler_description t;
   let aliases_f = Path.G.aliases t.global in
   let aliases = File.Aliases.safe_read aliases_f in
   if not (List.mem_assoc alias aliases) then begin
@@ -549,15 +554,9 @@ let init_ocaml alias (default_allowed, ocaml_version) =
   log "init_ocaml (alias=%s, ocaml_version=%s)" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
 
   let alias_p = Path.C.create alias in
-    Dirname.mkdir (Path.C.root alias_p);
-    (if ocaml_version = default then begin
-
-      (* we create a dummy compiler description file the the system-wide
-         OCaml configuration *)
-      create_default_compiler_description t;
-
-    end else 
-      try
+  Dirname.mkdir (Path.C.root alias_p);
+  (if ocaml_version <> default then 
+    try
       let comp_f = Path.G.compiler t.global ocaml_version in
       let comp = File.Comp.read comp_f in
       if not (File.Comp.preinstalled comp) then begin
@@ -1257,8 +1256,7 @@ let init repo alias ocaml_version cores =
     let (alias, ocaml_version), last_ocaml = init_ocaml alias (false, ocaml_version) in
     let opam_version = OPAM_V.of_string Globals.opam_version in
     File.Config.write config_f (File.Config.create opam_version [repo] alias last_ocaml cores);
-    let t = load_state () in
-    add_alias t alias ocaml_version;
+    add_alias alias ocaml_version;
     update_package ();
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
@@ -1690,7 +1688,7 @@ let switch clone alias ocaml_version =
     try 
       let (alias, ocaml_version), last_ocaml = init_ocaml (Some alias) (true, Some ocaml_version) in
       File.Config.write (Path.G.config t.global) (File.Config.with_last_ocaml_in_path config last_ocaml);
-      add_alias t alias ocaml_version
+      add_alias alias ocaml_version
     with e ->
       (* restore the previous configuration *)
       File.Config.write (Path.G.config t.global) t.config; 
