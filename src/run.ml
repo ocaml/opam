@@ -226,6 +226,8 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       mkdir (Filename.dirname name);
       let str = String.concat " " (cmd :: args) in
       log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
+      if None <> try Some (String.index cmd ' ') with Not_found -> None then 
+          Globals.warning "Command %S contains 1 space" cmd;
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
         Globals.warning "Command %S failed (see %s.{info,err,out})" str name;
