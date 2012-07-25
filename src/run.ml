@@ -272,7 +272,7 @@ let is_archive file =
 
 let extract o_tmp_dir file dst =
   log "untar %s" file;
-  let files = read_command_output [ "tar" ; "tf" ; file ] in
+  let files = read_command_output [ "tar" ; "ztf" ; file ] in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
   let f_tmp tmp_dir = 
   let err =
@@ -384,18 +384,22 @@ let ocamlc_where () =
 
 (* Only used by the compiler switch stuff *)
 let download src dst =
-  let cmd = match Globals.os with
-    | Globals.Darwin -> [ "curl"; "--insecure" ; "-OL"; src ]
-    | _              -> [ "wget"; "--no-check-certificate" ; src ] in
   create_tmp_dir (fun tmp_dir ->
-  let e = in_dir tmp_dir (fun () -> command cmd) in
-  let tmp_file = tmp_dir / Filename.basename src in
-  if e = 0 then
-    if Filename.check_suffix src "tar.gz"
-    || Filename.check_suffix src "tar.bz2" then
-      extract (Some tmp_dir) tmp_file dst
-    else
-      copy tmp_file (dst / Filename.basename src))
+    let cmd =
+      let open Globals in
+      match os with
+      | Darwin | OpenBSD | FreeBSD -> [ "curl"; "--insecure" ; "-OL"; src ]
+      | _              -> [ "wget"; "--no-check-certificate"; src ] in
+    mkdir tmp_dir;
+    let e = in_dir tmp_dir (fun () -> command cmd) in
+    let tmp_file = tmp_dir / Filename.basename src in
+    if e = 0 then
+      if Filename.check_suffix src "tar.gz"
+      || Filename.check_suffix src "tar.bz2" then
+        extract (Some tmp_dir) tmp_file dst
+      else
+        copy tmp_file (dst / Filename.basename src)
+  )
 
 let extract = extract None
 
