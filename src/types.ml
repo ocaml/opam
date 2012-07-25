@@ -147,7 +147,7 @@ end = struct
     Run.mkdir (to_string dirname)
 
   let list d =
-    let fs = Run.directories (to_string d) in
+    let fs = Run.directories_with_links (to_string d) in
     List.map of_string fs
 
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
@@ -262,7 +262,7 @@ end = struct
     of_string (F.chop_extension (to_string filename))
 
   let list d =
-    let fs = Run.files (Dirname.to_string d) in
+    let fs = Run.files_with_links (Dirname.to_string d) in
     List.map of_string fs
 
   let rec_list d =

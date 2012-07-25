@@ -13,6 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
+module Sys2 = struct
+  open Unix
+
+  (** behaves as [Sys.is_directory] except for symlinks, which returns always [false]. *)
+  let is_directory file = 
+    (lstat file).st_kind = S_DIR
+end
+
 let log fmt = Globals.log "RUN" fmt
 
 let (/) = Filename.concat
@@ -113,16 +121,22 @@ let list kind dir =
     List.sort compare (List.map (Filename.concat dir) l)
   )
 
-let files =
+let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with _ -> true)
 
-let directories =
+let files_all_not_dir =
+  list (fun f -> try not (Sys2.is_directory f) with _ -> true)
+
+let directories_strict =
+  list (fun f -> try Sys2.is_directory f with _ -> false)
+
+let directories_with_links =
   list (fun f -> try Sys.is_directory f with _ -> false)
 
 let rec_files dir =
   let rec aux accu dir =
-    let d = directories dir in
-    let f = files dir in
+    let d = directories_with_links dir in
+    let f = files_with_links dir in
     List.fold_left aux (f @ accu) d in
   aux [] dir
 
@@ -131,16 +145,16 @@ let remove_file file =
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
     
-let rec remove_dir dir =
+let rec remove_dir dir = (** WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
   if Sys.file_exists dir then begin
-    List.iter remove_file (files dir);
-    List.iter remove_dir (directories dir);
+    List.iter remove_file (files_all_not_dir dir);
+    List.iter remove_dir (directories_strict dir);
     log "remove_dir %s" dir;
     Unix.rmdir dir;
   end
 
 let remove file =
-  if Sys.file_exists file && Sys.is_directory file then
+  if Sys.file_exists file && Sys2.is_directory file then
     remove_dir file
   else
     remove_file file
