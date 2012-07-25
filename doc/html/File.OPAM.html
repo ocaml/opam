@@ -52,6 +52,9 @@ Package maintainer<br>
 <pre><span id="VALsubsts"><span class="keyword">val</span> substs</span> : <code class="type">t -> <a href="Types.html#TYPEbasename">Types.basename</a> list</code></pre><div class="info">
 File substitutions<br>
 </div>
+<pre><span id="VALbuild_env"><span class="keyword">val</span> build_env</span> : <code class="type">t -> (string * string * string) list</code></pre><div class="info">
+List of environment variables to set-up for the build<br>
+</div>
 <pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> string list list</code></pre><div class="info">
 List of command to run for building the package<br>
 </div>
@@ -81,6 +84,9 @@ deptopts (optional dependencies) string<br>
 </div>
 <pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> <a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a> -> t</code></pre><div class="info">
 Construct as <code class="code">depends</code><br>
+</div>
+<pre><span id="VALwith_depopts"><span class="keyword">val</span> with_depopts</span> : <code class="type">t -> <a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a> -> t</code></pre><div class="info">
+Construct as <code class="code">depopts</code><br>
 </div>
 <pre><span id="VALwith_build"><span class="keyword">val</span> with_build</span> : <code class="type">t -> string list list -> t</code></pre><div class="info">
 Construct as <code class="code">build</code><br>

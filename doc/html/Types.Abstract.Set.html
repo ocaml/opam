@@ -32,6 +32,9 @@
 <pre><span class="keyword">module</span> Set: <code class="code">sig</code> <a href="Types.Abstract.Set.html">..</a> <code class="code">end</code></pre>Collection of abstract values<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> Set.S</pre>
+<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">(elt -> elt) -> <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> <a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a></code></pre><div class="info">
+auto-map<br>
+</div>
 <pre><span id="VALchoose_one"><span class="keyword">val</span> choose_one</span> : <code class="type"><a href="Types.Abstract.html#TYPEt">Types.Abstract.t</a> -> elt</code></pre><div class="info">
 Return one element. Fail if the set is not a singleton.<br>
 </div>

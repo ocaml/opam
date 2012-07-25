@@ -28,6 +28,7 @@ let set_of_list empty add l =
 let map_of_list empty add = set_of_list empty (fun (k, v) -> add k v)
 
 module IntMap = Map.Make(struct type t = int let compare = compare end)  
+module StringMap = Map.Make(struct type t = string let compare = compare end)  
 module IntSet = Set.Make(struct type t = int let compare = compare end)  
 
 let (|>) f g x = g (f x) 
@@ -80,7 +81,7 @@ let rcut_at = cut_at_aux String.rindex
 let split s c =
   Pcre.split (Pcre.regexp (String.make 1 c)) s
 
-(* Remove from a ':' separated list of string the one which are prefix of Globals.root_path *)
-let reset_env_value v =
+(* Remove from a ':' separated list of string the one with the given prefix *)
+let reset_env_value ~prefix v =
   let v = split v ':' in
-  List.filter (fun v -> not (starts_with ~prefix:!Globals.root_path v)) v
+  List.filter (fun v -> not (starts_with ~prefix v)) v

@@ -13,6 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
+module Sys2 = struct
+  open Unix
+
+  (** behaves as [Sys.is_directory] except for symlinks, which returns always [false]. *)
+  let is_directory file = 
+    (lstat file).st_kind = S_DIR
+end
+
 let log fmt = Globals.log "RUN" fmt
 
 let (/) = Filename.concat
@@ -25,9 +33,6 @@ let rec mk_temp_dir str =
     mk_temp_dir str
   else
     s
-
-let tmp_dir =
-  mk_temp_dir "run"
 
 let lock_file () =
   !Globals.root_path / "opam.lock"
@@ -116,16 +121,22 @@ let list kind dir =
     List.sort compare (List.map (Filename.concat dir) l)
   )
 
-let files =
+let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with _ -> true)
 
-let directories =
+let files_all_not_dir =
+  list (fun f -> try not (Sys2.is_directory f) with _ -> true)
+
+let directories_strict =
+  list (fun f -> try Sys2.is_directory f with _ -> false)
+
+let directories_with_links =
   list (fun f -> try Sys.is_directory f with _ -> false)
 
 let rec_files dir =
   let rec aux accu dir =
-    let d = directories dir in
-    let f = files dir in
+    let d = directories_with_links dir in
+    let f = files_with_links dir in
     List.fold_left aux (f @ accu) d in
   aux [] dir
 
@@ -134,19 +145,26 @@ let remove_file file =
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
     
-let rec remove_dir dir =
+let rec remove_dir dir = (** WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
   if Sys.file_exists dir then begin
-    List.iter remove_file (files dir);
-    List.iter remove_dir (directories dir);
+    List.iter remove_file (files_all_not_dir dir);
+    List.iter remove_dir (directories_strict dir);
     log "remove_dir %s" dir;
     Unix.rmdir dir;
   end
 
 let remove file =
-  if Sys.file_exists file && Sys.is_directory file then
+  if Sys.file_exists file && Sys2.is_directory file then
     remove_dir file
   else
     remove_file file
+
+let create_tmp_dir f =
+  let dir = mk_temp_dir "run" in
+  List.iter (fun f -> f dir)
+    [ mkdir
+    ; f
+    ; remove_dir ]
 
 let getchdir s =
   let p = Unix.getcwd () in
@@ -188,7 +206,7 @@ let replace_path bins =
       | Some (k,v) -> k,v
       | None       -> assert false in
     if k = "PATH" then
-    let v = Utils.reset_env_value v in
+    let v = Utils.split v ':' in
     let bins = List.filter Sys.file_exists bins in
     let new_path = String.concat ":" (bins @ v) in
     env.(i) <- "PATH=" ^ new_path;
@@ -210,10 +228,9 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
-        Globals.error "Command %S failed (see %s.{info,err,out})" str name;
+        Globals.warning "Command %S failed (see %s.{info,err,out})" str name;
         List.iter (Globals.msg "%s\n") r.Process.r_stdout;
         List.iter (Globals.msg "%s\n") r.Process.r_stderr;
-        Globals.exit r.Process.r_code
       ) else if not !Globals.debug then
         Process.clean_files r;
       r
@@ -235,6 +252,7 @@ let commands ?(add_to_env=[]) ?(add_to_path = []) =
 
 let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ~add_to_env ~add_to_path cmd in
+  if Process.is_failure r then Globals.exit r.Process.r_code;
   r.Process.r_stdout
 
 let is_archive file =
@@ -250,11 +268,11 @@ let is_archive file =
     [ [ "tar.gz" ; "tgz" ], "z"
     ; [ "tar.bz2" ; "tbz" ], "j" ]
 
-let extract file dst =
+let extract o_tmp_dir file dst =
   log "untar %s" file;
   let files = read_command_output [ "tar" ; "ztf" ; file ] in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
-  mkdir tmp_dir;
+  let f_tmp tmp_dir = 
   let err =
     match is_archive file with
     | Some f_cmd -> f_cmd tmp_dir
@@ -284,10 +302,10 @@ let extract file dst =
       | `file f ->
           mkdir (Filename.dirname dst);
           copy f dst
-    ) moves;
-    List.iter (function
-      | (`file f, _) -> remove f
-      | _ -> ()) moves
+    ) moves in
+  match o_tmp_dir with
+    | None -> create_tmp_dir f_tmp
+    | Some tmp_dir -> f_tmp tmp_dir
 
 let link src dst =
   log "linking %s to %s" src dst;
@@ -339,12 +357,11 @@ let funlock () =
   end else
     Globals.error_and_exit "Cannot find %s" file
 
-let with_flock f x =
+let with_flock f =
   try
     flock ();
-    let r = f x in
+    f ();
     funlock ();
-    r
   with e ->
     funlock ();
     raise e
@@ -356,22 +373,33 @@ let ocaml_version () =
   with _ ->
     None
 
+let ocamlc_where () =
+  try
+    let s = read_command_output [ "ocamlc"; "-where" ] in
+    Some (Utils.string_strip (List.hd s))
+  with _ ->
+    None
+
 (* Only used by the compiler switch stuff *)
 let download src dst =
-  let cmd =
-    let open Globals in
-    match os with
-    | Darwin | OpenBSD | FreeBSD -> [ "curl"; "-OL"; src ]
-    | _              -> [ "wget"; src ] in
-  mkdir tmp_dir;
-  let e = in_dir tmp_dir (fun () -> command cmd) in
-  let tmp_file = tmp_dir / Filename.basename src in
-  if e = 0 then
-    if Filename.check_suffix src "tar.gz"
-    || Filename.check_suffix src "tar.bz2" then
-      extract tmp_file dst
-    else
-      copy tmp_file (dst / Filename.basename src)
+  create_tmp_dir (fun tmp_dir ->
+    let cmd =
+      let open Globals in
+      match os with
+      | Darwin | OpenBSD | FreeBSD -> [ "curl"; "--insecure" ; "-OL"; src ]
+      | _              -> [ "wget"; "--no-check-certificate"; src ] in
+    mkdir tmp_dir;
+    let e = in_dir tmp_dir (fun () -> command cmd) in
+    let tmp_file = tmp_dir / Filename.basename src in
+    if e = 0 then
+      if Filename.check_suffix src "tar.gz"
+      || Filename.check_suffix src "tar.bz2" then
+        extract (Some tmp_dir) tmp_file dst
+      else
+        copy tmp_file (dst / Filename.basename src)
+  )
+
+let extract = extract None
 
 let patch p =
   let err = command ["patch"; "-p0"; "-i"; p] in

@@ -23,7 +23,7 @@ open Types
     - [alias] the compiler alias
     - [oversion] is the version of the compiler
     - [cores] is the number of cores *)
-val init : repository -> Alias.t -> OCaml_V.t -> int -> unit
+val init : repository -> Alias.t option -> OCaml_V.t option -> int -> unit
 
 (** Displays all available packages. 
     If [bool] is [true], then we only display 
@@ -68,3 +68,9 @@ val switch: bool -> Alias.t -> OCaml_V.t -> unit
 
 (** [compiler_list] list the available compiler descriptions *)
 val compiler_list: unit -> unit
+
+(** Pin a package to a specific version *)
+val pin: pin -> unit
+
+(** list the current pinned packages *)
+val pin_list: unit -> unit

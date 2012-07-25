@@ -21,6 +21,7 @@ module type Abstract = sig
   val to_string: t -> string
   module Set: sig
     include Set.S with type elt = t
+    val map: (elt -> elt) -> t -> t
     val choose_one : t -> elt
     val of_list: elt list -> t
     val to_string: t -> string
@@ -57,6 +58,9 @@ module Set = struct
     let to_string s =
       let l = fold (fun nv l -> O.to_string nv :: l) s [] in
       Printf.sprintf "{ %s }" (String.concat ", " l)
+
+    let map f t =
+      of_list (List.map f (elements t))
 
   end
 
@@ -143,7 +147,7 @@ end = struct
     Run.mkdir (to_string dirname)
 
   let list d =
-    let fs = Run.directories (to_string d) in
+    let fs = Run.directories_with_links (to_string d) in
     List.map of_string fs
 
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
@@ -258,7 +262,7 @@ end = struct
     of_string (F.chop_extension (to_string filename))
 
   let list d =
-    let fs = Run.files (Dirname.to_string d) in
+    let fs = Run.files_with_links (Dirname.to_string d) in
     List.map of_string fs
 
   let rec_list d =
@@ -290,7 +294,9 @@ end = struct
     Utils.starts_with (Dirname.to_string dirname) (to_string filename)
 
   let remove_prefix ~prefix filename =
-    let prefix = Dirname.to_string prefix in
+    let prefix = 
+      let str = Dirname.to_string prefix in
+      if str = "" then "" else F.concat str "" in
     let filename = to_string filename in
     Utils.remove_prefix ~prefix filename
 
@@ -324,7 +330,22 @@ module V: Abstract = Base
 type version = V.t
 
 (* Names *)
-module N: Abstract = Base
+module N: Abstract = struct
+  type t = string
+  let of_string x = x
+  let to_string x = x
+  module O = struct
+    type t = string
+    let to_string = to_string
+    let compare n1 n2 = 
+      match compare (String.lowercase n1) (String.lowercase n2) with
+        | 0 -> compare n1 n2
+        | i -> i
+  end
+  module Set = Set.Make(O)
+  module Map = Map.Make(O)
+end
+
 type name = N.t
 
 module NV: sig
@@ -702,6 +723,35 @@ type config_option = {
   options: full_section list;
 }
 
+type pin_option =
+  | Version of version
+  | Path of dirname
+  | Unpin
+
+let pin_option_of_string s =
+  let d = Run.real_path s in
+  if s = "none" then
+    Unpin
+  else if String.length d > 1 && d.[0] = '/' then
+    Path (Dirname.of_string s)
+  else
+    Version (V.of_string s)
+    
+type pin = {
+  pin_package: name;
+  pin_arg: pin_option;
+}
+
+let string_of_pin_option = function
+  | Version v -> V.to_string v
+  | Path p    -> Dirname.to_string p
+  | Unpin     -> "none"
+
+let string_of_pin p =
+  Printf.sprintf "{package=%s; arg=%s}"
+    (N.to_string p.pin_package)
+    (string_of_pin_option p.pin_arg)
+
 type config =
   | Env
   | List_vars
@@ -727,6 +777,11 @@ let string_of_config = function
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map N.to_string l))
 
-type and_formula = Debian.Format822.vpkglist
+type atom_formula = Debian.Format822.vpkg
+type and_formula = atom_formula list
 type cnf_formula = Debian.Format822.vpkgformula
 type ocaml_constraint = relop * OCaml_V.t
+
+let string_of_atom_formula = function
+  | ((n,_), None)       -> n
+  | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c

@@ -29,9 +29,9 @@ let rsync ?fn dir =
 let () =
   let fn str = NV.of_filename (Filename.of_string str) in
   let opam = rsync ~fn "opam/" in
-  let descr = rsync "descr/" in
+  let descr = try rsync "descr/" with e -> let _ = Globals.warning "%s" (Printexc.to_string e) in NV.Set.empty in
   let archives =
-    let files = Run.files "archives" in
+    let files = Run.files_with_links "archives" in
     List.fold_left (fun set f -> NV.Set.union (rsync ~fn f) set) NV.Set.empty files in
   let updates = NV.Set.union archives (NV.Set.union opam descr) in
   File.Updated.write

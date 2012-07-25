@@ -83,6 +83,9 @@ Change the current working directory<br>
 Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns <code class="code">None</code>.<br>
 </div>
+<pre><span id="VALocamlc_where"><span class="keyword">val</span> ocamlc_where</span> : <code class="type">unit -> string option</code></pre><div class="info">
+Return the path where ocamlc library is installed<br>
+</div>
 <pre><span id="VALdirectories"><span class="keyword">val</span> directories</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">files dir</code> returns the directories in the directory <code class="code">dir</code><br>
 </div>
@@ -125,7 +128,7 @@ Create a directory. Do not fail if the directory already
     current processus is the same as the one who took the lock at the
     first place.<br>
 </div>
-<pre><span id="VALwith_flock"><span class="keyword">val</span> with_flock</span> : <code class="type">('a -> 'b) -> 'a -> 'b</code></pre><div class="info">
+<pre><span id="VALwith_flock"><span class="keyword">val</span> with_flock</span> : <code class="type">(unit -> unit) -> unit</code></pre><div class="info">
 Functional version of <code class="code">flock / funlock</code><br>
 </div>
 <br>

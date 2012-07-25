@@ -7,11 +7,11 @@ things, used by Debian to manage their packages.
  
 ### Prerequisites:
 
-* ocaml
+* ocaml (either installed or available in remote repository)
 
 ### Compiling OPAM
 
-* To compile `opam`, simply run:
+To compile `opam`, simply run:
 
 ```
 make
@@ -21,6 +21,20 @@ This will fetch the necessary archives if they are not already
 downloaded and then build OPAM. If you just want to get the
 necessary dependencies without compiling the project, run
 `make clone`.
+
+### Installing OPAM
+
+To install opam in `/usr/local/bin` simply run:
+
+```
+sudo make install
+```
+
+If you want to install OPAM in a different path:
+
+```
+make BIN=$HOME/bin install
+```
 
 ### Using opam
 
@@ -35,7 +49,10 @@ eval `opam config -env`
 ```
 
 The first command creates `~\.opam` and set-up `opam.ocamlpro.com` as
-default repository. The second command update your local environment
+default repository. If `OCaml` is not installed, you can add the option
+ `-comp VERSION` (if the remote repository contains the associated
+ `VERSION.comp` description file). 
+The second command updates your local environment
 to use the packages installed by OPAM. For convenience, you can add
 this line in your `~/.profile`.
 

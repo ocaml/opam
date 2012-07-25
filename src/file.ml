@@ -148,6 +148,23 @@ module Repo_index = struct
 
 end
 
+module Pinned = struct
+
+  let internal = "pinned"
+
+  type t = pin_option N.Map.t
+
+  let empty = N.Map.empty
+
+  let of_string filename str =
+    let m = Repo_index.of_string filename str in
+    N.Map.map pin_option_of_string m
+
+  let to_string filename map =
+    Repo_index.to_string filename (N.Map.map string_of_pin_option map)
+
+end
+
 module Repo_config = struct
 
   let internal = "repo-config"
@@ -253,24 +270,28 @@ module Config = struct
       opam_version  : OPAM_V.t ;
       repositories  : repository list ;
       ocaml_version : Alias.t ;
+      last_ocaml_in_path : OCaml_V.t option ;
       cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
     let with_ocaml_version t ocaml_version = { t with ocaml_version }
+    let with_last_ocaml_in_path t last_ocaml_in_path = { t with last_ocaml_in_path }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let ocaml_version t = t.ocaml_version
+    let last_ocaml_in_path t = t.last_ocaml_in_path
     let cores t = t.cores
 
-    let create opam_version repositories ocaml_version cores =
-      { opam_version ; repositories ; ocaml_version ; cores }
+    let create opam_version repositories ocaml_version last_ocaml_in_path cores =
+      { opam_version ; repositories ; ocaml_version ; last_ocaml_in_path ; cores }
 
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
       repositories = [];
       ocaml_version = Alias.of_string "<none>";
+      last_ocaml_in_path = None;
       cores = Globals.default_cores;
     }
 
@@ -278,12 +299,14 @@ module Config = struct
 
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
+    let s_last_ocaml_in_path = "system_ocaml-version"
     let s_cores = "cores"
 
     let valid_fields = [
       s_opam_version;
       s_repositories;
       s_ocaml_version;
+      s_last_ocaml_in_path;
       s_cores;
     ]
 
@@ -297,8 +320,10 @@ module Config = struct
           (parse_list (parse_string_option parse_string_pair_of_list |> to_repo)) in
       let ocaml_version =
         assoc s.contents s_ocaml_version (parse_string |> Alias.of_string) in
+      let last_ocaml_in_path =
+        assoc_option s.contents s_last_ocaml_in_path (parse_string |> OCaml_V.of_string) in
       let cores = assoc s.contents s_cores parse_int in
-      { opam_version; repositories; ocaml_version; cores }
+      { opam_version; repositories; ocaml_version; last_ocaml_in_path; cores }
 
    let to_string filename t =
      let s = {
@@ -308,7 +333,11 @@ module Config = struct
          Variable (s_repositories , make_list of_repo t.repositories);
          Variable (s_ocaml_version, make_string (Alias.to_string t.ocaml_version));
          Variable (s_cores        , make_int t.cores);
-       ] 
+       ] @ (
+            match t.last_ocaml_in_path with
+            | None   -> []
+            | Some v -> [ Variable (s_last_ocaml_in_path, make_string (OCaml_V.to_string v)) ]
+          ) 
      } in
      Syntax.to_string filename s
 end
@@ -324,6 +353,7 @@ module OPAM = struct
     version    : V.t;
     maintainer : string;
     substs     : basename list;
+    build_env  : (string * string * string) list;
     build      : string list list;
     remove     : string list list;
     depends    : cnf_formula;
@@ -340,6 +370,7 @@ module OPAM = struct
     version    = V.of_string "<none>";
     maintainer = "<none>";
     substs     = [];
+    build_env  = [];
     build      = [];
     remove     = [];
     depends    = [];
@@ -360,6 +391,7 @@ module OPAM = struct
   let s_maintainer  = "maintainer"
   let s_substs      = "substs"
   let s_build       = "build"
+  let s_build_env   = "build-env"
   let s_remove      = "remove"
   let s_depends     = "depends"
   let s_depopts     = "depopts"
@@ -391,6 +423,7 @@ module OPAM = struct
     s_libraries;
     s_syntax;
     s_ocaml_version;
+    s_build_env;
   ]
 
   let valid_fields =
@@ -412,8 +445,10 @@ module OPAM = struct
   let libraries t = t.libraries
   let syntax t = t.syntax
   let ocaml_version t = t.ocaml_version
+  let build_env t = t.build_env
 
   let with_depends t depends = { t with depends }
+  let with_depopts t depopts = { t with depopts }
   let with_build t build = { t with build }
   let with_remove t remove = { t with remove }
 
@@ -453,6 +488,7 @@ module OPAM = struct
             Variable (s_version, String (V.to_string t.version));
             Variable (s_maintainer, String t.maintainer);
             Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
+            Variable (s_build_env, make_list make_env_variable t.build_env);
             Variable (s_build, make_list (make_list make_string) t.build);
             Variable (s_remove, make_list (make_list make_string) t.remove);
             Variable (s_depends, make_cnf_formula t.depends);
@@ -494,6 +530,7 @@ module OPAM = struct
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
+    let build_env = assoc_list s s_build_env (parse_list parse_env_variable) in
     let build      =
       assoc_default Globals.default_build_command s s_build parse_commands in
     let remove     = assoc_list s s_remove parse_commands in
@@ -510,7 +547,7 @@ module OPAM = struct
       ) s in
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
-      ocaml_version; }
+      ocaml_version; build_env }
 end
 
 module Dot_install_raw = struct
@@ -520,11 +557,13 @@ module Dot_install_raw = struct
   type t =  {
     lib : string list ;
     bin : (string * string option) list ;
+    toplevel: string list;
     misc: (string * string option) list ;
   }
 
   let lib t = t.lib
   let bin t = t.bin
+  let toplevel t = t.toplevel
   let misc t = t.misc
 
   let with_bin t bin = { t with bin }
@@ -532,17 +571,20 @@ module Dot_install_raw = struct
   let empty = {
     lib  = [] ;
     bin  = [] ;
+    toplevel = [] ;
     misc = [] ;
   }
 
   let s_lib = "lib"
   let s_bin = "bin"
   let s_misc = "misc"
+  let s_toplevel = "toplevel"
 
   let valid_fields = [
     s_opam_version;
     s_lib;
     s_bin;
+    s_toplevel;
     s_misc;
   ]
 
@@ -555,6 +597,7 @@ module Dot_install_raw = struct
       contents = [
         Variable (s_lib , make_list make_string t.lib);
         Variable (s_bin , make_list make_option t.bin);
+        Variable (s_toplevel, make_list make_string t.toplevel);
         Variable (s_misc, make_list make_option t.misc);
       ]
     } in
@@ -565,8 +608,9 @@ module Dot_install_raw = struct
     Syntax.check s valid_fields;
     let lib = assoc_list s.contents s_lib (parse_list parse_string) in
     let bin = assoc_list s.contents s_bin (parse_list (parse_string_option parse_single_string)) in
+    let toplevel = assoc_list s.contents s_toplevel (parse_list parse_string) in
     let misc = assoc_list s.contents s_misc (parse_list (parse_string_option parse_single_string)) in
-    { lib; bin; misc }
+    { lib; bin; misc; toplevel }
 
 end
 
@@ -577,6 +621,7 @@ module Dot_install = struct
   type t =  {
     lib : filename list ;
     bin : (filename * basename) list ;
+    toplevel : filename list;
     misc: (filename * filename) list ;
   }
 
@@ -588,12 +633,14 @@ module Dot_install = struct
   let lib t = t.lib
   let bin t = t.bin
   let misc t = t.misc
+  let toplevel t = t.toplevel
 
   module R = Dot_install_raw
 
   let empty = {
     lib  = [] ;
     bin  = [] ;
+    toplevel = [];
     misc = [] ;
   }
 
@@ -607,6 +654,7 @@ module Dot_install = struct
     R.to_string filename
       { lib = List.map Filename.to_string t.lib
       ; bin = List.map to_bin t.bin
+      ; toplevel = List.map Filename.to_string t.toplevel
       ; R.misc = List.map to_misc t.misc }
 
   let of_string filename str =
@@ -619,6 +667,7 @@ module Dot_install = struct
       | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
     { lib = List.map Filename.of_string t.R.lib
     ; bin = List.map of_bin t.R.bin
+    ; toplevel = List.map Filename.of_string t.R.toplevel
     ; misc = List.map of_misc t.R.misc }
 
 end
@@ -895,15 +944,6 @@ module Comp = struct
       ("camlp4"     , parse_camlp4);
       ("string-list", parse_string_list |> fun x -> Some (Cmd x));
     ] in
-    let parse_env_variable v =
-      let l = parse_sequence [
-        ("ident" , parse_ident);
-        ("symbol", parse_symbol);
-        ("string", parse_string)
-      ] v in
-      match l with
-      | [ident; symbol; string] -> (ident, symbol, string)
-      | _ -> assert false in
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
@@ -941,8 +981,6 @@ module Comp = struct
     let make_ppflag = function
       | Cmd l    -> make_list make_string l
       | Camlp4 l -> List (Symbol "CAMLP4" :: List.map make_string l) in
-    let make_env_variable (ident, symbol, string) =
-      List [make_ident ident; make_symbol symbol; make_string string] in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
       contents = [
@@ -1064,6 +1102,11 @@ end
 module Repo_index = struct
   include Repo_index
   include Make (Repo_index)
+end
+
+module Pinned = struct
+  include Pinned
+  include Make (Pinned)
 end
 
 module Repo_config = struct

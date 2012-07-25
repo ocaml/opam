@@ -34,6 +34,9 @@ module type Abstract = sig
 
     include Set.S with type elt = t
 
+    (** auto-map *)
+    val map: (elt -> elt) -> t -> t
+
     (** Return one element. Fail if the set is not a singleton. *)
     val choose_one : t -> elt
 
@@ -54,6 +57,8 @@ module type Abstract = sig
 
     (** Same as [merge] but only keys that appear in both maps
         are given in the merging function *)
+    (** WARNING : Besides [key], the function could receive 
+        some [v1] and some [v2] such that [v1 = v2] holds. *)
     val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   end
 end
@@ -405,8 +410,28 @@ type remote =
   | Add of repository
   | Rm of string
 
-(** Pretty-print *)
+(** Pretty-print or remote args *)
 val string_of_remote: remote -> string
+
+(** Pinned packages options *)
+type pin_option =
+  | Version of version
+  | Path of dirname
+  | Unpin
+
+(** Pinned packages *)
+type pin = {
+  pin_package: name;
+  pin_arg: pin_option;
+}
+
+(** Pretty-printing of pinned packages *)
+val string_of_pin: pin -> string
+
+(** Read pin options args *)
+val pin_option_of_string: string -> pin_option
+
+val string_of_pin_option: pin_option -> string
 
 (** Configuration requests *)
 type config_option = {
@@ -430,6 +455,11 @@ val string_of_config: config -> string
 (** Compiler aliases *)
 module Alias: Abstract
 
-type and_formula = Debian.Format822.vpkglist
+type atom_formula = Debian.Format822.vpkg
+type and_formula = atom_formula list
+
+(** Pretty-print *)
+val string_of_atom_formula : atom_formula -> string
+
 type cnf_formula = Debian.Format822.vpkgformula
 type ocaml_constraint = relop * OCaml_V.t

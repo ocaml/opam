@@ -49,13 +49,16 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: OPAM_V.t -> repository list -> Alias.t -> int -> t
+  val create: OPAM_V.t -> repository list -> Alias.t -> OCaml_V.t option -> int -> t
 
-  (** OCaml version updates *)
+  (** OCaml alias updates *)
   val with_ocaml_version : t -> Alias.t -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
+
+  (** OCaml version updates *)
+  val with_last_ocaml_in_path: t -> OCaml_V.t option -> t
 
 
   (** Return the OPAM version *)
@@ -64,8 +67,11 @@ module Config: sig
   (** Return the list of repository *)
   val repositories: t  -> repository list
 
-  (** Return the OCaml version *)
+  (** Return the OCaml alias *)
   val ocaml_version: t -> Alias.t
+
+  (** Return the OCaml version *)
+  val last_ocaml_in_path: t -> OCaml_V.t option
 
   (** Return the number of cores *)
   val cores: t -> int
@@ -94,6 +100,9 @@ module OPAM: sig
 
   (** File substitutions *)
   val substs: t -> basename list
+
+  (** List of environment variables to set-up for the build *)
+  val build_env: t -> (string * string * string) list
 
   (** List of command to run for building the package *)
   val build: t -> string list list
@@ -124,6 +133,9 @@ module OPAM: sig
 
   (** Construct as [depends] *)
   val with_depends : t -> cnf_formula -> t
+
+  (** Construct as [depopts] *)
+  val with_depopts : t -> cnf_formula -> t
 
   (** Construct as [build] *)
   val with_build: t -> string list list -> t
@@ -254,6 +266,9 @@ module Dot_install: sig
   (** List of files to install in $bin/ *)
   val bin:  t -> (filename * basename) list
 
+  (** List of toplevel files *)
+  val toplevel: t -> filename list
+
   (** List of other files to install *)
   val misc: t -> (filename * filename) list
 
@@ -322,6 +337,9 @@ module Repo_index: IO_FILE with type t = string N.Map.t
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
+
+(** Pinned package files *)
+module Pinned: IO_FILE with type t = pin_option N.Map.t
 
 (** {2 Substitution files} *)
 

@@ -39,11 +39,11 @@ val write: string -> string -> unit
 val remove: string -> unit
 
 (** [remove_file filename] removes [filename]. Works only for normal
-    files *)
+    files (or also at least for symlinks) *)
 val remove_file: string -> unit
 
 (** [remove_dir filename] removes [filename]. Works only for
-    directory. *)
+    directory (not for symlinks or other files). *)
 val remove_dir: string -> unit
 
 (** Change the current working directory *)
@@ -52,19 +52,25 @@ val chdir: string -> unit
 (** [in_dir dir fn] evaluates [fn] in the directory [dir] *)
 val in_dir: string -> (unit -> 'a) -> 'a
 
-(** [files dir] returns the files in the directory [dir] *)
-val files: string -> string list
+(** [files_with_links dir] returns the files in the directory [dir].
+    Links simulating directory are ignored, others links are returned. *)
+val files_with_links: string -> string list
 
 (** [rec_files dir] returns the list of all files in [dir], 
-    recursively *)
+    recursively.
+    Links behaving like directory are crossed. *)
 val rec_files: string -> string list
 
 (** Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns [None]. *)
 val ocaml_version: unit -> string option
 
-(** [files dir] returns the directories in the directory [dir] *)
-val directories: string -> string list
+(** Return the path where ocamlc library is installed *)
+val ocamlc_where: unit -> string option
+
+(** [directories_with_links dir] returns the directories in the directory [dir].
+    Links pointing to directory are also returned. *)
+val directories_with_links: string -> string list
 
 (** a command is a list of words *)
 type command = string list
@@ -110,7 +116,7 @@ val flock: unit -> unit
 val funlock: unit -> unit
 
 (** Functional version of [flock / funlock] *)
-val with_flock: ('a -> 'b) -> 'a -> 'b
+val with_flock: (unit -> unit) -> unit
 
 (** {2 Function used only by the switch commnand} *)
 

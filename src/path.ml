@@ -62,6 +62,8 @@ module C = struct
 
   let stublibs t = lib_dir t / "stublibs"
 
+  let toplevel t = lib_dir t / "toplevel"
+
   let doc_dir t = t / "doc"
 
   let doc t n = doc_dir t / N.to_string n
@@ -93,6 +95,8 @@ module C = struct
   let config_dir t = t / "config"
 
   let config t n = config_dir t // (N.to_string n ^ ".config")
+
+  let pinned t = t // "pinned"
 
 end
 

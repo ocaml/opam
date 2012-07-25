@@ -70,7 +70,7 @@ let () =
   update local_path;
 
   (* Look at already cloned packages *)
-  let dirs = Run.directories repositories in
+  let dirs = Run.directories_with_links repositories in
   let updates = List.filter needs_update dirs in
   let updates =
     Utils.filter_map (fun d ->

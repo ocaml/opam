@@ -221,3 +221,11 @@ val parse_constraint: value -> ocaml_constraint
 
 (** Build a simple constraint *)
 val make_constraint: ocaml_constraint -> value
+
+(** {2 Environment variables} *)
+
+(** Parsing *)
+val parse_env_variable: value -> (string * string * string)
+
+(** Making *)
+val make_env_variable: (string * string * string) -> value
