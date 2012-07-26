@@ -39,9 +39,10 @@ module FileUrl = struct
 end
 
 let raw_wget str =
-  match Globals.os with
-  | Globals.Darwin -> [ "curl"; "--insecure" ; "-OL"; str ]
-  | _              -> [ "wget"; "--no-check-certificate" ; str ]
+  let open Globals in
+  match os with
+  | Darwin | FreeBSD | OpenBSD -> [ "curl"; "--insecure"; "-OL"; str ]
+  | _ -> [ "wget"; "--no-check-certificate" ; str ]
 
 let wget remote_file =
   raw_wget (Filename.to_string remote_file)
