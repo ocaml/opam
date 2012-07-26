@@ -120,6 +120,7 @@ module Dirname: sig
   val rmdir: t -> unit
   val mkdir: t -> unit
   val list: t -> t list
+  val in_dir: t -> (unit -> 'a) -> 'a
   val exec: t ->
     ?add_to_env:(string*string) list ->
     ?add_to_path:t list -> string list list -> int
@@ -127,7 +128,8 @@ module Dirname: sig
   val basename: t -> basename
   val remove_prefix: prefix:t -> t -> string
   val exists: t -> bool
-  val of_raw: string -> t
+  val raw: string -> t
+  val with_tmp_dir: (t -> 'a) -> 'a
 end = struct
 
   include Base
@@ -135,7 +137,13 @@ end = struct
   let of_string dirname =
     Run.real_path dirname
 
-  let of_raw s = s
+  let to_string dirname =
+    Filename.dirname (Filename.concat dirname "")
+
+  let raw s = s
+
+  let with_tmp_dir fn =
+    Run.with_tmp_dir (fun dir -> fn (of_string dir))
 
   let rmdir dirname =
     Run.remove (to_string dirname)
@@ -149,6 +157,9 @@ end = struct
   let list d =
     let fs = Run.directories_with_links (to_string d) in
     List.map of_string fs
+
+  let in_dir dirname fn =
+    Run.in_dir (to_string dirname) fn
 
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
     Run.in_dir (to_string dirname) 
@@ -168,7 +179,9 @@ end = struct
     Sys.file_exists (to_string dirname)
 
   let remove_prefix ~prefix dirname =
-    let prefix = to_string prefix in
+    let prefix = 
+      let str = to_string prefix in
+      if str = "" then "" else Filename.concat str "" in
     let dirname = to_string dirname in
     Utils.remove_prefix ~prefix dirname
 end
@@ -205,8 +218,16 @@ module Filename: sig
   val copy: t -> t -> unit
   val link: t -> t -> unit
   val extract: t -> dirname -> unit
+  val extract_in: t -> dirname -> unit
   val starts_with: dirname -> t -> bool
   val remove_prefix: prefix:dirname -> t -> string
+  val download: t -> dirname -> t option
+  val download_iter: t list -> dirname -> t option
+  val patch: t -> dirname -> bool
+  val digest: t -> Digest.t
+  val touch: t -> unit
+  val chmod: t -> int -> unit
+  val raw: string -> t
 end = struct
 
   type t = {
@@ -220,8 +241,22 @@ end = struct
     let dirname = Dirname.of_string "." in
     { dirname; basename }
 
+  let raw str =
+    let dirname = Dirname.of_string (Filename.dirname str) in
+    let basename = Basename.of_string (Filename.basename str) in
+    create dirname basename
+
   let to_string t =
     F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
+
+  let digest t =
+    Digest.file (to_string t)
+
+  let touch t =
+    Run.write (to_string t) ""
+
+  let chmod t p =
+    Unix.chmod (to_string t) p
 
   let of_string s =
     let dirname = F.dirname s in
@@ -290,15 +325,31 @@ end = struct
   let extract filename dirname =
     Run.extract (to_string filename) (Dirname.to_string dirname)
 
+  let extract_in filename dirname =
+    Run.extract_in (to_string filename) (Dirname.to_string dirname)
+
   let starts_with dirname filename =
     Utils.starts_with (Dirname.to_string dirname) (to_string filename)
 
   let remove_prefix ~prefix filename =
-    let prefix = 
-      let str = Dirname.to_string prefix in
-      if str = "" then "" else F.concat str "" in
-    let filename = to_string filename in
-    Utils.remove_prefix ~prefix filename
+    let filename = Dirname.raw (to_string filename) in
+    Dirname.remove_prefix ~prefix filename
+
+  let download filename dirname =
+    match Run.download ~filename:(to_string filename) ~dirname:(Dirname.to_string dirname) with
+    | None   -> None
+    | Some f -> Some (of_string f)
+
+  let rec download_iter filenames dirname =
+    match filenames with
+    | []   -> None
+    | h::t ->
+        match download h dirname with
+        | None -> download_iter t dirname
+        | x    -> x
+
+  let patch filename dirname =
+    Dirname.in_dir dirname (fun () -> Run.patch (to_string filename))
 
   module O = struct
     type tmp = t
@@ -313,7 +364,7 @@ type filename = Filename.t
 
 let (/) d1 s2 =
   let s1 = Dirname.to_string d1 in
-  Dirname.of_raw (F.concat s1 s2)
+  Dirname.raw (F.concat s1 s2)
 
 let (//) d1 s2 =
   let d = Stdlib_filename.dirname s2 in

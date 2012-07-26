@@ -366,13 +366,12 @@ let update_package () =
                 let nv = find_installed_package_by_name t n in
                 let build = Path.C.build t.compiler nv in
                 if Dirname.exists build then
-                  let o =
+                  match
                     Run.read_command_output
-                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p; Dirname.to_string build ] in
-                  if List.length o > 4 then
-                    Some nv
-                  else
-                    None
+                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p; Dirname.to_string build ]
+                  with
+                  | Some o when List.length o > 4 -> Some nv
+                  | _ -> None
                 else
                   None
               else
@@ -564,36 +563,46 @@ let init_ocaml alias (default_allowed, ocaml_version) =
         (* Install the compiler *)
         let comp_src = File.Comp.src comp in
         let build_dir = Path.C.build_ocaml alias_p in
-        Run.download comp_src (Dirname.to_string build_dir);
-        let patches = File.Comp.patches comp in
-        List.iter (fun f -> Run.download f (Dirname.to_string build_dir)) patches;
-        Run.in_dir
-          (Dirname.to_string build_dir)
-          (fun () ->
-            let patches = List.map Stdlib_filename.basename patches in
-            List.iter Run.patch patches);
-        let err =
-          if File.Comp.configure comp @ File.Comp.make comp <> [] then
-            Dirname.exec build_dir
-              [ ( "./configure" :: File.Comp.configure comp )
-                @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
-              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-              (* NOTE In case it exists 2 '-prefix', in general the script
-                 ./configure will only consider the last one, others will be
-                 discarded. *)
-              ; ( "make" :: File.Comp.make comp )
-              ; [ "make" ; "install" ]
-              ]
-          else
-            let builds =
-              List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-            Dirname.exec build_dir builds
-        in
-        if err <> 0 then
-          Globals.error_and_exit
-            "The compilation of compiler version %s failed"
-            (OCaml_V.to_string ocaml_version)
+        Dirname.with_tmp_dir (fun download_dir ->
+          match Filename.download comp_src build_dir with
+          | None -> Globals.error_and_exit "Cannot find %s" (Filename.to_string comp_src)
+          | Some local_file ->
+              Filename.extract local_file build_dir;
+              let patches = File.Comp.patches comp in
+              let patches =
+                Utils.filter_map (fun f ->
+                  match Filename.download f build_dir with
+                  | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string f) 
+                  | Some f -> Some f
+                ) patches in
+              List.iter (fun f ->
+                if not (Filename.patch f build_dir) then
+                  Globals.error_and_exit "Cannot apply %s" (Filename.to_string f)
+              ) patches;
+              let err =
+                if File.Comp.configure comp @ File.Comp.make comp <> [] then
+                Dirname.exec build_dir
+                  [ ( "./configure" :: File.Comp.configure comp )
+                    @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
+                  (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+                  (* NOTE In case it exists 2 '-prefix', in general the script
+                     ./configure will only consider the last one, others will be
+                     discarded. *)
+                  ; ( "make" :: File.Comp.make comp )
+                  ; [ "make" ; "install" ]
+                  ]
+                else
+                let builds =
+                  List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+                Dirname.exec build_dir builds
+              in
+              if err <> 0 then
+              Globals.error_and_exit
+                "The compilation of compiler version %s failed"
+                (OCaml_V.to_string ocaml_version)
+        )
       end
+
     with e -> 
       if not !Globals.debug then
       Dirname.rmdir (Path.C.root alias_p);

@@ -6,15 +6,12 @@ let _ =
     exit 1
   )
 
-let local_path = Run.cwd ()
-let remote_address = Sys.argv.(1)
-let package = Sys.argv.(2)
+let log fmt = Globals.log "rsync-download"
 
-let (/) = Filename.concat
+open Types
+open Repo_helpers
 
 let () =
-  let remote_archive = remote_address / "archives" / package ^ ".tar.gz" in
-  let err =
-    Run.command [ "rsync" ; "-ar"; remote_archive ; "archives/" ] in
-  if err <> 0 then
-    Globals.error_and_exit "rsync command failed"
+  let state = make_state () in
+  let nv = NV.of_string Sys.argv.(2) in
+  Rsync.Archives.make state () nv

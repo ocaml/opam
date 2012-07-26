@@ -26,105 +26,75 @@
    After the script is run, archives/ contains all the package archives
    for the available descr and OPAM files *)
 
-module F = Filename
-
+open Repo_helpers
 open Types
+open Curl
 
-let tmp_dir0 = Run.mk_temp_dir "mk-repo"
-
-let root = Path.R.of_path (Dirname.cwd ())
-
-let opams = Path.R.available root
-
-let () =
-  Globals.msg "Available:\n";
-  NV.Set.iter (fun nv ->
-    Globals.msg " - %s\n" (NV.to_string nv)
-  ) opams
-
-let opams =
-  NV.Set.filter (fun nv ->
-    not (Filename.exists (Path.R.archive root nv))
-  ) opams
+let all, index, packages =
+  let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
+  let all = ref true in
+  let index = ref false in
+  let packages = ref [] in
+  let specs = Arg.align [
+    ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
+    ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
+  ] in
+  let ano p = packages := p :: !packages in
+  Arg.parse specs ano usage;
+  !all, !index, NV.Set.of_list (List.map NV.of_string !packages)
 
 let () =
-  Globals.msg "To update:\n";
+
+  let local_path = Dirname.cwd () in
+  let local_repo = Path.R.of_path local_path in
+  let state = {
+    local_path; local_repo;
+    remote_path = local_path;
+    remote_repo = local_repo;
+  } in
+
+  (* Create urls.txt *)
+  let local_index_file = Filename.of_string "urls.txt" in
+  let urls = List.map (fun f ->
+    let basename =
+      Basename.of_string (Filename.remove_prefix ~prefix:(Dirname.cwd()) f) in
+    let perm =
+      let s = Unix.stat (Filename.to_string f) in
+      s.Unix.st_perm in
+    let digest =
+      Digest.to_hex (Digest.file (Filename.to_string f)) in
+    basename, perm, digest
+  ) (Filename.list (Path.R.opam_dir local_repo)
+   @ Filename.list (Path.R.descr_dir local_repo)
+   @ Filename.list (Path.R.archive_dir local_repo)
+   @ Filename.list (Path.R.compiler_dir local_repo)
+   @ Filename.list (Path.R.url_dir local_repo)
+   @ Filename.list (Path.R.files_dir local_repo)
+  ) in
+  File.Urls_txt.write local_index_file urls;
+
+  let t = Curl.make_state state in
+
+  let updates = Curl.Updates.get state t in
+
+  (* Update the archive files *)
   NV.Set.iter (fun nv ->
-    Globals.msg " - %s\n" (NV.to_string nv)
-  ) opams
+    Globals.msg "Updating %s as some file have changed\n" (NV.to_string nv);
+    if Filename.exists (Path.R.archive local_repo nv) then
+      Curl.Archives.make state t nv
+  ) updates;
 
-let url nv =
-  let f = Path.R.root root / "url" // NV.to_string nv in
-  if Filename.exists f then
-    Some (Utils.string_strip (Raw.to_string (Filename.read f)))
-  else
-    None
-
-let files nv =
-  let d = Path.R.root root / "files" / NV.to_string nv in
-  if Dirname.exists d then
-    Filename.list d
-  else
-    []
-
-let tmp nv =
-  Path.R.root root / "tmp" / NV.to_string nv
-
-let tmp_dir nv =
-  Dirname.of_string tmp_dir0 / NV.to_string nv
-
-let wget src =
-  let open Globals in
-  match os with
-  | Darwin | FreeBSD | OpenBSD -> [ "curl"; "--insecure" ; "-OL"; src ]
-  | _ -> [ "wget"; "--no-check-certificate"; src ]
-
-let archive_name src =
-  let name = F.basename src in
-  if F.check_suffix name ".tar.gz"
-  || F.check_suffix name ".tar.bz2"
-  || F.check_suffix name ".tgz"
-  || F.check_suffix name ".tbz" then
-    name
-  else    
-    Printf.sprintf "%s.tar.gz" name
-
-let mv src =
-  let name = archive_name src in
-  if (F.basename src) = name then
-    []
-  else
-    [ "mv" ; F.basename src ; name ]
-
-let () =
-  Dirname.mkdir (Path.R.archive_dir root);
+  (* Create the archives asked by the user *)
   NV.Set.iter (fun nv ->
-    Globals.msg "Processing %-40s ." (NV.to_string nv);
-    let tmp_dir = tmp_dir nv in
-    Dirname.rmdir tmp_dir;
-    Dirname.mkdir tmp_dir;
-    begin match url nv with
-    | None     -> ()
-    | Some url ->
-        Filename.remove (tmp nv // archive_name url);
-        Dirname.mkdir (tmp nv);
-        let err = Dirname.exec (tmp nv) [
-          wget url;
-          mv url;
-        ] in
-        if err <> 0 then
-          Globals.error_and_exit "Cannot get %s" url;
-        Filename.extract (tmp nv // archive_name url) tmp_dir;
-    end;
-    Globals.msg ".";
-    List.iter (fun f ->
-      Filename.copy_in f tmp_dir
-    ) (files nv);
-    Globals.msg ".";
-    let err = Dirname.exec (Dirname.of_string tmp_dir0) [
-      [ "tar" ; "czf" ; Filename.to_string (Path.R.archive root nv) ; NV.to_string nv ]
-    ] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir);
-    Globals.msg " OK\n";
-  ) opams
+    if not index && (all || NV.Set.mem nv packages) then begin
+      Globals.msg "Creating archive for %s\n" (NV.to_string nv);
+      Curl.Archives.make state t nv
+    end
+  ) updates;
+
+  (* Create index.tar.gz *)
+  let err = Run.command [
+    "sh"; "-c"; "tar cz compilers opam descr > index.tar.gz"
+  ] in
+  if err <> 0 then
+    Globals.error_and_exit "Cannot create index.tar.gz"

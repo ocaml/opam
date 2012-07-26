@@ -42,7 +42,6 @@ module Lines = struct
 
 end
 
-
 module Syntax = struct
 
   let internal = "syntax"
@@ -73,6 +72,52 @@ module Syntax = struct
 end
 
 module X = struct
+
+module Urls_txt = struct
+
+  let internal = "urls-txt"
+
+  type t = (basename * int * string) list
+
+  let empty = []
+
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    Utils.filter_map (function
+      | []                 -> None
+      | [name;perm;digest] -> Some (Basename.of_string name, int_of_string perm, digest)
+      | s                  ->
+          Globals.error_and_exit "%s is not a valid index entry" (String.concat " " s)
+    ) lines
+
+  let to_string f t =
+    let lines =
+      List.map (fun (f,p,d) -> [Basename.to_string f; Printf.sprintf "0o%o" p; d]) t in
+    Lines.to_string f lines
+
+end
+
+module URL = struct
+
+  let internal = "url"
+
+  type t = filename list
+
+  let empty = []
+
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    Utils.filter_map (function
+      | []    -> None
+      | [url] -> Some (Filename.of_string url)
+      | s     -> Globals.error_and_exit "%s is not a valid url" (String.concat " " s)
+    ) lines
+
+  let to_string f t =
+    let lines = List.map (fun f -> [Filename.to_string f]) t in
+    Lines.to_string f lines
+
+end
 
 module Installed = struct
 
@@ -844,8 +889,8 @@ module Comp = struct
     opam_version : OPAM_V.t ;
     name         : OCaml_V.t ;
     preinstalled : bool;
-    src          : string ;
-    patches      : string list ;
+    src          : filename ;
+    patches      : filename list ;
     configure    : string list ;
     make         : string list ;
     build        : string list list ;
@@ -862,7 +907,7 @@ module Comp = struct
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
     name         = OCaml_V.of_string "<none>";
-    src          = "";
+    src          = Filename.raw "";
     preinstalled = false;
     patches   = [];
     configure = [];
@@ -947,8 +992,8 @@ module Comp = struct
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
-    let src       = assoc_default "" s s_src parse_string in
-    let patches   = assoc_string_list s s_patches   in
+    let src       = assoc_default (Filename.raw "") s s_src (parse_string |> Filename.raw) in
+    let patches   = assoc_list s s_patches (parse_list (parse_string |> Filename.of_string)) in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
     let build     = assoc_list s s_build (parse_list parse_string_list) in
@@ -966,7 +1011,7 @@ module Comp = struct
     if build <> [] && (configure @ make) <> [] then
       Globals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
                               fields at the same time.";
-    if not preinstalled && src = "" then
+    if not preinstalled && Filename.to_string src = "" then
       Globals.error_and_exit "You should either specify an url (with 'sources')  \
                               or use 'preinstalled: true' to pick the already installed \
                               compiler version.";
@@ -985,10 +1030,10 @@ module Comp = struct
       filename = Filename.to_string filename;
       contents = [
         Variable (s_name        , make_string (OCaml_V.to_string s.name));
-        Variable (s_src         , make_string s.src);
+        Variable (s_src         , make_string (Filename.to_string s.src));
         Variable (s_opam_version, make_string (OPAM_V.to_string s.opam_version));
         Variable (s_preinstalled, make_bool s.preinstalled);
-        Variable (s_patches     , make_list make_string s.patches);
+        Variable (s_patches     , make_list (Filename.to_string |> make_string) s.patches);
         Variable (s_configure   , make_list make_string s.configure);
         Variable (s_make        , make_list make_string s.make);
         Variable (s_build       , make_list (make_list make_string) s.build);
@@ -1171,4 +1216,14 @@ end
 module Env = struct
   include Env
   include Make (Env)
+end
+
+module URL = struct
+  include URL
+  include Make (URL)
+end
+
+module Urls_txt = struct
+  include Urls_txt
+  include Make(Urls_txt)
 end

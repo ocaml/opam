@@ -88,6 +88,9 @@ module Dirname: sig
   (** List the directory *)
   val list: t -> t list
 
+  (** Evaluate a function in a given directory *)
+  val in_dir: t -> (unit -> 'a) -> 'a
+
   (** Execute a list of commands in a given directory *)
   val exec: t
     -> ?add_to_env:(string * string) list
@@ -103,10 +106,14 @@ module Dirname: sig
   val basename: t -> basename
 
   (** Creation from a raw string (as {i http://<path>}) *)
-  val of_raw: string -> t
+  val raw: string -> t
 
   (** Remove a prefix from a directory *)
   val remove_prefix: prefix:t -> t -> string
+
+  (** Execute a function in a temp directory *)
+  val with_tmp_dir: (t -> 'a) -> 'a
+
 end
 
 (** Shortcut to directory type *)
@@ -139,6 +146,9 @@ module Filename: sig
   (** Create a file from a basename and the current working directory
       as dirname *)
   val of_basename: basename -> t
+
+  (** Creation from a raw string (as {i http://<path>}) *)
+  val raw: string -> t
 
   (** Return the directory name *)
   val dirname: t -> dirname
@@ -192,11 +202,33 @@ module Filename: sig
       match [dirname] dir if needed) *)
   val extract: t -> dirname -> unit
 
+  (** Extract an archive in a given directory (which should already exists) *)
+  val extract_in: t -> dirname -> unit
+
   (** Check wether a filename starts by a given dirname *)
   val starts_with: dirname -> t -> bool
 
   (** Remove a prefix from a file name *)
   val remove_prefix: prefix:dirname -> t -> string
+
+  (** download a remote file in a given directory. Return the location
+      of the downloaded file if the download is successful.  *)
+  val download: t -> dirname -> t option
+
+  (** iterate downloads until one is sucessful *)
+  val download_iter: t list -> dirname -> t option
+
+  (** Apply a patch to a directory *)
+  val patch: t -> dirname -> bool
+
+  (** Compute the MD5 digest of a file *)
+  val digest: t -> Digest.t
+
+  (** Create an empty file *)
+  val touch: t -> unit
+
+  (** Change file permissions *)
+  val chmod: t -> int -> unit
 
 end
 

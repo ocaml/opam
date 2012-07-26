@@ -6,10 +6,6 @@ let _ =
     exit 1
   )
 
-let remote_address = Sys.argv.(1)
-
 let () =
-  Run.mkdir "opam";
-  Run.mkdir "descr";
-  Run.mkdir "archives";
-  Run.mkdir "compilers"
+  let state = Repo_helpers.make_state () in
+  Rsync.Init.make state

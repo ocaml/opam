@@ -190,10 +190,10 @@ module Comp: sig
   val name: t -> OCaml_V.t
 
   (** Return the url of the compiler *)
-  val src: t -> string
+  val src: t -> filename
 
   (** Return the list of patches to apply *)
-  val patches: t -> string list
+  val patches: t -> filename list
 
   (** Options to give to the "./configure" command *)
   val configure: t -> string list
@@ -355,3 +355,9 @@ module Subst: sig
   val replace_string: string -> (full_variable -> variable_contents) -> string
 
 end
+
+(** {2 Urls for OPAM repositories *)
+module URL: IO_FILE with type t = filename list
+
+(** {2 urls.txt file *} *)
+module Urls_txt: IO_FILE with type t = (basename * int * string) list

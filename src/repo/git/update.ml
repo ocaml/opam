@@ -20,11 +20,16 @@ let repositories = Filename.concat local_path "git"
 let get_updates dirname =
   Run.in_dir dirname (fun () ->
     let err = Run.command [ "git" ; "fetch" ; "origin" ] in
+    let error () = Globals.error_and_exit "Cannot fetch git repository %s" dirname in
     if err = 0 then
-      Run.read_command_output
-        [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ]
+      match
+        Run.read_command_output
+          [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ]
+      with
+      | None   -> error ()
+      | Some o -> o
     else
-      Globals.error_and_exit "Cannot fetch git repository %s" dirname
+      error ()
   )
 
 (* Update the git repository located at [dirname] *)

@@ -176,6 +176,13 @@ module R = struct
 
   let archive t nv = archive_dir t // (NV.to_string nv ^ ".tar.gz")
 
+  let available_archives t =
+    let d = archive_dir t in
+    if Dirname.exists d then
+      Filename.Set.of_list (Filename.list d)
+    else
+      Filename.Set.empty
+
   let updated t = t // "updated"
 
   let upload t = t / "upload"
@@ -197,5 +204,19 @@ module R = struct
   let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
 
   let compiler_list t = compiler_list (compiler_dir t)
+
+  let url_dir t = t / "url" 
+
+  let url t nv = url_dir t // NV.to_string nv
+
+  let files_dir t = t / "files"
+
+  let files t nv = files_dir t / NV.to_string nv
+
+  let available_files t nv =
+    if Dirname.exists (files t nv) then
+      Filename.rec_list (files t nv)
+    else
+      []
 
 end

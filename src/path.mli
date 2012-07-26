@@ -216,6 +216,9 @@ module R: sig
   (** Return the archive folder: {i $opam/repo/$repo/archives/} *)
   val archive_dir: t -> dirname
 
+  (** Return the list of archive files in {i $opam/repo/$repo/archives *)
+  val available_archives: t -> Filename.Set.t
+
   (** Return the list of updated packages:
       {i $opam/repo/$repo/updated} *)
   val updated: t -> filename
@@ -256,5 +259,20 @@ module R: sig
 
   (** All the compiler files *)
   val compiler_list: t -> OCaml_V.Set.t
+
+  (** The url folder *)
+  val url_dir: t -> dirname
+
+  (** urls {i $opma/repo/$repo/url/$name.$version *)
+  val url: t -> nv -> filename
+
+  (** file dir {i $opam/repo/$repo/files/} *)
+  val files_dir: t -> dirname
+
+  (** files {i $opam/repo/$repo/files/$package.$name} *)
+  val files: t -> nv -> dirname
+
+  (** All files in the file dir *)
+  val available_files: t -> nv -> filename list
 
 end

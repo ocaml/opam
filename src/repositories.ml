@@ -45,17 +45,3 @@ let download r nv =
 
 let upload r =
   run "upload" r []
-
-module Raw = struct
-
-  let rsync l src dst = 
-    match l with
-      | [`A ; `R] | [`R ; `A] ->
-          let dst = Filename.to_string dst in
-          let err =
-            Run.command [ "rsync" ; "-ar" ; src ; dst ] in
-          if err <> 0 then
-            Globals.error_and_exit "rsync (%S, %S) command failed (%d)" src dst err
-      | _ -> failwith "TODO"
-
-end

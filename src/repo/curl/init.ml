@@ -6,27 +6,24 @@ let _ =
     exit 1
   )
 
-let remote_address = Sys.argv.(1)
-
 open Types
-open Misc
+open Repo_helpers
+open Curl
 
 let () =
-  Run.mkdir "opam";
-  Run.mkdir "descr";
-  Run.mkdir "archives";
-  Run.mkdir "compilers";
-  Run.mkdir "url";
-  Run.mkdir "files";
+  let state = Repo_helpers.make_state () in
+  let t = Curl.make_state state in
+
+  (* Create empty directories *)
+  Curl.Init.make state;
 
   (* Download index.tar.gz *)
-  let err = Dirname.exec local_path [wget remote_index_archive] in
-  if err <> 0 then
-    Globals.msg "Cannot find index.tar.gz on the OPAM repository.\nInitialisation might take some time ...\n"
-  else
-    (* Untar the files *)
-    let err = Run.command [ "tar"; "xfz"; Filename.to_string local_index_archive ] in
-    if err <> 0 then begin
-      Globals.error "Cannot untar %s" (Filename.to_string local_index_archive);
-      Globals.exit err
-    end
+  let warning () =
+    Globals.msg "Cannot find index.tar.gz on the OPAM repository.\nInitialisation might take some time ...\n" in
+
+  try match Filename.download t.remote_index_archive state.local_path with
+    | None   -> warning ()
+    | Some _ ->
+        (* Untar the files *)
+        Filename.extract_in t.local_index_archive state.local_path
+  with _ -> warning ()
