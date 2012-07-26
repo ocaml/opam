@@ -60,11 +60,11 @@
 </div>
 <pre><span id="VALremove_file"><span class="keyword">val</span> remove_file</span> : <code class="type">string -> unit</code></pre><div class="info">
 <code class="code">remove_file filename</code> removes <code class="code">filename</code>. Works only for normal
-    files<br>
+    files (or also at least for symlinks)<br>
 </div>
 <pre><span id="VALremove_dir"><span class="keyword">val</span> remove_dir</span> : <code class="type">string -> unit</code></pre><div class="info">
 <code class="code">remove_dir filename</code> removes <code class="code">filename</code>. Works only for
-    directory.<br>
+    directory (not for symlinks or other files).<br>
 </div>
 <pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">string -> unit</code></pre><div class="info">
 Change the current working directory<br>
@@ -72,12 +72,14 @@ Change the current working directory<br>
 <pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">string -> (unit -> 'a) -> 'a</code></pre><div class="info">
 <code class="code">in_dir dir fn</code> evaluates <code class="code">fn</code> in the directory <code class="code">dir</code><br>
 </div>
-<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info">
-<code class="code">files dir</code> returns the files in the directory <code class="code">dir</code><br>
+<pre><span id="VALfiles_with_links"><span class="keyword">val</span> files_with_links</span> : <code class="type">string -> string list</code></pre><div class="info">
+<code class="code">files_with_links dir</code> returns the files in the directory <code class="code">dir</code>.
+    Links simulating directory are ignored, others links are returned.<br>
 </div>
 <pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>, 
-    recursively<br>
+    recursively.
+    Links behaving like directory are crossed.<br>
 </div>
 <pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Return the version of the current OCaml compiler. If no OCaml
@@ -86,8 +88,9 @@ Return the version of the current OCaml compiler. If no OCaml
 <pre><span id="VALocamlc_where"><span class="keyword">val</span> ocamlc_where</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Return the path where ocamlc library is installed<br>
 </div>
-<pre><span id="VALdirectories"><span class="keyword">val</span> directories</span> : <code class="type">string -> string list</code></pre><div class="info">
-<code class="code">files dir</code> returns the directories in the directory <code class="code">dir</code><br>
+<pre><span id="VALdirectories_with_links"><span class="keyword">val</span> directories_with_links</span> : <code class="type">string -> string list</code></pre><div class="info">
+<code class="code">directories_with_links dir</code> returns the directories in the directory <code class="code">dir</code>.
+    Links pointing to directory are also returned.<br>
 </div>
 <pre><span id="TYPEcommand"><span class="keyword">type</span> <code class="type"></code>command</span> = <code class="type">string list</code> </pre>
 <div class="info">
