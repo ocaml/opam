@@ -516,7 +516,7 @@ let add_alias alias ocaml_version =
 (* We assume that we have the right ocaml-version in $opam/config. Then we:
    - create $opam/$alias
    - compiles and install $opam/compiler/$descr.comp *)
-let init_ocaml alias (default_allowed, ocaml_version) =
+let init_ocaml f_exists alias (default_allowed, ocaml_version) =
   log "init_ocaml";
   let t = load_state () in
 
@@ -554,8 +554,13 @@ let init_ocaml alias (default_allowed, ocaml_version) =
   log "init_ocaml (alias=%s, ocaml_version=%s)" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
 
   let alias_p = Path.C.create alias in
-  Dirname.mkdir (Path.C.root alias_p);
-  (if ocaml_version <> default then 
+  let alias_p_dir = Path.C.root alias_p in
+  if Dirname.exists alias_p_dir then
+    f_exists alias_p_dir
+  else
+  begin
+    Dirname.mkdir alias_p_dir;
+    (if ocaml_version <> default then 
     try
       let comp_f = Path.G.compiler t.global ocaml_version in
       let comp = File.Comp.read comp_f in
@@ -576,7 +581,7 @@ let init_ocaml alias (default_allowed, ocaml_version) =
           if File.Comp.configure comp @ File.Comp.make comp <> [] then
             Dirname.exec build_dir
               [ ( "./configure" :: File.Comp.configure comp )
-                @ [ "-prefix";  Dirname.to_string (Path.C.root alias_p) ]
+                @ [ "-prefix";  Dirname.to_string alias_p_dir ]
               (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
               (* NOTE In case it exists 2 '-prefix', in general the script
                  ./configure will only consider the last one, others will be
@@ -596,9 +601,16 @@ let init_ocaml alias (default_allowed, ocaml_version) =
       end
     with e -> 
       if not !Globals.debug then
-      Dirname.rmdir (Path.C.root alias_p);
+      Dirname.rmdir alias_p_dir;
       raise e);
-  (alias, ocaml_version), last_ocaml
+  end;
+
+  (* write the new version in the configuration file *)
+  let config = File.Config.with_ocaml_version t.config alias in
+  let config = File.Config.with_last_ocaml_in_path config last_ocaml in
+  File.Config.write (Path.G.config t.global) config;
+  add_alias alias ocaml_version;
+  ocaml_version
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -1236,7 +1248,8 @@ let init repo alias ocaml_version cores =
   else try
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
-    File.Config.write config_f (File.Config.with_repositories File.Config.empty [repo]);
+    let opam_version = OPAM_V.of_string Globals.opam_version in
+    File.Config.write config_f (File.Config.create opam_version [repo] cores);
     File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
     File.Repo_config.write (Path.R.config repo_p) repo;
     Repositories.init repo;
@@ -1245,18 +1258,13 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.archive_dir root);
     Dirname.mkdir (Path.G.compiler_dir root);
     update_repo ();
-    (match alias with 
-      | Some alias ->
-          let alias_p = Path.C.root (Path.C.create alias) in
-          if Dirname.exists alias_p then
-            Globals.error_and_exit "%s does not exist and %s already exist" (Filename.to_string config_f) (Dirname.to_string alias_p)
-          else
-            ()
-      | None -> ());
-    let (alias, ocaml_version), last_ocaml = init_ocaml alias (false, ocaml_version) in
-    let opam_version = OPAM_V.of_string Globals.opam_version in
-    File.Config.write config_f (File.Config.create opam_version [repo] alias last_ocaml cores);
-    add_alias alias ocaml_version;
+    let ocaml_version = init_ocaml
+      (fun alias_p -> 
+        Globals.error_and_exit "%s does not exist whereas %s already exist" 
+          (Filename.to_string config_f)
+          (Dirname.to_string alias_p)) 
+      alias
+      (false, ocaml_version) in
     update_package ();
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
@@ -1675,30 +1683,16 @@ let switch clone alias ocaml_version =
   log "switch %B %s %s" clone
     (Alias.to_string alias)
     (OCaml_V.to_string ocaml_version);
-  let t = update_available_current (load_state ()) in
-  let alias_p = Path.C.create alias in
+  let t = load_state () in
 
-  (* [1/3] write the new version in the configuration file *)
-  let config = File.Config.with_ocaml_version t.config alias in
-  File.Config.write (Path.G.config t.global) config;
+  (* install the new OCaml version *)
+  let ocaml_version, exists = 
+    let exists = ref false in
+    let ocaml_version = 
+      init_ocaml (fun _ -> exists := true) (Some alias) (true, Some ocaml_version) in
+    ocaml_version, !exists in
 
-  (* [2/3] install the new OCaml version *)
-  let exists = Dirname.exists (Path.C.root alias_p) in
-  if not exists then begin
-    try 
-      let (alias, ocaml_version), last_ocaml = init_ocaml (Some alias) (true, Some ocaml_version) in
-      File.Config.write (Path.G.config t.global) (File.Config.with_last_ocaml_in_path config last_ocaml);
-      add_alias alias ocaml_version
-    with e ->
-      (* restore the previous configuration *)
-      File.Config.write (Path.G.config t.global) t.config; 
-      File.Aliases.write (Path.G.aliases t.global) t.aliases;
-      if not !Globals.debug then
-        Dirname.rmdir (Path.C.root alias_p); 
-      raise e
-  end;
-
-  (* [3/3] install new package
+  (* install new package
      - the packages specified in the compiler description file if
        the compiler was not previously installed
      - also attempt to replicate the previous state, if required

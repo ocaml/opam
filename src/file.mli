@@ -49,7 +49,7 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: OPAM_V.t -> repository list -> Alias.t -> OCaml_V.t option -> int -> t
+  val create: OPAM_V.t -> repository list -> int -> t
 
   (** OCaml alias updates *)
   val with_ocaml_version : t -> Alias.t -> t
