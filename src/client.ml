@@ -186,8 +186,26 @@ let load_state () =
   print_state t;
   t
 
-let check () =
-  if not (Dirname.exists (Dirname.of_string !Globals.root_path)) then
+type main_function = 
+  | Read_only of (unit -> unit)
+  | Write_lock of (unit -> unit)
+
+let check f =
+  if Dirname.exists (Dirname.of_string !Globals.root_path) then
+    match f with
+    | Write_lock f -> Run.with_flock f
+    | Read_only f ->
+      let warn msg e = Globals.warning "%s: %s" msg (Printexc.to_string e) in
+      try f () with e ->
+        if
+          None = try Some (current_ocaml_version (load_state ())) with e -> let () = warn "check" e in None
+        then
+          let () = warn "main" e in
+          Globals.warning "initialization is not yet finished (or the state %s is inconsistent)" !Globals.root_path
+          (* NOTE it is feasible to determine here if initialization is finished or not *)
+        else
+          raise e
+  else
     Globals.error_and_exit
       "Cannot find %s. Have you run 'opam init first ?"
       !Globals.root_path
@@ -1759,45 +1777,34 @@ let switch clone alias ocaml_version =
 on some read/write data. *)
 
 let list print_short =
-  check ();
-  list print_short
+  check (Read_only (fun () -> list print_short))
 
 let info package =
-  check ();
-  info package
+  check (Read_only (fun () -> info package))
 
 let config request =
-  check ();
-  config request
+  check (Read_only (fun () -> config request))
 
 let install name =
-  check ();
-  Run.with_flock (fun () -> install name)
+  check (Write_lock (fun () -> install name))
 
 let update () =
-  check ();
-  Run.with_flock update
+  check (Write_lock update)
 
 let upgrade () =
-  check ();
-  Run.with_flock upgrade
+  check (Write_lock upgrade)
 
 let upload u r =
-  check ();
-  Run.with_flock (fun () -> upload u r)
+  check (Write_lock (fun () -> upload u r))
 
 let remove name =
-  check ();
-  Run.with_flock (fun () -> remove name)
+  check (Write_lock (fun () -> remove name))
 
 let remote action =
-  check ();
-  Run.with_flock (fun () -> remote action)
+  check (Write_lock (fun () -> remote action))
 
 let switch clone alias ocaml_version =
-  check ();
-  Run.with_flock (fun () -> switch clone alias ocaml_version)
+  check (Write_lock (fun () -> switch clone alias ocaml_version))
 
 let compiler_list () =
-  check ();
-  compiler_list ()
+  check (Read_only compiler_list)
