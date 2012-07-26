@@ -1808,3 +1808,9 @@ let switch clone alias ocaml_version =
 
 let compiler_list () =
   check (Read_only compiler_list)
+
+let pin action =
+  check (Write_lock (fun () -> pin action))
+
+let pin_list () =
+  check (Read_only pin_list)
