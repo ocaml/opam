@@ -257,26 +257,37 @@ let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   if Process.is_failure r then Globals.exit r.Process.r_code;
   r.Process.r_stdout
 
-let is_archive file =
-  List.fold_left
-    (function
-      | Some s -> fun _ -> Some s
-      | None -> fun (ext, c) -> 
-        if List.exists (Filename.check_suffix file) ext then
-          Some (fun dir -> command  [ "tar" ; "xf"^c ; file; "-C" ; dir ])
-        else
-          None)
-    None
-    [ [ "tar.gz" ; "tgz" ], "z"
-    ; [ "tar.bz2" ; "tbz" ], "j" ]
+module Tar = struct
+  let extract = 
+    [ [ "tar.gz" ; "tgz" ], 'z'
+    ; [ "tar.bz2" ; "tbz" ], 'j' ]
+
+  let match_ext file ext = 
+    List.exists (Filename.check_suffix file) ext
+
+  let assoc file = 
+    snd (List.find (function ext, _ -> match_ext file ext) extract)
+
+  let is_archive file =
+    List.fold_left
+      (function
+        | Some s -> fun _ -> Some s
+        | None -> fun (ext, c) -> 
+          if match_ext file ext then
+            Some (fun dir -> command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ])
+          else
+            None)
+      None
+      extract
+end
 
 let extract o_tmp_dir file dst =
   log "untar %s" file;
-  let files = read_command_output [ "tar" ; "ztf" ; file ] in
+  let files = read_command_output [ "tar" ; Printf.sprintf "%ctf" (Tar.assoc file) ; file ] in
   log "%s contains %d files: %s" file (List.length files) (String.concat ", " files);
   let f_tmp tmp_dir = 
   let err =
-    match is_archive file with
+    match Tar.is_archive file with
     | Some f_cmd -> f_cmd tmp_dir
     | None       -> Globals.error_and_exit "%s is not a valid archive" file in
   if err <> 0 then
