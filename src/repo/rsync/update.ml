@@ -27,7 +27,16 @@ let rsync ?fn dir =
   List.fold_left (fun set f -> NV.Set.add f set) NV.Set.empty files
 
 let () =
-  let fn str = NV.of_filename (Filename.of_string str) in
+  let fn str = 
+    let s = "deleting " in
+    if
+      Some true = try Some (String.sub str 0 (String.length s) = s) with _ -> None
+    then
+      (* WARNING if [str] looks like this value : "deleting NAME.VERSION.opam", 
+         then we must not return [Some _] ! *)
+      None
+    else
+      NV.of_filename (Filename.of_string str) in
   let opam = rsync ~fn "opam/" in
   let descr = try rsync "descr/" with e -> let _ = Globals.warning "%s" (Printexc.to_string e) in NV.Set.empty in
   let archives =
