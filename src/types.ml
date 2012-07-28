@@ -125,6 +125,7 @@ module Dirname: sig
     ?add_to_env:(string*string) list ->
     ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
+  val dirname: t -> t
   val basename: t -> basename
   val remove_prefix: prefix:t -> t -> string
   val exists: t -> bool
@@ -174,6 +175,9 @@ end = struct
 
   let basename dirname =
     Basename.of_string (Filename.basename (to_string dirname))
+
+  let dirname dirname =
+    to_string (Filename.dirname (of_string dirname))
 
   let exists dirname =
     Sys.file_exists (to_string dirname)
@@ -435,13 +439,17 @@ end = struct
 
   let of_filename f =
     let f = Filename.to_string f in
-    let b = F.basename f in
-    if F.check_suffix b ".opam" then
-      check (F.chop_suffix b ".opam")
-    else if F.check_suffix b ".tar.gz" then
-      check (F.chop_suffix b ".tar.gz")
-    else
+    if Utils.cut_at f ' ' <> None then
       None
+    else begin
+      let b = F.basename f in
+      if F.check_suffix b ".opam" then
+      check (F.chop_suffix b ".opam")
+      else if F.check_suffix b ".tar.gz" then
+      check (F.chop_suffix b ".tar.gz")
+      else
+      None
+    end
 
   let of_dirname d =
     check (Basename.to_string (Dirname.basename d))

@@ -107,6 +107,9 @@ module Sync = struct
     end else
       Filename.Set.empty
 
+  let upload state t remote_dir =
+    Globals.error_and_exit "Upload is not available for CURL backends"
+
 end
 
 module M = Make(Sync)

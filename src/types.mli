@@ -102,6 +102,9 @@ module Dirname: sig
   (** Does the directory exists ? *)
   val exists: t -> bool
 
+  (** Return the parent directory *)
+  val dirname: t -> t
+
   (** Return the deeper directory name *)
   val basename: t -> basename
 

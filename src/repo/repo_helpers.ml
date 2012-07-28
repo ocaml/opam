@@ -13,6 +13,7 @@ module type SYNC = sig
   type t
   val file: state -> t -> filename -> (filename * bool) option
   val dir: state -> t -> dirname -> Filename.Set.t
+  val upload: state -> t -> dirname -> unit
   val same_digest: state -> t -> local_file:filename -> remote_file:filename -> bool
 end
 
@@ -106,7 +107,7 @@ module Make (Sync : SYNC) = struct
         )
       )
   end
-      
+
   module Updates = struct
 
     let (++) = NV.Set.union
@@ -131,6 +132,31 @@ module Make (Sync : SYNC) = struct
       let archives = get_archives_updates state t in
       let _comps = Sync.dir state t (Path.R.compiler_dir state.remote_repo) in
       url ++ descr ++ opam ++ archives
+
+  end
+
+  module Upload = struct
+
+    let (++) = Filename.Set.union
+
+    let upload state t =
+      let local_repo = state.local_repo in
+      let upload_path = Path.R.upload local_repo in
+      let upload_repo = Path.R.of_path upload_path in
+      let state = { state with local_path = upload_path; local_repo = upload_repo } in
+      let set d = Filename.Set.of_list (if Dirname.exists d then Filename.list d else []) in
+      let files =
+        set (Path.R.url_dir upload_repo)
+        ++ set (Path.R.descr_dir upload_repo)
+        ++ set (Path.R.opam_dir upload_repo)
+        ++ set (Path.R.archive_dir upload_repo)
+        ++ set (Path.R.compiler_dir upload_repo) in
+      Sync.upload state t (Path.R.url_dir state.remote_repo);
+      Sync.upload state t (Path.R.descr_dir state.remote_repo);
+      Sync.upload state t (Path.R.opam_dir state.remote_repo);
+      Sync.upload state t (Path.R.archive_dir state.remote_repo);
+      Sync.upload state t (Path.R.compiler_dir state.remote_repo);
+      files
 
   end
 

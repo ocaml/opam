@@ -10,14 +10,6 @@ open Repo_helpers
 
 let () =
   let state = Repo_helpers.make_state () in
-  let upload_path = Path.R.upload state.local_repo in
-  let upload_repo = Path.R.of_path upload_path in
-  let state = {
-    local_path = state.remote_path;
-    local_repo = state.remote_repo;
-    remote_path = upload_path;
-    remote_repo = upload_repo;
-  } in
-  let updates = Rsync.Updates.get state () in
-  let _archives = Rsync.Sync.dir state () (Path.R.archive_dir upload_repo) in
+  let files = Rsync.Upload.upload state () in
+  let updates = NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements files)) in
   Globals.msg "%d packages uploaded %s\n" (NV.Set.cardinal updates) (NV.Set.to_string updates)
