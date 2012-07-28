@@ -314,28 +314,28 @@ module Config = struct
     type t = {
       opam_version  : OPAM_V.t ;
       repositories  : repository list ;
-      ocaml_version : Alias.t ;
+      ocaml_version : Alias.t option ;
       last_ocaml_in_path : OCaml_V.t option ;
       cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
-    let with_ocaml_version t ocaml_version = { t with ocaml_version }
+    let with_ocaml_version t ocaml_version = { t with ocaml_version = Some ocaml_version }
     let with_last_ocaml_in_path t last_ocaml_in_path = { t with last_ocaml_in_path }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
-    let ocaml_version t = t.ocaml_version
+    let ocaml_version t = match t.ocaml_version with None -> Alias.of_string "<none>" | Some v -> v
     let last_ocaml_in_path t = t.last_ocaml_in_path
     let cores t = t.cores
 
-    let create opam_version repositories ocaml_version last_ocaml_in_path cores =
-      { opam_version ; repositories ; ocaml_version ; last_ocaml_in_path ; cores }
+    let create opam_version repositories cores =
+      { opam_version ; repositories ; ocaml_version = None ; last_ocaml_in_path = None ; cores }
 
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
       repositories = [];
-      ocaml_version = Alias.of_string "<none>";
+      ocaml_version = None;
       last_ocaml_in_path = None;
       cores = Globals.default_cores;
     }
@@ -364,7 +364,7 @@ module Config = struct
         assoc s.contents s_repositories
           (parse_list (parse_string_option parse_string_pair_of_list |> to_repo)) in
       let ocaml_version =
-        assoc s.contents s_ocaml_version (parse_string |> Alias.of_string) in
+        assoc_option s.contents s_ocaml_version (parse_string |> Alias.of_string) in
       let last_ocaml_in_path =
         assoc_option s.contents s_last_ocaml_in_path (parse_string |> OCaml_V.of_string) in
       let cores = assoc s.contents s_cores parse_int in
@@ -376,13 +376,18 @@ module Config = struct
        contents = [ 
          Variable (s_opam_version , make_string (OPAM_V.to_string t.opam_version));
          Variable (s_repositories , make_list of_repo t.repositories);
-         Variable (s_ocaml_version, make_string (Alias.to_string t.ocaml_version));
          Variable (s_cores        , make_int t.cores);
-       ] @ (
-            match t.last_ocaml_in_path with
-            | None   -> []
-            | Some v -> [ Variable (s_last_ocaml_in_path, make_string (OCaml_V.to_string v)) ]
-          ) 
+       ]
+       @ (
+         match t.ocaml_version with
+           | None   -> []
+           | Some v -> [ Variable (s_ocaml_version, make_string (Alias.to_string v)) ]
+       ) 
+       @ (
+         match t.last_ocaml_in_path with
+           | None   -> []
+           | Some v -> [ Variable (s_last_ocaml_in_path, make_string (OCaml_V.to_string v)) ]
+       ) 
      } in
      Syntax.to_string filename s
 end
