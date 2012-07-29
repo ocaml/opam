@@ -71,6 +71,7 @@ let init_server () =
   Unix.setsockopt socket Unix.SO_REUSEADDR true ;
   Unix.bind socket addr;
   Unix.listen socket 10;
+  Run.mkdir !Globals.root_path;
   socket
 
 let run_server () =

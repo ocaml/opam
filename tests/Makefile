@@ -83,11 +83,13 @@ $(BINARIES_): $(BUILDS)
 binaries: $(BINARIES_)
 
 init:
+ifneq ($(REPOKIND), server)
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
 	mkdir $(OPAM_REPO)/opam
 	mkdir $(OPAM_REPO)/descr
 	mkdir $(OPAM_REPO)/compilers
+endif
 ifeq ($(REPOKIND), git)
 	mkdir $(OPAM_REPO)/url
 	cd $(OPAM_REPO) && git init && \
@@ -245,4 +247,7 @@ clean:
 	rm -f $(ARCHIVES)
 
 fresh:
-	rm -rf $(OPAM_ROOT) $(OPAM_REPO) $(BIN)
+	rm -rf $(OPAM_ROOT) $(BIN)
+ifneq ($(REPOKIND), server)
+	rm -rf $(OPAM_REPO) 
+endif

@@ -27,16 +27,16 @@ type t = {
   available: NV.Set.t
 }
 
+let load_root () =
+  Path.R.of_dirname (Dirname.of_string !Globals.root_path)
+
 let init () =
-  log "init server state";
-  let t = Path.R.of_dirname (Dirname.cwd ()) in
+  let t = load_root () in
+  log "init server state (%s)" (Dirname.to_string (Path.R.root t));
   Dirname.mkdir (Path.R.packages_dir t);
   Dirname.mkdir (Path.R.compilers_dir t);
   Dirname.mkdir (Path.R.archives_dir t);
   Dirname.mkdir (Key.hashes_dir t)
-
-let load_root () =
-  Path.R.of_dirname (Dirname.cwd ())
 
 let load_state () =
   let root = load_root () in
@@ -69,7 +69,7 @@ let process_request id = function
       else
         Error "Wrong API version"
   | GetList ->
-      log "GetList";
+      log "GetList %s" !Globals.root_path;
       let t = load_state () in
       let l = NV.Set.fold (fun nv l ->
         (N.to_string (NV.name nv), V.to_string (NV.version nv)) :: l

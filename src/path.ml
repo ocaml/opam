@@ -19,6 +19,7 @@ open Utils
 let log fmt = Globals.log "PATH" fmt
 
 let available_packages dir =
+  log "available_packages %s" (Dirname.to_string dir);
   let files = Filename.list dir in
   let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
   List.fold_left (fun set file ->
@@ -30,6 +31,7 @@ let available_packages dir =
   ) NV.Set.empty files
 
 let available_compilers dir =
+  log "available_compilers %s" (Dirname.to_string dir);
   if Dirname.exists dir then (
     let files = Filename.list dir in
     let files = List.filter (fun f -> Filename.check_suffix f ".comp") files in
@@ -160,6 +162,7 @@ module R = struct
   let packages_dir t = t / "packages"
 
   let available_packages t =
+    log "available_packages %s" (Dirname.to_string t);
     let all = Dirname.list (packages_dir t) in
     let basenames = List.map Dirname.basename all in
     NV.Set.of_list (List.map (Basename.to_string |> NV.of_string) basenames)

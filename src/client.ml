@@ -1441,9 +1441,7 @@ let upload upload repo =
   Filename.copy upload.descr upload_descr;
   Filename.copy upload.archive upload_archives;
   Repositories.upload repo;
-  Filename.remove upload_opam;
-  Filename.remove upload_descr;
-  Filename.remove upload_archives
+  Dirname.rmdir (Path.R.package upload_repo nv)
 
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
