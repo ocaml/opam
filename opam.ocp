@@ -189,4 +189,9 @@ begin program "opam-check"
   requires = [ "opam-lib" ]
 end
 
+begin program "opam-repo-convert-0.3"
+  files = [ "src/scripts/opam_repo_convert.ml" ]
+  requires = [ "opam-lib" ]
+end
+
 end

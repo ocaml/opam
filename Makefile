@@ -7,7 +7,8 @@ TARGETS = opam opam-server \
 	  opam-curl-init opam-curl-update opam-curl-download opam-curl-upload \
 	  opam-git-init opam-git-update opam-git-download opam-git-upload \
 	  opam-server-init opam-server-update opam-server-download opam-server-upload \
-	  opam-mk-config opam-mk-install opam-mk-repo
+	  opam-mk-config opam-mk-install opam-mk-repo \
+	  opam-convert-0.3
 
 .PHONY: all
 
