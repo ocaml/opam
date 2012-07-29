@@ -1,16 +1,16 @@
 (* API version *)
 opam-version: "1"
 
-package "P1" {
+name: "P1"
 
-  (* Version are arbitrary strings *)
-  version: "1"
+(* Version are arbitrary strings *)
+version: "1"
 
-  maintainer: "contact@ocamlpro.com"
+maintainer: "contact@ocamlpro.com"
 
-  (* List of files to substitute env variables *)
-  substs: [ "P1.config" ]
+(* List of files to substitute env variables *)
+substs: [ "P1.config" ]
 
-  (* Libraries *)
-  libraries: [ "p1" ]
-}
+(* Libraries *)
+libraries: [ "p1" ]
+
