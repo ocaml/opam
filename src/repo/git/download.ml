@@ -6,31 +6,31 @@ let _ =
     exit 1
   )
 
-let local_path = Run.cwd ()
+open Types
+
+let local_path = Dirname.cwd ()
+let local_repo = Path.R.of_dirname local_path
 let remote_address = Sys.argv.(1)
 let package = Sys.argv.(2)
+let nv = NV.of_string package
 
-let (/) = Filename.concat
+let git_root = local_path / "git"
+let git_dir = git_root / package
 
 let git_archive () =
-  let dirname = local_path / "git" / package in
   (* If the git repo is not already there, then clone it *)
-  if not (Sys.file_exists dirname) then (
-    let url =
-      let p = local_path / "url" / package in
-      if Sys.file_exists p then
-        Utils.string_strip (Run.read p)
-      else
-        Globals.error_and_exit "Cannot find %s" p in
-    Run.mkdir "git";
-    Run.in_dir (local_path / "git") (fun () ->
+  if not (Dirname.exists git_dir) then (
+    let urls = File.URL.read (Path.R.url local_repo nv) in
+    Dirname.mkdir git_root;
+    Dirname.in_dir git_root (fun () ->
+      let url = match urls with h::_ -> Filename.to_string h | _ -> assert false in
       let err = Run.command [ "git" ; "clone" ; url ; package ] in
       if err <> 0 then
         Globals.error_and_exit "%s is not a valid git url" url
     )
   );
   (* Then run git-archive to get a tar.gz *)
-  Run.in_dir dirname (fun () ->
+  Dirname.in_dir git_dir (fun () ->
     let tar = package ^ ".tar" in 
     let err =
       Run.commands [ 
@@ -38,7 +38,7 @@ let git_archive () =
         [ "gzip" ; "-f" ; tar ] ;
       ] in
     if err <> 0 then
-      Globals.error_and_exit "Cannot run git-archive in %s" dirname
+      Globals.error_and_exit "Cannot run git-archive in %s" (Dirname.to_string git_dir)
   )
 
 let () =
@@ -46,7 +46,7 @@ let () =
   git_archive ();
 
   (* and copy the archive at the right place *)
-  Run.mkdir (local_path / "archives");
-  Run.copy
-    (local_path / "git" / package / package ^ ".tar.gz")
-    (local_path / "archives" / package ^ ".tar.gz")
+  Dirname.mkdir (Path.R.archives_dir local_repo);
+  Filename.move
+    (git_dir // (package ^ ".tar.gz"))
+    (Path.R.archive local_repo nv)
