@@ -32,10 +32,10 @@ let init r =
   Dirname.mkdir (Path.R.root root);
   run "init" r [];
   File.Repo_config.write (Path.R.config root) r;
-  Dirname.mkdir (Path.R.opam_dir root);
-  Dirname.mkdir (Path.R.descr_dir root);
-  Dirname.mkdir (Path.R.archive_dir root);
-  Dirname.mkdir (Path.R.compiler_dir root)
+  Dirname.mkdir (Path.R.packages_dir root);
+  Dirname.mkdir (Path.R.archives_dir root);
+  Dirname.mkdir (Path.R.compilers_dir root);
+  Dirname.mkdir (Path.R.upload_dir root)
 
 let update r =
   run "update" r []

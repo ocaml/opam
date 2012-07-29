@@ -87,5 +87,5 @@ let () =
 
   (* Write $opam/repo/$repo/updated *)
   File.Updated.write
-    (Path.R.updated (Path.R.of_path (Dirname.of_string local_path)))
+    (Path.R.updated (Path.R.of_dirname (Dirname.of_string local_path)))
     (repo_updates ++ url_updates ++ updates)

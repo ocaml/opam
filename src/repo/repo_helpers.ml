@@ -19,9 +19,9 @@ end
 
 let make_state () =
   let local_path = Dirname.of_string (Run.cwd ()) in
-  let local_repo = Path.R.of_path local_path in
+  let local_repo = Path.R.of_dirname local_path in
   let remote_path = Dirname.raw Sys.argv.(1) in
-  let remote_repo = Path.R.of_path remote_path in
+  let remote_repo = Path.R.of_dirname remote_path in
   { local_path; local_repo; remote_path; remote_repo }
 
 let local_of_remote_file state remote_file =
@@ -44,12 +44,11 @@ module Make (Sync : SYNC) = struct
   module Init = struct
 
     let make state =
-      Dirname.mkdir (Path.R.opam_dir state.local_repo);
-      Dirname.mkdir (Path.R.descr_dir state.local_repo);
-      Dirname.mkdir (Path.R.archive_dir state.local_repo);
-      Dirname.mkdir (Path.R.compiler_dir state.local_repo);
-      Dirname.mkdir (Path.R.url_dir state.local_repo);
-      Dirname.mkdir (Path.R.files_dir state.local_repo)
+      (* This folder should have already been created, but be sure they are here *)
+      Dirname.mkdir (Path.R.packages_dir state.local_repo);
+      Dirname.mkdir (Path.R.archives_dir state.local_repo);
+      Dirname.mkdir (Path.R.compilers_dir state.local_repo);
+      Dirname.mkdir (Path.R.upload_dir state.local_repo)
 
   end
 
@@ -120,18 +119,16 @@ module Make (Sync : SYNC) = struct
       let l =
         Filename.Set.filter (fun local_file ->
           let remote_file = remote_of_local_file state local_file in
-          Filename.starts_with (Path.R.archive_dir state.local_repo) local_file
+          Filename.starts_with (Path.R.archives_dir state.local_repo) local_file
           && not (Sync.same_digest state t ~local_file ~remote_file)
         ) (Path.R.available_archives state.local_repo) in
       nv_set_of_files l
 
     let get state t =
-      let url = get_nv_updates state t (Path.R.url_dir state.remote_repo) in
-      let descr = get_nv_updates state t (Path.R.descr_dir state.remote_repo) in
-      let opam = get_nv_updates state t (Path.R.opam_dir state.remote_repo) in
+      let packages = get_nv_updates state t (Path.R.packages_dir state.remote_repo) in
       let archives = get_archives_updates state t in
-      let _comps = Sync.dir state t (Path.R.compiler_dir state.remote_repo) in
-      url ++ descr ++ opam ++ archives
+      let _comps = Sync.dir state t (Path.R.compilers_dir state.remote_repo) in
+      packages ++ archives
 
   end
 
@@ -141,21 +138,17 @@ module Make (Sync : SYNC) = struct
 
     let upload state t =
       let local_repo = state.local_repo in
-      let upload_path = Path.R.upload local_repo in
-      let upload_repo = Path.R.of_path upload_path in
+      let upload_path = Path.R.upload_dir local_repo in
+      let upload_repo = Path.R.of_dirname upload_path in
       let state = { state with local_path = upload_path; local_repo = upload_repo } in
       let set d = Filename.Set.of_list (if Dirname.exists d then Filename.list d else []) in
       let files =
-        set (Path.R.url_dir upload_repo)
-        ++ set (Path.R.descr_dir upload_repo)
-        ++ set (Path.R.opam_dir upload_repo)
-        ++ set (Path.R.archive_dir upload_repo)
-        ++ set (Path.R.compiler_dir upload_repo) in
-      Sync.upload state t (Path.R.url_dir state.remote_repo);
-      Sync.upload state t (Path.R.descr_dir state.remote_repo);
-      Sync.upload state t (Path.R.opam_dir state.remote_repo);
-      Sync.upload state t (Path.R.archive_dir state.remote_repo);
-      Sync.upload state t (Path.R.compiler_dir state.remote_repo);
+           set (Path.R.packages_dir upload_repo)
+        ++ set (Path.R.archives_dir upload_repo)
+        ++ set (Path.R.compilers_dir upload_repo) in
+      Sync.upload state t (Path.R.packages_dir state.remote_repo);
+      Sync.upload state t (Path.R.archives_dir state.remote_repo);
+      Sync.upload state t (Path.R.compilers_dir state.remote_repo);
       files
 
   end

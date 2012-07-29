@@ -10,7 +10,7 @@ open Types
 open Protocol
 open Unix
 
-let local_path = Path.R.of_path (Dirname.of_string (Run.cwd ()))
+let local_path = Path.R.of_dirname (Dirname.cwd ())
 let remote_address =
   try inet_addr_of_string Sys.argv.(1)
   with _ ->

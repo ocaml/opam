@@ -12,7 +12,7 @@ open Unix
 
 let log fmt = Globals.log Sys.argv.(0) fmt
 
-let local_path = Path.R.of_path (Dirname.of_string (Run.cwd ()))
+let local_path = Path.R.of_dirname (Dirname.cwd ())
 let remote_address =
   try inet_addr_of_string Sys.argv.(1)
   with _ ->
@@ -28,7 +28,7 @@ let () =
     NV.Set.fold (fun nv accu ->
       (nv, Client.get_descr remote_address nv) :: accu
     ) s [] in
-  let available = Path.R.available local_path in
+  let available = Path.R.available_packages local_path in
   let updates = ref NV.Set.empty in
   List.iter (fun (nv,c) ->
     (* filter out already existing packages *)

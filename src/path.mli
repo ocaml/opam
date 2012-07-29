@@ -133,14 +133,14 @@ module G: sig
   val compiler: t -> OCaml_V.t -> filename
 
   (** Compiler files: {i $opam/compilers/} *)
-  val compiler_dir: t -> dirname
+  val compilers_dir: t -> dirname
 
   (** All the compiler files *)
-  val compiler_list: t -> OCaml_V.Set.t
+  val available_compilers: t -> OCaml_V.Set.t
 
   (** List all the available packages:
       {i $opam/opam/$NAME.$VERSION.opam} *)
-  val available: t -> NV.Set.t
+  val available_packages: t -> NV.Set.t
 
   (** List all the available packages:
       {i $opam/opam/$NAME.$VERSION.opam} *)
@@ -159,14 +159,13 @@ module G: sig
   val descr_dir: t -> dirname
 
   (** Archives files folder: {i $opam/archives/} *)
-  val archive_dir: t -> dirname
+  val archives_dir: t -> dirname
 
   (** Return the repository index: {i $opam/repo/index} *)
   val repo_index: t -> filename
 
-  (** Folding on available compiler, including the one that is currently set. 
-      The order of folding on version is not precised. *)
-  val fold_compiler: ('a -> C.t -> 'a) -> 'a -> t -> 'a
+  (** Available aliases *)
+  val available_aliases: t -> Alias.Set.t
 
 end
 
@@ -179,7 +178,7 @@ module R: sig
   val create: repository -> t
 
   (** Transform a directory name into a repository path *)
-  val of_path: dirname -> t
+  val of_dirname: dirname -> t
 
   (** Return the repository folder: {i $opam/repo/$repo} *)
   val root: t -> dirname
@@ -187,34 +186,34 @@ module R: sig
   (** Return the repository config: {i $opam/repo/$repo/config} *)
   val config: t -> filename
 
+  (** Packages folder: {i $opam/repo/$repo/packages} *)
+  val packages_dir: t -> dirname
+
+  (** Package folder: {i $opam/repo/$repo/packages/$NAME.$VERSION} *)
+  val package: t -> NV.t -> dirname
+
   (** Return the OPAM file for a given package:
-      {i $opam/repo/$repo/opam/$NAME.$VERSION.opam} *)
+      {i $opam/repo/$repo/packages/$NAME.$VERSION/opam} *)
   val opam: t -> NV.t -> filename
 
-  (** Return the OPAM folder: {i $opam/repo/$repo/opam/} *)
-  val opam_dir: t -> dirname
-
   (** List all the available packages:
-      {i $opam/repo/$repo/$NAME.$VERSION.opam} *)
-  val available: t -> NV.Set.t
+      {i $opam/repo/$repo/packages/$NAME.$VERSION/opam} *)
+  val available_packages: t -> NV.Set.t
 
   (** List all the available versions for a given package:
-      {i $opam/repo/$repo/$name.$VERSION.opam} *)
+      {i $opam/repo/$repo/packages/[name].$VERSION/opam} *)
   val available_versions: t -> N.t -> V.Set.t
 
   (** Return the description file for a given package:
-      {i $opam/repo/$repo/descr/$NAME.VERSION} *)
+      {i $opam/repo/$repo/packages/$NAME.VERSION/descr} *)
   val descr: t -> NV.t -> filename
 
-  (** Return the description folder *)
-  val descr_dir: t -> dirname
-
-  (** Return the archive for a giben package:
+  (** Return the archive for a given package:
       {i $opam/repo/$repo/archives/$NAME.$VERSION.tar.gz} *)
   val archive: t -> NV.t -> filename
 
   (** Return the archive folder: {i $opam/repo/$repo/archives/} *)
-  val archive_dir: t -> dirname
+  val archives_dir: t -> dirname
 
   (** Return the list of archive files in {i $opam/repo/$repo/archives *)
   val available_archives: t -> Filename.Set.t
@@ -225,51 +224,21 @@ module R: sig
 
   (** Return the upload folder for a given version:
       {i $opam/repo/$repo/upload/} *)
-  val upload: t -> dirname
-
-  (** Return the upload folder for OPAM files:
-      {i $opam/repo/$repo/upload/opam/}*)
-  val upload_opam_dir: t -> dirname
-
-  (** Return the upload folder for descr files:
-      {i $opam/repo/$repo/upload/descr/} *)
-  val upload_descr_dir: t -> dirname
-
-  (** Return the upload folder for archive files:
-      {i $opam/repo/$repo/upload/archives/} *)
-  val upload_archives_dir: t -> dirname
-
-  (** Return the upload folder for OPAM files:
-      {i $opam/repo/$repo/upload/opam/$NAME.$VERSION.opam}*)
-  val upload_opam: t -> NV.t -> filename
-
-  (** Return the upload folder for descr files:
-      {i $opam/repo/$repo/upload/descr/$NAME.$VERSION} *)
-  val upload_descr: t -> NV.t -> filename
-
-  (** Return the upload folder for archive files:
-      {i $opam/repo/$repo/upload/archives/$NAME.$VERSION.tar.gz} *)
-  val upload_archives: t -> NV.t -> filename
+  val upload_dir: t -> dirname
 
   (** Compiler files: {i $opam/repo/$repo/compilers/$OVERSION.comp} *)
   val compiler: t -> OCaml_V.t -> filename
 
   (** Compiler files: {i $opam/repo/$repo/compilers/} *)
-  val compiler_dir: t -> dirname
+  val compilers_dir: t -> dirname
 
   (** All the compiler files *)
-  val compiler_list: t -> OCaml_V.Set.t
+  val available_compilers: t -> OCaml_V.Set.t
 
-  (** The url folder *)
-  val url_dir: t -> dirname
-
-  (** urls {i $opma/repo/$repo/url/$name.$version *)
+  (** urls {i $opma/repo/$repo/package/$NAME.$VERSION/url *)
   val url: t -> nv -> filename
 
-  (** file dir {i $opam/repo/$repo/files/} *)
-  val files_dir: t -> dirname
-
-  (** files {i $opam/repo/$repo/files/$package.$name} *)
+  (** files {i $opam/repo/$repo/packages/$NAME.$VERSION/files} *)
   val files: t -> nv -> dirname
 
   (** All files in the file dir *)

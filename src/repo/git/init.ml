@@ -38,5 +38,5 @@ let () =
   Run.mkdir "git";
   git_clone ();
   File.Updated.write
-    (Path.R.updated (Path.R.of_path local_dir))
+    (Path.R.updated (Path.R.of_dirname local_dir))
     (packages ())

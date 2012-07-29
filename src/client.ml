@@ -176,7 +176,7 @@ let load_state () =
   let pinned = File.Pinned.safe_read (Path.C.pinned compiler) in
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
-  let available = Path.G.available global in
+  let available = Path.G.available_packages global in
   let available_current = None in
   let t = {
     global; compiler; repositories;
@@ -252,7 +252,7 @@ let print_updated t updated pinned_updated =
   ) pinned_updated
 
 let print_compilers compilers repo =
-  let repo_compilers = Path.R.compiler_list repo in
+  let repo_compilers = Path.R.available_compilers repo in
   let new_compilers = OCaml_V.Set.diff repo_compilers compilers in
   if not (OCaml_V.Set.is_empty new_compilers) then
     Globals.msg "New compiler descriptions available:\n";
@@ -311,7 +311,7 @@ let update_repo_index t =
   (* If there are new packages, assign them to some repository *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
-      let available = Path.R.available p in
+      let available = Path.R.available_packages p in
       log "repo=%s packages=%s" (Repository.name r) (NV.Set.to_string available);
       NV.Set.fold (fun nv repo_index ->
         let name = NV.name nv in
@@ -351,7 +351,7 @@ let update_repo_index t =
 let update_repo () =
   log "update_repo";
   let t = load_state () in
-  let compilers = Path.G.compiler_list t.global in
+  let compilers = Path.G.available_compilers t.global in
 
   (* first update all the repo *)
   List.iter (fun (r,_) -> Repositories.update r) t.repositories;
@@ -362,8 +362,8 @@ let update_repo () =
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
   List.iter (fun (r,p) ->
-    let comps = Path.R.compiler_list p in
-    let comp_dir = Path.G.compiler_dir t.global in
+    let comps = Path.R.available_compilers p in
+    let comp_dir = Path.G.compilers_dir t.global in
     OCaml_V.Set.iter (fun o ->
       let comp_f = Path.R.compiler p o in
       Filename.link_in comp_f comp_dir
@@ -413,9 +413,10 @@ let update_package () =
 
   let updated = NV.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall *)
-  Path.G.fold_compiler (fun () compiler ->
-    let installed = File.Installed.safe_read (Path.C.installed compiler) in
-    let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
+  Alias.Set.iter (fun alias ->
+    let t = Path.C.create alias in
+    let installed = File.Installed.safe_read (Path.C.installed t) in
+    let reinstall = File.Reinstall.safe_read (Path.C.reinstall t) in
     let reinstall = 
       NV.Set.fold (fun nv reinstall ->
         if NV.Set.mem nv installed then
@@ -424,8 +425,8 @@ let update_package () =
           reinstall
       ) updated reinstall in
     if not (NV.Set.is_empty reinstall) then
-      File.Reinstall.write (Path.C.reinstall compiler) reinstall
-  ) () t.global;
+      File.Reinstall.write (Path.C.reinstall t) reinstall
+  ) (Path.G.available_aliases t.global);
 
   (* Check all the dependencies exist *)
   let t = update_available_current (load_state ()) in
@@ -557,7 +558,7 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
                 (if ocaml_version = default then " (because it is a reserved name)" else "");
               OCaml_V.Set.iter
                 (fun v -> Globals.msg "    - %s\n" (OCaml_V.to_string v))
-                (Path.G.compiler_list t.global);
+                (Path.G.available_compilers t.global);
               Globals.exit 2
             end 
           else
@@ -1282,8 +1283,8 @@ let init repo alias ocaml_version cores =
     Repositories.init repo;
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
-    Dirname.mkdir (Path.G.archive_dir root);
-    Dirname.mkdir (Path.G.compiler_dir root);
+    Dirname.mkdir (Path.G.archives_dir root);
+    Dirname.mkdir (Path.G.compilers_dir root);
     update_repo ();
     let ocaml_version = init_ocaml
       (fun alias_p -> 
@@ -1432,9 +1433,10 @@ let upload upload repo =
         Globals.error_and_exit "Unbound repository %S (available = %s)" 
           repo (string_of_repositories t) in
   let repo_p = List.assoc repo t.repositories in
-  let upload_opam = Path.R.upload_opam repo_p nv in
-  let upload_descr = Path.R.upload_descr repo_p nv in
-  let upload_archives = Path.R.upload_archives repo_p nv in
+  let upload_repo = Path.R.of_dirname (Path.R.upload_dir repo_p) in
+  let upload_opam = Path.R.opam upload_repo nv in
+  let upload_descr = Path.R.descr upload_repo nv in
+  let upload_archives = Path.R.archive upload_repo nv in
   Filename.copy upload.opam upload_opam;
   Filename.copy upload.descr upload_descr;
   Filename.copy upload.archive upload_archives;
@@ -1692,7 +1694,7 @@ let pin_list () =
 let compiler_list () =
   log "compiler_list";
   let t = load_state () in
-  let descrs = Path.G.compiler_list t.global in
+  let descrs = Path.G.available_compilers t.global in
   let aliases = File.Aliases.read (Path.G.aliases t.global) in
   Globals.msg "--- Compilers installed ---\n";
   List.iter (fun (n,c) ->

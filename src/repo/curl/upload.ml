@@ -11,13 +11,3 @@ let remote_address = Sys.argv.(1)
 
 let () =
   Globals.error_and_exit "CURL does not support upload"
-
-
-
-
-
-
-
-
-
-

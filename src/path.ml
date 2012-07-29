@@ -18,7 +18,7 @@ open Utils
 
 let log fmt = Globals.log "PATH" fmt
 
-let available dir =
+let available_packages dir =
   let files = Filename.list dir in
   let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
   List.fold_left (fun set file ->
@@ -29,7 +29,7 @@ let available dir =
     | Some nv -> NV.Set.add nv set
   ) NV.Set.empty files
 
-let compiler_list dir =
+let available_compilers dir =
   if Dirname.exists dir then (
     let files = Filename.list dir in
     let files = List.filter (fun f -> Filename.check_suffix f ".comp") files in
@@ -118,32 +118,30 @@ module G = struct
 
   let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
 
-  let compiler_dir t = t / "compilers"
+  let compilers_dir t = t / "compilers"
 
-  let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
+  let compiler t ov = compilers_dir t // (OCaml_V.to_string ov ^ ".comp")
 
-  let compiler_list t = compiler_list (compiler_dir t)
+  let available_compilers t = available_compilers (compilers_dir t)
 
-  let available t = available (opam_dir t)
+  let available_packages t = available_packages (opam_dir t)
 
   let available_versions t n =
-    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
+    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available_packages t))
     
   let descr_dir t = t / "descr"
 
   let descr t nv = descr_dir t // NV.to_string nv
 
-  let archive_dir t = t / "archives"
+  let archives_dir t = t / "archives"
 
-  let archive t nv = archive_dir t // (NV.to_string nv ^ ".tar.gz")
+  let archive t nv = archives_dir t // (NV.to_string nv ^ ".tar.gz")
 
   let repo_index t = t / "repo" // "index"
 
-  let fold_compiler f acc t = 
-    List.fold_left
-      (fun acc (n, _) -> f acc (C.create n)) 
-      acc
-      (File.Aliases.read (aliases t))
+  let available_aliases t = 
+    let l = List.map fst (File.Aliases.read (aliases t)) in
+    Alias.Set.of_list l
 end
 
 module R = struct
@@ -153,31 +151,34 @@ module R = struct
   let create r =
     Dirname.of_string !Globals.root_path / "repo" / Repository.name r
 
-  let of_path path = path
+  let of_dirname path = path
     
   let root t = t
 
   let config t = t // "config"
 
-  let opam_dir t = t / "opam"
+  let packages_dir t = t / "packages"
 
-  let available t = available (opam_dir t)
+  let available_packages t =
+    let all = Dirname.list (packages_dir t) in
+    let basenames = List.map Dirname.basename all in
+    NV.Set.of_list (List.map (Basename.to_string |> NV.of_string) basenames)
 
   let available_versions t n =
-    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available t))
+    versions (NV.Set.filter (fun nv -> NV.name nv = n) (available_packages t))
 
-  let opam t nv = opam_dir t // (NV.to_string nv ^ ".opam")
+  let package t nv = packages_dir t / NV.to_string nv
 
-  let descr_dir t = t / "descr"
+  let opam t nv = package t nv // "opam"
 
-  let descr t nv = descr_dir t // (NV.to_string nv)
+  let descr t nv = package t nv // "descr"
 
-  let archive_dir t = t / "archives"
+  let archives_dir t = t / "archives"
 
-  let archive t nv = archive_dir t // (NV.to_string nv ^ ".tar.gz")
+  let archive t nv = archives_dir t // (NV.to_string nv ^ ".tar.gz")
 
   let available_archives t =
-    let d = archive_dir t in
+    let d = archives_dir t in
     if Dirname.exists d then
       Filename.Set.of_list (Filename.list d)
     else
@@ -185,33 +186,17 @@ module R = struct
 
   let updated t = t // "updated"
 
-  let upload t = t / "upload"
+  let upload_dir t = t / "upload"
 
-  let upload_opam_dir t = upload t / "opam"
+  let compilers_dir t = t / "compilers"
 
-  let upload_descr_dir t = upload t / "descr"
+  let compiler t ov = compilers_dir t // (OCaml_V.to_string ov ^ ".comp")
 
-  let upload_archives_dir t = upload t / "archives"
+  let available_compilers t = available_compilers (compilers_dir t)
 
-  let upload_opam t nv = upload_opam_dir t // (NV.to_string nv ^ ".opam")
+  let url t nv = package t nv // "url"
 
-  let upload_descr t nv = upload_descr_dir t // NV.to_string nv
-
-  let upload_archives t nv = upload_archives_dir t // (NV.to_string nv ^ ".tar.gz")
-
-  let compiler_dir t = t / "compilers"
-
-  let compiler t ov = compiler_dir t // (OCaml_V.to_string ov ^ ".comp")
-
-  let compiler_list t = compiler_list (compiler_dir t)
-
-  let url_dir t = t / "url" 
-
-  let url t nv = url_dir t // NV.to_string nv
-
-  let files_dir t = t / "files"
-
-  let files t nv = files_dir t / NV.to_string nv
+  let files t nv = package t nv / "files"
 
   let available_files t nv =
     if Dirname.exists (files t nv) then

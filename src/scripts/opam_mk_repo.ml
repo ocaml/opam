@@ -46,7 +46,7 @@ let all, index, packages =
 let () =
 
   let local_path = Dirname.cwd () in
-  let local_repo = Path.R.of_path local_path in
+  let local_repo = Path.R.of_dirname local_path in
   let state = {
     local_path; local_repo;
     remote_path = local_path;
@@ -64,12 +64,9 @@ let () =
     let digest =
       Digest.to_hex (Digest.file (Filename.to_string f)) in
     basename, perm, digest
-  ) (Filename.list (Path.R.opam_dir local_repo)
-   @ Filename.list (Path.R.descr_dir local_repo)
-   @ Filename.list (Path.R.archive_dir local_repo)
-   @ Filename.list (Path.R.compiler_dir local_repo)
-   @ Filename.list (Path.R.url_dir local_repo)
-   @ Filename.list (Path.R.files_dir local_repo)
+  ) (Filename.rec_list (Path.R.packages_dir local_repo)
+   @ Filename.list (Path.R.archives_dir local_repo)
+   @ Filename.list (Path.R.compilers_dir local_repo)
   ) in
   File.Urls_txt.write local_index_file urls;
 

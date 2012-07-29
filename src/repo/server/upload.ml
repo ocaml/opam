@@ -10,7 +10,10 @@ open Types
 open Protocol
 open Unix
 
-let local_path = Path.R.of_path (Dirname.of_string (Run.cwd ()))
+let local_repo = Path.R.of_dirname (Dirname.cwd ())
+let upload_path = Path.R.upload_dir local_repo
+let upload_repo = Path.R.of_dirname upload_path
+
 let remote_address =
   try inet_addr_of_string Sys.argv.(1)
   with _ ->
@@ -19,27 +22,18 @@ let remote_address =
 let log fmt = Globals.log Sys.argv.(0) fmt
 
 let () =
-  let opams = Filename.list (Path.R.upload_opam_dir local_path) in
-  let descrs = Filename.list (Path.R.upload_descr_dir local_path) in
-  let archives = Filename.list (Path.R.upload_archives_dir local_path) in
-  let rec aux = function
-    | []   , []   , []    -> ()
-    | o::ol, d::dl, a::al ->
-        let opam = File.OPAM.read o in
-        let descr = File.Descr.read d in
-        let archive = Filename.read a in
-        let name = File.OPAM.name opam in
-        if Key.exists local_path name then (
-          log "Package %s exists, updating a new version" (N.to_string name);
-          let key = Key.read local_path name in
-          Client.new_version remote_address opam descr archive key
-        ) else (
-          let key = Client.new_package remote_address opam descr archive in
-          Key.write local_path name key
-        );
-        aux (ol, dl, al)
-    | _ -> Globals.error_and_exit "Missing files for upload" in
-  aux (opams, descrs, archives)
-          
-    
-
+  let packages = Path.R.available_packages upload_repo in
+  let upload_package nv =
+    let opam = File.OPAM.read (Path.R.opam upload_repo nv) in
+    let descr = File.Descr.read (Path.R.descr upload_repo nv) in
+    let archive = Filename.read (Path.R.archive upload_repo nv) in
+    let name = File.OPAM.name opam in
+    if Key.exists local_repo name then (
+      log "Package %s exists, updating a new version" (N.to_string name);
+      let key = Key.read local_repo name in
+      Client.new_version remote_address opam descr archive key
+    ) else (
+      let key = Client.new_package remote_address opam descr archive in
+      Key.write local_repo name key
+    ) in
+  NV.Set.iter upload_package packages

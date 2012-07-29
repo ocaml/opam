@@ -44,20 +44,23 @@ val write: Path.R.t -> name -> t -> unit
     receives complete keys from the clients, and then compare their hash
     with what is stored on its filesystem. *)
 
+(** Server root *)
+type root = Path.R.t
+
 (** Type for key hashes *)
 type hash
 
 (** Directory where key hashes are stored *)
-val hashes_dir: unit -> dirname
+val hashes_dir: root -> dirname
 
 (** Hash a key *)
 val hash: t -> hash
 
 (** Is a key hash is associated to the given package *)
-val exists_hash: name -> bool
+val exists_hash: root -> name -> bool
 
 (** Read key hash in {i $opam-server/hashes/$name} *)
-val read_hash: name -> hash
+val read_hash: root -> name -> hash
 
 (** Write key hash in {i $opam-server/keys/$name} *)
-val write_hash: name -> hash -> unit
+val write_hash: root -> name -> hash -> unit
