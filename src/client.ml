@@ -336,15 +336,15 @@ let update_repo_index t =
     let available_versions = Path.R.available_versions repo_p n in
     V.Set.iter (fun v ->
       let nv = NV.create n v in
-      let opam_dir = Path.G.opam_dir t.global in
-      let opam_f = Path.R.opam repo_p nv in
-      let descr_dir = Path.G.descr_dir t.global in
-      let descr = Path.R.descr repo_p nv in
-      Filename.link_in opam_f opam_dir;
-      if Filename.exists descr then
-        Filename.link_in descr descr_dir
+      let opam_g = Path.G.opam t.global nv in
+      let opam_r = Path.R.opam repo_p nv in
+      let descr_g = Path.G.descr t.global nv in
+      let descr_r = Path.R.descr repo_p nv in
+      Filename.link opam_r opam_g;
+      if Filename.exists descr_r then
+        Filename.link descr_r descr_g
       else
-        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
+        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr_r)
     ) available_versions;
   ) repo_index
 

@@ -437,18 +437,28 @@ end = struct
     | Some x -> x
     | None   -> Globals.error_and_exit "%s is not a valid versioned package name" s
 
-  let of_filename f =
-    let f = Filename.to_string f in
+  (* XXX: this function is quite hackish, as it mainly depends on the shape the paths
+     built in path.ml *)
+  let rec of_filename f =
+    let f = Utils.string_strip (Filename.to_string f) in
     if Utils.cut_at f ' ' <> None then
       None
     else begin
-      let b = F.basename f in
-      if F.check_suffix b ".opam" then
-      check (F.chop_suffix b ".opam")
-      else if F.check_suffix b ".tar.gz" then
-      check (F.chop_suffix b ".tar.gz")
-      else
-      None
+      let base = F.basename f in
+      let parent = F.basename (F.dirname f) in
+      match parent with
+      | "."       -> None
+      | "package" -> check base
+      | "file"    ->
+          (* XXX: make it work for sub-folders of packages/files/ *)
+          of_filename (Filename.of_string parent) 
+      | _ ->
+          if F.check_suffix base ".opam" then
+            check (F.chop_suffix base ".opam")
+          else if F.check_suffix base ".tar.gz" then
+            check (F.chop_suffix base ".tar.gz")
+          else
+             None
     end
 
   let of_dirname d =

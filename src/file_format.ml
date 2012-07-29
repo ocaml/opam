@@ -207,6 +207,7 @@ and string_of_values l =
 let incr tab = "  " ^ tab
 
 let rec string_of_item_aux tab = function
+  | Variable (i, List []) -> ""
   | Variable (i, v) -> Printf.sprintf "%s%s: %s" tab i (string_of_value v)
   | Section s       ->
       Printf.sprintf "%s%s %S {\n%s\n}"

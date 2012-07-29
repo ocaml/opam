@@ -438,6 +438,7 @@ module OPAM = struct
     { empty with name; version }
 
   let s_version     = "version"
+  let s_name        = "name"
   let s_maintainer  = "maintainer"
   let s_substs      = "substs"
   let s_build       = "build"
@@ -462,7 +463,6 @@ module OPAM = struct
 
   let useful_fields = [
     s_opam_version;
-    s_version;
     s_maintainer;
     s_substs;
     s_build;
@@ -481,6 +481,8 @@ module OPAM = struct
       s_license;
       s_authors;
       s_homepage;
+      s_version;
+      s_name;
     ]
 
   let name t = t.name
@@ -530,30 +532,25 @@ module OPAM = struct
     let s = {
       filename = Filename.to_string filename;
       contents = [
-        Variable ("opam-version", String Globals.opam_version);
-        Section {
-          File_format.kind = "package";
-          name = N.to_string t.name;
-          items = [
-            Variable (s_version, String (V.to_string t.version));
-            Variable (s_maintainer, String t.maintainer);
-            Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
-            Variable (s_build_env, make_list make_env_variable t.build_env);
-            Variable (s_build, make_list (make_list make_string) t.build);
-            Variable (s_remove, make_list (make_list make_string) t.remove);
-            Variable (s_depends, make_cnf_formula t.depends);
-            Variable (s_depopts, make_cnf_formula t.depopts);
-            Variable (s_conflicts, make_and_formula t.conflicts);
-            Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
-            Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
-          ] @ (
-            match t.ocaml_version with
-            | None   -> []
-            | Some v -> [ Variable (s_ocaml_version, make_constraint v) ]
-          ) @
-            List.map (fun (s, v) -> Variable (s, v)) t.others;
-        }
-      ] 
+        Variable (s_opam_version, String Globals.opam_version);
+        Variable (s_name, String (N.to_string t.name));
+        Variable (s_version, String (V.to_string t.version));
+        Variable (s_maintainer, String t.maintainer);
+        Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
+        Variable (s_build_env, make_list make_env_variable t.build_env);
+        Variable (s_build, make_list (make_list make_string) t.build);
+        Variable (s_remove, make_list (make_list make_string) t.remove);
+        Variable (s_depends, make_cnf_formula t.depends);
+        Variable (s_depopts, make_cnf_formula t.depopts);
+        Variable (s_conflicts, make_and_formula t.conflicts);
+        Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
+        Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
+      ] @ (
+        match t.ocaml_version with
+        | None   -> []
+        | Some v -> [ Variable (s_ocaml_version, make_constraint v) ]
+      ) @
+        List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string filename s
 
@@ -564,19 +561,47 @@ module OPAM = struct
     ]
 
   let of_string filename str =
+    let nv = NV.of_filename filename in
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
-    let opam_version = assoc s.contents s_opam_version parse_string in
+    let s = s.contents in
+    let opam_version = assoc s s_opam_version parse_string in
     if opam_version <> Globals.opam_version then
       Globals.error_and_exit "%s is not a supported OPAM version" opam_version;
-    let package = get_section_by_kind s.contents "package" in
-    let name = N.of_string package.File_format.name in
-    let s = package.items in
+    let name_f =
+      try Some (assoc s s_name (parse_string |> N.of_string))
+      with Not_found -> None in
+    let name = match name_f, nv with
+      | None  , None    ->
+          Globals.error_and_exit "%s is an invalid OPAM filename" (Filename.to_string filename);
+      | Some n, None    -> n
+      | None  , Some nv -> NV.name nv
+      | Some n, Some nv ->
+          if NV.name nv <> n then
+            Globals.error_and_exit
+              "Inconsistant naming scheme in %s"
+              (Filename.to_string filename)
+          else
+            n in
+    let version_f =
+      try Some (assoc s s_version (parse_string |> V.of_string))
+      with Not_found -> None in
+    let version = match version_f, nv with
+      | None  , None    ->
+          Globals.error_and_exit "%s is an invalid OPAM filename" (Filename.to_string filename);
+      | Some v, None    -> v
+      | None  , Some nv -> NV.version nv
+      | Some v, Some nv ->
+          if NV.version nv <> v then
+            Globals.error_and_exit
+              "Inconsistant versioning scheme in %s"
+              (Filename.to_string filename)
+          else
+            v in
     let parse_commands = parse_or [
       "list",      (fun x -> [parse_list parse_command x]);
       "list-list", parse_list (parse_list parse_command);
     ] in
-    let version    = assoc s s_version (parse_string |> V.of_string) in
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
