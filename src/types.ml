@@ -441,9 +441,11 @@ end = struct
   let sep = '.'
 
   let check s =
-    match Utils.cut_at s sep with
-    | None        -> None
-    | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
+    if Utils.contains s ' ' || Utils.contains s '\n' then
+      None
+    else match Utils.cut_at s sep with
+      | None        -> None
+      | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
 
   let of_string s = match check s with
     | Some x -> x

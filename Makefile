@@ -8,7 +8,7 @@ TARGETS = opam opam-server \
 	  opam-git-init opam-git-update opam-git-download opam-git-upload \
 	  opam-server-init opam-server-update opam-server-download opam-server-upload \
 	  opam-mk-config opam-mk-install opam-mk-repo \
-	  opam-convert-0.3
+	  opam-repo-convert-0.3
 
 .PHONY: all
 

@@ -543,8 +543,8 @@ module OPAM = struct
       filename = Filename.to_string filename;
       contents = [
         Variable (s_opam_version, String Globals.opam_version);
-        Variable (s_name, String (N.to_string t.name));
-        Variable (s_version, String (V.to_string t.version));
+(*        Variable (s_name, String (N.to_string t.name));
+          Variable (s_version, String (V.to_string t.version)); *)
         Variable (s_maintainer, String t.maintainer);
         Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
         Variable (s_build_env, make_list make_env_variable t.build_env);
@@ -578,9 +578,7 @@ module OPAM = struct
     let opam_version = assoc s s_opam_version parse_string in
     if opam_version <> Globals.opam_version then
       Globals.error_and_exit "%s is not a supported OPAM version" opam_version;
-    let name_f =
-      try Some (assoc s s_name (parse_string |> N.of_string))
-      with Not_found -> None in
+    let name_f = assoc_option  s s_name (parse_string |> N.of_string) in
     let name = match name_f, nv with
       | None  , None    ->
           Globals.error_and_exit "%s is an invalid OPAM filename" (Filename.to_string filename);
@@ -593,9 +591,7 @@ module OPAM = struct
               (Filename.to_string filename)
           else
             n in
-    let version_f =
-      try Some (assoc s s_version (parse_string |> V.of_string))
-      with Not_found -> None in
+    let version_f = assoc_option s s_version (parse_string |> V.of_string) in
     let version = match version_f, nv with
       | None  , None    ->
           Globals.error_and_exit "%s is an invalid OPAM filename" (Filename.to_string filename);

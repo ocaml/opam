@@ -161,7 +161,7 @@ let string_of_package p =
       && List.assoc "status" p.Debian.Packages.extras = "  installed"
     then "installed"
     else "not-installed" in
-  Printf.sprintf "%s.%s(%s)"
+  Printf.sprintf "%s::%s(%s)"
     p.Debian.Packages.name p.Debian.Packages.version installed
 
 let string_of_packages l =

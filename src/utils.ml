@@ -78,6 +78,10 @@ let cut_at = cut_at_aux String.index
 
 let rcut_at = cut_at_aux String.rindex
 
+let contains s c =
+  try let _ = String.index s c in true
+  with Not_found -> false
+
 let split s c =
   Pcre.split (Pcre.regexp (String.make 1 c)) s
 

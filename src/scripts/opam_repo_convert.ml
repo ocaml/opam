@@ -399,9 +399,12 @@ let () =
   let t3 = Path_0_3.R.of_path (Dirname.cwd ()) in
   let t4 = Path.R.of_dirname (Dirname.cwd ()) in
   NV.Set.iter (fun nv ->
+    Globals.msg "Processing %s\n" (NV.to_string nv);
     let opam3 = File_0_3.OPAM.read (Path_0_3.R.opam t3 nv) in
+    let maintainer =
+      if opam3.maintainer = "<none>" then "contact@ocamlpro.com" else opam3.maintainer in
     let opam4 = File.OPAM.make
-      ~name:opam3.name ~version:opam3.version ~maintainer:opam3.maintainer
+      ~name:opam3.name ~version:opam3.version ~maintainer
       ~substs:opam3.substs ~build_env:opam3.build_env ~build:opam3.build
       ~remove:opam3.remove ~depends:opam3.depends ~depopts:opam3.depopts
       ~conflicts:opam3.conflicts ~libraries:opam3.libraries ~syntax:opam3.syntax
@@ -413,7 +416,6 @@ let () =
     let mv_dir src dst =
     if Dirname.exists (src t3 nv) then
       Dirname.move (src t3 nv) (dst t4 nv) in
-    mv_file Path_0_3.R.opam Path.R.opam;
     mv_file Path_0_3.R.descr Path.R.descr;
     mv_file Path_0_3.R.url Path.R.url;
     mv_dir Path_0_3.R.files Path.R.files;

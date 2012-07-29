@@ -191,6 +191,30 @@ let make_string_pair = make_pair make_string
 
 (* Printing *)
 
+let is_list = function
+  | List _ -> true
+  | _      -> false
+
+let rec pretty_string_of_value = function
+  | Symbol s
+  | Ident s     -> Printf.sprintf "%s" s
+  | Int i       -> Printf.sprintf "%d" i
+  | Bool b      -> Printf.sprintf "%b" b
+  | String s    -> Printf.sprintf "%S" s
+  | List l      ->
+      if List.for_all is_list l then
+        Printf.sprintf "[\n  %s\n]" (pretty_string_of_values "\n  " l)
+      else
+        Printf.sprintf "[%s]" (pretty_string_of_values " " l)
+  | Group g     -> Printf.sprintf "(%s)" (pretty_string_of_values " " g)
+  | Option(v,l) ->
+      Printf.sprintf "%s {%s}"
+        (pretty_string_of_value v)
+        (pretty_string_of_values " " l)
+
+and pretty_string_of_values sep l =
+  String.concat sep (List.map pretty_string_of_value l)
+
 let rec string_of_value = function
   | Symbol s
   | Ident s     -> Printf.sprintf "%s" s
@@ -202,25 +226,25 @@ let rec string_of_value = function
   | Option(v,l) -> Printf.sprintf "%s {%s}" (string_of_value v) (string_of_values l)
 
 and string_of_values l =
-  String.concat " "  (List.map string_of_value l)
+  String.concat " " (List.map string_of_value l)
 
 let incr tab = "  " ^ tab
 
 let rec string_of_item_aux tab = function
-  | Variable (i, List []) -> ""
-  | Variable (i, v) -> Printf.sprintf "%s%s: %s" tab i (string_of_value v)
+  | Variable (i, List []) -> None
+  | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value v))
   | Section s       ->
-      Printf.sprintf "%s%s %S {\n%s\n}"
+      Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.kind s.name
-        (string_of_items_aux (incr tab) s.items)
+        (string_of_items_aux (incr tab) s.items))
 
 and string_of_items_aux tab is =
-  String.concat "\n" (List.map (string_of_item_aux tab) is)
+  String.concat "\n" (Utils.filter_map (string_of_item_aux tab) is)
 
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file f = string_of_items f.contents
+let string_of_file f = string_of_items f.contents ^ "\n"
 
 (* Reading section contents *)
 
