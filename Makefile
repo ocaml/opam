@@ -77,3 +77,7 @@ doc: compile
 	  -I _obuild/bat -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
 	  src/*.mli -html -d doc/html/
+
+trailing:
+	find src -name "*.ml*" -exec \
+	  sed -i xxx -e :a -e "/^\n*$$/{$$d;N;ba" -e '}' {} \;
