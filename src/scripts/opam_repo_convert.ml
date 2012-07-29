@@ -383,15 +383,30 @@ module R = struct
 
   let compiler_list t = compiler_list (compiler_dir t)
 
+  let url_dir t = t / "url"
+
+  let files_dir t = t / "files"
+
+  let url t nv = url_dir t // NV.to_string nv
+
+  let files t nv = files_dir t / NV.to_string nv
+
 end
 end
 
 let () =
+  let open File_0_3.X in
   let t3 = Path_0_3.R.of_path (Dirname.cwd ()) in
   let t4 = Path.R.of_dirname (Dirname.cwd ()) in
   NV.Set.iter (fun nv ->
-    let opam = File_0_3.OPAM.read (Path_0_3.R.opam t3 nv) in
-    File.OPAM.write (Path.R.opam t4 nv) opam;
+    let opam3 = File_0_3.OPAM.read (Path_0_3.R.opam t3 nv) in
+    let opam4 = File.OPAM.make
+      ~name:opam3.name ~version:opam3.version ~maintainer:opam3.maintainer
+      ~substs:opam3.substs ~build_env:opam3.build_env ~build:opam3.build
+      ~remove:opam3.remove ~depends:opam3.depends ~depopts:opam3.depopts
+      ~conflicts:opam3.conflicts ~libraries:opam3.libraries ~syntax:opam3.syntax
+      ~others:opam3.others ~ocaml_version:opam3.ocaml_version in
+    File.OPAM.write (Path.R.opam t4 nv) opam4;
     let mv_file src dst =
     if Filename.exists (src t3 nv) then
       Filename.move (src t3 nv) (dst t4 nv) in

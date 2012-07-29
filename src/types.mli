@@ -99,6 +99,9 @@ module Dirname: sig
   (** Change the current directory *)
   val chdir: t -> unit
 
+  (** Move a directory *)
+  val move: t -> t -> unit
+
   (** Does the directory exists ? *)
   val exists: t -> bool
 
@@ -191,6 +194,9 @@ module Filename: sig
 
   (** Copy a file in a directory *)
   val copy_in: t -> dirname -> unit
+
+  (** Move a file *)
+  val move: t -> t -> unit
 
   (** Symlink a file in a directory *)
   val link_in: t -> dirname -> unit

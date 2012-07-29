@@ -432,6 +432,16 @@ module OPAM = struct
     ocaml_version = None;
   }
 
+  let make
+      ~name ~version ~maintainer ~substs ~build_env ~build ~remove
+      ~depends ~depopts ~conflicts ~libraries ~syntax ~others
+      ~ocaml_version =
+    { name; version; maintainer;
+      substs; build_env; build;
+      remove; depends; depopts; conflicts;
+      libraries; syntax; others;
+      ocaml_version }
+
   let create nv =
     let name = NV.name nv in
     let version = NV.version nv in

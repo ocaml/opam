@@ -86,6 +86,16 @@ module OPAM: sig
   (** Create an opam file *)
   val create: nv -> t
 
+  (** Full constructor *)
+  val make:
+    name:name -> version:version -> maintainer:string ->
+    substs:basename list -> build_env:(string * string * string) list ->
+    build:string list list -> remove:string list list ->
+    depends:cnf_formula -> depopts:cnf_formula -> conflicts:and_formula ->
+    libraries:section list -> syntax:section list ->
+    others:(string * File_format.value) list ->
+    ocaml_version:ocaml_constraint option -> t
+
   (** Package name *)
   val name: t -> name
 

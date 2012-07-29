@@ -125,6 +125,7 @@ module Dirname: sig
     ?add_to_env:(string*string) list ->
     ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
+  val move: t -> t -> unit
   val dirname: t -> t
   val basename: t -> basename
   val remove_prefix: prefix:t -> t -> string
@@ -173,6 +174,11 @@ end = struct
   let chdir dirname =
     Run.chdir (to_string dirname)
 
+  let move src dst =
+    let err = Run.command [ "mv"; to_string src; to_string dst ] in
+    if err <> 0 then
+      Globals.exit err
+
   let basename dirname =
     Basename.of_string (Filename.basename (to_string dirname))
 
@@ -217,6 +223,7 @@ module Filename: sig
   val list: dirname -> t list
   val rec_list: dirname -> t list
   val with_raw: (Raw.t -> 'a) -> t -> 'a
+  val move: t -> t -> unit
   val copy_in: t -> dirname -> unit
   val link_in: t -> dirname -> unit
   val copy: t -> t -> unit
@@ -310,6 +317,11 @@ end = struct
 
   let copy src dst =
     Run.copy (to_string src) (to_string dst)
+
+  let move src dst =
+    let err = Run.command [ "mv"; to_string src; to_string dst ] in
+    if err <> 0 then
+      Globals.exit err
 
   let link src dst =
     if Globals.os = Globals.Win32 then
