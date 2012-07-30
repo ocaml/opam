@@ -201,6 +201,7 @@ let rec pretty_string_of_value = function
   | Int i       -> Printf.sprintf "%d" i
   | Bool b      -> Printf.sprintf "%b" b
   | String s    -> Printf.sprintf "%S" s
+  | List[List[]]-> Printf.sprintf "[[]]"
   | List l      ->
       if List.for_all is_list l then
         Printf.sprintf "[\n  %s\n]" (pretty_string_of_values "\n  " l)
@@ -232,8 +233,9 @@ let incr tab = "  " ^ tab
 
 let rec string_of_item_aux tab = function
   | Variable (i, List []) -> None
+  | Variable (i, List[List[]]) -> None
   | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value v))
-  | Section s       ->
+  | Section s ->
       Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.kind s.name
         (string_of_items_aux (incr tab) s.items))
