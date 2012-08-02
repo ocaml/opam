@@ -33,6 +33,7 @@ ocaml-re.tar.gz:
 extlib.stamp: extlib-1.5.2.tar.gz
 	tar xfz extlib-1.5.2.tar.gz
 	mv extlib-1.5.2 extlib
+	cd extlib && patch -i ../extlib.patch -p1
 	@touch $@
 
 dose.stamp: dose.tar.gz
