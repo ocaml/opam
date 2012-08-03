@@ -1435,13 +1435,13 @@ let upload upload repo =
   Filename.remove upload_archives
 
 (* Return the transitive closure of dependencies *)
-let get_transitive_dependencies t names =
+let get_transitive_dependencies ?(depopts = false) t names =
   let universe =
     Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
   let pkg_of_name n = debpkg_of_nv `config t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
-  let depends = Solver.filter_backward_dependencies universe request in
+  let depends = Solver.filter_backward_dependencies ~depopts universe request in
   List.map NV.of_dpkg depends
 
 let config request =
@@ -1492,7 +1492,7 @@ let config request =
   | Includes (is_rec, names) ->
       let deps =
         if is_rec then
-          List.map NV.name (get_transitive_dependencies t names)
+          List.map NV.name (get_transitive_dependencies ~depopts:true t names)
         else
           names in
       let includes =
@@ -1512,7 +1512,7 @@ let config request =
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
         if c.is_rec then
-          List.map NV.name (get_transitive_dependencies t names)
+          List.map NV.name (get_transitive_dependencies ~depopts:true t names)
         else
           names in
       (* Map from libraries to package *)
