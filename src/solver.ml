@@ -489,6 +489,26 @@ struct
         (pkg_set, []) in
     l
 
+  (* Add the optional dependencies to the list of dependencies *)
+  (* The dependencies are encoded in the pkg_extra of cudf packages,
+     as a raw string. So we need to parse the string and convert it
+     to cudf list of package dependencies.
+     NOTE: the cudf encoding (to replace '_' by '%5f' is done in
+     file.ml when we create the debian package. It could make sense
+     to do it here. *)
+  let extended_dependencies table pkg =
+    let opt = File.OPAM.s_depopts in
+    if List.mem_assoc opt pkg.Cudf.pkg_extra then
+      match List.assoc opt pkg.Cudf.pkg_extra with
+      | `String s ->
+          let deps = File_format.parse_cnf_formula
+            (Parser.value Lexer.token (Lexing.from_string s)) in
+          let deps = Debian.Debcudf.lltocudf table deps in
+          { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
+      | _ -> assert false
+    else
+      pkg
+
   let filter_dependencies f_filter f_direction ?(depopts=false) (U l_pkg_pb) (P pkg_l) =
     let pkg_map = 
       List.fold_left
@@ -521,26 +541,6 @@ struct
       (fun pkg_set -> List.filter (fun p -> PkgSet.mem p pkg_set))
       (fun x -> x)
 
-  (* Add the optional dependencies to the list of dependencies *)
-  (* The dependencies are encoded in the pkg_extra of cudf packages,
-     as a raw string. So we need to parse the string and convert it
-     to cudf list of package dependencies.
-     NOTE: the cudf encoding (to replace '_' by '%5f' is done in
-     file.ml when we create the debian package. It could make sense
-     to do it here. *)
-  let extended_dependencies table pkg =
-    let opt = File.OPAM.s_depopts in
-    if List.mem_assoc opt pkg.Cudf.pkg_extra then
-      match List.assoc opt pkg.Cudf.pkg_extra with
-      | `String s ->
-          let deps = File_format.parse_cnf_formula
-            (Parser.value Lexer.token (Lexing.from_string s)) in
-          let deps = Debian.Debcudf.lltocudf table deps in
-          { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
-      | _ -> assert false
-    else
-      pkg
-
   let resolve (U l_pkg_pb) req reinstall =
     (* filter-out the default package from the universe *)
     let l_pkg_pb =
@@ -559,20 +559,41 @@ struct
     get_table l_pkg_pb 
       (fun table pkglist ->
         let package_map pkg = NV.of_cudf table pkg in
-        let universe = Cudf.load_universe pkglist in
-        let sol_o =
-          CudfDiff.resolve_diff universe 
-            (request_map
-               (fun x -> 
-                 match Debian.Debcudf.ltocudf table [x] with
-                 | [n,c] -> Common.CudfAdd.encode n, c
-                 | _   -> failwith "TODO"
-               ) req) in
 
-        (* Load an universe with all the optional dependencies *)
-        let pkglist = List.map (extended_dependencies table) pkglist in
-        let universe = Cudf.load_universe pkglist in
-        log "full-universe: %s" (string_of_universe universe);
+        let i_req = 
+          request_map
+            (fun x -> 
+              match Debian.Debcudf.ltocudf table [x] with
+                | [n,c] -> Common.CudfAdd.encode n, c
+                | _   -> failwith "TODO"
+            ) req in
+        let resolve_diff universe = 
+          CudfDiff.resolve_diff universe i_req in
+        
+        let req_only_remove = 
+          (** determine if the request is a remove case *)
+          match req with
+            | { wish_install = _  ; wish_upgrade = [] ; wish_remove = _ :: _ } -> true
+            | { wish_install = _  ; wish_upgrade = [] ; wish_remove = [] }
+            | { wish_install = [] ; wish_upgrade = _  ; wish_remove = [] } -> false
+            | _ -> Globals.error_and_exit "this type of request is not yet supported" in
+
+        (** [graph_simple] contains the graph of packages 
+            where the dependency relation is without optional dependencies  *)
+        let graph_simple, (universe, sol_o) = 
+          let universe0 = Cudf.load_universe pkglist in
+          dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe0),
+          let universe = Cudf.load_universe (List.map (extended_dependencies table) pkglist) in
+          universe, 
+          resolve_diff
+            (if req_only_remove then
+                (* Universe with all the optional dependencies *)
+                universe
+             else
+                (* Universe without optional dependencies *)
+                universe0) in
+
+        log "full-universe: (*%B*) %s" req_only_remove (string_of_universe universe);
         let create_graph filter = dep_reduction (Cudf.get_packages ~filter universe) in
 
         let action_of_answer l =
@@ -581,6 +602,7 @@ struct
                 (List.map (string_of_internal_action string_of_cudf_package)  l) in
             log "SOLUTION: %s" l_s;
 
+            (** compute all packages to remove *)
             let l_del_p, set_del = 
               Utils.filter_map (function
                 | I_to_change (Some pkg, _) 
@@ -591,21 +613,24 @@ struct
                   | I_to_delete pkg -> Some pkg
                   | _ -> None) l) in
 
+            (** compute initial packages to add *)
             let map_add = 
               Utils.map_of_list PkgMap.empty PkgMap.add (Utils.filter_map (function 
                 | I_to_change (_, pkg) as act -> Some (pkg, act)
                 | I_to_delete _ -> None
                 | I_to_recompile _ -> assert false) l) in
 
+            (** [graph_toinstall] is similar to [graph_simple] except that 
+                the dependency relation is complete *)
             let graph_toinstall = 
               PO.O.mirror 
                 (create_graph (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
-
             let graph_toinstall =
               let graph_toinstall = PG.copy graph_toinstall in
               List.iter (PG.remove_vertex graph_toinstall) l_del_p;
               graph_toinstall in
 
+            (** compute packages to recompile (and perform the merge with packages to add) *)
             let _, map_act = 
               PG_topo.fold
                 (fun pkg (set_recompile, l_act) ->
@@ -631,6 +656,46 @@ struct
                 graph_toinstall
                 (PkgSet.empty, Utils.IntMap.empty) in
 
+            (** compute packages to recompile and remove *)
+            let map_act, to_remove = 
+              let l_remove = topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del in
+              let () = 
+                match l_remove, req_only_remove with
+                  | _ :: _, false -> 
+                    Globals.warning "the removing optimization will be applied but the solver has only taken a universe with partial dependencies"
+                  (* check below if there are some packages, that depend optionally on packages to be removed, and that will not be recompiled *)
+                  | _ -> () in
+
+              (** partition the [l_remove] to decide for each element if we recompile them or delete. *)
+              List.fold_left
+                (fun (map_act, l_folded) pkg -> 
+                  if 
+                    (** check if the user has set some packages that will explicitely be removed *)
+                    List.exists
+                      (fun (p, _) -> p = pkg.Cudf.package) 
+                      i_req.i_wish_remove
+                    ||
+                    (** check if [pkg] contains an optional package which has already been visited in [l_folded] *)
+                    List.exists
+                      (fun p -> List.exists (fun p0 -> O_pkg.compare p0 p = 0) l_folded)
+                      (try PG.succ graph_simple pkg with _ -> [])
+                  then
+                    (** [pkg] will be deleted *)
+                    map_act, (*package_map*) pkg :: l_folded
+                  else
+                    (** [pkg] will be recompiled *)
+                    Utils.IntMap.add
+                      (PG.V.hash pkg)
+                      { cudf = pkg ; action = action_map package_map (I_to_recompile pkg) }
+                      map_act,
+                    l_folded
+                ) 
+                (map_act, [])
+                l_remove in
+
+            (** construct the answer [graph] to add. 
+                Then, it suffices to fold it topologically 
+                by following the action given at each node (install or recompile). *)
             let graph = PA_graph.create () in
             Utils.IntMap.iter (fun _ -> PA_graph.add_vertex graph) map_act;
             PG.iter_edges
@@ -643,8 +708,7 @@ struct
                   ())
               graph_toinstall;
             PA_graph.iter_update_reinstall reinstall graph;
-            { to_remove = List.rev_map package_map 
-                (topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del)
+            { to_remove = List.map package_map to_remove
             ; to_add = graph } in
 
         match sol_o with
