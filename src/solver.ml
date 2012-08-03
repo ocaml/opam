@@ -564,17 +564,17 @@ struct
                  | _   -> failwith "TODO"
                ) req) in
 
+        (* Load an universe with all the optional dependencies *)
+        let pkglist = List.map (extended_dependencies table) pkglist in
+        let universe = Cudf.load_universe pkglist in
+        log "full-universe: %s" (string_of_universe universe);
+        let create_graph filter = dep_reduction (Cudf.get_packages ~filter universe) in
+
         let action_of_answer l =
             let l_s =
               String.concat " "
                 (List.map (string_of_internal_action string_of_cudf_package)  l) in
             log "SOLUTION: %s" l_s;
-
-            (* Load an universe with all the optional dependencies *)
-            let pkglist = List.map (extended_dependencies table) pkglist in
-            let universe = Cudf.load_universe pkglist in
-            log "full-universe: %s" (string_of_universe universe);
-            let create_graph filter = dep_reduction (Cudf.get_packages ~filter universe) in
 
             let l_del_p, set_del = 
               Utils.filter_map (function
