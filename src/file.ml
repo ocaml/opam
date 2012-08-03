@@ -89,7 +89,7 @@ module Installed = struct
     List.iter (function
       | []              -> ()
       | [name; version] -> add (N.of_string name) (V.of_string version)
-      | _               -> Globals.error_and_exit "installed"
+      | _               -> Globals.error_and_exit "[file.ml/module Installed]"
     ) lines;
     !map
 

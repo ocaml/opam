@@ -489,7 +489,7 @@ struct
         (pkg_set, []) in
     l
 
-  let filter_dependencies f_filter f_direction (U l_pkg_pb) (P pkg_l) =
+  let filter_dependencies f_filter f_direction ?(depopts=false) (U l_pkg_pb) (P pkg_l) =
     let pkg_map = 
       List.fold_left
         (fun map pkg -> NV.Map.add (NV.of_dpkg pkg) pkg map)
@@ -497,6 +497,11 @@ struct
         l_pkg_pb in
     get_table l_pkg_pb
       (fun table pkglist ->
+        let pkglist = 
+          if depopts then
+            List.map (extended_dependencies table) pkglist
+          else
+            pkglist in
         let pkg_set = List.fold_left
           (fun accu pkg -> PkgSet.add (tocudf table pkg) accu)
           PkgSet.empty

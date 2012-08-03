@@ -1373,7 +1373,7 @@ let remove names =
   let wish_remove = Heuristic.nv_of_names t names in
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
   let depends =
-    Solver.filter_forward_dependencies universe
+    Solver.filter_forward_dependencies ~depopts:true universe
       (Solver.P (List.rev_map
                    (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
                    wish_remove)) in
