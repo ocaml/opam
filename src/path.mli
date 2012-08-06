@@ -244,4 +244,7 @@ module R: sig
   (** All files in the file dir *)
   val available_files: t -> nv -> filename list
 
+  (** Tempory folder {i $opam/repo/$repo/tmp/$NAME.$VERSION/} *)
+  val tmp_dir: t -> nv -> dirname
+
 end

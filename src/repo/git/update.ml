@@ -11,48 +11,24 @@ let _ =
     exit 1;
   )
 
-let local_path = Run.cwd ()
-let remote_address = Sys.argv.(1)
-let repositories = Filename.concat local_path "git"
-
-(* Return the list of modified files of the git repository located
-   at [dirname] *)
-let get_updates dirname =
-  Run.in_dir dirname (fun () ->
-    let err = Run.command [ "git" ; "fetch" ; "origin" ] in
-    let error () = Globals.error_and_exit "Cannot fetch git repository %s" dirname in
-    if err = 0 then
-      match
-        Run.read_command_output
-          [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ]
-      with
-      | None   -> error ()
-      | Some o -> o
-    else
-      error ()
-  )
-
-(* Update the git repository located at [dirname] *)
-let update dirname =
-  Run.in_dir dirname (fun () ->
-    let err = Run.command [ "git" ; "pull" ; "origin" ; "master" ] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot update git repository %s" dirname
-  )
-
-let needs_update dirname =
-  get_updates dirname <> []
+open Types
+open Repo_helpers
 
 open Types
 
-let (++) = NV.Set.union
-
 let () =
-  (* Look at new packages *)
-  let repo_updates = get_updates local_path in
+  let t = Repo_helpers.make_state () in
+  let state = Git.make_state true t in
+  let updates = Git.Updates.get t state in
+  File.Updated.write (Path.R.updated t.local_repo) updates
 
+(*
+  (* Look at new packages *)
   (* re-clone the repository if the url has changed *)
-  let url_updates = List.filter (Utils.starts_with ~prefix:"url/") repo_updates in
+  let url_updates =
+    Filename.Set.filter (fun f ->
+      Filename.basename f = Basename.of_string "url"
+    ) repo_updates in
   let url_updates =
     Utils.filter_map (fun url ->
       if Sys.file_exists url then begin
@@ -89,3 +65,4 @@ let () =
   File.Updated.write
     (Path.R.updated (Path.R.of_dirname (Dirname.of_string local_path)))
     (repo_updates ++ url_updates ++ updates)
+*)

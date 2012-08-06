@@ -2,39 +2,29 @@
 
 let _ =
   if Array.length Sys.argv <> 3 then (
-    Printf.eprintf "Usage: %s <remote-address> <package>" Sys.argv.(0);
+    Printf.eprintf "Usage: %s <remote_file> <package>" Sys.argv.(0);
     exit 1
   )
 
 open Types
 
-let local_path = Dirname.cwd ()
-let local_repo = Path.R.of_dirname local_path
-let remote_address = Sys.argv.(1)
-let package = Sys.argv.(2)
-let nv = NV.of_string package
-
-let git_root = local_path / "git"
-let git_dir = git_root / package
-
-let git_archive () =
+let git_archive t state nv url =
+  let git_dir = state.git_dir nv in
   (* If the git repo is not already there, then clone it *)
   if not (Dirname.exists git_dir) then (
-    let urls = File.URL.read (Path.R.url local_repo nv) in
-    Dirname.mkdir git_root;
-    Dirname.in_dir git_root (fun () ->
-      let url = match urls with h::_ -> Filename.to_string h | _ -> assert false in
-      let err = Run.command [ "git" ; "clone" ; url ; package ] in
+    Dirname.mkdir state.git_root;
+    Dirname.in_dir state.git_root (fun () ->
+      let err = Run.command [ "git" ; "clone" ; url ; NV.to_string nv ] in
       if err <> 0 then
         Globals.error_and_exit "%s is not a valid git url" url
     )
   );
   (* Then run git-archive to get a tar.gz *)
   Dirname.in_dir git_dir (fun () ->
-    let tar = package ^ ".tar" in 
+    let tar = NV.to_string nv ^ ".tar" in 
     let err =
       Run.commands [ 
-        [ "git" ; "archive" ; "--format=tar" ; "--prefix="^package^"/" ; "HEAD" ; "-o" ; tar ] ;
+        [ "git" ; "archive" ; "--format=tar" ; "--prefix="^NV.to_string nv^"/" ; "HEAD" ; "-o" ; tar ] ;
         [ "gzip" ; "-f" ; tar ] ;
       ] in
     if err <> 0 then
@@ -42,11 +32,14 @@ let git_archive () =
   )
 
 let () =
+  let t = Repo_helpers.make_state () in
+  let state = Git.make_state false t in
+
   (* Run git-archive in the right directory *)
-  git_archive ();
+  git_archive t state nv (Dirname.to_string t.remote_path)
 
   (* and copy the archive at the right place *)
-  Dirname.mkdir (Path.R.archives_dir local_repo);
+  Dirname.mkdir (Path.R.archives_dir t.local_repo);
   Filename.move
-    (git_dir // (package ^ ".tar.gz"))
-    (Path.R.archive local_repo nv)
+    (state.git_dir nv // ((NV.to_string nv) ^ ".tar.gz"))
+    (Path.R.archive t.local_repo nv)

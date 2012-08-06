@@ -117,6 +117,9 @@ module Dirname: sig
   (** Remove a prefix from a directory *)
   val remove_prefix: prefix:t -> t -> string
 
+  (** Does the directory starts with a given prefix *)
+  val starts_with: prefix:t -> t -> bool
+
   (** Execute a function in a temp directory *)
   val with_tmp_dir: (t -> 'a) -> 'a
 
@@ -335,6 +338,9 @@ module Repository: sig
 
   (** Get the repository address *)
   val address: t -> string
+
+  (** Return a copy of repo with a different kind *)
+  val with_kind: t -> string -> t
 
 end
 

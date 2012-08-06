@@ -103,24 +103,29 @@ end
 
 
 (* GIT *)
+begin library "opam-git-lib"
+  files = [ "src/repo/git/git.ml" ]
+  requires = [ "opam-lib" ]
+end
+
 begin program "opam-git-init"
   files = [ "src/repo/git/init.ml" ]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-git-lib" ]
 end
 
 begin program "opam-git-update"
   files = [ "src/repo/git/update.ml" ]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-git-lib" ]
 end
 
 begin program "opam-git-download"
   files = [ "src/repo/git/download.ml" ]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-git-lib" ]
 end
 
 begin program "opam-git-upload"
   files = [ "src/repo/git/upload.ml" ]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-git-lib" ]
 end
 
 

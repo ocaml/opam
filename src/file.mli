@@ -367,7 +367,7 @@ module Subst: sig
 end
 
 (** {2 Urls for OPAM repositories *)
-module URL: IO_FILE with type t = filename list
+module URL: IO_FILE with type t = (filename * string) list
 
 (** {2 urls.txt file *} *)
 module Urls_txt: IO_FILE with type t = (basename * int * string) list

@@ -201,6 +201,8 @@ module R = struct
 
   let files t nv = package t nv / "files"
 
+  let tmp_dir t nv = t / "tmp" / NV.to_string nv
+
   let available_files t nv =
     if Dirname.exists (files t nv) then
       Filename.rec_list (files t nv)

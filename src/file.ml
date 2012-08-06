@@ -101,20 +101,28 @@ module URL = struct
 
   let internal = "url"
 
-  type t = filename list
+  type t = (filename * string) list
 
   let empty = []
 
   let of_string f s =
     let lines = Lines.of_string f s in
     Utils.filter_map (function
-      | []    -> None
-      | [url] -> Some (Filename.of_string url)
-      | s     -> Globals.error_and_exit "%s is not a valid url" (String.concat " " s)
+      | []         -> None
+      | [url]      ->
+          let url = Filename.of_string url in
+          let kind =
+            if Filename.exists url then
+              "rsync"
+            else
+              "curl" in
+          Some (url, kind)
+      | [url;kind] -> Some (Filename.of_string url, kind)
+      | h          -> Globals.error_and_exit "%s is not a valid url" (String.concat " " h)
     ) lines
 
   let to_string f t =
-    let lines = List.map (fun f -> [Filename.to_string f]) t in
+    let lines = List.map (fun (f,k) -> [Filename.to_string f; k]) t in
     Lines.to_string f lines
 
 end

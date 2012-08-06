@@ -56,7 +56,7 @@ module Sync = struct
       let local_file = local_of_remote_file state remote_file in
       if same_digest state t ~local_file ~remote_file then
         (* Do not overwrite the file if it is already there, with the right contents *)
-        Some (local_file, false)
+        Some local_file
       else begin
         log "dowloading %s" (Filename.to_string remote_file);
         let local_dir = Filename.dirname local_file in
@@ -74,7 +74,7 @@ module Sync = struct
               with Not_found ->
                 ()
             end;
-            Some (local_file, true)
+            Some local_file
     end
   end
 

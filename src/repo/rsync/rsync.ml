@@ -60,7 +60,9 @@ module Sync = struct
   let file state () remote_file =
     let local_file = Repo_helpers.local_of_remote_file state remote_file in
     log "Sync.file %s with %s" (Filename.to_string remote_file) (Filename.to_string local_file);
-    rsync_file state remote_file (Filename.dirname local_file)
+    match rsync_file state remote_file (Filename.dirname local_file) with
+    | Some (f,_) -> Some f
+    | None       -> None
 
   let dir state () remote_dir =
     log "Sync.dir %s" (Dirname.to_string remote_dir);

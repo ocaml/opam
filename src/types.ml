@@ -128,6 +128,7 @@ module Dirname: sig
   val move: t -> t -> unit
   val dirname: t -> t
   val basename: t -> basename
+  val starts_with: prefix:t -> t -> bool
   val remove_prefix: prefix:t -> t -> string
   val exists: t -> bool
   val raw: string -> t
@@ -187,6 +188,10 @@ end = struct
 
   let exists dirname =
     Sys.file_exists (to_string dirname)
+
+  let starts_with ~prefix dirname =
+    let prefix = to_string prefix in
+    Utils.starts_with ~prefix (to_string dirname)
 
   let remove_prefix ~prefix dirname =
     let prefix = 
@@ -560,6 +565,7 @@ module Repository: sig
   val name: t -> string
   val kind: t -> string
   val address: t -> string
+  val with_kind: t -> string -> t
 end = struct
 
   type t = {
@@ -591,6 +597,8 @@ end = struct
     kind    = Globals.default_repository_kind;
     address = Globals.default_repository_address;
   }
+
+  let with_kind r kind = { r with kind }
 
   let to_string r =
     Printf.sprintf "%s(%s %s)" r.name r.address r.kind
