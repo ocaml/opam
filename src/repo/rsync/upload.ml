@@ -10,6 +10,5 @@ open Repo_helpers
 
 let () =
   let state = Repo_helpers.make_state () in
-  let files = Rsync.Upload.upload state () in
-  let updates = NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements files)) in
+  let updates = Rsync.upload state in
   Globals.msg "%d packages uploaded %s\n" (NV.Set.cardinal updates) (NV.Set.to_string updates)

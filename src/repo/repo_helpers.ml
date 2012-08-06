@@ -17,24 +17,44 @@ let make_state () =
   { local_path; local_repo; remote_path; remote_repo }
 
 type download_state = {
-  filename : filename;
-  force    : bool;
-  kind     : string;
+  kind    : string;
+  filename: filename;
+  force   : bool;
+  dirname : dirname;
 }
 
 let make_download_state () =
   let kind =
-    try (Array.of_list (Utils.split Sys.argv.(0) '-')).(1)
+    try (Array.of_list (Utils.split Sys.argv.(0) '-')).(0)
     with _ -> "none" in
   let filename = Filename.of_string Sys.argv.(1) in
   let force = bool_of_string Sys.argv.(2) in
-  { kind; filename; force }
+  let dirname = Dirname.cwd () in
+  { kind; filename; force; dirname }
 
-module type REPO = sig
-  type t
-  val sync  : t -> state -> Filename.Set.t
-  val upload: t -> state -> dirname -> Filename.Set.t
-end
+let download d =
+  let cmd = Printf.sprintf "opam-%s-download" d.kind in
+  let output = Dirname.in_dir d.dirname (fun () ->
+    Run.read_command_output [
+      cmd; Filename.to_string d.filename; string_of_bool d.force
+    ]) in
+  match output with
+  | None        -> None
+  | Some []     -> failwith "download error"
+  | Some (f::_) -> Some (Filename.of_string f)
+
+let rec download_iter dirname = function
+  | []       -> None
+  | (f,k)::t ->
+      let d = {
+        filename = f;
+        force    = false;
+        kind     = k;
+        dirname;
+      } in
+      match download d with
+      | None -> download_iter dirname t
+      | r    -> r
 
 let local_of_remote_file state remote_file =
   let basename = Filename.remove_prefix state.remote_path remote_file in
@@ -52,27 +72,10 @@ let remote_of_local_dir state local_dir =
   let basename = Dirname.remove_prefix state.local_path local_dir in
   state.remote_path / basename
 
-let download d =
-  let cmd = Printf.sprintf "opam-%s-download" d.kind in
-  let output = Run.read_command_output [
-    cmd; Filename.to_string d.filename; string_of_bool d.force
-  ] in
-  match output with
-  | None        -> None
-  | Some []     -> failwith "download error"
-  | Some (f::_) -> Some (Filename.of_string f)
-
-let rec download_iter = function
-  | []       -> None
-  | (f,k)::t ->
-      let d = {
-        filename = f;
-        force    = false;
-        kind     = k;
-      } in
-      match download d with
-      | None -> download_iter t
-      | r    -> r
+module type REPO = sig
+  val sync  : state -> Filename.Set.t
+  val upload: state -> dirname -> Filename.Set.t
+end
 
 module Make (R : REPO) = struct
 
@@ -81,8 +84,8 @@ module Make (R : REPO) = struct
 
   let (++) = Filename.Set.union
 
-  let get_updates t state =
-    let new_files = R.sync t state in
+  let get_updates state =
+    let new_files = R.sync state in
     let updates local_dir =
       Filename.Set.filter (fun local_file ->
         Filename.starts_with (local_dir state.local_repo) local_file
@@ -94,7 +97,7 @@ module Make (R : REPO) = struct
   let kind_of_file filename =
     if Filename.exists filename then "rsync" else "curl"
 
-  let make_archive t state nv =
+  let make_archive state nv =
     Dirname.with_tmp_dir (fun tmp_download_dir ->
       Dirname.with_tmp_dir (fun tmp_extract_root ->
         let tmp_extract_dir = tmp_extract_root / NV.to_string nv in
@@ -105,6 +108,7 @@ module Make (R : REPO) = struct
           kind     = kind_of_file remote_archive;
           filename = remote_archive;
           force    = false;
+          dirname  = tmp_download_dir;
         } in
         let local_archive = Path.R.archive state.local_repo nv in
         match download download_info with
@@ -124,7 +128,7 @@ module Make (R : REPO) = struct
                      (fun (f,k) -> Printf.sprintf "%s:%s" (Filename.to_string f) k)
                      urls) in
               log "downloading %s" urls_s;
-              match Dirname.in_dir tmp_download_dir (fun () -> download_iter urls) with
+              match download_iter tmp_download_dir urls with
               | None -> Globals.error_and_exit "Cannot get %s" urls_s
               | Some local_archive ->
                   log "extracting %s to %s"
@@ -154,12 +158,12 @@ module Make (R : REPO) = struct
       )
     )
 
-  let upload t state =
+  let upload state =
     let local_repo = state.local_repo in
     let upload_path = Path.R.upload_dir local_repo in
     let upload_repo = Path.R.of_dirname upload_path in
     let state = { state with local_path = upload_path; local_repo = upload_repo } in
-    let upload fn = R.upload t state (fn state.remote_repo) in
+    let upload fn = R.upload state (fn state.remote_repo) in
     let files =
          upload Path.R.packages_dir
       ++ upload Path.R.archives_dir

@@ -15,9 +15,10 @@ val make_state: unit -> state
 
 (** State associated to a download command *)
 type download_state = {
+  kind    : string;
   filename: filename;
   force   : bool;
-  kind    : string;
+  dirname : dirname;
 }
 
 (** Build a download state *)
@@ -25,29 +26,26 @@ val make_download_state: unit -> download_state
 
 module type REPO = sig
 
-  (** Backend-specific internal state *)
-  type t
-
   (** [sync state t] returns the updated local filenames *)
-  val sync: t -> state -> Filename.Set.t
+  val sync: state -> Filename.Set.t
 
   (** upload the contents of [dirname]. Return the uploaded local
       filename. *)
-  val upload: t -> state -> dirname -> Filename.Set.t
+  val upload: state -> dirname -> Filename.Set.t
 
 end
 
 module Make(R: REPO): sig
 
   (** Get the list of updated package updated *)
-  val get_updates: R.t -> state -> NV.Set.t      
+  val get_updates: state -> NV.Set.t      
 
   (** Build an archive. Return the local archive filename. *)
-  val make_archive: R.t -> state -> nv -> filename
+  val make_archive: state -> nv -> filename
 
   (** upload the contents of [upload/]. Return the uploaded
       packages. *)
-  val upload: R.t -> state -> NV.Set.t
+  val upload: state -> NV.Set.t
 
 end
 

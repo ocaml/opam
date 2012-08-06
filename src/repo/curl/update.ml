@@ -12,6 +12,5 @@ open Curl
 
 let () =
   let state = Repo_helpers.make_state () in
-  let t = Curl.make_state state in
-  let updates = Curl.Updates.get state t in
+  let updates = Curl.get_updates state in
   File.Updated.write (Path.R.updated state.local_repo) updates;

@@ -17,10 +17,9 @@ open Repo_helpers
 open Types
 
 let () =
-  let t = Repo_helpers.make_state () in
-  let state = Git.make_state true t in
-  let updates = Git.Updates.get t state in
-  File.Updated.write (Path.R.updated t.local_repo) updates
+  let state = Repo_helpers.make_state () in
+  let updates = Git.get_updates state in
+  File.Updated.write (Path.R.updated state.local_repo) updates
 
 (*
   (* Look at new packages *)

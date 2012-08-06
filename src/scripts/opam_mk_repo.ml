@@ -70,22 +70,22 @@ let () =
   ) in
   File.Urls_txt.write local_index_file urls;
 
-  let t = Curl.make_state state in
-
-  let updates = Curl.Updates.get state t in
+  let updates = Curl.get_updates state in
 
   (* Update the archive files *)
   NV.Set.iter (fun nv ->
     Globals.msg "Updating %s as some file have changed\n" (NV.to_string nv);
     if Filename.exists (Path.R.archive local_repo nv) then
-      Curl.Archives.make state t nv
+      let _archive = Curl.make_archive state nv in
+      ()
   ) updates;
 
   (* Create the archives asked by the user *)
   NV.Set.iter (fun nv ->
     if not index && (all || NV.Set.mem nv packages) then begin
       Globals.msg "Creating archive for %s\n" (NV.to_string nv);
-      Curl.Archives.make state t nv
+      let _archive = Curl.make_archive state nv in
+      ()
     end
   ) updates;
 

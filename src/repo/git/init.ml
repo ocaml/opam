@@ -32,6 +32,5 @@ let git_init t =
 
 let () =
   let t = Repo_helpers.make_state () in
-  let state = Git.make_state false t in
   git_init t;
-  Dirname.mkdir state.git_root
+  Dirname.mkdir (Path.R.tmp_root t.local_repo)

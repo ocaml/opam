@@ -2,16 +2,19 @@
 
 let _ =
   if Array.length Sys.argv <> 3 then (
-    Printf.eprintf "Usage: %s <remote-address> <package>" Sys.argv.(0);
+    Printf.eprintf "Usage: %s <remote-filename> <force>" Sys.argv.(0);
     exit 1
   )
 
-let package = Sys.argv.(2)
-
 open Types
+open Repo_helpers
 
 let () =
-  let nv = NV.of_string package in
-  let state = Repo_helpers.make_state () in
-  let t = Curl.make_state state in
-  Curl.Archives.make state t nv
+  let state = Repo_helpers.make_download_state () in
+  let basename = Filename.basename state.filename in
+  let local_file = Filename.create (Dirname.cwd ()) basename in
+  if state.force || not (Filename.exists local_file) then
+    match Filename.download state.filename (Dirname.cwd ()) with
+    | None   -> exit 1
+    | Some f ->
+        Printf.printf "%s" (Filename.to_string f)

@@ -36,7 +36,7 @@ let make_state state =
     remote_files; file_permissions; file_digests;
   }
 
-module Sync = struct
+module Repo = struct
 
   type t = state
 
@@ -51,7 +51,7 @@ module Sync = struct
 
   let file state t remote_file =
     if not (Filename.Set.mem remote_file t.remote_files) then
-    None
+      None
     else begin
       let local_file = local_of_remote_file state remote_file in
       if same_digest state t ~local_file ~remote_file then
@@ -66,7 +66,7 @@ module Sync = struct
         | Some local_file ->
             if not (Filename.exists local_file) then
               (* This may happen with empty files *)
-            Filename.touch local_file;
+              Filename.touch local_file;
             begin
               try
                 let perm = List.assoc remote_file t.file_permissions in
@@ -75,42 +75,38 @@ module Sync = struct
                 ()
             end;
             Some local_file
+      end
     end
-  end
 
   (* sync remote_dir with the corresponding local_dir*)
-  let dir state t remote_dir =
-    let local_dir = local_of_remote_dir state remote_dir in
+  let sync state =
+    let t = make_state state in
     log "dir local_dir=%s remote_dir=%s"
-      (Dirname.to_string local_dir)
-      (Dirname.to_string remote_dir);
-    if local_dir <> remote_dir then begin
-      let current = Filename.Set.of_list (Filename.list local_dir) in
+      (Dirname.to_string state.local_path)
+      (Dirname.to_string state.remote_path);
+    if state.local_path <> state.remote_path then begin
+      let current = Filename.Set.of_list (Filename.list state.local_path) in
       log "current: %s" (Filename.Set.to_string current);
       let to_keep = Filename.Set.filter (fun local_file ->
         let remote_file = remote_of_local_file state local_file in
-        Filename.starts_with local_dir local_file
-        && same_digest state t ~local_file ~remote_file
+        same_digest state t ~local_file ~remote_file
       ) (active_local_files state t) in
       log "to_keep: %s" (Filename.Set.to_string to_keep);
       let to_delete = Filename.Set.diff current to_keep in
       log "to_delete: %s" (Filename.Set.to_string to_delete);
       Filename.Set.iter Filename.remove to_delete;
       Filename.Set.filter (fun f ->
-        if Filename.starts_with remote_dir f then begin
-          match file state t f with
-          | Some _ -> true
-          | None   -> false
-        end else
-        false
+        match file state t f with
+        | Some _ -> true
+        | None   -> false
       ) t.remote_files
     end else
       Filename.Set.empty
 
-  let upload state t remote_dir =
+  let upload state remote_dir =
     Globals.error_and_exit "Upload is not available for CURL backends"
 
 end
 
-module M = Make(Sync)
+module M = Repo_helpers.Make(Repo)
 include M

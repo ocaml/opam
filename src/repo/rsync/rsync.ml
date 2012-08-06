@@ -53,18 +53,18 @@ let rsync_dir ?(delete=true) remote_dir local_dir =
       List.iter (fun f -> log "rsync_dir-files: %s %s" (Run.cwd ()) f) lines;
       lines
 
-module Sync = struct
+module Repo = struct
 
   type t = unit
 
-  let file state () remote_file =
+  let file state remote_file =
     let local_file = Repo_helpers.local_of_remote_file state remote_file in
     log "Sync.file %s with %s" (Filename.to_string remote_file) (Filename.to_string local_file);
     match rsync_file state remote_file (Filename.dirname local_file) with
     | Some (f,_) -> Some f
     | None       -> None
 
-  let dir state () remote_dir =
+  let dir state remote_dir =
     log "Sync.dir %s" (Dirname.to_string remote_dir);
     let local_dir = Repo_helpers.local_of_remote_dir state remote_dir in
     let lines = rsync_dir ~delete:true remote_dir local_dir in
@@ -73,19 +73,29 @@ module Sync = struct
     Filename.Set.iter (fun f -> log "found %s" (Filename.to_string f)) set;
     set
 
-  let upload state () remote_dir =
+  let (++) = Filename.Set.union
+
+  let sync state =
+    let archives =
+      Filename.Set.filter (fun f -> 
+        let remote_file = remote_of_local_file state f in
+        file state remote_file <> None
+      ) (Path.R.available_archives state.local_repo) in
+    let sync fn = dir state (fn state.remote_repo) in
+    archives
+    ++ sync Path.R.packages_dir
+    ++ sync Path.R.compilers_dir
+
+  let upload state remote_dir =
     log "Upload.dir %s" (Dirname.to_string remote_dir);
     let local_dir = Repo_helpers.local_of_remote_dir state remote_dir in
     if Dirname.exists local_dir then
-      let _lines = rsync_dir ~delete:false local_dir remote_dir in
-      ()
-
-  let same_digest state () ~local_file ~remote_file =
-    match rsync_file state remote_file (Filename.dirname local_file) with
-    | Some (_,updated) -> not updated
-    | None             -> false
+      Filename.Set.of_list
+        (List.map Filename.of_string (rsync_dir ~delete:false local_dir remote_dir))
+    else
+      Filename.Set.empty
 
 end    
 
-module M = Make(Sync)
+module M = Repo_helpers.Make(Repo)
 include M
