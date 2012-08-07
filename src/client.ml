@@ -406,9 +406,9 @@ let update_package () =
       (* we do not try to upgrade pinned packages *)
       let updated =
         NV.Set.filter (fun nv -> NV.Set.for_all (fun nvp -> NV.name nvp = NV.name nv) pinned_updated) updated in
+      log "updated=%s" (NV.Set.to_string updated);
       NV.Set.union updated accu;
     ) NV.Set.empty t.repositories in  
-
   print_updated t updated pinned_updated;
 
   let updated = NV.Set.union pinned_updated updated in
@@ -1441,7 +1441,8 @@ let upload upload repo =
   Filename.copy upload.descr upload_descr;
   Filename.copy upload.archive upload_archives;
   Repositories.upload repo;
-  Dirname.rmdir (Path.R.package upload_repo nv)
+  Dirname.rmdir (Path.R.package upload_repo nv);
+  Filename.remove (Path.R.archive upload_repo nv)
 
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies t names =
@@ -1631,7 +1632,7 @@ let remote action =
       let pretty_print r =
         Globals.msg "| %-10s| %-40s| %-10s |\n"
           (Repository.name r)
-          (Repository.address r)
+          (Dirname.to_string (Repository.address r))
           (Repository.kind r) in
       let line = String.make 68 '-' in
       line.[0] <- '|'; line.[12] <- '|'; line.[54] <- '|'; line.[67] <- '|';

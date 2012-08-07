@@ -86,12 +86,8 @@ init:
 ifneq ($(REPOKIND), server)
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
-	mkdir $(OPAM_REPO)/opam
-	mkdir $(OPAM_REPO)/descr
-	mkdir $(OPAM_REPO)/compilers
 endif
 ifeq ($(REPOKIND), git)
-	mkdir $(OPAM_REPO)/url
 	cd $(OPAM_REPO) && git init && \
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
@@ -103,28 +99,29 @@ ifeq ($(REPOKIND), git)
 	mkdir -p $(OPAM_REPO)/packages/P1.1
 	cp packages/P1-1.opam     $(OPAM_REPO)/packages/P1.1/opam
 	cp packages/P1-1/README   $(OPAM_REPO)/packages/P1.1/descr
-	echo '$(OPAM_GIT)/P1-1' > $(OPAM_REPO)/packages/P1.1/url
+	echo '$(OPAM_GIT)/P1-1 git' > $(OPAM_REPO)/packages/P1.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P1"
 	mkdir -p $(OPAM_REPO)/packages/P2.1
 	cp packages/P2/README     $(OPAM_REPO)/packages/P2.1/descr
 	cp packages/P2.opam       $(OPAM_REPO)/packages/P2.1/opam
-	echo '$(OPAM_GIT)/P2'   > $(OPAM_REPO)/packages/P2.1/url
+	echo '$(OPAM_GIT)/P2 git'   > $(OPAM_REPO)/packages/P2.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P2"
 	mkdir -p $(OPAM_REPO)/packages/P3.1~weird-version.test
 	cp packages/P3.opam       $(OPAM_REPO)/packages/P3.1~weird-version.test/opam
 	cp packages/P3/README     $(OPAM_REPO)/packages/P3.1~weird-version.test/descr
-	echo '$(OPAM_GIT)/P3'   > $(OPAM_REPO)/packages/P3.1~weird-version.test/url
+	echo '$(OPAM_GIT)/P3 git'   > $(OPAM_REPO)/packages/P3.1~weird-version.test/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P3"
 	mkdir -p $(OPAM_REPO)/packages/P4.1
 	cp packages/P4-1.opam     $(OPAM_REPO)/packages/P4.1/opam
 	cp packages/P4/README     $(OPAM_REPO)/packages/P4.1/descr
-	echo '$(OPAM_GIT)/P4'   > $(OPAM_REPO)/packages/P4.1/url
+	echo '$(OPAM_GIT)/P4 git'   > $(OPAM_REPO)/packages/P4.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4"
 	mkdir -p $(OPAM_REPO)/packages/P5.1
 	cp packages/P5.opam       $(OPAM_REPO)/packages/P5.1/opam
 	cp packages/P5/README     $(OPAM_REPO)/packages/P5.1/descr
-	echo '$(OPAM_GIT)/P5'   > $(OPAM_REPO)/packages/P5.1/url
+	echo '$(OPAM_GIT)/P5 git'   > $(OPAM_REPO)/packages/P5.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P5"
+	mkdir -p $(OPAM_REPO)/compilers
 	cp compilers/*            $(OPAM_REPO)/compilers/
 	cd $(OPAM_REPO)/compilers && git add * && git commit -a -m "Adding compilers"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)

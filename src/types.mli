@@ -337,7 +337,7 @@ module Repository: sig
   val kind: t -> string
 
   (** Get the repository address *)
-  val address: t -> string
+  val address: t -> dirname
 
   (** Return a copy of repo with a different kind *)
   val with_kind: t -> string -> t

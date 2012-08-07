@@ -31,3 +31,15 @@ val download: repository -> nv -> unit
 
 (** Run {i opam-$kind-upload} in {i $opam/repo/$repo} *)
 val upload: repository -> unit
+
+(** {2 Download script helpers} *)
+
+(** State associated to a download command *)
+type download_info = {
+  filename: filename;
+  nv: nv;
+  force: bool;
+}
+
+(** Read argv and build a download info record *)
+val read_download_info: unit -> download_info

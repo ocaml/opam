@@ -3,22 +3,22 @@ open Repo_helpers
 
 let log fmt = Globals.log "git" fmt
 
-let git_fetch state =
-  Dirname.in_dir state.local_path (fun () ->
+let git_fetch local_path =
+  Dirname.in_dir local_path (fun () ->
     let err = Run.command [ "git" ; "fetch" ; "origin" ] in
     if err <> 0 then
       Globals.error_and_exit
         "Cannot fetch git repository %s"
-        (Dirname.to_string state.local_path)
+        (Dirname.to_string local_path)
   )
 
-let git_merge state =
-  Dirname.in_dir state.local_path (fun () ->
+let git_merge local_path =
+  Dirname.in_dir local_path (fun () ->
       let err = Run.command [ "git" ; "merge" ; "origin/master" ] in
       if err <> 0 then
         Globals.error_and_exit
           "Cannot update git repository %s"
-          (Dirname.to_string state.local_path)
+          (Dirname.to_string local_path)
     )
 
 (* Return the list of modified files of the git repository located
@@ -44,7 +44,7 @@ module Repo = struct
   let make state =
     log "make_state";
     if Dirname.exists (state.local_path / ".git") then begin
-      git_fetch state;
+      git_fetch state.local_path;
       get_diff state;
     end else
       Filename.Set.empty
@@ -52,7 +52,7 @@ module Repo = struct
   let sync state =
     let diff = make state in
     if not (Filename.Set.is_empty diff) then
-      git_merge state;
+      git_merge state.local_path;
     diff
 
   let upload state dirname =

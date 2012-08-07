@@ -139,6 +139,8 @@ module G = struct
 
   let archive t nv = archives_dir t // (NV.to_string nv ^ ".tar.gz")
 
+  let archive_dir t nv = archives_dir t / NV.to_string nv
+
   let repo_index t = t / "repo" // "index"
 
   let available_aliases t = 
@@ -179,6 +181,8 @@ module R = struct
   let archives_dir t = t / "archives"
 
   let archive t nv = archives_dir t // (NV.to_string nv ^ ".tar.gz")
+
+  let archive_dir t nv = archives_dir t / NV.to_string nv
 
   let available_archives t =
     let d = archives_dir t in

@@ -161,6 +161,9 @@ module G: sig
   (** Archives files folder: {i $opam/archives/} *)
   val archives_dir: t -> dirname
 
+  (** Archive folder *)
+  val archive_dir: t -> nv -> dirname
+
   (** Return the repository index: {i $opam/repo/index} *)
   val repo_index: t -> filename
 
@@ -214,6 +217,9 @@ module R: sig
 
   (** Return the archive folder: {i $opam/repo/$repo/archives/} *)
   val archives_dir: t -> dirname
+
+  (** Archive folder *)
+  val archive_dir: t -> nv -> dirname
 
   (** Return the list of archive files in {i $opam/repo/$repo/archives *)
   val available_archives: t -> Filename.Set.t

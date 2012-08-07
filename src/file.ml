@@ -101,7 +101,7 @@ module URL = struct
 
   let internal = "url"
 
-  type t = (filename * string) list
+  type t = (filename * string option) list
 
   let empty = []
 
@@ -111,18 +111,15 @@ module URL = struct
       | []         -> None
       | [url]      ->
           let url = Filename.of_string url in
-          let kind =
-            if Filename.exists url then
-              "rsync"
-            else
-              "curl" in
-          Some (url, kind)
-      | [url;kind] -> Some (Filename.of_string url, kind)
+          Some (url, None)
+      | [url;kind] -> Some (Filename.of_string url, Some kind)
       | h          -> Globals.error_and_exit "%s is not a valid url" (String.concat " " h)
     ) lines
 
   let to_string f t =
-    let lines = List.map (fun (f,k) -> [Filename.to_string f; k]) t in
+    let lines = List.map (function
+      | (f,None)   -> [Filename.to_string f]
+      | (f,Some k) -> [Filename.to_string f; k]) t in
     Lines.to_string f lines
 
 end
@@ -134,6 +131,14 @@ module Installed = struct
   type t = NV.Set.t
 
   let empty = NV.Set.empty
+
+  let check t =
+    let map = NV.to_map t in
+    N.Map.iter (fun n vs ->
+      if V.Set.cardinal vs <> 1 then
+        Globals.error_and_exit "Multiple versions installed for package %s: %s"
+          (N.to_string n) (V.Set.to_string vs)
+    ) map
 
   let of_string f s =
     let lines = Lines.of_string f s in
@@ -147,6 +152,7 @@ module Installed = struct
     !map
 
   let to_string _ t =
+    check t;
     let buf = Buffer.create 1024 in
     NV.Set.iter
       (fun nv -> Printf.bprintf buf "%s %s\n" (N.to_string (NV.name nv)) (V.to_string (NV.version nv)))
@@ -243,7 +249,7 @@ module Repo_config = struct
       filename = Filename.to_string filename;
       contents = [
         Variable (s_name   , String (Repository.name t));
-        Variable (s_address, String (Repository.address t));
+        Variable (s_address, String (Dirname.to_string (Repository.address t)));
         Variable (s_kind   , String (Repository.kind t));
       ] } in
     Syntax.to_string filename s
@@ -316,7 +322,7 @@ module Config = struct
 
     let of_repo r =
       Option (String (Repository.name r),
-              [ String (Repository.address r);
+              [ String (Dirname.to_string (Repository.address r));
                 String (Repository.kind r) ])
 
     type t = {

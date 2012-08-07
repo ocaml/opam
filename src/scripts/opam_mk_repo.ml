@@ -52,6 +52,7 @@ let () =
     remote_path = local_path;
     remote_repo = local_repo;
   } in
+  let repo = Repository.create ~name:"local" ~kind:"curl" ~address:(Dirname.to_string local_path) in
 
   (* Create urls.txt *)
   let local_index_file = Filename.of_string "urls.txt" in
@@ -76,16 +77,14 @@ let () =
   NV.Set.iter (fun nv ->
     Globals.msg "Updating %s as some file have changed\n" (NV.to_string nv);
     if Filename.exists (Path.R.archive local_repo nv) then
-      let _archive = Curl.make_archive state nv in
-      ()
+      Repositories.download repo nv
   ) updates;
 
   (* Create the archives asked by the user *)
   NV.Set.iter (fun nv ->
     if not index && (all || NV.Set.mem nv packages) then begin
       Globals.msg "Creating archive for %s\n" (NV.to_string nv);
-      let _archive = Curl.make_archive state nv in
-      ()
+      Repositories.download repo nv
     end
   ) updates;
 

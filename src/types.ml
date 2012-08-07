@@ -564,23 +564,23 @@ module Repository: sig
   val default: t
   val name: t -> string
   val kind: t -> string
-  val address: t -> string
+  val address: t -> dirname
   val with_kind: t -> string -> t
 end = struct
 
   type t = {
     name: string;
     kind: string;
-    address: string;
+    address: dirname;
   }
 
   let create ~name ~kind ~address =
     let address =
       if Pcre.pmatch (Pcre.regexp "://") address
       || Utils.is_inet_address address then
-        address
+        Dirname.raw address
       else
-        Run.real_path address in
+        Dirname.of_string (Run.real_path address) in
     { name; kind; address }
 
   let of_string _ =
@@ -595,13 +595,13 @@ end = struct
   let default = {
     name   = Globals.default_repository_name;
     kind    = Globals.default_repository_kind;
-    address = Globals.default_repository_address;
+    address = Dirname.raw Globals.default_repository_address;
   }
 
   let with_kind r kind = { r with kind }
 
   let to_string r =
-    Printf.sprintf "%s(%s %s)" r.name r.address r.kind
+    Printf.sprintf "%s(%s %s)" r.name (Dirname.to_string r.address) r.kind
 
   module O = struct
     type tmp = t

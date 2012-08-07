@@ -2,19 +2,19 @@
 
 let _ =
   if Array.length Sys.argv <> 3 then (
-    Printf.eprintf "Usage: %s <remote-filename> <force>" Sys.argv.(0);
+    Printf.eprintf "Usage: %s <remote-filename> <nv> <force>" Sys.argv.(0);
     exit 1
   )
 
 open Types
-open Repo_helpers
+open Repositories
 
 let () =
-  let state = Repo_helpers.make_download_state () in
-  let basename = Filename.basename state.filename in
+  let d = Repositories.read_download_info () in
+  let basename = Filename.basename d.filename in
   let local_file = Filename.create (Dirname.cwd ()) basename in
-  if state.force || not (Filename.exists local_file) then
-    match Filename.download state.filename (Dirname.cwd ()) with
+  if d.force || not (Filename.exists local_file) then
+    match Filename.download d.filename (Dirname.cwd ()) with
     | None   -> exit 1
     | Some f ->
         Printf.printf "%s" (Filename.to_string f)

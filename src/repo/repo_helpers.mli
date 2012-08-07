@@ -13,17 +13,6 @@ type state = {
 (** Create a repository state *)
 val make_state: unit -> state
 
-(** State associated to a download command *)
-type download_state = {
-  kind    : string;
-  filename: filename;
-  force   : bool;
-  dirname : dirname;
-}
-
-(** Build a download state *)
-val make_download_state: unit -> download_state
-
 module type REPO = sig
 
   (** [sync state t] returns the updated local filenames *)
@@ -39,9 +28,6 @@ module Make(R: REPO): sig
 
   (** Get the list of updated package updated *)
   val get_updates: state -> NV.Set.t      
-
-  (** Build an archive. Return the local archive filename. *)
-  val make_archive: state -> nv -> filename
 
   (** upload the contents of [upload/]. Return the uploaded
       packages. *)
