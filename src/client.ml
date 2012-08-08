@@ -260,18 +260,8 @@ let print_compilers compilers repo =
     Globals.msg " -  %s\n" (OCaml_V.to_string v)
   ) new_compilers
 
-let install_conf_ocaml () =
-  log "installing conf-ocaml";
-  let t = load_state () in
+let install_conf_ocaml_config t =
   let name = N.of_string Globals.default_package in
-  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
-  let nv = NV.create name version in
-  (* .opam *)
-  let opam = File.OPAM.create nv in
-  File.OPAM.write (Path.G.opam t.global nv) opam;
-  (* description *)
-  let descr = File.Descr.create "Compiler configuration flags" in
-  File.Descr.write (Path.G.descr t.global nv) descr;
   (* .config *)
   let vars = 
     let map f l = List.map (fun (s,p) -> Variable.of_string s, S (f p)) l in
@@ -293,7 +283,21 @@ let install_conf_ocaml () =
       ] in
 
   let config = File.Dot_config.create vars in
-  File.Dot_config.write (Path.C.config t.compiler name) config;
+  File.Dot_config.write (Path.C.config t.compiler name) config
+
+let install_conf_ocaml () =
+  log "installing conf-ocaml";
+  let t = load_state () in
+  let name = N.of_string Globals.default_package in
+  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
+  let nv = NV.create name version in
+  (* .opam *)
+  let opam = File.OPAM.create nv in
+  File.OPAM.write (Path.G.opam t.global nv) opam;
+  (* description *)
+  let descr = File.Descr.create "Compiler configuration flags" in
+  File.Descr.write (Path.G.descr t.global nv) descr;
+  install_conf_ocaml_config t;
   (* installed *)
   let installed_p = Path.C.installed t.compiler in
   let installed = File.Installed.safe_read installed_p in
@@ -596,6 +600,15 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
             let patches = List.map Stdlib_filename.basename patches in
             List.iter Run.patch patches);
         let err =
+          let t = 
+            { t with
+              compiler = alias_p;
+              installed = 
+                let name = N.of_string Globals.default_package in
+                let version = V.of_string (Alias.to_string alias) in
+                let nv = NV.create name version in
+                NV.Set.add nv NV.Set.empty } in
+          install_conf_ocaml_config t;
           if File.Comp.configure comp @ File.Comp.make comp <> [] then
             Dirname.exec build_dir
               [ ( "./configure" :: File.Comp.configure comp )
