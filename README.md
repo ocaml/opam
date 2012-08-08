@@ -7,7 +7,8 @@ things, used by Debian to manage their packages.
  
 ### Prerequisites:
 
-* ocaml (either installed or available in remote repository)
+* ocaml
+* curl
 
 ### Compiling OPAM
 
