@@ -90,8 +90,8 @@ let rec download_iter local_path nv = function
       | None -> download_iter local_path nv t
       | r    -> r
 
-let kind_of_file filename =
-  if Filename.exists filename then "rsync" else "curl"
+let kind_of_repository r =
+  if Dirname.exists (Repository.address r) then "rsync" else "curl"
 
 (* Download the archive on the OPAM server.
    If it is not there, then:
@@ -105,7 +105,7 @@ let download r nv =
 
   (* If the archive is on the server, download it directly *)
   let remote_filename = Path.R.archive remote_repo nv in
-  let kind = kind_of_file remote_filename in
+  let kind = kind_of_repository r in
   let d = {
     local_path = Path.R.archives_dir local_repo;
     remote_filename;
@@ -128,7 +128,7 @@ let download r nv =
       let url_f = Path.R.url local_repo nv in
       let tmp_dir = Path.R.tmp_dir local_repo nv in
       let extract_dir = tmp_dir / NV.to_string nv in
-      Dirname.mkdir extract_dir;
+      Dirname.mkdir tmp_dir;
 
       if Filename.exists url_f then begin
         (* download the archive upstream if the upstream address
@@ -137,7 +137,7 @@ let download r nv =
         let urls =
           List.map (function
             | (f,Some k) -> (f,k)
-            | (f,None) -> (f, kind_of_file f)
+            | (f,None)   -> (f, kind)
           ) urls in
         let urls_s =
           String.concat " "

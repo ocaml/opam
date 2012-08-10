@@ -23,18 +23,22 @@ let git_merge local_path =
 
 (* Return the list of modified files of the git repository located
    at [dirname] *)
-let get_diff state =
-  Dirname.in_dir state.local_path (fun () ->
+let git_diff local_path =
+  Dirname.in_dir local_path (fun () ->
     match
       Run.read_command_output
         [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ]
     with
-    | Some fs -> Filename.Set.of_list (List.map ((//) state.remote_path) fs)
+    | Some fs -> fs
     | None    ->
         Globals.error_and_exit
           "Cannot diff git repository %s"
-          (Dirname.to_string state.local_path)
+          (Dirname.to_string local_path)
   )
+
+let remote_diff state =
+  let fs = git_diff state.local_path in
+  Filename.Set.of_list (List.map ((//) state.remote_path) fs)
 
 module Repo = struct
 
@@ -45,7 +49,7 @@ module Repo = struct
     log "make_state";
     if Dirname.exists (state.local_path / ".git") then begin
       git_fetch state.local_path;
-      get_diff state;
+      remote_diff state;
     end else
       Filename.Set.empty
 

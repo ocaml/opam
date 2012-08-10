@@ -3,7 +3,10 @@
 open Types
 open Repositories
 
+let log fmt = Globals.log "git-download" fmt
+
 let git_clone_or_update git_dir d =
+  log "git-clone-or-update %s" (Dirname.to_string git_dir); 
   let url = Filename.to_string d.remote_filename in
   (* If the git repo is not already there, then clone it *)
   if not (Dirname.exists git_dir) then (
@@ -12,15 +15,13 @@ let git_clone_or_update git_dir d =
     ] in
     if err <> 0 then
       Globals.error_and_exit "%s is not a valid git url" url
-  ) else (
+  ) else if Git.git_diff git_dir <> [] then (
     Git.git_fetch git_dir;
     Git.git_merge git_dir;
   )
 
 let () =
   let d = Repositories.read_download_info () in
-  let local_repo = Path.R.of_dirname d.local_path in
-  let git_dir = Path.R.tmp_dir local_repo d.nv in
-
+  let git_dir = d.local_path / NV.to_string d.nv in
   git_clone_or_update git_dir d;
   Printf.printf "%s\n%!" (Dirname.to_string git_dir)
