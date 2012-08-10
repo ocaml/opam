@@ -5,12 +5,6 @@
    - pull each git sub-repo to see if the package has been updated
 *)
 
-let _ =
-  if Array.length Sys.argv <> 2 then (
-    Printf.eprintf "Usage: %s <remote-address>" Sys.argv.(0);
-    exit 1;
-  )
-
 open Types
 open Repo_helpers
 

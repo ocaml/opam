@@ -102,6 +102,9 @@ module Dirname: sig
   (** Move a directory *)
   val move: t -> t -> unit
 
+  (** Copy a directory *)
+  val copy: t -> t -> unit
+
   (** Does the directory exists ? *)
   val exists: t -> bool
 

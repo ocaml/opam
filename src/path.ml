@@ -20,15 +20,18 @@ let log fmt = Globals.log "PATH" fmt
 
 let available_packages dir =
   log "available_packages %s" (Dirname.to_string dir);
-  let files = Filename.list dir in
-  let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
-  List.fold_left (fun set file ->
-    match NV.of_filename file with
-    | None    ->
-        log "%s is not a valid package filename!" (Filename.to_string file);
-        set
-    | Some nv -> NV.Set.add nv set
-  ) NV.Set.empty files
+  if Dirname.exists dir then (
+    let files = Filename.list dir in
+    let files = List.filter (fun f -> Filename.check_suffix f ".opam") files in
+    List.fold_left (fun set file ->
+      match NV.of_filename file with
+      | None    ->
+          log "%s is not a valid package filename!" (Filename.to_string file);
+          set
+      | Some nv -> NV.Set.add nv set
+    ) NV.Set.empty files
+  ) else
+    NV.Set.empty
 
 let available_compilers dir =
   log "available_compilers %s" (Dirname.to_string dir);
@@ -163,9 +166,13 @@ module R = struct
 
   let available_packages t =
     log "available_packages %s" (Dirname.to_string t);
-    let all = Dirname.list (packages_dir t) in
-    let basenames = List.map Dirname.basename all in
-    NV.Set.of_list (List.map (Basename.to_string |> NV.of_string) basenames)
+    let dir = packages_dir t in
+    if Dirname.exists dir then (
+      let all = Dirname.list dir in
+      let basenames = List.map Dirname.basename all in
+      NV.Set.of_list (List.map (Basename.to_string |> NV.of_string) basenames)
+    ) else
+      NV.Set.empty
 
   let available_versions t n =
     versions (NV.Set.filter (fun nv -> NV.name nv = n) (available_packages t))

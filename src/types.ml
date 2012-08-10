@@ -126,6 +126,7 @@ module Dirname: sig
     ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
   val move: t -> t -> unit
+  val copy: t -> t -> unit
   val dirname: t -> t
   val basename: t -> basename
   val starts_with: prefix:t -> t -> bool
@@ -177,6 +178,11 @@ end = struct
 
   let move src dst =
     let err = Run.command [ "mv"; to_string src; to_string dst ] in
+    if err <> 0 then
+      Globals.exit err
+
+  let copy src dst =
+    let err = Run.command [ "cp"; to_string src ^ "/*"; to_string dst ] in
     if err <> 0 then
       Globals.exit err
 

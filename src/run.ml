@@ -103,7 +103,7 @@ let chdir dir =
   if Sys.file_exists dir then
     Unix.chdir dir
   else
-    Globals.error_and_exit "%s does not exists!" dir
+    Globals.error_and_exit "%s does not exist!" dir
 
 let in_dir dir fn =
   let cwd = Unix.getcwd () in

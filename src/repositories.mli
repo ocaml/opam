@@ -36,9 +36,9 @@ val upload: repository -> unit
 
 (** State associated to a download command *)
 type download_info = {
-  filename: filename;
-  nv: nv;
-  force: bool;
+  local_path     : dirname;
+  remote_filename: filename;
+  nv             : nv;
 }
 
 (** Read argv and build a download info record *)

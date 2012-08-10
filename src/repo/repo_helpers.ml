@@ -10,6 +10,10 @@ type state = {
 }
 
 let make_state () =
+  if Array.length Sys.argv <> 2 then (
+    Printf.eprintf "Usage: %s <remote-address>" Sys.argv.(0);
+    exit 1;
+  );
   let local_path = Dirname.of_string (Run.cwd ()) in
   let local_repo = Path.R.of_dirname local_path in
   let remote_path = Dirname.raw Sys.argv.(1) in
@@ -60,7 +64,9 @@ module Make (R : REPO) = struct
     let upload_path = Path.R.upload_dir local_repo in
     let upload_repo = Path.R.of_dirname upload_path in
     let state = { state with local_path = upload_path; local_repo = upload_repo } in
-    let upload fn = R.upload state (fn state.remote_repo) in
+    let upload fn =
+      let dir = fn state.remote_repo in
+      R.upload state dir in
     let files =
          upload Path.R.packages_dir
       ++ upload Path.R.archives_dir
