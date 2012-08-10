@@ -20,7 +20,6 @@ begin library "extlib"
      "extlib/extString.ml"
      "extlib/extList.ml"
      "extlib/extLib.ml"
-     "extlib/extHashtbl.ml"
      "extlib/extArray.ml"
      "extlib/enum.ml"
      "extlib/dynArray.ml"
@@ -197,5 +196,4 @@ begin program "cnftocudf"
 end
 
 *)
-
 end

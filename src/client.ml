@@ -260,18 +260,8 @@ let print_compilers compilers repo =
     Globals.msg " -  %s\n" (OCaml_V.to_string v)
   ) new_compilers
 
-let install_conf_ocaml () =
-  log "installing conf-ocaml";
-  let t = load_state () in
+let install_conf_ocaml_config t =
   let name = N.of_string Globals.default_package in
-  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
-  let nv = NV.create name version in
-  (* .opam *)
-  let opam = File.OPAM.create nv in
-  File.OPAM.write (Path.G.opam t.global nv) opam;
-  (* description *)
-  let descr = File.Descr.create "Compiler configuration flags" in
-  File.Descr.write (Path.G.descr t.global nv) descr;
   (* .config *)
   let vars = 
     let map f l = List.map (fun (s,p) -> Variable.of_string s, S (f p)) l in
@@ -293,7 +283,21 @@ let install_conf_ocaml () =
       ] in
 
   let config = File.Dot_config.create vars in
-  File.Dot_config.write (Path.C.config t.compiler name) config;
+  File.Dot_config.write (Path.C.config t.compiler name) config
+
+let install_conf_ocaml () =
+  log "installing conf-ocaml";
+  let t = load_state () in
+  let name = N.of_string Globals.default_package in
+  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
+  let nv = NV.create name version in
+  (* .opam *)
+  let opam = File.OPAM.create nv in
+  File.OPAM.write (Path.G.opam t.global nv) opam;
+  (* description *)
+  let descr = File.Descr.create "Compiler configuration flags" in
+  File.Descr.write (Path.G.descr t.global nv) descr;
+  install_conf_ocaml_config t;
   (* installed *)
   let installed_p = Path.C.installed t.compiler in
   let installed = File.Installed.safe_read installed_p in
@@ -588,11 +592,11 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
         let comp_src = File.Comp.src comp in
         let build_dir = Path.C.build_ocaml alias_p in
         Dirname.with_tmp_dir (fun download_dir ->
-          match Filename.download comp_src build_dir with
-          | None -> Globals.error_and_exit "Cannot find %s" (Filename.to_string comp_src)
-          | Some local_file ->
-              Filename.extract local_file build_dir;
-              let patches = File.Comp.patches comp in
+          begin match Filename.download comp_src download_dir with
+          | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string comp_src)
+          | Some f -> Filename.extract f build_dir
+          end;
+          let patches = File.Comp.patches comp in
               let patches =
                 Utils.filter_map (fun f ->
                   match Filename.download f build_dir with
@@ -603,30 +607,38 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
                 if not (Filename.patch f build_dir) then
                   Globals.error_and_exit "Cannot apply %s" (Filename.to_string f)
               ) patches;
-              let err =
-                if File.Comp.configure comp @ File.Comp.make comp <> [] then
-                Dirname.exec build_dir
-                  [ ( "./configure" :: File.Comp.configure comp )
-                    @ [ "-prefix";  Dirname.to_string alias_p_dir ]
-                  (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-                  (* NOTE In case it exists 2 '-prefix', in general the script
-                     ./configure will only consider the last one, others will be
-                     discarded. *)
-                  ; ( "make" :: File.Comp.make comp )
-                  ; [ "make" ; "install" ]
-                  ]
-                else
-                let builds =
-                  List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-                Dirname.exec build_dir builds
-              in
-              if err <> 0 then
-              Globals.error_and_exit
-                "The compilation of compiler version %s failed"
-                (OCaml_V.to_string ocaml_version)
+          let err =
+            let t = 
+              { t with
+                compiler = alias_p;
+                installed = 
+                  let name = N.of_string Globals.default_package in
+                  let version = V.of_string (Alias.to_string alias) in
+                  let nv = NV.create name version in
+                  NV.Set.add nv NV.Set.empty } in
+            install_conf_ocaml_config t;
+            if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
+              Dirname.exec build_dir
+                [ ( "./configure" :: File.Comp.configure comp )
+                  @ [ "-prefix";  Dirname.to_string alias_p_dir ]
+                (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+                (* NOTE In case it exists 2 '-prefix', in general the script
+                   ./configure will only consider the last one, others will be
+                   discarded. *)
+                ; ( "make" :: File.Comp.make comp )
+                ; [ "make" ; "install" ]
+                ]
+            end else begin
+              let builds =
+                List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+              Dirname.exec build_dir builds
+            end in
+          if err <> 0 then
+            Globals.error_and_exit
+              "The compilation of compiler version %s failed"
+              (OCaml_V.to_string ocaml_version)
         )
       end
-
     with e -> 
       if not !Globals.debug then
       Dirname.rmdir alias_p_dir;
@@ -1383,7 +1395,7 @@ let remove names =
   let wish_remove = Heuristic.nv_of_names t names in
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
   let depends =
-    Solver.filter_forward_dependencies universe
+    Solver.filter_forward_dependencies ~depopts:true universe
       (Solver.P (List.rev_map
                    (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
                    wish_remove)) in
@@ -1445,13 +1457,13 @@ let upload upload repo =
   Filename.remove (Path.R.archive upload_repo nv)
 
 (* Return the transitive closure of dependencies *)
-let get_transitive_dependencies t names =
+let get_transitive_dependencies ?(depopts = false) t names =
   let universe =
     Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
   let pkg_of_name n = debpkg_of_nv `config t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
-  let depends = Solver.filter_backward_dependencies universe request in
+  let depends = Solver.filter_backward_dependencies ~depopts universe request in
   List.map NV.of_dpkg depends
 
 let config request =
@@ -1502,7 +1514,7 @@ let config request =
   | Includes (is_rec, names) ->
       let deps =
         if is_rec then
-          List.map NV.name (get_transitive_dependencies t names)
+          List.map NV.name (get_transitive_dependencies ~depopts:true t names)
         else
           names in
       let includes =
@@ -1522,7 +1534,7 @@ let config request =
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
         if c.is_rec then
-          List.map NV.name (get_transitive_dependencies t names)
+          List.map NV.name (get_transitive_dependencies ~depopts:true t names)
         else
           names in
       (* Map from libraries to package *)

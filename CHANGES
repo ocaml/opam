@@ -1,3 +1,10 @@
+0.3.2 [8 August 2012]
+* fix regression for 'opam switch' introduced in 0.3
+* fix deletion of optional dependencies
+* support for pinned packages
+* fix compilation for ocaml 4.00
+* fix compilation for *BSD
+
 0.3.1 [July 2012]
 * fix regression for 'opam install' introduced in 0.3
 

@@ -176,16 +176,18 @@ Given a description of packages, return a solution preserving the
     For the ordering, the first element in the list
     is obtained by upgrading from its next element.<br>
 </div>
-<pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+<pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
 Return the recursive dependencies of a package Note : the given
     package exists in the list in input because this list describes
-    the entire universe.  By convention, it also appears in output.<br>
+    the entire universe.  By convention, it also appears in output.
+    If <code class="code">depopts</code> (= <code class="code">false</code> by default) is set to <code class="code">true</code>, 
+    optional dependencies are merged with usual dependencies.<br>
 </div>
-<pre><span id="VALfilter_forward_dependencies"><span class="keyword">val</span> filter_forward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+<pre><span id="VALfilter_forward_dependencies"><span class="keyword">val</span> filter_forward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
 Same as <code class="code">filter_backward_dependencies</code> but for forward
     dependencies<br>
 </div>
-<pre><span id="VALsort_by_backward_dependencies"><span class="keyword">val</span> sort_by_backward_dependencies</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+<pre><span id="VALsort_by_backward_dependencies"><span class="keyword">val</span> sort_by_backward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
 Return a permutation of the given set of packages :
     if package B depends of package A then 
     B appears before A in the resulting list<br>
