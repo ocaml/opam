@@ -300,6 +300,7 @@ module Config = struct
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
     let s_system_ocaml_version = "system-ocaml-version"
+    let s_system_ocaml_version2 = "system_ocaml-version"
     let s_cores = "cores"
 
     let valid_fields = [
@@ -307,6 +308,7 @@ module Config = struct
       s_repositories;
       s_ocaml_version;
       s_system_ocaml_version;
+      s_system_ocaml_version2;
       s_cores;
     ]
 
@@ -322,6 +324,13 @@ module Config = struct
         assoc_option s.contents s_ocaml_version (parse_string |> Alias.of_string) in
       let system_ocaml_version =
         assoc_option s.contents s_system_ocaml_version (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version2 =
+        assoc_option s.contents s_system_ocaml_version2 (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version =
+        match system_ocaml_version, system_ocaml_version2 with
+        | Some v, _
+        | _     , Some v -> Some v
+        | None  , None   -> None in
       let cores = assoc s.contents s_cores parse_int in
       { opam_version; repositories; ocaml_version; system_ocaml_version; cores }
 
