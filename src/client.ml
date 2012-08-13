@@ -103,29 +103,28 @@ let update_available_current t =
   { t with available_current =     
     (* Remove the package which does not fullfil the compiler constraints *)
     let ocaml_version =
-      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
-        let v = 
-          match File.Config.last_ocaml_in_path t.config with
-            | None   -> (*assert false*) Globals.error_and_exit "the OCaml version from config has been manually removed"
-            | Some v -> v in
+      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then (
         let current = OCaml_V.current () in
-
-        (match current with
-          | None -> 
-              if confirm "No OCaml compiler found in path. Continue ?" then
-                ()
-              else
-                Globals.exit 66
-          | Some current ->
-              if v <> current then 
-                if confirm "The current OCaml version %S is not the same as the first in config %S. Continue ?" 
-                  (OCaml_V.to_string current)
-                  (OCaml_V.to_string v) then
-                  ()
-                else
-                  Globals.exit 66);
-        v
-      else
+        let system = File.Config.system_ocaml_version t.config in
+        match current, system  with
+        | None  , None   -> Globals.error_and_exit "No OCaml compiler installed."
+        | None  , Some s ->
+            if not (confirm "No OCaml compiler found. Continue ?") then 
+              Globals.exit 1
+            else
+              s
+        | Some c, Some s ->
+            if s <> c
+            && not (confirm "The version of OCaml in your path (%S) \
+                             is not the same as the one OPAM has been \
+                             initialized with (%S). Continue ?"
+                      (OCaml_V.to_string c)
+                      (OCaml_V.to_string s)) then
+              Globals.exit 1
+            else
+              s
+        | Some c, None   -> c
+      ) else
         current_ocaml_version t in
     let filter nv =
       let opam = File.OPAM.read (Path.G.opam t.global nv) in
@@ -537,17 +536,21 @@ let add_alias alias ocaml_version =
 
 (* We assume that we have the right ocaml-version in $opam/config. Then we:
    - create $opam/$alias
-   - compiles and install $opam/compiler/$descr.comp *)
-let init_ocaml f_exists alias (default_allowed, ocaml_version) =
+   - compiles and install $opam/compiler/$descr.comp
+   Some explanations:
+   - [f_exists] is called if alias already exists
+   - if [default_allowed] is set, then 'system' is an allowed alias argument
+*)
+let init_ocaml f_exists alias default_allowed ocaml_version =
   log "init_ocaml";
   let t = load_state () in
 
   let default = OCaml_V.of_string Globals.default_compiler_version in
-  let last_ocaml, ocaml_version = 
+  let system_ocaml_version, ocaml_version = 
     let current () =
       match OCaml_V.current () with
         | None -> Globals.error_and_exit "No OCaml compiler found in path"
-        | Some last_ocaml -> Some last_ocaml, default in
+        | Some system_ocaml -> Some system_ocaml, default in
 
     match ocaml_version with
       | None -> current ()
@@ -647,7 +650,7 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
 
   (* write the new version in the configuration file *)
   let config = File.Config.with_ocaml_version t.config alias in
-  let config = File.Config.with_last_ocaml_in_path config last_ocaml in
+  let config = File.Config.with_system_ocaml_version config system_ocaml_version in
   File.Config.write (Path.G.config t.global) config;
   add_alias alias ocaml_version;
   ocaml_version
@@ -1300,11 +1303,12 @@ let init repo alias ocaml_version cores =
     update_repo ();
     let ocaml_version = init_ocaml
       (fun alias_p -> 
-        Globals.error_and_exit "%s does not exist whereas %s already exist" 
+        Globals.error_and_exit "%s does not exist whereas %s already exists" 
           (Filename.to_string config_f)
           (Dirname.to_string alias_p)) 
       alias
-      (false, ocaml_version) in
+      false
+      ocaml_version in
     update_package ();
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
@@ -1729,7 +1733,7 @@ let switch clone alias ocaml_version =
   let ocaml_version, exists = 
     let exists = ref false in
     let ocaml_version = 
-      init_ocaml (fun _ -> exists := true) (Some alias) (true, Some ocaml_version) in
+      init_ocaml (fun _ -> exists := true) (Some alias) true (Some ocaml_version) in
     ocaml_version, !exists in
 
   (* install new package
