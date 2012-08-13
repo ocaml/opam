@@ -9,6 +9,8 @@ things, used by Debian to manage their packages.
 
 * ocaml
 * curl
+* git
+* rsync
 
 ### Compiling OPAM
 

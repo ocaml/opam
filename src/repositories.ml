@@ -44,24 +44,29 @@ let upload r =
   run "upload" r []
 
 type download_info = {
-  local_path     : dirname;
-  remote_filename: filename;
-  nv             : nv;
+  local_dir : dirname;
+  remote_dir: dirname;
+  basename  : basename;
+  nv        : nv;
 }
 
 let string_of_download_info d =
-  Printf.sprintf "<remote_filename=%s nv=%s>" 
-    (Filename.to_string d.remote_filename) (NV.to_string d.nv)
+  Printf.sprintf "<local_dir=%s remote_dir=%s basename=%s nv=%s>" 
+    (Dirname.to_string d.local_dir)
+    (Dirname.to_string d.remote_dir)
+    (Basename.to_string d.basename)
+    (NV.to_string d.nv)
 
 let read_download_info () =
-  if Array.length Sys.argv <> 3 then (
-    Printf.eprintf "Usage: %s <remote-filename> <package>" Sys.argv.(0);
+  if Array.length Sys.argv <> 4 then (
+    Printf.eprintf "Usage: %s <remote-server> <filenane> <package>" Sys.argv.(0);
     exit 1
   );
-  let local_path = Dirname.cwd () in
-  let remote_filename = Filename.of_string Sys.argv.(1) in
-  let nv = NV.of_string Sys.argv.(2) in
-  { local_path; remote_filename; nv }
+  let local_dir = Dirname.cwd () in
+  let remote_dir = Dirname.raw Sys.argv.(1) in
+  let basename = Basename.of_string Sys.argv.(2) in
+  let nv = NV.of_string Sys.argv.(3) in
+  { local_dir; remote_dir; basename; nv }
 
 type file = D of dirname | F of filename | UpToDate
 
@@ -73,25 +78,34 @@ let file filename =
 
 let download_one kind d =
   let cmd = Printf.sprintf "opam-%s-download" kind in
-  let output = Dirname.in_dir d.local_path (fun () ->
+  let output = Dirname.in_dir d.local_dir (fun () ->
     Run.read_command_output [
-      cmd; Filename.to_string d.remote_filename; NV.to_string d.nv;
+      cmd;
+      Dirname.to_string d.remote_dir;
+      Basename.to_string d.basename;
+      NV.to_string d.nv;
     ]) in
   match output with
   | None        -> None
   | Some []     -> Some UpToDate
   | Some (f::_) -> Some (file f)
 
-let rec download_iter local_path nv = function
+let rec download_iter local_dir nv = function
   | [] -> None
-  | (remote_filename ,kind) :: t ->
-      let d = { local_path; remote_filename; nv } in
+  | (remote_dir, basename, kind) :: t ->
+      let d = { local_dir; remote_dir; basename; nv } in
       match download_one kind d with
-      | None -> download_iter local_path nv t
+      | None -> download_iter local_dir nv t
       | r    -> r
 
 let kind_of_repository r =
-  if Dirname.exists (Repository.address r) then "rsync" else "curl"
+  match Repository.kind r with
+  | "server" -> "server"
+  | x ->
+      if Dirname.exists (Repository.address r) then
+        "rsync"
+      else
+        x
 
 (* Download the archive on the OPAM server.
    If it is not there, then:
@@ -104,27 +118,31 @@ let download r nv =
   let local_repo = Path.R.create r in
 
   (* If the archive is on the server, download it directly *)
-  let remote_filename = Path.R.archive remote_repo nv in
+  let remote_dir = Repository.address r in
+  let remote_file = Path.R.archive remote_repo nv in
+  let basename =
+    Basename.of_string (Filename.remove_prefix remote_dir remote_file) in
   let kind = kind_of_repository r in
   let d = {
-    local_path = Path.R.archives_dir local_repo;
-    remote_filename;
+    local_dir = Path.R.archives_dir local_repo;
+    remote_dir;
+    basename;
     nv;
   } in
   match download_one kind d with
   | Some UpToDate ->
-      log "%s is already downloaded and up-to-date"
-        (Filename.to_string remote_filename);
+      log "%s is already downloaded and up-to-date on %s"
+        (Basename.to_string basename) (Dirname.to_string remote_dir);
   | Some (F local_file) ->
       log "Downloaded %s" (Filename.to_string local_file)
   | Some (D _) ->
       Globals.error_and_exit
-        "Got unexpected folder while downloading %s"
-        (Filename.to_string remote_filename)
+        "Got unexpected folder while downloading %s on %s"
+        (Basename.to_string basename) (Dirname.to_string remote_dir)
   | None   ->
       log
-        "%s is not on the server, need to build it"
-        (Filename.to_string remote_filename);
+        "%s is not on available on %s, need to build it"
+        (Basename.to_string basename) (Dirname.to_string remote_dir);
       let url_f = Path.R.url local_repo nv in
       let tmp_dir = Path.R.tmp_dir local_repo nv in
       let extract_dir = tmp_dir / NV.to_string nv in
@@ -135,14 +153,19 @@ let download r nv =
            is specified *)
         let urls = File.URL.read url_f in
         let urls =
+          let mk s k = Filename.dirname s, Filename.basename s, k in
           List.map (function
-            | (f,Some k) -> (f,k)
-            | (f,None)   -> (f, kind)
+            | (f,Some k) -> mk f k
+            | (f,None)   -> mk f kind
           ) urls in
         let urls_s =
           String.concat " "
             (List.map
-               (fun (f,k) -> Printf.sprintf "%s:%s" (Filename.to_string f) k)
+               (fun (d,b,k) ->
+                 Printf.sprintf "%s:%s:%s"
+                   (Dirname.to_string d)
+                   (Basename.to_string b)
+                   k)
                urls) in
         log "downloading %s" urls_s;
         match download_iter tmp_dir nv urls with

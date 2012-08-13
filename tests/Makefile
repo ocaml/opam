@@ -189,11 +189,11 @@ ifeq ($(REPOKIND), git)
 	mkdir $(OPAM_REPO)/packages/P4.2
 	cp packages/P4-2.opam   $(OPAM_REPO)/packages/P4.2/opam
 	cp packages/P4/README   $(OPAM_REPO)/packages/P4.2/descr
-	echo '$(OPAM_GIT)/P4' > $(OPAM_REPO)/packages/P4.2/url
+	echo '$(OPAM_GIT)/P4 git' > $(OPAM_REPO)/packages/P4.2/url
 	mkdir $(OPAM_REPO)/packages/P4.3
 	cp packages/P4-3.opam   $(OPAM_REPO)/packages/P4.3/opam
 	cp packages/P4/README   $(OPAM_REPO)/packages/P4.3/descr
-	echo '$(OPAM_GIT)/P4' > $(OPAM_REPO)/packages/P4.3/url
+	echo '$(OPAM_GIT)/P4 git' > $(OPAM_REPO)/packages/P4.3/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4.2 and P4.3"
 else
 	cd packages && \

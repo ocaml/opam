@@ -458,7 +458,7 @@ let update_package () =
     )) (depends @ depopts)
   ) (get_available_current t);
   if !has_error then
-    Globals.exit 66
+    Globals.exit 1
 
 let update () =
   log "update";

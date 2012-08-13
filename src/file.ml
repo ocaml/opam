@@ -124,21 +124,13 @@ module URL = struct
 
 end
 
-module Installed = struct
+module Updated = struct
 
-  let internal = "installed"
+  let internal = "updated"
 
   type t = NV.Set.t
 
   let empty = NV.Set.empty
-
-  let check t =
-    let map = NV.to_map t in
-    N.Map.iter (fun n vs ->
-      if V.Set.cardinal vs <> 1 then
-        Globals.error_and_exit "Multiple versions installed for package %s: %s"
-          (N.to_string n) (V.Set.to_string vs)
-    ) map
 
   let of_string f s =
     let lines = Lines.of_string f s in
@@ -152,7 +144,6 @@ module Installed = struct
     !map
 
   let to_string _ t =
-    check t;
     let buf = Buffer.create 1024 in
     NV.Set.iter
       (fun nv -> Printf.bprintf buf "%s %s\n" (N.to_string (NV.name nv)) (V.to_string (NV.version nv)))
@@ -161,19 +152,31 @@ module Installed = struct
 
 end
 
+module Installed = struct
+
+  include Updated
+
+  let internal = "installed"
+
+  let check t =
+    let map = NV.to_map t in
+    N.Map.iter (fun n vs ->
+      if V.Set.cardinal vs <> 1 then
+        Globals.error_and_exit "Multiple versions installed for package %s: %s"
+          (N.to_string n) (V.Set.to_string vs)
+    ) map
+
+  let to_string f t =
+    check t;
+    Updated.to_string f t
+
+end
+
 module Reinstall = struct
 
   include Installed
 
   let internal = "reinstall"
-
-end
-
-module Updated = struct
-
-  include Installed
-
-  let internal = "updated"
 
 end
 
