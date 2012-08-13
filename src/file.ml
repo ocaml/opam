@@ -270,28 +270,28 @@ module Config = struct
       opam_version  : OPAM_V.t ;
       repositories  : repository list ;
       ocaml_version : Alias.t option ;
-      last_ocaml_in_path : OCaml_V.t option ;
+      system_ocaml_version: OCaml_V.t option ;
       cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
     let with_ocaml_version t ocaml_version = { t with ocaml_version = Some ocaml_version }
-    let with_last_ocaml_in_path t last_ocaml_in_path = { t with last_ocaml_in_path }
+    let with_system_ocaml_version t system_ocaml_version = { t with system_ocaml_version }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let ocaml_version t = match t.ocaml_version with None -> Alias.of_string "<none>" | Some v -> v
-    let last_ocaml_in_path t = t.last_ocaml_in_path
+    let system_ocaml_version t = t.system_ocaml_version
     let cores t = t.cores
 
     let create opam_version repositories cores =
-      { opam_version ; repositories ; ocaml_version = None ; last_ocaml_in_path = None ; cores }
+      { opam_version ; repositories ; ocaml_version = None ; system_ocaml_version = None ; cores }
 
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
       repositories = [];
       ocaml_version = None;
-      last_ocaml_in_path = None;
+      system_ocaml_version = None;
       cores = Globals.default_cores;
     }
 
@@ -299,14 +299,14 @@ module Config = struct
 
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
-    let s_last_ocaml_in_path = "system_ocaml-version"
+    let s_system_ocaml_version = "system-ocaml-version"
     let s_cores = "cores"
 
     let valid_fields = [
       s_opam_version;
       s_repositories;
       s_ocaml_version;
-      s_last_ocaml_in_path;
+      s_system_ocaml_version;
       s_cores;
     ]
 
@@ -320,10 +320,10 @@ module Config = struct
           (parse_list (parse_string_option parse_string_pair_of_list |> to_repo)) in
       let ocaml_version =
         assoc_option s.contents s_ocaml_version (parse_string |> Alias.of_string) in
-      let last_ocaml_in_path =
-        assoc_option s.contents s_last_ocaml_in_path (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version =
+        assoc_option s.contents s_system_ocaml_version (parse_string |> OCaml_V.of_string) in
       let cores = assoc s.contents s_cores parse_int in
-      { opam_version; repositories; ocaml_version; last_ocaml_in_path; cores }
+      { opam_version; repositories; ocaml_version; system_ocaml_version; cores }
 
    let to_string filename t =
      let s = {
@@ -339,9 +339,9 @@ module Config = struct
            | Some v -> [ Variable (s_ocaml_version, make_string (Alias.to_string v)) ]
        ) 
        @ (
-         match t.last_ocaml_in_path with
+         match t.system_ocaml_version with
            | None   -> []
-           | Some v -> [ Variable (s_last_ocaml_in_path, make_string (OCaml_V.to_string v)) ]
+           | Some v -> [ Variable (s_system_ocaml_version, make_string (OCaml_V.to_string v)) ]
        ) 
      } in
      Syntax.to_string filename s

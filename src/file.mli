@@ -57,9 +57,8 @@ module Config: sig
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
 
-  (** OCaml version updates *)
-  val with_last_ocaml_in_path: t -> OCaml_V.t option -> t
-
+  (** system-wide's OCaml version updates *)
+  val with_system_ocaml_version: t -> OCaml_V.t option -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> OPAM_V.t
@@ -70,8 +69,8 @@ module Config: sig
   (** Return the OCaml alias *)
   val ocaml_version: t -> Alias.t
 
-  (** Return the OCaml version *)
-  val last_ocaml_in_path: t -> OCaml_V.t option
+  (** Return the system's OCaml version *)
+  val system_ocaml_version: t -> OCaml_V.t option
 
   (** Return the number of cores *)
   val cores: t -> int
