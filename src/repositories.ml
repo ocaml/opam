@@ -17,86 +17,67 @@ open Types
 
 let log fmt = Globals.log "REPO" fmt
 
-let run cmd repo args =
-  log "opam-%s: %s %s" cmd (Repository.to_string repo) (String.concat " " args);
-  let path = Path.R.root (Path.R.create repo) in
-  let cmd =  Printf.sprintf "opam-%s-%s" (Repository.kind repo) cmd in
-  let i = Run.in_dir (Dirname.to_string path) (fun () ->
-    Run.command ( cmd :: Dirname.to_string (Repository.address repo) :: args );
-  ) in
-  if i <> 0 then
-    Globals.error_and_exit "%s failed" cmd
+type kind = string
+module type BACKEND = sig
+  val init: repository -> unit
+  val update: repository -> Filename.Set.t
+  val download_archive: repository -> nv -> filename download
+  val download_file: repository -> nv -> filename -> filename download
+  val download_dir: repository -> nv -> dirname  -> dirname download
+  val upload_dir: repository -> dirname -> Filename.Set.t
+end
+
+let backends = Hashtbl.create 8
+
+let find_backend r =
+  Hashtbl.find backends (Repository.kind r)
+
+let register_backend name backend =
+  Hashtbl.replace backends name backend
 
 let init r =
   let root = Path.R.create r in
+  let module B = (val find_backend r: BACKEND) in
   Dirname.mkdir (Path.R.root root);
-  run "init" r [];
   File.Repo_config.write (Path.R.config root) r;
   Dirname.mkdir (Path.R.packages_dir root);
   Dirname.mkdir (Path.R.archives_dir root);
   Dirname.mkdir (Path.R.compilers_dir root);
-  Dirname.mkdir (Path.R.upload_dir root)
+  Dirname.mkdir (Path.R.upload_dir root);
+  B.init r
 
-let update r =
-  run "update" r []
+let nv_set_of_files files =
+  NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements files))
 
 let upload r =
-  run "upload" r []
+  let root = Path.R.create r in
+  let module B = (val find_backend r: BACKEND) in
+  let files = B.upload_dir r (Path.R.upload_dir root) in
+  let packages = nv_set_of_files files in
+  Globals.msg "The following packages have been uploaded:\n";
+  NV.Set.iter (fun nv ->
+    Globals.msg "  - %s\n" (NV.to_string nv)
+  ) packages
 
-type download_info = {
-  local_dir : dirname;
-  remote_dir: dirname;
-  basename  : basename;
-  nv        : nv;
-}
+let download_file r nv f =
+  let module B = (val find_backend r: BACKEND) in
+  B.download_file r nv f
 
-let string_of_download_info d =
-  Printf.sprintf "<local_dir=%s remote_dir=%s basename=%s nv=%s>" 
-    (Dirname.to_string d.local_dir)
-    (Dirname.to_string d.remote_dir)
-    (Basename.to_string d.basename)
-    (NV.to_string d.nv)
+let download_dir r nv d =
+  let module B = (val find_backend r: BACKEND) in
+  B.download_dir r nv d
 
-let read_download_info () =
-  if Array.length Sys.argv <> 4 then (
-    Printf.eprintf "Usage: %s <remote-server> <filenane> <package>" Sys.argv.(0);
-    exit 1
-  );
-  let local_dir = Dirname.cwd () in
-  let remote_dir = Dirname.raw Sys.argv.(1) in
-  let basename = Basename.of_string Sys.argv.(2) in
-  let nv = NV.of_string Sys.argv.(3) in
-  { local_dir; remote_dir; basename; nv }
-
-type file = D of dirname | F of filename | UpToDate
-
-let file filename =
-  if not (Sys.is_directory filename) then
-    F (Filename.of_string filename)
+let download_one r nv url =
+  let map fn = function
+    | Result x      -> Result (fn x)
+    | Not_available -> Not_available
+    | Up_to_date    -> Up_to_date in
+  let f x = F x in
+  let d x = D x in
+  if Run.is_tar_archive url then
+    map f (download_file r nv (Filename.raw url))
   else
-    D (Dirname.of_string filename)
-
-let download_one kind d =
-  let cmd = Printf.sprintf "opam-%s-download" kind in
-  let output = Dirname.in_dir d.local_dir (fun () ->
-    Run.read_command_output [
-      cmd;
-      Dirname.to_string d.remote_dir;
-      Basename.to_string d.basename;
-      NV.to_string d.nv;
-    ]) in
-  match output with
-  | None        -> None
-  | Some []     -> Some UpToDate
-  | Some (f::_) -> Some (file f)
-
-let rec download_iter local_dir nv = function
-  | [] -> None
-  | (remote_dir, basename, kind) :: t ->
-      let d = { local_dir; remote_dir; basename; nv } in
-      match download_one kind d with
-      | None -> download_iter local_dir nv t
-      | r    -> r
+    map d (download_dir r nv (Dirname.raw url))
 
 let kind_of_repository r =
   match Repository.kind r with
@@ -105,7 +86,7 @@ let kind_of_repository r =
       if Dirname.exists (Repository.address r) then
         "rsync"
       else
-        x
+        "curl"
 
 (* Download the archive on the OPAM server.
    If it is not there, then:
@@ -114,78 +95,51 @@ let kind_of_repository r =
    * create a new tarball *)
 let download r nv =
   log "download %s %s" (Repository.to_string r) (NV.to_string nv);
-  let remote_repo = Path.R.of_dirname (Repository.address r) in
   let local_repo = Path.R.create r in
+  let module B = (val find_backend r: BACKEND) in
 
   (* If the archive is on the server, download it directly *)
-  let remote_dir = Repository.address r in
-  let remote_file = Path.R.archive remote_repo nv in
-  let basename =
-    Basename.of_string (Filename.remove_prefix remote_dir remote_file) in
-  let kind = kind_of_repository r in
-  let d = {
-    local_dir = Path.R.archives_dir local_repo;
-    remote_dir;
-    basename;
-    nv;
-  } in
-  match download_one kind d with
-  | Some UpToDate ->
-      log "%s is already downloaded and up-to-date on %s"
-        (Basename.to_string basename) (Dirname.to_string remote_dir);
-  | Some (F local_file) ->
-      log "Downloaded %s" (Filename.to_string local_file)
-  | Some (D _) ->
-      Globals.error_and_exit
-        "Got unexpected folder while downloading %s on %s"
-        (Basename.to_string basename) (Dirname.to_string remote_dir)
-  | None   ->
-      log
-        "%s is not on available on %s, need to build it"
-        (Basename.to_string basename) (Dirname.to_string remote_dir);
+
+  match B.download_archive r nv with
+  | Up_to_date ->
+      log "The archive for %s is already downloaded and up-to-date"
+        (NV.to_string nv)
+  | Result local_file ->
+      log "Downloaded %s successfully" (Filename.to_string local_file)
+  | Not_available ->
+      log "The archive for %s is not on available, need to build it"
+        (NV.to_string nv);
+
+      (* download the archive upstream if the upstream address
+         is specified *)
       let url_f = Path.R.url local_repo nv in
-      let tmp_dir = Path.R.tmp_dir local_repo nv in
-      let extract_dir = tmp_dir / NV.to_string nv in
-      Dirname.mkdir tmp_dir;
+      let download_dir = Path.R.tmp_dir local_repo nv in
+      Dirname.with_tmp_dir (fun extract_root ->
+        let extract_dir = extract_root / NV.to_string nv in
 
-      if Filename.exists url_f then begin
-        (* download the archive upstream if the upstream address
-           is specified *)
-        let urls = File.URL.read url_f in
-        let urls =
-          let mk s k = Filename.dirname s, Filename.basename s, k in
-          List.map (function
-            | (f,Some k) -> mk f k
-            | (f,None)   -> mk f kind
-          ) urls in
-        let urls_s =
-          String.concat " "
-            (List.map
-               (fun (d,b,k) ->
-                 Printf.sprintf "%s:%s:%s"
-                   (Dirname.to_string d)
-                   (Basename.to_string b)
-                   k)
-               urls) in
-        log "downloading %s" urls_s;
-        match download_iter tmp_dir nv urls with
+        if Filename.exists url_f then begin
+          let url = File.URL.read url_f in
+          let kind = match File.URL.kind url with
+            | None   -> kind_of_repository r
+            | Some k -> k in
+          let url = File.URL.url url in
+          log "downloading %s:%s" url kind;
+          let r2 = Repository.with_kind r kind in
 
-        | None -> Globals.error_and_exit "Cannot get %s" urls_s
-
-        | Some UpToDate -> ()
-
-        | Some (F local_archive) ->
-            log "extracting %s to %s"
-              (Filename.to_string local_archive)
-              (Dirname.to_string tmp_dir);
-            Filename.extract local_archive extract_dir
-
-        | Some (D local_dir) ->
-            log "copying %s to %s"
-              (Dirname.to_string local_dir)
-              (Dirname.to_string tmp_dir);
-            if local_dir <> extract_dir then
-              Dirname.move local_dir extract_dir
+          match Dirname.in_dir download_dir (fun () -> download_one r2 nv url) with
+          | Not_available -> Globals.error_and_exit "Cannot get %s" url
+          | Up_to_date    -> ()
+          | Result (F local_archive) ->
+              log "extracting %s to %s"
+                (Filename.to_string local_archive)
+                (Dirname.to_string extract_dir);
+              Filename.extract local_archive extract_dir
+          | Result (D local_dir) ->
+              log "copying %s to %s"
+                (Dirname.to_string local_dir)
+                (Dirname.to_string extract_dir);
+              if local_dir <> extract_dir then
+                Dirname.copy local_dir extract_dir
         end;
             
         (* Eventually add the files/<package>/* to the extracted dir *)
@@ -198,10 +152,18 @@ let download r nv =
            the archive has been repacked by opam *)
         let local_archive = Path.R.archive local_repo nv in
         log "Creating the archive files in %s" (Filename.to_string local_archive);
-        let err = Dirname.exec tmp_dir [
+        let err = Dirname.exec extract_root [
           [ "tar" ; "czf" ; Filename.to_string local_archive ; NV.to_string nv ]
         ] in
         if err <> 0 then
-          Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir)
+          Globals.error_and_exit "Cannot compress %s" (Dirname.to_string extract_dir)
+      )
 
-(* check whether an archive have changed *)
+(* XXX: clean-up + update when the url change *)
+(* XXX: update when the thing pointed by the url change *)
+let update r =
+  let root = Path.R.create r in
+  let module B = (val find_backend r: BACKEND) in
+  let files = B.update r in
+  let packages = nv_set_of_files files in
+  File.Updated.write (Path.R.updated root) packages

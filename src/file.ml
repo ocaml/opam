@@ -101,26 +101,38 @@ module URL = struct
 
   let internal = "url"
 
-  type t = (filename * string option) list
+  type t = {
+    url     : string;
+    kind    : string option;
+    checksum: string option;
+  }
 
-  let empty = []
+  let empty = {
+    url     = "<none>";
+    kind    = None;
+    checksum= None;
+  }
+
+  let url t = t.url
+  let kind t = t.kind
 
   let of_string f s =
     let lines = Lines.of_string f s in
-    Utils.filter_map (function
+    let lines = Utils.filter_map (function
       | []         -> None
-      | [url]      ->
-          let url = Filename.of_string url in
-          Some (url, None)
-      | [url;kind] -> Some (Filename.of_string url, Some kind)
+      | [url]      -> Some {url; kind=None; checksum=None}
+      | [url;kind] -> Some {url; kind=Some kind; checksum=None}
       | h          -> Globals.error_and_exit "%s is not a valid url" (String.concat " " h)
-    ) lines
+    ) lines in
+    match lines with
+    | [x] -> x
+    | _   -> Globals.error_and_exit "too many lines (%d)" (List.length lines)
 
   let to_string f t =
-    let lines = List.map (function
-      | (f,None)   -> [Filename.to_string f]
-      | (f,Some k) -> [Filename.to_string f; k]) t in
-    Lines.to_string f lines
+    let line = match t.kind with
+      | None   -> [t.url]
+      | Some k -> [t.url; k] in
+    Lines.to_string f [line]
 
 end
 

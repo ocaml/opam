@@ -24,7 +24,6 @@ begin library "opam-lib"
     "file.ml"
     "path.ml"
     "repositories.ml"
-    "repo/repo_helpers.ml"
   ]
 
   requires = [
@@ -40,6 +39,9 @@ end
 begin program "opam"
   dirname  = [ "src" ]
   files    = [
+    "repo/curl.ml"
+    "repo/rsync.ml"
+    "repo/git.ml"
     "solver.ml"
     "client.ml"
     "opam.ml"
@@ -48,6 +50,9 @@ begin program "opam"
 end
 
 (* Repository Scripts *)
+
+(*
+
 
 (* RSYNC *)
 begin library "opam-rsync-lib"
@@ -73,32 +78,6 @@ end
 begin program "opam-rsync-upload"
   files = [ "src/repo/rsync/upload.ml" ]
   requires = [ "opam-rsync-lib" ]
-end
-
-(* CURL *)
-begin library "opam-curl-lib"
-  files = [ "src/repo/curl/curl.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-curl-init"
-  files = [ "src/repo/curl/init.ml" ]
-  requires = [ "opam-curl-lib" ]
-end
-
-begin program "opam-curl-update"
-  files = [ "src/repo/curl/update.ml" ]
-  requires = [ "opam-curl-lib" ]
-end
-
-begin program "opam-curl-download"
-  files = [ "src/repo/curl/download.ml" ]
-  requires = [ "opam-curl-lib" ]
-end
-
-begin program "opam-curl-upload"
-  files = [ "src/repo/curl/upload.ml" ]
-  requires = [ "opam-curl-lib" ]
 end
 
 
@@ -171,6 +150,8 @@ begin program "opam-server-upload"
   files = [ "src/repo/server/upload.ml" ]
   requires = [ "opam-server-lib" ]
 end
+
+*)
 
 (* Helpers *)
 

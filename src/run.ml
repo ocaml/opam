@@ -267,7 +267,8 @@ let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
     Some r.Process.r_stdout
 
 module Tar = struct
-  let extract = 
+
+  let extensions = 
     [ [ "tar.gz" ; "tgz" ], 'z'
     ; [ "tar.bz2" ; "tbz" ], 'j' ]
 
@@ -275,27 +276,35 @@ module Tar = struct
     List.exists (Filename.check_suffix file) ext
 
   let assoc file = 
-    snd (List.find (function ext, _ -> match_ext file ext) extract)
+    snd (List.find (function ext, _ -> match_ext file ext) extensions)
 
-  let is_archive file =
+  let is_archive f =
+    List.exists
+      (fun suff -> Filename.check_suffix f suff)
+      (List.concat (List.map fst extensions))
+
+  let extract_function file =
     List.fold_left
       (function
-        | Some s -> fun _ -> Some s
-        | None -> fun (ext, c) -> 
-          if match_ext file ext then
-            Some (fun dir -> command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ])
-          else
-            None)
+        | Some s -> (fun _ -> Some s)
+        | None   -> 
+            (fun (ext, c) -> 
+              if match_ext file ext then
+                Some (fun dir -> command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ])
+              else
+                None))
       None
-      extract
+      extensions
 end
+
+let is_tar_archive = Tar.is_archive
 
 let extract file dst =
   log "extract %s %s" file dst;
 (*   let files = read_command_output [ "tar" ; "tf" ; file ] in
      log "%s contains %d files: %s" file (List.length files) (String.concat ", " files); *)
   with_tmp_dir (fun tmp_dir ->
-    match Tar.is_archive file with
+    match Tar.extract_function file with
     | None   -> Globals.error_and_exit "%s is not a valid archive" file
     | Some f -> 
         let err = f tmp_dir in
@@ -315,7 +324,7 @@ let extract_in file dst =
   log "extract_in %s %s" file dst;
   if not (Sys.file_exists dst) then
     Globals.error_and_exit "%s does not exist" file;
-  match Tar.is_archive file with
+  match Tar.extract_function file with
   | None   -> Globals.error_and_exit "%s is not a valid archive" file
   | Some f ->
       let err = f dst in

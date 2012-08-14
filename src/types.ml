@@ -363,6 +363,7 @@ end = struct
     Dirname.remove_prefix ~prefix filename
 
   let download filename dirname =
+    Dirname.mkdir dirname;
     match Run.download ~filename:(to_string filename) ~dirname:(Dirname.to_string dirname) with
     | None   -> None
     | Some f -> Some (of_string f)
@@ -388,6 +389,15 @@ end = struct
   module Set = Set.Make(O)
 end
 type filename = Filename.t
+
+type 'a download =
+  | Up_to_date
+  | Not_available
+  | Result of 'a
+
+type file =
+  | D of dirname
+  | F of filename
 
 let (/) d1 s2 =
   let s1 = Dirname.to_string d1 in
