@@ -1,5 +1,4 @@
 open Types
-open Repo_helpers
 
 let log fmt = Globals.log "git" fmt
 
@@ -29,37 +28,90 @@ let git_diff local_path =
       Run.read_command_output
         [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ]
     with
-    | Some fs -> fs
+    | Some fs -> Filename.Set.of_list (List.map Filename.of_string fs)
     | None    ->
         Globals.error_and_exit
           "Cannot diff git repository %s"
           (Dirname.to_string local_path)
   )
 
-let remote_diff state =
-  let fs = git_diff state.local_path in
-  Filename.Set.of_list (List.map ((//) state.remote_path) fs)
+let git_init local_path remote_path =
+  Dirname.mkdir local_path;
+  Dirname.in_dir local_path (fun () ->
+    let repo = Dirname.to_string remote_path in
+    let err =
+      Run.commands [
+        [ "git" ; "init" ] ;
+        [ "git" ; "remote" ; "add" ; "origin" ; repo ] ;
+      ] in
+    if err <> 0 then
+      Globals.error_and_exit "Cannot clone %s" repo
+  )
 
-module Repo = struct
+let check_updates local_path =
+  if Dirname.exists (local_path / ".git") then begin
+    git_fetch local_path;
+    let files = git_diff local_path in
+    git_merge local_path;
+    Some files
+  end else
+    None
 
-  (* The list of modified files *)
-  type t = Filename.Set.t
+module B = struct
 
-  let make state =
-    log "make_state";
-    if Dirname.exists (state.local_path / ".git") then begin
-      git_fetch state.local_path;
-      remote_diff state;
-    end else
-      Filename.Set.empty
+  let updates r =
+    Path.R.root r // "last-git-updates"
 
-  let sync state =
-    let diff = make state in
-    if not (Filename.Set.is_empty diff) then
-      git_merge state.local_path;
-    diff
+  let init r =
+    let local_repo = Path.R.create r in
+    git_init (Path.R.root local_repo) (Repository.address r);
+    File.Filenames.write (updates local_repo) (Filename.Set.empty)
 
-  let upload state dirname =
+  let check_file r file =
+    let local_repo = Path.R.create r in
+    let updates = File.Filenames.read (updates local_repo) in
+    if Filename.Set.mem file updates then
+      Result file
+    else if Filename.exists file then
+      Up_to_date file
+    else
+      Not_available
+
+  let download_archive r nv =
+    let local_repo = Path.R.create r in
+    let archive = Path.R.archive local_repo nv in
+    check_file r archive
+
+  let download_file r nv filename =
+    let local_repo = Path.R.create r in
+    let basename = Filename.basename filename in
+    let file = Path.R.tmp_dir local_repo nv // Basename.to_string basename in
+    check_file r file
+      
+  let rec download_dir r nv dirname =
+    let local_repo = Path.R.create r in
+    let basename = Dirname.basename dirname in
+    let dir = Path.R.tmp_dir local_repo nv / Basename.to_string basename in
+    match check_updates dir with
+    | None ->
+        git_init dir dirname;
+        download_dir r nv dirname
+    | Some f ->
+        if Filename.Set.empty = f then
+          Up_to_date dir
+        else
+          Result dir
+      
+  let update r =
+    let local_path = Path.R.root (Path.R.create r) in
+    match check_updates local_path with
+    | Some f -> f
+    | None   ->
+        Globals.error_and_exit
+          "The repository %s is not initialized correctly"
+          (Repository.to_string r)
+
+  let upload_dir state dirname =
     let files = Filename.rec_list dirname in
     let err = Run.commands [
       [ "git"; "add"; Dirname.to_string dirname; ];
@@ -73,5 +125,5 @@ module Repo = struct
 
 end
 
-module M = Repo_helpers.Make(Repo)
-include M
+let () =
+  Repositories.register_backend "git" (module B: Repositories.BACKEND)

@@ -21,7 +21,7 @@ let rsync ?(delete=true) src dst =
   with
   | None   -> Not_available
   | Some l -> match trim l with
-    | []    -> Up_to_date
+    | []    -> Up_to_date []
     | lines ->
         List.iter (fun f -> log "updated: %s %s" (Run.cwd ()) f) lines;
         Result lines
@@ -32,7 +32,7 @@ let rsync_dirs ?delete src dst =
   let dst_files0 = Filename.rec_list dst in
   match rsync ?delete src_s dst_s with
   | Not_available -> Not_available
-  | Up_to_date    -> Up_to_date
+  | Up_to_date _  -> Up_to_date dst
   | Result lines  ->
       let src_files = Filename.rec_list src in
       let dst_files = Filename.rec_list dst in
@@ -52,8 +52,8 @@ let rsync_file src dst =
   with
   | None   -> Not_available
   | Some l -> match trim l with
-    | []  -> Up_to_date
-    | [f] -> Result (Filename.of_string f)
+    | []  -> Up_to_date dst
+    | [x] -> assert (Filename.to_string dst = x); Result dst
     | l   ->
         Globals.error_and_exit
           "unknown rsync output: {%s}"
@@ -89,8 +89,8 @@ module B = struct
     let sync_dir fn =
       match rsync_dirs ~delete:true (fn remote_repo) (fn local_repo) with
       | Not_available
-      | Up_to_date -> Filename.Set.empty
-      | Result dir ->
+      | Up_to_date _ -> Filename.Set.empty
+      | Result dir   ->
           let files = Filename.rec_list dir in
           Filename.Set.of_list files in
     let archives =
@@ -98,7 +98,7 @@ module B = struct
       let updates = NV.Set.filter (fun nv ->
         match download_archive r nv with
         | Not_available -> true
-        | Up_to_date    -> false
+        | Up_to_date _  -> false
         | Result _      -> true
       ) available_packages in
       List.map (Path.R.archive local_repo) (NV.Set.elements updates) in
@@ -120,8 +120,8 @@ module B = struct
           Globals.error_and_exit "Cannot upload %s to %s"
             (Dirname.to_string local_dir)
             (Repository.to_string r)
-      | Up_to_date -> Filename.Set.empty
-      | Result dir ->
+      | Up_to_date _ -> Filename.Set.empty
+      | Result dir   ->
           let files = Filename.rec_list dir in
           Filename.Set.of_list files
     else

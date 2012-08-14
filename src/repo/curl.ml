@@ -113,7 +113,7 @@ module B = struct
     else begin
       let local_file = Filename.Map.find remote_file state.remote_local in
       if is_up_to_date state local_file then
-        Up_to_date
+        Up_to_date local_file
       else begin
         log "dowloading %s" (Filename.to_string remote_file);
         let local_dir = Filename.dirname local_file in

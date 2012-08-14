@@ -258,7 +258,7 @@ type file =
 
 (** Download result *)
 type 'a download =
-  | Up_to_date
+  | Up_to_date of 'a
   | Not_available
   | Result of 'a
 

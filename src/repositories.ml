@@ -36,6 +36,7 @@ let register_backend name backend =
   Hashtbl.replace backends name backend
 
 let init r =
+  log "init %s" (Repository.to_string r);
   let root = Path.R.create r in
   let module B = (val find_backend r: BACKEND) in
   Dirname.mkdir (Path.R.root root);
@@ -50,6 +51,7 @@ let nv_set_of_files files =
   NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements files))
 
 let upload r =
+  log "upload %s" (Repository.to_string r);
   let root = Path.R.create r in
   let module B = (val find_backend r: BACKEND) in
   let files = B.upload_dir r (Path.R.upload_dir root) in
@@ -60,18 +62,26 @@ let upload r =
   ) packages
 
 let download_file r nv f =
+  log "download_file %s %s %s"
+    (Repository.to_string r)
+    (NV.to_string nv)
+    (Filename.to_string f);
   let module B = (val find_backend r: BACKEND) in
   B.download_file r nv f
 
 let download_dir r nv d =
+  log "download_dir %s %s %s"
+    (Repository.to_string r)
+    (NV.to_string nv)
+    (Dirname.to_string d);
   let module B = (val find_backend r: BACKEND) in
   B.download_dir r nv d
 
 let download_one r nv url =
   let map fn = function
     | Result x      -> Result (fn x)
-    | Not_available -> Not_available
-    | Up_to_date    -> Up_to_date in
+    | Up_to_date x  -> Up_to_date (fn x)
+    | Not_available -> Not_available in
   let f x = F x in
   let d x = D x in
   if Run.is_tar_archive url then
@@ -101,19 +111,21 @@ let download r nv =
   (* If the archive is on the server, download it directly *)
 
   match B.download_archive r nv with
-  | Up_to_date ->
+  | Up_to_date local_file ->
       log "The archive for %s is already downloaded and up-to-date"
         (NV.to_string nv)
   | Result local_file ->
       log "Downloaded %s successfully" (Filename.to_string local_file)
   | Not_available ->
-      log "The archive for %s is not on available, need to build it"
+      log "The archive for %s is not available, need to build it"
         (NV.to_string nv);
 
       (* download the archive upstream if the upstream address
          is specified *)
       let url_f = Path.R.url local_repo nv in
       let download_dir = Path.R.tmp_dir local_repo nv in
+      Dirname.mkdir download_dir;
+
       Dirname.with_tmp_dir (fun extract_root ->
         let extract_dir = extract_root / NV.to_string nv in
 
@@ -128,12 +140,13 @@ let download r nv =
 
           match Dirname.in_dir download_dir (fun () -> download_one r2 nv url) with
           | Not_available -> Globals.error_and_exit "Cannot get %s" url
-          | Up_to_date    -> ()
+          | Up_to_date (F local_archive)
           | Result (F local_archive) ->
               log "extracting %s to %s"
                 (Filename.to_string local_archive)
                 (Dirname.to_string extract_dir);
               Filename.extract local_archive extract_dir
+          | Up_to_date (D local_dir)
           | Result (D local_dir) ->
               log "copying %s to %s"
                 (Dirname.to_string local_dir)
@@ -145,6 +158,8 @@ let download r nv =
         (* Eventually add the files/<package>/* to the extracted dir *)
         log "Adding the files to the archive";
         let files = Path.R.available_files local_repo nv in
+        if not (Dirname.exists extract_dir) then
+          Dirname.mkdir extract_dir;
         List.iter (fun f -> Filename.copy_in f extract_dir) files;
 
         (* And finally create the final archive *)
@@ -162,6 +177,7 @@ let download r nv =
 (* XXX: clean-up + update when the url change *)
 (* XXX: update when the thing pointed by the url change *)
 let update r =
+  log "update %s" (Repository.to_string r);
   let root = Path.R.create r in
   let module B = (val find_backend r: BACKEND) in
   let files = B.update r in

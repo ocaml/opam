@@ -73,6 +73,31 @@ end
 
 module X = struct
 
+module Filenames = struct
+
+  let internal = "filenames"
+
+  type t = Filename.Set.t
+
+  let empty = Filename.Set.empty
+
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    let lines = Utils.filter_map (function
+      | []  -> None
+      | [f] -> Some (Filename.of_string f)
+      | s   ->
+          Globals.error_and_exit "%S is not a valid filename" (String.concat " " s)
+    ) lines in
+    Filename.Set.of_list lines
+
+  let to_string f s =
+    let lines =
+      List.map (fun f -> [Filename.to_string f]) (Filename.Set.elements s) in
+    Lines.to_string f lines
+                                 
+end
+
 module Urls_txt = struct
 
   let internal = "urls-txt"
@@ -1300,4 +1325,9 @@ end
 module Urls_txt = struct
   include Urls_txt
   include Make(Urls_txt)
+end
+
+module Filenames = struct
+  include Filenames
+  include Make(Filenames)
 end
