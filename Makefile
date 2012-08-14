@@ -2,13 +2,7 @@ BIN = /usr/local/bin
 OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
 OCAMLC=ocamlc
 SRC_EXT=src_ext
-TARGETS = opam opam-server \
-	  opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
-	  opam-curl-init opam-curl-update opam-curl-download opam-curl-upload \
-	  opam-git-init opam-git-update opam-git-download opam-git-upload \
-	  opam-server-init opam-server-update opam-server-download opam-server-upload \
-	  opam-mk-config opam-mk-install opam-mk-repo \
-	  opam-repo-convert-0.3
+TARGETS = opam opam-mk-repo opam-repo-convert-0.3
 
 .PHONY: all
 
@@ -68,8 +62,9 @@ tests-git:
 	cp _obuild/$*/$*.asm $(BIN)/$*
 
 .PHONY: install
-install: $(TARGETS:%=%-install)
-	@
+install:
+	rm $(BIN)/opam*
+	$(MAKE) $(TARGETS:%=%-install)
 
 doc: compile
 	mkdir -p doc/html/
