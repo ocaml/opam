@@ -34,7 +34,7 @@ module Syntax = struct
         (String.concat ", " fields)
 end
 
-module X = struct
+module OPAM_X = struct
 
   let internal = "opam"
 
@@ -243,6 +243,16 @@ module X = struct
       ocaml_version; build_env }
 end
 
+module URL_X = struct
+  let internal = "url"
+  type t = string
+  let empty = "<none>"
+  let to_string f t =
+    Raw.of_string (Utils.string_strip t)
+  let of_string f t =
+    Utils.string_strip (Raw.to_string t)
+end
+
 module type F = sig
   val internal : string
   type t
@@ -292,10 +302,14 @@ module Make (F : F) = struct
 end
 
 module OPAM = struct
-  include X
-  include Make (X)
+  include OPAM_X
+  include Make (OPAM_X)
 end
 
+module URL = struct
+  include URL_X
+  include Make (URL_X)
+end
 end
 
 module Path_0_3 = struct
@@ -395,7 +409,14 @@ end
 end
 
 let () =
-  let open File_0_3.X in
+  let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
+  let specs = [] in
+  let ano x =
+    Printf.eprintf "%s: invalid argument" x in
+  Arg.parse specs ano usage
+
+let () =
+  let open File_0_3.OPAM_X in
   let t3 = Path_0_3.R.of_path (Dirname.cwd ()) in
   let t4 = Path.R.of_dirname (Dirname.cwd ()) in
   NV.Set.iter (fun nv ->

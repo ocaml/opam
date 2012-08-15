@@ -19,32 +19,30 @@ let remote_address =
     (gethostbyname Sys.argv.(1)).h_addr_list.(0)
 
 let () =
-  let s = Client.get_list remote_address in
-  let opams =
-    NV.Set.fold (fun nv accu ->
-      (nv, Client.get_opam remote_address nv) :: accu
-    ) s [] in
-  let descrs =
-    NV.Set.fold (fun nv accu ->
-      (nv, Client.get_descr remote_address nv) :: accu
-    ) s [] in
-  let available = Path.R.available_packages local_path in
-  let updates = ref NV.Set.empty in
-  List.iter (fun (nv,c) ->
+  let server_list = Client.get_list remote_address in
+  let client_list = Path.R.available_packages local_path in
+  let updates = NV.Set.diff server_list client_list in
+  log "server-list=%s" (NV.Set.to_string server_list);
+  log "client-list=%s" (NV.Set.to_string client_list);
+  log "updates=%s" (NV.Set.to_string updates);
+  NV.Set.iter (fun nv ->
     (* filter out already existing packages *)
-    if not (NV.Set.mem nv available) then (
-      updates := NV.Set.add nv !updates;
-      File.OPAM.write (Path.R.opam local_path nv) c
+    if not (NV.Set.mem nv client_list) then (
+      let opam = Client.get_opam remote_address nv in
+      let descr = Client.get_descr remote_address nv in
+      File.OPAM.write (Path.R.opam local_path nv) opam;
+      File.Descr.write (Path.R.descr local_path nv) descr;
     )
-  ) opams;
-  List.iter (fun (nv,c) ->
-    (* filter out already existing packages *)
-    if not (NV.Set.mem nv available) then (
-      updates := NV.Set.add nv !updates;
-      File.Descr.write (Path.R.descr local_path nv) c
+  ) server_list;
+  NV.Set.iter (fun nv ->
+    if not (NV.Set.mem nv server_list) then (
+      Filename.remove (Path.R.opam local_path nv);
+      Filename.remove (Path.R.descr local_path nv);
+      Filename.remove (Path.R.archive local_path nv);
     )
-  ) descrs;
-  File.Updated.write (Path.R.updated local_path) !updates;
+  ) client_list;
+  File.Updated.write (Path.R.updated local_path) updates;
+
   let compilers = Client.get_compilers remote_address in
   List.iter (fun c ->
     let filename = Path.R.compiler local_path (File.Comp.name c) in

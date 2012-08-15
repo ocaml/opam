@@ -208,9 +208,9 @@ module R = struct
 
   let files t nv = package t nv / "files"
 
-  let tmp_root t = t / "tmp"
+  let tmp t = t / "tmp"
 
-  let tmp_dir t nv = tmp_root t / NV.to_string nv
+  let tmp_dir t nv = tmp t / NV.to_string nv
 
   let available_files t nv =
     if Dirname.exists (files t nv) then

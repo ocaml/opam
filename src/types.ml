@@ -182,9 +182,16 @@ end = struct
       Globals.exit err
 
   let copy src dst =
-    let err = Run.command [ "cp"; to_string src ^ "/*"; to_string dst ] in
-    if err <> 0 then
-      Globals.exit err
+    with_tmp_dir (fun tmp ->
+      let err = Run.command [ "cp"; "-a"; Filename.concat (to_string src) ""; to_string tmp ] in
+      if err <> 0 then
+        Globals.exit err;
+      match list tmp with
+      | [f] ->
+          rmdir dst;
+          move f dst
+      | _ -> Globals.error_and_exit "Error while copying %s to %s" (to_string src) (to_string dst)
+    )
 
   let basename dirname =
     Basename.of_string (Filename.basename (to_string dirname))
@@ -363,6 +370,7 @@ end = struct
     Dirname.remove_prefix ~prefix filename
 
   let download filename dirname =
+    Dirname.mkdir dirname;
     match Run.download ~filename:(to_string filename) ~dirname:(Dirname.to_string dirname) with
     | None   -> None
     | Some f -> Some (of_string f)
@@ -388,6 +396,15 @@ end = struct
   module Set = Set.Make(O)
 end
 type filename = Filename.t
+
+type 'a download =
+  | Up_to_date of 'a
+  | Not_available
+  | Result of 'a
+
+type file =
+  | D of dirname
+  | F of filename
 
 let (/) d1 s2 =
   let s1 = Dirname.to_string d1 in

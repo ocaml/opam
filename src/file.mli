@@ -366,7 +366,18 @@ module Subst: sig
 end
 
 (** {2 Urls for OPAM repositories *)
-module URL: IO_FILE with type t = (filename * string option) list
+module URL: sig
+
+  include IO_FILE
+
+  val url: t -> string
+
+  val kind: t -> string option
+
+end
 
 (** {2 urls.txt file *} *)
 module Urls_txt: IO_FILE with type t = (basename * int * string) list
+
+(** List of filenames *)
+module Filenames: IO_FILE with type t = Filename.Set.t

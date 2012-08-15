@@ -250,6 +250,18 @@ end
 (** Shortcut to file names *)
 type filename = Filename.t
 
+(** Generalized file type *)
+type file =
+  | D of dirname
+  | F of filename
+
+
+(** Download result *)
+type 'a download =
+  | Up_to_date of 'a
+  | Not_available
+  | Result of 'a
+
 (** Concatenate a directory and a string to create a filename *)
 val (//): dirname -> string -> filename
 

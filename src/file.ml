@@ -73,6 +73,31 @@ end
 
 module X = struct
 
+module Filenames = struct
+
+  let internal = "filenames"
+
+  type t = Filename.Set.t
+
+  let empty = Filename.Set.empty
+
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    let lines = Utils.filter_map (function
+      | []  -> None
+      | [f] -> Some (Filename.of_string f)
+      | s   ->
+          Globals.error_and_exit "%S is not a valid filename" (String.concat " " s)
+    ) lines in
+    Filename.Set.of_list lines
+
+  let to_string f s =
+    let lines =
+      List.map (fun f -> [Filename.to_string f]) (Filename.Set.elements s) in
+    Lines.to_string f lines
+                                 
+end
+
 module Urls_txt = struct
 
   let internal = "urls-txt"
@@ -101,44 +126,48 @@ module URL = struct
 
   let internal = "url"
 
-  type t = (filename * string option) list
+  type t = {
+    url     : string;
+    kind    : string option;
+    checksum: string option;
+  }
 
-  let empty = []
+  let empty = {
+    url     = "<none>";
+    kind    = None;
+    checksum= None;
+  }
+
+  let url t = t.url
+  let kind t = t.kind
 
   let of_string f s =
     let lines = Lines.of_string f s in
-    Utils.filter_map (function
+    let lines = Utils.filter_map (function
       | []         -> None
-      | [url]      ->
-          let url = Filename.of_string url in
-          Some (url, None)
-      | [url;kind] -> Some (Filename.of_string url, Some kind)
+      | [url]      -> Some {url; kind=None; checksum=None}
+      | [url;kind] -> Some {url; kind=Some kind; checksum=None}
       | h          -> Globals.error_and_exit "%s is not a valid url" (String.concat " " h)
-    ) lines
+    ) lines in
+    match lines with
+    | [x] -> x
+    | _   -> Globals.error_and_exit "too many lines (%d)" (List.length lines)
 
   let to_string f t =
-    let lines = List.map (function
-      | (f,None)   -> [Filename.to_string f]
-      | (f,Some k) -> [Filename.to_string f; k]) t in
-    Lines.to_string f lines
+    let line = match t.kind with
+      | None   -> [t.url]
+      | Some k -> [t.url; k] in
+    Lines.to_string f [line]
 
 end
 
-module Installed = struct
+module Updated = struct
 
-  let internal = "installed"
+  let internal = "updated"
 
   type t = NV.Set.t
 
   let empty = NV.Set.empty
-
-  let check t =
-    let map = NV.to_map t in
-    N.Map.iter (fun n vs ->
-      if V.Set.cardinal vs <> 1 then
-        Globals.error_and_exit "Multiple versions installed for package %s: %s"
-          (N.to_string n) (V.Set.to_string vs)
-    ) map
 
   let of_string f s =
     let lines = Lines.of_string f s in
@@ -152,7 +181,6 @@ module Installed = struct
     !map
 
   let to_string _ t =
-    check t;
     let buf = Buffer.create 1024 in
     NV.Set.iter
       (fun nv -> Printf.bprintf buf "%s %s\n" (N.to_string (NV.name nv)) (V.to_string (NV.version nv)))
@@ -161,19 +189,31 @@ module Installed = struct
 
 end
 
+module Installed = struct
+
+  include Updated
+
+  let internal = "installed"
+
+  let check t =
+    let map = NV.to_map t in
+    N.Map.iter (fun n vs ->
+      if V.Set.cardinal vs <> 1 then
+        Globals.error_and_exit "Multiple versions installed for package %s: %s"
+          (N.to_string n) (V.Set.to_string vs)
+    ) map
+
+  let to_string f t =
+    check t;
+    Updated.to_string f t
+
+end
+
 module Reinstall = struct
 
   include Installed
 
   let internal = "reinstall"
-
-end
-
-module Updated = struct
-
-  include Installed
-
-  let internal = "updated"
 
 end
 
@@ -359,6 +399,7 @@ module Config = struct
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
     let s_system_ocaml_version = "system-ocaml-version"
+    let s_system_ocaml_version2 = "system_ocaml-version"
     let s_cores = "cores"
 
     let valid_fields = [
@@ -366,6 +407,7 @@ module Config = struct
       s_repositories;
       s_ocaml_version;
       s_system_ocaml_version;
+      s_system_ocaml_version2;
       s_cores;
     ]
 
@@ -381,6 +423,13 @@ module Config = struct
         assoc_option s.contents s_ocaml_version (parse_string |> Alias.of_string) in
       let system_ocaml_version =
         assoc_option s.contents s_system_ocaml_version (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version2 =
+        assoc_option s.contents s_system_ocaml_version2 (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version =
+        match system_ocaml_version, system_ocaml_version2 with
+        | Some v, _
+        | _     , Some v -> Some v
+        | None  , None   -> None in
       let cores = assoc s.contents s_cores parse_int in
       { opam_version; repositories; ocaml_version; system_ocaml_version; cores }
 
@@ -1276,4 +1325,9 @@ end
 module Urls_txt = struct
   include Urls_txt
   include Make(Urls_txt)
+end
+
+module Filenames = struct
+  include Filenames
+  include Make(Filenames)
 end

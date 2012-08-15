@@ -26,9 +26,7 @@
    After the script is run, archives/ contains all the package archives
    for the available descr and OPAM files *)
 
-open Repo_helpers
 open Types
-open Curl
 
 let all, index, packages =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
@@ -46,13 +44,8 @@ let all, index, packages =
 let () =
 
   let local_path = Dirname.cwd () in
-  let local_repo = Path.R.of_dirname local_path in
-  let state = {
-    local_path; local_repo;
-    remote_path = local_path;
-    remote_repo = local_repo;
-  } in
   let repo = Repository.create ~name:"local" ~kind:"curl" ~address:(Dirname.to_string local_path) in
+  let local_repo = Path.R.create repo in
 
   (* Create urls.txt *)
   let local_index_file = Filename.of_string "urls.txt" in
@@ -71,14 +64,17 @@ let () =
   ) in
   File.Urls_txt.write local_index_file urls;
 
-  let updates = Curl.get_updates state in
+  let module B = (val Repositories.find_backend repo: Repositories.BACKEND) in
+  let updates = B.update repo in
+  let packages =
+    NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements updates)) in
 
   (* Update the archive files *)
   NV.Set.iter (fun nv ->
     Globals.msg "Updating %s as some file have changed\n" (NV.to_string nv);
     if Filename.exists (Path.R.archive local_repo nv) then
       Repositories.download repo nv
-  ) updates;
+  ) packages;
 
   (* Create the archives asked by the user *)
   NV.Set.iter (fun nv ->
@@ -86,7 +82,7 @@ let () =
       Globals.msg "Creating archive for %s\n" (NV.to_string nv);
       Repositories.download repo nv
     end
-  ) updates;
+  ) packages;
 
   (* Create index.tar.gz *)
   let err = Run.command [

@@ -93,6 +93,9 @@ val read_command_output:
   ?add_to_env:(string*string) list ->
   ?add_to_path:string list -> command -> string list option
 
+(** Test whether the file is an archive, by looking as its extension *)
+val is_tar_archive: string -> bool
+
 (** [extract filename dirname] extracts the archive [filename] into
     [dirname]. [dirname] should not exists and [filename] should
     contain only one top-level directory.*)
