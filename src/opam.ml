@@ -63,10 +63,17 @@ let parse_args fn () =
 
 (* opam init [-kind $kind] $repo $adress *)
 let init = 
-  let kind = ref Globals.default_repository_kind in
+  let kind = ref None in
   let alias = ref None in
   let comp = ref None in
   let cores = ref Globals.default_cores in
+  let mk_kind address = match !kind with
+    | None  ->
+        if Sys.file_exists address then
+          "rsync"
+        else
+          Globals.default_repository_kind
+    | Some k -> k in
 {
   name     = "init";
   usage    = "";
@@ -76,7 +83,7 @@ let init =
     ("-comp" , Arg.String (fun s -> comp := Some (OCaml_V.of_string s)), " Which compiler version to use");
     ("-alias", Arg.String (fun s -> alias := Some (Alias.of_string s)), " Set the compiler alias name");
     ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
-    ("-kind" , Arg.Set_string kind , " Set the repository kind");
+    ("-kind" , Arg.String (fun s -> kind := Some s) , " Set the repository kind");
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
   ];
   anon;
@@ -84,8 +91,14 @@ let init =
     parse_args (function
     | [] ->
         Client.init Repository.default !alias !comp !cores
-    | [name; address]  ->
-        let repo = Repository.create ~name ~address ~kind:!kind in
+    | [address] ->
+        let name = Globals.default_repository_name in
+        let kind = mk_kind address in
+        let repo = Repository.create ~name ~address ~kind in
+        Client.init repo !alias !comp !cores
+    | [name; address] ->
+        let kind = mk_kind address in
+        let repo = Repository.create ~name ~address ~kind in
         Client.init repo !alias !comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
 }
