@@ -37,6 +37,9 @@
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPEnv">Types.nv</a> -> t</code></pre><div class="info">
 Create an opam file<br>
 </div>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">name:<a href="Types.html#TYPEname">Types.name</a> -><br>       version:<a href="Types.html#TYPEversion">Types.version</a> -><br>       maintainer:string -><br>       substs:<a href="Types.html#TYPEbasename">Types.basename</a> list -><br>       build_env:(string * string * string) list -><br>       build:string list list -><br>       remove:string list list -><br>       depends:<a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a> -><br>       depopts:<a href="Types.html#TYPEcnf_formula">Types.cnf_formula</a> -><br>       conflicts:<a href="Types.html#TYPEand_formula">Types.and_formula</a> -><br>       libraries:<a href="Types.html#TYPEsection">Types.section</a> list -><br>       syntax:<a href="Types.html#TYPEsection">Types.section</a> list -><br>       others:(string * <a href="File_format.html#TYPEvalue">File_format.value</a>) list -><br>       ocaml_version:<a href="Types.html#TYPEocaml_constraint">Types.ocaml_constraint</a> option -> t</code></pre><div class="info">
+Full constructor<br>
+</div>
 <pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="Types.html#TYPEname">Types.name</a></code></pre><div class="info">
 Package name<br>
 </div>

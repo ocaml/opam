@@ -33,13 +33,16 @@
 <br>
 <pre><span class="keyword">module</span> Filename: <code class="code">sig</code> <a href="Types.Filename.html">..</a> <code class="code">end</code></pre>non-directory filenames<br>
 <hr width="100%">
-<pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span class="keyword">include</span> <a href="Types.ABSTRACT.html">Types.ABSTRACT</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Types.html#TYPEbasename">Types.basename</a> -> t</code></pre><div class="info">
 Create a filename from a dirname and a basename<br>
 </div>
 <pre><span id="VALof_basename"><span class="keyword">val</span> of_basename</span> : <code class="type"><a href="Types.html#TYPEbasename">Types.basename</a> -> t</code></pre><div class="info">
 Create a file from a basename and the current working directory
       as dirname<br>
+</div>
+<pre><span id="VALraw"><span class="keyword">val</span> raw</span> : <code class="type">string -> t</code></pre><div class="info">
+Creation from a raw string (as <i>http://&lt;path&gt;</i>)<br>
 </div>
 <pre><span id="VALdirname"><span class="keyword">val</span> dirname</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the directory name<br>
@@ -80,6 +83,9 @@ Apply a function on the contents of a file<br>
 <pre><span id="VALcopy_in"><span class="keyword">val</span> copy_in</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> unit</code></pre><div class="info">
 Copy a file in a directory<br>
 </div>
+<pre><span id="VALmove"><span class="keyword">val</span> move</span> : <code class="type">t -> t -> unit</code></pre><div class="info">
+Move a file<br>
+</div>
 <pre><span id="VALlink_in"><span class="keyword">val</span> link_in</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> unit</code></pre><div class="info">
 Symlink a file in a directory<br>
 </div>
@@ -93,10 +99,32 @@ Symlink a file. If symlink is not possible on the system, use copy instead.<br>
 Extract an archive in a given directory (it rewrites the root to
       match <code class="code">dirname</code> dir if needed)<br>
 </div>
+<pre><span id="VALextract_in"><span class="keyword">val</span> extract_in</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> unit</code></pre><div class="info">
+Extract an archive in a given directory (which should already exists)<br>
+</div>
 <pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> t -> bool</code></pre><div class="info">
 Check wether a filename starts by a given dirname<br>
 </div>
 <pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:<a href="Types.html#TYPEdirname">Types.dirname</a> -> t -> string</code></pre><div class="info">
 Remove a prefix from a file name<br>
+</div>
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> t option</code></pre><div class="info">
+download a remote file in a given directory. Return the location
+      of the downloaded file if the download is successful.<br>
+</div>
+<pre><span id="VALdownload_iter"><span class="keyword">val</span> download_iter</span> : <code class="type">t list -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> t option</code></pre><div class="info">
+iterate downloads until one is sucessful<br>
+</div>
+<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> bool</code></pre><div class="info">
+Apply a patch to a directory<br>
+</div>
+<pre><span id="VALdigest"><span class="keyword">val</span> digest</span> : <code class="type">t -> Digest.t</code></pre><div class="info">
+Compute the MD5 digest of a file<br>
+</div>
+<pre><span id="VALtouch"><span class="keyword">val</span> touch</span> : <code class="type">t -> unit</code></pre><div class="info">
+Create an empty file<br>
+</div>
+<pre><span id="VALchmod"><span class="keyword">val</span> chmod</span> : <code class="type">t -> int -> unit</code></pre><div class="info">
+Change file permissions<br>
 </div>
 </body></html>

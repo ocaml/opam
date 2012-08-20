@@ -33,7 +33,7 @@ val download: repository -> nv -> unit
     repository.*)
 val upload: repository -> unit
 
-(** {2 Repository backends *)
+(** {2 Repository backends} *)
 
 type address = dirname
 

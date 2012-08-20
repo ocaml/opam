@@ -56,13 +56,13 @@ OPAM files: <i>$opam/opam/$NAME.$VERSION.opam</i><br>
 <pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Compiler files: <i>$opam/compilers/$OVERSION.comp</i><br>
 </div>
-<pre><span id="VALcompiler_dir"><span class="keyword">val</span> compiler_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+<pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Compiler files: <i>$opam/compilers/</i><br>
 </div>
-<pre><span id="VALcompiler_list"><span class="keyword">val</span> compiler_list</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.Set.t</code></pre><div class="info">
+<pre><span id="VALavailable_compilers"><span class="keyword">val</span> available_compilers</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.OCaml_V.Set.t</code></pre><div class="info">
 All the compiler files<br>
 </div>
-<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
+<pre><span id="VALavailable_packages"><span class="keyword">val</span> available_packages</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
 List all the available packages:
       <i>$opam/opam/$NAME.$VERSION.opam</i><br>
 </div>
@@ -82,14 +82,13 @@ OPAM files folder: <i>$opam/opam/</i><br>
 <pre><span id="VALdescr_dir"><span class="keyword">val</span> descr_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Description files folder: <i>$opam/descr/</i><br>
 </div>
-<pre><span id="VALarchive_dir"><span class="keyword">val</span> archive_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+<pre><span id="VALarchives_dir"><span class="keyword">val</span> archives_dir</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Archives files folder: <i>$opam/archives/</i><br>
 </div>
 <pre><span id="VALrepo_index"><span class="keyword">val</span> repo_index</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the repository index: <i>$opam/repo/index</i><br>
 </div>
-<pre><span id="VALfold_compiler"><span class="keyword">val</span> fold_compiler</span> : <code class="type">('a -> <a href="Path.C.html#TYPEt">Path.C.t</a> -> 'a) -> 'a -> <a href="Path.G.html#TYPEt">t</a> -> 'a</code></pre><div class="info">
-Folding on available compiler, including the one that is currently set. 
-      The order of folding on version is not precised.<br>
+<pre><span id="VALavailable_aliases"><span class="keyword">val</span> available_aliases</span> : <code class="type"><a href="Path.G.html#TYPEt">t</a> -> Types.Alias.Set.t</code></pre><div class="info">
+Available aliases<br>
 </div>
 </body></html>

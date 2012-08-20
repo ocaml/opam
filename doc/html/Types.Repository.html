@@ -33,7 +33,7 @@
 <br>
 <pre><span class="keyword">module</span> Repository: <code class="code">sig</code> <a href="Types.Repository.html">..</a> <code class="code">end</code></pre>OPAM repositories<br>
 <hr width="100%">
-<pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span class="keyword">include</span> <a href="Types.ABSTRACT.html">Types.ABSTRACT</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">name:string -> kind:string -> address:string -> t</code></pre><div class="info">
 Create a repository<br>
 </div>
@@ -46,7 +46,10 @@ Get the repository name<br>
 <pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> string</code></pre><div class="info">
 Get the repository kind<br>
 </div>
-<pre><span id="VALaddress"><span class="keyword">val</span> address</span> : <code class="type">t -> string</code></pre><div class="info">
+<pre><span id="VALaddress"><span class="keyword">val</span> address</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Get the repository address<br>
+</div>
+<pre><span id="VALwith_kind"><span class="keyword">val</span> with_kind</span> : <code class="type">t -> string -> t</code></pre><div class="info">
+Return a copy of repo with a different kind<br>
 </div>
 </body></html>

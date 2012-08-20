@@ -22,7 +22,8 @@
 <link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
-<link title="Types" rel="Chapter" href="Types.html"><title>Repositories</title>
+<link title="Types" rel="Chapter" href="Types.html"><link title="Repository backends" rel="Section" href="#2_Repositorybackends">
+<title>Repositories</title>
 </head>
 <body>
 <div class="navbar"><a href="Process.html">Previous</a>
@@ -37,15 +38,32 @@
 The following functions are wrapper to the corresponding
     scripts<br>
 <pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> unit</code></pre><div class="info">
-Run <i>opam-$kind-init</i> in <i>$opam/repo/$repo</i><br>
+Initialize <i>$opam/repo/$repo</i><br>
 </div>
 <pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> unit</code></pre><div class="info">
-Run <i>opam-$kind-update</i> in <i>$opam/repo/$repo</i><br>
+Update <i>$opam/repo/$repo</i><br>
 </div>
 <pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> unit</code></pre><div class="info">
-Run <i>opam-$kind-download</i> in <i>$opam/repo/$repo</i><br>
+Download <i>$opam/repo/$repo/archive/$nv.tar.gz</i><br>
 </div>
 <pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> unit</code></pre><div class="info">
-Run <i>opam-$kind-upload</i> in <i>$opam/repo/$repo</i><br>
+Upload the content of <i>$opam/repo/$repo/upload</i> to the remote
+    repository.<br>
 </div>
-<pre><span class="keyword">module</span> <a href="Repositories.Raw.html">Raw</a>: <code class="code">sig</code> <a href="Repositories.Raw.html">..</a> <code class="code">end</code></pre></body></html>
+<br>
+<span id="2_Repositorybackends"><h2>Repository backends</h2></span><br>
+<pre><span id="TYPEaddress"><span class="keyword">type</span> <code class="type"></code>address</span> = <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a></code> </pre>
+
+<pre><span class="keyword">module type</span> <a href="Repositories.BACKEND.html">BACKEND</a> = <code class="code">sig</code> <a href="Repositories.BACKEND.html">..</a> <code class="code">end</code></pre><div class="info">
+Backend signature
+</div>
+<pre><span id="TYPEkind"><span class="keyword">type</span> <code class="type"></code>kind</span> = <code class="type">string</code> </pre>
+
+<pre><span id="VALregister_backend"><span class="keyword">val</span> register_backend</span> : <code class="type"><a href="Repositories.html#TYPEkind">kind</a> -> (module Repositories.BACKEND) -> unit</code></pre><div class="info">
+Register a repository backend<br>
+</div>
+<pre><span id="VALmake_archive"><span class="keyword">val</span> make_archive</span> : <code class="type"><a href="Types.html#TYPEnv">Types.nv</a> -> unit</code></pre><div class="info">
+<code class="code">make_archive repo_kind nv</code> build ./$nv.tar.gz, assuming the
+    repository kind is <code class="code">repo_kind</code>.<br>
+</div>
+</body></html>

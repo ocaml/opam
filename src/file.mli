@@ -15,9 +15,7 @@
 
 open Types
 
-(** Functions to file read and write configuration files in a typed
-    way. *)
-
+(** Functions to read and write configuration files in a typed way. *)
 module type IO_FILE = sig
 
   (** File contents *)
@@ -365,7 +363,7 @@ module Subst: sig
 
 end
 
-(** {2 Urls for OPAM repositories *)
+(** {2 Urls for OPAM repositories} *)
 module URL: sig
 
   include IO_FILE

@@ -33,7 +33,7 @@
 <br>
 <pre><span class="keyword">module</span> Dirname: <code class="code">sig</code> <a href="Types.Dirname.html">..</a> <code class="code">end</code></pre>Absolute directory names<br>
 <hr width="100%">
-<pre><span class="keyword">include</span> <a href="Types.Abstract.html">Types.Abstract</a></pre>
+<pre><span class="keyword">include</span> <a href="Types.ABSTRACT.html">Types.ABSTRACT</a></pre>
 <pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> t</code></pre><div class="info">
 Return the current working directory<br>
 </div>
@@ -46,22 +46,40 @@ Create a directory<br>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">t -> t list</code></pre><div class="info">
 List the directory<br>
 </div>
+<pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">t -> (unit -> 'a) -> 'a</code></pre><div class="info">
+Evaluate a function in a given directory<br>
+</div>
 <pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">t -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:t list -> string list list -> int</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
 <pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">t -> unit</code></pre><div class="info">
 Change the current directory<br>
 </div>
+<pre><span id="VALmove"><span class="keyword">val</span> move</span> : <code class="type">t -> t -> unit</code></pre><div class="info">
+Move a directory<br>
+</div>
+<pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">t -> t -> unit</code></pre><div class="info">
+Copy a directory<br>
+</div>
 <pre><span id="VALexists"><span class="keyword">val</span> exists</span> : <code class="type">t -> bool</code></pre><div class="info">
 Does the directory exists ?<br>
+</div>
+<pre><span id="VALdirname"><span class="keyword">val</span> dirname</span> : <code class="type">t -> t</code></pre><div class="info">
+Return the parent directory<br>
 </div>
 <pre><span id="VALbasename"><span class="keyword">val</span> basename</span> : <code class="type">t -> <a href="Types.html#TYPEbasename">Types.basename</a></code></pre><div class="info">
 Return the deeper directory name<br>
 </div>
-<pre><span id="VALof_raw"><span class="keyword">val</span> of_raw</span> : <code class="type">string -> t</code></pre><div class="info">
+<pre><span id="VALraw"><span class="keyword">val</span> raw</span> : <code class="type">string -> t</code></pre><div class="info">
 Creation from a raw string (as <i>http://&lt;path&gt;</i>)<br>
 </div>
 <pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:t -> t -> string</code></pre><div class="info">
 Remove a prefix from a directory<br>
+</div>
+<pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type">prefix:t -> t -> bool</code></pre><div class="info">
+Does the directory starts with a given prefix<br>
+</div>
+<pre><span id="VALwith_tmp_dir"><span class="keyword">val</span> with_tmp_dir</span> : <code class="type">(t -> 'a) -> 'a</code></pre><div class="info">
+Execute a function in a temp directory<br>
 </div>
 </body></html>

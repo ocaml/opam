@@ -36,8 +36,11 @@
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Types.html#TYPErepository">Types.repository</a> -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
 Create a repository path<br>
 </div>
-<pre><span id="VALof_path"><span class="keyword">val</span> of_path</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALof_dirname"><span class="keyword">val</span> of_dirname</span> : <code class="type"><a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
 Transform a directory name into a repository path<br>
+</div>
+<pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> <a href="Path.R.html#TYPEt">t</a></code></pre><div class="info">
+Create a repository path with the current working directory<br>
 </div>
 <pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the repository folder: <i>$opam/repo/$repo</i><br>
@@ -45,74 +48,68 @@ Return the repository folder: <i>$opam/repo/$repo</i><br>
 <pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the repository config: <i>$opam/repo/$repo/config</i><br>
 </div>
+<pre><span id="VALpackages_dir"><span class="keyword">val</span> packages_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Packages folder: <i>$opam/repo/$repo/packages</i><br>
+</div>
+<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Package folder: <i>$opam/repo/$repo/packages/$NAME.$VERSION</i><br>
+</div>
 <pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the OPAM file for a given package:
-      <i>$opam/repo/$repo/opam/$NAME.$VERSION.opam</i><br>
+      <i>$opam/repo/$repo/packages/$NAME.$VERSION/opam</i><br>
 </div>
-<pre><span id="VALopam_dir"><span class="keyword">val</span> opam_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Return the OPAM folder: <i>$opam/repo/$repo/opam/</i><br>
-</div>
-<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
+<pre><span id="VALavailable_packages"><span class="keyword">val</span> available_packages</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
 List all the available packages:
-      <i>$opam/repo/$repo/$NAME.$VERSION.opam</i><br>
+      <i>$opam/repo/$repo/packages/$NAME.$VERSION/opam</i><br>
 </div>
 <pre><span id="VALavailable_versions"><span class="keyword">val</span> available_versions</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.N.t -> Types.V.Set.t</code></pre><div class="info">
 List all the available versions for a given package:
-      <i>$opam/repo/$repo/$name.$VERSION.opam</i><br>
+      <i>$opam/repo/$repo/packages/<code class="code">name</code>.$VERSION/opam</i><br>
 </div>
 <pre><span id="VALdescr"><span class="keyword">val</span> descr</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the description file for a given package:
-      <i>$opam/repo/$repo/descr/$NAME.VERSION</i><br>
-</div>
-<pre><span id="VALdescr_dir"><span class="keyword">val</span> descr_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Return the description folder<br>
+      <i>$opam/repo/$repo/packages/$NAME.VERSION/descr</i><br>
 </div>
 <pre><span id="VALarchive"><span class="keyword">val</span> archive</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-Return the archive for a giben package:
+Return the archive for a given package:
       <i>$opam/repo/$repo/archives/$NAME.$VERSION.tar.gz</i><br>
 </div>
-<pre><span id="VALarchive_dir"><span class="keyword">val</span> archive_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+<pre><span id="VALarchives_dir"><span class="keyword">val</span> archives_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the archive folder: <i>$opam/repo/$repo/archives/</i><br>
+</div>
+<pre><span id="VALavailable_archives"><span class="keyword">val</span> available_archives</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.Filename.Set.t</code></pre><div class="info">
+Return the list of archive files in <i>$opam/repo/$repo/archives</i><br>
 </div>
 <pre><span id="VALupdated"><span class="keyword">val</span> updated</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Return the list of updated packages:
       <i>$opam/repo/$repo/updated</i><br>
 </div>
-<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+<pre><span id="VALupload_dir"><span class="keyword">val</span> upload_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Return the upload folder for a given version:
       <i>$opam/repo/$repo/upload/</i><br>
-</div>
-<pre><span id="VALupload_opam_dir"><span class="keyword">val</span> upload_opam_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Return the upload folder for OPAM files:
-      <i>$opam/repo/$repo/upload/opam/</i><br>
-</div>
-<pre><span id="VALupload_descr_dir"><span class="keyword">val</span> upload_descr_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Return the upload folder for descr files:
-      <i>$opam/repo/$repo/upload/descr/</i><br>
-</div>
-<pre><span id="VALupload_archives_dir"><span class="keyword">val</span> upload_archives_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Return the upload folder for archive files:
-      <i>$opam/repo/$repo/upload/archives/</i><br>
-</div>
-<pre><span id="VALupload_opam"><span class="keyword">val</span> upload_opam</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-Return the upload folder for OPAM files:
-      <i>$opam/repo/$repo/upload/opam/$NAME.$VERSION.opam</i><br>
-</div>
-<pre><span id="VALupload_descr"><span class="keyword">val</span> upload_descr</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-Return the upload folder for descr files:
-      <i>$opam/repo/$repo/upload/descr/$NAME.$VERSION</i><br>
-</div>
-<pre><span id="VALupload_archives"><span class="keyword">val</span> upload_archives</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-Return the upload folder for archive files:
-      <i>$opam/repo/$repo/upload/archives/$NAME.$VERSION.tar.gz</i><br>
 </div>
 <pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.OCaml_V.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
 Compiler files: <i>$opam/repo/$repo/compilers/$OVERSION.comp</i><br>
 </div>
-<pre><span id="VALcompiler_dir"><span class="keyword">val</span> compiler_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+<pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
 Compiler files: <i>$opam/repo/$repo/compilers/</i><br>
 </div>
-<pre><span id="VALcompiler_list"><span class="keyword">val</span> compiler_list</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.OCaml_V.Set.t</code></pre><div class="info">
+<pre><span id="VALavailable_compilers"><span class="keyword">val</span> available_compilers</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.OCaml_V.Set.t</code></pre><div class="info">
 All the compiler files<br>
+</div>
+<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
+urls <i>$opma/repo/$repo/package/$NAME.$VERSION/url</i><br>
+</div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+files <i>$opam/repo/$repo/packages/$NAME.$VERSION/files</i><br>
+</div>
+<pre><span id="VALavailable_files"><span class="keyword">val</span> available_files</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEfilename">Types.filename</a> list</code></pre><div class="info">
+All files in the file dir<br>
+</div>
+<pre><span id="VALtmp_dir"><span class="keyword">val</span> tmp_dir</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
+Tempory folder <i>$opam/repo/$repo/tmp/$NAME.$VERSION/</i><br>
+</div>
+<pre><span id="VALavailable_tmp"><span class="keyword">val</span> available_tmp</span> : <code class="type"><a href="Path.R.html#TYPEt">t</a> -> Types.NV.Set.t</code></pre><div class="info">
+Available packages in the temp dir<br>
 </div>
 </body></html>
