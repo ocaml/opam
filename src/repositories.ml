@@ -187,8 +187,6 @@ let download r nv =
         (NV.to_string nv);
       Dirname.in_dir local_dir (fun () -> make_archive nv)
 
-(* XXX: clean-up + update when the url change *)
-(* XXX: update when the thing pointed by the url change *)
 let update r =
   log "update %s" (Repository.to_string r);
   let local_repo = Path.R.create r in
@@ -196,4 +194,43 @@ let update r =
   let module B = (val find_backend r: BACKEND) in
   let files = Dirname.in_dir local_dir (fun () -> B.update (Repository.address r)) in
   let packages = nv_set_of_files files in
-  File.Updated.write (Path.R.updated local_repo) packages
+  
+  let cached_packages = Path.R.available_tmp local_repo in
+
+  (* Clean-up outdated archives *)
+  NV.Set.iter (fun nv ->
+    let archive = Path.R.archive local_repo nv in
+    if Filename.Set.mem archive files then
+      Filename.remove archive
+  ) cached_packages;
+
+  (* Clean-up tmp files when the URL change *)
+  NV.Set.iter (fun nv ->
+    let url_f = Path.R.url local_repo nv in
+    if Filename.Set.mem url_f files then begin
+      let tmp_dir = Path.R.tmp_dir local_repo nv in
+      Dirname.rmdir tmp_dir;
+    end
+  ) cached_packages;
+
+  (* For each URL file, look at changes upstream *)
+  let updated_cached_packages = NV.Set.filter (fun nv ->
+    let archive = Path.R.archive local_repo nv in
+    if not (Filename.exists archive) then
+      let url_f = Path.R.url local_repo nv in
+      let url = File.URL.read url_f in
+      let kind = match File.URL.kind url with
+      | None   -> kind_of_url (File.URL.url url)
+      | Some k -> k in
+      let url = File.URL.url url in
+      log "updating %s:%s" url kind;
+      match Dirname.in_dir local_dir (fun () -> download_one kind nv url) with
+      | Not_available -> Globals.error_and_exit "Cannot get %s" url
+      | Up_to_date _  -> false
+      | Result _      -> true
+    else
+      false
+  ) cached_packages in
+
+  let updated = NV.Set.union packages updated_cached_packages in
+  File.Updated.write (Path.R.updated local_repo) updated

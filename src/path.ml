@@ -214,6 +214,14 @@ module R = struct
 
   let tmp_dir t nv = tmp t / NV.to_string nv
 
+  let available_tmp t =
+    let d = tmp t in
+    let files = if Dirname.exists d then
+        Filename.Set.of_list (Filename.list d)
+      else
+        Filename.Set.empty in
+    NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements files))
+
   let available_files t nv =
     if Dirname.exists (files t nv) then
       Filename.rec_list (files t nv)

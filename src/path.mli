@@ -250,4 +250,6 @@ module R: sig
   (** Tempory folder {i $opam/repo/$repo/tmp/$NAME.$VERSION/} *)
   val tmp_dir: t -> nv -> dirname
 
+  (** Available packages in the temp dir *)
+  val available_tmp: t -> NV.Set.t
 end
