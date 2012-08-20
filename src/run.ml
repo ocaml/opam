@@ -241,7 +241,7 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
         List.iter (Globals.msg "+ %s\n") r.Process.r_stdout;
         List.iter (Globals.msg "= %s\n") r.Process.r_info;
         List.iter (Globals.msg "- %s\n") r.Process.r_stderr;
-
+        Process.clean_files r;
       ) else if not !Globals.debug then
         Process.clean_files r;
       r
