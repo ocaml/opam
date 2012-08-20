@@ -271,7 +271,7 @@ end = struct
     { dirname; basename }
 
   let raw str =
-    let dirname = Dirname.of_string (Filename.dirname str) in
+    let dirname = Dirname.raw (Filename.dirname str) in
     let basename = Basename.of_string (Filename.basename str) in
     create dirname basename
 

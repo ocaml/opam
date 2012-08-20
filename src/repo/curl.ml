@@ -1,6 +1,6 @@
 open Types
 
-let log msg = Globals.log "curl" msg
+let log msg = Globals.log "CURL" msg
 
 type state = {
   remote_repo         : Path.R.t;

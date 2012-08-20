@@ -1,7 +1,7 @@
 let (+) = Filename.concat
 open Types
 
-let log fmt = Globals.log "rsync" fmt
+let log fmt = Globals.log "RSYNC" fmt
 
 (* if rsync -arv return 4 lines, this means that no files have changed *)
 let trim = function

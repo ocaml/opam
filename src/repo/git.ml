@@ -1,6 +1,6 @@
 open Types
 
-let log fmt = Globals.log "git" fmt
+let log fmt = Globals.log "GIT" fmt
 
 let git_fetch local_path =
   Dirname.in_dir local_path (fun () ->

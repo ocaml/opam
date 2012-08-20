@@ -15,7 +15,7 @@
 
 open Types
 
-let log fmt = Globals.log "REPO" fmt
+let log fmt = Globals.log "REPOSITORIES" fmt
 
 type kind = string
 type address = dirname
