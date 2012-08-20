@@ -237,9 +237,11 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
           Globals.warning "Command %S contains 1 space" cmd;
       let r = Process.run ~env ~name cmd args in
       if Process.is_failure r then (
-        Globals.warning "Command %S failed (see %s.{info,err,out})" str name;
-        List.iter (Globals.msg "%s\n") r.Process.r_stdout;
-        List.iter (Globals.msg "%s\n") r.Process.r_stderr;
+        Globals.error "Command %S failed:" str;
+        List.iter (Globals.msg "+ %s\n") r.Process.r_stdout;
+        List.iter (Globals.msg "= %s\n") r.Process.r_info;
+        List.iter (Globals.msg "- %s\n") r.Process.r_stderr;
+
       ) else if not !Globals.debug then
         Process.clean_files r;
       r

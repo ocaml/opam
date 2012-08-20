@@ -41,6 +41,7 @@ type result = {
   r_proc     : t;           (** Process *)
   r_code     : int;         (** Process exit code *)
   r_duration : float;       (** Process duration *)
+  r_info     : string list; (** Environment variables *)
   r_stdout   : string list; (** Content of stdout dump file *)
   r_stderr   : string list; (** Content of stderr dump file *)
 }

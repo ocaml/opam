@@ -239,7 +239,7 @@ let find_available_package_by_name t name =
     Some s
 
 let print_updated t updated pinned_updated =
-  if not (NV.Set.is_empty updated) && not (NV.Set.is_empty pinned_updated) then
+  if not (NV.Set.is_empty (NV.Set.union updated pinned_updated)) then
     Globals.msg "New packages available:\n";
   NV.Set.iter (fun nv ->
     Globals.msg " - %s%s\n"
@@ -256,7 +256,7 @@ let print_compilers compilers repo =
   if not (OCaml_V.Set.is_empty new_compilers) then
     Globals.msg "New compiler descriptions available:\n";
   OCaml_V.Set.iter (fun v ->
-    Globals.msg " -  %s\n" (OCaml_V.to_string v)
+    Globals.msg " - %s\n" (OCaml_V.to_string v)
   ) new_compilers
 
 let install_conf_ocaml_config t =

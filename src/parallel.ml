@@ -197,9 +197,11 @@ module Make (G : G) = struct
             log "Spawning a new process";
             begin
               try child n; log "OK"; exit 0
-              with e ->
-                Globals.error "%s" (Printexc.to_string e);
-                exit 1
+              with 
+              | Globals.Exit _ -> exit 1
+              | e ->
+                  Globals.error "%s" (Printexc.to_string e);
+                  exit 1
             end
         | pid ->
             log "Creating process %d" pid;
