@@ -157,6 +157,8 @@ module R = struct
     Dirname.of_string !Globals.root_path / "repo" / Repository.name r
 
   let of_dirname path = path
+
+  let cwd () = Dirname.cwd ()
     
   let root t = t
 

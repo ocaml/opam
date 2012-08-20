@@ -17,10 +17,9 @@ type state = {
   file_digests        : (filename * string) list;
 }
 
-let make_state r =
-  let remote_path = Repository.address r in
+let make_state remote_path =
   let remote_repo = Path.R.of_dirname remote_path in
-  let local_repo = Path.R.create r in
+  let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
   let local_path = Path.R.root local_repo in
   let index_file = remote_path // "urls.txt" in
   let local_index_archive = local_path // "index.tar.gz" in
@@ -31,7 +30,12 @@ let make_state r =
     | Some local_file ->
         let urls = File.Urls_txt.read local_file in
         let remote_local, local_remote, locals, perms, digests =
-          List.fold_left(fun (rl, lr, locals, perms, digests) (base,perm,digest) ->
+          Remote_file.Set.fold (fun r (rl, lr, locals, perms, digests) ->
+            let base = Remote_file.base r in
+            let perm = match Remote_file.perm r with
+              | None  ->  0o640
+              | Some p -> p in
+            let digest = Remote_file.md5 r in
             let remote = Filename.create remote_path base in
             let local = Filename.create (Dirname.cwd()) base in
             Filename.Map.add remote local rl,
@@ -39,8 +43,7 @@ let make_state r =
             Filename.Set.add local locals,
             (local, perm) :: perms,
             (local, digest) :: digests
-          ) (Filename.Map.empty, Filename.Map.empty, Filename.Set.empty, [], [])
-            urls in
+          ) urls (Filename.Map.empty, Filename.Map.empty, Filename.Set.empty, [], []) in
         remote_local, local_remote, locals, perms, digests in
   {
     remote_repo; remote_path; local_repo; local_path;
@@ -57,8 +60,8 @@ let is_up_to_date state local_file =
 
 module B = struct
 
-  let init r =
-    let state = make_state r in
+  let init address =
+    let state = make_state address in
     let warning () =
       Globals.msg "Cannot find index.tar.gz on the OPAM repository.\n\
                  Initialisation might take some time ...\n" in
@@ -77,8 +80,8 @@ module B = struct
     Dirname.mkdir local_dir;
     Filename.download remote_file local_dir
 
-  let update r =
-    let state = make_state r in
+  let update address =
+    let state = make_state address in
     log "dir local_dir=%s remote_dir=%s"
       (Dirname.to_string state.local_path)
       (Dirname.to_string state.remote_path);
@@ -94,7 +97,7 @@ module B = struct
       log "new_files: %s" (Filename.Set.to_string new_files);
       Filename.Set.iter Filename.remove to_delete;
       if Filename.Set.cardinal new_files > 4 then
-        init r
+        init address
       else
         Filename.Set.iter (fun local_file ->
           let remote_file = Filename.Map.find local_file state.local_remote in
@@ -104,10 +107,10 @@ module B = struct
     end else
       Filename.Set.empty
 
-  let download_archive r nv =
-    let remote_repo = Path.R.of_dirname (Repository.address r) in
+  let download_archive address nv =
+    let remote_repo = Path.R.of_dirname address in
     let remote_file = Path.R.archive remote_repo nv in
-    let state = make_state r in
+    let state = make_state address in
     if not (Filename.Map.mem remote_file state.remote_local) then
       Not_available
     else begin
@@ -136,20 +139,18 @@ module B = struct
     end
 
   (* XXX: use checksums *)
-  let download_file r nv remote_file =
-    let root = Path.R.create r in
-    let local_dir = Path.R.tmp_dir root nv in
-    match Filename.download remote_file local_dir with
+  let download_file nv remote_file =
+    match Filename.download remote_file (Dirname.cwd ()) with
     | None   -> Not_available
     | Some f -> Result f
 
   let not_supported action =
     failwith (action ^ " is not supported by CURL backend")
 
-  let download_dir r nv remote_dir =
+  let download_dir r nv =
     not_supported "download_dir"
 
-  let upload_dir state remote_dir =
+  let upload_dir ~address remote_dir =
     not_supported "upload"
 
 end

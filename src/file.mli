@@ -377,7 +377,7 @@ module URL: sig
 end
 
 (** {2 urls.txt file *} *)
-module Urls_txt: IO_FILE with type t = (basename * int * string) list
+module Urls_txt: IO_FILE with type t = Remote_file.Set.t
 
 (** List of filenames *)
 module Filenames: IO_FILE with type t = Filename.Set.t

@@ -15,7 +15,7 @@
 
 let log fmt = Globals.log "TYPES" fmt
 
-module type Abstract = sig
+module type ABSTRACT = sig
   type t
   val of_string: string -> t
   val to_string: t -> string
@@ -110,12 +110,12 @@ end
 (* Filenames *)
 
 (* Basenames *)
-module Basename: Abstract = Base
+module Basename: ABSTRACT = Base
 type basename = Basename.t
 
 (* Absolute directory names *)
 module Dirname: sig
-  include Abstract
+  include ABSTRACT
   val cwd: unit -> t
   val rmdir: t -> unit
   val mkdir: t -> unit
@@ -217,7 +217,7 @@ end
 type dirname = Dirname.t
 
 (* Raw file contents *)
-module Raw: Abstract = Base
+module Raw: ABSTRACT = Base
 type raw = Raw.t
 
 (* Keep a link to [Filename] for the standard library *)
@@ -226,7 +226,7 @@ module F = Filename
 module Stdlib_filename = F
 
 module Filename: sig
-  include Abstract
+  include ABSTRACT
   val create: dirname -> basename -> t
   val of_basename: basename -> t
   val dirname: t -> dirname
@@ -421,11 +421,11 @@ let (//) d1 s2 =
 (* Package name and versions *)
 
 (* Versions *)
-module V: Abstract = Base
+module V: ABSTRACT = Base
 type version = V.t
 
 (* Names *)
-module N: Abstract = struct
+module N: ABSTRACT = struct
   type t = string
   let of_string x = x
   let to_string x = x
@@ -444,7 +444,7 @@ end
 type name = N.t
 
 module NV: sig
-  include Abstract
+  include ABSTRACT
   val name: t -> name
   val version: t -> version
   val create: name -> version -> t
@@ -550,7 +550,7 @@ type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
 
 (* OCaml version *)
 module OCaml_V: sig
-  include Abstract
+  include ABSTRACT
   val current: unit -> t option
   val compare: t -> relop -> t -> bool
 end = struct
@@ -573,16 +573,16 @@ end = struct
 
 end
 
-module Alias: Abstract = Base
+module Alias: ABSTRACT = Base
 
 (* OPAM version *)
-module OPAM_V: Abstract = Base
+module OPAM_V: ABSTRACT = Base
 
 (* Repositories *)
 
 (* OPAM repositories *)
 module Repository: sig
-  include Abstract
+  include ABSTRACT
   val create: name:string -> kind:string -> address:string -> t
   val default: t
   val name: t -> string
@@ -642,7 +642,7 @@ type repository = Repository.t
 
 (* Variable names are used in .config files *)
 module Variable: sig
-  include Abstract
+  include ABSTRACT
   val installed: t
   val enable: t
 end = struct
@@ -662,7 +662,7 @@ let string_of_variable_contents = function
   | S s -> s
 
 module Section: sig
-  include Abstract
+  include ABSTRACT
   module G : Graph.Sig.I with type V.t = t
   val graph_iter : (G.V.t -> unit) -> G.t -> unit
 end = struct
@@ -680,7 +680,7 @@ end
 type section = Section.t
 
 module Full_section: sig
-  include Abstract
+  include ABSTRACT
   val package: t -> name
   val section: t -> section option
   val create: name -> section -> t
@@ -730,7 +730,7 @@ end
 type full_section = Full_section.t
 
 module Full_variable: sig
-  include Abstract
+  include ABSTRACT
   val create_local: name -> section -> variable -> t
   val create_global: name -> variable -> t
   val package: t -> name
@@ -899,3 +899,46 @@ type ocaml_constraint = relop * OCaml_V.t
 let string_of_atom_formula = function
   | ((n,_), None)       -> n
   | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c
+
+module Remote_file: sig
+  include ABSTRACT
+  val base: t -> basename
+  val md5: t -> string
+  val perm: t -> int option
+  val create: basename -> string -> int -> t
+end = struct
+
+  type t = {
+    base: basename;
+    md5 : string;
+    perm: int option;
+  }
+
+  let base t = t.base
+  let md5 t = t.md5
+  let perm t = t.perm
+
+  let create base md5 perm =
+    { base; md5; perm=Some perm }
+
+  let to_string t =
+    let perm = match t.perm with
+      | None   -> ""
+      | Some p -> Printf.sprintf " o%o" p in
+    Printf.sprintf "%s %s%s" (Basename.to_string t.base) t.md5 perm
+
+  let of_string s =
+    match Utils.split s ' ' with
+    | [base; md5]      -> { base=Basename.of_string base; md5; perm=None }
+    | [base;md5; perm] -> { base=Basename.of_string base; md5; perm=Some (int_of_string perm) }
+    | k                -> Globals.error_and_exit "Remote_file: %s" (String.concat " " k)
+
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let to_string = to_string
+    let compare = compare
+  end
+  module Set = Set.Make(O)
+  module Map = Map.Make(O)
+end

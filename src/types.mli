@@ -18,9 +18,9 @@
 (** {2 Abstract types} *)
 
 (** All abstract types should implement this signature *)
-module type Abstract = sig
+module type ABSTRACT = sig
 
-  (** Abstract type *)
+  (** ABSTRACT type *)
   type t
 
   (** Create an abstract value from a string *)
@@ -66,7 +66,7 @@ end
 (** {2 Filenames} *)
 
 (** Basenames *)
-module Basename: Abstract
+module Basename: ABSTRACT
 
 (** Shortcut to basename type *)
 type basename = Basename.t
@@ -74,7 +74,7 @@ type basename = Basename.t
 (** Absolute directory names *)
 module Dirname: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Return the current working directory *)
   val cwd: unit -> t
@@ -135,7 +135,7 @@ type dirname = Dirname.t
 val (/): dirname -> string -> dirname
 
 (** Raw file contents *)
-module Raw: Abstract
+module Raw: ABSTRACT
 
 (** Shortcut to raw file content type *)
 type raw = Raw.t
@@ -150,7 +150,7 @@ end
 (** non-directory filenames *)
 module Filename: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Create a filename from a dirname and a basename *)
   val create: dirname -> basename -> t
@@ -268,20 +268,20 @@ val (//): dirname -> string -> filename
 (** {2 Package name and versions} *)
 
 (** Versions *)
-module V: Abstract
+module V: ABSTRACT
 
 (** Shortcut to V.t *)
 type version = V.t
 
 (** Names *)
-module N: Abstract
+module N: ABSTRACT
 
 (** Shortcut to N.t *)
 type name = N.t
 
 (** Package (name x version) pairs *)
 module NV: sig
-  include Abstract
+  include ABSTRACT
 
   (** Return the package name *)
   val name: t -> name
@@ -320,7 +320,7 @@ type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
 
 (** OCaml version *)
 module OCaml_V: sig
-  include Abstract
+  include ABSTRACT
 
   (** Return the version of the compiler currently installed *)
   val current: unit -> t option
@@ -330,14 +330,14 @@ module OCaml_V: sig
 end
 
 (** OPAM version *)
-module OPAM_V: Abstract
+module OPAM_V: ABSTRACT
 
 (** {2 Repositories} *)
 
 (** OPAM repositories *)
 module Repository: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Create a repository *)
   val create: name:string -> kind:string -> address:string -> t
@@ -366,7 +366,7 @@ type repository = Repository.t
 
 (** Variable names are used in .config files *)
 module Variable: sig
-  include Abstract
+  include ABSTRACT
 
   (** the variable [enable] *)
   val enable: t
@@ -381,7 +381,7 @@ type variable = Variable.t
 (** Section names *)
 module Section: sig 
 
-  include Abstract
+  include ABSTRACT
 
   (** Graph of fully-qualified sections *)
   module G : Graph.Sig.I with type V.t = t
@@ -396,7 +396,7 @@ type section = Section.t
 (** Fully qualified sections *)
 module Full_section: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Create a fully qualified section *)
   val create: name -> section -> t
@@ -418,7 +418,7 @@ type full_section = Full_section.t
 (** Fully qualified variables *)
 module Full_variable: sig
 
-  include Abstract
+  include ABSTRACT
   
   (** Create a variable local for a given library/syntax extension *)
   val create_local: name -> section -> variable -> t
@@ -515,7 +515,7 @@ type config =
 val string_of_config: config -> string
 
 (** Compiler aliases *)
-module Alias: Abstract
+module Alias: ABSTRACT
 
 type atom_formula = Debian.Format822.vpkg
 type and_formula = atom_formula list
@@ -525,3 +525,19 @@ val string_of_atom_formula : atom_formula -> string
 
 type cnf_formula = Debian.Format822.vpkgformula
 type ocaml_constraint = relop * OCaml_V.t
+
+module Remote_file: sig
+  include ABSTRACT
+
+  (** Get remote filename *)
+  val base: t -> basename
+  
+  (** MD5 digest or the remote file *)
+  val md5: t -> string
+
+  (** File permission *)
+  val perm: t -> int option
+
+  (** Constructor*)
+  val create: basename -> string -> int -> t
+end

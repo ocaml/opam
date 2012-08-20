@@ -35,18 +35,15 @@ let git_diff local_path =
           (Dirname.to_string local_path)
   )
 
-let git_init local_path remote_path =
-  Dirname.mkdir local_path;
-  Dirname.in_dir local_path (fun () ->
-    let repo = Dirname.to_string remote_path in
-    let err =
-      Run.commands [
-        [ "git" ; "init" ] ;
-        [ "git" ; "remote" ; "add" ; "origin" ; repo ] ;
-      ] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot clone %s" repo
-  )
+let git_init address =
+  let repo = Dirname.to_string address in
+  let err =
+    Run.commands [
+      [ "git" ; "init" ] ;
+      [ "git" ; "remote" ; "add" ; "origin" ; repo ] ;
+    ] in
+  if err <> 0 then
+  Globals.error_and_exit "Cannot clone %s" repo
 
 let check_updates local_path =
   if Dirname.exists (local_path / ".git") then begin
@@ -62,13 +59,8 @@ module B = struct
   let updates r =
     Path.R.root r // "last-git-updates"
 
-  let init r =
-    let local_repo = Path.R.create r in
-    git_init (Path.R.root local_repo) (Repository.address r);
-    File.Filenames.write (updates local_repo) (Filename.Set.empty)
-
-  let check_file r file =
-    let local_repo = Path.R.create r in
+  let check_file file =
+    let local_repo = Path.R.cwd () in
     let updates = File.Filenames.read (updates local_repo) in
     if Filename.Set.mem file updates then
       Result file
@@ -77,41 +69,47 @@ module B = struct
     else
       Not_available
 
-  let download_archive r nv =
-    let local_repo = Path.R.create r in
-    let archive = Path.R.archive local_repo nv in
-    check_file r archive
+  let init address =
+    let local_repo = Path.R.cwd () in
+    git_init address;
+    File.Filenames.write (updates local_repo) (Filename.Set.empty)
 
-  let download_file r nv filename =
-    let local_repo = Path.R.create r in
+  let download_archive address nv =
+    let local_repo = Path.R.cwd () in
+    let archive = Path.R.archive local_repo nv in
+    check_file archive
+
+  let download_file nv filename =
+    let local_repo = Path.R.cwd () in
     let basename = Filename.basename filename in
     let file = Path.R.tmp_dir local_repo nv // Basename.to_string basename in
-    check_file r file
+    check_file file
       
-  let rec download_dir r nv dirname =
-    let local_repo = Path.R.create r in
+  let rec download_dir nv dirname =
+    let local_repo = Path.R.cwd () in
     let basename = Dirname.basename dirname in
     let dir = Path.R.tmp_dir local_repo nv / Basename.to_string basename in
     match check_updates dir with
     | None ->
-        git_init dir dirname;
-        download_dir r nv dirname
+        Dirname.mkdir dir;
+        Dirname.in_dir dir (fun () -> git_init dirname);
+        download_dir nv dirname
     | Some f ->
         if Filename.Set.empty = f then
           Up_to_date dir
         else
           Result dir
       
-  let update r =
-    let local_path = Path.R.root (Path.R.create r) in
+  let update address =
+    let local_path = Dirname.cwd () in
     match check_updates local_path with
     | Some f -> f
     | None   ->
         Globals.error_and_exit
           "The repository %s is not initialized correctly"
-          (Repository.to_string r)
+          (Dirname.to_string local_path)
 
-  let upload_dir state dirname =
+  let upload_dir ~address dirname =
     let files = Filename.rec_list dirname in
     let err = Run.commands [
       [ "git"; "add"; Dirname.to_string dirname; ];

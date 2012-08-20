@@ -52,9 +52,6 @@ tests:
 tests-rsync:
 	$(MAKE) -C tests rsync
 
-tests-server:
-	$(MAKE) -C tests server
-
 tests-git:
 	$(MAKE) -C tests git
 

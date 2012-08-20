@@ -42,14 +42,15 @@ let all, index, packages =
   !all, !index, NV.Set.of_list (List.map NV.of_string !packages)
 
 let () =
-
   let local_path = Dirname.cwd () in
-  let repo = Repository.create ~name:"local" ~kind:"curl" ~address:(Dirname.to_string local_path) in
-  let local_repo = Path.R.create repo in
+  Globals.root_path := Dirname.to_string local_path;
+  let local_repo = Path.R.of_dirname local_path in
 
-  (* Create urls.txt *)
+  (* Read urls.txt *)
   let local_index_file = Filename.of_string "urls.txt" in
-  let urls = List.map (fun f ->
+  let old_index = File.Urls_txt.safe_read local_index_file in
+
+  let new_index = Remote_file.Set.of_list (List.map (fun f ->
     let basename =
       Basename.of_string (Filename.remove_prefix ~prefix:(Dirname.cwd()) f) in
     let perm =
@@ -57,32 +58,29 @@ let () =
       s.Unix.st_perm in
     let digest =
       Digest.to_hex (Digest.file (Filename.to_string f)) in
-    basename, perm, digest
+    Remote_file.create basename digest perm
   ) (Filename.rec_list (Path.R.packages_dir local_repo)
    @ Filename.list (Path.R.archives_dir local_repo)
    @ Filename.list (Path.R.compilers_dir local_repo)
-  ) in
-  File.Urls_txt.write local_index_file urls;
+  )) in
+  File.Urls_txt.write local_index_file new_index;
 
-  let module B = (val Repositories.find_backend repo: Repositories.BACKEND) in
-  let updates = B.update repo in
-  let packages =
-    NV.Set.of_list (Utils.filter_map NV.of_filename (Filename.Set.elements updates)) in
+  let nv_set_of_remotes remotes =
+    let aux r = Filename.create (Dirname.cwd ()) (Remote_file.base r) in
+    let list = List.map aux (Remote_file.Set.elements remotes) in
+    NV.Set.of_list (Utils.filter_map NV.of_filename list) in
+  let to_remove = nv_set_of_remotes (Remote_file.Set.diff old_index new_index) in
+  let to_add = nv_set_of_remotes (Remote_file.Set.diff new_index old_index) in
 
-  (* Update the archive files *)
+  (* Remove the old archive files *)
   NV.Set.iter (fun nv ->
-    Globals.msg "Updating %s as some file have changed\n" (NV.to_string nv);
-    if Filename.exists (Path.R.archive local_repo nv) then
-      Repositories.download repo nv
-  ) packages;
+    let archive = Path.R.archive local_repo nv in
+    Globals.msg "Removing %s" (Filename.to_string archive);
+    Filename.remove archive
+  ) to_remove;
 
-  (* Create the archives asked by the user *)
-  NV.Set.iter (fun nv ->
-    if not index && (all || NV.Set.mem nv packages) then begin
-      Globals.msg "Creating archive for %s\n" (NV.to_string nv);
-      Repositories.download repo nv
-    end
-  ) packages;
+  let to_add = NV.Set.inter packages to_add in
+  NV.Set.iter Repositories.make_archive to_add;
 
   (* Create index.tar.gz *)
   let err = Run.command [

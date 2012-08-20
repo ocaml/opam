@@ -13,18 +13,21 @@ let trim = function
 
 let rsync ?(delete=true) src dst =
   log "rsync: delete:%b src:%s dst:%s" delete src dst;
-  Run.mkdir src;
-  Run.mkdir dst;
-  let delete = if delete then ["--delete"] else [] in
-  match
-    Run.read_command_output (["rsync" ; "-arv"; src; dst] @ delete)
-  with
-  | None   -> Not_available
-  | Some l -> match trim l with
-    | []    -> Up_to_date []
-    | lines ->
-        List.iter (fun f -> log "updated: %s %s" (Run.cwd ()) f) lines;
-        Result lines
+  if src <> dst then (
+    Run.mkdir src;
+    Run.mkdir dst;
+    let delete = if delete then ["--delete"] else [] in
+    match
+      Run.read_command_output (["rsync" ; "-arv"; src; dst] @ delete)
+    with
+    | None   -> Not_available
+    | Some l -> match trim l with
+      | []    -> Up_to_date []
+      | lines ->
+          List.iter (fun f -> log "updated: %s %s" (Run.cwd ()) f) lines;
+          Result lines
+  ) else
+    Up_to_date []
 
 let rsync_dirs ?delete src dst =
   let src_s = Dirname.to_string src + "" in
@@ -53,7 +56,7 @@ let rsync_file src dst =
   | None   -> Not_available
   | Some l -> match trim l with
     | []  -> Up_to_date dst
-    | [x] -> assert (Filename.to_string dst = x); Result dst
+    | [x] -> Result dst
     | l   ->
         Globals.error_and_exit
           "unknown rsync output: {%s}"
@@ -63,29 +66,29 @@ module B = struct
 
   let init r = ()
 
-  let download_file r nv remote_file =
-    let local_repo = Path.R.create r in
+  let download_file nv remote_file =
+    let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let tmp_dir = Path.R.tmp_dir local_repo nv in
     let local_file = Filename.create tmp_dir (Filename.basename remote_file) in
     rsync_file remote_file local_file
 
-  let download_dir r nv remote_dir =
-    let local_repo = Path.R.create r in
+  let download_dir nv remote_dir =
+    let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let tmp_dir = Path.R.tmp_dir local_repo nv in
     let local_dir = tmp_dir / Basename.to_string (Dirname.basename remote_dir) in
     rsync_dirs ~delete:true remote_dir local_dir
 
-  let download_archive r nv =
-    let remote_repo = Path.R.of_dirname (Repository.address r) in
+  let download_archive address nv =
+    let remote_repo = Path.R.of_dirname address in
     let remote_file = Path.R.archive remote_repo nv in
-    let local_repo = Path.R.create r in
+    let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let local_file = Path.R.archive local_repo nv in
     rsync_file remote_file local_file
 
 
-  let update r =
-    let remote_repo = Path.R.of_dirname (Repository.address r) in
-    let local_repo = Path.R.create r in
+  let update address =
+    let remote_repo = Path.R.of_dirname address in
+    let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let sync_dir fn =
       match rsync_dirs ~delete:true (fn remote_repo) (fn local_repo) with
       | Not_available
@@ -96,7 +99,7 @@ module B = struct
     let archives =
       let available_packages = Path.R.available_packages local_repo in
       let updates = NV.Set.filter (fun nv ->
-        match download_archive r nv with
+        match download_archive address nv with
         | Not_available -> true
         | Up_to_date _  -> false
         | Result _      -> true
@@ -107,8 +110,8 @@ module B = struct
     ++ sync_dir Path.R.packages_dir
     ++ sync_dir Path.R.compilers_dir
 
-  let upload_dir r local_dir =
-    let remote_repo = Path.R.of_dirname (Repository.address r) in
+  let upload_dir ~address local_dir =
+    let remote_repo = Path.R.of_dirname address in
     let remote_dir = Path.R.root remote_repo in
     (* we assume that rsync is only used locally *)
     if Dirname.exists (Dirname.dirname remote_dir)
@@ -119,7 +122,7 @@ module B = struct
       | Not_available ->
           Globals.error_and_exit "Cannot upload %s to %s"
             (Dirname.to_string local_dir)
-            (Repository.to_string r)
+            (Dirname.to_string address)
       | Up_to_date _ -> Filename.Set.empty
       | Result dir   ->
           let files = Filename.rec_list dir in

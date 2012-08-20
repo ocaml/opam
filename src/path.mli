@@ -180,6 +180,9 @@ module R: sig
   (** Transform a directory name into a repository path *)
   val of_dirname: dirname -> t
 
+  (** Create a repository path with the current working directory *)
+  val cwd: unit -> t
+
   (** Return the repository folder: {i $opam/repo/$repo} *)
   val root: t -> dirname
 

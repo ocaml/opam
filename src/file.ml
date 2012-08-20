@@ -102,22 +102,21 @@ module Urls_txt = struct
 
   let internal = "urls-txt"
 
-  type t = (basename * int * string) list
+  type t = Remote_file.Set.t
 
-  let empty = []
+  let empty = Remote_file.Set.empty
 
   let of_string f s =
     let lines = Lines.of_string f s in
-    Utils.filter_map (function
-      | []                 -> None
-      | [name;perm;digest] -> Some (Basename.of_string name, int_of_string perm, digest)
-      | s                  ->
-          Globals.error_and_exit "%s is not a valid index entry" (String.concat " " s)
-    ) lines
+    let rs = Utils.filter_map (function
+      | [] -> None
+      | l  -> Some (Remote_file.of_string (String.concat " " l))
+    ) lines in
+    Remote_file.Set.of_list rs
 
   let to_string f t =
     let lines =
-      List.map (fun (f,p,d) -> [Basename.to_string f; Printf.sprintf "0o%o" p; d]) t in
+      List.map (fun r -> [Remote_file.to_string r]) (Remote_file.Set.elements t) in
     Lines.to_string f lines
 
 end

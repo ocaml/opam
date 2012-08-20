@@ -7,18 +7,10 @@ BIN       = $(TEST_DIR)/OPAM.BIN
 REPO      = test
 REPOKIND ?= rsync
 
-# To test OPAM server repositories
-OPAM_SERVER_ROOT = $(TEST_DIR)/OPAM.SERVER
-OPAM_SERVER      = 127.0.0.1
-
 # To test GIT repo
 OPAM_GIT = $(TEST_DIR)/OPAM.GIT
 
-BINARIES  = opam opam-server opam-check \
-	    opam-rsync-init  opam-rsync-update  opam-rsync-download  opam-rsync-upload \
-	    opam-server-init opam-server-update opam-server-download opam-server-upload \
-	    opam-git-init    opam-git-update    opam-git-download    opam-git-upload \
-	    opam-curl-init   opam-curl-update   opam-curl-download   opam-curl-upload
+BINARIES  = opam-check opam
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
@@ -33,9 +25,9 @@ BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
-.PHONY: all rsync server git
+.PHONY: all rsync git
 
-all: rsync server git
+all: rsync git
 	@
 
 run:
@@ -63,14 +55,6 @@ run:
 rsync:
 	$(MAKE) REPOKIND=rsync run
 
-server:
-	$(MAKE) fresh
-	$(MAKE) binaries
-	rm -rf $(OPAM_SERVER_ROOT)
-	($(ENV) opam-server --root $(OPAM_SERVER_ROOT) & \
-	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) run \
-	  && killall opam-server || killall opam-server))
-
 git:
 	$(MAKE) REPOKIND=git run
 
@@ -83,10 +67,8 @@ $(BINARIES_): $(BUILDS)
 binaries: $(BINARIES_)
 
 init:
-ifneq ($(REPOKIND), server)
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
-endif
 ifeq ($(REPOKIND), git)
 	cd $(OPAM_REPO) && git init && \
 	  touch README && git add README && \
@@ -147,11 +129,7 @@ else
 	cd packages && \
 	$(OPAM) upload -opam P5.opam -descr P5/README -archive P5.tar.gz -repo $(REPO)
 endif
-ifeq ($(REPOKIND), server)
-	cp compilers/* $(OPAM_ROOT)/compilers/
-else
 	cp compilers/* $(OPAM_REPO)/compilers/
-endif
 	$(OPAM) update # update the list of available packages with the one being updated
 
 list:
@@ -252,6 +230,4 @@ clean:
 
 fresh:
 	rm -rf $(OPAM_ROOT) $(BIN)
-ifneq ($(REPOKIND), server)
 	rm -rf $(OPAM_REPO) 
-endif
