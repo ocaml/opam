@@ -351,7 +351,7 @@ let update_repo_index t =
     ) available_versions;
   ) repo_index
 
-let update_repo () =
+let update_repo ~show_compilers  =
   log "update_repo";
   let t = load_state () in
   let compilers = Path.G.available_compilers t.global in
@@ -360,7 +360,7 @@ let update_repo () =
   List.iter (fun (r,_) -> Repositories.update r) t.repositories;
 
   (* Display the new compilers available *)
-  List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
+  List.iter (fun (_, r) -> if show_compilers then print_compilers compilers r) t.repositories;
 
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
@@ -374,8 +374,7 @@ let update_repo () =
   ) t.repositories
 
 let update_package () =
-  log "update_package";
-
+  log "update_packages";
   let t = load_state () in
   (* Update the pinned packages *)
   let pinned_updated =
@@ -386,10 +385,12 @@ let update_package () =
               if mem_installed_package_by_name t n then
                 let nv = find_installed_package_by_name t n in
                 let build = Path.C.build t.compiler nv in
+                Globals.msg "Syncronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
+                (* XXX: make it more generic *)
                 if Dirname.exists build then
                   match
                     Run.read_command_output
-                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p; Dirname.to_string build ]
+                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p ^ "/"; Dirname.to_string build ]
                   with
                   | Some o when List.length o > 4 -> Some nv
                   | _ -> None
@@ -462,7 +463,7 @@ let update_package () =
 
 let update () =
   log "update";
-  update_repo ();
+  update_repo ~show_compilers:true;
   update_package ()
 
 (* Return the contents of a fully qualified variable *)
@@ -886,6 +887,7 @@ let proceed_toinstall t nv =
 
 let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
+  Globals.msg "Uninstalling %s ...\n" (NV.to_string nv);
   let name = NV.name nv in
 
   (* Run the remove script *)
@@ -895,9 +897,10 @@ let proceed_todelete t nv =
     let p_build = Path.C.build t.compiler nv in
     if Dirname.exists p_build then
       p_build
-    else
-      let () = Globals.warning "the folder '%s' does not exist anymore" (Dirname.to_string p_build) in
-      Path.G.root t.global in
+    else (
+      Globals.warning "the folder '%s' does not exist anymore" (Dirname.to_string p_build);
+      Path.G.root t.global;
+    ) in
   (* We try to run the remove scripts in the folder where it was extracted
      If it does not exist, we don't really care. *)
   let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root_remove remove in
@@ -999,6 +1002,8 @@ let pinned_path t nv =
   None
 
 let rec proceed_tochange t nv_old nv =
+  Globals.msg "==== %s ====\n" (NV.to_string nv);
+
   (* First, uninstall any previous version *)
   (match nv_old with
   | Some nv_old -> proceed_todelete t nv_old
@@ -1008,9 +1013,13 @@ let rec proceed_tochange t nv_old nv =
   let p_build = Path.C.build t.compiler nv in
   Dirname.rmdir p_build;
   (match pinned_path t nv with
-  | None   -> Filename.extract (get_archive t nv) p_build
+  | None   ->
+      let archive = get_archive t nv in
+      Globals.msg "Extracting ...\n";
+      Filename.extract archive p_build
   | Some p ->
       log "rsyncing locally instead of downloading the archive";
+      Globals.msg "Synchronizing with %s ..." (Dirname.to_string p);
       Dirname.mkdir p_build;
       let err = Dirname.exec p_build [ ["rsync"; "-ar"; Dirname.to_string p; "."] ] in
       log "rsync should be done";
@@ -1037,9 +1046,7 @@ let rec proceed_tochange t nv_old nv =
   let commands = List.map (List.map (substitute_string t))
     (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "[%s] Build commands:\n  %s\n"
-    (NV.to_string nv)
-    (String.concat "\n  " commands_s);
+  Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s);
   let err =
     Dirname.exec
       ~add_to_env:env.add_to_env
@@ -1192,43 +1199,43 @@ module Heuristic = struct
             unknown_package sname)
 
   let apply_solution t sol = 
-(*    Globals.msg "The following solution has been found:\n"; *)
-      print_solution sol;
-      let continue =
-        if Solver.delete_or_update sol then
-          confirm "Continue ?"
-        else
-          true in
+    Globals.msg "The following actions will be performed:\n";
+    print_solution sol;
+    let continue =
+      if Solver.delete_or_update sol then
+        confirm "Continue ?"
+      else
+        true in
 
-      if continue then (
+    if continue then (
 
-        let installed = ref t.installed in
-        let write_installed () =
-          File.Installed.write (Path.C.installed t.compiler) !installed in
+      let installed = ref t.installed in
+      let write_installed () =
+        File.Installed.write (Path.C.installed t.compiler) !installed in
 
-        (* Delete some packages *)
-        (* In case of errors, we try to keep the list of installed packages up-to-date *)
-        List.iter
-          (fun nv ->
-            if NV.Set.mem nv !installed then begin
-              proceed_todelete t nv;
-              installed := NV.Set.remove nv !installed;
-              write_installed ()
-            end)
-          sol.to_remove;
+      (* Delete some packages *)
+      (* In case of errors, we try to keep the list of installed packages up-to-date *)
+      List.iter
+        (fun nv ->
+          if NV.Set.mem nv !installed then begin
+            proceed_todelete t nv;
+            installed := NV.Set.remove nv !installed;
+            write_installed ()
+          end)
+        sol.to_remove;
 
-        (* Install or recompile some packages on the child process *)
-        let child n =
-          let t = load_state () in
-          match action n with
-          | To_change (o, nv) -> proceed_tochange t o nv
-          | To_recompile nv   -> proceed_torecompile t nv
-          | To_delete _       -> assert false in
+      (* Install or recompile some packages on the child process *)
+      let child n =
+        let t = load_state () in
+        match action n with
+        | To_change (o, nv) -> proceed_tochange t o nv
+        | To_recompile nv   -> proceed_torecompile t nv
+        | To_delete _       -> assert false in
 
-        let pre _ = () in
+      let pre _ = () in
 
-        (* Update the installed file in the parent process *)
-        let post n = match action n with
+      (* Update the installed file in the parent process *)
+      let post n = match action n with
         | To_delete _    -> assert false
         | To_recompile _ -> ()
         | To_change (None, nv) ->
@@ -1238,20 +1245,20 @@ module Heuristic = struct
             installed := NV.Set.add nv (NV.Set.remove o !installed);
             write_installed () in
 
-        let error n =
-          let f msg nv =
-            Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
-          match action n with
-          | To_change (Some _, nv) -> f "upgrading/downgrading" nv
-          | To_change (None, nv)   -> f "installing" nv
-          | To_recompile nv        -> f "recompiling" nv
-          | To_delete _            -> assert false in
+      let error n =
+        let f msg nv =
+          Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
+        match action n with
+        | To_change (Some _, nv) -> f "upgrading/downgrading" nv
+        | To_change (None, nv)   -> f "installing" nv
+        | To_recompile nv        -> f "recompiling" nv
+        | To_delete _            -> assert false in
 
-        let cores = File.Config.cores t.config in
-        try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
-        with PA_graph.Parallel.Errors n -> List.iter error n
-      );
-      continue
+      let cores = File.Config.cores t.config in
+      try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
+      with PA_graph.Parallel.Errors n -> List.iter error n
+    );
+    continue
 
   let apply_solutions t = 
     let rec aux = function
@@ -1300,7 +1307,7 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.descr_dir root);
     Dirname.mkdir (Path.G.archives_dir root);
     Dirname.mkdir (Path.G.compilers_dir root);
-    update_repo ();
+    update_repo ~show_compilers:false;
     let ocaml_version = init_ocaml
       (fun alias_p -> 
         Globals.error_and_exit "%s does not exist whereas %s already exists" 

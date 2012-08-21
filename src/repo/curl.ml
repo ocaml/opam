@@ -121,6 +121,7 @@ module B = struct
         log "dowloading %s" (Filename.to_string remote_file);
         let local_dir = Filename.dirname local_file in
         Dirname.mkdir local_dir;
+        Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file); 
         match Filename.download remote_file local_dir with
         | None -> Globals.error_and_exit "Cannot download %s" (Filename.to_string remote_file);
         | Some local_file ->
@@ -140,6 +141,7 @@ module B = struct
 
   (* XXX: use checksums *)
   let download_file nv remote_file =
+    Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file);
     match Filename.download remote_file (Dirname.cwd ()) with
     | None   -> Not_available
     | Some f -> Result f

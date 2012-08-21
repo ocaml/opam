@@ -53,6 +53,10 @@ let starts_with ~prefix s =
   String.length s >= String.length prefix
   && String.sub s 0 (String.length prefix) = prefix
 
+let ends_with ~suffix s =
+  String.length s >= String.length suffix
+  && String.sub s (String.length s - String.length suffix) (String.length suffix) = suffix
+
 let remove_prefix ~prefix s =
   if starts_with prefix s then
     String.sub s (String.length prefix) (String.length s - String.length prefix)

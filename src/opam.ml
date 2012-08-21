@@ -71,6 +71,9 @@ let init =
     | None  ->
         if Sys.file_exists address then
           "rsync"
+        else if Utils.starts_with ~prefix:"git" address
+             || Utils.ends_with ~suffix:"git" address then
+           "git"
         else
           Globals.default_repository_kind
     | Some k -> k in
@@ -330,7 +333,7 @@ let switch =
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 
-(* opam pin [-list|-add <url>|-rm <url>] *)
+(* opam pin [-list|<package> <version>|<package> <path>] *)
 let pin =
   let list = ref false in
 {

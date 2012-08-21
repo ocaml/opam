@@ -33,12 +33,12 @@ let map_reinstall reinstall a =
   | _ -> a
 
 let string_of_action = function
-  | To_change (None, p)   -> Printf.sprintf "Install: %s" (NV.to_string p)
+  | To_change (None, p)   -> Printf.sprintf " - install %s" (NV.to_string p)
   | To_change (Some o, p) ->
-      Printf.sprintf "Update: %s (Remove) -> %s (Install)"
+      Printf.sprintf "- remove %s and install %s"
         (NV.to_string o) (NV.to_string p)
-  | To_recompile p        -> Printf.sprintf "Recompile: %s" (NV.to_string p)
-  | To_delete p           -> Printf.sprintf "Delete: %s" (NV.to_string p)
+  | To_recompile p        -> Printf.sprintf "- recompile %s" (NV.to_string p)
+  | To_delete p           -> Printf.sprintf "- delete %s" (NV.to_string p)
 
 type package_action = {
   cudf: Cudf.package;

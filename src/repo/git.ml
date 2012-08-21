@@ -2,7 +2,8 @@ open Types
 
 let log fmt = Globals.log "GIT" fmt
 
-let git_fetch local_path =
+let git_fetch local_path remote_address =
+  Globals.msg "Fetching %s ...\n" (Dirname.to_string remote_address);
   Dirname.in_dir local_path (fun () ->
     let err = Run.command [ "git" ; "fetch" ; "origin" ] in
     if err <> 0 then
@@ -45,9 +46,9 @@ let git_init address =
   if err <> 0 then
   Globals.error_and_exit "Cannot clone %s" repo
 
-let check_updates local_path =
+let check_updates local_path remote_address=
   if Dirname.exists (local_path / ".git") then begin
-    git_fetch local_path;
+    git_fetch local_path remote_address;
     let files = git_diff local_path in
     git_merge local_path;
     Some files
@@ -85,24 +86,24 @@ module B = struct
     let file = Path.R.tmp_dir local_repo nv // Basename.to_string basename in
     check_file file
       
-  let rec download_dir nv dirname =
+  let rec download_dir nv remote_address =
     let local_repo = Path.R.cwd () in
-    let basename = Dirname.basename dirname in
+    let basename = Dirname.basename remote_address in
     let dir = Path.R.tmp_dir local_repo nv / Basename.to_string basename in
-    match check_updates dir with
+    match check_updates dir remote_address with
     | None ->
         Dirname.mkdir dir;
-        Dirname.in_dir dir (fun () -> git_init dirname);
-        download_dir nv dirname
+        Dirname.in_dir dir (fun () -> git_init remote_address);
+        download_dir nv remote_address
     | Some f ->
         if Filename.Set.empty = f then
           Up_to_date dir
         else
           Result dir
       
-  let update address =
+  let update remote_address =
     let local_path = Dirname.cwd () in
-    match check_updates local_path with
+    match check_updates local_path remote_address with
     | Some f -> f
     | None   ->
         Globals.error_and_exit

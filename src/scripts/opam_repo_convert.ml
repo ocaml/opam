@@ -244,13 +244,25 @@ module OPAM_X = struct
 end
 
 module URL_X = struct
+
   let internal = "url"
-  type t = string
-  let empty = "<none>"
+
+  type t = File.URL.t
+
+  let empty = File.URL.empty
+
   let to_string f t =
-    Raw.of_string (Utils.string_strip t)
+    Raw.of_string (Utils.string_strip (File.URL.url t))
+
   let of_string f t =
-    Utils.string_strip (Raw.to_string t)
+    let remote_file = Utils.string_strip (Raw.to_string t) in
+    let checksum =
+      Dirname.with_tmp_dir (fun tmp_dir ->
+        match Filename.download (Filename.raw remote_file) tmp_dir with
+        | None -> Globals.error_and_exit "Cannot download %s" remote_file
+        | Some local_file -> Digest.to_hex (Digest.file (Filename.to_string local_file))
+      ) in
+    File.URL.create ~checksum remote_file
 end
 
 module type F = sig
@@ -431,6 +443,11 @@ let () =
       ~conflicts:opam3.conflicts ~libraries:opam3.libraries ~syntax:opam3.syntax
       ~others:opam3.others ~ocaml_version:opam3.ocaml_version in
     File.OPAM.write (Path.R.opam t4 nv) opam4;
+    let url3_f = Path_0_3.R.url t3 nv in
+    if Filename.exists url3_f then (
+      let url = File_0_3.URL.read url3_f in
+      File.URL.write (Path.R.url t4 nv) url;
+    );
     let mv_file src dst =
     if Filename.exists (src t3 nv) then
       Filename.move (src t3 nv) (dst t4 nv) in
@@ -438,6 +455,10 @@ let () =
     if Dirname.exists (src t3 nv) then
       Dirname.move (src t3 nv) (dst t4 nv) in
     mv_file Path_0_3.R.descr Path.R.descr;
-    mv_file Path_0_3.R.url Path.R.url;
     mv_dir Path_0_3.R.files Path.R.files;
-  ) (Path_0_3.R.available t3)
+  ) (Path_0_3.R.available t3);
+  Globals.msg "Cleaning-up remaining directories ...\n";
+  Dirname.rmdir (Path_0_3.R.opam_dir t3);
+  Dirname.rmdir (Path_0_3.R.files_dir t3);
+  Dirname.rmdir (Path_0_3.R.descr_dir t3);
+  Dirname.rmdir (Path_0_3.R.url_dir t3)
