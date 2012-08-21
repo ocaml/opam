@@ -37,8 +37,8 @@ let string_of_action = function
   | To_change (Some o, p) ->
       Printf.sprintf "- remove %s and install %s"
         (NV.to_string o) (NV.to_string p)
-  | To_recompile p        -> Printf.sprintf "- recompile %s" (NV.to_string p)
-  | To_delete p           -> Printf.sprintf "- delete %s" (NV.to_string p)
+  | To_recompile p        -> Printf.sprintf " - recompile %s" (NV.to_string p)
+  | To_delete p           -> Printf.sprintf " - delete %s" (NV.to_string p)
 
 type package_action = {
   cudf: Cudf.package;
