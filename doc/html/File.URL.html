@@ -34,4 +34,16 @@
 <pre><span class="keyword">module</span> URL: <code class="code">sig</code> <a href="File.URL.html">..</a> <code class="code">end</code></pre><span id="2_UrlsforOPAMrepositories"><h2>Urls for OPAM repositories</h2></span><br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
-<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type">t -> string</code></pre><pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> string option</code></pre></body></html>
+<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type">t -> string</code></pre><div class="info">
+URL address<br>
+</div>
+<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> string option</code></pre><div class="info">
+Backend kind (could be curl/rsync/git at the moment)<br>
+</div>
+<pre><span id="VALchecksum"><span class="keyword">val</span> checksum</span> : <code class="type">t -> string option</code></pre><div class="info">
+Archive checksum<br>
+</div>
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?checksum:string -> string -> t</code></pre><div class="info">
+Constructor<br>
+</div>
+</body></html>
