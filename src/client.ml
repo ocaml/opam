@@ -992,6 +992,10 @@ let print_env env =
     Globals.msg "%s=%s; export %s;\n" k v k;
   ) env.new_env
 
+let print_env_warning () =
+  Globals.msg "\nTo update your environment variables, you can now run:
+            \n\    $ eval `opam config -env`\n\n"
+
 let pinned_path t nv =
   let name = NV.name nv in
   if N.Map.mem name t.pinned then
@@ -1323,8 +1327,8 @@ let init repo alias ocaml_version cores =
       [ { wish_install
         ; wish_remove = [] 
         ; wish_upgrade = [] } ];
-    let env = get_env (load_state ()) in
-    print_env env
+
+    print_env_warning ()
 
   with e ->
     if not !Globals.debug then
@@ -1803,8 +1807,7 @@ let switch clone alias ocaml_version =
       ; wish_remove = [] 
       ; wish_upgrade = [] } ];
 
-  let env = get_env (load_state ()) in
-  print_env env
+  print_env_warning ()
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
