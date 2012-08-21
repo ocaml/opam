@@ -105,6 +105,9 @@ type solution = {
   to_add   : PA_graph.t;
 }
 
+let solution_is_empty s =
+  s.to_remove = [] && PA_graph.is_empty s.to_add
+
 let print_solution t =
   if t.to_remove = [] && PA_graph.is_empty t.to_add then
     ()
@@ -112,7 +115,7 @@ let print_solution t =
     "No actions will be performed, the current state satisfies the request.\n"*)
   else
     let f = NV.to_string in
-    List.iter (fun p -> Globals.msg "Remove: %s\n" (f p)) t.to_remove;
+    List.iter (fun p -> Globals.msg " - remove %s\n" (f p)) t.to_remove;
     PA_graph.Topological.iter
       (function { action ; _ } -> Globals.msg "%s\n" (string_of_action action))
       t.to_add

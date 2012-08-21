@@ -93,3 +93,11 @@ let split s c =
 let reset_env_value ~prefix v =
   let v = split v ':' in
   List.filter (fun v -> not (starts_with ~prefix v)) v
+
+(* if rsync -arv return 4 lines, this means that no files have changed *)
+let rsync_trim = function
+  | [] -> []
+  | _ :: t ->
+      match List.rev t with
+      | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
+      | _ -> []

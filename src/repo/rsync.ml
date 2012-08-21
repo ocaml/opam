@@ -3,14 +3,6 @@ open Types
 
 let log fmt = Globals.log "RSYNC" fmt
 
-(* if rsync -arv return 4 lines, this means that no files have changed *)
-let trim = function
-  | [] -> []
-  | _ :: t ->
-      match List.rev t with
-      | _ :: _ :: _ :: l -> l
-      | _ -> []
-
 let rsync ?(delete=true) src dst =
   log "rsync: delete:%b src:%s dst:%s" delete src dst;
   if src <> dst then (
@@ -21,7 +13,7 @@ let rsync ?(delete=true) src dst =
       Run.read_command_output (["rsync" ; "-arv"; src; dst] @ delete)
     with
     | None   -> Not_available
-    | Some l -> match trim l with
+    | Some l -> match Utils.rsync_trim l with
       | []    -> Up_to_date []
       | lines ->
           List.iter (fun f -> log "updated: %s %s" (Run.cwd ()) f) lines;
@@ -54,7 +46,7 @@ let rsync_file src dst =
     ]
   with
   | None   -> Not_available
-  | Some l -> match trim l with
+  | Some l -> match Utils.rsync_trim l with
     | []  -> Up_to_date dst
     | [x] -> Result dst
     | l   ->

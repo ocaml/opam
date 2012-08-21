@@ -385,15 +385,18 @@ let update_package () =
               if mem_installed_package_by_name t n then
                 let nv = find_installed_package_by_name t n in
                 let build = Path.C.build t.compiler nv in
-                Globals.msg "Syncronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
+                Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
                 (* XXX: make it more generic *)
                 if Dirname.exists build then
                   match
                     Run.read_command_output
-                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p ^ "/"; Dirname.to_string build ]
+                      [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string build ]
                   with
-                  | Some o when List.length o > 4 -> Some nv
-                  | _ -> None
+                  | None -> None
+                  | Some lines ->
+                      match Utils.rsync_trim lines with
+                      | [] -> None
+                      | l  -> Some nv
                 else
                   None
               else
@@ -885,6 +888,44 @@ let proceed_toinstall t nv =
       end
     ) (File.Dot_install.misc install)
 
+let pinned_path t nv =
+  let name = NV.name nv in
+  if N.Map.mem name t.pinned then
+    match N.Map.find name t.pinned with
+    | Path p -> Some p
+    | _      -> None
+  else
+    None
+
+let get_archive t nv =
+  log "get_archive %s" (NV.to_string nv);
+  let name = NV.name nv in
+  let repo = N.Map.find name t.repo_index in
+  let repo_p = find_repository_path t repo in
+  let repo = find_repository t repo in
+  Repositories.download repo nv;
+  let src = Path.R.archive repo_p nv in
+  let dst = Path.G.archive t.global nv in
+  Filename.link src dst;
+  dst
+
+let extract_package t nv =
+  let p_build = Path.C.build t.compiler nv in
+  Dirname.rmdir p_build;
+  match pinned_path t nv with
+  | None   ->
+      let archive = get_archive t nv in
+      Globals.msg "Extracting ...\n";
+      Filename.extract archive p_build;
+      p_build
+  | Some p ->
+      (* XXX: make it a bit more generic ... *)
+      Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
+      let err = Run.command [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ] in
+      if err <> 0 then
+        Globals.error_and_exit "Cannot synchronize %s with %s." (Dirname.to_string p) (Dirname.to_string p_build);
+      p_build
+
 let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
   Globals.msg "Uninstalling %s ...\n" (NV.to_string nv);
@@ -893,17 +934,12 @@ let proceed_todelete t nv =
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
-  let root_remove = 
-    let p_build = Path.C.build t.compiler nv in
-    if Dirname.exists p_build then
-      p_build
-    else (
-      Globals.warning "the folder '%s' does not exist anymore" (Dirname.to_string p_build);
-      Path.G.root t.global;
-    ) in
+  let p_build = Path.C.build t.compiler nv in
+  if not (Dirname.exists p_build) then
+    ignore (extract_package t nv);
   (* We try to run the remove scripts in the folder where it was extracted
      If it does not exist, we don't really care. *)
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root_remove remove in
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
 
@@ -930,18 +966,6 @@ let proceed_todelete t nv =
   (* Remove .config and .install *)
   Filename.remove (Path.C.install t.compiler name);
   Filename.remove (Path.C.config t.compiler name)
-
-let get_archive t nv =
-  log "get_archive %s" (NV.to_string nv);
-  let name = NV.name nv in
-  let repo = N.Map.find name t.repo_index in
-  let repo_p = find_repository_path t repo in
-  let repo = find_repository t repo in
-  Repositories.download repo nv;
-  let src = Path.R.archive repo_p nv in
-  let dst = Path.G.archive t.global nv in
-  Filename.link src dst;
-  dst
 
 type env = {
   add_to_env : (string * string) list;
@@ -996,15 +1020,6 @@ let print_env_warning () =
   Globals.msg "\nTo update your environment variables, you can now run:
             \n\    $ eval `opam config -env`\n\n"
 
-let pinned_path t nv =
-  let name = NV.name nv in
-  if N.Map.mem name t.pinned then
-  match N.Map.find name t.pinned with
-  | Path p -> Some p
-  | _      -> None
-  else
-  None
-
 let rec proceed_tochange t nv_old nv =
   Globals.msg "==== %s ====\n" (NV.to_string nv);
 
@@ -1014,22 +1029,7 @@ let rec proceed_tochange t nv_old nv =
   | None        -> ());
 
   (* Then, untar the archive *)
-  let p_build = Path.C.build t.compiler nv in
-  Dirname.rmdir p_build;
-  (match pinned_path t nv with
-  | None   ->
-      let archive = get_archive t nv in
-      Globals.msg "Extracting ...\n";
-      Filename.extract archive p_build
-  | Some p ->
-      log "rsyncing locally instead of downloading the archive";
-      Globals.msg "Synchronizing with %s ..." (Dirname.to_string p);
-      Dirname.mkdir p_build;
-      let err = Dirname.exec p_build [ ["rsync"; "-ar"; Dirname.to_string p; "."] ] in
-      log "rsync should be done";
-      if err <> 0 then
-        Globals.error_and_exit "Cannot rsync with %s" (Dirname.to_string p));
-
+  let p_build = extract_package t nv in
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
 
   (* Substitute the configuration files. We should be in the right
@@ -1065,19 +1065,22 @@ let rec proceed_tochange t nv_old nv =
       raise e
   else (
     proceed_todelete t nv;
-    (match nv_old with 
-      | Some nv_old -> 
-        if nv_old = nv then 
-          Globals.error "Recompilation failed" 
-        else 
+    let p_build = extract_package t nv in
+    match nv_old with 
+    | None        ->
+        Globals.error_and_exit "Compilation failed in %s." (Dirname.to_string p_build)
+    | Some nv_old -> 
+        if nv_old = nv then
+          Globals.error_and_exit "Recompilation failed in %s."  (Dirname.to_string p_build)
+        else
           (* try to restore the previous erased [nv_old] version *)
-          (try proceed_tochange t None nv_old with
-            | _ -> 
-              Globals.error "Restoration of previous version failed" 
-                (* determine if it is because some dependencies have been deleted or not... *))
-      | None -> ());
-    Globals.error_and_exit
-      "Compilation failed with error %d" err
+          try
+            Globals.error "Compilation of %s failed in %s. Restoring previous working version (%s) ..."
+              (NV.to_string nv) (Dirname.to_string p_build) (NV.to_string nv_old);
+            proceed_tochange t None nv_old
+          with _ ->
+            (* XXX: determine if it is because some dependencies have been deleted or not... *)
+            Globals.error_and_exit "Restoring %s failed" (NV.to_string nv_old) 
   )
 
 (* We need to clean-up things before recompiling. *)
@@ -1203,66 +1206,70 @@ module Heuristic = struct
             unknown_package sname)
 
   let apply_solution t sol = 
-    Globals.msg "The following actions will be performed:\n";
-    print_solution sol;
-    let continue =
-      if Solver.delete_or_update sol then
-        confirm "Continue ?"
-      else
-        true in
+    if Solver.solution_is_empty sol then
+      true
+    else (
+      Globals.msg "The following actions will be performed:\n";
+      print_solution sol;
+      let continue =
+        if Solver.delete_or_update sol then
+          confirm "Continue ?"
+        else
+          true in
 
-    if continue then (
+      if continue then (
 
-      let installed = ref t.installed in
-      let write_installed () =
-        File.Installed.write (Path.C.installed t.compiler) !installed in
+        let installed = ref t.installed in
+        let write_installed () =
+          File.Installed.write (Path.C.installed t.compiler) !installed in
 
-      (* Delete some packages *)
-      (* In case of errors, we try to keep the list of installed packages up-to-date *)
-      List.iter
-        (fun nv ->
-          if NV.Set.mem nv !installed then begin
-            proceed_todelete t nv;
-            installed := NV.Set.remove nv !installed;
-            write_installed ()
-          end)
-        sol.to_remove;
+        (* Delete some packages *)
+        (* In case of errors, we try to keep the list of installed packages up-to-date *)
+        List.iter
+          (fun nv ->
+            if NV.Set.mem nv !installed then begin
+              proceed_todelete t nv;
+              installed := NV.Set.remove nv !installed;
+              write_installed ()
+            end)
+          sol.to_remove;
 
-      (* Install or recompile some packages on the child process *)
-      let child n =
-        let t = load_state () in
-        match action n with
-        | To_change (o, nv) -> proceed_tochange t o nv
-        | To_recompile nv   -> proceed_torecompile t nv
-        | To_delete _       -> assert false in
+        (* Install or recompile some packages on the child process *)
+        let child n =
+          let t = load_state () in
+          match action n with
+          | To_change (o, nv) -> proceed_tochange t o nv
+          | To_recompile nv   -> proceed_torecompile t nv
+          | To_delete _       -> assert false in
 
-      let pre _ = () in
+        let pre _ = () in
 
-      (* Update the installed file in the parent process *)
-      let post n = match action n with
-        | To_delete _    -> assert false
-        | To_recompile _ -> ()
-        | To_change (None, nv) ->
-            installed := NV.Set.add nv !installed;
-            write_installed ()
-        | To_change (Some o, nv)   ->
-            installed := NV.Set.add nv (NV.Set.remove o !installed);
-            write_installed () in
+        (* Update the installed file in the parent process *)
+        let post n = match action n with
+          | To_delete _    -> assert false
+          | To_recompile _ -> ()
+          | To_change (None, nv) ->
+              installed := NV.Set.add nv !installed;
+              write_installed ()
+          | To_change (Some o, nv)   ->
+              installed := NV.Set.add nv (NV.Set.remove o !installed);
+              write_installed () in
 
-      let error n =
-        let f msg nv =
-          Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
-        match action n with
-        | To_change (Some _, nv) -> f "upgrading/downgrading" nv
-        | To_change (None, nv)   -> f "installing" nv
-        | To_recompile nv        -> f "recompiling" nv
-        | To_delete _            -> assert false in
+        let error n =
+          let f msg nv =
+            Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
+          match action n with
+          | To_change (Some _, nv) -> f "upgrading/downgrading" nv
+          | To_change (None, nv)   -> f "installing" nv
+          | To_recompile nv        -> f "recompiling" nv
+          | To_delete _            -> assert false in
 
-      let cores = File.Config.cores t.config in
-      try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
-      with PA_graph.Parallel.Errors n -> List.iter error n
-    );
-    continue
+        let cores = File.Config.cores t.config in
+        try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
+        with PA_graph.Parallel.Errors n -> List.iter error n
+      );
+      continue
+    )
 
   let apply_solutions t = 
     let rec aux = function
@@ -1700,8 +1707,15 @@ let pin action =
   let pins = File.Pinned.safe_read pin_f in
   let update_config pins = File.Pinned.write pin_f pins in
   let name = action.pin_package in
+  if mem_installed_package_by_name t name then (
+    let reinstall_f = Path.C.reinstall t.compiler in
+    let reinstall = File.Reinstall.safe_read reinstall_f in
+    let nv = find_installed_package_by_name t name in
+    File.Reinstall.write reinstall_f (NV.Set.add nv reinstall)
+  );
   match action.pin_arg with
-  | Unpin  -> update_config (N.Map.remove name pins)
+  | Unpin  ->
+      update_config (N.Map.remove name pins);
   | Version _ | Path _ ->
       if N.Map.mem name pins then
         Globals.error_and_exit "%s is already associated to %s"
