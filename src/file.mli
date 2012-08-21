@@ -368,9 +368,17 @@ module URL: sig
 
   include IO_FILE
 
+  (** URL address *)
   val url: t -> string
 
+  (** Backend kind (could be curl/rsync/git at the moment) *)
   val kind: t -> string option
+
+  (** Archive checksum *)
+  val checksum: t -> string option
+
+  (** Constructor *)
+  val create: ?checksum:string -> string -> t
 
 end
 

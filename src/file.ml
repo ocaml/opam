@@ -137,26 +137,52 @@ module URL = struct
     checksum= None;
   }
 
+  let s_archive = "archive"
+  let s_checksum = "checksum"
+  let s_git = "git"
+
+  let valid_fields = [
+    s_archive;
+    s_checksum;
+    s_git;
+  ]
+
+  let of_string filename str =
+    let s = Syntax.of_string filename str in
+    Syntax.check s valid_fields;
+    let archive = assoc_option s.contents s_archive parse_string in
+    let git = assoc_option s.contents s_git parse_string in
+    let checksum = assoc_option s.contents s_checksum parse_string in
+    let url, kind = match archive, git with
+      | None  , None   -> Globals.error_and_exit "Missing URL"
+      | Some x, None   -> x, None
+      | None  , Some x -> x, Some "git"
+      | _ -> Globals.error_and_exit "Too many URLS" in
+    { url; kind; checksum }
+
+  let to_string filename t =
+    let url_name = match t.kind with
+      | Some "git"   -> "git"
+      | Some "curl"
+      | Some "rsync"
+      | None         -> "archive"
+      | Some x -> Globals.error_and_exit "%s is an unknown backend" x in
+    let s = {
+      filename = Filename.to_string filename;
+      contents = [
+        Variable (url_name , String t.url);
+      ] @ match t.checksum with
+        | None   -> []
+        | Some c -> [Variable (s_checksum, String c)]
+    } in
+    Syntax.to_string filename s
+
   let url t = t.url
   let kind t = t.kind
+  let checksum t = t.checksum
 
-  let of_string f s =
-    let lines = Lines.of_string f s in
-    let lines = Utils.filter_map (function
-      | []         -> None
-      | [url]      -> Some {url; kind=None; checksum=None}
-      | [url;kind] -> Some {url; kind=Some kind; checksum=None}
-      | h          -> Globals.error_and_exit "%s is not a valid url" (String.concat " " h)
-    ) lines in
-    match lines with
-    | [x] -> x
-    | _   -> Globals.error_and_exit "too many lines (%d)" (List.length lines)
-
-  let to_string f t =
-    let line = match t.kind with
-      | None   -> [t.url]
-      | Some k -> [t.url; k] in
-    Lines.to_string f [line]
+  let create ?checksum url =
+    { url; checksum; kind = None }
 
 end
 
