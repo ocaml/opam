@@ -47,21 +47,7 @@ let () =
   (* Read urls.txt *)
   let local_index_file = Filename.of_string "urls.txt" in
   let old_index = File.Urls_txt.safe_read local_index_file in
-
-  let new_index = Remote_file.Set.of_list (List.map (fun f ->
-    let basename =
-      Basename.of_string (Filename.remove_prefix ~prefix:(Dirname.cwd()) f) in
-    let perm =
-      let s = Unix.stat (Filename.to_string f) in
-      s.Unix.st_perm in
-    let digest =
-      Digest.to_hex (Digest.file (Filename.to_string f)) in
-    Remote_file.create basename digest perm
-  ) (Filename.rec_list (Path.R.packages_dir local_repo)
-   @ Filename.list (Path.R.archives_dir local_repo)
-   @ Filename.list (Path.R.compilers_dir local_repo)
-  )) in
-  File.Urls_txt.write local_index_file new_index;
+  let new_index = Curl.make_urls_txt local_repo in
 
   let to_remove = Remote_file.Set.diff old_index new_index in
   let to_add = Remote_file.Set.diff new_index old_index in
@@ -99,12 +85,6 @@ let () =
   NV.Set.iter Repositories.make_archive to_add;
 
   (* Create index.tar.gz *)
-  let dirs = [ "compilers"; "packages"; "archives" ] in
-  let dirs = List.filter Sys.file_exists dirs in
-  let err = Run.command [
-    "sh"; "-c"; "tar cz " ^ (String.concat " " dirs) ^ "> index.tar.gz"
-  ] in
-  if err <> 0 then
-    Globals.error_and_exit "Cannot create index.tar.gz";
+  Curl.make_index_tar_gz local_repo;
 
   Unix.rmdir "log"

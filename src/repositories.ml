@@ -72,10 +72,22 @@ let upload r =
   ) packages
 
 (* Download file f in the current directory *)
+let map fn = function
+  | Result x      -> Result (fn x)
+  | Up_to_date x  -> Up_to_date (fn x)
+  | Not_available -> Not_available
+
 let download_file k nv f =
   log "download_file %s %s %s" k (NV.to_string nv) (Filename.to_string f);
   let module B = (val find_backend_by_kind k: BACKEND) in
-  B.download_file nv f
+  let rename file =
+    if Run.is_github_tarball (Filename.to_string f) then
+      let new_file = Filename.raw (Filename.to_string file ^ ".tar.gz") in
+      Filename.move file new_file;
+      new_file
+    else
+      file in
+  map rename (B.download_file nv f)
 
 (* Download directory d in the current directory *)
 let download_dir k nv d =
@@ -85,13 +97,9 @@ let download_dir k nv d =
 
 (* Download either a file or a directory in the current directory *)
 let download_one k nv url =
-  let map fn = function
-    | Result x      -> Result (fn x)
-    | Up_to_date x  -> Up_to_date (fn x)
-    | Not_available -> Not_available in
   let f x = F x in
   let d x = D x in
-  if Run.is_tar_archive url then
+  if Run.is_tar_archive url || Run.is_github_tarball url then
     map f (download_file k nv (Filename.raw url))
   else
     map d (download_dir k nv (Dirname.raw url))

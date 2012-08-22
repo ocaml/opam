@@ -67,7 +67,12 @@ begin program "opam-check"
 end
 
 begin program "opam-repo-convert-0.3"
-  files = [ "src/scripts/opam_repo_convert.ml" ]
+  files = [
+    "src/repo/curl.ml"
+    "src/repo/rsync.ml"
+    "src/repo/git.ml"
+    "src/scripts/opam_repo_convert.ml"
+  ]
   requires = [ "opam-lib" ]
 end
 

@@ -147,15 +147,44 @@ module B = struct
     | Some f -> Result f
 
   let not_supported action =
-    failwith (action ^ " is not supported by CURL backend")
+    failwith (action ^ ": not supported by CURL backend")
 
-  let download_dir r nv =
-    not_supported "download_dir"
+  let download_dir nv dir =
+    not_supported ("Downloading " ^ Dirname.to_string dir)
 
   let upload_dir ~address remote_dir =
-    not_supported "upload"
+    not_supported ("Uploading to " ^ Dirname.to_string remote_dir)
 
 end
 
+let make_urls_txt local_repo =
+  let local_index_file = Filename.of_string "urls.txt" in
+  let index = Remote_file.Set.of_list (List.map (fun f ->
+    let basename =
+      Basename.of_string (Filename.remove_prefix ~prefix:(Dirname.cwd()) f) in
+    let perm =
+      let s = Unix.stat (Filename.to_string f) in
+      s.Unix.st_perm in
+    let digest =
+      Digest.to_hex (Digest.file (Filename.to_string f)) in
+    Remote_file.create basename digest perm
+  ) (Filename.rec_list (Path.R.packages_dir local_repo)
+   @ Filename.list (Path.R.archives_dir local_repo)
+   @ Filename.list (Path.R.compilers_dir local_repo)
+  )) in
+  File.Urls_txt.write local_index_file index;
+  index
+
+let make_index_tar_gz local_repo =
+  Dirname.in_dir (Path.R.root local_repo) (fun () ->
+    let dirs = [ "compilers"; "packages"; "archives" ] in
+    let dirs = List.filter Sys.file_exists dirs in
+    let err = Run.command [
+      "sh"; "-c"; "tar cz " ^ (String.concat " " dirs) ^ "> index.tar.gz"
+    ] in
+    if err <> 0 then
+      Globals.error_and_exit "Cannot create index.tar.gz";
+  )
+    
 let () =
   Repositories.register_backend "curl" (module B : Repositories.BACKEND)

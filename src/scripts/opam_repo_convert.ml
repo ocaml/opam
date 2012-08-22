@@ -455,10 +455,17 @@ let () =
     if Dirname.exists (src t3 nv) then
       Dirname.move (src t3 nv) (dst t4 nv) in
     mv_file Path_0_3.R.descr Path.R.descr;
+    mv_file Path_0_3.R.archive Path.R.archive;
     mv_dir Path_0_3.R.files Path.R.files;
   ) (Path_0_3.R.available t3);
   Globals.msg "Cleaning-up remaining directories ...\n";
   Dirname.rmdir (Path_0_3.R.opam_dir t3);
   Dirname.rmdir (Path_0_3.R.files_dir t3);
   Dirname.rmdir (Path_0_3.R.descr_dir t3);
-  Dirname.rmdir (Path_0_3.R.url_dir t3)
+  Dirname.rmdir (Path_0_3.R.url_dir t3);
+
+  let local_index_file = Filename.of_string "urls.txt" in
+  if Filename.exists local_index_file then (
+    let _index = Curl.make_urls_txt t4 in
+    Curl.make_index_tar_gz t4;
+  )

@@ -96,6 +96,8 @@ val read_command_output:
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool
 
+val is_github_tarball: string -> bool
+
 (** [extract filename dirname] extracts the archive [filename] into
     [dirname]. [dirname] should not exists and [filename] should
     contain only one top-level directory.*)
