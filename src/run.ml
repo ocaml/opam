@@ -117,12 +117,14 @@ let in_dir dir fn =
     raise e
     
 let list kind dir =
-  in_dir dir (fun () ->
-    let d = Sys.readdir (Unix.getcwd ()) in
-    let d = Array.to_list d in
-    let l = List.filter kind d in
-    List.sort compare (List.map (Filename.concat dir) l)
-  )
+  if Sys.file_exists dir then
+    in_dir dir (fun () ->
+      let d = Sys.readdir (Unix.getcwd ()) in
+      let d = Array.to_list d in
+      let l = List.filter kind d in
+      List.sort compare (List.map (Filename.concat dir) l))
+  else
+    []
 
 let files_with_links =
   list (fun f -> try not (Sys.is_directory f) with _ -> true)

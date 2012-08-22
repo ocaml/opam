@@ -157,6 +157,7 @@ let make_archive nv =
     (* And finally create the final archive *)
     (* XXX: we should add a suffix to the version to show that
        the archive has been repacked by opam *)
+    Dirname.mkdir (Path.R.archives_dir local_repo);
     let local_archive = Path.R.archive local_repo nv in
     log "Creating the archive files in %s" (Filename.to_string local_archive);
     let err = Dirname.exec extract_root [

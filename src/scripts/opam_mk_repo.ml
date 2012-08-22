@@ -15,18 +15,16 @@
 
 (* A script helper to initialize an OPAM repo.
    It takes as input a directory where:
-   * opam/                 contains some OPAM files
-   * descr/                contains some description files
+   * packages/             contains packages meta-files
    * archives/             might contain some archive
-   * url/$name.$version    contains archive address
-   * files/$name.$version  contains some files to include in
-                           the archives (typically .config.in
-                           and .install)
+   * compilers/            contains compiler descriptions
 
-   After the script is run, archives/ contains all the package archives
-   for the available descr and OPAM files *)
+   After the script is run with -all, archives/ contains all the
+   package archives for the available package meta-files *)
 
 open Types
+
+let log fmt = Globals.log "OPAM-MK-REPO" fmt
 
 let all, index, packages =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
@@ -65,12 +63,31 @@ let () =
   )) in
   File.Urls_txt.write local_index_file new_index;
 
+  let to_remove = Remote_file.Set.diff old_index new_index in
+  let to_add = Remote_file.Set.diff new_index old_index in
+
   let nv_set_of_remotes remotes =
     let aux r = Filename.create (Dirname.cwd ()) (Remote_file.base r) in
     let list = List.map aux (Remote_file.Set.elements remotes) in
     NV.Set.of_list (Utils.filter_map NV.of_filename list) in
-  let to_remove = nv_set_of_remotes (Remote_file.Set.diff old_index new_index) in
-  let to_add = nv_set_of_remotes (Remote_file.Set.diff new_index old_index) in
+  let new_index = nv_set_of_remotes new_index in
+  let missing_archive =
+    NV.Set.filter (fun nv ->
+      let archive = Path.R.archive local_repo nv in
+      not (Filename.exists archive)
+    ) new_index in
+  let to_remove = nv_set_of_remotes to_remove in
+  let to_add = NV.Set.union (nv_set_of_remotes to_add) missing_archive in
+  let to_add =
+    if NV.Set.is_empty packages then
+      to_add
+    else
+      NV.Set.inter packages to_add in
+
+  if not (NV.Set.is_empty to_remove) then
+    Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
+  if not (NV.Set.is_empty to_add) then
+    Globals.msg "Packages to build: %s\n" (NV.Set.to_string to_add);
 
   (* Remove the old archive files *)
   NV.Set.iter (fun nv ->
@@ -79,12 +96,15 @@ let () =
     Filename.remove archive
   ) to_remove;
 
-  let to_add = NV.Set.inter packages to_add in
   NV.Set.iter Repositories.make_archive to_add;
 
   (* Create index.tar.gz *)
+  let dirs = [ "compilers"; "packages"; "archives" ] in
+  let dirs = List.filter Sys.file_exists dirs in
   let err = Run.command [
-    "sh"; "-c"; "tar cz compilers opam descr > index.tar.gz"
+    "sh"; "-c"; "tar cz " ^ (String.concat " " dirs) ^ "> index.tar.gz"
   ] in
   if err <> 0 then
-    Globals.error_and_exit "Cannot create index.tar.gz"
+    Globals.error_and_exit "Cannot create index.tar.gz";
+
+  Unix.rmdir "log"

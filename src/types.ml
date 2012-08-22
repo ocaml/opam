@@ -488,19 +488,22 @@ end = struct
     else begin
       let base = F.basename f in
       let parent = F.basename (F.dirname f) in
-      match parent with
-      | "."       -> None
-      | "package" -> check base
-      | "file"    ->
-          (* XXX: make it work for sub-folders of packages/files/ *)
-          of_filename (Filename.of_string parent) 
+      match base with
+      | "opam" | "descr" | "url" ->
+          check parent
       | _ ->
           if F.check_suffix base ".opam" then
             check (F.chop_suffix base ".opam")
           else if F.check_suffix base ".tar.gz" then
             check (F.chop_suffix base ".tar.gz")
           else
-             None
+            match parent with
+            | "files" ->
+                let parent2 = F.basename (F.dirname (F.dirname f)) in
+                check parent2
+            | _ ->
+                (* XXX: handle the case with a deeper files hierarchy *)
+                None
     end
 
   let of_dirname d =
@@ -924,7 +927,7 @@ end = struct
   let to_string t =
     let perm = match t.perm with
       | None   -> ""
-      | Some p -> Printf.sprintf " o%o" p in
+      | Some p -> Printf.sprintf " 0o%o" p in
     Printf.sprintf "%s %s%s" (Basename.to_string t.base) t.md5 perm
 
   let of_string s =
