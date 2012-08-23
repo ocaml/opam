@@ -27,7 +27,7 @@ let rsync_dirs ?delete src dst =
   let dst_files0 = Filename.rec_list dst in
   match rsync ?delete src_s dst_s with
   | Not_available -> Not_available
-  | Up_to_date _  -> Up_to_date dst
+  | Up_to_date _  -> Up_to_date []
   | Result lines  ->
       let src_files = Filename.rec_list src in
       let dst_files = Filename.rec_list dst in
@@ -37,7 +37,7 @@ let rsync_dirs ?delete src dst =
         List.iter (fun f -> Globals.msg "dst-file: %s\n" (Filename.to_string f)) dst_files;
         Globals.error_and_exit "rsync_dir failed!"
       );
-      Result dst
+      Result lines
 
 let rsync_file src dst =
   match
@@ -68,7 +68,10 @@ module B = struct
     let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let tmp_dir = Path.R.tmp_dir local_repo nv in
     let local_dir = tmp_dir / Basename.to_string (Dirname.basename remote_dir) in
-    rsync_dirs ~delete:true remote_dir local_dir
+    match rsync_dirs ~delete:true remote_dir local_dir with
+    | Up_to_date _  -> Up_to_date local_dir
+    | Result _      -> Result local_dir
+    | Not_available -> Not_available
 
   let download_archive address nv =
     let remote_repo = Path.R.of_dirname address in
@@ -77,7 +80,6 @@ module B = struct
     let local_file = Path.R.archive local_repo nv in
     rsync_file remote_file local_file
 
-
   let update address =
     let remote_repo = Path.R.of_dirname address in
     let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
@@ -85,8 +87,8 @@ module B = struct
       match rsync_dirs ~delete:true (fn remote_repo) (fn local_repo) with
       | Not_available
       | Up_to_date _ -> Filename.Set.empty
-      | Result dir   ->
-          let files = Filename.rec_list dir in
+      | Result lines ->
+          let files = List.map Filename.of_string lines in
           Filename.Set.of_list files in
     let archives =
       let available_packages = Path.R.available_packages local_repo in
@@ -98,9 +100,10 @@ module B = struct
       ) available_packages in
       List.map (Path.R.archive local_repo) (NV.Set.elements updates) in
     let (++) = Filename.Set.union in
-    Filename.Set.of_list archives
+    let updates = Filename.Set.of_list archives
     ++ sync_dir Path.R.packages_dir
-    ++ sync_dir Path.R.compilers_dir
+    ++ sync_dir Path.R.compilers_dir in
+    updates
 
   let upload_dir ~address local_dir =
     let remote_repo = Path.R.of_dirname address in
@@ -116,8 +119,8 @@ module B = struct
             (Dirname.to_string local_dir)
             (Dirname.to_string address)
       | Up_to_date _ -> Filename.Set.empty
-      | Result dir   ->
-          let files = Filename.rec_list dir in
+      | Result lines ->
+          let files = Filename.rec_list local_dir in
           Filename.Set.of_list files
     else
       Filename.Set.empty
