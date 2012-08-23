@@ -74,3 +74,4 @@ doc: compile
 trailing:
 	find src -name "*.ml*" -exec \
 	  sed -i xxx -e :a -e "/^\n*$$/{$$d;N;ba" -e '}' {} \;
+	find src -name "*xxx" -exec rm {} \;
