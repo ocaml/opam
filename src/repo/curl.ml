@@ -179,7 +179,7 @@ let make_urls_txt local_repo =
 
 let make_index_tar_gz local_repo =
   Dirname.in_dir (Path.R.root local_repo) (fun () ->
-    let dirs = [ "compilers"; "packages"; "archives" ] in
+    let dirs = [ "compilers"; "packages" ] in
     let dirs = List.filter Sys.file_exists dirs in
     let err = Run.command [
       "sh"; "-c"; "tar cz " ^ (String.concat " " dirs) ^ "> index.tar.gz"
