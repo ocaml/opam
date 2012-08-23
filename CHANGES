@@ -1,3 +1,13 @@
+4.0.0 [23 August 2012]
+* #25 better layout of repository files
+* #34 (partial) possibility to specify archive checksums
+* #39 if the archive is not on ocamlpro.com, download it upstream
+* #42 suffix +opam to the versions of archives available on ocamlpro.com
+* #57 prompt the user to evaluate `opam config -env` more often
+* #74 changes in meta-data aren't picked up by the CURL backen
+* more modulare repository system: the 'kind' of repository is no more linked
+  to the kind of package archives
+
 0.3.2 [8 August 2012]
 * fix regression for 'opam switch' introduced in 0.3
 * fix deletion of optional dependencies
