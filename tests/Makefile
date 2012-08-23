@@ -81,27 +81,27 @@ ifeq ($(REPOKIND), git)
 	mkdir -p $(OPAM_REPO)/packages/P1.1
 	cp packages/P1-1.opam     $(OPAM_REPO)/packages/P1.1/opam
 	cp packages/P1-1/README   $(OPAM_REPO)/packages/P1.1/descr
-	echo '$(OPAM_GIT)/P1-1 git' > $(OPAM_REPO)/packages/P1.1/url
+	echo 'git: "$(OPAM_GIT)/P1-1"' > $(OPAM_REPO)/packages/P1.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P1"
 	mkdir -p $(OPAM_REPO)/packages/P2.1
 	cp packages/P2/README     $(OPAM_REPO)/packages/P2.1/descr
 	cp packages/P2.opam       $(OPAM_REPO)/packages/P2.1/opam
-	echo '$(OPAM_GIT)/P2 git'   > $(OPAM_REPO)/packages/P2.1/url
+	echo 'git: "$(OPAM_GIT)/P2"'   > $(OPAM_REPO)/packages/P2.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P2"
 	mkdir -p $(OPAM_REPO)/packages/P3.1~weird-version.test
 	cp packages/P3.opam       $(OPAM_REPO)/packages/P3.1~weird-version.test/opam
 	cp packages/P3/README     $(OPAM_REPO)/packages/P3.1~weird-version.test/descr
-	echo '$(OPAM_GIT)/P3 git'   > $(OPAM_REPO)/packages/P3.1~weird-version.test/url
+	echo 'git: "$(OPAM_GIT)/P3"'   > $(OPAM_REPO)/packages/P3.1~weird-version.test/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P3"
 	mkdir -p $(OPAM_REPO)/packages/P4.1
 	cp packages/P4-1.opam     $(OPAM_REPO)/packages/P4.1/opam
 	cp packages/P4/README     $(OPAM_REPO)/packages/P4.1/descr
-	echo '$(OPAM_GIT)/P4 git'   > $(OPAM_REPO)/packages/P4.1/url
+	echo 'git: "$(OPAM_GIT)/P4"'   > $(OPAM_REPO)/packages/P4.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4"
 	mkdir -p $(OPAM_REPO)/packages/P5.1
 	cp packages/P5.opam       $(OPAM_REPO)/packages/P5.1/opam
 	cp packages/P5/README     $(OPAM_REPO)/packages/P5.1/descr
-	echo '$(OPAM_GIT)/P5 git'   > $(OPAM_REPO)/packages/P5.1/url
+	echo 'git: "$(OPAM_GIT)/P5"'   > $(OPAM_REPO)/packages/P5.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P5"
 	mkdir -p $(OPAM_REPO)/compilers
 	cp compilers/*            $(OPAM_REPO)/compilers/
@@ -167,11 +167,11 @@ ifeq ($(REPOKIND), git)
 	mkdir $(OPAM_REPO)/packages/P4.2
 	cp packages/P4-2.opam   $(OPAM_REPO)/packages/P4.2/opam
 	cp packages/P4/README   $(OPAM_REPO)/packages/P4.2/descr
-	echo '$(OPAM_GIT)/P4 git' > $(OPAM_REPO)/packages/P4.2/url
+	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.2/url
 	mkdir $(OPAM_REPO)/packages/P4.3
 	cp packages/P4-3.opam   $(OPAM_REPO)/packages/P4.3/opam
 	cp packages/P4/README   $(OPAM_REPO)/packages/P4.3/descr
-	echo '$(OPAM_GIT)/P4 git' > $(OPAM_REPO)/packages/P4.3/url
+	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.3/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4.2 and P4.3"
 else
 	cd packages && \
