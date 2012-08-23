@@ -141,8 +141,10 @@ module B = struct
 
   (* XXX: use checksums *)
   let download_file nv remote_file =
+    let local_repo = Path.R.cwd () in
+    let dest_dir = Path.R.tmp_dir local_repo nv in
     Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file);
-    match Filename.download remote_file (Dirname.cwd ()) with
+    match Filename.download remote_file dest_dir with
     | None   -> Not_available
     | Some f -> Result f
 
