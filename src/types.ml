@@ -494,8 +494,8 @@ end = struct
       | _ ->
           if F.check_suffix base ".opam" then
             check (F.chop_suffix base ".opam")
-          else if F.check_suffix base ".tar.gz" then
-            check (F.chop_suffix base ".tar.gz")
+          else if F.check_suffix base "+opam.tar.gz" then
+            check (F.chop_suffix base "+opam.tar.gz")
           else
             match parent with
             | "files" ->

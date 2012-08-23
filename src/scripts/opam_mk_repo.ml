@@ -78,13 +78,18 @@ let () =
   (* Remove the old archive files *)
   NV.Set.iter (fun nv ->
     let archive = Path.R.archive local_repo nv in
-    Globals.msg "Removing %s" (Filename.to_string archive);
+    Globals.msg "Removing %s ...\n" (Filename.to_string archive);
     Filename.remove archive
   ) to_remove;
 
   NV.Set.iter Repositories.make_archive to_add;
 
   (* Create index.tar.gz *)
-  Curl.make_index_tar_gz local_repo;
+  if not (NV.Set.is_empty to_add) && not (NV.Set.is_empty to_remove) then (
+    Globals.msg "Creating index.tar.gz ...\n";
+    Curl.make_index_tar_gz local_repo;
+  ) else
+    Globals.msg "OPAM Repository already up-to-date\n";
 
-  Unix.rmdir "log"
+  Run.remove "log";
+  Run.remove "tmp"
