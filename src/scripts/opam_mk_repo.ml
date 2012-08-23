@@ -26,12 +26,18 @@ open Types
 
 let log fmt = Globals.log "OPAM-MK-REPO" fmt
 
+let version () =
+  Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
+  exit 1
+
 let all, index, packages =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
   let index = ref false in
   let packages = ref [] in
   let specs = Arg.align [
+    ("-v"       , Arg.Unit version, " Display version information");
+    ("--version", Arg.Unit version, " Display version information");
     ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
     ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
   ] in
