@@ -60,7 +60,6 @@ tests-git:
 
 .PHONY: install
 install:
-	rm -f $(BIN)/opam*
 	$(MAKE) $(TARGETS:%=%-install)
 
 doc: compile
