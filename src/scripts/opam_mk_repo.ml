@@ -91,11 +91,12 @@ let () =
     Filename.remove archive
   ) to_remove;
 
+  let errors = ref [] in
   if not index then
-  NV.Set.iter (fun nv ->
-    try Repositories.make_archive nv
-    with _ -> ()
-  ) to_add;
+    NV.Set.iter (fun nv ->
+      try Repositories.make_archive nv
+      with _ -> errors := nv :: !errors;
+    ) to_add;
 
   (* Create index.tar.gz *)
   if not (NV.Set.is_empty to_add) && not (NV.Set.is_empty to_remove) then (
@@ -105,4 +106,8 @@ let () =
     Globals.msg "OPAM Repository already up-to-date\n";
 
   Run.remove "log";
-  Run.remove "tmp"
+  Run.remove "tmp";
+
+  if !errors <> [] then
+    Globals.msg "Got some errors while processing: %s"
+      (String.concat ", " (List.map NV.to_string !errors))
