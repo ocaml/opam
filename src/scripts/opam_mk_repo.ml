@@ -47,10 +47,13 @@ let all, index, packages =
 
 let () =
   let local_path = Dirname.cwd () in
+  log "local_path=%s" (Dirname.to_string local_path);
+
   Globals.root_path := Dirname.to_string local_path;
   let local_repo = Path.R.of_dirname local_path in
 
   (* Read urls.txt *)
+  log "Reading urls.txt";
   let local_index_file = Filename.of_string "urls.txt" in
   let old_index = File.Urls_txt.safe_read local_index_file in
   let new_index = Curl.make_urls_txt local_repo in
