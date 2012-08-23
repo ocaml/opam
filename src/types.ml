@@ -142,7 +142,7 @@ end = struct
     Run.real_path dirname
 
   let to_string dirname =
-    Filename.dirname (Filename.concat dirname "")
+    Filename.concat (Filename.dirname dirname) (Filename.basename dirname)
 
   let raw s = s
 
