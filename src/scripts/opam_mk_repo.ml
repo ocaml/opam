@@ -91,7 +91,8 @@ let () =
     Filename.remove archive
   ) to_remove;
 
-  NV.Set.iter Repositories.make_archive to_add;
+  if not index then
+    NV.Set.iter Repositories.make_archive to_add;
 
   (* Create index.tar.gz *)
   if not (NV.Set.is_empty to_add) && not (NV.Set.is_empty to_remove) then (
