@@ -987,6 +987,22 @@ let proceed_todelete t nv =
   Dirname.rmdir (Path.C.lib t.compiler name);
   Dirname.rmdir (Path.C.build t.compiler nv);
 
+  (* Remove the archive *)
+  let archive = Path.G.archive t.global nv in
+  Filename.remove archive;
+
+  (* Clean-up the repositories *)
+  let repos =
+    try N.Map.find (NV.name nv) t.repo_index
+    with _ -> [] in
+  List.iter (fun r ->
+    let p = find_repository_path t r in
+    let archive = Path.R.archive p nv in
+    let tmp_dir = Path.R.tmp_dir p nv in
+    Filename.remove archive;
+    Dirname.rmdir tmp_dir
+  ) repos;
+    
   (* Remove the binaries *)
   let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
