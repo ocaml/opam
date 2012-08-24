@@ -59,7 +59,7 @@ type t = {
   config: File.Config.t;
 
   (* ~/.opam/repo/index contents *)
-  repo_index: string N.Map.t;
+  repo_index: string list N.Map.t;
 }
 
 let print_state t =
@@ -69,10 +69,6 @@ let print_state t =
         (Repository.to_string r)
         (Dirname.to_string (Path.R.root p)) in
     String.concat ", " (List.map s r) in
-  let string_of_nmap m =
-    let s (n,r) = Printf.sprintf "%s:%s" (N.to_string n) r in
-    let l = N.Map.fold (fun n r l -> s (n,r)::l) m [] in
-    String.concat ", " l in
   log "GLOBAL    : %s" (Dirname.to_string (Path.G.root t.global));
   log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
   log "REPO      : %s" (string_of_repos t.repositories);
@@ -80,7 +76,7 @@ let print_state t =
   log "AVAILABLE_CURRENT : %s" (match t.available_current with None -> "<none>" | Some set -> NV.Set.to_string set);
   log "INSTALLED : %s" (NV.Set.to_string t.installed);
   log "REINSTALL : %s" (NV.Set.to_string t.reinstall);
-  log "REPO_INDEX: %s" (string_of_nmap t.repo_index)
+  log "REPO_INDEX: %s" (N.Map.to_string (String.concat ",") t.repo_index)
 
 let current_ocaml_version t =
   let alias = File.Config.ocaml_version t.config in
@@ -147,7 +143,7 @@ let get_available_current t =
 
 (* - Look into the content of ~/.opam/config to build the client
    state
-   - Also perform the maximum checking of consistency possible *)
+   - Also try to check package consistency as much as possible *)
 let load_state () =
   log "root path is %s" !Globals.root_path;
   let global = Path.G.create () in
@@ -160,9 +156,14 @@ let load_state () =
   let repo_index = 
     let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
     let l_wrong = 
-      List.filter (fun (_, repo) -> 
-        List.for_all (fun (r, _) -> Repository.name r <> repo) repositories)
-        (N.Map.bindings repo_index) in
+      List.fold_left (fun accu (n, repo_s) ->
+        List.fold_left (fun accu repo ->
+          if List.for_all (fun (r, _) -> Repository.name r <> repo) repositories then
+            (n, repo) :: accu
+          else
+            accu
+        ) accu repo_s
+      ) [] (N.Map.bindings repo_index) in
     let () = List.iter 
       (fun (n, repo) ->
         Globals.error "File %S: unbound repository %S associated to name %S" 
@@ -311,17 +312,23 @@ let install_conf_ocaml () =
 
 let update_repo_index t =
 
-  (* If there are new packages, assign them to some repository *)
+  (* Update repo_index *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
       let available = Path.R.available_packages p in
       log "repo=%s packages=%s" (Repository.name r) (NV.Set.to_string available);
       NV.Set.fold (fun nv repo_index ->
         let name = NV.name nv in
+        let repo = Repository.name r in
         if not (N.Map.mem name repo_index) then
-          N.Map.add name (Repository.name r) repo_index
+          N.Map.add name [repo] repo_index
         else
-          repo_index
+          let repo_s = N.Map.find name repo_index in
+          if not (List.mem repo repo_s) then
+            let repo_index = N.Map.remove name repo_index in
+            N.Map.add name (repo_s @ [repo]) repo_index
+          else
+            repo_index
       ) available repo_index
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
@@ -334,21 +341,26 @@ let update_repo_index t =
   install_conf_ocaml ();
   
   (* Create symbolic links from $repo dirs to main dir *)
-  N.Map.iter (fun n r ->
-    let repo_p = find_repository_path t r in
-    let available_versions = Path.R.available_versions repo_p n in
-    V.Set.iter (fun v ->
-      let nv = NV.create n v in
-      let opam_g = Path.G.opam t.global nv in
-      let opam_r = Path.R.opam repo_p nv in
-      let descr_g = Path.G.descr t.global nv in
-      let descr_r = Path.R.descr repo_p nv in
-      Filename.link opam_r opam_g;
-      if Filename.exists descr_r then
-        Filename.link descr_r descr_g
-      else
-        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr_r)
-    ) available_versions;
+  N.Map.iter (fun n repo_s ->
+    let all_versions = ref V.Set.empty in
+    List.iter (fun r ->
+      let repo_p = find_repository_path t r in
+      let available_versions = Path.R.available_versions repo_p n in
+      V.Set.iter (fun v ->
+        if not (V.Set.mem v !all_versions) then (
+          let nv = NV.create n v in
+          let opam_g = Path.G.opam t.global nv in
+          let opam_r = Path.R.opam repo_p nv in
+          let descr_g = Path.G.descr t.global nv in
+          let descr_r = Path.R.descr repo_p nv in
+          Filename.link opam_r opam_g;
+          if Filename.exists descr_r then
+            Filename.link descr_r descr_g
+          else
+           Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr_r)
+        )
+      ) available_versions
+    ) repo_s
   ) repo_index
 
 let update_repo ~show_compilers  =
@@ -408,14 +420,30 @@ let update_package ~show_packages =
   update_repo_index t;
 
   let updated =
-    List.fold_left (fun accu (_,p) ->
-      let updated = File.Updated.safe_read (Path.R.updated p) in
+    N.Map.fold (fun n repo_s accu ->
       (* we do not try to upgrade pinned packages *)
-      let updated =
-        NV.Set.filter (fun nv -> NV.Set.for_all (fun nvp -> NV.name nvp = NV.name nv) pinned_updated) updated in
-      log "updated=%s" (NV.Set.to_string updated);
-      NV.Set.union updated accu;
-    ) NV.Set.empty t.repositories in  
+      if N.Map.mem n t.pinned then
+        accu
+      else (
+        let all_versions = ref V.Set.empty in
+        List.fold_left (fun accu repo ->
+          let p = find_repository_path t repo in
+          let available_versions = Path.R.available_versions p n in
+          let new_versions = V.Set.diff available_versions !all_versions in
+          log "new_versions: %s" (V.Set.to_string new_versions);
+          if not (V.Set.is_empty new_versions) then (
+            all_versions := V.Set.union !all_versions new_versions;
+            let all_updated = File.Updated.safe_read (Path.R.updated p) in
+            let updated =
+              NV.Set.filter (fun nv ->
+                NV.name nv = n && V.Set.mem (NV.version nv) new_versions
+              ) all_updated in
+            NV.Set.union updated accu
+          ) else
+            accu
+        ) accu repo_s
+      )
+    ) t.repo_index NV.Set.empty in  
   if show_packages then
     print_updated t updated pinned_updated;
 
@@ -901,14 +929,24 @@ let pinned_path t nv =
 let get_archive t nv =
   log "get_archive %s" (NV.to_string nv);
   let name = NV.name nv in
-  let repo = N.Map.find name t.repo_index in
-  let repo_p = find_repository_path t repo in
-  let repo = find_repository t repo in
-  Repositories.download repo nv;
-  let src = Path.R.archive repo_p nv in
-  let dst = Path.G.archive t.global nv in
-  Filename.link src dst;
-  dst
+  let rec aux = function
+    | [] ->
+        Globals.error_and_exit
+          "Unable to find a repository containing %s"
+          (NV.to_string nv)
+    | repo :: repo_s ->
+        let repo_p = find_repository_path t repo in
+        let repo = find_repository t repo in
+        let opam_f = Path.R.opam repo_p nv in
+        if Filename.exists opam_f then (
+          Repositories.download repo nv;
+          let src = Path.R.archive repo_p nv in
+          let dst = Path.G.archive t.global nv in
+          Filename.link src dst;
+          dst
+        ) else
+          aux repo_s in
+  aux (N.Map.find name t.repo_index)
 
 let extract_package t nv =
   let p_build = Path.C.build t.compiler nv in
@@ -1458,7 +1496,8 @@ let upload upload repo =
   let repo = match repo with
   | None ->
       if N.Map.mem name t.repo_index then
-        find_repository t (N.Map.find name t.repo_index)
+        (* We upload the package to the first available repository. *)
+        find_repository t (List.hd (N.Map.find name t.repo_index))
       else
         Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
   | Some repo -> 
@@ -1692,11 +1731,11 @@ let remote action =
           Globals.error_and_exit "%s is not a remote index" n in
       update_config (List.filter ((!=) repo) repos);
       let repo_index =
-        N.Map.fold (fun n r repo_index ->
-          if r = Repository.name repo then
-            repo_index
-          else
-            N.Map.add n r repo_index
+        N.Map.fold (fun n repo_s repo_index ->
+          let repo_s = List.filter (fun r -> r <> Repository.name repo) repo_s in
+          match repo_s with
+          | [] -> repo_index
+          | _  -> N.Map.add n repo_s repo_index
         ) t.repo_index N.Map.empty in
         File.Repo_index.write (Path.G.repo_index t.global) repo_index;
       Dirname.rmdir (Path.R.root (Path.R.create repo))

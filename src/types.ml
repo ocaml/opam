@@ -28,17 +28,18 @@ module type ABSTRACT = sig
   end               
   module Map: sig
     include Map.S with type key = t
+    val to_string: ('a -> string) -> 'a t -> string
     val values: 'a t -> 'a list
     val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   end
 end
 
-module Set = struct
+module type OrderedType = sig
+  include Set.OrderedType
+  val to_string: t -> string
+end
 
-  module type OrderedType = sig
-    include Set.OrderedType
-    val to_string: t -> string
-  end
+module Set = struct
 
   module Make (O : OrderedType) = struct
 
@@ -68,8 +69,6 @@ end
 
 module Map = struct
 
-  module type OrderedType = Map.OrderedType
-
   module Make (O : OrderedType) = struct
 
     module M = Map.Make(O)
@@ -85,6 +84,11 @@ module Map = struct
           | Some o1 -> function
               | None -> Some o1
               | Some o2 -> f k o1 o2)
+
+  let to_string string_of_value m =
+    let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
+    let l = fold (fun k v l -> s (k,v)::l) m [] in
+    Printf.sprintf "{ %s }" (String.concat ", " l)
 
   end
 

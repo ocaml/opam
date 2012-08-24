@@ -52,6 +52,9 @@ module type ABSTRACT = sig
 
     include Map.S with type key = t
 
+    (** Pretty-printing *)
+    val to_string: ('a -> string) -> 'a t  -> string
+
     (** Split with [bindings] and return the [snd] component. *)
     val values: 'a t -> 'a list
 
@@ -60,6 +63,7 @@ module type ABSTRACT = sig
     (** WARNING : Besides [key], the function could receive 
         some [v1] and some [v2] such that [v1 = v2] holds. *)
     val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+
   end
 end
 

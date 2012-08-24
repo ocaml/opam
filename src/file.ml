@@ -246,27 +246,25 @@ module Repo_index = struct
     
   let internal = "repo-index"
 
-  type t = string N.Map.t
+  type t = string list N.Map.t
 
   let empty = N.Map.empty
 
   let of_string filename str =
     let lines = Lines.of_string filename str in
     List.fold_left (fun map -> function
-      | [name_s; repo_s] ->
+      | name_s :: repo_s ->
           let name = N.of_string name_s in
           if N.Map.mem name map then
             Globals.error_and_exit "multiple lines for package %s" name_s
           else
             N.Map.add name repo_s map
       | [] -> map
-      | x  ->
-          Globals.error_and_exit "'%s' is not a valid repository index line" (String.concat " " x)
     ) N.Map.empty lines
 
   let to_string filename map =
-    let lines = N.Map.fold (fun name repo lines ->
-      [ N.to_string name; repo] :: lines
+    let lines = N.Map.fold (fun name repo_s lines ->
+      (N.to_string name :: repo_s) :: lines
     ) map [] in
     Lines.to_string filename (List.rev lines)
 
@@ -282,10 +280,14 @@ module Pinned = struct
 
   let of_string filename str =
     let m = Repo_index.of_string filename str in
-    N.Map.map pin_option_of_string m
+    N.Map.map (function
+      | [x] -> pin_option_of_string x
+      | _   -> Globals.error_and_exit "too many pinning options"
+    ) m
 
   let to_string filename map =
-    Repo_index.to_string filename (N.Map.map string_of_pin_option map)
+    let aux x = [ string_of_pin_option x ] in
+    Repo_index.to_string filename (N.Map.map aux map)
 
 end
 

@@ -340,7 +340,7 @@ end
 (** {2 Repository files} *)
 
 (** Association between package names and repository: [$opam/repo/index] *)
-module Repo_index: IO_FILE with type t = string N.Map.t
+module Repo_index: IO_FILE with type t = string list N.Map.t
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
