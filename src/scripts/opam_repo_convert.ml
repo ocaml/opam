@@ -260,7 +260,7 @@ module URL_X = struct
       Dirname.with_tmp_dir (fun tmp_dir ->
         match Filename.download (Filename.raw remote_file) tmp_dir with
         | None -> Globals.error_and_exit "Cannot download %s" remote_file
-        | Some local_file -> Digest.to_hex (Digest.file (Filename.to_string local_file))
+        | Some local_file -> Filename.digest local_file
       ) in
     File.URL.create ~checksum remote_file
 end

@@ -237,7 +237,7 @@ module Filename: sig
   val patch: t -> dirname -> bool
 
   (** Compute the MD5 digest of a file *)
-  val digest: t -> Digest.t
+  val digest: t -> string
 
   (** Create an empty file *)
   val touch: t -> unit

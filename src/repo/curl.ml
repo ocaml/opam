@@ -87,10 +87,13 @@ module B = struct
       (Dirname.to_string state.remote_path);
     if state.local_path <> state.remote_path then begin
       let (--) = Filename.Set.diff in
-      let current = Filename.Set.of_list (Filename.list state.local_path) in
+      let current = Filename.Set.of_list (Filename.rec_list state.local_path) in
       let to_keep = Filename.Set.filter (is_up_to_date state) state.local_files in
       let to_delete = current -- to_keep in
-      let new_files = state.local_files -- to_keep in
+      let archive_dir = Path.R.archives_dir state.local_repo in
+      let new_files =
+        (Filename.Set.filter (fun f -> not (Filename.starts_with archive_dir f)) state.local_files)
+        -- to_keep in
       log "current: %s" (Filename.Set.to_string current);
       log "to_keep: %s" (Filename.Set.to_string to_keep);
       log "to_delete: %s" (Filename.Set.to_string to_delete);
@@ -167,8 +170,7 @@ let make_urls_txt local_repo =
     let perm =
       let s = Unix.stat (Filename.to_string f) in
       s.Unix.st_perm in
-    let digest =
-      Digest.to_hex (Digest.file (Filename.to_string f)) in
+    let digest = Filename.digest f in
     Remote_file.create basename digest perm
   ) (Filename.rec_list (Path.R.packages_dir local_repo)
    @ Filename.list (Path.R.archives_dir local_repo)

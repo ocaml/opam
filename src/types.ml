@@ -292,7 +292,7 @@ end = struct
     F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
 
   let digest t =
-    Digest.file (to_string t)
+    Digest.to_hex (Digest.file (to_string t))
 
   let touch t =
     Run.write (to_string t) ""
