@@ -219,6 +219,10 @@ end
     
 type dirname = Dirname.t
 
+let (/) d1 s2 =
+  let s1 = Dirname.to_string d1 in
+  Dirname.raw (Filename.concat s1 s2)
+
 (* Raw file contents *)
 module Raw: ABSTRACT = Base
 type raw = Raw.t
@@ -267,7 +271,13 @@ end = struct
     basename: Basename.t;
   }
 
-  let create dirname basename = { dirname; basename }
+  let create dirname basename =
+    let b1 = Filename.dirname (Basename.to_string basename) in
+    let b2 = Basename.of_string (Filename.basename (Basename.to_string basename)) in
+    if basename = b2 then
+      { dirname; basename }
+    else
+      { dirname = dirname / b1; basename = b2 }
 
   let of_basename basename =
     let dirname = Dirname.of_string "." in
@@ -408,10 +418,6 @@ type 'a download =
 type file =
   | D of dirname
   | F of filename
-
-let (/) d1 s2 =
-  let s1 = Dirname.to_string d1 in
-  Dirname.raw (F.concat s1 s2)
 
 let (//) d1 s2 =
   let d = Stdlib_filename.dirname s2 in
