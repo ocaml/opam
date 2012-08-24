@@ -143,7 +143,10 @@ end = struct
   include Base
 
   let of_string dirname =
-    Run.real_path dirname
+    if not (Filename.is_relative dirname) then
+      dirname
+    else
+      Run.real_path dirname
 
   let to_string dirname =
     if dirname.[String.length dirname - 1] = Filename.dir_sep.[0] then
@@ -170,7 +173,10 @@ end = struct
     List.map of_string fs
 
   let in_dir dirname fn =
-    Run.in_dir (to_string dirname) fn
+    if Sys.file_exists dirname then
+      Run.in_dir dirname fn
+    else
+      Globals.error_and_exit "%s does not exists!" dirname
 
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
     Run.in_dir (to_string dirname) 

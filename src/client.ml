@@ -949,6 +949,7 @@ let get_archive t nv =
   aux (N.Map.find name t.repo_index)
 
 let extract_package t nv =
+  log "extract_package: %s" (NV.to_string nv);
   let p_build = Path.C.build t.compiler nv in
   Dirname.rmdir p_build;
   match pinned_path t nv with
@@ -1101,6 +1102,7 @@ let rec proceed_tochange t nv_old nv =
     with e ->
       Globals.error "while copying some files of %S" (NV.to_string nv);
       proceed_todelete t nv;
+      let _build = extract_package t nv in
       raise e
   else (
     proceed_todelete t nv;

@@ -106,14 +106,20 @@ let chdir dir =
     Globals.error_and_exit "%s does not exist!" dir
 
 let in_dir dir fn =
-  let cwd = Unix.getcwd () in
+  let reset_cwd =
+    try
+      let cwd = Unix.getcwd () in
+      fun () -> chdir cwd
+    with _ ->
+      (* can happen when the current directory has been deleted *)
+      fun () -> () in
   chdir dir;
   try
     let r = fn () in
-    chdir cwd;
+    reset_cwd ();
     r
   with e ->
-    chdir cwd;
+    reset_cwd ();
     raise e
     
 let list kind dir =
