@@ -862,7 +862,7 @@ let pin_option_of_string s =
   let d = Run.real_path s in
   if s = "none" then
     Unpin
-  else if String.length d > 1 && d.[0] = '/' then
+  else if Sys.file_exists d then
     Path (Dirname.of_string s)
   else
     Version (V.of_string s)
