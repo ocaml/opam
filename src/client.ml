@@ -373,7 +373,7 @@ let update_repo ~show_compilers  =
     ) comps
   ) t.repositories
 
-let update_package () =
+let update_package ~show_packages =
   log "update_packages";
   let t = load_state () in
   (* Update the pinned packages *)
@@ -416,7 +416,8 @@ let update_package () =
       log "updated=%s" (NV.Set.to_string updated);
       NV.Set.union updated accu;
     ) NV.Set.empty t.repositories in  
-  print_updated t updated pinned_updated;
+  if show_packages then
+    print_updated t updated pinned_updated;
 
   let updated = NV.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall *)
@@ -467,7 +468,7 @@ let update_package () =
 let update () =
   log "update";
   update_repo ~show_compilers:true;
-  update_package ()
+  update_package ~show_packages:true
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -1327,7 +1328,7 @@ let init repo alias ocaml_version cores =
       alias
       false
       ocaml_version in
-    update_package ();
+    update_package ~show_packages:false;
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
