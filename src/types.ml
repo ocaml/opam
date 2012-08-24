@@ -392,7 +392,7 @@ end = struct
   module O = struct
     type tmp = t
     type t = tmp
-    let compare = compare
+    let compare x y = compare (to_string x) (to_string y)
     let to_string = to_string
   end
   module Map = Map.Make(O)
