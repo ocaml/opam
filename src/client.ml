@@ -1753,18 +1753,18 @@ let pin action =
     let nv = find_installed_package_by_name t name in
     File.Reinstall.write reinstall_f (NV.Set.add nv reinstall)
   );
-  let add_config str =
-    if N.Map.mem name pins then
-      Globals.error_and_exit "Cannot pin %s to %s, it is already associated to %s, "
-        (N.to_string name) str
-        (string_of_pin_option action.pin_arg);
-    log "Adding %s => %s" (string_of_pin_option action.pin_arg) (N.to_string name);
-    update_config (N.Map.add name action.pin_arg pins)
- in
   match action.pin_arg with
-  | Unpin     -> update_config (N.Map.remove name pins);
-  | Version v -> add_config (V.to_string v)
-  | Path f    -> add_config (Dirname.to_string f)
+  | Unpin -> update_config (N.Map.remove name pins)
+  | _     ->
+      if N.Map.mem name pins then (
+        let current = N.Map.find name pins in
+        Globals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
+          (N.to_string name)
+          (string_of_pin_option current)
+          (string_of_pin_option action.pin_arg);
+      );
+      log "Adding %s => %s" (string_of_pin_option action.pin_arg) (N.to_string name);
+      update_config (N.Map.add name action.pin_arg pins)
 
 let pin_list () =
   log "pin_list";
