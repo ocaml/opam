@@ -93,7 +93,10 @@ module B = struct
     let archives =
       let available_packages = Path.R.available_packages local_repo in
       let updates = NV.Set.filter (fun nv ->
-        match download_archive address nv with
+        let archive = Path.R.archive local_repo nv in
+        if not (Filename.exists archive) then
+          false
+        else match download_archive address nv with
         | Not_available -> true
         | Up_to_date _  -> false
         | Result _      -> true
