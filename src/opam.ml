@@ -61,22 +61,24 @@ let global_args = [
 let parse_args fn () =
   fn (List.rev !ano_args)
 
+let guess_repository_kind kind address =
+  match kind with
+  | None  ->
+      if Sys.file_exists address then
+        "rsync"
+      else if Utils.starts_with ~prefix:"git" address
+           || Utils.ends_with ~suffix:"git" address then
+        "git"
+      else
+        Globals.default_repository_kind
+  | Some k -> k
+
 (* opam init [-kind $kind] $repo $adress *)
 let init = 
   let kind = ref None in
   let alias = ref None in
   let comp = ref None in
   let cores = ref Globals.default_cores in
-  let mk_kind address = match !kind with
-    | None  ->
-        if Sys.file_exists address then
-          "rsync"
-        else if Utils.starts_with ~prefix:"git" address
-             || Utils.ends_with ~suffix:"git" address then
-           "git"
-        else
-          Globals.default_repository_kind
-    | Some k -> k in
 {
   name     = "init";
   usage    = "";
@@ -96,11 +98,11 @@ let init =
         Client.init Repository.default !alias !comp !cores
     | [address] ->
         let name = Globals.default_repository_name in
-        let kind = mk_kind address in
+        let kind = guess_repository_kind !kind address in
         let repo = Repository.create ~name ~address ~kind in
         Client.init repo !alias !comp !cores
     | [name; address] ->
-        let kind = mk_kind address in
+        let kind = guess_repository_kind !kind address in
         let repo = Repository.create ~name ~address ~kind in
         Client.init repo !alias !comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
@@ -279,7 +281,7 @@ let remove = {
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
 let remote = 
-  let kind = ref Globals.default_repository_kind in
+  let kind = ref None in
   let command : [`add|`list|`rm] option ref = ref None in
   let set c () = command := Some c in
 {
@@ -291,7 +293,7 @@ let remote =
     ("-list" , Arg.Unit (set `list), " List the repositories");
     ("-add"  , Arg.Unit (set `add) , " Add a new repository");
     ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
-    ("-kind" , Arg.Set_string kind , " (optional) Specify the repository kind");
+    ("-kind" , Arg.String (fun s -> kind := Some s) , " (optional) Specify the repository kind");
   ];
   anon;
   main     = parse_args (fun args ->
@@ -299,7 +301,8 @@ let remote =
     | Some `list, []                -> Client.remote List
     | Some `rm,   [ name ]          -> Client.remote (Rm name)
     | Some `add , [ name; address ] ->
-        Client.remote (Add (Repository.create ~name ~kind:!kind ~address))
+        let kind = guess_repository_kind !kind address in
+        Client.remote (Add (Repository.create ~name ~kind ~address))
     | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
     | _        -> bad_argument "remote" "Wrong arguments")
 }
