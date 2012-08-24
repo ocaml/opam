@@ -79,24 +79,26 @@ let () =
     else
       NV.Set.inter packages to_add in
 
-  if not (NV.Set.is_empty to_remove) then
-    Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
-  if not (NV.Set.is_empty to_add) then
-    Globals.msg "Packages to build: %s\n" (NV.Set.to_string to_add);
-
-  (* Remove the old archive files *)
-  NV.Set.iter (fun nv ->
-    let archive = Path.R.archive local_repo nv in
-    Globals.msg "Removing %s ...\n" (Filename.to_string archive);
-    Filename.remove archive
-  ) to_remove;
-
   let errors = ref [] in
-  if not index then
+  if not index then (
+
+    if not (NV.Set.is_empty to_remove) then
+      Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
+    if not (NV.Set.is_empty to_add) then
+      Globals.msg "Packages to build: %s\n" (NV.Set.to_string to_add);
+
+    (* Remove the old archive files *)
+    NV.Set.iter (fun nv ->
+      let archive = Path.R.archive local_repo nv in
+      Globals.msg "Removing %s ...\n" (Filename.to_string archive);
+      Filename.remove archive
+    ) to_remove;
+
     NV.Set.iter (fun nv ->
       try Repositories.make_archive nv
       with _ -> errors := nv :: !errors;
     ) to_add;
+  );
 
   (* Create index.tar.gz *)
   if not (NV.Set.is_empty to_add) && not (NV.Set.is_empty to_remove) then (
@@ -107,6 +109,9 @@ let () =
 
   Run.remove "log";
   Run.remove "tmp";
+
+  (* Rebuild urls.txt now the archives have been updated *)
+  let _index = Curl.make_urls_txt local_repo in
 
   if !errors <> [] then
     Globals.msg "Got some errors while processing: %s"
