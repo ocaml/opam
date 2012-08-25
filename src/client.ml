@@ -987,10 +987,6 @@ let proceed_todelete t nv =
   Dirname.rmdir (Path.C.lib t.compiler name);
   Dirname.rmdir (Path.C.build t.compiler nv);
 
-  (* Remove the archive *)
-  let archive = Path.G.archive t.global nv in
-  Filename.remove archive;
-
   (* Clean-up the repositories *)
   let repos =
     try N.Map.find (NV.name nv) t.repo_index
