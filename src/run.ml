@@ -309,11 +309,6 @@ end
 
 let is_tar_archive = Tar.is_archive
 
-let is_github_tarball s =
-  (Utils.starts_with ~prefix:"https://github.com/" s
-   || Utils.starts_with ~prefix:"http://github.com/" s)
-  && Filename.basename (Filename.dirname s) = "tarball"
-
 let extract file dst =
   log "extract %s %s" file dst;
 (*   let files = read_command_output [ "tar" ; "tf" ; file ] in
