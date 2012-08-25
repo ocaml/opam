@@ -196,7 +196,7 @@ end = struct
 
   let copy src dst =
     with_tmp_dir (fun tmp ->
-      let err = Run.command [ "cp"; "-a"; Filename.concat (to_string src) ""; to_string tmp ] in
+      let err = Run.command [ "rsync"; "-a"; Filename.concat (to_string src) "/"; to_string tmp ] in
       if err <> 0 then
         Globals.exit err;
       match list tmp with
