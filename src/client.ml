@@ -1262,13 +1262,18 @@ module Heuristic = struct
     if Solver.solution_is_empty sol then
       true
     else (
-      Globals.msg "The following actions will be performed:\n";
+      Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      let continue =
-        if Solver.delete_or_update sol then
-          confirm "Continue ?"
-        else
-          true in
+      let to_install = ref 0 in
+      let cores = File.Config.cores t.config in      
+      Globals.msg "%d to install | %d to remove\n" 
+        (PA_graph.Parallel.iter cores sol.to_add 
+           ?pre:(fun _ -> incr to_install) 
+           ?child:(fun _ -> ()) 
+           ?post:(fun _ -> ()); !to_install)
+        (List.length sol.to_remove);            
+
+      let continue = confirm "Do you want to continue ?" in
 
       if continue then (
 
@@ -1317,7 +1322,6 @@ module Heuristic = struct
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
 
-        let cores = File.Config.cores t.config in
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       );
