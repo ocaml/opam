@@ -108,19 +108,22 @@ let init =
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 
-(* opam list *)
+(* opam list [PACKAGE_REGEXP]* *)
 let list = 
   let short = ref false in
 {
   name     = "list";
-  usage    = "";
-  synopsis = "Display information about all available packages";
+  usage    = "[package-regexp]*";
+  synopsis = "Display information about all available packages that match package-regexp, or all available packages if no regexp is provided";
   help     = "";
   specs    = [
     ("-short", Arg.Set short, " Minimize the output by displaying only package name (installed and not installed)");
   ];
-  anon     = noanon "list";
-  main     = parse_args (fun _ -> Client.list !short);
+  anon;
+  main     = 
+    parse_args (function
+    | [] -> Client.list !short ""
+    | l  -> List.iter (fun name -> Client.list !short name) l)
 }
 
 (* opam info [PACKAGE] *)
