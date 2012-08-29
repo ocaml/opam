@@ -1733,8 +1733,9 @@ let remote action =
       if List.exists (fun r -> Repository.name r = name) repos then
         Globals.error_and_exit "%s is already a remote repository" name
       else (
+        (try Repositories.init repo with Repositories.Unknown_backend ->
+          Globals.error_and_exit "\"%s\" is not a supported backend" (Repository.kind repo));
         log "Adding %s" (Repository.to_string repo);
-        Repositories.init repo;
         update_config (repo :: repos)
       );
       update ()
