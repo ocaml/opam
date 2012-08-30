@@ -1264,6 +1264,8 @@ module Heuristic = struct
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
+      (* Maybe we can have a function PA_graph.length instead of 
+         doing an iter to calculate the number of packages to install *)
       let to_install = ref 0 in
       let cores = File.Config.cores t.config in      
       Globals.msg "%d to install | %d to remove\n" 
