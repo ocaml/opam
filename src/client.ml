@@ -1275,8 +1275,12 @@ module Heuristic = struct
            ?post:(fun _ -> ()); !to_install)
         (List.length sol.to_remove);            
 
-      let continue = confirm "Do you want to continue ?" in
-
+      let continue = 
+        if !to_install <= 1 then
+          true
+        else
+          confirm "Do you want to continue ?" in
+      
       if continue then (
 
         let installed = ref t.installed in
