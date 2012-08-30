@@ -1,35 +1,32 @@
 BIN = /usr/local/bin
-OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
+LOCAL_OCPBUILD=./ocp-build/ocp-build
+OCPBUILD ?= $(LOCAL_OCPBUILD)
 OCAMLC=ocamlc
 SRC_EXT=src_ext
 TARGETS = opam opam-mk-repo opam-repo-convert-0.3
 
 .PHONY: all
 
-all: ./_obuild/unixrun
+all: $(LOCAL_OCPBUILD)
 	$(MAKE) clone
 	$(MAKE) compile
 
-scan: ./_obuild/unixrun
+scan: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -scan
-sanitize: ./_obuild/unixrun
+sanitize: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -sanitize
-byte: ./_obuild/unixrun
+byte: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -byte
-opt: ./_obuild/unixrun
+opt: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -asm
-./_obuild/unixrun:
-	mkdir -p ./_obuild
-	$(OCAMLC) -o ./_obuild/unixrun -make-runtime unix.cma str.cma
 
-bootstrap: _obuild/unixrun _obuild/opam/opam.byte
-	rm -f boot/opam.boot
-	ocp-bytehack -static _obuild/opam/opam.byte -o boot/opam.boot
+$(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
+	$(MAKE) -C ocp-build
 
-compile: ./_obuild/unixrun
+compile: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
-clone: 
+clone:
 	$(MAKE) -C $(SRC_EXT)
 
 clean:
