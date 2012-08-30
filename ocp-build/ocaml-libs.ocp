@@ -18,6 +18,7 @@
 begin
 
   generated = true
+  dirname = [ "%{OCAMLLIB}%" ]
 
   begin library "unix"
     has_byte = true
@@ -47,6 +48,7 @@ begin
   end
 
   begin library "threads"
+    dirname = [ "%{OCAMLLIB}%/threads" ]
     has_byte = true
     has_asm  = true
   end
