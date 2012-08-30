@@ -1267,16 +1267,20 @@ module Heuristic = struct
       (* Maybe we can have a function PA_graph.length instead of 
          doing an iter to calculate the number of packages to install *)
       let to_install = ref 0 in
+      let to_remove = List.length sol.to_remove in
       let cores = File.Config.cores t.config in      
       Globals.msg "%d to install | %d to remove\n" 
         (PA_graph.Parallel.iter cores sol.to_add 
            ?pre:(fun _ -> incr to_install) 
            ?child:(fun _ -> ()) 
            ?post:(fun _ -> ()); !to_install)
-        (List.length sol.to_remove);            
+        to_remove;
 
       let continue = 
-        if !to_install <= 1 then
+        (* if only one package to install and none to remove, or one package 
+           to remove and none to install then no need to confirm *)
+        if (!to_install <= 1 && to_remove = 0) || 
+           (!to_install = 0 && to_remove <= 1) then
           true
         else
           confirm "Do you want to continue ?" in
