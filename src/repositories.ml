@@ -29,13 +29,19 @@ module type BACKEND = sig
   val upload_dir: address:address -> dirname -> Filename.Set.t
 end
 
+exception Unknown_backend
+
 let backends = Hashtbl.create 8
 
 let find_backend r =
-  Hashtbl.find backends (Repository.kind r)
+  try
+    Hashtbl.find backends (Repository.kind r)
+  with Not_found -> raise Unknown_backend
 
 let find_backend_by_kind k =
-  Hashtbl.find backends k
+  try
+    Hashtbl.find backends k
+  with Not_found -> raise Unknown_backend
 
 let register_backend name backend =
   Hashtbl.replace backends name backend
