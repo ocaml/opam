@@ -704,9 +704,10 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
-let list print_short =
+let list print_short pkg_str =
   log "list";
   let t = load_state () in
+  let re = Re_perl.compile_pat ~opts:[`Caseless] pkg_str in
   (* Get all the installed packages *)
   let installed = File.Installed.read (Path.C.installed t.compiler) in
   let map, max_n, max_v =
@@ -736,16 +737,21 @@ let list print_short =
   in
   N.Map.iter (
     if print_short then
-      fun name _ -> Globals.msg "%s " (N.to_string name)
+      fun name _ -> 
+        let name = N.to_string name in
+        (if Re.execp re name 
+        then Globals.msg "%s " name)
     else
       fun name (version, description) ->
+        let name = N.to_string name in
         let version = match version with
           | None   -> s_not_installed
           | Some v -> V.to_string v in
-        Globals.msg "%s  %s  %s\n"
-          (indent_left (N.to_string name) max_n)
-          (indent_right version max_v)
-          description) map
+        (if Re.execp re name || Re.execp re description then
+            Globals.msg "%s  %s  %s\n"
+              (indent_left name max_n)
+              (indent_right version max_v)
+              description)) map
 
 let info package =
   log "info %s" (N.to_string package);
@@ -1892,8 +1898,8 @@ let switch clone alias ocaml_version =
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
 
-let list print_short =
-  check (Read_only (fun () -> list print_short))
+let list print_short pkg_str =
+  check (Read_only (fun () -> list print_short pkg_str))
 
 let info package =
   check (Read_only (fun () -> info package))
