@@ -20,6 +20,8 @@
 
 open Types
 
+exception Unknown_backend
+
 (** Initialize {i $opam/repo/$repo} *)
 val init: repository -> unit
 
