@@ -1,3 +1,0 @@
-#!/bin/bash
-set -e
-unixrun ocp-build.boot -init -scan $@

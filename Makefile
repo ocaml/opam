@@ -35,6 +35,7 @@ clean:
 	rm -f opam
 	rm -f ocp-build.*
 	$(MAKE) -C $(SRC_EXT) clean
+	$(MAKE) -C ocp-build clean
 
 distclean: clean
 	rm -f *.tar.gz *.tar.bz2
