@@ -4,7 +4,8 @@
 \usepackage{eurosym}
 %\usepackage[french]{babel}
 \usepackage[T1]{fontenc}
-\usepackage{pdfswitch}
+%\usepackage{pdfswitch}
+\usepackage{hyperref}
 \usepackage{verbatim}
 \usepackage{fullpage}
 \usepackage{fancyvrb}
@@ -192,13 +193,13 @@ data between the client and the corresponding OPAM repository.
 
 \begin{itemize}
 
-\item \verb+$opam/repo/$REPO/kind+ contains the kind associated to the
+\item FIXME \verb+$opam/repo/$REPO/kind+ contains the kind associated to the
   OPAM repository \verb+$REPO+ have. The kind is stored as a single
   word (containing only letters and digits) and specifies which {\tt
     opam-<kind>-*} scripts to call when updating and uploading this
   repository.
 
-\item \verb+$opam/repo/$REPO/address+ contains the address of the
+\item FIXME \verb+$opam/repo/$REPO/address+ contains the address of the
   OPAM repository \verb+$REPO+. This address is passed as argument to
   the {\tt opam-<kind>-*} scripts.
 
@@ -365,7 +366,7 @@ compiler (available in the path).
 \label{dotopam}
 
 \verb+$opam/opam/$NAME.$VERSION.opam+ follows the syntax defined in
-\S\ref{syntax} with the following restrictions:
+\S\ref{syntax} with the following restrictions (FIXME: not that syntax anymore):
 
 {\small
 \begin{Verbatim}[frame=single]
@@ -629,7 +630,7 @@ Where:
 \item \verb+$REPO+ is the name of the repository (default is {\tt
   default}); and
 \item \verb+ADDRESS+ is the repository address (default is
-  \verb+http://opam.ocamlpro.com/pub+).
+  \verb+http://opam.ocamlpro.com+).
 \end{itemize}
 
 This command will:
@@ -650,7 +651,7 @@ This command will:
   the script cannot be found in the path, the command should be
   canceled and should return a well-defined error.
 
-\item Symlink all OPAM and description files (ie. create a symbolic
+\item FIXME Symlink all OPAM and description files (ie. create a symbolic
   link from every file in \verb+$opam/repo/$REPO/opam/+ to
   \verb+$opam/opam/+ and from every file in
   \verb+$opam/repo/$REPO/descr/+ to \verb+$opam/descr/+).
@@ -985,7 +986,7 @@ When the user wants to manage OPAM repositories, he should write:
 
 Dependency solving is a hard problem and we do not plan to start from
 scratch implementing a new SAT solver. Thus our plan to integrate (as
-a library) the Debian depency solver for CUDF files, which is written
+a library) the Debian dependency solver for CUDF files, which is written
 in OCaml.
 
 \begin{itemize}
@@ -1030,7 +1031,7 @@ contacting the OPAM repository located at address \verb+$ADDRESS+
 and update \verb+$./opam+ and \verb+./descr+.
 
 It should then create (or update) \verb+./updated+ to reflect the
-newly available packages and the one who changed uptstream..
+newly available packages and the one who changed upstream..
 
 \subsubsection{Download script}
 \label{script-download}
