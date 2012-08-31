@@ -111,6 +111,7 @@ let init =
 (* opam list [PACKAGE_REGEXP]* *)
 let list = 
   let short = ref false in
+  let installed = ref false in
 {
   name     = "list";
   usage    = "[package-regexp]*";
@@ -118,12 +119,13 @@ let list =
   help     = "";
   specs    = [
     ("-short", Arg.Set short, " Minimize the output by displaying only package name (installed and not installed)");
+    ("-installed", Arg.Set installed, " Display only the list of installed packages");
   ];
   anon;
   main     = 
     parse_args (function
-    | [] -> Client.list !short ""
-    | l  -> List.iter (fun name -> Client.list !short name) l)
+    | [] -> Client.list !short !installed ""
+    | l  -> List.iter (fun name -> Client.list !short !installed name) l)
 }
 
 (* opam info [PACKAGE] *)
