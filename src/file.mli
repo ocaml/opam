@@ -149,6 +149,18 @@ module OPAM: sig
 
   (** Construct as [remove] *)
   val with_remove : t -> string list list -> t
+
+  (** Construct as [libraries] *)
+  val with_libraries : t -> section list -> t
+
+  (** Construct as [substs] *)
+  val with_substs : t -> basename list -> t
+
+  (** Construct as [ocaml_version] *)
+  val with_ocaml_version: t -> ocaml_constraint option -> t
+
+  (** Construct as [maintainer] *)
+  val with_maintainer: t -> string -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)
@@ -260,8 +272,17 @@ module Dot_install: sig
     (** List of other files to install *)
     val misc: t -> (string * string option) list
 
+    (** List of toplevel files *)
+    val toplevel: t -> string list
+
     (** Construct as [bin] *)
     val with_bin: t -> (string * string option) list -> t
+
+    (** Construct as [lib] *)
+    val with_lib: t -> string list -> t
+
+    (** Construct as [toplevel] *)
+    val with_toplevel: t -> string list -> t
 
   end
 

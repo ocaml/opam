@@ -603,6 +603,10 @@ module OPAM = struct
   let with_depopts t depopts = { t with depopts }
   let with_build t build = { t with build }
   let with_remove t remove = { t with remove }
+  let with_libraries t libraries = { t with libraries }
+  let with_substs t substs = { t with substs }
+  let with_ocaml_version t ocaml_version = { t with ocaml_version }
+  let with_maintainer t maintainer = { t with maintainer }
 
   module D = Debian.Packages
 
@@ -738,6 +742,8 @@ module Dot_install_raw = struct
   let misc t = t.misc
 
   let with_bin t bin = { t with bin }
+  let with_lib t lib = { t with lib }
+  let with_toplevel t toplevel = { t with toplevel }
 
   let empty = {
     lib  = [] ;

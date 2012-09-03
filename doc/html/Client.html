@@ -15,7 +15,6 @@
 <link title="File" rel="Chapter" href="File.html">
 <link title="File_format" rel="Chapter" href="File_format.html">
 <link title="Parallel" rel="Chapter" href="Parallel.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
 <link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
@@ -41,10 +40,8 @@ Initializes the client a consistent state.
 </ul>
 <br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">bool -> unit</code></pre><div class="info">
-Displays all available packages. 
-    If <code class="code">bool</code> is <code class="code">true</code>, then we only display 
-    packages that are known to exist.<br>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">bool -> bool -> string -> unit</code></pre><div class="info">
+Displays all available packages that matches <code class="code">string</code>.<br>
 </div>
 <pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">Types.N.t -> unit</code></pre><div class="info">
 Displays a general summary of a package.<br>

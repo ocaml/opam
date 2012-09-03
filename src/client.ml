@@ -1275,23 +1275,28 @@ module Heuristic = struct
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      (* Maybe we can have a function PA_graph.length instead of 
-         doing an iter to calculate the number of packages to install *)
-      let to_install = ref 0 in
+      let to_install, to_reinstall =
+        PA_graph.fold_vertex
+          (fun pkg (to_install, to_reinstall) ->
+            match action pkg with
+              | To_change (None, _) -> succ to_install, to_reinstall
+              | To_change (Some _, _)
+              | To_recompile _ -> to_install, succ to_reinstall
+              | To_delete _ -> assert false) 
+          sol.to_add
+          (0, 0) in
       let to_remove = List.length sol.to_remove in
-      let cores = File.Config.cores t.config in      
-      Globals.msg "%d to install | %d to remove\n" 
-        (PA_graph.Parallel.iter cores sol.to_add 
-           ?pre:(fun _ -> incr to_install) 
-           ?child:(fun _ -> ()) 
-           ?post:(fun _ -> ()); !to_install)
+      Globals.msg "%d to install | %d to reinstall | %d to remove\n"
+        to_install
+        to_reinstall
         to_remove;
 
       let continue = 
-        (* if only one package to install and none to remove, or one package 
-           to remove and none to install then no need to confirm *)
-        if (!to_install <= 1 && to_remove = 0) || 
-           (!to_install = 0 && to_remove <= 1) then
+        (* if only one package to install and none to remove, 
+           or one package to remove and none to install
+           or at most one package to reinstall
+           then no need to confirm *)
+        if to_install + to_reinstall + to_remove <= 1 then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1343,6 +1348,7 @@ module Heuristic = struct
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
 
+        let cores = File.Config.cores t.config in
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       );

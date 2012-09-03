@@ -15,7 +15,6 @@
 <link title="File" rel="Chapter" href="File.html">
 <link title="File_format" rel="Chapter" href="File_format.html">
 <link title="Parallel" rel="Chapter" href="Parallel.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
 <link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
@@ -32,6 +31,9 @@
 <pre><span class="keyword">module</span> Map: <code class="code">sig</code> <a href="Types.ABSTRACT.Map.html">..</a> <code class="code">end</code></pre>Dictionaries of abstract values<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> Map.S</pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">('a -> string) -> 'a <a href="Types.ABSTRACT.html#TYPEt">Types.ABSTRACT.t</a> -> string</code></pre><div class="info">
+Pretty-printing<br>
+</div>
 <pre><span id="VALvalues"><span class="keyword">val</span> values</span> : <code class="type">'a <a href="Types.ABSTRACT.html#TYPEt">Types.ABSTRACT.t</a> -> 'a list</code></pre><div class="info">
 Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.<br>
 </div>
