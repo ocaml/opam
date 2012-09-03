@@ -14,7 +14,6 @@
 <link title="File" rel="Chapter" href="File.html">
 <link title="File_format" rel="Chapter" href="File_format.html">
 <link title="Parallel" rel="Chapter" href="Parallel.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
 <link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
@@ -38,7 +37,16 @@ List of files to install in $bin/<br>
 <pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (string * string option) list</code></pre><div class="info">
 List of other files to install<br>
 </div>
+<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> string list</code></pre><div class="info">
+List of toplevel files<br>
+</div>
 <pre><span id="VALwith_bin"><span class="keyword">val</span> with_bin</span> : <code class="type">t -> (string * string option) list -> t</code></pre><div class="info">
 Construct as <code class="code">bin</code><br>
+</div>
+<pre><span id="VALwith_lib"><span class="keyword">val</span> with_lib</span> : <code class="type">t -> string list -> t</code></pre><div class="info">
+Construct as <code class="code">lib</code><br>
+</div>
+<pre><span id="VALwith_toplevel"><span class="keyword">val</span> with_toplevel</span> : <code class="type">t -> string list -> t</code></pre><div class="info">
+Construct as <code class="code">toplevel</code><br>
 </div>
 </body></html>

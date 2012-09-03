@@ -16,7 +16,6 @@
 <link title="File" rel="Chapter" href="File.html">
 <link title="File_format" rel="Chapter" href="File_format.html">
 <link title="Parallel" rel="Chapter" href="Parallel.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
 <link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
@@ -112,7 +111,7 @@ a command is a list of words<br>
 <pre><span id="VALis_tar_archive"><span class="keyword">val</span> is_tar_archive</span> : <code class="type">string -> bool</code></pre><div class="info">
 Test whether the file is an archive, by looking as its extension<br>
 </div>
-<pre><span id="VALis_github_tarball"><span class="keyword">val</span> is_github_tarball</span> : <code class="type">string -> bool</code></pre><pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
 <code class="code">extract filename dirname</code> extracts the archive <code class="code">filename</code> into
     <code class="code">dirname</code>. <code class="code">dirname</code> should not exists and <code class="code">filename</code> should
     contain only one top-level directory.<br>
