@@ -5,7 +5,6 @@ ocp-build: primitives ocp-build.boot win32_c.c
 	ocamlc -o ocp-build.run -custom -make-runtime win32_c.c primitives.ml unix.cma  -cclib -lunix
 	cat ocp-build.run ocp-build.boot >> ocp-build
 	chmod +x ocp-build
-	./ocp-build -help
 
 install: ocp-build
 	cp ocp-build $(PREFIX)/bin/ocp-build
