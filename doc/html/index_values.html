@@ -12,7 +12,6 @@
 <link title="File" rel="Chapter" href="File.html">
 <link title="File_format" rel="Chapter" href="File_format.html">
 <link title="Parallel" rel="Chapter" href="Parallel.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Path" rel="Chapter" href="Path.html">
 <link title="Process" rel="Chapter" href="Process.html">
 <link title="Repositories" rel="Chapter" href="Repositories.html">
@@ -844,8 +843,6 @@ Find all the invalid fields
 Is the process result a failure ?
 </div>
 </td></tr>
-<tr><td><a href="Run.html#VALis_github_tarball">is_github_tarball</a> [<a href="Run.html">Run</a>]</td>
-<td></td></tr>
 <tr><td><a href="Process.html#VALis_success">is_success</a> [<a href="Process.html">Process</a>]</td>
 <td><div class="info">
 Is the process result a success ?
@@ -937,12 +934,10 @@ List the directory
 </td></tr>
 <tr><td><a href="Client.html#VALlist">list</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Displays all available packages.
+Displays all available packages that matches <code class="code">string</code>.
 </div>
 </td></tr>
 <tr><td align="left"><br>M</td></tr>
-<tr><td><a href="Parser.html#VALmain">main</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="File.OPAM.html#VALmaintainer">maintainer</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
 <td><div class="info">
 Package maintainer
@@ -1715,6 +1710,11 @@ Convert to Debian packages to feed the solver
 Return the file contents
 </div>
 </td></tr>
+<tr><td><a href="Types.ABSTRACT.Map.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
+<td><div class="info">
+Pretty-printing
+</div>
+</td></tr>
 <tr><td><a href="Types.ABSTRACT.Set.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
 <td><div class="info">
 Pretty-print a set
@@ -1728,6 +1728,11 @@ Convert an abstract value to a string
 <tr><td><a href="Path.C.html#VALtoplevel">toplevel</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 toplevel path: <i>$opam/$OVERSION/lib/toplevel</i>
+</div>
+</td></tr>
+<tr><td><a href="File.Dot_install.Raw.html#VALtoplevel">toplevel</a> [<a href="File.Dot_install.Raw.html">File.Dot_install.Raw</a>]</td>
+<td><div class="info">
+List of toplevel files
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_install.html#VALtoplevel">toplevel</a> [<a href="File.Dot_install.html">File.Dot_install</a>]</td>
@@ -1802,8 +1807,6 @@ URL address
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>
-<tr><td><a href="Parser.html#VALvalue">value</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="Types.ABSTRACT.Map.html#VALvalues">values</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
 <td><div class="info">
 Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.
@@ -1885,6 +1888,26 @@ Functional version of <code class="code">flock / funlock</code>
 Return a copy of repo with a different kind
 </div>
 </td></tr>
+<tr><td><a href="File.Dot_install.Raw.html#VALwith_lib">with_lib</a> [<a href="File.Dot_install.Raw.html">File.Dot_install.Raw</a>]</td>
+<td><div class="info">
+Construct as <code class="code">lib</code>
+</div>
+</td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_libraries">with_libraries</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">libraries</code>
+</div>
+</td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_maintainer">with_maintainer</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">maintainer</code>
+</div>
+</td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_ocaml_version">with_ocaml_version</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">ocaml_version</code>
+</div>
+</td></tr>
 <tr><td><a href="File.Config.html#VALwith_ocaml_version">with_ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 OCaml alias updates
@@ -1905,6 +1928,11 @@ Construct as <code class="code">remove</code>
 Repository updates
 </div>
 </td></tr>
+<tr><td><a href="File.OPAM.html#VALwith_substs">with_substs</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">substs</code>
+</div>
+</td></tr>
 <tr><td><a href="File.Config.html#VALwith_system_ocaml_version">with_system_ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 system-wide's OCaml version updates
@@ -1918,6 +1946,11 @@ Execute a function in a temp directory
 <tr><td><a href="Run.html#VALwith_tmp_dir">with_tmp_dir</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">with_tmp_dir fn</code> executes <code class="code">fn</code> in a tempory directory
+</div>
+</td></tr>
+<tr><td><a href="File.Dot_install.Raw.html#VALwith_toplevel">with_toplevel</a> [<a href="File.Dot_install.Raw.html">File.Dot_install.Raw</a>]</td>
+<td><div class="info">
+Construct as <code class="code">toplevel</code>
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALwrite">write</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
