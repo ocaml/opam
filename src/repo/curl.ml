@@ -98,11 +98,7 @@ module B = struct
       log "to_keep: %s" (Filename.Set.to_string to_keep);
       log "to_delete: %s" (Filename.Set.to_string to_delete);
       log "new_files: %s" (Filename.Set.to_string new_files);
-      Filename.Set.iter (fun f ->
-        match NV.of_filename f with
-        | None    -> ()
-        | Some nv -> Dirname.rmdir (Path.R.package state.local_repo nv)
-        ) to_delete;
+      Filename.Set.iter Filename.remove to_delete;
       if Filename.Set.cardinal new_files > 4 then
         init address
       else
