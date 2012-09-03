@@ -99,6 +99,14 @@ module B = struct
       log "to_delete: %s" (Filename.Set.to_string to_delete);
       log "new_files: %s" (Filename.Set.to_string new_files);
       Filename.Set.iter Filename.remove to_delete;
+      NV.Set.iter (fun nv ->
+        let opam_f = Path.R.opam state.local_repo nv in
+        if not (Filename.exists opam_f) then (
+          Dirname.rmdir (Path.R.package state.local_repo nv);
+          Dirname.rmdir (Path.R.tmp_dir state.local_repo nv);
+          Filename.remove (Path.R.archive state.local_repo nv);
+        )
+      ) (Path.R.available_packages state.local_repo);
       if Filename.Set.cardinal new_files > 4 then
         init address
       else
