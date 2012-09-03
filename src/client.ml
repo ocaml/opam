@@ -1270,19 +1270,20 @@ module Heuristic = struct
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      (* Maybe we can have a function PA_graph.length instead of 
-         doing an iter to calculate the number of packages to install *)
-      let to_install = ref 0 in
-      let cores = File.Config.cores t.config in      
-      Globals.msg "%d to install | %d to remove\n" 
-        (PA_graph.Parallel.iter cores sol.to_add 
-           ?pre:(fun _ -> incr to_install) 
-           ?child:(fun _ -> ()) 
-           ?post:(fun _ -> ()); !to_install)
-        (List.length sol.to_remove);            
+      let to_install =
+        PA_graph.fold_vertex
+          (fun pkg to_install ->
+            match action pkg with
+              | To_change (None, _) -> succ to_install
+              | _ -> to_install) 
+          sol.to_add
+          0 in
+      Globals.msg "%d to install | %d to remove\n"
+        to_install
+        (List.length sol.to_remove);
 
       let continue = 
-        if !to_install <= 1 then
+        if to_install <= 1 then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1334,6 +1335,7 @@ module Heuristic = struct
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
 
+        let cores = File.Config.cores t.config in
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       );
