@@ -1270,16 +1270,19 @@ module Heuristic = struct
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      let to_install =
+      let to_install, to_reinstall =
         PA_graph.fold_vertex
-          (fun pkg to_install ->
+          (fun pkg (to_install, to_reinstall) ->
             match action pkg with
-              | To_change (None, _) -> succ to_install
-              | _ -> to_install) 
+              | To_change (None, _) -> succ to_install, to_reinstall
+              | To_change (Some _, _)
+              | To_recompile _ -> to_install, succ to_reinstall
+              | To_delete _ -> assert false) 
           sol.to_add
-          0 in
-      Globals.msg "%d to install | %d to remove\n"
+          (0, 0) in
+      Globals.msg "%d to install | %d to reinstall | %d to remove\n"
         to_install
+        to_reinstall
         (List.length sol.to_remove);
 
       let continue = 
