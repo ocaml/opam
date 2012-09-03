@@ -15,9 +15,7 @@
 
 open Types
 
-(** Functions to file read and write configuration files in a typed
-    way. *)
-
+(** Functions to read and write configuration files in a typed way. *)
 module type IO_FILE = sig
 
   (** File contents *)
@@ -57,9 +55,8 @@ module Config: sig
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
 
-  (** OCaml version updates *)
-  val with_last_ocaml_in_path: t -> OCaml_V.t option -> t
-
+  (** system-wide's OCaml version updates *)
+  val with_system_ocaml_version: t -> OCaml_V.t option -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> OPAM_V.t
@@ -70,8 +67,8 @@ module Config: sig
   (** Return the OCaml alias *)
   val ocaml_version: t -> Alias.t
 
-  (** Return the OCaml version *)
-  val last_ocaml_in_path: t -> OCaml_V.t option
+  (** Return the system's OCaml version *)
+  val system_ocaml_version: t -> OCaml_V.t option
 
   (** Return the number of cores *)
   val cores: t -> int
@@ -85,6 +82,16 @@ module OPAM: sig
 
   (** Create an opam file *)
   val create: nv -> t
+
+  (** Full constructor *)
+  val make:
+    name:name -> version:version -> maintainer:string ->
+    substs:basename list -> build_env:(string * string * string) list ->
+    build:string list list -> remove:string list list ->
+    depends:cnf_formula -> depopts:cnf_formula -> conflicts:and_formula ->
+    libraries:section list -> syntax:section list ->
+    others:(string * File_format.value) list ->
+    ocaml_version:ocaml_constraint option -> t
 
   (** Package name *)
   val name: t -> name
@@ -198,10 +205,10 @@ module Comp: sig
   val name: t -> OCaml_V.t
 
   (** Return the url of the compiler *)
-  val src: t -> string
+  val src: t -> filename
 
   (** Return the list of patches to apply *)
-  val patches: t -> string list
+  val patches: t -> filename list
 
   (** Options to give to the "./configure" command *)
   val configure: t -> string list
@@ -350,7 +357,7 @@ end
 (** {2 Repository files} *)
 
 (** Association between package names and repository: [$opam/repo/index] *)
-module Repo_index: IO_FILE with type t = string N.Map.t
+module Repo_index: IO_FILE with type t = string list N.Map.t
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
@@ -372,3 +379,28 @@ module Subst: sig
   val replace_string: string -> (full_variable -> variable_contents) -> string
 
 end
+
+(** {2 Urls for OPAM repositories} *)
+module URL: sig
+
+  include IO_FILE
+
+  (** URL address *)
+  val url: t -> string
+
+  (** Backend kind (could be curl/rsync/git at the moment) *)
+  val kind: t -> string option
+
+  (** Archive checksum *)
+  val checksum: t -> string option
+
+  (** Constructor *)
+  val create: ?checksum:string -> string -> t
+
+end
+
+(** {2 urls.txt file *} *)
+module Urls_txt: IO_FILE with type t = Remote_file.Set.t
+
+(** List of filenames *)
+module Filenames: IO_FILE with type t = Filename.Set.t

@@ -33,12 +33,12 @@ let map_reinstall reinstall a =
   | _ -> a
 
 let string_of_action = function
-  | To_change (None, p)   -> Printf.sprintf "Install: %s" (NV.to_string p)
+  | To_change (None, p)   -> Printf.sprintf " - install %s" (NV.to_string p)
   | To_change (Some o, p) ->
-      Printf.sprintf "Update: %s (Remove) -> %s (Install)"
+      Printf.sprintf "- remove %s and install %s"
         (NV.to_string o) (NV.to_string p)
-  | To_recompile p        -> Printf.sprintf "Recompile: %s" (NV.to_string p)
-  | To_delete p           -> Printf.sprintf "Delete: %s" (NV.to_string p)
+  | To_recompile p        -> Printf.sprintf " - recompile %s" (NV.to_string p)
+  | To_delete p           -> Printf.sprintf " - delete %s" (NV.to_string p)
 
 type package_action = {
   cudf: Cudf.package;
@@ -105,6 +105,9 @@ type solution = {
   to_add   : PA_graph.t;
 }
 
+let solution_is_empty s =
+  s.to_remove = [] && PA_graph.is_empty s.to_add
+
 let print_solution t =
   if t.to_remove = [] && PA_graph.is_empty t.to_add then
     ()
@@ -112,7 +115,7 @@ let print_solution t =
     "No actions will be performed, the current state satisfies the request.\n"*)
   else
     let f = NV.to_string in
-    List.iter (fun p -> Globals.msg "Remove: %s\n" (f p)) t.to_remove;
+    List.iter (fun p -> Globals.msg " - remove %s\n" (f p)) t.to_remove;
     PA_graph.Topological.iter
       (function { action ; _ } -> Globals.msg "%s\n" (string_of_action action))
       t.to_add
@@ -161,7 +164,7 @@ let string_of_package p =
       && List.assoc "status" p.Debian.Packages.extras = "  installed"
     then "installed"
     else "not-installed" in
-  Printf.sprintf "%s.%s(%s)"
+  Printf.sprintf "%s::%s(%s)"
     p.Debian.Packages.name p.Debian.Packages.version installed
 
 let string_of_packages l =

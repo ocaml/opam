@@ -156,7 +156,7 @@ val string_of_value : value -> string
 val string_of_values : value list -> string
 
 (** Print an item *)
-val string_of_item : item -> string
+val string_of_item : item -> string option
 
 (** Print a list of items *)
 val string_of_items : item list -> string

@@ -72,6 +72,7 @@ type result = {
   r_proc     : t;           (* Process *)
   r_code     : int;         (* Process exit code *)
   r_duration : float;       (* Process duration *)
+  r_info     : string list; (* Env variables *)
   r_stdout   : string list; (* Content of stdout dump file *)
   r_stderr   : string list; (* Content of stderr dump file *)
 }
@@ -108,6 +109,8 @@ let wait p =
       match status with
         | Unix.WEXITED code ->
           let duration = Unix.gettimeofday () -. p.p_time in
+          let info =
+            option_default [] (option_map read_lines p.p_info) in
           let stdout =
             option_default [] (option_map read_lines p.p_stdout) in
           let stderr =
@@ -116,6 +119,7 @@ let wait p =
             r_proc     = p;
             r_code     = code;
             r_duration = duration;
+            r_info     = info;
             r_stdout   = stdout;
             r_stderr   = stderr;
           }

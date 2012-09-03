@@ -62,7 +62,7 @@ All the sections in a package
 </td></tr>
 <tr><td><a href="Path.R.html#VALarchive">archive</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
-Return the archive for a giben package:
+Return the archive for a given package:
       <i>$opam/repo/$repo/archives/$NAME.$VERSION.tar.gz</i>
 </div>
 </td></tr>
@@ -71,12 +71,12 @@ Return the archive for a giben package:
 Archives files: <i>$opam/archives/$NAME.$VERSION.tar.gz</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALarchive_dir">archive_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<tr><td><a href="Path.R.html#VALarchives_dir">archives_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the archive folder: <i>$opam/repo/$repo/archives/</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.G.html#VALarchive_dir">archive_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
+<tr><td><a href="Path.G.html#VALarchives_dir">archives_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Archives files folder: <i>$opam/archives/</i>
 </div>
@@ -131,27 +131,57 @@ Get sections
 Get the string list associated to a variable.
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALavailable">available</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-List all the available packages:
-      <i>$opam/repo/$repo/$NAME.$VERSION.opam</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.G.html#VALavailable">available</a> [<a href="Path.G.html">Path.G</a>]</td>
-<td><div class="info">
-List all the available packages:
-      <i>$opam/opam/$NAME.$VERSION.opam</i>
-</div>
-</td></tr>
 <tr><td><a href="File.Dot_config.SECTION.html#VALavailable">available</a> [<a href="File.Dot_config.SECTION.html">File.Dot_config.SECTION</a>]</td>
 <td><div class="info">
 List the available sections
 </div>
 </td></tr>
+<tr><td><a href="Path.G.html#VALavailable_aliases">available_aliases</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+Available aliases
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALavailable_archives">available_archives</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Return the list of archive files in <i>$opam/repo/$repo/archives</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALavailable_compilers">available_compilers</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+All the compiler files
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALavailable_compilers">available_compilers</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+All the compiler files
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALavailable_files">available_files</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+All files in the file dir
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALavailable_packages">available_packages</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+List all the available packages:
+      <i>$opam/repo/$repo/packages/$NAME.$VERSION/opam</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.G.html#VALavailable_packages">available_packages</a> [<a href="Path.G.html">Path.G</a>]</td>
+<td><div class="info">
+List all the available packages:
+      <i>$opam/opam/$NAME.$VERSION.opam</i>
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALavailable_tmp">available_tmp</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Available packages in the temp dir
+</div>
+</td></tr>
 <tr><td><a href="Path.R.html#VALavailable_versions">available_versions</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 List all the available versions for a given package:
-      <i>$opam/repo/$repo/$name.$VERSION.opam</i>
+      <i>$opam/repo/$repo/packages/<code class="code">name</code>.$VERSION/opam</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALavailable_versions">available_versions</a> [<a href="Path.G.html">Path.G</a>]</td>
@@ -161,6 +191,11 @@ List all the available packages:
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
+<tr><td><a href="Types.Remote_file.html#VALbase">base</a> [<a href="Types.Remote_file.html">Types.Remote_file</a>]</td>
+<td><div class="info">
+Get remote filename
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALbasename">basename</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Return the base name
@@ -284,7 +319,17 @@ Check whether a file has a given suffix
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALcheck_suffix">check_suffix</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
 <td></td></tr>
-<tr><td><a href="Types.Abstract.Set.html#VALchoose_one">choose_one</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<tr><td><a href="File.URL.html#VALchecksum">checksum</a> [<a href="File.URL.html">File.URL</a>]</td>
+<td><div class="info">
+Archive checksum
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALchmod">chmod</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Change file permissions
+</div>
+</td></tr>
+<tr><td><a href="Types.ABSTRACT.Set.html#VALchoose_one">choose_one</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
 <td><div class="info">
 Return one element.
 </div>
@@ -325,29 +370,19 @@ Compiler files: <i>$opam/repo/$repo/compilers/$OVERSION.comp</i>
 Compiler files: <i>$opam/compilers/$OVERSION.comp</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALcompiler_dir">compiler_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<tr><td><a href="Client.html#VALcompiler_list">compiler_list</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+<code class="code">compiler_list</code> list the available compiler descriptions
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALcompilers_dir">compilers_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Compiler files: <i>$opam/repo/$repo/compilers/</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.G.html#VALcompiler_dir">compiler_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
+<tr><td><a href="Path.G.html#VALcompilers_dir">compilers_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Compiler files: <i>$opam/compilers/</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.R.html#VALcompiler_list">compiler_list</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-All the compiler files
-</div>
-</td></tr>
-<tr><td><a href="Path.G.html#VALcompiler_list">compiler_list</a> [<a href="Path.G.html">Path.G</a>]</td>
-<td><div class="info">
-All the compiler files
-</div>
-</td></tr>
-<tr><td><a href="Client.html#VALcompiler_list">compiler_list</a> [<a href="Client.html">Client</a>]</td>
-<td><div class="info">
-<code class="code">compiler_list</code> list the available compiler descriptions
 </div>
 </td></tr>
 <tr><td><a href="Types.Stdlib_filename.html#VALconcat">concat</a> [<a href="Types.Stdlib_filename.html">Types.Stdlib_filename</a>]</td>
@@ -394,6 +429,11 @@ Package conflicts
 Copy a file
 </div>
 </td></tr>
+<tr><td><a href="Types.Dirname.html#VALcopy">copy</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Copy a directory
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALcopy">copy</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>
@@ -407,6 +447,11 @@ Copy a file in a directory
 <tr><td><a href="File.Config.html#VALcores">cores</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 Return the number of cores
+</div>
+</td></tr>
+<tr><td><a href="Types.Remote_file.html#VALcreate">create</a> [<a href="Types.Remote_file.html">Types.Remote_file</a>]</td>
+<td><div class="info">
+Constructor
 </div>
 </td></tr>
 <tr><td><a href="Types.Full_section.html#VALcreate">create</a> [<a href="Types.Full_section.html">Types.Full_section</a>]</td>
@@ -448,6 +493,11 @@ Create a global path
 <tr><td><a href="Path.C.html#VALcreate">create</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Create a compiler path
+</div>
+</td></tr>
+<tr><td><a href="File.URL.html#VALcreate">create</a> [<a href="File.URL.html">File.URL</a>]</td>
+<td><div class="info">
+Constructor
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_config.html#VALcreate">create</a> [<a href="File.Dot_config.html">File.Dot_config</a>]</td>
@@ -500,6 +550,11 @@ Return the current working directory
 Return the current working directory
 </div>
 </td></tr>
+<tr><td><a href="Path.R.html#VALcwd">cwd</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Create a repository path with the current working directory
+</div>
+</td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Types.Repository.html#VALdefault">default</a> [<a href="Types.Repository.html">Types.Repository</a>]</td>
 <td><div class="info">
@@ -524,7 +579,7 @@ Optional dependencies
 <tr><td><a href="Path.R.html#VALdescr">descr</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the description file for a given package:
-      <i>$opam/repo/$repo/descr/$NAME.VERSION</i>
+      <i>$opam/repo/$repo/packages/$NAME.VERSION/descr</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALdescr">descr</a> [<a href="Path.G.html">Path.G</a>]</td>
@@ -532,14 +587,14 @@ Return the description file for a given package:
 Description file: <i>$opam/descr/$NAME.$VERSION</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALdescr_dir">descr_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-Return the description folder
-</div>
-</td></tr>
 <tr><td><a href="Path.G.html#VALdescr_dir">descr_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 Description files folder: <i>$opam/descr/</i>
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALdigest">digest</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Compute the MD5 digest of a file
 </div>
 </td></tr>
 <tr><td><a href="Run.html#VALdirectories_with_links">directories_with_links</a> [<a href="Run.html">Run</a>]</td>
@@ -550,6 +605,11 @@ Description files folder: <i>$opam/descr/</i>
 <tr><td><a href="Types.Filename.html#VALdirname">dirname</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Return the directory name
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALdirname">dirname</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Return the parent directory
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALdoc">doc</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -563,14 +623,42 @@ Documentation path for a given package:
 Documentation path: <i>$opam/$OVERSION/doc/</i>
 </div>
 </td></tr>
+<tr><td><a href="Types.Filename.html#VALdownload">download</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+download a remote file in a given directory.
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALdownload">download</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-download compiler sources.
+download compiler sources
 </div>
 </td></tr>
 <tr><td><a href="Repositories.html#VALdownload">download</a> [<a href="Repositories.html">Repositories</a>]</td>
 <td><div class="info">
-Run <i>opam-$kind-download</i> in <i>$opam/repo/$repo</i>
+Download <i>$opam/repo/$repo/archive/$nv.tar.gz</i>
+</div>
+</td></tr>
+<tr><td><a href="Repositories.BACKEND.html#VALdownload_archive">download_archive</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
+<td><div class="info">
+Download a (remote) archive file, stored on the (remote) OPAM
+      repository, in the current repository.
+</div>
+</td></tr>
+<tr><td><a href="Repositories.BACKEND.html#VALdownload_dir">download_dir</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
+<td><div class="info">
+Download a (remote) directory and return the local path to the
+      downloaded directory.
+</div>
+</td></tr>
+<tr><td><a href="Repositories.BACKEND.html#VALdownload_file">download_file</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
+<td><div class="info">
+Download a (remote) file and return the local path to the
+      downloaded file.
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALdownload_iter">download_iter</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+iterate downloads until one is sucessful
 </div>
 </td></tr>
 <tr><td align="left"><br>E</td></tr>
@@ -618,11 +706,27 @@ Extract an archive in a given directory (it rewrites the root to
 </td></tr>
 <tr><td><a href="Run.html#VALextract">extract</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">extract filename dirname</code> untar the archive <code class="code">filename</code> to
-    <code class="code">dirname</code>
+<code class="code">extract filename dirname</code> extracts the archive <code class="code">filename</code> into
+    <code class="code">dirname</code>.
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALextract_in">extract_in</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Extract an archive in a given directory (which should already exists)
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALextract_in">extract_in</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">extract_in filename dirname</code> extracts the archive <code class="code">filename</code> into
+    <code class="code">dirname</code>.
 </div>
 </td></tr>
 <tr><td align="left"><br>F</td></tr>
+<tr><td><a href="Path.R.html#VALfiles">files</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+files <i>$opam/repo/$repo/packages/$NAME.$VERSION/files</i>
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALfiles_with_links">files_with_links</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">files_with_links dir</code> returns the files in the directory <code class="code">dir</code>.
@@ -644,11 +748,6 @@ Same as <code class="code">filter_backward_dependencies</code> but for forward
 <tr><td><a href="Run.html#VALflock">flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">flock ()</code> takes the global file lock.
-</div>
-</td></tr>
-<tr><td><a href="Path.G.html#VALfold_compiler">fold_compiler</a> [<a href="Path.G.html">Path.G</a>]</td>
-<td><div class="info">
-Folding on available compiler, including the one that is currently set.
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALfull">full</a> [<a href="File.Descr.html">File.Descr</a>]</td>
@@ -678,6 +777,11 @@ Iteration in topological order
 </div>
 </td></tr>
 <tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Types.Dirname.html#VALin_dir">in_dir</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Evaluate a function in a given directory
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALin_dir">in_dir</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">in_dir dir fn</code> evaluates <code class="code">fn</code> in the directory <code class="code">dir</code>
@@ -688,9 +792,14 @@ Iteration in topological order
 Displays a general summary of a package.
 </div>
 </td></tr>
+<tr><td><a href="Repositories.BACKEND.html#VALinit">init</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
+<td><div class="info">
+Initialize an OPAM repository in the current directory.
+</div>
+</td></tr>
 <tr><td><a href="Repositories.html#VALinit">init</a> [<a href="Repositories.html">Repositories</a>]</td>
 <td><div class="info">
-Run <i>opam-$kind-init</i> in <i>$opam/repo/$repo</i>
+Initialize <i>$opam/repo/$repo</i>
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALinit">init</a> [<a href="Client.html">Client</a>]</td>
@@ -735,9 +844,16 @@ Find all the invalid fields
 Is the process result a failure ?
 </div>
 </td></tr>
+<tr><td><a href="Run.html#VALis_github_tarball">is_github_tarball</a> [<a href="Run.html">Run</a>]</td>
+<td></td></tr>
 <tr><td><a href="Process.html#VALis_success">is_success</a> [<a href="Process.html">Process</a>]</td>
 <td><div class="info">
 Is the process result a success ?
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALis_tar_archive">is_tar_archive</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+Test whether the file is an archive, by looking as its extension
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALis_valid">is_valid</a> [<a href="File_format.html">File_format</a>]</td>
@@ -757,17 +873,17 @@ Check whether a list of items contains only valid variable definitions
 Get the repository kind
 </div>
 </td></tr>
+<tr><td><a href="File.URL.html#VALkind">kind</a> [<a href="File.URL.html">File.URL</a>]</td>
+<td><div class="info">
+Backend kind (could be curl/rsync/git at the moment)
+</div>
+</td></tr>
 <tr><td><a href="File.Dot_config.SECTION.html#VALkind">kind</a> [<a href="File.Dot_config.SECTION.html">File.Dot_config.SECTION</a>]</td>
 <td><div class="info">
 Return the section kind
 </div>
 </td></tr>
 <tr><td align="left"><br>L</td></tr>
-<tr><td><a href="File.Config.html#VALlast_ocaml_in_path">last_ocaml_in_path</a> [<a href="File.Config.html">File.Config</a>]</td>
-<td><div class="info">
-Return the OCaml version
-</div>
-</td></tr>
 <tr><td><a href="Path.C.html#VALlib">lib</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Library path for a given package:
@@ -837,9 +953,20 @@ Package maintainer
 Options to give to the "make" command
 </div>
 </td></tr>
+<tr><td><a href="File.OPAM.html#VALmake">make</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
+<td><div class="info">
+Full constructor
+</div>
+</td></tr>
 <tr><td><a href="File_format.html#VALmake_and_formula">make_and_formula</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Build an AND formula
+</div>
+</td></tr>
+<tr><td><a href="Repositories.html#VALmake_archive">make_archive</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td><div class="info">
+<code class="code">make_archive repo_kind nv</code> build ./$nv.tar.gz, assuming the
+    repository kind is <code class="code">repo_kind</code>.
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALmake_bool">make_bool</a> [<a href="File_format.html">File_format</a>]</td>
@@ -907,12 +1034,17 @@ Create a pair of strings
 Create a symbol
 </div>
 </td></tr>
-<tr><td><a href="Types.Abstract.Set.html#VALmap">map</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<tr><td><a href="Types.ABSTRACT.Set.html#VALmap">map</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
 <td><div class="info">
 auto-map
 </div>
 </td></tr>
-<tr><td><a href="Types.Abstract.Map.html#VALmerge_max">merge_max</a> [<a href="Types.Abstract.Map.html">Types.Abstract.Map</a>]</td>
+<tr><td><a href="Types.Remote_file.html#VALmd5">md5</a> [<a href="Types.Remote_file.html">Types.Remote_file</a>]</td>
+<td><div class="info">
+MD5 digest or the remote file
+</div>
+</td></tr>
+<tr><td><a href="Types.ABSTRACT.Map.html#VALmerge_max">merge_max</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
 <td><div class="info">
 WARNING : Besides <code class="code">key</code>, the function could receive 
         some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
@@ -928,11 +1060,6 @@ List of other files to install
 List of other files to install
 </div>
 </td></tr>
-<tr><td><a href="Run.html#VALmk_temp_dir">mk_temp_dir</a> [<a href="Run.html">Run</a>]</td>
-<td><div class="info">
-<code class="code">mk_temp_dir str</code> creates a tempory directory
-</div>
-</td></tr>
 <tr><td><a href="Types.Dirname.html#VALmkdir">mkdir</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
 <td><div class="info">
 Create a directory
@@ -941,6 +1068,16 @@ Create a directory
 <tr><td><a href="Run.html#VALmkdir">mkdir</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 Create a directory.
+</div>
+</td></tr>
+<tr><td><a href="Types.Filename.html#VALmove">move</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Move a file
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALmove">move</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Move a directory
 </div>
 </td></tr>
 <tr><td align="left"><br>N</td></tr>
@@ -1001,6 +1138,11 @@ Create a new pair from a cudf package
 Create a new pair from a directory name.
 </div>
 </td></tr>
+<tr><td><a href="Path.R.html#VALof_dirname">of_dirname</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Transform a directory name into a repository path
+</div>
+</td></tr>
 <tr><td><a href="Types.NV.html#VALof_dpkg">of_dpkg</a> [<a href="Types.NV.html">Types.NV</a>]</td>
 <td><div class="info">
 Create a new pair from a debian package
@@ -1011,19 +1153,9 @@ Create a new pair from a debian package
 Create a new pair from a filename.
 </div>
 </td></tr>
-<tr><td><a href="Types.Abstract.Set.html#VALof_list">of_list</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<tr><td><a href="Types.ABSTRACT.Set.html#VALof_list">of_list</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
 <td><div class="info">
 Make a set from a list
-</div>
-</td></tr>
-<tr><td><a href="Path.R.html#VALof_path">of_path</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-Transform a directory name into a repository path
-</div>
-</td></tr>
-<tr><td><a href="Types.Dirname.html#VALof_raw">of_raw</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
-<td><div class="info">
-Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 </div>
 </td></tr>
 <tr><td><a href="File.IO_FILE.html#VALof_raw">of_raw</a> [<a href="File.IO_FILE.html">File.IO_FILE</a>]</td>
@@ -1031,7 +1163,7 @@ Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 Convert a raw string into a file
 </div>
 </td></tr>
-<tr><td><a href="Types.Abstract.html#VALof_string">of_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
+<tr><td><a href="Types.ABSTRACT.html#VALof_string">of_string</a> [<a href="Types.ABSTRACT.html">Types.ABSTRACT</a>]</td>
 <td><div class="info">
 Create an abstract value from a string
 </div>
@@ -1039,17 +1171,12 @@ Create an abstract value from a string
 <tr><td><a href="Path.R.html#VALopam">opam</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Return the OPAM file for a given package:
-      <i>$opam/repo/$repo/opam/$NAME.$VERSION.opam</i>
+      <i>$opam/repo/$repo/packages/$NAME.$VERSION/opam</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALopam">opam</a> [<a href="Path.G.html">Path.G</a>]</td>
 <td><div class="info">
 OPAM files: <i>$opam/opam/$NAME.$VERSION.opam</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.R.html#VALopam_dir">opam_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-Return the OPAM folder: <i>$opam/repo/$repo/opam/</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.G.html#VALopam_dir">opam_dir</a> [<a href="Path.G.html">Path.G</a>]</td>
@@ -1073,9 +1200,19 @@ Return the package the variable is defined in
 Return the package name in which the section is
 </div>
 </td></tr>
+<tr><td><a href="Path.R.html#VALpackage">package</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Package folder: <i>$opam/repo/$repo/packages/$NAME.$VERSION</i>
+</div>
+</td></tr>
 <tr><td><a href="File.Comp.html#VALpackages">packages</a> [<a href="File.Comp.html">File.Comp</a>]</td>
 <td><div class="info">
 Packages to install immediately after the creation of OCaml
+</div>
+</td></tr>
+<tr><td><a href="Path.R.html#VALpackages_dir">packages_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Packages folder: <i>$opam/repo/$repo/packages</i>
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALparse_and_formula">parse_and_formula</a> [<a href="File_format.html">File_format</a>]</td>
@@ -1180,14 +1317,24 @@ Parse a pair of strings from a list of values
 Parse a symbol
 </div>
 </td></tr>
+<tr><td><a href="Types.Filename.html#VALpatch">patch</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Apply a patch to a directory
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALpatch">patch</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-Apply a patch file in the current directory
+Apply a patch file in the current directory.
 </div>
 </td></tr>
 <tr><td><a href="File.Comp.html#VALpatches">patches</a> [<a href="File.Comp.html">File.Comp</a>]</td>
 <td><div class="info">
 Return the list of patches to apply
+</div>
+</td></tr>
+<tr><td><a href="Types.Remote_file.html#VALperm">perm</a> [<a href="Types.Remote_file.html">Types.Remote_file</a>]</td>
+<td><div class="info">
+File permission
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALpin">pin</a> [<a href="Client.html">Client</a>]</td>
@@ -1226,6 +1373,16 @@ Display a solution
 </div>
 </td></tr>
 <tr><td align="left"><br>R</td></tr>
+<tr><td><a href="Types.Filename.html#VALraw">raw</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Creation from a raw string (as <i>http://&lt;path&gt;</i>)
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALraw">raw</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Creation from a raw string (as <i>http://&lt;path&gt;</i>)
+</div>
+</td></tr>
 <tr><td><a href="Types.Filename.html#VALread">read</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Retrieves the contents from the hard disk.
@@ -1267,6 +1424,11 @@ Misc
 <tr><td><a href="Types.Filename.html#VALrec_list">rec_list</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 List all the filenames, recursively
+</div>
+</td></tr>
+<tr><td><a href="Repositories.html#VALregister_backend">register_backend</a> [<a href="Repositories.html">Repositories</a>]</td>
+<td><div class="info">
+Register a repository backend
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALreinstall">reinstall</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -1376,8 +1538,6 @@ Root dir: <i>$opam/</i>
 Root dir: <i>$opam/$OVERSION</i>
 </div>
 </td></tr>
-<tr><td><a href="Repositories.Raw.html#VALrsync">rsync</a> [<a href="Repositories.Raw.html">Repositories.Raw</a>]</td>
-<td></td></tr>
 <tr><td><a href="Process.html#VALrun">run</a> [<a href="Process.html">Process</a>]</td>
 <td><div class="info">
 <code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
@@ -1412,6 +1572,11 @@ Return the optional section name: <code class="code">None</code> means all avail
 Get all the sections from a list of items
 </div>
 </td></tr>
+<tr><td><a href="Solver.html#VALsolution_is_empty">solution_is_empty</a> [<a href="Solver.html">Solver</a>]</td>
+<td><div class="info">
+Is the solution empty ?
+</div>
+</td></tr>
 <tr><td><a href="Solver.html#VALsort_by_backward_dependencies">sort_by_backward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
 <td><div class="info">
 Return a permutation of the given set of packages :
@@ -1427,6 +1592,11 @@ Return the url of the compiler
 <tr><td><a href="Types.Filename.html#VALstarts_with">starts_with</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
 <td><div class="info">
 Check wether a filename starts by a given dirname
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALstarts_with">starts_with</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Does the directory starts with a given prefix
 </div>
 </td></tr>
 <tr><td><a href="Types.html#VALstring_of_atom_formula">string_of_atom_formula</a> [<a href="Types.html">Types</a>]</td>
@@ -1519,7 +1689,17 @@ Return the first line
 List of exported syntax extensions
 </div>
 </td></tr>
+<tr><td><a href="File.Config.html#VALsystem_ocaml_version">system_ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
+<td><div class="info">
+Return the system's OCaml version
+</div>
+</td></tr>
 <tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Path.R.html#VALtmp_dir">tmp_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<td><div class="info">
+Tempory folder <i>$opam/repo/$repo/tmp/$NAME.$VERSION/</i>
+</div>
+</td></tr>
 <tr><td><a href="Types.NV.html#VALto_map">to_map</a> [<a href="Types.NV.html">Types.NV</a>]</td>
 <td><div class="info">
 Convert a set of pairs to a map <code class="code">name -&gt; versions</code>
@@ -1535,12 +1715,12 @@ Convert to Debian packages to feed the solver
 Return the file contents
 </div>
 </td></tr>
-<tr><td><a href="Types.Abstract.Set.html#VALto_string">to_string</a> [<a href="Types.Abstract.Set.html">Types.Abstract.Set</a>]</td>
+<tr><td><a href="Types.ABSTRACT.Set.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
 <td><div class="info">
 Pretty-print a set
 </div>
 </td></tr>
-<tr><td><a href="Types.Abstract.html#VALto_string">to_string</a> [<a href="Types.Abstract.html">Types.Abstract</a>]</td>
+<tr><td><a href="Types.ABSTRACT.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.html">Types.ABSTRACT</a>]</td>
 <td><div class="info">
 Convert an abstract value to a string
 </div>
@@ -1555,10 +1735,20 @@ toplevel path: <i>$opam/$OVERSION/lib/toplevel</i>
 List of toplevel files
 </div>
 </td></tr>
+<tr><td><a href="Types.Filename.html#VALtouch">touch</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
+<td><div class="info">
+Create an empty file
+</div>
+</td></tr>
 <tr><td align="left"><br>U</td></tr>
+<tr><td><a href="Repositories.BACKEND.html#VALupdate">update</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
+<td><div class="info">
+Update the OPAM repository in the current directory.
+</div>
+</td></tr>
 <tr><td><a href="Repositories.html#VALupdate">update</a> [<a href="Repositories.html">Repositories</a>]</td>
 <td><div class="info">
-Run <i>opam-$kind-update</i> in <i>$opam/repo/$repo</i>
+Update <i>$opam/repo/$repo</i>
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALupdate">update</a> [<a href="Client.html">Client</a>]</td>
@@ -1580,13 +1770,8 @@ Finds a consistent state where most of the installed packages are
 </td></tr>
 <tr><td><a href="Repositories.html#VALupload">upload</a> [<a href="Repositories.html">Repositories</a>]</td>
 <td><div class="info">
-Run <i>opam-$kind-upload</i> in <i>$opam/repo/$repo</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.R.html#VALupload">upload</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-Return the upload folder for a given version:
-      <i>$opam/repo/$repo/upload/</i>
+Upload the content of <i>$opam/repo/$repo/upload</i> to the remote
+    repository.
 </div>
 </td></tr>
 <tr><td><a href="Client.html#VALupload">upload</a> [<a href="Client.html">Client</a>]</td>
@@ -1594,46 +1779,32 @@ Return the upload folder for a given version:
 Upload a package to a remote repository.
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALupload_archives">upload_archives</a> [<a href="Path.R.html">Path.R</a>]</td>
+<tr><td><a href="Repositories.BACKEND.html#VALupload_dir">upload_dir</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
 <td><div class="info">
-Return the upload folder for archive files:
-      <i>$opam/repo/$repo/upload/archives/$NAME.$VERSION.tar.gz</i>
+Upload the content of the current directory to the directory
+      given as argument.
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALupload_archives_dir">upload_archives_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<tr><td><a href="Path.R.html#VALupload_dir">upload_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
-Return the upload folder for archive files:
-      <i>$opam/repo/$repo/upload/archives/</i>
+Return the upload folder for a given version:
+      <i>$opam/repo/$repo/upload/</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALupload_descr">upload_descr</a> [<a href="Path.R.html">Path.R</a>]</td>
+<tr><td><a href="Path.R.html#VALurl">url</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
-Return the upload folder for descr files:
-      <i>$opam/repo/$repo/upload/descr/$NAME.$VERSION</i>
+urls <i>$opma/repo/$repo/package/$NAME.$VERSION/url</i>
 </div>
 </td></tr>
-<tr><td><a href="Path.R.html#VALupload_descr_dir">upload_descr_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
+<tr><td><a href="File.URL.html#VALurl">url</a> [<a href="File.URL.html">File.URL</a>]</td>
 <td><div class="info">
-Return the upload folder for descr files:
-      <i>$opam/repo/$repo/upload/descr/</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.R.html#VALupload_opam">upload_opam</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-Return the upload folder for OPAM files:
-      <i>$opam/repo/$repo/upload/opam/$NAME.$VERSION.opam</i>
-</div>
-</td></tr>
-<tr><td><a href="Path.R.html#VALupload_opam_dir">upload_opam_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
-<td><div class="info">
-Return the upload folder for OPAM files:
-      <i>$opam/repo/$repo/upload/opam/</i>
+URL address
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>
 <tr><td><a href="Parser.html#VALvalue">value</a> [<a href="Parser.html">Parser</a>]</td>
 <td></td></tr>
-<tr><td><a href="Types.Abstract.Map.html#VALvalues">values</a> [<a href="Types.Abstract.Map.html">Types.Abstract.Map</a>]</td>
+<tr><td><a href="Types.ABSTRACT.Map.html#VALvalues">values</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
 <td><div class="info">
 Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.
 </div>
@@ -1709,9 +1880,9 @@ Construct as <code class="code">depopts</code>
 Functional version of <code class="code">flock / funlock</code>
 </div>
 </td></tr>
-<tr><td><a href="File.Config.html#VALwith_last_ocaml_in_path">with_last_ocaml_in_path</a> [<a href="File.Config.html">File.Config</a>]</td>
+<tr><td><a href="Types.Repository.html#VALwith_kind">with_kind</a> [<a href="Types.Repository.html">Types.Repository</a>]</td>
 <td><div class="info">
-OCaml version updates
+Return a copy of repo with a different kind
 </div>
 </td></tr>
 <tr><td><a href="File.Config.html#VALwith_ocaml_version">with_ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
@@ -1732,6 +1903,21 @@ Construct as <code class="code">remove</code>
 <tr><td><a href="File.Config.html#VALwith_repositories">with_repositories</a> [<a href="File.Config.html">File.Config</a>]</td>
 <td><div class="info">
 Repository updates
+</div>
+</td></tr>
+<tr><td><a href="File.Config.html#VALwith_system_ocaml_version">with_system_ocaml_version</a> [<a href="File.Config.html">File.Config</a>]</td>
+<td><div class="info">
+system-wide's OCaml version updates
+</div>
+</td></tr>
+<tr><td><a href="Types.Dirname.html#VALwith_tmp_dir">with_tmp_dir</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
+<td><div class="info">
+Execute a function in a temp directory
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALwith_tmp_dir">with_tmp_dir</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+<code class="code">with_tmp_dir fn</code> executes <code class="code">fn</code> in a tempory directory
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALwrite">write</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>

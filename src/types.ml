@@ -15,7 +15,7 @@
 
 let log fmt = Globals.log "TYPES" fmt
 
-module type Abstract = sig
+module type ABSTRACT = sig
   type t
   val of_string: string -> t
   val to_string: t -> string
@@ -28,17 +28,18 @@ module type Abstract = sig
   end               
   module Map: sig
     include Map.S with type key = t
+    val to_string: ('a -> string) -> 'a t -> string
     val values: 'a t -> 'a list
     val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   end
 end
 
-module Set = struct
+module type OrderedType = sig
+  include Set.OrderedType
+  val to_string: t -> string
+end
 
-  module type OrderedType = sig
-    include Set.OrderedType
-    val to_string: t -> string
-  end
+module Set = struct
 
   module Make (O : OrderedType) = struct
 
@@ -68,8 +69,6 @@ end
 
 module Map = struct
 
-  module type OrderedType = Map.OrderedType
-
   module Make (O : OrderedType) = struct
 
     module M = Map.Make(O)
@@ -85,6 +84,11 @@ module Map = struct
           | Some o1 -> function
               | None -> Some o1
               | Some o2 -> f k o1 o2)
+
+  let to_string string_of_value m =
+    let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
+    let l = fold (fun k v l -> s (k,v)::l) m [] in
+    Printf.sprintf "{ %s }" (String.concat ", " l)
 
   end
 
@@ -110,32 +114,50 @@ end
 (* Filenames *)
 
 (* Basenames *)
-module Basename: Abstract = Base
+module Basename: ABSTRACT = Base
 type basename = Basename.t
 
 (* Absolute directory names *)
 module Dirname: sig
-  include Abstract
+  include ABSTRACT
   val cwd: unit -> t
   val rmdir: t -> unit
   val mkdir: t -> unit
   val list: t -> t list
+  val in_dir: t -> (unit -> 'a) -> 'a
   val exec: t ->
     ?add_to_env:(string*string) list ->
     ?add_to_path:t list -> string list list -> int
   val chdir: t -> unit
+  val move: t -> t -> unit
+  val copy: t -> t -> unit
+  val dirname: t -> t
   val basename: t -> basename
+  val starts_with: prefix:t -> t -> bool
   val remove_prefix: prefix:t -> t -> string
   val exists: t -> bool
-  val of_raw: string -> t
+  val raw: string -> t
+  val with_tmp_dir: (t -> 'a) -> 'a
 end = struct
 
   include Base
 
   let of_string dirname =
-    Run.real_path dirname
+    if not (Filename.is_relative dirname) then
+      dirname
+    else
+      Run.real_path dirname
 
-  let of_raw s = s
+  let to_string dirname =
+    if dirname.[String.length dirname - 1] = Filename.dir_sep.[0] then
+      Filename.concat (Filename.dirname dirname) (Filename.basename dirname)
+    else
+      dirname
+
+  let raw s = s
+
+  let with_tmp_dir fn =
+    Run.with_tmp_dir (fun dir -> fn (of_string dir))
 
   let rmdir dirname =
     Run.remove (to_string dirname)
@@ -150,6 +172,12 @@ end = struct
     let fs = Run.directories_with_links (to_string d) in
     List.map of_string fs
 
+  let in_dir dirname fn =
+    if Sys.file_exists dirname then
+      Run.in_dir dirname fn
+    else
+      Globals.error_and_exit "%s does not exists!" dirname
+
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
     Run.in_dir (to_string dirname) 
       (fun () -> 
@@ -161,22 +189,52 @@ end = struct
   let chdir dirname =
     Run.chdir (to_string dirname)
 
+  let move src dst =
+    let err = Run.command [ "mv"; to_string src; to_string dst ] in
+    if err <> 0 then
+      Globals.exit err
+
+  let copy src dst =
+    with_tmp_dir (fun tmp ->
+      let err = Run.command [ "rsync"; "-a"; Filename.concat (to_string src) "/"; to_string tmp ] in
+      if err <> 0 then
+        Globals.exit err;
+      match list tmp with
+      | [f] ->
+          rmdir dst;
+          move f dst
+      | _ -> Globals.error_and_exit "Error while copying %s to %s" (to_string src) (to_string dst)
+    )
+
   let basename dirname =
     Basename.of_string (Filename.basename (to_string dirname))
+
+  let dirname dirname =
+    to_string (Filename.dirname (of_string dirname))
 
   let exists dirname =
     Sys.file_exists (to_string dirname)
 
-  let remove_prefix ~prefix dirname =
+  let starts_with ~prefix dirname =
     let prefix = to_string prefix in
+    Utils.starts_with ~prefix (to_string dirname)
+
+  let remove_prefix ~prefix dirname =
+    let prefix = 
+      let str = to_string prefix in
+      if str = "" then "" else Filename.concat str "" in
     let dirname = to_string dirname in
     Utils.remove_prefix ~prefix dirname
 end
     
 type dirname = Dirname.t
 
+let (/) d1 s2 =
+  let s1 = Dirname.to_string d1 in
+  Dirname.raw (Filename.concat s1 s2)
+
 (* Raw file contents *)
-module Raw: Abstract = Base
+module Raw: ABSTRACT = Base
 type raw = Raw.t
 
 (* Keep a link to [Filename] for the standard library *)
@@ -185,7 +243,7 @@ module F = Filename
 module Stdlib_filename = F
 
 module Filename: sig
-  include Abstract
+  include ABSTRACT
   val create: dirname -> basename -> t
   val of_basename: basename -> t
   val dirname: t -> dirname
@@ -200,13 +258,22 @@ module Filename: sig
   val list: dirname -> t list
   val rec_list: dirname -> t list
   val with_raw: (Raw.t -> 'a) -> t -> 'a
+  val move: t -> t -> unit
   val copy_in: t -> dirname -> unit
   val link_in: t -> dirname -> unit
   val copy: t -> t -> unit
   val link: t -> t -> unit
   val extract: t -> dirname -> unit
+  val extract_in: t -> dirname -> unit
   val starts_with: dirname -> t -> bool
   val remove_prefix: prefix:dirname -> t -> string
+  val download: t -> dirname -> t option
+  val download_iter: t list -> dirname -> t option
+  val patch: t -> dirname -> bool
+  val digest: t -> Digest.t
+  val touch: t -> unit
+  val chmod: t -> int -> unit
+  val raw: string -> t
 end = struct
 
   type t = {
@@ -214,14 +281,34 @@ end = struct
     basename: Basename.t;
   }
 
-  let create dirname basename = { dirname; basename }
+  let create dirname basename =
+    let b1 = Filename.dirname (Basename.to_string basename) in
+    let b2 = Basename.of_string (Filename.basename (Basename.to_string basename)) in
+    if basename = b2 then
+      { dirname; basename }
+    else
+      { dirname = dirname / b1; basename = b2 }
 
   let of_basename basename =
     let dirname = Dirname.of_string "." in
     { dirname; basename }
 
+  let raw str =
+    let dirname = Dirname.raw (Filename.dirname str) in
+    let basename = Basename.of_string (Filename.basename str) in
+    create dirname basename
+
   let to_string t =
     F.concat (Dirname.to_string t.dirname) (Basename.to_string t.basename)
+
+  let digest t =
+    Digest.to_hex (Digest.file (to_string t))
+
+  let touch t =
+    Run.write (to_string t) ""
+
+  let chmod t p =
+    Unix.chmod (to_string t) p
 
   let of_string s =
     let dirname = F.dirname s in
@@ -272,6 +359,11 @@ end = struct
   let copy src dst =
     Run.copy (to_string src) (to_string dst)
 
+  let move src dst =
+    let err = Run.command [ "mv"; to_string src; to_string dst ] in
+    if err <> 0 then
+      Globals.exit err
+
   let link src dst =
     if Globals.os = Globals.Win32 then
       copy src dst
@@ -290,20 +382,37 @@ end = struct
   let extract filename dirname =
     Run.extract (to_string filename) (Dirname.to_string dirname)
 
+  let extract_in filename dirname =
+    Run.extract_in (to_string filename) (Dirname.to_string dirname)
+
   let starts_with dirname filename =
     Utils.starts_with (Dirname.to_string dirname) (to_string filename)
 
   let remove_prefix ~prefix filename =
-    let prefix = 
-      let str = Dirname.to_string prefix in
-      if str = "" then "" else F.concat str "" in
-    let filename = to_string filename in
-    Utils.remove_prefix ~prefix filename
+    let filename = Dirname.raw (to_string filename) in
+    Dirname.remove_prefix ~prefix filename
+
+  let download filename dirname =
+    Dirname.mkdir dirname;
+    match Run.download ~filename:(to_string filename) ~dirname:(Dirname.to_string dirname) with
+    | None   -> None
+    | Some f -> Some (of_string f)
+
+  let rec download_iter filenames dirname =
+    match filenames with
+    | []   -> None
+    | h::t ->
+        match download h dirname with
+        | None -> download_iter t dirname
+        | x    -> x
+
+  let patch filename dirname =
+    Dirname.in_dir dirname (fun () -> Run.patch (to_string filename))
 
   module O = struct
     type tmp = t
     type t = tmp
-    let compare = compare
+    let compare x y = compare (to_string x) (to_string y)
     let to_string = to_string
   end
   module Map = Map.Make(O)
@@ -311,9 +420,14 @@ end = struct
 end
 type filename = Filename.t
 
-let (/) d1 s2 =
-  let s1 = Dirname.to_string d1 in
-  Dirname.of_raw (F.concat s1 s2)
+type 'a download =
+  | Up_to_date of 'a
+  | Not_available
+  | Result of 'a
+
+type file =
+  | D of dirname
+  | F of filename
 
 let (//) d1 s2 =
   let d = Stdlib_filename.dirname s2 in
@@ -326,11 +440,11 @@ let (//) d1 s2 =
 (* Package name and versions *)
 
 (* Versions *)
-module V: Abstract = Base
+module V: ABSTRACT = Base
 type version = V.t
 
 (* Names *)
-module N: Abstract = struct
+module N: ABSTRACT = struct
   type t = string
   let of_string x = x
   let to_string x = x
@@ -349,7 +463,7 @@ end
 type name = N.t
 
 module NV: sig
-  include Abstract
+  include ABSTRACT
   val name: t -> name
   val version: t -> version
   val create: name -> version -> t
@@ -374,23 +488,42 @@ end = struct
   let sep = '.'
 
   let check s =
-    match Utils.cut_at s sep with
-    | None        -> None
-    | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
+    if Utils.contains s ' ' || Utils.contains s '\n' then
+      None
+    else match Utils.cut_at s sep with
+      | None        -> None
+      | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
 
   let of_string s = match check s with
     | Some x -> x
     | None   -> Globals.error_and_exit "%s is not a valid versioned package name" s
 
-  let of_filename f =
-    let f = Filename.to_string f in
-    let b = F.basename f in
-    if F.check_suffix b ".opam" then
-      check (F.chop_suffix b ".opam")
-    else if F.check_suffix b ".tar.gz" then
-      check (F.chop_suffix b ".tar.gz")
-    else
+  (* XXX: this function is quite hackish, as it mainly depends on the shape the paths
+     built in path.ml *)
+  let rec of_filename f =
+    let f = Utils.string_strip (Filename.to_string f) in
+    if Utils.cut_at f ' ' <> None then
       None
+    else begin
+      let base = F.basename f in
+      let parent = F.basename (F.dirname f) in
+      match base with
+      | "opam" | "descr" | "url" ->
+          check parent
+      | _ ->
+          if F.check_suffix base ".opam" then
+            check (F.chop_suffix base ".opam")
+          else if F.check_suffix base "+opam.tar.gz" then
+            check (F.chop_suffix base "+opam.tar.gz")
+          else
+            match parent with
+            | "files" ->
+                let parent2 = F.basename (F.dirname (F.dirname f)) in
+                check parent2
+            | _ ->
+                (* XXX: handle the case with a deeper files hierarchy *)
+                None
+    end
 
   let of_dirname d =
     check (Basename.to_string (Dirname.basename d))
@@ -439,7 +572,7 @@ type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
 
 (* OCaml version *)
 module OCaml_V: sig
-  include Abstract
+  include ABSTRACT
   val current: unit -> t option
   val compare: t -> relop -> t -> bool
 end = struct
@@ -462,36 +595,37 @@ end = struct
 
 end
 
-module Alias: Abstract = Base
+module Alias: ABSTRACT = Base
 
 (* OPAM version *)
-module OPAM_V: Abstract = Base
+module OPAM_V: ABSTRACT = Base
 
 (* Repositories *)
 
 (* OPAM repositories *)
 module Repository: sig
-  include Abstract
+  include ABSTRACT
   val create: name:string -> kind:string -> address:string -> t
   val default: t
   val name: t -> string
   val kind: t -> string
-  val address: t -> string
+  val address: t -> dirname
+  val with_kind: t -> string -> t
 end = struct
 
   type t = {
     name: string;
     kind: string;
-    address: string;
+    address: dirname;
   }
 
   let create ~name ~kind ~address =
     let address =
       if Pcre.pmatch (Pcre.regexp "://") address
       || Utils.is_inet_address address then
-        address
+        Dirname.raw address
       else
-        Run.real_path address in
+        Dirname.of_string (Run.real_path address) in
     { name; kind; address }
 
   let of_string _ =
@@ -506,11 +640,13 @@ end = struct
   let default = {
     name   = Globals.default_repository_name;
     kind    = Globals.default_repository_kind;
-    address = Globals.default_repository_address;
+    address = Dirname.raw Globals.default_repository_address;
   }
 
+  let with_kind r kind = { r with kind }
+
   let to_string r =
-    Printf.sprintf "%s(%s %s)" r.name r.address r.kind
+    Printf.sprintf "%s(%s %s)" r.name (Dirname.to_string r.address) r.kind
 
   module O = struct
     type tmp = t
@@ -528,7 +664,7 @@ type repository = Repository.t
 
 (* Variable names are used in .config files *)
 module Variable: sig
-  include Abstract
+  include ABSTRACT
   val installed: t
   val enable: t
 end = struct
@@ -548,7 +684,7 @@ let string_of_variable_contents = function
   | S s -> s
 
 module Section: sig
-  include Abstract
+  include ABSTRACT
   module G : Graph.Sig.I with type V.t = t
   val graph_iter : (G.V.t -> unit) -> G.t -> unit
 end = struct
@@ -566,7 +702,7 @@ end
 type section = Section.t
 
 module Full_section: sig
-  include Abstract
+  include ABSTRACT
   val package: t -> name
   val section: t -> section option
   val create: name -> section -> t
@@ -616,7 +752,7 @@ end
 type full_section = Full_section.t
 
 module Full_variable: sig
-  include Abstract
+  include ABSTRACT
   val create_local: name -> section -> variable -> t
   val create_global: name -> variable -> t
   val package: t -> name
@@ -732,7 +868,7 @@ let pin_option_of_string s =
   let d = Run.real_path s in
   if s = "none" then
     Unpin
-  else if String.length d > 1 && d.[0] = '/' then
+  else if Sys.file_exists d then
     Path (Dirname.of_string s)
   else
     Version (V.of_string s)
@@ -785,3 +921,46 @@ type ocaml_constraint = relop * OCaml_V.t
 let string_of_atom_formula = function
   | ((n,_), None)       -> n
   | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c
+
+module Remote_file: sig
+  include ABSTRACT
+  val base: t -> basename
+  val md5: t -> string
+  val perm: t -> int option
+  val create: basename -> string -> int -> t
+end = struct
+
+  type t = {
+    base: basename;
+    md5 : string;
+    perm: int option;
+  }
+
+  let base t = t.base
+  let md5 t = t.md5
+  let perm t = t.perm
+
+  let create base md5 perm =
+    { base; md5; perm=Some perm }
+
+  let to_string t =
+    let perm = match t.perm with
+      | None   -> ""
+      | Some p -> Printf.sprintf " 0o%o" p in
+    Printf.sprintf "%s %s%s" (Basename.to_string t.base) t.md5 perm
+
+  let of_string s =
+    match Utils.split s ' ' with
+    | [base; md5]      -> { base=Basename.of_string base; md5; perm=None }
+    | [base;md5; perm] -> { base=Basename.of_string base; md5; perm=Some (int_of_string perm) }
+    | k                -> Globals.error_and_exit "Remote_file: %s" (String.concat " " k)
+
+  module O = struct
+    type tmp = t
+    type t = tmp
+    let to_string = to_string
+    let compare = compare
+  end
+  module Set = Set.Make(O)
+  module Map = Map.Make(O)
+end

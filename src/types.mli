@@ -18,9 +18,9 @@
 (** {2 Abstract types} *)
 
 (** All abstract types should implement this signature *)
-module type Abstract = sig
+module type ABSTRACT = sig
 
-  (** Abstract type *)
+  (** ABSTRACT type *)
   type t
 
   (** Create an abstract value from a string *)
@@ -52,6 +52,9 @@ module type Abstract = sig
 
     include Map.S with type key = t
 
+    (** Pretty-printing *)
+    val to_string: ('a -> string) -> 'a t  -> string
+
     (** Split with [bindings] and return the [snd] component. *)
     val values: 'a t -> 'a list
 
@@ -60,13 +63,14 @@ module type Abstract = sig
     (** WARNING : Besides [key], the function could receive 
         some [v1] and some [v2] such that [v1 = v2] holds. *)
     val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+
   end
 end
 
 (** {2 Filenames} *)
 
 (** Basenames *)
-module Basename: Abstract
+module Basename: ABSTRACT
 
 (** Shortcut to basename type *)
 type basename = Basename.t
@@ -74,7 +78,7 @@ type basename = Basename.t
 (** Absolute directory names *)
 module Dirname: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Return the current working directory *)
   val cwd: unit -> t
@@ -88,6 +92,9 @@ module Dirname: sig
   (** List the directory *)
   val list: t -> t list
 
+  (** Evaluate a function in a given directory *)
+  val in_dir: t -> (unit -> 'a) -> 'a
+
   (** Execute a list of commands in a given directory *)
   val exec: t
     -> ?add_to_env:(string * string) list
@@ -96,17 +103,33 @@ module Dirname: sig
   (** Change the current directory *)
   val chdir: t -> unit
 
+  (** Move a directory *)
+  val move: t -> t -> unit
+
+  (** Copy a directory *)
+  val copy: t -> t -> unit
+
   (** Does the directory exists ? *)
   val exists: t -> bool
+
+  (** Return the parent directory *)
+  val dirname: t -> t
 
   (** Return the deeper directory name *)
   val basename: t -> basename
 
   (** Creation from a raw string (as {i http://<path>}) *)
-  val of_raw: string -> t
+  val raw: string -> t
 
   (** Remove a prefix from a directory *)
   val remove_prefix: prefix:t -> t -> string
+
+  (** Does the directory starts with a given prefix *)
+  val starts_with: prefix:t -> t -> bool
+
+  (** Execute a function in a temp directory *)
+  val with_tmp_dir: (t -> 'a) -> 'a
+
 end
 
 (** Shortcut to directory type *)
@@ -116,7 +139,7 @@ type dirname = Dirname.t
 val (/): dirname -> string -> dirname
 
 (** Raw file contents *)
-module Raw: Abstract
+module Raw: ABSTRACT
 
 (** Shortcut to raw file content type *)
 type raw = Raw.t
@@ -131,7 +154,7 @@ end
 (** non-directory filenames *)
 module Filename: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Create a filename from a dirname and a basename *)
   val create: dirname -> basename -> t
@@ -139,6 +162,9 @@ module Filename: sig
   (** Create a file from a basename and the current working directory
       as dirname *)
   val of_basename: basename -> t
+
+  (** Creation from a raw string (as {i http://<path>}) *)
+  val raw: string -> t
 
   (** Return the directory name *)
   val dirname: t -> dirname
@@ -179,6 +205,9 @@ module Filename: sig
   (** Copy a file in a directory *)
   val copy_in: t -> dirname -> unit
 
+  (** Move a file *)
+  val move: t -> t -> unit
+
   (** Symlink a file in a directory *)
   val link_in: t -> dirname -> unit
 
@@ -192,16 +221,50 @@ module Filename: sig
       match [dirname] dir if needed) *)
   val extract: t -> dirname -> unit
 
+  (** Extract an archive in a given directory (which should already exists) *)
+  val extract_in: t -> dirname -> unit
+
   (** Check wether a filename starts by a given dirname *)
   val starts_with: dirname -> t -> bool
 
   (** Remove a prefix from a file name *)
   val remove_prefix: prefix:dirname -> t -> string
 
+  (** download a remote file in a given directory. Return the location
+      of the downloaded file if the download is successful.  *)
+  val download: t -> dirname -> t option
+
+  (** iterate downloads until one is sucessful *)
+  val download_iter: t list -> dirname -> t option
+
+  (** Apply a patch to a directory *)
+  val patch: t -> dirname -> bool
+
+  (** Compute the MD5 digest of a file *)
+  val digest: t -> string
+
+  (** Create an empty file *)
+  val touch: t -> unit
+
+  (** Change file permissions *)
+  val chmod: t -> int -> unit
+
 end
 
 (** Shortcut to file names *)
 type filename = Filename.t
+
+(** Generalized file type *)
+type file =
+  | D of dirname
+  | F of filename
+
+
+(** Download result *)
+type 'a download =
+  | Up_to_date of 'a
+  | Not_available
+  | Result of 'a
 
 (** Concatenate a directory and a string to create a filename *)
 val (//): dirname -> string -> filename
@@ -209,20 +272,20 @@ val (//): dirname -> string -> filename
 (** {2 Package name and versions} *)
 
 (** Versions *)
-module V: Abstract
+module V: ABSTRACT
 
 (** Shortcut to V.t *)
 type version = V.t
 
 (** Names *)
-module N: Abstract
+module N: ABSTRACT
 
 (** Shortcut to N.t *)
 type name = N.t
 
 (** Package (name x version) pairs *)
 module NV: sig
-  include Abstract
+  include ABSTRACT
 
   (** Return the package name *)
   val name: t -> name
@@ -261,7 +324,7 @@ type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
 
 (** OCaml version *)
 module OCaml_V: sig
-  include Abstract
+  include ABSTRACT
 
   (** Return the version of the compiler currently installed *)
   val current: unit -> t option
@@ -271,14 +334,14 @@ module OCaml_V: sig
 end
 
 (** OPAM version *)
-module OPAM_V: Abstract
+module OPAM_V: ABSTRACT
 
 (** {2 Repositories} *)
 
 (** OPAM repositories *)
 module Repository: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Create a repository *)
   val create: name:string -> kind:string -> address:string -> t
@@ -293,7 +356,10 @@ module Repository: sig
   val kind: t -> string
 
   (** Get the repository address *)
-  val address: t -> string
+  val address: t -> dirname
+
+  (** Return a copy of repo with a different kind *)
+  val with_kind: t -> string -> t
 
 end
 
@@ -304,7 +370,7 @@ type repository = Repository.t
 
 (** Variable names are used in .config files *)
 module Variable: sig
-  include Abstract
+  include ABSTRACT
 
   (** the variable [enable] *)
   val enable: t
@@ -319,7 +385,7 @@ type variable = Variable.t
 (** Section names *)
 module Section: sig 
 
-  include Abstract
+  include ABSTRACT
 
   (** Graph of fully-qualified sections *)
   module G : Graph.Sig.I with type V.t = t
@@ -334,7 +400,7 @@ type section = Section.t
 (** Fully qualified sections *)
 module Full_section: sig
 
-  include Abstract
+  include ABSTRACT
 
   (** Create a fully qualified section *)
   val create: name -> section -> t
@@ -356,7 +422,7 @@ type full_section = Full_section.t
 (** Fully qualified variables *)
 module Full_variable: sig
 
-  include Abstract
+  include ABSTRACT
   
   (** Create a variable local for a given library/syntax extension *)
   val create_local: name -> section -> variable -> t
@@ -453,7 +519,7 @@ type config =
 val string_of_config: config -> string
 
 (** Compiler aliases *)
-module Alias: Abstract
+module Alias: ABSTRACT
 
 type atom_formula = Debian.Format822.vpkg
 type and_formula = atom_formula list
@@ -463,3 +529,19 @@ val string_of_atom_formula : atom_formula -> string
 
 type cnf_formula = Debian.Format822.vpkgformula
 type ocaml_constraint = relop * OCaml_V.t
+
+module Remote_file: sig
+  include ABSTRACT
+
+  (** Get remote filename *)
+  val base: t -> basename
+  
+  (** MD5 digest or the remote file *)
+  val md5: t -> string
+
+  (** File permission *)
+  val perm: t -> int option
+
+  (** Constructor*)
+  val create: basename -> string -> int -> t
+end

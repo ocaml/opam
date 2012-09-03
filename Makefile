@@ -1,40 +1,32 @@
 BIN = /usr/local/bin
-OCPBUILD ?= ./_obuild/unixrun ./boot/ocp-build.boot
+LOCAL_OCPBUILD=./ocp-build/ocp-build
+OCPBUILD ?= $(LOCAL_OCPBUILD)
 OCAMLC=ocamlc
 SRC_EXT=src_ext
-TARGETS = opam opam-server \
-	  opam-rsync-init opam-rsync-update opam-rsync-download opam-rsync-upload \
-	  opam-curl-init opam-curl-update opam-curl-download opam-curl-upload \
-	  opam-git-init opam-git-update opam-git-download opam-git-upload \
-	  opam-server-init opam-server-update opam-server-download opam-server-upload \
-	  opam-mk-config opam-mk-install opam-mk-repo
+TARGETS = opam opam-mk-repo opam-repo-convert-0.3
 
 .PHONY: all
 
-all: ./_obuild/unixrun
+all: $(LOCAL_OCPBUILD)
 	$(MAKE) clone
 	$(MAKE) compile
 
-scan: ./_obuild/unixrun
+scan: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -scan
-sanitize: ./_obuild/unixrun
+sanitize: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -sanitize
-byte: ./_obuild/unixrun
+byte: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -byte
-opt: ./_obuild/unixrun
+opt: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -asm
-./_obuild/unixrun:
-	mkdir -p ./_obuild
-	$(OCAMLC) -o ./_obuild/unixrun -make-runtime unix.cma str.cma
 
-bootstrap: _obuild/unixrun _obuild/opam/opam.byte
-	rm -f boot/opam.boot
-	ocp-bytehack -static _obuild/opam/opam.byte -o boot/opam.boot
+$(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
+	$(MAKE) -C ocp-build
 
-compile: ./_obuild/unixrun
+compile: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
-clone: 
+clone:
 	$(MAKE) -C $(SRC_EXT)
 
 clean:
@@ -43,6 +35,7 @@ clean:
 	rm -f opam
 	rm -f ocp-build.*
 	$(MAKE) -C $(SRC_EXT) clean
+	$(MAKE) -C ocp-build clean
 
 distclean: clean
 	rm -f *.tar.gz *.tar.bz2
@@ -57,9 +50,6 @@ tests:
 tests-rsync:
 	$(MAKE) -C tests rsync
 
-tests-server:
-	$(MAKE) -C tests server
-
 tests-git:
 	$(MAKE) -C tests git
 
@@ -67,8 +57,8 @@ tests-git:
 	cp _obuild/$*/$*.asm $(BIN)/$*
 
 .PHONY: install
-install: $(TARGETS:%=%-install)
-	@
+install:
+	$(MAKE) $(TARGETS:%=%-install)
 
 doc: compile
 	mkdir -p doc/html/
@@ -77,3 +67,8 @@ doc: compile
 	  -I _obuild/bat -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
 	  src/*.mli -html -d doc/html/
+
+trailing:
+	find src -name "*.ml*" -exec \
+	  sed -i xxx -e :a -e "/^\n*$$/{$$d;N;ba" -e '}' {} \;
+	find src -name "*xxx" -exec rm {} \;

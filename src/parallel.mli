@@ -45,13 +45,3 @@ end
 
 (** Functor *)
 module Make (G : G) : SIG with module G = G
-
-
-
-
-
-
-
-
-
-

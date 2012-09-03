@@ -29,6 +29,21 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_raw&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.raw<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_raw&nbsp;:&nbsp;<span class="constructor">Types</span>.raw&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name:<span class="constructor">Types</span>.name&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;version:<span class="constructor">Types</span>.version&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;maintainer:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;substs:<span class="constructor">Types</span>.basename&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;build_env:(string&nbsp;*&nbsp;string&nbsp;*&nbsp;string)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;build:string&nbsp;list&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove:string&nbsp;list&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;depends:<span class="constructor">Types</span>.cnf_formula&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;depopts:<span class="constructor">Types</span>.cnf_formula&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;conflicts:<span class="constructor">Types</span>.and_formula&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;libraries:<span class="constructor">Types</span>.section&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;syntax:<span class="constructor">Types</span>.section&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;others:(string&nbsp;*&nbsp;<span class="constructor">File_format</span>.value)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;ocaml_version:<span class="constructor">Types</span>.ocaml_constraint&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;name&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.name<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;version&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.version<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;ocaml_version&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.ocaml_constraint&nbsp;option<br>

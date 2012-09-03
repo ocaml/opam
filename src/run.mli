@@ -15,8 +15,8 @@
 
 (** Low-level untyped system operations. *)
 
-(** [mk_temp_dir str] creates a tempory directory *)
-val mk_temp_dir: string -> string
+(** [with_tmp_dir fn] executes [fn] in a tempory directory *)
+val with_tmp_dir: (string -> 'a) -> 'a
 
 (** [copy src dst] copies [src] to [dst] *)
 val copy: string -> string -> unit
@@ -91,11 +91,19 @@ val commands:
     the lines from stdout *)
 val read_command_output:
   ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command -> string list
+  ?add_to_path:string list -> command -> string list option
 
-(** [extract filename dirname] untar the archive [filename] to
-    [dirname] *)
+(** Test whether the file is an archive, by looking as its extension *)
+val is_tar_archive: string -> bool
+
+(** [extract filename dirname] extracts the archive [filename] into
+    [dirname]. [dirname] should not exists and [filename] should
+    contain only one top-level directory.*)
 val extract: string -> string -> unit
+
+(** [extract_in filename dirname] extracts the archive [filename] into
+    [dirname]. [dirname] should already exists. *)
+val extract_in: string -> string -> unit
 
 (** Return the current working directory *)
 val cwd: unit -> string
@@ -120,10 +128,9 @@ val with_flock: (unit -> unit) -> unit
 
 (** {2 Function used only by the switch commnand} *)
 
-(** download compiler sources.
-    Currently support only tar.gz/tar.bz2, but should be able to support
-    git and svn as well. *)
-val download: string -> string -> unit
+(** download compiler sources *)
+val download: filename:string -> dirname:string -> string option
 
-(** Apply a patch file in the current directory *)
-val patch: string -> unit
+(** Apply a patch file in the current directory. Return whether the
+    patch has been applied succesfully. *)
+val patch: string -> bool

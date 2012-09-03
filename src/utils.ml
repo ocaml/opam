@@ -53,6 +53,10 @@ let starts_with ~prefix s =
   String.length s >= String.length prefix
   && String.sub s 0 (String.length prefix) = prefix
 
+let ends_with ~suffix s =
+  String.length s >= String.length suffix
+  && String.sub s (String.length s - String.length suffix) (String.length suffix) = suffix
+
 let remove_prefix ~prefix s =
   if starts_with prefix s then
     String.sub s (String.length prefix) (String.length s - String.length prefix)
@@ -78,6 +82,10 @@ let cut_at = cut_at_aux String.index
 
 let rcut_at = cut_at_aux String.rindex
 
+let contains s c =
+  try let _ = String.index s c in true
+  with Not_found -> false
+
 let split s c =
   Pcre.split (Pcre.regexp (String.make 1 c)) s
 
@@ -85,3 +93,11 @@ let split s c =
 let reset_env_value ~prefix v =
   let v = split v ':' in
   List.filter (fun v -> not (starts_with ~prefix v)) v
+
+(* if rsync -arv return 4 lines, this means that no files have changed *)
+let rsync_trim = function
+  | [] -> []
+  | _ :: t ->
+      match List.rev t with
+      | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
+      | _ -> []

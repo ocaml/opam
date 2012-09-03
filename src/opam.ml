@@ -61,9 +61,21 @@ let global_args = [
 let parse_args fn () =
   fn (List.rev !ano_args)
 
+let guess_repository_kind kind address =
+  match kind with
+  | None  ->
+      if Sys.file_exists address then
+        "rsync"
+      else if Utils.starts_with ~prefix:"git" address
+           || Utils.ends_with ~suffix:"git" address then
+        "git"
+      else
+        Globals.default_repository_kind
+  | Some k -> k
+
 (* opam init [-kind $kind] $repo $adress *)
 let init = 
-  let kind = ref Globals.default_repository_kind in
+  let kind = ref None in
   let alias = ref None in
   let comp = ref None in
   let cores = ref Globals.default_cores in
@@ -76,7 +88,7 @@ let init =
     ("-comp" , Arg.String (fun s -> comp := Some (OCaml_V.of_string s)), " Which compiler version to use");
     ("-alias", Arg.String (fun s -> alias := Some (Alias.of_string s)), " Set the compiler alias name");
     ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
-    ("-kind" , Arg.Set_string kind , " Set the repository kind");
+    ("-kind" , Arg.String (fun s -> kind := Some s) , " Set the repository kind");
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
   ];
   anon;
@@ -84,25 +96,34 @@ let init =
     parse_args (function
     | [] ->
         Client.init Repository.default !alias !comp !cores
-    | [name; address]  ->
-        let repo = Repository.create ~name ~address ~kind:!kind in
+    | [address] ->
+        let name = Globals.default_repository_name in
+        let kind = guess_repository_kind !kind address in
+        let repo = Repository.create ~name ~address ~kind in
+        Client.init repo !alias !comp !cores
+    | [name; address] ->
+        let kind = guess_repository_kind !kind address in
+        let repo = Repository.create ~name ~address ~kind in
         Client.init repo !alias !comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 
-(* opam list *)
+(* opam list [PACKAGE_REGEXP]* *)
 let list = 
   let short = ref false in
 {
   name     = "list";
-  usage    = "";
-  synopsis = "Display information about all available packages";
+  usage    = "[package-regexp]*";
+  synopsis = "Display information about all available packages that match package-regexp, or all available packages if no regexp is provided";
   help     = "";
   specs    = [
     ("-short", Arg.Set short, " Minimize the output by displaying only package name (installed and not installed)");
   ];
-  anon     = noanon "list";
-  main     = parse_args (fun _ -> Client.list !short);
+  anon;
+  main     = 
+    parse_args (function
+    | [] -> Client.list !short ""
+    | l  -> List.iter (fun name -> Client.list !short name) l)
 }
 
 (* opam info [PACKAGE] *)
@@ -263,7 +284,7 @@ let remove = {
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
 let remote = 
-  let kind = ref Globals.default_repository_kind in
+  let kind = ref None in
   let command : [`add|`list|`rm] option ref = ref None in
   let set c () = command := Some c in
 {
@@ -275,7 +296,7 @@ let remote =
     ("-list" , Arg.Unit (set `list), " List the repositories");
     ("-add"  , Arg.Unit (set `add) , " Add a new repository");
     ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
-    ("-kind" , Arg.Set_string kind , " (optional) Specify the repository kind");
+    ("-kind" , Arg.String (fun s -> kind := Some s) , " (optional) Specify the repository kind");
   ];
   anon;
   main     = parse_args (fun args ->
@@ -283,7 +304,8 @@ let remote =
     | Some `list, []                -> Client.remote List
     | Some `rm,   [ name ]          -> Client.remote (Rm name)
     | Some `add , [ name; address ] ->
-        Client.remote (Add (Repository.create ~name ~kind:!kind ~address))
+        let kind = guess_repository_kind !kind address in
+        Client.remote (Add (Repository.create ~name ~kind ~address))
     | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
     | _        -> bad_argument "remote" "Wrong arguments")
 }
@@ -317,7 +339,7 @@ let switch =
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 
-(* opam pin [-list|-add <url>|-rm <url>] *)
+(* opam pin [-list|<package> <version>|<package> <path>] *)
 let pin =
   let list = ref false in
 {

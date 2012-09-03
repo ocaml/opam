@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Repositories.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Client" rel="Chapter" href="Client.html">
+<link title="File" rel="Chapter" href="File.html">
+<link title="File_format" rel="Chapter" href="File_format.html">
+<link title="Parallel" rel="Chapter" href="Parallel.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Path" rel="Chapter" href="Path.html">
+<link title="Process" rel="Chapter" href="Process.html">
+<link title="Repositories" rel="Chapter" href="Repositories.html">
+<link title="Run" rel="Chapter" href="Run.html">
+<link title="Solver" rel="Chapter" href="Solver.html">
+<link title="Types" rel="Chapter" href="Types.html"><title>Repositories.BACKEND</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="Repositories.html">Up</a>
+&nbsp;</div>
+<center><h1>Module type <a href="type_Repositories.BACKEND.html">Repositories.BACKEND</a></h1></center>
+<br>
+<pre><span class="keyword">module type</span> BACKEND = <code class="code">sig</code> <a href="Repositories.BACKEND.html">..</a> <code class="code">end</code></pre>Backend signature<br>
+<hr width="100%">
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="Repositories.html#TYPEaddress">Repositories.address</a> -> unit</code></pre><div class="info">
+Initialize an OPAM repository in the current directory. The
+      argument is the remote repository address.<br>
+</div>
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="Repositories.html#TYPEaddress">Repositories.address</a> -> Types.Filename.Set.t</code></pre><div class="info">
+Update the OPAM repository in the current directory. Return the
+      list of locally updated files.<br>
+</div>
+<pre><span id="VALdownload_archive"><span class="keyword">val</span> download_archive</span> : <code class="type"><a href="Repositories.html#TYPEaddress">Repositories.address</a> -> <a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEfilename">Types.filename</a> <a href="Types.html#TYPEdownload">Types.download</a></code></pre><div class="info">
+Download a (remote) archive file, stored on the (remote) OPAM
+      repository, in the current repository. Return the local path to
+      the downloaded archive.<br>
+</div>
+<pre><span id="VALdownload_file"><span class="keyword">val</span> download_file</span> : <code class="type"><a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEfilename">Types.filename</a> -> <a href="Types.html#TYPEfilename">Types.filename</a> <a href="Types.html#TYPEdownload">Types.download</a></code></pre><div class="info">
+Download a (remote) file and return the local path to the
+      downloaded file. As the opposite to <code class="code">download_archive</code>, the
+      downloaded file needs not to be stored on the remote
+      repository. If needed, the function can use <i>$repo/tmp/$nv/</i>
+      to store transient states between downloads.<br>
+</div>
+<pre><span id="VALdownload_dir"><span class="keyword">val</span> download_dir</span> : <code class="type"><a href="Types.html#TYPEnv">Types.nv</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a> <a href="Types.html#TYPEdownload">Types.download</a></code></pre><div class="info">
+Download a (remote) directory and return the local path to the
+      downloaded directory. If needed, the function can use <i>      $repo/tmp/$nv/</i> to store transient states between downloads.<br>
+</div>
+<pre><span id="VALupload_dir"><span class="keyword">val</span> upload_dir</span> : <code class="type">address:<a href="Repositories.html#TYPEaddress">Repositories.address</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> Types.Filename.Set.t</code></pre><div class="info">
+Upload the content of the current directory to the directory
+      given as argument. Return the local paths corresponding to the
+      uploaded local files.<br>
+</div>
+</body></html>

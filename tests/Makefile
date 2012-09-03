@@ -7,18 +7,10 @@ BIN       = $(TEST_DIR)/OPAM.BIN
 REPO      = test
 REPOKIND ?= rsync
 
-# To test OPAM server repositories
-OPAM_SERVER_ROOT = $(TEST_DIR)/OPAM.SERVER
-OPAM_SERVER      = 127.0.0.1
-
 # To test GIT repo
 OPAM_GIT = $(TEST_DIR)/OPAM.GIT
 
-BINARIES  = opam opam-server opam-check \
-	    opam-rsync-init  opam-rsync-update  opam-rsync-download  opam-rsync-upload \
-	    opam-server-init opam-server-update opam-server-download opam-server-upload \
-	    opam-git-init    opam-git-update    opam-git-download    opam-git-upload \
-	    opam-curl-init   opam-curl-update   opam-curl-download   opam-curl-upload
+BINARIES  = opam-check opam
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
@@ -33,9 +25,9 @@ BINARIES_ = $(BINARIES:%=$(BIN)/%)
 BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
-.PHONY: all rsync server git
+.PHONY: all rsync git
 
-all: rsync server git
+all: rsync git
 	@
 
 run:
@@ -63,14 +55,6 @@ run:
 rsync:
 	$(MAKE) REPOKIND=rsync run
 
-server:
-	$(MAKE) fresh
-	$(MAKE) binaries
-	rm -rf $(OPAM_SERVER_ROOT)
-	($(ENV) opam-server --root $(OPAM_SERVER_ROOT) & \
-	(sleep 1 && $(MAKE) REPOKIND=server OPAM_REPO=$(OPAM_SERVER) run \
-	  && killall opam-server || killall opam-server))
-
 git:
 	$(MAKE) REPOKIND=git run
 
@@ -85,11 +69,7 @@ binaries: $(BINARIES_)
 init:
 	rm -rf $(OPAM_REPO)
 	mkdir -p $(OPAM_REPO)
-	mkdir $(OPAM_REPO)/opam
-	mkdir $(OPAM_REPO)/descr
-	mkdir $(OPAM_REPO)/compilers
 ifeq ($(REPOKIND), git)
-	mkdir $(OPAM_REPO)/url
 	cd $(OPAM_REPO) && git init && \
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
@@ -98,26 +78,32 @@ endif
 
 upload: $(ARCHIVES)
 ifeq ($(REPOKIND), git)
-	cp packages/P1-1.opam     $(OPAM_REPO)/opam/P1.1.opam
-	cp packages/P1-1/README   $(OPAM_REPO)/descr/P1.1
-	echo '$(OPAM_GIT)/P1-1' > $(OPAM_REPO)/url/P1.1
+	mkdir -p $(OPAM_REPO)/packages/P1.1
+	cp packages/P1-1.opam     $(OPAM_REPO)/packages/P1.1/opam
+	cp packages/P1-1/README   $(OPAM_REPO)/packages/P1.1/descr
+	echo 'git: "$(OPAM_GIT)/P1-1"' > $(OPAM_REPO)/packages/P1.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P1"
-	cp packages/P2/README     $(OPAM_REPO)/descr/P2.1
-	cp packages/P2.opam       $(OPAM_REPO)/opam/P2.1.opam
-	echo '$(OPAM_GIT)/P2'   > $(OPAM_REPO)/url/P2.1
+	mkdir -p $(OPAM_REPO)/packages/P2.1
+	cp packages/P2/README     $(OPAM_REPO)/packages/P2.1/descr
+	cp packages/P2.opam       $(OPAM_REPO)/packages/P2.1/opam
+	echo 'git: "$(OPAM_GIT)/P2"'   > $(OPAM_REPO)/packages/P2.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P2"
-	cp packages/P3.opam       $(OPAM_REPO)/opam/P3.1~weird-version.test.opam
-	cp packages/P3/README     $(OPAM_REPO)/descr/P3.1~weird-version.test
-	echo '$(OPAM_GIT)/P3'   > $(OPAM_REPO)/url/P3.1~weird-version.test
+	mkdir -p $(OPAM_REPO)/packages/P3.1~weird-version.test
+	cp packages/P3.opam       $(OPAM_REPO)/packages/P3.1~weird-version.test/opam
+	cp packages/P3/README     $(OPAM_REPO)/packages/P3.1~weird-version.test/descr
+	echo 'git: "$(OPAM_GIT)/P3"'   > $(OPAM_REPO)/packages/P3.1~weird-version.test/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P3"
-	cp packages/P4-1.opam     $(OPAM_REPO)/opam/P4.1.opam
-	cp packages/P4/README     $(OPAM_REPO)/descr/P4.1
-	echo '$(OPAM_GIT)/P4'   > $(OPAM_REPO)/url/P4.1
+	mkdir -p $(OPAM_REPO)/packages/P4.1
+	cp packages/P4-1.opam     $(OPAM_REPO)/packages/P4.1/opam
+	cp packages/P4/README     $(OPAM_REPO)/packages/P4.1/descr
+	echo 'git: "$(OPAM_GIT)/P4"'   > $(OPAM_REPO)/packages/P4.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4"
-	cp packages/P5.opam       $(OPAM_REPO)/opam/P5.1.opam
-	cp packages/P5/README     $(OPAM_REPO)/descr/P5.1
-	echo '$(OPAM_GIT)/P5'   > $(OPAM_REPO)/url/P5.1
+	mkdir -p $(OPAM_REPO)/packages/P5.1
+	cp packages/P5.opam       $(OPAM_REPO)/packages/P5.1/opam
+	cp packages/P5/README     $(OPAM_REPO)/packages/P5.1/descr
+	echo 'git: "$(OPAM_GIT)/P5"'   > $(OPAM_REPO)/packages/P5.1/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P5"
+	mkdir -p $(OPAM_REPO)/compilers
 	cp compilers/*            $(OPAM_REPO)/compilers/
 	cd $(OPAM_REPO)/compilers && git add * && git commit -a -m "Adding compilers"
 	rm -rf $(OPAM_GIT) && mkdir -p $(OPAM_GIT)
@@ -143,11 +129,7 @@ else
 	cd packages && \
 	$(OPAM) upload -opam P5.opam -descr P5/README -archive P5.tar.gz -repo $(REPO)
 endif
-ifeq ($(REPOKIND), server)
-	cp compilers/* $(OPAM_ROOT)/compilers/
-else
 	cp compilers/* $(OPAM_REPO)/compilers/
-endif
 	$(OPAM) update # update the list of available packages with the one being updated
 
 list:
@@ -182,12 +164,14 @@ upload-new:
 ifeq ($(REPOKIND), git)
 	echo "(* new line *)" >> $(OPAM_GIT)/P1-1/p1.ml
 	cd $(OPAM_GIT)/P1-1 && git commit -a -m "a small change"
-	cp packages/P4-2.opam   $(OPAM_REPO)/opam/P4.2.opam
-	cp packages/P4/README   $(OPAM_REPO)/descr/P4.2
-	echo '$(OPAM_GIT)/P4' > $(OPAM_REPO)/url/P4.2
-	cp packages/P4-3.opam   $(OPAM_REPO)/opam/P4.3.opam
-	cp packages/P4/README   $(OPAM_REPO)/descr/P4.3
-	echo '$(OPAM_GIT)/P4' > $(OPAM_REPO)/url/P4.3
+	mkdir $(OPAM_REPO)/packages/P4.2
+	cp packages/P4-2.opam   $(OPAM_REPO)/packages/P4.2/opam
+	cp packages/P4/README   $(OPAM_REPO)/packages/P4.2/descr
+	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.2/url
+	mkdir $(OPAM_REPO)/packages/P4.3
+	cp packages/P4-3.opam   $(OPAM_REPO)/packages/P4.3/opam
+	cp packages/P4/README   $(OPAM_REPO)/packages/P4.3/descr
+	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.3/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4.2 and P4.3"
 else
 	cd packages && \
@@ -245,4 +229,5 @@ clean:
 	rm -f $(ARCHIVES)
 
 fresh:
-	rm -rf $(OPAM_ROOT) $(OPAM_REPO) $(BIN)
+	rm -rf $(OPAM_ROOT) $(BIN)
+	rm -rf $(OPAM_REPO) 

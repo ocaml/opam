@@ -42,7 +42,6 @@ module Lines = struct
 
 end
 
-
 module Syntax = struct
 
   let internal = "syntax"
@@ -74,9 +73,122 @@ end
 
 module X = struct
 
-module Installed = struct
+module Filenames = struct
 
-  let internal = "installed"
+  let internal = "filenames"
+
+  type t = Filename.Set.t
+
+  let empty = Filename.Set.empty
+
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    let lines = Utils.filter_map (function
+      | []  -> None
+      | [f] -> Some (Filename.of_string f)
+      | s   ->
+          Globals.error_and_exit "%S is not a valid filename" (String.concat " " s)
+    ) lines in
+    Filename.Set.of_list lines
+
+  let to_string f s =
+    let lines =
+      List.map (fun f -> [Filename.to_string f]) (Filename.Set.elements s) in
+    Lines.to_string f lines
+                                 
+end
+
+module Urls_txt = struct
+
+  let internal = "urls-txt"
+
+  type t = Remote_file.Set.t
+
+  let empty = Remote_file.Set.empty
+
+  let of_string f s =
+    let lines = Lines.of_string f s in
+    let rs = Utils.filter_map (function
+      | [] -> None
+      | l  -> Some (Remote_file.of_string (String.concat " " l))
+    ) lines in
+    Remote_file.Set.of_list rs
+
+  let to_string f t =
+    let lines =
+      List.map (fun r -> [Remote_file.to_string r]) (Remote_file.Set.elements t) in
+    Lines.to_string f lines
+
+end
+
+module URL = struct
+
+  let internal = "url"
+
+  type t = {
+    url     : string;
+    kind    : string option;
+    checksum: string option;
+  }
+
+  let empty = {
+    url     = "<none>";
+    kind    = None;
+    checksum= None;
+  }
+
+  let s_archive = "archive"
+  let s_checksum = "checksum"
+  let s_git = "git"
+
+  let valid_fields = [
+    s_archive;
+    s_checksum;
+    s_git;
+  ]
+
+  let of_string filename str =
+    let s = Syntax.of_string filename str in
+    Syntax.check s valid_fields;
+    let archive = assoc_option s.contents s_archive parse_string in
+    let git = assoc_option s.contents s_git parse_string in
+    let checksum = assoc_option s.contents s_checksum parse_string in
+    let url, kind = match archive, git with
+      | None  , None   -> Globals.error_and_exit "Missing URL"
+      | Some x, None   -> x, None
+      | None  , Some x -> x, Some "git"
+      | _ -> Globals.error_and_exit "Too many URLS" in
+    { url; kind; checksum }
+
+  let to_string filename t =
+    let url_name = match t.kind with
+      | Some "git"   -> "git"
+      | Some "curl"
+      | Some "rsync"
+      | None         -> "archive"
+      | Some x -> Globals.error_and_exit "%s is an unknown backend" x in
+    let s = {
+      filename = Filename.to_string filename;
+      contents = [
+        Variable (url_name , String t.url);
+      ] @ match t.checksum with
+        | None   -> []
+        | Some c -> [Variable (s_checksum, String c)]
+    } in
+    Syntax.to_string filename s
+
+  let url t = t.url
+  let kind t = t.kind
+  let checksum t = t.checksum
+
+  let create ?checksum url =
+    { url; checksum; kind = None }
+
+end
+
+module Updated = struct
+
+  let internal = "updated"
 
   type t = NV.Set.t
 
@@ -102,6 +214,26 @@ module Installed = struct
 
 end
 
+module Installed = struct
+
+  include Updated
+
+  let internal = "installed"
+
+  let check t =
+    let map = NV.to_map t in
+    N.Map.iter (fun n vs ->
+      if V.Set.cardinal vs <> 1 then
+        Globals.error_and_exit "Multiple versions installed for package %s: %s"
+          (N.to_string n) (V.Set.to_string vs)
+    ) map
+
+  let to_string f t =
+    check t;
+    Updated.to_string f t
+
+end
+
 module Reinstall = struct
 
   include Installed
@@ -110,39 +242,29 @@ module Reinstall = struct
 
 end
 
-module Updated = struct
-
-  include Installed
-
-  let internal = "updated"
-
-end
-
 module Repo_index = struct
     
   let internal = "repo-index"
 
-  type t = string N.Map.t
+  type t = string list N.Map.t
 
   let empty = N.Map.empty
 
   let of_string filename str =
     let lines = Lines.of_string filename str in
     List.fold_left (fun map -> function
-      | [name_s; repo_s] ->
+      | name_s :: repo_s ->
           let name = N.of_string name_s in
           if N.Map.mem name map then
             Globals.error_and_exit "multiple lines for package %s" name_s
           else
             N.Map.add name repo_s map
       | [] -> map
-      | x  ->
-          Globals.error_and_exit "'%s' is not a valid repository index line" (String.concat " " x)
     ) N.Map.empty lines
 
   let to_string filename map =
-    let lines = N.Map.fold (fun name repo lines ->
-      [ N.to_string name; repo] :: lines
+    let lines = N.Map.fold (fun name repo_s lines ->
+      (N.to_string name :: repo_s) :: lines
     ) map [] in
     Lines.to_string filename (List.rev lines)
 
@@ -158,10 +280,14 @@ module Pinned = struct
 
   let of_string filename str =
     let m = Repo_index.of_string filename str in
-    N.Map.map pin_option_of_string m
+    N.Map.map (function
+      | [x] -> pin_option_of_string x
+      | _   -> Globals.error_and_exit "too many pinning options"
+    ) m
 
   let to_string filename map =
-    Repo_index.to_string filename (N.Map.map string_of_pin_option map)
+    let aux x = [ string_of_pin_option x ] in
+    Repo_index.to_string filename (N.Map.map aux map)
 
 end
 
@@ -190,7 +316,7 @@ module Repo_config = struct
       filename = Filename.to_string filename;
       contents = [
         Variable (s_name   , String (Repository.name t));
-        Variable (s_address, String (Repository.address t));
+        Variable (s_address, String (Dirname.to_string (Repository.address t)));
         Variable (s_kind   , String (Repository.kind t));
       ] } in
     Syntax.to_string filename s
@@ -263,35 +389,35 @@ module Config = struct
 
     let of_repo r =
       Option (String (Repository.name r),
-              [ String (Repository.address r);
+              [ String (Dirname.to_string (Repository.address r));
                 String (Repository.kind r) ])
 
     type t = {
       opam_version  : OPAM_V.t ;
       repositories  : repository list ;
       ocaml_version : Alias.t option ;
-      last_ocaml_in_path : OCaml_V.t option ;
+      system_ocaml_version: OCaml_V.t option ;
       cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
     let with_ocaml_version t ocaml_version = { t with ocaml_version = Some ocaml_version }
-    let with_last_ocaml_in_path t last_ocaml_in_path = { t with last_ocaml_in_path }
+    let with_system_ocaml_version t system_ocaml_version = { t with system_ocaml_version }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let ocaml_version t = match t.ocaml_version with None -> Alias.of_string "<none>" | Some v -> v
-    let last_ocaml_in_path t = t.last_ocaml_in_path
+    let system_ocaml_version t = t.system_ocaml_version
     let cores t = t.cores
 
     let create opam_version repositories cores =
-      { opam_version ; repositories ; ocaml_version = None ; last_ocaml_in_path = None ; cores }
+      { opam_version ; repositories ; ocaml_version = None ; system_ocaml_version = None ; cores }
 
     let empty = {
       opam_version = OPAM_V.of_string Globals.opam_version;
       repositories = [];
       ocaml_version = None;
-      last_ocaml_in_path = None;
+      system_ocaml_version = None;
       cores = Globals.default_cores;
     }
 
@@ -299,14 +425,16 @@ module Config = struct
 
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
-    let s_last_ocaml_in_path = "system_ocaml-version"
+    let s_system_ocaml_version = "system-ocaml-version"
+    let s_system_ocaml_version2 = "system_ocaml-version"
     let s_cores = "cores"
 
     let valid_fields = [
       s_opam_version;
       s_repositories;
       s_ocaml_version;
-      s_last_ocaml_in_path;
+      s_system_ocaml_version;
+      s_system_ocaml_version2;
       s_cores;
     ]
 
@@ -320,10 +448,17 @@ module Config = struct
           (parse_list (parse_string_option parse_string_pair_of_list |> to_repo)) in
       let ocaml_version =
         assoc_option s.contents s_ocaml_version (parse_string |> Alias.of_string) in
-      let last_ocaml_in_path =
-        assoc_option s.contents s_last_ocaml_in_path (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version =
+        assoc_option s.contents s_system_ocaml_version (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version2 =
+        assoc_option s.contents s_system_ocaml_version2 (parse_string |> OCaml_V.of_string) in
+      let system_ocaml_version =
+        match system_ocaml_version, system_ocaml_version2 with
+        | Some v, _
+        | _     , Some v -> Some v
+        | None  , None   -> None in
       let cores = assoc s.contents s_cores parse_int in
-      { opam_version; repositories; ocaml_version; last_ocaml_in_path; cores }
+      { opam_version; repositories; ocaml_version; system_ocaml_version; cores }
 
    let to_string filename t =
      let s = {
@@ -339,9 +474,9 @@ module Config = struct
            | Some v -> [ Variable (s_ocaml_version, make_string (Alias.to_string v)) ]
        ) 
        @ (
-         match t.last_ocaml_in_path with
+         match t.system_ocaml_version with
            | None   -> []
-           | Some v -> [ Variable (s_last_ocaml_in_path, make_string (OCaml_V.to_string v)) ]
+           | Some v -> [ Variable (s_system_ocaml_version, make_string (OCaml_V.to_string v)) ]
        ) 
      } in
      Syntax.to_string filename s
@@ -387,12 +522,23 @@ module OPAM = struct
     ocaml_version = None;
   }
 
+  let make
+      ~name ~version ~maintainer ~substs ~build_env ~build ~remove
+      ~depends ~depopts ~conflicts ~libraries ~syntax ~others
+      ~ocaml_version =
+    { name; version; maintainer;
+      substs; build_env; build;
+      remove; depends; depopts; conflicts;
+      libraries; syntax; others;
+      ocaml_version }
+
   let create nv =
     let name = NV.name nv in
     let version = NV.version nv in
     { empty with name; version }
 
   let s_version     = "version"
+  let s_name        = "name"
   let s_maintainer  = "maintainer"
   let s_substs      = "substs"
   let s_build       = "build"
@@ -417,7 +563,6 @@ module OPAM = struct
 
   let useful_fields = [
     s_opam_version;
-    s_version;
     s_maintainer;
     s_substs;
     s_build;
@@ -436,6 +581,8 @@ module OPAM = struct
       s_license;
       s_authors;
       s_homepage;
+      s_version;
+      s_name;
     ]
 
   let name t = t.name
@@ -488,30 +635,25 @@ module OPAM = struct
     let s = {
       filename = Filename.to_string filename;
       contents = [
-        Variable ("opam-version", String Globals.opam_version);
-        Section {
-          File_format.kind = "package";
-          name = N.to_string t.name;
-          items = [
-            Variable (s_version, String (V.to_string t.version));
-            Variable (s_maintainer, String t.maintainer);
-            Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
-            Variable (s_build_env, make_list make_env_variable t.build_env);
-            Variable (s_build, make_list (make_list make_string) t.build);
-            Variable (s_remove, make_list (make_list make_string) t.remove);
-            Variable (s_depends, make_cnf_formula t.depends);
-            Variable (s_depopts, make_cnf_formula t.depopts);
-            Variable (s_conflicts, make_and_formula t.conflicts);
-            Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
-            Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
-          ] @ (
-            match t.ocaml_version with
-            | None   -> []
-            | Some v -> [ Variable (s_ocaml_version, make_constraint v) ]
-          ) @
-            List.map (fun (s, v) -> Variable (s, v)) t.others;
-        }
-      ] 
+        Variable (s_opam_version, String Globals.opam_version);
+(*        Variable (s_name, String (N.to_string t.name));
+          Variable (s_version, String (V.to_string t.version)); *)
+        Variable (s_maintainer, String t.maintainer);
+        Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
+        Variable (s_build_env, make_list make_env_variable t.build_env);
+        Variable (s_build, make_list (make_list make_string) t.build);
+        Variable (s_remove, make_list (make_list make_string) t.remove);
+        Variable (s_depends, make_cnf_formula t.depends);
+        Variable (s_depopts, make_cnf_formula t.depopts);
+        Variable (s_conflicts, make_and_formula t.conflicts);
+        Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
+        Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
+      ] @ (
+        match t.ocaml_version with
+        | None   -> []
+        | Some v -> [ Variable (s_ocaml_version, make_constraint v) ]
+      ) @
+        List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string filename s
 
@@ -522,19 +664,43 @@ module OPAM = struct
     ]
 
   let of_string filename str =
+    let nv = NV.of_filename filename in
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
-    let opam_version = assoc s.contents s_opam_version parse_string in
+    let s = s.contents in
+    let opam_version = assoc s s_opam_version parse_string in
     if opam_version <> Globals.opam_version then
       Globals.error_and_exit "%s is not a supported OPAM version" opam_version;
-    let package = get_section_by_kind s.contents "package" in
-    let name = N.of_string package.File_format.name in
-    let s = package.items in
+    let name_f = assoc_option  s s_name (parse_string |> N.of_string) in
+    let name = match name_f, nv with
+      | None  , None    ->
+          Globals.error_and_exit "%s is an invalid OPAM filename" (Filename.to_string filename);
+      | Some n, None    -> n
+      | None  , Some nv -> NV.name nv
+      | Some n, Some nv ->
+          if NV.name nv <> n then
+            Globals.error_and_exit
+              "Inconsistant naming scheme in %s"
+              (Filename.to_string filename)
+          else
+            n in
+    let version_f = assoc_option s s_version (parse_string |> V.of_string) in
+    let version = match version_f, nv with
+      | None  , None    ->
+          Globals.error_and_exit "%s is an invalid OPAM filename" (Filename.to_string filename);
+      | Some v, None    -> v
+      | None  , Some nv -> NV.version nv
+      | Some v, Some nv ->
+          if NV.version nv <> v then
+            Globals.error_and_exit
+              "Inconsistant versioning scheme in %s"
+              (Filename.to_string filename)
+          else
+            v in
     let parse_commands = parse_or [
       "list",      (fun x -> [parse_list parse_command x]);
       "list-list", parse_list (parse_list parse_command);
     ] in
-    let version    = assoc s s_version (parse_string |> V.of_string) in
     let maintainer = assoc s s_maintainer parse_string in
     let substs     = 
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
@@ -854,8 +1020,8 @@ module Comp = struct
     opam_version : OPAM_V.t ;
     name         : OCaml_V.t ;
     preinstalled : bool;
-    src          : string ;
-    patches      : string list ;
+    src          : filename ;
+    patches      : filename list ;
     configure    : string list ;
     make         : string list ;
     build        : string list list ;
@@ -872,7 +1038,7 @@ module Comp = struct
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
     name         = OCaml_V.of_string "<none>";
-    src          = "";
+    src          = Filename.raw "";
     preinstalled = false;
     patches   = [];
     configure = [];
@@ -957,8 +1123,8 @@ module Comp = struct
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
-    let src       = assoc_default "" s s_src parse_string in
-    let patches   = assoc_string_list s s_patches   in
+    let src       = assoc_default (Filename.raw "") s s_src (parse_string |> Filename.raw) in
+    let patches   = assoc_list s s_patches (parse_list (parse_string |> Filename.of_string)) in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
     let build     = assoc_list s s_build (parse_list parse_string_list) in
@@ -976,7 +1142,7 @@ module Comp = struct
     if build <> [] && (configure @ make) <> [] then
       Globals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
                               fields at the same time.";
-    if not preinstalled && src = "" then
+    if not preinstalled && Filename.to_string src = "" then
       Globals.error_and_exit "You should either specify an url (with 'sources')  \
                               or use 'preinstalled: true' to pick the already installed \
                               compiler version.";
@@ -995,10 +1161,10 @@ module Comp = struct
       filename = Filename.to_string filename;
       contents = [
         Variable (s_name        , make_string (OCaml_V.to_string s.name));
-        Variable (s_src         , make_string s.src);
+        Variable (s_src         , make_string (Filename.to_string s.src));
         Variable (s_opam_version, make_string (OPAM_V.to_string s.opam_version));
         Variable (s_preinstalled, make_bool s.preinstalled);
-        Variable (s_patches     , make_list make_string s.patches);
+        Variable (s_patches     , make_list (Filename.to_string |> make_string) s.patches);
         Variable (s_configure   , make_list make_string s.configure);
         Variable (s_make        , make_list make_string s.make);
         Variable (s_build       , make_list (make_list make_string) s.build);
@@ -1181,4 +1347,19 @@ end
 module Env = struct
   include Env
   include Make (Env)
+end
+
+module URL = struct
+  include URL
+  include Make (URL)
+end
+
+module Urls_txt = struct
+  include Urls_txt
+  include Make(Urls_txt)
+end
+
+module Filenames = struct
+  include Filenames
+  include Make(Filenames)
 end

@@ -41,8 +41,8 @@ OCaml alias updates<br>
 <pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> <a href="Types.html#TYPErepository">Types.repository</a> list -> t</code></pre><div class="info">
 Repository updates<br>
 </div>
-<pre><span id="VALwith_last_ocaml_in_path"><span class="keyword">val</span> with_last_ocaml_in_path</span> : <code class="type">t -> Types.OCaml_V.t option -> t</code></pre><div class="info">
-OCaml version updates<br>
+<pre><span id="VALwith_system_ocaml_version"><span class="keyword">val</span> with_system_ocaml_version</span> : <code class="type">t -> Types.OCaml_V.t option -> t</code></pre><div class="info">
+system-wide's OCaml version updates<br>
 </div>
 <pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> Types.OPAM_V.t</code></pre><div class="info">
 Return the OPAM version<br>
@@ -53,8 +53,8 @@ Return the list of repository<br>
 <pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">t -> Types.Alias.t</code></pre><div class="info">
 Return the OCaml alias<br>
 </div>
-<pre><span id="VALlast_ocaml_in_path"><span class="keyword">val</span> last_ocaml_in_path</span> : <code class="type">t -> Types.OCaml_V.t option</code></pre><div class="info">
-Return the OCaml version<br>
+<pre><span id="VALsystem_ocaml_version"><span class="keyword">val</span> system_ocaml_version</span> : <code class="type">t -> Types.OCaml_V.t option</code></pre><div class="info">
+Return the system's OCaml version<br>
 </div>
 <pre><span id="VALcores"><span class="keyword">val</span> cores</span> : <code class="type">t -> int</code></pre><div class="info">
 Return the number of cores<br>

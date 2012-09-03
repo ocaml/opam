@@ -59,7 +59,7 @@ type t = {
   config: File.Config.t;
 
   (* ~/.opam/repo/index contents *)
-  repo_index: string N.Map.t;
+  repo_index: string list N.Map.t;
 }
 
 let print_state t =
@@ -69,10 +69,6 @@ let print_state t =
         (Repository.to_string r)
         (Dirname.to_string (Path.R.root p)) in
     String.concat ", " (List.map s r) in
-  let string_of_nmap m =
-    let s (n,r) = Printf.sprintf "%s:%s" (N.to_string n) r in
-    let l = N.Map.fold (fun n r l -> s (n,r)::l) m [] in
-    String.concat ", " l in
   log "GLOBAL    : %s" (Dirname.to_string (Path.G.root t.global));
   log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
   log "REPO      : %s" (string_of_repos t.repositories);
@@ -80,7 +76,7 @@ let print_state t =
   log "AVAILABLE_CURRENT : %s" (match t.available_current with None -> "<none>" | Some set -> NV.Set.to_string set);
   log "INSTALLED : %s" (NV.Set.to_string t.installed);
   log "REINSTALL : %s" (NV.Set.to_string t.reinstall);
-  log "REPO_INDEX: %s" (string_of_nmap t.repo_index)
+  log "REPO_INDEX: %s" (N.Map.to_string (String.concat ",") t.repo_index)
 
 let current_ocaml_version t =
   let alias = File.Config.ocaml_version t.config in
@@ -103,29 +99,28 @@ let update_available_current t =
   { t with available_current =     
     (* Remove the package which does not fullfil the compiler constraints *)
     let ocaml_version =
-      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then
-        let v = 
-          match File.Config.last_ocaml_in_path t.config with
-            | None   -> (*assert false*) Globals.error_and_exit "the OCaml version from config has been manually removed"
-            | Some v -> v in
+      if File.Config.ocaml_version t.config = Alias.of_string Globals.default_compiler_version then (
         let current = OCaml_V.current () in
-
-        (match current with
-          | None -> 
-              if confirm "No OCaml compiler found in path. Continue ?" then
-                ()
-              else
-                Globals.exit 66
-          | Some current ->
-              if v <> current then 
-                if confirm "The current OCaml version %S is not the same as the first in config %S. Continue ?" 
-                  (OCaml_V.to_string current)
-                  (OCaml_V.to_string v) then
-                  ()
-                else
-                  Globals.exit 66);
-        v
-      else
+        let system = File.Config.system_ocaml_version t.config in
+        match current, system  with
+        | None  , None   -> Globals.error_and_exit "No OCaml compiler installed."
+        | None  , Some s ->
+            if not (confirm "No OCaml compiler found. Continue ?") then 
+              Globals.exit 1
+            else
+              s
+        | Some c, Some s ->
+            if s <> c
+            && not (confirm "The version of OCaml in your path (%S) \
+                             is not the same as the one OPAM has been \
+                             initialized with (%S). Continue ?"
+                      (OCaml_V.to_string c)
+                      (OCaml_V.to_string s)) then
+              Globals.exit 1
+            else
+              s
+        | Some c, None   -> c
+      ) else
         current_ocaml_version t in
     let filter nv =
       let opam = File.OPAM.read (Path.G.opam t.global nv) in
@@ -148,7 +143,7 @@ let get_available_current t =
 
 (* - Look into the content of ~/.opam/config to build the client
    state
-   - Also perform the maximum checking of consistency possible *)
+   - Also try to check package consistency as much as possible *)
 let load_state () =
   log "root path is %s" !Globals.root_path;
   let global = Path.G.create () in
@@ -161,9 +156,14 @@ let load_state () =
   let repo_index = 
     let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
     let l_wrong = 
-      List.filter (fun (_, repo) -> 
-        List.for_all (fun (r, _) -> Repository.name r <> repo) repositories)
-        (N.Map.bindings repo_index) in
+      List.fold_left (fun accu (n, repo_s) ->
+        List.fold_left (fun accu repo ->
+          if List.for_all (fun (r, _) -> Repository.name r <> repo) repositories then
+            (n, repo) :: accu
+          else
+            accu
+        ) accu repo_s
+      ) [] (N.Map.bindings repo_index) in
     let () = List.iter 
       (fun (n, repo) ->
         Globals.error "File %S: unbound repository %S associated to name %S" 
@@ -176,7 +176,7 @@ let load_state () =
   let pinned = File.Pinned.safe_read (Path.C.pinned compiler) in
   let installed = File.Installed.safe_read (Path.C.installed compiler) in
   let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
-  let available = Path.G.available global in
+  let available = Path.G.available_packages global in
   let available_current = None in
   let t = {
     global; compiler; repositories;
@@ -240,7 +240,7 @@ let find_available_package_by_name t name =
     Some s
 
 let print_updated t updated pinned_updated =
-  if not (NV.Set.is_empty updated) && not (NV.Set.is_empty pinned_updated) then
+  if not (NV.Set.is_empty (NV.Set.union updated pinned_updated)) then
     Globals.msg "New packages available:\n";
   NV.Set.iter (fun nv ->
     Globals.msg " - %s%s\n"
@@ -252,12 +252,12 @@ let print_updated t updated pinned_updated =
   ) pinned_updated
 
 let print_compilers compilers repo =
-  let repo_compilers = Path.R.compiler_list repo in
+  let repo_compilers = Path.R.available_compilers repo in
   let new_compilers = OCaml_V.Set.diff repo_compilers compilers in
   if not (OCaml_V.Set.is_empty new_compilers) then
     Globals.msg "New compiler descriptions available:\n";
   OCaml_V.Set.iter (fun v ->
-    Globals.msg " -  %s\n" (OCaml_V.to_string v)
+    Globals.msg " - %s\n" (OCaml_V.to_string v)
   ) new_compilers
 
 let install_conf_ocaml_config t =
@@ -312,17 +312,23 @@ let install_conf_ocaml () =
 
 let update_repo_index t =
 
-  (* If there are new packages, assign them to some repository *)
+  (* Update repo_index *)
   let repo_index =
     List.fold_left (fun repo_index (r,p) ->
-      let available = Path.R.available p in
+      let available = Path.R.available_packages p in
       log "repo=%s packages=%s" (Repository.name r) (NV.Set.to_string available);
       NV.Set.fold (fun nv repo_index ->
         let name = NV.name nv in
+        let repo = Repository.name r in
         if not (N.Map.mem name repo_index) then
-          N.Map.add name (Repository.name r) repo_index
+          N.Map.add name [repo] repo_index
         else
-          repo_index
+          let repo_s = N.Map.find name repo_index in
+          if not (List.mem repo repo_s) then
+            let repo_index = N.Map.remove name repo_index in
+            N.Map.add name (repo_s @ [repo]) repo_index
+          else
+            repo_index
       ) available repo_index
     ) t.repo_index t.repositories in
   File.Repo_index.write (Path.G.repo_index t.global) repo_index;
@@ -335,48 +341,52 @@ let update_repo_index t =
   install_conf_ocaml ();
   
   (* Create symbolic links from $repo dirs to main dir *)
-  N.Map.iter (fun n r ->
-    let repo_p = find_repository_path t r in
-    let available_versions = Path.R.available_versions repo_p n in
-    V.Set.iter (fun v ->
-      let nv = NV.create n v in
-      let opam_dir = Path.G.opam_dir t.global in
-      let opam_f = Path.R.opam repo_p nv in
-      let descr_dir = Path.G.descr_dir t.global in
-      let descr = Path.R.descr repo_p nv in
-      Filename.link_in opam_f opam_dir;
-      if Filename.exists descr then
-        Filename.link_in descr descr_dir
-      else
-        Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr)
-    ) available_versions;
+  N.Map.iter (fun n repo_s ->
+    let all_versions = ref V.Set.empty in
+    List.iter (fun r ->
+      let repo_p = find_repository_path t r in
+      let available_versions = Path.R.available_versions repo_p n in
+      V.Set.iter (fun v ->
+        if not (V.Set.mem v !all_versions) then (
+          let nv = NV.create n v in
+          let opam_g = Path.G.opam t.global nv in
+          let opam_r = Path.R.opam repo_p nv in
+          let descr_g = Path.G.descr t.global nv in
+          let descr_r = Path.R.descr repo_p nv in
+          Filename.link opam_r opam_g;
+          if Filename.exists descr_r then
+            Filename.link descr_r descr_g
+          else
+           Globals.msg "WARNING: %s does not exist\n" (Filename.to_string descr_r)
+        )
+      ) available_versions
+    ) repo_s
   ) repo_index
 
-let update_repo () =
+let update_repo ~show_compilers  =
   log "update_repo";
   let t = load_state () in
-  let compilers = Path.G.compiler_list t.global in
+  let compilers = Path.G.available_compilers t.global in
 
   (* first update all the repo *)
   List.iter (fun (r,_) -> Repositories.update r) t.repositories;
 
   (* Display the new compilers available *)
-  List.iter (fun (_, r) -> print_compilers compilers r) t.repositories;
+  List.iter (fun (_, r) -> if show_compilers then print_compilers compilers r) t.repositories;
 
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
   List.iter (fun (r,p) ->
-    let comps = Path.R.compiler_list p in
-    let comp_dir = Path.G.compiler_dir t.global in
+    let comps = Path.R.available_compilers p in
+    let comp_dir = Path.G.compilers_dir t.global in
     OCaml_V.Set.iter (fun o ->
       let comp_f = Path.R.compiler p o in
       Filename.link_in comp_f comp_dir
     ) comps
   ) t.repositories
 
-let update_package () =
-  log "update_package";
-
+let update_package ~show_packages =
+  log "update_packages";
   let t = load_state () in
   (* Update the pinned packages *)
   let pinned_updated =
@@ -387,14 +397,18 @@ let update_package () =
               if mem_installed_package_by_name t n then
                 let nv = find_installed_package_by_name t n in
                 let build = Path.C.build t.compiler nv in
+                Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
+                (* XXX: make it more generic *)
                 if Dirname.exists build then
-                  let o =
+                  match
                     Run.read_command_output
-                      [ "rsync"; "-arv"; "--delete"; Dirname.to_string p; Dirname.to_string build ] in
-                  if List.length o > 4 then
-                    Some nv
-                  else
-                    None
+                      [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string build ]
+                  with
+                  | None -> None
+                  | Some lines ->
+                      match Utils.rsync_trim lines with
+                      | [] -> None
+                      | l  -> Some nv
                 else
                   None
               else
@@ -406,21 +420,39 @@ let update_package () =
   update_repo_index t;
 
   let updated =
-    List.fold_left (fun accu (_,p) ->
-      let updated = File.Updated.safe_read (Path.R.updated p) in
+    N.Map.fold (fun n repo_s accu ->
       (* we do not try to upgrade pinned packages *)
-      let updated =
-        NV.Set.filter (fun nv -> NV.Set.for_all (fun nvp -> NV.name nvp = NV.name nv) pinned_updated) updated in
-      NV.Set.union updated accu;
-    ) NV.Set.empty t.repositories in  
-
-  print_updated t updated pinned_updated;
+      if N.Map.mem n t.pinned then
+        accu
+      else (
+        let all_versions = ref V.Set.empty in
+        List.fold_left (fun accu repo ->
+          let p = find_repository_path t repo in
+          let available_versions = Path.R.available_versions p n in
+          let new_versions = V.Set.diff available_versions !all_versions in
+          log "new_versions: %s" (V.Set.to_string new_versions);
+          if not (V.Set.is_empty new_versions) then (
+            all_versions := V.Set.union !all_versions new_versions;
+            let all_updated = File.Updated.safe_read (Path.R.updated p) in
+            let updated =
+              NV.Set.filter (fun nv ->
+                NV.name nv = n && V.Set.mem (NV.version nv) new_versions
+              ) all_updated in
+            NV.Set.union updated accu
+          ) else
+            accu
+        ) accu repo_s
+      )
+    ) t.repo_index NV.Set.empty in  
+  if show_packages then
+    print_updated t updated pinned_updated;
 
   let updated = NV.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall *)
-  Path.G.fold_compiler (fun () compiler ->
-    let installed = File.Installed.safe_read (Path.C.installed compiler) in
-    let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
+  Alias.Set.iter (fun alias ->
+    let t = Path.C.create alias in
+    let installed = File.Installed.safe_read (Path.C.installed t) in
+    let reinstall = File.Reinstall.safe_read (Path.C.reinstall t) in
     let reinstall = 
       NV.Set.fold (fun nv reinstall ->
         if NV.Set.mem nv installed then
@@ -429,8 +461,8 @@ let update_package () =
           reinstall
       ) updated reinstall in
     if not (NV.Set.is_empty reinstall) then
-      File.Reinstall.write (Path.C.reinstall compiler) reinstall
-  ) () t.global;
+      File.Reinstall.write (Path.C.reinstall t) reinstall
+  ) (Path.G.available_aliases t.global);
 
   (* Check all the dependencies exist *)
   let t = update_available_current (load_state ()) in
@@ -459,12 +491,12 @@ let update_package () =
     )) (depends @ depopts)
   ) (get_available_current t);
   if !has_error then
-    Globals.exit 66
+    Globals.exit 1
 
 let update () =
   log "update";
-  update_repo ();
-  update_package ()
+  update_repo ~show_compilers:true;
+  update_package ~show_packages:true
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -537,17 +569,21 @@ let add_alias alias ocaml_version =
 
 (* We assume that we have the right ocaml-version in $opam/config. Then we:
    - create $opam/$alias
-   - compiles and install $opam/compiler/$descr.comp *)
-let init_ocaml f_exists alias (default_allowed, ocaml_version) =
+   - compiles and install $opam/compiler/$descr.comp
+   Some explanations:
+   - [f_exists] is called if alias already exists
+   - if [default_allowed] is set, then 'system' is an allowed alias argument
+*)
+let init_ocaml f_exists alias default_allowed ocaml_version =
   log "init_ocaml";
   let t = load_state () in
 
   let default = OCaml_V.of_string Globals.default_compiler_version in
-  let last_ocaml, ocaml_version = 
+  let system_ocaml_version, ocaml_version = 
     let current () =
       match OCaml_V.current () with
         | None -> Globals.error_and_exit "No OCaml compiler found in path"
-        | Some last_ocaml -> Some last_ocaml, default in
+        | Some system_ocaml -> Some system_ocaml, default in
 
     match ocaml_version with
       | None -> current ()
@@ -562,7 +598,7 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
                 (if ocaml_version = default then " (because it is a reserved name)" else "");
               OCaml_V.Set.iter
                 (fun v -> Globals.msg "    - %s\n" (OCaml_V.to_string v))
-                (Path.G.compiler_list t.global);
+                (Path.G.available_compilers t.global);
               Globals.exit 2
             end 
           else
@@ -591,44 +627,53 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
         (* Install the compiler *)
         let comp_src = File.Comp.src comp in
         let build_dir = Path.C.build_ocaml alias_p in
-        Run.download comp_src (Dirname.to_string build_dir);
-        let patches = File.Comp.patches comp in
-        List.iter (fun f -> Run.download f (Dirname.to_string build_dir)) patches;
-        Run.in_dir
-          (Dirname.to_string build_dir)
-          (fun () ->
-            let patches = List.map Stdlib_filename.basename patches in
-            List.iter Run.patch patches);
-        let err =
-          let t = 
-            { t with
-              compiler = alias_p;
-              installed = 
-                let name = N.of_string Globals.default_package in
-                let version = V.of_string (Alias.to_string alias) in
-                let nv = NV.create name version in
-                NV.Set.add nv NV.Set.empty } in
-          install_conf_ocaml_config t;
-          if File.Comp.configure comp @ File.Comp.make comp <> [] then
-            Dirname.exec build_dir
-              [ ( "./configure" :: File.Comp.configure comp )
-                @ [ "-prefix";  Dirname.to_string alias_p_dir ]
-              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-              (* NOTE In case it exists 2 '-prefix', in general the script
-                 ./configure will only consider the last one, others will be
-                 discarded. *)
-              ; ( "make" :: File.Comp.make comp )
-              ; [ "make" ; "install" ]
-              ]
-          else
-            let builds =
-              List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-            Dirname.exec build_dir builds
-        in
-        if err <> 0 then
-          Globals.error_and_exit
-            "The compilation of compiler version %s failed"
-            (OCaml_V.to_string ocaml_version)
+        Dirname.with_tmp_dir (fun download_dir ->
+          begin match Filename.download comp_src download_dir with
+          | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string comp_src)
+          | Some f -> Filename.extract f build_dir
+          end;
+          let patches = File.Comp.patches comp in
+              let patches =
+                Utils.filter_map (fun f ->
+                  match Filename.download f build_dir with
+                  | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string f) 
+                  | Some f -> Some f
+                ) patches in
+              List.iter (fun f ->
+                if not (Filename.patch f build_dir) then
+                  Globals.error_and_exit "Cannot apply %s" (Filename.to_string f)
+              ) patches;
+          let err =
+            let t = 
+              { t with
+                compiler = alias_p;
+                installed = 
+                  let name = N.of_string Globals.default_package in
+                  let version = V.of_string (Alias.to_string alias) in
+                  let nv = NV.create name version in
+                  NV.Set.add nv NV.Set.empty } in
+            install_conf_ocaml_config t;
+            if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
+              Dirname.exec build_dir
+                [ ( "./configure" :: File.Comp.configure comp )
+                  @ [ "-prefix";  Dirname.to_string alias_p_dir ]
+                (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+                (* NOTE In case it exists 2 '-prefix', in general the script
+                   ./configure will only consider the last one, others will be
+                   discarded. *)
+                ; ( "make" :: File.Comp.make comp )
+                ; [ "make" ; "install" ]
+                ]
+            end else begin
+              let builds =
+                List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+              Dirname.exec build_dir builds
+            end in
+          if err <> 0 then
+            Globals.error_and_exit
+              "The compilation of compiler version %s failed"
+              (OCaml_V.to_string ocaml_version)
+        )
       end
     with e -> 
       if not !Globals.debug then
@@ -638,7 +683,7 @@ let init_ocaml f_exists alias (default_allowed, ocaml_version) =
 
   (* write the new version in the configuration file *)
   let config = File.Config.with_ocaml_version t.config alias in
-  let config = File.Config.with_last_ocaml_in_path config last_ocaml in
+  let config = File.Config.with_system_ocaml_version config system_ocaml_version in
   File.Config.write (Path.G.config t.global) config;
   add_alias alias ocaml_version;
   ocaml_version
@@ -659,9 +704,10 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
-let list print_short =
+let list print_short pkg_str =
   log "list";
   let t = load_state () in
+  let re = Re_perl.compile_pat ~opts:[`Caseless] pkg_str in
   (* Get all the installed packages *)
   let installed = File.Installed.read (Path.C.installed t.compiler) in
   let map, max_n, max_v =
@@ -691,16 +737,21 @@ let list print_short =
   in
   N.Map.iter (
     if print_short then
-      fun name _ -> Globals.msg "%s " (N.to_string name)
+      fun name _ -> 
+        let name = N.to_string name in
+        (if Re.execp re name 
+        then Globals.msg "%s " name)
     else
       fun name (version, description) ->
+        let name = N.to_string name in
         let version = match version with
           | None   -> s_not_installed
           | Some v -> V.to_string v in
-        Globals.msg "%s  %s  %s\n"
-          (indent_left (N.to_string name) max_n)
-          (indent_right version max_v)
-          description) map
+        (if Re.execp re name || Re.execp re description then
+            Globals.msg "%s  %s  %s\n"
+              (indent_left name max_n)
+              (indent_right version max_v)
+              description)) map
 
 let info package =
   log "info %s" (N.to_string package);
@@ -872,23 +923,69 @@ let proceed_toinstall t nv =
       end
     ) (File.Dot_install.misc install)
 
+let pinned_path t nv =
+  let name = NV.name nv in
+  if N.Map.mem name t.pinned then
+    match N.Map.find name t.pinned with
+    | Path p -> Some p
+    | _      -> None
+  else
+    None
+
+let get_archive t nv =
+  log "get_archive %s" (NV.to_string nv);
+  let name = NV.name nv in
+  let rec aux = function
+    | [] ->
+        Globals.error_and_exit
+          "Unable to find a repository containing %s"
+          (NV.to_string nv)
+    | repo :: repo_s ->
+        let repo_p = find_repository_path t repo in
+        let repo = find_repository t repo in
+        let opam_f = Path.R.opam repo_p nv in
+        if Filename.exists opam_f then (
+          Repositories.download repo nv;
+          let src = Path.R.archive repo_p nv in
+          let dst = Path.G.archive t.global nv in
+          Filename.link src dst;
+          dst
+        ) else
+          aux repo_s in
+  aux (N.Map.find name t.repo_index)
+
+let extract_package t nv =
+  log "extract_package: %s" (NV.to_string nv);
+  let p_build = Path.C.build t.compiler nv in
+  Dirname.rmdir p_build;
+  match pinned_path t nv with
+  | None   ->
+      let archive = get_archive t nv in
+      Globals.msg "Extracting ...\n";
+      Filename.extract archive p_build;
+      p_build
+  | Some p ->
+      (* XXX: make it a bit more generic ... *)
+      Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
+      let err = Run.command [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ] in
+      if err <> 0 then
+        Globals.error_and_exit "Cannot synchronize %s with %s." (Dirname.to_string p) (Dirname.to_string p_build);
+      p_build
+
 let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
+  Globals.msg "Uninstalling %s ...\n" (NV.to_string nv);
   let name = NV.name nv in
 
   (* Run the remove script *)
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
-  let root_remove = 
-    let p_build = Path.C.build t.compiler nv in
-    if Dirname.exists p_build then
-      p_build
-    else
-      let () = Globals.warning "the folder '%s' does not exist anymore" (Dirname.to_string p_build) in
-      Path.G.root t.global in
+  let p_build = Path.C.build t.compiler nv in
+  if not (Dirname.exists p_build) then
+    ignore (extract_package t nv);
   (* We try to run the remove scripts in the folder where it was extracted
      If it does not exist, we don't really care. *)
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] root_remove remove in
+  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove in
   if err <> 0 then
     Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
 
@@ -896,6 +993,18 @@ let proceed_todelete t nv =
   Dirname.rmdir (Path.C.lib t.compiler name);
   Dirname.rmdir (Path.C.build t.compiler nv);
 
+  (* Clean-up the repositories *)
+  let repos =
+    try N.Map.find (NV.name nv) t.repo_index
+    with _ -> [] in
+  List.iter (fun r ->
+    let p = find_repository_path t r in
+    let archive = Path.R.archive p nv in
+    let tmp_dir = Path.R.tmp_dir p nv in
+    Filename.remove archive;
+    Dirname.rmdir tmp_dir
+  ) repos;
+    
   (* Remove the binaries *)
   let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
@@ -915,18 +1024,6 @@ let proceed_todelete t nv =
   (* Remove .config and .install *)
   Filename.remove (Path.C.install t.compiler name);
   Filename.remove (Path.C.config t.compiler name)
-
-let get_archive t nv =
-  log "get_archive %s" (NV.to_string nv);
-  let name = NV.name nv in
-  let repo = N.Map.find name t.repo_index in
-  let repo_p = find_repository_path t repo in
-  let repo = find_repository t repo in
-  Repositories.download repo nv;
-  let src = Path.R.archive repo_p nv in
-  let dst = Path.G.archive t.global nv in
-  Filename.link src dst;
-  dst
 
 type env = {
   add_to_env : (string * string) list;
@@ -977,34 +1074,20 @@ let print_env env =
     Globals.msg "%s=%s; export %s;\n" k v k;
   ) env.new_env
 
-let pinned_path t nv =
-  let name = NV.name nv in
-  if N.Map.mem name t.pinned then
-  match N.Map.find name t.pinned with
-  | Path p -> Some p
-  | _      -> None
-  else
-  None
+let print_env_warning () =
+  Globals.msg "\nTo update your environment variables, you can now run:
+            \n\    $ eval `opam config -env`\n\n"
 
 let rec proceed_tochange t nv_old nv =
+  Globals.msg "==== %s ====\n" (NV.to_string nv);
+
   (* First, uninstall any previous version *)
   (match nv_old with
   | Some nv_old -> proceed_todelete t nv_old
   | None        -> ());
 
   (* Then, untar the archive *)
-  let p_build = Path.C.build t.compiler nv in
-  Dirname.rmdir p_build;
-  (match pinned_path t nv with
-  | None   -> Filename.extract (get_archive t nv) p_build
-  | Some p ->
-      log "rsyncing locally instead of downloading the archive";
-      Dirname.mkdir p_build;
-      let err = Dirname.exec p_build [ ["rsync"; "-ar"; Dirname.to_string p; "."] ] in
-      log "rsync should be done";
-      if err <> 0 then
-        Globals.error_and_exit "Cannot rsync with %s" (Dirname.to_string p));
-
+  let p_build = extract_package t nv in
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
 
   (* Substitute the configuration files. We should be in the right
@@ -1025,9 +1108,7 @@ let rec proceed_tochange t nv_old nv =
   let commands = List.map (List.map (substitute_string t))
     (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "[%s] Build commands:\n  %s\n"
-    (NV.to_string nv)
-    (String.concat "\n  " commands_s);
+  Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s);
   let err =
     Dirname.exec
       ~add_to_env:env.add_to_env
@@ -1039,22 +1120,26 @@ let rec proceed_tochange t nv_old nv =
     with e ->
       Globals.error "while copying some files of %S" (NV.to_string nv);
       proceed_todelete t nv;
+      let _build = extract_package t nv in
       raise e
   else (
     proceed_todelete t nv;
-    (match nv_old with 
-      | Some nv_old -> 
-        if nv_old = nv then 
-          Globals.error "Recompilation failed" 
-        else 
+    let p_build = extract_package t nv in
+    match nv_old with 
+    | None        ->
+        Globals.error_and_exit "Compilation failed in %s." (Dirname.to_string p_build)
+    | Some nv_old -> 
+        if nv_old = nv then
+          Globals.error_and_exit "Recompilation failed in %s."  (Dirname.to_string p_build)
+        else
           (* try to restore the previous erased [nv_old] version *)
-          (try proceed_tochange t None nv_old with
-            | _ -> 
-              Globals.error "Restoration of previous version failed" 
-                (* determine if it is because some dependencies have been deleted or not... *))
-      | None -> ());
-    Globals.error_and_exit
-      "Compilation failed with error %d" err
+          try
+            Globals.error "Compilation of %s failed in %s. Restoring previous working version (%s) ..."
+              (NV.to_string nv) (Dirname.to_string p_build) (NV.to_string nv_old);
+            proceed_tochange t None nv_old
+          with _ ->
+            (* XXX: determine if it is because some dependencies have been deleted or not... *)
+            Globals.error_and_exit "Restoring %s failed" (NV.to_string nv_old) 
   )
 
 (* We need to clean-up things before recompiling. *)
@@ -1180,14 +1265,28 @@ module Heuristic = struct
             unknown_package sname)
 
   let apply_solution t sol = 
-(*    Globals.msg "The following solution has been found:\n"; *)
+    if Solver.solution_is_empty sol then
+      true
+    else (
+      Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      let continue =
-        if Solver.delete_or_update sol then
-          confirm "Continue ?"
-        else
-          true in
+      (* Maybe we can have a function PA_graph.length instead of 
+         doing an iter to calculate the number of packages to install *)
+      let to_install = ref 0 in
+      let cores = File.Config.cores t.config in      
+      Globals.msg "%d to install | %d to remove\n" 
+        (PA_graph.Parallel.iter cores sol.to_add 
+           ?pre:(fun _ -> incr to_install) 
+           ?child:(fun _ -> ()) 
+           ?post:(fun _ -> ()); !to_install)
+        (List.length sol.to_remove);            
 
+      let continue = 
+        if !to_install <= 1 then
+          true
+        else
+          confirm "Do you want to continue ?" in
+      
       if continue then (
 
         let installed = ref t.installed in
@@ -1217,14 +1316,14 @@ module Heuristic = struct
 
         (* Update the installed file in the parent process *)
         let post n = match action n with
-        | To_delete _    -> assert false
-        | To_recompile _ -> ()
-        | To_change (None, nv) ->
-            installed := NV.Set.add nv !installed;
-            write_installed ()
-        | To_change (Some o, nv)   ->
-            installed := NV.Set.add nv (NV.Set.remove o !installed);
-            write_installed () in
+          | To_delete _    -> assert false
+          | To_recompile _ -> ()
+          | To_change (None, nv) ->
+              installed := NV.Set.add nv !installed;
+              write_installed ()
+          | To_change (Some o, nv)   ->
+              installed := NV.Set.add nv (NV.Set.remove o !installed);
+              write_installed () in
 
         let error n =
           let f msg nv =
@@ -1235,11 +1334,11 @@ module Heuristic = struct
           | To_recompile nv        -> f "recompiling" nv
           | To_delete _            -> assert false in
 
-        let cores = File.Config.cores t.config in
         try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
         with PA_graph.Parallel.Errors n -> List.iter error n
       );
       continue
+    )
 
   let apply_solutions t = 
     let rec aux = function
@@ -1286,25 +1385,26 @@ let init repo alias ocaml_version cores =
     Repositories.init repo;
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
-    Dirname.mkdir (Path.G.archive_dir root);
-    Dirname.mkdir (Path.G.compiler_dir root);
-    update_repo ();
+    Dirname.mkdir (Path.G.archives_dir root);
+    Dirname.mkdir (Path.G.compilers_dir root);
+    update_repo ~show_compilers:false;
     let ocaml_version = init_ocaml
       (fun alias_p -> 
-        Globals.error_and_exit "%s does not exist whereas %s already exist" 
+        Globals.error_and_exit "%s does not exist whereas %s already exists" 
           (Filename.to_string config_f)
           (Dirname.to_string alias_p)) 
       alias
-      (false, ocaml_version) in
-    update_package ();
+      false
+      ocaml_version in
+    update_package ~show_packages:false;
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_packages t ocaml_version Heuristic.v_any in
     Heuristic.resolve `init t
       [ { wish_install
         ; wish_remove = [] 
         ; wish_upgrade = [] } ];
-    let env = get_env (load_state ()) in
-    print_env env
+
+    print_env_warning ()
 
   with e ->
     if not !Globals.debug then
@@ -1426,7 +1526,8 @@ let upload upload repo =
   let repo = match repo with
   | None ->
       if N.Map.mem name t.repo_index then
-        find_repository t (N.Map.find name t.repo_index)
+        (* We upload the package to the first available repository. *)
+        find_repository t (List.hd (N.Map.find name t.repo_index))
       else
         Globals.error_and_exit "No repository found to upload %s" (NV.to_string nv)
   | Some repo -> 
@@ -1436,16 +1537,16 @@ let upload upload repo =
         Globals.error_and_exit "Unbound repository %S (available = %s)" 
           repo (string_of_repositories t) in
   let repo_p = List.assoc repo t.repositories in
-  let upload_opam = Path.R.upload_opam repo_p nv in
-  let upload_descr = Path.R.upload_descr repo_p nv in
-  let upload_archives = Path.R.upload_archives repo_p nv in
+  let upload_repo = Path.R.of_dirname (Path.R.upload_dir repo_p) in
+  let upload_opam = Path.R.opam upload_repo nv in
+  let upload_descr = Path.R.descr upload_repo nv in
+  let upload_archives = Path.R.archive upload_repo nv in
   Filename.copy upload.opam upload_opam;
   Filename.copy upload.descr upload_descr;
   Filename.copy upload.archive upload_archives;
   Repositories.upload repo;
-  Filename.remove upload_opam;
-  Filename.remove upload_descr;
-  Filename.remove upload_archives
+  Dirname.rmdir (Path.R.package upload_repo nv);
+  Filename.remove (Path.R.archive upload_repo nv)
 
 (* Return the transitive closure of dependencies *)
 let get_transitive_dependencies ?(depopts = false) t names =
@@ -1635,7 +1736,7 @@ let remote action =
       let pretty_print r =
         Globals.msg "| %-10s| %-40s| %-10s |\n"
           (Repository.name r)
-          (Repository.address r)
+          (Dirname.to_string (Repository.address r))
           (Repository.kind r) in
       let line = String.make 68 '-' in
       line.[0] <- '|'; line.[12] <- '|'; line.[54] <- '|'; line.[67] <- '|';
@@ -1648,8 +1749,9 @@ let remote action =
       if List.exists (fun r -> Repository.name r = name) repos then
         Globals.error_and_exit "%s is already a remote repository" name
       else (
+        (try Repositories.init repo with Repositories.Unknown_backend ->
+          Globals.error_and_exit "\"%s\" is not a supported backend" (Repository.kind repo));
         log "Adding %s" (Repository.to_string repo);
-        Repositories.init repo;
         update_config (repo :: repos)
       );
       update ()
@@ -1660,11 +1762,11 @@ let remote action =
           Globals.error_and_exit "%s is not a remote index" n in
       update_config (List.filter ((!=) repo) repos);
       let repo_index =
-        N.Map.fold (fun n r repo_index ->
-          if r = Repository.name repo then
-            repo_index
-          else
-            N.Map.add n r repo_index
+        N.Map.fold (fun n repo_s repo_index ->
+          let repo_s = List.filter (fun r -> r <> Repository.name repo) repo_s in
+          match repo_s with
+          | [] -> repo_index
+          | _  -> N.Map.add n repo_s repo_index
         ) t.repo_index N.Map.empty in
         File.Repo_index.write (Path.G.repo_index t.global) repo_index;
       Dirname.rmdir (Path.R.root (Path.R.create repo))
@@ -1676,13 +1778,22 @@ let pin action =
   let pins = File.Pinned.safe_read pin_f in
   let update_config pins = File.Pinned.write pin_f pins in
   let name = action.pin_package in
+  if mem_installed_package_by_name t name then (
+    let reinstall_f = Path.C.reinstall t.compiler in
+    let reinstall = File.Reinstall.safe_read reinstall_f in
+    let nv = find_installed_package_by_name t name in
+    File.Reinstall.write reinstall_f (NV.Set.add nv reinstall)
+  );
   match action.pin_arg with
-  | Unpin  -> update_config (N.Map.remove name pins)
-  | Version _ | Path _ ->
-      if N.Map.mem name pins then
-        Globals.error_and_exit "%s is already associated to %s"
+  | Unpin -> update_config (N.Map.remove name pins)
+  | _     ->
+      if N.Map.mem name pins then (
+        let current = N.Map.find name pins in
+        Globals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
           (N.to_string name)
+          (string_of_pin_option current)
           (string_of_pin_option action.pin_arg);
+      );
       log "Adding %s => %s" (string_of_pin_option action.pin_arg) (N.to_string name);
       update_config (N.Map.add name action.pin_arg pins)
 
@@ -1696,7 +1807,7 @@ let pin_list () =
 let compiler_list () =
   log "compiler_list";
   let t = load_state () in
-  let descrs = Path.G.compiler_list t.global in
+  let descrs = Path.G.available_compilers t.global in
   let aliases = File.Aliases.read (Path.G.aliases t.global) in
   Globals.msg "--- Compilers installed ---\n";
   List.iter (fun (n,c) ->
@@ -1720,7 +1831,7 @@ let switch clone alias ocaml_version =
   let ocaml_version, exists = 
     let exists = ref false in
     let ocaml_version = 
-      init_ocaml (fun _ -> exists := true) (Some alias) (true, Some ocaml_version) in
+      init_ocaml (fun _ -> exists := true) (Some alias) true (Some ocaml_version) in
     ocaml_version, !exists in
 
   (* install new package
@@ -1783,14 +1894,13 @@ let switch clone alias ocaml_version =
       ; wish_remove = [] 
       ; wish_upgrade = [] } ];
 
-  let env = get_env (load_state ()) in
-  print_env env
+  print_env_warning ()
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
 
-let list print_short =
-  check (Read_only (fun () -> list print_short))
+let list print_short pkg_str =
+  check (Read_only (fun () -> list print_short pkg_str))
 
 let info package =
   check (Read_only (fun () -> info package))

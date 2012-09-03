@@ -1,3 +1,7 @@
+begin
+
+comp += [ "-g" ]
+link += [ "-g" ]
 
 begin library "extlib"
    sort = true
@@ -192,3 +196,4 @@ begin program "cnftocudf"
 end
 
 *)
+end

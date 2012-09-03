@@ -65,6 +65,9 @@ type solution = {
   to_add   : PA_graph.t;
 }
 
+(** Is the solution empty ? *)
+val solution_is_empty: solution -> bool
+
 (** Does the solution implies deleting or updating a package *)
 val delete_or_update : solution -> bool
 

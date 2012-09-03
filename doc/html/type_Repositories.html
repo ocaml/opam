@@ -25,6 +25,22 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upload&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Raw</span>&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span>&nbsp;<span class="keyword">val</span>&nbsp;rsync&nbsp;:&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">A</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">R</span>&nbsp;]&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;address&nbsp;=&nbsp;<span class="constructor">Types</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="keyword">type</span>&nbsp;<span class="constructor">BACKEND</span>&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;init&nbsp;:&nbsp;<span class="constructor">Repositories</span>.address&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update&nbsp;:&nbsp;<span class="constructor">Repositories</span>.address&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">Filename</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download_archive&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Repositories</span>.address&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename&nbsp;<span class="constructor">Types</span>.download<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download_file&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.filename&nbsp;<span class="constructor">Types</span>.download<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download_dir&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname&nbsp;<span class="constructor">Types</span>.download<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upload_dir&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;address:<span class="constructor">Repositories</span>.address&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">Filename</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;kind&nbsp;=&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;register_backend&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Repositories</span>.kind&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="keyword">module</span>&nbsp;<span class="constructor">Repositories</span>.<span class="constructor">BACKEND</span>)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_archive&nbsp;:&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 <span class="keyword">end</span></code></body></html>

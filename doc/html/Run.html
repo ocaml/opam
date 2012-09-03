@@ -35,8 +35,8 @@
 <br>
 <pre><span class="keyword">module</span> Run: <code class="code">sig</code> <a href="Run.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations.<br>
 <hr width="100%">
-<pre><span id="VALmk_temp_dir"><span class="keyword">val</span> mk_temp_dir</span> : <code class="type">string -> string</code></pre><div class="info">
-<code class="code">mk_temp_dir str</code> creates a tempory directory<br>
+<pre><span id="VALwith_tmp_dir"><span class="keyword">val</span> with_tmp_dir</span> : <code class="type">(string -> 'a) -> 'a</code></pre><div class="info">
+<code class="code">with_tmp_dir fn</code> executes <code class="code">fn</code> in a tempory directory<br>
 </div>
 <pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
 <code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code><br>
@@ -105,13 +105,21 @@ a command is a list of words<br>
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning. 
     It stops whenever one command fails.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list option</code></pre><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> and return
     the lines from stdout<br>
 </div>
-<pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
-<code class="code">extract filename dirname</code> untar the archive <code class="code">filename</code> to
-    <code class="code">dirname</code><br>
+<pre><span id="VALis_tar_archive"><span class="keyword">val</span> is_tar_archive</span> : <code class="type">string -> bool</code></pre><div class="info">
+Test whether the file is an archive, by looking as its extension<br>
+</div>
+<pre><span id="VALis_github_tarball"><span class="keyword">val</span> is_github_tarball</span> : <code class="type">string -> bool</code></pre><pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<code class="code">extract filename dirname</code> extracts the archive <code class="code">filename</code> into
+    <code class="code">dirname</code>. <code class="code">dirname</code> should not exists and <code class="code">filename</code> should
+    contain only one top-level directory.<br>
+</div>
+<pre><span id="VALextract_in"><span class="keyword">val</span> extract_in</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+<code class="code">extract_in filename dirname</code> extracts the archive <code class="code">filename</code> into
+    <code class="code">dirname</code>. <code class="code">dirname</code> should already exists.<br>
 </div>
 <pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> string</code></pre><div class="info">
 Return the current working directory<br>
@@ -136,12 +144,11 @@ Functional version of <code class="code">flock / funlock</code><br>
 </div>
 <br>
 <span id="2_Functionusedonlybytheswitchcommnand"><h2>Function used only by the switch commnand</h2></span><br>
-<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
-download compiler sources.
-    Currently support only tar.gz/tar.bz2, but should be able to support
-    git and svn as well.<br>
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">filename:string -> dirname:string -> string option</code></pre><div class="info">
+download compiler sources<br>
 </div>
-<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info">
-Apply a patch file in the current directory<br>
+<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> bool</code></pre><div class="info">
+Apply a patch file in the current directory. Return whether the
+    patch has been applied succesfully.<br>
 </div>
 </body></html>

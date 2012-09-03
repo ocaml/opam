@@ -15,159 +15,104 @@
 
 (* A script helper to initialize an OPAM repo.
    It takes as input a directory where:
-   * opam/                 contains some OPAM files
-   * descr/                contains some description files
+   * packages/             contains packages meta-files
    * archives/             might contain some archive
-   * url/$name.$version    contains archive address
-   * files/$name.$version  contains some files to include in
-                           the archives (typically .config.in
-                           and .install)
+   * compilers/            contains compiler descriptions
 
-   After the script is run, archives/ contains all the package archives
-   for the available descr and OPAM files *)
-
-module F = Filename
+   After the script is run with -all, archives/ contains all the
+   package archives for the available package meta-files *)
 
 open Types
 
-let tmp_dir0 = Run.mk_temp_dir "mk-repo"
+let log fmt = Globals.log "OPAM-MK-REPO" fmt
 
-let root = Path.R.of_path (Dirname.cwd ())
+let version () =
+  Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
+  exit 1
 
-let opams = Path.R.available root
-
-module StringSet = Set.Make (struct type t = string let compare = compare end)
-
-module Checking = struct
-  module Checking = struct
-      
-    type t = 
-        { name : string 
-        ; set : StringSet.t }
-
-    (** returns a set containing filenames of [s] *)
-    let init s = 
-      { set = 
-          Utils.set_of_list StringSet.empty StringSet.add
-            (Array.to_list
-               (*(fun f -> Basename.to_string (Dirname.basename f)) *)
-               (Sys.readdir (Dirname.to_string (Path.R.root root / s))))
-      ; name = s }
-        
-    let remove nv t = { t with set = StringSet.remove (NV.to_string nv) t.set }
-    let not_empty t = not (StringSet.is_empty t.set)
-
-    let warning t = 
-      if StringSet.is_empty t.set then
-        ()
-      else
-        Globals.error "should not exist : %s" (String.concat " " (List.rev (StringSet.fold (fun s l -> Printf.sprintf "%s/%s" t.name s :: l) t.set [])))
-  end
-
-  let init () = List.map Checking.init [ "url" ; "files" (*; "descr"*) ]
-  let remove nv = List.map (Checking.remove nv)
-  let not_empty = List.exists Checking.not_empty
-
-  let warning = List.iter Checking.warning
-end
-
-let l_check = ref (Checking.init ())
+let all, index, packages =
+  let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
+  let all = ref true in
+  let index = ref false in
+  let packages = ref [] in
+  let specs = Arg.align [
+    ("-v"       , Arg.Unit version, " Display version information");
+    ("--version", Arg.Unit version, " Display version information");
+    ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
+    ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
+  ] in
+  let ano p = packages := p :: !packages in
+  Arg.parse specs ano usage;
+  !all, !index, NV.Set.of_list (List.map NV.of_string !packages)
 
 let () =
-  Globals.msg "Available:\n";
-  NV.Set.iter (fun nv ->
-    l_check := Checking.remove nv !l_check;
-    Globals.msg " - %s\n" (NV.to_string nv)
-  ) opams
+  let local_path = Dirname.cwd () in
+  log "local_path=%s" (Dirname.to_string local_path);
 
-let opams =
-  NV.Set.filter (fun nv ->
-    not (Filename.exists (Path.R.archive root nv))
-  ) opams
+  Globals.root_path := Dirname.to_string local_path;
+  let local_repo = Path.R.of_dirname local_path in
 
-let () =
-  Globals.msg "To update:\n";
-  NV.Set.iter (fun nv ->
-    Globals.msg " - %s\n" (NV.to_string nv)
-  ) opams
+  (* Read urls.txt *)
+  log "Reading urls.txt";
+  let local_index_file = Filename.of_string "urls.txt" in
+  let old_index = File.Urls_txt.safe_read local_index_file in
+  let new_index = Curl.make_urls_txt local_repo in
 
-let url nv =
-  let f = Path.R.root root / "url" // NV.to_string nv in
-  if Filename.exists f then
-    Some (Utils.string_strip (Raw.to_string (Filename.read f)))
-  else
-    None
+  let to_remove = Remote_file.Set.diff old_index new_index in
+  let to_add = Remote_file.Set.diff new_index old_index in
 
-let files nv =
-  let d = Path.R.root root / "files" / NV.to_string nv in
-  if Dirname.exists d then
-    Filename.list d
-  else
-    []
+  let nv_set_of_remotes remotes =
+    let aux r = Filename.create (Dirname.cwd ()) (Remote_file.base r) in
+    let list = List.map aux (Remote_file.Set.elements remotes) in
+    NV.Set.of_list (Utils.filter_map NV.of_filename list) in
+  let new_index = nv_set_of_remotes new_index in
+  let missing_archive =
+    NV.Set.filter (fun nv ->
+      let archive = Path.R.archive local_repo nv in
+      not (Filename.exists archive)
+    ) new_index in
+  let to_remove = nv_set_of_remotes to_remove in
+  let to_add = NV.Set.union (nv_set_of_remotes to_add) missing_archive in
+  let to_add =
+    if NV.Set.is_empty packages then
+      to_add
+    else
+      NV.Set.inter packages to_add in
 
-let tmp nv =
-  Path.R.root root / "tmp" / NV.to_string nv
+  let errors = ref [] in
+  if not index then (
 
-let tmp_dir nv =
-  Dirname.of_string tmp_dir0 / NV.to_string nv
+    if not (NV.Set.is_empty to_remove) then
+      Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
+    if not (NV.Set.is_empty to_add) then
+      Globals.msg "Packages to build: %s\n" (NV.Set.to_string to_add);
 
-let wget src =
-  let open Globals in
-  match os with
-  | Darwin | FreeBSD | OpenBSD -> [ "curl"; "--insecure" ; "-OL"; src ]
-  | _ -> [ "wget"; "--no-check-certificate"; src ]
+    (* Remove the old archive files *)
+    NV.Set.iter (fun nv ->
+      let archive = Path.R.archive local_repo nv in
+      Globals.msg "Removing %s ...\n" (Filename.to_string archive);
+      Filename.remove archive
+    ) to_remove;
 
-let archive_name src =
-  let name = F.basename src in
-  if F.check_suffix name ".tar.gz"
-  || F.check_suffix name ".tar.bz2"
-  || F.check_suffix name ".tgz"
-  || F.check_suffix name ".tbz" then
-    name
-  else    
-    Printf.sprintf "%s.tar.gz" name
+    NV.Set.iter (fun nv ->
+      try Repositories.make_archive nv
+      with _ -> errors := nv :: !errors;
+    ) to_add;
+  );
 
-let mv src =
-  let name = archive_name src in
-  if (F.basename src) = name then
-    []
-  else
-    [ "mv" ; F.basename src ; name ]
+  (* Create index.tar.gz *)
+  if not (NV.Set.is_empty to_add) && not (NV.Set.is_empty to_remove) then (
+    Globals.msg "Creating index.tar.gz ...\n";
+    Curl.make_index_tar_gz local_repo;
+  ) else
+    Globals.msg "OPAM Repository already up-to-date\n";
 
-let () =
-  let has_error = ref false in
-  Dirname.mkdir (Path.R.archive_dir root);
-  NV.Set.iter (fun nv ->
-    Globals.msg "Processing %-40s ." (NV.to_string nv);
-    let tmp_dir = tmp_dir nv in
-    Dirname.rmdir tmp_dir;
-    Dirname.mkdir tmp_dir;
-    begin match url nv with
-    | None     -> let _ = Globals.error "no url found for %s" (NV.to_string nv) in has_error := true
-    | Some url ->
-        Filename.remove (tmp nv // archive_name url);
-        Dirname.mkdir (tmp nv);
-        let err = Dirname.exec (tmp nv) [
-          wget url;
-          mv url;
-        ] in
-        if err <> 0 then
-          Globals.error_and_exit "Cannot get %s" url;
-        Filename.extract (tmp nv // archive_name url) tmp_dir;
-        Globals.msg ".";
-        List.iter (fun f ->
-          Filename.copy_in f tmp_dir
-        ) (files nv);
-        Globals.msg ".";
-        let err = Dirname.exec (Dirname.of_string tmp_dir0) [
-          [ "tar" ; "czf" ; Filename.to_string (Path.R.archive root nv) ; NV.to_string nv ]
-        ] in
-        if err <> 0 then
-          Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir);
-        Globals.msg " OK\n";
-    end;
-  ) opams;
+  Run.remove "log";
+  Run.remove "tmp";
 
-  Checking.warning !l_check;
-  if !has_error || Checking.not_empty !l_check then
-    Globals.exit 66
+  (* Rebuild urls.txt now the archives have been updated *)
+  let _index = Curl.make_urls_txt local_repo in
+
+  if !errors <> [] then
+    Globals.msg "Got some errors while processing: %s"
+      (String.concat ", " (List.map NV.to_string !errors))

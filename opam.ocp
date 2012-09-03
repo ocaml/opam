@@ -39,6 +39,9 @@ end
 begin program "opam"
   dirname  = [ "src" ]
   files    = [
+    "repo/curl.ml"
+    "repo/rsync.ml"
+    "repo/git.ml"
     "solver.ml"
     "client.ml"
     "opam.ml"
@@ -46,144 +49,30 @@ begin program "opam"
   requires = [ "opam-lib" ]
 end
 
-(* Repository Scripts *)
-
-(* RSYNC *)
-begin program "opam-rsync-init"
-  files = [ "src/repo/rsync/init.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-rsync-update"
-  files = [ "src/repo/rsync/update.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-rsync-download"
-  files = [ "src/repo/rsync/download.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-rsync-upload"
-  files = [ "src/repo/rsync/upload.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-(* CURL *)
-begin program "opam-curl-init"
-  files = [
-    "src/repo/curl/misc.ml"
-    "src/repo/curl/init.ml"
-  ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-curl-update"
-  files = [
-    "src/repo/curl/misc.ml"
-    "src/repo/curl/update.ml"
-  ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-curl-download"
-  files = [
-    "src/repo/curl/misc.ml"
-    "src/repo/curl/download.ml"
-  ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-curl-upload"
-  files = [ "src/repo/curl/upload.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-
-(* GIT *)
-begin program "opam-git-init"
-  files = [ "src/repo/git/init.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-git-update"
-  files = [ "src/repo/git/update.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-git-download"
-  files = [ "src/repo/git/download.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-git-upload"
-  files = [ "src/repo/git/upload.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-
-(* SERVER *)
-begin library "opam-server-lib"
-  files = [
-    "src/repo/server/protocol.ml"
-    "src/repo/server/key.ml"
-    "src/repo/server/client.ml"
-  ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-server"
-  files = [
-    "src/repo/server/daemon.ml"
-    "src/repo/server/server.ml"
-  ]
-  comp += [ "-thread" ]
-  link += [ "-thread" ]
-  requires = [
-    "opam-server-lib"
-    "threads"
-  ]
-end
-
-begin program "opam-server-init"
-  files = [ "src/repo/server/init.ml" ]
-  requires = [ "opam-server-lib" ]
-end
-
-begin program "opam-server-update"
-  files = [ "src/repo/server/update.ml" ]
-  requires = [ "opam-server-lib" ]
-end
-
-begin program "opam-server-download"
-  files = [ "src/repo/server/download.ml" ]
-  requires = [ "opam-server-lib" ]
-end
-
-begin program "opam-server-upload"
-  files = [ "src/repo/server/upload.ml" ]
-  requires = [ "opam-server-lib" ]
-end
-
 (* Helpers *)
 
-begin program "opam-mk-config"
-  files = [ "src/scripts/opam_mk_config.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-mk-install"
-  files = [ "src/scripts/opam_mk_install.ml" ]
-  requires = [ "opam-lib" ]
-end
-
 begin program "opam-mk-repo"
-  files = [ "src/scripts/opam_mk_repo.ml" ]
+  files = [
+    "src/repo/curl.ml"
+    "src/repo/rsync.ml"
+    "src/repo/git.ml"
+    "src/scripts/opam_mk_repo.ml"
+  ]
   requires = [ "opam-lib" ]
 end
 
 begin program "opam-check"
   files = [ "src/scripts/opam_check.ml" ]
+  requires = [ "opam-lib" ]
+end
+
+begin program "opam-repo-convert-0.3"
+  files = [
+    "src/repo/curl.ml"
+    "src/repo/rsync.ml"
+    "src/repo/git.ml"
+    "src/scripts/opam_repo_convert.ml"
+  ]
   requires = [ "opam-lib" ]
 end
 
