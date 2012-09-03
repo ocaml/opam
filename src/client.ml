@@ -704,7 +704,7 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
-let list print_short pkg_str =
+let list print_short installed_only pkg_str =
   log "list";
   let t = load_state () in
   let re = Re_perl.compile_pat ~opts:[`Caseless] pkg_str in
@@ -737,21 +737,26 @@ let list print_short pkg_str =
   in
   N.Map.iter (
     if print_short then
-      fun name _ -> 
+      fun name (version, _) -> 
+        let version = match version with
+          | None   -> s_not_installed
+          | Some v -> V.to_string v in
         let name = N.to_string name in
-        (if Re.execp re name 
-        then Globals.msg "%s " name)
+        (if Re.execp re name && (not installed_only || version <> s_not_installed)
+         then Globals.msg "%s " name)
     else
       fun name (version, description) ->
         let name = N.to_string name in
         let version = match version with
           | None   -> s_not_installed
           | Some v -> V.to_string v in
-        (if Re.execp re name || Re.execp re description then
+        (if (Re.execp re name || Re.execp re description)
+            && (not installed_only || version <> s_not_installed) then
             Globals.msg "%s  %s  %s\n"
               (indent_left name max_n)
               (indent_right version max_v)
-              description)) map
+              description)
+  ) map
 
 let info package =
   log "info %s" (N.to_string package);
@@ -1280,13 +1285,16 @@ module Heuristic = struct
               | To_delete _ -> assert false) 
           sol.to_add
           (0, 0) in
+      let to_remove = List.length sol.to_remove in
       Globals.msg "%d to install | %d to reinstall | %d to remove\n"
         to_install
         to_reinstall
-        (List.length sol.to_remove);
+        to_remove;
 
       let continue = 
-        if to_install <= 1 then
+        (* if only one package to install and none to remove, or one package 
+           to remove and none to install then no need to confirm *)
+        if to_install + to_reinstall + to_remove <= 1 then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1904,8 +1912,8 @@ let switch clone alias ocaml_version =
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
 
-let list print_short pkg_str =
-  check (Read_only (fun () -> list print_short pkg_str))
+let list print_short installed pkg_str =
+  check (Read_only (fun () -> list print_short installed pkg_str))
 
 let info package =
   check (Read_only (fun () -> info package))
