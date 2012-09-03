@@ -36,9 +36,47 @@ let root = Path.R.of_path (Dirname.cwd ())
 
 let opams = Path.R.available root
 
+module StringSet = Set.Make (struct type t = string let compare = compare end)
+
+module Checking = struct
+  module Checking = struct
+      
+    type t = 
+        { name : string 
+        ; set : StringSet.t }
+
+    (** returns a set containing filenames of [s] *)
+    let init s = 
+      { set = 
+          Utils.set_of_list StringSet.empty StringSet.add
+            (Array.to_list
+               (*(fun f -> Basename.to_string (Dirname.basename f)) *)
+               (Sys.readdir (Dirname.to_string (Path.R.root root / s))))
+      ; name = s }
+        
+    let remove nv t = { t with set = StringSet.remove (NV.to_string nv) t.set }
+    let not_empty t = not (StringSet.is_empty t.set)
+
+    let warning t = 
+      if StringSet.is_empty t.set then
+        ()
+      else
+        Globals.error "should not exist : %s" (String.concat " " (List.rev (StringSet.fold (fun s l -> Printf.sprintf "%s/%s" t.name s :: l) t.set [])))
+  end
+
+  let init () = List.map Checking.init [ "url" ; "files" (*; "descr"*) ]
+  let remove nv = List.map (Checking.remove nv)
+  let not_empty = List.exists Checking.not_empty
+
+  let warning = List.iter Checking.warning
+end
+
+let l_check = ref (Checking.init ())
+
 let () =
   Globals.msg "Available:\n";
   NV.Set.iter (fun nv ->
+    l_check := Checking.remove nv !l_check;
     Globals.msg " - %s\n" (NV.to_string nv)
   ) opams
 
@@ -97,6 +135,7 @@ let mv src =
     [ "mv" ; F.basename src ; name ]
 
 let () =
+  let has_error = ref false in
   Dirname.mkdir (Path.R.archive_dir root);
   NV.Set.iter (fun nv ->
     Globals.msg "Processing %-40s ." (NV.to_string nv);
@@ -104,7 +143,7 @@ let () =
     Dirname.rmdir tmp_dir;
     Dirname.mkdir tmp_dir;
     begin match url nv with
-    | None     -> ()
+    | None     -> let _ = Globals.error "no url found for %s" (NV.to_string nv) in has_error := true
     | Some url ->
         Filename.remove (tmp nv // archive_name url);
         Dirname.mkdir (tmp nv);
@@ -115,16 +154,20 @@ let () =
         if err <> 0 then
           Globals.error_and_exit "Cannot get %s" url;
         Filename.extract (tmp nv // archive_name url) tmp_dir;
+        Globals.msg ".";
+        List.iter (fun f ->
+          Filename.copy_in f tmp_dir
+        ) (files nv);
+        Globals.msg ".";
+        let err = Dirname.exec (Dirname.of_string tmp_dir0) [
+          [ "tar" ; "czf" ; Filename.to_string (Path.R.archive root nv) ; NV.to_string nv ]
+        ] in
+        if err <> 0 then
+          Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir);
+        Globals.msg " OK\n";
     end;
-    Globals.msg ".";
-    List.iter (fun f ->
-      Filename.copy_in f tmp_dir
-    ) (files nv);
-    Globals.msg ".";
-    let err = Dirname.exec (Dirname.of_string tmp_dir0) [
-      [ "tar" ; "czf" ; Filename.to_string (Path.R.archive root nv) ; NV.to_string nv ]
-    ] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot compress %s" (Dirname.to_string tmp_dir);
-    Globals.msg " OK\n";
-  ) opams
+  ) opams;
+
+  Checking.warning !l_check;
+  if !has_error || Checking.not_empty !l_check then
+    Globals.exit 66
