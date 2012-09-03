@@ -1292,8 +1292,10 @@ module Heuristic = struct
         to_remove;
 
       let continue = 
-        (* if only one package to install and none to remove, or one package 
-           to remove and none to install then no need to confirm *)
+        (* if only one package to install and none to remove, 
+           or one package to remove and none to install
+           or at most one package to reinstall
+           then no need to confirm *)
         if to_install + to_reinstall + to_remove <= 1 then
           true
         else
