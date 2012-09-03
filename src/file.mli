@@ -156,7 +156,11 @@ module OPAM: sig
   (** Construct as [substs] *)
   val with_substs : t -> basename list -> t
 
+  (** Construct as [ocaml_version] *)
   val with_ocaml_version: t -> ocaml_constraint option -> t
+
+  (** Construct as [maintainer] *)
+  val with_maintainer: t -> string -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)

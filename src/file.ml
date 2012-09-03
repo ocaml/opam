@@ -606,6 +606,7 @@ module OPAM = struct
   let with_libraries t libraries = { t with libraries }
   let with_substs t substs = { t with substs }
   let with_ocaml_version t ocaml_version = { t with ocaml_version }
+  let with_maintainer t maintainer = { t with maintainer }
 
   module D = Debian.Packages
 
