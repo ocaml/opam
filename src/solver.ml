@@ -35,8 +35,8 @@ let map_reinstall reinstall a =
 let string_of_action = function
   | To_change (None, p)   -> Printf.sprintf " - install %s" (NV.to_string p)
   | To_change (Some o, p) ->
-      Printf.sprintf " - remove %s and install %s"
-        (NV.to_string o) (NV.to_string p)
+      Printf.sprintf " - upgrade %s to %s"
+        (NV.to_string o) (V.to_string (NV.version p))
   | To_recompile p        -> Printf.sprintf " - recompile %s" (NV.to_string p)
   | To_delete p           -> Printf.sprintf " - delete %s" (NV.to_string p)
 
