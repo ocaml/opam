@@ -244,18 +244,22 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       if None <> try Some (String.index cmd ' ') with Not_found -> None then 
           Globals.warning "Command %S contains 1 space" cmd;
       let r = Process.run ~env ~name cmd args in
-      if Process.is_failure r then (
-        Globals.error "Command %S failed:" str;
-        List.iter (Globals.msg "+ %s\n") r.Process.r_stdout;
-        List.iter (Globals.msg "= %s\n") r.Process.r_info;
-        List.iter (Globals.msg "- %s\n") r.Process.r_stderr;
-        Process.clean_files r;
-      ) else if not !Globals.debug then
+      if not !Globals.debug then
         Process.clean_files r;
       r
 
+let display_error_message r =
+  if Process.is_failure r then (
+    let command = r.Process.r_proc.Process.p_name :: r.Process.r_proc.Process.p_args in
+    Globals.error "Command %S failed:" (String.concat " " command);
+    List.iter (Globals.msg "+ %s\n") r.Process.r_stdout;
+    List.iter (Globals.msg "= %s\n") r.Process.r_info;
+    List.iter (Globals.msg "- %s\n") r.Process.r_stderr;
+  )
+
 let command ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ~add_to_env ~add_to_path cmd in
+  display_error_message r;
   r.Process.r_code
 
 let fold f =
