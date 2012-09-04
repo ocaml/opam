@@ -1836,7 +1836,7 @@ let compiler_list () =
     Globals.msg "%s  %s\n" preinstalled (OCaml_V.to_string c)
   ) descrs
   
-let switch clone alias ocaml_version =
+let switch ~clone ~quiet alias ocaml_version =
   log "switch %B %s %s" clone
     (Alias.to_string alias)
     (OCaml_V.to_string ocaml_version);
@@ -1848,6 +1848,9 @@ let switch clone alias ocaml_version =
     let ocaml_version = 
       init_ocaml (fun _ -> exists := true) (Some alias) true (Some ocaml_version) in
     ocaml_version, !exists in
+
+  if not exists && not quiet then
+    Globals.verbose := true;
 
   (* install new package
      - the packages specified in the compiler description file if
@@ -1939,8 +1942,8 @@ let remove name =
 let remote action =
   check (Write_lock (fun () -> remote action))
 
-let switch clone alias ocaml_version =
-  check (Write_lock (fun () -> switch clone alias ocaml_version))
+let switch ~clone ~quiet alias ocaml_version =
+  check (Write_lock (fun () -> switch ~clone ~quiet alias ocaml_version))
 
 let compiler_list () =
   check (Read_only compiler_list)

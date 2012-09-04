@@ -62,7 +62,7 @@ val remote : remote -> unit
     {i $opam/$alias} if it does not exists by reading the contents
     of {i $opam/compilers/$descr.comp}.
     It takes the global file lock. *)
-val switch: bool -> Alias.t -> OCaml_V.t -> unit
+val switch: clone:bool -> quiet:bool -> Alias.t -> OCaml_V.t -> unit
 
 (** [compiler_list] list the available compiler descriptions *)
 val compiler_list: unit -> unit

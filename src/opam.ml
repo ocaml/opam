@@ -45,7 +45,7 @@ let noanon cmd s =
 
 let () = Globals.root_path := Globals.default_opam_path
 
-(* Useful for switch, who overwrite the default verbose flag *)
+(* Useful for switch, which can overwrite the default verbose flag *)
 let quiet = ref false
 
 let global_args = [
@@ -331,13 +331,12 @@ let switch =
   ];
   anon;
   main     = parse_args (fun args ->
-    if not !quiet then Globals.verbose := true;
     match !command, args with
     | `list  , []     -> Client.compiler_list ()
     | `switch, []     -> bad_argument "switch" "Compiler name is missing"
     | `switch, [name] ->
         let alias = if !alias = "" then name else !alias in
-        Client.switch !clone (Alias.of_string alias) (OCaml_V.of_string name)
+        Client.switch ~clone:!clone ~quiet:!quiet (Alias.of_string alias) (OCaml_V.of_string name)
     | _      -> bad_argument "switch" "Too many compiler names")
 }
 
