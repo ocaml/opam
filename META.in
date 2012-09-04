@@ -1,0 +1,4 @@
+version = "@VERSION@"
+description = "OCaml Package Manager base API"
+archive(byte) = "opam-lib.cma"
+archive(native) = "opam-lib.cmxa"

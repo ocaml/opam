@@ -7,7 +7,7 @@ TARGETS = opam opam-mk-repo opam-repo-convert-0.3
 
 .PHONY: all
 
-all: $(LOCAL_OCPBUILD)
+all: $(LOCAL_OCPBUILD) META
 	$(MAKE) clone
 	$(MAKE) compile
 
@@ -55,6 +55,10 @@ tests-git:
 
 %-install:
 	cp _obuild/$*/$*.asm $(BIN)/$*
+
+PRODUCT_VERSION=$(shell grep "let version" src/globals.ml | cut -f 2 -d \")
+META: META.in
+	sed 's/@VERSION@/$(PRODUCT_VERSION)/g' < $< > $@
 
 .PHONY: install
 install:
