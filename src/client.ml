@@ -1791,16 +1791,11 @@ let remote action =
   match action with
   | List  ->
       let pretty_print r =
-        Globals.msg "| %-10s| %-40s| %-10s |\n"
+        Globals.msg "[%s] %10s %s\n"
+          (Repository.kind r) 
           (Repository.name r)
-          (Dirname.to_string (Repository.address r))
-          (Repository.kind r) in
-      let line = String.make 68 '-' in
-      line.[0] <- '|'; line.[12] <- '|'; line.[54] <- '|'; line.[67] <- '|';
-      Globals.msg "%s\n| %-10s| %-40s| %-10s |\n%s\n"
-        line "NAME" "ADDRESS" "KIND" line;
-      List.iter pretty_print repos;
-      Globals.msg "%s\n" line
+          (Dirname.to_string (Repository.address r)) in
+      List.iter pretty_print repos
   | Add repo ->
       let name = Repository.name repo in
       if List.exists (fun r -> Repository.name r = name) repos then
