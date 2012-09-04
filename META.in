@@ -1,4 +1,5 @@
 version = "@VERSION@"
 description = "OCaml Package Manager base API"
+requires = "mancoosi-dose, mancoosi-cudf, ocamlgraph, unix, re"
 archive(byte) = "opam-lib.cma"
 archive(native) = "opam-lib.cmxa"
