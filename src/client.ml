@@ -1535,9 +1535,13 @@ let upgrade () =
   log "upgrade";
   let t = update_available_current (load_state ()) in
   Heuristic.resolve `upgrade t
-    [ { wish_install = []
-      ; wish_remove  = []
-      ; wish_upgrade = N.Map.values (Heuristic.get_installed t Heuristic.v_ge) } ];
+    (List.map
+       (fun heuristic ->
+         { wish_install = []
+         ; wish_remove  = []
+         ; wish_upgrade = N.Map.values (Heuristic.get_installed t heuristic) })
+       [ Heuristic.v_max; Heuristic.v_ge ]
+    );
   Filename.remove (Path.C.reinstall t.compiler)
 
 let upload upload repo =
