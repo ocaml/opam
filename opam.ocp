@@ -30,7 +30,6 @@ begin library "opam-lib"
     "cudf"
     "dose"
     "unix"
-    "arg"
     "graph"
     "re_perl"
   ]
@@ -46,7 +45,10 @@ begin program "opam"
     "client.ml"
     "opam.ml"
   ]
-  requires = [ "opam-lib" ]
+  requires = [
+    "opam-lib"
+    "arg"
+ ]
 end
 
 (* Helpers *)
