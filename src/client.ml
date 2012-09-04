@@ -768,13 +768,13 @@ let info package =
     with Not_found -> None in
 
   let v_set =
-    let v_set =
-      try Path.G.available_versions t.global package
-      with Not_found ->
-        Globals.error_and_exit "unknown package %s" (N.to_string package) in
-    match o_v with
-      | None   -> v_set
-      | Some v -> V.Set.remove v v_set in
+    let v_set = Path.G.available_versions t.global package in
+    if V.Set.is_empty v_set then
+      Globals.error_and_exit "unknown package %s" (N.to_string package)
+    else
+      match o_v with
+        | None   -> v_set
+        | Some v -> V.Set.remove v v_set in
 
   let installed_version = match o_v with
     | None   -> []
