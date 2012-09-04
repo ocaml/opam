@@ -1866,16 +1866,21 @@ let compiler_list () =
   let t = load_state () in
   let descrs = Path.G.available_compilers t.global in
   let aliases = File.Aliases.read (Path.G.aliases t.global) in
-  Globals.msg "--- Compilers installed ---\n";
+  Globals.msg "--- Installed compilers ---\n";
   List.iter (fun (n,c) ->
     let current = if n = File.Config.ocaml_version t.config then "*" else " " in
-    Globals.msg "%s %s (%s)\n" current (Alias.to_string n) (OCaml_V.to_string c)
+    let ocaml_version = OCaml_V.to_string c in
+    let alias_name = Alias.to_string n in
+    if alias_name = ocaml_version then
+      Globals.msg " %s %s\n" current alias_name
+    else
+      Globals.msg " %s %s [%s]\n" current ocaml_version alias_name
   ) aliases;
-  Globals.msg "\n--- Compilers available ---\n";
+  Globals.msg "\n--- Available compilers ---\n";
   OCaml_V.Set.iter (fun c ->
     let comp = File.Comp.read (Path.G.compiler t.global c) in
     let preinstalled = if File.Comp.preinstalled comp then "~" else " " in
-    Globals.msg "%s  %s\n" preinstalled (OCaml_V.to_string c)
+    Globals.msg " %s %s\n" preinstalled (OCaml_V.to_string c)
   ) descrs
   
 let switch ~clone ~quiet alias ocaml_version =
