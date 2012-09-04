@@ -1856,18 +1856,16 @@ let switch clone alias ocaml_version =
        with -clone *)
   let t_new = update_available_current (load_state ()) in
 
-  let comp_packages f_h =
+  let comp_constraints =
     if exists then
-      Heuristic.get_installed t_new f_h
+      Heuristic.get_installed t_new Heuristic.v_eq
     else
-      Utils.map_of_list
-        N.Map.empty
-        N.Map.add
+      N.Map.of_list
         (List.rev_map
            (function (name, _), _ as nv -> N.of_string name, nv)
-           (Heuristic.get_packages t_new ocaml_version f_h)) in
+           (Heuristic.get_packages t_new ocaml_version Heuristic.v_eq)) in
 
-  let cloned_packages f_h =
+  let clone_constraints =
     if clone then 
       (* we filter from "futur requested packages", 
          packages that are present in the OLD version of OCaml
@@ -1876,7 +1874,7 @@ let switch clone alias ocaml_version =
       let new_installed = NV.to_map t_new.installed in
       N.Map.mapi
         (fun n _ -> 
-          f_h 
+          Heuristic.v_eq_opt
             (if N.Map.mem n new_installed then
                 Some (V.Set.choose_one (N.Map.find n new_installed)) 
              else
@@ -1886,26 +1884,26 @@ let switch clone alias ocaml_version =
         (NV.to_map t.installed)
     else N.Map.empty in
 
-  Heuristic.resolve `switch t_new
-    [ let packages = 
-        N.Map.merge_max
-          (fun pkg p_clone p_comp ->
-            (* NOTE 
-               - both [p_clone] and [p_comp] constraints are valid
-               - the intersection of these 2 constraints should not be empty *)
-            if p_clone = p_comp then 
-              Some p_comp
-            else
-              let () = Globals.warning "package %s : we reject the constraint to clone %s and we take the constraint from compiler %s" 
-                (N.to_string pkg) 
-                (string_of_atom_formula p_clone)
-                (string_of_atom_formula p_comp) in
-              (* we arbitrarily take the constraint from the compiler *)
-              Some p_comp)
-          (cloned_packages Heuristic.v_eq_opt)
-          (comp_packages Heuristic.v_eq) in
+  let all_constraints = 
+    N.Map.merge_max
+      (fun pkg p_clone p_comp ->
+        (* NOTE 
+           - both [p_clone] and [p_comp] constraints are valid
+           - the intersection of these 2 constraints should not be empty *)
+        if p_clone = p_comp then 
+          Some p_comp
+        else
+          let () = Globals.warning "package %s : we reject the constraint to clone %s and we take the constraint from compiler %s" 
+            (N.to_string pkg) 
+            (string_of_atom_formula p_clone)
+            (string_of_atom_formula p_comp) in
+          (* we arbitrarily take the constraint from the compiler *)
+          Some p_comp)
+      clone_constraints
+      comp_constraints in
 
-      { wish_install = N.Map.values packages
+  Heuristic.resolve `switch t_new
+    [ { wish_install = N.Map.values all_constraints
       ; wish_remove = [] 
       ; wish_upgrade = [] } ];
 

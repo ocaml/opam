@@ -35,7 +35,7 @@ let map_reinstall reinstall a =
 let string_of_action = function
   | To_change (None, p)   -> Printf.sprintf " - install %s" (NV.to_string p)
   | To_change (Some o, p) ->
-      Printf.sprintf "- remove %s and install %s"
+      Printf.sprintf " - remove %s and install %s"
         (NV.to_string o) (NV.to_string p)
   | To_recompile p        -> Printf.sprintf " - recompile %s" (NV.to_string p)
   | To_delete p           -> Printf.sprintf " - delete %s" (NV.to_string p)
@@ -440,6 +440,7 @@ struct
 
   module O_pkg = struct
     type t = Cudf.package
+    let to_string = string_of_cudf_package
     let summary pkg = pkg.Cudf.package, pkg.Cudf.version
     let compare pkg1 pkg2 =
       compare (summary pkg1) (summary pkg2)
@@ -611,14 +612,14 @@ struct
                 | I_to_change (Some pkg, _) 
                 | I_to_delete pkg -> Some pkg
                 | _ -> None) l,
-              Utils.set_of_list PkgSet.empty PkgSet.add
+              PkgSet.of_list
                 (Utils.filter_map (function
                   | I_to_delete pkg -> Some pkg
                   | _ -> None) l) in
 
             (** compute initial packages to add *)
             let map_add = 
-              Utils.map_of_list PkgMap.empty PkgMap.add (Utils.filter_map (function 
+              PkgMap.of_list (Utils.filter_map (function 
                 | I_to_change (_, pkg) as act -> Some (pkg, act)
                 | I_to_delete _ -> None
                 | I_to_recompile _ -> assert false) l) in

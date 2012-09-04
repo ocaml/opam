@@ -17,6 +17,47 @@
 
 (** {2 Abstract types} *)
 
+(** Collection of abstract values *)
+module type SET = sig
+
+  include Set.S
+
+  (** auto-map *)
+  val map: (elt -> elt) -> t -> t
+
+  (** Return one element. Fail if the set is not a singleton. *)
+  val choose_one : t -> elt
+
+  (** Make a set from a list *)
+  val of_list: elt list -> t
+
+  (** Pretty-print a set *)
+  val to_string: t -> string
+
+end               
+
+(** Dictionaries of abstract values *)
+module type MAP = sig
+  
+  include Map.S
+
+  (** Pretty-printing *)
+  val to_string: ('a -> string) -> 'a t  -> string
+
+  (** Split with [bindings] and return the [snd] component. *)
+  val values: 'a t -> 'a list
+
+  (** Same as [merge] but only keys that appear in both maps
+      are given in the merging function *)
+  (** WARNING : Besides [key], the function could receive 
+      some [v1] and some [v2] such that [v1 = v2] holds. *)
+  val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+
+  (** Convert an assoc list to a map *)
+  val of_list: (key * 'a) list -> 'a t
+
+end
+
 (** All abstract types should implement this signature *)
 module type ABSTRACT = sig
 
@@ -29,42 +70,20 @@ module type ABSTRACT = sig
   (** Convert an abstract value to a string *)
   val to_string: t -> string
 
-  (** Collection of abstract values *)
-  module Set: sig
+  module Set: SET with type elt = t
+  module Map: MAP with type key = t
+end
 
-    include Set.S with type elt = t
-
-    (** auto-map *)
-    val map: (elt -> elt) -> t -> t
-
-    (** Return one element. Fail if the set is not a singleton. *)
-    val choose_one : t -> elt
-
-    (** Make a set from a list *)
-    val of_list: elt list -> t
-
-    (** Pretty-print a set *)
-    val to_string: t -> string
-  end               
-
-  (** Dictionaries of abstract values *)
-  module Map: sig
-
-    include Map.S with type key = t
-
-    (** Pretty-printing *)
-    val to_string: ('a -> string) -> 'a t  -> string
-
-    (** Split with [bindings] and return the [snd] component. *)
-    val values: 'a t -> 'a list
-
-    (** Same as [merge] but only keys that appear in both maps
-        are given in the merging function *)
-    (** WARNING : Besides [key], the function could receive 
-        some [v1] and some [v2] such that [v1 = v2] holds. *)
-    val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
-
-  end
+(** Extended sets and maps *)
+module type OrderedType = sig
+  include Set.OrderedType
+  val to_string: t -> string
+end
+module Set: sig
+  module Make (S: OrderedType): SET with type elt = S.t
+end
+module Map: sig
+  module Make (S: OrderedType): MAP with type key = S.t
 end
 
 (** {2 Filenames} *)
@@ -315,6 +334,7 @@ module NV: sig
   val to_map: Set.t -> V.Set.t N.Map.t
 
 end
+
 
 (** Shortcut to NV.t *)
 type nv = NV.t

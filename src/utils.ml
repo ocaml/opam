@@ -22,11 +22,6 @@ let filter_map f l =
         | Some x -> loop (x::accu) t in
   loop [] l
 
-let set_of_list empty add l =
-  List.fold_left (fun map v -> add v map) empty l
-
-let map_of_list empty add = set_of_list empty (fun (k, v) -> add k v)
-
 module IntMap = Map.Make(struct type t = int let compare = compare end)  
 module StringMap = Map.Make(struct type t = string let compare = compare end)  
 module IntSet = Set.Make(struct type t = int let compare = compare end)  

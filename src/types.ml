@@ -15,23 +15,26 @@
 
 let log fmt = Globals.log "TYPES" fmt
 
+module type SET = sig
+  include Set.S
+  val map: (elt -> elt) -> t -> t
+  val choose_one : t -> elt
+  val of_list: elt list -> t
+  val to_string: t -> string
+end               
+module type MAP = sig
+  include Map.S
+  val to_string: ('a -> string) -> 'a t -> string
+  val values: 'a t -> 'a list
+  val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  val of_list: (key * 'a) list -> 'a t
+end
 module type ABSTRACT = sig
   type t
   val of_string: string -> t
   val to_string: t -> string
-  module Set: sig
-    include Set.S with type elt = t
-    val map: (elt -> elt) -> t -> t
-    val choose_one : t -> elt
-    val of_list: elt list -> t
-    val to_string: t -> string
-  end               
-  module Map: sig
-    include Map.S with type key = t
-    val to_string: ('a -> string) -> 'a t -> string
-    val values: 'a t -> 'a list
-    val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
-  end
+  module Set: SET with type elt = t
+  module Map: MAP with type key = t
 end
 
 module type OrderedType = sig
@@ -89,6 +92,9 @@ module Map = struct
     let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
     let l = fold (fun k v l -> s (k,v)::l) m [] in
     Printf.sprintf "{ %s }" (String.concat ", " l)
+
+  let of_list l =
+    List.fold_left (fun map (k,v) -> add k v map) empty l
 
   end
 
