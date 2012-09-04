@@ -234,8 +234,11 @@ let upgrade = {
   synopsis = "Upgrade the list of available package";
   help     = "";
   specs    = [];
-  anon     = noanon "upgrade";
-  main     = Client.upgrade;
+  anon;
+  main     = parse_args (fun names ->
+    let names = List.map N.of_string names in
+    Client.upgrade (N.Set.of_list names);
+  )
 }
 
 (* opam upload PACKAGE *)

@@ -42,8 +42,10 @@ val install : N.Set.t -> unit
 val update : unit -> unit
 
 (** Finds a consistent state where most of the installed packages are
-    upgraded to their latest version. Take the global file lock. *)
-val upgrade : unit -> unit
+    upgraded to their latest version.
+    If no package packages are specified then try to upgrade everything.
+    Take the global file lock. *)
+val upgrade : N.Set.t -> unit
 
 (** Upload a package to a remote repository. If repo is [None] then it
     will look for the repository associated with the package

@@ -577,10 +577,8 @@ struct
         let req_only_remove = 
           (** determine if the request is a remove case *)
           match req with
-            | { wish_install = _  ; wish_upgrade = [] ; wish_remove = _ :: _ } -> true
-            | { wish_install = _  ; wish_upgrade = [] ; wish_remove = [] }
-            | { wish_install = [] ; wish_upgrade = _  ; wish_remove = [] } -> false
-            | _ -> Globals.error_and_exit "this type of request is not yet supported" in
+            | { wish_remove = _ :: _; _ } -> true
+            | _ -> false in
 
         (** [graph_simple] contains the graph of packages 
             where the dependency relation is without optional dependencies  *)
