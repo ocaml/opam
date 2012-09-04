@@ -937,8 +937,8 @@ let pinned_path t nv =
   else
     None
 
-let get_archive t nv =
-  log "get_archive %s" (NV.to_string nv);
+let with_repo t nv fn =
+  log "find_repo %s" (NV.to_string nv);
   let name = NV.name nv in
   let rec aux = function
     | [] ->
@@ -950,14 +950,24 @@ let get_archive t nv =
         let repo = find_repository t repo in
         let opam_f = Path.R.opam repo_p nv in
         if Filename.exists opam_f then (
-          Repositories.download repo nv;
-          let src = Path.R.archive repo_p nv in
-          let dst = Path.G.archive t.global nv in
-          Filename.link src dst;
-          dst
+          fn repo_p repo
         ) else
           aux repo_s in
   aux (N.Map.find name t.repo_index)
+
+let get_archive t nv =
+  let aux repo_p repo =
+    Repositories.download repo nv;
+    let src = Path.R.archive repo_p nv in
+    let dst = Path.G.archive t.global nv in
+    Filename.link src dst;
+    dst in
+  with_repo t nv aux
+
+let get_files t nv =
+  let aux repo_p _ =
+    Path.R.available_files repo_p nv in
+  with_repo t nv aux
 
 let extract_package t nv =
   log "extract_package: %s" (NV.to_string nv);
@@ -973,6 +983,8 @@ let extract_package t nv =
       (* XXX: make it a bit more generic ... *)
       Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
       let err = Run.command [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ] in
+      let files = get_files t nv in
+      List.iter (fun f -> Filename.copy_in f p_build) files;
       if err <> 0 then
         Globals.error_and_exit "Cannot synchronize %s with %s." (Dirname.to_string p) (Dirname.to_string p_build);
       p_build
@@ -983,16 +995,20 @@ let proceed_todelete t nv =
   let name = NV.name nv in
 
   (* Run the remove script *)
-  let opam = File.OPAM.read (Path.G.opam t.global nv) in
-  let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
-  let p_build = Path.C.build t.compiler nv in
-  if not (Dirname.exists p_build) then
-    ignore (extract_package t nv);
-  (* We try to run the remove scripts in the folder where it was extracted
-     If it does not exist, we don't really care. *)
-  let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove in
-  if err <> 0 then
-    Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
+  let opam_f = Path.G.opam t.global nv in
+  if Filename.exists opam_f then (
+    let opam = File.OPAM.read opam_f in
+    let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
+    let p_build = Path.C.build t.compiler nv in
+    if not (Dirname.exists p_build) then
+      ignore (extract_package t nv);
+    (* We try to run the remove scripts in the folder where it was extracted
+       If it does not exist, we don't really care. *)
+    let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove in
+    if err <> 0 then
+      Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
+    Dirname.rmdir p_build;
+  );
 
   (* Remove the libraries *)
   Dirname.rmdir (Path.C.lib t.compiler name);
@@ -1259,8 +1275,10 @@ module Heuristic = struct
     let available = NV.to_map (get_available_current t) in
     let installed = NV.to_map t.installed in
     List.map
-      (fun name -> 
-        if N.Map.mem name available then begin
+      (fun name ->
+        if N.Map.mem name installed && not (N.Map.mem name available) then
+          V_eq (name, V.Set.choose_one (N.Map.find name installed))
+        else if N.Map.mem name available then begin
           let set = N.Map.find name available in
           if N.Map.mem name installed then
             let version = V.Set.choose_one (N.Map.find name installed) in
@@ -1516,27 +1534,48 @@ let remove names =
     NV.create n v in
   let wish_remove = Heuristic.nv_of_names t names in
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
-  let depends =
-    Solver.filter_forward_dependencies ~depopts:true universe
-      (Solver.P (List.rev_map
-                   (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
-                   wish_remove)) in
-  let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
-  log "depends=%s" (NV.Set.to_string depends);
-  let heuristic_apply = 
-    let installed = List.filter (fun nv -> not (NV.Set.mem nv depends)) (NV.Set.elements t.installed) in
-    fun f_heuristic ->
-      List.rev_map (fun nv -> f_heuristic (NV.name nv) (NV.version nv)) installed in
+  let whish_remove, does_not_exist =
+    let aux (whish_remove, does_not_exist) c nv =
+      if not (NV.Set.mem nv t.available) then
+        (whish_remove, nv :: does_not_exist)
+      else
+        (c :: whish_remove, does_not_exist) in
+    List.fold_left
+      (fun accu c ->
+        match c with
+        | V_eq (n, v)
+        | V_any (n, _, Some v) -> aux accu c (NV.create n v)
+        | V_any (n, _, None)   ->
+            match find_available_package_by_name t n with
+            | None    -> accu
+            | Some vs ->  NV.Set.fold (fun v accu -> aux accu c v) vs accu
+      ) ([], []) wish_remove in
 
-  Heuristic.resolve `remove t
-    (List.map 
-       (let wish_remove = Heuristic.apply Heuristic.v_any wish_remove in
-        fun f_h -> 
-          { wish_install = heuristic_apply f_h
-          ; wish_remove
-          ; wish_upgrade = [] })
-       [ Heuristic.vpkg_of_nv_eq
-       ; fun n _ -> Heuristic.vpkg_of_nv_any n ])
+  List.iter (proceed_todelete t) does_not_exist;
+
+  if whish_remove <> [] then (
+    let depends =
+      Solver.filter_forward_dependencies ~depopts:true universe
+        (Solver.P (List.rev_map
+                     (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
+                     wish_remove)) in
+    let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
+    log "depends=%s" (NV.Set.to_string depends);
+    let heuristic_apply = 
+      let installed = List.filter (fun nv -> not (NV.Set.mem nv depends)) (NV.Set.elements t.installed) in
+      fun f_heuristic ->
+        List.rev_map (fun nv -> f_heuristic (NV.name nv) (NV.version nv)) installed in
+
+    Heuristic.resolve `remove t
+      (List.map 
+         (let wish_remove = Heuristic.apply Heuristic.v_any wish_remove in
+          fun f_h -> 
+            { wish_install = heuristic_apply f_h
+            ; wish_remove
+            ; wish_upgrade = [] })
+         [ Heuristic.vpkg_of_nv_eq
+         ; fun n _ -> Heuristic.vpkg_of_nv_any n ])
+  )
 
 let upgrade names =
   log "upgrade %s" (N.Set.to_string names);
