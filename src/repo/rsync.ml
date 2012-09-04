@@ -40,6 +40,7 @@ let rsync_dirs ?delete src dst =
       Result lines
 
 let rsync_file src dst =
+  log "rsync_file src=%s dst=%s" (Filename.to_string src) (Filename.to_string dst);
   match
     Run.read_command_output [
       "rsync"; "-av"; Filename.to_string src; Filename.to_string dst;
