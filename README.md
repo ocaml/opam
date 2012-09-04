@@ -76,7 +76,7 @@ optional dependency of a package will recompile the package and all its
 forward dependencies. For instance:
 
 ```
-$ opam install react`
+$ opam install react
 ```
 
 will install `react`, will recompile `lwt` (with the right `./configure` options)
