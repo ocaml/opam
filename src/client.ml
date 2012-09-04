@@ -1184,10 +1184,17 @@ module Heuristic = struct
   let vpkg_of_nv_le = vpkg_of_n_op "<="
   let vpkg_of_nv_any = vpkg_of_n None
 
+  (* Choose any available version *)
   let v_any _ _ = vpkg_of_nv_any
-  let v_eq _ set n = vpkg_of_nv_eq n (V.Set.max_elt set)
-  let v_ge _ set n = vpkg_of_nv_ge n (V.Set.max_elt set)
-  let v_eq_opt v set n = vpkg_of_nv_eq n (match v with None -> V.Set.max_elt set | Some v -> v)
+  
+  (* Choose the max version *)
+  let v_max _ set n = vpkg_of_nv_eq n (V.Set.max_elt set)
+
+  (* Choose the installed version *)
+  let v_eq v set n = vpkg_of_nv_eq n (match v with None -> V.Set.max_elt set | Some v -> v)
+
+  (* Choose at least the installed version *)
+  let v_ge v set n = vpkg_of_nv_ge n (match v with None -> V.Set.max_elt set | Some v -> v)
 
   let get_installed t f_h =
     let available = NV.to_map (get_available_current t) in
@@ -1481,10 +1488,10 @@ let install names =
          ; wish_remove  = []
          ; wish_upgrade = [] })
        (let open Heuristic in
-        [ v_eq, v_eq_opt
-        ; v_any, v_eq_opt
-        ; v_eq, v_eq
+        [ v_max, v_eq
+        ; v_max, v_ge
         ; v_any, v_eq
+        ; v_any, v_ge
         ; v_any, v_any ]))
 
 let remove names =
@@ -1862,13 +1869,10 @@ let switch ~clone ~quiet alias ocaml_version =
   let t_new = update_available_current (load_state ()) in
 
   let comp_constraints =
-    if exists then
-      Heuristic.get_installed t_new Heuristic.v_eq
-    else
-      N.Map.of_list
-        (List.rev_map
-           (function (name, _), _ as nv -> N.of_string name, nv)
-           (Heuristic.get_packages t_new ocaml_version Heuristic.v_eq)) in
+    N.Map.of_list
+      (List.rev_map
+         (function (name, _), _ as nv -> N.of_string name, nv)
+         (Heuristic.get_packages t_new ocaml_version Heuristic.v_eq)) in
 
   let clone_constraints =
     if clone then 
@@ -1879,7 +1883,7 @@ let switch ~clone ~quiet alias ocaml_version =
       let new_installed = NV.to_map t_new.installed in
       N.Map.mapi
         (fun n _ -> 
-          Heuristic.v_eq_opt
+          Heuristic.v_eq
             (if N.Map.mem n new_installed then
                 Some (V.Set.choose_one (N.Map.find n new_installed)) 
              else
@@ -1889,7 +1893,10 @@ let switch ~clone ~quiet alias ocaml_version =
         (NV.to_map t.installed)
     else N.Map.empty in
 
-  let all_constraints = 
+  let installed_constraints =
+    Heuristic.get_installed t_new Heuristic.v_eq in
+
+  let (++) c1 c2 = 
     N.Map.merge_max
       (fun pkg p_clone p_comp ->
         (* NOTE 
@@ -1904,13 +1911,25 @@ let switch ~clone ~quiet alias ocaml_version =
             (string_of_atom_formula p_comp) in
           (* we arbitrarily take the constraint from the compiler *)
           Some p_comp)
-      clone_constraints
-      comp_constraints in
+      c1 c2 in
 
-  Heuristic.resolve `switch t_new
-    [ { wish_install = N.Map.values all_constraints
-      ; wish_remove = [] 
-      ; wish_upgrade = [] } ];
+  let all_constraints = clone_constraints ++ comp_constraints ++ installed_constraints in
+
+  let is_ok =
+    N.Map.for_all (fun n c ->
+      if mem_installed_package_by_name t n then
+        let nv = find_installed_package_by_name t n in
+        c = Heuristic.vpkg_of_nv_eq n (NV.version nv)
+      else (
+        false
+      )
+    ) all_constraints in
+
+  if not is_ok then
+    Heuristic.resolve `switch t_new
+      [ { wish_install = N.Map.values all_constraints
+        ; wish_remove = [] 
+        ; wish_upgrade = [] } ];
 
   print_env_warning ()
 
