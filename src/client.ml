@@ -1875,10 +1875,23 @@ let remote action =
         N.Map.fold (fun n repo_s repo_index ->
           let repo_s = List.filter (fun r -> r <> Repository.name repo) repo_s in
           match repo_s with
-          | [] -> repo_index
+          | [] ->
+            (* The package does not exists anymore in any remote repository,
+               so we need to remove the associated meta-data if the package
+               is not installed. *)
+            let versions = Path.G.available_versions t.global n in
+            V.Set.iter (fun v ->
+              let nv = NV.create n v in
+              if not (NV.Set.mem nv t.installed) then (
+                Filename.remove (Path.G.opam t.global nv);
+                Filename.remove (Path.G.descr t.global nv);
+                Filename.remove (Path.G.archive t.global nv);
+              )
+            ) versions;
+            repo_index
           | _  -> N.Map.add n repo_s repo_index
         ) t.repo_index N.Map.empty in
-        File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+      File.Repo_index.write (Path.G.repo_index t.global) repo_index;
       Dirname.rmdir (Path.R.root (Path.R.create repo))
 
 let pin action =
