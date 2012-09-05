@@ -240,16 +240,34 @@ let find_available_package_by_name t name =
     Some s
 
 let print_updated t updated pinned_updated =
-  if not (NV.Set.is_empty (NV.Set.union updated pinned_updated)) then
-    Globals.msg "New packages available:\n";
-  NV.Set.iter (fun nv ->
-    Globals.msg " - %s%s\n"
-      (NV.to_string nv)
-      (if NV.Set.mem nv t.installed then " (*)" else "")
-  ) updated;
-  NV.Set.iter (fun nv ->
-    Globals.msg " - %s(+)\n" (N.to_string (NV.name nv))
-  ) pinned_updated
+  let new_packages =
+    NV.Set.filter (fun nv -> not (NV.Set.mem nv t.installed)) updated in
+  let updated_packages =
+    let aux set = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) set in
+    NV.Set.union (aux updated) (aux pinned_updated) in
+  if not (NV.Set.is_empty new_packages) then (
+    if NV.Set.cardinal new_packages = 1 then
+      Globals.msg "The following NEW package is available:\n"
+    else
+      Globals.msg "The following NEW packages are available:\n";
+    NV.Set.iter (fun nv ->
+      Globals.msg " - %s\n" (NV.to_string nv)
+    ) updated;
+  );
+  if not (NV.Set.is_empty updated_packages) then (
+    if NV.Set.cardinal updated_packages = 1 then
+      Globals.msg "The following package needs to be upgraded:\n"
+    else
+      Globals.msg "The following packages need to be upgraded:\n";
+    NV.Set.iter (fun nv ->
+      if NV.Set.mem nv pinned_updated then
+        Globals.msg " - %s\n" (N.to_string (NV.name nv))
+      else
+        Globals.msg " - %s\n" (NV.to_string nv)
+    ) pinned_updated
+  );
+  if NV.Set.is_empty (NV.Set.union new_packages updated_packages) then
+    Globals.msg "Already up-to-date."
 
 let print_compilers compilers repo =
   let repo_compilers = Path.R.available_compilers repo in
