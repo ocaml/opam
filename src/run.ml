@@ -201,17 +201,21 @@ let normalize s =
     s
 
 let real_path p =
-  let dir = normalize (Filename.dirname p) in
-  let dir =
-    if Filename.is_relative dir then
-      Sys.getcwd () / dir
+  if Sys.file_exists p && Sys.is_directory p then
+    normalize p
+  else (
+    let dir = normalize (Filename.dirname p) in
+    let dir =
+      if Filename.is_relative dir then
+        Sys.getcwd () / dir
+      else
+        dir in
+    let base = Filename.basename p in
+    if base = "." then
+      dir
     else
-      dir in
-  let base = Filename.basename p in
-  if base = "." then
-    dir
-  else
-    dir / base
+      dir / base
+  )
 
 let replace_path bins = 
   let path = ref "<not set>" in
