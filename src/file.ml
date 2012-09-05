@@ -444,7 +444,7 @@ module Config = struct
       let opam_version =
         assoc s.contents s_opam_version (parse_string |> OPAM_V.of_string) in
       let repositories =
-        assoc s.contents s_repositories
+        assoc_default [] s.contents s_repositories
           (parse_list (parse_string_option parse_string_pair_of_list |> to_repo)) in
       let ocaml_version =
         assoc_option s.contents s_ocaml_version (parse_string |> Alias.of_string) in
