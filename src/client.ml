@@ -723,10 +723,14 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
-let list print_short installed_only pkg_str =
+let list ~print_short ~installed_only ~name_only pkg_str =
   log "list";
   let t = load_state () in
-  let re = Re_perl.compile_pat ~opts:[`Caseless] pkg_str in
+  let re = 
+    try Re_perl.compile_pat ~opts:[`Caseless] pkg_str
+    with Re_perl.Parse_error -> 
+      Globals.error_and_exit "\"%s\" is not a valid package descriptor" pkg_str
+  in
   (* Get all the installed packages *)
   let installed = File.Installed.read (Path.C.installed t.compiler) in
   let map, max_n, max_v =
@@ -769,7 +773,7 @@ let list print_short installed_only pkg_str =
         let version = match version with
           | None   -> s_not_installed
           | Some v -> V.to_string v in
-        (if (Re.execp re name || Re.execp re description)
+        (if (Re.execp re name || (not name_only && Re.execp re description))
             && (not installed_only || version <> s_not_installed) then
             Globals.msg "%s  %s  %s\n"
               (indent_left name max_n)
@@ -2049,8 +2053,8 @@ let switch ~clone ~quiet alias ocaml_version =
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
 
-let list print_short installed pkg_str =
-  check (Read_only (fun () -> list print_short installed pkg_str))
+let list ~print_short ~installed_only ~name_only pkg_str =
+  check (Read_only (fun () -> list ~print_short ~installed_only ~name_only pkg_str))
 
 let info package =
   check (Read_only (fun () -> info package))
