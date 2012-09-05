@@ -77,6 +77,7 @@ type command = string list
 
 (** [command cmd] executes the command [cmd]. Return the exit code. *)
 val command:
+  ?verbose:bool ->
   ?add_to_env:(string*string) list ->
   ?add_to_path:string list -> command -> int
 
@@ -84,6 +85,7 @@ val command:
     in a context where $PATH contains [add_to_path] at the beginning. 
     It stops whenever one command fails. *)
 val commands:
+  ?verbose:bool ->
   ?add_to_env:(string*string) list ->
   ?add_to_path:string list -> command list -> int
 

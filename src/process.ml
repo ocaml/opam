@@ -27,12 +27,12 @@ type t = {
 
 let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC]
 
-let create ?info ?stdout ?stderr ?env cmd args =
+let create ?info ?stdout ?stderr ?env ~verbose cmd args =
   let nothing () = () in
   let tee f =
     let fd = Unix.openfile f open_flags 0o644 in
     let close_fd () = Unix.close fd in
-    if !Globals.debug || !Globals.verbose then (
+    if verbose then (
       let chan = Unix.open_process_out ("tee " ^ f) in
       let close () =
         match Unix.close_process_out chan with
@@ -138,7 +138,7 @@ let output_lines oc lines =
   output_string oc "\n";
   flush oc
 
-let run ?env ~name cmd args =
+let run ?env ~verbose ~name cmd args =
   try 
     let stdout = Printf.sprintf "%s.out" name in
     let stderr = Printf.sprintf "%s.err" name in
@@ -155,7 +155,7 @@ let run ?env ~name cmd args =
       ];
     close_out chan;
    
-    let p = create ~env ~info ~stdout ~stderr cmd args in
+    let p = create ~env ~info ~stdout ~stderr ~verbose cmd args in
     wait p
   with e ->
     Printf.printf "Exception %s in run\n%!" (Printexc.to_string e);

@@ -34,7 +34,7 @@ type t = {
     be overriden if [env] is set. *)
 val create :
   ?info:string -> ?stdout:string -> ?stderr:string -> ?env:string array
-  -> string -> string list -> t
+  -> verbose:bool -> string -> string list -> t
 
 (** The type for result processes *)
 type result = {
@@ -56,7 +56,7 @@ val wait : t -> result
     the standard output, the standart error and some process info
     respectively.
     @raise Global.Exit as only possible error *)
-val run : ?env:string array -> name:string -> string -> string list -> result
+val run : ?env:string array -> verbose:bool -> name:string -> string -> string list -> result
 
 (** Is the process result a success ? *)
 val is_success : result -> bool

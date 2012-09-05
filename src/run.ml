@@ -235,7 +235,7 @@ let replace_path bins =
 
 type command = string list
 
-let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
+let run_process ?verbose ?(add_to_env=[]) ?(add_to_path=[]) = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
       let env, path = replace_path add_to_path in
@@ -246,8 +246,11 @@ let run_process ?(add_to_env=[]) ?(add_to_path=[]) = function
       let str = String.concat " " (cmd :: args) in
       log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
       if None <> try Some (String.index cmd ' ') with Not_found -> None then 
-          Globals.warning "Command %S contains 1 space" cmd;
-      let r = Process.run ~env ~name cmd args in
+        Globals.warning "Command %S contains 1 space" cmd;
+      let verbose = match verbose with
+        | None   -> !Globals.debug || !Globals.verbose
+        | Some b -> b in
+      let r = Process.run ~env ~name ~verbose cmd args in
       if not !Globals.debug then
         Process.clean_files r;
       r
@@ -261,8 +264,8 @@ let display_error_message r =
     List.iter (Globals.msg "- %s\n") r.Process.r_stderr;
   )
 
-let command ?(add_to_env=[]) ?(add_to_path=[]) cmd =
-  let r = run_process ~add_to_env ~add_to_path cmd in
+let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
+  let r = run_process ?verbose ~add_to_env ~add_to_path cmd in
   display_error_message r;
   r.Process.r_code
 
@@ -274,8 +277,8 @@ let fold f =
     | err, _  -> err
   ) 0
 
-let commands ?(add_to_env=[]) ?(add_to_path = []) = 
-  fold (command ~add_to_env ~add_to_path)
+let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) = 
+  fold (command ?verbose ~add_to_env ~add_to_path)
 
 let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ~add_to_env ~add_to_path cmd in
@@ -418,10 +421,19 @@ let ocamlc_where () =
   | None   -> None
   | Some s -> Some (Utils.string_strip (List.hd s))
 
+let download_command =
+  let err_curl = command ~verbose:false ["which"; "curl"] in
+  if err_curl = 0 then
+    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
+  else
+    let err_wget = command ~verbose:false ["which"; "wget"] in
+    if err_wget = 0 then
+      (fun src -> [ "wget"; "--no-check-certificate" ; src ])
+    else
+      Globals.error_and_exit "Cannot find curl nor wget"
+
 let download ~filename:src ~dirname:dst =
-  let cmd = match Globals.os with
-    | Globals.Darwin -> [ "curl"; "--insecure" ; "-OL"; src ]
-    | _              -> [ "wget"; "--no-check-certificate" ; src ] in
+  let cmd = download_command src in
   let dst_file = dst / Filename.basename src in
   log "download %s in %s (%b)" src dst_file (src = dst_file);
   let e =
