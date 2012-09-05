@@ -1,4 +1,4 @@
-BIN = /usr/local/bin
+PREFIX = /usr/local
 LOCAL_OCPBUILD=./ocp-build/ocp-build
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 OCAMLC=ocamlc
@@ -54,7 +54,7 @@ tests-git:
 	$(MAKE) -C tests git
 
 %-install:
-	cp _obuild/$*/$*.asm $(BIN)/$*
+	cp _obuild/$*/$*.asm $(PREFIX)/bin/$*
 
 PRODUCT_VERSION=$(shell grep "let version" src/globals.ml | cut -f 2 -d \")
 META: META.in
