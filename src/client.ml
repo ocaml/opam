@@ -1240,19 +1240,16 @@ module Heuristic = struct
   let v_ge v set n = vpkg_of_nv_ge n (match v with None -> V.Set.max_elt set | Some v -> v)
 
   let get_installed t f_h =
-    let available = NV.to_map (get_available_current t) in
-    let available =
-      N.Map.filter
-        (fun n _ -> N.Map.mem n available)
-        (NV.to_map t.installed) in
+    let available = get_available_current t in
+    let available_map = NV.to_map available in
+    let installed =
+      NV.Set.filter
+        (fun nv -> NV.Set.mem nv available)
+        t.installed in
+    let installed_map = NV.to_map installed in
     N.Map.mapi
-      (fun n v ->
-        if N.Map.mem n available then
-          f_h (Some (V.Set.choose_one v)) (N.Map.find n available) n
-        else (
-          let current_version = V.Set.choose_one v in
-          f_h (Some current_version) (V.Set.singleton current_version) n))
-      available
+      (fun n vs -> f_h (Some (V.Set.choose_one vs)) (N.Map.find n available_map) n)
+      installed_map
 
   let get_comp_packages t ocaml_version f_h = 
     let comp_f = Path.G.compiler t.global ocaml_version in
@@ -1336,7 +1333,7 @@ module Heuristic = struct
 
   let apply_solution t sol = 
     if Solver.solution_is_empty sol then
-      true
+      false
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
