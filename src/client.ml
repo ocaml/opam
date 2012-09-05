@@ -436,6 +436,7 @@ let update_package ~show_packages =
 
   (* then update $opam/repo/index *)
   update_repo_index t;
+  let t = load_state () in
 
   let updated =
     N.Map.fold (fun n repo_s accu ->
@@ -448,7 +449,7 @@ let update_package ~show_packages =
           let p = find_repository_path t repo in
           let available_versions = Path.R.available_versions p n in
           let new_versions = V.Set.diff available_versions !all_versions in
-          log "new_versions: %s" (V.Set.to_string new_versions);
+          log "repo=%s n=%s new_versions= %s" repo (N.to_string n) (V.Set.to_string new_versions);
           if not (V.Set.is_empty new_versions) then (
             all_versions := V.Set.union !all_versions new_versions;
             let all_updated = File.Updated.safe_read (Path.R.updated p) in
