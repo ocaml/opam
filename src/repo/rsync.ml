@@ -82,6 +82,7 @@ module B = struct
     rsync_file remote_file local_file
 
   let update address =
+    Globals.msg "Synchronizing with %s ...\n" (Dirname.to_string address);
     let remote_repo = Path.R.of_dirname address in
     let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let sync_dir fn =

@@ -27,9 +27,11 @@ let make_state remote_path =
     let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let local_path = Path.R.root local_repo in
     let index_file = remote_path // "urls.txt" in
+    let local_index_file = local_path // "urls.txt" in
     let local_index_archive = local_path // "index.tar.gz" in
     let remote_index_archive = remote_path // "index.tar.gz" in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
+      Filename.remove local_index_file;
       match Filename.download index_file local_path with
       | None            -> Globals.error_and_exit "Cannot get urls.txt"
       | Some local_file ->
