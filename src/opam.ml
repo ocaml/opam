@@ -115,7 +115,7 @@ let list =
 {
   name     = "list";
   usage    = "[package-regexp]*";
-  synopsis = "Display information about all available packages that match package-regexp, or all available packages if no regexp is provided";
+  synopsis = "Display the list of available packages";
   help     = "";
   specs    = [
     ("-short", Arg.Set short, " Minimize the output by displaying only package name (installed and not installed)");
@@ -124,8 +124,23 @@ let list =
   anon;
   main     = 
     parse_args (function
-    | [] -> Client.list !short !installed ""
-    | l  -> List.iter (fun name -> Client.list !short !installed name) l)
+    | [] -> Client.list !short !installed true ""
+    | l  -> List.iter (fun name -> Client.list !short !installed true name) l)
+}
+
+(* opam search [PACKAGE_REGEXP]* *)
+let search = 
+{
+  name     = "search";
+  usage    = "<package-regexp>*";
+  synopsis = "Search into the package list";
+  help     = "";
+  specs    = [];
+  anon;
+  main     = 
+    parse_args (function
+    | [] -> Client.list false false false ""
+    | l  -> List.iter (fun name -> Client.list false false false name) l)
 }
 
 (* opam info [PACKAGE] *)
@@ -364,6 +379,7 @@ let pin =
 let commands = [
   init;
   list;
+  search;
   info;
   config;
   install;
