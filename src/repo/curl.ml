@@ -17,41 +17,48 @@ type state = {
   file_digests        : (filename * string) list;
 }
 
-let make_state remote_path =
-  let remote_repo = Path.R.of_dirname remote_path in
-  let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
-  let local_path = Path.R.root local_repo in
-  let index_file = remote_path // "urls.txt" in
-  let local_index_archive = local_path // "index.tar.gz" in
-  let remote_index_archive = remote_path // "index.tar.gz" in
-  let remote_local, local_remote, local_files, file_permissions, file_digests =
-    match Filename.download index_file local_path with
-    | None            -> Globals.error_and_exit "Cannot get urls.txt"
-    | Some local_file ->
-        let urls = File.Urls_txt.read local_file in
-        let remote_local, local_remote, locals, perms, digests =
-          Remote_file.Set.fold (fun r (rl, lr, locals, perms, digests) ->
-            let base = Remote_file.base r in
-            let perm = match Remote_file.perm r with
-              | None  ->  0o640
-              | Some p -> p in
-            let digest = Remote_file.md5 r in
-            let remote = Filename.create remote_path base in
-            let local = Filename.create (Dirname.cwd()) base in
-            Filename.Map.add remote local rl,
-            Filename.Map.add local remote lr,
-            Filename.Set.add local locals,
-            (local, perm) :: perms,
-            (local, digest) :: digests
-          ) urls (Filename.Map.empty, Filename.Map.empty, Filename.Set.empty, [], []) in
-        remote_local, local_remote, locals, perms, digests in
-  {
-    remote_repo; remote_path; local_repo; local_path;
-    index_file; local_index_archive; remote_index_archive;
-    local_files; remote_local; local_remote;
-    file_permissions; file_digests;
-  }
+let state_cache = ref []
 
+let make_state remote_path =
+  if List.mem_assoc remote_path !state_cache then
+    List.assoc remote_path !state_cache
+  else (
+    let remote_repo = Path.R.of_dirname remote_path in
+    let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
+    let local_path = Path.R.root local_repo in
+    let index_file = remote_path // "urls.txt" in
+    let local_index_archive = local_path // "index.tar.gz" in
+    let remote_index_archive = remote_path // "index.tar.gz" in
+    let remote_local, local_remote, local_files, file_permissions, file_digests =
+      match Filename.download index_file local_path with
+      | None            -> Globals.error_and_exit "Cannot get urls.txt"
+      | Some local_file ->
+          let urls = File.Urls_txt.read local_file in
+          let remote_local, local_remote, locals, perms, digests =
+            Remote_file.Set.fold (fun r (rl, lr, locals, perms, digests) ->
+              let base = Remote_file.base r in
+              let perm = match Remote_file.perm r with
+                | None  ->  0o640
+                | Some p -> p in
+              let digest = Remote_file.md5 r in
+              let remote = Filename.create remote_path base in
+              let local = Filename.create (Dirname.cwd()) base in
+              Filename.Map.add remote local rl,
+              Filename.Map.add local remote lr,
+              Filename.Set.add local locals,
+              (local, perm) :: perms,
+              (local, digest) :: digests
+            ) urls (Filename.Map.empty, Filename.Map.empty, Filename.Set.empty, [], []) in
+          remote_local, local_remote, locals, perms, digests in
+    let state = {
+      remote_repo; remote_path; local_repo; local_path;
+      index_file; local_index_archive; remote_index_archive;
+      local_files; remote_local; local_remote;
+      file_permissions; file_digests;
+    } in
+    state_cache := (remote_path, state) :: !state_cache;
+    state
+  )
 
 let is_up_to_date state local_file =
   List.mem_assoc local_file state.file_digests
