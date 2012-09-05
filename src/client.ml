@@ -1846,6 +1846,30 @@ let remote action =
   let update_config repos =
     let new_config = File.Config.with_repositories t.config repos in
     File.Config.write (Path.G.config t.global) new_config in
+  let cleanup_repo repo =
+    update_config (List.filter ((!=) repo) repos);
+    let repo_index =
+      N.Map.fold (fun n repo_s repo_index ->
+        let repo_s = List.filter (fun r -> r <> Repository.name repo) repo_s in
+        match repo_s with
+        | [] ->
+            (* The package does not exists anymore in any remote repository,
+               so we need to remove the associated meta-data if the package
+               is not installed. *)
+            let versions = Path.G.available_versions t.global n in
+            V.Set.iter (fun v ->
+              let nv = NV.create n v in
+              if not (NV.Set.mem nv t.installed) then (
+                Filename.remove (Path.G.opam t.global nv);
+                Filename.remove (Path.G.descr t.global nv);
+                Filename.remove (Path.G.archive t.global nv);
+              )
+            ) versions;
+            repo_index
+        | _  -> N.Map.add n repo_s repo_index
+      ) t.repo_index N.Map.empty in
+    File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+    Dirname.rmdir (Path.R.root (Path.R.create repo)) in
   match action with
   | List  ->
       let pretty_print r =
@@ -1862,39 +1886,22 @@ let remote action =
         (try Repositories.init repo with
         | Repositories.Unknown_backend ->
             Globals.error_and_exit "\"%s\" is not a supported backend" (Repository.kind repo)
-        | e -> raise e);
+        | e ->
+            cleanup_repo repo;
+            raise e);
         log "Adding %s" (Repository.to_string repo);
         update_config (repo :: repos)
       );
-      update ()
+      (try update ()
+       with e ->
+         cleanup_repo repo;
+         raise e)
   | Rm n  ->
       let repo =
         try List.find (fun r -> Repository.name r = n) repos
         with Not_found ->
           Globals.error_and_exit "%s is not a remote index" n in
-      update_config (List.filter ((!=) repo) repos);
-      let repo_index =
-        N.Map.fold (fun n repo_s repo_index ->
-          let repo_s = List.filter (fun r -> r <> Repository.name repo) repo_s in
-          match repo_s with
-          | [] ->
-            (* The package does not exists anymore in any remote repository,
-               so we need to remove the associated meta-data if the package
-               is not installed. *)
-            let versions = Path.G.available_versions t.global n in
-            V.Set.iter (fun v ->
-              let nv = NV.create n v in
-              if not (NV.Set.mem nv t.installed) then (
-                Filename.remove (Path.G.opam t.global nv);
-                Filename.remove (Path.G.descr t.global nv);
-                Filename.remove (Path.G.archive t.global nv);
-              )
-            ) versions;
-            repo_index
-          | _  -> N.Map.add n repo_s repo_index
-        ) t.repo_index N.Map.empty in
-      File.Repo_index.write (Path.G.repo_index t.global) repo_index;
-      Dirname.rmdir (Path.R.root (Path.R.create repo))
+      cleanup_repo repo
 
 let pin action =
   log "pin %s" (string_of_pin action);
