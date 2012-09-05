@@ -1425,30 +1425,32 @@ module Heuristic = struct
   let apply_solutions t = 
     let rec aux = function
       | x :: xs when not (apply_solution t x) -> aux xs
-      | _ -> () in
+      | _ -> false in
     aux
 
   let resolve action_k t l_request =
     let available = get_available_current t in
-
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
-
-    match
+    let solution =
       List.fold_left 
-        (function 
-          | None -> fun request -> 
-            (match 
-                Solver.resolve
-                  (Solver.U l_pkg) 
-                  request
-                  (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
-             with
-               | []  -> let _ = log "heuristic with no solution" in None
-               | sol -> Some (apply_solutions t sol))
-          | Some acc -> fun _ -> Some acc) None l_request
-    with
-      | None -> Globals.msg "No solution has been found.\n"
-      | Some sol -> sol
+        (fun found_solution request ->
+          if not found_solution then
+            match 
+              Solver.resolve
+                (Solver.U l_pkg) 
+                request
+                (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
+            with
+            | []  -> let _ = log "heuristic with no solution" in false
+            | sol -> apply_solutions t sol
+          else
+            false)
+        false
+        l_request in
+    if not solution then
+      Globals.msg "No solution has been found.\n";
+    solution
+
 end
 
 let init repo alias ocaml_version cores =
@@ -1481,10 +1483,10 @@ let init repo alias ocaml_version cores =
     update_package ~show_packages:false;
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_comp_packages t ocaml_version Heuristic.v_any in
-    Heuristic.resolve `init t
+    let _solution = Heuristic.resolve `init t
       [ { wish_install
         ; wish_remove = [] 
-        ; wish_upgrade = [] } ];
+        ; wish_upgrade = [] } ] in
 
     print_env_warning ()
 
@@ -1539,7 +1541,7 @@ let install names =
   let pkg_installed = 
     N.Map.values (Heuristic.get_installed t (fun v set name -> V_any (name, set, v))) in
 
-  Heuristic.resolve `install t
+  let _solution = Heuristic.resolve `install t
     (List.map 
        (fun (f_new, f_installed) -> 
          { wish_install = Heuristic.apply f_new pkg_new @ Heuristic.apply f_installed pkg_installed
@@ -1550,7 +1552,8 @@ let install names =
         ; v_max, v_ge
         ; v_any, v_eq
         ; v_any, v_ge
-        ; v_any, v_any ]))
+        ; v_any, v_any ])) in
+  ()
 
 let remove names =
   log "remove %s" (N.Set.to_string names);
@@ -1598,7 +1601,7 @@ let remove names =
       fun f_heuristic ->
         List.rev_map (fun nv -> f_heuristic (NV.name nv) (NV.version nv)) installed in
 
-    Heuristic.resolve `remove t
+    let _solution = Heuristic.resolve `remove t
       (List.map 
          (let wish_remove = Heuristic.apply Heuristic.v_any wish_remove in
           fun f_h -> 
@@ -1606,22 +1609,24 @@ let remove names =
             ; wish_remove
             ; wish_upgrade = [] })
          [ Heuristic.vpkg_of_nv_eq
-         ; fun n _ -> Heuristic.vpkg_of_nv_any n ])
-  )
+         ; fun n _ -> Heuristic.vpkg_of_nv_any n ]) in
+    ())
 
 let upgrade names =
   log "upgrade %s" (N.Set.to_string names);
   let t = update_available_current (load_state ()) in
+  let solution_found = ref false in
   if N.Set.is_empty names then (
-    Heuristic.resolve `upgrade t
+    let solution = Heuristic.resolve `upgrade t
       (List.map (fun to_upgrade ->
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
-         [ Heuristic.v_max; Heuristic.v_ge ])
+         [ Heuristic.v_max; Heuristic.v_ge ]) in
+    solution_found := solution;
   ) else (
     let names = Heuristic.nv_of_names t names in
-    Heuristic.resolve `upgrade t
+    let solution = Heuristic.resolve `upgrade t
       (List.map (fun (to_upgrade, to_keep) ->
         let wish_install = Heuristic.get_installed t to_keep in
         let wish_install =
@@ -1640,9 +1645,11 @@ let upgrade names =
            (Heuristic.v_ge , Heuristic.v_eq);
            (Heuristic.v_ge , Heuristic.v_ge);
            (Heuristic.v_ge , Heuristic.v_any); ]
-      )
+      ) in
+    solution_found := solution;
   );
-  Filename.remove (Path.C.reinstall t.compiler)
+  if !solution_found then
+    Filename.remove (Path.C.reinstall t.compiler)
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
@@ -2051,11 +2058,13 @@ let switch ~clone ~quiet alias ocaml_version =
       )
     ) all_constraints in
 
-  if not is_ok then
-    Heuristic.resolve `switch t_new
+  if not is_ok then (
+    let _solution = Heuristic.resolve `switch t_new
       [ { wish_install = N.Map.values all_constraints
         ; wish_remove = [] 
-        ; wish_upgrade = [] } ];
+        ; wish_upgrade = [] } ] in
+    ()
+  );
 
   print_env_warning ()
 
