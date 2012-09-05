@@ -134,6 +134,15 @@ OPAM supports multiple repositories.
 $ opam remote -list
 ```
 
+### Auto-completion
+
+`shell/` contains shell-scripts to add auto-completion to OPAM. The script is not
+installed by default, so to activate the mode you can either:
+
+* move it at the right location (depending on your OS, for instance
+  `/etc/auto-complete.d/opam` on Debian)
+
+* copy it somewhere in you path and source it in your `.profile`.
 
 ## Documentation
 
