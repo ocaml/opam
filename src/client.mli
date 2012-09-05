@@ -26,7 +26,8 @@ open Types
 val init : repository -> Alias.t option -> OCaml_V.t option -> int -> unit
 
 (** Displays all available packages that matches [string]. *)
-val list : bool -> bool -> bool -> string -> unit
+val list : print_short:bool -> installed_only:bool -> name_only:bool 
+  -> string -> unit
 
 (** Displays a general summary of a package. *)
 val info : N.t -> unit
