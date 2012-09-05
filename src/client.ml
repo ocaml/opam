@@ -1241,9 +1241,18 @@ module Heuristic = struct
 
   let get_installed t f_h =
     let available = NV.to_map (get_available_current t) in
+    let available =
+      N.Map.filter
+        (fun n _ -> N.Map.mem n available)
+        (NV.to_map t.installed) in
     N.Map.mapi
-      (fun n v -> f_h (Some (V.Set.choose_one v)) (N.Map.find n available) n)
-      (NV.to_map t.installed)
+      (fun n v ->
+        if N.Map.mem n available then
+          f_h (Some (V.Set.choose_one v)) (N.Map.find n available) n
+        else (
+          let current_version = V.Set.choose_one v in
+          f_h (Some current_version) (V.Set.singleton current_version) n))
+      available
 
   let get_comp_packages t ocaml_version f_h = 
     let comp_f = Path.G.compiler t.global ocaml_version in
@@ -1605,7 +1614,7 @@ let upgrade names =
   let t = update_available_current (load_state ()) in
   if N.Set.is_empty names then (
     Heuristic.resolve `upgrade t
-      (List.map (fun (to_upgrade) ->
+      (List.map (fun to_upgrade ->
         { wish_install = [];
           wish_remove  = [];
           wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
