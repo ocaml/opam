@@ -1,0 +1,59 @@
+.TH OPAM-SWITCH 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.SH NAME
+.PP
+opam-switch - Switch compiler version
+.SH SYNOPSIS
+.PP
+\f[I]opam switch\f[] -list
+.PP
+\f[I]opam switch\f[] [-no-base-packages] [-clone] [-alias <alias>]
+<version>
+.SH DESCRIPTION
+.PP
+This command allows to switch between different compiler versions,
+installing the compiler if \f[I]opam switch\f[] is used to switch to
+that compiler for the first time.
+The different compiler versions are totally independant from each other,
+meaning that OPAM maintains a separate state (e.g.
+list of installed packages...)
+ for each.
+.SH PARAMETERS
+.TP
+.B <version>
+Switch to the compiler version <version>.
+The list of available versions is obtained by doing \f[I]opam switch
+-list\f[]
+.RS
+.RE
+.SH OPTIONS
+.TP
+.B -list
+Displays the list of available compilers.
+.RS
+.RE
+.TP
+.B -no-base-packages
+Will prevent \f[I]opam switch\f[] from installing the base packages.
+.RS
+.RE
+.TP
+.B -clone
+Will try to install the packages that were installed before switching
+(that are not currently installed).
+If not set, \f[I]opam switch\f[] will not install any package, thus
+creating a brand new state for the newly selected compiler.
+.RS
+.RE
+.TP
+.B -alias <alias>
+Will switch to requested compiler version, but use the alternative name
+<alias> instead of the the default compiler version's name.
+This is useful to create multiple instances of the same compiler
+version.
+.RS
+.RE
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.

@@ -1,0 +1,52 @@
+.TH OPAM-REMOTE 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.SH NAME
+.PP
+opam-remote - Manage OPAM repositories
+.SH SYNOPSIS
+.PP
+\f[I]opam remote\f[] -list
+.PP
+\f[I]opam remote\f[] -rm <name>
+.PP
+\f[I]opam remote\f[] -add [-kind <kind>] <name> <address>
+.SH DESCRIPTION
+.PP
+This command is used to manage OPAM repositories.
+To synchronize OPAM with the last versions of the packages available in
+remote repositories, \f[I]opam update\f[] should be used.
+.SH PARAMETERS
+.TP
+.B -list
+Lists all repositories used by OPAM.
+.RS
+.RE
+.TP
+.B -rm <name>
+Removes the repository named <name> from the list of repositories used
+by OPAM.
+.RS
+.RE
+.TP
+.B -add <name> <address>
+Add the repository <name> available at address <address> to the list of
+repositories used by OPAM.
+The kind of the repository can be specified with the \f[I]-kind\f[]
+option, otherwise it will be determined automatically.
+.RS
+.RE
+.SH OPTIONS
+.TP
+.B -kind <kind>
+Specify the kind of the repository to be added.
+If not used, \f[I]opam remote add\f[] will try to figure out
+automatically what kind of repository to use.
+.RS
+.RE
+.SH SEE ALSO
+.PP
+\f[B]opam-update\f[](1)
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.

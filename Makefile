@@ -1,4 +1,4 @@
-BIN = /usr/local/bin
+PREFIX = /usr/local
 LOCAL_OCPBUILD=./ocp-build/ocp-build
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 OCAMLC=ocamlc
@@ -54,7 +54,7 @@ tests-git:
 	$(MAKE) -C tests git
 
 %-install:
-	cp _obuild/$*/$*.asm $(BIN)/$*
+	cp _obuild/$*/$*.asm $(PREFIX)/bin/$*
 
 PRODUCT_VERSION=$(shell grep "let version" src/globals.ml | cut -f 2 -d \")
 META: META.in
@@ -63,6 +63,11 @@ META: META.in
 .PHONY: install
 install:
 	$(MAKE) $(TARGETS:%=%-install)
+	mkdir -p $(PREFIX)/share/man/man1 && cp doc/man/* $(PREFIX)/share/man/man1
+
+uninstall:
+	rm -f $(PREFIX)/bin/opam*
+	rm -f $(PREFIX)/share/man/man1/opam*
 
 doc: compile
 	mkdir -p doc/html/
@@ -71,6 +76,7 @@ doc: compile
 	  -I _obuild/bat -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
 	  src/*.mli -html -d doc/html/
+	$(MAKE) -C doc/man-src
 
 trailing:
 	find src -name "*.ml*" -exec \

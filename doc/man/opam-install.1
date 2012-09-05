@@ -1,0 +1,37 @@
+.TH OPAM-INSTALL 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.SH NAME
+.PP
+opam-install - Install packages
+.SH SYNOPSIS
+.PP
+\f[I]opam install\f[] <package>...
+.SH DESCRIPTION
+.PP
+This command installs one or more packages to the currently selected
+compiler.
+To install packages for another compiler, you need to switch compilers
+using \f[I]opam switch\f[].
+You can remove installed packages with \f[I]opam remove\f[], and list
+installed packages with \f[I]opam list -installed\f[].
+.PP
+This command will make opam use the dependency solver to compute the
+transitive closure of dependencies to be installed, and will handle
+conflicts as well.
+If the dependency solver returns more than one solution, opam will ask
+which one should be selected.
+If dependencies are to be installed, opam will ask if the installation
+should really be performed.
+.SH OPTIONS
+.TP
+.B <package>...
+Package(s) to be installed.
+.RS
+.RE
+.SH SEE ALSO
+.PP
+\f[B]opam-remove\f[](1) \f[B]opam-switch\f[](1) \f[B]opam-list\f[](1)
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.

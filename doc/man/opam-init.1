@@ -1,0 +1,47 @@
+.TH OPAM-INIT 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.SH NAME
+.PP
+opam-init - Creating a fresh client state
+.SH SYNOPSIS
+.PP
+\f[I]opam init\f[] [-kind <kind>] <repo-name> <repo-address>
+.SH DESCRIPTION
+.PP
+This command creates a fresh client state, that is initialize opam
+configuration in $HOME/.opam and setup a default repository by calling
+\f[I]opam-<kind>-init\f[].
+Additional repositories can later be added by using the \f[I]opam
+remote\f[] command.
+The local cache of a repository state can be updated by using \f[I]opam
+update\f[].
+.SH PARAMETERS
+.TP
+.B <repo-name>
+Name of the repository.
+Default value "default".
+.RS
+.RE
+.TP
+.B <repo-address>
+Address of the repository.
+Default value "http://opam.ocamlpro.com"
+.RS
+.RE
+.SH OPTIONS
+.TP
+.B -kind <kind>
+Specify the kind of the repository to be set.
+Possible values: "http", "rsync", "git".
+Default value "http".
+.RS
+.RE
+.SH SEE ALSO
+.PP
+\f[B]opam-remote\f[](1) \f[B]opam-update\f[](1)
+\f[B]opam-http-init\f[](1) \f[B]opam-rsync-init\f[](1)
+\f[B]opam-git-init\f[](1)
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.
