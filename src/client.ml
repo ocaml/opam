@@ -727,8 +727,8 @@ let list ~print_short ~installed_only ~name_only pkg_str =
   log "list";
   let t = load_state () in
   let re = 
-    try Re_perl.compile_pat ~opts:[`Caseless] pkg_str
-    with Re_perl.Parse_error -> 
+    try Re.compile (Re_glob.globx pkg_str)
+    with Re_glob.Parse_error -> 
       Globals.error_and_exit "\"%s\" is not a valid package descriptor" pkg_str
   in
   (* Get all the installed packages *)
