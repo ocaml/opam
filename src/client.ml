@@ -252,7 +252,7 @@ let print_updated t updated pinned_updated =
       Globals.msg "The following NEW packages are available:\n";
     NV.Set.iter (fun nv ->
       Globals.msg " - %s\n" (NV.to_string nv)
-    ) updated;
+    ) new_packages;
   );
   if not (NV.Set.is_empty updated_packages) then (
     if NV.Set.cardinal updated_packages = 1 then
@@ -264,7 +264,7 @@ let print_updated t updated pinned_updated =
         Globals.msg " - %s\n" (N.to_string (NV.name nv))
       else
         Globals.msg " - %s\n" (NV.to_string nv)
-    ) pinned_updated
+    ) updated_packages
   );
   if NV.Set.is_empty (NV.Set.union new_packages updated_packages) then
     Globals.msg "Already up-to-date.\n"
