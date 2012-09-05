@@ -1849,8 +1849,8 @@ let remote action =
   match action with
   | List  ->
       let pretty_print r =
-        Globals.msg "[%s] %10s %s\n"
-          (Repository.kind r) 
+        Globals.msg "%-7s %10s     %s\n"
+          (Printf.sprintf "[%s]" (Repository.kind r))
           (Repository.name r)
           (Dirname.to_string (Repository.address r)) in
       List.iter pretty_print repos
@@ -1859,8 +1859,10 @@ let remote action =
       if List.exists (fun r -> Repository.name r = name) repos then
         Globals.error_and_exit "%s is already a remote repository" name
       else (
-        (try Repositories.init repo with Repositories.Unknown_backend ->
-          Globals.error_and_exit "\"%s\" is not a supported backend" (Repository.kind repo));
+        (try Repositories.init repo with
+        | Repositories.Unknown_backend ->
+            Globals.error_and_exit "\"%s\" is not a supported backend" (Repository.kind repo)
+        | e -> raise e);
         log "Adding %s" (Repository.to_string repo);
         update_config (repo :: repos)
       );
