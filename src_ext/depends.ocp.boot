@@ -36,6 +36,7 @@ begin library "re_perl"
      "ocaml-re/lib/automata.ml"
      "ocaml-re/lib/re.ml"
      "ocaml-re/lib/re_perl.ml"
+     "ocaml-re/lib/re_glob.ml"
      "ocaml-re/lib/pcre.ml"
    ]
 end
