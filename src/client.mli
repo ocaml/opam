@@ -36,13 +36,16 @@ val info : N.t -> unit
     package is installed. *)
 val config : config -> unit
 
-(** Installs the given set of packages. Take the global file lock. *)
+(** Install the given set of packages. Take the global file lock. *)
 val install : N.Set.t -> unit
+
+(** Reinstall the given set of packages. Take the global file lock. *)
+val reinstall : N.Set.t -> unit
 
 (** Refresh the available packages. Take the global file lock. *)
 val update : unit -> unit
 
-(** Finds a consistent state where most of the installed packages are
+(** Find a consistent state where most of the installed packages are
     upgraded to their latest version.
     If no package packages are specified then try to upgrade everything.
     Take the global file lock. *)
@@ -54,7 +57,7 @@ val upgrade : N.Set.t -> unit
     name. Take the global file lock. *)
 val upload : upload -> string option -> unit
 
-(** Removes the given set of packages. Take the global file lock. *)
+(** Remove the given set of packages. Take the global file lock. *)
 val remove : N.Set.t -> unit
 
 (** Manage remote repositories. Take the global file lock. *)

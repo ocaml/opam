@@ -217,7 +217,7 @@ let mk options =
     Client.config config
 }
 
-(* opam install PACKAGE *)
+(* opam install <PACKAGE>+ *)
 let install = {
   name     = "install";
   usage    = "[package]+";
@@ -228,6 +228,20 @@ let install = {
   main     = parse_args (fun names ->
     let names = List.map N.of_string names in
     Client.install (N.Set.of_list names)
+  )
+}
+
+(* opam reinstall <PACKAGE>+ *)
+let reinstall = {
+  name     = "reinstall";
+  usage    = "[package]+";
+  synopsis = "Reinstall a list of package";
+  help     = "";
+  specs    = [];
+  anon;
+  main     = parse_args (fun names ->
+    let names = List.map N.of_string names in
+    Client.reinstall (N.Set.of_list names)
   )
 }
 
@@ -383,6 +397,7 @@ let commands = [
   info;
   config;
   install;
+  reinstall;
   update;
   upgrade;
   upload;

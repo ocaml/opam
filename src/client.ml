@@ -1421,17 +1421,22 @@ module Heuristic = struct
 
   let apply_solutions t = 
     let rec aux = function
-      | x :: xs when not (apply_solution t x) -> aux xs
-      | _ -> false in
+      | x :: xs ->
+          let solution_found = apply_solution t x in
+          if solution_found then
+            true
+          else
+            aux xs
+      | [] -> false in
     aux
 
   let resolve action_k t l_request =
     let available = get_available_current t in
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
-    let solution =
-      List.fold_left 
-        (fun found_solution request ->
-          if not found_solution then
+    let solution_found =
+      List.fold_left
+        (fun solution_found request ->
+          if not solution_found then
             match 
               Solver.resolve
                 (Solver.U l_pkg) 
@@ -1441,12 +1446,12 @@ module Heuristic = struct
             | []  -> let _ = log "heuristic with no solution" in false
             | sol -> apply_solutions t sol
           else
-            false)
+            true)
         false
         l_request in
-    if not solution then
+    if not solution_found then
       Globals.msg "No solution has been found.\n";
-    solution
+    solution_found
 
 end
 
@@ -1646,7 +1651,31 @@ let upgrade names =
     solution_found := solution;
   );
   if !solution_found then
-    Filename.remove (Path.C.reinstall t.compiler)
+    let t = load_state () in
+    let reinstall = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) t.installed in
+    let reinstall_f = Path.C.reinstall t.compiler in
+    if NV.Set.is_empty reinstall then
+      Filename.remove reinstall_f
+    else
+      File.Reinstall.write reinstall_f reinstall
+
+let reinstall names =
+  log "reinstall %s" (N.Set.to_string names);
+  let t = update_available_current (load_state ()) in
+  let packages = Heuristic.nv_of_names t names in
+  let reinstall_new =
+    Utils.filter_map (function
+      | V_any (n, _, Some v)
+      | V_eq (n, v) -> Some (NV.create n v)
+      | V_any (n, _, _) ->
+          Globals.msg "%s is not installed" (N.to_string n);
+          None
+    ) packages in
+  let reinstall_new = NV.Set.of_list reinstall_new in
+  let reinstall_f = Path.C.reinstall t.compiler in
+  let reinstall_old = File.Reinstall.safe_read reinstall_f in
+  File.Reinstall.write reinstall_f (NV.Set.union reinstall_new reinstall_old);
+  upgrade names
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
@@ -2079,6 +2108,9 @@ let config request =
 
 let install name =
   check (Write_lock (fun () -> install name))
+
+let reinstall name =
+  check (Write_lock (fun () -> reinstall name))
 
 let update () =
   check (Write_lock update)
