@@ -30,17 +30,20 @@ If you don't have `curl` installed on your system, you can run
 
 ### Installing OPAM
 
-To install opam in `/usr/local/bin` simply run:
+To install opam (under `/usr/local`) simply run:
 
 ```
 $ sudo make install
 ```
 
-If you want to install OPAM in a different path:
+If you want to install OPAM under a different prefix:
 
 ```
-$ make BIN=$HOME/bin install
+$ make PREFIX=$HOME install
 ```
+
+This way, opam binaries will be installed in `$HOME/bin`, and man
+pages will be located in `$HOME/share/man`.
 
 ### Using opam
 

@@ -1,0 +1,44 @@
+.TH OPAM-LIST 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.SH NAME
+.PP
+opam-list - List packages
+.SH SYNOPSIS
+.PP
+\f[I]opam list\f[] [-short] [-installed] [<packagepattern>...]
+.SH DESCRIPTION
+.PP
+This command displays the list of available packages, or the list of
+installed packages if the -installed switch is used.
+.PP
+Unless the -short switch is used, the output format displays one package
+per line, and each line contains the name of the package, the installed
+version or "--" if the package is not installed, and a short
+desctription.
+The full description can be obtained by doing \f[I]opam info \f[].
+You can search into the package list with the \f[I]opam search\f[]
+command.
+.SH OPTIONS
+.TP
+.B <packagepattern>...
+List only packages whose name matches at least one <packagepattern>.
+.RS
+.RE
+.TP
+.B -short
+Output the names of packages separated by one whitespace instead of
+using the usual formatting.
+.RS
+.RE
+.TP
+.B -installed
+List installed packages only.
+.RS
+.RE
+.SH SEE ALSO
+.PP
+\f[B]opam-search\f[](1) \f[B]opam-info\f[](1)
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.

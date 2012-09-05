@@ -1,0 +1,73 @@
+.TH OPAM-CONFIG 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.SH NAME
+.PP
+opam-config - Getting package configuration
+.SH SYNOPSIS
+.PP
+\f[I]opam config\f[] -env
+.PP
+\f[I]opam config\f[] -list-vars
+.PP
+\f[I]opam config\f[] -var <var>
+.PP
+\f[I]opam config\f[] -subst <filename>...
+.PP
+\f[I]opam config\f[] [-r] -I <name>...
+.PP
+\f[I]opam config\f[] [-r] -bytecomp <name>[.<lib>]...
+.PP
+\f[I]opam config\f[] [-r] -asmcomp <name>[.<lib>]...
+.PP
+\f[I]opam config\f[] [-r] -bytelink <name>[.<lib>]...
+.PP
+\f[I]opam config\f[] [-r] -asmlink <name>[.<lib>]...
+.SH DESCRIPTION
+.PP
+This command uses opam state to output information on how to use
+installed libraries, updating the user's $PATH, and substitute variables
+used in opam packages.
+Apart from \f[I]opam config -env\f[], most of these commands are used by
+opam internally, and thus are of limited interest for the user.
+.SH OPTIONS
+.TP
+.B -env
+Set the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and
+CAML_LD_LIBRARY_PATH according to the current selected compiler.
+The output of this command is meant to be evaluated by a shell, for
+example by doing \f[I]eval \f[C]opam\ config\ -env\f[]\f[].
+.RS
+.RE
+.TP
+.B -list-vars
+Return the list of all variables defined in installed packages.
+.RS
+.RE
+.TP
+.B -var <var>
+Return the value associated with variable <var>
+.RS
+.RE
+.TP
+.B -subst <filename>...
+Substitute variables in file <filename>.in to create <filename>
+.RS
+.RE
+.TP
+.B -I <name>...
+Return the list of paths to include when compiling a project using the
+package <name>.
+Using the -r option will take into account the transitive closure of
+dependencies.
+.RS
+.RE
+.TP
+.B -bytecomp|-asmcomp|-bytelink|-asmlink <name>[.<lib>]...
+Return the associated value for section <lib> in the config file for
+package <name>.
+.RS
+.RE
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.
