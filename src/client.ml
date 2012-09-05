@@ -267,7 +267,7 @@ let print_updated t updated pinned_updated =
     ) pinned_updated
   );
   if NV.Set.is_empty (NV.Set.union new_packages updated_packages) then
-    Globals.msg "Already up-to-date."
+    Globals.msg "Already up-to-date.\n"
 
 let print_compilers compilers repo =
   let repo_compilers = Path.R.available_compilers repo in
