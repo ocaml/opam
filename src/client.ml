@@ -1038,6 +1038,7 @@ let proceed_todelete t nv =
   Dirname.rmdir (Path.C.build t.compiler nv);
 
   (* Clean-up the repositories *)
+  log "Cleaning-up the repositories";
   let repos =
     try N.Map.find (NV.name nv) t.repo_index
     with _ -> [] in
@@ -1050,6 +1051,7 @@ let proceed_todelete t nv =
   ) repos;
     
   (* Remove the binaries *)
+  log "Removing the binaries";
   let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
     let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
@@ -1057,6 +1059,7 @@ let proceed_todelete t nv =
   ) (File.Dot_install.bin install);
 
   (* Remove the misc files *)
+  log "Removing the misc files";
   List.iter (fun (_,dst) ->
     if Filename.exists dst then begin
       Globals.msg "Removing %s." (Filename.to_string dst);
@@ -1066,6 +1069,7 @@ let proceed_todelete t nv =
   ) (File.Dot_install.misc install);
 
   (* Remove .config and .install *)
+  log "Removing config and install files";
   Filename.remove (Path.C.install t.compiler name);
   Filename.remove (Path.C.config t.compiler name)
 
@@ -1427,7 +1431,10 @@ module Heuristic = struct
           match action n with
           | To_change (Some _, nv) -> f "upgrading/downgrading" nv
           | To_change (None, nv)   -> f "installing" nv
-          | To_recompile nv        -> f "recompiling" nv
+          | To_recompile nv        ->
+              installed := NV.Set.remove nv !installed;
+              write_installed ();
+              f "recompiling" nv
           | To_delete _            -> assert false in
 
         let cores = File.Config.cores t.config in
