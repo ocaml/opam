@@ -593,7 +593,7 @@ let add_alias alias ocaml_version =
    - [f_exists] is called if alias already exists
    - if [default_allowed] is set, then 'system' is an allowed alias argument
 *)
-let init_ocaml f_exists alias default_allowed ocaml_version =
+let init_ocaml quiet f_exists alias default_allowed ocaml_version =
   log "init_ocaml";
   let t = load_state () in
 
@@ -642,6 +642,8 @@ let init_ocaml f_exists alias default_allowed ocaml_version =
       let comp_f = Path.G.compiler t.global ocaml_version in
       let comp = File.Comp.read comp_f in
       if not (File.Comp.preinstalled comp) then begin
+
+        Globals.verbose := not quiet;
 
         (* Install the compiler *)
         let comp_src = File.Comp.src comp in
@@ -1512,7 +1514,7 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.archives_dir root);
     Dirname.mkdir (Path.G.compilers_dir root);
     update_repo ~show_compilers:false;
-    let ocaml_version = init_ocaml
+    let ocaml_version = init_ocaml true
       (fun alias_p -> 
         Globals.error_and_exit "%s does not exist whereas %s already exists" 
           (Filename.to_string config_f)
@@ -2054,7 +2056,7 @@ let compiler_list () =
   ) descrs
   
 let switch ~clone ~quiet alias ocaml_version =
-  log "switch %B %s %s" clone
+  log "switch %B %B %s %s" clone quiet
     (Alias.to_string alias)
     (OCaml_V.to_string ocaml_version);
   let t = load_state () in
@@ -2063,11 +2065,8 @@ let switch ~clone ~quiet alias ocaml_version =
   let ocaml_version, exists = 
     let exists = ref false in
     let ocaml_version = 
-      init_ocaml (fun _ -> exists := true) (Some alias) true (Some ocaml_version) in
+      init_ocaml quiet (fun _ -> exists := true) (Some alias) true (Some ocaml_version) in
     ocaml_version, !exists in
-
-  if not exists && not quiet then
-    Globals.verbose := true;
 
   (* install new package
      - the packages specified in the compiler description file if
