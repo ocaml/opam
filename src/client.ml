@@ -1110,7 +1110,9 @@ let get_env t =
   let add_to_env = File.Comp.env comp in
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=", Dirname.to_string (Path.C.toplevel t.compiler) in
-  let new_env = new_path :: toplevel_dir :: add_to_env in
+  let man_path = 
+    "MANPATH", "+=", Dirname.to_string (Path.C.man_dir t.compiler) in
+  let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
 
   let add_to_env = expand_env t add_to_env in
   let new_env = expand_env t new_env in

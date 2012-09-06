@@ -415,11 +415,11 @@ let () =
     Globals.msg "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
     match e with
     | Bad (cmd, msg) ->
-        ArgExt.pp_print_help ~man:"opam" (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
+        ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
         Globals.msg "%s\n" msg;
         exit 1;
     | Failure ("no subcommand defined" as s) ->
-        ArgExt.pp_print_help ~man:"opam" ArgExt.NoSubCommand Format.err_formatter global_args ();
+        ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
         Globals.msg "%s\n" s;
         exit 2
     | Globals.Exit i -> exit i

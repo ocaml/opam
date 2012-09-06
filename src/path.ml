@@ -71,6 +71,8 @@ module C = struct
 
   let doc_dir t = t / "doc"
 
+  let man_dir t = t / "man"
+
   let doc t n = doc_dir t / N.to_string n
 
   let bin t = t / "bin"
