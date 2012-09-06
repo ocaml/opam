@@ -62,6 +62,7 @@ META: META.in
 
 .PHONY: install
 install:
+	mkdir -p $(PREFIX)/bin
 	$(MAKE) $(TARGETS:%=%-install)
 	mkdir -p $(PREFIX)/share/man/man1 && cp doc/man/* $(PREFIX)/share/man/man1
 
