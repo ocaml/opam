@@ -83,3 +83,9 @@ trailing:
 	find src -name "*.ml*" -exec \
 	  sed -i xxx -e :a -e "/^\n*$$/{$$d;N;ba" -e '}' {} \;
 	find src -name "*xxx" -exec rm {} \;
+
+archive:
+	echo $(ARCHIVES)
+	$(MAKE) distclean
+	$(MAKE) clone
+	tar cz $(wildcard src_ext/*.tar.gz) > opam-extfiles.1.tar.gz
