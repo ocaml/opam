@@ -31,7 +31,7 @@ begin library "opam-lib"
     "dose"
     "unix"
     "graph"
-    "re_perl"
+    "re_glob"
   ]
 end
 

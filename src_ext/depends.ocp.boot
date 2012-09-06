@@ -29,16 +29,30 @@ begin library "extlib"
      ]
 end
 
-begin library "re_perl"
+begin library "re"
    sort = true
    files = [
      "ocaml-re/lib/cset.ml"
      "ocaml-re/lib/automata.ml"
      "ocaml-re/lib/re.ml"
-     "ocaml-re/lib/re_perl.ml"
-     "ocaml-re/lib/re_glob.ml"
-     "ocaml-re/lib/pcre.ml"
    ]
+end
+
+begin library "re_perl"
+  sort = true
+  files = [
+     "ocaml-re/lib/re_perl.ml"
+     "ocaml-re/lib/pcre.ml"
+  ]
+  requires = [ "re" ]
+end
+
+begin library "re_glob"
+  sort = true
+  files = [
+     "ocaml-re/lib/re_glob.ml"
+  ]
+  requires = [ "re" ]
 end
 
 begin library "arg"
