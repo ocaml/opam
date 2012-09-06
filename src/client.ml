@@ -1466,7 +1466,7 @@ module Heuristic = struct
           if solution_found then
             true
           else
-            aux xs
+            (* aux xs *) false
       | [] -> false in
     aux
 
