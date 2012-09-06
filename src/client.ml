@@ -138,7 +138,7 @@ let update_available_current t =
 
 let get_available_current t = 
   match t.available_current with
-    | None -> assert false
+    | None   -> assert false
     | Some v -> v
 
 (* - Look into the content of ~/.opam/config to build the client
@@ -1198,8 +1198,8 @@ let debpkg_of_nv action t nv =
   File.OPAM.to_package opam installed
 
 type version_constraint = 
-  | V_any of name * V.Set.t (* versions available *) * version option (* version installed *)
-  | V_eq of name * version
+  | V_any of name * V.Set.t (* available versions *) * version option (* installed version *)
+  | V_eq  of name * version
 
 let string_of_version_constraint = function
   | V_any (n,s,i) ->
@@ -1217,27 +1217,38 @@ let name_of_version_constraint = function
 
 module Heuristic = struct
 
-  let vpkg_of_n op name = (N.to_string name, None), op
+  let vpkg_of_n op name =
+    (N.to_string name, None), op
 
-  let vpkg_of_n_op op name v = vpkg_of_n (Some (op, V.to_string v)) name
+  let vpkg_of_n_op op name v =
+    vpkg_of_n (Some (op, V.to_string v)) name
 
-  let vpkg_eq = "="
-  let vpkg_of_nv_eq = vpkg_of_n_op vpkg_eq
+  let vpkg_of_nv_eq = vpkg_of_n_op "="
   let vpkg_of_nv_ge = vpkg_of_n_op ">="
   let vpkg_of_nv_le = vpkg_of_n_op "<="
   let vpkg_of_nv_any = vpkg_of_n None
 
   (* Choose any available version *)
-  let v_any _ _ = vpkg_of_nv_any
+  let v_any _ _ =
+    vpkg_of_nv_any
   
   (* Choose the max version *)
-  let v_max _ set n = vpkg_of_nv_eq n (V.Set.max_elt set)
+  let v_max _ set n =
+    vpkg_of_nv_eq n (V.Set.max_elt set)
 
-  (* Choose the installed version *)
-  let v_eq v set n = vpkg_of_nv_eq n (match v with None -> V.Set.max_elt set | Some v -> v)
+  (* Choose the installed version (if any); if the package is not installed,
+     pick the max version *)
+  let v_eq v set n =
+    match v with
+    | None   -> vpkg_of_nv_eq n (V.Set.max_elt set)
+    | Some v -> vpkg_of_nv_eq n v
 
-  (* Choose at least the installed version *)
-  let v_ge v set n = vpkg_of_nv_ge n (match v with None -> V.Set.max_elt set | Some v -> v)
+  (* Choose at least the installed version (if any); if the package is not
+     installed, pick the max version *)
+  let v_ge v set n =
+    match v with
+    | None   -> vpkg_of_nv_eq n (V.Set.max_elt set)
+    | Some v -> vpkg_of_nv_ge n v
 
   let get_installed t f_h =
     let available = get_available_current t in
@@ -1291,7 +1302,7 @@ module Heuristic = struct
     List.map
       (function 
         | V_any (n, set, v) -> f_heuristic v set n
-        | V_eq (n, v) -> vpkg_of_nv_eq n v)
+        | V_eq (n, v)       -> vpkg_of_nv_eq n v)
       constraints
 
   let unknown_package name =
@@ -1333,7 +1344,7 @@ module Heuristic = struct
 
   let apply_solution t sol = 
     if Solver.solution_is_empty sol then
-      false
+      true
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
@@ -1502,7 +1513,8 @@ let install names =
   let t = update_available_current (load_state ()) in
   let map_installed = NV.to_map t.installed in
 
-  let pkg_skip, pkg_new = N.Set.partition (fun name -> N.Map.mem name map_installed) names in
+  let pkg_skip, pkg_new =
+    N.Set.partition (fun name -> N.Map.mem name map_installed) names in
 
   (* Display a message if at least one package is already installed *)
   N.Set.iter 
@@ -1513,22 +1525,23 @@ let install names =
         (V.to_string (V.Set.choose_one (N.Map.find name map_installed))))
     pkg_skip;
 
-  let pkg_new = Heuristic.nv_of_names t pkg_new in
+  if not (N.Set.is_empty pkg_new) then (
 
-  (* Display a warning if at least one package contains
-     dependencies to some unknown packages *)
-  List.iter 
-    (let available = NV.to_map (get_available_current t) in
-     fun v_cstr ->
-       match
-         match v_cstr with
-           | V_any (_, _, Some _) -> None (* We skip. An already installed package satisfies the dependency property. *)
-           | V_any (n, s, None) -> Some (n, V.Set.choose s)
-           | V_eq (n, v) -> Some (n, v)
-       with
-         | None -> ()
-         | Some (n, v) -> 
-           let opam = File.OPAM.read (Path.G.opam t.global (NV.create n v)) in
+    let pkg_new = Heuristic.nv_of_names t pkg_new in
+
+    (* Display a warning if at least one package contains
+       dependencies to some unknown packages *)
+    let available = NV.to_map (get_available_current t) in
+    List.iter 
+      (fun v_cstr ->
+        let nv_o = match v_cstr with
+          | V_any (_, _, Some _) -> None (* We skip. An already installed package satisfies the dependency property. *)
+          | V_any (n, s, None)   -> Some (NV.create n (V.Set.choose s))
+          | V_eq (n, v)          -> Some (NV.create n v) in
+        match nv_o with
+         | None    -> ()
+         | Some nv -> 
+           let opam = File.OPAM.read (Path.G.opam t.global nv) in
            let f_warn = 
              List.iter
                (fun ((n, _), _) -> 
@@ -1538,24 +1551,29 @@ let install names =
              [ File.OPAM.depends opam
              ; File.OPAM.depopts opam ];
            f_warn (File.OPAM.conflicts opam))
-    pkg_new;
+      pkg_new;
 
-  let pkg_installed = 
-    N.Map.values (Heuristic.get_installed t (fun v set name -> V_any (name, set, v))) in
+    let new_names = List.map name_of_version_constraint pkg_new in
+    let pkg_installed f_h =
+      let pkg_installed = Heuristic.get_installed t f_h in
+      let pkg_installed = N.Map.filter (fun n _ -> not (List.mem n new_names)) pkg_installed in
+      N.Map.values pkg_installed in
 
-  let _solution = Heuristic.resolve `install t
-    (List.map 
-       (fun (f_new, f_installed) -> 
-         { wish_install = Heuristic.apply f_new pkg_new @ Heuristic.apply f_installed pkg_installed
-         ; wish_remove  = []
-         ; wish_upgrade = [] })
-       (let open Heuristic in
-        [ v_max, v_eq
-        ; v_max, v_ge
-        ; v_any, v_eq
-        ; v_any, v_ge
-        ; v_any, v_any ])) in
-  ()
+    let _solution = Heuristic.resolve `install t
+      (List.map 
+         (fun (f_new, f_installed) -> 
+           { wish_install = Heuristic.apply f_new pkg_new @ pkg_installed f_installed 
+           ; wish_remove  = []
+           ; wish_upgrade = [] })
+         (let open Heuristic in
+          [ v_max, v_eq
+          ; v_max, v_ge 
+          ; v_max, v_any
+          ; v_any, v_eq
+          ; v_any, v_ge
+          ; v_any, v_any ])) in
+    ()
+  )
 
 let remove names =
   log "remove %s" (N.Set.to_string names);
@@ -1573,7 +1591,7 @@ let remove names =
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
   let whish_remove, does_not_exist =
     let aux (whish_remove, does_not_exist) c nv =
-      if not (NV.Set.mem nv t.available) then
+      if not (NV.Set.mem nv (get_available_current t)) then
         (whish_remove, nv :: does_not_exist)
       else
         (c :: whish_remove, does_not_exist) in

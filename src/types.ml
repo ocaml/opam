@@ -926,7 +926,7 @@ type ocaml_constraint = relop * OCaml_V.t
 
 let string_of_atom_formula = function
   | ((n,_), None)       -> n
-  | ((n,_), Some (r,c)) -> Printf.sprintf "%s %s %s" n r c
+  | ((n,_), Some (r,c)) -> Printf.sprintf "%s (%s %s)" n r c
 
 module Remote_file: sig
   include ABSTRACT

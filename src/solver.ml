@@ -86,13 +86,15 @@ type request = {
   wish_upgrade:  and_formula;
 }
 
-let string_of_vpkg = string_of_atom_formula
+let string_of_vpkg =
+  string_of_atom_formula
 
 let string_of_list f l =
   Printf.sprintf "{%s}"
-    (String.concat "," (List.map f l))
+    (String.concat ", " (List.map f l))
 
-let string_of_vpkgs = string_of_list string_of_vpkg
+let string_of_vpkgs =
+  string_of_list string_of_vpkg
 
 let string_of_request r =
   Printf.sprintf "install:%s remove:%s upgrade:%s"
@@ -181,8 +183,8 @@ let string_of_cudf (p, c) =
     | `Lt  -> "<" in
   let const = function
     | None       -> ""
-    | Some (r,v) -> Printf.sprintf "%s %d" (relop r) v in
-  Printf.sprintf "%s %s" p (const c)
+    | Some (r,v) -> Printf.sprintf " (%s %d)" (relop r) v in
+  Printf.sprintf "%s%s" p (const c)
 
 (* Universe of packages *)
 type universe = U of package list
