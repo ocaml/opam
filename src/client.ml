@@ -1193,8 +1193,10 @@ let proceed_torecompile t nv =
 let debpkg_of_nv action t nv =
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
   let installed =
-    (action <> `upgrade || not (NV.Set.mem nv t.reinstall))
-    && NV.Set.mem nv t.installed in
+    NV.Set.mem nv t.installed &&
+    match action with
+    | `upgrade reinstall -> not (NV.Set.mem nv reinstall)
+    | _                  -> true in
   File.OPAM.to_package opam installed
 
 type version_constraint = 
@@ -1214,6 +1216,11 @@ let string_of_version_constraint = function
 let name_of_version_constraint = function
   | V_any (n,_,_) -> n
   | V_eq (n,_)    -> n
+
+let nv_of_version_constraint = function
+  | V_eq (n, v) 
+  | V_any (n, _, Some v) -> NV.create n v
+  | V_any (n, vs, None)  -> NV.create n (V.Set.choose vs)
 
 module Heuristic = struct
 
@@ -1452,7 +1459,7 @@ module Heuristic = struct
               Solver.resolve
                 (Solver.U l_pkg) 
                 request
-                (if action_k = `upgrade then t.reinstall else NV.Set.empty) 
+                (match action_k with `upgrade reinstall -> reinstall | _ -> NV.Set.empty) 
             with
             | []  -> let _ = log "heuristic with no solution" in false
             | sol -> apply_solutions t sol
@@ -1534,23 +1541,17 @@ let install names =
     let available = NV.to_map (get_available_current t) in
     List.iter 
       (fun v_cstr ->
-        let nv_o = match v_cstr with
-          | V_any (_, _, Some _) -> None (* We skip. An already installed package satisfies the dependency property. *)
-          | V_any (n, s, None)   -> Some (NV.create n (V.Set.choose s))
-          | V_eq (n, v)          -> Some (NV.create n v) in
-        match nv_o with
-         | None    -> ()
-         | Some nv -> 
-           let opam = File.OPAM.read (Path.G.opam t.global nv) in
-           let f_warn = 
-             List.iter
-               (fun ((n, _), _) -> 
-                 if not (N.Map.mem (N.of_string n) available) then
-                   Globals.warning "unknown package %S" n) in
-           List.iter (List.iter f_warn)
-             [ File.OPAM.depends opam
-             ; File.OPAM.depopts opam ];
-           f_warn (File.OPAM.conflicts opam))
+        let nv = nv_of_version_constraint v_cstr in
+        let opam = File.OPAM.read (Path.G.opam t.global nv) in
+        let f_warn = 
+          List.iter
+            (fun ((n, _), _) -> 
+              if not (N.Map.mem (N.of_string n) available) then
+              Globals.warning "unknown package %S" n) in
+        List.iter (List.iter f_warn)
+          [ File.OPAM.depends opam
+          ; File.OPAM.depopts opam ];
+        f_warn (File.OPAM.conflicts opam))
       pkg_new;
 
     let new_names = List.map name_of_version_constraint pkg_new in
@@ -1581,12 +1582,6 @@ let remove names =
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = update_available_current (load_state ()) in
   let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) (get_available_current t) []) in
-  let choose_any_v nv = 
-    let n, v = match nv with 
-      | V_any (n, set, None) -> n, V.Set.choose set
-      | V_any (n, _, Some v)
-      | V_eq (n, v) -> n, v in 
-    NV.create n v in
   let wish_remove = Heuristic.nv_of_names t names in
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
   let whish_remove, does_not_exist =
@@ -1612,7 +1607,7 @@ let remove names =
     let depends =
       Solver.filter_forward_dependencies ~depopts:true universe
         (Solver.P (List.rev_map
-                     (fun nv -> debpkg_of_nv `remove t (choose_any_v nv)) 
+                     (fun vc -> debpkg_of_nv `remove t (nv_of_version_constraint vc)) 
                      wish_remove)) in
     let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
     log "depends=%s" (NV.Set.to_string depends);
@@ -1637,7 +1632,7 @@ let upgrade names =
   let t = update_available_current (load_state ()) in
   let solution_found = ref false in
   if N.Set.is_empty names then (
-    let solution = Heuristic.resolve `upgrade t
+    let solution = Heuristic.resolve (`upgrade t.reinstall) t
       (List.map (fun to_upgrade ->
         { wish_install = [];
           wish_remove  = [];
@@ -1646,7 +1641,8 @@ let upgrade names =
     solution_found := solution;
   ) else (
     let names = Heuristic.nv_of_names t names in
-    let solution = Heuristic.resolve `limited_upgrade t
+    let reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
+    let solution = Heuristic.resolve (`upgrade reinstall)  t
       (List.map (fun (to_upgrade, to_keep) ->
         let wish_install = Heuristic.get_installed t to_keep in
         let wish_install =
