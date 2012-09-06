@@ -1,3 +1,11 @@
+5.0.0 [6 September 2012]
+* add opam search
+* add opam reinstall
+* ability to upgrade only a subset of packages
+* lot of bug fixes in the rsync and curl backend
+* better --help messages
+* better information displayed to the user
+
 4.0.0 [23 August 2012]
 * #25 better layout of repository files
 * #34 (partial) possibility to specify archive checksums
