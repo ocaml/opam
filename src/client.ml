@@ -1633,19 +1633,18 @@ let remove names =
                      (fun vc -> debpkg_of_nv `remove t (nv_of_version_constraint vc)) 
                      wish_remove)) in
     let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
+    let depends = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) depends in
+    let remaining = NV.Set.filter (fun nv -> not (NV.Set.mem nv depends)) t.installed in
     log "depends=%s" (NV.Set.to_string depends);
-    let heuristic_apply = 
-      let installed = List.filter (fun nv -> not (NV.Set.mem nv depends)) (NV.Set.elements t.installed) in
-      fun f_heuristic ->
-        List.rev_map (fun nv -> f_heuristic (NV.name nv) (NV.version nv)) installed in
-
+    log "remaining=%s" (NV.Set.to_string remaining);
+    let wish_remove = Heuristic.apply Heuristic.v_eq wish_remove in
+    let remaining = NV.Set.elements remaining in
     let _solution = Heuristic.resolve `remove t
       (List.map 
-         (let wish_remove = Heuristic.apply Heuristic.v_any wish_remove in
-          fun f_h -> 
-            { wish_install = heuristic_apply f_h
-            ; wish_remove
-            ; wish_upgrade = [] })
+         (fun f_h -> 
+           { wish_install = List.rev_map (fun nv -> f_h (NV.name nv) (NV.version nv)) remaining
+           ; wish_remove
+           ; wish_upgrade = [] })
          [ Heuristic.vpkg_of_nv_eq
          ; fun n _ -> Heuristic.vpkg_of_nv_any n ]) in
     ())
