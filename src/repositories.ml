@@ -83,10 +83,18 @@ let map fn = function
   | Up_to_date x  -> Up_to_date (fn x)
   | Not_available -> Not_available
 
-let download_file k nv f =
+let download_file k nv f c =
   log "download_file %s %s %s" k (NV.to_string nv) (Filename.to_string f);
   let module B = (val find_backend_by_kind k: BACKEND) in
+  let check file = match c with
+    | None   -> true
+    | Some c -> Filename.digest file = c in
   let rename file =
+    if not (check file) then
+      Globals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
+        (Filename.to_string file)
+        (match c with Some c -> c | None -> "<none>")
+        (Filename.digest file);
     if k = "curl" && not (Run.is_tar_archive (Filename.to_string f)) then
       let new_file = Filename.raw (Filename.to_string file ^ ".tar.gz") in
       Filename.move file new_file;
@@ -102,11 +110,11 @@ let download_dir k nv d =
   B.download_dir nv d
 
 (* Download either a file or a directory in the current directory *)
-let download_one k nv url =
+let download_one k nv url checksum =
   let f x = F x in
   let d x = D x in
   if k = "curl" || Run.is_tar_archive url then
-    map f (download_file k nv (Filename.raw url))
+    map f (download_file k nv (Filename.raw url) checksum)
   else
     map d (download_dir k nv (Dirname.raw url))
 
@@ -138,13 +146,14 @@ let make_archive nv =
 
     if Filename.exists url_f then begin
       let url = File.URL.read url_f in
+      let checksum = File.URL.checksum url in
       let kind = match File.URL.kind url with
       | None   -> kind_of_url (File.URL.url url)
       | Some k -> k in
       let url = File.URL.url url in
       log "downloading %s:%s" url kind;
 
-      match Dirname.in_dir local_dir (fun () -> download_one kind nv url) with
+      match Dirname.in_dir local_dir (fun () -> download_one kind nv url checksum) with
       | Not_available -> Globals.error_and_exit "Cannot get %s" url
       | Up_to_date (F local_archive)
       | Result (F local_archive) ->
@@ -237,9 +246,10 @@ let update r =
       let kind = match File.URL.kind url with
       | None   -> kind_of_url (File.URL.url url)
       | Some k -> k in
+      let checksum = File.URL.checksum url in
       let url = File.URL.url url in
       log "updating %s:%s" url kind;
-      match Dirname.in_dir local_dir (fun () -> download_one kind nv url) with
+      match Dirname.in_dir local_dir (fun () -> download_one kind nv url checksum) with
       | Not_available -> Globals.error_and_exit "Cannot get %s" url
       | Up_to_date _  -> false
       | Result _      -> true

@@ -155,6 +155,8 @@ module B = struct
               with Not_found ->
                 ()
             end;
+            if not (is_up_to_date state local_file) then
+              Globals.error_and_exit "Wrong checksum for %s" (Filename.to_string remote_file);
             Result local_file
       end
     end
