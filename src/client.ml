@@ -1646,7 +1646,7 @@ let upgrade names =
     solution_found := solution;
   ) else (
     let names = Heuristic.nv_of_names t names in
-    let solution = Heuristic.resolve `upgrade t
+    let solution = Heuristic.resolve `limited_upgrade t
       (List.map (fun (to_upgrade, to_keep) ->
         let wish_install = Heuristic.get_installed t to_keep in
         let wish_install =
@@ -1670,7 +1670,7 @@ let upgrade names =
   );
   if !solution_found then
     let t = load_state () in
-    let reinstall = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) t.installed in
+    let reinstall = NV.Set.filter (fun nv -> not (NV.Set.mem nv t.installed)) t.reinstall in
     let reinstall_f = Path.C.reinstall t.compiler in
     if NV.Set.is_empty reinstall then
       Filename.remove reinstall_f
