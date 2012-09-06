@@ -1600,8 +1600,10 @@ let install names =
 
 let remove names =
   log "remove %s" (N.Set.to_string names);
-  if N.Set.mem (N.of_string Globals.default_package) names then
-    Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
+  let default_package = N.of_string Globals.default_package in
+  if N.Set.mem default_package names then
+    Globals.msg "Package %s can not be removed.\n" Globals.default_package;
+  let names = N.Set.filter (fun n -> n <> default_package) names in
   let t = update_available_current (load_state ()) in
   let wish_remove = Heuristic.nv_of_names t names in
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
@@ -1649,19 +1651,20 @@ let remove names =
                      wish_remove)) in
     let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
     let depends = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) depends in
-    let remaining = NV.Set.filter (fun nv -> not (NV.Set.mem nv depends)) t.installed in
-    log "depends=%s" (NV.Set.to_string depends);
-    log "remaining=%s" (NV.Set.to_string remaining);
     let wish_remove = Heuristic.apply Heuristic.v_eq wish_remove in
-    let remaining = NV.Set.elements remaining in
     let _solution = Heuristic.resolve `remove t
       (List.map 
-         (fun f_h -> 
-           { wish_install = List.rev_map (fun nv -> f_h (NV.name nv) (NV.version nv)) remaining
+         (fun f_h ->
+           let installed = Heuristic.get_installed t f_h in
+           let installed =
+             N.Map.filter
+               (fun n _ -> not (NV.Set.exists (fun nv -> NV.name nv = n) depends))
+               installed in
+           { wish_install = N.Map.values installed
            ; wish_remove
            ; wish_upgrade = [] })
-         [ Heuristic.vpkg_of_nv_eq
-         ; fun n _ -> Heuristic.vpkg_of_nv_any n ]) in
+         [ Heuristic.v_eq
+         ; Heuristic.v_any ]) in
     ())
 
 let upgrade names =
