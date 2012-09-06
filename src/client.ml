@@ -1588,15 +1588,17 @@ let remove names =
   if N.Set.mem (N.of_string Globals.default_package) names then
     Globals.error_and_exit "Package %s can not be removed" Globals.default_package;
   let t = update_available_current (load_state ()) in
-  let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) (get_available_current t) []) in
   let wish_remove = Heuristic.nv_of_names t names in
   log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
-  let whish_remove, does_not_exist =
-    let aux (whish_remove, does_not_exist) c nv =
-      if not (NV.Set.mem nv (get_available_current t)) then
-        (whish_remove, nv :: does_not_exist)
+  let whish_remove, not_installed, does_not_exist =
+    let aux (whish_remove, not_installed, does_not_exist) c nv =
+      let name = NV.name nv in
+      if not (NV.Set.exists (fun nv -> NV.name nv = name) t.installed) then
+        (whish_remove, N.Set.add name not_installed, does_not_exist)
+      else if not (NV.Set.mem nv (get_available_current t)) then
+        (whish_remove, not_installed, nv :: does_not_exist)
       else
-        (c :: whish_remove, does_not_exist) in
+        (c :: whish_remove, not_installed, does_not_exist) in
     List.fold_left
       (fun accu c ->
         match c with
@@ -1606,11 +1608,25 @@ let remove names =
             match find_available_package_by_name t n with
             | None    -> accu
             | Some vs ->  NV.Set.fold (fun v accu -> aux accu c v) vs accu
-      ) ([], []) wish_remove in
+      ) ([], N.Set.empty, []) wish_remove in
 
-  List.iter (proceed_todelete t) does_not_exist;
+  if does_not_exist <> [] then (
+    List.iter (proceed_todelete t) does_not_exist;
+    let installed_f = Path.C.installed t.compiler in
+    let installed = File.Installed.read installed_f in
+    let installed = NV.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in
+    File.Installed.write installed_f installed;
+  );
+
+  if not (N.Set.is_empty not_installed) then (
+    if N.Set.cardinal not_installed = 1 then
+      Globals.msg "%s is not installed.\n" (N.to_string (N.Set.choose not_installed))
+    else
+      Globals.msg "%s are not installed.\n" (N.Set.to_string not_installed)
+  );
 
   if whish_remove <> [] then (
+    let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) (get_available_current t) []) in
     let depends =
       Solver.filter_forward_dependencies ~depopts:true universe
         (Solver.P (List.rev_map
