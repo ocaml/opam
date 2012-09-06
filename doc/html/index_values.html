@@ -328,7 +328,7 @@ Archive checksum
 Change file permissions
 </div>
 </td></tr>
-<tr><td><a href="Types.ABSTRACT.Set.html#VALchoose_one">choose_one</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
+<tr><td><a href="Types.SET.html#VALchoose_one">choose_one</a> [<a href="Types.SET.html">Types.SET</a>]</td>
 <td><div class="info">
 Return one element.
 </div>
@@ -744,6 +744,11 @@ Same as <code class="code">filter_backward_dependencies</code> but for forward
     dependencies
 </div>
 </td></tr>
+<tr><td><a href="Types.SET.html#VALfind">find</a> [<a href="Types.SET.html">Types.SET</a>]</td>
+<td><div class="info">
+Find an element in the list
+</div>
+</td></tr>
 <tr><td><a href="Run.html#VALflock">flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">flock ()</code> takes the global file lock.
@@ -814,7 +819,7 @@ Installed files for a given package:
 </td></tr>
 <tr><td><a href="Client.html#VALinstall">install</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Installs the given set of packages.
+Install the given set of packages.
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALinstall_dir">install_dir</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -1029,7 +1034,12 @@ Create a pair of strings
 Create a symbol
 </div>
 </td></tr>
-<tr><td><a href="Types.ABSTRACT.Set.html#VALmap">map</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
+<tr><td><a href="Path.C.html#VALman_dir">man_dir</a> [<a href="Path.C.html">Path.C</a>]</td>
+<td><div class="info">
+Man pages path: <i>$opam/$OVERSION/man/</i>
+</div>
+</td></tr>
+<tr><td><a href="Types.SET.html#VALmap">map</a> [<a href="Types.SET.html">Types.SET</a>]</td>
 <td><div class="info">
 auto-map
 </div>
@@ -1039,10 +1049,10 @@ auto-map
 MD5 digest or the remote file
 </div>
 </td></tr>
-<tr><td><a href="Types.ABSTRACT.Map.html#VALmerge_max">merge_max</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
+<tr><td><a href="Types.MAP.html#VALmerge_max">merge_max</a> [<a href="Types.MAP.html">Types.MAP</a>]</td>
 <td><div class="info">
 WARNING : Besides <code class="code">key</code>, the function could receive 
-        some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
+      some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
 </div>
 </td></tr>
 <tr><td><a href="File.Dot_install.Raw.html#VALmisc">misc</a> [<a href="File.Dot_install.Raw.html">File.Dot_install.Raw</a>]</td>
@@ -1148,7 +1158,12 @@ Create a new pair from a debian package
 Create a new pair from a filename.
 </div>
 </td></tr>
-<tr><td><a href="Types.ABSTRACT.Set.html#VALof_list">of_list</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
+<tr><td><a href="Types.MAP.html#VALof_list">of_list</a> [<a href="Types.MAP.html">Types.MAP</a>]</td>
+<td><div class="info">
+Convert an assoc list to a map
+</div>
+</td></tr>
+<tr><td><a href="Types.SET.html#VALof_list">of_list</a> [<a href="Types.SET.html">Types.SET</a>]</td>
 <td><div class="info">
 Make a set from a list
 </div>
@@ -1432,6 +1447,11 @@ Packages to reinstall on next upgrade:
       <i>$opam/$OVERSION/reinstall</i>
 </div>
 </td></tr>
+<tr><td><a href="Client.html#VALreinstall">reinstall</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Reinstall the given set of packages.
+</div>
+</td></tr>
 <tr><td><a href="Client.html#VALremote">remote</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
 Manage remote repositories.
@@ -1454,7 +1474,7 @@ List of command to run for removing the package
 </td></tr>
 <tr><td><a href="Client.html#VALremove">remove</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Removes the given set of packages.
+Remove the given set of packages.
 </div>
 </td></tr>
 <tr><td><a href="Run.html#VALremove_dir">remove_dir</a> [<a href="Run.html">Run</a>]</td>
@@ -1710,19 +1730,21 @@ Convert to Debian packages to feed the solver
 Return the file contents
 </div>
 </td></tr>
-<tr><td><a href="Types.ABSTRACT.Map.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
+<tr><td><a href="Types.OrderedType.html#VALto_string">to_string</a> [<a href="Types.OrderedType.html">Types.OrderedType</a>]</td>
+<td></td></tr>
+<tr><td><a href="Types.ABSTRACT.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.html">Types.ABSTRACT</a>]</td>
+<td><div class="info">
+Convert an abstract value to a string
+</div>
+</td></tr>
+<tr><td><a href="Types.MAP.html#VALto_string">to_string</a> [<a href="Types.MAP.html">Types.MAP</a>]</td>
 <td><div class="info">
 Pretty-printing
 </div>
 </td></tr>
-<tr><td><a href="Types.ABSTRACT.Set.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.Set.html">Types.ABSTRACT.Set</a>]</td>
+<tr><td><a href="Types.SET.html#VALto_string">to_string</a> [<a href="Types.SET.html">Types.SET</a>]</td>
 <td><div class="info">
 Pretty-print a set
-</div>
-</td></tr>
-<tr><td><a href="Types.ABSTRACT.html#VALto_string">to_string</a> [<a href="Types.ABSTRACT.html">Types.ABSTRACT</a>]</td>
-<td><div class="info">
-Convert an abstract value to a string
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALtoplevel">toplevel</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -1769,7 +1791,7 @@ Return the list of updated packages:
 </td></tr>
 <tr><td><a href="Client.html#VALupgrade">upgrade</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Finds a consistent state where most of the installed packages are
+Find a consistent state where most of the installed packages are
     upgraded to their latest version.
 </div>
 </td></tr>
@@ -1807,7 +1829,7 @@ URL address
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>
-<tr><td><a href="Types.ABSTRACT.Map.html#VALvalues">values</a> [<a href="Types.ABSTRACT.Map.html">Types.ABSTRACT.Map</a>]</td>
+<tr><td><a href="Types.MAP.html#VALvalues">values</a> [<a href="Types.MAP.html">Types.MAP</a>]</td>
 <td><div class="info">
 Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.
 </div>

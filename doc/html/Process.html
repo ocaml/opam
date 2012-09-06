@@ -88,7 +88,7 @@
 The type for processes<br>
 </div>
 
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?info:string -><br>       ?stdout:string -><br>       ?stderr:string -> ?env:string array -> string -> string list -> <a href="Process.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?info:string -><br>       ?stdout:string -><br>       ?stderr:string -><br>       ?env:string array -> verbose:bool -> string -> string list -> <a href="Process.html#TYPEt">t</a></code></pre><div class="info">
 <code class="code">create cmd args</code> create a new process to execute the command
     <code class="code">cmd</code> with arguments <code class="code">args</code>.  If stdout/stderr are set, the
     channels are redirected to files. The current environment can also
@@ -147,7 +147,7 @@ The type for result processes<br>
 <code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results.<br>
 <b>Raises</b> <code>Global.Exit</code> as only possible error<br>
 </div>
-<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?env:string array -> name:string -> string -> string list -> <a href="Process.html#TYPEresult">result</a></code></pre><div class="info">
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?env:string array -><br>       verbose:bool -> name:string -> string -> string list -> <a href="Process.html#TYPEresult">result</a></code></pre><div class="info">
 <code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
     arguments <code class="code">args</code>. It waits until the process is finished. The file
     <code class="code">name.out</code>, <code class="code">name.err</code> and <code class="code">name.info</code> are created, which contains

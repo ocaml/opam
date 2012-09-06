@@ -96,10 +96,10 @@ Return the path where ocamlc library is installed<br>
 a command is a list of words<br>
 </div>
 
-<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> int</code></pre><div class="info">
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> int</code></pre><div class="info">
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code>. Return the exit code.<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> int</code></pre><div class="info">
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> int</code></pre><div class="info">
 <code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning. 
     It stops whenever one command fails.<br>

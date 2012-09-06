@@ -38,10 +38,19 @@
 <hr width="100%">
 <br>
 <span id="2_Abstracttypes"><h2>Abstract types</h2></span><br>
+<pre><span class="keyword">module type</span> <a href="Types.SET.html">SET</a> = <code class="code">sig</code> <a href="Types.SET.html">..</a> <code class="code">end</code></pre><div class="info">
+Collection of abstract values
+</div>
+<pre><span class="keyword">module type</span> <a href="Types.MAP.html">MAP</a> = <code class="code">sig</code> <a href="Types.MAP.html">..</a> <code class="code">end</code></pre><div class="info">
+Dictionaries of abstract values
+</div>
 <pre><span class="keyword">module type</span> <a href="Types.ABSTRACT.html">ABSTRACT</a> = <code class="code">sig</code> <a href="Types.ABSTRACT.html">..</a> <code class="code">end</code></pre><div class="info">
 All abstract types should implement this signature
 </div>
-<br>
+<pre><span class="keyword">module type</span> <a href="Types.OrderedType.html">OrderedType</a> = <code class="code">sig</code> <a href="Types.OrderedType.html">..</a> <code class="code">end</code></pre><div class="info">
+Extended sets and maps
+</div>
+<pre><span class="keyword">module</span> <a href="Types.Set.html">Set</a>: <code class="code">sig</code> <a href="Types.Set.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="Types.Map.html">Map</a>: <code class="code">sig</code> <a href="Types.Map.html">..</a> <code class="code">end</code></pre><br>
 <span id="2_Filenames"><h2>Filenames</h2></span><br>
 <pre><span class="keyword">module</span> <a href="Types.Basename.html">Basename</a>: <code class="type"><a href="Types.ABSTRACT.html">ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
 Basenames

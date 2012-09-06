@@ -40,7 +40,7 @@ Initializes the client a consistent state.
 </ul>
 <br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">bool -> bool -> string -> unit</code></pre><div class="info">
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -> installed_only:bool -> name_only:bool -> string -> unit</code></pre><div class="info">
 Displays all available packages that matches <code class="code">string</code>.<br>
 </div>
 <pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">Types.N.t -> unit</code></pre><div class="info">
@@ -51,14 +51,19 @@ Depending on request, returns options or directories where the
     package is installed.<br>
 </div>
 <pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">Types.N.Set.t -> unit</code></pre><div class="info">
-Installs the given set of packages. Take the global file lock.<br>
+Install the given set of packages. Take the global file lock.<br>
+</div>
+<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type">Types.N.Set.t -> unit</code></pre><div class="info">
+Reinstall the given set of packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Refresh the available packages. Take the global file lock.<br>
 </div>
-<pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type">unit -> unit</code></pre><div class="info">
-Finds a consistent state where most of the installed packages are
-    upgraded to their latest version. Take the global file lock.<br>
+<pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type">Types.N.Set.t -> unit</code></pre><div class="info">
+Find a consistent state where most of the installed packages are
+    upgraded to their latest version.
+    If no package packages are specified then try to upgrade everything.
+    Take the global file lock.<br>
 </div>
 <pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="Types.html#TYPEupload">Types.upload</a> -> string option -> unit</code></pre><div class="info">
 Upload a package to a remote repository. If repo is <code class="code">None</code> then it
@@ -67,12 +72,12 @@ Upload a package to a remote repository. If repo is <code class="code">None</cod
     name. Take the global file lock.<br>
 </div>
 <pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">Types.N.Set.t -> unit</code></pre><div class="info">
-Removes the given set of packages. Take the global file lock.<br>
+Remove the given set of packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="Types.html#TYPEremote">Types.remote</a> -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> Types.Alias.t -> Types.OCaml_V.t -> unit</code></pre><div class="info">
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">clone:bool -> quiet:bool -> Types.Alias.t -> Types.OCaml_V.t -> unit</code></pre><div class="info">
 <code class="code">switch and_clone alias descr</code> switch to an OCaml compiler 
     and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>. It creates
     <i>$opam/$alias</i> if it does not exists by reading the contents
