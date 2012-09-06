@@ -49,6 +49,9 @@ module C: sig
   (** Documentation path: {i $opam/$OVERSION/doc/} *)
   val doc_dir: t -> dirname
 
+  (** Man pages path: {i $opam/$OVERSION/man/} *)
+  val man_dir: t -> dirname
+
   (** Installed binaries: {i $opam/$OVERSION/bin} *)
   val bin: t -> dirname
 
