@@ -1134,27 +1134,38 @@ let rec proceed_tochange t nv_old nv =
   | Some nv_old -> proceed_todelete t nv_old
   | None        -> ());
 
-  (* Then, untar the archive *)
-  let p_build = extract_package t nv in
   let opam = File.OPAM.read (Path.G.opam t.global nv) in
-
-  (* Substitute the configuration files. We should be in the right
-     directory to get the correct absolute path for the substitution
-     files (see [substitute_file] and [Filename.of_basename]. *)
-  Dirname.chdir (Path.C.build t.compiler nv);
-  List.iter (substitute_file t) (File.OPAM.substs opam);
 
   (* Get the env variables set up in the compiler description file *)
   let env0 = get_env t in
   let env = update_env t env0 (File.OPAM.build_env opam) in
 
-  (* Generate an environnement file *)
-  let env_f = Path.C.build_env t.compiler nv in
-  File.Env.write env_f env.new_env;
+  (* Prepare the package for the build.
+     This function is run before the build and after an error has
+     occured, to help debugging. *)
+  let prepare_package () =
+    (* First, untar the archive *)
+    let p_build = extract_package t nv in
+
+    (* Substitute the configuration files. We should be in the right
+       directory to get the correct absolute path for the substitution
+       files (see [substitute_file] and [Filename.of_basename]. *)
+    Dirname.chdir (Path.C.build t.compiler nv);
+    List.iter (substitute_file t) (File.OPAM.substs opam);
+
+    (* Generate an environnement file *)
+    let env_f = Path.C.build_env t.compiler nv in
+    File.Env.write env_f env.new_env;
+
+    p_build in
+
+  let p_build = prepare_package () in
 
   (* Call the build script and copy the output files *)
-  let commands = List.map (List.map (substitute_string t))
-    (File.OPAM.build opam) in
+  let commands =
+    List.map
+      (List.map (substitute_string t))
+      (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s);
   let err =
@@ -1166,13 +1177,13 @@ let rec proceed_tochange t nv_old nv =
   if err = 0 then
     try proceed_toinstall t nv
     with e ->
-      Globals.error "while copying some files of %S" (NV.to_string nv);
       proceed_todelete t nv;
-      let _build = extract_package t nv in
+      let p_build = prepare_package () in
+      Globals.error "Installation failed in %s." (Dirname.to_string p_build);
       raise e
   else (
     proceed_todelete t nv;
-    let p_build = extract_package t nv in
+    let p_build = prepare_package () in
     match nv_old with 
     | None        ->
         Globals.error_and_exit "Compilation failed in %s." (Dirname.to_string p_build)
