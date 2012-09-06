@@ -228,7 +228,7 @@ let mem_installed_package_by_name t name =
   not (NV.Set.is_empty (NV.Set.filter (fun nv -> NV.name nv = name) t.installed))
 
 let find_installed_package_by_name t name =
-  try NV.Set.choose (NV.Set.filter (fun nv -> NV.name nv = name) t.installed)
+  try NV.Set.find (fun nv -> NV.name nv = name) t.installed
   with Not_found ->
     Globals.error_and_exit "Package %s is not installed" (N.to_string name)
 
@@ -1477,12 +1477,7 @@ module Heuristic = struct
       List.fold_left
         (fun solution_found request ->
           if not solution_found then
-            match 
-              Solver.resolve
-                (Solver.U l_pkg) 
-                request
-                (match action_k with `upgrade reinstall -> reinstall | _ -> NV.Set.empty) 
-            with
+            match Solver.resolve (Solver.U l_pkg) request t.installed with
             | []  -> let _ = log "heuristic with no solution" in false
             | sol -> apply_solutions t sol
           else

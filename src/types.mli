@@ -34,6 +34,9 @@ module type SET = sig
   (** Pretty-print a set *)
   val to_string: t -> string
 
+  (** Find an element in the list *)
+  val find: (elt -> bool) -> t -> elt
+
 end               
 
 (** Dictionaries of abstract values *)

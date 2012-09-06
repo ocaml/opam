@@ -23,13 +23,18 @@ type action = (* NV.t internal_action *)
   | To_delete of NV.t
   | To_recompile of NV.t
 
-let map_reinstall reinstall a =
+let map_reinstall ~installed a =
   match a with
   | To_change (None, nv) ->
-      if NV.Set.mem nv reinstall then
+      if NV.Set.mem nv installed then
         To_recompile nv
       else
-        a
+        let name = NV.name nv in
+        if NV.Set.exists (fun nv -> NV.name nv = name) installed then
+          let old_nv = NV.Set.find (fun nv -> NV.name nv = name) installed in
+          To_change (Some old_nv, nv)
+        else
+          a
   | _ -> a
 
 let string_of_action = function
@@ -73,9 +78,9 @@ module PA_graph = struct
   end)
   include PG
 
-  let iter_update_reinstall reinstall g =
+  let iter_update_reinstall ~installed g =
     PG.iter_vertex (fun v ->
-      v.action <- map_reinstall reinstall v.action
+      v.action <- map_reinstall ~installed v.action
     ) g
 
 end
@@ -547,7 +552,7 @@ struct
       (fun pkg_set -> List.filter (fun p -> PkgSet.mem p pkg_set))
       (fun x -> x)
 
-  let resolve (U l_pkg_pb) req reinstall =
+  let resolve (U l_pkg_pb) req installed =
     (* filter-out the default package from the universe *)
     let l_pkg_pb =
       List.filter
@@ -711,7 +716,7 @@ struct
                 with Not_found ->
                   ())
               graph_toinstall;
-            PA_graph.iter_update_reinstall reinstall graph;
+            PA_graph.iter_update_reinstall ~installed graph;
             { to_remove = List.map package_map to_remove
             ; to_add = graph } in
 

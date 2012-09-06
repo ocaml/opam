@@ -21,6 +21,7 @@ module type SET = sig
   val choose_one : t -> elt
   val of_list: elt list -> t
   val to_string: t -> string
+  val find: (elt -> bool) -> t -> elt
 end               
 module type MAP = sig
   include Map.S
@@ -65,6 +66,9 @@ module Set = struct
 
     let map f t =
       of_list (List.map f (elements t))
+
+    let find fn s =
+      choose (filter fn s)
 
   end
 

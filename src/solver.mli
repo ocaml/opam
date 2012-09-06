@@ -85,7 +85,7 @@ type packages = P of package list
 
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description.  An empty [list] : No solution
-    found. The last argument is the set of packages to reinstall.
+    found. The last argument is the set of installed packages.
 
     Every element in the solution [list] satisfies the problem given.
     For the ordering, the first element in the list
