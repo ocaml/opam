@@ -147,7 +147,7 @@ module G = struct
   let repo_index t = t / "repo" // "index"
 
   let available_aliases t = 
-    let l = List.map fst (File.Aliases.read (aliases t)) in
+    let l = List.map fst (File.Aliases.safe_read (aliases t)) in
     Alias.Set.of_list l
 end
 

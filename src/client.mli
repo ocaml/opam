@@ -43,7 +43,7 @@ val install : N.Set.t -> unit
 val reinstall : N.Set.t -> unit
 
 (** Refresh the available packages. Take the global file lock. *)
-val update : unit -> unit
+val update : string list -> unit
 
 (** Find a consistent state where most of the installed packages are
     upgraded to their latest version.

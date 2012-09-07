@@ -248,12 +248,12 @@ let reinstall = {
 (* opam update *)
 let update = {
   name     = "update";
-  usage    = "[package]+";
+  usage    = "[repo]+";
   synopsis = "Update the installed package to latest version";
   help     = "";
   specs    = [];
-  anon     = noanon "update";
-  main     = Client.update;
+  anon;
+  main     = parse_args Client.update
 }
 
 (* opam upgrade *)
