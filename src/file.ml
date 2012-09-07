@@ -1125,7 +1125,7 @@ module Comp = struct
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
     let src       = assoc_default (Filename.raw "") s s_src (parse_string |> Filename.raw) in
-    let patches   = assoc_list s s_patches (parse_list (parse_string |> Filename.of_string)) in
+    let patches   = assoc_list s s_patches (parse_list (parse_string |> Filename.raw)) in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
     let build     = assoc_list s s_build (parse_list parse_string_list) in
