@@ -56,7 +56,7 @@ module Config: sig
   val with_repositories: t -> repository list -> t
 
   (** system-wide's OCaml version updates *)
-  val with_system_ocaml_version: t -> OCaml_V.t option -> t
+  val with_system_ocaml_version: t -> OCaml_V.t -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> OPAM_V.t

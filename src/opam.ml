@@ -76,7 +76,6 @@ let guess_repository_kind kind address =
 (* opam init [-kind $kind] $repo $adress *)
 let init = 
   let kind = ref None in
-  let alias = ref None in
   let comp = ref None in
   let cores = ref Globals.default_cores in
 {
@@ -86,7 +85,6 @@ let init =
   help     = "Create the initial config files";
   specs    = [
     ("-comp" , Arg.String (fun s -> comp := Some (OCaml_V.of_string s)), " Which compiler version to use");
-    ("-alias", Arg.String (fun s -> alias := Some (Alias.of_string s)), " Set the compiler alias name");
     ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
     ("-kind" , Arg.String (fun s -> kind := Some s) , " Set the repository kind");
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
@@ -95,16 +93,16 @@ let init =
   main     =
     parse_args (function
     | [] ->
-        Client.init Repository.default !alias !comp !cores
+        Client.init Repository.default !comp !cores
     | [address] ->
         let name = Globals.default_repository_name in
         let kind = guess_repository_kind !kind address in
         let repo = Repository.create ~name ~address ~kind in
-        Client.init repo !alias !comp !cores
+        Client.init repo !comp !cores
     | [name; address] ->
         let kind = guess_repository_kind !kind address in
         let repo = Repository.create ~name ~address ~kind in
-        Client.init repo !alias !comp !cores
+        Client.init repo !comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
 }
 
@@ -346,30 +344,58 @@ let remote =
 
 (* opam switch [-clone] OVERSION *)
 let switch =
-  let command : [`switch|`list] ref = ref `switch in
-  let clone = ref false in
-  let alias = ref "" in
-  let set c () = command := c in
+  let alias_of = ref "" in
+  let command = ref `switch in
+  let set c () =
+    if !command <> `switch then
+      bad_argument "switch" "two many sub-commands";
+    command := c in
+  let no_alias_of () =
+    if !alias_of <> "" then
+      bad_argument "switch" "invalid -alias-of option" in
 {
   name     = "switch";
   usage    = "[compiler-name]";
-  synopsis = "Switch to an other compiler version";
+  synopsis = "Manage multiple installation of compilers";
   help     = "";
   specs    = [
-    ("-clone" , Arg.Set clone        , " Try to keep the same installed packages");
-    ("-list"  , Arg.Unit (set `list) , " List the available compiler descriptions");
-    ("-alias" , Arg.Set_string alias , " Set the compiler name");
+    ("-alias-of"        , Arg.Set_string alias_of        , " Compiler name");
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
+    ("-install"         , Arg.Unit (set `install)        , " Install the given compiler");
+    ("-remove"          , Arg.Unit (set `remove)         , " Remove the given compiler");
+    ("-clone"           , Arg.Unit (set `clone)          , " Clone the content of the given alias");
+    ("-reinstall"       , Arg.Unit (set `reinstall)      , " Reinstall the given compiler");
+    ("-list"            , Arg.Unit (set `list)           , " List the available compilers");
+    ("-current"         , Arg.Unit (set `current)        , " Display the current compiler");
   ];
   anon;
-  main     = parse_args (fun args ->
+  main     = parse_args (function args ->
     match !command, args with
-    | `list  , []     -> Client.compiler_list ()
-    | `switch, []     -> bad_argument "switch" "Compiler name is missing"
-    | `switch, [name] ->
-        let alias = if !alias = "" then name else !alias in
-        Client.switch ~clone:!clone ~quiet:!quiet (Alias.of_string alias) (OCaml_V.of_string name)
-    | _      -> bad_argument "switch" "Too many compiler names")
+    | `install, [alias] ->
+        let comp = match !alias_of with
+          | ""   -> OCaml_V.of_string alias
+          | comp -> OCaml_V.of_string comp in
+        Client.compiler_install !quiet (Alias.of_string alias) comp
+    | `clone, [alias] ->
+        no_alias_of ();
+        Client.compiler_clone  (Alias.of_string alias)
+    | `remove, aliases ->
+        no_alias_of ();
+        List.iter (fun alias -> Client.compiler_remove (Alias.of_string alias)) aliases
+    | `reinstall, [alias] ->
+        no_alias_of ();
+        Client.compiler_reinstall (Alias.of_string alias)
+    | `list, [] ->
+        no_alias_of ();
+        Client.compiler_list ()
+    | `current, [] ->
+        no_alias_of ();
+        Client.compiler_current ()
+    | `switch, [alias] ->
+        no_alias_of ();
+        Client.compiler_switch (Alias.of_string alias)
+    | _ -> bad_argument "switch" "too many arguments"
+  )
 }
 
 (* opam pin [-list|<package> <version>|<package> <path>] *)

@@ -401,8 +401,8 @@ module Config = struct
     }
 
     let with_repositories t repositories = { t with repositories }
-    let with_ocaml_version t ocaml_version = { t with ocaml_version = Some ocaml_version }
-    let with_system_ocaml_version t system_ocaml_version = { t with system_ocaml_version }
+    let with_ocaml_version t v = { t with ocaml_version = Some v }
+    let with_system_ocaml_version t v = { t with system_ocaml_version = Some v}
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories

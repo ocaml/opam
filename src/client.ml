@@ -74,7 +74,7 @@ let print_state t =
   log "COMPILER  : %s" (Dirname.to_string (Path.C.root t.compiler));
   log "REPO      : %s" (string_of_repos t.repositories);
   log "AVAILABLE : %s" (NV.Set.to_string t.available);
-  log "AVAILABLE_CURRENT : %s" (match t.available_current with None -> "<none>" | Some set -> NV.Set.to_string set);
+  log "AV_CURRENT: %s" (match t.available_current with None -> "<none>" | Some set -> NV.Set.to_string set);
   log "INSTALLED : %s" (NV.Set.to_string t.installed);
   log "REINSTALL : %s" (NV.Set.to_string t.reinstall);
   log "REPO_INDEX: %s" (N.Map.to_string (String.concat ",") t.repo_index)
@@ -632,127 +632,101 @@ let add_alias alias ocaml_version =
     File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
   end
 
-(* We assume that we have the right ocaml-version in $opam/config. Then we:
-   - create $opam/$alias
-   - compiles and install $opam/compiler/$descr.comp
-   Some explanations:
-   - [f_exists] is called if alias already exists
-   - if [default_allowed] is set, then 'system' is an allowed alias argument
-*)
-let init_ocaml t quiet f_exists alias default_allowed ocaml_version =
-  log "init_ocaml";
+(* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[alias]
+   - update $opam/alias
+   - update $opam/config *)
+let init_ocaml t quiet alias ocaml_version =
+  log "init_ocaml alias=%s ocaml_version=%s"
+    (Alias.to_string alias)
+    (OCaml_V.to_string ocaml_version);
 
-  let default = OCaml_V.of_string Globals.default_compiler_version in
-  let system_ocaml_version, ocaml_version = 
-    let current () =
-      match OCaml_V.current () with
-        | None -> Globals.error_and_exit "No OCaml compiler found in path"
-        | Some system_ocaml -> Some system_ocaml, default in
+  if ocaml_version = OCaml_V.of_string Globals.default_compiler_version then
+    create_default_compiler_description t;
 
-    match ocaml_version with
-      | None -> current ()
-      | Some ocaml_version when default_allowed && ocaml_version = default -> current ()
-      | Some ocaml_version -> 
-          let comp_f = Path.G.compiler t.global ocaml_version in
-          if not default_allowed && ocaml_version = default || not (Filename.exists comp_f) then 
-            begin
-              Globals.msg
-                "  %S is not a valid compiler description%s. The available compilers descriptions are:\n"
-                (OCaml_V.to_string ocaml_version)
-                (if ocaml_version = default then " (because it is a reserved name)" else "");
-              OCaml_V.Set.iter
-                (fun v -> Globals.msg "    - %s\n" (OCaml_V.to_string v))
-                (Path.G.available_compilers t.global);
-              Globals.exit 2
-            end 
-          else
-            None, ocaml_version in
-
-  let alias = 
-    match alias with 
-      | None -> Alias.of_string (OCaml_V.to_string ocaml_version)
-      | Some alias -> alias in
-
-  log "init_ocaml (alias=%s, ocaml_version=%s)" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
+  let comp_f = Path.G.compiler t.global ocaml_version in
+  if not (Filename.exists comp_f) then (
+    Globals.msg "Cannot find %s: %s is not a valid compiler name.\n"
+      (Filename.to_string comp_f)
+      (OCaml_V.to_string ocaml_version);
+    Globals.exit 0;
+  );
 
   let alias_p = Path.C.create alias in
   let alias_p_dir = Path.C.root alias_p in
-  if Dirname.exists alias_p_dir then
-    f_exists alias_p_dir
-  else
-  begin
-    Dirname.mkdir alias_p_dir;
-    (if ocaml_version <> default then 
-    try
-      let comp_f = Path.G.compiler t.global ocaml_version in
-      let comp = File.Comp.read comp_f in
-      if not (File.Comp.preinstalled comp) then begin
+  if Dirname.exists alias_p_dir then (
+    Globals.msg "The compiler %s is already installed.\n" (Alias.to_string alias);
+    Globals.exit 0;
+  );
+  Dirname.mkdir alias_p_dir;
 
-        Globals.verbose := not quiet;
+  let comp = File.Comp.read comp_f in
+  begin try
+    if not (File.Comp.preinstalled comp) then begin
 
-        (* Install the compiler *)
-        let comp_src = File.Comp.src comp in
-        let build_dir = Path.C.build_ocaml alias_p in
-        Dirname.with_tmp_dir (fun download_dir ->
-          begin match Filename.download comp_src download_dir with
+      Globals.verbose := not quiet;
+
+      (* Install the compiler *)
+      let comp_src = File.Comp.src comp in
+      let build_dir = Path.C.build_ocaml alias_p in
+      Dirname.with_tmp_dir (fun download_dir ->
+        begin match Filename.download comp_src download_dir with
           | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string comp_src)
           | Some f -> Filename.extract f build_dir
-          end;
-          let patches = File.Comp.patches comp in
-              let patches =
-                Utils.filter_map (fun f ->
-                  match Filename.download f build_dir with
-                  | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string f) 
-                  | Some f -> Some f
-                ) patches in
-              List.iter (fun f ->
-                if not (Filename.patch f build_dir) then
-                  Globals.error_and_exit "Cannot apply %s" (Filename.to_string f)
-              ) patches;
-          let err =
-            let t = 
-              { t with
-                compiler = alias_p;
-                installed = 
-                  let name = N.of_string Globals.default_package in
-                  let version = V.of_string (Alias.to_string alias) in
-                  let nv = NV.create name version in
-                  NV.Set.add nv NV.Set.empty } in
-            install_conf_ocaml_config t;
-            if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
-              Dirname.exec build_dir
-                [ ( "./configure" :: File.Comp.configure comp )
-                  @ [ "-prefix";  Dirname.to_string alias_p_dir ]
-                (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-                (* NOTE In case it exists 2 '-prefix', in general the script
-                   ./configure will only consider the last one, others will be
-                   discarded. *)
-                ; ( "make" :: File.Comp.make comp )
-                ; [ "make" ; "install" ]
-                ]
-            end else begin
-              let builds =
-                List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-              Dirname.exec build_dir builds
-            end in
-          if err <> 0 then
-            Globals.error_and_exit
-              "The compilation of compiler version %s failed"
-              (OCaml_V.to_string ocaml_version)
-        )
-      end
-    with e -> 
-      if not !Globals.debug then
-      Dirname.rmdir alias_p_dir;
-      raise e);
-  end;
+        end;
+        let patches = File.Comp.patches comp in
+        let patches =
+          Utils.filter_map (fun f ->
+            match Filename.download f build_dir with
+            | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string f) 
+            | Some f -> Some f
+          ) patches in
+        List.iter (fun f ->
+          if not (Filename.patch f build_dir) then
+          Globals.error_and_exit "Cannot apply %s" (Filename.to_string f)
+        ) patches;
+        let err =
+          let t = 
+            { t with
+              compiler = alias_p;
+              installed = 
+                let name = N.of_string Globals.default_package in
+                let version = V.of_string (Alias.to_string alias) in
+                let nv = NV.create name version in
+                NV.Set.add nv NV.Set.empty } in
+          install_conf_ocaml_config t;
+          if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
+            Dirname.exec build_dir
+              [ ( "./configure" :: File.Comp.configure comp )
+                @ [ "-prefix";  Dirname.to_string alias_p_dir ]
+              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+              (* NOTE In case it exists 2 '-prefix', in general the script
+                 ./configure will only consider the last one, others will be
+                 discarded. *)
+              ; ( "make" :: File.Comp.make comp )
+              ; [ "make" ; "install" ]
+              ]
+          end else begin
+            let builds =
+              List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+            Dirname.exec build_dir builds
+          end in
+        if err <> 0 then
+        Globals.error_and_exit
+          "The compilation of compiler version %s failed"
+          (OCaml_V.to_string ocaml_version)
+      )
+    end;
 
-  (* write the new version in the configuration file *)
-  let config = File.Config.with_ocaml_version t.config alias in
-  let config = File.Config.with_system_ocaml_version config system_ocaml_version in
-  File.Config.write (Path.G.config t.global) config;
-  add_alias alias ocaml_version;
-  ocaml_version
+    (* write the new version in the configuration file *)
+    let config = File.Config.with_ocaml_version t.config alias in
+    File.Config.write (Path.G.config t.global) config;
+    add_alias alias ocaml_version
+
+  with e -> 
+    if not !Globals.debug then
+      Dirname.rmdir alias_p_dir;
+    raise e
+  end
 
 let indent_left s nb =
   let nb = nb - String.length s in
@@ -1327,17 +1301,20 @@ module Heuristic = struct
     | None   -> vpkg_of_nv_eq n (V.Set.max_elt set)
     | Some v -> vpkg_of_nv_ge n v
 
-  let get_installed t f_h =
+  let get t packages f_h =
     let available = get_available_current t in
     let available_map = NV.to_map available in
-    let installed =
+    let packages =
       NV.Set.filter
         (fun nv -> NV.Set.mem nv available)
-        t.installed in
-    let installed_map = NV.to_map installed in
+        packages in
+    let map = NV.to_map packages in
     N.Map.mapi
       (fun n vs -> f_h (Some (V.Set.choose_one vs)) (N.Map.find n available_map) n)
-      installed_map
+      map
+
+  let get_installed t f_h =
+    get t t.installed f_h
 
   let get_comp_packages t ocaml_version f_h = 
     let comp_f = Path.G.compiler t.global ocaml_version in
@@ -1540,7 +1517,7 @@ module Heuristic = struct
 
 end
 
-let init repo alias ocaml_version cores =
+let init repo ocaml_version cores =
   log "init %s" (Repository.to_string repo);
   let root = Path.G.create () in
   let config_f = Path.G.config root in
@@ -1560,14 +1537,23 @@ let init repo alias ocaml_version cores =
     Dirname.mkdir (Path.G.compilers_dir root);
     let t = load_state () in
     update_repositories t ~show_compilers:false t.repositories;
-    let ocaml_version = init_ocaml t true
-      (fun alias_p -> 
-        Globals.error_and_exit "%s does not exist whereas %s already exists" 
-          (Filename.to_string config_f)
-          (Dirname.to_string alias_p)) 
-      alias
-      false
-      ocaml_version in
+    let system_ocaml_version = OCaml_V.current () in
+    begin match system_ocaml_version with
+      | None   -> ()
+      | Some v ->
+          let config = File.Config.with_system_ocaml_version t.config v in
+          File.Config.write (Path.G.config t.global) config
+    end;
+    let t = load_state () in
+    let ocaml_version = match ocaml_version, system_ocaml_version with
+      | None  , Some _ -> OCaml_V.of_string Globals.default_compiler_version
+      | Some v, _      -> v
+      | None  , None   ->
+          Globals.msg "No compiler found.\n";
+          Globals.exit 1 in
+    let alias = Alias.of_string (OCaml_V.to_string ocaml_version) in
+    let quiet = (system_ocaml_version = Some ocaml_version) in
+    init_ocaml t quiet alias ocaml_version;
     update_packages t ~show_packages:false;
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_comp_packages t ocaml_version Heuristic.v_any in
@@ -2108,92 +2094,116 @@ let compiler_list () =
     Globals.msg " %s %s\n" preinstalled (OCaml_V.to_string c)
   ) descrs
   
-let switch ~clone ~quiet alias ocaml_version =
-  log "switch %B %B %s %s" clone quiet
+let compiler_switch alias =
+  log "compiler_switch alias=%s" (Alias.to_string alias);
+  let t = load_state () in
+  let comp_p = Path.C.create alias in
+  let comp_dir = Path.C.root comp_p in
+  if not (Dirname.exists comp_dir) then (
+    Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
+    Globals.exit 1;
+  );
+  let config = File.Config.with_ocaml_version t.config alias in
+  File.Config.write (Path.G.config t.global) config;
+  print_env_warning ()
+
+let compiler_install quiet alias ocaml_version =
+  log "compiler_switch %b %s %s" quiet
     (Alias.to_string alias)
     (OCaml_V.to_string ocaml_version);
-  let t = load_state () in
 
   (* install the new OCaml version *)
-  let ocaml_version, exists = 
-    let exists = ref false in
-    let ocaml_version = 
-      init_ocaml t quiet (fun _ -> exists := true) (Some alias) true (Some ocaml_version) in
-    ocaml_version, !exists in
+  init_ocaml (load_state ()) quiet alias ocaml_version;
 
-  (* install new package
-     - the packages specified in the compiler description file if
-       the compiler was not previously installed
-     - also attempt to replicate the previous state, if required
-       with -clone *)
-  let t_new = update_available_current (load_state ()) in
-
-  let comp_constraints =
+  (* install the compiler packages *)
+  let t = update_available_current (load_state ()) in
+  let packages =
     N.Map.of_list
       (List.rev_map
          (function (name, _), _ as nv -> N.of_string name, nv)
-         (Heuristic.get_comp_packages t_new ocaml_version Heuristic.v_eq)) in
-
-  let clone_constraints =
-    if clone then 
-      (* we filter from "futur requested packages", 
-         packages that are present in the OLD version of OCaml
-         and absent in the NEW version of OCaml *)
-      let available = NV.to_map (get_available_current t_new) in
-      let new_installed = NV.to_map t_new.installed in
-      N.Map.mapi
-        (fun n _ -> 
-          Heuristic.v_eq
-            (if N.Map.mem n new_installed then
-                Some (V.Set.choose_one (N.Map.find n new_installed)) 
-             else
-                None)
-            (N.Map.find n available) 
-            n)
-        (NV.to_map t.installed)
-    else N.Map.empty in
-
-  let installed_constraints =
-    Heuristic.get_installed t_new Heuristic.v_eq in
-
-  let (++) c1 c2 = 
-    N.Map.merge_max
-      (fun pkg p_clone p_comp ->
-        (* NOTE 
-           - both [p_clone] and [p_comp] constraints are valid
-           - the intersection of these 2 constraints should not be empty *)
-        if p_clone = p_comp then 
-          Some p_comp
-        else
-          let () = Globals.warning "package %s : we reject the constraint to clone %s and we take the constraint from compiler %s" 
-            (N.to_string pkg) 
-            (string_of_atom_formula p_clone)
-            (string_of_atom_formula p_comp) in
-          (* we arbitrarily take the constraint from the compiler *)
-          Some p_comp)
-      c1 c2 in
-
-  let all_constraints = clone_constraints ++ comp_constraints ++ installed_constraints in
+         (Heuristic.get_comp_packages t ocaml_version Heuristic.v_eq)) in
 
   let is_ok =
     N.Map.for_all (fun n c ->
-      if mem_installed_package_by_name t n then
+      if mem_installed_package_by_name t n then (
         let nv = find_installed_package_by_name t n in
         c = Heuristic.vpkg_of_nv_eq n (NV.version nv)
-      else (
+      ) else (
         false
       )
-    ) all_constraints in
-
+    ) packages in
   if not is_ok then (
-    let _solution = Heuristic.resolve `switch t_new
-      [ { wish_install = N.Map.values all_constraints
+    let _solution = Heuristic.resolve `switch t
+      [ { wish_install = N.Map.values packages
         ; wish_remove = [] 
         ; wish_upgrade = [] } ] in
     ()
   );
 
   print_env_warning ()
+
+let compiler_clone alias =
+  log "compiler_clone alias=%s" (Alias.to_string alias);
+  let t = update_available_current (load_state ()) in
+
+  let installed_in_alias =
+    let comp_p = Path.C.create alias in
+    if not (Dirname.exists (Path.C.root comp_p)) then (
+      Globals.msg "%s is not a valid compiler name.\n" (Alias.to_string alias);
+      Globals.exit 1;
+    );
+    File.Installed.safe_read (Path.C.installed comp_p) in
+
+  let new_packages = NV.Set.diff installed_in_alias t.installed in
+  let installed =
+    NV.Set.filter (fun nv ->
+      let name = NV.name nv in
+      not (NV.Set.exists (fun nv -> name = NV.name nv) new_packages)
+    ) t.installed in
+
+  let constraints f_h = Heuristic.get t (NV.Set.union new_packages installed) f_h in
+
+  let _solution = Heuristic.resolve `switch t
+    (List.map (fun f_h ->
+      { wish_install = N.Map.values (constraints f_h);
+        wish_remove  = [];
+        wish_upgrade = [] })
+     [ Heuristic.v_eq; Heuristic.v_ge; Heuristic.v_any ]
+    ) in
+  ()
+
+let compiler_current () =
+  let t = load_state () in
+  let current = File.Config.ocaml_version t.config in
+  Globals.msg "%s\n" (Alias.to_string current)
+
+let compiler_remove alias =
+  log "compiler_remove alias=%s" (Alias.to_string alias);
+  let t = load_state () in
+  let comp_p = Path.C.create alias in
+  let comp_dir = Path.C.root comp_p in
+  if not (Dirname.exists comp_dir) then (
+    Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
+    Globals.exit 1;
+  );
+  if File.Config.ocaml_version t.config = alias then (
+    Globals.msg "Cannot remove %s as it is the current compiler.\n" (Alias.to_string alias);
+    Globals.exit 1;
+  );
+  let aliases = List.filter (fun (a,_) -> a <> alias) t.aliases in
+  File.Aliases.write (Path.G.aliases t.global) aliases;
+  Dirname.rmdir comp_dir
+
+let compiler_reinstall alias =
+  log "compiler_remove alias=%s" (Alias.to_string alias);
+  let t = load_state () in
+  if not (List.mem_assoc alias t.aliases) then (
+    Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
+    Globals.exit 1;
+  );
+  let ocaml_version = List.assoc alias t.aliases in
+  compiler_remove alias;
+  compiler_install false alias ocaml_version
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
@@ -2228,8 +2238,20 @@ let remove name =
 let remote action =
   check (Write_lock (fun () -> remote action))
 
-let switch ~clone ~quiet alias ocaml_version =
-  check (Write_lock (fun () -> switch ~clone ~quiet alias ocaml_version))
+let compiler_switch alias =
+  check (Write_lock (fun () -> compiler_switch alias))
+
+let compiler_install quiet alias ocaml_version =
+  check (Write_lock (fun () -> compiler_install quiet alias ocaml_version))
+
+let compiler_reinstall alias =
+  check (Write_lock (fun () -> compiler_reinstall alias))
+
+let compiler_remove alias =
+  check (Write_lock (fun () -> compiler_remove alias))
+
+let compiler_clone alias =
+  check (Write_lock (fun () -> compiler_clone alias))
 
 let compiler_list () =
   check (Read_only compiler_list)

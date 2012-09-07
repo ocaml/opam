@@ -14,8 +14,6 @@ BINARIES  = opam-check opam
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-OCAMLVERSION = system
-
 # opam in the path should not be a requirement
 ENV  = OCAMLRUNPARAM=b OPAMDEBUG=2 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
 OPAM = $(ENV) opam --yes --root $(OPAM_ROOT)
@@ -198,14 +196,17 @@ downgrade:
 switch-alias:
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias P1.1 P2.1
-	$(OPAM) switch -alias test $(OCAMLVERSION) -clone -no-base-packages
-	$(CHECK) -l switch-alias-test P1.1 P2.1
-	$(OPAM) switch 4.00.0
+	$(OPAM) switch -install test -alias-of system -no-base-packages
+	$(OPAM)	switch -clone system
+	$(CHECK) -l switch-alias-clone P1.1 P2.1
+	$(OPAM) switch -install test2 -alias-of 4.00.0
 	$(OPAM) install P1
 	$(CHECK) -l switch-alias-4.00 P1.1
+	$(OPAM) switch system
+	$(OPAM) switch -remove test test2
 
 switch-env-packages:
-	$(OPAM) switch 3.12.1
+	$(OPAM) switch -install 3.12.1
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l switch-env-packages P1.1 P2.1 P3.1~weird-version.test P4.3
 else

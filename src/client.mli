@@ -20,10 +20,10 @@ open Types
 (** Initializes the client a consistent state.
     [init repo alias oversion cores] means:
     - [repo] is the initial repository description,
-    - [alias] the compiler alias
-    - [oversion] is the version of the compiler
+    - [oversion] is the version of the compiler. [None] means we
+      are using the system-wide installed compiler.
     - [cores] is the number of cores *)
-val init : repository -> Alias.t option -> OCaml_V.t option -> int -> unit
+val init : repository -> OCaml_V.t option -> int -> unit
 
 (** Displays all available packages that matches [string]. *)
 val list : print_short:bool -> installed_only:bool -> name_only:bool 
@@ -63,15 +63,26 @@ val remove : N.Set.t -> unit
 (** Manage remote repositories. Take the global file lock. *)
 val remote : remote -> unit
 
-(** [switch and_clone alias descr] switch to an OCaml compiler 
-    and clone at the end in case [and_clone] is [true]. It creates
-    {i $opam/$alias} if it does not exists by reading the contents
-    of {i $opam/compilers/$descr.comp}.
-    It takes the global file lock. *)
-val switch: clone:bool -> quiet:bool -> Alias.t -> OCaml_V.t -> unit
+(** Install the given compiler *)
+val compiler_install: bool -> Alias.t -> OCaml_V.t -> unit
+
+(** Clone the packages from the given compiler *)
+val compiler_clone: Alias.t -> unit
+
+(** Remove the given compiler *)
+val compiler_remove: Alias.t -> unit
+
+(** Switch to the given compiler *)
+val compiler_switch: Alias.t -> unit
+
+(** Reinstall the given compiler *)
+val compiler_reinstall: Alias.t -> unit
 
 (** [compiler_list] list the available compiler descriptions *)
 val compiler_list: unit -> unit
+
+(** [compiler_current] display the name of the current compiler *)
+val compiler_current: unit -> unit
 
 (** Pin a package to a specific version. Take the global file lock. *)
 val pin: pin -> unit
