@@ -17,6 +17,7 @@ things, used by Debian to manage their packages.
 To compile `opam`, simply run:
 
 ```
+$ ./configure # (or ./configure --prefix=$HOME if you want to install under your $HOME)
 $ make
 ```
 
@@ -30,20 +31,22 @@ If you don't have `curl` installed on your system, you can run
 
 ### Installing OPAM
 
-To install opam (under `/usr/local`) simply run:
+To install opam simply run:
+
+```
+$ make install
+```
+
+or
 
 ```
 $ sudo make install
 ```
 
-If you want to install OPAM under a different prefix:
+if you need root privileges.
 
-```
-$ make PREFIX=$HOME install
-```
-
-This way, opam binaries will be installed in `$HOME/bin`, and man
-pages will be located in `$HOME/share/man`.
+This way, opam binaries will be installed in `$prefix/bin`, where
+prefix might have been specified during the ./configure phase.
 
 ### Using opam
 
