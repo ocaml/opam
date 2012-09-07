@@ -1287,6 +1287,11 @@ let nv_of_version_constraint = function
   | V_any (n, _, Some v) -> NV.create n v
   | V_any (n, vs, None)  -> NV.create n (V.Set.choose vs)
 
+type solver_result =
+  | OK
+  | Aborted
+  | No_solution
+
 module Heuristic = struct
 
   let vpkg_of_n op name =
@@ -1510,29 +1515,28 @@ module Heuristic = struct
       | x :: xs ->
           let solution_found = apply_solution t x in
           if solution_found then
-            true
+            OK
           else
-            (* aux xs *) true
-      | [] -> false in
+            Aborted (* aux xs *)
+      | [] -> No_solution in
     aux
 
   let resolve action_k t l_request =
     let available = get_available_current t in
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
-    let solution_found =
-      List.fold_left
-        (fun solution_found request ->
-          if not solution_found then
-            match Solver.resolve (Solver.U l_pkg) request t.installed with
-            | []  -> let _ = log "heuristic with no solution" in false
-            | sol -> apply_solutions t sol
-          else
-            true)
-        false
-        l_request in
-    if not solution_found then
-      Globals.msg "No solution has been found.\n";
-    solution_found
+    let rec aux = function
+      | []                    -> No_solution
+      | request :: l_request ->
+          match Solver.resolve (Solver.U l_pkg) request t.installed with
+          | []  ->
+              log "heuristic with no solution";
+              aux l_request
+          | sol -> apply_solutions t sol in
+    match aux l_request with
+    | No_solution ->
+        Globals.msg "No solution has been found.\n";
+        No_solution
+    | result      -> result
 
 end
 
@@ -1712,9 +1716,11 @@ let remove names =
 let upgrade names =
   log "upgrade %s" (N.Set.to_string names);
   let t = update_available_current (load_state ()) in
-  let solution_found = ref false in
+  let reinstall = NV.Set.inter t.reinstall t.installed in
+  let to_not_reinstall = ref NV.Set.empty in
+  let solution_found = ref No_solution in
   if N.Set.is_empty names then (
-    let solution = Heuristic.resolve (`upgrade t.reinstall) t
+    let solution = Heuristic.resolve (`upgrade reinstall) t
       (List.map (fun to_upgrade ->
         { wish_install = [];
           wish_remove  = [];
@@ -1723,8 +1729,9 @@ let upgrade names =
     solution_found := solution;
   ) else (
     let names = Heuristic.nv_of_names t names in
-    let reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
-    let solution = Heuristic.resolve (`upgrade reinstall)  t
+    let partial_reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
+    to_not_reinstall := NV.Set.diff reinstall partial_reinstall;
+    let solution = Heuristic.resolve (`upgrade partial_reinstall)  t
       (List.map (fun (to_upgrade, to_keep) ->
         let wish_install = Heuristic.get_installed t to_keep in
         let wish_install =
@@ -1746,14 +1753,15 @@ let upgrade names =
       ) in
     solution_found := solution;
   );
-  if !solution_found then
-    let t = load_state () in
-    let reinstall = NV.Set.filter (fun nv -> not (NV.Set.mem nv t.installed)) t.reinstall in
-    let reinstall_f = Path.C.reinstall t.compiler in
-    if NV.Set.is_empty reinstall then
-      Filename.remove reinstall_f
-    else
-      File.Reinstall.write reinstall_f reinstall
+  let t = load_state () in
+  if !solution_found <> OK then
+    to_not_reinstall := reinstall;
+  let reinstall = NV.Set.inter t.installed !to_not_reinstall in
+  let reinstall_f = Path.C.reinstall t.compiler in
+  if NV.Set.is_empty reinstall then
+    Filename.remove reinstall_f
+  else
+    File.Reinstall.write reinstall_f reinstall
 
 let reinstall names =
   log "reinstall %s" (N.Set.to_string names);
