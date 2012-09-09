@@ -1066,9 +1066,7 @@ let proceed_todelete t nv =
   List.iter (fun r ->
     let repo = find_repository t r in
     let repo_p = Path.R.create repo in
-    let archive = Path.R.archive repo_p nv in
     let tmp_dir = Path.R.tmp_dir repo_p nv in
-    Filename.remove archive;
     Dirname.rmdir tmp_dir
   ) repos;
     
