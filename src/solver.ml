@@ -624,7 +624,8 @@ struct
 
             (** compute initial packages to add *)
             let map_add = 
-              PkgMap.of_list (Utils.filter_map (function 
+              PkgMap.of_list (Utils.filter_map (function
+                | I_to_change (None, _) when req_only_remove -> None
                 | I_to_change (_, pkg) as act -> Some (pkg, act)
                 | I_to_delete _ -> None
                 | I_to_recompile _ -> assert false) l) in
