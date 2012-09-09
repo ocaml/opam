@@ -19,7 +19,7 @@ type state = {
 
 let state_cache = ref []
 
-let make_state remote_path =
+let make_state ~download_index remote_path =
   if List.mem_assoc remote_path !state_cache then
     List.assoc remote_path !state_cache
   else (
@@ -30,28 +30,32 @@ let make_state remote_path =
     let local_index_file = local_path // "urls.txt" in
     let local_index_archive = local_path // "index.tar.gz" in
     let remote_index_archive = remote_path // "index.tar.gz" in
+    let index =
+      if download_index then (
+        Filename.remove local_index_file;
+        match Filename.download index_file local_path with
+        | None   -> Globals.error_and_exit "Cannot get urls.txt"
+        | Some f -> f
+      ) else
+        local_index_file in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
-      Filename.remove local_index_file;
-      match Filename.download index_file local_path with
-      | None            -> Globals.error_and_exit "Cannot get urls.txt"
-      | Some local_file ->
-          let urls = File.Urls_txt.read local_file in
-          let remote_local, local_remote, locals, perms, digests =
-            Remote_file.Set.fold (fun r (rl, lr, locals, perms, digests) ->
-              let base = Remote_file.base r in
-              let perm = match Remote_file.perm r with
-                | None  ->  0o640
-                | Some p -> p in
-              let digest = Remote_file.md5 r in
-              let remote = Filename.create remote_path base in
-              let local = Filename.create (Dirname.cwd()) base in
-              Filename.Map.add remote local rl,
-              Filename.Map.add local remote lr,
-              Filename.Set.add local locals,
-              (local, perm) :: perms,
-              (local, digest) :: digests
-            ) urls (Filename.Map.empty, Filename.Map.empty, Filename.Set.empty, [], []) in
-          remote_local, local_remote, locals, perms, digests in
+      let urls = File.Urls_txt.read index in
+      let remote_local, local_remote, locals, perms, digests =
+        Remote_file.Set.fold (fun r (rl, lr, locals, perms, digests) ->
+          let base = Remote_file.base r in
+          let perm = match Remote_file.perm r with
+            | None  ->  0o640
+            | Some p -> p in
+          let digest = Remote_file.md5 r in
+          let remote = Filename.create remote_path base in
+          let local = Filename.create (Dirname.cwd()) base in
+          Filename.Map.add remote local rl,
+          Filename.Map.add local remote lr,
+          Filename.Set.add local locals,
+          (local, perm) :: perms,
+          (local, digest) :: digests
+        ) urls (Filename.Map.empty, Filename.Map.empty, Filename.Set.empty, [], []) in
+      remote_local, local_remote, locals, perms, digests in
     let state = {
       remote_repo; remote_path; local_repo; local_path;
       index_file; local_index_archive; remote_index_archive;
@@ -70,7 +74,7 @@ let is_up_to_date state local_file =
 module B = struct
 
   let init address =
-    let state = make_state address in
+    let state = make_state ~download_index:true address in
     let warning () =
       Globals.msg "Cannot find index.tar.gz on the OPAM repository.\n\
                  Initialisation might take some time ...\n" in
@@ -90,7 +94,7 @@ module B = struct
     Filename.download remote_file local_dir
 
   let update address =
-    let state = make_state address in
+    let state = make_state ~download_index:true address in
     log "dir local_dir=%s remote_dir=%s"
       (Dirname.to_string state.local_path)
       (Dirname.to_string state.remote_path);
@@ -130,7 +134,7 @@ module B = struct
   let download_archive address nv =
     let remote_repo = Path.R.of_dirname address in
     let remote_file = Path.R.archive remote_repo nv in
-    let state = make_state address in
+    let state = make_state ~download_index:false address in
     if not (Filename.Map.mem remote_file state.remote_local) then
       Not_available
     else begin

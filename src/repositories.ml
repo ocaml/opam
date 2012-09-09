@@ -202,6 +202,7 @@ let download r nv =
   (* If the archive is on the server, download it directly *)
   match Dirname.in_dir local_dir (fun () -> download_archive r nv) with
   | Up_to_date local_file ->
+      Globals.msg "The archive for %s is in the local cache.\n" (NV.to_string nv);   
       log "The archive for %s is already downloaded and up-to-date"
         (NV.to_string nv)
   | Result local_file ->
