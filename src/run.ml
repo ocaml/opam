@@ -406,7 +406,7 @@ let system_ocamlc_where () =
       with Not_found -> "" in
     let path = Utils.reset_env_value ~prefix:!Globals.root_path path in
     match read_command_output ~path [ "ocamlc"; "-where" ] with
-    | h::_ -> Printf.eprintf "XXXX %s\n" h; Some (Utils.string_strip h)
+    | h::_ -> Some (Utils.string_strip h)
     | []   -> internal_error "ocamlc -where"
   with _ ->
     None
