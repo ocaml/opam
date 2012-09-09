@@ -5,46 +5,29 @@ let log fmt = Globals.log "GIT" fmt
 let git_fetch local_path remote_address =
   Globals.msg "Fetching %s ...\n" (Dirname.to_string remote_address);
   Dirname.in_dir local_path (fun () ->
-    let err = Run.command [ "git" ; "fetch" ; "origin" ] in
-    if err <> 0 then
-      Globals.error_and_exit
-        "Cannot fetch git repository %s"
-        (Dirname.to_string local_path)
+    Run.command [ "git" ; "fetch" ; "origin" ]
   )
 
 let git_merge local_path =
   Dirname.in_dir local_path (fun () ->
-      let err = Run.command [ "git" ; "merge" ; "origin/master" ] in
-      if err <> 0 then
-        Globals.error_and_exit
-          "Cannot update git repository %s"
-          (Dirname.to_string local_path)
-    )
+    Run.command [ "git" ; "merge" ; "origin/master" ]
+  )
 
 (* Return the list of modified files of the git repository located
    at [dirname] *)
 let git_diff local_path =
   Dirname.in_dir local_path (fun () ->
-    match
-      Run.read_command_output
-        [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ]
-    with
-    | Some fs -> Filename.Set.of_list (List.map Filename.of_string fs)
-    | None    ->
-        Globals.error_and_exit
-          "Cannot diff git repository %s"
-          (Dirname.to_string local_path)
+    let lines = Run.read_command_output
+      [ "git" ; "diff" ; "remotes/origin/master" ; "--name-only" ] in
+    Filename.Set.of_list (List.map Filename.of_string lines)
   )
 
 let git_init address =
   let repo = Dirname.to_string address in
-  let err =
-    Run.commands [
-      [ "git" ; "init" ] ;
-      [ "git" ; "remote" ; "add" ; "origin" ; repo ] ;
-    ] in
-  if err <> 0 then
-  Globals.error_and_exit "Cannot clone %s" repo
+  Run.commands [
+    [ "git" ; "init" ] ;
+    [ "git" ; "remote" ; "add" ; "origin" ; repo ] ;
+  ]
 
 let check_updates local_path remote_address=
   if Dirname.exists (local_path / ".git") then begin
@@ -112,14 +95,14 @@ module B = struct
 
   let upload_dir ~address dirname =
     let files = Filename.rec_list dirname in
-    let err = Run.commands [
-      [ "git"; "add"; Dirname.to_string dirname; ];
-      [ "git"; "commit"; "-a"; "-m"; "upload new files" ];
-      [ "git"; "push"; "origin"; "master" ]
-    ] in
-    if err = 0 then
+    try
+      Run.commands [
+        [ "git"; "add"; Dirname.to_string dirname; ];
+        [ "git"; "commit"; "-a"; "-m"; "upload new files" ];
+        [ "git"; "push"; "origin"; "master" ]
+      ];
       Filename.Set.of_list files
-    else
+    with _ ->
       Filename.Set.empty
 
 end

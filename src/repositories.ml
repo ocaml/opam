@@ -183,11 +183,9 @@ let make_archive nv =
     Dirname.mkdir (Path.R.archives_dir local_repo);
     let local_archive = Path.R.archive local_repo nv in
     log "Creating the archive files in %s" (Filename.to_string local_archive);
-    let err = Dirname.exec extract_root [
+    Dirname.exec extract_root [
       [ "tar" ; "czf" ; Filename.to_string local_archive ; NV.to_string nv ]
-    ] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot compress %s" (Dirname.to_string extract_dir)
+    ]
   )
   
 (* Download the archive on the OPAM server.

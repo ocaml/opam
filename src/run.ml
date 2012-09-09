@@ -13,6 +13,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
+exception Process_error of Process.result
+exception Internal_error of string
+
+let internal_error fmt =
+  Printf.kprintf (fun str -> raise (Internal_error str)) fmt
+
+let process_error r =
+  raise (Process_error r)
+
 module Sys2 = struct
   open Unix
 
@@ -97,22 +106,16 @@ let write file contents =
   output_string oc contents;
   close_out oc
 
-let cwd = Unix.getcwd
-
 let chdir dir =
-  if Sys.file_exists dir then
+  if Sys.file_exists dir then (
     Unix.chdir dir
-  else
-    Globals.error_and_exit "%s does not exist!" dir
+  ) else
+    internal_error "%s does not exist!" dir
 
 let in_dir dir fn =
   let reset_cwd =
-    try
-      let cwd = Unix.getcwd () in
-      fun () -> chdir cwd
-    with _ ->
-      (* can happen when the current directory has been deleted *)
-      fun () -> () in
+    let cwd = Unix.getcwd () in
+    fun () -> chdir cwd in
   chdir dir;
   try
     let r = fn () in
@@ -183,7 +186,7 @@ let remove file =
 
 let getchdir s =
   let p = Unix.getcwd () in
-  let () = chdir s in
+  chdir s;
   p
 
 let rec root path =
@@ -255,37 +258,22 @@ let run_process ?verbose ?(add_to_env=[]) ?(add_to_path=[]) = function
         Process.clean_files r;
       r
 
-let display_error_message r =
-  if Process.is_failure r then (
-    let command = r.Process.r_proc.Process.p_name :: r.Process.r_proc.Process.p_args in
-    Globals.error "Command %S failed:" (String.concat " " command);
-    List.iter (Globals.msg "+ %s\n") r.Process.r_stdout;
-    List.iter (Globals.msg "= %s\n") r.Process.r_info;
-    List.iter (Globals.msg "- %s\n") r.Process.r_stderr;
-  )
-
 let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ?verbose ~add_to_env ~add_to_path cmd in
-  display_error_message r;
-  r.Process.r_code
+  if Process.is_success r then
+    ()
+  else
+    process_error r
 
-let fold f =
-  List.fold_left (fun err cmd ->
-    match err, cmd with
-    | _  , [] -> err
-    | 0  , _  -> f cmd
-    | err, _  -> err
-  ) 0
-
-let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) = 
-  fold (command ?verbose ~add_to_env ~add_to_path)
+let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) commands = 
+  List.iter (command ?verbose ~add_to_env ~add_to_path) commands
 
 let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ~add_to_env ~add_to_path cmd in
-  if Process.is_failure r then
-    None
+  if Process.is_success r then
+    r.Process.r_stdout
   else
-    Some r.Process.r_stdout
+    process_error r
 
 module Tar = struct
 
@@ -326,19 +314,15 @@ let extract file dst =
      log "%s contains %d files: %s" file (List.length files) (String.concat ", " files); *)
   with_tmp_dir (fun tmp_dir ->
     match Tar.extract_function file with
-    | None   -> Globals.error_and_exit "%s is not a valid archive" file
+    | None   -> internal_error "%s is not a valid archive" file
     | Some f -> 
-        let err = f tmp_dir in
-        if err <> 0 then
-          Globals.error_and_exit "Error while extracting %s" file;
-        if Sys.file_exists dst then
-          Globals.error_and_exit "Cannot overwrite %s" dst;
+        f tmp_dir;
+        if Sys.file_exists dst then internal_error "Cannot overwrite %s" dst;
         match directories_strict tmp_dir with
         | [x] ->
             mkdir (Filename.dirname dst);
-            let err = command [ "mv"; x; dst] in
-            if err <> 0 then Globals.error_and_exit "Cannot mv %s to %s" x dst
-        | _   -> Globals.error_and_exit "The archive contains mutliple root directories"
+            command [ "mv"; x; dst]
+        | _   -> internal_error "The archive contains mutliple root directories"
   )
 
 let extract_in file dst =
@@ -346,11 +330,8 @@ let extract_in file dst =
   if not (Sys.file_exists dst) then
     Globals.error_and_exit "%s does not exist" file;
   match Tar.extract_function file with
-  | None   -> Globals.error_and_exit "%s is not a valid archive" file
-  | Some f ->
-      let err = f dst in
-      if err <> 0 then
-        Globals.error_and_exit "Error while extracting %s" file
+  | None   -> internal_error "%s is not a valid archive" file
+  | Some f -> f dst
 
 let link src dst =
   log "linking %s to %s" src dst;
@@ -412,45 +393,46 @@ let with_flock f =
     raise e
 
 let ocaml_version () =
-  match read_command_output [ "ocamlc" ; "-version" ] with
-  | None   -> None
-  | Some s -> Some (Utils.string_strip (List.hd s))
+  try
+    match read_command_output [ "ocamlc" ; "-version" ] with
+    | h::_ -> Some (Utils.string_strip h)
+    | []   -> internal_error "ocamlc -version"
+  with _ ->
+    None
 
 let ocamlc_where () =
-  match read_command_output [ "ocamlc"; "-where" ] with
-  | None   -> None
-  | Some s -> Some (Utils.string_strip (List.hd s))
+  try
+    match read_command_output [ "ocamlc"; "-where" ] with
+    | h::_ -> Some (Utils.string_strip h)
+    | []   -> internal_error "ocamlc -where"
+  with _ ->
+    None
 
 let download_command =
-  let err_curl = command ~verbose:false ["which"; "curl"] in
-  if err_curl = 0 then
-    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
-  else
-    let err_wget = command ~verbose:false ["which"; "wget"] in
-    if err_wget = 0 then
+  try
+    command ~verbose:false ["which"; "curl"];
+    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])  
+  with Process_error _ ->
+    try
+      command ~verbose:false ["which"; "wget"];
       (fun src -> [ "wget"; "--no-check-certificate" ; src ])
-    else
-      Globals.error_and_exit "Cannot find curl nor wget"
+    with Process_error _ ->
+      internal_error "Cannot find curl nor wget"
 
 let download ~filename:src ~dirname:dst =
   let cmd = download_command src in
   let dst_file = dst / Filename.basename src in
   log "download %s in %s (%b)" src dst_file (src = dst_file);
-  let e =
-    if dst_file = src then
-      0
-    else if Sys.file_exists src then
-      commands [
-        [ "rm"; "-f"; dst_file ];
-        [ "cp"; src; dst ]
-      ]
-    else
-      in_dir dst (fun () -> command cmd) in
-  if e = 0 then
-    Some dst_file
+  if dst_file = src then
+    ()
+  else if Sys.file_exists src then
+    commands [
+      [ "rm"; "-f"; dst_file ];
+      [ "cp"; src; dst ]
+    ]
   else
-    None
+    in_dir dst (fun () -> command cmd);
+  dst_file
 
 let patch p =
-  let err = command ["patch"; "-p0"; "-i"; p] in
-  err = 0
+  command ["patch"; "-p0"; "-i"; p]

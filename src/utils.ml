@@ -22,9 +22,20 @@ let filter_map f l =
         | Some x -> loop (x::accu) t in
   loop [] l
 
-module IntMap = Map.Make(struct type t = int let compare = compare end)  
-module StringMap = Map.Make(struct type t = string let compare = compare end)  
-module IntSet = Set.Make(struct type t = int let compare = compare end)  
+module OInt = struct
+  type t = int
+  let compare = compare
+end
+
+module IntMap = Map.Make(OInt)  
+module IntSet = Set.Make(OInt)
+
+module OString = struct
+  type t = string
+  let compare = compare
+end
+
+module StringMap = Map.Make(OString)
 
 let (|>) f g x = g (f x) 
 

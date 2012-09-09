@@ -9,15 +9,16 @@ let rsync ?(delete=true) src dst =
     Run.mkdir src;
     Run.mkdir dst;
     let delete = if delete then ["--delete"] else [] in
-    match
-      Run.read_command_output (["rsync" ; "-arv"; src; dst] @ delete)
-    with
-    | None   -> Not_available
-    | Some l -> match Utils.rsync_trim l with
+    try
+      let lines = Run.read_command_output (["rsync" ; "-arv"; src; dst] @ delete) in
+      match Utils.rsync_trim lines with
       | []    -> Up_to_date []
       | lines ->
-          List.iter (fun f -> log "updated: %s %s" (Run.cwd ()) f) lines;
+          let cwd = Unix.getcwd () in
+          List.iter (fun l -> log "updated: %s %s" cwd l) lines;
           Result lines
+    with _ ->
+      Not_available
   ) else
     Up_to_date []
 
@@ -41,19 +42,19 @@ let rsync_dirs ?delete src dst =
 
 let rsync_file src dst =
   log "rsync_file src=%s dst=%s" (Filename.to_string src) (Filename.to_string dst);
-  match
-    Run.read_command_output [
+  try
+    let lines = Run.read_command_output [
       "rsync"; "-av"; Filename.to_string src; Filename.to_string dst;
-    ]
-  with
-  | None   -> Not_available
-  | Some l -> match Utils.rsync_trim l with
+    ] in
+    match Utils.rsync_trim lines with
     | []  -> Up_to_date dst
     | [x] -> Result dst
     | l   ->
-        Globals.error_and_exit
+        Run.internal_error
           "unknown rsync output: {%s}"
           (String.concat ", " l)
+  with _ ->
+    Not_available
 
 module B = struct
 

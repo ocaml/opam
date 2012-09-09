@@ -15,6 +15,20 @@
 
 (** Low-level untyped system operations. *)
 
+(** Exception raised when subprocess fails *)
+exception Process_error of Process.result
+
+(** raise [Process_error] *)
+val process_error: Process.result -> 'a
+
+(** Exception raised when a computation in the current process
+    fails. *)
+exception Internal_error of string
+
+(** Raise [Internal_error] *)
+val internal_error: ('a, unit, string, 'b) format4 -> 'a
+
+
 (** [with_tmp_dir fn] executes [fn] in a tempory directory *)
 val with_tmp_dir: (string -> 'a) -> 'a
 
@@ -79,7 +93,7 @@ type command = string list
 val command:
   ?verbose:bool ->
   ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command -> int
+  ?add_to_path:string list -> command -> unit
 
 (** [commands ~add_to_path cmds] executes the commands [cmds] 
     in a context where $PATH contains [add_to_path] at the beginning. 
@@ -87,13 +101,13 @@ val command:
 val commands:
   ?verbose:bool ->
   ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command list -> int
+  ?add_to_path:string list -> command list -> unit
 
 (** [read_command_output cmd] executes the command [cmd] and return
     the lines from stdout *)
 val read_command_output:
   ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command -> string list option
+  ?add_to_path:string list -> command -> string list
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool
@@ -106,9 +120,6 @@ val extract: string -> string -> unit
 (** [extract_in filename dirname] extracts the archive [filename] into
     [dirname]. [dirname] should already exists. *)
 val extract_in: string -> string -> unit
-
-(** Return the current working directory *)
-val cwd: unit -> string
 
 (** Create a directory. Do not fail if the directory already
     exist. *)
@@ -131,8 +142,7 @@ val with_flock: (unit -> unit) -> unit
 (** {2 Function used only by the switch commnand} *)
 
 (** download compiler sources *)
-val download: filename:string -> dirname:string -> string option
+val download: filename:string -> dirname:string -> string
 
-(** Apply a patch file in the current directory. Return whether the
-    patch has been applied succesfully. *)
-val patch: string -> bool
+(** Apply a patch file in the current directory. *)
+val patch: string -> unit

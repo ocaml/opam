@@ -438,15 +438,15 @@ let () =
   List.iter SubCommand.register commands;
   try ArgExt.parse ~man:"opam" global_args
   with e ->
-    Globals.msg "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
+    Globals.error "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
     match e with
     | Bad (cmd, msg) ->
         ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
-        Globals.msg "%s\n" msg;
+        Globals.error "%s" msg;
         exit 1;
     | Failure ("no subcommand defined" as s) ->
         ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
-        Globals.msg "%s\n" s;
+        Globals.error "%s" s;
         exit 2
     | Globals.Exit i -> exit i
     | e -> raise e

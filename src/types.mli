@@ -120,10 +120,7 @@ module Dirname: sig
   (** Execute a list of commands in a given directory *)
   val exec: t
     -> ?add_to_env:(string * string) list
-    -> ?add_to_path:t list -> string list list -> int
-
-  (** Change the current directory *)
-  val chdir: t -> unit
+    -> ?add_to_path:t list -> string list list -> unit
 
   (** Move a directory *)
   val move: t -> t -> unit
@@ -254,13 +251,13 @@ module Filename: sig
 
   (** download a remote file in a given directory. Return the location
       of the downloaded file if the download is successful.  *)
-  val download: t -> dirname -> t option
+  val download: t -> dirname -> t
 
   (** iterate downloads until one is sucessful *)
-  val download_iter: t list -> dirname -> t option
+  val download_iter: t list -> dirname -> t
 
   (** Apply a patch to a directory *)
-  val patch: t -> dirname -> bool
+  val patch: t -> dirname -> unit
 
   (** Compute the MD5 digest of a file *)
   val digest: t -> string

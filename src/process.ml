@@ -124,8 +124,8 @@ let wait p =
         | _ -> iter () in
     iter ()
   with e ->
-    Printf.printf "Exception %s in waitpid\n%!" (Printexc.to_string e);
-    raise (Globals.Exit 2)
+    Globals.error "Exception %s in waitpid" (Printexc.to_string e);
+    Globals.exit 2
 
 let output_lines oc lines =
   List.iter (fun line ->
@@ -147,8 +147,8 @@ let run ?env ~verbose ~name cmd args =
     (* Write info file *)
     let chan = open_out info in
     output_lines chan
-      [ String.concat " " (cmd :: args) ;
-        Unix.getcwd () ;
+      [ Printf.sprintf "[RUN] %S" (String.concat " " (cmd :: args)) ;
+        Printf.sprintf "[CWD] %S" (Unix.getcwd ()) ;
         String.concat "\n" (Array.to_list env)
       ];
     close_out chan;
@@ -156,8 +156,8 @@ let run ?env ~verbose ~name cmd args =
     let p = create ~env ~info ~stdout ~stderr ~verbose cmd args in
     wait p
   with e ->
-    Printf.printf "Exception %s in run\n%!" (Printexc.to_string e);
-    raise (Globals.Exit 2)
+    Globals.error "Exception %s in run" (Printexc.to_string e);
+    Globals.exit 2
       
 let is_success r = r.r_code = 0
 
@@ -174,3 +174,10 @@ let clean_files r =
   option_iter safe_unlink r.r_proc.p_stdout;
   option_iter safe_unlink r.r_proc.p_stderr;
   option_iter safe_unlink r.r_proc.p_info
+
+let display_error_message r =
+  if is_failure r then (
+    List.iter (Globals.error "= %s") r.r_info;
+    List.iter (Globals.error ". %s") r.r_stdout;
+    List.iter (Globals.error "* %s") r.r_stderr;
+  )

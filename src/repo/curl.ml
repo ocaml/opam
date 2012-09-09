@@ -33,9 +33,7 @@ let make_state ~download_index remote_path =
     let index =
       if download_index then (
         Filename.remove local_index_file;
-        match Filename.download index_file local_path with
-        | None   -> Globals.error_and_exit "Cannot get urls.txt"
-        | Some f -> f
+        Filename.download index_file local_path
       ) else
         local_index_file in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
@@ -75,17 +73,14 @@ module B = struct
 
   let init address =
     let state = make_state ~download_index:true address in
-    let warning () =
-      Globals.msg "Cannot find index.tar.gz on the OPAM repository.\n\
-                 Initialisation might take some time ...\n" in
-
     (* Download index.tar.gz *)
-    try match Filename.download state.remote_index_archive state.local_path with
-    | None   -> warning ()
-    | Some _ ->
-        (* Untar the files *)
-        Filename.extract_in state.local_index_archive state.local_path
-    with _ -> warning ()
+    try
+      let file = Filename.download state.remote_index_archive state.local_path in
+      Filename.extract_in file state.local_path
+    with _ ->
+      Globals.msg
+        "Cannot find index.tar.gz on the OPAM repository.\n\
+         Initialisation might take some time ...\n"
 
   let curl ~remote_file ~local_file =
     log "dowloading %s" (Filename.to_string remote_file);
@@ -146,33 +141,32 @@ module B = struct
         let local_dir = Filename.dirname local_file in
         Dirname.mkdir local_dir;
         Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file); 
-        match Filename.download remote_file local_dir with
-        | None -> Globals.error_and_exit "Cannot download %s" (Filename.to_string remote_file);
-        | Some local_file ->
-            if not (Filename.exists local_file) then
-              (* This may happen with empty files *)
-              Filename.touch local_file;
-            begin
-              try
-                let perm = List.assoc local_file state.file_permissions in
-                Filename.chmod local_file perm
-              with Not_found ->
-                ()
-            end;
-            if not (is_up_to_date state local_file) then
-              Globals.error_and_exit "Wrong checksum for %s" (Filename.to_string remote_file);
-            Result local_file
+        let local_file = Filename.download remote_file local_dir in
+        if not (Filename.exists local_file) then
+          (* This may happen with empty files *)
+          Filename.touch local_file;
+        begin
+          try
+            let perm = List.assoc local_file state.file_permissions in
+            Filename.chmod local_file perm
+          with Not_found ->
+            ()
+        end;
+        if not (is_up_to_date state local_file) then
+          Run.internal_error "Wrong checksum for %s" (Filename.to_string remote_file);
+        Result local_file
       end
     end
 
-  (* XXX: use checksums *)
   let download_file nv remote_file =
     let local_repo = Path.R.cwd () in
     let dest_dir = Path.R.tmp_dir local_repo nv in
     Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file);
-    match Filename.download remote_file dest_dir with
-    | None   -> Not_available
-    | Some f -> Result f
+    try
+      let file = Filename.download remote_file dest_dir in
+      Result file
+    with _ ->
+      Not_available
 
   let not_supported action =
     failwith (action ^ ": not supported by CURL backend")
@@ -206,11 +200,9 @@ let make_index_tar_gz local_repo =
   Dirname.in_dir (Path.R.root local_repo) (fun () ->
     let dirs = [ "compilers"; "packages" ] in
     let dirs = List.filter Sys.file_exists dirs in
-    let err = Run.command [
+    Run.command [
       "sh"; "-c"; "tar cz " ^ (String.concat " " dirs) ^ "> index.tar.gz"
-    ] in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot create index.tar.gz";
+    ]
   )
     
 let () =

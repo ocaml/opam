@@ -448,15 +448,14 @@ let update_packages t ~show_packages =
                 Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
                 (* XXX: make it more generic *)
                 if Dirname.exists build then
-                  match
-                    Run.read_command_output
-                      [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string build ]
-                  with
-                  | None -> None
-                  | Some lines ->
-                      match Utils.rsync_trim lines with
-                      | [] -> None
-                      | l  -> Some nv
+                  try
+                    let lines = Run.read_command_output
+                      [ "rsync"; "-arv"; "--exclude"; "'.git/*'"; Dirname.to_string p ^ "/"; Dirname.to_string build ] in
+                    match Utils.rsync_trim lines with
+                    | [] -> None
+                    | l  -> Some nv
+                  with _ ->
+                    None
                 else
                   None
               else
@@ -669,52 +668,37 @@ let init_ocaml t quiet alias ocaml_version =
       let comp_src = File.Comp.src comp in
       let build_dir = Path.C.build_ocaml alias_p in
       Dirname.with_tmp_dir (fun download_dir ->
-        begin match Filename.download comp_src download_dir with
-          | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string comp_src)
-          | Some f -> Filename.extract f build_dir
-        end;
+        let file = Filename.download comp_src download_dir in
+        Filename.extract file build_dir;
         let patches = File.Comp.patches comp in
-        let patches =
-          Utils.filter_map (fun f ->
-            match Filename.download f build_dir with
-            | None   -> Globals.error_and_exit "Cannot download %s" (Filename.to_string f) 
-            | Some f -> Some f
-          ) patches in
-        List.iter (fun f ->
-          if not (Filename.patch f build_dir) then
-          Globals.error_and_exit "Cannot apply %s" (Filename.to_string f)
-        ) patches;
-        let err =
-          let t = 
-            { t with
-              compiler = alias_p;
-              installed = 
-                let name = N.of_string Globals.default_package in
-                let version = V.of_string (Alias.to_string alias) in
-                let nv = NV.create name version in
-                NV.Set.add nv NV.Set.empty } in
-          install_conf_ocaml_config t;
-          if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
-            Dirname.exec build_dir
-              [ ( "./configure" :: File.Comp.configure comp )
-                @ [ "-prefix";  Dirname.to_string alias_p_dir ]
-              (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-              (* NOTE In case it exists 2 '-prefix', in general the script
-                 ./configure will only consider the last one, others will be
-                 discarded. *)
-              ; ( "make" :: File.Comp.make comp )
-              ; [ "make" ; "install" ]
-              ]
-          end else begin
-            let builds =
-              List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-            Dirname.exec build_dir builds
-          end in
-        if err <> 0 then
-        Globals.error_and_exit
-          "The compilation of compiler version %s failed"
-          (OCaml_V.to_string ocaml_version)
-      )
+        let patches = List.map (fun f -> Filename.download f build_dir) patches in
+        List.iter (fun f -> Filename.patch f build_dir) patches;
+        let t = 
+          { t with
+            compiler = alias_p;
+            installed = 
+              let name = N.of_string Globals.default_package in
+              let version = V.of_string (Alias.to_string alias) in
+              let nv = NV.create name version in
+              NV.Set.add nv NV.Set.empty } in
+        install_conf_ocaml_config t;
+        if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
+          Dirname.exec build_dir
+            [ ( "./configure" :: File.Comp.configure comp )
+              @ [ "-prefix";  Dirname.to_string alias_p_dir ]
+            (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+            (* NOTE In case it exists 2 '-prefix', in general the script
+               ./configure will only consider the last one, others will be
+               discarded. *)
+            ; ( "make" :: File.Comp.make comp )
+            ; [ "make" ; "install" ]
+            ]
+        end else begin
+          let builds =
+            List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+          Dirname.exec build_dir builds
+        end;
+      );
     end;
 
     (* write the new version in the configuration file *)
@@ -865,112 +849,113 @@ let info package =
 let proceed_toinstall t nv =
   Globals.msg "Installing %s ...\n" (NV.to_string nv);
 
-  let t = load_state () in
-  let name = NV.name nv in
-  let opam_f = Path.G.opam t.global nv in
-  let opam = File.OPAM.read opam_f in
-  let config_f = Path.C.build_config t.compiler nv in
-  let config = File.Dot_config.safe_read config_f in
-  let install_f = Path.C.build_install t.compiler nv in
-  let install = File.Dot_install.safe_read install_f in
+  Dirname.in_dir (Path.C.build t.compiler nv) (fun () ->
 
-  Dirname.chdir (Path.C.build t.compiler nv);
+    let t = load_state () in
+    let name = NV.name nv in
+    let opam_f = Path.G.opam t.global nv in
+    let opam = File.OPAM.read opam_f in
+    let config_f = Path.C.build_config t.compiler nv in
+    let config = File.Dot_config.safe_read config_f in
+    let install_f = Path.C.build_install t.compiler nv in
+    let install = File.Dot_install.safe_read install_f in
 
-  (* check that libraries and syntax extensions specified in .opam and
-     .config are in sync *)
-  let check kind config_sections opam_sections =
-    List.iter (fun cs ->
-      if not (List.mem cs opam_sections) then
-        Globals.error_and_exit "The %s %s does not appear in %s"
-          kind (Section.to_string cs) (Filename.to_string opam_f)
-    ) config_sections;
-    List.iter (fun os ->
-      if not (List.mem os config_sections) then
-        Globals.error_and_exit "The %s %s does not appear in %s"
-          kind (Section.to_string os) (Filename.to_string config_f)
-    ) opam_sections in
-  if not (Filename.exists config_f) &&
-    (File.OPAM.libraries opam <> [] || File.OPAM.syntax opam <> []) then
-    Globals.error_and_exit
-      "%s does not exists but %s defines some libraries and syntax extensions"
-      (Filename.to_string config_f)
-      (Filename.to_string opam_f);
-  check "library"
-    (File.Dot_config.Library.available config)
-    (File.OPAM.libraries opam);
-  check "syntax"
-    (File.Dot_config.Syntax.available config)
-    (File.OPAM.syntax opam);
-
-  (* check that depends (in .opam) and requires (in .config) fields
-     are in almost in sync *)
-  (* NOTES: the check is partial as we don't know which clause is valid
-     in depends (XXX there is surely a way to get it from the solver) *)
-  let local_sections = File.Dot_config.Section.available config in
-  let libraries_in_opam =
-    List.fold_left (fun accu l ->
-      List.fold_left (fun accu ((n,_),_) ->
-        let n = N.of_string n in
-        let nv = find_installed_package_by_name t n in
-        let opam = File.OPAM.read (Path.G.opam t.global nv) in
-        let libs = File.OPAM.libraries opam in
-        let syntax = File.OPAM.syntax opam in
-        List.fold_right Section.Set.add (libs @ syntax) accu
-      ) accu l
-    ) Section.Set.empty (File.OPAM.depends opam) in
-  let libraries_in_config =
-    List.fold_left (fun accu s ->
-      List.fold_left (fun accu r ->
-        Section.Set.add r accu
-      ) accu (File.Dot_config.Section.requires config s)
-    ) Section.Set.empty local_sections in
-  Section.Set.iter (fun s ->
-    if not (List.mem s local_sections)
-    && not (Section.Set.mem s libraries_in_opam) then
-      let config_f = Filename.to_string (Path.C.build_config t.compiler nv) in
-      let opam_f = Filename.to_string (Path.G.opam t.global nv) in
-      let local_sections = List.map Section.to_string local_sections in
-      let opam_sections = List.map Section.to_string (Section.Set.elements libraries_in_opam) in
+    (* check that libraries and syntax extensions specified in .opam and
+       .config are in sync *)
+    let check kind config_sections opam_sections =
+      List.iter (fun cs ->
+        if not (List.mem cs opam_sections) then
+          Globals.error_and_exit "The %s %s does not appear in %s"
+            kind (Section.to_string cs) (Filename.to_string opam_f)
+      ) config_sections;
+      List.iter (fun os ->
+        if not (List.mem os config_sections) then
+          Globals.error_and_exit "The %s %s does not appear in %s"
+            kind (Section.to_string os) (Filename.to_string config_f)
+      ) opam_sections in
+    if not (Filename.exists config_f)
+    && (File.OPAM.libraries opam <> [] || File.OPAM.syntax opam <> []) then
       Globals.error_and_exit
-        "%s appears as a library dependency in %s, but:\n\
+        "%s does not exists but %s defines some libraries and syntax extensions"
+        (Filename.to_string config_f)
+        (Filename.to_string opam_f);
+    check "library"
+      (File.Dot_config.Library.available config)
+      (File.OPAM.libraries opam);
+    check "syntax"
+      (File.Dot_config.Syntax.available config)
+      (File.OPAM.syntax opam);
+
+    (* check that depends (in .opam) and requires (in .config) fields
+       are in almost in sync *)
+    (* NOTES: the check is partial as we don't know which clause is valid
+       in depends (XXX there is surely a way to get it from the solver) *)
+    let local_sections = File.Dot_config.Section.available config in
+    let libraries_in_opam =
+      List.fold_left (fun accu l ->
+        List.fold_left (fun accu ((n,_),_) ->
+          let n = N.of_string n in
+          let nv = find_installed_package_by_name t n in
+          let opam = File.OPAM.read (Path.G.opam t.global nv) in
+          let libs = File.OPAM.libraries opam in
+          let syntax = File.OPAM.syntax opam in
+          List.fold_right Section.Set.add (libs @ syntax) accu
+        ) accu l
+      ) Section.Set.empty (File.OPAM.depends opam) in
+    let libraries_in_config =
+      List.fold_left (fun accu s ->
+        List.fold_left (fun accu r ->
+          Section.Set.add r accu
+        ) accu (File.Dot_config.Section.requires config s)
+      ) Section.Set.empty local_sections in
+    Section.Set.iter (fun s ->
+      if not (List.mem s local_sections)
+      && not (Section.Set.mem s libraries_in_opam) then
+        let config_f = Filename.to_string (Path.C.build_config t.compiler nv) in
+        let opam_f = Filename.to_string (Path.G.opam t.global nv) in
+        let local_sections = List.map Section.to_string local_sections in
+        let opam_sections = List.map Section.to_string (Section.Set.elements libraries_in_opam) in
+        Globals.error_and_exit
+          "%s appears as a library dependency in %s, but:\n\
              - %s defines the libraries {%s}\n\
              - Packages in %s defines the libraries {%s}"
-        (Section.to_string s) config_f
-        config_f (String.concat ", " local_sections)
-        opam_f (String.concat ", " opam_sections)
-  ) libraries_in_config;
+          (Section.to_string s) config_f
+          config_f (String.concat ", " local_sections)
+          opam_f (String.concat ", " opam_sections)
+    ) libraries_in_config;
 
-  (* .install *)
-  File.Dot_install.write (Path.C.install t.compiler name) install;
+    (* .install *)
+    File.Dot_install.write (Path.C.install t.compiler name) install;
 
-  (* .config *)
-  File.Dot_config.write (Path.C.config t.compiler name) config;
+    (* .config *)
+    File.Dot_config.write (Path.C.config t.compiler name) config;
 
-  (* lib *)
-  let lib = Path.C.lib t.compiler name in
-  List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
+    (* lib *)
+    let lib = Path.C.lib t.compiler name in
+    List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
 
-  (* toplevel *)
-  let toplevel = Path.C.toplevel t.compiler in
-  List.iter (fun f -> Filename.copy_in f toplevel) (File.Dot_install.toplevel install);
+    (* toplevel *)
+    let toplevel = Path.C.toplevel t.compiler in
+    List.iter (fun f -> Filename.copy_in f toplevel) (File.Dot_install.toplevel install);
 
-  (* bin *)
-  List.iter (fun (src, dst) ->
-    let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
-    Filename.copy src dst
-  ) (File.Dot_install.bin install);
+    (* bin *)
+    List.iter (fun (src, dst) ->
+      let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
+      Filename.copy src dst
+    ) (File.Dot_install.bin install);
 
-  (* misc *)
-  List.iter
-    (fun (src, dst) ->
-      if Filename.exists dst && confirm "Overwriting %s ?" (Filename.to_string dst) then
-        Filename.copy src dst
-      else begin
-        Globals.msg "Installing %s to %s.\n" (Filename.to_string src) (Filename.to_string dst);
-        if confirm "Continue ?" then
+    (* misc *)
+    List.iter
+      (fun (src, dst) ->
+        if Filename.exists dst && confirm "Overwriting %s ?" (Filename.to_string dst) then
           Filename.copy src dst
-      end
-    ) (File.Dot_install.misc install)
+        else begin
+          Globals.msg "Installing %s to %s.\n" (Filename.to_string src) (Filename.to_string dst);
+          if confirm "Continue ?" then
+            Filename.copy src dst
+        end
+      ) (File.Dot_install.misc install)
+  )
 
 let pinned_path t nv =
   let name = NV.name nv in
@@ -1020,17 +1005,15 @@ let extract_package t nv =
   match pinned_path t nv with
   | None   ->
       let archive = get_archive t nv in
-      Globals.msg "Extracting ...\n";
+      Globals.msg "Extracting %s ...\n" (Filename.to_string archive);
       Filename.extract archive p_build;
       p_build
   | Some p ->
       (* XXX: make it a bit more generic ... *)
       Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
-      let err = Run.command [ "rsync"; "-arv"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ] in
+      Run.command [ "rsync"; "-arv"; "--exclude"; "'.git/*'"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ];
       let files = get_files t nv in
       List.iter (fun f -> Filename.copy_in f p_build) files;
-      if err <> 0 then
-        Globals.error_and_exit "Cannot synchronize %s with %s." (Dirname.to_string p) (Dirname.to_string p_build);
       p_build
 
 let proceed_todelete t nv =
@@ -1044,13 +1027,17 @@ let proceed_todelete t nv =
     let opam = File.OPAM.read opam_f in
     let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
     let p_build = Path.C.build t.compiler nv in
-    if not (Dirname.exists p_build) then
-      ignore (extract_package t nv);
     (* We try to run the remove scripts in the folder where it was extracted
-       If it does not exist, we don't really care. *)
-    let err = Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove in
-    if err <> 0 then
-      Globals.error_and_exit "Cannot uninstall %s" (NV.to_string nv);
+       If it does not exist, we try to download and extract the archive again,
+       if that fails, we don't really care. *)
+    if not (Dirname.exists p_build) then (
+      try ignore (extract_package t nv)
+      with _ -> Dirname.mkdir p_build;
+    );
+    begin
+      try Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove
+      with _ -> ();
+    end;
     Dirname.rmdir p_build;
   );
 
@@ -1148,8 +1135,11 @@ let print_env_warning () =
   Globals.msg "\nTo update your environment variables, you can now run:
             \n\    $ eval `opam config -env`\n\n"
 
+(* In case of error, simply return the error traces, and let the
+   repo in a state that the user can explore.
+   Do not try to recover yet. *)
 let rec proceed_tochange t nv_old nv =
-  Globals.msg "==== %s ====\n" (NV.to_string nv);
+  Globals.msg "\n=-=-= %s =-=-=\n" (NV.to_string nv);
 
   (* First, uninstall any previous version *)
   (match nv_old with
@@ -1172,8 +1162,9 @@ let rec proceed_tochange t nv_old nv =
     (* Substitute the configuration files. We should be in the right
        directory to get the correct absolute path for the substitution
        files (see [substitute_file] and [Filename.of_basename]. *)
-    Dirname.chdir (Path.C.build t.compiler nv);
-    List.iter (substitute_file t) (File.OPAM.substs opam);
+    Dirname.in_dir (Path.C.build t.compiler nv) (fun () ->
+      List.iter (substitute_file t) (File.OPAM.substs opam)
+    );
 
     (* Generate an environnement file *)
     let env_f = Path.C.build_env t.compiler nv in
@@ -1190,38 +1181,29 @@ let rec proceed_tochange t nv_old nv =
       (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s);
-  let err =
+  try
     Dirname.exec
       ~add_to_env:env.add_to_env
       ~add_to_path:[env.add_to_path]
       p_build
-      commands in
-  if err = 0 then
-    try proceed_toinstall t nv
-    with e ->
-      proceed_todelete t nv;
-      let p_build = prepare_package () in
-      Globals.error "Installation failed in %s." (Dirname.to_string p_build);
-      raise e
-  else (
+      commands;
+    proceed_toinstall t nv;
+  with e ->
     proceed_todelete t nv;
     let p_build = prepare_package () in
-    match nv_old with 
+    begin match nv_old with 
     | None        ->
-        Globals.error_and_exit "Compilation failed in %s." (Dirname.to_string p_build)
+        Globals.error
+          "The compilation of %s failed in %s."
+          (NV.to_string nv)
+          (Dirname.to_string p_build)
     | Some nv_old -> 
-        if nv_old = nv then
-          Globals.error_and_exit "Recompilation failed in %s."  (Dirname.to_string p_build)
-        else
-          (* try to restore the previous erased [nv_old] version *)
-          try
-            Globals.error "Compilation of %s failed in %s. Restoring previous working version (%s) ..."
-              (NV.to_string nv) (Dirname.to_string p_build) (NV.to_string nv_old);
-            proceed_tochange t None nv_old
-          with _ ->
-            (* XXX: determine if it is because some dependencies have been deleted or not... *)
-            Globals.error_and_exit "Restoring %s failed" (NV.to_string nv_old) 
-  )
+        Globals.error
+          "The recompilation of %s failed in %s."
+          (NV.to_string nv)
+          (Dirname.to_string p_build)
+    end;
+    raise e
 
 (* We need to clean-up things before recompiling. *)
 let proceed_torecompile t nv =
@@ -1396,7 +1378,8 @@ module Heuristic = struct
 
   let apply_solution t sol = 
     if Solver.solution_is_empty sol then
-      true
+      (* The current state satisfies the request contraints *)
+      OK
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
@@ -1419,11 +1402,7 @@ module Heuristic = struct
         to_remove;
 
       let continue = 
-        (* if only one package to install and none to remove, 
-           or one package to remove and none to install
-           or at most one package to reinstall
-           then no need to confirm *)
-        if to_install + to_reinstall + to_remove <= 1 then
+        if to_install + to_reinstall + to_remove + to_upgrade <= 1 then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1431,21 +1410,26 @@ module Heuristic = struct
       if continue then (
 
         let installed = ref t.installed in
+        (* This function should be called by the parent process only, as it modifies
+           the global state of OPAM *)
         let write_installed () =
           File.Installed.write (Path.C.installed t.compiler) !installed in
 
-        (* Delete some packages *)
+        (* Delete the requested packages in the parent process *)
         (* In case of errors, we try to keep the list of installed packages up-to-date *)
         List.iter
           (fun nv ->
             if NV.Set.mem nv !installed then begin
-              proceed_todelete t nv;
-              installed := NV.Set.remove nv !installed;
-              write_installed ()
+              try
+                proceed_todelete t nv;
+                installed := NV.Set.remove nv !installed;
+                write_installed ()
+              with _ ->
+                ()
             end)
           sol.to_remove;
 
-        (* Install or recompile some packages on the child process *)
+        (* Installation and recompilation are done by child processes *)
         let child n =
           let t = load_state () in
           match action n with
@@ -1466,34 +1450,80 @@ module Heuristic = struct
               installed := NV.Set.add nv (NV.Set.remove o !installed);
               write_installed () in
 
-        let error n =
-          let f msg nv =
-            Globals.error_and_exit "Command failed while %s %s" msg (NV.to_string nv) in
-          match action n with
-          | To_change (Some _, nv) -> f "upgrading/downgrading" nv
-          | To_change (None, nv)   -> f "installing" nv
-          | To_recompile nv        ->
-              installed := NV.Set.remove nv !installed;
+        (* Try to recover from errors.
+           XXX: this is higly experimental. *)
+        let recover_from_error (n, _) = match action n with
+          | To_change (Some o, _) ->
+              proceed_toinstall t o;
+              installed := NV.Set.add o !installed;
+              write_installed ()
+          | To_change (None, _)   -> ()
+          | To_recompile nv       ->
+              (* this case is quite tricky. We have to remove all the packages
+                 depending in nv, as they will be broken if nv is uninstalled. *)
+              let universe =
+                Solver.U
+                  (NV.Set.fold
+                     (fun nv l -> (debpkg_of_nv `remove t nv) :: l)
+                     (get_available_current t) []) in
+              let depends =
+                Solver.filter_forward_dependencies ~depopts:true universe
+                  (Solver.P [debpkg_of_nv `remove t nv]) in
+              let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
+              let depends = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) depends in
+              NV.Set.iter (proceed_todelete t) depends;
+              installed := NV.Set.diff !installed depends;
               write_installed ();
-              f "recompiling" nv
-          | To_delete _            -> assert false in
+          | To_delete nv            -> assert false in
+
+        let display_error (n, error) =
+          let f action nv =
+            Globals.error "[ERROR] while %s %s" action (NV.to_string nv);
+            match error with
+            | Parallel.Process_error r  -> Process.display_error_message r
+            | Parallel.Internal_error s -> Globals.error "  %s" s in
+          match action n with
+          | To_change (Some o, nv) -> f "upgrading to" nv
+          | To_change (None, nv)   -> f "installing" nv
+          | To_recompile nv        -> f "recompiling" nv
+          | To_delete nv           -> f "removing" nv in
+
+        let string_of_errors errors =
+          let actions = List.map action (List.map fst errors) in
+          let packages =
+            List.map (function
+              | To_change (_,nv)
+              | To_recompile nv
+              | To_delete nv -> nv
+            ) actions in
+          match packages with
+          | []  -> assert false
+          | [h] -> NV.to_string h
+          | l   -> NV.Set.to_string (NV.Set.of_list l) in
 
         let cores = File.Config.cores t.config in
-        try PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post
-        with PA_graph.Parallel.Errors n -> List.iter error n
-      );
-      continue
+        try
+          PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post;
+          OK
+        with PA_graph.Parallel.Errors (errors, remaining) ->
+          Globals.msg "\n";
+          if remaining <> [] then (
+            Globals.error
+              "Due to some errors while processing %s, the following action will NOT been proceeded:"
+              (string_of_errors errors);
+            List.iter (fun n -> Globals.error "%s" (string_of_action (action n))) remaining;
+          );
+          List.iter recover_from_error errors;
+          List.iter display_error errors;
+          Globals.exit 2
+      ) else
+        Aborted
     )
 
   let apply_solutions t = 
     let rec aux = function
-      | x :: xs ->
-          let solution_found = apply_solution t x in
-          if solution_found then
-            OK
-          else
-            Aborted (* aux xs *)
-      | [] -> No_solution in
+      | []   -> No_solution
+      | x::_ -> apply_solution t x in
     aux
 
   let resolve action_k t l_request =

@@ -67,3 +67,5 @@ val clean_files : result -> unit
 
 (** {2 Misc} *)
 val read_lines: string -> string list
+
+val display_error_message: result -> unit

@@ -23,6 +23,10 @@ module type G = sig
   val string_of_vertex: V.t -> string
 end
 
+type error =
+  | Process_error of Process.result
+  | Internal_error of string
+
 (** Functor signature *)
 module type SIG = sig
 
@@ -39,7 +43,8 @@ module type SIG = sig
     post:(G.V.t -> unit) ->
     unit
 
-  exception Errors of G.V.t list
+  (** Errors ([errors], [remaining]) *)
+  exception Errors of (G.V.t * error) list * G.V.t list
 
 end
 

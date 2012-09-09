@@ -33,6 +33,9 @@ type action =
   (** The package is already installed, but it must be recompiled. *)
   | To_recompile of NV.t
 
+(** Pretty-printing of actions *)
+val string_of_action: action -> string
+
 (** Package with associated build action *)
 type package_action
 

@@ -137,8 +137,7 @@ module Dirname: sig
   val in_dir: t -> (unit -> 'a) -> 'a
   val exec: t ->
     ?add_to_env:(string*string) list ->
-    ?add_to_path:t list -> string list list -> int
-  val chdir: t -> unit
+    ?add_to_path:t list -> string list list -> unit
   val move: t -> t -> unit
   val copy: t -> t -> unit
   val dirname: t -> t
@@ -173,7 +172,7 @@ end = struct
     Run.remove (to_string dirname)
 
   let cwd () =
-    of_string (Run.cwd ())
+    of_string (Unix.getcwd ())
 
   let mkdir dirname =
     Run.mkdir (to_string dirname)
@@ -196,19 +195,12 @@ end = struct
           ~add_to_path:(List.map of_string add_to_path)
           cmds)
 
-  let chdir dirname =
-    Run.chdir (to_string dirname)
-
   let move src dst =
-    let err = Run.command [ "mv"; to_string src; to_string dst ] in
-    if err <> 0 then
-      Globals.exit err
+    Run.command [ "mv"; to_string src; to_string dst ]
 
   let copy src dst =
     with_tmp_dir (fun tmp ->
-      let err = Run.command [ "rsync"; "-a"; Filename.concat (to_string src) "/"; to_string tmp ] in
-      if err <> 0 then
-        Globals.exit err;
+      Run.command [ "rsync"; "-a"; Filename.concat (to_string src) "/"; to_string tmp ];
       match list tmp with
       | [f] ->
           rmdir dst;
@@ -277,9 +269,9 @@ module Filename: sig
   val extract_in: t -> dirname -> unit
   val starts_with: dirname -> t -> bool
   val remove_prefix: prefix:dirname -> t -> string
-  val download: t -> dirname -> t option
-  val download_iter: t list -> dirname -> t option
-  val patch: t -> dirname -> bool
+  val download: t -> dirname -> t
+  val download_iter: t list -> dirname -> t
+  val patch: t -> dirname -> unit
   val digest: t -> Digest.t
   val touch: t -> unit
   val chmod: t -> int -> unit
@@ -370,9 +362,7 @@ end = struct
     Run.copy (to_string src) (to_string dst)
 
   let move src dst =
-    let err = Run.command [ "mv"; to_string src; to_string dst ] in
-    if err <> 0 then
-      Globals.exit err
+    Run.command [ "mv"; to_string src; to_string dst ]
 
   let link src dst =
     if Globals.os = Globals.Win32 then
@@ -404,17 +394,17 @@ end = struct
 
   let download filename dirname =
     Dirname.mkdir dirname;
-    match Run.download ~filename:(to_string filename) ~dirname:(Dirname.to_string dirname) with
-    | None   -> None
-    | Some f -> Some (of_string f)
+    let file = Run.download ~filename:(to_string filename) ~dirname:(Dirname.to_string dirname) in
+    of_string file
 
-  let rec download_iter filenames dirname =
-    match filenames with
-    | []   -> None
-    | h::t ->
-        match download h dirname with
-        | None -> download_iter t dirname
-        | x    -> x
+  let download_iter filenames dirname =
+    let rec aux = function
+      | []   ->
+          Run.internal_error "Cannot download %s" (String.concat ", " (List.map to_string filenames))
+      | h::t ->
+          try download h dirname
+          with _ -> aux t in
+    aux filenames
 
   let patch filename dirname =
     Dirname.in_dir dirname (fun () -> Run.patch (to_string filename))

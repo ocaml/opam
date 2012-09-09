@@ -258,9 +258,8 @@ module URL_X = struct
     let remote_file = Utils.string_strip (Raw.to_string t) in
     let checksum =
       Dirname.with_tmp_dir (fun tmp_dir ->
-        match Filename.download (Filename.raw remote_file) tmp_dir with
-        | None -> Globals.error_and_exit "Cannot download %s" remote_file
-        | Some local_file -> Filename.digest local_file
+        let local_file = Filename.download (Filename.raw remote_file) tmp_dir in
+        Filename.digest local_file
       ) in
     File.URL.create ~checksum remote_file
 end
