@@ -434,7 +434,7 @@ let update_repositories t ~show_compilers repos =
     ) comps
   ) repos
 
-let update_packages t ~show_packages =
+let update_packages t ~show_packages repos =
   log "update_packages";
   (* Update the pinned packages *)
   let pinned_updated =
@@ -466,7 +466,7 @@ let update_packages t ~show_packages =
   (* then update $opam/repo/index *)
   update_repo_index t;
   let t = load_state () in
-
+  let repos = Repository.Set.of_list repos in
   let updated =
     N.Map.fold (fun n repo_s accu ->
       (* we do not try to upgrade pinned packages *)
@@ -487,7 +487,10 @@ let update_packages t ~show_packages =
               NV.Set.filter (fun nv ->
                 NV.name nv = n && V.Set.mem (NV.version nv) new_versions
               ) all_updated in
-            NV.Set.union updated accu
+            if Repository.Set.mem repo repos then
+              NV.Set.union updated accu
+            else
+              accu
           ) else
             accu
         ) accu repo_s
@@ -559,7 +562,7 @@ let update repos =
       Utils.filter_map aux repos in
   if repos <> [] then (
     update_repositories t ~show_compilers:true repos;
-    update_packages t ~show_packages:true;
+    update_packages t ~show_packages:true repos;
   )
 
 (* Return the contents of a fully qualified variable *)
@@ -1582,7 +1585,7 @@ let init repo ocaml_version cores =
     let alias = Alias.of_string (OCaml_V.to_string ocaml_version) in
     let quiet = (system_ocaml_version = Some ocaml_version) in
     init_ocaml t quiet alias ocaml_version;
-    update_packages t ~show_packages:false;
+    update_packages t ~show_packages:false t.repositories;
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_comp_packages t ocaml_version Heuristic.v_any in
     let _solution = Heuristic.resolve `init t
