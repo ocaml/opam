@@ -728,14 +728,20 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
-let list ~print_short ~installed_only ~name_only pkg_str =
+let list ~print_short ~installed_only ~name_only res =
   log "list";
   let t = load_state () in
-  let re = 
-    try Re.compile (Re_glob.globx pkg_str)
-    with Re_glob.Parse_error -> 
-      Globals.error_and_exit "\"%s\" is not a valid package descriptor" pkg_str
-  in
+  let res =
+    Utils.filter_map (fun re ->
+      try Some (Re.compile (Re_glob.globx re))
+      with Re_glob.Parse_error -> 
+        Globals.error "\"%s\" is not a valid package descriptor" re;
+        None
+    ) res in
+  let exact_match str =
+    List.exists (fun re -> Utils.exact_match re str) res in
+  let partial_match str =
+    List.exists (fun re -> Re.execp re str) res in
   (* Get all the installed packages *)
   let installed = File.Installed.read (Path.C.installed t.compiler) in
   let map, max_n, max_v =
@@ -743,13 +749,9 @@ let list ~print_short ~installed_only ~name_only pkg_str =
       (fun nv (map, max_n, max_v) ->
         let name = NV.name nv in
         let version = NV.version nv in
-        if
-          N.Map.mem name map (* If the packet has been processed yet *)
-          &&
-          fst (N.Map.find name map) <> None
-            (* If moreover the version processed was the version that is installed.
-               NB at the time of writing there is at most only 1 [version]
-               installed for a given [name]. *)
+        if N.Map.mem name map (* If the packet has been processed yet *)
+        (* And the version processed was the installed version. *)
+        && fst (N.Map.find name map) <> None
         then
           map, max_n, max_v
         else
@@ -761,29 +763,27 @@ let list ~print_short ~installed_only ~name_only pkg_str =
           let max_v = if is_installed then max max_v (String.length (V.to_string version)) else max_v in
           map, max_n, max_v)
       t.available
-      (N.Map.empty, min_int, String.length s_not_installed)
-  in
+      (N.Map.empty, min_int, String.length s_not_installed) in
+  let map =
+    N.Map.filter (fun name (version, descr) ->
+      (* installp *) (not installed_only || version <> None)
+      (* allp     *) && (res = []
+      (* namep    *)  || name_only && exact_match (N.to_string name)
+      (* descrp   *)  || not name_only && (partial_match (N.to_string name) || partial_match descr))
+    ) map in
   N.Map.iter (
     if print_short then
-      fun name (version, _) -> 
-        let version = match version with
-          | None   -> s_not_installed
-          | Some v -> V.to_string v in
-        let name = N.to_string name in
-        (if Re.execp re name && (not installed_only || version <> s_not_installed)
-         then Globals.msg "%s " name)
+      fun name _ -> Globals.msg "%s " (N.to_string name)
     else
       fun name (version, description) ->
         let name = N.to_string name in
         let version = match version with
           | None   -> s_not_installed
           | Some v -> V.to_string v in
-        (if (Re.execp re name || (not name_only && Re.execp re description))
-            && (not installed_only || version <> s_not_installed) then
-            Globals.msg "%s  %s  %s\n"
-              (indent_left name max_n)
-              (indent_right version max_v)
-              description)
+        Globals.msg "%s  %s  %s\n"
+          (indent_left name max_n)
+          (indent_right version max_v)
+          description
   ) map
 
 let info package =

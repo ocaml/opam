@@ -112,33 +112,45 @@ let list =
   let installed = ref false in
 {
   name     = "list";
-  usage    = "[package-regexp]*";
+  usage    = "<package-regexp>*";
   synopsis = "Display the list of available packages";
   help     = "";
   specs    = [
-    ("-short", Arg.Set short, " Minimize the output by displaying only package name (installed and not installed)");
+    ("-short"    , Arg.Set short    , " Minimize the output by displaying only package name");
     ("-installed", Arg.Set installed, " Display only the list of installed packages");
   ];
   anon;
   main     = 
-    parse_args (function
-    | [] -> Client.list !short !installed true ""
-    | l  -> List.iter (fun name -> Client.list !short !installed true name) l)
+    parse_args (function args ->
+      let print_short = !short in
+      let installed_only = !installed in
+      let name_only = true in
+      Client.list ~print_short ~installed_only ~name_only args
+    )
 }
 
 (* opam search [PACKAGE_REGEXP]* *)
-let search = 
+let search =
+  let short = ref false in
+  let installed = ref false in
 {
   name     = "search";
   usage    = "<package-regexp>*";
   synopsis = "Search into the package list";
   help     = "";
-  specs    = [];
+  specs    = [
+    ("-short"    , Arg.Set short    , " Minimize the output by displaying only package name");
+    ("-installed", Arg.Set installed, " Display only the list of installed packages");
+  ];
+
   anon;
   main     = 
-    parse_args (function
-    | [] -> Client.list false false false ""
-    | l  -> List.iter (fun name -> Client.list false false false name) l)
+    parse_args (function args ->
+      let print_short = !short in
+      let installed_only = !installed in
+      let name_only = false in
+      Client.list ~print_short ~installed_only ~name_only args
+    )
 }
 
 (* opam info [PACKAGE] *)

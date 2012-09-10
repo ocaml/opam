@@ -107,3 +107,13 @@ let rsync_trim = function
       match List.rev t with
       | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
       | _ -> []
+
+let exact_match re s =
+  try
+    let subs = Re.exec re s in
+    let subs = Array.to_list (Re.get_all_ofs subs) in
+    let n = String.length s in
+    let subs = List.filter (fun (s,e) -> s=0 && e=n) subs in
+    List.length subs > 0
+  with Not_found ->
+    false

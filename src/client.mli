@@ -25,9 +25,9 @@ open Types
     - [cores] is the number of cores *)
 val init : repository -> OCaml_V.t option -> int -> unit
 
-(** Displays all available packages that matches [string]. *)
-val list : print_short:bool -> installed_only:bool -> name_only:bool 
-  -> string -> unit
+(** Displays all available packages that matches any of the regexps. *)
+val list : print_short:bool -> installed_only:bool -> name_only:bool
+  -> string list  -> unit
 
 (** Displays a general summary of a package. *)
 val info : N.t -> unit
