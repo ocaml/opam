@@ -149,6 +149,10 @@ val make_string_pair: string * string -> value
 
 (** {2 Printing functions} *)
 
+(** Apply the given printer function 
+    by putting a newline between every element of every list *)
+val force_newline : (unit -> 'a) -> 'a
+
 (** Print a value *)
 val string_of_value : value -> string
 

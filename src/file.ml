@@ -778,7 +778,7 @@ module Dot_install_raw = struct
         Variable (s_misc, make_list make_option t.misc);
       ]
     } in
-    Syntax.to_string filename s
+    force_newline (fun () -> Syntax.to_string filename s)
 
   let of_string filename str =
     let s = Syntax.of_string filename str in
