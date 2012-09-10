@@ -7,8 +7,6 @@ type state = {
   remote_path         : dirname;
   local_repo          : Path.R.t;
   local_path          : dirname;
-  index_file          : filename;
-  local_index_archive : filename;
   remote_index_archive: filename;
   local_files         : Filename.Set.t;
   remote_local        : filename Filename.Map.t;
@@ -19,6 +17,9 @@ type state = {
 
 let state_cache = ref []
 
+let index_file local_path = local_path // "urls.txt"
+let index_archive local_path = local_path // "index.tar.gz"
+
 let make_state ~download_index remote_path =
   if List.mem_assoc remote_path !state_cache then
     List.assoc remote_path !state_cache
@@ -26,14 +27,13 @@ let make_state ~download_index remote_path =
     let remote_repo = Path.R.of_dirname remote_path in
     let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
     let local_path = Path.R.root local_repo in
-    let index_file = remote_path // "urls.txt" in
-    let local_index_file = local_path // "urls.txt" in
-    let local_index_archive = local_path // "index.tar.gz" in
+    let remote_index_file = remote_path // "urls.txt" in
+    let local_index_file = index_file local_path in
     let remote_index_archive = remote_path // "index.tar.gz" in
     let index =
       if download_index then (
         Filename.remove local_index_file;
-        Filename.download index_file local_path
+        Filename.download remote_index_file local_path
       ) else
         local_index_file in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
@@ -56,7 +56,7 @@ let make_state ~download_index remote_path =
       remote_local, local_remote, locals, perms, digests in
     let state = {
       remote_repo; remote_path; local_repo; local_path;
-      index_file; local_index_archive; remote_index_archive;
+      remote_index_archive;
       local_files; remote_local; local_remote;
       file_permissions; file_digests;
     } in
@@ -95,9 +95,13 @@ module B = struct
       (Dirname.to_string state.remote_path);
     if state.local_path <> state.remote_path then begin
       let (--) = Filename.Set.diff in
+      let indexes =
+        Filename.Set.add
+          (index_file state.local_path)
+          (Filename.Set.singleton (index_archive state.local_path)) in
       let current = Filename.Set.of_list (Filename.rec_list state.local_path) in
       let to_keep = Filename.Set.filter (is_up_to_date state) state.local_files in
-      let to_delete = current -- to_keep in
+      let to_delete = current -- to_keep -- indexes in
       let archive_dir = Path.R.archives_dir state.local_repo in
       let new_files =
         (Filename.Set.filter (fun f -> not (Filename.starts_with archive_dir f)) state.local_files)
