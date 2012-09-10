@@ -735,6 +735,11 @@ let indent_right s nb =
 
 let s_not_installed = "--"
 
+let unknown_package name version =
+  match version with
+  | None   -> Globals.error_and_exit "%S is not a valid package.\n" (N.to_string name)
+  | Some v -> Globals.error_and_exit "The package %S has no version %s." (N.to_string name) (V.to_string v)
+
 let list ~print_short ~installed_only ~name_only res =
   log "list";
   let t = load_state () in
@@ -805,7 +810,7 @@ let info package =
   let v_set =
     let v_set = Path.G.available_versions t.global package in
     if V.Set.is_empty v_set then
-      Globals.error_and_exit "unknown package %s" (N.to_string package)
+      unknown_package package None
     else
       match o_v with
         | None   -> v_set
@@ -1346,9 +1351,6 @@ module Heuristic = struct
         | V_eq (n, v)       -> vpkg_of_nv_eq n v)
       constraints
 
-  let unknown_package name =
-    Globals.error_and_exit "Unable to locate package %S\n" (N.to_string name)
-
   (* transform a name into:
      - <name, installed version> package
      - <$n,$v> package when name = $n.$v *)
@@ -1370,17 +1372,16 @@ module Heuristic = struct
           (* consider 'name' to be 'name.version' *)
           let nv =
             try NV.of_string (N.to_string name)
-            with Not_found -> unknown_package name in
+            with Not_found -> unknown_package name None in
           let sname = NV.name nv in
           let sversion = NV.version nv in
-          Globals.msg
-            "The raw name %S not found, looking for package %s version %s\n"
+          log "The raw name %S not found, looking for package %s version %s"
             (N.to_string name) (N.to_string sname) (V.to_string sversion);
           if N.Map.mem sname available
             && V.Set.mem sversion (N.Map.find sname available) then
             V_eq (sname, sversion)
           else
-            unknown_package sname)
+            unknown_package sname (Some sversion))
       (N.Set.elements names)
 
   let apply_solution t sol = 
@@ -1625,30 +1626,31 @@ let init repo ocaml_version cores =
 let install names =
   log "install %s" (N.Set.to_string names);
   let t = update_available_current (load_state ()) in
-  let map_installed = NV.to_map t.installed in
+  let names = Heuristic.nv_of_names t names in
+  let nvs = List.map nv_of_version_constraint names in
 
   let pkg_skip, pkg_new =
-    N.Set.partition (fun name -> N.Map.mem name map_installed) names in
+    List.partition (fun nv ->
+      let name = NV.name nv in
+      NV.Set.exists (fun nv -> NV.name nv = name) t.installed
+    ) nvs in
 
   (* Display a message if at least one package is already installed *)
-  N.Set.iter 
-    (fun name ->
+  List.iter 
+    (fun nv ->
       Globals.msg
         "Package %s is already installed (current version is %s)\n"
-        (N.to_string name)
-        (V.to_string (V.Set.choose_one (N.Map.find name map_installed))))
+        (N.to_string (NV.name nv))
+        (V.to_string (NV.version nv)))
     pkg_skip;
 
-  if not (N.Set.is_empty pkg_new) then (
-
-    let pkg_new = Heuristic.nv_of_names t pkg_new in
+  if pkg_new <> [] then (
 
     (* Display a warning if at least one package contains
        dependencies to some unknown packages *)
     let available = NV.to_map (get_available_current t) in
     List.iter 
-      (fun v_cstr ->
-        let nv = nv_of_version_constraint v_cstr in
+      (fun nv ->
         let opam = File.OPAM.read (Path.G.opam t.global nv) in
         let f_warn = 
           List.iter
@@ -1661,15 +1663,13 @@ let install names =
         f_warn (File.OPAM.conflicts opam))
       pkg_new;
 
-    let name_new = List.map name_of_version_constraint pkg_new in
+    let name_new = List.map NV.name pkg_new in
     List.iter (fun n -> log "new: %s" (N.to_string n)) name_new;
 
     let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `install t nv) :: l) (get_available_current t) []) in
     let depends =
       Solver.filter_backward_dependencies ~depopts:true universe
-        (Solver.P (List.rev_map
-                     (fun vc -> debpkg_of_nv `install t (nv_of_version_constraint vc)) 
-                     pkg_new)) in
+        (Solver.P (List.rev_map (fun nv -> debpkg_of_nv `install t nv) pkg_new)) in
     let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
     let depends =
       NV.Set.filter (fun nv ->
@@ -1698,6 +1698,10 @@ let install names =
       N.Map.iter (fun n _ -> log "not_change: %s" (N.to_string n)) pkgs;
       N.Map.values pkgs in
 
+    let pkg_new =
+      List.filter
+        (fun v_cstr -> List.mem (name_of_version_constraint v_cstr) name_new)
+        names in
     let _solution = Heuristic.resolve `install t
       (List.map 
          (fun (f_new, f_might, f_not) ->
