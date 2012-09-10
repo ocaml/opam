@@ -6,7 +6,7 @@
 (*  All rights reserved.  This file is distributed under the terms of  *)
 (*  the GNU Public License version 3.0.                                *)
 (*                                                                     *)
-(*  OPAM is distributed in the hope that it will be useful,            y*)
+(*  OPAM is distributed in the hope that it will be useful,            *)
 (*  but WITHOUT ANY WARRANTY; without even the implied warranty of     *)
 (*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      *)
 (*  GNU General Public License for more details.                       *)
@@ -47,25 +47,25 @@ let default_opam_path = Filename.concat home ".opam"
 let root_path = ref default_opam_path
 
 let log section fmt =
-  Printf.kprintf (fun str ->
+  Printf.ksprintf (fun str ->
     if !debug then
       Printf.eprintf "[%d] %-20s %s\n%!" (Unix.getpid ()) section str
   ) fmt
 
 let error fmt =
-  Printf.kprintf (fun str ->
+  Printf.ksprintf (fun str ->
     Printf.eprintf "%s\n%!" str
   ) fmt
 
 let warning fmt =
-  Printf.kprintf (fun str ->
+  Printf.ksprintf (fun str ->
     Printf.eprintf "[WARNING] %s\n%!" str
   ) fmt
 
 exception Exit of int
   
 let error_and_exit fmt =
-  Printf.kprintf (fun str ->
+  Printf.ksprintf (fun str ->
     error "%s" str;
     raise (Exit 66)
   ) fmt
@@ -73,7 +73,7 @@ let error_and_exit fmt =
 let exit i = raise (Exit i)
 
 let msg fmt =
-  Printf.kprintf (fun str ->
+  Printf.ksprintf (fun str ->
     Printf.printf "%s%!" str
   ) fmt
 
