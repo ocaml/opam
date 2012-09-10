@@ -349,7 +349,7 @@ let make_cnf_formula l =
       | [c] -> c :: cnf
       | _   -> (Group orl) :: cnf
     ) [] l in
-  List cnf
+  List (List.rev cnf)
 
 let parse_relop = function
   | "="  -> `Eq
