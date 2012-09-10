@@ -291,6 +291,7 @@ let install_conf_ocaml_config t =
         ("doc", Path.C.doc_dir t.compiler);
         ("stublibs", Path.C.stublibs t.compiler);
         ("toplevel", Path.C.toplevel t.compiler);
+        ("man", Path.C.man_dir t.compiler);
       ]
     @ 
     map (fun x -> x)
