@@ -206,7 +206,7 @@ switch-alias:
 	$(OPAM) switch -remove test test2
 
 switch-env-packages:
-	$(OPAM) switch -install 3.12.1
+	$(OPAM) switch 3.12.1
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l switch-env-packages P1.1 P2.1 P3.1~weird-version.test P4.3
 else

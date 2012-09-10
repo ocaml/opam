@@ -73,7 +73,7 @@ val compiler_clone: Alias.t -> unit
 val compiler_remove: Alias.t -> unit
 
 (** Switch to the given compiler *)
-val compiler_switch: Alias.t -> unit
+val compiler_switch: bool -> Alias.t -> unit
 
 (** Reinstall the given compiler *)
 val compiler_reinstall: Alias.t -> unit

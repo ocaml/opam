@@ -2122,19 +2122,6 @@ let compiler_list () =
     Globals.msg " %s %s\n" preinstalled (OCaml_V.to_string c)
   ) descrs
   
-let compiler_switch alias =
-  log "compiler_switch alias=%s" (Alias.to_string alias);
-  let t = load_state () in
-  let comp_p = Path.C.create alias in
-  let comp_dir = Path.C.root comp_p in
-  if not (Dirname.exists comp_dir) then (
-    Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
-    Globals.exit 1;
-  );
-  let config = File.Config.with_ocaml_version t.config alias in
-  File.Config.write (Path.G.config t.global) config;
-  print_env_warning ()
-
 let compiler_install quiet alias ocaml_version =
   log "compiler_switch %b %s %s" quiet
     (Alias.to_string alias)
@@ -2169,6 +2156,24 @@ let compiler_install quiet alias ocaml_version =
   );
 
   print_env_warning ()
+
+let compiler_switch quiet alias =
+  log "compiler_switch alias=%s" (Alias.to_string alias);
+  let t = load_state () in
+  let comp_p = Path.C.create alias in
+  let comp_dir = Path.C.root comp_p in
+  let ocaml_version = OCaml_V.of_string (Alias.to_string alias) in
+  let comp_f = Path.G.compiler t.global ocaml_version in
+  if not (Dirname.exists comp_dir) && not (Filename.exists comp_f) then (
+    Globals.error "The compiler's description for %s does not exist.\n" (Alias.to_string alias);
+    Globals.exit 1;
+  );
+  if not (Dirname.exists comp_dir) then
+    compiler_install quiet alias ocaml_version
+  else
+    let config = File.Config.with_ocaml_version t.config alias in
+    File.Config.write (Path.G.config t.global) config;
+    print_env_warning ()
 
 let compiler_clone alias =
   log "compiler_clone alias=%s" (Alias.to_string alias);
@@ -2266,8 +2271,8 @@ let remove name =
 let remote action =
   check (Write_lock (fun () -> remote action))
 
-let compiler_switch alias =
-  check (Write_lock (fun () -> compiler_switch alias))
+let compiler_switch quiet alias =
+  check (Write_lock (fun () -> compiler_switch quiet alias))
 
 let compiler_install quiet alias ocaml_version =
   check (Write_lock (fun () -> compiler_install quiet alias ocaml_version))

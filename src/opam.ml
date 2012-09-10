@@ -353,6 +353,9 @@ let switch =
   let no_alias_of () =
     if !alias_of <> "" then
       bad_argument "switch" "invalid -alias-of option" in
+  let mk_comp alias = match !alias_of with
+    | ""   -> OCaml_V.of_string alias
+    | comp -> OCaml_V.of_string comp in
 {
   name     = "switch";
   usage    = "[compiler-name]";
@@ -372,10 +375,7 @@ let switch =
   main     = parse_args (function args ->
     match !command, args with
     | `install, [alias] ->
-        let comp = match !alias_of with
-          | ""   -> OCaml_V.of_string alias
-          | comp -> OCaml_V.of_string comp in
-        Client.compiler_install !quiet (Alias.of_string alias) comp
+        Client.compiler_install !quiet (Alias.of_string alias) (mk_comp alias)
     | `clone, [alias] ->
         no_alias_of ();
         Client.compiler_clone  (Alias.of_string alias)
@@ -392,8 +392,10 @@ let switch =
         no_alias_of ();
         Client.compiler_current ()
     | `switch, [alias] ->
-        no_alias_of ();
-        Client.compiler_switch (Alias.of_string alias)
+        begin match !alias_of with
+          | "" -> Client.compiler_switch !quiet (Alias.of_string alias)
+          | _  -> Client.compiler_install !quiet (Alias.of_string alias) (mk_comp alias)
+        end
     | _ -> bad_argument "switch" "too many arguments"
   )
 }
