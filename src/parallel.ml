@@ -167,9 +167,11 @@ module Make (G : G) = struct
 
   let read_error pid =
     log "read_error[%d]" pid;
-    let ic = open_in_bin (pid_file pid) in
+    let file = pid_file pid in
+    let ic = open_in_bin file in
     let r : error = Marshal.from_channel ic in
     close_in ic;
+    Sys.remove file;
     r
 
   let iter n g ~pre ~child ~post =
