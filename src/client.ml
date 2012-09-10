@@ -1390,22 +1390,27 @@ module Heuristic = struct
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      let to_install, to_reinstall, to_upgrade =
+      let to_install, to_reinstall, to_upgrade, to_downgrade =
         PA_graph.fold_vertex
-          (fun pkg (to_install, to_reinstall, to_upgrade) ->
+          (fun pkg (to_install, to_reinstall, to_upgrade, to_downgrade) ->
             match action pkg with
-              | To_change (None, _)             -> succ to_install, to_reinstall, to_upgrade
-              | To_change (Some x, y) when x<>y -> to_install, to_reinstall, succ to_upgrade
+              | To_change (None, _)             -> succ to_install, to_reinstall, to_upgrade, to_downgrade
+              | To_change (Some x, y) when x<>y ->
+                  if V.compare (NV.version x) (NV.version y) < 0 then
+                    to_install, to_reinstall, succ to_upgrade, to_downgrade
+                  else
+                    to_install, to_reinstall, to_upgrade, succ to_downgrade
               | To_change (Some _, _)
-              | To_recompile _                  -> to_install, succ to_reinstall, to_upgrade
+              | To_recompile _                  -> to_install, succ to_reinstall, to_upgrade, to_downgrade
               | To_delete _ -> assert false) 
           sol.to_add
-          (0, 0, 0) in
+          (0, 0, 0, 0) in
       let to_remove = List.length sol.to_remove in
-      Globals.msg "%d to install | %d to reinstall | %d to upgrade | %d to remove\n"
+      Globals.msg "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove\n"
         to_install
         to_reinstall
         to_upgrade
+        to_downgrade
         to_remove;
 
       let continue = 
@@ -1490,7 +1495,11 @@ module Heuristic = struct
             | Parallel.Process_error r  -> Process.display_error_message r
             | Parallel.Internal_error s -> Globals.error "  %s" s in
           match action n with
-          | To_change (Some o, nv) -> f "upgrading to" nv
+          | To_change (Some o, nv) ->
+              if V.compare (NV.version o) (NV.version nv) < 0 then
+                f "upgrading to" nv
+              else
+                f "downgrading to" nv
           | To_change (None, nv)   -> f "installing" nv
           | To_recompile nv        -> f "recompiling" nv
           | To_delete nv           -> f "removing" nv in

@@ -291,7 +291,13 @@ val (//): dirname -> string -> filename
 (** {2 Package name and versions} *)
 
 (** Versions *)
-module V: ABSTRACT
+module V: sig
+
+  include ABSTRACT
+
+  (** Compare two versions using the Debian version scheme *)
+  val compare: t -> t -> int
+end
 
 (** Shortcut to V.t *)
 type version = V.t

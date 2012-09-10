@@ -40,8 +40,13 @@ let map_reinstall ~installed a =
 let string_of_action = function
   | To_change (None, p)   -> Printf.sprintf " - install %s" (NV.to_string p)
   | To_change (Some o, p) ->
-      Printf.sprintf " - upgrade %s to %s"
-        (NV.to_string o) (V.to_string (NV.version p))
+      let f action =
+        Printf.sprintf " - %s %s to %s" action
+          (NV.to_string o) (V.to_string (NV.version p)) in
+      if V.compare (NV.version o) (NV.version p) < 0 then
+        f "upgrade"
+      else
+        f "downgrade"
   | To_recompile p        -> Printf.sprintf " - recompile %s" (NV.to_string p)
   | To_delete p           -> Printf.sprintf " - delete %s" (NV.to_string p)
 
