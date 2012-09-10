@@ -1464,11 +1464,23 @@ module Heuristic = struct
 
         (* Try to recover from errors.
            XXX: this is higly experimental. *)
+        let can_try_to_recover_from_error l =
+          List.exists (function (n,_) ->
+            match action n with
+            | To_change(Some _,_)
+            | To_recompile _ -> true
+            | _ -> false
+          ) l in
+
         let recover_from_error (n, _) = match action n with
           | To_change (Some o, _) ->
-              proceed_toinstall t o;
-              installed := NV.Set.add o !installed;
-              write_installed ()
+              begin try
+                proceed_toinstall t o;
+                installed := NV.Set.add o !installed;
+                write_installed ()
+              with _ ->
+                  ()
+              end
           | To_change (None, _)   -> ()
           | To_recompile nv       ->
               (* this case is quite tricky. We have to remove all the packages
@@ -1529,7 +1541,10 @@ module Heuristic = struct
               (string_of_errors errors);
             List.iter (fun n -> Globals.error "%s" (string_of_action (action n))) remaining;
           );
-          List.iter recover_from_error errors;
+          if can_try_to_recover_from_error errors then (
+            Globals.msg "\nRecovering from errors:\n";
+            List.iter recover_from_error errors;
+          );
           List.iter display_error errors;
           Globals.exit 2
       ) else
