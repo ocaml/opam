@@ -60,7 +60,7 @@ let sections items =
 exception Bad_format of string
 
 let bad_format fmt =
-  Printf.kprintf
+  Printf.ksprintf
     (fun str -> raise (Bad_format (Printf.sprintf "Bad format! %s" str)))
     fmt
 

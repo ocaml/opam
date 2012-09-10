@@ -38,7 +38,7 @@ let anon s =
 exception Bad of string * string
 
 let bad_argument cmd fmt =
-  Printf.kprintf (fun msg -> raise (Bad (cmd, msg))) fmt
+  Printf.ksprintf (fun msg -> raise (Bad (cmd, msg))) fmt
 
 let noanon cmd s =
   raise (Bad (cmd, s ^ " is not expected"))
@@ -239,8 +239,10 @@ let install = {
   specs    = [];
   anon;
   main     = parse_args (fun names ->
-    let names = List.map N.of_string names in
-    Client.install (N.Set.of_list names)
+    if names <> [] then
+      let names = List.map N.of_string names in
+      Client.install (N.Set.of_list names)
+    else Globals.error_and_exit "You need to specify at least one package to install."
   )
 }
 
@@ -292,7 +294,7 @@ let upload =
 {
   name     = "upload";
   usage    = "";
-  synopsis = "Upload a package to the server";
+  synopsis = "Upload a package to an OPAM repository";
   help     = "";
   specs    = [
     ("-opam"   , Arg.Set_string opam   , " specify the OPAM file to upload");
@@ -324,8 +326,10 @@ let remove = {
   specs    = [];
   anon;
   main     = parse_args (fun names ->
-    let names = List.map N.of_string names in
-    Client.remove (N.Set.of_list names)
+    if names <> [] then
+      let names = List.map N.of_string names in
+      Client.remove (N.Set.of_list names)
+    else Globals.error_and_exit "You need to specify at least one package to remove."
   )
 }
 
