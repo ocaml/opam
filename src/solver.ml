@@ -222,7 +222,7 @@ module CudfDiff : sig
   val resolve_diff :
     Cudf.universe ->
     Cudf_types.vpkg internal_request ->
-    answer list option
+    answer option
 
 end = struct
     
@@ -281,40 +281,36 @@ end = struct
             log "INTERNAL(resolve) constraint violation";
             None
 
-  let resolve_with_optimization = 
-    let nb_iter_max = 20 in 
-    (** maximum number of request we can send to the solver 
-        before the algorithm stops and returns the current solution *)
+  let resolve_with_optimization f_diff univ req = 
 
-    fun f_diff univ req ->
     let string_of_c l = 
-      String.concat " " (List.map (string_of_internal_action string_of_cudf_package) l) in
+      String.concat ", " (List.map (string_of_internal_action string_of_cudf_package) l) in
 
     match req, resolve f_diff univ req with
-      | { i_wish_remove = [] ; i_wish_upgrade = [] ; _ }, Some ans -> 
+      | { i_wish_remove = [] ; i_wish_upgrade = [] ; _ }, Some ans ->
 
-        let rec aux nb_iter univ l_ans req ans =
-          match
-            (** partition [ans] so that we have one group of packages with version increase-able *)
+          (* determine if the user has put a constraint on the package associated to [p] in [req] *)
+          let has_constraint_in_req p =
+            try 
+              let _, version = List.find (fun (name, _) -> p.Cudf.package = name) req.i_wish_install in
+              version <> None
+            with Not_found ->
+              false in
+
+          let l_p_ans, l_new_pkg =
+            (* partition [ans] so that we have one group of packages with version increase-able *)
             List.partition
               (function
-                | I_to_change (None, p) -> 
-                    (match 
-                        (** determine if [p] belongs to [req] *)
-                        try Some (List.find (fun (wish_name, _) -> p.Cudf.package = wish_name) req) with Not_found -> None
-                     with
-                       | None -> false
-                       | Some (_, wish_version) -> 
-                           (** determine if the user has put a constraint on the package associated to [p] in [req] *) 
-                           wish_version <> None)
-                | I_to_change (Some _, _)
+                | I_to_change (Some _, p)
+                | I_to_change (None, p) -> has_constraint_in_req p
                 | I_to_delete _
                 | I_to_recompile _ -> true) 
-              ans
-          with
-          | _, [] -> l_ans
-          | l_p_ans, l_new_pkg ->
-              log "INTERNAL(optimization) requested=%s, new_computed=%s" (string_of_c l_p_ans) (string_of_c l_new_pkg);
+              ans in
+
+          begin match l_new_pkg with
+          | [] -> Some ans
+          | _  ->
+              log "INTERNAL(optimization) fixed=%s, increasable=%s" (string_of_c l_p_ans) (string_of_c l_new_pkg);
 
               (** we preserve versions of packages that were explicitely requested *)
               let l_p_ans = 
@@ -341,57 +337,43 @@ end = struct
 
                 List.fold_left 
                   (fun (to_continue, l_new_pkg) -> function
+                    | I_to_change (Some _, p)
                     | I_to_change (None, p) -> 
                         let v_max = (find_max p univ_map).Cudf.version in
                         to_continue || p.Cudf.version <> v_max, (p.Cudf.package, Some (`Eq, v_max)) :: l_new_pkg
-                    | I_to_change (Some _, _)
                     | I_to_delete _
                     | I_to_recompile _ -> assert false (* already filtered before *))
                   (false, []) 
                   l_new_pkg in
 
-              if to_continue then
+              let consistent pkgs =
                 let i_wish_upgrade =
-                  let l = l_p_ans @ l_new_pkg in
-                  let s = List.filter (fun (p,_) -> not (List.mem_assoc p l)) req in
+                  let l = pkgs @ l_p_ans in
+                  let s = List.filter (fun (p,_) -> not (List.mem_assoc p l)) req.i_wish_install in
                   l @ s in
-                match resolve f_diff univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } with
-                  | None -> 
-                      let () = Globals.warning "INTERNAL(optimization) no solution" in
-                      l_ans
-                  | Some ans_new -> 
-                      if ans_new = ans then (* NOTE the strict equality is a bit strong. 
-                                               For instance, we can just require that [ans_new] is a permutation of [ans]. *)
-                        l_ans
-                      else if nb_iter > nb_iter_max then
-                        let () = Globals.warning "number of iteration exceeded" in
-                        (* We stop the loop. 
-                           Even if it is correct to stop at any time, 
-                           determine if the equality above is too strong
-                           or if we have reached a cycle of answer (i1, i2, ..., iN, i1) so that (forall J, iJ <> iJ+1). *)
-                        l_ans
-                      else
-                        aux (succ nb_iter) univ (ans_new :: l_ans) i_wish_upgrade ans_new
-              else
-                let _ = log "INTERNAL(optimization) the answer does not contain some package with a more recent version to try" in
-                l_ans in
-        
-        Some (aux 0 univ [ans] req.i_wish_install ans)
+                resolve f_diff univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } in
 
-      | _, Some ans -> Some [ans]
+              if to_continue then
+                let consistent_pkgs =
+                  List.fold_left (fun accu pkg ->
+                    if consistent [pkg] <> None then
+                      pkg :: accu
+                    else
+                      accu
+                  ) [] l_new_pkg in
+                match consistent consistent_pkgs with
+                | Some ans -> Some ans
+                | None     -> Some ans
+              else
+                Some ans 
+          end
+      | _, Some ans -> Some ans
       | _, None -> None
 
-  let resolve_diff =
+  let resolve_diff univ req =
     let f_diff diff =
       Hashtbl.fold (fun pkgname s acc ->
         let add x = x :: acc in
-(*        log "%s removed=%s installed=%s"
-          pkgname
-          (Cudf_set.to_string s.Common.CudfDiff.removed)
-          (Cudf_set.to_string s.Common.CudfDiff.installed); *)
-        (* NOTE for the following [choose_one] : 
-           As we have always at most one version of a package installed,
-           the set is always either empty or a singleton *)
         let removed =
           try Some (Cudf_set.choose_one s.Common.CudfDiff.removed)
           with Not_found -> None in
@@ -405,7 +387,7 @@ end = struct
         | None      , None       -> acc
       ) diff []
     in
-    resolve_with_optimization f_diff
+    resolve_with_optimization f_diff univ req
 
 end
 
@@ -727,8 +709,8 @@ struct
             ; to_add = graph } in
 
         match sol_o with
-        | None   -> []
-        | Some l -> (* [l] is not empty *) List.map action_of_answer l)
+        | None   -> None
+        | Some l -> Some (action_of_answer l))
 
 end
 
