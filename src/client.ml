@@ -86,7 +86,7 @@ let current_ocaml_version t =
   List.assoc alias aliases
 
 let confirm fmt =
-  Printf.kprintf (fun msg ->
+  Printf.ksprintf (fun msg ->
     Globals.msg "%s [Y/n] " msg;
     if not !Globals.yes then
       match read_line () with

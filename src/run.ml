@@ -17,7 +17,7 @@ exception Process_error of Process.result
 exception Internal_error of string
 
 let internal_error fmt =
-  Printf.kprintf (fun str -> raise (Internal_error str)) fmt
+  Printf.ksprintf (fun str -> raise (Internal_error str)) fmt
 
 let process_error r =
   raise (Process_error r)
