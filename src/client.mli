@@ -17,7 +17,7 @@
 
 open Types
 
-(** Initializes the client a consistent state.
+(** Initialize the client a consistent state.
     [init repo alias oversion cores] means:
     - [repo] is the initial repository description,
     - [oversion] is the version of the compiler. [None] means we
@@ -25,14 +25,14 @@ open Types
     - [cores] is the number of cores *)
 val init : repository -> OCaml_V.t option -> int -> unit
 
-(** Displays all available packages that matches any of the regexps. *)
+(** Display all available packages that matches any of the regexps. *)
 val list : print_short:bool -> installed_only:bool -> name_only:bool
   -> string list  -> unit
 
-(** Displays a general summary of a package. *)
+(** Display a general summary of a package. *)
 val info : N.t -> unit
 
-(** Depending on request, returns options or directories where the
+(** Depending on request, return options or directories where the
     package is installed. *)
 val config : config -> unit
 
@@ -63,29 +63,29 @@ val remove : N.Set.t -> unit
 (** Manage remote repositories. Take the global file lock. *)
 val remote : remote -> unit
 
-(** Install the given compiler *)
+(** Install the given compiler. Take the global file lock. *)
 val compiler_install: bool -> Alias.t -> OCaml_V.t -> unit
 
-(** Clone the packages from the given compiler *)
+(** Clone the packages from the given compiler. Take the global file lock. *)
 val compiler_clone: Alias.t -> unit
 
-(** Remove the given compiler *)
+(** Remove the given compiler. Take the global file lock. *)
 val compiler_remove: Alias.t -> unit
 
-(** Switch to the given compiler *)
+(** Switch to the given compiler. Take the global file lock. *)
 val compiler_switch: bool -> Alias.t -> unit
 
-(** Reinstall the given compiler *)
+(** Reinstall the given compiler. Take the global file lock. *)
 val compiler_reinstall: Alias.t -> unit
 
-(** [compiler_list] list the available compiler descriptions *)
+(** List the available compiler descriptions *)
 val compiler_list: unit -> unit
 
-(** [compiler_current] display the name of the current compiler *)
+(** Display the name of the current compiler *)
 val compiler_current: unit -> unit
 
 (** Pin a package to a specific version. Take the global file lock. *)
 val pin: pin -> unit
 
-(** list the current pinned packages *)
+(** List the current pinned packages *)
 val pin_list: unit -> unit

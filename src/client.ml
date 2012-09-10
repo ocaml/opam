@@ -291,12 +291,14 @@ let install_conf_ocaml_config t =
         ("doc", Path.C.doc_dir t.compiler);
         ("stublibs", Path.C.stublibs t.compiler);
         ("toplevel", Path.C.toplevel t.compiler);
+        ("man", Path.C.man_dir t.compiler);
       ]
     @ 
     map (fun x -> x)
       [
         ("user", (Unix.getpwuid (Unix.getuid ())).Unix.pw_name);
         ("group", (Unix.getgrgid (Unix.getgid ())).Unix.gr_name);
+        ("make", !Globals.makecmd);
       ] in
 
   let config = File.Dot_config.create vars in
@@ -1538,7 +1540,7 @@ module Heuristic = struct
           Globals.msg "\n";
           if remaining <> [] then (
             Globals.error
-              "Due to some errors while processing %s, the following action will NOT been proceeded:"
+              "Due to some errors while processing %s, the following actions will NOT be proceeded:"
               (string_of_errors errors);
             List.iter (fun n -> Globals.error "%s" (string_of_action (action n))) remaining;
           );
@@ -2187,7 +2189,7 @@ let compiler_list () =
   ) descrs
   
 let compiler_install quiet alias ocaml_version =
-  log "compiler_switch %b %s %s" quiet
+  log "compiler_install %b %s %s" quiet
     (Alias.to_string alias)
     (OCaml_V.to_string ocaml_version);
 
@@ -2292,7 +2294,7 @@ let compiler_remove alias =
   Dirname.rmdir comp_dir
 
 let compiler_reinstall alias =
-  log "compiler_remove alias=%s" (Alias.to_string alias);
+  log "compiler_reinstall alias=%s" (Alias.to_string alias);
   let t = load_state () in
   if not (List.mem_assoc alias t.aliases) then (
     Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
@@ -2335,23 +2337,26 @@ let remove name =
 let remote action =
   check (Write_lock (fun () -> remote action))
 
-let compiler_switch quiet alias =
-  check (Write_lock (fun () -> compiler_switch quiet alias))
-
 let compiler_install quiet alias ocaml_version =
   check (Write_lock (fun () -> compiler_install quiet alias ocaml_version))
-
-let compiler_reinstall alias =
-  check (Write_lock (fun () -> compiler_reinstall alias))
-
-let compiler_remove alias =
-  check (Write_lock (fun () -> compiler_remove alias))
 
 let compiler_clone alias =
   check (Write_lock (fun () -> compiler_clone alias))
 
+let compiler_remove alias =
+  check (Write_lock (fun () -> compiler_remove alias))
+
+let compiler_switch quiet alias =
+  check (Write_lock (fun () -> compiler_switch quiet alias))
+
+let compiler_reinstall alias =
+  check (Write_lock (fun () -> compiler_reinstall alias))
+
 let compiler_list () =
   check (Read_only compiler_list)
+
+let compiler_current () =
+  check (Read_only compiler_current)
 
 let pin action =
   check (Write_lock (fun () -> pin action))
