@@ -99,4 +99,6 @@ let os = match Sys.os_type with
   | "Cygwin" -> Cygwin
   | _        -> assert false
 
+let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* WARNING check the result of "which gmake", "which make", ... *)
+
 let default_cores = 1

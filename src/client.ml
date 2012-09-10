@@ -298,6 +298,7 @@ let install_conf_ocaml_config t =
       [
         ("user", (Unix.getpwuid (Unix.getuid ())).Unix.pw_name);
         ("group", (Unix.getgrgid (Unix.getgid ())).Unix.gr_name);
+        ("make", !Globals.makecmd);
       ] in
 
   let config = File.Dot_config.create vars in

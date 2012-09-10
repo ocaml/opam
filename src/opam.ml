@@ -54,6 +54,8 @@ let global_args = [
   "--quiet"     , Arg.Clear quiet, " Not display the stdout/stderr of subprocesses";
   "--version"   , Arg.Unit version,      " Display version information";
   "--yes"       , Arg.Set Globals.yes,   " Answer yes to all questions";
+  "--makecmd"   , Arg.Set_string Globals.makecmd, 
+    Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !Globals.makecmd;
   "--root"      , Arg.Set_string Globals.root_path,
     (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path);
 ]
