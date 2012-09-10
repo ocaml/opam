@@ -246,7 +246,7 @@ let reinstall = {
 (* opam update *)
 let update = {
   name     = "update";
-  usage    = "[repo]+";
+  usage    = "[repo]*";
   synopsis = "Update the list of available packages";
   help     = "";
   specs    = [];
@@ -257,7 +257,7 @@ let update = {
 (* opam upgrade *)
 let upgrade = {
   name     = "upgrade";
-  usage    = "[package]+";
+  usage    = "[package]*";
   synopsis = "Upgrade the installed package to latest version";
   help     = "";
   specs    = [];
