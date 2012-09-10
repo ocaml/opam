@@ -100,7 +100,9 @@ module B = struct
         if not (Filename.exists archive) then
           false
         else match download_archive address nv with
-        | Not_available -> false
+        | Not_available ->
+            Filename.remove archive;
+            false
         | Up_to_date _  -> false
         | Result _      -> true
       ) available_packages in

@@ -373,9 +373,12 @@ let update_repo_index t =
     ) (Path.G.available_aliases t.global) NV.Set.empty in
   NV.Set.iter (fun nv ->
     if not (NV.Set.mem nv all_installed) then (
-      Filename.remove (Path.G.opam t.global nv);
-      Filename.remove (Path.G.descr t.global nv);
-      Filename.remove (Path.G.archive t.global nv);
+      let opam_g = Path.G.opam t.global nv in
+      let descr_g = Path.G.descr t.global nv in
+      let archive_g = Path.G.archive t.global nv in
+      Filename.remove opam_g;
+      Filename.remove descr_g;
+      Filename.remove archive_g;
     );
   ) (Path.G.available_packages t.global);
 
@@ -390,6 +393,7 @@ let update_repo_index t =
       let available_versions = Path.R.available_versions repo_p n in
       V.Set.iter (fun v ->
         if not (V.Set.mem v !all_versions) then (
+          all_versions := V.Set.add v !all_versions;
           let nv = NV.create n v in
           let opam_g = Path.G.opam t.global nv in
           let descr_g = Path.G.descr t.global nv in
