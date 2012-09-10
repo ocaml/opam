@@ -58,6 +58,7 @@ let global_args = [
     Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !Globals.makecmd;
   "--root"      , Arg.Set_string Globals.root_path,
     (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path);
+  "--no-checksums", Arg.Clear Globals.verify_checksums, " Do not verify checksums on download";
 ]
 
 let parse_args fn () =

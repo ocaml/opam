@@ -90,7 +90,7 @@ let download_file k nv f c =
     | None   -> true
     | Some c -> Filename.digest file = c in
   let rename file =
-    if not (check file) then
+    if !Globals.verify_checksums && not (check file) then
       Globals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
         (Filename.to_string file)
         (match c with Some c -> c | None -> "<none>")

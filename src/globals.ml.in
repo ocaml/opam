@@ -24,7 +24,7 @@ let verbose = ref (
 )
 
 let base_packages = ref true
-
+let verify_checksums = ref true
 let yes = ref false
 
 let version = "@PACKAGE_VERSION@"

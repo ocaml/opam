@@ -156,7 +156,7 @@ module B = struct
           with Not_found ->
             ()
         end;
-        if not (is_up_to_date state local_file) then
+        if !Globals.verify_checksums && not (is_up_to_date state local_file) then
           Run.internal_error "Wrong checksum for %s" (Filename.to_string remote_file);
         Result local_file
       end
