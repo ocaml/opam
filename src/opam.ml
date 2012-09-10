@@ -292,7 +292,7 @@ let upload =
 {
   name     = "upload";
   usage    = "";
-  synopsis = "Upload a package to the server";
+  synopsis = "Upload a package to an OPAM repository";
   help     = "";
   specs    = [
     ("-opam"   , Arg.Set_string opam   , " specify the OPAM file to upload");
