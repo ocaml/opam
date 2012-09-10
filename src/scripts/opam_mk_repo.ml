@@ -101,11 +101,13 @@ let () =
   );
 
   (* Create index.tar.gz *)
-  if not (NV.Set.is_empty to_add) && not (NV.Set.is_empty to_remove) then (
+  if not (Filename.exists (local_path // "index.tar.gz"))
+  || not (NV.Set.is_empty to_add)
+  || not (NV.Set.is_empty to_remove) then (
     Globals.msg "Creating index.tar.gz ...\n";
     Curl.make_index_tar_gz local_repo;
   ) else
-    Globals.msg "OPAM Repository already up-to-date\n";
+    Globals.msg "OPAM Repository already up-to-date.\n";
 
   Run.remove "log";
   Run.remove "tmp";
