@@ -1392,26 +1392,31 @@ module Heuristic = struct
     else (
       Globals.msg "The following actions will be performed:\n";      
       print_solution sol;
-      let to_install, to_reinstall, to_upgrade =
+      let to_install, to_reinstall, to_upgrade, to_downgrade =
         PA_graph.fold_vertex
-          (fun pkg (to_install, to_reinstall, to_upgrade) ->
+          (fun pkg (to_install, to_reinstall, to_upgrade, to_downgrade) ->
             match action pkg with
-              | To_change (None, _)             -> succ to_install, to_reinstall, to_upgrade
-              | To_change (Some x, y) when x<>y -> to_install, to_reinstall, succ to_upgrade
+              | To_change (None, _)             -> succ to_install, to_reinstall, to_upgrade, to_downgrade
+              | To_change (Some x, y) when x<>y ->
+                  if V.compare (NV.version x) (NV.version y) < 0 then
+                    to_install, to_reinstall, succ to_upgrade, to_downgrade
+                  else
+                    to_install, to_reinstall, to_upgrade, succ to_downgrade
               | To_change (Some _, _)
-              | To_recompile _                  -> to_install, succ to_reinstall, to_upgrade
+              | To_recompile _                  -> to_install, succ to_reinstall, to_upgrade, to_downgrade
               | To_delete _ -> assert false) 
           sol.to_add
-          (0, 0, 0) in
+          (0, 0, 0, 0) in
       let to_remove = List.length sol.to_remove in
-      Globals.msg "%d to install | %d to reinstall | %d to upgrade | %d to remove\n"
+      Globals.msg "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove\n"
         to_install
         to_reinstall
         to_upgrade
+        to_downgrade
         to_remove;
 
       let continue = 
-        if to_install + to_reinstall + to_remove + to_upgrade <= 1 then
+        if to_install + to_reinstall + to_remove + to_upgrade + to_downgrade <= 1 then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1492,7 +1497,11 @@ module Heuristic = struct
             | Parallel.Process_error r  -> Process.display_error_message r
             | Parallel.Internal_error s -> Globals.error "  %s" s in
           match action n with
-          | To_change (Some o, nv) -> f "upgrading to" nv
+          | To_change (Some o, nv) ->
+              if V.compare (NV.version o) (NV.version nv) < 0 then
+                f "upgrading to" nv
+              else
+                f "downgrading to" nv
           | To_change (None, nv)   -> f "installing" nv
           | To_recompile nv        -> f "recompiling" nv
           | To_delete nv           -> f "removing" nv in
@@ -1529,12 +1538,6 @@ module Heuristic = struct
         Aborted
     )
 
-  let apply_solutions t = 
-    let rec aux = function
-      | []   -> No_solution
-      | x::_ -> apply_solution t x in
-    aux
-
   let resolve action_k t l_request =
     let available = get_available_current t in
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
@@ -1542,10 +1545,10 @@ module Heuristic = struct
       | []                    -> No_solution
       | request :: l_request ->
           match Solver.resolve (Solver.U l_pkg) request t.installed with
-          | []  ->
+          | None  ->
               log "heuristic with no solution";
               aux l_request
-          | sol -> apply_solutions t sol in
+          | Some sol -> apply_solution t sol in
     match aux l_request with
     | No_solution ->
         Globals.msg "No solution has been found.\n";
@@ -1645,25 +1648,60 @@ let install names =
         f_warn (File.OPAM.conflicts opam))
       pkg_new;
 
-    let new_names = List.map name_of_version_constraint pkg_new in
-    let pkg_installed f_h =
-      let pkg_installed = Heuristic.get_installed t f_h in
-      let pkg_installed = N.Map.filter (fun n _ -> not (List.mem n new_names)) pkg_installed in
-      N.Map.values pkg_installed in
+    let name_new = List.map name_of_version_constraint pkg_new in
+    List.iter (fun n -> log "new: %s" (N.to_string n)) name_new;
+
+    let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `install t nv) :: l) (get_available_current t) []) in
+    let depends =
+      Solver.filter_backward_dependencies ~depopts:true universe
+        (Solver.P (List.rev_map
+                     (fun vc -> debpkg_of_nv `install t (nv_of_version_constraint vc)) 
+                     pkg_new)) in
+    let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
+    let depends =
+      NV.Set.filter (fun nv ->
+        let name = NV.name nv in
+        NV.Set.exists (fun nv -> NV.name nv = name) t.installed
+      ) depends in
+    NV.Set.iter (fun nv -> log "might_change<2>: %s" (NV.to_string nv)) depends;
+
+    let name_might_change = List.map NV.name (NV.Set.elements depends) in
+
+    (* A gross approximation of the collection of packages which migh
+       be upgraded/downloaded by the installation process *)
+    let pkg_might_change f_h =
+      let pkgs = Heuristic.get_installed t f_h in
+      let pkgs = N.Map.filter (fun n _ -> List.mem n name_might_change) pkgs in
+      N.Map.iter (fun n _ -> log "might_change: %s" (N.to_string n)) pkgs;
+      N.Map.values pkgs in
+
+    (* The collection of packages which should change very rarely (so the NOT is a bit misleading
+       as it may happen if some packages indirectly List.map name_of_version_constraint pkg_new
+       add new package constraints) *)
+    let pkg_not_change f_h =
+      let pkgs = Heuristic.get_installed t f_h in
+      let pkgs = N.Map.filter (fun n _ -> not (List.mem n name_new)) pkgs in
+      let pkgs = N.Map.filter (fun n _ -> not (List.mem n name_might_change)) pkgs in
+      N.Map.iter (fun n _ -> log "not_change: %s" (N.to_string n)) pkgs;
+      N.Map.values pkgs in
 
     let _solution = Heuristic.resolve `install t
       (List.map 
-         (fun (f_new, f_installed) -> 
-           { wish_install = Heuristic.apply f_new pkg_new @ pkg_installed f_installed 
+         (fun (f_new, f_might, f_not) ->
+           { wish_install =
+               Heuristic.apply f_new pkg_new
+               @ (pkg_might_change f_might)
+               @ (pkg_not_change f_not)
            ; wish_remove  = []
            ; wish_upgrade = [] })
          (let open Heuristic in
-          [ v_max, v_eq
-          ; v_max, v_ge 
-          ; v_max, v_any
-          ; v_any, v_eq
-          ; v_any, v_ge
-          ; v_any, v_any ])) in
+          [ v_max, v_eq , v_eq
+          ; v_max, v_ge , v_eq 
+          ; v_max, v_any, v_eq
+          ; v_any, v_eq , v_eq
+          ; v_any, v_ge , v_eq
+          ; v_any, v_any, v_eq
+          ; v_any, v_any, v_any ])) in
     ()
   )
 

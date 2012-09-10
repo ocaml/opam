@@ -440,14 +440,29 @@ let (//) d1 s2 =
 (* Package name and versions *)
 
 (* Versions *)
-module V: ABSTRACT = Base
+module V: sig
+  include ABSTRACT
+  val compare: t -> t -> int
+end = struct
+  type t = string
+  let to_string x = x
+  let of_string x = x
+  let compare = Debian.Version.compare
+  module O = struct
+    type t = string
+    let to_string = to_string
+    let compare = compare
+  end
+  module Set = Set.Make(O)
+  module Map = Map.Make(O)
+end
 type version = V.t
 
 (* Names *)
 module N: ABSTRACT = struct
   type t = string
-  let of_string x = x
   let to_string x = x
+  let of_string x = x
   module O = struct
     type t = string
     let to_string = to_string

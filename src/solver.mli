@@ -93,7 +93,7 @@ type packages = P of package list
     Every element in the solution [list] satisfies the problem given.
     For the ordering, the first element in the list
     is obtained by upgrading from its next element. *)
-val resolve : universe -> request -> NV.Set.t -> solution list
+val resolve : universe -> request -> NV.Set.t -> solution option
 
 (** Return the recursive dependencies of a package Note : the given
     package exists in the list in input because this list describes
