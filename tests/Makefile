@@ -190,6 +190,7 @@ else
 endif
 
 downgrade:
+	$(OPAM) remove P4
 	$(OPAM) install P4.2
 	$(CHECK) -l downgrade P1.1 P2.1 P3.1~weird-version.test P4.2
 
