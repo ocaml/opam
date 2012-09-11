@@ -195,6 +195,15 @@ let is_list = function
   | List _ -> true
   | _      -> false
 
+let pretty_force_newline = ref false
+
+let force_newline f = 
+  let save = !pretty_force_newline in
+  let () = pretty_force_newline := true in
+  let res = f () in
+  let () = pretty_force_newline := save in
+  res
+
 let rec pretty_string_of_value = function
   | Symbol s
   | Ident s     -> Printf.sprintf "%s" s
@@ -203,7 +212,7 @@ let rec pretty_string_of_value = function
   | String s    -> Printf.sprintf "%S" s
   | List[List[]]-> Printf.sprintf "[[]]"
   | List l      ->
-      if List.for_all is_list l then
+      if !pretty_force_newline || List.for_all is_list l then
         Printf.sprintf "[\n  %s\n]" (pretty_string_of_values "\n  " l)
       else
         Printf.sprintf "[%s]" (pretty_string_of_values " " l)
