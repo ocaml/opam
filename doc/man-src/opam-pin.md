@@ -1,6 +1,6 @@
-% OPAM-PIN(1) Opam Manual | Version 0.4
+% OPAM-PIN(1) opam 0.6.0 | OPAM Manual
 % OCamlPro
-% September 03, 2012
+% 10/09/2012
 
 # NAME
 

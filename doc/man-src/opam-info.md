@@ -1,6 +1,6 @@
-% OPAM-INFO(1) Opam Manual | Version 0.4
+% OPAM-INFO(1) opam 0.6.0 | OPAM Manual
 % OCamlPro
-% September 03, 2012
+% 10/09/2012
 
 # NAME
 
@@ -8,7 +8,7 @@ opam-info - Displays information about packages
 
 # SYNOPSIS
 
-*opam info* \<package\> [\<package\>...]
+*opam info* \<package\>...
 
 # DESCRIPTION
 

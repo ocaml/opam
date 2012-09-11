@@ -1,6 +1,6 @@
-% OPAM-UPLOAD(1) Opam Manual | Version 0.4
+% OPAM-UPLOAD(1) opam 0.6.0 | OPAM Manual
 % OCamlPro
-% September 03, 2012
+% 10/09/2012
 
 # NAME
 
@@ -13,18 +13,24 @@ opam-upload - Upload a new package to a remote repository
 
 # DESCRIPTION
 
-TODO: add description
+This command uploads an already built package to a remote repository,
+if the remote repository is not read-only.
 
 # PARAMETERS
 
 -opam \<opam-file\>
-:   Specify the .opam file to use.
+:   Specify the .opam file that will be uploaded to repo://packages/name.version/opam
 
 -descr \<descr-file\>
-:   Specify the .descr file to use.
+:   Specify the .descr file that will be uploaded to repo://packages/name.version/descr
 
 -archive \<name.version.tar.gz\>
-:   
+:   Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz
+
+# OPTIONS
+
+-repo \<repository\>
+:   Specify the repository to upload to. Defaults to the default repository.
 
 # SEE ALSO
 
