@@ -1,4 +1,4 @@
-.TH OPAM-SWITCH 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.TH OPAM-SWITCH 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
 .SH NAME
 .PP
 opam-switch - Switch compiler version
@@ -6,8 +6,16 @@ opam-switch - Switch compiler version
 .PP
 \f[I]opam switch\f[] -list
 .PP
-\f[I]opam switch\f[] [-no-base-packages] [-clone] [-alias <alias>]
-<version>
+\f[I]opam switch\f[] -current
+.PP
+\f[I]opam switch\f[] <alias>
+.PP
+\f[I]opam switch\f[] [-no-base-packages] -install <alias> [-alias-of
+<alias>]
+.PP
+\f[I]opam switch\f[] -remove <alias>
+.PP
+\f[I]opam switch\f[] [-no-base-packages] -clone <alias>
 .SH DESCRIPTION
 .PP
 This command allows to switch between different compiler versions,
@@ -17,42 +25,79 @@ The different compiler versions are totally independant from each other,
 meaning that OPAM maintains a separate state (e.g.
 list of installed packages...)
  for each.
+See the EXAMPLES section to learn how to use this command.
 .SH PARAMETERS
-.TP
-.B <version>
-Switch to the compiler version <version>.
-The list of available versions is obtained by doing \f[I]opam switch
--list\f[]
-.RS
-.RE
-.SH OPTIONS
 .TP
 .B -list
 Displays the list of available compilers.
 .RS
 .RE
 .TP
+.B -current
+Displays the current compiler in use.
+.RS
+.RE
+.TP
+.B <alias>
+Switch to the compiler version <alias>, installing it if it is not
+already installed.
+This is a shortcut to \f[I]opam switch -install <alias>\f[].
+The list of available versions is obtained by doing \f[I]opam switch
+-list\f[].
+.RS
+.RE
+.TP
+.B -install <alias>
+Install a compiler version <alias>.
+See EXAMPLES.
+.RS
+.RE
+.TP
+.B -remove <alias>
+Remove the compiler <alias>.
+.RS
+.RE
+.TP
+.B -clone <alias>
+Install all packages installed in compiler <alias> into the currently
+selected compiler.
+.RS
+.RE
+.SH OPTIONS
+.TP
 .B -no-base-packages
 Will prevent \f[I]opam switch\f[] from installing the base packages.
 .RS
 .RE
 .TP
-.B -clone
-Will try to install the packages that were installed before switching
-(that are not currently installed).
-If not set, \f[I]opam switch\f[] will not install any package, thus
-creating a brand new state for the newly selected compiler.
-.RS
-.RE
-.TP
-.B -alias <alias>
-Will switch to requested compiler version, but use the alternative name
-<alias> instead of the the default compiler version's name.
+.B -alias-of <alias>
+Will switch to compiler version <alias>, but use the name specified as
+an argument to -install instead of <alias>.
 This is useful to create multiple instances of the same compiler
 version.
+See EXAMPLES.
 .RS
 .RE
-.SH OPAM
+.SH EXAMPLES
+.IP \[bu] 2
+To install a brand new OCaml 4.00.0 and switch into it as the current
+compiler, do:
+.PP
+\f[C]$\ opam\ switch\ -install\ 4.00.0\f[]
+.IP \[bu] 2
+To remove OCaml 3.12.1, do:
+.PP
+\f[C]$\ opam\ switch\ -remove\ 3.12.1\f[]
+.IP \[bu] 2
+To install OCaml 4.00.0 under alias "foo" such that you will have two
+instances of OCaml 4.00.0, each with its own environment (i.e.
+list of installed packages, and so on):
+.PP
+\f[C]$\ opam\ switch\ -install\ foo\ -alias-of\ 4.00.0\f[]
+.IP \[bu] 2
+To install in "foo" all packages that are installed in "4.00.0":
+.PP
+\f[C]$\ opam\ switch\ foo\ \ $\ opam\ switch\ -clone\ 4.00.0\f[] # OPAM
 .PP
 Part of the opam(1) suite
 .SH AUTHORS
