@@ -1,4 +1,11 @@
-0.5.0 [6 September 2012]
+0.6.0 [Sept 2012]
+* semantics changes in 'opam switch'
+* solver improvements in case of install and remove
+* better error reporting
+* fix caching of package archives
+* fix ~/.opam/repo/index priorities
+
+0.5.0 [Sept 2012]
 * add opam search
 * add opam reinstall
 * ability to upgrade only a subset of packages
@@ -6,7 +13,7 @@
 * better --help messages
 * better information displayed to the user
 
-0.4.0 [23 August 2012]
+0.4.0 [Aug 2012]
 * #25 better layout of repository files
 * #34 (partial) possibility to specify archive checksums
 * #39 if the archive is not on ocamlpro.com, download it upstream
@@ -16,7 +23,7 @@
 * more modulare repository system: the 'kind' of repository is no more linked
   to the kind of package archives
 
-0.3.2 [8 August 2012]
+0.3.2 [Aug 2012]
 * fix regression for 'opam switch' introduced in 0.3
 * fix deletion of optional dependencies
 * support for pinned packages
@@ -26,7 +33,7 @@
 0.3.1 [July 2012]
 * fix regression for 'opam install' introduced in 0.3
 
-0.3 [July 2012]
+0.3.0 [July 2012]
 * improve parallel compilation of packages
 * better recovery on compilation/installation errors
 * first draft of version pinnig
@@ -35,12 +42,12 @@
 * more robust 'opam update' (ie. old files are gc-ed)
 * add a (more or less) generic way to install and use topfind
 
-0.2 [July 2012]
+0.2.0 [July 2012]
 * more robust switch command
 * more robust parallel build (not yet activated by default)
 * support for compiler-constraints in packages
 * new solver heuristics
 * improved performance on init with the rsync backend
 
-0.1 [June 2012]
+0.1.0 [June 2012]
 * Initial version
