@@ -1,6 +1,6 @@
-% OPAM-LIST(1) Opam Manual | Version 0.4
+% OPAM-LIST(1) opam 0.6.0 | OPAM Manual
 % OCamlPro
-% September 03, 2012
+% 10/09/2012
 
 # NAME
 
@@ -8,7 +8,7 @@ opam-list - List packages
 
 # SYNOPSIS
 
-*opam list* [-short] [-installed] [\<packagepattern\>...]
+*opam list* [-short] [-installed] [\<package-name\>...]
 
 # DESCRIPTION
 
@@ -24,9 +24,9 @@ search* command.
 
 # OPTIONS
 
-\<packagepattern\>...
-:   List only packages whose name matches at least one
-    \<packagepattern\>. 
+\<package-name\>...
+:   List only packages whose name exactly matches at least one
+    \<package-name\>. 
 
 -short
 :   Output the names of packages separated by one whitespace instead of

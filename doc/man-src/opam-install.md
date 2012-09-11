@@ -1,6 +1,6 @@
-% OPAM-INSTALL(1) Opam Manual | Version 0.4
+% OPAM-INSTALL(1) opam 0.6.0 | OPAM Manual
 % OCamlPro
-% September 03, 2012
+% 10/09/2012
 
 # NAME
 
@@ -25,7 +25,7 @@ solution, opam will ask which one should be selected. If dependencies
 are to be installed, opam will ask if the installation should really
 be performed.
 
-# OPTIONS
+# PARAMETERS
 
 \<package\>...
 :   Package(s) to be installed.

@@ -1,4 +1,4 @@
-.TH OPAM-SEARCH 1 "September 03, 2012" "Opam Manual" "Version 0.4"
+.TH OPAM-SEARCH 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
 .SH NAME
 .PP
 opam-search - Search into the package database
@@ -9,14 +9,11 @@ opam-search - Search into the package database
 .PP
 This command displays the list of available packages that match one of
 the <packagepattern>s specified as arguments.
-This command is almost identical to the \f[I]opam list\f[] command,
-except that packages get selected if their descriptions match the
-pattern, in addition of their names.
 .SH OPTIONS
 .TP
 .B <packagepattern>...
-Search for packages whose name or description matches at least one
-<packagepattern>.
+Search for packages whose name or description matches (in the "glob"
+sense) at least one <packagepattern>.
 The case is not taken into account.
 .RS
 .RE
