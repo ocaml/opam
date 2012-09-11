@@ -55,10 +55,10 @@ module Make (G : G) = struct
   module S = Set.Make (V)
 
   type t = {
-    graph       : G.t ;
-    visited_node: S.t ;
-    roots       : S.t ;
-    degree      : int M.t ;
+    graph  : G.t ;      (* The original graph *)
+    visited: S.t ;      (* The visited nodes *)
+    roots  : S.t ;      (* The current roots *)
+    degree : int M.t ;  (* Node degrees *)
   }
 
   let print_state t =
@@ -86,15 +86,15 @@ module Make (G : G) = struct
             todo
           )
         ) graph S.empty in
-    { graph ; roots ; degree = !degree ; visited_node = S.empty }
+    { graph ; roots ; degree = !degree ; visited = S.empty }
       
   let visit t x =
-    if S.mem x t.visited_node then
+    if S.mem x t.visited then
       invalid_arg "This node has already been visited.";
     if not (S.mem x t.roots) then
       invalid_arg "This node is not a root node";
       (* Add the node to the list of visited nodes *)
-    let t = { t with visited_node = S.add x t.visited_node } in
+    let t = { t with visited = S.add x t.visited } in
       (* Remove the node from the list of root nodes *)
     let roots = S.remove x t.roots in
     let degree = ref t.degree in
@@ -187,8 +187,9 @@ module Make (G : G) = struct
     let error_nodes () =
       M.fold (fun n _ accu -> S.add n accu) !errors S.empty in
     (* All the node not successfully proceeded. This include error worker and error nodes. *)
+    let all_nodes = G.fold_vertex S.add !t.graph S.empty in
     let remaining_nodes () =
-      G.fold_vertex S.add !t.graph S.empty in
+      all_nodes -- !t.visited in
 
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
