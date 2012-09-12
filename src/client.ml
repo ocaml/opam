@@ -2069,7 +2069,7 @@ let config request =
       log "OUTPUT: %S" output;
       Globals.msg "%s\n" output
 
-let remote action =
+let remote ?(verbose=false) action =
   log "remote %s" (string_of_remote action);
   let t = load_state () in
   let repos = File.Config.repositories t.config in
@@ -2102,12 +2102,15 @@ let remote action =
     Dirname.rmdir (Path.R.root (Path.R.create repo)) in
   match action with
   | List  ->
-      let pretty_print r =
+    let pretty_print r =
+      if verbose then
         Globals.msg "%-7s %10s     %s\n"
           (Printf.sprintf "[%s]" (Repository.kind r))
           (Repository.name r)
-          (Dirname.to_string (Repository.address r)) in
-      List.iter pretty_print repos
+          (Dirname.to_string (Repository.address r)) 
+      else
+        Globals.msg "%s\n" (Repository.name r) in
+    List.iter pretty_print repos
   | Add repo ->
       let name = Repository.name repo in
       if List.exists (fun r -> Repository.name r = name) repos then
@@ -2334,8 +2337,8 @@ let upload u r =
 let remove name =
   check (Write_lock (fun () -> remove name))
 
-let remote action =
-  check (Write_lock (fun () -> remote action))
+let remote ?(verbose=false) action =
+  check (Write_lock (fun () -> remote ~verbose action))
 
 let compiler_install quiet alias ocaml_version =
   check (Write_lock (fun () -> compiler_install quiet alias ocaml_version))

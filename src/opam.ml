@@ -336,6 +336,7 @@ let remove = {
 (* opam remote [-list|-add <url>|-rm <url>] *)
 let remote = 
   let kind = ref None in
+  let verbose = ref false in
   let command : [`add|`list|`rm] option ref = ref None in
   let set c () = command := Some c in
 {
@@ -344,6 +345,7 @@ let remote =
   synopsis = "Manage remote servers";
   help     = "";
   specs    = [
+    ("-v"    , Arg.Unit (fun () -> verbose := true), " Be verbose");
     ("-list" , Arg.Unit (set `list), " List the repositories");
     ("-add"  , Arg.Unit (set `add) , " Add a new repository");
     ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
@@ -351,14 +353,15 @@ let remote =
   ];
   anon;
   main     = parse_args (fun args ->
+    let verbose = !verbose in
     match !command, args with
-    | Some `list, []                -> Client.remote List
-    | Some `rm,   [ name ]          -> Client.remote (Rm name)
-    | Some `add , [ name; address ] ->
+      | Some `list, []                -> Client.remote ~verbose List
+      | Some `rm,   [ name ]          -> Client.remote ~verbose (Rm name)
+      | Some `add , [ name; address ] ->
         let kind = guess_repository_kind !kind address in
-        Client.remote (Add (Repository.create ~name ~kind ~address))
-    | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
-    | _        -> bad_argument "remote" "Wrong arguments")
+        Client.remote ~verbose (Add (Repository.create ~name ~kind ~address))
+      | _        -> Client.remote ~verbose List
+  )
 }
 
 (* opam switch [-clone] OVERSION *)
