@@ -82,22 +82,40 @@ See EXAMPLES.
 .IP \[bu] 2
 To install a brand new OCaml 4.00.0 and switch into it as the current
 compiler, do:
-.PP
-\f[C]$\ opam\ switch\ -install\ 4.00.0\f[]
+.IP
+.nf
+\f[C]
+$\ opam\ switch\ -install\ 4.00.0
+\f[]
+.fi
 .IP \[bu] 2
 To remove OCaml 3.12.1, do:
-.PP
-\f[C]$\ opam\ switch\ -remove\ 3.12.1\f[]
+.IP
+.nf
+\f[C]
+$\ opam\ switch\ -remove\ 3.12.1
+\f[]
+.fi
 .IP \[bu] 2
 To install OCaml 4.00.0 under alias "foo" such that you will have two
 instances of OCaml 4.00.0, each with its own environment (i.e.
 list of installed packages, and so on):
-.PP
-\f[C]$\ opam\ switch\ -install\ foo\ -alias-of\ 4.00.0\f[]
+.IP
+.nf
+\f[C]
+$\ opam\ switch\ -install\ foo\ -alias-of\ 4.00.0
+\f[]
+.fi
 .IP \[bu] 2
 To install in "foo" all packages that are installed in "4.00.0":
-.PP
-\f[C]$\ opam\ switch\ foo\ \ $\ opam\ switch\ -clone\ 4.00.0\f[] # OPAM
+.IP
+.nf
+\f[C]
+$\ opam\ switch\ foo
+$\ opam\ switch\ -clone\ 4.00.0
+\f[]
+.fi
+.SH OPAM
 .PP
 Part of the opam(1) suite
 .SH AUTHORS

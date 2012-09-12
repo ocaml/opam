@@ -70,23 +70,31 @@ the EXAMPLES section to learn how to use this command.
 * To install a brand new OCaml 4.00.0 and switch into it as the current
 compiler, do:
 
-`$ opam switch -install 4.00.0`
+```
+$ opam switch -install 4.00.0
+```
 
 * To remove OCaml 3.12.1, do:
 
-`$ opam switch -remove 3.12.1`
+```
+$ opam switch -remove 3.12.1
+```
 
 * To install OCaml 4.00.0 under alias "foo" such that you will have
   two instances of OCaml 4.00.0, each with its own environment
   (i.e. list of installed packages, and so on):
 
-`$ opam switch -install foo -alias-of 4.00.0`
+```
+$ opam switch -install foo -alias-of 4.00.0
+```
 
 * To install in "foo" all packages that are installed in "4.00.0":
 
-`$ opam switch foo
- $ opam switch -clone 4.00.0
-`
+```
+$ opam switch foo
+$ opam switch -clone 4.00.0
+```
+
 # OPAM
 
 Part of the opam(1) suite
