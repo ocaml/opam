@@ -345,7 +345,7 @@ let remote =
   synopsis = "Manage remote servers";
   help     = "";
   specs    = [
-    ("-v"    , Arg.Unit (fun () -> verbose := true), " Be verbose");
+    ("-v"    , Arg.Set verbose, " Be verbose");
     ("-list" , Arg.Unit (set `list), " List the repositories");
     ("-add"  , Arg.Unit (set `add) , " Add a new repository");
     ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
