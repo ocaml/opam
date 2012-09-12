@@ -31,15 +31,13 @@ clone:
 
 clean:
 	rm -rf _obuild
-	rm -rf src/*.annot bat/*.annot
-	rm -f opam
+	rm -f *.annot src/*.annot
 	rm -f ocp-build.*
 	$(MAKE) -C $(SRC_EXT) clean
 	$(MAKE) -C ocp-build clean
 
 distclean: clean
-	rm -f *.tar.gz *.tar.bz2
-	rm -rf _obuild _build
+	rm -f META Makefile.config src/globals.ml config.log config.status
 	$(MAKE) -C $(SRC_EXT) distclean
 
 .PHONY: tests
