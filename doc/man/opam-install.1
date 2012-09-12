@@ -4,7 +4,7 @@
 opam-install - Install packages
 .SH SYNOPSIS
 .PP
-\f[I]opam install\f[] <package>...
+\f[I]opam install\f[] <package>[.<version>]...
 .SH DESCRIPTION
 .PP
 This command installs one or more packages to the currently selected
@@ -13,6 +13,8 @@ To install packages for another compiler, you need to switch compilers
 using \f[I]opam switch\f[].
 You can remove installed packages with \f[I]opam remove\f[], and list
 installed packages with \f[I]opam list -installed\f[].
+See \f[I]opam pin\f[] as well to understand how to manage package
+versions.
 .PP
 This command will make opam use the dependency solver to compute the
 transitive closure of dependencies to be installed, and will handle
@@ -23,13 +25,25 @@ If dependencies are to be installed, opam will ask if the installation
 should really be performed.
 .SH PARAMETERS
 .TP
-.B <package>...
+.B <package>[.<version>]...
 Package(s) to be installed.
+An optional version can be specified, instructing opam to install a
+particular version of the specified package.
 .RS
 .RE
+.SH EXAMPLES
+.IP \[bu] 2
+To install the last version of package "lwt", do:
+.PP
+\f[C]$\ opam\ install\ lwt\f[]
+.IP \[bu] 2
+To install "lwt" version 2.4.0, do:
+.PP
+\f[C]$\ opam\ install\ lwt.2.4.0\f[]
 .SH SEE ALSO
 .PP
 \f[B]opam-remove\f[](1) \f[B]opam-switch\f[](1) \f[B]opam-list\f[](1)
+\f[B]opam-pin\f[](1)
 .SH OPAM
 .PP
 Part of the opam(1) suite
