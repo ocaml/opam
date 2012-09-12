@@ -8,7 +8,7 @@ opam-init - Creating a fresh client state
 
 # SYNOPSIS
 
-*opam init* [-kind \<kind\>] \<repo-name\> \<repo-address\>
+*opam init* [-kind \<kind\>] [\<repo-name\> \<repo-address\>]
 
 # DESCRIPTION
 
