@@ -152,7 +152,7 @@ installed by default, so to activate the mode you can either:
 
 ## Documentation
 
-Some technical documentations are available in `doc`:
+Some technical documentation is available in `doc`:
 
 * the API is available in `doc/html/`
 * The design documents are available in `doc/specs/`
