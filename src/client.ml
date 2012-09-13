@@ -1153,7 +1153,7 @@ let print_env_warning () =
 (* In case of error, simply return the error traces, and let the
    repo in a state that the user can explore.
    Do not try to recover yet. *)
-let rec proceed_tochange t nv_old nv =
+let proceed_tochange t nv_old nv =
   Globals.msg "\n=-=-= %s =-=-=\n" (NV.to_string nv);
 
   (* First, uninstall any previous version *)
