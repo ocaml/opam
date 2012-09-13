@@ -65,6 +65,15 @@ let mkdir dir =
     end in
   aux dir
   
+let is_link filename = 
+  let open Unix in
+  (lstat filename).st_kind = S_LNK
+
+let remove_file file =
+  log "remove_file %s" file;
+  try Unix.unlink file
+  with Unix.Unix_error _ -> ()
+    
 let copy src dst =
   if src <> dst then begin
     log "copying %s to %s" src dst;
@@ -74,8 +83,10 @@ let copy src dst =
     let ic = open_in_bin src in
     let oc =
       if Sys.file_exists dst then
-      open_out_bin dst
-      else
+        (* WARNING here we [remove_file] because the copy will fail 
+           - if [dst] is a link
+           - or if [dst] is a regular file with not enough permission (e.g. "u-w") *)
+        remove_file dst;
       let perm = (Unix.stat src).Unix.st_perm in
       mkdir (Filename.dirname dst);
       open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm dst
@@ -154,11 +165,6 @@ let rec_files dir =
     List.fold_left aux (f @ accu) d in
   aux [] dir
 
-let remove_file file =
-  log "remove_file %s" file;
-  try Unix.unlink file
-  with Unix.Unix_error _ -> ()
-    
 let rec remove_dir dir = (** WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);

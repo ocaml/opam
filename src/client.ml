@@ -955,6 +955,7 @@ let proceed_toinstall t nv =
     (* bin *)
     List.iter (fun (src, dst) ->
       let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
+      (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
       Filename.copy src dst
     ) (File.Dot_install.bin install);
 
