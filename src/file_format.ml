@@ -356,7 +356,7 @@ let make_cnf_formula l =
       match orl with
       | []  -> cnf
       | [c] -> c :: cnf
-      | _   -> (Group orl) :: cnf
+      | _   -> (Group (List.rev orl)) :: cnf
     ) [] l in
   List (List.rev cnf)
 
