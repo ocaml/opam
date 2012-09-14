@@ -32,10 +32,10 @@ val internal_error: ('a, unit, string, 'b) format4 -> 'a
 (** [with_tmp_dir fn] executes [fn] in a tempory directory *)
 val with_tmp_dir: (string -> 'a) -> 'a
 
-(** [copy src dst] copies [src] to [dst] *)
+(** [copy src dst] copies [src] to [dst]. Remove [dst] before the copy if it is a link. *)
 val copy: string -> string -> unit
 
-(** [link src dst] links [src] to [dst] *)
+(** [link src dst] links [src] to [dst]. Remove [dst] if it is a file, not a directory. *)
 val link: string -> string -> unit
 
 (** [real_path p] returns the real path associated to [p]: [..] are

@@ -10,8 +10,8 @@ clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp ocaml-
 cudf.tar.gz:
 	$(FETCH) http://www.ocamlpro.com/pub/cudf.tar.gz
 
-extlib-1.5.2.tar.gz:
-	$(FETCH) http://ocaml-extlib.googlecode.com/files/extlib-1.5.2.tar.gz
+extlib-1.5.3.tar.gz:
+	$(FETCH) http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
 	@touch $@
 
 cudf.stamp: cudf.tar.gz
@@ -30,10 +30,9 @@ ocamlgraph-1.8.1.tar.gz:
 ocaml-re.1.1.tar.gz:	
 	$(FETCH) http://www.ocamlpro.com/pub/ocaml-re.1.1.tar.gz
 
-extlib.stamp: extlib-1.5.2.tar.gz
-	tar xfz extlib-1.5.2.tar.gz
-	mv extlib-1.5.2 extlib
-	cd extlib && patch -i ../extlib.patch -p1
+extlib.stamp: extlib-1.5.3.tar.gz
+	tar xfz extlib-1.5.3.tar.gz
+	mv extlib-1.5.3 extlib
 	@touch $@
 
 dose.stamp: dose.tar.gz

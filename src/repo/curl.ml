@@ -75,6 +75,7 @@ module B = struct
     let state = make_state ~download_index:true address in
     (* Download index.tar.gz *)
     try
+      Filename.remove state.remote_index_archive;
       let file = Filename.download state.remote_index_archive state.local_path in
       Filename.extract_in file state.local_path
     with _ ->
