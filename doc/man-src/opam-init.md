@@ -13,7 +13,7 @@ opam-init - Creating a fresh client state
 # DESCRIPTION
 
 This command creates a fresh client state, that is initialize opam
-configuration in $HOME/.opam and setup a default repository by calling
+configuration in ~/.opam and setup a default repository by calling
 *opam-\<kind\>-init*. Additional repositories can later be added by
 using the *opam remote* command. The local cache of a repository state
 can be updated by using *opam update*.
@@ -35,8 +35,8 @@ can be updated by using *opam update*.
 
 # SEE ALSO
 
-**opam-remote**(1) **opam-update**(1) **opam-http-init**(1)
-  **opam-rsync-init**(1) **opam-git-init**(1)
+**opam-remote**(1), **opam-update**(1), **opam-http-init**(1),
+  **opam-rsync-init**(1), **opam-git-init**(1)
 
 # OPAM
 

@@ -21,7 +21,7 @@ This command does *opam remove* followed by *opam install*.
 
 # SEE ALSO
 
-**opam-install**(1) **opam-remove**(1) **opam-switch**(1) **opam-list**(1)
+**opam-install**(1), **opam-remove**(1), **opam-switch**(1), **opam-list**(1)
 
 # OPAM
 

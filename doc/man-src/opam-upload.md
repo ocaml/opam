@@ -34,7 +34,7 @@ if the remote repository is not read-only.
 
 # SEE ALSO
 
-**opam-remote**(1) **opam-upgrade**(1)
+**opam-remote**(1), **opam-upgrade**(1)
 
 # OPAM
 

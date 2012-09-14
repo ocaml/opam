@@ -37,7 +37,7 @@ search* command.
 
 # SEE ALSO
 
-**opam-search**(1) **opam-info**(1)
+**opam-search**(1), **opam-info**(1)
 
 # OPAM
 
