@@ -45,7 +45,7 @@ be performed.
 
 # SEE ALSO
 
-**opam-remove**(1) **opam-switch**(1) **opam-list**(1) **opam-pin**(1)
+**opam-remove**(1), **opam-switch**(1), **opam-list**(1), **opam-pin**(1)
 
 # OPAM
 
