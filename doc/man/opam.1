@@ -1,0 +1,159 @@
+.TH OPAM 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.SH NAME
+.PP
+opam - The OCaml Package Manager
+.SH SYNOPSIS
+.PP
+\f[I]opam\f[] [--version] [--help] [--debug] [--verbose] [--quiet]
+[--yes] [--makecmd] [--root] [--no-checksums] <command>
+.SH DESCRIPTION
+.PP
+OPAM is a package manager for OCaml.
+It uses the powerful mancoosi tools to handle dependencies, including
+support for version constraints, optional dependencies, and conflicts
+management.
+It has support for different repository backends such as HTTP, rsync and
+git.
+It handles multiple OCaml versions concurrently, and is flexible enough
+to allow you to use your own repositories and packages in addition of
+the ones it provides.
+.SH OPTIONS
+.TP
+.B --version
+Print version information and exit.
+.RS
+.RE
+.TP
+.B --help
+Display help and exit.
+.RS
+.RE
+.TP
+.B --debug
+Print debug messages on stdout.
+.RS
+.RE
+.TP
+.B --verbose
+Be more verbose.
+.RS
+.RE
+.TP
+.B --quiet
+Be less verbose.
+.RS
+.RE
+.TP
+.B --yes
+Disable interactive mode and answer yes to all questions that would
+otherwise be asked to the user.
+.RS
+.RE
+.TP
+.B --makecmd <command>
+Use <command> instead of the standard \f[I]make\f[] (\f[I]make\f[] on
+Linux, \f[I]gmake\f[] on BSDs) to build packages in opam.
+.RS
+.RE
+.TP
+.B --root <root-path>
+Change root path (default is ~/.opam).
+.RS
+.RE
+.TP
+.B --no-checksum
+Do not verify packages checksum on download.
+.RS
+.RE
+.SH COMMANDS
+.PP
+To obtain help about any of these commands, use \f[I]opam\f[] <command>
+--help
+.TP
+.B \f[B]init\f[]
+Initialize OPAM state in ~/.opam, or in the directory specified as
+argument of the --root option.
+.RS
+.RE
+.SS Query packages
+.TP
+.B \f[B]list\f[]
+Display a list of packages.
+.RS
+.RE
+.TP
+.B \f[B]search\f[]
+Search repositories for packages.
+.RS
+.RE
+.TP
+.B \f[B]info\f[]
+Display information about packages.
+.RS
+.RE
+.SS Manage packages
+.TP
+.B \f[B]install\f[]
+Install packages.
+.RS
+.RE
+.TP
+.B \f[B]reinstall\f[]
+Reinstall packages.
+.RS
+.RE
+.TP
+.B \f[B]upgrade\f[]
+Upgrade your packages.
+.RS
+.RE
+.TP
+.B \f[B]remove\f[]
+Remove packages.
+.RS
+.RE
+.SS Manage repositories
+.TP
+.B \f[B]remote\f[]
+Manage remote repositories.
+.RS
+.RE
+.TP
+.B \f[B]update\f[]
+Fetch latest packages from remote repositories.
+.RS
+.RE
+.TP
+.B \f[B]upload\f[]
+Upload packages to repositories.
+.RS
+.RE
+.SS Advanced
+.TP
+.B \f[B]pin\f[]
+Pin a package to a specific version.
+.RS
+.RE
+.TP
+.B \f[B]switch\f[]
+Manage multiple compiler installations.
+.RS
+.RE
+.TP
+.B \f[B]config\f[]
+Manage various configuration options about opam and packages.
+.RS
+.RE
+.SH SEE ALSO
+.PP
+\f[B]curl\f[](1), \f[B]wget\f[](1), \f[B]git\f[](1), \f[B]rsync(1)\f[]
+.SH LINKS
+.IP \[bu] 2
+\f[B]http://opam.ocamlpro.com\f[]
+.IP \[bu] 2
+\f[B]http://www.mancoosi.org\f[]
+.SH OPAM
+.PP
+Part of the opam(1) suite
+.SH AUTHORS
+OCamlPro.

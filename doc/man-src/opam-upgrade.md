@@ -23,7 +23,7 @@ None
 
 # SEE ALSO
 
-**opam-remote**(1) **opam-update**(1)
+**opam-remote**(1), **opam-update**(1)
 
 # OPAM
 

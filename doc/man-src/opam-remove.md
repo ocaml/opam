@@ -24,7 +24,7 @@ installed in another compiler, you need to switch compilers using
 
 # SEE ALSO
 
-**opam-install**(1) **opam-switch**(1)
+**opam-install**(1), **opam-switch**(1)
 
 # OPAM
 
