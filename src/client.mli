@@ -61,7 +61,7 @@ val upload : upload -> string option -> unit
 val remove : N.Set.t -> unit
 
 (** Manage remote repositories. Take the global file lock. *)
-val remote : remote -> unit
+val remote : ?verbose:bool -> remote -> unit
 
 (** Install the given compiler. Take the global file lock. *)
 val compiler_install: bool -> Alias.t -> OCaml_V.t -> unit
