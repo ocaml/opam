@@ -459,17 +459,21 @@ end
 type version = V.t
 
 (* Names *)
-module N: ABSTRACT = struct
+module N: sig
+  include ABSTRACT
+  val compare: t -> t -> int
+end = struct
   type t = string
   let to_string x = x
   let of_string x = x
+  let compare n1 n2 = 
+    match compare (String.lowercase n1) (String.lowercase n2) with
+      | 0 -> compare n1 n2
+      | i -> i
   module O = struct
     type t = string
     let to_string = to_string
-    let compare n1 n2 = 
-      match compare (String.lowercase n1) (String.lowercase n2) with
-        | 0 -> compare n1 n2
-        | i -> i
+    let compare = compare
   end
   module Set = Set.Make(O)
   module Map = Map.Make(O)
@@ -561,7 +565,10 @@ end = struct
   module O = struct
     type tmp = t
     type t = tmp
-    let compare = compare
+    let compare nv1 nv2 = 
+      match N.compare nv1.name nv2.name with
+        | 0 -> V.compare nv1.version nv2.version
+        | i -> i
     let to_string = to_string
   end
   module Set = Set.Make (O)
