@@ -145,7 +145,7 @@ module B = struct
         log "dowloading %s" (Filename.to_string remote_file);
         let local_dir = Filename.dirname local_file in
         Dirname.mkdir local_dir;
-        Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file); 
+        Globals.msg "Downloading %s ...\n" (Filename.to_string remote_file);
         let local_file = Filename.download remote_file local_dir in
         if not (Filename.exists local_file) then
           (* This may happen with empty files *)
@@ -209,6 +209,6 @@ let make_index_tar_gz local_repo =
       "sh"; "-c"; "tar cz " ^ (String.concat " " dirs) ^ "> index.tar.gz"
     ]
   )
-    
+
 let () =
   Repositories.register_backend "curl" (module B : Repositories.BACKEND)

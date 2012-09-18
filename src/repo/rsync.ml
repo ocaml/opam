@@ -133,7 +133,7 @@ module B = struct
     else
       Filename.Set.empty
 
-end    
+end
 
 let () =
   Repositories.register_backend "rsync" (module B: Repositories.BACKEND)

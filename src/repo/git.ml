@@ -68,7 +68,7 @@ module B = struct
     let basename = Filename.basename filename in
     let file = Path.R.tmp_dir local_repo nv // Basename.to_string basename in
     check_file file
-      
+
   let rec download_dir nv remote_address =
     let local_repo = Path.R.cwd () in
     let basename = Dirname.basename remote_address in
@@ -83,7 +83,7 @@ module B = struct
           Up_to_date dir
         else
           Result dir
-      
+
   let update remote_address =
     let local_path = Dirname.cwd () in
     match check_updates local_path remote_address with
