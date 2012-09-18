@@ -168,7 +168,7 @@ let parse_sequence fns v =
       aux (fns, l)
   | x      -> bad_format "Expecting a list, got %s" (kind x)
 
-  
+
 let make_string str = String str
 
 let make_ident str = Ident str
@@ -197,7 +197,7 @@ let is_list = function
 
 let pretty_force_newline = ref false
 
-let force_newline f = 
+let force_newline f =
   let save = !pretty_force_newline in
   let () = pretty_force_newline := true in
   let res = f () in

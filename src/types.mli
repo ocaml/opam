@@ -37,11 +37,11 @@ module type SET = sig
   (** Find an element in the list *)
   val find: (elt -> bool) -> t -> elt
 
-end               
+end
 
 (** Dictionaries of abstract values *)
 module type MAP = sig
-  
+
   include Map.S
 
   (** Pretty-printing *)
@@ -52,7 +52,7 @@ module type MAP = sig
 
   (** Same as [merge] but only keys that appear in both maps
       are given in the merging function *)
-  (** WARNING : Besides [key], the function could receive 
+  (** WARNING : Besides [key], the function could receive
       some [v1] and some [v2] such that [v1 = v2] holds. *)
   val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
 
@@ -374,10 +374,10 @@ module Repository: sig
 
   (** Default repository *)
   val default: t
-  
+
   (** Get the repository name *)
   val name: t -> string
-  
+
   (** Get the repository kind *)
   val kind: t -> string
 
@@ -409,7 +409,7 @@ end
 type variable = Variable.t
 
 (** Section names *)
-module Section: sig 
+module Section: sig
 
   include ABSTRACT
 
@@ -449,7 +449,7 @@ type full_section = Full_section.t
 module Full_variable: sig
 
   include ABSTRACT
-  
+
   (** Create a variable local for a given library/syntax extension *)
   val create_local: name -> section -> variable -> t
 
@@ -561,7 +561,7 @@ module Remote_file: sig
 
   (** Get remote filename *)
   val base: t -> basename
-  
+
   (** MD5 digest or the remote file *)
   val md5: t -> string
 

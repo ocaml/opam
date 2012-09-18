@@ -72,10 +72,10 @@ module Make (G : G) = struct
     log "ROOTS:  %s" (string_of_set t.roots);
     log "DEGREE: %s" (string_of_imap t.degree)
 
-  let init graph = 
+  let init graph =
     let degree = ref M.empty in
     let add_degree v d = degree := M.add v d !degree in
-    let roots = 
+    let roots =
       G.fold_vertex
         (fun v todo ->
           let d = G.in_degree graph v in
@@ -87,7 +87,7 @@ module Make (G : G) = struct
           )
         ) graph S.empty in
     { graph ; roots ; degree = !degree ; visited = S.empty }
-      
+
   let visit t x =
     if S.mem x t.visited then
       invalid_arg "This node has already been visited.";
@@ -101,7 +101,7 @@ module Make (G : G) = struct
     let remove_degree x = degree := M.remove x !degree in
     let replace_degree x d = degree := M.add x d (M.remove x !degree) in
       (* Update the children of the node by decreasing by 1 their in-degree *)
-    let roots = 
+    let roots =
       G.fold_succ
         (fun x l ->
           let d = M.find x t.degree in
@@ -125,14 +125,14 @@ module Make (G : G) = struct
       (String.concat ","
          (IntMap.fold (fun e _ l -> string_of_int e :: l) pids []))
 
-  let string_of_status st = 
+  let string_of_status st =
     let st, n = match st with
       | Unix.WEXITED n -> "exit", n
       | Unix.WSIGNALED n -> "signal", n
       | Unix.WSTOPPED n -> "stop", n in
     Printf.sprintf "%s %d" st n
 
-  let wait pids = 
+  let wait pids =
     let rec aux () =
       let pid, status = Unix.wait () in
       if IntMap.mem pid pids then (

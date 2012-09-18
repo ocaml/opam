@@ -20,7 +20,7 @@ open Types
 (** {2 Package actions} *)
 
 (** Build action *)
-type action = 
+type action =
 
   (** The package must be installed. The package could have been
       present or not, but if present, it is another version than the
@@ -98,7 +98,7 @@ val resolve : universe -> request -> NV.Set.t -> solution option
 (** Return the recursive dependencies of a package Note : the given
     package exists in the list in input because this list describes
     the entire universe.  By convention, it also appears in output.
-    If [depopts] (= [false] by default) is set to [true], 
+    If [depopts] (= [false] by default) is set to [true],
     optional dependencies are merged with usual dependencies. *)
 val filter_backward_dependencies : ?depopts:bool -> universe -> packages -> package list
 
@@ -107,6 +107,6 @@ val filter_backward_dependencies : ?depopts:bool -> universe -> packages -> pack
 val filter_forward_dependencies : ?depopts:bool -> universe -> packages -> package list
 
 (** Return a permutation of the given set of packages :
-    if package B depends of package A then 
+    if package B depends of package A then
     B appears before A in the resulting list *)
 val sort_by_backward_dependencies : ?depopts:bool -> universe -> packages -> package list

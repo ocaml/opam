@@ -28,7 +28,7 @@ module C: sig
 
   (** Root dir: {i $opam/$OVERSION} *)
   val root: t -> dirname
-   
+
   (** Library path for a given package:
       {i $opam/$OVERSION/lib/NAME} *)
   val lib: t -> N.t -> dirname
@@ -59,12 +59,12 @@ module C: sig
       {i $opam/$OVERSION/installed} *)
   val installed: t -> filename
 
-  (** Tempory folders used to decompress and compile 
+  (** Tempory folders used to decompress and compile
       the corresponding archives:
       {i $opam/$OVERSION/build/$NAME-$VERSION} *)
   val build: t -> NV.t -> dirname
 
-  (** Tempory folders used to decompress and compile 
+  (** Tempory folders used to decompress and compile
       the OCaml compiler:
       {i $opam/$OVERSION/build/_} *)
   val build_ocaml: t -> dirname
@@ -76,7 +76,7 @@ module C: sig
       processed: {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.env} *)
   val build_env: t -> NV.t -> filename
 
-  (** A file containing a copy of the current env variables, before 
+  (** A file containing a copy of the current env variables, before
       the env variables for the build are set:
       {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env} *)
   val build_old_env: t -> NV.t -> filename
@@ -95,7 +95,7 @@ module C: sig
 
   (** Installed files: {i $opam/$OVERSION/install/} *)
   val install_dir: t -> dirname
-    
+
   (** Packages to reinstall on next upgrade:
       {i $opam/$OVERSION/reinstall} *)
   val reinstall: t -> filename

@@ -70,7 +70,7 @@ val in_dir: string -> (unit -> 'a) -> 'a
     Links simulating directory are ignored, others links are returned. *)
 val files_with_links: string -> string list
 
-(** [rec_files dir] returns the list of all files in [dir], 
+(** [rec_files dir] returns the list of all files in [dir],
     recursively.
     Links behaving like directory are crossed. *)
 val rec_files: string -> string list
@@ -95,8 +95,8 @@ val command:
   ?add_to_env:(string*string) list ->
   ?add_to_path:string list -> command -> unit
 
-(** [commands ~add_to_path cmds] executes the commands [cmds] 
-    in a context where $PATH contains [add_to_path] at the beginning. 
+(** [commands ~add_to_path cmds] executes the commands [cmds]
+    in a context where $PATH contains [add_to_path] at the beginning.
     It stops whenever one command fails. *)
 val commands:
   ?verbose:bool ->

@@ -54,7 +54,7 @@ let global_args = [
   "--quiet"     , Arg.Clear quiet, " Not display the stdout/stderr of subprocesses";
   "--version"   , Arg.Unit version,      " Display version information";
   "--yes"       , Arg.Set Globals.yes,   " Answer yes to all questions";
-  "--makecmd"   , Arg.Set_string Globals.makecmd, 
+  "--makecmd"   , Arg.Set_string Globals.makecmd,
     Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !Globals.makecmd;
   "--root"      , Arg.Set_string Globals.root_path,
     (Printf.sprintf " Change root path (default is %s)" Globals.default_opam_path);
@@ -77,7 +77,7 @@ let guess_repository_kind kind address =
   | Some k -> k
 
 (* opam init [-kind $kind] $repo $adress *)
-let init = 
+let init =
   let kind = ref None in
   let comp = ref None in
   let cores = ref Globals.default_cores in
@@ -110,7 +110,7 @@ let init =
 }
 
 (* opam list [PACKAGE_REGEXP]* *)
-let list = 
+let list =
   let short = ref false in
   let installed = ref false in
 {
@@ -123,7 +123,7 @@ let list =
     ("-installed", Arg.Set installed, " Display only the list of installed packages");
   ];
   anon;
-  main     = 
+  main     =
     parse_args (function args ->
       let print_short = !short in
       let installed_only = !installed in
@@ -147,7 +147,7 @@ let search =
   ];
 
   anon;
-  main     = 
+  main     =
     parse_args (function args ->
       let print_short = !short in
       let installed_only = !installed in
@@ -171,7 +171,7 @@ let info = {
 }
 
 (* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
-let config = 
+let config =
 let has_cmd = ref false in
 let is_rec = ref false in
 let is_link = ref false in
@@ -286,7 +286,7 @@ let upgrade = {
 }
 
 (* opam upload PACKAGE *)
-let upload = 
+let upload =
   let opam = ref "" in
   let descr = ref "" in
   let archive = ref "" in
@@ -334,7 +334,7 @@ let remove = {
 }
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
-let remote = 
+let remote =
   let kind = ref None in
   let command : [`add|`list|`rm] option ref = ref None in
   let set c () = command := Some c in

@@ -27,7 +27,7 @@ module OInt = struct
   let compare = compare
 end
 
-module IntMap = Map.Make(OInt)  
+module IntMap = Map.Make(OInt)
 module IntSet = Set.Make(OInt)
 
 module OString = struct
@@ -37,14 +37,14 @@ end
 
 module StringMap = Map.Make(OString)
 
-let (|>) f g x = g (f x) 
+let (|>) f g x = g (f x)
 
 let string_strip str =
   let p = ref 0 in
   let l = String.length str in
   let fn = function
     | ' ' | '\t' | '\r' | '\n' -> true
-    | _ -> false in 
+    | _ -> false in
   while !p < l && fn (String.unsafe_get str !p) do
     incr p;
   done;

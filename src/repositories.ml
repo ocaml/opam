@@ -169,7 +169,7 @@ let make_archive nv =
           if dir <> extract_dir then
           Dirname.copy download_dir extract_dir
     end;
-    
+
     (* Eventually add the files/<package>/* to the extracted dir *)
     log "Adding the files to the archive";
     let files = Path.R.available_files local_repo nv in
@@ -187,7 +187,7 @@ let make_archive nv =
       [ "tar" ; "czf" ; Filename.to_string local_archive ; NV.to_string nv ]
     ]
   )
-  
+
 (* Download the archive on the OPAM server.
    If it is not there, then:
    * download the original archive upstream
@@ -200,7 +200,7 @@ let download r nv =
   (* If the archive is on the server, download it directly *)
   match Dirname.in_dir local_dir (fun () -> download_archive r nv) with
   | Up_to_date local_file ->
-      Globals.msg "The archive for %s is in the local cache.\n" (NV.to_string nv);   
+      Globals.msg "The archive for %s is in the local cache.\n" (NV.to_string nv);
       log "The archive for %s is already downloaded and up-to-date"
         (NV.to_string nv)
   | Result local_file ->
@@ -217,7 +217,7 @@ let update r =
   let module B = (val find_backend r: BACKEND) in
   let files = Dirname.in_dir local_dir (fun () -> B.update (Repository.address r)) in
   let packages = nv_set_of_files files in
-  
+
   let cached_packages = Path.R.available_tmp local_repo in
 
   (* Clean-up outdated archives *)

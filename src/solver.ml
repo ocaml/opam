@@ -132,7 +132,7 @@ let print_solution t =
       (function { action ; _ } -> Globals.msg "%s\n" (string_of_action action))
       t.to_add
 
-type 'a internal_action = 
+type 'a internal_action =
   | I_to_change of 'a option * 'a
   | I_to_delete of 'a
   | I_to_recompile of 'a
@@ -162,7 +162,7 @@ let string_of_internal_request f r =
     (string_of_list f r.i_wish_remove)
     (string_of_list f r.i_wish_upgrade)
 
-let request_map f r = 
+let request_map f r =
   let f = List.map f in
   { i_wish_install = f r.wish_install
   ; i_wish_remove  = f r.wish_remove
@@ -214,7 +214,7 @@ let string_of_universe u =
       (fun accu p -> string_of_cudf_package p :: accu)
       [] u in
   Printf.sprintf "{%s}" (String.concat ", " l)
-    
+
 module CudfDiff : sig
 
   type answer = Cudf.package internal_action list
@@ -225,7 +225,7 @@ module CudfDiff : sig
     answer option
 
 end = struct
-    
+
   type answer = Cudf.package internal_action list
 
   module Cudf_set = struct
@@ -244,16 +244,16 @@ end = struct
 
   end
 
-  let to_cudf_doc univ req = 
-    None, 
-    Cudf.fold_packages (fun l x -> x :: l) [] univ, 
+  let to_cudf_doc univ req =
+    None,
+    Cudf.fold_packages (fun l x -> x :: l) [] univ,
     { Cudf.request_id = "";
       install   = req.i_wish_install;
       remove    = req.i_wish_remove;
       upgrade   = req.i_wish_upgrade;
       req_extra = [] }
 
-  let cudf_resolve univ req = 
+  let cudf_resolve univ req =
     log "INTERNAL(cudf_resolve) universe=%s request=<%s>"
       (string_of_universe univ)
       (string_of_internal_request string_of_cudf req);
@@ -273,17 +273,17 @@ end = struct
     | None   -> None
     | Some l ->
       log "INTERNAL(resolve) %s" (String.concat " " (List.map string_of_cudf_package l));
-        try 
+        try
           let diff = Common.CudfDiff.diff univ_init (Cudf.load_universe l) in
           Some (f_diff diff)
         with
-          Cudf.Constraint_violation _ -> 
+          Cudf.Constraint_violation _ ->
             log "INTERNAL(resolve) constraint violation";
             None
 
-  let resolve_with_optimization f_diff univ req = 
+  let resolve_with_optimization f_diff univ req =
 
-    let string_of_c l = 
+    let string_of_c l =
       String.concat ", " (List.map (string_of_internal_action string_of_cudf_package) l) in
 
     match req, resolve f_diff univ req with
@@ -291,7 +291,7 @@ end = struct
 
           (* determine if the user has put a constraint on the package associated to [p] in [req] *)
           let has_constraint_in_req p =
-            try 
+            try
               let _, version = List.find (fun (name, _) -> p.Cudf.package = name) req.i_wish_install in
               version <> None
             with Not_found ->
@@ -304,7 +304,7 @@ end = struct
                 | I_to_change (Some _, p)
                 | I_to_change (None, p) -> has_constraint_in_req p
                 | I_to_delete _
-                | I_to_recompile _ -> true) 
+                | I_to_recompile _ -> true)
               ans in
 
           begin match l_new_pkg with
@@ -313,37 +313,37 @@ end = struct
               log "INTERNAL(optimization) fixed=%s, increasable=%s" (string_of_c l_p_ans) (string_of_c l_new_pkg);
 
               (** we preserve versions of packages that were explicitely requested *)
-              let l_p_ans = 
+              let l_p_ans =
                 Utils.filter_map
-                  (function 
+                  (function
                     | I_to_change (_, p)
                     | I_to_recompile p -> Some (p.Cudf.package, Some (`Eq, p.Cudf.version))
                     | I_to_delete _ -> None)
                   l_p_ans in
 
               (** we compute the last version of every new package (not requested) *)
-              let to_continue, l_new_pkg = 
+              let to_continue, l_new_pkg =
                 let univ_map = (** similar as [univ] but represented with map *)
-                  List.fold_left (fun map p -> 
+                  List.fold_left (fun map p ->
                     Utils.StringMap.add p.Cudf.package
-                      (Utils.IntMap.add 
+                      (Utils.IntMap.add
                          p.Cudf.version
                          p
                          (try Utils.StringMap.find p.Cudf.package map with Not_found -> Utils.IntMap.empty))
                       map) Utils.StringMap.empty (Cudf.get_packages univ) in
-                
+
                 let find_max p univ =
                   snd (Utils.IntMap.max_binding (Utils.StringMap.find p.Cudf.package univ)) in
 
-                List.fold_left 
+                List.fold_left
                   (fun (to_continue, l_new_pkg) -> function
                     | I_to_change (Some _, p)
-                    | I_to_change (None, p) -> 
+                    | I_to_change (None, p) ->
                         let v_max = (find_max p univ_map).Cudf.version in
                         to_continue || p.Cudf.version <> v_max, (p.Cudf.package, Some (`Eq, v_max)) :: l_new_pkg
                     | I_to_delete _
                     | I_to_recompile _ -> assert false (* already filtered before *))
-                  (false, []) 
+                  (false, [])
                   l_new_pkg in
 
               let consistent pkgs =
@@ -365,7 +365,7 @@ end = struct
                 | Some ans -> Some ans
                 | None     -> Some ans
               else
-                Some ans 
+                Some ans
           end
       | _, Some ans -> Some ans
       | _, None -> None
@@ -391,7 +391,7 @@ end = struct
 
 end
 
-module Graph = 
+module Graph =
 struct
   open Algo
 
@@ -399,7 +399,7 @@ struct
     module G = Defaultgraphs.PackageGraph.G
     let union g1 g2 =
       let g1 = G.copy g1 in
-      let () = 
+      let () =
         begin
           G.iter_vertex (G.add_vertex g1) g2;
           G.iter_edges (G.add_edge g1) g2;
@@ -418,8 +418,8 @@ struct
   end
 
   module Make_fs (F : FS) = struct
-    let fold f acc g = 
-      let rec aux acc iter = 
+    let fold f acc g =
+      let rec aux acc iter =
         match try Some (F.get iter, F.step iter) with Exit -> None with
         | None -> acc
         | Some (x, iter) -> aux (f acc x) iter in
@@ -461,29 +461,29 @@ struct
 
   let cudfpkg_of_debpkg table = List.map (tocudf table)
 
-  let get_table l_pkg_pb f = 
+  let get_table l_pkg_pb f =
     let table = Debian.Debcudf.init_tables l_pkg_pb in
     let v = f table (cudfpkg_of_debpkg table l_pkg_pb) in
     let () = Debian.Debcudf.clear table in
     v
 
-  let topo_fold g pkg_set = 
+  let topo_fold g pkg_set =
     let _, l =
       PG_topo.fold
         (fun p (set, l) ->
           let add_succ_rem pkg set act =
             (let set = PkgSet.remove pkg set in
              try
-               List.fold_left (fun set x -> 
+               List.fold_left (fun set x ->
                  PkgSet.add x set) set (PG.succ g pkg)
-             with _ -> set), 
+             with _ -> set),
             act :: l in
-          
-          if PkgSet.mem p set then 
+
+          if PkgSet.mem p set then
             add_succ_rem p set p
           else
             set, l)
-        g 
+        g
         (pkg_set, []) in
     l
 
@@ -508,14 +508,14 @@ struct
       pkg
 
   let filter_dependencies f_filter f_direction ?(depopts=false) (U l_pkg_pb) (P pkg_l) =
-    let pkg_map = 
+    let pkg_map =
       List.fold_left
         (fun map pkg -> NV.Map.add (NV.of_dpkg pkg) pkg map)
         NV.Map.empty
         l_pkg_pb in
     get_table l_pkg_pb
       (fun table pkglist ->
-        let pkglist = 
+        let pkglist =
           if depopts then
             List.map (extended_dependencies table) pkglist
           else
@@ -534,7 +534,7 @@ struct
   let filter_backward_dependencies = filter_dep (fun x -> x)
   let filter_forward_dependencies = filter_dep PO.O.mirror
 
-  let sort_by_backward_dependencies = 
+  let sort_by_backward_dependencies =
     filter_dependencies
       (fun pkg_set -> List.filter (fun p -> PkgSet.mem p pkg_set))
       (fun x -> x)
@@ -554,33 +554,33 @@ struct
     log "universe=%s request=<%s>"
       (string_of_packages (List.rev l_pkg_pb))
       (string_of_request req);
-    get_table l_pkg_pb 
+    get_table l_pkg_pb
       (fun table pkglist ->
         let package_map pkg = NV.of_cudf table pkg in
 
-        let i_req = 
+        let i_req =
           request_map
-            (fun x -> 
+            (fun x ->
               match Debian.Debcudf.ltocudf table [x] with
                 | [n,c] -> Common.CudfAdd.encode n, c
                 | _   -> failwith "TODO"
             ) req in
-        let resolve_diff universe = 
+        let resolve_diff universe =
           CudfDiff.resolve_diff universe i_req in
-        
-        let req_only_remove = 
+
+        let req_only_remove =
           (** determine if the request is a remove case *)
           match req with
             | { wish_remove = _ :: _; _ } -> true
             | _ -> false in
 
-        (** [graph_simple] contains the graph of packages 
+        (** [graph_simple] contains the graph of packages
             where the dependency relation is without optional dependencies  *)
-        let graph_simple, (universe, sol_o) = 
+        let graph_simple, (universe, sol_o) =
           let universe0 = Cudf.load_universe pkglist in
           dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe0),
           let universe = Cudf.load_universe (List.map (extended_dependencies table) pkglist) in
-          universe, 
+          universe,
           resolve_diff
             (if req_only_remove then
                 (* Universe with all the optional dependencies *)
@@ -599,9 +599,9 @@ struct
             log "SOLUTION: %s" l_s;
 
             (** compute all packages to remove *)
-            let l_del_p, set_del = 
+            let l_del_p, set_del =
               Utils.filter_map (function
-                | I_to_change (Some pkg, _) 
+                | I_to_change (Some pkg, _)
                 | I_to_delete pkg -> Some pkg
                 | _ -> None) l,
               PkgSet.of_list
@@ -610,17 +610,17 @@ struct
                   | _ -> None) l) in
 
             (** compute initial packages to add *)
-            let map_add = 
+            let map_add =
               PkgMap.of_list (Utils.filter_map (function
                 | I_to_change (None, _) when req_only_remove -> None
                 | I_to_change (_, pkg) as act -> Some (pkg, act)
                 | I_to_delete _ -> None
                 | I_to_recompile _ -> assert false) l) in
 
-            (** [graph_toinstall] is similar to [graph_simple] except that 
+            (** [graph_toinstall] is similar to [graph_simple] except that
                 the dependency relation is complete *)
-            let graph_toinstall = 
-              PO.O.mirror 
+            let graph_toinstall =
+              PO.O.mirror
                 (create_graph (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
             let graph_toinstall =
               let graph_toinstall = PG.copy graph_toinstall in
@@ -628,7 +628,7 @@ struct
               graph_toinstall in
 
             (** compute packages to recompile (and perform the merge with packages to add) *)
-            let _, map_act = 
+            let _, map_act =
               PG_topo.fold
                 (fun pkg (set_recompile, l_act) ->
                   let add_succ_rem pkg set act =
@@ -637,7 +637,7 @@ struct
                        List.fold_left
                          (fun set x -> PkgSet.add x set)
                          set (PG.succ graph_toinstall pkg)
-                     with _ -> set), 
+                     with _ -> set),
                     Utils.IntMap.add
                       (PG.V.hash pkg)
                       { cudf = pkg ; action = action_map package_map act } l_act in
@@ -654,22 +654,22 @@ struct
                 (PkgSet.empty, Utils.IntMap.empty) in
 
             (** compute packages to recompile and remove *)
-            let map_act, to_remove = 
+            let map_act, to_remove =
               let l_remove = topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del in
-              let () = 
+              let () =
                 match l_remove, req_only_remove with
-                  | _ :: _, false -> 
+                  | _ :: _, false ->
                     Globals.warning "the removing optimization will be applied but the solver has only taken a universe with partial dependencies"
                   (* check below if there are some packages, that depend optionally on packages to be removed, and that will not be recompiled *)
                   | _ -> () in
 
               (** partition the [l_remove] to decide for each element if we recompile them or delete. *)
               List.fold_left
-                (fun (map_act, l_folded) pkg -> 
-                  if 
+                (fun (map_act, l_folded) pkg ->
+                  if
                     (** check if the user has set some packages that will explicitely be removed *)
                     List.exists
-                      (fun (p, _) -> p = pkg.Cudf.package) 
+                      (fun (p, _) -> p = pkg.Cudf.package)
                       i_req.i_wish_remove
                     ||
                     (** check if [pkg] contains an optional package which has already been visited in [l_folded] *)
@@ -686,12 +686,12 @@ struct
                       { cudf = pkg ; action = action_map package_map (I_to_recompile pkg) }
                       map_act,
                     l_folded
-                ) 
+                )
                 (map_act, [])
                 l_remove in
 
-            (** construct the answer [graph] to add. 
-                Then, it suffices to fold it topologically 
+            (** construct the answer [graph] to add.
+                Then, it suffices to fold it topologically
                 by following the action given at each node (install or recompile). *)
             let graph = PA_graph.create () in
             Utils.IntMap.iter (fun _ -> PA_graph.add_vertex graph) map_act;
@@ -721,7 +721,7 @@ let sort_by_backward_dependencies = Graph.sort_by_backward_dependencies
 let resolve = Graph.resolve
 
 let delete_or_update t =
-  t.to_remove <> [] || 
+  t.to_remove <> [] ||
   PA_graph.fold_vertex
     (fun v acc ->
       acc || match v.action with To_change (Some _, _) -> true | _ -> false)

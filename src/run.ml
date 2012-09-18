@@ -26,7 +26,7 @@ module Sys2 = struct
   open Unix
 
   (** behaves as [Sys.is_directory] except for symlinks, which returns always [false]. *)
-  let is_directory file = 
+  let is_directory file =
     (lstat file).st_kind = S_DIR
 end
 
@@ -58,14 +58,14 @@ let safe_mkdir dir =
   end
 
 let mkdir dir =
-  let rec aux dir = 
+  let rec aux dir =
     if not (Sys.file_exists dir) then begin
       aux (Filename.dirname dir);
       safe_mkdir dir;
     end in
   aux dir
-  
-let is_link filename = 
+
+let is_link filename =
   let open Unix in
   (lstat filename).st_kind = S_LNK
 
@@ -73,7 +73,7 @@ let remove_file file =
   log "remove_file %s" file;
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
-    
+
 let copy src dst =
   if src <> dst then begin
     log "copying %s to %s" src dst;
@@ -83,7 +83,7 @@ let copy src dst =
     let ic = open_in_bin src in
     let oc =
       if Sys.file_exists dst then
-        (* WARNING here we [remove_file] because the copy will fail 
+        (* WARNING here we [remove_file] because the copy will fail
            - if [dst] is a link
            - or if [dst] is a regular file with not enough permission (e.g. "u-w") *)
         remove_file dst;
@@ -135,7 +135,7 @@ let in_dir dir fn =
   with e ->
     reset_cwd ();
     raise e
-    
+
 let list kind dir =
   if Sys.file_exists dir then
     in_dir dir (fun () ->
@@ -226,7 +226,7 @@ let real_path p =
       dir / base
   )
 
-let replace_path bins = 
+let replace_path bins =
   let path = ref "<not set>" in
   let env = Unix.environment () in
   for i = 0 to Array.length env - 1 do
@@ -254,7 +254,7 @@ let run_process ?verbose ?(add_to_env=[]) ?(add_to_path=[]) = function
       mkdir (Filename.dirname name);
       let str = String.concat " " (cmd :: args) in
       log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
-      if None <> try Some (String.index cmd ' ') with Not_found -> None then 
+      if None <> try Some (String.index cmd ' ') with Not_found -> None then
         Globals.warning "Command %S contains 1 space" cmd;
       let verbose = match verbose with
         | None   -> !Globals.debug || !Globals.verbose
@@ -271,7 +271,7 @@ let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   else
     process_error r
 
-let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) commands = 
+let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) commands =
   List.iter (command ?verbose ~add_to_env ~add_to_path) commands
 
 let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
@@ -283,14 +283,14 @@ let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
 
 module Tar = struct
 
-  let extensions = 
+  let extensions =
     [ [ "tar.gz" ; "tgz" ], 'z'
     ; [ "tar.bz2" ; "tbz" ], 'j' ]
 
-  let match_ext file ext = 
+  let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
 
-  let assoc file = 
+  let assoc file =
     snd (List.find (function ext, _ -> match_ext file ext) extensions)
 
   let is_archive f =
@@ -302,8 +302,8 @@ module Tar = struct
     List.fold_left
       (function
         | Some s -> (fun _ -> Some s)
-        | None   -> 
-            (fun (ext, c) -> 
+        | None   ->
+            (fun (ext, c) ->
               if match_ext file ext then
                 Some (fun dir -> command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ])
               else
@@ -321,7 +321,7 @@ let extract file dst =
   with_tmp_dir (fun tmp_dir ->
     match Tar.extract_function file with
     | None   -> internal_error "%s is not a valid archive" file
-    | Some f -> 
+    | Some f ->
         f tmp_dir;
         if Sys.file_exists dst then internal_error "Cannot overwrite %s" dst;
         match directories_strict tmp_dir with
@@ -373,7 +373,7 @@ let flock () =
       Globals.log id "locking %s" file;
     end in
   loop ()
-    
+
 let funlock () =
   let id = string_of_int (Unix.getpid ()) in
   let file = lock_file () in
@@ -417,7 +417,7 @@ let ocamlc_where () =
 let download_command =
   try
     command ~verbose:false ["which"; "curl"];
-    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])  
+    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
   with Process_error _ ->
     try
       command ~verbose:false ["which"; "wget"];

@@ -22,7 +22,7 @@ module type SET = sig
   val of_list: elt list -> t
   val to_string: t -> string
   val find: (elt -> bool) -> t -> elt
-end               
+end
 module type MAP = sig
   include Map.S
   val to_string: ('a -> string) -> 'a t -> string
@@ -51,7 +51,7 @@ module Set = struct
 
     include S
 
-    let choose_one s = 
+    let choose_one s =
       match elements s with
         | [x] -> x
         | [] -> raise Not_found
@@ -84,9 +84,9 @@ module Map = struct
 
     let values map = List.map snd (bindings map)
 
-    let merge_max f = 
+    let merge_max f =
       merge
-        (fun k -> function 
+        (fun k -> function
           | None -> fun x -> x
           | Some o1 -> function
               | None -> Some o1
@@ -188,8 +188,8 @@ end = struct
       Globals.error_and_exit "%s does not exists!" dirname
 
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
-    Run.in_dir (to_string dirname) 
-      (fun () -> 
+    Run.in_dir (to_string dirname)
+      (fun () ->
         Run.commands
           ~add_to_env
           ~add_to_path:(List.map of_string add_to_path)
@@ -222,13 +222,13 @@ end = struct
     Utils.starts_with ~prefix (to_string dirname)
 
   let remove_prefix ~prefix dirname =
-    let prefix = 
+    let prefix =
       let str = to_string prefix in
       if str = "" then "" else Filename.concat str "" in
     let dirname = to_string dirname in
     Utils.remove_prefix ~prefix dirname
 end
-    
+
 type dirname = Dirname.t
 
 let (/) d1 s2 =
@@ -466,7 +466,7 @@ end = struct
   type t = string
   let to_string x = x
   let of_string x = x
-  let compare n1 n2 = 
+  let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with
       | 0 -> compare n1 n2
       | i -> i
@@ -558,14 +558,14 @@ end = struct
         (pkg.Cudf.package, pkg.Cudf.version) in
     { name    = N.of_string (Common.CudfAdd.decode pkg.Cudf.package);
       version = V.of_string real_version; }
-    
+
   let to_string t =
     Printf.sprintf "%s%c%s" (N.to_string t.name) sep (V.to_string t.version)
 
   module O = struct
     type tmp = t
     type t = tmp
-    let compare nv1 nv2 = 
+    let compare nv1 nv2 =
       match N.compare nv1.name nv2.name with
         | 0 -> V.compare nv1.version nv2.version
         | i -> i
@@ -894,7 +894,7 @@ let pin_option_of_string s =
     Path (Dirname.of_string s)
   else
     Version (V.of_string s)
-    
+
 type pin = {
   pin_package: name;
   pin_arg: pin_option;

@@ -149,7 +149,7 @@ val make_string_pair: string * string -> value
 
 (** {2 Printing functions} *)
 
-(** Apply the given printer function 
+(** Apply the given printer function
     by putting a newline between every element of every list *)
 val force_newline : (unit -> 'a) -> 'a
 
@@ -179,7 +179,7 @@ val assoc_option : item list -> string -> (value -> 'a) -> 'a option
 
 (** Get the value of a field. If the variable does not exist, return a
     default value *)
-val assoc_default : 'a -> item list -> string -> (value -> 'a) -> 'a 
+val assoc_default : 'a -> item list -> string -> (value -> 'a) -> 'a
 
 (** Get the value associated to a variable. If the variable does not
     exists, return [] *)

@@ -135,7 +135,7 @@ module G = struct
 
   let available_versions t n =
     versions (NV.Set.filter (fun nv -> NV.name nv = n) (available_packages t))
-    
+
   let descr_dir t = t / "descr"
 
   let descr t nv = descr_dir t // NV.to_string nv
@@ -146,7 +146,7 @@ module G = struct
 
   let repo_index t = t / "repo" // "index"
 
-  let available_aliases t = 
+  let available_aliases t =
     let l = List.map fst (File.Aliases.safe_read (aliases t)) in
     Alias.Set.of_list l
 end
@@ -161,7 +161,7 @@ module R = struct
   let of_dirname path = path
 
   let cwd () = Dirname.cwd ()
-    
+
   let root t = t
 
   let config t = t // "config"
