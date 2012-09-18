@@ -1518,7 +1518,7 @@ module Heuristic = struct
                      (fun nv l -> (debpkg_of_nv `remove t nv) :: l)
                      (get_available_current t) []) in
               let depends =
-                Solver.filter_forward_dependencies ~depopts:true universe
+                Solver.get_forward_dependencies ~depopts:true universe
                   (Solver.P [debpkg_of_nv `remove t nv]) in
               let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
               let depends = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) depends in
@@ -1694,7 +1694,7 @@ let install names =
 
     let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `install t nv) :: l) (get_available_current t) []) in
     let depends =
-      Solver.filter_backward_dependencies ~depopts:true universe
+      Solver.get_backward_dependencies ~depopts:true universe
         (Solver.P (List.rev_map (fun nv -> debpkg_of_nv `install t nv) pkg_new)) in
     let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
     let depends =
@@ -1795,7 +1795,7 @@ let remove names =
   if whish_remove <> [] then (
     let universe = Solver.U (NV.Set.fold (fun nv l -> (debpkg_of_nv `remove t nv) :: l) (get_available_current t) []) in
     let depends =
-      Solver.filter_forward_dependencies ~depopts:true universe
+      Solver.get_forward_dependencies ~depopts:true universe
         (Solver.P (List.rev_map
                      (fun vc -> debpkg_of_nv `remove t (nv_of_version_constraint vc))
                      wish_remove)) in
@@ -1917,15 +1917,16 @@ let upload upload repo =
   Dirname.rmdir (Path.R.package upload_repo nv);
   Filename.remove (Path.R.archive upload_repo nv)
 
-(* Return the transitive closure of dependencies *)
+(* Return the transitive closure of dependencies sorted in topological order *)
 let get_transitive_dependencies ?(depopts = false) t names =
   let universe =
     Solver.U (List.map (debpkg_of_nv `config t) (NV.Set.elements t.installed)) in
   (* Compute the transitive closure of dependencies *)
   let pkg_of_name n = debpkg_of_nv `config t (find_installed_package_by_name t n) in
   let request = Solver.P (List.map pkg_of_name names) in
-  let depends = Solver.filter_backward_dependencies ~depopts universe request in
-  List.map NV.of_dpkg depends
+  let depends = Solver.get_backward_dependencies ~depopts universe request in
+  let topo = List.map NV.of_dpkg depends in
+  topo
 
 let config request =
   log "config %s" (string_of_config request);
@@ -1981,7 +1982,7 @@ let config request =
       let includes =
         List.fold_left (fun accu n ->
           "-I" :: Dirname.to_string (Path.C.lib t.compiler n) :: accu
-        ) [] deps in
+        ) [] (List.rev deps) in
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
@@ -2057,15 +2058,15 @@ let config request =
             let childs = File.Dot_config.Section.requires config s in
             (* keep only the build reqs which are in the package dependency list
                and the ones we haven't already seen *)
-            let childs =
-              List.filter (fun s ->
-                Section.Map.mem s library_map && not (Section.Set.mem s !seen)
-              ) childs in
             List.iter (fun child ->
                 Section.G.add_vertex graph child;
                 Section.G.add_edge graph child s;
-                todo := Section.Set.add child !todo;
             ) childs;
+            let new_childs =
+              List.filter (fun s ->
+                Section.Map.mem s library_map && not (Section.Set.mem s !seen)
+              ) childs in
+            todo := Section.Set.union (Section.Set.of_list new_childs) !todo;
             loop ()
         in
         loop ();

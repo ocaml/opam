@@ -507,7 +507,7 @@ struct
     else
       pkg
 
-  let filter_dependencies f_filter f_direction ?(depopts=false) (U l_pkg_pb) (P pkg_l) =
+  let filter_dependencies f_direction ?(depopts=false) (U l_pkg_pb) (P pkg_l) =
     let pkg_map =
       List.fold_left
         (fun map pkg -> NV.Map.add (NV.of_dpkg pkg) pkg map)
@@ -525,19 +525,13 @@ struct
           PkgSet.empty
           pkg_l in
         let g = f_direction (dep_reduction pkglist) in
-        let l = topo_fold g pkg_set in
-        List.map (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map)
-          (f_filter pkg_set l))
+        let pkg_topo = topo_fold g pkg_set in
+        List.map
+          (fun pkg -> NV.Map.find (NV.of_cudf table pkg) pkg_map)
+          pkg_topo)
 
-  let filter_dep = filter_dependencies (fun _ x -> x)
-
-  let filter_backward_dependencies = filter_dep (fun x -> x)
-  let filter_forward_dependencies = filter_dep PO.O.mirror
-
-  let sort_by_backward_dependencies =
-    filter_dependencies
-      (fun pkg_set -> List.filter (fun p -> PkgSet.mem p pkg_set))
-      (fun x -> x)
+  let filter_backward_dependencies = filter_dependencies (fun x -> x)
+  let filter_forward_dependencies = filter_dependencies PO.O.mirror
 
   let resolve (U l_pkg_pb) req installed =
     (* filter-out the default package from the universe *)
@@ -714,9 +708,8 @@ struct
 
 end
 
-let filter_backward_dependencies = Graph.filter_backward_dependencies
-let filter_forward_dependencies = Graph.filter_forward_dependencies
-let sort_by_backward_dependencies = Graph.sort_by_backward_dependencies
+let get_backward_dependencies = Graph.filter_backward_dependencies
+let get_forward_dependencies = Graph.filter_forward_dependencies
 
 let resolve = Graph.resolve
 
