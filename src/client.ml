@@ -960,6 +960,7 @@ let proceed_toinstall t nv =
     (* bin *)
     List.iter (fun (src, dst) ->
       let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
+      (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
       Filename.copy src dst
     ) (File.Dot_install.bin install);
 
@@ -1157,7 +1158,7 @@ let print_env_warning () =
 (* In case of error, simply return the error traces, and let the
    repo in a state that the user can explore.
    Do not try to recover yet. *)
-let rec proceed_tochange t nv_old nv =
+let proceed_tochange t nv_old nv =
   Globals.msg "\n=-=-= %s =-=-=\n" (NV.to_string nv);
 
   (* First, uninstall any previous version *)

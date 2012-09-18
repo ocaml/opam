@@ -24,7 +24,7 @@ the \<packagepattern\>s specified as arguments.
 
 # SEE ALSO
 
-**opam-list**(1) **opam-info**(1)
+**opam-list**(1), **opam-info**(1)
 
 # OPAM
 

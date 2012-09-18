@@ -19,7 +19,7 @@ upgrade* to upgrade those.
 
 # SEE ALSO
 
-**opam-init**(1) **opam-remote**(1) **opam-upgrade**(1)
+**opam-init**(1), **opam-remote**(1), **opam-upgrade**(1)
 
 # OPAM
 
