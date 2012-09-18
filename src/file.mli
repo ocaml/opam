@@ -26,7 +26,7 @@ module type IO_FILE = sig
 
   (** Write some contents to a file *)
   val write: filename -> t -> unit
-  
+
   (** Read file contents. Raise an error if the file does not exist. *)
   val read: filename -> t
 
@@ -76,7 +76,7 @@ module Config: sig
 end
 
 (** OPAM files *)
-module OPAM: sig 
+module OPAM: sig
 
   include IO_FILE
 
@@ -209,7 +209,7 @@ module Comp: sig
   val name: t -> OCaml_V.t
 
   (** Return the url of the compiler *)
-  val src: t -> filename
+  val src: t -> filename option
 
   (** Return the list of patches to apply *)
   val patches: t -> filename list
@@ -259,10 +259,10 @@ end
 (** .install files *)
 module Dot_install: sig
 
-  module Raw : sig 
+  module Raw : sig
 
     include IO_FILE
-      
+
     (** List of files to install in $lib/ *)
     val lib:  t -> string list
 
@@ -304,7 +304,7 @@ end
 
 (** .config files *)
 module Dot_config: sig
-  
+
   include IO_FILE
 
   (** Create a new .config file (containing only variables) *)
@@ -356,7 +356,7 @@ module Dot_config: sig
   (** The list of top-level variables *)
   val variables: t -> variable list
 
-end 
+end
 
 (** {2 Repository files} *)
 

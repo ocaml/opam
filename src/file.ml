@@ -95,7 +95,7 @@ module Filenames = struct
     let lines =
       List.map (fun f -> [Filename.to_string f]) (Filename.Set.elements s) in
     Lines.to_string f lines
-                                 
+
 end
 
 module Urls_txt = struct
@@ -243,7 +243,7 @@ module Reinstall = struct
 end
 
 module Repo_index = struct
-    
+
   let internal = "repo-index"
 
   type t = string list N.Map.t
@@ -382,7 +382,7 @@ module Config = struct
     let to_repo (name, option) =
       let address, kind = match option with
         | Some (address, kind) -> address, kind
-        | None                 -> 
+        | None                 ->
             Globals.default_repository_kind,
             Globals.default_repository_address in
       Repository.create ~name ~address ~kind
@@ -463,7 +463,7 @@ module Config = struct
    let to_string filename t =
      let s = {
        filename = Filename.to_string filename;
-       contents = [ 
+       contents = [
          Variable (s_opam_version , make_string (OPAM_V.to_string t.opam_version));
          Variable (s_repositories , make_list of_repo t.repositories);
          Variable (s_cores        , make_int t.cores);
@@ -472,12 +472,12 @@ module Config = struct
          match t.ocaml_version with
            | None   -> []
            | Some v -> [ Variable (s_ocaml_version, make_string (Alias.to_string v)) ]
-       ) 
+       )
        @ (
          match t.system_ocaml_version with
            | None   -> []
            | Some v -> [ Variable (s_system_ocaml_version, make_string (OCaml_V.to_string v)) ]
-       ) 
+       )
      } in
      Syntax.to_string filename s
 end
@@ -553,13 +553,13 @@ module OPAM = struct
   let s_authors     = "authors"
   let s_homepage    = "homepage"
   let s_ocaml_version = "ocaml-version"
-    
+
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
-  let s_status = "status" 
-    
+  let s_status = "status"
+
   (* see [Debcudf.add_inst] for more details about the format *)
-  let s_installed   = "  installed" 
+  let s_installed   = "  installed"
 
   let useful_fields = [
     s_opam_version;
@@ -618,7 +618,7 @@ module OPAM = struct
   let default_package t =
     let depopts =
       string_of_value (File_format.make_cnf_formula (llencode t.depopts)) in
-    { D.default_package with 
+    { D.default_package with
       D.name      = N.to_string t.name ;
       D.version   = V.to_string t.version ;
       D.depends   = llencode t.depends ;
@@ -703,7 +703,7 @@ module OPAM = struct
       "list-list", parse_list (parse_list parse_command);
     ] in
     let maintainer = assoc s s_maintainer parse_string in
-    let substs     = 
+    let substs     =
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
     let build_env = assoc_list s s_build_env (parse_list parse_env_variable) in
     let build      =
@@ -728,7 +728,7 @@ end
 module Dot_install_raw = struct
 
   let internal = ".install(*raw*)"
-    
+
   type t =  {
     lib : string list ;
     bin : (string * string option) list ;
@@ -794,7 +794,7 @@ end
 module Dot_install = struct
 
   let internal = ".install"
-    
+
   type t =  {
     lib : filename list ;
     bin : (filename * basename) list ;
@@ -823,10 +823,10 @@ module Dot_install = struct
 
   let to_string filename t =
     let to_bin (src, dst) =
-      Filename.to_string src, 
+      Filename.to_string src,
       if Filename.basename src = dst then None else Some (Basename.to_string dst) in
     let to_misc (src, dst) =
-      Filename.to_string src, 
+      Filename.to_string src,
       Some (Filename.to_string dst) in
     R.to_string filename
       { lib = List.map Filename.to_string t.lib
@@ -857,13 +857,13 @@ module Dot_config = struct
   let b bool = B bool
   type section = Types.section
 
-  type s = { 
+  type s = {
     name      : section;
     kind      : string ;
     bytecomp  : string list ;
     asmcomp   : string list ;
     bytelink  : string list ;
-    asmlink   : string list ; 
+    asmlink   : string list ;
     requires  : section list;
     lvariables: (variable * variable_contents) list;
   }
@@ -938,7 +938,7 @@ module Dot_config = struct
             Variable (s_bytelink, make_list make_string s.bytelink);
             Variable (s_asmlink , make_list make_string s.asmlink);
             Variable (s_requires, make_list make_require s.requires);
-          ] @ of_variables s.lvariables 
+          ] @ of_variables s.lvariables
         } in
     Syntax.to_string filename {
       filename = Filename.to_string filename;
@@ -1017,11 +1017,11 @@ module Comp = struct
 
   type section = Types.section
 
-  type t = { 
+  type t = {
     opam_version : OPAM_V.t ;
     name         : OCaml_V.t ;
     preinstalled : bool;
-    src          : filename ;
+    src          : filename option ;
     patches      : filename list ;
     configure    : string list ;
     make         : string list ;
@@ -1031,7 +1031,7 @@ module Comp = struct
     bytelink     : string list ;
     asmlink      : string list ;
     packages     : and_formula ;
-    requires     : section list; 
+    requires     : section list;
     pp           : ppflag option;
     env          : (string * string * string) list;
   }
@@ -1039,7 +1039,7 @@ module Comp = struct
   let empty = {
     opam_version = OPAM_V.of_string Globals.opam_version;
     name         = OCaml_V.of_string "<none>";
-    src          = Filename.raw "";
+    src          = None;
     preinstalled = false;
     patches   = [];
     configure = [];
@@ -1124,7 +1124,7 @@ module Comp = struct
     let opam_version =
       assoc s s_opam_version (parse_string |> OPAM_V.of_string) in
     let name      = assoc s s_name (parse_string |> OCaml_V.of_string) in
-    let src       = assoc_default (Filename.raw "") s s_src (parse_string |> Filename.raw) in
+    let src       = assoc_option s s_src (parse_string |> Filename.raw) in
     let patches   = assoc_list s s_patches (parse_list (parse_string |> Filename.raw)) in
     let configure = assoc_string_list s s_configure in
     let make      = assoc_string_list s s_make      in
@@ -1143,7 +1143,7 @@ module Comp = struct
     if build <> [] && (configure @ make) <> [] then
       Globals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
                               fields at the same time.";
-    if not preinstalled && Filename.to_string src = "" then
+    if not preinstalled && src = None then
       Globals.error_and_exit "You should either specify an url (with 'sources')  \
                               or use 'preinstalled: true' to pick the already installed \
                               compiler version.";
@@ -1162,7 +1162,10 @@ module Comp = struct
       filename = Filename.to_string filename;
       contents = [
         Variable (s_name        , make_string (OCaml_V.to_string s.name));
-        Variable (s_src         , make_string (Filename.to_string s.src));
+      ] @ (match s.src with
+          | None   -> []
+          | Some s -> [Variable (s_src, make_string (Filename.to_string s))]
+      ) @ [
         Variable (s_opam_version, make_string (OPAM_V.to_string s.opam_version));
         Variable (s_preinstalled, make_bool s.preinstalled);
         Variable (s_patches     , make_list (Filename.to_string |> make_string) s.patches);
