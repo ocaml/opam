@@ -949,18 +949,31 @@ let proceed_toinstall t nv =
     File.Dot_config.write (Path.C.config t.compiler name) config;
 
     (* lib *)
+    let warnings = ref [] in
+    let check f dst =
+      if not (Filename.exists f) then (
+        warnings := (f, dst) :: !warnings
+      );
+      Filename.exists f in
     let lib = Path.C.lib t.compiler name in
-    List.iter (fun f -> Filename.copy_in f lib) (File.Dot_install.lib install);
+    List.iter (fun f ->
+      if check f lib then
+        Filename.copy_in f lib
+    ) (File.Dot_install.lib install);
 
     (* toplevel *)
     let toplevel = Path.C.toplevel t.compiler in
-    List.iter (fun f -> Filename.copy_in f toplevel) (File.Dot_install.toplevel install);
+    List.iter (fun f ->
+      if check f toplevel then
+        Filename.copy_in f toplevel
+    ) (File.Dot_install.toplevel install);
 
     (* bin *)
     List.iter (fun (src, dst) ->
       let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
       (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
-      Filename.copy src dst
+      if check src  (Path.C.bin t.compiler) then
+        Filename.copy src dst;
     ) (File.Dot_install.bin install);
 
     (* misc *)
@@ -973,7 +986,13 @@ let proceed_toinstall t nv =
           if confirm "Continue ?" then
             Filename.copy src dst
         end
-      ) (File.Dot_install.misc install)
+      ) (File.Dot_install.misc install);
+
+    if !warnings <> [] then
+      let print (f, dst) = Printf.sprintf " - %s in %s" (Filename.to_string f) (Dirname.to_string dst) in
+      Globals.error
+        "Error while installing the following files:\n%s"
+        (String.concat "\n" (List.map print !warnings));
   )
 
 let pinned_path t nv =
