@@ -2178,8 +2178,8 @@ let pin action =
         let current = N.Map.find name pins in
         Globals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
           (N.to_string name)
-          (string_of_pin_option current)
-          (string_of_pin_option action.pin_arg);
+          (string_of_pin_option action.pin_arg)
+          (string_of_pin_option current);
       );
       log "Adding %s => %s" (string_of_pin_option action.pin_arg) (N.to_string name);
       update_config (N.Map.add name action.pin_arg pins)
