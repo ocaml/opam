@@ -215,46 +215,35 @@ let update r =
   let local_repo = Path.R.create r in
   let local_dir = Path.R.root local_repo in
   let module B = (val find_backend r: BACKEND) in
-  let files = Dirname.in_dir local_dir (fun () -> B.update (Repository.address r)) in
-  let packages = nv_set_of_files files in
+  let updated_files = Dirname.in_dir local_dir (fun () -> B.update (Repository.address r)) in
+  let updated_packages = nv_set_of_files updated_files in
 
-  let cached_packages = Path.R.available_tmp local_repo in
-
-  (* Clean-up outdated archives *)
-  NV.Set.iter (fun nv ->
-    let archive = Path.R.archive local_repo nv in
-    if Filename.Set.mem archive files then
-      Filename.remove archive
-  ) cached_packages;
-
-  (* Clean-up tmp files when the URL change *)
+  (* Clean-up archives and tmp files on URL changes *)
   NV.Set.iter (fun nv ->
     let url_f = Path.R.url local_repo nv in
-    if Filename.Set.mem url_f files then begin
+    if Filename.Set.mem url_f updated_files then begin
       let tmp_dir = Path.R.tmp_dir local_repo nv in
       Dirname.rmdir tmp_dir;
+      Filename.remove (Path.R.archive local_repo nv);
     end
-  ) cached_packages;
+  ) updated_packages;
 
-  (* For each URL file, look at changes upstream *)
+  (* For each package in the cache, look at what changed upstream *)
+  let cached_packages = Path.R.available_tmp local_repo in
   let updated_cached_packages = NV.Set.filter (fun nv ->
-    let archive = Path.R.archive local_repo nv in
-    if not (Filename.exists archive) then
-      let url_f = Path.R.url local_repo nv in
-      let url = File.URL.read url_f in
-      let kind = match File.URL.kind url with
+    let url_f = Path.R.url local_repo nv in
+    let url = File.URL.read url_f in
+    let kind = match File.URL.kind url with
       | None   -> kind_of_url (File.URL.url url)
       | Some k -> k in
-      let checksum = File.URL.checksum url in
-      let url = File.URL.url url in
-      log "updating %s:%s" url kind;
-      match Dirname.in_dir local_dir (fun () -> download_one kind nv url checksum) with
-      | Not_available -> Globals.error_and_exit "Cannot get %s" url
-      | Up_to_date _  -> false
-      | Result _      -> true
-    else
-      false
+    let checksum = File.URL.checksum url in
+    let url = File.URL.url url in
+    log "updating %s:%s" url kind;
+    match Dirname.in_dir local_dir (fun () -> download_one kind nv url checksum) with
+    | Not_available -> Globals.error_and_exit "Cannot get %s" url
+    | Up_to_date _  -> false
+    | Result _      -> true
   ) cached_packages in
 
-  let updated = NV.Set.union packages updated_cached_packages in
+  let updated = NV.Set.union updated_packages updated_cached_packages in
   File.Updated.write (Path.R.updated local_repo) updated
