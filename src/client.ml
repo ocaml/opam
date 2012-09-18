@@ -282,6 +282,7 @@ let install_conf_ocaml_config t =
   (* .config *)
   let vars =
     let map f l = List.map (fun (s,p) -> Variable.of_string s, S (f p)) l in
+    let id x = x in
 
     map Dirname.to_string
       [
@@ -293,13 +294,11 @@ let install_conf_ocaml_config t =
         ("toplevel", Path.C.toplevel t.compiler);
         ("man", Path.C.man_dir t.compiler);
       ]
-    @
-    map (fun x -> x)
-      [
-        ("user", (Unix.getpwuid (Unix.getuid ())).Unix.pw_name);
-        ("group", (Unix.getgrgid (Unix.getgid ())).Unix.gr_name);
-        ("make", !Globals.makecmd);
-      ] in
+    @ map id [
+      ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
+      ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
+      ("make" , !Globals.makecmd);
+    ] in
 
   let config = File.Dot_config.create vars in
   File.Dot_config.write (Path.C.config t.compiler name) config
