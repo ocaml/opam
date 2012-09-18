@@ -615,7 +615,7 @@ let create_default_compiler_description t =
       ocaml_version
       (List.map mk (if !Globals.base_packages then base_packages else []))
       [ ("CAML_LD_LIBRARY_PATH", "=",
-           (Dirname.to_string (Path.C.stublibs t.compiler))
+           "%{lib}%/stublibs"
            ^ ":" ^
            (match Run.ocamlc_where () with
            | Some d -> Stdlib_filename.concat d "stublibs"
