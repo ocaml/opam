@@ -200,29 +200,20 @@ switch-alias:
 	$(OPAM) switch -install test -alias-of system -no-base-packages
 	$(OPAM)	switch -clone system
 	$(CHECK) -l switch-alias-clone P1.1 P2.1
-	$(OPAM) switch -install test2 -alias-of 4.00.0
+	$(OPAM) switch -install test2 -alias-of 20
 	$(OPAM) install P1
-	$(CHECK) -l switch-alias-4.00 P1.1
+	$(CHECK) -l switch-alias-20 P1.1
 	$(OPAM) switch system
 	$(OPAM) switch -remove test test2
 
 switch-env-packages:
-	$(OPAM) switch 3.12.1
+	$(OPAM) switch 10
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l switch-env-packages P1.1 P2.1 P3.1~weird-version.test P4.3
 else
 	$(CHECK) -l switch-env-packages P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
-	./test-TEST.sh $(OPAM_ROOT)/3.12.1/build/P4.3/P4.env "1"
-
-switch:
-	$(MAKE) fresh
-	$(MAKE) binaries
-	$(MAKE) init
-	$(MAKE) upload
-	$(MAKE) install
-	$(OPAM) switch -list
-	$(OPAM) switch -clone 3.12.1-byte
+	./test-TEST.sh $(OPAM_ROOT)/10/build/P4.3/P4.env "1"
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz
