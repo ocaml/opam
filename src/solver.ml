@@ -196,6 +196,9 @@ let string_of_cudf (p, c) =
     | Some (r,v) -> Printf.sprintf " (%s %d)" (relop r) v in
   Printf.sprintf "%s%s" p (const c)
 
+let string_of_cudfs l =
+  String.concat ", " (List.map string_of_cudf l)
+
 (* Universe of packages *)
 type universe = U of package list
 
@@ -219,9 +222,10 @@ module CudfDiff : sig
 
   type answer = Cudf.package internal_action list
 
-  val resolve_diff :
+  val resolve:
     Cudf.universe ->
     Cudf_types.vpkg internal_request ->
+    NV.Set.t ->
     answer option
 
 end = struct
@@ -281,96 +285,111 @@ end = struct
             log "INTERNAL(resolve) constraint violation";
             None
 
-  let resolve_with_optimization f_diff univ req =
-
-    let string_of_c l =
-      String.concat ", " (List.map (string_of_internal_action string_of_cudf_package) l) in
+  let resolve_with_optimization f_diff univ req installed =
 
     match req, resolve f_diff univ req with
       | { i_wish_remove = [] ; i_wish_upgrade = [] ; _ }, Some ans ->
 
-          (* determine if the user has put a constraint on the package associated to [p] in [req] *)
-          let has_constraint_in_req p =
-            try
-              let _, version = List.find (fun (name, _) -> p.Cudf.package = name) req.i_wish_install in
-              version <> None
-            with Not_found ->
-              false in
+        (* First, we partition the packages we get in the answer
+           into two sets: the ones with a version constraint in the
+           initial request, and the one without. *)
+        let keep_versions, change_versions =
+          let mk_eq p = p.Cudf.package, Some (`Eq, p.Cudf.version) in
+          let mk_any p = p.Cudf.package, None in
+          List.fold_left (function (keep, change) -> function
+            | I_to_delete _      -> (keep, change)
+            | I_to_recompile p   -> ((mk_eq p)::keep, change)
+            | I_to_change (_, p) ->
+              try
+                let r = List.find (fun (name, _) -> p.Cudf.package = name) req.i_wish_install in
+                begin match r with
+                | _, None -> (keep, (mk_any p)::change)
+                | _, v    -> ((mk_eq p)::keep, change)
+                end
+              with Not_found ->
+                (keep, (mk_any p) :: change)
+          ) ([],[]) ans in
 
-          let l_p_ans, l_new_pkg =
-            (* partition [ans] so that we have one group of packages with version increase-able *)
-            List.partition
-              (function
-                | I_to_change (Some _, p)
-                | I_to_change (None, p) -> has_constraint_in_req p
-                | I_to_delete _
-                | I_to_recompile _ -> true)
-              ans in
-
-          begin match l_new_pkg with
+        begin match change_versions with
           | [] -> Some ans
           | _  ->
-              log "INTERNAL(optimization) fixed=%s, increasable=%s" (string_of_c l_p_ans) (string_of_c l_new_pkg);
+              log "INTERNAL(optimization/1) keep=%s, change=%s"
+                (string_of_cudfs keep_versions)
+                (string_of_cudfs change_versions);
 
-              (** we preserve versions of packages that were explicitely requested *)
-              let l_p_ans =
-                Utils.filter_map
-                  (function
-                    | I_to_change (_, p)
-                    | I_to_recompile p -> Some (p.Cudf.package, Some (`Eq, p.Cudf.version))
-                    | I_to_delete _ -> None)
-                  l_p_ans in
+              let versions_map =
+                List.fold_left (fun map p ->
+                  let p_map =
+                    try  Utils.StringMap.find p.Cudf.package map
+                    with Not_found -> Utils.IntMap.empty in
+                  let p_map = Utils.IntMap.add p.Cudf.version p p_map in
+                  Utils.StringMap.add p.Cudf.package p_map map
+                ) Utils.StringMap.empty (Cudf.get_packages univ) in
 
-              (** we compute the last version of every new package (not requested) *)
-              let to_continue, l_new_pkg =
-                let univ_map = (** similar as [univ] but represented with map *)
-                  List.fold_left (fun map p ->
-                    Utils.StringMap.add p.Cudf.package
-                      (Utils.IntMap.add
-                         p.Cudf.version
-                         p
-                         (try Utils.StringMap.find p.Cudf.package map with Not_found -> Utils.IntMap.empty))
-                      map) Utils.StringMap.empty (Cudf.get_packages univ) in
+              let find_max n =
+                snd (Utils.IntMap.max_binding (Utils.StringMap.find n versions_map)) in
 
-                let find_max p univ =
-                  snd (Utils.IntMap.max_binding (Utils.StringMap.find p.Cudf.package univ)) in
+              (* we compute the max version for every packages with no version constraints *)
+              let max_versions =
+                List.map (function (n,_) ->
+                  let v_max = (find_max n).Cudf.version in
+                  (n, Some (`Eq, v_max))
+                ) change_versions in
 
-                List.fold_left
-                  (fun (to_continue, l_new_pkg) -> function
-                    | I_to_change (Some _, p)
-                    | I_to_change (None, p) ->
-                        let v_max = (find_max p univ_map).Cudf.version in
-                        to_continue || p.Cudf.version <> v_max, (p.Cudf.package, Some (`Eq, v_max)) :: l_new_pkg
-                    | I_to_delete _
-                    | I_to_recompile _ -> assert false (* already filtered before *))
-                  (false, [])
-                  l_new_pkg in
+              log "INTERNAL(optimization/2) max=%s" (string_of_cudfs max_versions);
 
-              let consistent pkgs =
+              (* does the install request + pkgs stay consistent ? *)
+              let are_consistent pkgs =
                 let i_wish_upgrade =
-                  let l = pkgs @ l_p_ans in
+                  let l = pkgs @ keep_versions in
                   let s = List.filter (fun (p,_) -> not (List.mem_assoc p l)) req.i_wish_install in
                   l @ s in
                 resolve f_diff univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } in
 
-              if to_continue then
-                let consistent_pkgs =
-                  List.fold_left (fun accu pkg ->
-                    if consistent [pkg] <> None then
-                      pkg :: accu
-                    else
-                      accu
-                  ) [] l_new_pkg in
-                match consistent consistent_pkgs with
+              let is_minimal pkg_n =
+                let all_versions = keep_versions @ change_versions in
+                match are_consistent (List.filter (fun (n,_) -> n <> pkg_n) all_versions) with
+                | None   -> true
+                | Some a ->
+                  List.exists (function
+                    | I_to_recompile p
+                    | I_to_change (_, p) -> p.Cudf.package = pkg_n
+                    | I_to_delete _ -> false
+                  ) a in
+
+              (* First, keep only the minimum set among the new packages *)
+              let max_versions =
+                List.filter (fun (n,_) ->
+                  NV.Set.exists (fun nv -> N.to_string (NV.name nv) = n) installed
+                  || is_minimal n
+                ) max_versions in
+
+              log "INTERNAL(optimization/3) max/filtered=%s" (string_of_cudfs max_versions);
+
+              (* Then try to upgrade each new package to its maximum version *)
+              let upgradables = ref 0 in
+              let upgradable_pkgs =
+                List.map (fun (n,v) ->
+                  if are_consistent [n,v] <> None then (
+                    incr upgradables;
+                    (n,v)
+                  ) else
+                    (n,None)
+                ) max_versions in
+                match are_consistent upgradable_pkgs with
                 | Some ans -> Some ans
-                | None     -> Some ans
-              else
-                Some ans
-          end
+                | None     ->
+                  if !upgradables <> 0 then (
+                    log "We found %d upgradable packages, but the global solution is not consistent"
+                      !upgradables;
+                    Some ans
+                  ) else
+                    Some ans
+        end
       | _, Some ans -> Some ans
       | _, None -> None
 
-  let resolve_diff univ req =
+  let resolve univ req installed =
     let f_diff diff =
       Hashtbl.fold (fun pkgname s acc ->
         let add x = x :: acc in
@@ -387,7 +406,7 @@ end = struct
         | None      , None       -> acc
       ) diff []
     in
-    resolve_with_optimization f_diff univ req
+    resolve_with_optimization f_diff univ req installed
 
 end
 
@@ -559,8 +578,8 @@ struct
                 | [n,c] -> Common.CudfAdd.encode n, c
                 | _   -> failwith "TODO"
             ) req in
-        let resolve_diff universe =
-          CudfDiff.resolve_diff universe i_req in
+        let resolve universe =
+          CudfDiff.resolve universe i_req installed in
 
         let req_only_remove =
           (** determine if the request is a remove case *)
@@ -575,7 +594,7 @@ struct
           dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe0),
           let universe = Cudf.load_universe (List.map (extended_dependencies table) pkglist) in
           universe,
-          resolve_diff
+          resolve
             (if req_only_remove then
                 (* Universe with all the optional dependencies *)
                 universe
