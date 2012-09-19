@@ -1682,7 +1682,7 @@ let init repo ocaml_version cores =
     update_packages t ~show_packages:false t.repositories;
     let t = update_available_current (load_state ()) in
     let wish_install = Heuristic.get_comp_packages t ocaml_version Heuristic.v_any in
-    let _solution = Heuristic.resolve `init t
+    let _solution = Heuristic.resolve ~force:true `init t
       [ { wish_install
         ; wish_remove = []
         ; wish_upgrade = [] } ] in
