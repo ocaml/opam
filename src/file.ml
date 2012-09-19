@@ -181,6 +181,8 @@ module URL = struct
   let kind t = t.kind
   let checksum t = t.checksum
 
+  let with_checksum t checksum = { t with checksum }
+
   let create ?checksum url =
     { url; checksum; kind = None }
 
