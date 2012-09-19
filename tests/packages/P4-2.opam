@@ -7,4 +7,4 @@ depends: [
     "P2"
     "P3"
 ]
-
+build: [ "./build.sh" ]

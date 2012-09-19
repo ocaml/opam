@@ -8,6 +8,9 @@ version: "1"
 
 maintainer: "contact@ocamlpro.com"
 
+(* The command to run *)
+build: [ "./build.sh" ]
+
 (* List of files to substitute env variables *)
 substs: [ "P1.config" ]
 

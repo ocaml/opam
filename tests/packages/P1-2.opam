@@ -5,4 +5,4 @@ ocaml-version: [ < "20" ]
 maintainer: "contact@ocamlpro.com"
 substs:     [ "P1.config" ]
 libraries:  [ "p1" ]
-
+build: [ "./build.sh" ]
