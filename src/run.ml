@@ -74,33 +74,6 @@ let remove_file file =
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
 
-let copy src dst =
-  if src <> dst then begin
-    log "copying %s to %s" src dst;
-    let n = 1024 in
-    let b = String.create n in
-    let read = ref min_int in
-    let ic = open_in_bin src in
-    let oc =
-      if Sys.file_exists dst then
-        (* WARNING here we [remove_file] because the copy will fail
-           - if [dst] is a link
-           - or if [dst] is a regular file with not enough permission (e.g. "u-w") *)
-        remove_file dst;
-      let perm = (Unix.stat src).Unix.st_perm in
-      mkdir (Filename.dirname dst);
-      open_out_gen [Open_wronly; Open_creat; Open_trunc; Open_binary] perm dst
-    in
-    while !read <>0 do
-      read := input ic b 0 n;
-      output oc b 0 !read;
-    done;
-    close_in ic;
-    close_out oc;
-    let st = Unix.lstat src in
-    Unix.utimes dst (st.Unix.st_atime) (st.Unix.st_mtime)
-  end
-
 let read file =
   log "read %s" file;
   let ic = open_in_bin file in
@@ -280,6 +253,19 @@ let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
     r.Process.r_stdout
   else
     process_error r
+
+let copy src dst =
+  if Sys.is_directory src then
+    internal_error "%s is a directory!" src;
+  if Sys.file_exists dst && Sys.is_directory dst then
+    internal_error "%s is a directory!" dst;
+  if  Sys.file_exists dst then
+    remove_file dst;
+  mkdir (Filename.dirname dst);
+  if src <> dst then begin
+    log "copying %s to %s" src dst;
+    command ["cp"; src; dst ];
+  end
 
 module Tar = struct
 

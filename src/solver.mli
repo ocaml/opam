@@ -95,18 +95,14 @@ type packages = P of package list
     is obtained by upgrading from its next element. *)
 val resolve : universe -> request -> NV.Set.t -> solution option
 
-(** Return the recursive dependencies of a package Note : the given
+(** Return the recursive dependencies of a package. Note : the given
     package exists in the list in input because this list describes
     the entire universe.  By convention, it also appears in output.
     If [depopts] (= [false] by default) is set to [true],
-    optional dependencies are merged with usual dependencies. *)
-val filter_backward_dependencies : ?depopts:bool -> universe -> packages -> package list
+    optional dependencies are added to the dependency relation.
+    The packages are return in topological order. *)
+val get_backward_dependencies : ?depopts:bool -> universe -> packages -> package list
 
-(** Same as [filter_backward_dependencies] but for forward
+(** Same as [get_backward_dependencies] but for forward
     dependencies *)
-val filter_forward_dependencies : ?depopts:bool -> universe -> packages -> package list
-
-(** Return a permutation of the given set of packages :
-    if package B depends of package A then
-    B appears before A in the resulting list *)
-val sort_by_backward_dependencies : ?depopts:bool -> universe -> packages -> package list
+val get_forward_dependencies : ?depopts:bool -> universe -> packages -> package list

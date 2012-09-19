@@ -85,9 +85,10 @@ module B = struct
           Result dir
 
   let update remote_address =
+    let local_repo = Path.R.cwd () in
     let local_path = Dirname.cwd () in
     match check_updates local_path remote_address with
-    | Some f -> f
+    | Some f -> File.Filenames.write (updates local_repo) f; f
     | None   ->
         Globals.error_and_exit
           "The repository %s is not initialized correctly"
