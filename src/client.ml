@@ -746,12 +746,13 @@ let unknown_package name version =
   | None   -> Globals.error_and_exit "%S is not a valid package.\n" (N.to_string name)
   | Some v -> Globals.error_and_exit "The package %S has no version %s." (N.to_string name) (V.to_string v)
 
-let list ~print_short ~installed_only ~name_only res =
+let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = false) res =
   log "list";
   let t = load_state () in
   let res =
     Utils.filter_map (fun re ->
-      try Some (Re.compile (Re_glob.globx re))
+      try Some (Re.compile (let re = Re_glob.globx re in
+                            if case_sensitive then re else Re.no_case re))
       with Re_glob.Parse_error ->
         Globals.error "\"%s\" is not a valid package descriptor" re;
         None
@@ -2312,8 +2313,8 @@ let compiler_reinstall alias =
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
 
-let list ~print_short ~installed_only ~name_only pkg_str =
-  check (Read_only (fun () -> list ~print_short ~installed_only ~name_only pkg_str))
+let list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str =
+  check (Read_only (fun () -> list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str))
 
 let info package =
   check (Read_only (fun () -> info package))

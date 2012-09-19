@@ -111,48 +111,49 @@ let init =
 
 (* opam list [PACKAGE_REGEXP]* *)
 let list =
-  let short = ref false in
-  let installed = ref false in
+  let print_short = ref false in
+  let installed_only = ref false in
 {
   name     = "list";
   usage    = "<package-regexp>*";
   synopsis = "Display the list of available packages";
   help     = "";
   specs    = [
-    ("-short"    , Arg.Set short    , " Minimize the output by displaying only package name");
-    ("-installed", Arg.Set installed, " Display only the list of installed packages");
+    ("-short"    , Arg.Set print_short   , " Minimize the output by displaying only package name");
+    ("-installed", Arg.Set installed_only, " Display only the list of installed packages");
   ];
   anon;
   main     =
     parse_args (function args ->
-      let print_short = !short in
-      let installed_only = !installed in
-      let name_only = true in
-      Client.list ~print_short ~installed_only ~name_only args
+      let print_short = !print_short in
+      let installed_only = !installed_only in
+      Client.list ~print_short ~installed_only args
     )
 }
 
 (* opam search [PACKAGE_REGEXP]* *)
 let search =
-  let short = ref false in
-  let installed = ref false in
+  let print_short = ref false in
+  let installed_only = ref false in
+  let case_sensitive = ref false in
 {
   name     = "search";
   usage    = "<package-regexp>*";
   synopsis = "Search into the package list";
   help     = "";
   specs    = [
-    ("-short"    , Arg.Set short    , " Minimize the output by displaying only package name");
-    ("-installed", Arg.Set installed, " Display only the list of installed packages");
+    ("-short"    , Arg.Set print_short   , " Minimize the output by displaying only package name");
+    ("-installed", Arg.Set installed_only, " Display only the list of installed packages");
+    ("-case-sensitive", Arg.Set case_sensitive, " Force the search in case sensitive (insensitive by default)");
   ];
 
   anon;
   main     =
     parse_args (function args ->
-      let print_short = !short in
-      let installed_only = !installed in
-      let name_only = false in
-      Client.list ~print_short ~installed_only ~name_only args
+      let print_short = !print_short in
+      let installed_only = !installed_only in
+      let case_sensitive = !case_sensitive in
+      Client.list ~print_short ~installed_only ~name_only:false ~case_sensitive args
     )
 }
 
