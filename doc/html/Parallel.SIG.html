@@ -23,11 +23,10 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Parallel.SIG</title>
 </head>
 <body>
-<div class="navbar"><a href="Parallel.G.html">Previous</a>
-&nbsp;<a href="Parallel.html">Up</a>
+<div class="navbar"><a class="pre" href="Parallel.G.html" title="Parallel.G">Previous</a>
+&nbsp;<a class="up" href="Parallel.html" title="Parallel">Up</a>
 &nbsp;</div>
-<center><h1>Module type <a href="type_Parallel.SIG.html">Parallel.SIG</a></h1></center>
-<br>
+<h1>Module type <a href="type_Parallel.SIG.html">Parallel.SIG</a></h1>
 <pre><span class="keyword">module type</span> SIG = <code class="code">sig</code> <a href="Parallel.SIG.html">..</a> <code class="code">end</code></pre>Functor signature<br>
 <hr width="100%">
 <pre><span class="keyword">module</span> <a href="Parallel.SIG.G.html">G</a>: <code class="type"><a href="Parallel.G.html">Parallel.G</a></code><code class="type"> </code></pre><pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">int -><br>       Parallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
@@ -37,5 +36,8 @@
       process (respectively before and after the child process has
       been created).<br>
 </div>
-<pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">G.V.t list</code></pre>
+<pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">(G.V.t * <a href="Parallel.html#TYPEerror">Parallel.error</a>) list * G.V.t list</code></pre>
+<div class="info">
+Errors (<code class="code">errors</code>, <code class="code">remaining</code>)<br>
+</div>
 </body></html>

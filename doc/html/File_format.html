@@ -30,69 +30,68 @@
 <title>File_format</title>
 </head>
 <body>
-<div class="navbar"><a href="File.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="Parallel.html">Next</a>
+<div class="navbar"><a class="pre" href="File.html" title="File">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Parallel.html" title="Parallel">Next</a>
 </div>
-<center><h1>Module <a href="type_File_format.html">File_format</a></h1></center>
-<br>
+<h1>Module <a href="type_File_format.html">File_format</a></h1>
 <pre><span class="keyword">module</span> File_format: <code class="code">sig</code> <a href="File_format.html">..</a> <code class="code">end</code></pre>Untyped generic file format.<br>
 <hr width="100%">
-<br><code><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> = </code><table class="typetable">
+<pre><code><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Bool</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+<code><span id="TYPEELTvalue.Bool"><span class="constructor">Bool</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Int</span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+<code><span id="TYPEELTvalue.Int"><span class="constructor">Int</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">String</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvalue.String"><span class="constructor">String</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Symbol</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvalue.Symbol"><span class="constructor">Symbol</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Ident</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvalue.Ident"><span class="constructor">Ident</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">List</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
+<code><span id="TYPEELTvalue.List"><span class="constructor">List</span></span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Group</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
+<code><span id="TYPEELTvalue.Group"><span class="constructor">Group</span></span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Option</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> * <a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
+<code><span id="TYPEELTvalue.Option"><span class="constructor">Option</span></span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEvalue">value</a> * <a href="File_format.html#TYPEvalue">value</a> list</code></code></td>
 
 </tr></table>
 
@@ -100,26 +99,26 @@
 Base values<br>
 </div>
 
-<br><code><span id="TYPEsection"><span class="keyword">type</span> <code class="type"></code>section</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEsection"><span class="keyword">type</span> <code class="type"></code>section</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>kind&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTsection.kind">kind</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>name&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTsection.name">name</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>items&nbsp;: <code class="type"><a href="File_format.html#TYPEitem">item</a> list</code>;</code></td>
+<code><span id="TYPEELTsection.items">items</span>&nbsp;:<code class="type"><a href="File_format.html#TYPEitem">item</a> list</code>;</code></td>
 
 </tr></table>
 }
@@ -128,19 +127,19 @@ Base values<br>
 A file section<br>
 </div>
 
-<br><code><span id="TYPEitem"><span class="keyword">type</span> <code class="type"></code>item</span> = </code><table class="typetable">
+<pre><code><span id="TYPEitem"><span class="keyword">type</span> <code class="type"></code>item</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Section</span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEsection">section</a></code></code></td>
+<code><span id="TYPEELTitem.Section"><span class="constructor">Section</span></span> <span class="keyword">of</span> <code class="type"><a href="File_format.html#TYPEsection">section</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Variable</span> <span class="keyword">of</span> <code class="type">string * <a href="File_format.html#TYPEvalue">value</a></code></code></td>
+<code><span id="TYPEELTitem.Variable"><span class="constructor">Variable</span></span> <span class="keyword">of</span> <code class="type">string * <a href="File_format.html#TYPEvalue">value</a></code></code></td>
 
 </tr></table>
 
@@ -148,19 +147,19 @@ A file section<br>
 A file is composed of sections and variable definitions<br>
 </div>
 
-<br><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>contents&nbsp;: <code class="type"><a href="File_format.html#TYPEitem">item</a> list</code>;</code></td>
+<code><span id="TYPEELTfile.contents">contents</span>&nbsp;:<code class="type"><a href="File_format.html#TYPEitem">item</a> list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>filename&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTfile.filename">filename</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr></table>
 }
@@ -275,6 +274,10 @@ Create a pair of strings<br>
 </div>
 <br>
 <span id="2_Printingfunctions"><h2>Printing functions</h2></span><br>
+<pre><span id="VALforce_newline"><span class="keyword">val</span> force_newline</span> : <code class="type">(unit -> 'a) -> 'a</code></pre><div class="info">
+Apply the given printer function
+    by putting a newline between every element of every list<br>
+</div>
 <pre><span id="VALstring_of_value"><span class="keyword">val</span> string_of_value</span> : <code class="type"><a href="File_format.html#TYPEvalue">value</a> -> string</code></pre><div class="info">
 Print a value<br>
 </div>

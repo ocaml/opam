@@ -4,17 +4,40 @@
 opam-search - Search into the package database
 .SH SYNOPSIS
 .PP
-\f[I]opam search\f[] <packagepattern>...
+\f[I]opam search\f[] [-short] [-installed] <packagepattern>...
 .SH DESCRIPTION
 .PP
 This command displays the list of available packages that match one of
 the <packagepattern>s specified as arguments.
+.PP
+Unless the -short switch is used, the output format is the same as the
+\f[I]opam list\f[] command.
+It displays one package per line, and each line contains the name of the
+package, the installed version or "--" if the package is not installed,
+and a short description.
+The full description can be obtained by doing \f[I]opam info \f[].
 .SH OPTIONS
 .TP
 .B <packagepattern>...
 Search for packages whose name or description matches (in the "glob"
 sense) at least one <packagepattern>.
-The case is not taken into account.
+The case is not taken into account by default.
+.RS
+.RE
+.TP
+.B -case-sensitive
+Force the search in case sensitive mode
+.RS
+.RE
+.TP
+.B -short
+Output the names of packages separated by one whitespace instead of
+using the usual formatting.
+.RS
+.RE
+.TP
+.B -installed
+List installed packages only.
 .RS
 .RE
 .SH SEE ALSO

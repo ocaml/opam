@@ -26,22 +26,36 @@
 <title>Run</title>
 </head>
 <body>
-<div class="navbar"><a href="Repositories.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="Solver.html">Next</a>
+<div class="navbar"><a class="pre" href="Repositories.html" title="Repositories">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Solver.html" title="Solver">Next</a>
 </div>
-<center><h1>Module <a href="type_Run.html">Run</a></h1></center>
-<br>
+<h1>Module <a href="type_Run.html">Run</a></h1>
 <pre><span class="keyword">module</span> Run: <code class="code">sig</code> <a href="Run.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations.<br>
 <hr width="100%">
+<pre><span id="EXCEPTIONProcess_error"><span class="keyword">exception</span> Process_error</span> <span class="keyword">of</span> <code class="type"><a href="Process.html#TYPEresult">Process.result</a></code></pre>
+<div class="info">
+Exception raised when subprocess fails<br>
+</div>
+<pre><span id="VALprocess_error"><span class="keyword">val</span> process_error</span> : <code class="type"><a href="Process.html#TYPEresult">Process.result</a> -> 'a</code></pre><div class="info">
+raise <code class="code">Process_error</code><br>
+</div>
+<pre><span id="EXCEPTIONInternal_error"><span class="keyword">exception</span> Internal_error</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+Exception raised when a computation in the current process
+    fails.<br>
+</div>
+<pre><span id="VALinternal_error"><span class="keyword">val</span> internal_error</span> : <code class="type">('a, unit, string, 'b) Pervasives.format4 -> 'a</code></pre><div class="info">
+Raise <code class="code">Internal_error</code><br>
+</div>
 <pre><span id="VALwith_tmp_dir"><span class="keyword">val</span> with_tmp_dir</span> : <code class="type">(string -> 'a) -> 'a</code></pre><div class="info">
 <code class="code">with_tmp_dir fn</code> executes <code class="code">fn</code> in a tempory directory<br>
 </div>
 <pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
-<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code><br>
+<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> before the copy if it is a link.<br>
 </div>
 <pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
-<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code><br>
+<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> if it is a file, not a directory.<br>
 </div>
 <pre><span id="VALreal_path"><span class="keyword">val</span> real_path</span> : <code class="type">string -> string</code></pre><div class="info">
 <code class="code">real_path p</code> returns the real path associated to <code class="code">p</code>: <code class="code">..</code> are
@@ -76,7 +90,7 @@ Change the current working directory<br>
     Links simulating directory are ignored, others links are returned.<br>
 </div>
 <pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">string -> string list</code></pre><div class="info">
-<code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>, 
+<code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>,
     recursively.
     Links behaving like directory are crossed.<br>
 </div>
@@ -96,15 +110,15 @@ Return the path where ocamlc library is installed<br>
 a command is a list of words<br>
 </div>
 
-<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> int</code></pre><div class="info">
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> unit</code></pre><div class="info">
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code>. Return the exit code.<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> int</code></pre><div class="info">
-<code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
-    in a context where $PATH contains <code class="code">add_to_path</code> at the beginning. 
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
+<code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code>
+    in a context where $PATH contains <code class="code">add_to_path</code> at the beginning.
     It stops whenever one command fails.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list option</code></pre><div class="info">
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?add_to_env:(string * string) list -><br>       ?add_to_path:string list -> <a href="Run.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> and return
     the lines from stdout<br>
 </div>
@@ -119,9 +133,6 @@ Test whether the file is an archive, by looking as its extension<br>
 <pre><span id="VALextract_in"><span class="keyword">val</span> extract_in</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
 <code class="code">extract_in filename dirname</code> extracts the archive <code class="code">filename</code> into
     <code class="code">dirname</code>. <code class="code">dirname</code> should already exists.<br>
-</div>
-<pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> string</code></pre><div class="info">
-Return the current working directory<br>
 </div>
 <pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">string -> unit</code></pre><div class="info">
 Create a directory. Do not fail if the directory already
@@ -143,11 +154,10 @@ Functional version of <code class="code">flock / funlock</code><br>
 </div>
 <br>
 <span id="2_Functionusedonlybytheswitchcommnand"><h2>Function used only by the switch commnand</h2></span><br>
-<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">filename:string -> dirname:string -> string option</code></pre><div class="info">
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">filename:string -> dirname:string -> string</code></pre><div class="info">
 download compiler sources<br>
 </div>
-<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> bool</code></pre><div class="info">
-Apply a patch file in the current directory. Return whether the
-    patch has been applied succesfully.<br>
+<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info">
+Apply a patch file in the current directory.<br>
 </div>
 </body></html>

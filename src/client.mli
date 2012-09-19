@@ -26,7 +26,7 @@ open Types
 val init : repository -> OCaml_V.t option -> int -> unit
 
 (** Display all available packages that matches any of the regexps. *)
-val list : print_short:bool -> installed_only:bool -> name_only:bool
+val list : print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_sensitive:bool
   -> string list  -> unit
 
 (** Display a general summary of a package. *)

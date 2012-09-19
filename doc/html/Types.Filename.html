@@ -24,12 +24,11 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Filename</title>
 </head>
 <body>
-<div class="navbar"><a href="Types.Stdlib_filename.html">Previous</a>
-&nbsp;<a href="Types.html">Up</a>
-&nbsp;<a href="Types.V.html">Next</a>
+<div class="navbar"><a class="pre" href="Types.Stdlib_filename.html" title="Types.Stdlib_filename">Previous</a>
+&nbsp;<a class="up" href="Types.html" title="Types">Up</a>
+&nbsp;<a class="post" href="Types.V.html" title="Types.V">Next</a>
 </div>
-<center><h1>Module <a href="type_Types.Filename.html">Types.Filename</a></h1></center>
-<br>
+<h1>Module <a href="type_Types.Filename.html">Types.Filename</a></h1>
 <pre><span class="keyword">module</span> Filename: <code class="code">sig</code> <a href="Types.Filename.html">..</a> <code class="code">end</code></pre>non-directory filenames<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="Types.ABSTRACT.html">Types.ABSTRACT</a></pre>
@@ -107,14 +106,14 @@ Check wether a filename starts by a given dirname<br>
 <pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:<a href="Types.html#TYPEdirname">Types.dirname</a> -> t -> string</code></pre><div class="info">
 Remove a prefix from a file name<br>
 </div>
-<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> t option</code></pre><div class="info">
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> t</code></pre><div class="info">
 download a remote file in a given directory. Return the location
       of the downloaded file if the download is successful.<br>
 </div>
-<pre><span id="VALdownload_iter"><span class="keyword">val</span> download_iter</span> : <code class="type">t list -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> t option</code></pre><div class="info">
+<pre><span id="VALdownload_iter"><span class="keyword">val</span> download_iter</span> : <code class="type">t list -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> t</code></pre><div class="info">
 iterate downloads until one is sucessful<br>
 </div>
-<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> bool</code></pre><div class="info">
+<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">t -> <a href="Types.html#TYPEdirname">Types.dirname</a> -> unit</code></pre><div class="info">
 Apply a patch to a directory<br>
 </div>
 <pre><span id="VALdigest"><span class="keyword">val</span> digest</span> : <code class="type">t -> string</code></pre><div class="info">

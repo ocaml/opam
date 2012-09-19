@@ -23,11 +23,10 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>File.Config</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="File.html">Up</a>
-&nbsp;<a href="File.OPAM.html">Next</a>
+<div class="navbar">&nbsp;<a class="up" href="File.html" title="File">Up</a>
+&nbsp;<a class="post" href="File.OPAM.html" title="File.OPAM">Next</a>
 </div>
-<center><h1>Module <a href="type_File.Config.html">File.Config</a></h1></center>
-<br>
+<h1>Module <a href="type_File.Config.html">File.Config</a></h1>
 <pre><span class="keyword">module</span> Config: <code class="code">sig</code> <a href="File.Config.html">..</a> <code class="code">end</code></pre>Configuration file: <code class="code">$opam/config</code><br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="File.IO_FILE.html">File.IO_FILE</a></pre>
@@ -40,7 +39,7 @@ OCaml alias updates<br>
 <pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> <a href="Types.html#TYPErepository">Types.repository</a> list -> t</code></pre><div class="info">
 Repository updates<br>
 </div>
-<pre><span id="VALwith_system_ocaml_version"><span class="keyword">val</span> with_system_ocaml_version</span> : <code class="type">t -> Types.OCaml_V.t option -> t</code></pre><div class="info">
+<pre><span id="VALwith_system_ocaml_version"><span class="keyword">val</span> with_system_ocaml_version</span> : <code class="type">t -> Types.OCaml_V.t -> t</code></pre><div class="info">
 system-wide's OCaml version updates<br>
 </div>
 <pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> Types.OPAM_V.t</code></pre><div class="info">
