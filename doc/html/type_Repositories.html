@@ -42,5 +42,5 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;kind&nbsp;=&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;register_backend&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Repositories</span>.kind&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="keyword">module</span>&nbsp;<span class="constructor">Repositories</span>.<span class="constructor">BACKEND</span>)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_archive&nbsp;:&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_archive&nbsp;:&nbsp;?gener_digest:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.nv&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 <span class="keyword">end</span></code></body></html>

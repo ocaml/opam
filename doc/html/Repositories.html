@@ -61,8 +61,11 @@ Backend signature
 <pre><span id="VALregister_backend"><span class="keyword">val</span> register_backend</span> : <code class="type"><a href="Repositories.html#TYPEkind">kind</a> -> (module Repositories.BACKEND) -> unit</code></pre><div class="info">
 Register a repository backend<br>
 </div>
-<pre><span id="VALmake_archive"><span class="keyword">val</span> make_archive</span> : <code class="type"><a href="Types.html#TYPEnv">Types.nv</a> -> unit</code></pre><div class="info">
+<pre><span id="VALmake_archive"><span class="keyword">val</span> make_archive</span> : <code class="type">?gener_digest:bool -> <a href="Types.html#TYPEnv">Types.nv</a> -> unit</code></pre><div class="info">
 <code class="code">make_archive repo_kind nv</code> build ./$nv.tar.gz, assuming the
-    repository kind is <code class="code">repo_kind</code>.<br>
+    repository kind is <code class="code">repo_kind</code>. 
+    By default, the digest that appear in 
+    <i>$NAME.$VERSION/url</i> is not modified, 
+    unless <code class="code">gener_digest = true</code> is given.<br>
 </div>
 </body></html>
