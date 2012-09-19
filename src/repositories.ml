@@ -83,14 +83,14 @@ let map fn = function
   | Up_to_date x  -> Up_to_date (fn x)
   | Not_available -> Not_available
 
-let download_file k nv f c =
+let download_file ~gener_digest k nv f c =
   log "download_file %s %s %s" k (NV.to_string nv) (Filename.to_string f);
   let module B = (val find_backend_by_kind k: BACKEND) in
   let check file = match c with
     | None   -> true
     | Some c -> Filename.digest file = c in
   let rename file =
-    if !Globals.verify_checksums && not (check file) then
+    if not gener_digest && !Globals.verify_checksums && not (check file) then
       Globals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
         (Filename.to_string file)
         (match c with Some c -> c | None -> "<none>")
@@ -110,11 +110,11 @@ let download_dir k nv d =
   B.download_dir nv d
 
 (* Download either a file or a directory in the current directory *)
-let download_one k nv url checksum =
+let download_one ?(gener_digest = false) k nv url checksum =
   let f x = F x in
   let d x = D x in
   if k = "curl" || Run.is_tar_archive url then
-    map f (download_file k nv (Filename.raw url) checksum)
+    map f (download_file ~gener_digest k nv (Filename.raw url) checksum)
   else
     map d (download_dir k nv (Dirname.raw url))
 
@@ -131,7 +131,7 @@ let download_archive r nv =
   let module B = (val find_backend r: BACKEND) in
   B.download_archive (Repository.address r) nv
 
-let make_archive nv =
+let make_archive ?(gener_digest = false) nv =
   (* download the archive upstream if the upstream address is
      specified *)
   let local_repo = Path.R.cwd () in
@@ -145,18 +145,28 @@ let make_archive nv =
     let extract_dir = extract_root / NV.to_string nv in
 
     if Filename.exists url_f then begin
-      let url = File.URL.read url_f in
-      let checksum = File.URL.checksum url in
-      let kind = match File.URL.kind url with
-      | None   -> kind_of_url (File.URL.url url)
+      let url_file = File.URL.read url_f in
+      let checksum = File.URL.checksum url_file in
+      let kind = match File.URL.kind url_file with
+      | None   -> kind_of_url (File.URL.url url_file)
       | Some k -> k in
-      let url = File.URL.url url in
+      let url = File.URL.url url_file in
       log "downloading %s:%s" url kind;
 
-      match Dirname.in_dir local_dir (fun () -> download_one kind nv url checksum) with
+      match Dirname.in_dir local_dir (fun () -> download_one ~gener_digest kind nv url checksum) with
       | Not_available -> Globals.error_and_exit "Cannot get %s" url
       | Up_to_date (F local_archive)
       | Result (F local_archive) ->
+          if gener_digest then
+            let digest = Filename.digest local_archive in
+            begin
+              (match checksum with
+                | Some c when c <> digest ->
+                  Globals.warning "Wrong checksum for %s (in cache: %s, new downloaded: %s). Update by keeping the downloaded digest..."
+                    (Filename.to_string local_archive) c digest
+                | _ -> ());
+              File.URL.write url_f (File.URL.with_checksum url_file (Some digest));
+            end;
           log "extracting %s to %s"
             (Filename.to_string local_archive)
             (Dirname.to_string extract_dir);

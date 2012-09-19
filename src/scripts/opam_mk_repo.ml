@@ -30,20 +30,22 @@ let version () =
   Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
   exit 1
 
-let all, index, packages =
+let all, index, packages, gener_digest =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
   let index = ref false in
   let packages = ref [] in
+  let gener_digest = ref false in
   let specs = Arg.align [
     ("-v"       , Arg.Unit version, " Display version information");
     ("--version", Arg.Unit version, " Display version information");
     ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
     ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
+    ("-generate-checksums", Arg.Set gener_digest, Printf.sprintf " Generate checksums during the build (default is %b)" !gener_digest);
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;
-  !all, !index, NV.Set.of_list (List.map NV.of_string !packages)
+  !all, !index, NV.Set.of_list (List.map NV.of_string !packages), !gener_digest
 
 let () =
   let local_path = Dirname.cwd () in
@@ -95,7 +97,7 @@ let () =
     ) to_remove;
 
     NV.Set.iter (fun nv ->
-      try Repositories.make_archive nv
+      try Repositories.make_archive ~gener_digest nv
       with _ -> errors := nv :: !errors;
     ) to_add;
   );
