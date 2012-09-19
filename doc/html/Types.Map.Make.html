@@ -22,10 +22,9 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.Map.Make</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="Types.Map.html">Up</a>
+<div class="navbar">&nbsp;<a class="up" href="Types.Map.html" title="Types.Map">Up</a>
 &nbsp;</div>
-<center><h1>Functor <a href="type_Types.Map.Make.html">Types.Map.Make</a></h1></center>
-<br>
+<h1>Functor <a href="type_Types.Map.Make.html">Types.Map.Make</a></h1>
 <pre><span class="keyword">module</span> Make: <div class="sig_block"><code class="code">functor (</code><code class="code">S</code><code class="code"> : </code><code class="type"><a href="Types.OrderedType.html">Types.OrderedType</a></code><code class="code">) -&gt; </code><code class="type"><a href="Types.MAP.html">Types.MAP</a></code><code class="type">  with type key = S.t</code></div></pre><table border="0" cellpadding="3" width="100%">
 <tr>
 <td align="left" valign="top" width="1%%"><b>Parameters: </b></td>
@@ -52,7 +51,7 @@ Split with <code class="code">bindings</code> and return the <code class="code">
 Same as <code class="code">merge</code> but only keys that appear in both maps
       are given in the merging function<br>
 <pre><span id="VALmerge_max"><span class="keyword">val</span> merge_max</span> : <code class="type">(key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t</code></pre><div class="info">
-WARNING : Besides <code class="code">key</code>, the function could receive 
+WARNING : Besides <code class="code">key</code>, the function could receive
       some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.<br>
 </div>
 <pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">(key * 'a) list -> 'a t</code></pre><div class="info">

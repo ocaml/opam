@@ -18,7 +18,7 @@ installed packages if the -installed switch is used.
 Unless the -short switch is used, the output format displays one
 package per line, and each line contains the name of the package, the
 installed version or "--" if the package is not installed, and a short
-desctription. The full description can be obtained by doing *opam info
+description. The full description can be obtained by doing *opam info
 <package>*. You can search into the package list with the *opam
 search* command.
 

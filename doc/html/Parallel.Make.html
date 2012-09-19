@@ -22,10 +22,9 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Parallel.Make</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="Parallel.html">Up</a>
+<div class="navbar">&nbsp;<a class="up" href="Parallel.html" title="Parallel">Up</a>
 &nbsp;</div>
-<center><h1>Functor <a href="type_Parallel.Make.html">Parallel.Make</a></h1></center>
-<br>
+<h1>Functor <a href="type_Parallel.Make.html">Parallel.Make</a></h1>
 <pre><span class="keyword">module</span> Make: <div class="sig_block"><code class="code">functor (</code><code class="code">G</code><code class="code"> : </code><code class="type"><a href="Parallel.G.html">G</a></code><code class="code">) -&gt; </code><code class="type"><a href="Parallel.SIG.html">SIG</a></code><code class="type">  with module G = G</code></div></pre>Functor<br>
 <table border="0" cellpadding="3" width="100%">
 <tr>
@@ -49,5 +48,8 @@
       process (respectively before and after the child process has
       been created).<br>
 </div>
-<pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">G.V.t list</code></pre>
+<pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">(G.V.t * <a href="Parallel.html#TYPEerror">Parallel.error</a>) list * G.V.t list</code></pre>
+<div class="info">
+Errors (<code class="code">errors</code>, <code class="code">remaining</code>)<br>
+</div>
 </body></html>

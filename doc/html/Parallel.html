@@ -24,18 +24,34 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Parallel</title>
 </head>
 <body>
-<div class="navbar"><a href="File_format.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="Path.html">Next</a>
+<div class="navbar"><a class="pre" href="File_format.html" title="File_format">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Path.html" title="Path">Next</a>
 </div>
-<center><h1>Module <a href="type_Parallel.html">Parallel</a></h1></center>
-<br>
+<h1>Module <a href="type_Parallel.html">Parallel</a></h1>
 <pre><span class="keyword">module</span> Parallel: <code class="code">sig</code> <a href="Parallel.html">..</a> <code class="code">end</code></pre>Parallel traversal of a graph, respecting the topological
     order.<br>
 <hr width="100%">
 <pre><span class="keyword">module type</span> <a href="Parallel.G.html">G</a> = <code class="code">sig</code> <a href="Parallel.G.html">..</a> <code class="code">end</code></pre><div class="info">
 Functor argument
 </div>
+<pre><code><span id="TYPEerror"><span class="keyword">type</span> <code class="type"></code>error</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTerror.Process_error"><span class="constructor">Process_error</span></span> <span class="keyword">of</span> <code class="type"><a href="Process.html#TYPEresult">Process.result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTerror.Internal_error"><span class="constructor">Internal_error</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr></table>
+
+
 <pre><span class="keyword">module type</span> <a href="Parallel.SIG.html">SIG</a> = <code class="code">sig</code> <a href="Parallel.SIG.html">..</a> <code class="code">end</code></pre><div class="info">
 Functor signature
 </div>

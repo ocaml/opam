@@ -24,23 +24,15 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Types.V</title>
 </head>
 <body>
-<div class="navbar"><a href="Types.Filename.html">Previous</a>
-&nbsp;<a href="Types.html">Up</a>
-&nbsp;<a href="Types.N.html">Next</a>
+<div class="navbar"><a class="pre" href="Types.Filename.html" title="Types.Filename">Previous</a>
+&nbsp;<a class="up" href="Types.html" title="Types">Up</a>
+&nbsp;<a class="post" href="Types.N.html" title="Types.N">Next</a>
 </div>
-<center><h1>Module <a href="type_Types.V.html">Types.V</a></h1></center>
-<br>
-<pre><span class="keyword">module</span> V: <code class="type"><a href="Types.ABSTRACT.html">ABSTRACT</a></code><code class="type"> </code></pre>Versions<br>
+<h1>Module <a href="type_Types.V.html">Types.V</a></h1>
+<pre><span class="keyword">module</span> V: <code class="code">sig</code> <a href="Types.V.html">..</a> <code class="code">end</code></pre>Versions<br>
 <hr width="100%">
-<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
-<div class="info">
-ABSTRACT type<br>
+<pre><span class="keyword">include</span> <a href="Types.ABSTRACT.html">Types.ABSTRACT</a></pre>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> t -> int</code></pre><div class="info">
+Compare two versions using the Debian version scheme<br>
 </div>
-
-<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> <a href="Types.ABSTRACT.html#TYPEt">t</a></code></pre><div class="info">
-Create an abstract value from a string<br>
-</div>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Types.ABSTRACT.html#TYPEt">t</a> -> string</code></pre><div class="info">
-Convert an abstract value to a string<br>
-</div>
-<pre><span class="keyword">module</span> <a href="Types.ABSTRACT.Set.html">Set</a>: <code class="type"><a href="Types.SET.html">Types.SET</a></code><code class="type">  with type elt = t</code></pre><pre><span class="keyword">module</span> <a href="Types.ABSTRACT.Map.html">Map</a>: <code class="type"><a href="Types.MAP.html">Types.MAP</a></code><code class="type">  with type key = t</code></pre></body></html>
+</body></html>
