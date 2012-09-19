@@ -80,5 +80,8 @@ type kind = string
 val register_backend: kind -> (module BACKEND) -> unit
 
 (** [make_archive repo_kind nv] build ./$nv.tar.gz, assuming the
-    repository kind is [repo_kind]. *)
-val make_archive: nv -> unit
+    repository kind is [repo_kind]. 
+    By default, the digest that appear in 
+    {i $NAME.$VERSION/url} is not modified, 
+    unless [gener_digest = true] is given. *)
+val make_archive: ?gener_digest:bool -> nv -> unit

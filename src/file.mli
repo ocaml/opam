@@ -401,6 +401,9 @@ module URL: sig
   (** Constructor *)
   val create: ?checksum:string -> string -> t
 
+  (** Constructor *)
+  val with_checksum: t -> string option -> t
+
 end
 
 (** {2 urls.txt file *} *)
