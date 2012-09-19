@@ -1177,7 +1177,7 @@ let print_env env =
     Globals.msg "%s=%s; export %s;\n" k v k;
   ) env.new_env
 
-let print_env_warning ?(add_profile = "") t =
+let print_env_warning ?(add_profile = false) t =
   match
     List.filter
       (fun (s, v) ->
@@ -1186,13 +1186,27 @@ let print_env_warning ?(add_profile = "") t =
   with
     | [] -> () (* every variables are correctly set *)
     | l ->
-      Globals.msg "\nTo update %s; you can now run:
-            \n\    $ which opam && eval `opam%s config -env`\n%s\n"
-        (String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l))
+      let which_opam =
+        if add_profile then
+          "which opam && "
+        else
+          "" in
+      let add_profile =
+        if add_profile then
+          "\nand add this in your ~/.profile"
+        else
+          "" in
+      let opam_root =
         (if !Globals.root_path = Globals.default_opam_path then
             ""
          else
-            Printf.sprintf " --root %s" !Globals.root_path)
+            Printf.sprintf " --root %s" !Globals.root_path) in
+      let variables = String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l) in
+      Globals.msg "\nTo update %s; you can now run:
+            \n\    $ %seval `opam%s config -env`\n%s\n"
+        variables
+        which_opam
+        opam_root
         add_profile
 
 (* In case of error, simply return the error traces, and let the
@@ -1673,7 +1687,7 @@ let init repo ocaml_version cores =
         ; wish_remove = []
         ; wish_upgrade = [] } ] in
 
-    print_env_warning ~add_profile:"\nand add this in your ~/.profile" t
+    print_env_warning ~add_profile:true t
 
   with e ->
     if not !Globals.debug then
