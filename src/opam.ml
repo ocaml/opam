@@ -458,7 +458,8 @@ let commands = [
 let () =
   Sys.catch_break true;
   List.iter SubCommand.register commands;
-  try ArgExt.parse ~man:"opam" global_args
+  try ArgExt.parse ~man_fun:
+        (fun cmd -> ignore (Sys.command ("man opam-" ^ cmd))) global_args
   with e ->
     Globals.error "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
     match e with
