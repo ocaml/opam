@@ -21,13 +21,13 @@ cudf.stamp: cudf.tar.gz
 dose.tar.gz:
 	$(FETCH) http://www.ocamlpro.com/pub/dose.tar.gz
 
-ocaml-arg.0.2.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/ocaml-arg.0.2.tar.gz
+ocaml-arg.0.3.tar.gz:
+	$(FETCH) http://www.ocamlpro.com/pub/ocaml-arg.0.3.tar.gz
 
 ocamlgraph-1.8.1.tar.gz:
 	$(FETCH) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
 
-ocaml-re.1.1.tar.gz:	
+ocaml-re.1.1.tar.gz:
 	$(FETCH) http://www.ocamlpro.com/pub/ocaml-re.1.1.tar.gz
 
 extlib.stamp: extlib-1.5.3.tar.gz
@@ -39,8 +39,8 @@ dose.stamp: dose.tar.gz
 	tar xfz dose.tar.gz
 	@touch $@
 
-ocaml-arg.stamp: ocaml-arg.0.2.tar.gz
-	tar xfz ocaml-arg.0.2.tar.gz
+ocaml-arg.stamp: ocaml-arg.0.3.tar.gz
+	tar xfz ocaml-arg.0.3.tar.gz
 	@touch $@
 
 ocamlgraph.stamp: ocamlgraph-1.8.1.tar.gz
