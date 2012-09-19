@@ -1136,6 +1136,8 @@ let expand_env t env =
     | "="  -> (ident, string)
     | "+=" -> (ident, String.concat ":" (string :: read_env ()))
     | "=+" -> (ident, String.concat ":" (read_env () @ [string]))
+    | ":=" -> (ident, string ^":"^ (String.concat ":" (read_env())))
+    | "=:" -> (ident, (String.concat ":" (read_env())) ^":"^ string)
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
@@ -1157,7 +1159,7 @@ let get_env t =
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=", Dirname.to_string (Path.C.toplevel t.compiler) in
   let man_path =
-    "OPAM_MANPATH", "+=", Dirname.to_string (Path.C.man_dir t.compiler) in
+    "MANPATH", ":=", Dirname.to_string (Path.C.man_dir t.compiler) in
   let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
 
   let add_to_env = expand_env t add_to_env in
