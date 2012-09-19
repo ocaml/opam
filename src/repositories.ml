@@ -180,13 +180,21 @@ let make_archive ?(gener_digest = false) nv =
           Dirname.copy download_dir extract_dir
     );
 
-    (* Eventually add the files/<package>/* to the extracted dir *)
+    (* Eventually add the <package>/files/* to the extracted dir *)
     log "Adding the files to the archive";
     let files = Path.R.available_files local_repo nv in
     if files <> [] then (
       if not (Dirname.exists extract_dir) then
         Dirname.mkdir extract_dir;
-      List.iter (fun f -> Filename.copy_in f extract_dir) files;
+      List.iter (fun f ->
+        let dst = extract_dir // Basename.to_string (Filename.basename f) in
+        if Filename.exists dst then
+          Globals.warning
+            "Skipping %s as it already exists in %s\n"
+            (Filename.to_string f)
+            (Dirname.to_string extract_dir)
+        else
+          Filename.copy_in f extract_dir) files;
     );
 
     (* And finally create the final archive *)
