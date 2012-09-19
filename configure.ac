@@ -9,6 +9,17 @@ if test "$OCAMLC" = "no"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
 
+AC_ARG_ENABLE(version-check,
+ [  --disable-version-check            do not check OCaml version],
+ [VERSION_CHECK="$enableval"],
+ [VERSION_CHECK="yes"])
+
+# Check that OCaml version is greater or equal to 3.12.1
+if test "$VERSION_CHECK" = "yes" ; then
+   AX_COMPARE_VERSION( [$OCAMLVERSION], [lt], [3.12.1],
+     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
+fi
+
 AC_CONFIG_FILES(
   Makefile.config
   src/globals.ml

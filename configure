@@ -635,6 +635,7 @@ OCAMLMKTOP
 OCAMLMKLIB
 OCAMLDOC
 OCAMLBUILD
+AWK
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -1212,6 +1213,11 @@ if test -n "$ac_init_help"; then
      short | recursive ) echo "Configuration of opam 0.6.0:";;
    esac
   cat <<\_ACEOF
+
+Optional Features:
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --disable-version-check            do not check OCaml version
 
 Some influential environment variables:
   CC          C compiler command
@@ -3621,6 +3627,97 @@ echo "$as_me: error: You must install the OCaml compiler" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
+# Check whether --enable-version-check was given.
+if test "${enable_version_check+set}" = set; then
+  enableval=$enable_version_check; VERSION_CHECK="$enableval"
+else
+  VERSION_CHECK="yes"
+fi
+
+
+# Check that OCaml version is greater or equal to 3.12.1
+if test "$VERSION_CHECK" = "yes" ; then
+   for ac_prog in gawk mawk nawk awk
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_AWK+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$AWK"; then
+  ac_cv_prog_AWK="$AWK" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_AWK="$ac_prog"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+AWK=$ac_cv_prog_AWK
+if test -n "$AWK"; then
+  { echo "$as_me:$LINENO: result: $AWK" >&5
+echo "${ECHO_T}$AWK" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+  test -n "$AWK" && break
+done
+
+
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "4.00.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+    { { echo "$as_me:$LINENO: error: Your version of OCaml: $OCAMLVERSION is not supported" >&5
+echo "$as_me: error: Your version of OCaml: $OCAMLVERSION is not supported" >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+
+fi
+
 ac_config_files="$ac_config_files Makefile.config src/globals.ml"
 
 cat >confcache <<\_ACEOF
@@ -4309,11 +4406,12 @@ OCAMLMKTOP!$OCAMLMKTOP$ac_delim
 OCAMLMKLIB!$OCAMLMKLIB$ac_delim
 OCAMLDOC!$OCAMLDOC$ac_delim
 OCAMLBUILD!$OCAMLBUILD$ac_delim
+AWK!$AWK$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 59; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 60; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
