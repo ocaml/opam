@@ -1455,7 +1455,7 @@ module Heuristic = struct
             unknown_package sname (Some sversion))
       (N.Set.elements names)
 
-  let apply_solution t sol =
+  let apply_solution ?(force = false) t sol =
     if Solver.solution_is_empty sol then
       (* The current state satisfies the request contraints *)
       OK
@@ -1486,7 +1486,7 @@ module Heuristic = struct
         to_remove;
 
       let continue =
-        if to_install + to_reinstall + to_remove + to_upgrade + to_downgrade <= 1 then
+        if force || (to_install + to_reinstall + to_remove + to_upgrade + to_downgrade <= 1) then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1623,7 +1623,7 @@ module Heuristic = struct
         Aborted
     )
 
-  let resolve action_k t l_request =
+  let resolve ?(force=false) action_k t l_request =
     let available = get_available_current t in
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
     let rec aux = function
@@ -1633,7 +1633,7 @@ module Heuristic = struct
           | None  ->
               log "heuristic with no solution";
               aux l_request
-          | Some sol -> apply_solution t sol in
+          | Some sol -> apply_solution ~force t sol in
     match aux l_request with
     | No_solution ->
         Globals.msg "No solution has been found.\n";
@@ -2284,7 +2284,7 @@ let compiler_install quiet alias ocaml_version =
       )
     ) packages in
   if not is_ok then (
-    let _solution = Heuristic.resolve `switch t
+    let _solution = Heuristic.resolve ~force:true `switch t
       [ { wish_install = N.Map.values packages
         ; wish_remove = []
         ; wish_upgrade = [] } ] in
