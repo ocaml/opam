@@ -1170,9 +1170,23 @@ let print_env env =
     Globals.msg "%s=%s; export %s;\n" k v k;
   ) env.new_env
 
-let print_env_warning () =
-  Globals.msg "\nTo update your environment variables, you can now run:
-            \n\    $ eval `opam config -env`\n\n"
+let print_env_warning ?(add_profile = "") t =
+  match
+    List.filter
+      (fun (s, v) ->
+        Some v <> try Some (Unix.getenv s) with _ -> None)
+      (get_env t).new_env
+  with
+    | [] -> () (* every variables are correctly set *)
+    | l ->
+      Globals.msg "\nTo update %s; you can now run:
+            \n\    $ which opam && eval `opam%s config -env`\n%s\n"
+        (String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l))
+        (if !Globals.root_path = Globals.default_opam_path then
+            ""
+         else
+            Printf.sprintf " --root %s" !Globals.root_path)
+        add_profile
 
 (* In case of error, simply return the error traces, and let the
    repo in a state that the user can explore.
@@ -1643,7 +1657,7 @@ let init repo ocaml_version cores =
         ; wish_remove = []
         ; wish_upgrade = [] } ] in
 
-    print_env_warning ()
+    print_env_warning ~add_profile:"\nand add this in your ~/.profile" t
 
   with e ->
     if not !Globals.debug then
@@ -2247,7 +2261,7 @@ let compiler_install quiet alias ocaml_version =
     ()
   );
 
-  print_env_warning ()
+  print_env_warning t
 
 let compiler_switch quiet alias =
   log "compiler_switch alias=%s" (Alias.to_string alias);
@@ -2265,7 +2279,7 @@ let compiler_switch quiet alias =
   else
     let config = File.Config.with_ocaml_version t.config alias in
     File.Config.write (Path.G.config t.global) config;
-    print_env_warning ()
+    print_env_warning (load_state ())
 
 let compiler_clone alias =
   log "compiler_clone alias=%s" (Alias.to_string alias);
