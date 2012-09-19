@@ -20,7 +20,9 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Index of values</title>
 </head>
 <body>
-<center><h1>Index of values</h1></center>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
 <table>
 <tr><td align="left"><br></td></tr>
 <tr><td><a href="Types.html#VAL(/)">(/)</a> [<a href="Types.html">Types</a>]</td>
@@ -224,7 +226,7 @@ List of files to install in $bin/
 </td></tr>
 <tr><td><a href="Path.C.html#VALbuild">build</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-Tempory folders used to decompress and compile 
+Tempory folders used to decompress and compile
       the corresponding archives:
       <i>$opam/$OVERSION/build/$NAME-$VERSION</i>
 </div>
@@ -268,14 +270,14 @@ Tempory location of install files:
 </td></tr>
 <tr><td><a href="Path.C.html#VALbuild_ocaml">build_ocaml</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-Tempory folders used to decompress and compile 
+Tempory folders used to decompress and compile
       the OCaml compiler:
       <i>$opam/$OVERSION/build/_</i>
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALbuild_old_env">build_old_env</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
-A file containing a copy of the current env variables, before 
+A file containing a copy of the current env variables, before
       the env variables for the build are set:
       <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env</i>
 </div>
@@ -301,11 +303,6 @@ Linking options to give to the bytecode compiler
 </div>
 </td></tr>
 <tr><td align="left"><br>C</td></tr>
-<tr><td><a href="Types.Dirname.html#VALchdir">chdir</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
-<td><div class="info">
-Change the current directory
-</div>
-</td></tr>
 <tr><td><a href="Run.html#VALchdir">chdir</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 Change the current working directory
@@ -350,13 +347,18 @@ Clean-up process result files
 </td></tr>
 <tr><td><a href="Run.html#VALcommands">commands</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code> 
+<code class="code">commands ~add_to_path cmds</code> executes the commands <code class="code">cmds</code>
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning.
 </div>
 </td></tr>
 <tr><td><a href="Types.OCaml_V.html#VALcompare">compare</a> [<a href="Types.OCaml_V.html">Types.OCaml_V</a>]</td>
 <td><div class="info">
 Compare OCaml versions
+</div>
+</td></tr>
+<tr><td><a href="Types.V.html#VALcompare">compare</a> [<a href="Types.V.html">Types.V</a>]</td>
+<td><div class="info">
+Compare two versions using the Debian version scheme
 </div>
 </td></tr>
 <tr><td><a href="Path.R.html#VALcompiler">compiler</a> [<a href="Path.R.html">Path.R</a>]</td>
@@ -369,9 +371,39 @@ Compiler files: <i>$opam/repo/$repo/compilers/$OVERSION.comp</i>
 Compiler files: <i>$opam/compilers/$OVERSION.comp</i>
 </div>
 </td></tr>
+<tr><td><a href="Client.html#VALcompiler_clone">compiler_clone</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Clone the packages from the given compiler.
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALcompiler_current">compiler_current</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Display the name of the current compiler
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALcompiler_install">compiler_install</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Install the given compiler.
+</div>
+</td></tr>
 <tr><td><a href="Client.html#VALcompiler_list">compiler_list</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-<code class="code">compiler_list</code> list the available compiler descriptions
+List the available compiler descriptions
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALcompiler_reinstall">compiler_reinstall</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Reinstall the given compiler.
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALcompiler_remove">compiler_remove</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Remove the given compiler.
+</div>
+</td></tr>
+<tr><td><a href="Client.html#VALcompiler_switch">compiler_switch</a> [<a href="Client.html">Client</a>]</td>
+<td><div class="info">
+Switch to the given compiler.
 </div>
 </td></tr>
 <tr><td><a href="Path.R.html#VALcompilers_dir">compilers_dir</a> [<a href="Path.R.html">Path.R</a>]</td>
@@ -404,7 +436,7 @@ Compile and link flags for a given package:
 </td></tr>
 <tr><td><a href="Client.html#VALconfig">config</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Depending on request, returns options or directories where the
+Depending on request, return options or directories where the
     package is installed.
 </div>
 </td></tr>
@@ -435,7 +467,7 @@ Copy a directory
 </td></tr>
 <tr><td><a href="Run.html#VALcopy">copy</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>
+<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>.
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALcopy_in">copy_in</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
@@ -544,11 +576,6 @@ Return the version of the compiler currently installed
 Return the current working directory
 </div>
 </td></tr>
-<tr><td><a href="Run.html#VALcwd">cwd</a> [<a href="Run.html">Run</a>]</td>
-<td><div class="info">
-Return the current working directory
-</div>
-</td></tr>
 <tr><td><a href="Path.R.html#VALcwd">cwd</a> [<a href="Path.R.html">Path.R</a>]</td>
 <td><div class="info">
 Create a repository path with the current working directory
@@ -611,6 +638,8 @@ Return the directory name
 Return the parent directory
 </div>
 </td></tr>
+<tr><td><a href="Process.html#VALdisplay_error_message">display_error_message</a> [<a href="Process.html">Process</a>]</td>
+<td></td></tr>
 <tr><td><a href="Path.C.html#VALdoc">doc</a> [<a href="Path.C.html">Path.C</a>]</td>
 <td><div class="info">
 Documentation path for a given package:
@@ -731,19 +760,6 @@ files <i>$opam/repo/$repo/packages/$NAME.$VERSION/files</i>
 <code class="code">files_with_links dir</code> returns the files in the directory <code class="code">dir</code>.
 </div>
 </td></tr>
-<tr><td><a href="Solver.html#VALfilter_backward_dependencies">filter_backward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
-<td><div class="info">
-Return the recursive dependencies of a package Note : the given
-    package exists in the list in input because this list describes
-    the entire universe.
-</div>
-</td></tr>
-<tr><td><a href="Solver.html#VALfilter_forward_dependencies">filter_forward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
-<td><div class="info">
-Same as <code class="code">filter_backward_dependencies</code> but for forward
-    dependencies
-</div>
-</td></tr>
 <tr><td><a href="Types.SET.html#VALfind">find</a> [<a href="Types.SET.html">Types.SET</a>]</td>
 <td><div class="info">
 Find an element in the list
@@ -752,6 +768,12 @@ Find an element in the list
 <tr><td><a href="Run.html#VALflock">flock</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
 <code class="code">flock ()</code> takes the global file lock.
+</div>
+</td></tr>
+<tr><td><a href="File_format.html#VALforce_newline">force_newline</a> [<a href="File_format.html">File_format</a>]</td>
+<td><div class="info">
+Apply the given printer function
+    by putting a newline between every element of every list
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALfull">full</a> [<a href="File.Descr.html">File.Descr</a>]</td>
@@ -768,6 +790,17 @@ Return the full description
 <tr><td><a href="File_format.html#VALget_all_section_by_kind">get_all_section_by_kind</a> [<a href="File_format.html">File_format</a>]</td>
 <td><div class="info">
 Get all the sections of a certain kind
+</div>
+</td></tr>
+<tr><td><a href="Solver.html#VALget_backward_dependencies">get_backward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
+<td><div class="info">
+Return the recursive dependencies of a package.
+</div>
+</td></tr>
+<tr><td><a href="Solver.html#VALget_forward_dependencies">get_forward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
+<td><div class="info">
+Same as <code class="code">get_backward_dependencies</code> but for forward
+    dependencies
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALget_section_by_kind">get_section_by_kind</a> [<a href="File_format.html">File_format</a>]</td>
@@ -793,7 +826,7 @@ Evaluate a function in a given directory
 </td></tr>
 <tr><td><a href="Client.html#VALinfo">info</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Displays a general summary of a package.
+Display a general summary of a package.
 </div>
 </td></tr>
 <tr><td><a href="Repositories.BACKEND.html#VALinit">init</a> [<a href="Repositories.BACKEND.html">Repositories.BACKEND</a>]</td>
@@ -808,7 +841,7 @@ Initialize <i>$opam/repo/$repo</i>
 </td></tr>
 <tr><td><a href="Client.html#VALinit">init</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Initializes the client a consistent state.
+Initialize the client a consistent state.
 </div>
 </td></tr>
 <tr><td><a href="Path.C.html#VALinstall">install</a> [<a href="Path.C.html">Path.C</a>]</td>
@@ -836,6 +869,11 @@ the variable <code class="code">installed</code>
 <td><div class="info">
 List of installed packages with their version:
       <i>$opam/$OVERSION/installed</i>
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALinternal_error">internal_error</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+Raise <code class="code">Internal_error</code>
 </div>
 </td></tr>
 <tr><td><a href="File_format.html#VALinvalid_fields">invalid_fields</a> [<a href="File_format.html">File_format</a>]</td>
@@ -919,7 +957,7 @@ Symlink a file.
 </td></tr>
 <tr><td><a href="Run.html#VALlink">link</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code>
+<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code>.
 </div>
 </td></tr>
 <tr><td><a href="Types.Filename.html#VALlink_in">link_in</a> [<a href="Types.Filename.html">Types.Filename</a>]</td>
@@ -939,7 +977,7 @@ List the directory
 </td></tr>
 <tr><td><a href="Client.html#VALlist">list</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-Displays all available packages that matches <code class="code">string</code>.
+Display all available packages that matches any of the regexps.
 </div>
 </td></tr>
 <tr><td align="left"><br>M</td></tr>
@@ -1051,7 +1089,7 @@ MD5 digest or the remote file
 </td></tr>
 <tr><td><a href="Types.MAP.html#VALmerge_max">merge_max</a> [<a href="Types.MAP.html">Types.MAP</a>]</td>
 <td><div class="info">
-WARNING : Besides <code class="code">key</code>, the function could receive 
+WARNING : Besides <code class="code">key</code>, the function could receive
       some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
 </div>
 </td></tr>
@@ -1354,7 +1392,7 @@ Pin a package to a specific version.
 </td></tr>
 <tr><td><a href="Client.html#VALpin_list">pin_list</a> [<a href="Client.html">Client</a>]</td>
 <td><div class="info">
-list the current pinned packages
+List the current pinned packages
 </div>
 </td></tr>
 <tr><td><a href="Types.html#VALpin_option_of_string">pin_option_of_string</a> [<a href="Types.html">Types</a>]</td>
@@ -1380,6 +1418,11 @@ Is it a pre-installed compiler description file
 <tr><td><a href="Solver.html#VALprint_solution">print_solution</a> [<a href="Solver.html">Solver</a>]</td>
 <td><div class="info">
 Display a solution
+</div>
+</td></tr>
+<tr><td><a href="Run.html#VALprocess_error">process_error</a> [<a href="Run.html">Run</a>]</td>
+<td><div class="info">
+raise <code class="code">Process_error</code>
 </div>
 </td></tr>
 <tr><td align="left"><br>R</td></tr>
@@ -1427,7 +1470,7 @@ Misc
 </td></tr>
 <tr><td><a href="Run.html#VALrec_files">rec_files</a> [<a href="Run.html">Run</a>]</td>
 <td><div class="info">
-<code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>, 
+<code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>,
     recursively.
 </div>
 </td></tr>
@@ -1592,13 +1635,6 @@ Get all the sections from a list of items
 Is the solution empty ?
 </div>
 </td></tr>
-<tr><td><a href="Solver.html#VALsort_by_backward_dependencies">sort_by_backward_dependencies</a> [<a href="Solver.html">Solver</a>]</td>
-<td><div class="info">
-Return a permutation of the given set of packages :
-    if package B depends of package A then 
-    B appears before A in the resulting list
-</div>
-</td></tr>
 <tr><td><a href="File.Comp.html#VALsrc">src</a> [<a href="File.Comp.html">File.Comp</a>]</td>
 <td><div class="info">
 Return the url of the compiler
@@ -1612,6 +1648,11 @@ Check wether a filename starts by a given dirname
 <tr><td><a href="Types.Dirname.html#VALstarts_with">starts_with</a> [<a href="Types.Dirname.html">Types.Dirname</a>]</td>
 <td><div class="info">
 Does the directory starts with a given prefix
+</div>
+</td></tr>
+<tr><td><a href="Solver.html#VALstring_of_action">string_of_action</a> [<a href="Solver.html">Solver</a>]</td>
+<td><div class="info">
+Pretty-printing of actions
 </div>
 </td></tr>
 <tr><td><a href="Types.html#VALstring_of_atom_formula">string_of_atom_formula</a> [<a href="Types.html">Types</a>]</td>
@@ -1686,12 +1727,6 @@ DLL paths
 <tr><td><a href="File.OPAM.html#VALsubsts">substs</a> [<a href="File.OPAM.html">File.OPAM</a>]</td>
 <td><div class="info">
 File substitutions
-</div>
-</td></tr>
-<tr><td><a href="Client.html#VALswitch">switch</a> [<a href="Client.html">Client</a>]</td>
-<td><div class="info">
-<code class="code">switch and_clone alias descr</code> switch to an OCaml compiler 
-    and clone at the end in case <code class="code">and_clone</code> is <code class="code">true</code>.
 </div>
 </td></tr>
 <tr><td><a href="File.Descr.html#VALsynopsis">synopsis</a> [<a href="File.Descr.html">File.Descr</a>]</td>
@@ -1990,6 +2025,6 @@ Removes everything in <code class="code">filename</code> if existed, then write 
 Write some contents to a file
 </div>
 </td></tr>
-</table><br>
+</table>
 </body>
 </html>

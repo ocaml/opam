@@ -29,11 +29,10 @@
 <title>Types</title>
 </head>
 <body>
-<div class="navbar"><a href="Solver.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
+<div class="navbar"><a class="pre" href="Solver.html" title="Solver">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;</div>
-<center><h1>Module <a href="type_Types.html">Types</a></h1></center>
-<br>
+<h1>Module <a href="type_Types.html">Types</a></h1>
 <pre><span class="keyword">module</span> Types: <code class="code">sig</code> <a href="Types.html">..</a> <code class="code">end</code></pre>The OPAM types and then main function which operates on them.<br>
 <hr width="100%">
 <br>
@@ -90,19 +89,19 @@ non-directory filenames
 Shortcut to file names<br>
 </div>
 
-<br><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = </code><table class="typetable">
+<pre><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">D</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTfile.D"><span class="constructor">D</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEdirname">dirname</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">F</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEfilename">filename</a></code></code></td>
+<code><span id="TYPEELTfile.F"><span class="constructor">F</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEfilename">filename</a></code></code></td>
 
 </tr></table>
 
@@ -110,26 +109,26 @@ Shortcut to file names<br>
 Generalized file type<br>
 </div>
 
-<br><code><span id="TYPEdownload"><span class="keyword">type</span> <code class="type">'a</code> download</span> = </code><table class="typetable">
+<pre><code><span id="TYPEdownload"><span class="keyword">type</span> <code class="type">'a</code> download</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Up_to_date</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTdownload.Up_to_date"><span class="constructor">Up_to_date</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Not_available</span></code></td>
+<code><span id="TYPEELTdownload.Not_available"><span class="constructor">Not_available</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Result</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTdownload.Result"><span class="constructor">Result</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr></table>
 
@@ -142,7 +141,7 @@ Concatenate a directory and a string to create a filename<br>
 </div>
 <br>
 <span id="2_Packagenameandversions"><h2>Package name and versions</h2></span><br>
-<pre><span class="keyword">module</span> <a href="Types.V.html">V</a>: <code class="type"><a href="Types.ABSTRACT.html">ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="Types.V.html">V</a>: <code class="code">sig</code> <a href="Types.V.html">..</a> <code class="code">end</code></pre><div class="info">
 Versions
 </div>
 <pre><span id="TYPEversion"><span class="keyword">type</span> <code class="type"></code>version</span> = <code class="type">V.t</code> </pre>
@@ -215,19 +214,19 @@ Fully qualified variables
 Shortcut to fully qualified variables<br>
 </div>
 
-<br><code><span id="TYPEvariable_contents"><span class="keyword">type</span> <code class="type"></code>variable_contents</span> = </code><table class="typetable">
+<pre><code><span id="TYPEvariable_contents"><span class="keyword">type</span> <code class="type"></code>variable_contents</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">B</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+<code><span id="TYPEELTvariable_contents.B"><span class="constructor">B</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">S</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvariable_contents.S"><span class="constructor">S</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr></table>
 
@@ -238,19 +237,19 @@ Content of user-defined variables<br>
 <pre><span id="VALstring_of_variable_contents"><span class="keyword">val</span> string_of_variable_contents</span> : <code class="type"><a href="Types.html#TYPEvariable_contents">variable_contents</a> -> string</code></pre><div class="info">
 Convert the content of a variable to a string<br>
 </div>
-<br><code><span id="TYPEppflag"><span class="keyword">type</span> <code class="type"></code>ppflag</span> = </code><table class="typetable">
+<pre><code><span id="TYPEppflag"><span class="keyword">type</span> <code class="type"></code>ppflag</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Camlp4</span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
+<code><span id="TYPEELTppflag.Camlp4"><span class="constructor">Camlp4</span></span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Cmd</span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
+<code><span id="TYPEELTppflag.Cmd"><span class="constructor">Cmd</span></span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
 
 </tr></table>
 
@@ -260,26 +259,26 @@ Content of <code class="code">pp</code> variables<br>
 
 <br>
 <span id="2_Commandlinearguments"><h2>Command line arguments</h2></span><br>
-<br><code><span id="TYPEupload"><span class="keyword">type</span> <code class="type"></code>upload</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEupload"><span class="keyword">type</span> <code class="type"></code>upload</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>opam&nbsp;: <code class="type"><a href="Types.html#TYPEfilename">filename</a></code>;</code></td>
+<code><span id="TYPEELTupload.opam">opam</span>&nbsp;:<code class="type"><a href="Types.html#TYPEfilename">filename</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>descr&nbsp;: <code class="type"><a href="Types.html#TYPEfilename">filename</a></code>;</code></td>
+<code><span id="TYPEELTupload.descr">descr</span>&nbsp;:<code class="type"><a href="Types.html#TYPEfilename">filename</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>archive&nbsp;: <code class="type"><a href="Types.html#TYPEfilename">filename</a></code>;</code></td>
+<code><span id="TYPEELTupload.archive">archive</span>&nbsp;:<code class="type"><a href="Types.html#TYPEfilename">filename</a></code>;</code></td>
 
 </tr></table>
 }
@@ -291,26 +290,26 @@ Upload arguments<br>
 <pre><span id="VALstring_of_upload"><span class="keyword">val</span> string_of_upload</span> : <code class="type"><a href="Types.html#TYPEupload">upload</a> -> string</code></pre><div class="info">
 Pretty-print<br>
 </div>
-<br><code><span id="TYPEremote"><span class="keyword">type</span> <code class="type"></code>remote</span> = </code><table class="typetable">
+<pre><code><span id="TYPEremote"><span class="keyword">type</span> <code class="type"></code>remote</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">List</span></code></td>
+<code><span id="TYPEELTremote.List"><span class="constructor">List</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Add</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPErepository">repository</a></code></code></td>
+<code><span id="TYPEELTremote.Add"><span class="constructor">Add</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPErepository">repository</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Rm</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTremote.Rm"><span class="constructor">Rm</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr></table>
 
@@ -321,26 +320,26 @@ Remote arguments<br>
 <pre><span id="VALstring_of_remote"><span class="keyword">val</span> string_of_remote</span> : <code class="type"><a href="Types.html#TYPEremote">remote</a> -> string</code></pre><div class="info">
 Pretty-print or remote args<br>
 </div>
-<br><code><span id="TYPEpin_option"><span class="keyword">type</span> <code class="type"></code>pin_option</span> = </code><table class="typetable">
+<pre><code><span id="TYPEpin_option"><span class="keyword">type</span> <code class="type"></code>pin_option</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Version</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEversion">version</a></code></code></td>
+<code><span id="TYPEELTpin_option.Version"><span class="constructor">Version</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEversion">version</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Path</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTpin_option.Path"><span class="constructor">Path</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEdirname">dirname</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Unpin</span></code></td>
+<code><span id="TYPEELTpin_option.Unpin"><span class="constructor">Unpin</span></span></code></td>
 
 </tr></table>
 
@@ -348,19 +347,19 @@ Pretty-print or remote args<br>
 Pinned packages options<br>
 </div>
 
-<br><code><span id="TYPEpin"><span class="keyword">type</span> <code class="type"></code>pin</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEpin"><span class="keyword">type</span> <code class="type"></code>pin</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>pin_package&nbsp;: <code class="type"><a href="Types.html#TYPEname">name</a></code>;</code></td>
+<code><span id="TYPEELTpin.pin_package">pin_package</span>&nbsp;:<code class="type"><a href="Types.html#TYPEname">name</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>pin_arg&nbsp;: <code class="type"><a href="Types.html#TYPEpin_option">pin_option</a></code>;</code></td>
+<code><span id="TYPEELTpin.pin_arg">pin_arg</span>&nbsp;:<code class="type"><a href="Types.html#TYPEpin_option">pin_option</a></code>;</code></td>
 
 </tr></table>
 }
@@ -375,33 +374,33 @@ Pretty-printing of pinned packages<br>
 <pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">string -> <a href="Types.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
 Read pin options args<br>
 </div>
-<pre><span id="VALstring_of_pin_option"><span class="keyword">val</span> string_of_pin_option</span> : <code class="type"><a href="Types.html#TYPEpin_option">pin_option</a> -> string</code></pre><br><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code><table class="typetable">
+<pre><span id="VALstring_of_pin_option"><span class="keyword">val</span> string_of_pin_option</span> : <code class="type"><a href="Types.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>is_rec&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig_option.is_rec">is_rec</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>is_byte&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig_option.is_byte">is_byte</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>is_link&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig_option.is_link">is_link</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>options&nbsp;: <code class="type"><a href="Types.html#TYPEfull_section">full_section</a> list</code>;</code></td>
+<code><span id="TYPEELTconfig_option.options">options</span>&nbsp;:<code class="type"><a href="Types.html#TYPEfull_section">full_section</a> list</code>;</code></td>
 
 </tr></table>
 }
@@ -410,47 +409,47 @@ Read pin options args<br>
 Configuration requests<br>
 </div>
 
-<br><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = </code><table class="typetable">
+<pre><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Env</span></code></td>
+<code><span id="TYPEELTconfig.Env"><span class="constructor">Env</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">List_vars</span></code></td>
+<code><span id="TYPEELTconfig.List_vars"><span class="constructor">List_vars</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Variable</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEfull_variable">full_variable</a></code></code></td>
+<code><span id="TYPEELTconfig.Variable"><span class="constructor">Variable</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEfull_variable">full_variable</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Includes</span> <span class="keyword">of</span> <code class="type">bool * <a href="Types.html#TYPEname">name</a> list</code></code></td>
+<code><span id="TYPEELTconfig.Includes"><span class="constructor">Includes</span></span> <span class="keyword">of</span> <code class="type">bool * <a href="Types.html#TYPEname">name</a> list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Compil</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEconfig_option">config_option</a></code></code></td>
+<code><span id="TYPEELTconfig.Compil"><span class="constructor">Compil</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEconfig_option">config_option</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Subst</span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEbasename">basename</a> list</code></code></td>
+<code><span id="TYPEELTconfig.Subst"><span class="constructor">Subst</span></span> <span class="keyword">of</span> <code class="type"><a href="Types.html#TYPEbasename">basename</a> list</code></code></td>
 
 </tr></table>
 

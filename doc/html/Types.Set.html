@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="next" href="Types.MAP.html">
+<link rel="next" href="Types.Map.html">
 <link rel="Up" href="Types.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -20,30 +20,12 @@
 <link title="Repositories" rel="Chapter" href="Repositories.html">
 <link title="Run" rel="Chapter" href="Run.html">
 <link title="Solver" rel="Chapter" href="Solver.html">
-<link title="Types" rel="Chapter" href="Types.html"><title>Types.SET</title>
+<link title="Types" rel="Chapter" href="Types.html"><title>Types.Set</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="Types.html">Up</a>
-&nbsp;<a href="Types.MAP.html">Next</a>
+<div class="navbar">&nbsp;<a class="up" href="Types.html" title="Types">Up</a>
+&nbsp;<a class="post" href="Types.Map.html" title="Types.Map">Next</a>
 </div>
-<center><h1>Module type <a href="type_Types.SET.html">Types.SET</a></h1></center>
-<br>
-<pre><span class="keyword">module type</span> SET = <code class="code">sig</code> <a href="Types.SET.html">..</a> <code class="code">end</code></pre>Collection of abstract values<br>
-<hr width="100%">
-<pre><span class="keyword">include</span> Set.S</pre>
-<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">(elt -> elt) -> t -> t</code></pre><div class="info">
-auto-map<br>
-</div>
-<pre><span id="VALchoose_one"><span class="keyword">val</span> choose_one</span> : <code class="type">t -> elt</code></pre><div class="info">
-Return one element. Fail if the set is not a singleton.<br>
-</div>
-<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">elt list -> t</code></pre><div class="info">
-Make a set from a list<br>
-</div>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">t -> string</code></pre><div class="info">
-Pretty-print a set<br>
-</div>
-<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type">(elt -> bool) -> t -> elt</code></pre><div class="info">
-Find an element in the list<br>
-</div>
-</body></html>
+<h1>Module <a href="type_Types.Set.html">Types.Set</a></h1>
+<pre><span class="keyword">module</span> Set: <code class="code">sig</code> <a href="Types.Set.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span class="keyword">module</span> <a href="Types.Set.Make.html">Make</a>: <div class="sig_block"><code class="code">functor (</code><code class="code">S</code><code class="code"> : </code><code class="type"><a href="Types.OrderedType.html">Types.OrderedType</a></code><code class="code">) -&gt; </code><code class="type"><a href="Types.SET.html">Types.SET</a></code><code class="type">  with type elt = S.t</code></div></pre></body></html>

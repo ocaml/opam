@@ -23,11 +23,10 @@
 <link title="Types" rel="Chapter" href="Types.html"><title>Path.C</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="Path.html">Up</a>
-&nbsp;<a href="Path.G.html">Next</a>
+<div class="navbar">&nbsp;<a class="up" href="Path.html" title="Path">Up</a>
+&nbsp;<a class="post" href="Path.G.html" title="Path.G">Next</a>
 </div>
-<center><h1>Module <a href="type_Path.C.html">Path.C</a></h1></center>
-<br>
+<h1>Module <a href="type_Path.C.html">Path.C</a></h1>
 <pre><span class="keyword">module</span> C: <code class="code">sig</code> <a href="Path.C.html">..</a> <code class="code">end</code></pre>Compiler-version related state<br>
 <hr width="100%">
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
@@ -72,12 +71,12 @@ List of installed packages with their version:
       <i>$opam/$OVERSION/installed</i><br>
 </div>
 <pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Tempory folders used to decompress and compile 
+Tempory folders used to decompress and compile
       the corresponding archives:
       <i>$opam/$OVERSION/build/$NAME-$VERSION</i><br>
 </div>
 <pre><span id="VALbuild_ocaml"><span class="keyword">val</span> build_ocaml</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> <a href="Types.html#TYPEdirname">Types.dirname</a></code></pre><div class="info">
-Tempory folders used to decompress and compile 
+Tempory folders used to decompress and compile
       the OCaml compiler:
       <i>$opam/$OVERSION/build/_</i><br>
 </div>
@@ -89,7 +88,7 @@ A file containing the env variables in which build command are
       processed: <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.env</i><br>
 </div>
 <pre><span id="VALbuild_old_env"><span class="keyword">val</span> build_old_env</span> : <code class="type"><a href="Path.C.html#TYPEt">t</a> -> Types.NV.t -> <a href="Types.html#TYPEfilename">Types.filename</a></code></pre><div class="info">
-A file containing a copy of the current env variables, before 
+A file containing a copy of the current env variables, before
       the env variables for the build are set:
       <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env</i><br>
 </div>

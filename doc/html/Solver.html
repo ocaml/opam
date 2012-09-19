@@ -26,36 +26,35 @@
 <title>Solver</title>
 </head>
 <body>
-<div class="navbar"><a href="Run.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="Types.html">Next</a>
+<div class="navbar"><a class="pre" href="Run.html" title="Run">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Types.html" title="Types">Next</a>
 </div>
-<center><h1>Module <a href="type_Solver.html">Solver</a></h1></center>
-<br>
+<h1>Module <a href="type_Solver.html">Solver</a></h1>
 <pre><span class="keyword">module</span> Solver: <code class="code">sig</code> <a href="Solver.html">..</a> <code class="code">end</code></pre>SAT-solver for package dependencies and conflicts.<br>
 <hr width="100%">
 <br>
 <span id="2_Packageactions"><h2>Package actions</h2></span><br>
-<br><code><span id="TYPEaction"><span class="keyword">type</span> <code class="type"></code>action</span> = </code><table class="typetable">
+<pre><code><span id="TYPEaction"><span class="keyword">type</span> <code class="type"></code>action</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">To_change</span> <span class="keyword">of</span> <code class="type">Types.NV.t option * Types.NV.t</code></code></td>
+<code><span id="TYPEELTaction.To_change"><span class="constructor">To_change</span></span> <span class="keyword">of</span> <code class="type">Types.NV.t option * Types.NV.t</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">To_delete</span> <span class="keyword">of</span> <code class="type">Types.NV.t</code></code></td>
+<code><span id="TYPEELTaction.To_delete"><span class="constructor">To_delete</span></span> <span class="keyword">of</span> <code class="type">Types.NV.t</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">To_recompile</span> <span class="keyword">of</span> <code class="type">Types.NV.t</code></code></td>
+<code><span id="TYPEELTaction.To_recompile"><span class="constructor">To_recompile</span></span> <span class="keyword">of</span> <code class="type">Types.NV.t</code></code></td>
 
 </tr></table>
 
@@ -63,6 +62,9 @@
 Build action<br>
 </div>
 
+<pre><span id="VALstring_of_action"><span class="keyword">val</span> string_of_action</span> : <code class="type"><a href="Solver.html#TYPEaction">action</a> -> string</code></pre><div class="info">
+Pretty-printing of actions<br>
+</div>
 <pre><span id="TYPEpackage_action"><span class="keyword">type</span> <code class="type"></code>package_action</span> </pre>
 <div class="info">
 Package with associated build action<br>
@@ -76,26 +78,26 @@ Package action graph
 </div>
 <br>
 <span id="2_Solver"><h2>Solver</h2></span><br>
-<br><code><span id="TYPErequest"><span class="keyword">type</span> <code class="type"></code>request</span> = {</code><table class="typetable">
+<pre><code><span id="TYPErequest"><span class="keyword">type</span> <code class="type"></code>request</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>wish_install&nbsp;: <code class="type"><a href="Types.html#TYPEand_formula">Types.and_formula</a></code>;</code></td>
+<code><span id="TYPEELTrequest.wish_install">wish_install</span>&nbsp;:<code class="type"><a href="Types.html#TYPEand_formula">Types.and_formula</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>wish_remove&nbsp;: <code class="type"><a href="Types.html#TYPEand_formula">Types.and_formula</a></code>;</code></td>
+<code><span id="TYPEELTrequest.wish_remove">wish_remove</span>&nbsp;:<code class="type"><a href="Types.html#TYPEand_formula">Types.and_formula</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>wish_upgrade&nbsp;: <code class="type"><a href="Types.html#TYPEand_formula">Types.and_formula</a></code>;</code></td>
+<code><span id="TYPEELTrequest.wish_upgrade">wish_upgrade</span>&nbsp;:<code class="type"><a href="Types.html#TYPEand_formula">Types.and_formula</a></code>;</code></td>
 
 </tr></table>
 }
@@ -107,19 +109,19 @@ Solver request<br>
 <pre><span id="VALstring_of_request"><span class="keyword">val</span> string_of_request</span> : <code class="type"><a href="Solver.html#TYPErequest">request</a> -> string</code></pre><div class="info">
 Convert a request to a string<br>
 </div>
-<br><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>to_remove&nbsp;: <code class="type">Types.NV.t list</code>;</code></td>
+<code><span id="TYPEELTsolution.to_remove">to_remove</span>&nbsp;:<code class="type">Types.NV.t list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>to_add&nbsp;: <code class="type">PA_graph.t</code>;</code></td>
+<code><span id="TYPEELTsolution.to_add">to_add</span>&nbsp;:<code class="type">PA_graph.t</code>;</code></td>
 
 </tr></table>
 }
@@ -142,12 +144,12 @@ Display a solution<br>
 Package<br>
 </div>
 
-<br><code><span id="TYPEuniverse"><span class="keyword">type</span> <code class="type"></code>universe</span> = </code><table class="typetable">
+<pre><code><span id="TYPEuniverse"><span class="keyword">type</span> <code class="type"></code>universe</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">U</span> <span class="keyword">of</span> <code class="type"><a href="Solver.html#TYPEpackage">package</a> list</code></code></td>
+<code><span id="TYPEELTuniverse.U"><span class="constructor">U</span></span> <span class="keyword">of</span> <code class="type"><a href="Solver.html#TYPEpackage">package</a> list</code></code></td>
 
 </tr></table>
 
@@ -155,12 +157,12 @@ Package<br>
 Universe of packages<br>
 </div>
 
-<br><code><span id="TYPEpackages"><span class="keyword">type</span> <code class="type"></code>packages</span> = </code><table class="typetable">
+<pre><code><span id="TYPEpackages"><span class="keyword">type</span> <code class="type"></code>packages</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">P</span> <span class="keyword">of</span> <code class="type"><a href="Solver.html#TYPEpackage">package</a> list</code></code></td>
+<code><span id="TYPEELTpackages.P"><span class="constructor">P</span></span> <span class="keyword">of</span> <code class="type"><a href="Solver.html#TYPEpackage">package</a> list</code></code></td>
 
 </tr></table>
 
@@ -168,7 +170,7 @@ Universe of packages<br>
 Subset of packages<br>
 </div>
 
-<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPErequest">request</a> -> Types.NV.Set.t -> <a href="Solver.html#TYPEsolution">solution</a> list</code></pre><div class="info">
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPErequest">request</a> -> Types.NV.Set.t -> <a href="Solver.html#TYPEsolution">solution</a> option</code></pre><div class="info">
 Given a description of packages, return a solution preserving the
     consistency of the initial description.  An empty <code class="code">list</code> : No solution
     found. The last argument is the set of installed packages.
@@ -178,20 +180,16 @@ Given a description of packages, return a solution preserving the
     For the ordering, the first element in the list
     is obtained by upgrading from its next element.<br>
 </div>
-<pre><span id="VALfilter_backward_dependencies"><span class="keyword">val</span> filter_backward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
-Return the recursive dependencies of a package Note : the given
+<pre><span id="VALget_backward_dependencies"><span class="keyword">val</span> get_backward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+Return the recursive dependencies of a package. Note : the given
     package exists in the list in input because this list describes
     the entire universe.  By convention, it also appears in output.
-    If <code class="code">depopts</code> (= <code class="code">false</code> by default) is set to <code class="code">true</code>, 
-    optional dependencies are merged with usual dependencies.<br>
+    If <code class="code">depopts</code> (= <code class="code">false</code> by default) is set to <code class="code">true</code>,
+    optional dependencies are added to the dependency relation.
+    The packages are return in topological order.<br>
 </div>
-<pre><span id="VALfilter_forward_dependencies"><span class="keyword">val</span> filter_forward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
-Same as <code class="code">filter_backward_dependencies</code> but for forward
+<pre><span id="VALget_forward_dependencies"><span class="keyword">val</span> get_forward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
+Same as <code class="code">get_backward_dependencies</code> but for forward
     dependencies<br>
-</div>
-<pre><span id="VALsort_by_backward_dependencies"><span class="keyword">val</span> sort_by_backward_dependencies</span> : <code class="type">?depopts:bool -> <a href="Solver.html#TYPEuniverse">universe</a> -> <a href="Solver.html#TYPEpackages">packages</a> -> <a href="Solver.html#TYPEpackage">package</a> list</code></pre><div class="info">
-Return a permutation of the given set of packages :
-    if package B depends of package A then 
-    B appears before A in the resulting list<br>
 </div>
 </body></html>

@@ -20,24 +20,27 @@
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;init&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;init&nbsp;:&nbsp;<span class="constructor">Types</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;list&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;print_short:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;installed_only:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;name_only:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;installed_only:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?name_only:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?case_sensitive:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;info&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">N</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;config&nbsp;:&nbsp;<span class="constructor">Types</span>.config&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;install&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">N</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;reinstall&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">N</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update&nbsp;:&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upgrade&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">N</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upload&nbsp;:&nbsp;<span class="constructor">Types</span>.upload&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">N</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remote&nbsp;:&nbsp;<span class="constructor">Types</span>.remote&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;switch&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;clone:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;quiet:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_install&nbsp;:&nbsp;bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">OCaml_V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_clone&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_remove&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_switch&nbsp;:&nbsp;bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_reinstall&nbsp;:&nbsp;<span class="constructor">Types</span>.<span class="constructor">Alias</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_list&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_current&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pin&nbsp;:&nbsp;<span class="constructor">Types</span>.pin&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pin_list&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 <span class="keyword">end</span></code></body></html>

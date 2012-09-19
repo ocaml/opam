@@ -24,6 +24,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">To_change</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t&nbsp;option&nbsp;*&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">To_delete</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">To_recompile</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_action&nbsp;:&nbsp;<span class="constructor">Solver</span>.action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package_action<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;action&nbsp;:&nbsp;<span class="constructor">Solver</span>.package_action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.action<br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">PA_graph</span>&nbsp;:<br>
@@ -157,7 +158,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">Parallel</span>.error)&nbsp;list&nbsp;*&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;request&nbsp;=&nbsp;{<br>
@@ -178,14 +179,11 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;packages&nbsp;=&nbsp;<span class="constructor">P</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;list<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_backward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Types</span>.<span class="constructor">NV</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.solution&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_backward_dependencies&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?depopts:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_forward_dependencies&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?depopts:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sort_by_backward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_forward_dependencies&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?depopts:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Solver</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.packages&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Solver</span>.package&nbsp;list<br>
 <span class="keyword">end</span></code></body></html>
