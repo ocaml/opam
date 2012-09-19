@@ -185,7 +185,7 @@ end = struct
     if Sys.file_exists dirname then
       Run.in_dir dirname fn
     else
-      Globals.error_and_exit "%s does not exists!" dirname
+      Globals.error_and_exit "%s does not exist!" dirname
 
   let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
     Run.in_dir (to_string dirname)

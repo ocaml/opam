@@ -866,10 +866,10 @@ let info package =
     )
 
 let proceed_toinstall t nv =
-  Globals.msg "Installing %s ...\n" (NV.to_string nv);
+  let build_dir = Path.C.build t.compiler nv in
+  if Dirname.exists build_dir then Dirname.in_dir build_dir (fun () ->
 
-  Dirname.in_dir (Path.C.build t.compiler nv) (fun () ->
-
+    Globals.msg "Installing %s ...\n" (NV.to_string nv);
     let t = load_state () in
     let name = NV.name nv in
     let opam_f = Path.G.opam t.global nv in
@@ -895,7 +895,7 @@ let proceed_toinstall t nv =
     if not (Filename.exists config_f)
     && (File.OPAM.libraries opam <> [] || File.OPAM.syntax opam <> []) then
       Globals.error_and_exit
-        "%s does not exists but %s defines some libraries and syntax extensions"
+        "%s does not exist but %s defines some libraries and syntax extensions"
         (Filename.to_string config_f)
         (Filename.to_string opam_f);
     check "library"
@@ -1028,8 +1028,11 @@ let get_archive t nv =
     Repositories.download repo nv;
     let src = Path.R.archive repo_p nv in
     let dst = Path.G.archive t.global nv in
-    Filename.link src dst;
-    dst in
+    if Filename.exists src then (
+      Filename.link src dst;
+      Some dst
+    ) else
+      None in
   with_repo t nv aux
 
 let get_files t nv =
@@ -1043,17 +1046,19 @@ let extract_package t nv =
   Dirname.rmdir p_build;
   match pinned_path t nv with
   | None   ->
-      let archive = get_archive t nv in
-      Globals.msg "Extracting %s ...\n" (Filename.to_string archive);
-      Filename.extract archive p_build;
-      p_build
+      (match get_archive t nv with
+      | None         -> None
+      | Some archive ->
+        Globals.msg "Extracting %s ...\n" (Filename.to_string archive);
+        Filename.extract archive p_build;
+        Some p_build)
   | Some p ->
       (* XXX: make it a bit more generic ... *)
       Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
       Run.command [ "rsync"; "-arv"; "--exclude"; "'.git/*'"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ];
       let files = get_files t nv in
       List.iter (fun f -> Filename.copy_in f p_build) files;
-      p_build
+      Some p_build
 
 let proceed_todelete t nv =
   log "deleting %s" (NV.to_string nv);
@@ -1212,22 +1217,26 @@ let proceed_tochange t nv_old nv =
      occured, to help debugging. *)
   let prepare_package () =
     (* First, untar the archive *)
-    let p_build = extract_package t nv in
+    match extract_package t nv with
+    | None         -> None
+    | Some p_build ->
 
-    (* Substitute the configuration files. We should be in the right
-       directory to get the correct absolute path for the substitution
-       files (see [substitute_file] and [Filename.of_basename]. *)
-    Dirname.in_dir (Path.C.build t.compiler nv) (fun () ->
-      List.iter (substitute_file t) (File.OPAM.substs opam)
-    );
+      (* Substitute the configuration files. We should be in the right
+         directory to get the correct absolute path for the substitution
+         files (see [substitute_file] and [Filename.of_basename]. *)
+      Dirname.in_dir (Path.C.build t.compiler nv) (fun () ->
+        List.iter (substitute_file t) (File.OPAM.substs opam)
+      );
 
-    (* Generate an environnement file *)
-    let env_f = Path.C.build_env t.compiler nv in
-    File.Env.write env_f env.new_env;
+      (* Generate an environnement file *)
+      let env_f = Path.C.build_env t.compiler nv in
+      File.Env.write env_f env.new_env;
 
-    p_build in
+      Some p_build in
 
-  let p_build = prepare_package () in
+  let p_build = match prepare_package () with
+    | None         -> Path.C.root t.compiler
+    | Some p_build -> p_build in
 
   (* Call the build script and copy the output files *)
   let commands =
@@ -1235,7 +1244,10 @@ let proceed_tochange t nv_old nv =
       (List.map (substitute_string t))
       (File.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s);
+  if commands_s <> [] then
+    Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s)
+  else
+    Globals.msg "Nothing to do.\n";
   try
     Dirname.exec
       ~add_to_env:env.add_to_env
@@ -1245,18 +1257,20 @@ let proceed_tochange t nv_old nv =
     proceed_toinstall t nv;
   with e ->
     proceed_todelete t nv;
-    let p_build = prepare_package () in
+    let p_build = match prepare_package () with
+      | None         -> Path.C.root t.compiler
+      | Some p_build -> p_build in
     begin match nv_old with
     | None        ->
-        Globals.error
-          "The compilation of %s failed in %s."
-          (NV.to_string nv)
-          (Dirname.to_string p_build)
+      Globals.error
+        "The compilation of %s failed in %s."
+        (NV.to_string nv)
+        (Dirname.to_string p_build)
     | Some nv_old ->
-        Globals.error
-          "The recompilation of %s failed in %s."
-          (NV.to_string nv)
-          (Dirname.to_string p_build)
+      Globals.error
+        "The recompilation of %s failed in %s."
+        (NV.to_string nv)
+        (Dirname.to_string p_build)
     end;
     raise e
 
@@ -2125,7 +2139,7 @@ let remote action =
         let repo_s = List.filter (fun r -> r <> Repository.name repo) repo_s in
         match repo_s with
         | [] ->
-            (* The package does not exists anymore in any remote repository,
+            (* The package does not exist anymore in any remote repository,
                so we need to remove the associated meta-data if the package
                is not installed. *)
             let versions = Path.G.available_versions t.global n in
@@ -2324,7 +2338,7 @@ let compiler_remove alias =
   let comp_p = Path.C.create alias in
   let comp_dir = Path.C.root comp_p in
   if not (Dirname.exists comp_dir) then (
-    Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
+    Globals.msg "The compiler alias %s does not exist.\n" (Alias.to_string alias);
     Globals.exit 1;
   );
   if File.Config.ocaml_version t.config = alias then (
@@ -2339,7 +2353,7 @@ let compiler_reinstall alias =
   log "compiler_reinstall alias=%s" (Alias.to_string alias);
   let t = load_state () in
   if not (List.mem_assoc alias t.aliases) then (
-    Globals.msg "The compiler alias %s does not exists.\n" (Alias.to_string alias);
+    Globals.msg "The compiler alias %s does not exist.\n" (Alias.to_string alias);
     Globals.exit 1;
   );
   let ocaml_version = List.assoc alias t.aliases in

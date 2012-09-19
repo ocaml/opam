@@ -708,8 +708,7 @@ module OPAM = struct
     let substs     =
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
     let build_env = assoc_list s s_build_env (parse_list parse_env_variable) in
-    let build      =
-      assoc_default Globals.default_build_command s s_build parse_commands in
+    let build      = assoc_default [] s s_build parse_commands in
     let remove     = assoc_list s s_remove parse_commands in
     let depends    = assoc_list s s_depends parse_cnf_formula in
     let depopts    = assoc_list s s_depopts parse_cnf_formula in

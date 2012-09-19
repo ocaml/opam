@@ -95,13 +95,13 @@ module OPAM_X = struct
   let s_homepage    = "homepage"
   let s_ocaml_version = "ocaml-version"
   let s_opam_version = "opam-version"
-    
+
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
-  let s_status = "status" 
-    
+  let s_status = "status"
+
   (* see [Debcudf.add_inst] for more details about the format *)
-  let s_installed   = "  installed" 
+  let s_installed   = "  installed"
 
   let useful_fields = [
     s_opam_version;
@@ -155,7 +155,7 @@ module OPAM_X = struct
   let default_package t =
     let depopts =
       string_of_value (File_format.make_cnf_formula (llencode t.depopts)) in
-    { D.default_package with 
+    { D.default_package with
       D.name      = N.to_string t.name ;
       D.version   = V.to_string t.version ;
       D.depends   = llencode t.depends ;
@@ -196,7 +196,7 @@ module OPAM_X = struct
           ) @
             List.map (fun (s, v) -> Variable (s, v)) t.others;
         }
-      ] 
+      ]
     } in
     Syntax.to_string filename s
 
@@ -221,11 +221,10 @@ module OPAM_X = struct
     ] in
     let version    = assoc s s_version (parse_string |> V.of_string) in
     let maintainer = assoc s s_maintainer parse_string in
-    let substs     = 
+    let substs     =
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
     let build_env = assoc_list s s_build_env (parse_list parse_env_variable) in
-    let build      =
-      assoc_default Globals.default_build_command s s_build parse_commands in
+    let build      = assoc_default [] s s_build parse_commands in
     let remove     = assoc_list s s_remove parse_commands in
     let depends    = assoc_list s s_depends parse_cnf_formula in
     let depopts    = assoc_list s s_depopts parse_cnf_formula in
@@ -364,7 +363,7 @@ module R = struct
     Dirname.of_string !Globals.root_path / "repo" / Repository.name r
 
   let of_path path = path
-    
+
   let root t = t
 
   let config t = t // "config"

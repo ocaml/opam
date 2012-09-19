@@ -144,7 +144,7 @@ let make_archive ?(gener_digest = false) nv =
   Dirname.with_tmp_dir (fun extract_root ->
     let extract_dir = extract_root / NV.to_string nv in
 
-    if Filename.exists url_f then begin
+    if Filename.exists url_f then (
       let url_file = File.URL.read url_f in
       let checksum = File.URL.checksum url_file in
       let kind = match File.URL.kind url_file with
@@ -178,24 +178,28 @@ let make_archive ?(gener_digest = false) nv =
             (Dirname.to_string extract_dir);
           if dir <> extract_dir then
           Dirname.copy download_dir extract_dir
-    end;
+    );
 
     (* Eventually add the files/<package>/* to the extracted dir *)
     log "Adding the files to the archive";
     let files = Path.R.available_files local_repo nv in
-    if not (Dirname.exists extract_dir) then
-    Dirname.mkdir extract_dir;
-    List.iter (fun f -> Filename.copy_in f extract_dir) files;
+    if files <> [] then (
+      if not (Dirname.exists extract_dir) then
+        Dirname.mkdir extract_dir;
+      List.iter (fun f -> Filename.copy_in f extract_dir) files;
+    );
 
     (* And finally create the final archive *)
     (* XXX: we should add a suffix to the version to show that
        the archive has been repacked by opam *)
-    Dirname.mkdir (Path.R.archives_dir local_repo);
-    let local_archive = Path.R.archive local_repo nv in
-    log "Creating the archive files in %s" (Filename.to_string local_archive);
-    Dirname.exec extract_root [
-      [ "tar" ; "czf" ; Filename.to_string local_archive ; NV.to_string nv ]
-    ]
+    if files <> [] || Filename.exists url_f then (
+      Dirname.mkdir (Path.R.archives_dir local_repo);
+      let local_archive = Path.R.archive local_repo nv in
+      log "Creating the archive files in %s" (Filename.to_string local_archive);
+      Dirname.exec extract_root [
+        [ "tar" ; "czf" ; Filename.to_string local_archive ; NV.to_string nv ]
+      ]
+    );
   )
 
 (* Download the archive on the OPAM server.
