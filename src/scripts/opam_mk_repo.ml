@@ -30,24 +30,24 @@ let version () =
   Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
   exit 1
 
-let all, index, packages, gener_digest, keep =
+let all, index, packages, gener_digest, dryrun =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
   let index = ref false in
   let packages = ref [] in
   let gener_digest = ref false in
-  let keep = ref false in
+  let dryrun = ref false in
   let specs = Arg.align [
     ("-v"       , Arg.Unit version, " Display version information");
     ("--version", Arg.Unit version, " Display version information");
     ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
     ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
     ("-generate-checksums", Arg.Set gener_digest, Printf.sprintf " Generate checksums during the build (default is %b)" !gener_digest);
-    ("-keep" , Arg.Set keep, " Do not delete archive files already built");
+    ("-dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them")
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;
-  !all, !index, NV.Set.of_list (List.map NV.of_string !packages), !gener_digest, !keep
+  !all, !index, NV.Set.of_list (List.map NV.of_string !packages), !gener_digest, !dryrun
 
 let () =
   let local_path = Dirname.cwd () in
@@ -86,26 +86,30 @@ let () =
   let errors = ref [] in
   if not index then (
 
-    if not keep then (
-      (* Remove the old archive files *)
-      if not (NV.Set.is_empty to_remove) then
-        Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
-      NV.Set.iter (fun nv ->
-        let archive = Path.R.archive local_repo nv in
-        Globals.msg "Removing %s ...\n" (Filename.to_string archive);
+    (* Remove the old archive files *)
+    if not (NV.Set.is_empty to_remove) then
+      Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
+    NV.Set.iter (fun nv ->
+      let archive = Path.R.archive local_repo nv in
+      Globals.msg "Removing %s ...\n" (Filename.to_string archive);
+      if not dryrun then
         Filename.remove archive
-      ) to_remove;
-    );
+    ) to_remove;
 
     (* build the new archives *)
     if not (NV.Set.is_empty to_add) then
       Globals.msg "Packages to build: %s\n" (NV.Set.to_string to_add);
     NV.Set.iter (fun nv ->
+      let archive = Path.R.archive local_repo nv in
       try
-        let archive = Path.R.archive local_repo nv in
+        if not dryrun then (
+          Filename.remove archive;
+          Repositories.make_archive ~gener_digest nv
+        ) else
+          Globals.msg "Building %s\n" (Filename.to_string archive)
+      with e ->
         Filename.remove archive;
-        Repositories.make_archive ~gener_digest nv
-      with e -> errors := (nv, e) :: !errors;
+        errors := (nv, e) :: !errors;
     ) to_add;
   );
 
@@ -113,8 +117,9 @@ let () =
   if not (Filename.exists (local_path // "index.tar.gz"))
   || not (NV.Set.is_empty to_add)
   || not (NV.Set.is_empty to_remove) then (
-    Globals.msg "Creating index.tar.gz ...\n";
-    Curl.make_index_tar_gz local_repo;
+    Globals.msg "Rebuilding index.tar.gz ...\n";
+    if not dryrun then
+      Curl.make_index_tar_gz local_repo;
   ) else
     Globals.msg "OPAM Repository already up-to-date.\n";
 
@@ -122,16 +127,19 @@ let () =
   Run.remove "tmp";
 
   (* Rebuild urls.txt now the archives have been updated *)
-  let _index = Curl.make_urls_txt local_repo in
+  if dryrun then
+    Globals.msg "Rebuilding urls.txt\n"
+  else
+    let _index = Curl.make_urls_txt local_repo in
 
-  if !errors <> [] then
-    let display_error (nv, error) =
-      Globals.error "[ERROR] Error while processing %s" (NV.to_string nv);
-      match error with
-      | Run.Process_error r  -> Process.display_error_message r
-      | Run.Internal_error s -> Globals.error "  %s" s
-      | _ -> Globals.error "%s" (Printexc.to_string error) in
-    let all_errors = List.map fst !errors in
-    Globals.error "Got some errors while processing: %s"
-      (String.concat ", " (List.map NV.to_string all_errors));
-    List.iter display_error !errors
+    if !errors <> [] then
+      let display_error (nv, error) =
+        Globals.error "[ERROR] Error while processing %s" (NV.to_string nv);
+        match error with
+        | Run.Process_error r  -> Process.display_error_message r
+        | Run.Internal_error s -> Globals.error "  %s" s
+        | _ -> Globals.error "%s" (Printexc.to_string error) in
+      let all_errors = List.map fst !errors in
+      Globals.error "Got some errors while processing: %s"
+        (String.concat ", " (List.map NV.to_string all_errors));
+      List.iter display_error !errors
