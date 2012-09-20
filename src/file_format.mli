@@ -87,7 +87,7 @@ val parse_list : (value -> 'a) -> value -> 'a list
 val parse_group : (value -> 'a) -> value -> 'a list
 
 (** Parse a value and its option of 'things' *)
-val parse_option : (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b list
+val parse_option : (value -> 'a) -> (value list -> 'b) -> value -> 'a * 'b option
 
 (** Parse a value and a single optional value *)
 val parse_single_option : (value -> 'a) -> (value -> 'b) -> value -> 'a * 'b option
@@ -139,7 +139,7 @@ val make_list : ('a -> value) -> 'a list -> value
 val make_group : ('a -> value) -> 'a list -> value
 
 (** Create a value and its optional arguments *)
-val make_option : ('a -> value) -> ('b -> value) -> 'a * 'b list -> value
+val make_option : ('a -> value) -> ('b -> value list) -> ('a * 'b option) -> value
 
 (** Create a pair *)
 val make_pair: ('a -> value) -> ('a * 'a) -> value
@@ -233,3 +233,29 @@ val parse_env_variable: value -> (string * string * string)
 
 (** Making *)
 val make_env_variable: (string * string * string) -> value
+
+(** {2 filter expressions} *)
+
+(** Parsing *)
+val parse_filter: value list -> filter
+
+(** Creation *)
+val make_filter: filter -> value list
+
+(** Parse a command argument *)
+val parse_arg: value -> arg
+
+(** Create a command argument *)
+val make_arg: arg -> value
+
+(** Parse a command *)
+val parse_command: value -> command
+
+(** Create a command *)
+val make_command: command -> value
+
+(** Parse a list of commands *)
+val parse_commands: value -> command list
+
+(** Create a list of commands *)
+val make_commands: command list -> value

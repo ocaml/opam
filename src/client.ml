@@ -628,6 +628,84 @@ let substitute_file t f =
 let substitute_string t s =
   File.Subst.replace_string s (contents_of_variable t)
 
+let rec substitute_filter t = function
+  | Bool b    -> Bool b
+  | String s  -> String (substitute_string t s)
+  | Op(e,s,f) ->
+    let e = substitute_filter t e in
+    let f = substitute_filter t f in
+    Op(e, s, f)
+  | And (e,f) ->
+    let e = substitute_filter t e in
+    let f = substitute_filter t f in
+    And(e,f)
+  | Or(e,f) ->
+    let e = substitute_filter t e in
+    let f = substitute_filter t f in
+    Or(e,f)
+
+let substitute_arg t (a, f) =
+  let a = substitute_string t a in
+  let f = match f with
+    | None   -> None
+    | Some f -> Some (substitute_filter t f) in
+  (a, f)
+
+let substitute_command t (l, f) =
+  let l = List.map (substitute_arg t) l in
+  let f = match f with
+    | None   -> None
+    | Some f -> Some (substitute_filter t f) in
+  (l, f)
+
+let substitute_commands t c =
+  List.map (substitute_command t) c
+
+let rec eval_filter t = function
+  | Bool b -> string_of_bool b
+  | String s -> s
+  | Op(e,s,f) ->
+    (* We are supposed to compare version strings *)
+    let s = match s with
+      | Eq  -> (=)
+      | Neq -> (<>)
+      | Ge  -> (fun a b -> Debian.Version.compare a b >= 0)
+      | Le  -> (fun a b -> Debian.Version.compare a b <= 0)
+      | Gt  -> (fun a b -> Debian.Version.compare a b >  0)
+      | Lt  -> (fun a b -> Debian.Version.compare a b <  0) in
+    let e = eval_filter t e in
+    let f = eval_filter t f in
+    if s e f then "true" else "false"
+  | Or(e,f)  ->
+    if eval_filter t e = "true"
+    || eval_filter t f = "true"
+    then "true" else "false"
+  | And(e,f) ->
+    if eval_filter t e = "true"
+    && eval_filter t f = "true"
+    then "true" else "false"
+
+let eval_filter t = function
+  | None   -> true
+  | Some f -> eval_filter t f = "true"
+
+let filter_arg t (a,f) =
+  if eval_filter t f then
+    Some a
+  else
+    None
+
+let filter_command t (l, f) =
+  if eval_filter t f then
+    match Utils.filter_map (filter_arg t) l with
+    | [] -> None
+    | l  -> Some l
+  else
+    None
+
+let filter_commands t l =
+  Utils.filter_map (filter_command t) l
+
 let base_packages = [ "base-unix"; "base-bigarray"; "base-threads" ]
 
 let create_default_compiler_description t =
@@ -1098,7 +1176,8 @@ let proceed_todelete t nv =
   let opam_f = Path.G.opam t.global nv in
   if Filename.exists opam_f then (
     let opam = File.OPAM.read opam_f in
-    let remove = List.map (List.map (substitute_string t)) (File.OPAM.remove opam) in
+    let remove = substitute_commands t (File.OPAM.remove opam) in
+    let remove = filter_commands t remove in
     let p_build = Path.C.build t.compiler nv in
     (* We try to run the remove scripts in the folder where it was extracted
        If it does not exist, we try to download and extract the archive again,
@@ -1282,10 +1361,8 @@ let proceed_tochange t nv_old nv =
     | Some p_build -> p_build in
 
   (* Call the build script and copy the output files *)
-  let commands =
-    List.map
-      (List.map (substitute_string t))
-      (File.OPAM.build opam) in
+  let commands = substitute_commands t (File.OPAM.build opam) in
+  let commands = filter_commands t commands in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   if commands_s <> [] then
     Globals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s)

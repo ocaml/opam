@@ -496,8 +496,8 @@ module OPAM = struct
     maintainer : string;
     substs     : basename list;
     build_env  : (string * string * string) list;
-    build      : string list list;
-    remove     : string list list;
+    build      : command list;
+    remove     : command list;
     depends    : cnf_formula;
     depopts    : cnf_formula;
     conflicts  : and_formula;
@@ -644,8 +644,8 @@ module OPAM = struct
         Variable (s_maintainer, String t.maintainer);
         Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
         Variable (s_build_env, make_list make_env_variable t.build_env);
-        Variable (s_build, make_list (make_list make_string) t.build);
-        Variable (s_remove, make_list (make_list make_string) t.remove);
+        Variable (s_build, make_list make_command t.build);
+        Variable (s_remove, make_list make_command t.remove);
         Variable (s_depends, make_cnf_formula t.depends);
         Variable (s_depopts, make_cnf_formula t.depopts);
         Variable (s_conflicts, make_and_formula t.conflicts);
@@ -659,12 +659,6 @@ module OPAM = struct
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string filename s
-
-  let parse_command =
-    parse_or [
-      ("string", parse_string);
-      ("symbol", parse_symbol)
-    ]
 
   let of_string filename str =
     let nv = NV.of_filename filename in
@@ -700,10 +694,6 @@ module OPAM = struct
               (Filename.to_string filename)
           else
             v in
-    let parse_commands = parse_or [
-      "list",      (fun x -> [parse_list parse_command x]);
-      "list-list", parse_list (parse_list parse_command);
-    ] in
     let maintainer = assoc s s_maintainer parse_string in
     let substs     =
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in

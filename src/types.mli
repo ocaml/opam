@@ -571,3 +571,25 @@ module Remote_file: sig
   (** Constructor*)
   val create: basename -> string -> int -> t
 end
+
+
+(** {2 Filtered commands} *)
+
+(** Symbols *)
+type symbol =
+  | Eq | Neq | Le | Ge | Lt | Gt
+
+(** Filter *)
+type filter =
+  | Bool of bool
+  | String of string
+  | Op of filter * symbol * filter
+  | And of filter * filter
+  | Or of filter * filter
+
+(** Command argument *)
+type arg = string * filter option
+
+(** Command *)
+type command = arg list * filter option
+

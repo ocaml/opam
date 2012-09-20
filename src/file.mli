@@ -87,7 +87,7 @@ module OPAM: sig
   val make:
     name:name -> version:version -> maintainer:string ->
     substs:basename list -> build_env:(string * string * string) list ->
-    build:string list list -> remove:string list list ->
+    build:command list -> remove:command list ->
     depends:cnf_formula -> depopts:cnf_formula -> conflicts:and_formula ->
     libraries:section list -> syntax:section list ->
     others:(string * File_format.value) list ->
@@ -112,10 +112,10 @@ module OPAM: sig
   val build_env: t -> (string * string * string) list
 
   (** List of command to run for building the package *)
-  val build: t -> string list list
+  val build: t -> command list
 
   (** List of command to run for removing the package *)
-  val remove: t -> string list list
+  val remove: t -> command list
 
   (** Package dependencies *)
   val depends: t -> cnf_formula
@@ -145,10 +145,10 @@ module OPAM: sig
   val with_depopts : t -> cnf_formula -> t
 
   (** Construct as [build] *)
-  val with_build: t -> string list list -> t
+  val with_build: t -> command list -> t
 
   (** Construct as [remove] *)
-  val with_remove : t -> string list list -> t
+  val with_remove : t -> command list -> t
 
   (** Construct as [libraries] *)
   val with_libraries : t -> section list -> t

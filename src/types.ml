@@ -986,3 +986,17 @@ end = struct
   module Set = Set.Make(O)
   module Map = Map.Make(O)
 end
+
+type symbol =
+  | Eq | Neq | Le | Ge | Lt | Gt
+
+type filter =
+  | Bool of bool
+  | String of string
+  | Op of filter * symbol * filter
+  | And of filter * filter
+  | Or of filter * filter
+
+type arg = string * filter option
+
+type command = arg list * filter option

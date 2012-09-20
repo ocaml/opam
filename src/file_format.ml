@@ -119,8 +119,8 @@ let parse_group fn = function
   | x        -> bad_format "Expecting a group, got %s" (kind x)
 
 let parse_option f g = function
-  | Option (k,l) -> f k, List.map g l
-  | k            -> f k, []
+  | Option (k,l) -> f k, Some (g l)
+  | k            -> f k, None
 
 let parse_single_option f g = function
   | Option (k,[v]) -> f k, Some (g v)
@@ -183,7 +183,9 @@ let make_list fn l = List (List.map fn l)
 
 let make_group fn g = Group (List.map fn g)
 
-let make_option f g (v,l) = Option (f v, List.map g l)
+let make_option f g = function
+  | (v, None)   -> f v
+  | (v, Some o) -> Option (f v, g o)
 
 let make_pair f (k,v) = List [f k; f v]
 
@@ -400,3 +402,72 @@ let parse_env_variable v =
 
 let make_env_variable (ident, symbol, string) =
   List [make_ident ident; make_symbol symbol; make_string string]
+
+(* Filters *)
+
+let rec parse_filter = function
+  | [Bool b]   -> Types.Bool b
+  | [String s] -> Types.String s
+  | [Group g]  -> parse_filter g
+  | [e; Symbol s; f] ->
+    let open Types in
+    let e = parse_filter [e] in
+    let f = parse_filter [f] in
+    begin match s with
+      | "="  -> Op(e,Eq,f)
+      | "!=" -> Op(e,Neq,f)
+      | ">=" -> Op(e,Ge,f)
+      | "<=" -> Op(e,Le,f)
+      | ">"  -> Op(e,Gt,f)
+      | "<"  -> Op(e,Lt,f)
+      | "||"
+      | "|"  -> Or(e,f)
+      | "&&"
+      | "&"  -> And(e,f)
+      | _    -> bad_format "Got %s, expecting a valid symbol" s
+    end;
+  | x    -> bad_format "Got %s, expecting a filter expression" (kinds x)
+
+let lift = function
+  | [x] -> x
+  | l   -> Group l
+
+let rec make_filter = function
+  | Types.String s  -> [String s]
+  | Types.Bool b    -> [Bool b]
+  | Types.Op(e,s,f) ->
+    let open Types in
+    let s = begin match s with
+      | Eq  -> Symbol "="
+      | Neq -> Symbol "!="
+      | Ge  -> Symbol ">="
+      | Le  -> Symbol "<="
+      | Gt  -> Symbol ">"
+      | Lt  -> Symbol "<"
+      end in
+    let e = lift (make_filter e) in
+    let f = lift (make_filter f) in
+    [ e; s; f]
+  | Types.Or(e,f) ->
+    let e = lift (make_filter e) in
+    let f = lift (make_filter f) in
+    [ e; Symbol "||"; f]
+  | Types.And(e,f) ->
+    let e = lift (make_filter e) in
+    let f = lift (make_filter f) in
+    [ e; Symbol "&&"; f ]
+
+let make_arg = make_option make_string make_filter
+
+let make_command = make_option (make_list make_arg) make_filter
+
+let make_commands = make_list make_command
+
+let parse_arg = parse_option parse_string parse_filter
+
+let parse_command = parse_option (parse_list parse_arg) parse_filter
+
+let parse_commands = parse_or [
+  "command"     , (fun x -> [parse_command x]);
+  "command-list", parse_list parse_command;
+]
