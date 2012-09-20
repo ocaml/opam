@@ -125,5 +125,13 @@ let () =
   let _index = Curl.make_urls_txt local_repo in
 
   if !errors <> [] then
-    Globals.msg "Got some errors while processing: %s"
-      (String.concat ", " (List.map NV.to_string !errors))
+    let display_error (nv, error) =
+      Globals.error "[ERROR] Error while processing %s" (NV.to_string nv);
+      match error with
+      | Run.Process_error r  -> Process.display_error_message r
+      | Run.Internal_error s -> Globals.error "  %s" s
+      | _ -> Globals.error "%s" (Printexc.to_string error) in
+    let all_errors = List.map fst !errors in
+    Globals.error "Got some errors while processing: %s"
+      (String.concat ", " (List.map NV.to_string all_errors));
+    List.iter display_error !errors
