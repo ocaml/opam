@@ -63,7 +63,7 @@ let warning fmt =
   ) fmt
 
 exception Exit of int
-  
+
 let error_and_exit fmt =
   Printf.ksprintf (fun str ->
     error "%s" str;
@@ -77,7 +77,7 @@ let msg fmt =
     Printf.printf "%s%!" str
   ) fmt
 
-type os = 
+type os =
   | Darwin
   | Linux
   | FreeBSD
@@ -85,6 +85,7 @@ type os =
   | Cygwin
   | Win32
   | Unix
+  | Other of string
 
 let os = match Sys.os_type with
   | "Unix" -> begin
@@ -97,7 +98,17 @@ let os = match Sys.os_type with
   end
   | "Win32"  -> Win32
   | "Cygwin" -> Cygwin
-  | _        -> assert false
+  | s        -> Other s
+
+let os_string = match os with
+  | Darwin  -> "darwin"
+  | Linux   -> "linux"
+  | FreeBSD
+  | OpenBSD -> "bsd"
+  | Cygwin  -> "cygwin"
+  | Win32   -> "win32"
+  | Unix    -> "unix"
+  | Other x -> x
 
 let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* WARNING check the result of "which gmake", "which make", ... *)
 
