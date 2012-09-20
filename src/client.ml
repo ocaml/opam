@@ -578,23 +578,43 @@ let update repos =
 let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
-  let installed = mem_installed_package_by_name t name in
-  if var = Variable.enable && installed then
-    S "enable"
-  else if var = Variable.enable && not installed then
-    S "disable"
-  else if var = Variable.installed then
-    B installed
-  else if not installed then
-    Globals.error_and_exit "Package %s is not installed" (N.to_string name)
-  else begin
+  let name_str = N.to_string name in
+  let var_str = Variable.to_string var in
+  let read_var () =
     let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
     try match Full_variable.section v with
       | None   -> File.Dot_config.variable c var
       | Some s -> File.Dot_config.Section.variable c s var
     with Not_found ->
-      Globals.error_and_exit "%s is not defined" (Full_variable.to_string v)
-  end
+      Globals.error_and_exit "%s is not defined" (Full_variable.to_string v) in
+  if N.to_string name = Globals.default_package then (
+    try S (Sys.getenv var_str)
+    with Not_found ->
+      if var_str = "ocaml-version" then
+        let version = OCaml_V.to_string (current_ocaml_version t) in
+        if version = Globals.default_compiler_version then
+          match File.Config.system_ocaml_version t.config with
+          | None   -> S "<none>"
+          | Some v -> S (OCaml_V.to_string v)
+        else
+          S version
+      else
+        read_var ()
+  ) else (
+    try S (Sys.getenv (name_str ^"_"^ var_str))
+    with Not_found ->
+      let installed = mem_installed_package_by_name t name in
+      if var = Variable.enable && installed then
+        S "enable"
+      else if var = Variable.enable && not installed then
+        S "disable"
+      else if var = Variable.installed then
+        B installed
+      else if not installed then
+        Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+      else
+        read_var ()
+  )
 
 (* Substitute the file contents *)
 let substitute_file t f =
