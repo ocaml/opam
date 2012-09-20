@@ -857,6 +857,11 @@ let unknown_package name version =
   | None   -> Globals.error_and_exit "%S is not a valid package.\n" (N.to_string name)
   | Some v -> Globals.error_and_exit "The package %S has no version %s." (N.to_string name) (V.to_string v)
 
+let unavailable_package name version =
+  match version with
+  | None   -> Globals.error_and_exit "%S is not available for your compiler.\n" (N.to_string name)
+  | Some v -> Globals.error_and_exit "Version %s of %S is incompatible with your compiler." (V.to_string v) (N.to_string name)
+
 let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = false) res =
   log "list";
   let t = load_state () in
@@ -1557,19 +1562,30 @@ module Heuristic = struct
           else
             V_any (name, set, None)
         end else
-          (* consider 'name' to be 'name.version' *)
-          let nv =
-            try NV.of_string (N.to_string name)
-            with Not_found -> unknown_package name None in
-          let sname = NV.name nv in
-          let sversion = NV.version nv in
-          log "The raw name %S not found, looking for package %s version %s"
-            (N.to_string name) (N.to_string sname) (V.to_string sversion);
-          if N.Map.mem sname available
-            && V.Set.mem sversion (N.Map.find sname available) then
-            V_eq (sname, sversion)
+          (* perhaps the package is unavailable for this compiler *)
+          let get_available = Path.G.available_versions t.global in
+          let all_versions = get_available name in
+          if not (V.Set.is_empty all_versions) then
+            unavailable_package name None
           else
-            unknown_package sname (Some sversion))
+            (* consider 'name' to be 'name.version' *)
+            let nv =
+              try NV.of_string (N.to_string name)
+              with Not_found -> unknown_package name None in
+            let sname = NV.name nv in
+            let sversion = NV.version nv in
+            log "The raw name %S not found, looking for package %s version %s"
+                (N.to_string name) (N.to_string sname) (V.to_string sversion);
+            if N.Map.mem sname available
+               && V.Set.mem sversion (N.Map.find sname available) then
+              V_eq (sname, sversion)
+            else
+              let all_versions = get_available sname in
+              if V.Set.mem sversion all_versions then
+                unavailable_package sname (Some sversion)
+              else
+                unknown_package sname (Some sversion)
+      )
       (N.Set.elements names)
 
   let apply_solution ?(force = false) t sol =
