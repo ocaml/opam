@@ -47,7 +47,7 @@ let all, index, packages, gener_digest, dryrun =
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;
-  !all, !index, NV.Set.of_list (List.map NV.of_string !packages), !gener_digest, !dryrun
+  !all, !index, N.Set.of_list (List.map N.of_string !packages), !gener_digest, !dryrun
 
 let () =
   let local_path = Dirname.cwd () in
@@ -64,6 +64,40 @@ let () =
 
   let to_remove = Remote_file.Set.diff old_index new_index in
   let to_add = Remote_file.Set.diff new_index old_index in
+
+  (* Compute the transitive closure of packages *)
+  let get_dependencies n =
+    let versions = Path.R.available_versions local_repo n in
+    let depends v =
+      let nv = NV.create n v in
+      let opam_f = Path.R.opam local_repo nv in
+      if Filename.exists opam_f then (
+        let opam = File.OPAM.read opam_f in
+        let deps = File.OPAM.depends opam in
+        let depopts = File.OPAM.depopts opam in
+        List.fold_left (fun accu l ->
+          List.fold_left (fun accu ((n,_),_) ->
+            N.Set.add (N.of_string n) accu
+          ) accu l
+        ) N.Set.empty (deps @ depopts)
+      ) else
+        N.Set.empty in
+    V.Set.fold (fun v set ->
+      N.Set.union (depends v) set
+    ) versions (N.Set.singleton n) in
+  let rec get_transitive_dependencies names =
+    let new_names =
+      N.Set.fold (fun n set -> N.Set.union (get_dependencies n) set) names N.Set.empty in
+    if N.Set.cardinal names = N.Set.cardinal new_names then
+      names
+    else
+      get_transitive_dependencies new_names in
+  let packages = get_transitive_dependencies packages in
+  let packages =
+    N.Set.fold (fun n set ->
+      let versions = Path.R.available_versions local_repo n in
+      V.Set.fold (fun v set -> NV.Set.add (NV.create n v) set) versions set
+    ) packages NV.Set.empty in
 
   let nv_set_of_remotes remotes =
     let aux r = Filename.create (Dirname.cwd ()) (Remote_file.base r) in
