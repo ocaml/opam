@@ -157,16 +157,18 @@ let make_archive ?(gener_digest = false) nv =
       | Not_available -> Globals.error_and_exit "Cannot get %s" url
       | Up_to_date (F local_archive)
       | Result (F local_archive) ->
-          if gener_digest then
+          if gener_digest then (
             let digest = Filename.digest local_archive in
-            begin
-              (match checksum with
-                | Some c when c <> digest ->
-                  Globals.warning "Wrong checksum for %s (in cache: %s, new downloaded: %s). Update by keeping the downloaded digest..."
-                    (Filename.to_string local_archive) c digest
-                | _ -> ());
+            begin match checksum with
+            | Some c when c <> digest ->
+              Globals.warning
+                "Wrong checksum for %s (in cache: %s, new downloaded: %s). \
+                 Update by keeping the downloaded digest..."
+                (Filename.to_string local_archive) c digest
+            | _ -> ();
               File.URL.write url_f (File.URL.with_checksum url_file (Some digest));
             end;
+          );
           log "extracting %s to %s"
             (Filename.to_string local_archive)
             (Dirname.to_string extract_dir);
