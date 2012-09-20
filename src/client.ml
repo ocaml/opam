@@ -590,14 +590,18 @@ let contents_of_variable t v =
   if N.to_string name = Globals.default_package then (
     try S (Sys.getenv var_str)
     with Not_found ->
-      if var_str = "ocaml-version" then
-        let version = OCaml_V.to_string (current_ocaml_version t) in
-        if version = Globals.default_compiler_version then
+      let ocaml_version = current_ocaml_version t in
+      if var_str = "ocaml-version" then (
+        let ocaml_version_str = OCaml_V.to_string ocaml_version in
+        if ocaml_version_str = Globals.default_compiler_version then
           match File.Config.system_ocaml_version t.config with
           | None   -> S "<none>"
           | Some v -> S (OCaml_V.to_string v)
         else
-          S version
+          S ocaml_version_str
+      ) else if var_str = "preinstalled" then
+          let comp = File.Comp.read (Path.G.compiler t.global ocaml_version) in
+          B (File.Comp.preinstalled comp)
       else
         read_var ()
   ) else (
