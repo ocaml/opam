@@ -407,11 +407,13 @@ let update_repo_index t =
           Filename.remove descr_g;
           Filename.remove archive_g;
           (* update global files *)
-          Filename.link opam_r opam_g;
-          if Filename.exists descr_r then
-            Filename.link descr_r descr_g;
-          if Filename.exists archive_r then
-            Filename.link archive_r archive_g;
+          if Filename.exists opam_r then (
+            Filename.link opam_r opam_g;
+            if Filename.exists descr_r then
+              Filename.link descr_r descr_g;
+            if Filename.exists archive_r then
+              Filename.link archive_r archive_g;
+          )
         )
       ) available_versions
     ) repo_s
@@ -435,7 +437,8 @@ let update_repositories t ~show_compilers repos =
     let comp_dir = Path.G.compilers_dir t.global in
     OCaml_V.Set.iter (fun o ->
       let comp_f = Path.R.compiler repo_p o in
-      Filename.link_in comp_f comp_dir
+      if Filename.exists comp_f then
+        Filename.link_in comp_f comp_dir
     ) comps
   ) repos
 
