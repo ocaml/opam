@@ -128,6 +128,9 @@ module Dirname: sig
   (** Copy a directory *)
   val copy: t -> t -> unit
 
+  (** Link a directory *)
+  val link: t -> t -> unit
+
   (** Does the directory exists ? *)
   val exists: t -> bool
 

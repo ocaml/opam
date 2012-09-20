@@ -140,6 +140,7 @@ module Dirname: sig
     ?add_to_path:t list -> string list list -> unit
   val move: t -> t -> unit
   val copy: t -> t -> unit
+  val link: t -> t -> unit
   val dirname: t -> t
   val basename: t -> basename
   val starts_with: prefix:t -> t -> bool
@@ -207,6 +208,20 @@ end = struct
           move f dst
       | _ -> Globals.error_and_exit "Error while copying %s to %s" (to_string src) (to_string dst)
     )
+
+  let link src dst =
+    rmdir dst;
+    let tmp_dst = Filename.concat (Filename.basename src) (Filename.basename dst) in
+    let base = Filename.dirname dst in
+    mkdir base;
+    if dst = tmp_dst then
+      in_dir base (fun () -> Run.command [ "ln"; "-s"; src])
+    else
+      in_dir base (fun () ->
+        Run.commands [
+          ["ln"; "-s"; src];
+          ["mv"; (Filename.basename src); (Filename.basename dst) ];
+        ])
 
   let basename dirname =
     Basename.of_string (Filename.basename (to_string dirname))

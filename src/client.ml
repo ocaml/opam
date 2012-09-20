@@ -786,38 +786,43 @@ let init_ocaml t quiet alias ocaml_version =
             "No source for compiler %s"
             (OCaml_V.to_string ocaml_version) in
       let build_dir = Path.C.build_ocaml alias_p in
-      Dirname.with_tmp_dir (fun download_dir ->
+      let comp_src_raw = Filename.to_string comp_src in
+      if Sys.file_exists comp_src_raw && Sys.is_directory comp_src_raw then
+        Dirname.link (Dirname.of_string comp_src_raw) build_dir
+      else if Sys.file_exists comp_src_raw then
+        Filename.extract comp_src build_dir
+      else Dirname.with_tmp_dir (fun download_dir ->
         let file = Filename.download comp_src download_dir in
         Filename.extract file build_dir;
-        let patches = File.Comp.patches comp in
-        let patches = List.map (fun f -> Filename.download f build_dir) patches in
-        List.iter (fun f -> Filename.patch f build_dir) patches;
-        let t =
-          { t with
-            compiler = alias_p;
-            installed =
-              let name = N.of_string Globals.default_package in
-              let version = V.of_string (Alias.to_string alias) in
-              let nv = NV.create name version in
-              NV.Set.add nv NV.Set.empty } in
-        install_conf_ocaml_config t;
-        if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
-          Dirname.exec build_dir
-            [ ( "./configure" :: File.Comp.configure comp )
-              @ [ "-prefix";  Dirname.to_string alias_p_dir ]
-            (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
-            (* NOTE In case it exists 2 '-prefix', in general the script
-               ./configure will only consider the last one, others will be
-               discarded. *)
-            ; ( "make" :: File.Comp.make comp )
-            ; [ "make" ; "install" ]
-            ]
-        end else begin
-          let builds =
-            List.map (List.map (substitute_string t)) (File.Comp.build comp) in
-          Dirname.exec build_dir builds
-        end;
       );
+      let patches = File.Comp.patches comp in
+      let patches = List.map (fun f -> Filename.download f build_dir) patches in
+      List.iter (fun f -> Filename.patch f build_dir) patches;
+      let t =
+        { t with
+          compiler = alias_p;
+          installed =
+            let name = N.of_string Globals.default_package in
+            let version = V.of_string (Alias.to_string alias) in
+            let nv = NV.create name version in
+            NV.Set.add nv NV.Set.empty } in
+      install_conf_ocaml_config t;
+      if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
+        Dirname.exec build_dir
+          [ ( "./configure" :: File.Comp.configure comp )
+            @ [ "-prefix";  Dirname.to_string alias_p_dir ]
+          (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
+          (* NOTE In case it exists 2 '-prefix', in general the script
+             ./configure will only consider the last one, others will be
+             discarded. *)
+          ; ( "make" :: File.Comp.make comp )
+          ; [ "make" ; "install" ]
+          ]
+      end else begin
+        let builds =
+          List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+        Dirname.exec build_dir builds
+      end;
     end;
 
     (* write the new version in the configuration file *)
