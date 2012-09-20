@@ -30,22 +30,24 @@ let version () =
   Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
   exit 1
 
-let all, index, packages, gener_digest =
+let all, index, packages, gener_digest, keep =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
   let index = ref false in
   let packages = ref [] in
   let gener_digest = ref false in
+  let keep = ref false in
   let specs = Arg.align [
     ("-v"       , Arg.Unit version, " Display version information");
     ("--version", Arg.Unit version, " Display version information");
     ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
     ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
     ("-generate-checksums", Arg.Set gener_digest, Printf.sprintf " Generate checksums during the build (default is %b)" !gener_digest);
+    ("-keep" , Arg.Set keep, " Do not delete archive files already built");
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;
-  !all, !index, NV.Set.of_list (List.map NV.of_string !packages), !gener_digest
+  !all, !index, NV.Set.of_list (List.map NV.of_string !packages), !gener_digest, !keep
 
 let () =
   let local_path = Dirname.cwd () in
@@ -84,21 +86,26 @@ let () =
   let errors = ref [] in
   if not index then (
 
-    if not (NV.Set.is_empty to_remove) then
-      Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
+    if not keep then (
+      (* Remove the old archive files *)
+      if not (NV.Set.is_empty to_remove) then
+        Globals.msg "Packages to remove: %s\n" (NV.Set.to_string to_remove);
+      NV.Set.iter (fun nv ->
+        let archive = Path.R.archive local_repo nv in
+        Globals.msg "Removing %s ...\n" (Filename.to_string archive);
+        Filename.remove archive
+      ) to_remove;
+    );
+
+    (* build the new archives *)
     if not (NV.Set.is_empty to_add) then
       Globals.msg "Packages to build: %s\n" (NV.Set.to_string to_add);
-
-    (* Remove the old archive files *)
     NV.Set.iter (fun nv ->
-      let archive = Path.R.archive local_repo nv in
-      Globals.msg "Removing %s ...\n" (Filename.to_string archive);
-      Filename.remove archive
-    ) to_remove;
-
-    NV.Set.iter (fun nv ->
-      try Repositories.make_archive ~gener_digest nv
-      with _ -> errors := nv :: !errors;
+      try
+        let archive = Path.R.archive local_repo nv in
+        Filename.remove archive;
+        Repositories.make_archive ~gener_digest nv
+      with e -> errors := (nv, e) :: !errors;
     ) to_add;
   );
 
