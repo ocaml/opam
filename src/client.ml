@@ -793,6 +793,11 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
       (* namep    *)  || name_only && exact_match (N.to_string name)
       (* descrp   *)  || not name_only && (partial_match (N.to_string name) || partial_match descr))
     ) map in
+  let alias = File.Config.ocaml_version t.config in
+  if not print_short then (
+    let kind = if installed_only then "Installed" else "Available" in
+    Globals.msg "%s packages for %s:\n" kind (Alias.to_string alias);
+  );
   N.Map.iter (
     if print_short then
       fun name _ -> Globals.msg "%s " (N.to_string name)
