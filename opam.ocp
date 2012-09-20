@@ -3,7 +3,7 @@
    ocamlc   = [ "ocp-ocamlc.opt" ]
    ocamlopt = [ "ocp-ocamlopt.opt" ]
 *)
- 
+
 begin
   comp += [ "-g" "-annot" "-warn-error" "A" ]
   link += [ "-g" ]
@@ -65,16 +65,6 @@ end
 
 begin program "opam-check"
   files = [ "src/scripts/opam_check.ml" ]
-  requires = [ "opam-lib" ]
-end
-
-begin program "opam-repo-convert-0.3"
-  files = [
-    "src/repo/curl.ml"
-    "src/repo/rsync.ml"
-    "src/repo/git.ml"
-    "src/scripts/opam_repo_convert.ml"
-  ]
   requires = [ "opam-lib" ]
 end
 

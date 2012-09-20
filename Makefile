@@ -3,7 +3,7 @@ include Makefile.config
 LOCAL_OCPBUILD=./ocp-build/ocp-build
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
-TARGETS = opam opam-mk-repo opam-repo-convert-0.3
+TARGETS = opam opam-mk-repo
 
 .PHONY: all
 
