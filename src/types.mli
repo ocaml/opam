@@ -278,7 +278,6 @@ type file =
   | D of dirname
   | F of filename
 
-
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
@@ -593,3 +592,8 @@ type arg = string * filter option
 (** Command *)
 type command = arg list * filter option
 
+(** Misc *)
+type 'a optional = {
+  c: 'a;   (** Contents *)
+  optional: bool; (** Is the contents optional *)
+}

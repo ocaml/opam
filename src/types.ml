@@ -1000,3 +1000,8 @@ type filter =
 type arg = string * filter option
 
 type command = arg list * filter option
+
+type 'a optional = {
+  c: 'a;
+  optional: bool;
+}

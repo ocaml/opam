@@ -1063,21 +1063,21 @@ let proceed_toinstall t nv =
     (* lib *)
     let warnings = ref [] in
     let check f dst =
-      if not (Filename.exists f) then (
-        warnings := (f, dst) :: !warnings
+      if not f.optional && not (Filename.exists f.c) then (
+        warnings := (f.c, dst) :: !warnings
       );
-      Filename.exists f in
+      Filename.exists f.c in
     let lib = Path.C.lib t.compiler name in
     List.iter (fun f ->
       if check f lib then
-        Filename.copy_in f lib
+        Filename.copy_in f.c lib
     ) (File.Dot_install.lib install);
 
     (* toplevel *)
     let toplevel = Path.C.toplevel t.compiler in
     List.iter (fun f ->
       if check f toplevel then
-        Filename.copy_in f toplevel
+        Filename.copy_in f.c toplevel
     ) (File.Dot_install.toplevel install);
 
     (* bin *)
@@ -1085,26 +1085,28 @@ let proceed_toinstall t nv =
       let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
       (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
       if check src  (Path.C.bin t.compiler) then
-        Filename.copy src dst;
+        Filename.copy src.c dst;
     ) (File.Dot_install.bin install);
 
     (* misc *)
     List.iter
       (fun (src, dst) ->
         if Filename.exists dst && confirm "Overwriting %s ?" (Filename.to_string dst) then
-          Filename.copy src dst
+          Filename.copy src.c dst
         else begin
-          Globals.msg "Installing %s to %s.\n" (Filename.to_string src) (Filename.to_string dst);
+          Globals.msg "Installing %s to %s.\n" (Filename.to_string src.c) (Filename.to_string dst);
           if confirm "Continue ?" then
-            Filename.copy src dst
+            Filename.copy src.c dst
         end
       ) (File.Dot_install.misc install);
 
-    if !warnings <> [] then
+    if !warnings <> [] then (
       let print (f, dst) = Printf.sprintf " - %s in %s" (Filename.to_string f) (Dirname.to_string dst) in
       Globals.error
         "Error while installing the following files:\n%s"
         (String.concat "\n" (List.map print !warnings));
+      Globals.exit 2;
+    )
   )
 
 let pinned_path t nv =

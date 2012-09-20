@@ -264,41 +264,41 @@ module Dot_install: sig
     include IO_FILE
 
     (** List of files to install in $lib/ *)
-    val lib:  t -> string list
+    val lib:  t -> string optional list
 
     (** List of files to install in $bin/ *)
-    val bin:  t -> (string * string option) list
+    val bin:  t -> (string optional * string option) list
 
     (** List of other files to install *)
-    val misc: t -> (string * string option) list
+    val misc: t -> (string optional * string option) list
 
     (** List of toplevel files *)
-    val toplevel: t -> string list
+    val toplevel: t -> string optional list
 
     (** Construct as [bin] *)
-    val with_bin: t -> (string * string option) list -> t
+    val with_bin: t -> (string optional * string option) list -> t
 
     (** Construct as [lib] *)
-    val with_lib: t -> string list -> t
+    val with_lib: t -> string optional list -> t
 
     (** Construct as [toplevel] *)
-    val with_toplevel: t -> string list -> t
+    val with_toplevel: t -> string optional list -> t
 
   end
 
   include IO_FILE
 
   (** List of files to install in $lib/ *)
-  val lib:  t -> filename list
+  val lib:  t -> filename optional list
 
   (** List of files to install in $bin/ *)
-  val bin:  t -> (filename * basename) list
+  val bin:  t -> (filename optional * basename) list
 
   (** List of toplevel files *)
-  val toplevel: t -> filename list
+  val toplevel: t -> filename optional list
 
   (** List of other files to install *)
-  val misc: t -> (filename * filename) list
+  val misc: t -> (filename optional * filename) list
 
 end
 
