@@ -149,24 +149,25 @@ val make_string_pair: string * string -> value
 
 (** {2 Printing functions} *)
 
-(** Apply the given printer function
-    by putting a newline between every element of every list *)
-val force_newline : (unit -> 'a) -> 'a
-
 (** Print a value *)
 val string_of_value : value -> string
 
 (** Print a list of values *)
 val string_of_values : value list -> string
 
+(** When folding recursively a value [Variable (s, v)] for printing,
+    we check if we indent the first encountered list below [v] 
+    (i.e. in case [indent_variable s] is [true]). *)
+type indent_variable = string -> bool
+
 (** Print an item *)
-val string_of_item : item -> string option
+val string_of_item : ?indent_variable:indent_variable -> item -> string option
 
 (** Print a list of items *)
-val string_of_items : item list -> string
+val string_of_items : ?indent_variable:indent_variable -> item list -> string
 
 (** Print a file *)
-val string_of_file : file -> string
+val string_of_file : ?indent_variable:indent_variable -> file -> string
 
 (** {2 Finding functions} *)
 
