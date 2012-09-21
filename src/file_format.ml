@@ -38,7 +38,7 @@ type file = {
   filename: string;
 }
 
-type indent_hint = string -> bool list
+type indent_variable = string -> bool
 
 let empty = {
   contents = [];
@@ -239,22 +239,22 @@ and string_of_values l =
 
 let incr tab = "  " ^ tab
 
-let rec string_of_item_aux tab ?(indent_hint = fun _ -> []) = function
+let rec string_of_item_aux tab ?(indent_variable = fun _ -> false) = function
   | Variable (i, List []) -> None
   | Variable (i, List[List[]]) -> None
-  | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value ~indent_hint:(indent_hint i) v))
+  | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value ~indent_hint:[indent_variable i] v))
   | Section s ->
       Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.kind s.name
-        (string_of_items_aux (incr tab) ~indent_hint s.items))
+        (string_of_items_aux (incr tab) ~indent_variable s.items))
 
-and string_of_items_aux tab ?(indent_hint = fun _ -> []) is =
-  String.concat "\n" (Utils.filter_map (string_of_item_aux tab ~indent_hint) is)
+and string_of_items_aux tab ?(indent_variable = fun _ -> false) is =
+  String.concat "\n" (Utils.filter_map (string_of_item_aux tab ~indent_variable) is)
 
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file ?(indent_hint = fun _ -> []) f = string_of_items f.contents ~indent_hint ^ "\n"
+let string_of_file ?(indent_variable = fun _ -> false) f = string_of_items f.contents ~indent_variable ^ "\n"
 
 (* Reading section contents *)
 

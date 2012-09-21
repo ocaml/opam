@@ -155,25 +155,19 @@ val string_of_value : value -> string
 (** Print a list of values *)
 val string_of_values : value list -> string
 
-(** The functions [string_of_item], [string_of_items] and [string_of_file] 
-    accept as optional argument some informations on where to perform 
-    the indentation during the folding of respectively [item], [item list] and [file].
-
-    Suppose the printing is going recursively by following the [item] type. 
-    As soon as the printer reaches a value [v] situated under a [Variable (s, v)], 
-    the printer follows the given hint [l : bool list] to decide 
-    to print or not (i.e. if [l] currently matches [true :: _]).
-    [l] is in fact equal to [indent_hint s]. *)
-type indent_hint = string -> bool list
+(** When folding recursively a value [Variable (s, v)] for printing,
+    we check if we indent the first encountered list below [v] 
+    (i.e. in case [indent_variable s] is [true]). *)
+type indent_variable = string -> bool
 
 (** Print an item *)
-val string_of_item : ?indent_hint:indent_hint -> item -> string option
+val string_of_item : ?indent_variable:indent_variable -> item -> string option
 
 (** Print a list of items *)
-val string_of_items : ?indent_hint:indent_hint -> item list -> string
+val string_of_items : ?indent_variable:indent_variable -> item list -> string
 
 (** Print a file *)
-val string_of_file : ?indent_hint:indent_hint -> file -> string
+val string_of_file : ?indent_variable:indent_variable -> file -> string
 
 (** {2 Finding functions} *)
 

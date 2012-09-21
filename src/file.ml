@@ -60,8 +60,8 @@ module Syntax = struct
       Globals.error "Parsing error while reading %s" (Filename.to_string f);
       raise e
 
-  let to_string ?(indent_hint = fun _ -> []) _ t =
-    Raw.of_string (File_format.string_of_file ~indent_hint t)
+  let to_string ?(indent_variable = fun _ -> false) _ t =
+    Raw.of_string (File_format.string_of_file ~indent_variable t)
 
   let check f fields =
     if not (File_format.is_valid f.contents fields) then
@@ -659,9 +659,7 @@ module OPAM = struct
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string 
-      ~indent_hint:(function 
-        | s when List.mem s [s_build ; (*s_depends*)] -> [true] 
-        | _ -> [])
+      ~indent_variable:(fun s -> List.mem s [s_build ; s_depends ; s_depopts])
       filename s
 
   let of_string filename str =
@@ -786,7 +784,7 @@ module Dot_install_raw = struct
         Variable (s_misc, make_list make_option t.misc);
       ]
     } in
-    Syntax.to_string ~indent_hint:(fun _ -> [true]) filename s
+    Syntax.to_string ~indent_variable:(fun _ -> true) filename s
 
   let of_string filename str =
     let s = Syntax.of_string filename str in
