@@ -1460,6 +1460,7 @@ let nv_of_version_constraint = function
   | V_any (n, vs, None)  -> NV.create n (V.Set.choose vs)
 
 type solver_result =
+  | Nothing_to_do
   | OK
   | Aborted
   | No_solution
@@ -1635,7 +1636,7 @@ module Heuristic = struct
   let apply_solution ?(force = false) t sol =
     if Solver.solution_is_empty sol then
       (* The current state satisfies the request contraints *)
-      OK
+      Nothing_to_do
     else (
       let stats = get_stats sol in
       Globals.msg "The following actions will be performed:\n";
@@ -2160,8 +2161,12 @@ let upgrade names =
     solution_found := solution;
   );
   let t = load_state () in
-  if !solution_found <> OK then
-    to_not_reinstall := reinstall;
+  begin match !solution_found with
+    | OK            -> ()
+    | Nothing_to_do -> Globals.msg "Already up-to-date.\n"
+    | Aborted
+    | No_solution   -> to_not_reinstall := reinstall
+  end;
   let reinstall = NV.Set.inter t.installed !to_not_reinstall in
   let reinstall_f = Path.C.reinstall t.compiler in
   if NV.Set.is_empty reinstall then
