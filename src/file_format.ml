@@ -38,6 +38,8 @@ type file = {
   filename: string;
 }
 
+type indent_hint = string -> bool list
+
 let empty = {
   contents = [];
   filename = "<none>";
@@ -197,16 +199,7 @@ let is_list = function
   | List _ -> true
   | _      -> false
 
-let pretty_force_newline = ref false
-
-let force_newline f =
-  let save = !pretty_force_newline in
-  let () = pretty_force_newline := true in
-  let res = f () in
-  let () = pretty_force_newline := save in
-  res
-
-let rec pretty_string_of_value = function
+let rec pretty_string_of_value ?(indent_hint = []) = function
   | Symbol s
   | Ident s     -> Printf.sprintf "%s" s
   | Int i       -> Printf.sprintf "%d" i
@@ -214,18 +207,22 @@ let rec pretty_string_of_value = function
   | String s    -> Printf.sprintf "%S" s
   | List[List[]]-> Printf.sprintf "[[]]"
   | List l      ->
-      if !pretty_force_newline || List.for_all is_list l then
-        Printf.sprintf "[\n  %s\n]" (pretty_string_of_values "\n  " l)
+      let force_indent, indent_hint = 
+        match indent_hint with
+          | [] -> false, []
+          | b :: indent_hint -> b, indent_hint in
+      if force_indent || List.for_all is_list l then
+        Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~indent_hint "\n  " l)
       else
-        Printf.sprintf "[%s]" (pretty_string_of_values " " l)
-  | Group g     -> Printf.sprintf "(%s)" (pretty_string_of_values " " g)
+        Printf.sprintf "[%s]" (pretty_string_of_values ~indent_hint " " l)
+  | Group g     -> Printf.sprintf "(%s)" (pretty_string_of_values ~indent_hint " " g)
   | Option(v,l) ->
       Printf.sprintf "%s {%s}"
-        (pretty_string_of_value v)
-        (pretty_string_of_values " " l)
+        (pretty_string_of_value ~indent_hint v)
+        (pretty_string_of_values ~indent_hint " " l)
 
-and pretty_string_of_values sep l =
-  String.concat sep (List.map pretty_string_of_value l)
+and pretty_string_of_values ?(indent_hint = []) sep l =
+  String.concat sep (List.map (pretty_string_of_value ~indent_hint) l)
 
 let rec string_of_value = function
   | Symbol s
@@ -242,22 +239,22 @@ and string_of_values l =
 
 let incr tab = "  " ^ tab
 
-let rec string_of_item_aux tab = function
+let rec string_of_item_aux tab ?(indent_hint = fun _ -> []) = function
   | Variable (i, List []) -> None
   | Variable (i, List[List[]]) -> None
-  | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value v))
+  | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value ~indent_hint:(indent_hint i) v))
   | Section s ->
       Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.kind s.name
-        (string_of_items_aux (incr tab) s.items))
+        (string_of_items_aux (incr tab) ~indent_hint s.items))
 
-and string_of_items_aux tab is =
-  String.concat "\n" (Utils.filter_map (string_of_item_aux tab) is)
+and string_of_items_aux tab ?(indent_hint = fun _ -> []) is =
+  String.concat "\n" (Utils.filter_map (string_of_item_aux tab ~indent_hint) is)
 
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file f = string_of_items f.contents ^ "\n"
+let string_of_file ?(indent_hint = fun _ -> []) f = string_of_items f.contents ~indent_hint ^ "\n"
 
 (* Reading section contents *)
 
