@@ -1831,7 +1831,7 @@ let update repos =
   | Some stats ->
     if sum stats > 0 then (
       print_stats stats;
-      Globals.msg "You can now run 'opam upgrade' to upgrade your system."
+      Globals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
     ) else
       Globals.msg "Already up-to-date.\n"
 
