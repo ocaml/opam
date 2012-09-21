@@ -1121,23 +1121,34 @@ let pinned_path t nv =
   else
     None
 
-let with_repo t nv fn =
+let find_repo t nv =
   log "find_repo %s" (NV.to_string nv);
   let name = NV.name nv in
   let rec aux = function
-    | [] ->
-        Globals.error_and_exit
-          "Unable to find a repository containing %s"
-          (NV.to_string nv)
+    | []          -> None
     | r :: repo_s ->
         let repo = find_repository t r in
         let repo_p = Path.R.create repo in
         let opam_f = Path.R.opam repo_p nv in
         if Filename.exists opam_f then (
-          fn repo_p repo
+          Some (repo_p, repo)
         ) else
           aux repo_s in
-  aux (N.Map.find name t.repo_index)
+  if N.Map.mem name t.repo_index then
+    aux (N.Map.find name t.repo_index)
+  else
+    None
+
+let mem_repo t nv =
+  find_repo t nv <> None
+
+let with_repo t nv fn =
+  match find_repo t nv with
+  | None ->
+    Globals.error_and_exit
+      "Unable to find a repository containing %s"
+      (NV.to_string nv)
+  | Some (repo_p, repo) -> fn repo_p repo
 
 let get_archive t nv =
   let aux repo_p repo =
@@ -1191,7 +1202,7 @@ let proceed_todelete t nv =
     (* We try to run the remove scripts in the folder where it was extracted
        If it does not exist, we try to download and extract the archive again,
        if that fails, we don't really care. *)
-    if not (Dirname.exists p_build) then (
+    if not (Dirname.exists p_build) && mem_repo t nv then (
       try ignore (extract_package t nv)
       with _ -> Dirname.mkdir p_build;
     );
