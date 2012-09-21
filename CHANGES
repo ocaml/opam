@@ -1,3 +1,14 @@
+0.7.0 [Sept 2012]
+* report upgrade statistic on update
+* do no ask y/n when installing compiler's base packages
+* improve opam-mk-repo
+* fix 'opam search' to be caseless
+* ability to filter some commands (depending on some predicates) in opam file
+* improvments when packages disapear upstream
+* check for ocaml 3.12.1 on configure
+* tell the user to unset some potentially dangerous variables when running opam
+* fix few git backend issues
+
 0.6.0 [Sept 2012]
 * semantics changes in 'opam switch'
 * solver improvements in case of install and remove
