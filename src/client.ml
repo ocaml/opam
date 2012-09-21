@@ -268,12 +268,20 @@ let print_updated t updated pinned_updated =
 let print_compilers compilers repo =
   let repo_p = Path.R.create repo in
   let repo_compilers = Path.R.available_compilers repo_p in
-  let new_compilers = OCaml_V.Set.diff repo_compilers compilers in
+  let (--) = OCaml_V.Set.diff in
+  let new_compilers = repo_compilers -- compilers in
+  let default = OCaml_V.of_string Globals.default_compiler_version in
+  let del_compilers = compilers -- repo_compilers -- (OCaml_V.Set.singleton default) in
   if not (OCaml_V.Set.is_empty new_compilers) then
     Globals.msg "New compiler descriptions available:\n";
   OCaml_V.Set.iter (fun v ->
     Globals.msg " - %s\n" (OCaml_V.to_string v)
-  ) new_compilers
+  ) new_compilers;
+  if not (OCaml_V.Set.is_empty del_compilers) then
+    Globals.msg "Some compilers are not available anymore:\n";
+  OCaml_V.Set.iter (fun v ->
+    Globals.msg " - %s\n" (OCaml_V.to_string v)
+  ) del_compilers
 
 let install_conf_ocaml_config t =
   let name = N.of_string Globals.default_package in
@@ -430,6 +438,13 @@ let update_repositories t ~show_compilers repos =
 
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
+  OCaml_V.Set.iter (fun comp ->
+    if OCaml_V.to_string comp <> Globals.default_compiler_version
+    && not (List.exists (fun (_,c) -> comp = c) t.aliases) then (
+      let comp_f = Path.G.compiler t.global comp in
+      Filename.remove comp_f;
+    )
+  ) (Path.G.available_compilers t.global);
   List.iter (fun repo ->
     let repo_p = Path.R.create repo in
     let comps = Path.R.available_compilers repo_p in
