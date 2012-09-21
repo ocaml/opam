@@ -90,6 +90,7 @@ module B = struct
     Filename.download remote_file local_dir
 
   let update address =
+    Globals.msg "Synchronizing with %s ...\n" (Dirname.to_string address);
     let state = make_state ~download_index:true address in
     log "dir local_dir=%s remote_dir=%s"
       (Dirname.to_string state.local_path)

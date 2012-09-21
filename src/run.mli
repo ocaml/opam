@@ -79,8 +79,8 @@ val rec_files: string -> string list
     compiler is present in the path, then it returns [None]. *)
 val ocaml_version: unit -> string option
 
-(** Return the path where ocamlc library is installed *)
-val ocamlc_where: unit -> string option
+(** Return the path where the system ocamlc library is installed *)
+val system_ocamlc_where: unit -> string option
 
 (** [directories_with_links dir] returns the directories in the directory [dir].
     Links pointing to directory are also returned. *)
@@ -105,9 +105,7 @@ val commands:
 
 (** [read_command_output cmd] executes the command [cmd] and return
     the lines from stdout *)
-val read_command_output:
-  ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command -> string list
+val read_command_output: ?path:string list  -> command -> string list
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool

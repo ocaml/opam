@@ -715,7 +715,7 @@ let create_default_compiler_description t =
       [ ("CAML_LD_LIBRARY_PATH", "=",
            "%{lib}%/stublibs"
            ^ ":" ^
-           (match Run.ocamlc_where () with
+           (match Run.system_ocamlc_where () with
            | Some d -> Stdlib_filename.concat d "stublibs"
            | None   -> assert false))
       ] in
