@@ -224,7 +224,7 @@ let mk options =
 let install = {
   name     = "install";
   usage    = "[package]+";
-  synopsis = "Install a list of package";
+  synopsis = "Install a list of packages";
   help     = "";
   specs    = [];
   anon;
@@ -240,7 +240,7 @@ let install = {
 let reinstall = {
   name     = "reinstall";
   usage    = "[package]+";
-  synopsis = "Reinstall a list of package";
+  synopsis = "Reinstall a list of packages";
   help     = "";
   specs    = [];
   anon;
@@ -311,7 +311,7 @@ let upload =
 let remove = {
   name     = "remove";
   usage    = "[package]+";
-  synopsis = "Remove a list of package";
+  synopsis = "Remove a list of packages";
   help     = "";
   specs    = [];
   anon;
