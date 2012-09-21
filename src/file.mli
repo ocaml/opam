@@ -402,7 +402,7 @@ module URL: sig
   val create: ?checksum:string -> string -> t
 
   (** Constructor *)
-  val with_checksum: t -> string option -> t
+  val with_checksum: t -> string -> t
 
 end
 
