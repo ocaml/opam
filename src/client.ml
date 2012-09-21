@@ -263,9 +263,7 @@ let print_updated t updated pinned_updated =
       else
         Globals.msg " - %s\n" (NV.to_string nv)
     ) updated_packages
-  );
-  if NV.Set.is_empty (NV.Set.union new_packages updated_packages) then
-    Globals.msg "Already up-to-date.\n"
+  )
 
 let print_compilers compilers repo =
   let repo_p = Path.R.create repo in
@@ -553,26 +551,6 @@ let update_packages t ~show_packages repos =
   ) (get_available_current t);
   if !has_error then
     Globals.exit 1
-
-let update repos =
-  log "update %s" (String.concat " " repos);
-  let t = load_state () in
-  let repos =
-    if repos = [] then
-      t.repositories
-    else
-      let aux r =
-        if mem_repository t r then
-          Some (find_repository t r)
-        else (
-          Globals.msg "%s is not a valid repository.\n" r;
-          None
-        ) in
-      Utils.filter_map aux repos in
-  if repos <> [] then (
-    update_repositories t ~show_compilers:true repos;
-    update_packages t ~show_packages:true repos;
-  )
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -1451,6 +1429,36 @@ type solver_result =
   | Aborted
   | No_solution
 
+let get_stats sol =
+  let s_install, s_reinstall, s_upgrade, s_downgrade =
+    PA_graph.fold_vertex
+      (fun pkg (to_install, to_reinstall, to_upgrade, to_downgrade) ->
+        match action pkg with
+        | To_change (None, _)             -> succ to_install, to_reinstall, to_upgrade, to_downgrade
+        | To_change (Some x, y) when x<>y ->
+          if V.compare (NV.version x) (NV.version y) < 0 then
+            to_install, to_reinstall, succ to_upgrade, to_downgrade
+          else
+            to_install, to_reinstall, to_upgrade, succ to_downgrade
+        | To_change (Some _, _)
+        | To_recompile _                  -> to_install, succ to_reinstall, to_upgrade, to_downgrade
+        | To_delete _ -> assert false)
+      sol.to_add
+      (0, 0, 0, 0) in
+  let s_remove = List.length sol.to_remove in
+  { s_install; s_reinstall; s_upgrade; s_downgrade; s_remove }
+
+let sum stats =
+  stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
+
+let print_stats stats =
+  Globals.msg "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove\n"
+    stats.s_install
+    stats.s_reinstall
+    stats.s_upgrade
+    stats.s_downgrade
+    stats.s_remove
+
 module Heuristic = struct
 
   let vpkg_of_n op name =
@@ -1588,38 +1596,19 @@ module Heuristic = struct
       )
       (N.Set.elements names)
 
+  (* Apply a solution *)
   let apply_solution ?(force = false) t sol =
     if Solver.solution_is_empty sol then
       (* The current state satisfies the request contraints *)
       OK
     else (
+      let stats = get_stats sol in
       Globals.msg "The following actions will be performed:\n";
       print_solution sol;
-      let to_install, to_reinstall, to_upgrade, to_downgrade =
-        PA_graph.fold_vertex
-          (fun pkg (to_install, to_reinstall, to_upgrade, to_downgrade) ->
-            match action pkg with
-              | To_change (None, _)             -> succ to_install, to_reinstall, to_upgrade, to_downgrade
-              | To_change (Some x, y) when x<>y ->
-                  if V.compare (NV.version x) (NV.version y) < 0 then
-                    to_install, to_reinstall, succ to_upgrade, to_downgrade
-                  else
-                    to_install, to_reinstall, to_upgrade, succ to_downgrade
-              | To_change (Some _, _)
-              | To_recompile _                  -> to_install, succ to_reinstall, to_upgrade, to_downgrade
-              | To_delete _ -> assert false)
-          sol.to_add
-          (0, 0, 0, 0) in
-      let to_remove = List.length sol.to_remove in
-      Globals.msg "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove\n"
-        to_install
-        to_reinstall
-        to_upgrade
-        to_downgrade
-        to_remove;
+      print_stats stats;
 
       let continue =
-        if force || (to_install + to_reinstall + to_remove + to_upgrade + to_downgrade <= 1) then
+        if force || sum stats <= 1 then
           true
         else
           confirm "Do you want to continue ?" in
@@ -1756,24 +1745,69 @@ module Heuristic = struct
         Aborted
     )
 
-  let resolve ?(force=false) action_k t l_request =
+  let find_solution action_k t l_request =
     let available = get_available_current t in
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
     let rec aux = function
-      | []                    -> No_solution
+      | []                    -> None
       | request :: l_request ->
           match Solver.resolve (Solver.U l_pkg) request t.installed with
           | None  ->
               log "heuristic with no solution";
               aux l_request
-          | Some sol -> apply_solution ~force t sol in
-    match aux l_request with
-    | No_solution ->
+          | Some sol -> Some sol in
+    aux l_request
+
+  let resolve ?(force=false) action_k t l_request =
+    match find_solution action_k t l_request with
+    | None ->
         Globals.msg "No solution has been found.\n";
         No_solution
-    | result      -> result
+    | Some sol -> apply_solution ~force t sol
 
 end
+
+let dry_upgrade () =
+  log "dry-upgrade";
+  let t = update_available_current (load_state ()) in
+  let reinstall = NV.Set.inter t.reinstall t.installed in
+  let solution = Heuristic.find_solution (`upgrade reinstall) t
+    (List.map (fun to_upgrade ->
+      { wish_install = [];
+        wish_remove  = [];
+        wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
+       [ Heuristic.v_max; Heuristic.v_ge ]) in
+  match solution with
+  | None     -> None
+  | Some sol -> Some (get_stats sol)
+
+let update repos =
+  log "update %s" (String.concat " " repos);
+  let t = load_state () in
+  let repos =
+    if repos = [] then
+      t.repositories
+    else
+      let aux r =
+        if mem_repository t r then
+          Some (find_repository t r)
+        else (
+          Globals.msg "%s is not a valid repository.\n" r;
+          None
+        ) in
+      Utils.filter_map aux repos in
+  if repos <> [] then (
+    update_repositories t ~show_compilers:true repos;
+    update_packages t ~show_packages:true repos;
+  );
+  match dry_upgrade () with
+  | None -> Globals.msg "Already up-to-date.\n"
+  | Some stats ->
+    if sum stats > 0 then (
+      print_stats stats;
+      Globals.msg "You can now run 'opam upgrade' to upgrade your system."
+    ) else
+      Globals.msg "Already up-to-date.\n"
 
 let init repo ocaml_version cores =
   log "init %s" (Repository.to_string repo);

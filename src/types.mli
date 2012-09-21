@@ -600,3 +600,11 @@ type 'a optional = {
   c: 'a;   (** Contents *)
   optional: bool; (** Is the contents optional *)
 }
+
+type stats = {
+  s_install  : int;
+  s_reinstall: int;
+  s_upgrade  : int;
+  s_downgrade: int;
+  s_remove   : int;
+}
