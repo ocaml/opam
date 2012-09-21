@@ -70,8 +70,6 @@ let error_and_exit fmt =
     raise (Exit 66)
   ) fmt
 
-let exit i = raise (Exit i)
-
 let msg fmt =
   Printf.ksprintf (fun str ->
     Printf.printf "%s%!" str
@@ -113,3 +111,17 @@ let os_string = match os with
 let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* WARNING check the result of "which gmake", "which make", ... *)
 
 let default_cores = 1
+
+let version () =
+  Printf.printf "\
+%s version %s
+
+Copyright (C) 2012 OCamlPro - INRIA
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+    Sys.argv.(0) version;
+  exit 0
+
+let exit i =
+  raise (Exit i)

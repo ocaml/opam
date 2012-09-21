@@ -6,8 +6,9 @@ let usage = "opam-check [--root root] [-l label] <package>+"
 
 let label = ref ""
 let spec = Arg.align [
-  ("--root", Arg.Set_string Globals.root_path, " set opam path");
-  ("-l"    , Arg.Set_string label            , " set a test label");
+  ("--root", Arg.Set_string Globals.root_path, " Set opam path");
+  ("-l"    , Arg.Set_string label            , " Set a test label");
+  ("--version", Arg.Unit Globals.version     , " Display version information");
 ]
 
 let packages = ref []

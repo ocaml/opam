@@ -5,14 +5,16 @@ open File
 
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
-  let specs = [] in
+  let specs = [
+    ("--version", Arg.Unit Globals.version, " Display version information")
+  ] in
   let ano x =
     Printf.eprintf "%s: invalid argument" x in
   Arg.parse specs ano usage
 
-let () = 
+let () =
   let t = Path.R.of_dirname (Dirname.cwd ()) in
-  NV.Set.iter (fun nv -> 
+  NV.Set.iter (fun nv ->
     Globals.msg "Processing %s\n" (NV.to_string nv);
 
     (** Descr *)

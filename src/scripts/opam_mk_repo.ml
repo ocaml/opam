@@ -26,10 +26,6 @@ open Types
 
 let log fmt = Globals.log "OPAM-MK-REPO" fmt
 
-let version () =
-  Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
-  exit 1
-
 let all, index, packages, gener_digest, dryrun =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
@@ -38,8 +34,8 @@ let all, index, packages, gener_digest, dryrun =
   let gener_digest = ref false in
   let dryrun = ref false in
   let specs = Arg.align [
-    ("-v"       , Arg.Unit version, " Display version information");
-    ("--version", Arg.Unit version, " Display version information");
+    ("-v"       , Arg.Unit Globals.version, " Display version information");
+    ("--version", Arg.Unit Globals.version, " Display version information");
 
     ("-a"   , Arg.Set all, "");
     ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);

@@ -20,17 +20,6 @@ open Solver
 open Client
 open SubCommand
 
-let version () =
-  Printf.printf "\
-%s version %s
-
-Copyright (C) 2012 OCamlPro - INRIA
-
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.argv.(0) Globals.version;
-  exit 0
-
 let ano_args = ref []
 let anon s =
   ano_args := s :: !ano_args
@@ -49,11 +38,11 @@ let () = Globals.root_path := Globals.default_opam_path
 let quiet = ref false
 
 let global_args = [
-  "--debug"     , Arg.Set Globals.debug, " Print more debug messages";
-  "--verbose"   , Arg.Set Globals.verbose, " Display the stdout/stderr of subprocesses";
-  "--quiet"     , Arg.Clear quiet, " Not display the stdout/stderr of subprocesses";
-  "--version"   , Arg.Unit version,      " Display version information";
-  "--yes"       , Arg.Set Globals.yes,   " Answer yes to all questions";
+  "--debug"     , Arg.Set Globals.debug   , " Print internal debug messages (very verbose)";
+  "--verbose"   , Arg.Set Globals.verbose , " Display the output of subprocesses";
+  "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
+  "--version"   , Arg.Unit Globals.version, " Display version information";
+  "--yes"       , Arg.Set Globals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.Set_string Globals.makecmd,
     Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !Globals.makecmd;
   "--root"      , Arg.Set_string Globals.root_path,
