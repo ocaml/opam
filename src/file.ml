@@ -658,7 +658,7 @@ module OPAM = struct
       ) @
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
-    Syntax.to_string 
+    Syntax.to_string
       ~indent_variable:(fun s -> List.mem s [s_build ; s_depends ; s_depopts])
       filename s
 

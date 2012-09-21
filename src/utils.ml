@@ -35,6 +35,7 @@ module OString = struct
   let compare = compare
 end
 
+module StringSet = Set.Make(OString)
 module StringMap = Map.Make(OString)
 
 let (|>) f g x = g (f x)

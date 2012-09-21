@@ -83,7 +83,8 @@ let current_ocaml_version t =
   let alias = File.Config.ocaml_version t.config in
   let aliases = File.Aliases.safe_read (Path.G.aliases t.global) in
   log "current_ocaml_version %s" (Alias.to_string alias);
-  List.assoc alias aliases
+  try Some (List.assoc alias aliases)
+  with Not_found -> None
 
 let confirm fmt =
   Printf.ksprintf (fun msg ->
@@ -110,7 +111,7 @@ let update_available_current t =
         | None  , None   -> Globals.error_and_exit "No OCaml compiler installed."
         | None  , Some s ->
             if not (confirm "No OCaml compiler found. Continue ?") then
-              Globals.exit 1
+              Globals.exit 0
             else
               s
         | Some c, Some s ->
@@ -125,7 +126,9 @@ let update_available_current t =
               s
         | Some c, None   -> c
       ) else
-        current_ocaml_version t in
+        match current_ocaml_version t with
+        | Some v -> v
+        | None   -> Globals.error_and_exit "No OCaml compiler defined."in
     let filter nv =
       let opam = File.OPAM.read (Path.G.opam t.global nv) in
       let consistent_ocaml_version =
@@ -583,21 +586,23 @@ let contents_of_variable t v =
   if N.to_string name = Globals.default_package then (
     try S (Sys.getenv var_str)
     with Not_found ->
-      let ocaml_version = current_ocaml_version t in
-      if var_str = "ocaml-version" then (
-        let ocaml_version_str = OCaml_V.to_string ocaml_version in
-        if ocaml_version_str = Globals.default_compiler_version then
-          match File.Config.system_ocaml_version t.config with
-          | None   -> S "<none>"
-          | Some v -> S (OCaml_V.to_string v)
-        else
-          S ocaml_version_str
-      ) else if var_str = "preinstalled" then
+      match current_ocaml_version t with
+      | None -> read_var ()
+      | Some ocaml_version ->
+        if var_str = "ocaml-version" then (
+          let ocaml_version_str = OCaml_V.to_string ocaml_version in
+          if ocaml_version_str = Globals.default_compiler_version then
+            match File.Config.system_ocaml_version t.config with
+            | None   -> S "<none>"
+            | Some v -> S (OCaml_V.to_string v)
+          else
+            S ocaml_version_str
+        ) else if var_str = "preinstalled" then (
           let comp = File.Comp.read (Path.G.compiler t.global ocaml_version) in
           B (File.Comp.preinstalled comp)
-      else
-        read_var ()
-  ) else (
+        ) else
+          read_var ()
+) else (
     try S (Sys.getenv (name_str ^"_"^ var_str))
     with Not_found ->
       let installed = mem_installed_package_by_name t name in
@@ -1280,30 +1285,34 @@ let update_env t env e =
     add_to_env = expanded @ env.add_to_env;
     new_env    = expanded @ env.new_env }
 
+let empty_env = { add_to_env=[]; add_to_path=Dirname.raw ""; new_env=[] }
 let get_env t =
-  let ocaml_version = current_ocaml_version t in
-  let comp_f = Path.G.compiler t.global ocaml_version in
-  let comp = File.Comp.read comp_f in
+  match current_ocaml_version t with
+  | None               -> empty_env
+  | Some ocaml_version ->
+    let comp_f = Path.G.compiler t.global ocaml_version in
+    let comp = File.Comp.read comp_f in
 
-  let add_to_path = Path.C.bin t.compiler in
-  let new_path = "PATH", "+=", Dirname.to_string add_to_path in
+    let add_to_path = Path.C.bin t.compiler in
+    let new_path = "PATH", "+=", Dirname.to_string add_to_path in
 
-  let add_to_env = File.Comp.env comp in
-  let toplevel_dir =
-    "OCAML_TOPLEVEL_PATH", "=", Dirname.to_string (Path.C.toplevel t.compiler) in
-  let man_path =
-    "MANPATH", ":=", Dirname.to_string (Path.C.man_dir t.compiler) in
-  let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
+    let add_to_env = File.Comp.env comp in
+    let toplevel_dir =
+      "OCAML_TOPLEVEL_PATH", "=", Dirname.to_string (Path.C.toplevel t.compiler) in
+    let man_path =
+      "MANPATH", ":=", Dirname.to_string (Path.C.man_dir t.compiler) in
+    let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
 
-  let add_to_env = expand_env t add_to_env in
-  let new_env = expand_env t new_env in
+    let add_to_env = expand_env t add_to_env in
+    let new_env = expand_env t new_env in
 
-  { add_to_env; add_to_path; new_env }
+    { add_to_env; add_to_path; new_env }
 
 let print_env env =
-  List.iter (fun (k,v) ->
-    Globals.msg "%s=%s; export %s;\n" k v k;
-  ) env.new_env
+  if env <> empty_env then
+    List.iter (fun (k,v) ->
+      Globals.msg "%s=%s; export %s;\n" k v k;
+    ) env.new_env
 
 let print_env_warning ?(add_profile = false) t =
   match
@@ -1784,12 +1793,67 @@ module Heuristic = struct
           | Some sol -> Some sol in
     aux l_request
 
+  let new_variables e =
+    let open Utils in
+    let e = List.filter (fun (_,s,_) -> s="=") e in
+    let e = List.map (fun (v,_,_) -> v) e in
+    List.fold_right StringSet.add e StringSet.empty
+
+  let print_variable_warnings =
+    let warnings = ref false in
+    fun t ->
+      let variables = ref [] in
+      if not !warnings then (
+        let warn w =
+          let is_defined s =
+            try let _ = Sys.getenv s in true
+            with Not_found -> false in
+          if is_defined w then
+            variables := w :: !variables in
+
+      (* 1. Warn about OCAMLFIND variables if it is installed *)
+        let ocamlfind_vars = [
+          "OCAMLFIND_DESTDIR";
+          "OCAMLFIND_CONF";
+          "OCAMLFIND_METADIR";
+          "OCAMLFIND_COMMANDS";
+          "OCAMLFIND_LDCONF";
+        ] in
+        if NV.Set.exists (fun nv -> N.to_string (NV.name nv) = "ocamlfind") t.installed then
+          List.iter warn ocamlfind_vars;
+      (* 2. Warn about variables possibly set by other compilers *)
+        let new_variables version =
+          let comp_f = Path.G.compiler t.global version in
+          let env = File.Comp.env (File.Comp.read comp_f) in
+          new_variables env in
+        let vars = ref StringSet.empty in
+        List.iter (fun (_,version) ->
+          vars := StringSet.union !vars (new_variables version)
+        ) t.aliases;
+        begin match current_ocaml_version t with
+        | None   -> ()
+        | Some v -> vars := StringSet.diff !vars (new_variables v);
+        end;
+        StringSet.iter warn !vars;
+        if !variables <> [] then (
+          Globals.msg "The following variables are set in your environment, \
+                     you should better unset it if you want OPAM to work \
+                     correctly.\n";
+          List.iter (Globals.msg " - %s\n") !variables;
+          if not (confirm "Do you want to continue ?") then
+            Globals.exit 0;
+        );
+        warnings := true;
+      )
+
   let resolve ?(force=false) action_k t l_request =
     match find_solution action_k t l_request with
     | None ->
         Globals.msg "No solution has been found.\n";
         No_solution
-    | Some sol -> apply_solution ~force t sol
+    | Some sol ->
+      print_variable_warnings t;
+      apply_solution ~force t sol
 
 end
 
@@ -2224,7 +2288,9 @@ let config request =
       Globals.msg "%s\n" (String.concat " " includes)
 
   | Compil c ->
-      let oversion = current_ocaml_version t in
+    begin match current_ocaml_version t with
+    | None          -> ()
+    | Some oversion ->
       let comp = File.Comp.read (Path.G.compiler t.global oversion) in
       let names =
         List.filter
@@ -2331,6 +2397,7 @@ let config request =
       let output = String.concat " " (List.flatten strs) in
       log "OUTPUT: %S" output;
       Globals.msg "%s\n" output
+    end
 
 let remote action =
   log "remote %s" (string_of_remote action);
