@@ -498,6 +498,7 @@ type name = N.t
 
 module NV: sig
   include ABSTRACT
+  val of_string_opt: string -> t option
   val name: t -> name
   val version: t -> version
   val create: name -> version -> t
@@ -521,14 +522,14 @@ end = struct
 
   let sep = '.'
 
-  let check s =
+  let of_string_opt s =
     if Utils.contains s ' ' || Utils.contains s '\n' then
       None
     else match Utils.cut_at s sep with
       | None        -> None
       | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
 
-  let of_string s = match check s with
+  let of_string s = match of_string_opt s with
     | Some x -> x
     | None   -> Globals.error_and_exit "%s is not a valid versioned package name" s
 
@@ -543,24 +544,24 @@ end = struct
       let parent = F.basename (F.dirname f) in
       match base with
       | "opam" | "descr" | "url" ->
-          check parent
+          of_string_opt parent
       | _ ->
           if F.check_suffix base ".opam" then
-            check (F.chop_suffix base ".opam")
+            of_string_opt (F.chop_suffix base ".opam")
           else if F.check_suffix base "+opam.tar.gz" then
-            check (F.chop_suffix base "+opam.tar.gz")
+            of_string_opt (F.chop_suffix base "+opam.tar.gz")
           else
             match parent with
             | "files" ->
                 let parent2 = F.basename (F.dirname (F.dirname f)) in
-                check parent2
+                of_string_opt parent2
             | _ ->
                 (* XXX: handle the case with a deeper files hierarchy *)
                 None
     end
 
   let of_dirname d =
-    check (Basename.to_string (Dirname.basename d))
+    of_string_opt (Basename.to_string (Dirname.basename d))
 
   let of_dpkg d =
     { name    = N.of_string d.Debian.Packages.name;

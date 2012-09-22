@@ -317,6 +317,9 @@ module NV: sig
   (** Return the package name *)
   val name: t -> name
 
+  (** Return None if [nv] is not a valid package name *)
+  val of_string_opt: string -> t option
+
   (** Return the version name *)
   val version: t -> version
 

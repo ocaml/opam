@@ -174,7 +174,7 @@ module R = struct
     if Dirname.exists dir then (
       let all = Dirname.list dir in
       let basenames = List.map Dirname.basename all in
-      NV.Set.of_list (List.map (Basename.to_string |> NV.of_string) basenames)
+      NV.Set.of_list (Utils.filter_map (Basename.to_string |> NV.of_string_opt) basenames)
     ) else
       NV.Set.empty
 
