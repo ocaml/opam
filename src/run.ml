@@ -433,8 +433,11 @@ let download ~filename:src ~dirname:dst =
       [ "rm"; "-f"; dst_file ];
       [ "cp"; src; dst ]
     ]
-  else
-    in_dir dst (fun () -> command cmd);
+  else (
+    try in_dir dst (fun () -> command cmd)
+    with _ ->
+      Globals.error_and_exit "Cannot download %s, please check your connection settings." src
+  );
   dst_file
 
 let patch p =
