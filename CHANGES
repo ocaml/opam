@@ -1,3 +1,6 @@
+0.7.1 [Sept 2012]
+* Remove forgotten debug statement
+
 0.7.0 [Sept 2012]
 * report upgrade statistic on update
 * do no ask y/n when installing compiler's base packages
