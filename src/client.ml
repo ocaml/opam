@@ -435,6 +435,25 @@ let update_repo_index t =
     ) repo_s
   ) repo_index
 
+let base_packages = [ "base-unix"; "base-bigarray"; "base-threads" ]
+
+let create_default_compiler_description t =
+  let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
+  let mk name = ((name,None),None) in
+  let f =
+    File.Comp.create_preinstalled
+      ocaml_version
+      (List.map mk (if !Globals.base_packages then base_packages else []))
+      [ ("CAML_LD_LIBRARY_PATH", "=",
+           "%{lib}%/stublibs"
+           ^ ":" ^
+           (match Run.system_ocamlc_where () with
+           | Some d -> Stdlib_filename.concat d "stublibs"
+           | None   -> assert false))
+      ] in
+  let comp = Path.G.compiler t.global ocaml_version in
+  File.Comp.write comp f
+
 let update_repositories t ~show_compilers repos =
   log "update_repositories";
   let compilers = Path.G.available_compilers t.global in
@@ -464,7 +483,12 @@ let update_repositories t ~show_compilers repos =
       if not (Filename.exists comp_g) && Filename.exists comp_f then
         Filename.link_in comp_f comp_dir
     ) comps
-  ) t.repositories
+  ) t.repositories;
+  (* If system.comp has been deleted, create it *)
+  let default_compiler =
+    Path.G.compiler t.global (OCaml_V.of_string Globals.default_compiler_version) in
+  if not (Filename.exists default_compiler) then
+    create_default_compiler_description t
 
 let update_packages t ~show_packages repos =
   log "update_packages";
@@ -714,25 +738,6 @@ let filter_command t (l, f) =
 
 let filter_commands t l =
   Utils.filter_map (filter_command t) l
-
-let base_packages = [ "base-unix"; "base-bigarray"; "base-threads" ]
-
-let create_default_compiler_description t =
-  let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
-  let mk name = ((name,None),None) in
-  let f =
-    File.Comp.create_preinstalled
-      ocaml_version
-      (List.map mk (if !Globals.base_packages then base_packages else []))
-      [ ("CAML_LD_LIBRARY_PATH", "=",
-           "%{lib}%/stublibs"
-           ^ ":" ^
-           (match Run.system_ocamlc_where () with
-           | Some d -> Stdlib_filename.concat d "stublibs"
-           | None   -> assert false))
-      ] in
-  let comp = Path.G.compiler t.global ocaml_version in
-  File.Comp.write comp f
 
 let add_alias alias ocaml_version =
   log "adding alias %s %s" (Alias.to_string alias) (OCaml_V.to_string ocaml_version);
