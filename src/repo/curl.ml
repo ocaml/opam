@@ -34,13 +34,15 @@ let make_state ~download_index remote_path =
     let remote_index_archive = remote_path // "index.tar.gz" in
     let index =
       if download_index then (
-        Filename.move local_index_file local_index_file_save;
+        if Filename.exists local_index_file then
+          Filename.move local_index_file local_index_file_save;
         try
           let file = Filename.download remote_index_file local_path in
           Filename.remove local_index_file_save;
           file;
         with e ->
-          Filename.move local_index_file_save local_index_file;
+          if Filename.exists local_index_file_save then
+            Filename.move local_index_file_save local_index_file;
           raise e
       ) else
         local_index_file in
