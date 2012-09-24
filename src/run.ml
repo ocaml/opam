@@ -278,7 +278,9 @@ module Tar = struct
 
   let extensions =
     [ [ "tar.gz" ; "tgz" ], 'z'
-    ; [ "tar.bz2" ; "tbz" ], 'j' ]
+    ; [ "tar.bz2" ; "tbz" ], 'j' 
+    ; [ "" ], 'z' 
+    ]
 
   let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
