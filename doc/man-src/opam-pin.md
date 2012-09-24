@@ -10,7 +10,7 @@ opam-pin - Pin a package to a specific version
 
 *opam pin* \<package\> \<version\>
 
-*opam pin* \<package\> \<url\>
+*opam pin* \<package\> \<path\>
 
 *opam pin* \<package\> none
 
@@ -29,10 +29,10 @@ specific source path for installing and upgrading the package. Using
 \<version\>
 :   Pin the selected package to a specific version.
 
-\<url\>
-:   Use the specified url for installing or upgrading the package. This
+\<path\>
+:   Use the specified path for installing or upgrading the package. This
     means that from now on, *opam install* and *opam upgrade* will use the
-    specified url to install (respectively upgrade) the package.
+    specified path to install (respectively upgrade) the package.
 
 none
 :   Unpin the package, i.e. use the default sources and version for the
