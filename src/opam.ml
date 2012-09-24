@@ -77,7 +77,7 @@ let init =
   help     = "Create the initial config files";
   specs    = [
     ("-comp" , Arg.String (fun s -> comp := Some (OCaml_V.of_string s)), " Which compiler version to use");
-    ("-cores", Arg.Set_int cores   , " Set the nomber of cores");
+    ("-cores", Arg.Set_int cores   , " Set the number of cores");
     ("-kind" , Arg.String (fun s -> kind := Some s) , " Set the repository kind");
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
   ];
