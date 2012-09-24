@@ -268,18 +268,24 @@ let print_updated t updated pinned_updated =
     ) updated_packages
   )
 
-let print_compilers compilers repo =
+let print_compilers t compilers repo =
   let repo_p = Path.R.create repo in
   let repo_compilers = Path.R.available_compilers repo_p in
   let (--) = OCaml_V.Set.diff in
   let new_compilers = repo_compilers -- compilers in
-  let default = OCaml_V.of_string Globals.default_compiler_version in
-  let del_compilers = compilers -- repo_compilers -- (OCaml_V.Set.singleton default) in
   if not (OCaml_V.Set.is_empty new_compilers) then
     Globals.msg "New compiler descriptions available:\n";
   OCaml_V.Set.iter (fun v ->
     Globals.msg " - %s\n" (OCaml_V.to_string v)
   ) new_compilers;
+  let all_compilers =
+    List.fold_left (fun set repo ->
+      let repo_p = Path.R.create repo in
+      let repo_compilers = Path.R.available_compilers repo_p in
+      OCaml_V.Set.union repo_compilers set;
+    ) OCaml_V.Set.empty t.repositories in
+  let default = OCaml_V.of_string Globals.default_compiler_version in
+  let del_compilers = compilers -- all_compilers -- (OCaml_V.Set.singleton default) in
   if not (OCaml_V.Set.is_empty del_compilers) then
     Globals.msg "Some compilers are not available anymore:\n";
   OCaml_V.Set.iter (fun v ->
@@ -437,7 +443,7 @@ let update_repositories t ~show_compilers repos =
   List.iter (fun r -> Repositories.update r) repos;
 
   (* Display the new compilers available *)
-  List.iter (fun r -> if show_compilers then print_compilers compilers r) repos;
+  List.iter (fun r -> if show_compilers then print_compilers t compilers r) repos;
 
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
@@ -453,11 +459,12 @@ let update_repositories t ~show_compilers repos =
     let comps = Path.R.available_compilers repo_p in
     let comp_dir = Path.G.compilers_dir t.global in
     OCaml_V.Set.iter (fun o ->
+      let comp_g = Path.G.compiler t.global o in
       let comp_f = Path.R.compiler repo_p o in
-      if Filename.exists comp_f then
+      if not (Filename.exists comp_g) && Filename.exists comp_f then
         Filename.link_in comp_f comp_dir
     ) comps
-  ) repos
+  ) t.repositories
 
 let update_packages t ~show_packages repos =
   log "update_packages";
