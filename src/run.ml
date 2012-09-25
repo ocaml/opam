@@ -16,6 +16,25 @@
 exception Process_error of Process.result
 exception Internal_error of string
 
+let _ =
+  Printexc.register_printer (fun exn ->
+    let open Process in
+    match exn with
+      Process_error r ->
+        let b = Buffer.create 1000 in
+        Printf.bprintf b "Exception Run.Process_error {\n";
+        Printf.bprintf b "\tr_code = %d\n" r.r_code;
+        Printf.bprintf b "\tr_duration = %.2f\n" r.r_duration;
+        Printf.bprintf b "\tr_info = [ %s\t]\n"
+          (String.concat "\n\t\t" r.r_info);
+        Printf.bprintf b "\tr_stdout = [ %s\t]\n"
+          (String.concat "\n\t\t" r.r_stdout);
+        Printf.bprintf b "\tr_stderr = [ %s\t]\n"
+          (String.concat "\n\t\t" r.r_stderr);
+        Printf.bprintf b "\t\t}\n";
+        Some (Buffer.contents b)
+    | _ -> None)
+
 let internal_error fmt =
   Printf.ksprintf (fun str -> raise (Internal_error str)) fmt
 
