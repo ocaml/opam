@@ -87,7 +87,7 @@ module OPAM: sig
   val make:
     name:name -> version:version -> maintainer:string ->
     substs:basename list -> build_env:(string * string * string) list ->
-    build:string list list -> remove:string list list ->
+    build:command list -> remove:command list ->
     depends:cnf_formula -> depopts:cnf_formula -> conflicts:and_formula ->
     libraries:section list -> syntax:section list ->
     others:(string * File_format.value) list ->
@@ -112,10 +112,10 @@ module OPAM: sig
   val build_env: t -> (string * string * string) list
 
   (** List of command to run for building the package *)
-  val build: t -> string list list
+  val build: t -> command list
 
   (** List of command to run for removing the package *)
-  val remove: t -> string list list
+  val remove: t -> command list
 
   (** Package dependencies *)
   val depends: t -> cnf_formula
@@ -145,10 +145,10 @@ module OPAM: sig
   val with_depopts : t -> cnf_formula -> t
 
   (** Construct as [build] *)
-  val with_build: t -> string list list -> t
+  val with_build: t -> command list -> t
 
   (** Construct as [remove] *)
-  val with_remove : t -> string list list -> t
+  val with_remove : t -> command list -> t
 
   (** Construct as [libraries] *)
   val with_libraries : t -> section list -> t
@@ -264,41 +264,41 @@ module Dot_install: sig
     include IO_FILE
 
     (** List of files to install in $lib/ *)
-    val lib:  t -> string list
+    val lib:  t -> string optional list
 
     (** List of files to install in $bin/ *)
-    val bin:  t -> (string * string option) list
+    val bin:  t -> (string optional * string option) list
 
     (** List of other files to install *)
-    val misc: t -> (string * string option) list
+    val misc: t -> (string optional * string option) list
 
     (** List of toplevel files *)
-    val toplevel: t -> string list
+    val toplevel: t -> string optional list
 
     (** Construct as [bin] *)
-    val with_bin: t -> (string * string option) list -> t
+    val with_bin: t -> (string optional * string option) list -> t
 
     (** Construct as [lib] *)
-    val with_lib: t -> string list -> t
+    val with_lib: t -> string optional list -> t
 
     (** Construct as [toplevel] *)
-    val with_toplevel: t -> string list -> t
+    val with_toplevel: t -> string optional list -> t
 
   end
 
   include IO_FILE
 
   (** List of files to install in $lib/ *)
-  val lib:  t -> filename list
+  val lib:  t -> filename optional list
 
   (** List of files to install in $bin/ *)
-  val bin:  t -> (filename * basename) list
+  val bin:  t -> (filename optional * basename) list
 
   (** List of toplevel files *)
-  val toplevel: t -> filename list
+  val toplevel: t -> filename optional list
 
   (** List of other files to install *)
-  val misc: t -> (filename * filename) list
+  val misc: t -> (filename optional * filename) list
 
 end
 
@@ -402,7 +402,7 @@ module URL: sig
   val create: ?checksum:string -> string -> t
 
   (** Constructor *)
-  val with_checksum: t -> string option -> t
+  val with_checksum: t -> string -> t
 
 end
 

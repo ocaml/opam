@@ -140,6 +140,7 @@ module Dirname: sig
     ?add_to_path:t list -> string list list -> unit
   val move: t -> t -> unit
   val copy: t -> t -> unit
+  val link: t -> t -> unit
   val dirname: t -> t
   val basename: t -> basename
   val starts_with: prefix:t -> t -> bool
@@ -207,6 +208,20 @@ end = struct
           move f dst
       | _ -> Globals.error_and_exit "Error while copying %s to %s" (to_string src) (to_string dst)
     )
+
+  let link src dst =
+    rmdir dst;
+    let tmp_dst = Filename.concat (Filename.basename src) (Filename.basename dst) in
+    let base = Filename.dirname dst in
+    mkdir base;
+    if dst = tmp_dst then
+      in_dir base (fun () -> Run.command [ "ln"; "-s"; src])
+    else
+      in_dir base (fun () ->
+        Run.commands [
+          ["ln"; "-s"; src];
+          ["mv"; (Filename.basename src); (Filename.basename dst) ];
+        ])
 
   let basename dirname =
     Basename.of_string (Filename.basename (to_string dirname))
@@ -483,6 +498,7 @@ type name = N.t
 
 module NV: sig
   include ABSTRACT
+  val of_string_opt: string -> t option
   val name: t -> name
   val version: t -> version
   val create: name -> version -> t
@@ -506,14 +522,14 @@ end = struct
 
   let sep = '.'
 
-  let check s =
+  let of_string_opt s =
     if Utils.contains s ' ' || Utils.contains s '\n' then
       None
     else match Utils.cut_at s sep with
       | None        -> None
       | Some (n, v) -> Some { name = N.of_string n; version = V.of_string v }
 
-  let of_string s = match check s with
+  let of_string s = match of_string_opt s with
     | Some x -> x
     | None   -> Globals.error_and_exit "%s is not a valid versioned package name" s
 
@@ -528,24 +544,24 @@ end = struct
       let parent = F.basename (F.dirname f) in
       match base with
       | "opam" | "descr" | "url" ->
-          check parent
+          of_string_opt parent
       | _ ->
           if F.check_suffix base ".opam" then
-            check (F.chop_suffix base ".opam")
+            of_string_opt (F.chop_suffix base ".opam")
           else if F.check_suffix base "+opam.tar.gz" then
-            check (F.chop_suffix base "+opam.tar.gz")
+            of_string_opt (F.chop_suffix base "+opam.tar.gz")
           else
             match parent with
             | "files" ->
                 let parent2 = F.basename (F.dirname (F.dirname f)) in
-                check parent2
+                of_string_opt parent2
             | _ ->
                 (* XXX: handle the case with a deeper files hierarchy *)
                 None
     end
 
   let of_dirname d =
-    check (Basename.to_string (Dirname.basename d))
+    of_string_opt (Basename.to_string (Dirname.basename d))
 
   let of_dpkg d =
     { name    = N.of_string d.Debian.Packages.name;
@@ -986,3 +1002,30 @@ end = struct
   module Set = Set.Make(O)
   module Map = Map.Make(O)
 end
+
+type symbol =
+  | Eq | Neq | Le | Ge | Lt | Gt
+
+type filter =
+  | Bool of bool
+  | String of string
+  | Op of filter * symbol * filter
+  | And of filter * filter
+  | Or of filter * filter
+
+type arg = string * filter option
+
+type command = arg list * filter option
+
+type 'a optional = {
+  c: 'a;
+  optional: bool;
+}
+
+type stats = {
+  s_install  : int;
+  s_reinstall: int;
+  s_upgrade  : int;
+  s_downgrade: int;
+  s_remove   : int;
+}

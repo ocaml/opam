@@ -9,7 +9,11 @@ version: "1"
 maintainer: "contact@ocamlpro.com"
 
 (* The command to run *)
-build: [ "./build.sh" ]
+build: [
+ [ "./build.sh" ]
+ [ "this" "should" "never" "run" ] { "%{ocaml-version}%" > "100" }
+ [ "this as well" { "%{os}%" = "myOS" } ]
+]
 
 (* List of files to substitute env variables *)
 substs: [ "P1.config" ]

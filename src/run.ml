@@ -225,21 +225,28 @@ let replace_path bins =
     let k,v = match Utils.cut_at env.(i) '=' with
       | Some (k,v) -> k,v
       | None       -> assert false in
-    if k = "PATH" then
-    let v = Utils.split v ':' in
-    let bins = List.filter Sys.file_exists bins in
-    let new_path = String.concat ":" (bins @ v) in
-    env.(i) <- "PATH=" ^ new_path;
-    path := new_path;
+    if k = "PATH" then (
+      let bins = List.filter Sys.file_exists bins in
+      let new_path = String.concat ":" bins in
+      env.(i) <- "PATH=" ^ new_path;
+      path := new_path;
+    )
   done;
   env, !path
 
+let get_current_path () =
+  try Utils.split (Sys.getenv "PATH") ':'
+  with Not_found -> []
+
 type command = string list
 
-let run_process ?verbose ?(add_to_env=[]) ?(add_to_path=[]) = function
+let run_process ?verbose ?path ?(add_to_env=[]) ?(add_to_path=[]) = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
-      let env, path = replace_path add_to_path in
+      let env, path =
+        match path with
+        | None   -> replace_path (add_to_path @ get_current_path ())
+        | Some p -> replace_path p in
       let add_to_env = List.map (fun (k,v) -> k^"="^v) add_to_env in
       let env = Array.concat [ env; Array.of_list add_to_env ] in
       let name = log_file () in
@@ -266,8 +273,8 @@ let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
 let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) commands =
   List.iter (command ?verbose ~add_to_env ~add_to_path) commands
 
-let read_command_output ?(add_to_env=[]) ?(add_to_path=[]) cmd =
-  let r = run_process ~add_to_env ~add_to_path cmd in
+let read_command_output ?path cmd =
+  let r = run_process ?path cmd in
   if Process.is_success r then
     r.Process.r_stdout
   else
@@ -411,9 +418,13 @@ let ocaml_version () =
   with _ ->
     None
 
-let ocamlc_where () =
+let system_ocamlc_where () =
   try
-    match read_command_output [ "ocamlc"; "-where" ] with
+    let path =
+      try Sys.getenv "PATH"
+      with Not_found -> "" in
+    let path = Utils.reset_env_value ~prefix:!Globals.root_path path in
+    match read_command_output ~path [ "ocamlc"; "-where" ] with
     | h::_ -> Some (Utils.string_strip h)
     | []   -> internal_error "ocamlc -where"
   with _ ->
@@ -441,8 +452,11 @@ let download ~filename:src ~dirname:dst =
       [ "rm"; "-f"; dst_file ];
       [ "cp"; src; dst ]
     ]
-  else
-    in_dir dst (fun () -> command cmd);
+  else (
+    try in_dir dst (fun () -> command cmd)
+    with _ ->
+      Globals.error_and_exit "Cannot download %s, please check your connection settings." src
+  );
   dst_file
 
 let patch p =

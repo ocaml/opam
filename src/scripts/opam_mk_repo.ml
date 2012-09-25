@@ -26,10 +26,6 @@ open Types
 
 let log fmt = Globals.log "OPAM-MK-REPO" fmt
 
-let version () =
-  Printf.printf "%s: version %s\n" Sys.argv.(0) Globals.version;
-  exit 1
-
 let all, index, packages, gener_digest, dryrun =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
@@ -38,12 +34,21 @@ let all, index, packages, gener_digest, dryrun =
   let gener_digest = ref false in
   let dryrun = ref false in
   let specs = Arg.align [
-    ("-v"       , Arg.Unit version, " Display version information");
-    ("--version", Arg.Unit version, " Display version information");
-    ("-all"  , Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
-    ("-index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
-    ("-generate-checksums", Arg.Set gener_digest, Printf.sprintf " Generate checksums during the build (default is %b)" !gener_digest);
-    ("-dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them")
+    ("-v"       , Arg.Unit Globals.version, " Display version information");
+    ("--version", Arg.Unit Globals.version, " Display version information");
+
+    ("-a"   , Arg.Set all, "");
+    ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
+
+    ("-i"     , Arg.Set index, "");
+    ("--index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
+
+    ("-g"                  , Arg.Set gener_digest, "");
+    ("--generate-checksums", Arg.Set gener_digest,
+     Printf.sprintf " Automatically correct the wrong archive checksums (default is %b)" !gener_digest);
+
+    ("-d"      , Arg.Set dryrun, "");
+    ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them")
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;

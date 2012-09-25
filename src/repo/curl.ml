@@ -18,6 +18,7 @@ type state = {
 let state_cache = ref []
 
 let index_file local_path = local_path // "urls.txt"
+let index_file_save local_path = local_path // "urls.txt.0"
 let index_archive local_path = local_path // "index.tar.gz"
 
 let make_state ~download_index remote_path =
@@ -29,11 +30,20 @@ let make_state ~download_index remote_path =
     let local_path = Path.R.root local_repo in
     let remote_index_file = remote_path // "urls.txt" in
     let local_index_file = index_file local_path in
+    let local_index_file_save = index_file_save local_path in
     let remote_index_archive = remote_path // "index.tar.gz" in
     let index =
       if download_index then (
-        Filename.remove local_index_file;
-        Filename.download remote_index_file local_path
+        if Filename.exists local_index_file then
+          Filename.move local_index_file local_index_file_save;
+        try
+          let file = Filename.download remote_index_file local_path in
+          Filename.remove local_index_file_save;
+          file;
+        with e ->
+          if Filename.exists local_index_file_save then
+            Filename.move local_index_file_save local_index_file;
+          raise e
       ) else
         local_index_file in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
@@ -90,6 +100,7 @@ module B = struct
     Filename.download remote_file local_dir
 
   let update address =
+    Globals.msg "Synchronizing with %s ...\n" (Dirname.to_string address);
     let state = make_state ~download_index:true address in
     log "dir local_dir=%s remote_dir=%s"
       (Dirname.to_string state.local_path)

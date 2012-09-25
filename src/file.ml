@@ -60,8 +60,8 @@ module Syntax = struct
       Globals.error "Parsing error while reading %s" (Filename.to_string f);
       raise e
 
-  let to_string _ t =
-    Raw.of_string (File_format.string_of_file t)
+  let to_string ?(indent_variable = fun _ -> false) _ t =
+    Raw.of_string (File_format.string_of_file ~indent_variable t)
 
   let check f fields =
     if not (File_format.is_valid f.contents fields) then
@@ -181,7 +181,7 @@ module URL = struct
   let kind t = t.kind
   let checksum t = t.checksum
 
-  let with_checksum t checksum = { t with checksum }
+  let with_checksum t checksum = { t with checksum = Some checksum }
 
   let create ?checksum url =
     { url; checksum; kind = None }
@@ -496,8 +496,8 @@ module OPAM = struct
     maintainer : string;
     substs     : basename list;
     build_env  : (string * string * string) list;
-    build      : string list list;
-    remove     : string list list;
+    build      : command list;
+    remove     : command list;
     depends    : cnf_formula;
     depopts    : cnf_formula;
     conflicts  : and_formula;
@@ -644,8 +644,8 @@ module OPAM = struct
         Variable (s_maintainer, String t.maintainer);
         Variable (s_substs, make_list (Basename.to_string |> make_string) t.substs);
         Variable (s_build_env, make_list make_env_variable t.build_env);
-        Variable (s_build, make_list (make_list make_string) t.build);
-        Variable (s_remove, make_list (make_list make_string) t.remove);
+        Variable (s_build, make_list make_command t.build);
+        Variable (s_remove, make_list make_command t.remove);
         Variable (s_depends, make_cnf_formula t.depends);
         Variable (s_depopts, make_cnf_formula t.depopts);
         Variable (s_conflicts, make_and_formula t.conflicts);
@@ -658,13 +658,9 @@ module OPAM = struct
       ) @
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
-    Syntax.to_string filename s
-
-  let parse_command =
-    parse_or [
-      ("string", parse_string);
-      ("symbol", parse_symbol)
-    ]
+    Syntax.to_string
+      ~indent_variable:(fun s -> List.mem s [s_build ; s_depends ; s_depopts])
+      filename s
 
   let of_string filename str =
     let nv = NV.of_filename filename in
@@ -700,10 +696,6 @@ module OPAM = struct
               (Filename.to_string filename)
           else
             v in
-    let parse_commands = parse_or [
-      "list",      (fun x -> [parse_list parse_command x]);
-      "list-list", parse_list (parse_list parse_command);
-    ] in
     let maintainer = assoc s s_maintainer parse_string in
     let substs     =
       assoc_list s s_substs (parse_list (parse_string |> Basename.of_string)) in
@@ -731,10 +723,10 @@ module Dot_install_raw = struct
   let internal = ".install(*raw*)"
 
   type t =  {
-    lib : string list ;
-    bin : (string * string option) list ;
-    toplevel: string list;
-    misc: (string * string option) list ;
+    lib : string optional list;
+    bin : (string optional * string option) list;
+    toplevel: string optional list;
+    misc: (string optional * string option) list;
   }
 
   let lib t = t.lib
@@ -766,28 +758,47 @@ module Dot_install_raw = struct
     s_misc;
   ]
 
+  (* Filenames starting by ? are not always present. *)
+  let optional_of_string str =
+    if String.length str > 0 && str.[0] = '?' then
+      { optional=true; c=String.sub str 1 (String.length str - 1) }
+    else
+      { optional=false; c=str }
+
+  let string_of_optional t =
+    let o = if t.optional then "?" else "" in
+    Printf.sprintf "%s%s" o t.c
+
   let to_string filename t =
-    let make_option = function
-      | src, None -> String src
-      | src, Some dst -> Option (String src, [String dst]) in
+    let make_option (src, option) =
+      let src = String (string_of_optional src) in
+      match option with
+      | None     -> src
+      | Some dst -> Option (src, [String dst]) in
     let s = {
       filename = Filename.to_string filename;
       contents = [
-        Variable (s_lib , make_list make_string t.lib);
+        Variable (s_lib , make_list (string_of_optional |> make_string) t.lib);
         Variable (s_bin , make_list make_option t.bin);
-        Variable (s_toplevel, make_list make_string t.toplevel);
+        Variable (s_toplevel, make_list (string_of_optional |> make_string) t.toplevel);
         Variable (s_misc, make_list make_option t.misc);
       ]
     } in
-    force_newline (fun () -> Syntax.to_string filename s)
+    Syntax.to_string ~indent_variable:(fun _ -> true) filename s
 
   let of_string filename str =
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
-    let lib = assoc_list s.contents s_lib (parse_list parse_string) in
-    let bin = assoc_list s.contents s_bin (parse_list (parse_string_option parse_single_string)) in
-    let toplevel = assoc_list s.contents s_toplevel (parse_list parse_string) in
-    let misc = assoc_list s.contents s_misc (parse_list (parse_string_option parse_single_string)) in
+    let parse_option = parse_or [
+      ("string", fun v -> optional_of_string (parse_string v), None);
+      ("option", function
+        | Option (String src, [String dst]) -> optional_of_string src, Some dst
+        | _ -> failwith "option");
+    ] in
+    let lib = assoc_list s.contents s_lib (parse_list (parse_string |> optional_of_string)) in
+    let bin = assoc_list s.contents s_bin (parse_list parse_option) in
+    let toplevel = assoc_list s.contents s_toplevel (parse_list (parse_string |> optional_of_string)) in
+    let misc = assoc_list s.contents s_misc (parse_list parse_option) in
     { lib; bin; misc; toplevel }
 
 end
@@ -797,10 +808,10 @@ module Dot_install = struct
   let internal = ".install"
 
   type t =  {
-    lib : filename list ;
-    bin : (filename * basename) list ;
-    toplevel : filename list;
-    misc: (filename * filename) list ;
+    lib : filename optional list ;
+    bin : (filename optional * basename) list ;
+    toplevel : filename optional list;
+    misc: (filename optional * filename) list ;
   }
 
   let string_of_move (src, dst) =
@@ -822,30 +833,33 @@ module Dot_install = struct
     misc = [] ;
   }
 
+  let map_o fn x =
+    { optional = x.optional; c = fn x.c }
+
   let to_string filename t =
     let to_bin (src, dst) =
-      Filename.to_string src,
-      if Filename.basename src = dst then None else Some (Basename.to_string dst) in
+      map_o Filename.to_string src,
+      if Filename.basename src.c = dst then None else Some (Basename.to_string dst) in
     let to_misc (src, dst) =
-      Filename.to_string src,
+      map_o Filename.to_string src,
       Some (Filename.to_string dst) in
     R.to_string filename
-      { lib = List.map Filename.to_string t.lib
+      { lib = List.map (map_o Filename.to_string) t.lib
       ; bin = List.map to_bin t.bin
-      ; toplevel = List.map Filename.to_string t.toplevel
+      ; toplevel = List.map (map_o Filename.to_string) t.toplevel
       ; R.misc = List.map to_misc t.misc }
 
   let of_string filename str =
     let t = R.of_string filename str in
     let of_bin = function
-      | s  , None     -> let f = Filename.of_string s in (f, Filename.basename f)
-      | src, Some dst -> (Filename.of_string src, Basename.of_string dst) in
+      | s  , None     -> let f = map_o Filename.of_string s in (f, Filename.basename f.c)
+      | src, Some dst -> (map_o Filename.of_string src, Basename.of_string dst) in
     let of_misc = function
-      | s  , None     -> let f = Filename.of_string s in (f, f)
-      | src, Some dst -> (Filename.of_string src, Filename.of_string dst) in
-    { lib = List.map Filename.of_string t.R.lib
+      | s  , None     -> let f = map_o Filename.of_string s in (f, f.c)
+      | src, Some dst -> (map_o Filename.of_string src, Filename.of_string dst) in
+    { lib = List.map (map_o Filename.of_string) t.R.lib
     ; bin = List.map of_bin t.R.bin
-    ; toplevel = List.map Filename.of_string t.R.toplevel
+    ; toplevel = List.map (map_o Filename.of_string) t.R.toplevel
     ; misc = List.map of_misc t.R.misc }
 
 end

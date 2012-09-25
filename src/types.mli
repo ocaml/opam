@@ -128,6 +128,9 @@ module Dirname: sig
   (** Copy a directory *)
   val copy: t -> t -> unit
 
+  (** Link a directory *)
+  val link: t -> t -> unit
+
   (** Does the directory exists ? *)
   val exists: t -> bool
 
@@ -278,7 +281,6 @@ type file =
   | D of dirname
   | F of filename
 
-
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
@@ -314,6 +316,9 @@ module NV: sig
 
   (** Return the package name *)
   val name: t -> name
+
+  (** Return None if [nv] is not a valid package name *)
+  val of_string_opt: string -> t option
 
   (** Return the version name *)
   val version: t -> version
@@ -571,3 +576,38 @@ module Remote_file: sig
   (** Constructor*)
   val create: basename -> string -> int -> t
 end
+
+
+(** {2 Filtered commands} *)
+
+(** Symbols *)
+type symbol =
+  | Eq | Neq | Le | Ge | Lt | Gt
+
+(** Filter *)
+type filter =
+  | Bool of bool
+  | String of string
+  | Op of filter * symbol * filter
+  | And of filter * filter
+  | Or of filter * filter
+
+(** Command argument *)
+type arg = string * filter option
+
+(** Command *)
+type command = arg list * filter option
+
+(** Misc *)
+type 'a optional = {
+  c: 'a;   (** Contents *)
+  optional: bool; (** Is the contents optional *)
+}
+
+type stats = {
+  s_install  : int;
+  s_reinstall: int;
+  s_upgrade  : int;
+  s_downgrade: int;
+  s_remove   : int;
+}

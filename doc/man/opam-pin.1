@@ -6,7 +6,7 @@ opam-pin - Pin a package to a specific version
 .PP
 \f[I]opam pin\f[] <package> <version>
 .PP
-\f[I]opam pin\f[] <package> <url>
+\f[I]opam pin\f[] <package> <path>
 .PP
 \f[I]opam pin\f[] <package> none
 .SH DESCRIPTION
@@ -27,11 +27,11 @@ Pin the selected package to a specific version.
 .RS
 .RE
 .TP
-.B <url>
-Use the specified url for installing or upgrading the package.
+.B <path>
+Use the specified path for installing or upgrading the package.
 This means that from now on, \f[I]opam install\f[] and \f[I]opam
-upgrade\f[] will use the specified url to install (respectively upgrade)
-the package.
+upgrade\f[] will use the specified path to install (respectively
+upgrade) the package.
 .RS
 .RE
 .TP

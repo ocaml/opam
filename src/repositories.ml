@@ -161,13 +161,12 @@ let make_archive ?(gener_digest = false) nv =
             let digest = Filename.digest local_archive in
             begin match checksum with
             | Some c when c <> digest ->
-              Globals.warning
-                "Wrong checksum for %s (in cache: %s, new downloaded: %s). \
-                 Update by keeping the downloaded digest..."
-                (Filename.to_string local_archive) c digest
+              Globals.msg
+                "Wrong checksum for %s (waiting: %s, got: %s)\nFixing %s ...\n"
+                (Filename.to_string local_archive) c digest (Filename.to_string url_f);
             | _ -> ();
-              File.URL.write url_f (File.URL.with_checksum url_file (Some digest));
             end;
+            File.URL.write url_f (File.URL.with_checksum url_file digest);
           );
           log "extracting %s to %s"
             (Filename.to_string local_archive)
