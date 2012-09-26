@@ -57,7 +57,7 @@ tests-git:
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
 
-.PHONY: install
+.PHONY: uninstall install
 install:
 	mkdir -p $(prefix)/bin
 	$(MAKE) $(TARGETS:%=%-install)
@@ -66,6 +66,18 @@ install:
 uninstall:
 	rm -f $(prefix)/bin/opam*
 	rm -f $(mandir)/man1/opam*
+
+.PHONY: libuninstall libinstall
+LIB =   opam-lib
+CMI =   file path file_format process globals repositories lexer run\
+	linelexer types parallel utils parser
+_FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
+	$(CMI:%=%.cmi)
+FILES = $(_FILES:%=_obuild/opam-lib/%)
+libinstall:
+	ocamlfind install opam META $(FILES)
+libuninstall:
+	ocamlfind remove opam
 
 doc: compile
 	mkdir -p doc/html/
