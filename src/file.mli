@@ -376,12 +376,6 @@ module Subst: sig
 
   include IO_FILE
 
-  (** Representation of the string "enable" *)
-  val enable: string
-
-  (** Representation of the string "disable" *)
-  val disable: string
-
   (** Substitute the variables appearing in a file *)
   val replace: t ->  (full_variable -> variable_contents)-> t
 
