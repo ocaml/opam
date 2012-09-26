@@ -32,6 +32,7 @@ ocaml-re.1.1.tar.gz:
 
 extlib.stamp: extlib-1.5.3.tar.gz
 	tar xfz extlib-1.5.3.tar.gz
+	rm -rf extlib
 	mv extlib-1.5.3 extlib
 	@touch $@
 
@@ -45,6 +46,7 @@ ocaml-arg.stamp: ocaml-arg.0.3.tar.gz
 
 ocamlgraph.stamp: ocamlgraph-1.8.1.tar.gz
 	tar xfz ocamlgraph-1.8.1.tar.gz
+	rm -rf ocamlgraph
 	mv ocamlgraph-1.8.1 ocamlgraph
 	@touch $@
 

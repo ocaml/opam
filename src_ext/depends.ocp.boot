@@ -62,7 +62,7 @@ begin library "arg"
      "ocaml-arg/src/formatExt.ml"
      "ocaml-arg/src/argExt.ml"
    ]
-   
+
 end
 
 begin library "cudf"
@@ -133,7 +133,7 @@ end
 
 begin library "dose"
    sort = true
-   pp = "camlp4o Camlp4MacroParser.cmo"
+   pp = [ "camlp4o";  "Camlp4MacroParser.cmo" ]
    files = [
      pack Common [
        "dose/common/util.ml"
@@ -192,7 +192,7 @@ end
 (*
 
 begin program "cnftocudf"
-  pp = "camlp4o Camlp4MacroParser.cmo"
+  pp = ["camlp4o" ; "Camlp4MacroParser.cmo" ]
   files    = [
     pack Eclipse [
       "dose/eclipse/version.ml"

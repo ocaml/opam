@@ -9,7 +9,7 @@ begin
   link += [ "-g" ]
 
 begin library "opam-lib"
-  dirname = [ "src" ]
+  subdir = [ "src" ]
   files   = [
     "globals.ml"
     "utils.ml"
@@ -36,7 +36,7 @@ begin library "opam-lib"
 end
 
 begin program "opam"
-  dirname  = [ "src" ]
+  subdir  = [ "src" ]
   files    = [
     "repo/curl.ml"
     "repo/rsync.ml"
