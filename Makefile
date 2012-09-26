@@ -23,6 +23,10 @@ opt: $(LOCAL_OCPBUILD)
 $(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
 	$(MAKE) -C ocp-build
 
+OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
+prepare: depends.ocp.in
+	sed "s|%{lib}%|$(OCAMLFIND_DIR)|g" depends.ocp.in > depends.ocp
+
 compile: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
@@ -57,7 +61,7 @@ tests-git:
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
 
-.PHONY: install
+.PHONY: uninstall install
 install:
 	mkdir -p $(prefix)/bin
 	$(MAKE) $(TARGETS:%=%-install)
@@ -66,6 +70,19 @@ install:
 uninstall:
 	rm -f $(prefix)/bin/opam*
 	rm -f $(mandir)/man1/opam*
+
+LIB =   opam-lib
+CMI =   file path file_format process globals repositories lexer run\
+	linelexer types parallel utils parser
+_FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
+	$(CMI:%=%.cmi)
+FILES = $(_FILES:%=_obuild/opam-lib/%)
+
+.PHONY: libuninstall libinstall
+libinstall: META
+	ocamlfind install opam META $(FILES)
+libuninstall:
+	ocamlfind remove opam
 
 doc: compile
 	mkdir -p doc/html/

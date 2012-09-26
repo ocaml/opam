@@ -1,0 +1,50 @@
+begin library "re"
+  dirname  += "%{lib}%/re"
+  generated = true
+end
+
+begin library "re_perl"
+  dirname  += "%{lib}%/re"
+  generated = true
+  requires  = [ "re" ]
+end
+
+begin library "re_glob"
+  dirname  += "%{lib}%/re"
+  generated = true
+  requires  = [ "re" ]
+end
+
+begin library "re_pcre"
+  dirname  += "%{lib}%/re"
+  generated = true
+  requires  = [ "re_perl" ]
+end
+
+begin library "graph"
+  dirname  += "%{lib}%/ocamlgraph"
+  generated = true
+end
+
+begin library "arg"
+  dirname  += "%{lib}%/ocaml-arg"
+  generated = true
+end
+
+begin library "cudf"
+  dirname  += "%{lib}%/mancoosi-cudf"
+  generated = true
+  requires  = [ "extLib" ]
+end
+
+begin library "dose"
+  dirname  += "%{lib}%/mancoosi-dose"
+  generated = true
+  requires  = [ "re_pcre" "extLib" "cudf" "graph" "unix" "str" ]
+end
+
+begin library "extLib"
+  dirname  += "%{lib}%/extlib"
+  generated = true
+end
+
