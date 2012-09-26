@@ -23,6 +23,10 @@ opt: $(LOCAL_OCPBUILD)
 $(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
 	$(MAKE) -C ocp-build
 
+OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
+prepare: depends.ocp.in
+	sed "s|%{lib}%|$(OCAMLFIND_DIR)|g" depends.ocp.in > depends.ocp
+
 compile: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
