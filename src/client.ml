@@ -314,6 +314,8 @@ let install_conf_ocaml_config t =
       ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
       ("make" , !Globals.makecmd);
       ("os"   , Globals.os_string);
+      ("enable", File.Subst.enable);
+      ("disable", File.Subst.disable);
     ] in
 
   let config = File.Dot_config.create vars in
@@ -638,9 +640,9 @@ let contents_of_variable t v =
     with Not_found ->
       let installed = mem_installed_package_by_name t name in
       if var = Variable.enable && installed then
-        S "enable"
+        S File.Subst.enable
       else if var = Variable.enable && not installed then
-        S "disable"
+        S File.Subst.disable
       else if var = Variable.installed then
         B installed
       else if not installed then

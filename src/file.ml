@@ -1213,6 +1213,10 @@ module Subst = struct
 
   let to_string filename t = t
 
+  let enable = "enable"
+
+  let disable = "disable"
+
   let replace t f =
     let subst str =
       let str = String.sub str 2 (String.length str - 4) in
