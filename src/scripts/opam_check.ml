@@ -19,9 +19,9 @@ let () = Arg.parse spec ano usage
 let packages = NV.Set.of_list (List.map NV.of_string !packages)
 
 let installed () =
-  let config = File.Config.read (Path.G.config (Path.G.create ())) in
-  let version = File.Config.ocaml_version config in
-  let installed = File.Installed.read (Path.C.installed (Path.C.create version)) in
+  let config = OpamFile.Config.read (Path.G.config (Path.G.create ())) in
+  let version = OpamFile.Config.ocaml_version config in
+  let installed = OpamFile.Installed.read (Path.C.installed (Path.C.create version)) in
   NV.Set.filter (fun nv -> N.to_string (NV.name nv) <> Globals.default_package) installed
 
 let () =

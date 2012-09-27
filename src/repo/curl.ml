@@ -47,7 +47,7 @@ let make_state ~download_index remote_path =
       ) else
         local_index_file in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
-      let urls = File.Urls_txt.read index in
+      let urls = OpamFile.Urls_txt.read index in
       let remote_local, local_remote, locals, perms, digests =
         Remote_file.Set.fold (fun r (rl, lr, locals, perms, digests) ->
           let base = Remote_file.base r in
@@ -209,7 +209,7 @@ let make_urls_txt local_repo =
    @ Filename.list (Path.R.archives_dir local_repo)
    @ Filename.list (Path.R.compilers_dir local_repo)
   )) in
-  File.Urls_txt.write local_index_file index;
+  OpamFile.Urls_txt.write local_index_file index;
   index
 
 let make_index_tar_gz local_repo =

@@ -45,7 +45,7 @@ module B = struct
 
   let check_file file =
     let local_repo = Path.R.cwd () in
-    let updates = File.Filenames.read (updates local_repo) in
+    let updates = OpamFile.Filenames.read (updates local_repo) in
     if Filename.Set.mem file updates then
       Result file
     else if Filename.exists file then
@@ -56,7 +56,7 @@ module B = struct
   let init address =
     let local_repo = Path.R.cwd () in
     git_init address;
-    File.Filenames.write (updates local_repo) (Filename.Set.empty)
+    OpamFile.Filenames.write (updates local_repo) (Filename.Set.empty)
 
   let download_archive address nv =
     let local_repo = Path.R.cwd () in
@@ -88,7 +88,7 @@ module B = struct
     let local_repo = Path.R.cwd () in
     let local_path = Dirname.cwd () in
     match check_updates local_path remote_address with
-    | Some f -> File.Filenames.write (updates local_repo) f; f
+    | Some f -> OpamFile.Filenames.write (updates local_repo) f; f
     | None   ->
         Globals.error_and_exit
           "The repository %s is not initialized correctly"

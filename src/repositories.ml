@@ -52,7 +52,7 @@ let init r =
   let root = Path.R.create r in
   let module B = (val find_backend r: BACKEND) in
   Dirname.mkdir (Path.R.root root);
-  File.Repo_config.write (Path.R.config root) r;
+  OpamFile.Repo_config.write (Path.R.config root) r;
   Dirname.mkdir (Path.R.packages_dir root);
   Dirname.mkdir (Path.R.archives_dir root);
   Dirname.mkdir (Path.R.compilers_dir root);
@@ -145,12 +145,12 @@ let make_archive ?(gener_digest = false) nv =
     let extract_dir = extract_root / NV.to_string nv in
 
     if Filename.exists url_f then (
-      let url_file = File.URL.read url_f in
-      let checksum = File.URL.checksum url_file in
-      let kind = match File.URL.kind url_file with
-      | None   -> kind_of_url (File.URL.url url_file)
+      let url_file = OpamFile.URL.read url_f in
+      let checksum = OpamFile.URL.checksum url_file in
+      let kind = match OpamFile.URL.kind url_file with
+      | None   -> kind_of_url (OpamFile.URL.url url_file)
       | Some k -> k in
-      let url = File.URL.url url_file in
+      let url = OpamFile.URL.url url_file in
       log "downloading %s:%s" url kind;
 
       match Dirname.in_dir local_dir (fun () -> download_one ~gener_digest kind nv url checksum) with
@@ -166,7 +166,7 @@ let make_archive ?(gener_digest = false) nv =
                 (Filename.to_string local_archive) c digest (Filename.to_string url_f);
             | _ -> ();
             end;
-            File.URL.write url_f (File.URL.with_checksum url_file digest);
+            OpamFile.URL.write url_f (OpamFile.URL.with_checksum url_file digest);
           );
           log "extracting %s to %s"
             (Filename.to_string local_archive)
@@ -255,12 +255,12 @@ let update r =
   let cached_packages = Path.R.available_tmp local_repo in
   let updated_cached_packages = NV.Set.filter (fun nv ->
     let url_f = Path.R.url local_repo nv in
-    let url = File.URL.read url_f in
-    let kind = match File.URL.kind url with
-      | None   -> kind_of_url (File.URL.url url)
+    let url = OpamFile.URL.read url_f in
+    let kind = match OpamFile.URL.kind url with
+      | None   -> kind_of_url (OpamFile.URL.url url)
       | Some k -> k in
-    let checksum = File.URL.checksum url in
-    let url = File.URL.url url in
+    let checksum = OpamFile.URL.checksum url in
+    let url = OpamFile.URL.url url in
     log "updating %s:%s" url kind;
     match Dirname.in_dir local_dir (fun () -> download_one kind nv url checksum) with
     | Not_available -> Globals.error_and_exit "Cannot get %s" url
@@ -269,4 +269,4 @@ let update r =
   ) cached_packages in
 
   let updated = NV.Set.union updated_packages updated_cached_packages in
-  File.Updated.write (Path.R.updated local_repo) updated
+  OpamFile.Updated.write (Path.R.updated local_repo) updated
