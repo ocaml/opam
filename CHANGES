@@ -1,3 +1,6 @@
+0.7.3 (trunk)
+* Improve the minimality of installed packages 
+
 0.7.2 [Sept 2012]
 * Fix regression in init introcuced in 0.7.0
 * Fix regression in update introduced in 0.7.0
