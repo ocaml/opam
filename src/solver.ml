@@ -501,14 +501,14 @@ end = struct
   let packages_of_answer univ req ans =
     let keep_versions, change_versions =
       List.fold_left (function (keep, change) -> function
-      | I_to_delete _      -> (keep, change)
+      | I_to_delete _      -> (keep   , change)
       | I_to_recompile p   -> (p::keep, change)
       | I_to_change (_, p) ->
         try
-          let r = List.find (fun (name, _) -> p.Cudf.package = name) req.i_wish_install in
+          let r = List.find (fun (name, _) -> p.Cudf.package = name) (req.i_wish_install @ req.i_wish_upgrade) in
           begin match r with
-          | _, None -> (keep, p::change)
-          | _, v    -> (p::keep, change)
+          | _, None -> (keep   , p::change)
+          | _, _    -> (p::keep, change)
           end
         with Not_found ->
           (keep, p::change)
@@ -527,7 +527,7 @@ end = struct
       match change_versions with
       | [] -> Success ans
       | _  ->
-        log "INTERNAL(optimization/1) keep=%s, change=%s"
+        log "INTERNAL(optimization/1) keep=%s, change=%s\n"
           (string_of_cudf_packages keep_versions)
           (string_of_cudf_packages change_versions);
 
@@ -553,12 +553,16 @@ end = struct
         let i_wish_upgrade max_pkgs =
           let max = List.map mk_max max_pkgs in
           let ge = List.map mk_ge (List.filter (fun p -> not (List.mem p max_pkgs)) change_versions) in
-          (List.map mk_eq keep_versions) @ max @ ge in
+          List.map mk_eq keep_versions @ max @ ge in
 
         (* Minimize the installed packages from the request *)
         let minimize request =
-          let filter p = List.exists (fun (n,_) -> p.Cudf.package=n) request in
-          let pkgs = Cudf.get_packages ~filter univ in
+          let pkgs =
+            List.map (fun (n,_) ->
+              match Cudf.get_packages ~filter:(fun p -> p.Cudf.package=n) univ with
+              | [] -> assert false
+              | h::_ -> h
+            ) request in
           let depends = Algo.Defaultgraphs.PackageGraph.dependency_graph_list univ pkgs in
           let exists (name,_) =
             Graph.PG.fold_vertex (fun v accu -> accu || v.Cudf.package=name) depends false in
