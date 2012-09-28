@@ -1,4 +1,5 @@
 0.7.3 (trunk)
+* Better user-message when no solution is found
 * Improve the minimality of installed packages 
 
 0.7.2 [Sept 2012]
