@@ -1,7 +1,7 @@
 (* Script to check that a given repository is well-typed (or well-parsed) *)
 open Types
 open Printf
-open File
+open OpamFile
 
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in

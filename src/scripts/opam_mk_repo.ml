@@ -64,7 +64,7 @@ let () =
   (* Read urls.txt *)
   log "Reading urls.txt";
   let local_index_file = Filename.of_string "urls.txt" in
-  let old_index = File.Urls_txt.safe_read local_index_file in
+  let old_index = OpamFile.Urls_txt.safe_read local_index_file in
   let new_index = Curl.make_urls_txt local_repo in
 
   let to_remove = Remote_file.Set.diff old_index new_index in
@@ -77,9 +77,9 @@ let () =
       let nv = NV.create n v in
       let opam_f = Path.R.opam local_repo nv in
       if Filename.exists opam_f then (
-        let opam = File.OPAM.read opam_f in
-        let deps = File.OPAM.depends opam in
-        let depopts = File.OPAM.depopts opam in
+        let opam = OpamFile.OPAM.read opam_f in
+        let deps = OpamFile.OPAM.depends opam in
+        let depopts = OpamFile.OPAM.depopts opam in
         List.fold_left (fun accu l ->
           List.fold_left (fun accu ((n,_),_) ->
             N.Set.add (N.of_string n) accu

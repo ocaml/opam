@@ -56,7 +56,7 @@ type t = {
   reinstall: NV.Set.t;
 
   (* ~/.opam/config contents *)
-  config: File.Config.t;
+  config: OpamFile.Config.t;
 
   (* ~/.opam/repo/index contents *)
   repo_index: string list N.Map.t;
@@ -80,8 +80,8 @@ let print_state t =
   log "REPO_INDEX: %s" (N.Map.to_string (String.concat ",") t.repo_index)
 
 let current_ocaml_version t =
-  let alias = File.Config.ocaml_version t.config in
-  let aliases = File.Aliases.safe_read (Path.G.aliases t.global) in
+  let alias = OpamFile.Config.ocaml_version t.config in
+  let aliases = OpamFile.Aliases.safe_read (Path.G.aliases t.global) in
   log "current_ocaml_version %s" (Alias.to_string alias);
   try Some (List.assoc alias aliases)
   with Not_found -> None
@@ -102,11 +102,11 @@ let update_available_current t =
   { t with available_current =
     (* Remove the packages which does not fullfil the compiler constraints *)
     let ocaml_version =
-      let opam_version = File.Config.ocaml_version t.config in
+      let opam_version = OpamFile.Config.ocaml_version t.config in
       let default_version = Alias.of_string Globals.default_compiler_version in
       if opam_version = default_version then (
         let current = OCaml_V.current () in
-        let system = File.Config.system_ocaml_version t.config in
+        let system = OpamFile.Config.system_ocaml_version t.config in
         match current, system  with
         | None  , None   -> Globals.error_and_exit "No OCaml compiler installed."
         | None  , Some s ->
@@ -130,9 +130,9 @@ let update_available_current t =
         | Some v -> v
         | None   -> Globals.error_and_exit "No OCaml compiler defined."in
     let filter nv =
-      let opam = File.OPAM.read (Path.G.opam t.global nv) in
+      let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
       let consistent_ocaml_version =
-        match File.OPAM.ocaml_version opam with
+        match OpamFile.OPAM.ocaml_version opam with
         | None       -> true
         | Some (r,v) -> OCaml_V.compare ocaml_version r v in
       let consistent_pinned_version =
@@ -154,13 +154,13 @@ let get_available_current t =
 let load_state () =
   log "root path is %s" !Globals.root_path;
   let global = Path.G.create () in
-  let config = File.Config.read (Path.G.config global) in
-  let ocaml_version = File.Config.ocaml_version config in
-  let aliases = File.Aliases.safe_read (Path.G.aliases global) in
+  let config = OpamFile.Config.read (Path.G.config global) in
+  let ocaml_version = OpamFile.Config.ocaml_version config in
+  let aliases = OpamFile.Aliases.safe_read (Path.G.aliases global) in
   let compiler = Path.C.create ocaml_version in
-  let repositories = File.Config.repositories config in
+  let repositories = OpamFile.Config.repositories config in
   let repo_index =
-    let repo_index = File.Repo_index.safe_read (Path.G.repo_index global) in
+    let repo_index = OpamFile.Repo_index.safe_read (Path.G.repo_index global) in
     let l_wrong =
       List.fold_left (fun accu (n, repo_s) ->
         List.fold_left (fun accu repo ->
@@ -179,9 +179,9 @@ let load_state () =
       repo_index
     else
       Globals.exit 66 in
-  let pinned = File.Pinned.safe_read (Path.C.pinned compiler) in
-  let installed = File.Installed.safe_read (Path.C.installed compiler) in
-  let reinstall = File.Reinstall.safe_read (Path.C.reinstall compiler) in
+  let pinned = OpamFile.Pinned.safe_read (Path.C.pinned compiler) in
+  let installed = OpamFile.Installed.safe_read (Path.C.installed compiler) in
+  let reinstall = OpamFile.Reinstall.safe_read (Path.C.reinstall compiler) in
   let available = Path.G.available_packages global in
   let available_current = None in
   let t = {
@@ -316,27 +316,27 @@ let install_conf_ocaml_config t =
       ("os"   , Globals.os_string);
     ] in
 
-  let config = File.Dot_config.create vars in
-  File.Dot_config.write (Path.C.config t.compiler name) config
+  let config = OpamFile.Dot_config.create vars in
+  OpamFile.Dot_config.write (Path.C.config t.compiler name) config
 
 let install_conf_ocaml () =
   log "installing conf-ocaml";
   let t = load_state () in
   let name = N.of_string Globals.default_package in
-  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
+  let version = V.of_string (Alias.to_string (OpamFile.Config.ocaml_version t.config)) in
   let nv = NV.create name version in
   (* .opam *)
-  let opam = File.OPAM.create nv in
-  File.OPAM.write (Path.G.opam t.global nv) opam;
+  let opam = OpamFile.OPAM.create nv in
+  OpamFile.OPAM.write (Path.G.opam t.global nv) opam;
   (* description *)
-  let descr = File.Descr.create "Compiler configuration flags" in
-  File.Descr.write (Path.G.descr t.global nv) descr;
+  let descr = OpamFile.Descr.create "Compiler configuration flags" in
+  OpamFile.Descr.write (Path.G.descr t.global nv) descr;
   install_conf_ocaml_config t;
   (* installed *)
   let installed_p = Path.C.installed t.compiler in
-  let installed = File.Installed.safe_read installed_p in
+  let installed = OpamFile.Installed.safe_read installed_p in
   let installed = NV.Set.add nv installed in
-  File.Installed.write installed_p installed;
+  OpamFile.Installed.write installed_p installed;
   (* stublibs *)
   let stublibs = Path.C.stublibs t.compiler in
   Dirname.mkdir stublibs;
@@ -347,7 +347,7 @@ let install_conf_ocaml () =
 let uninstall_conf_ocaml () =
   let t = load_state () in
   let name = N.of_string Globals.default_package in
-  let version = V.of_string (Alias.to_string (File.Config.ocaml_version t.config)) in
+  let version = V.of_string (Alias.to_string (OpamFile.Config.ocaml_version t.config)) in
   let nv = NV.create name version in
   Filename.remove (Path.G.opam t.global nv);
   Filename.remove (Path.G.descr t.global nv)
@@ -378,14 +378,14 @@ let update_repo_index t =
             repo_index
       ) available repo_index
     ) t.repo_index t.repositories in
-  File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+  OpamFile.Repo_index.write (Path.G.repo_index t.global) repo_index;
 
   (* suppress previous links, but keep metadata of installed packages
      (because you need them to uninstall the package) *)
   let all_installed =
     Alias.Set.fold (fun alias accu ->
       let installed_f = Path.C.installed (Path.C.create alias) in
-      let installed = File.Installed.safe_read installed_f in
+      let installed = OpamFile.Installed.safe_read installed_f in
       NV.Set.union installed accu
     ) (Path.G.available_aliases t.global) NV.Set.empty in
   NV.Set.iter (fun nv ->
@@ -441,7 +441,7 @@ let create_default_compiler_description t =
   let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
   let mk name = ((name,None),None) in
   let f =
-    File.Comp.create_preinstalled
+    OpamFile.Comp.create_preinstalled
       ocaml_version
       (List.map mk (if !Globals.base_packages then base_packages else []))
       [ ("CAML_LD_LIBRARY_PATH", "=",
@@ -452,7 +452,7 @@ let create_default_compiler_description t =
            | None   -> assert false))
       ] in
   let comp = Path.G.compiler t.global ocaml_version in
-  File.Comp.write comp f
+  OpamFile.Comp.write comp f
 
 let update_repositories t ~show_compilers repos =
   log "update_repositories";
@@ -538,7 +538,7 @@ let update_packages t ~show_packages repos =
           log "repo=%s n=%s new_versions= %s" r (N.to_string n) (V.Set.to_string new_versions);
           if not (V.Set.is_empty new_versions) then (
             all_versions := V.Set.union !all_versions new_versions;
-            let all_updated = File.Updated.safe_read (Path.R.updated repo_p) in
+            let all_updated = OpamFile.Updated.safe_read (Path.R.updated repo_p) in
             let updated =
               NV.Set.filter (fun nv ->
                 NV.name nv = n && V.Set.mem (NV.version nv) new_versions
@@ -559,8 +559,8 @@ let update_packages t ~show_packages repos =
   (* update $opam/$oversion/reinstall *)
   Alias.Set.iter (fun alias ->
     let t = Path.C.create alias in
-    let installed = File.Installed.safe_read (Path.C.installed t) in
-    let reinstall = File.Reinstall.safe_read (Path.C.reinstall t) in
+    let installed = OpamFile.Installed.safe_read (Path.C.installed t) in
+    let reinstall = OpamFile.Reinstall.safe_read (Path.C.reinstall t) in
     let reinstall =
       NV.Set.fold (fun nv reinstall ->
         if NV.Set.mem nv installed then
@@ -569,16 +569,16 @@ let update_packages t ~show_packages repos =
           reinstall
       ) updated reinstall in
     if not (NV.Set.is_empty reinstall) then
-      File.Reinstall.write (Path.C.reinstall t) reinstall
+      OpamFile.Reinstall.write (Path.C.reinstall t) reinstall
   ) (Path.G.available_aliases t.global);
 
   (* Check all the dependencies exist *)
   let t = update_available_current (load_state ()) in
   let has_error = ref false in
   NV.Set.iter (fun nv ->
-    let opam = File.OPAM.read (Path.G.opam t.global nv) in
-    let name = File.OPAM.name opam in
-    let version = File.OPAM.version opam in
+    let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
+    let name = OpamFile.OPAM.name opam in
+    let version = OpamFile.OPAM.version opam in
     if nv <> NV.create name version then
       (Globals.error
         "The file %s is not consistent with the package %s (%s)"
@@ -587,8 +587,8 @@ let update_packages t ~show_packages repos =
         (V.to_string version);
       has_error := true);
     let map_b b = List.map (List.map (fun s -> b, s)) in
-    let depends = map_b true (File.OPAM.depends opam) in
-    let depopts = map_b false (File.OPAM.depopts opam) in
+    let depends = map_b true (OpamFile.OPAM.depends opam) in
+    let depopts = map_b false (OpamFile.OPAM.depopts opam) in
     List.iter (List.iter (fun (raise_err, ((d,_),_)) ->
       match find_available_package_by_name t (N.of_string d) with
         | None   ->
@@ -614,10 +614,10 @@ let contents_of_variable t v =
   let name_str = N.to_string name in
   let var_str = Variable.to_string var in
   let read_var () =
-    let c = File.Dot_config.safe_read (Path.C.config t.compiler name) in
+    let c = OpamFile.Dot_config.safe_read (Path.C.config t.compiler name) in
     try match Full_variable.section v with
-      | None   -> File.Dot_config.variable c var
-      | Some s -> File.Dot_config.Section.variable c s var
+      | None   -> OpamFile.Dot_config.variable c var
+      | Some s -> OpamFile.Dot_config.Section.variable c s var
     with Not_found ->
       Globals.error_and_exit "%s is not defined" (Full_variable.to_string v) in
   if N.to_string name = Globals.default_package then (
@@ -629,14 +629,14 @@ let contents_of_variable t v =
         if var_str = "ocaml-version" then (
           let ocaml_version_str = OCaml_V.to_string ocaml_version in
           if ocaml_version_str = Globals.default_compiler_version then
-            match File.Config.system_ocaml_version t.config with
+            match OpamFile.Config.system_ocaml_version t.config with
             | None   -> S "<none>"
             | Some v -> S (OCaml_V.to_string v)
           else
             S ocaml_version_str
         ) else if var_str = "preinstalled" then (
-          let comp = File.Comp.read (Path.G.compiler t.global ocaml_version) in
-          B (File.Comp.preinstalled comp)
+          let comp = OpamFile.Comp.read (Path.G.compiler t.global ocaml_version) in
+          B (OpamFile.Comp.preinstalled comp)
         ) else
           read_var ()
 ) else (
@@ -659,13 +659,13 @@ let contents_of_variable t v =
 let substitute_file t f =
   let f = Filename.of_basename f in
   let src = Filename.add_extension f "in" in
-  let contents = File.Subst.read src in
-  let newcontents = File.Subst.replace contents (contents_of_variable t) in
-  File.Subst.write f newcontents
+  let contents = OpamFile.Subst.read src in
+  let newcontents = OpamFile.Subst.replace contents (contents_of_variable t) in
+  OpamFile.Subst.write f newcontents
 
 (* Substitue the string contents *)
 let substitute_string t s =
-  File.Subst.replace_string s (contents_of_variable t)
+  OpamFile.Subst.replace_string s (contents_of_variable t)
 
 let rec substitute_filter t = function
   | Bool b    -> Bool b
@@ -753,12 +753,12 @@ let add_alias alias ocaml_version =
        OCaml configuration *)
     create_default_compiler_description t;
   let aliases_f = Path.G.aliases t.global in
-  let aliases = File.Aliases.safe_read aliases_f in
+  let aliases = OpamFile.Aliases.safe_read aliases_f in
   if not (List.mem_assoc alias aliases) then begin
     (* Install the initial package and reload the global state *)
     install_conf_ocaml ();
     (* Update the list of aliases *)
-    File.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
+    OpamFile.Aliases.write aliases_f ((alias, ocaml_version) :: aliases);
   end
 
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[alias]
@@ -788,14 +788,14 @@ let init_ocaml t quiet alias ocaml_version =
   );
   Dirname.mkdir alias_p_dir;
 
-  let comp = File.Comp.read comp_f in
+  let comp = OpamFile.Comp.read comp_f in
   begin try
-    if not (File.Comp.preinstalled comp) then begin
+    if not (OpamFile.Comp.preinstalled comp) then begin
 
       Globals.verbose := not quiet;
 
       (* Install the compiler *)
-      let comp_src = match File.Comp.src comp with
+      let comp_src = match OpamFile.Comp.src comp with
         | Some f -> f
         | None   ->
           Globals.error_and_exit
@@ -811,7 +811,7 @@ let init_ocaml t quiet alias ocaml_version =
         let file = Filename.download comp_src download_dir in
         Filename.extract file build_dir;
       );
-      let patches = File.Comp.patches comp in
+      let patches = OpamFile.Comp.patches comp in
       let patches = List.map (fun f -> Filename.download f build_dir) patches in
       List.iter (fun f -> Filename.patch f build_dir) patches;
       let t =
@@ -823,27 +823,27 @@ let init_ocaml t quiet alias ocaml_version =
             let nv = NV.create name version in
             NV.Set.add nv NV.Set.empty } in
       install_conf_ocaml_config t;
-      if File.Comp.configure comp @ File.Comp.make comp <> [] then begin
+      if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
         Dirname.exec build_dir
-          [ ( "./configure" :: File.Comp.configure comp )
+          [ ( "./configure" :: OpamFile.Comp.configure comp )
             @ [ "-prefix";  Dirname.to_string alias_p_dir ]
           (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
              discarded. *)
-          ; ( "make" :: File.Comp.make comp )
+          ; ( "make" :: OpamFile.Comp.make comp )
           ; [ "make" ; "install" ]
           ]
       end else begin
         let builds =
-          List.map (List.map (substitute_string t)) (File.Comp.build comp) in
+          List.map (List.map (substitute_string t)) (OpamFile.Comp.build comp) in
         Dirname.exec build_dir builds
       end;
     end;
 
     (* write the new version in the configuration file *)
-    let config = File.Config.with_ocaml_version t.config alias in
-    File.Config.write (Path.G.config t.global) config;
+    let config = OpamFile.Config.with_ocaml_version t.config alias in
+    OpamFile.Config.write (Path.G.config t.global) config;
     add_alias alias ocaml_version
 
   with e ->
@@ -894,7 +894,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
   let partial_match str =
     List.exists (fun re -> Re.execp re str) res in
   (* Get all the installed packages *)
-  let installed = File.Installed.read (Path.C.installed t.compiler) in
+  let installed = OpamFile.Installed.read (Path.C.installed t.compiler) in
   let map, max_n, max_v =
     NV.Set.fold
       (fun nv (map, max_n, max_v) ->
@@ -907,8 +907,8 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
           map, max_n, max_v
         else
           let is_installed = NV.Set.mem nv installed in
-          let descr_f = File.Descr.safe_read (Path.G.descr t.global nv) in
-          let synopsis = File.Descr.synopsis descr_f in
+          let descr_f = OpamFile.Descr.safe_read (Path.G.descr t.global nv) in
+          let synopsis = OpamFile.Descr.synopsis descr_f in
           let map = N.Map.add name ((if is_installed then Some version else None), synopsis) map in
           let max_n = max max_n (String.length (N.to_string name)) in
           let max_v = if is_installed then max max_v (String.length (V.to_string version)) else max_v in
@@ -922,7 +922,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
       (* namep    *)  || name_only && exact_match (N.to_string name)
       (* descrp   *)  || not name_only && (partial_match (N.to_string name) || partial_match descr))
     ) map in
-  let alias = File.Config.ocaml_version t.config in
+  let alias = OpamFile.Config.ocaml_version t.config in
   if not print_short then (
     let kind = if installed_only then "Installed" else "Available" in
     Globals.msg "%s packages for %s:\n" kind (Alias.to_string alias);
@@ -947,7 +947,7 @@ let info package =
   let t = load_state () in
 
   let o_v =
-    let installed = File.Installed.read (Path.C.installed t.compiler) in
+    let installed = OpamFile.Installed.read (Path.C.installed t.compiler) in
     try Some (V.Set.choose_one (N.Map.find package (NV.to_map installed)))
     with Not_found -> None in
 
@@ -973,11 +973,11 @@ let info package =
   let libraries, syntax = match o_v with
     | None   -> [], []
     | Some v ->
-        let opam = File.OPAM.read (Path.G.opam t.global (NV.create package v)) in
-        let libraries = match File.OPAM.libraries opam with
+        let opam = OpamFile.OPAM.read (Path.G.opam t.global (NV.create package v)) in
+        let libraries = match OpamFile.OPAM.libraries opam with
           | [] -> []
           | l  -> [ "libraries", String.concat ", " (List.map Section.to_string l) ] in
-        let syntax = match File.OPAM.syntax opam with
+        let syntax = match OpamFile.OPAM.syntax opam with
           | [] -> []
           | l  -> [ "syntax", String.concat ", " (List.map Section.to_string l) ] in
         libraries, syntax in
@@ -996,10 +996,10 @@ let info package =
              with Not_found -> None in
        let descr =
          match latest with
-         | None   -> File.Descr.empty
+         | None   -> OpamFile.Descr.empty
          | Some v ->
-             File.Descr.safe_read (Path.G.descr t.global (NV.create package v)) in
-       [ "description", File.Descr.full descr ]
+             OpamFile.Descr.safe_read (Path.G.descr t.global (NV.create package v)) in
+       [ "description", OpamFile.Descr.full descr ]
     )
 
 let proceed_toinstall t nv =
@@ -1010,11 +1010,11 @@ let proceed_toinstall t nv =
     let t = load_state () in
     let name = NV.name nv in
     let opam_f = Path.G.opam t.global nv in
-    let opam = File.OPAM.read opam_f in
+    let opam = OpamFile.OPAM.read opam_f in
     let config_f = Path.C.build_config t.compiler nv in
-    let config = File.Dot_config.safe_read config_f in
+    let config = OpamFile.Dot_config.safe_read config_f in
     let install_f = Path.C.build_install t.compiler nv in
-    let install = File.Dot_install.safe_read install_f in
+    let install = OpamFile.Dot_install.safe_read install_f in
 
     (* check that libraries and syntax extensions specified in .opam and
        .config are in sync *)
@@ -1030,39 +1030,39 @@ let proceed_toinstall t nv =
             kind (Section.to_string os) (Filename.to_string config_f)
       ) opam_sections in
     if not (Filename.exists config_f)
-    && (File.OPAM.libraries opam <> [] || File.OPAM.syntax opam <> []) then
+    && (OpamFile.OPAM.libraries opam <> [] || OpamFile.OPAM.syntax opam <> []) then
       Globals.error_and_exit
         "%s does not exist but %s defines some libraries and syntax extensions"
         (Filename.to_string config_f)
         (Filename.to_string opam_f);
     check "library"
-      (File.Dot_config.Library.available config)
-      (File.OPAM.libraries opam);
+      (OpamFile.Dot_config.Library.available config)
+      (OpamFile.OPAM.libraries opam);
     check "syntax"
-      (File.Dot_config.Syntax.available config)
-      (File.OPAM.syntax opam);
+      (OpamFile.Dot_config.Syntax.available config)
+      (OpamFile.OPAM.syntax opam);
 
     (* check that depends (in .opam) and requires (in .config) fields
        are in almost in sync *)
     (* NOTES: the check is partial as we don't know which clause is valid
        in depends (XXX there is surely a way to get it from the solver) *)
-    let local_sections = File.Dot_config.Section.available config in
+    let local_sections = OpamFile.Dot_config.Section.available config in
     let libraries_in_opam =
       List.fold_left (fun accu l ->
         List.fold_left (fun accu ((n,_),_) ->
           let n = N.of_string n in
           let nv = find_installed_package_by_name t n in
-          let opam = File.OPAM.read (Path.G.opam t.global nv) in
-          let libs = File.OPAM.libraries opam in
-          let syntax = File.OPAM.syntax opam in
+          let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
+          let libs = OpamFile.OPAM.libraries opam in
+          let syntax = OpamFile.OPAM.syntax opam in
           List.fold_right Section.Set.add (libs @ syntax) accu
         ) accu l
-      ) Section.Set.empty (File.OPAM.depends opam) in
+      ) Section.Set.empty (OpamFile.OPAM.depends opam) in
     let libraries_in_config =
       List.fold_left (fun accu s ->
         List.fold_left (fun accu r ->
           Section.Set.add r accu
-        ) accu (File.Dot_config.Section.requires config s)
+        ) accu (OpamFile.Dot_config.Section.requires config s)
       ) Section.Set.empty local_sections in
     Section.Set.iter (fun s ->
       if not (List.mem s local_sections)
@@ -1081,10 +1081,10 @@ let proceed_toinstall t nv =
     ) libraries_in_config;
 
     (* .install *)
-    File.Dot_install.write (Path.C.install t.compiler name) install;
+    OpamFile.Dot_install.write (Path.C.install t.compiler name) install;
 
     (* .config *)
-    File.Dot_config.write (Path.C.config t.compiler name) config;
+    OpamFile.Dot_config.write (Path.C.config t.compiler name) config;
 
     (* lib *)
     let warnings = ref [] in
@@ -1097,14 +1097,14 @@ let proceed_toinstall t nv =
     List.iter (fun f ->
       if check f lib then
         Filename.copy_in f.c lib
-    ) (File.Dot_install.lib install);
+    ) (OpamFile.Dot_install.lib install);
 
     (* toplevel *)
     let toplevel = Path.C.toplevel t.compiler in
     List.iter (fun f ->
       if check f toplevel then
         Filename.copy_in f.c toplevel
-    ) (File.Dot_install.toplevel install);
+    ) (OpamFile.Dot_install.toplevel install);
 
     (* bin *)
     List.iter (fun (src, dst) ->
@@ -1112,7 +1112,7 @@ let proceed_toinstall t nv =
       (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
       if check src  (Path.C.bin t.compiler) then
         Filename.copy src.c dst;
-    ) (File.Dot_install.bin install);
+    ) (OpamFile.Dot_install.bin install);
 
     (* misc *)
     List.iter
@@ -1124,7 +1124,7 @@ let proceed_toinstall t nv =
           if confirm "Continue ?" then
             Filename.copy src.c dst
         end
-      ) (File.Dot_install.misc install);
+      ) (OpamFile.Dot_install.misc install);
 
     if !warnings <> [] then (
       let print (f, dst) = Printf.sprintf " - %s in %s" (Filename.to_string f) (Dirname.to_string dst) in
@@ -1218,8 +1218,8 @@ let proceed_todelete t nv =
   (* Run the remove script *)
   let opam_f = Path.G.opam t.global nv in
   if Filename.exists opam_f then (
-    let opam = File.OPAM.read opam_f in
-    let remove = substitute_commands t (File.OPAM.remove opam) in
+    let opam = OpamFile.OPAM.read opam_f in
+    let remove = substitute_commands t (OpamFile.OPAM.remove opam) in
     let remove = filter_commands t remove in
     let p_build = Path.C.build t.compiler nv in
     (* We try to run the remove scripts in the folder where it was extracted
@@ -1254,11 +1254,11 @@ let proceed_todelete t nv =
 
   (* Remove the binaries *)
   log "Removing the binaries";
-  let install = File.Dot_install.safe_read (Path.C.install t.compiler name) in
+  let install = OpamFile.Dot_install.safe_read (Path.C.install t.compiler name) in
   List.iter (fun (_,dst) ->
     let dst = Path.C.bin t.compiler // (Basename.to_string dst) in
     Filename.remove dst
-  ) (File.Dot_install.bin install);
+  ) (OpamFile.Dot_install.bin install);
 
   (* Remove the misc files *)
   log "Removing the misc files";
@@ -1268,7 +1268,7 @@ let proceed_todelete t nv =
       if confirm "Continue ?" then
         Filename.remove dst
     end
-  ) (File.Dot_install.misc install);
+  ) (OpamFile.Dot_install.misc install);
 
   (* Remove .config and .install *)
   log "Removing config and install files";
@@ -1309,12 +1309,12 @@ let get_env t =
   | None               -> empty_env
   | Some ocaml_version ->
     let comp_f = Path.G.compiler t.global ocaml_version in
-    let comp = File.Comp.read comp_f in
+    let comp = OpamFile.Comp.read comp_f in
 
     let add_to_path = Path.C.bin t.compiler in
     let new_path = "PATH", "+=", Dirname.to_string add_to_path in
 
-    let add_to_env = File.Comp.env comp in
+    let add_to_env = OpamFile.Comp.env comp in
     let toplevel_dir =
       "OCAML_TOPLEVEL_PATH", "=", Dirname.to_string (Path.C.toplevel t.compiler) in
     let man_path =
@@ -1375,11 +1375,11 @@ let proceed_tochange t nv_old nv =
   | Some nv_old -> proceed_todelete t nv_old
   | None        -> ());
 
-  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
 
   (* Get the env variables set up in the compiler description file *)
   let env0 = get_env t in
-  let env = update_env t env0 (File.OPAM.build_env opam) in
+  let env = update_env t env0 (OpamFile.OPAM.build_env opam) in
 
   (* Prepare the package for the build.
      This function is run before the build and after an error has
@@ -1394,12 +1394,12 @@ let proceed_tochange t nv_old nv =
          directory to get the correct absolute path for the substitution
          files (see [substitute_file] and [Filename.of_basename]. *)
       Dirname.in_dir (Path.C.build t.compiler nv) (fun () ->
-        List.iter (substitute_file t) (File.OPAM.substs opam)
+        List.iter (substitute_file t) (OpamFile.OPAM.substs opam)
       );
 
       (* Generate an environnement file *)
       let env_f = Path.C.build_env t.compiler nv in
-      File.Env.write env_f env.new_env;
+      OpamFile.Env.write env_f env.new_env;
 
       Some p_build in
 
@@ -1408,7 +1408,7 @@ let proceed_tochange t nv_old nv =
     | Some p_build -> p_build in
 
   (* Call the build script and copy the output files *)
-  let commands = substitute_commands t (File.OPAM.build opam) in
+  let commands = substitute_commands t (OpamFile.OPAM.build opam) in
   let commands = filter_commands t commands in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   if commands_s <> [] then
@@ -1446,13 +1446,13 @@ let proceed_torecompile t nv =
   proceed_tochange t (Some nv) nv
 
 let debpkg_of_nv action t nv =
-  let opam = File.OPAM.read (Path.G.opam t.global nv) in
+  let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
   let installed =
     NV.Set.mem nv t.installed &&
     match action with
     | `upgrade reinstall -> not (NV.Set.mem nv reinstall)
     | _                  -> true in
-  File.OPAM.to_package opam installed
+  OpamFile.OPAM.to_package opam installed
 
 type version_constraint =
   | V_any of name * V.Set.t (* available versions *) * version option (* installed version *)
@@ -1565,14 +1565,14 @@ module Heuristic = struct
 
   let get_comp_packages t ocaml_version f_h =
     let comp_f = Path.G.compiler t.global ocaml_version in
-    let comp = File.Comp.read comp_f in
+    let comp = OpamFile.Comp.read comp_f in
     let available = NV.to_map (get_available_current t) in
 
     let pkg_available, pkg_not =
       List.partition
         (function (name, _), _ ->
           N.Map.mem (N.of_string name) available)
-        (File.Comp.packages comp) in
+        (OpamFile.Comp.packages comp) in
 
     let () = (* check that all packages in [comp] are in [available]
                 except for "base-..."
@@ -1673,7 +1673,7 @@ module Heuristic = struct
         (* This function should be called by the parent process only, as it modifies
            the global state of OPAM *)
         let write_installed () =
-          File.Installed.write (Path.C.installed t.compiler) !installed in
+          OpamFile.Installed.write (Path.C.installed t.compiler) !installed in
 
         (* Delete the requested packages in the parent process *)
         (* In case of errors, we try to keep the list of installed packages up-to-date *)
@@ -1777,7 +1777,7 @@ module Heuristic = struct
           | [h] -> NV.to_string h
           | l   -> NV.Set.to_string (NV.Set.of_list l) in
 
-        let cores = File.Config.cores t.config in
+        let cores = OpamFile.Config.cores t.config in
         try
           PA_graph.Parallel.iter cores sol.to_add ~pre ~child ~post;
           OK
@@ -1843,7 +1843,7 @@ module Heuristic = struct
       (* 2. Warn about variables possibly set by other compilers *)
         let new_variables version =
           let comp_f = Path.G.compiler t.global version in
-          let env = File.Comp.env (File.Comp.read comp_f) in
+          let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
           new_variables env in
         let vars = ref StringSet.empty in
         List.iter (fun (_,version) ->
@@ -1928,9 +1928,9 @@ let init repo ocaml_version cores =
     let repo_p = Path.R.create repo in
     (* Create (possibly empty) configuration files *)
     let opam_version = OPAM_V.of_string Globals.opam_version in
-    File.Config.write config_f (File.Config.create opam_version [repo] cores);
-    File.Repo_index.write (Path.G.repo_index root) N.Map.empty;
-    File.Repo_config.write (Path.R.config repo_p) repo;
+    OpamFile.Config.write config_f (OpamFile.Config.create opam_version [repo] cores);
+    OpamFile.Repo_index.write (Path.G.repo_index root) N.Map.empty;
+    OpamFile.Repo_config.write (Path.R.config repo_p) repo;
     Repositories.init repo;
     Dirname.mkdir (Path.G.opam_dir root);
     Dirname.mkdir (Path.G.descr_dir root);
@@ -1942,8 +1942,8 @@ let init repo ocaml_version cores =
     begin match system_ocaml_version with
       | None   -> ()
       | Some v ->
-          let config = File.Config.with_system_ocaml_version t.config v in
-          File.Config.write (Path.G.config t.global) config
+          let config = OpamFile.Config.with_system_ocaml_version t.config v in
+          OpamFile.Config.write (Path.G.config t.global) config
     end;
     let t = load_state () in
     let ocaml_version = match ocaml_version, system_ocaml_version with
@@ -1998,16 +1998,16 @@ let install names =
     let available = NV.to_map (get_available_current t) in
     List.iter
       (fun nv ->
-        let opam = File.OPAM.read (Path.G.opam t.global nv) in
+        let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
         let f_warn =
           List.iter
             (fun ((n, _), _) ->
               if not (N.Map.mem (N.of_string n) available) then
               Globals.warning "unknown package %S" n) in
         List.iter (List.iter f_warn)
-          [ File.OPAM.depends opam
-          ; File.OPAM.depopts opam ];
-        f_warn (File.OPAM.conflicts opam))
+          [ OpamFile.OPAM.depends opam
+          ; OpamFile.OPAM.depopts opam ];
+        f_warn (OpamFile.OPAM.conflicts opam))
       pkg_new;
 
     let name_new = List.map NV.name pkg_new in
@@ -2101,9 +2101,9 @@ let remove names =
   if does_not_exist <> [] then (
     List.iter (proceed_todelete t) does_not_exist;
     let installed_f = Path.C.installed t.compiler in
-    let installed = File.Installed.read installed_f in
+    let installed = OpamFile.Installed.read installed_f in
     let installed = NV.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in
-    File.Installed.write installed_f installed;
+    OpamFile.Installed.write installed_f installed;
   );
 
   if not (N.Set.is_empty not_installed) then (
@@ -2190,7 +2190,7 @@ let upgrade names =
   if NV.Set.is_empty reinstall then
     Filename.remove reinstall_f
   else
-    File.Reinstall.write reinstall_f reinstall
+    OpamFile.Reinstall.write reinstall_f reinstall
 
 let reinstall names =
   log "reinstall %s" (N.Set.to_string names);
@@ -2206,16 +2206,16 @@ let reinstall names =
     ) packages in
   let reinstall_new = NV.Set.of_list reinstall_new in
   let reinstall_f = Path.C.reinstall t.compiler in
-  let reinstall_old = File.Reinstall.safe_read reinstall_f in
-  File.Reinstall.write reinstall_f (NV.Set.union reinstall_new reinstall_old);
+  let reinstall_old = OpamFile.Reinstall.safe_read reinstall_f in
+  OpamFile.Reinstall.write reinstall_f (NV.Set.union reinstall_new reinstall_old);
   upgrade names
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
   let t = load_state () in
-  let opam = File.OPAM.read upload.opam in
-  let name = File.OPAM.name opam in
-  let version = File.OPAM.version opam in
+  let opam = OpamFile.OPAM.read upload.opam in
+  let name = OpamFile.OPAM.name opam in
+  let version = OpamFile.OPAM.version opam in
   let nv = NV.create name version in
   let repo = match repo with
   | None ->
@@ -2266,7 +2266,7 @@ let config request =
       let configs =
         NV.Set.fold (fun nv l ->
           let file = Path.C.config t.compiler (NV.name nv) in
-          (nv, File.Dot_config.safe_read file) :: l
+          (nv, OpamFile.Dot_config.safe_read file) :: l
         ) t.installed [] in
       let variables =
         List.fold_left (fun accu (nv, c) ->
@@ -2274,17 +2274,17 @@ let config request =
           (* add all the global variables *)
           let globals =
             List.fold_left (fun accu v ->
-              (Full_variable.create_global name v, File.Dot_config.variable c v) :: accu
-            ) accu (File.Dot_config.variables c) in
+              (Full_variable.create_global name v, OpamFile.Dot_config.variable c v) :: accu
+            ) accu (OpamFile.Dot_config.variables c) in
           (* then add the local variables *)
           List.fold_left
             (fun accu n ->
-              let variables = File.Dot_config.Section.variables c n in
+              let variables = OpamFile.Dot_config.Section.variables c n in
               List.fold_left (fun accu v ->
                 (Full_variable.create_local name n v,
-                 File.Dot_config.Section.variable c n v) :: accu
+                 OpamFile.Dot_config.Section.variable c n v) :: accu
               ) accu variables
-            ) globals (File.Dot_config.Section.available c)
+            ) globals (OpamFile.Dot_config.Section.available c)
         ) [] configs in
       List.iter (fun (fv, contents) ->
         Globals.msg "%-20s : %s\n"
@@ -2314,11 +2314,11 @@ let config request =
     begin match current_ocaml_version t with
     | None          -> ()
     | Some oversion ->
-      let comp = File.Comp.read (Path.G.compiler t.global oversion) in
+      let comp = OpamFile.Comp.read (Path.G.compiler t.global oversion) in
       let names =
         List.filter
           (fun n -> NV.Set.exists (fun nv -> NV.name nv = n) t.installed)
-          (List.map (function (n, _), _ -> N.of_string n) (File.Comp.packages comp))
+          (List.map (function (n, _), _ -> N.of_string n) (OpamFile.Comp.packages comp))
         @ List.map Full_section.package c.options in
       (* Compute the transitive closure of package dependencies *)
       let package_deps =
@@ -2334,8 +2334,8 @@ let config request =
       let library_map =
         List.fold_left (fun accu n ->
           let nv = find_installed_package_by_name t n in
-          let opam = File.OPAM.read (Path.G.opam t.global nv) in
-          let sections = (File.OPAM.libraries opam) @ (File.OPAM.syntax opam) in
+          let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
+          let sections = (OpamFile.OPAM.libraries opam) @ (OpamFile.OPAM.syntax opam) in
           List.iter (fun s ->
             if Section.Map.mem s accu then
               Globals.error_and_exit "Conflict: the library %s appears in %s and %s"
@@ -2361,8 +2361,8 @@ let config request =
           let name = Full_section.package s in
           let sections = match Full_section.section s with
             | None   ->
-                let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-                File.Dot_config.Section.available config
+                let config = OpamFile.Dot_config.safe_read (Path.C.config t.compiler name) in
+                OpamFile.Dot_config.Section.available config
             | Some s -> [s] in
           List.iter (fun s ->
             Section.G.add_vertex graph s;
@@ -2373,7 +2373,7 @@ let config request =
         List.iter (fun s ->
           Section.G.add_vertex graph s;
           add_todo s
-        ) (File.Comp.requires comp);
+        ) (OpamFile.Comp.requires comp);
         (* Least fix-point to add edges and missing vertices *)
         let rec loop () =
           if not (Section.Set.is_empty !todo) then
@@ -2381,8 +2381,8 @@ let config request =
             todo := Section.Set.remove s !todo;
             seen := Section.Set.add s !seen;
             let name = Section.Map.find s library_map in
-            let config = File.Dot_config.safe_read (Path.C.config t.compiler name) in
-            let childs = File.Dot_config.Section.requires config s in
+            let config = OpamFile.Dot_config.safe_read (Path.C.config t.compiler name) in
+            let childs = OpamFile.Dot_config.Section.requires config s in
             (* keep only the build reqs which are in the package dependency list
                and the ones we haven't already seen *)
             List.iter (fun child ->
@@ -2401,20 +2401,20 @@ let config request =
         Section.graph_iter (fun n -> nodes := n :: !nodes) graph;
         !nodes in
       let fn_comp = match c.is_byte, c.is_link with
-        | true , true  -> File.Comp.bytelink
-        | true , false -> File.Comp.bytecomp
-        | false, true  -> File.Comp.asmlink
-        | false, false -> File.Comp.asmcomp in
+        | true , true  -> OpamFile.Comp.bytelink
+        | true , false -> OpamFile.Comp.bytecomp
+        | false, true  -> OpamFile.Comp.asmlink
+        | false, false -> OpamFile.Comp.asmcomp in
       let fn = match c.is_byte, c.is_link with
-        | true , true  -> File.Dot_config.Section.bytelink
-        | true , false -> File.Dot_config.Section.bytecomp
-        | false, true  -> File.Dot_config.Section.asmlink
-        | false, false -> File.Dot_config.Section.asmcomp in
+        | true , true  -> OpamFile.Dot_config.Section.bytelink
+        | true , false -> OpamFile.Dot_config.Section.bytecomp
+        | false, true  -> OpamFile.Dot_config.Section.asmlink
+        | false, false -> OpamFile.Dot_config.Section.asmcomp in
       let strs =
         fn_comp comp ::
         List.fold_left (fun accu s ->
           let name = Section.Map.find s library_map in
-          let config = File.Dot_config.read (Path.C.config t.compiler name) in
+          let config = OpamFile.Dot_config.read (Path.C.config t.compiler name) in
           fn config s :: accu
         ) [] library_deps in
       let output = String.concat " " (List.flatten strs) in
@@ -2425,10 +2425,10 @@ let config request =
 let remote action =
   log "remote %s" (string_of_remote action);
   let t = load_state () in
-  let repos = File.Config.repositories t.config in
+  let repos = OpamFile.Config.repositories t.config in
   let update_config repos =
-    let new_config = File.Config.with_repositories t.config repos in
-    File.Config.write (Path.G.config t.global) new_config in
+    let new_config = OpamFile.Config.with_repositories t.config repos in
+    OpamFile.Config.write (Path.G.config t.global) new_config in
   let cleanup_repo repo =
     update_config (List.filter ((!=) repo) repos);
     let repo_index =
@@ -2451,7 +2451,7 @@ let remote action =
             repo_index
         | _  -> N.Map.add n repo_s repo_index
       ) t.repo_index N.Map.empty in
-    File.Repo_index.write (Path.G.repo_index t.global) repo_index;
+    OpamFile.Repo_index.write (Path.G.repo_index t.global) repo_index;
     Dirname.rmdir (Path.R.root (Path.R.create repo)) in
   match action with
   | List  ->
@@ -2490,14 +2490,14 @@ let pin action =
   log "pin %s" (string_of_pin action);
   let t = load_state () in
   let pin_f = Path.C.pinned t.compiler in
-  let pins = File.Pinned.safe_read pin_f in
-  let update_config pins = File.Pinned.write pin_f pins in
+  let pins = OpamFile.Pinned.safe_read pin_f in
+  let update_config pins = OpamFile.Pinned.write pin_f pins in
   let name = action.pin_package in
   if mem_installed_package_by_name t name then (
     let reinstall_f = Path.C.reinstall t.compiler in
-    let reinstall = File.Reinstall.safe_read reinstall_f in
+    let reinstall = OpamFile.Reinstall.safe_read reinstall_f in
     let nv = find_installed_package_by_name t name in
-    File.Reinstall.write reinstall_f (NV.Set.add nv reinstall)
+    OpamFile.Reinstall.write reinstall_f (NV.Set.add nv reinstall)
   );
   match action.pin_arg with
   | Unpin -> update_config (N.Map.remove name pins)
@@ -2515,7 +2515,7 @@ let pin action =
 let pin_list () =
   log "pin_list";
   let t = load_state () in
-  let pins = File.Pinned.safe_read (Path.C.pinned t.compiler) in
+  let pins = OpamFile.Pinned.safe_read (Path.C.pinned t.compiler) in
   let print n a = Globals.msg "%-20s %s\n" (N.to_string n) (string_of_pin_option a) in
   N.Map.iter print pins
 
@@ -2523,10 +2523,10 @@ let compiler_list () =
   log "compiler_list";
   let t = load_state () in
   let descrs = Path.G.available_compilers t.global in
-  let aliases = File.Aliases.read (Path.G.aliases t.global) in
+  let aliases = OpamFile.Aliases.read (Path.G.aliases t.global) in
   Globals.msg "--- Installed compilers ---\n";
   List.iter (fun (n,c) ->
-    let current = if n = File.Config.ocaml_version t.config then "*" else " " in
+    let current = if n = OpamFile.Config.ocaml_version t.config then "*" else " " in
     let ocaml_version = OCaml_V.to_string c in
     let alias_name = Alias.to_string n in
     if alias_name = ocaml_version then
@@ -2536,8 +2536,8 @@ let compiler_list () =
   ) aliases;
   Globals.msg "\n--- Available compilers ---\n";
   OCaml_V.Set.iter (fun c ->
-    let comp = File.Comp.read (Path.G.compiler t.global c) in
-    let preinstalled = if File.Comp.preinstalled comp then "~" else " " in
+    let comp = OpamFile.Comp.read (Path.G.compiler t.global c) in
+    let preinstalled = if OpamFile.Comp.preinstalled comp then "~" else " " in
     Globals.msg " %s %s\n" preinstalled (OCaml_V.to_string c)
   ) descrs
 
@@ -2590,8 +2590,8 @@ let compiler_switch quiet alias =
   if not (Dirname.exists comp_dir) then
     compiler_install quiet alias ocaml_version
   else
-    let config = File.Config.with_ocaml_version t.config alias in
-    File.Config.write (Path.G.config t.global) config;
+    let config = OpamFile.Config.with_ocaml_version t.config alias in
+    OpamFile.Config.write (Path.G.config t.global) config;
     print_env_warning (load_state ())
 
 let compiler_clone alias =
@@ -2604,7 +2604,7 @@ let compiler_clone alias =
       Globals.msg "%s is not a valid compiler name.\n" (Alias.to_string alias);
       Globals.exit 1;
     );
-    File.Installed.safe_read (Path.C.installed comp_p) in
+    OpamFile.Installed.safe_read (Path.C.installed comp_p) in
 
   let new_packages = NV.Set.diff installed_in_alias t.installed in
   let installed =
@@ -2626,7 +2626,7 @@ let compiler_clone alias =
 
 let compiler_current () =
   let t = load_state () in
-  let current = File.Config.ocaml_version t.config in
+  let current = OpamFile.Config.ocaml_version t.config in
   Globals.msg "%s\n" (Alias.to_string current)
 
 let compiler_remove alias =
@@ -2638,12 +2638,12 @@ let compiler_remove alias =
     Globals.msg "The compiler alias %s does not exist.\n" (Alias.to_string alias);
     Globals.exit 1;
   );
-  if File.Config.ocaml_version t.config = alias then (
+  if OpamFile.Config.ocaml_version t.config = alias then (
     Globals.msg "Cannot remove %s as it is the current compiler.\n" (Alias.to_string alias);
     Globals.exit 1;
   );
   let aliases = List.filter (fun (a,_) -> a <> alias) t.aliases in
-  File.Aliases.write (Path.G.aliases t.global) aliases;
+  OpamFile.Aliases.write (Path.G.aliases t.global) aliases;
   Dirname.rmdir comp_dir
 
 let compiler_reinstall alias =

@@ -283,7 +283,7 @@ module Graph = struct
     let options = {
       Debian.Debcudf.default_options with
         Debian.Debcudf.extras_opt = [
-          File.OPAM.s_depopts, (File.OPAM.s_depopts, `String None)
+          OpamFile.OPAM.s_depopts, (OpamFile.OPAM.s_depopts, `String None)
         ]
     } in
     Debian.Debcudf.tocudf ~options table pkg
@@ -324,7 +324,7 @@ module Graph = struct
      file.ml when we create the debian package. It could make sense
      to do it here. *)
   let extended_dependencies table pkg =
-    let opt = File.OPAM.s_depopts in
+    let opt = OpamFile.OPAM.s_depopts in
     if List.mem_assoc opt pkg.Cudf.pkg_extra then
       match List.assoc opt pkg.Cudf.pkg_extra with
       | `String s ->
