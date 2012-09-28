@@ -1986,6 +1986,7 @@ let install names =
   (* Display a message if at least one package is already installed *)
   List.iter
     (fun nv ->
+      let nv = find_installed_package_by_name t (NV.name nv) in
       Globals.msg
         "Package %s is already installed (current version is %s)\n"
         (N.to_string (NV.name nv))
