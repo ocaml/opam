@@ -698,12 +698,6 @@ let resolve (U l_pkg_pb) req installed =
         (** compute packages to recompile and remove *)
         let map_act, to_remove =
           let l_remove = Graph.topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del in
-          let () =
-            match l_remove, req_only_remove with
-            | _ :: _, false ->
-              Globals.warning "the removing optimization will be applied but the solver has only taken a universe with partial dependencies"
-            (* check below if there are some packages, that depend optionally on packages to be removed, and that will not be recompiled *)
-            | _ -> () in
 
           (** partition the [l_remove] to decide for each element if we recompile them or delete. *)
           List.fold_left
