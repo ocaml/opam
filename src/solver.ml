@@ -549,12 +549,13 @@ end = struct
         let mk_ge p  = p.Cudf.package, Some (`Geq, p.Cudf.version) in
         let mk_max p = p.Cudf.package, Some (`Eq , find_max p.Cudf.package) in
 
-        let i_wish_upgrade0 =
-          (List.map mk_eq keep_versions) @ (List.map mk_max change_versions) in
-        let i_wish_upgrade1 =
-          (List.map mk_eq keep_versions) @ (List.map mk_ge change_versions) in
+        (* Return the constraint where max_pkgs are set to max *)
+        let i_wish_upgrade max_pkgs =
+          let max = List.map mk_max max_pkgs in
+          let ge = List.map mk_ge (List.filter (fun p -> not (List.mem p max_pkgs)) change_versions) in
+          (List.map mk_eq keep_versions) @ max @ ge in
 
-        (* 1. minimize the installed packages *)
+        (* Minimize the installed packages from the request *)
         let minimize request =
           let filter p = List.exists (fun (n,_) -> p.Cudf.package=n) request in
           let pkgs = Cudf.get_packages ~filter univ in
@@ -563,15 +564,22 @@ end = struct
             Graph.PG.fold_vertex (fun v accu -> accu || v.Cudf.package=name) depends false in
           List.filter exists request in
 
-        let process i_wish_upgrade =
-          let i_wish_upgrade = minimize i_wish_upgrade in
+        let process max_pkgs =
+          let i_wish_upgrade = minimize (i_wish_upgrade max_pkgs) in
           log "INTERNAL(optimization/2) i_wish_upgrade=%s" (string_of_cudfs i_wish_upgrade);
-          (* 2. compute the newest packages available. *)
           resolve_simple univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } in
 
-        match process i_wish_upgrade0 with
-        | Conflicts _ -> process i_wish_upgrade1
-        | x           -> x
+        (* 1. try to upgrade each package independently *)
+        let max_pkgs = ref [] in
+        List.iter (fun pkg ->
+          match process [pkg] with
+          | Conflicts _ -> ()
+          | Success _   -> max_pkgs := pkg :: !max_pkgs
+        ) change_versions;
+
+        match process !max_pkgs with
+        | Conflicts _ -> Success ans
+        | Success ans -> Success ans
 
 end
 
