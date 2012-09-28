@@ -217,6 +217,9 @@ let string_of_cudf_package p =
 let string_of_cudf_packages l =
   string_of_list string_of_cudf_package l
 
+let string_of_answer l =
+  string_of_list (string_of_internal_action string_of_cudf_package)  l
+
 let string_of_universe u =
   string_of_cudf_packages (Cudf.get_packages u)
 
@@ -505,7 +508,7 @@ end = struct
       | I_to_recompile p   -> (p::keep, change)
       | I_to_change (_, p) ->
         try
-          let r = List.find (fun (name, _) -> p.Cudf.package = name) (req.i_wish_install @ req.i_wish_upgrade) in
+          let r = List.find (fun (name, _) -> p.Cudf.package = name) req.i_wish_install in
           begin match r with
           | _, None -> (keep   , p::change)
           | _, _    -> (p::keep, change)
@@ -527,7 +530,8 @@ end = struct
       match change_versions with
       | [] -> Success ans
       | _  ->
-        log "INTERNAL(optimization/1) keep=%s, change=%s\n"
+        log "RESOLVE(optimization/0) ans=%s" (string_of_answer ans);
+        log "RESOLVE(optimization/1) keep=%s, change=%s\n"
           (string_of_cudf_packages keep_versions)
           (string_of_cudf_packages change_versions);
 
@@ -556,6 +560,9 @@ end = struct
           List.map mk_eq keep_versions @ max @ ge in
 
         (* Minimize the installed packages from the request *)
+        let installed = Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ in
+        let is_installed name =
+          List.exists (fun p -> p.Cudf.package = name) installed in
         let minimize request =
           let pkgs =
             List.map (fun (n,_) ->
@@ -565,11 +572,15 @@ end = struct
             ) request in
           let depends = Algo.Defaultgraphs.PackageGraph.dependency_graph_list univ pkgs in
           let exists (name,_) =
+            is_installed name ||
             Graph.PG.fold_vertex (fun v accu -> accu || v.Cudf.package=name) depends false in
           List.filter exists request in
 
         let process max_pkgs =
-          let i_wish_upgrade = minimize (i_wish_upgrade max_pkgs) in
+          let to_upgrade = minimize (i_wish_upgrade max_pkgs) in
+          let to_keep = List.filter (fun p -> List.for_all (fun (n,_) -> n <> p.Cudf.package) to_upgrade) installed in
+          let to_keep = List.map mk_eq to_keep in
+          let i_wish_upgrade = to_upgrade @ to_keep in
           log "INTERNAL(optimization/2) i_wish_upgrade=%s" (string_of_cudfs i_wish_upgrade);
           resolve_simple univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } in
 
@@ -580,7 +591,7 @@ end = struct
           | Conflicts _ -> ()
           | Success _   -> max_pkgs := pkg :: !max_pkgs
         ) change_versions;
-
+        log "INTERNAL(optimization/3) max_pkgs=%s" (string_of_cudf_packages !max_pkgs);
         match process !max_pkgs with
         | Conflicts _ -> Success ans
         | Success ans -> Success ans
@@ -641,8 +652,7 @@ let resolve (U l_pkg_pb) req installed =
       let create_graph filter = Graph.dep_reduction (Cudf.get_packages ~filter universe) in
 
       let action_of_answer l =
-        let l_s = string_of_list (string_of_internal_action string_of_cudf_package)  l in
-        log "SOLUTION: %s" l_s;
+        log "SOLUTION: %s" (string_of_answer l);
 
         (** compute all packages to remove *)
         let l_del_p, set_del =
