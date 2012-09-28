@@ -503,6 +503,8 @@ module OPAM = struct
     conflicts  : and_formula;
     libraries  : section list;
     syntax     : section list;
+    patches    : filename list;
+    files      : filename list;
     others     : (string * value) list;
     ocaml_version: ocaml_constraint option;
   }
@@ -520,19 +522,11 @@ module OPAM = struct
     conflicts  = [];
     libraries  = [];
     syntax     = [];
+    files      = [];
+    patches    = [];
     others     = [];
     ocaml_version = None;
   }
-
-  let make
-      ~name ~version ~maintainer ~substs ~build_env ~build ~remove
-      ~depends ~depopts ~conflicts ~libraries ~syntax ~others
-      ~ocaml_version =
-    { name; version; maintainer;
-      substs; build_env; build;
-      remove; depends; depopts; conflicts;
-      libraries; syntax; others;
-      ocaml_version }
 
   let create nv =
     let name = NV.name nv in
@@ -555,6 +549,8 @@ module OPAM = struct
   let s_authors     = "authors"
   let s_homepage    = "homepage"
   let s_ocaml_version = "ocaml-version"
+  let s_patches     = "patches"
+  let s_files       = "files"
 
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
@@ -576,6 +572,8 @@ module OPAM = struct
     s_syntax;
     s_ocaml_version;
     s_build_env;
+    s_patches;
+    s_files;
   ]
 
   let valid_fields =
@@ -600,6 +598,8 @@ module OPAM = struct
   let syntax t = t.syntax
   let ocaml_version t = t.ocaml_version
   let build_env t = t.build_env
+  let patches t = t.patches
+  let files t = t.files
 
   let with_depends t depends = { t with depends }
   let with_depopts t depopts = { t with depopts }
@@ -651,6 +651,8 @@ module OPAM = struct
         Variable (s_conflicts, make_and_formula t.conflicts);
         Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
         Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
+        Variable (s_files, make_list (Filename.to_string |> make_string) t.files);
+        Variable (s_patches, make_list (Filename.to_string |> make_string) t.patches);
       ] @ (
         match t.ocaml_version with
         | None   -> []
@@ -708,6 +710,8 @@ module OPAM = struct
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
     let ocaml_version = assoc_option s s_ocaml_version parse_constraint in
+    let patches = assoc_list s s_patches (parse_list (parse_string |> Filename.raw)) in
+    let files = assoc_list s s_files (parse_list (parse_string |> Filename.raw)) in
     let others     =
       Utils.filter_map (function
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
@@ -715,7 +719,7 @@ module OPAM = struct
       ) s in
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
-      ocaml_version; build_env }
+      files; patches; ocaml_version; build_env }
 end
 
 module Dot_install_raw = struct
