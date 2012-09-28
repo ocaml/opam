@@ -589,18 +589,17 @@ let update_packages t ~show_packages repos =
     let map_b b = List.map (List.map (fun s -> b, s)) in
     let depends = map_b true (OpamFile.OPAM.depends opam) in
     let depopts = map_b false (OpamFile.OPAM.depopts opam) in
-    List.iter (List.iter (fun (raise_err, ((d,_),_)) ->
+    List.iter (List.iter (fun (mandatory, ((d,_),_)) ->
       match find_available_package_by_name t (N.of_string d) with
         | None   ->
-            if raise_err then
-              let _ = Globals.error
-                "Package %s depends on the unknown package %s"
-                (NV.to_string nv) d in
-              has_error := true
-            else
-              Globals.warning
-                "Package %s depends optionally on the unknown package %s"
-                (NV.to_string nv) d
+          if mandatory then
+            Globals.warning
+              "Package %s depends on the unknown package %s"
+              (NV.to_string nv) d
+          else
+            Globals.warning
+              "Package %s depends optionally on the unknown package %s"
+              (NV.to_string nv) d
         | Some _ -> ()
     )) (depends @ depopts)
   ) (get_available_current t);
