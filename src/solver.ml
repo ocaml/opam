@@ -117,6 +117,10 @@ type solution = {
   to_add   : PA_graph.t;
 }
 
+type ('a, 'b) result =
+  | Success of 'a
+  | Conflicts of (unit -> 'b)
+
 let solution_is_empty s =
   s.to_remove = [] && PA_graph.is_empty s.to_add
 
@@ -180,8 +184,7 @@ let string_of_package p =
     p.Debian.Packages.name p.Debian.Packages.version installed
 
 let string_of_packages l =
-  Printf.sprintf "{%s}"
-    (String.concat "," (List.map string_of_package l))
+  string_of_list string_of_package l
 
 let string_of_cudf (p, c) =
   let relop = function
@@ -197,7 +200,7 @@ let string_of_cudf (p, c) =
   Printf.sprintf "%s%s" p (const c)
 
 let string_of_cudfs l =
-  String.concat ", " (List.map string_of_cudf l)
+  string_of_list string_of_cudf l
 
 (* Universe of packages *)
 type universe = U of package list
@@ -212,14 +215,64 @@ let string_of_cudf_package p =
     p.Cudf.version installed
 
 let string_of_cudf_packages l =
-  String.concat ", " (List.map string_of_cudf_package l)
+  string_of_list string_of_cudf_package l
 
 let string_of_universe u =
-  let l =
-    Cudf.fold_packages
-      (fun accu p -> string_of_cudf_package p :: accu)
-      [] u in
-  Printf.sprintf "{%s}" (String.concat ", " l)
+  string_of_cudf_packages (Cudf.get_packages u)
+
+let string_of_reason table r =
+  let open Algo.Diagnostic in
+  match r with
+  | Conflict (i,j,_) ->
+    let nvi = NV.of_cudf table i in
+    let nvj = NV.of_cudf table j in
+    Printf.sprintf "Conflict between %s and %s."
+      (NV.to_string nvi) (NV.to_string nvj)
+  | Missing (i,_) ->
+    let nv = NV.of_cudf table i in
+    Printf.sprintf "Missing %s." (NV.to_string nv)
+  | Dependency _ -> ""
+
+let make_chains root depends =
+  let open Algo.Diagnostic in
+  let d = Hashtbl.create 16 in
+  let init = function
+    | Dependency (i,_,j) -> List.iter (Hashtbl.add d i) j
+    | _ -> () in
+  List.iter init depends;
+  let rec unroll root =
+    match Hashtbl.find_all d root with
+    | []       -> [[root]]
+    | children ->
+      let chains = List.flatten (List.map unroll children) in
+      if root.Cudf.package = "dummy" then
+        chains
+      else
+        List.map (fun cs -> root :: cs) chains in
+  unroll root
+
+exception Found of Cudf.package
+
+let string_of_reasons table reasons =
+  let open Algo.Diagnostic in
+  let depends, reasons = List.partition (function Dependency _ -> true | _ -> false) reasons in
+  let root =
+    try List.iter (function Dependency (p,_,_) -> raise (Found p) | _ -> ()) depends; assert false
+    with Found p -> p in
+  let chains = make_chains root depends in
+  let rec string_of_chain = function
+    | []   -> ""
+    | [p]  -> NV.to_string (NV.of_cudf table p)
+    | p::t -> Printf.sprintf "%s <- %s" (NV.to_string (NV.of_cudf table p)) (string_of_chain t) in
+  let b = Buffer.create 1024 in
+  let string_of_chain c = string_of_chain (List.rev c) in
+  List.iter (fun r ->
+    Printf.bprintf b " - %s\n" (string_of_reason table r)
+  ) reasons;
+  List.iter (fun c ->
+    Printf.bprintf b " + %s\n" (string_of_chain c)
+  ) chains;
+  Buffer.contents b
 
 module O_pkg = struct
   type t = Cudf.package
@@ -293,7 +346,7 @@ module Graph = struct
   let get_table l_pkg_pb f =
     let table = Debian.Debcudf.init_tables l_pkg_pb in
     let v = f table (cudfpkg_of_debpkg table l_pkg_pb) in
-    let () = Debian.Debcudf.clear table in
+    (* Debian.Debcudf.clear table in *)
     v
 
   let topo_fold g pkg_set =
@@ -371,7 +424,7 @@ module CudfDiff : sig
   val resolve:
     Cudf.universe ->
     Cudf_types.vpkg internal_request ->
-    answer option
+    (Cudf.package internal_action list, Algo.Diagnostic.reason list) result
 
 end = struct
 
@@ -382,8 +435,7 @@ end = struct
     include Common.CudfAdd.Cudf_set
 
     let to_string s =
-      Printf.sprintf "{%s}"
-        (String.concat "," (List.map string_of_cudf_package (elements s)))
+      string_of_list string_of_cudf_package (elements s)
 
     let choose_one s =
       match elements s with
@@ -402,38 +454,50 @@ end = struct
       upgrade   = req.i_wish_upgrade;
       req_extra = [] }
 
-  let cudf_resolve univ req =
-    log "INTERNAL(cudf_resolve) universe=%s request=<%s>"
+  (* Return the state in which the system has to go *)
+  let resolve_final_state univ req =
+    log "FINAL_STATE: universe=%s request=<%s>"
       (string_of_universe univ)
       (string_of_internal_request string_of_cudf req);
-    let open Algo in
-    let r = Depsolver.check_request (to_cudf_doc univ req) in
+    let r = Algo.Depsolver.check_request (to_cudf_doc univ req) in
 (*    Diagnostic.fprintf ~explain:true ~failure:true ~success:true Format.err_formatter r;
       Format.pp_print_flush Format.err_formatter (); *)
-    if Diagnostic.is_solution r then
-      match r with
-      | { Diagnostic.result = Diagnostic.Success f } -> Some (f ~all:true ())
-      | _ -> assert false
-    else
-      None
+    r.Algo.Diagnostic.result
 
-  let resolve f_diff univ req =
-    match cudf_resolve univ req with
-    | None   -> None
-    | Some l ->
-      log "INTERNAL(resolve) %s" (String.concat " " (List.map string_of_cudf_package l));
+  (* Transform a diff from current to final state into a list of actions *)
+  let actions_of_diff diff =
+    Hashtbl.fold (fun pkgname s acc ->
+      let add x = x :: acc in
+      let removed =
+        try Some (Cudf_set.choose_one s.Common.CudfDiff.removed)
+        with Not_found -> None in
+      let installed =
+        try Some (Cudf_set.choose_one s.Common.CudfDiff.installed)
+        with Not_found -> None in
+      match removed, installed with
+      | None      , Some p     -> add (I_to_change (None, p))
+      | Some p    , None       -> add (I_to_delete p)
+      | Some p_old, Some p_new -> add (I_to_change (Some p_old, p_new))
+      | None      , None       -> acc
+    ) diff []
+
+  (* Do not try to optimize installations *)
+  let resolve_simple univ req =
+    let open Algo in
+    match resolve_final_state univ req with
+    | Diagnostic.Failure e -> Conflicts e
+    | Diagnostic.Success f ->
+      let final_state = f ~all:true () in
+      log "FINAL_STATE: state=%s" (string_of_cudf_packages final_state);
         try
-          let diff = Common.CudfDiff.diff univ (Cudf.load_universe l) in
-          Some (f_diff diff)
-        with
-          Cudf.Constraint_violation _ ->
-            log "INTERNAL(resolve) constraint violation";
-            None
+          let diff = Common.CudfDiff.diff univ (Cudf.load_universe final_state) in
+          Success (actions_of_diff diff)
+        with Cudf.Constraint_violation s ->
+          Globals.error_and_exit "constraint violations: %s" s
 
-
-  (* First, we partition the packages we get in the answer
-     into two sets: the ones with a version constraint in the
-     initial request, and the one without. *)
+  (* Partition the packages in an answer into two sets: the ones with
+     a version constraint in the initial request, and the one
+     without. *)
   let packages_of_answer univ req ans =
     let keep_versions, change_versions =
       List.fold_left (function (keep, change) -> function
@@ -451,17 +515,17 @@ end = struct
       ) ([],[]) ans in
     keep_versions, change_versions
 
-  let resolve_opt f_diff univ req =
-
-    match req, resolve f_diff univ req with
-
-    (* 1. we try to install the minimum number of packages *)
-    | { i_wish_remove = [] ; i_wish_upgrade = [] ; _ }, Some ans ->
+  (* Resolution with heuristic to install the minimun set of packages *)
+  let resolve univ req =
+    if req.i_wish_install = [] then
+      resolve_simple univ req
+    else match resolve_simple univ req with
+    | Conflicts c -> Conflicts c
+    | Success ans ->
 
       let keep_versions, change_versions = packages_of_answer univ req ans in
-
-      begin match change_versions with
-      | [] -> Some ans
+      match change_versions with
+      | [] -> Success ans
       | _  ->
         log "INTERNAL(optimization/1) keep=%s, change=%s"
           (string_of_cudf_packages keep_versions)
@@ -502,37 +566,12 @@ end = struct
         let process i_wish_upgrade =
           let i_wish_upgrade = minimize i_wish_upgrade in
           log "INTERNAL(optimization/2) i_wish_upgrade=%s" (string_of_cudfs i_wish_upgrade);
-
           (* 2. compute the newest packages available. *)
-          resolve f_diff univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } in
+          resolve_simple univ { i_wish_install = [] ; i_wish_remove = [] ; i_wish_upgrade } in
 
         match process i_wish_upgrade0 with
-        | None -> process i_wish_upgrade1
-        | x    -> x
-
-      end
-
-    | _, Some ans -> Some ans
-    | _, None -> None
-
-  let resolve univ req =
-    let f_diff diff =
-      Hashtbl.fold (fun pkgname s acc ->
-        let add x = x :: acc in
-        let removed =
-          try Some (Cudf_set.choose_one s.Common.CudfDiff.removed)
-          with Not_found -> None in
-        let installed =
-          try Some (Cudf_set.choose_one s.Common.CudfDiff.installed)
-          with Not_found -> None in
-        match removed, installed with
-        | None      , Some p     -> add (I_to_change (None, p))
-        | Some p    , None       -> add (I_to_delete p)
-        | Some p_old, Some p_new -> add (I_to_change (Some p_old, p_new))
-        | None      , None       -> acc
-      ) diff []
-    in
-    resolve_opt f_diff univ req
+        | Conflicts _ -> process i_wish_upgrade1
+        | x           -> x
 
 end
 
@@ -573,141 +612,140 @@ let resolve (U l_pkg_pb) req installed =
 
       (** [graph_simple] contains the graph of packages
           where the dependency relation is without optional dependencies  *)
-      let graph_simple, (universe, sol_o) =
+      let graph_simple, universe, sol_o =
         let universe0 = Cudf.load_universe pkglist in
+        let universe = Cudf.load_universe (List.map (Graph.extended_dependencies table) pkglist) in
+        let universe1 =
+          if req_only_remove then
+            (* Universe with all the optional dependencies *)
+            universe
+          else (* Universe without optional dependencies *)
+            universe0 in
         Graph.dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe0),
-          let universe = Cudf.load_universe (List.map (Graph.extended_dependencies table) pkglist) in
-          universe,
-          resolve
-            (if req_only_remove then
-                (* Universe with all the optional dependencies *)
-                universe
-             else
-                (* Universe without optional dependencies *)
-                universe0) in
+        universe,
+        resolve universe1 in
 
-        log "full-universe: (*%B*) %s" req_only_remove (string_of_universe universe);
-        let create_graph filter = Graph.dep_reduction (Cudf.get_packages ~filter universe) in
+      log "full-universe: (*%B*) %s" req_only_remove (string_of_universe universe);
+      let create_graph filter = Graph.dep_reduction (Cudf.get_packages ~filter universe) in
 
-        let action_of_answer l =
-            let l_s =
-              String.concat " "
-                (List.map (string_of_internal_action string_of_cudf_package)  l) in
-            log "SOLUTION: %s" l_s;
+      let action_of_answer l =
+        let l_s = string_of_list (string_of_internal_action string_of_cudf_package)  l in
+        log "SOLUTION: %s" l_s;
 
-            (** compute all packages to remove *)
-            let l_del_p, set_del =
-              Utils.filter_map (function
-                | I_to_change (Some pkg, _)
-                | I_to_delete pkg -> Some pkg
-                | _ -> None) l,
-              PkgSet.of_list
-                (Utils.filter_map (function
-                  | I_to_delete pkg -> Some pkg
-                  | _ -> None) l) in
+        (** compute all packages to remove *)
+        let l_del_p, set_del =
+          Utils.filter_map (function
+          | I_to_change (Some pkg, _)
+          | I_to_delete pkg -> Some pkg
+          | _ -> None) l,
+          PkgSet.of_list
+            (Utils.filter_map (function
+            | I_to_delete pkg -> Some pkg
+            | _ -> None) l) in
 
-            (** compute initial packages to add *)
-            let map_add =
-              PkgMap.of_list (Utils.filter_map (function
-                | I_to_change (None, _) when req_only_remove -> None
-                | I_to_change (_, pkg) as act -> Some (pkg, act)
-                | I_to_delete _ -> None
-                | I_to_recompile _ -> assert false) l) in
+        (** compute initial packages to add *)
+        let map_add =
+          PkgMap.of_list (Utils.filter_map (function
+          | I_to_change (None, _) when req_only_remove -> None
+          | I_to_change (_, pkg) as act -> Some (pkg, act)
+          | I_to_delete _ -> None
+          | I_to_recompile _ -> assert false) l) in
 
-            (** [graph_toinstall] is similar to [graph_simple] except that
-                the dependency relation is complete *)
-            let graph_toinstall =
-              Graph.PO.O.mirror
-                (create_graph (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
-            let graph_toinstall =
-              let graph_toinstall = Graph.PG.copy graph_toinstall in
-              List.iter (Graph.PG.remove_vertex graph_toinstall) l_del_p;
-              graph_toinstall in
+        (** [graph_toinstall] is similar to [graph_simple] except that
+            the dependency relation is complete *)
+        let graph_toinstall =
+          Graph.PO.O.mirror
+            (create_graph (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
+        let graph_toinstall =
+          let graph_toinstall = Graph.PG.copy graph_toinstall in
+          List.iter (Graph.PG.remove_vertex graph_toinstall) l_del_p;
+          graph_toinstall in
 
-            (** compute packages to recompile (and perform the merge with packages to add) *)
-            let _, map_act =
-              Graph.PG_topo.fold
-                (fun pkg (set_recompile, l_act) ->
-                  let add_succ_rem pkg set act =
-                    (let set = PkgSet.remove pkg set in
-                     try
-                       List.fold_left
-                         (fun set x -> PkgSet.add x set)
-                         set (Graph.PG.succ graph_toinstall pkg)
-                     with _ -> set),
-                    Utils.IntMap.add
-                      (Graph.PG.V.hash pkg)
-                      { cudf = pkg ; action = action_map package_map act } l_act in
-                  try
-                    let act = PkgMap.find pkg map_add in
-                    add_succ_rem pkg set_recompile act
-                  with Not_found ->
-                    if PkgSet.mem pkg set_recompile then
-                      add_succ_rem pkg set_recompile (I_to_recompile pkg)
-                    else
-                      set_recompile, l_act
-                )
-                graph_toinstall
-                (PkgSet.empty, Utils.IntMap.empty) in
+        (** compute packages to recompile (and perform the merge with packages to add) *)
+        let _, map_act =
+          Graph.PG_topo.fold
+            (fun pkg (set_recompile, l_act) ->
+              let add_succ_rem pkg set act =
+                (let set = PkgSet.remove pkg set in
+                 try
+                   List.fold_left
+                     (fun set x -> PkgSet.add x set)
+                     set (Graph.PG.succ graph_toinstall pkg)
+                 with _ -> set),
+                Utils.IntMap.add
+                  (Graph.PG.V.hash pkg)
+                  { cudf = pkg ; action = action_map package_map act } l_act in
+              try
+                let act = PkgMap.find pkg map_add in
+                add_succ_rem pkg set_recompile act
+              with Not_found ->
+                if PkgSet.mem pkg set_recompile then
+                  add_succ_rem pkg set_recompile (I_to_recompile pkg)
+                else
+                  set_recompile, l_act
+            )
+            graph_toinstall
+            (PkgSet.empty, Utils.IntMap.empty) in
 
-            (** compute packages to recompile and remove *)
-            let map_act, to_remove =
-              let l_remove = Graph.topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del in
-              let () =
-                match l_remove, req_only_remove with
-                  | _ :: _, false ->
-                    Globals.warning "the removing optimization will be applied but the solver has only taken a universe with partial dependencies"
-                  (* check below if there are some packages, that depend optionally on packages to be removed, and that will not be recompiled *)
-                  | _ -> () in
+        (** compute packages to recompile and remove *)
+        let map_act, to_remove =
+          let l_remove = Graph.topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del in
+          let () =
+            match l_remove, req_only_remove with
+            | _ :: _, false ->
+              Globals.warning "the removing optimization will be applied but the solver has only taken a universe with partial dependencies"
+            (* check below if there are some packages, that depend optionally on packages to be removed, and that will not be recompiled *)
+            | _ -> () in
 
-              (** partition the [l_remove] to decide for each element if we recompile them or delete. *)
-              List.fold_left
-                (fun (map_act, l_folded) pkg ->
-                  if
-                    (** check if the user has set some packages that will explicitely be removed *)
-                    List.exists
-                      (fun (p, _) -> p = pkg.Cudf.package)
-                      i_req.i_wish_remove
-                    ||
-                    (** check if [pkg] contains an optional package which has already been visited in [l_folded] *)
-                    List.exists
-                      (fun p -> List.exists (fun p0 -> O_pkg.compare p0 p = 0) l_folded)
-                      (try Graph.PG.succ graph_simple pkg with _ -> [])
-                  then
-                    (** [pkg] will be deleted *)
-                    map_act, (*package_map*) pkg :: l_folded
-                  else
-                    (** [pkg] will be recompiled *)
-                    Utils.IntMap.add
-                      (Graph.PG.V.hash pkg)
-                      { cudf = pkg ; action = action_map package_map (I_to_recompile pkg) }
-                      map_act,
-                    l_folded
-                )
-                (map_act, [])
-                l_remove in
+          (** partition the [l_remove] to decide for each element if we recompile them or delete. *)
+          List.fold_left
+            (fun (map_act, l_folded) pkg ->
+              if
+                (** check if the user has set some packages that will explicitely be removed *)
+                List.exists
+                  (fun (p, _) -> p = pkg.Cudf.package)
+                  i_req.i_wish_remove
+                ||
+                  (** check if [pkg] contains an optional package which has already been visited in [l_folded] *)
+                  List.exists
+                  (fun p -> List.exists (fun p0 -> O_pkg.compare p0 p = 0) l_folded)
+                  (try Graph.PG.succ graph_simple pkg with _ -> [])
+              then
+                (** [pkg] will be deleted *)
+                map_act, (*package_map*) pkg :: l_folded
+              else
+                (** [pkg] will be recompiled *)
+                Utils.IntMap.add
+                  (Graph.PG.V.hash pkg)
+                  { cudf = pkg ; action = action_map package_map (I_to_recompile pkg) }
+                  map_act,
+                l_folded
+            )
+            (map_act, [])
+            l_remove in
 
-            (** construct the answer [graph] to add.
-                Then, it suffices to fold it topologically
-                by following the action given at each node (install or recompile). *)
-            let graph = PA_graph.create () in
-            Utils.IntMap.iter (fun _ -> PA_graph.add_vertex graph) map_act;
-            Graph.PG.iter_edges
-              (fun v1 v2 ->
-                try
-                  let v1 = Utils.IntMap.find (Graph.PG.V.hash v1) map_act in
-                  let v2 = Utils.IntMap.find (Graph.PG.V.hash v2) map_act in
-                  PA_graph.add_edge graph v1 v2
-                with Not_found ->
-                  ())
-              graph_toinstall;
-            PA_graph.iter_update_reinstall ~installed graph;
-            { to_remove = List.map package_map to_remove
-            ; to_add = graph } in
+        (** construct the answer [graph] to add.
+            Then, it suffices to fold it topologically
+            by following the action given at each node (install or recompile). *)
+        let graph = PA_graph.create () in
+        Utils.IntMap.iter (fun _ -> PA_graph.add_vertex graph) map_act;
+        Graph.PG.iter_edges
+          (fun v1 v2 ->
+            try
+              let v1 = Utils.IntMap.find (Graph.PG.V.hash v1) map_act in
+              let v2 = Utils.IntMap.find (Graph.PG.V.hash v2) map_act in
+              PA_graph.add_edge graph v1 v2
+            with Not_found ->
+              ())
+          graph_toinstall;
+        PA_graph.iter_update_reinstall ~installed graph;
+        { to_remove = List.map package_map to_remove
+        ; to_add = graph } in
 
-        match sol_o with
-        | None   -> None
-        | Some l -> Some (action_of_answer l))
+      match sol_o with
+      | Conflicts c -> Conflicts (fun () -> string_of_reasons table (c ()))
+      | Success l   -> Success (action_of_answer l)
+    )
 
 let get_backward_dependencies = Graph.filter_backward_dependencies
 let get_forward_dependencies = Graph.filter_forward_dependencies

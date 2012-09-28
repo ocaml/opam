@@ -1802,14 +1802,16 @@ module Heuristic = struct
   let find_solution action_k t l_request =
     let available = get_available_current t in
     let l_pkg = NV.Set.fold (fun nv l -> debpkg_of_nv action_k t nv :: l) available [] in
+    let conflicts = ref (fun _ -> "") in
     let rec aux = function
-      | []                    -> None
+      | []                   -> Conflicts !conflicts
       | request :: l_request ->
           match Solver.resolve (Solver.U l_pkg) request t.installed with
-          | None  ->
+          | Conflicts cs  ->
               log "heuristic with no solution";
+              conflicts := cs;
               aux l_request
-          | Some sol -> Some sol in
+          | Success sol -> Success sol in
     aux l_request
 
   let new_variables e =
@@ -1867,10 +1869,10 @@ module Heuristic = struct
 
   let resolve ?(force=false) action_k t l_request =
     match find_solution action_k t l_request with
-    | None ->
-        Globals.msg "No solution has been found.\n";
+    | Conflicts cs ->
+        Globals.msg "No solution has been found:\n%s\n" (cs ());
         No_solution
-    | Some sol ->
+    | Success sol ->
       print_variable_warnings t;
       apply_solution ~force t sol
 
@@ -1887,8 +1889,8 @@ let dry_upgrade () =
         wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
        [ Heuristic.v_max; Heuristic.v_ge ]) in
   match solution with
-  | None     -> None
-  | Some sol -> Some (get_stats sol)
+  | Conflicts _ -> None
+  | Success sol -> Some (get_stats sol)
 
 let update repos =
   log "update %s" (String.concat " " repos);

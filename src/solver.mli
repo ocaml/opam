@@ -68,6 +68,10 @@ type solution = {
   to_add   : PA_graph.t;
 }
 
+type ('a, 'b) result =
+  | Success of 'a
+  | Conflicts of (unit -> 'b)
+
 (** Is the solution empty ? *)
 val solution_is_empty: solution -> bool
 
@@ -93,7 +97,7 @@ type packages = P of package list
     Every element in the solution [list] satisfies the problem given.
     For the ordering, the first element in the list
     is obtained by upgrading from its next element. *)
-val resolve : universe -> request -> NV.Set.t -> solution option
+val resolve : universe -> request -> NV.Set.t -> (solution, string) result
 
 (** Return the recursive dependencies of a package. Note : the given
     package exists in the list in input because this list describes
