@@ -1,4 +1,6 @@
-0.7.3 (trunk)
+0.7.4 (trunk)
+
+0.7.3 [Sept 2012]
 * Better user-message when no solution is found
 * Improve the minimality of installed packages 
 
