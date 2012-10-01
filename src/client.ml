@@ -527,7 +527,7 @@ let update_pinned_package t nv pin =
   match B.download_dir nv ~dst:build path with
   | Up_to_date _    -> None
   | Result _
-  | Not_available _ -> Some nv
+  | Not_available -> Some nv
 
 let update_packages t ~show_packages repos =
   log "update_packages";
