@@ -2602,19 +2602,12 @@ let compiler_switch quiet alias =
     OpamFile.Config.write (Path.G.config t.global) config;
     print_env_warning (load_state ())
 
-let compiler_clone alias =
-  log "compiler_clone alias=%s" (Alias.to_string alias);
+let compiler_import filename =
+  log "compiler_clone alias=%s" (Filename.to_string filename);
   let t = update_available_current (load_state ()) in
 
-  let installed_in_alias =
-    let comp_p = Path.C.create alias in
-    if not (Dirname.exists (Path.C.root comp_p)) then (
-      Globals.msg "%s is not a valid compiler name.\n" (Alias.to_string alias);
-      Globals.exit 1;
-    );
-    OpamFile.Installed.safe_read (Path.C.installed comp_p) in
-
-  let new_packages = NV.Set.diff installed_in_alias t.installed in
+  let imported = OpamFile.Installed.read filename in
+  let new_packages = NV.Set.diff imported t.installed in
   let installed =
     NV.Set.filter (fun nv ->
       let name = NV.name nv in
@@ -2631,6 +2624,10 @@ let compiler_clone alias =
      [ Heuristic.v_eq; Heuristic.v_ge; Heuristic.v_any ]
     ) in
   ()
+
+let compiler_export filename =
+  let t = update_available_current (load_state ()) in
+  OpamFile.Installed.write filename t.installed
 
 let compiler_current () =
   let t = load_state () in
@@ -2701,8 +2698,11 @@ let remote action =
 let compiler_install quiet alias ocaml_version =
   check (Write_lock (fun () -> compiler_install quiet alias ocaml_version))
 
-let compiler_clone alias =
-  check (Write_lock (fun () -> compiler_clone alias))
+let compiler_import filename =
+  check (Write_lock (fun () -> compiler_import filename))
+
+let compiler_export filename =
+  check (Write_lock (fun () -> compiler_export filename))
 
 let compiler_remove alias =
   check (Write_lock (fun () -> compiler_remove alias))

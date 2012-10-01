@@ -66,8 +66,11 @@ val remote : remote -> unit
 (** Install the given compiler. Take the global file lock. *)
 val compiler_install: bool -> Alias.t -> OCaml_V.t -> unit
 
-(** Clone the packages from the given compiler. Take the global file lock. *)
-val compiler_clone: Alias.t -> unit
+(** Import the packages from a file. Take the global file lock. *)
+val compiler_import: filename -> unit
+
+(** Export the packages to a file. Take the global file lock. *)
+val compiler_export: filename -> unit
 
 (** Remove the given compiler. Take the global file lock. *)
 val compiler_remove: Alias.t -> unit

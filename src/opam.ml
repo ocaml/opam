@@ -375,7 +375,8 @@ let switch =
     ("-no-base-packages", Arg.Clear Globals.base_packages, " Do not install the base packages");
     ("-install"         , Arg.Unit (set `install)        , " Install the given compiler");
     ("-remove"          , Arg.Unit (set `remove)         , " Remove the given compiler");
-    ("-clone"           , Arg.Unit (set `clone)          , " Clone the content of the given alias");
+    ("-export"          , Arg.String (fun s -> set (`export s) ()), " Export the libraries installed with the given alias");
+    ("-import"          , Arg.String (fun s -> set (`import s) ()), " Import the libraries installed with the given alias");
     ("-reinstall"       , Arg.Unit (set `reinstall)      , " Reinstall the given compiler");
     ("-list"            , Arg.Unit (set `list)           , " List the available compilers");
     ("-current"         , Arg.Unit (set `current)        , " Display the current compiler");
@@ -385,9 +386,12 @@ let switch =
     match !command, args with
     | `install, [alias] ->
         Client.compiler_install !quiet (Alias.of_string alias) (mk_comp alias)
-    | `clone, [alias] ->
+    | `export f, [] ->
         no_alias_of ();
-        Client.compiler_clone  (Alias.of_string alias)
+        Client.compiler_export (Filename.of_string f)
+    | `import f, [] ->
+        no_alias_of ();
+        Client.compiler_import (Filename.of_string f)
     | `remove, aliases ->
         no_alias_of ();
         List.iter (fun alias -> Client.compiler_remove (Alias.of_string alias)) aliases
