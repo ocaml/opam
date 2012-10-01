@@ -1,6 +1,9 @@
-0.7.4 (trunk)
+0.7.5 (trunk)
+
+0.7.4 [Oct 2012]
 * improve 'opam pin': the code is more robust and it is now possible to pin a package to a git repository
 * add support for patches per package
+* add 'opam swith -import <file>' and 'opam switch -export <file>'
 
 0.7.3 [Sep 2012]
 * Better user-message when no solution is found
