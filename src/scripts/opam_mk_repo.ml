@@ -26,13 +26,14 @@ open Types
 
 let log fmt = Globals.log "OPAM-MK-REPO" fmt
 
-let all, index, packages, gener_digest, dryrun =
+let all, index, packages, gener_digest, dryrun, recurse =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Stdlib_filename.basename Sys.argv.(0)) in
   let all = ref true in
   let index = ref false in
   let packages = ref [] in
   let gener_digest = ref false in
   let dryrun = ref false in
+  let recurse = ref false in
   let specs = Arg.align [
     ("-v"       , Arg.Unit Globals.version, " Display version information");
     ("--version", Arg.Unit Globals.version, " Display version information");
@@ -48,11 +49,13 @@ let all, index, packages, gener_digest, dryrun =
      Printf.sprintf " Automatically correct the wrong archive checksums (default is %b)" !gener_digest);
 
     ("-d"      , Arg.Set dryrun, "");
-    ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them")
+    ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them");
+
+    ("-r", Arg.Set recurse, " Recurse among the transitive dependencies");
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;
-  !all, !index, N.Set.of_list (List.map N.of_string !packages), !gener_digest, !dryrun
+  !all, !index, N.Set.of_list (List.map N.of_string !packages), !gener_digest, !dryrun, !recurse
 
 let () =
   let local_path = Dirname.cwd () in
@@ -97,7 +100,11 @@ let () =
       names
     else
       get_transitive_dependencies new_names in
-  let packages = get_transitive_dependencies packages in
+  let packages =
+    if recurse then
+      get_transitive_dependencies packages
+    else
+      packages in
   let packages =
     N.Set.fold (fun n set ->
       let versions = Path.R.available_versions local_repo n in
