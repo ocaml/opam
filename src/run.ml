@@ -417,7 +417,7 @@ let system_ocamlc_where () =
   with _ ->
     None
 
-let download_command =
+let download_command = lazy (
   try
     command ~verbose:false ["which"; "curl"];
     (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
@@ -427,9 +427,10 @@ let download_command =
       (fun src -> [ "wget"; "--no-check-certificate" ; src ])
     with Process_error _ ->
       internal_error "Cannot find curl nor wget"
+)
 
 let download ~filename:src ~dirname:dst =
-  let cmd = download_command src in
+  let cmd = (Lazy.force download_command) src in
   let dst_file = dst / Filename.basename src in
   if dst_file = src then
     ()
