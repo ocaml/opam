@@ -1,17 +1,18 @@
 0.7.4 (trunk)
+* improve 'opam pin': the code is more robust and it is now possible to pin a package to a git repository
 
-0.7.3 [Sept 2012]
+0.7.3 [Sep 2012]
 * Better user-message when no solution is found
 * Improve the minimality of installed packages 
 
-0.7.2 [Sept 2012]
+0.7.2 [Sep 2012]
 * Fix regression in init introcuced in 0.7.0
 * Fix regression in update introduced in 0.7.0
 
-0.7.1 [Sept 2012]
+0.7.1 [Sep 2012]
 * Remove forgotten debug statement
 
-0.7.0 [Sept 2012]
+0.7.0 [Sep 2012]
 * report upgrade statistic on update
 * do no ask y/n when installing compiler's base packages
 * improve opam-mk-repo
@@ -22,14 +23,14 @@
 * tell the user to unset some potentially dangerous variables when running opam
 * fix few git backend issues
 
-0.6.0 [Sept 2012]
+0.6.0 [Sep 2012]
 * semantics changes in 'opam switch'
 * solver improvements in case of install and remove
 * better error reporting
 * fix caching of package archives
 * fix ~/.opam/repo/index priorities
 
-0.5.0 [Sept 2012]
+0.5.0 [Sep 2012]
 * add opam search
 * add opam reinstall
 * ability to upgrade only a subset of packages
@@ -54,10 +55,10 @@
 * fix compilation for ocaml 4.00
 * fix compilation for *BSD
 
-0.3.1 [July 2012]
+0.3.1 [Jul 2012]
 * fix regression for 'opam install' introduced in 0.3
 
-0.3.0 [July 2012]
+0.3.0 [Jul 2012]
 * improve parallel compilation of packages
 * better recovery on compilation/installation errors
 * first draft of version pinnig
@@ -66,12 +67,12 @@
 * more robust 'opam update' (ie. old files are gc-ed)
 * add a (more or less) generic way to install and use topfind
 
-0.2.0 [July 2012]
+0.2.0 [Jul 2012]
 * more robust switch command
 * more robust parallel build (not yet activated by default)
 * support for compiler-constraints in packages
 * new solver heuristics
 * improved performance on init with the rsync backend
 
-0.1.0 [June 2012]
+0.1.0 [Jun 2012]
 * Initial version
