@@ -1260,8 +1260,6 @@ module Make (F : F) = struct
       Globals.error_and_exit "File %s does not exist" (Filename.to_string f)
 
   let safe_read f =
-    let filename = Filename.to_string f in
-    log "safe_read %s" filename;
     if Filename.exists f then
       read f
     else (

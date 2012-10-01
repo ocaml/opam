@@ -71,10 +71,8 @@ let log_file () =
   !Globals.root_path / "log" / f
 
 let safe_mkdir dir =
-  if not (Sys.file_exists dir) then begin
-    log "mkdir %s" dir;
+  if not (Sys.file_exists dir) then
     Unix.mkdir dir 0o755
-  end
 
 let mkdir dir =
   let rec aux dir =
@@ -89,12 +87,10 @@ let is_link filename =
   (lstat filename).st_kind = S_LNK
 
 let remove_file file =
-  log "remove_file %s" file;
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
 
 let read file =
-  log "read %s" file;
   let ic = open_in_bin file in
   let n = in_channel_length ic in
   let s = String.create n in
@@ -104,7 +100,6 @@ let read file =
 
 let write file contents =
   mkdir (Filename.dirname file);
-  log "write %s" file;
   let oc = open_out_bin file in
   output_string oc contents;
   close_out oc
@@ -161,7 +156,6 @@ let rec remove_dir dir = (** WARNING it fails if [dir] is not a [S_DIR] or simli
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);
     List.iter remove_dir (directories_strict dir);
-    log "remove_dir %s" dir;
     Unix.rmdir dir;
   end
 
@@ -288,10 +282,8 @@ let copy src dst =
   if  Sys.file_exists dst then
     remove_file dst;
   mkdir (Filename.dirname dst);
-  if src <> dst then begin
-    log "copying %s to %s" src dst;
-    command ["cp"; src; dst ];
-  end
+  if src <> dst then
+    command ["cp"; src; dst ]
 
 module Tar = struct
 
@@ -327,9 +319,6 @@ end
 let is_tar_archive = Tar.is_archive
 
 let extract file dst =
-  log "extract %s %s" file dst;
-(*   let files = read_command_output [ "tar" ; "tf" ; file ] in
-     log "%s contains %d files: %s" file (List.length files) (String.concat ", " files); *)
   with_tmp_dir (fun tmp_dir ->
     match Tar.extract_function file with
     | None   -> internal_error "%s is not a valid archive" file
@@ -344,7 +333,6 @@ let extract file dst =
   )
 
 let extract_in file dst =
-  log "extract_in %s %s" file dst;
   if not (Sys.file_exists dst) then
     Globals.error_and_exit "%s does not exist" file;
   match Tar.extract_function file with
@@ -352,7 +340,6 @@ let extract_in file dst =
   | Some f -> f dst
 
 let link src dst =
-  log "linking %s to %s" src dst;
   mkdir (Filename.dirname dst);
   if Sys.file_exists dst then
     remove_file dst;
@@ -444,7 +431,6 @@ let download_command =
 let download ~filename:src ~dirname:dst =
   let cmd = download_command src in
   let dst_file = dst / Filename.basename src in
-  log "download %s in %s (%b)" src dst_file (src = dst_file);
   if dst_file = src then
     ()
   else if Sys.file_exists src then
