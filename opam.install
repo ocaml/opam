@@ -1,0 +1,23 @@
+bin: [
+  "_obuild/opam/opam.asm" { "opam" }
+  "_obuild/opam-mk-repo/opam-mk-repo.asm" { "opam-mk-repo" }
+]
+lib: [
+  "META"
+  "_obuild/opam-lib/opam-lib.a"
+  "_obuild/opam-lib/opam-lib.cma"
+  "_obuild/opam-lib/opam-lib.cmxa"
+  "_obuild/opam-lib/opamFile.cmi"
+  "_obuild/opam-lib/path.cmi"
+  "_obuild/opam-lib/file_format.cmi"
+  "_obuild/opam-lib/process.cmi"
+  "_obuild/opam-lib/globals.cmi"
+  "_obuild/opam-lib/repositories.cmi"
+  "_obuild/opam-lib/lexer.cmi"
+  "_obuild/opam-lib/run.cmi"
+  "_obuild/opam-lib/linelexer.cmi"
+  "_obuild/opam-lib/types.cmi"
+  "_obuild/opam-lib/parallel.cmi"
+  "_obuild/opam-lib/utils.cmi"
+  "_obuild/opam-lib/parser.cmi"
+]
