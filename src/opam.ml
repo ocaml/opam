@@ -469,6 +469,7 @@ let () =
     | Globals.Exit i -> exit i
     | e ->
       let bt = Printexc.get_backtrace () in
-      Printf.fprintf stderr "Fatal error: exception %s\n\tat\n %s\n%!"
+      let bt = if bt = "" then "" else Printf.sprintf "    at\n %s\n" bt in
+      Printf.fprintf stderr "Fatal error: exception %s\n%s%!"
         (Printexc.to_string e) bt;
       exit 2
