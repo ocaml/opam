@@ -25,7 +25,7 @@ module type BACKEND = sig
   val update: address -> Filename.Set.t
   val download_archive: address -> nv -> filename download
   val download_file: nv -> filename -> filename download
-  val download_dir: nv -> dirname -> dirname download
+  val download_dir: nv -> ?dst:dirname -> dirname -> dirname download
   val upload_dir: address:address -> dirname -> Filename.Set.t
 end
 
@@ -104,10 +104,10 @@ let download_file ~gener_digest k nv f c =
   map rename (B.download_file nv f)
 
 (* Download directory d in the current directory *)
-let download_dir k nv d =
+let download_dir k nv ?dst d =
   log "download_dir %s %s %s" k (NV.to_string nv) (Dirname.to_string d);
   let module B = (val find_backend_by_kind k: BACKEND) in
-  B.download_dir nv d
+  B.download_dir nv ?dst d
 
 (* Download either a file or a directory in the current directory *)
 let download_one ?(gener_digest = false) k nv url checksum =
@@ -131,7 +131,28 @@ let download_archive r nv =
   let module B = (val find_backend r: BACKEND) in
   B.download_archive (Repository.address r) nv
 
-let make_archive ?(gener_digest = false) nv =
+(* Copy the file in local_repo in current dir *)
+let copy_files local_repo nv =
+  let local_dir = Dirname.cwd () in
+  (* Eventually add the <package>/files/* to the extracted dir *)
+  log "Adding the files to the archive";
+  let files = Path.R.available_files local_repo nv in
+  if files <> [] then (
+    if not (Dirname.exists local_dir) then
+      Dirname.mkdir local_dir;
+    List.iter (fun f ->
+      let dst = local_dir // Basename.to_string (Filename.basename f) in
+      if Filename.exists dst then
+        Globals.warning
+          "Skipping %s as it already exists in %s"
+          (Filename.to_string f)
+          (Dirname.to_string local_dir)
+      else
+        Filename.copy_in f local_dir) files;
+  );
+  Filename.Set.of_list files
+
+let make_archive ?(gener_digest=false) ?local_path nv =
   (* download the archive upstream if the upstream address is
      specified *)
   let local_repo = Path.R.cwd () in
@@ -144,7 +165,7 @@ let make_archive ?(gener_digest = false) nv =
   Dirname.with_tmp_dir (fun extract_root ->
     let extract_dir = extract_root / NV.to_string nv in
 
-    if Filename.exists url_f then (
+    if local_path = None && Filename.exists url_f then (
       let url_file = OpamFile.URL.read url_f in
       let checksum = OpamFile.URL.checksum url_file in
       let kind = match OpamFile.URL.kind url_file with
@@ -181,30 +202,19 @@ let make_archive ?(gener_digest = false) nv =
           Dirname.copy download_dir extract_dir
     );
 
+    let extract_dir = match local_path with
+      | None   -> extract_dir
+      | Some p -> p in
+
     (* Eventually add the <package>/files/* to the extracted dir *)
-    log "Adding the files to the archive";
-    let files = Path.R.available_files local_repo nv in
-    if files <> [] then (
-      if not (Dirname.exists extract_dir) then
-        Dirname.mkdir extract_dir;
-      List.iter (fun f ->
-        let dst = extract_dir // Basename.to_string (Filename.basename f) in
-        if Filename.exists dst then
-          Globals.warning
-            "Skipping %s as it already exists in %s\n"
-            (Filename.to_string f)
-            (Dirname.to_string extract_dir)
-        else
-          Filename.copy_in f extract_dir) files;
-    );
+    let files =
+      Dirname.in_dir extract_dir (fun () -> copy_files local_repo nv) in
 
     (* And finally create the final archive *)
-    (* XXX: we should add a suffix to the version to show that
-       the archive has been repacked by opam *)
-    if files <> [] || Filename.exists url_f then (
+    if local_path <> None || not (Filename.Set.is_empty files) || Filename.exists url_f then (
       Dirname.mkdir (Path.R.archives_dir local_repo);
       let local_archive = Path.R.archive local_repo nv in
-      log "Creating the archive files in %s" (Filename.to_string local_archive);
+      Globals.msg "Creating the archive file in %s\n" (Filename.to_string local_archive);
       Dirname.exec extract_root [
         [ "tar" ; "czf" ; Filename.to_string local_archive ; NV.to_string nv ]
       ]
@@ -270,3 +280,5 @@ let update r =
 
   let updated = NV.Set.union updated_packages updated_cached_packages in
   OpamFile.Updated.write (Path.R.updated local_repo) updated
+
+let find_backend = find_backend_by_kind

@@ -283,12 +283,13 @@ module Pinned = struct
   let of_string filename str =
     let m = Repo_index.of_string filename str in
     N.Map.map (function
-      | [x] -> pin_option_of_string x
-      | _   -> Globals.error_and_exit "too many pinning options"
+      | [x]   -> pin_option_of_string x
+      | [k;x] -> pin_option_of_string ?kind:(Some k) x
+      | _     -> Globals.error_and_exit "too many pinning options"
     ) m
 
   let to_string filename map =
-    let aux x = [ string_of_pin_option x ] in
+    let aux x = [ kind_of_pin_option x; path_of_pin_option x ] in
     Repo_index.to_string filename (N.Map.map aux map)
 
 end

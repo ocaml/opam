@@ -69,15 +69,18 @@ module B = struct
     let file = Path.R.tmp_dir local_repo nv // Basename.to_string basename in
     check_file file
 
-  let rec download_dir nv remote_address =
+  let rec download_dir nv ?dst remote_address =
     let local_repo = Path.R.cwd () in
-    let basename = Dirname.basename remote_address in
-    let dir = Path.R.tmp_dir local_repo nv / Basename.to_string basename in
+    let dir = match dst with
+      | None   ->
+        let basename = Basename.to_string (Dirname.basename remote_address) in
+        Path.R.tmp_dir local_repo nv / basename
+      | Some d -> d in
     match check_updates dir remote_address with
     | None ->
         Dirname.mkdir dir;
         Dirname.in_dir dir (fun () -> git_init remote_address);
-        download_dir nv remote_address
+        download_dir nv ?dst remote_address
     | Some f ->
         if Filename.Set.empty = f then
           Up_to_date dir

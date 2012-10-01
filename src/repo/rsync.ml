@@ -10,13 +10,10 @@ let rsync ?(delete=true) src dst =
     Run.mkdir dst;
     let delete = if delete then ["--delete"] else [] in
     try
-      let lines = Run.read_command_output (["rsync" ; "-arv"; src; dst] @ delete) in
+      let lines = Run.read_command_output (["rsync" ; "-arv"; "--exclude"; ".git/*"; src; dst] @ delete) in
       match Utils.rsync_trim lines with
       | []    -> Up_to_date []
-      | lines ->
-          let cwd = Unix.getcwd () in
-          List.iter (fun l -> log "updated: %s %s" cwd l) lines;
-          Result lines
+      | lines -> Result lines
     with _ ->
       Not_available
   ) else
@@ -25,20 +22,10 @@ let rsync ?(delete=true) src dst =
 let rsync_dirs ?delete src dst =
   let src_s = Dirname.to_string src + "" in
   let dst_s = Dirname.to_string dst in
-  let dst_files0 = Filename.rec_list dst in
   match rsync ?delete src_s dst_s with
   | Not_available -> Not_available
   | Up_to_date _  -> Up_to_date []
-  | Result lines  ->
-      let src_files = Filename.rec_list src in
-      let dst_files = Filename.rec_list dst in
-      if delete = Some true && List.length src_files <> List.length dst_files then (
-        List.iter (fun f -> Globals.msg "src-file: %s\n" (Filename.to_string f)) src_files;
-        List.iter (fun f -> Globals.msg "dst-file0: %s\n" (Filename.to_string f)) dst_files0;
-        List.iter (fun f -> Globals.msg "dst-file: %s\n" (Filename.to_string f)) dst_files;
-        Globals.error_and_exit "rsync_dir failed!"
-      );
-      Result lines
+  | Result lines  -> Result lines
 
 let rsync_file src dst =
   log "rsync_file src=%s dst=%s" (Filename.to_string src) (Filename.to_string dst);
@@ -66,10 +53,14 @@ module B = struct
     let local_file = Filename.create tmp_dir (Filename.basename remote_file) in
     rsync_file remote_file local_file
 
-  let download_dir nv remote_dir =
+  let download_dir nv ?dst remote_dir =
     let local_repo = Path.R.of_dirname (Dirname.cwd ()) in
-    let tmp_dir = Path.R.tmp_dir local_repo nv in
-    let local_dir = tmp_dir / Basename.to_string (Dirname.basename remote_dir) in
+    let local_dir = match dst with
+      | None   ->
+        let tmp_dir = Path.R.tmp_dir local_repo nv in
+        let basename = Basename.to_string (Dirname.basename remote_dir) in
+        tmp_dir / basename
+      | Some d -> d in
     match rsync_dirs ~delete:true remote_dir local_dir with
     | Up_to_date _  -> Up_to_date local_dir
     | Result _      -> Result local_dir

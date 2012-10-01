@@ -170,6 +170,7 @@ end = struct
     Run.with_tmp_dir (fun dir -> fn (of_string dir))
 
   let rmdir dirname =
+    log "rmdir %s" (to_string dirname);
     Run.remove (to_string dirname)
 
   let cwd () =
@@ -900,31 +901,51 @@ type config_option = {
 type pin_option =
   | Version of version
   | Path of dirname
+  | Git of dirname
   | Unpin
 
-let pin_option_of_string s =
-  let d = Run.real_path s in
-  if s = "none" then
-    Unpin
-  else if Sys.file_exists d then
-    Path (Dirname.of_string s)
-  else
-    Version (V.of_string s)
+let pin_option_of_string ?kind s =
+  match kind with
+  | Some "version" -> Version (V.of_string s)
+  | Some "git"     ->
+    if Sys.file_exists s then
+      Git (Dirname.of_string s)
+    else
+      Git (Dirname.raw s)
+  | Some "rsync"   -> Path (Dirname.of_string s)
+  | None | Some _  ->
+    let d = Run.real_path s in
+    if s = "none" then
+      Unpin
+    else if Sys.file_exists d then
+      Path (Dirname.of_string s)
+    else if Utils.contains d ('/') then
+      Git (Dirname.raw s)
+    else
+      Version (V.of_string s)
 
 type pin = {
   pin_package: name;
   pin_arg: pin_option;
 }
 
-let string_of_pin_option = function
+let path_of_pin_option = function
   | Version v -> V.to_string v
+  | Git p
   | Path p    -> Dirname.to_string p
   | Unpin     -> "none"
 
+let kind_of_pin_option = function
+  | Version _ -> "version"
+  | Git _     -> "git"
+  | Path _    -> "rsync"
+  | Unpin     -> "<none>"
+
 let string_of_pin p =
-  Printf.sprintf "{package=%s; arg=%s}"
+  Printf.sprintf "{package=%s; path=%s; kind=%s}"
     (N.to_string p.pin_package)
-    (string_of_pin_option p.pin_arg)
+    (path_of_pin_option p.pin_arg)
+    (kind_of_pin_option p.pin_arg)
 
 type config =
   | Env

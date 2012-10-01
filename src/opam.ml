@@ -412,18 +412,21 @@ let switch =
 (* opam pin [-list|<package> <version>|<package> <path>] *)
 let pin =
   let list = ref false in
+  let kind = ref None in
+  let set_kind s = kind := Some s in
 {
   name     = "pin";
   usage    = "<package> [<version>|<url>|none]";
   synopsis = "Pin a given package to a specific version";
   help     = "";
   specs    = [
-    ("-list" ,   Arg.Set list,    " List the current status of pinned packages");
+    ("-list", Arg.Set list       , " List the current status of pinned packages");
+    ("-kind", Arg.String set_kind, " Force the pin action (options are: 'git', 'rsync', 'version'");
   ];
   anon;
   main     = parse_args (function
     | [] when !list    -> Client.pin_list ()
-    | [name; arg]      -> Client.pin { pin_package = N.of_string name; pin_arg = pin_option_of_string arg }
+    | [name; arg]      -> Client.pin { pin_package = N.of_string name; pin_arg = pin_option_of_string ?kind:!kind arg }
     | _                -> bad_argument "pin" "Wrong arguments")
 }
 

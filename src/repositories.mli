@@ -65,7 +65,7 @@ module type BACKEND = sig
   (** Download a (remote) directory and return the local path to the
       downloaded directory. If needed, the function can use {i
       $repo/tmp/$nv/} to store transient states between downloads. *)
-  val download_dir: nv -> dirname  -> dirname download
+  val download_dir: nv -> ?dst:dirname -> dirname -> dirname download
 
   (** Upload the content of the current directory to the directory
       given as argument. Return the local paths corresponding to the
@@ -79,9 +79,15 @@ type kind = string
 (** Register a repository backend *)
 val register_backend: kind -> (module BACKEND) -> unit
 
+(** Find a backend *)
+val find_backend: kind -> (module BACKEND)
+
+(** Copy the additional package files in the current dir *)
+val copy_files: Path.R.t -> nv -> Filename.Set.t
+
 (** [make_archive repo_kind nv] build ./$nv.tar.gz, assuming the
-    repository kind is [repo_kind]. 
-    By default, the digest that appear in 
-    {i $NAME.$VERSION/url} is not modified, 
+    repository kind is [repo_kind].
+    By default, the digest that appear in
+    {i $NAME.$VERSION/url} is not modified,
     unless [gener_digest = true] is given. *)
-val make_archive: ?gener_digest:bool -> nv -> unit
+val make_archive: ?gener_digest:bool -> ?local_path:dirname -> nv -> unit

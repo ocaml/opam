@@ -490,6 +490,45 @@ let update_repositories t ~show_compilers repos =
   if not (Filename.exists default_compiler) then
     create_default_compiler_description t
 
+let find_repo t nv =
+  log "find_repo %s" (NV.to_string nv);
+  let name = NV.name nv in
+  let rec aux = function
+    | []          -> None
+    | r :: repo_s ->
+        let repo = find_repository t r in
+        let repo_p = Path.R.create repo in
+        let opam_f = Path.R.opam repo_p nv in
+        if Filename.exists opam_f then (
+          Some (repo_p, repo)
+        ) else
+          aux repo_s in
+  if N.Map.mem name t.repo_index then
+    aux (N.Map.find name t.repo_index)
+  else
+    None
+
+let mem_repo t nv =
+  find_repo t nv <> None
+
+let with_repo t nv fn =
+  match find_repo t nv with
+  | None ->
+    Globals.error_and_exit
+      "Unable to find a repository containing %s"
+      (NV.to_string nv)
+  | Some (repo_p, repo) -> fn repo_p repo
+
+let update_pinned_package t nv pin =
+  let kind = kind_of_pin_option pin in
+  let path = Dirname.raw (path_of_pin_option pin) in
+  let module B = (val Repositories.find_backend kind: Repositories.BACKEND) in
+  let build = Path.C.build t.compiler nv in
+  match B.download_dir nv ~dst:build path with
+  | Up_to_date _    -> None
+  | Result _
+  | Not_available _ -> Some nv
+
 let update_packages t ~show_packages repos =
   log "update_packages";
   (* Update the pinned packages *)
@@ -497,25 +536,13 @@ let update_packages t ~show_packages repos =
     NV.Set.of_list (
       Utils.filter_map
         (function
-          | n, Path p ->
-              if mem_installed_package_by_name t n then
-                let nv = find_installed_package_by_name t n in
-                let build = Path.C.build t.compiler nv in
-                Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
-                (* XXX: make it more generic *)
-                if Dirname.exists build then
-                  try
-                    let lines = Run.read_command_output
-                      [ "rsync"; "-arv"; "--exclude"; "'.git/*'"; Dirname.to_string p ^ "/"; Dirname.to_string build ] in
-                    match Utils.rsync_trim lines with
-                    | [] -> None
-                    | l  -> Some nv
-                  with _ ->
-                    None
-                else
-                  None
-              else
-                None
+          | n, (Path p | Git p as k) ->
+            if mem_installed_package_by_name t n then
+              let nv = find_installed_package_by_name t n in
+              Globals.msg "Synchronizing with %s ...\n" (Dirname.to_string p);
+              update_pinned_package t nv k
+            else
+              None
           | _ -> None)
         (N.Map.bindings t.pinned)) in
 
@@ -1138,39 +1165,11 @@ let pinned_path t nv =
   let name = NV.name nv in
   if N.Map.mem name t.pinned then
     match N.Map.find name t.pinned with
-    | Path p -> Some p
-    | _      -> None
+    | Path _
+    | Git _ as k -> Some k
+    | _          -> None
   else
     None
-
-let find_repo t nv =
-  log "find_repo %s" (NV.to_string nv);
-  let name = NV.name nv in
-  let rec aux = function
-    | []          -> None
-    | r :: repo_s ->
-        let repo = find_repository t r in
-        let repo_p = Path.R.create repo in
-        let opam_f = Path.R.opam repo_p nv in
-        if Filename.exists opam_f then (
-          Some (repo_p, repo)
-        ) else
-          aux repo_s in
-  if N.Map.mem name t.repo_index then
-    aux (N.Map.find name t.repo_index)
-  else
-    None
-
-let mem_repo t nv =
-  find_repo t nv <> None
-
-let with_repo t nv fn =
-  match find_repo t nv with
-  | None ->
-    Globals.error_and_exit
-      "Unable to find a repository containing %s"
-      (NV.to_string nv)
-  | Some (repo_p, repo) -> fn repo_p repo
 
 let get_archive t nv =
   let aux repo_p repo =
@@ -1192,24 +1191,25 @@ let get_files t nv =
 let extract_package t nv =
   log "extract_package: %s" (NV.to_string nv);
   let p_build = Path.C.build t.compiler nv in
-  Dirname.rmdir p_build;
   match pinned_path t nv with
-  | None   ->
-      (match get_archive t nv with
-      | None         -> None
-      | Some archive ->
-        Globals.msg "Extracting %s ...\n" (Filename.to_string archive);
-        Filename.extract archive p_build;
-        Some p_build)
-  | Some p ->
-      (* XXX: make it a bit more generic ... *)
-      Globals.msg "Synchronizing %s with %s ...\n" (NV.to_string nv) (Dirname.to_string p);
-      Run.command [ "rsync"; "-arv"; "--exclude"; "'.git/*'"; Dirname.to_string p ^ "/"; Dirname.to_string p_build ];
-      let files = get_files t nv in
-      List.iter (fun f -> Filename.copy_in f p_build) files;
+  | Some (Git p| Path p as pin) ->
+    Globals.msg "Synchronizing pinned package ...\n";
+    ignore (update_pinned_package t nv pin);
+    Dirname.mkdir p_build;
+    let _files = with_repo t nv (fun repo _ ->
+      Dirname.in_dir p_build (fun () -> Repositories.copy_files repo nv)
+    ) in
+    Some p_build
+  | _ ->
+    Dirname.rmdir p_build;
+    match get_archive t nv with
+    | None         -> None
+    | Some archive ->
+      Globals.msg "Extracting %s ...\n" (Filename.to_string archive);
+      Filename.extract archive p_build;
       Some p_build
 
-let proceed_todelete t nv =
+let proceed_todelete ~rm_build t nv =
   log "deleting %s" (NV.to_string nv);
   Globals.msg "Uninstalling %s ...\n" (NV.to_string nv);
   let name = NV.name nv in
@@ -1219,25 +1219,27 @@ let proceed_todelete t nv =
   if Filename.exists opam_f then (
     let opam = OpamFile.OPAM.read opam_f in
     let remove = substitute_commands t (OpamFile.OPAM.remove opam) in
-    let remove = filter_commands t remove in
-    let p_build = Path.C.build t.compiler nv in
-    (* We try to run the remove scripts in the folder where it was extracted
-       If it does not exist, we try to download and extract the archive again,
-       if that fails, we don't really care. *)
-    if not (Dirname.exists p_build) && mem_repo t nv then (
-      try ignore (extract_package t nv)
-      with _ -> Dirname.mkdir p_build;
-    );
-    begin
+    match filter_commands t remove with
+(*    | []        -> () *)
+    | remove ->
+      let p_build = Path.C.build t.compiler nv in
+      (* We try to run the remove scripts in the folder where it was extracted
+         If it does not exist, we try to download and extract the archive again,
+         if that fails, we don't really care. *)
+      if not (Dirname.exists p_build) && mem_repo t nv then (
+        try ignore (extract_package t nv)
+        with _ -> Dirname.mkdir p_build;
+      );
       try Dirname.exec ~add_to_path:[Path.C.bin t.compiler] p_build remove
       with _ -> ();
-    end;
-    Dirname.rmdir p_build;
   );
 
   (* Remove the libraries *)
   Dirname.rmdir (Path.C.lib t.compiler name);
-  Dirname.rmdir (Path.C.build t.compiler nv);
+
+  (* Remove build/<package> if requested *)
+  if rm_build then
+    Dirname.rmdir (Path.C.build t.compiler nv);
 
   (* Clean-up the repositories *)
   log "Cleaning-up the repositories";
@@ -1371,7 +1373,7 @@ let proceed_tochange t nv_old nv =
 
   (* First, uninstall any previous version *)
   (match nv_old with
-  | Some nv_old -> proceed_todelete t nv_old
+  | Some nv_old -> proceed_todelete ~rm_build:true t nv_old
   | None        -> ());
 
   let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
@@ -1380,13 +1382,11 @@ let proceed_tochange t nv_old nv =
   let env0 = get_env t in
   let env = update_env t env0 (OpamFile.OPAM.build_env opam) in
 
-  (* Prepare the package for the build.
-     This function is run before the build and after an error has
-     occured, to help debugging. *)
-  let prepare_package () =
+  (* Prepare the package for the build. *)
+  let p_build =
     (* First, untar the archive *)
     match extract_package t nv with
-    | None         -> None
+    | None         -> Path.C.root t.compiler
     | Some p_build ->
 
       (* Substitute the configuration files. We should be in the right
@@ -1400,11 +1400,7 @@ let proceed_tochange t nv_old nv =
       let env_f = Path.C.build_env t.compiler nv in
       OpamFile.Env.write env_f env.new_env;
 
-      Some p_build in
-
-  let p_build = match prepare_package () with
-    | None         -> Path.C.root t.compiler
-    | Some p_build -> p_build in
+      p_build in
 
   (* Call the build script and copy the output files *)
   let commands = substitute_commands t (OpamFile.OPAM.build opam) in
@@ -1422,10 +1418,8 @@ let proceed_tochange t nv_old nv =
       commands;
     proceed_toinstall t nv;
   with e ->
-    proceed_todelete t nv;
-    let p_build = match prepare_package () with
-      | None         -> Path.C.root t.compiler
-      | Some p_build -> p_build in
+    (* We keep the build dir to help debugging *)
+    proceed_todelete ~rm_build:false t nv;
     begin match nv_old with
     | None        ->
       Globals.error
@@ -1680,7 +1674,7 @@ module Heuristic = struct
           (fun nv ->
             if NV.Set.mem nv !installed then begin
               try
-                proceed_todelete t nv;
+                proceed_todelete ~rm_build:true t nv;
                 installed := NV.Set.remove nv !installed;
                 write_installed ()
               with _ ->
@@ -1742,7 +1736,7 @@ module Heuristic = struct
                   (Solver.P [debpkg_of_nv `remove t nv]) in
               let depends = NV.Set.of_list (List.rev_map NV.of_dpkg depends) in
               let depends = NV.Set.filter (fun nv -> NV.Set.mem nv t.installed) depends in
-              NV.Set.iter (proceed_todelete t) depends;
+              NV.Set.iter (proceed_todelete ~rm_build:true t) depends;
               installed := NV.Set.diff !installed depends;
               write_installed ();
           | To_delete nv            -> assert false in
@@ -2025,7 +2019,6 @@ let install names =
         let name = NV.name nv in
         NV.Set.exists (fun nv -> NV.name nv = name) t.installed
       ) depends in
-    NV.Set.iter (fun nv -> log "might_change<2>: %s" (NV.to_string nv)) depends;
 
     let name_might_change = List.map NV.name (NV.Set.elements depends) in
 
@@ -2034,7 +2027,6 @@ let install names =
     let pkg_might_change f_h =
       let pkgs = Heuristic.get_installed t f_h in
       let pkgs = N.Map.filter (fun n _ -> List.mem n name_might_change) pkgs in
-      N.Map.iter (fun n _ -> log "might_change: %s" (N.to_string n)) pkgs;
       N.Map.values pkgs in
 
     (* The collection of packages which should change very rarely (so the NOT is a bit misleading
@@ -2044,7 +2036,6 @@ let install names =
       let pkgs = Heuristic.get_installed t f_h in
       let pkgs = N.Map.filter (fun n _ -> not (List.mem n name_new)) pkgs in
       let pkgs = N.Map.filter (fun n _ -> not (List.mem n name_might_change)) pkgs in
-      N.Map.iter (fun n _ -> log "not_change: %s" (N.to_string n)) pkgs;
       N.Map.values pkgs in
 
     let pkg_new =
@@ -2101,7 +2092,7 @@ let remove names =
       ) ([], N.Set.empty, []) wish_remove in
 
   if does_not_exist <> [] then (
-    List.iter (proceed_todelete t) does_not_exist;
+    List.iter (proceed_todelete ~rm_build:true t) does_not_exist;
     let installed_f = Path.C.installed t.compiler in
     let installed = OpamFile.Installed.read installed_f in
     let installed = NV.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in
@@ -2493,8 +2484,13 @@ let pin action =
   let t = load_state () in
   let pin_f = Path.C.pinned t.compiler in
   let pins = OpamFile.Pinned.safe_read pin_f in
-  let update_config pins = OpamFile.Pinned.write pin_f pins in
   let name = action.pin_package in
+  let update_config pins =
+    V.Set.iter (fun version ->
+      let nv = NV.create name version in
+      Dirname.rmdir (Path.C.build t.compiler nv)
+    ) (Path.G.available_versions t.global name);
+    OpamFile.Pinned.write pin_f pins in
   if mem_installed_package_by_name t name then (
     let reinstall_f = Path.C.reinstall t.compiler in
     let reinstall = OpamFile.Reinstall.safe_read reinstall_f in
@@ -2508,17 +2504,21 @@ let pin action =
         let current = N.Map.find name pins in
         Globals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
           (N.to_string name)
-          (string_of_pin_option action.pin_arg)
-          (string_of_pin_option current);
+          (path_of_pin_option action.pin_arg)
+          (path_of_pin_option current);
       );
-      log "Adding %s => %s" (string_of_pin_option action.pin_arg) (N.to_string name);
+      log "Adding %s(%s) => %s"
+        (path_of_pin_option action.pin_arg)
+        (kind_of_pin_option action.pin_arg)
+        (N.to_string name);
       update_config (N.Map.add name action.pin_arg pins)
 
 let pin_list () =
   log "pin_list";
   let t = load_state () in
   let pins = OpamFile.Pinned.safe_read (Path.C.pinned t.compiler) in
-  let print n a = Globals.msg "%-20s %s\n" (N.to_string n) (string_of_pin_option a) in
+  let print n a =
+    Globals.msg "%-20s %-8s %s\n" (N.to_string n) (kind_of_pin_option a) (path_of_pin_option a) in
   N.Map.iter print pins
 
 let compiler_list () =

@@ -514,6 +514,7 @@ val string_of_remote: remote -> string
 type pin_option =
   | Version of version
   | Path of dirname
+  | Git of dirname
   | Unpin
 
 (** Pinned packages *)
@@ -526,9 +527,11 @@ type pin = {
 val string_of_pin: pin -> string
 
 (** Read pin options args *)
-val pin_option_of_string: string -> pin_option
+val pin_option_of_string: ?kind:string -> string -> pin_option
 
-val string_of_pin_option: pin_option -> string
+val path_of_pin_option: pin_option -> string
+
+val kind_of_pin_option: pin_option -> string
 
 (** Configuration requests *)
 type config_option = {

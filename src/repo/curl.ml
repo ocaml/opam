@@ -187,7 +187,7 @@ module B = struct
   let not_supported action =
     failwith (action ^ ": not supported by CURL backend")
 
-  let download_dir nv dir =
+  let download_dir nv ?dst dir =
     not_supported ("Downloading " ^ Dirname.to_string dir)
 
   let upload_dir ~address remote_dir =
