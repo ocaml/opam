@@ -1,5 +1,6 @@
 0.7.4 (trunk)
 * improve 'opam pin': the code is more robust and it is now possible to pin a package to a git repository
+* add support for patches per package
 
 0.7.3 [Sep 2012]
 * Better user-message when no solution is found
