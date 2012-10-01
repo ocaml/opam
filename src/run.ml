@@ -447,4 +447,6 @@ let download ~filename:src ~dirname:dst =
   dst_file
 
 let patch p =
-  command ["patch"; "-p0"; "-i"; p]
+  try command ["patch"; "-p1"; "-i"; p]
+  with e ->
+    command ["patch"; "-p0"; "-i"; p]

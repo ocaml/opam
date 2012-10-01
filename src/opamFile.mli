@@ -128,6 +128,12 @@ module OPAM: sig
   (** deptopts (optional dependencies) string *)
   val s_depopts: string
 
+  (** Files *)
+  val files: t -> (basename * filter option) list
+
+  (** Patches *)
+  val patches: t -> (basename * filter option) list
+
   (** Construct as [depends] *)
   val with_depends : t -> cnf_formula -> t
 

@@ -504,8 +504,8 @@ module OPAM = struct
     conflicts  : and_formula;
     libraries  : section list;
     syntax     : section list;
-    patches    : filename list;
-    files      : filename list;
+    patches    : (basename * filter option) list;
+    files      : (basename * filter option) list;
     others     : (string * value) list;
     ocaml_version: ocaml_constraint option;
   }
@@ -636,6 +636,7 @@ module OPAM = struct
       p
 
   let to_string filename t =
+    let make_file = make_option (Basename.to_string |> make_string) make_filter in
     let s = {
       filename = Filename.to_string filename;
       contents = [
@@ -652,8 +653,8 @@ module OPAM = struct
         Variable (s_conflicts, make_and_formula t.conflicts);
         Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
         Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
-        Variable (s_files, make_list (Filename.to_string |> make_string) t.files);
-        Variable (s_patches, make_list (Filename.to_string |> make_string) t.patches);
+        Variable (s_files, make_list make_file t.files);
+        Variable (s_patches, make_list make_file t.patches);
       ] @ (
         match t.ocaml_version with
         | None   -> []
@@ -711,8 +712,9 @@ module OPAM = struct
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
     let ocaml_version = assoc_option s s_ocaml_version parse_constraint in
-    let patches = assoc_list s s_patches (parse_list (parse_string |> Filename.raw)) in
-    let files = assoc_list s s_files (parse_list (parse_string |> Filename.raw)) in
+    let parse_file = parse_option (parse_string |> Basename.of_string) parse_filter in
+    let patches = assoc_list s s_patches (parse_list parse_file) in
+    let files = assoc_list s s_files (parse_list parse_file) in
     let others     =
       Utils.filter_map (function
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)

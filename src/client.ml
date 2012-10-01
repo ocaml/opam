@@ -727,8 +727,8 @@ let substitute_commands t c =
   List.map (substitute_command t) c
 
 let rec eval_filter t = function
-  | Bool b -> string_of_bool b
-  | String s -> s
+  | Bool b    -> string_of_bool b
+  | String s  -> substitute_string t s
   | Op(e,s,f) ->
     (* We are supposed to compare version strings *)
     let s = match s with
@@ -1183,11 +1183,6 @@ let get_archive t nv =
       None in
   with_repo t nv aux
 
-let get_files t nv =
-  let aux repo_p _ =
-    Path.R.available_files repo_p nv in
-  with_repo t nv aux
-
 let extract_package t nv =
   log "extract_package: %s" (NV.to_string nv);
   let p_build = Path.C.build t.compiler nv in
@@ -1220,7 +1215,7 @@ let proceed_todelete ~rm_build t nv =
     let opam = OpamFile.OPAM.read opam_f in
     let remove = substitute_commands t (OpamFile.OPAM.remove opam) in
     match filter_commands t remove with
-(*    | []        -> () *)
+    | []        -> ()
     | remove ->
       let p_build = Path.C.build t.compiler nv in
       (* We try to run the remove scripts in the folder where it was extracted
@@ -1399,6 +1394,17 @@ let proceed_tochange t nv_old nv =
       (* Generate an environnement file *)
       let env_f = Path.C.build_env t.compiler nv in
       OpamFile.Env.write env_f env.new_env;
+
+      (* Apply the patches *)
+      let patches = OpamFile.OPAM.patches opam in
+      List.iter (fun (base, filter) ->
+        with_repo t nv (fun repo _ ->
+          let root = Path.R.files repo nv in
+          let patch = root // Basename.to_string base in
+          if eval_filter t filter then (
+            Globals.msg "Applying %s\n" (Basename.to_string base);
+            Filename.patch patch p_build))
+      ) patches;
 
       p_build in
 
