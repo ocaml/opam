@@ -238,6 +238,7 @@ module Make (G : G) = struct
         | -1  -> Globals.error_and_exit "Cannot fork a new process"
         | 0   ->
             log "Spawning a new process";
+            Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> Globals.error "Interrupted"; exit 1));
             let aux p =
               write_error p;
               exit 1 in
