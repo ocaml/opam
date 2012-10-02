@@ -364,6 +364,8 @@ module OCaml_V: sig
   val compare: t -> relop -> t -> bool
 end
 
+type ocaml_constraint = relop * OCaml_V.t
+
 (** OPAM version *)
 module OPAM_V: ABSTRACT
 
@@ -555,14 +557,42 @@ val string_of_config: config -> string
 (** Compiler aliases *)
 module Alias: ABSTRACT
 
-type atom_formula = Debian.Format822.vpkg
-type and_formula = atom_formula list
+module Formula: sig
 
-(** Pretty-print *)
-val string_of_atom_formula : atom_formula -> string
+  type conjunction = Debian.Format822.vpkglist
 
-type cnf_formula = Debian.Format822.vpkgformula
-type ocaml_constraint = relop * OCaml_V.t
+  type cnf = Debian.Format822.vpkgformula
+
+  type 'a formula =
+    | Empty
+    | Atom of 'a
+    | Block of 'a formula
+    | And of 'a formula * 'a formula
+    | Or of 'a formula * 'a formula
+
+  val string_of_formula: ('a -> string) -> 'a formula -> string
+
+  val map: ('a -> 'b) -> 'a formula -> 'b formula
+
+  val iter: ('a -> unit) -> 'a formula -> unit
+
+  val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
+
+  (** An atom is: [name] * ([relop] * [version]) formula.
+      Examples of valid formulaes:
+      - "foo" {> "1" & (<"3" | ="5")}
+      - "foo" {= "1" | > "4"} | ("bar" "bouh") *)
+  type t = (name * (string * version) formula) formula
+
+  val atoms: t -> (name * (string * version) option) list
+
+  val to_string: t -> string
+
+  val to_conjunction: t -> conjunction
+
+  val to_cnf: t -> cnf
+
+end
 
 module Remote_file: sig
   include ABSTRACT

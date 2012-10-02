@@ -207,19 +207,11 @@ val assoc_sections: item list -> string -> (section -> 'a) -> 'a list
 
 open Types
 
-(** Parse an AND formala such as
-    ["foo", "bar" (<"1", >"2"), "aa" ] *)
-val parse_and_formula : value -> and_formula
+(** Parse package formula *)
+val parse_formula : value -> Formula.t
 
-(** Parse an CNF formula (which contains only inlevel OR) such as
-    ["foo" ("bar"(<"1") | "bar" (>"2"))] *)
-val parse_cnf_formula : value -> cnf_formula
-
-(** Build an AND formula *)
-val make_and_formula : and_formula -> value
-
-(** Build a CNF formula *)
-val make_cnf_formula : cnf_formula -> value
+(** Build a formula *)
+val make_formula : Formula.t -> value
 
 (** Parse a simple constraint *)
 val parse_constraint: value -> ocaml_constraint

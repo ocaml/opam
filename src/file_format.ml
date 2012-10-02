@@ -288,76 +288,53 @@ let assoc_list items n parse =
 let assoc_string_list s n =
   assoc_list s n (parse_list parse_string)
 
-(* transform: "foo" (< "1", > "2") => "foo" (< "1"), "foo" (>"2") *)
-let rec parse_constraints name = function
-  | [] -> []
-  | (Symbol r) :: (String v) :: [] ->
-      [ ((name,None), Some (r, v)) ]
-  | (Symbol r) :: (String v) :: (Symbol ",") :: t ->
-      ((name,None), Some (r, v)) :: parse_constraints name t
-  | x -> bad_format "Expecting a constraint, got %s" (kinds x)
+(* Parse any constraint list *)
+let rec parse_constraints t =
+  let open Types.Formula in
+  match t with
+  | [] -> Empty
+  | (Symbol r) :: (String v) :: []                -> Atom (r, Types.V.of_string v)
+  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> And (Atom (r, Types.V.of_string v), parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> Or (Atom (r, Types.V.of_string v), parse_constraints t)
+  | [Group g]                                     -> Block (parse_constraints g)
+  | x                                             -> bad_format "Expecting a list of constraints, got %s" (kinds x)
 
-(* contains only "," *)
-let rec parse_and_formula_aux = function
-  | []                       -> []
-  | [String name]            -> [ ((name,None), None) ]
-  | [Option(String name, g)] -> parse_constraints name g
-  | [Group g]                -> parse_and_formula_aux g
-  | [ x ]                    -> bad_format "Expecting string or group, got %s" (kind x)
-  | e1 :: e2                 -> parse_and_formula_aux [e1] @ parse_and_formula_aux e2
+let rec make_constraints t =
+  let open Types.Formula in
+  match t with
+  | Empty       -> []
+  | Atom (r, v) -> [Symbol r; String (Types.V.to_string v)]
+  | And (x, y)  -> make_constraints x @ [Symbol "&"] @ make_constraints y
+  | Or (x, y)   -> make_constraints x @ [Symbol "|"] @ make_constraints y
+  | Block g     -> [Group (make_constraints g)]
 
-let parse_and_formula = function
-  | List l -> parse_and_formula_aux l
+(* parse a list of formulas *)
+let rec parse_formulas t =
+  let open Types.Formula in
+  match t with
+  | []                       -> Empty
+  | [String name]            -> Atom (Types.N.of_string name, Empty)
+  | [Option(String name, g)] -> Atom (Types.N.of_string name, parse_constraints g)
+  | [Group g]                -> parse_formulas g
+  | e1 :: Symbol "|" :: e2   -> Or (parse_formulas [e1], parse_formulas e2)
+  | e1 :: e2                 -> And (parse_formulas [e1], parse_formulas e2)
+
+let rec make_formulas t =
+  let open Types.Formula in
+  match t with
+  | Empty -> []
+  | Atom (name, Empty) -> [String (Types.N.to_string name)]
+  | Atom (name, cs)    -> [Option(String (Types.N.to_string name), make_constraints cs)]
+  | Block f            -> [Group (make_formulas f)]
+  | And(e,f)           -> make_formulas e @ make_formulas f
+  | Or(e,f)            -> make_formulas e @ [Symbol "|"] @ make_formulas f
+
+let parse_formula = function
+  | List l -> parse_formulas l
   | x      -> bad_format "Expecting list, got %s" (kind x)
 
-(* contains only "|" *)
-let rec parse_or_formula_aux = function
-  | []                       -> []
-  | [String name]            -> [ ((name,None), None) ]
-  | [Option(String name, g)] -> parse_constraints name g
-  | [Group g]                -> parse_or_formula_aux g
-  | [ x ]                    -> bad_format "Expecting string or group, got %s" (kind x)
-  | e1 :: Symbol "|" :: e2   -> parse_or_formula_aux [e1] @ parse_or_formula_aux e2
-  | _ -> bad_format "Expecting a 'or' formula"
-
-let parse_or_formula = function
-  | List l -> parse_or_formula_aux l
-  | x      -> bad_format "Expecting list, got %s" (kind x)
-
-let rec parse_cnf_formula_aux = function
-  | []                     -> []
-  | e1 :: e2               -> parse_or_formula_aux [e1] :: parse_cnf_formula_aux e2
-
-let parse_cnf_formula = function
-  | List l -> parse_cnf_formula_aux l
-  | x      -> bad_format "Expecting list, got %s" (kind x)
-
-let make_constraint = function
-  | (name,_), None       -> String name
-  | (name,_), Some (r,v) -> Option (String name, [Symbol r; String v])
-
-let make_and_formula_aux l =
-  List.map make_constraint l
-
-let make_and_formula l =
-  List (make_and_formula_aux l)
-
-let make_cnf_formula l =
-  let cnf =
-    List.fold_left (fun cnf l ->
-      let orl = List.map make_constraint l in
-      let orl =
-        List.fold_left (fun orl elt ->
-          match orl with
-          | [] -> [elt]
-          | _  -> elt :: Symbol "|" :: orl
-        ) [] orl in
-      match orl with
-      | []  -> cnf
-      | [c] -> c :: cnf
-      | _   -> (Group (List.rev orl)) :: cnf
-    ) [] l in
-  List (List.rev cnf)
+let make_formula f =
+  List (make_formulas f)
 
 let parse_relop = function
   | "="  -> `Eq
@@ -372,6 +349,10 @@ let parse_constraint = function
       (try (parse_relop r, Types.OCaml_V.of_string v)
        with _ -> bad_format "Expecting a relop, got %s" r)
   | x -> bad_format "Expecting a constraint, got %s" (kind x)
+
+let make_constraint = function
+  | (name,_), None       -> String name
+  | (name,_), Some (r,v) -> Option (String name, [Symbol r; String v])
 
 let string_of_relop = function
   | `Eq  -> "="

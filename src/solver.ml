@@ -91,13 +91,14 @@ module PA_graph = struct
 end
 
 type request = {
-  wish_install:  and_formula;
-  wish_remove :  and_formula;
-  wish_upgrade:  and_formula;
+  wish_install: Formula.conjunction;
+  wish_remove : Formula.conjunction;
+  wish_upgrade: Formula.conjunction;
 }
 
-let string_of_vpkg =
-  string_of_atom_formula
+let string_of_vpkg = function
+  | ((n,_), None)       -> n
+  | ((n,_), Some (r,c)) -> Printf.sprintf "%s (%s %s)" n r c
 
 let string_of_list f l =
   Printf.sprintf "{%s}"
@@ -198,6 +199,9 @@ let string_of_cudf (p, c) =
     | None       -> ""
     | Some (r,v) -> Printf.sprintf " (%s %d)" (relop r) v in
   Printf.sprintf "%s%s" p (const c)
+
+let string_of_internal_request =
+  string_of_internal_request string_of_cudf
 
 let string_of_cudfs l =
   string_of_list string_of_cudf l
@@ -384,8 +388,9 @@ module Graph = struct
     if List.mem_assoc opt pkg.Cudf.pkg_extra then
       match List.assoc opt pkg.Cudf.pkg_extra with
       | `String s ->
-          let deps = File_format.parse_cnf_formula
+          let deps = File_format.parse_formula
             (Parser.value Lexer.token (Lexing.from_string s)) in
+          let deps = Formula.to_cnf deps in
           let deps = Debian.Debcudf.lltocudf table deps in
           { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
       | _ -> assert false
@@ -461,7 +466,7 @@ end = struct
   let resolve_final_state univ req =
     log "FINAL_STATE: universe=%s request=<%s>"
       (string_of_universe univ)
-      (string_of_internal_request string_of_cudf req);
+      (string_of_internal_request req);
     let r = Algo.Depsolver.check_request (to_cudf_doc univ req) in
 (*    Diagnostic.fprintf ~explain:true ~failure:true ~success:true Format.err_formatter r;
       Format.pp_print_flush Format.err_formatter (); *)

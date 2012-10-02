@@ -83,11 +83,9 @@ let () =
         let opam = OpamFile.OPAM.read opam_f in
         let deps = OpamFile.OPAM.depends opam in
         let depopts = OpamFile.OPAM.depopts opam in
-        List.fold_left (fun accu l ->
-          List.fold_left (fun accu ((n,_),_) ->
-            N.Set.add (N.of_string n) accu
-          ) accu l
-        ) N.Set.empty (deps @ depopts)
+        Formula.fold_left (fun accu (n,_) ->
+            N.Set.add n accu
+        ) N.Set.empty (Formula.And (deps, depopts))
       ) else
         N.Set.empty in
     V.Set.fold (fun v set ->
