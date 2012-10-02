@@ -1,4 +1,5 @@
 0.7.5 (trunk)
+* Fix regression on init for rsync repositories
 
 0.7.4 [Oct 2012]
 * improve 'opam pin': the code is more robust and it is now possible to pin a package to a git repository
