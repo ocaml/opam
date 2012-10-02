@@ -561,6 +561,9 @@ end = struct
 
         (* Minimize the installed packages from the request *)
         let installed = Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) univ in
+        let installed =
+          List.filter (fun p -> not (List.exists (fun (n,_) -> n=p.Cudf.package) req.i_wish_remove)) installed in
+
         let is_installed name =
           List.exists (fun p -> p.Cudf.package = name) installed in
         let minimize request =
