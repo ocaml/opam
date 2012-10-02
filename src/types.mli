@@ -570,12 +570,16 @@ module Formula: sig
     | And of 'a formula * 'a formula
     | Or of 'a formula * 'a formula
 
+  (** Pretty print a formula *)
   val string_of_formula: ('a -> string) -> 'a formula -> string
 
+  (** Map function *)
   val map: ('a -> 'b) -> 'a formula -> 'b formula
 
+  (** Iter function *)
   val iter: ('a -> unit) -> 'a formula -> unit
 
+  (** Fold function *)
   val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 
   (** An atom is: [name] * ([relop] * [version]) formula.
@@ -584,12 +588,17 @@ module Formula: sig
       - "foo" {= "1" | > "4"} | ("bar" "bouh") *)
   type t = (name * (string * version) formula) formula
 
+  (** Return all the atoms *)
   val atoms: t -> (name * (string * version) option) list
 
+  (** Pretty print the formula *)
   val to_string: t -> string
 
+  (** Return a conjunction. If the initial formula is not a
+      conjunction, fail. *)
   val to_conjunction: t -> conjunction
 
+  (** Return an equivalent CNF formula *)
   val to_cnf: t -> cnf
 
 end

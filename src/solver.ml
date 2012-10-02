@@ -388,9 +388,8 @@ module Graph = struct
     if List.mem_assoc opt pkg.Cudf.pkg_extra then
       match List.assoc opt pkg.Cudf.pkg_extra with
       | `String s ->
-          let deps = File_format.parse_formula
-            (Parser.value Lexer.token (Lexing.from_string s)) in
-          let deps = Formula.to_cnf deps in
+          let value = Parser.value Lexer.token (Lexing.from_string s) in
+          let deps = Formula.to_cnf (File_format.parse_formula value) in
           let deps = Debian.Debcudf.lltocudf table deps in
           { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
       | _ -> assert false
