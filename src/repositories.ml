@@ -208,6 +208,8 @@ let make_archive ?(gener_digest=false) ?local_path nv =
 
     (* Eventually add the <package>/files/* to the extracted dir *)
     let files =
+      if not (Dirname.exists extract_dir) then
+        Dirname.mkdir extract_dir;
       Dirname.in_dir extract_dir (fun () -> copy_files local_repo nv) in
 
     (* And finally create the final archive *)
