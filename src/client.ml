@@ -1398,12 +1398,11 @@ let proceed_tochange t nv_old nv =
       (* Apply the patches *)
       let patches = OpamFile.OPAM.patches opam in
       List.iter (fun (base, filter) ->
-        with_repo t nv (fun repo _ ->
-          let root = Path.R.files repo nv in
-          let patch = root // Basename.to_string base in
-          if eval_filter t filter then (
-            Globals.msg "Applying %s\n" (Basename.to_string base);
-            Filename.patch patch p_build))
+        let root = Path.C.build t.compiler nv in
+        let patch = root // Basename.to_string base in
+        if eval_filter t filter then (
+          Globals.msg "Applying %s\n" (Basename.to_string base);
+          Filename.patch patch p_build)
       ) patches;
 
       p_build in
