@@ -247,7 +247,7 @@ let download r nv =
 
 let check_version repo =
   let repo_version =
-    try V.of_string (Raw.to_string (Filename.read (Path.R.version repo)))
+    try V.of_string (Utils.string_strip (Raw.to_string (Filename.read (Path.R.version repo))))
     with e -> V.of_string "0.7.5" in
   if V.compare repo_version (V.of_string Globals.version)  >= 0 then
     Globals.error_and_exit
