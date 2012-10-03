@@ -98,7 +98,7 @@ let contains s c =
   with Not_found -> false
 
 let split s c =
-  Pcre.split (Pcre.regexp (String.make 1 c)) s
+  Pcre.split (Re_perl.compile (Re.char c)) s
 
 (* Remove from a ':' separated list of string the one with the given prefix *)
 let reset_env_value ~prefix v =

@@ -636,9 +636,8 @@ let update_packages t ~show_packages repos =
 let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
-  let name_str = N.to_string name in
   let var_str = Variable.to_string var in
-  let read_var () =
+  let read_var name =
     let c = OpamFile.Dot_config.safe_read (Path.C.config t.compiler name) in
     try match Full_variable.section v with
       | None   -> OpamFile.Dot_config.variable c var
@@ -649,7 +648,7 @@ let contents_of_variable t v =
     try S (Sys.getenv var_str)
     with Not_found ->
       match current_ocaml_version t with
-      | None -> read_var ()
+      | None -> read_var name
       | Some ocaml_version ->
         if var_str = "ocaml-version" then (
           let ocaml_version_str = OCaml_V.to_string ocaml_version in
@@ -663,21 +662,54 @@ let contents_of_variable t v =
           let comp = OpamFile.Comp.read (Path.G.compiler t.global ocaml_version) in
           B (OpamFile.Comp.preinstalled comp)
         ) else
-          read_var ()
+          read_var name
 ) else (
-    try S (Sys.getenv (name_str ^"_"^ var_str))
-    with Not_found ->
-      let installed = mem_installed_package_by_name t name in
-      if var = Variable.enable && installed then
-        S "enable"
-      else if var = Variable.enable && not installed then
-        S "disable"
-      else if var = Variable.installed then
-        B installed
-      else if not installed then
-        Globals.error_and_exit "Package %s is not installed" (N.to_string name)
-      else
-        read_var ()
+    let process_one name =
+      let name_str = N.to_string name in
+      try Some (S (Sys.getenv (name_str ^"_"^ var_str)))
+      with Not_found ->
+        let installed = mem_installed_package_by_name t name in
+        if var = Variable.enable && installed then
+          Some (S "enable")
+        else if var = Variable.enable && not installed then
+          Some (S "disable")
+        else if var = Variable.installed then
+          Some (B installed)
+        else if not installed then
+          None
+        else
+          Some (read_var name) in
+    match process_one name with
+    | Some r -> r
+    | None   ->
+      let name_str = N.to_string name in
+      let names = Utils.split name_str '+' in
+      if List.length names = 1 then
+        Globals.error_and_exit "Package %s is not installed" name_str;
+      let names = List.map N.of_string names in
+      let results =
+        List.map (fun name ->
+          match process_one name with
+          | None   -> Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+          | Some r -> r
+        ) names in
+      let rec compose x y = match x,y with
+        | S "enable" , S "enable"  -> S "enable"
+        | S "disable", S "enable"
+        | S "enable" , S "disable"
+        | S "disable", S "disable" -> S "disable"
+        | B b1       , B b2        -> B (b1 && b2)
+        | S b, r     | r, S b      ->
+          if b = "true" then compose (B true) r
+          else if b = "false" then compose (B false) r
+          else
+            Globals.error_and_exit
+              "Cannot compose %s and %s"
+              (string_of_variable_contents x)
+              (string_of_variable_contents y) in
+      match results with
+      | [] | [_] -> assert false
+      | h::t     -> List.fold_left compose h t
   )
 
 (* Substitute the file contents *)
