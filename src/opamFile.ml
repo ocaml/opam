@@ -552,6 +552,7 @@ module OPAM = struct
   let s_ocaml_version = "ocaml-version"
   let s_patches     = "patches"
   let s_files       = "files"
+  let s_configure_style = "configure-style"
 
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
@@ -584,6 +585,7 @@ module OPAM = struct
       s_homepage;
       s_version;
       s_name;
+      s_configure_style;
     ]
 
   let name t = t.name
