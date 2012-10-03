@@ -207,11 +207,17 @@ val assoc_sections: item list -> string -> (section -> 'a) -> 'a list
 
 open Types
 
-(** Parse package formula *)
+(** Parse package formula where AND are implicit: [x y -> x & y] *)
 val parse_formula : value -> Formula.t
 
-(** Build a formula *)
+(** Build a formula where AND are implicit. *)
 val make_formula : Formula.t -> value
+
+(** Parse optional package formula where OR are implicit: [x y -> x | y] *)
+val parse_opt_formula : value -> Formula.t
+
+(** Build a formula where OR are implicit. *)
+val make_opt_formula : Formula.t -> value
 
 (** Parse a simple constraint *)
 val parse_constraint: value -> ocaml_constraint

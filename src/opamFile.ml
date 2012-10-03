@@ -618,7 +618,7 @@ module OPAM = struct
   let encode = Formula.map (fun (n,c) -> N.of_string (Common.CudfAdd.encode (N.to_string n)), c)
 
   let default_package t =
-    let depopts = string_of_value (File_format.make_formula (encode t.depopts)) in
+    let depopts = string_of_value (File_format.make_opt_formula t.depopts) in
     { D.default_package with
       D.name      = N.to_string t.name ;
       D.version   = V.to_string t.version ;
@@ -647,7 +647,7 @@ module OPAM = struct
         Variable (s_build, make_list make_command t.build);
         Variable (s_remove, make_list make_command t.remove);
         Variable (s_depends, make_formula t.depends);
-        Variable (s_depopts, make_formula t.depopts);
+        Variable (s_depopts, make_opt_formula t.depopts);
         Variable (s_conflicts, make_formula t.conflicts);
         Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
         Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
@@ -705,7 +705,7 @@ module OPAM = struct
     let build      = assoc_default [] s s_build parse_commands in
     let remove     = assoc_list s s_remove parse_commands in
     let depends    = assoc_default Formula.Empty s s_depends parse_formula in
-    let depopts    = assoc_default Formula.Empty s s_depopts parse_formula in
+    let depopts    = assoc_default Formula.Empty s s_depopts parse_opt_formula in
     let conflicts  = assoc_default Formula.Empty s s_conflicts parse_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in

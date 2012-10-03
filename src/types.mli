@@ -559,10 +559,19 @@ module Alias: ABSTRACT
 
 module Formula: sig
 
+  (** AND formulas *)
   type conjunction = Debian.Format822.vpkglist
 
+  (** Pretty print AND formulas *)
+  val string_of_conjunction: conjunction -> string
+
+  (** CNF formulas *)
   type cnf = Debian.Format822.vpkgformula
 
+  (** Pretty print CNF formulas *)
+  val string_of_cnf: cnf -> string
+
+  (** General formulas *)
   type 'a formula =
     | Empty
     | Atom of 'a

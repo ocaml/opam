@@ -980,6 +980,18 @@ module Formula = struct
 
   type cnf = Debian.Format822.vpkgformula
 
+  let string_of_vpkg = function
+    | ((n,_), None)       -> n
+    | ((n,_), Some (r,c)) -> Printf.sprintf "%s (%s %s)" n r c
+
+  let string_of_conjunction c =
+    Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_vpkg c))
+
+  let string_of_cnf cnf =
+    let string_of_clause c =
+      Printf.sprintf "(%s)" (String.concat " | " (List.map string_of_vpkg c)) in
+    Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_clause cnf))
+
   type 'a formula =
     | Empty
     | Atom of 'a

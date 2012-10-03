@@ -40,6 +40,10 @@ module StringMap = Map.Make(OString)
 
 let (|>) f g x = g (f x)
 
+let string_of_list f l =
+  Printf.sprintf "{%s}"
+    (String.concat ", " (List.map f l))
+
 let string_strip str =
   let p = ref 0 in
   let l = String.length str in

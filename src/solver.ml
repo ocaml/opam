@@ -96,22 +96,11 @@ type request = {
   wish_upgrade: Formula.conjunction;
 }
 
-let string_of_vpkg = function
-  | ((n,_), None)       -> n
-  | ((n,_), Some (r,c)) -> Printf.sprintf "%s (%s %s)" n r c
-
-let string_of_list f l =
-  Printf.sprintf "{%s}"
-    (String.concat ", " (List.map f l))
-
-let string_of_vpkgs =
-  string_of_list string_of_vpkg
-
 let string_of_request r =
   Printf.sprintf "install:%s remove:%s upgrade:%s"
-    (string_of_vpkgs r.wish_install)
-    (string_of_vpkgs r.wish_remove)
-    (string_of_vpkgs r.wish_upgrade)
+    (Formula.string_of_conjunction r.wish_install)
+    (Formula.string_of_conjunction r.wish_remove)
+    (Formula.string_of_conjunction r.wish_upgrade)
 
 type solution = {
   to_remove: NV.t list; (* order : first element needs to be removed before the others *)
@@ -163,9 +152,9 @@ type 'a internal_request = {
 
 let string_of_internal_request f r =
   Printf.sprintf "install:%s remove:%s upgrade:%s"
-    (string_of_list f r.i_wish_install)
-    (string_of_list f r.i_wish_remove)
-    (string_of_list f r.i_wish_upgrade)
+    (Utils.string_of_list f r.i_wish_install)
+    (Utils.string_of_list f r.i_wish_remove)
+    (Utils.string_of_list f r.i_wish_upgrade)
 
 let request_map f r =
   let f = List.map f in
@@ -185,7 +174,7 @@ let string_of_package p =
     p.Debian.Packages.name p.Debian.Packages.version installed
 
 let string_of_packages l =
-  string_of_list string_of_package l
+  Utils.string_of_list string_of_package l
 
 let string_of_cudf (p, c) =
   let relop = function
@@ -204,7 +193,7 @@ let string_of_internal_request =
   string_of_internal_request string_of_cudf
 
 let string_of_cudfs l =
-  string_of_list string_of_cudf l
+  Utils.string_of_list string_of_cudf l
 
 (* Universe of packages *)
 type universe = U of package list
@@ -219,10 +208,10 @@ let string_of_cudf_package p =
     p.Cudf.version installed
 
 let string_of_cudf_packages l =
-  string_of_list string_of_cudf_package l
+  Utils.string_of_list string_of_cudf_package l
 
 let string_of_answer l =
-  string_of_list (string_of_internal_action string_of_cudf_package)  l
+  Utils.string_of_list (string_of_internal_action string_of_cudf_package)  l
 
 let string_of_universe u =
   string_of_cudf_packages (Cudf.get_packages u)
@@ -280,6 +269,21 @@ let string_of_reasons table reasons =
     Printf.bprintf b " + %s\n" (string_of_chain c)
   ) chains;
   Buffer.contents b
+
+let depopts pkg =
+  let opt = OpamFile.OPAM.s_depopts in
+  if List.mem_assoc opt pkg.Cudf.pkg_extra then
+    match List.assoc opt pkg.Cudf.pkg_extra with
+    | `String s ->
+      let value = Parser.value Lexer.token (Lexing.from_string s) in
+      Some (File_format.parse_formula value)
+    | _ -> assert false
+  else
+    None
+
+let encode ((n,a),c) = (Common.CudfAdd.encode n,a),c
+let lencode = List.map encode
+let llencode = List.map lencode
 
 module O_pkg = struct
   type t = Cudf.package
@@ -384,17 +388,12 @@ module Graph = struct
      file.ml when we create the debian package. It could make sense
      to do it here. *)
   let extended_dependencies table pkg =
-    let opt = OpamFile.OPAM.s_depopts in
-    if List.mem_assoc opt pkg.Cudf.pkg_extra then
-      match List.assoc opt pkg.Cudf.pkg_extra with
-      | `String s ->
-          let value = Parser.value Lexer.token (Lexing.from_string s) in
-          let deps = Formula.to_cnf (File_format.parse_formula value) in
-          let deps = Debian.Debcudf.lltocudf table deps in
-          { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
-      | _ -> assert false
-    else
-      pkg
+    match depopts pkg with
+    | Some deps ->
+      let cnf = Formula.to_cnf deps in
+      let deps = Debian.Debcudf.lltocudf table (llencode cnf) in
+      { pkg with Cudf.depends = deps @ pkg.Cudf.depends }
+    | None -> pkg
 
   let filter_dependencies f_direction ?(depopts=false) (U l_pkg_pb) (P pkg_l) =
     let pkg_map =
@@ -442,7 +441,7 @@ end = struct
     include Common.CudfAdd.Cudf_set
 
     let to_string s =
-      string_of_list string_of_cudf_package (elements s)
+      Utils.string_of_list string_of_cudf_package (elements s)
 
     let choose_one s =
       match elements s with
@@ -463,9 +462,8 @@ end = struct
 
   (* Return the state in which the system has to go *)
   let resolve_final_state univ req =
-    log "FINAL_STATE: universe=%s request=<%s>"
-      (string_of_universe univ)
-      (string_of_internal_request req);
+    log "RESOLVE(final-state): universe=%s" (string_of_universe univ);
+    log "RESOLVE(final-state): request=%s" (string_of_internal_request req);
     let r = Algo.Depsolver.check_request (to_cudf_doc univ req) in
 (*    Diagnostic.fprintf ~explain:true ~failure:true ~success:true Format.err_formatter r;
       Format.pp_print_flush Format.err_formatter (); *)
@@ -495,7 +493,7 @@ end = struct
     | Diagnostic.Failure e -> Conflicts e
     | Diagnostic.Success f ->
       let final_state = f ~all:true () in
-      log "FINAL_STATE: state=%s" (string_of_cudf_packages final_state);
+      log "RESOLVE(simple): final-state=%s" (string_of_cudf_packages final_state);
         try
           let diff = Common.CudfDiff.diff univ (Cudf.load_universe final_state) in
           Success (actions_of_diff diff)

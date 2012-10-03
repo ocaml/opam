@@ -309,32 +309,43 @@ let rec make_constraints t =
   | Block g     -> [Group (make_constraints g)]
 
 (* parse a list of formulas *)
-let rec parse_formulas t =
+let rec parse_formulas opt t =
   let open Types.Formula in
   match t with
   | []                       -> Empty
   | [String name]            -> Atom (Types.N.of_string name, Empty)
   | [Option(String name, g)] -> Atom (Types.N.of_string name, parse_constraints g)
-  | [Group g]                -> parse_formulas g
-  | e1 :: Symbol "|" :: e2   -> Or (parse_formulas [e1], parse_formulas e2)
-  | e1 :: e2                 -> And (parse_formulas [e1], parse_formulas e2)
+  | [Group g]                -> parse_formulas opt g
+  | e1 :: Symbol "|" :: e2   -> Or (parse_formulas opt [e1], parse_formulas opt e2)
+  | e1 :: Symbol "&" :: e2   -> And (parse_formulas opt [e1], parse_formulas opt e2)
+  | e1 :: e2 when opt        -> Or (parse_formulas opt [e1], parse_formulas opt e2)
+  | e1 :: e2                 -> And (parse_formulas opt [e1], parse_formulas opt e2)
 
-let rec make_formulas t =
+let rec make_formulas opt t =
   let open Types.Formula in
   match t with
   | Empty -> []
   | Atom (name, Empty) -> [String (Types.N.to_string name)]
   | Atom (name, cs)    -> [Option(String (Types.N.to_string name), make_constraints cs)]
-  | Block f            -> [Group (make_formulas f)]
-  | And(e,f)           -> make_formulas e @ make_formulas f
-  | Or(e,f)            -> make_formulas e @ [Symbol "|"] @ make_formulas f
+  | Block f            -> [Group (make_formulas opt f)]
+  | And(e,f) when opt  -> make_formulas opt e @ [Symbol "&"] @ make_formulas opt f
+  | And(e,f)           -> make_formulas opt e @ make_formulas opt f
+  | Or(e,f) when opt   -> make_formulas opt e @ make_formulas opt f
+  | Or(e,f)            -> make_formulas opt e @ [Symbol "|"] @ make_formulas opt f
 
 let parse_formula = function
-  | List l -> parse_formulas l
+  | List l -> parse_formulas false l
   | x      -> bad_format "Expecting list, got %s" (kind x)
 
 let make_formula f =
-  List (make_formulas f)
+  List (make_formulas false f)
+
+let parse_opt_formula = function
+  | List l -> parse_formulas true l
+  | x      -> bad_format "Expecting list, got %s" (kind x)
+
+let make_opt_formula f =
+  List (make_formulas true f)
 
 let parse_relop = function
   | "="  -> `Eq
