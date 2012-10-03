@@ -35,8 +35,8 @@ let all, index, packages, gener_digest, dryrun, recurse =
   let dryrun = ref false in
   let recurse = ref false in
   let specs = Arg.align [
-    ("-v"       , Arg.Unit Globals.version, " Display version information");
-    ("--version", Arg.Unit Globals.version, " Display version information");
+    ("-v"       , Arg.Unit Globals.version_msg, " Display version information");
+    ("--version", Arg.Unit Globals.version_msg, " Display version information");
 
     ("-a"   , Arg.Set all, "");
     ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);

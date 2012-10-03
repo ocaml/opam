@@ -189,6 +189,9 @@ module R: sig
   (** Return the repository folder: {i $opam/repo/$repo} *)
   val root: t -> dirname
 
+  (** Return the version file *)
+  val version: t -> filename
+
   (** Return the repository config: {i $opam/repo/$repo/config} *)
   val config: t -> filename
 

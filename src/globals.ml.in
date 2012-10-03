@@ -112,7 +112,7 @@ let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* 
 
 let default_cores = 1
 
-let version () =
+let version_msg () =
   Printf.printf "\
 %s version %s
 

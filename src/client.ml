@@ -1913,6 +1913,77 @@ let dry_upgrade () =
   | Conflicts _ -> None
   | Success sol -> Some (get_stats sol)
 
+let upgrade names =
+  log "upgrade %s" (N.Set.to_string names);
+  let t = update_available_current (load_state ()) in
+  let reinstall = NV.Set.inter t.reinstall t.installed in
+  let to_not_reinstall = ref NV.Set.empty in
+  let solution_found = ref No_solution in
+  if N.Set.is_empty names then (
+    let solution = Heuristic.resolve (`upgrade reinstall) t
+      (List.map (fun to_upgrade ->
+        { wish_install = [];
+          wish_remove  = [];
+          wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
+         [ Heuristic.v_max; Heuristic.v_ge ]) in
+    solution_found := solution;
+  ) else (
+    let names = Heuristic.nv_of_names t names in
+    let partial_reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
+    to_not_reinstall := NV.Set.diff reinstall partial_reinstall;
+    let solution = Heuristic.resolve (`upgrade partial_reinstall)  t
+      (List.map (fun (to_upgrade, to_keep) ->
+        let wish_install = Heuristic.get_installed t to_keep in
+        let wish_install =
+          (* Remove the packages in [names] *)
+          N.Map.filter
+            (fun n _ -> List.for_all (fun vc -> name_of_version_constraint vc <> n) names)
+            wish_install in
+        let wish_install = N.Map.values wish_install in
+        let wish_upgrade = Heuristic.apply to_upgrade names in
+        { wish_install;
+          wish_remove  = [];
+          wish_upgrade })
+         [ (Heuristic.v_max, Heuristic.v_eq);
+           (Heuristic.v_max, Heuristic.v_ge);
+           (Heuristic.v_max, Heuristic.v_any);
+           (Heuristic.v_ge , Heuristic.v_eq);
+           (Heuristic.v_ge , Heuristic.v_ge);
+           (Heuristic.v_ge , Heuristic.v_any); ]
+      ) in
+    solution_found := solution;
+  );
+  let t = load_state () in
+  begin match !solution_found with
+    | OK            -> ()
+    | Nothing_to_do -> Globals.msg "Already up-to-date.\n"
+    | Aborted
+    | No_solution   -> to_not_reinstall := reinstall
+  end;
+  let reinstall = NV.Set.inter t.installed !to_not_reinstall in
+  let reinstall_f = Path.C.reinstall t.compiler in
+  if NV.Set.is_empty reinstall then
+    Filename.remove reinstall_f
+  else
+    OpamFile.Reinstall.write reinstall_f reinstall
+
+let check_opam_version () =
+  let t = load_state () in
+  let n = N.of_string "opam" in
+  let current_version =
+    let v = match Run.read_command_output ["opam"; "--version"] with
+      | s::_ -> List.hd (List.rev (Utils.split s ' '))
+      | _    -> assert false in
+    V.of_string v in
+  let max_version = V.Set.max_elt (Path.G.available_versions t.global n) in
+  if V.compare max_version current_version > 0 then (
+    if confirm "Your version of opam (%s) is not up-to-date. Do you want to upgrade to version %s ?"
+        (V.to_string current_version)
+        (V.to_string max_version)
+    then
+      upgrade (N.Set.singleton n)
+  )
+
 let update repos =
   log "update %s" (String.concat " " repos);
   let t = load_state () in
@@ -1933,13 +2004,19 @@ let update repos =
     update_packages t ~show_packages:true repos;
   );
   match dry_upgrade () with
-  | None -> Globals.msg "Already up-to-date.\n"
-  | Some stats ->
-    if sum stats > 0 then (
-      print_stats stats;
-      Globals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
-    ) else
-      Globals.msg "Already up-to-date.\n"
+  | None   -> Globals.msg "Already up-to-date.\n"
+  | Some _ ->
+    check_opam_version ();
+    (* we re-run dry_upgrade, as some packages might have been
+       upgraded by the precedent function *)
+    match dry_upgrade () with
+    | None       -> Globals.msg "Already up-to-date.\n"
+    | Some stats ->
+      if sum stats > 0 then (
+        print_stats stats;
+        Globals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
+      ) else
+        Globals.msg "Already up-to-date.\n"
 
 let init repo ocaml_version cores =
   log "init %s" (Repository.to_string repo);
@@ -2158,60 +2235,6 @@ let remove names =
          [ Heuristic.v_eq
          ; Heuristic.v_any ]) in
     ())
-
-let upgrade names =
-  log "upgrade %s" (N.Set.to_string names);
-  let t = update_available_current (load_state ()) in
-  let reinstall = NV.Set.inter t.reinstall t.installed in
-  let to_not_reinstall = ref NV.Set.empty in
-  let solution_found = ref No_solution in
-  if N.Set.is_empty names then (
-    let solution = Heuristic.resolve (`upgrade reinstall) t
-      (List.map (fun to_upgrade ->
-        { wish_install = [];
-          wish_remove  = [];
-          wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
-         [ Heuristic.v_max; Heuristic.v_ge ]) in
-    solution_found := solution;
-  ) else (
-    let names = Heuristic.nv_of_names t names in
-    let partial_reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
-    to_not_reinstall := NV.Set.diff reinstall partial_reinstall;
-    let solution = Heuristic.resolve (`upgrade partial_reinstall)  t
-      (List.map (fun (to_upgrade, to_keep) ->
-        let wish_install = Heuristic.get_installed t to_keep in
-        let wish_install =
-          (* Remove the packages in [names] *)
-          N.Map.filter
-            (fun n _ -> List.for_all (fun vc -> name_of_version_constraint vc <> n) names)
-            wish_install in
-        let wish_install = N.Map.values wish_install in
-        let wish_upgrade = Heuristic.apply to_upgrade names in
-        { wish_install;
-          wish_remove  = [];
-          wish_upgrade })
-         [ (Heuristic.v_max, Heuristic.v_eq);
-           (Heuristic.v_max, Heuristic.v_ge);
-           (Heuristic.v_max, Heuristic.v_any);
-           (Heuristic.v_ge , Heuristic.v_eq);
-           (Heuristic.v_ge , Heuristic.v_ge);
-           (Heuristic.v_ge , Heuristic.v_any); ]
-      ) in
-    solution_found := solution;
-  );
-  let t = load_state () in
-  begin match !solution_found with
-    | OK            -> ()
-    | Nothing_to_do -> Globals.msg "Already up-to-date.\n"
-    | Aborted
-    | No_solution   -> to_not_reinstall := reinstall
-  end;
-  let reinstall = NV.Set.inter t.installed !to_not_reinstall in
-  let reinstall_f = Path.C.reinstall t.compiler in
-  if NV.Set.is_empty reinstall then
-    Filename.remove reinstall_f
-  else
-    OpamFile.Reinstall.write reinstall_f reinstall
 
 let reinstall names =
   log "reinstall %s" (N.Set.to_string names);

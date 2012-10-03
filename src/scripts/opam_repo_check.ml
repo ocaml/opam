@@ -6,7 +6,7 @@ open OpamFile
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
   let specs = [
-    ("--version", Arg.Unit Globals.version, " Display version information")
+    ("--version", Arg.Unit Globals.version_msg, " Display version information")
   ] in
   let ano x =
     Printf.eprintf "%s: invalid argument" x in
