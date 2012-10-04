@@ -157,6 +157,12 @@ module OPAM: sig
 
   (** Construct as [maintainer] *)
   val with_maintainer: t -> string -> t
+
+  (** Construct as [files] *)
+  val with_files: t -> (basename * filter option) list -> t
+
+  (** Construct as [patches] *)
+  val with_patches: t -> (basename * filter option) list -> t
 end
 
 (** Package descriptions: [$opam/descr/] *)
