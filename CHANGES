@@ -1,4 +1,5 @@
 0.7.6 (trunk)
+* major internal API refactoring
 * repositories are now versionned, and we try to auto-update when possible
 
 0.7.5 [Oct 2012]
