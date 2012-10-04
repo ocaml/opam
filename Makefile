@@ -1,7 +1,7 @@
 include Makefile.config
 
 LOCAL_OCPBUILD=./ocp-build/ocp-build
-OCPBUILD ?= $(LOCAL_OCPBUILD)
+OCPBUILD ?= $(LOCAL_OCPBUILD) # /usr/local/bin/ocp-build
 SRC_EXT=src_ext
 TARGETS = opam opam-mk-repo
 
@@ -72,8 +72,7 @@ uninstall:
 	rm -f $(mandir)/man1/opam*
 
 LIB =   opam-lib
-CMI =   opamFile path file_format process globals repositories lexer run\
-	linelexer types parallel utils parser
+CMI =   $(shell ls src/*.mli)
 _FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
 	$(CMI:%=%.cmi)
 FILES = $(_FILES:%=_obuild/opam-lib/%)
@@ -88,7 +87,7 @@ doc: compile
 	mkdir -p doc/html/
 	ocamldoc \
 	  -I _obuild/opam-lib -I _obuild/cudf -I _obuild/dose \
-	  -I _obuild/bat -I _obuild/unix -I _obuild/extlib \
+	  -I _obuild/re -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
 	  src/*.mli -html -d doc/html/
 	$(MAKE) -C doc/man-src

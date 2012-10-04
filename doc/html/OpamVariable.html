@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamTypes.html">
+<link rel="next" href="OpamVersion.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamVariable</title>
+</head>
+<body>
+<div class="navbar"><a href="OpamTypes.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="OpamVersion.html">Next</a>
+</div>
+<center><h1>Module <a href="type_OpamVariable.html">OpamVariable</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> OpamVariable: <code class="code">sig</code> <a href="OpamVariable.html">..</a> <code class="code">end</code></pre><span id="2_Variablenames"><h2>Variable names</h2></span><br>
+<hr width="100%">
+<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
+<pre><span id="TYPEvariable"><span class="keyword">type</span> <code class="type"></code>variable</span> = <code class="type">t</code> </pre>
+<div class="info">
+Shortcut to variables<br>
+</div>
+
+<br><code><span id="TYPEvariable_contents"><span class="keyword">type</span> <code class="type"></code>variable_contents</span> = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">B</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">S</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Variable contents<br>
+</div>
+
+<pre><span id="VALstring_of_variable_contents"><span class="keyword">val</span> string_of_variable_contents</span> : <code class="type"><a href="OpamVariable.html#TYPEvariable_contents">variable_contents</a> -> string</code></pre><div class="info">
+Pretty print of variable contents<br>
+</div>
+<pre><span id="VALenable"><span class="keyword">val</span> enable</span> : <code class="type">t</code></pre><div class="info">
+the variable <code class="code">enable</code><br>
+</div>
+<pre><span id="VALinstalled"><span class="keyword">val</span> installed</span> : <code class="type">t</code></pre><div class="info">
+the variable <code class="code">installed</code><br>
+</div>
+<pre><span class="keyword">module</span> <a href="OpamVariable.Section.html">Section</a>: <code class="code">sig</code> <a href="OpamVariable.Section.html">..</a> <code class="code">end</code></pre><div class="info">
+Section names
+</div>
+<pre><span class="keyword">module</span> <a href="OpamVariable.Full.html">Full</a>: <code class="code">sig</code> <a href="OpamVariable.Full.html">..</a> <code class="code">end</code></pre><div class="info">
+Fully qualified variables
+</div>
+</body></html>

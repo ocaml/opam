@@ -1,0 +1,168 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamTypes</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;basename&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Base</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;dirname&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Dir</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filename&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filename_set&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;filename_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Map</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;generic_file&nbsp;=&nbsp;<span class="constructor">D</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">F</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;download&nbsp;=&nbsp;<span class="constructor">Up_to_date</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Not_available</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Result</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package_set&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;package_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Map</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;name&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;name_set&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;name_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.<span class="constructor">Map</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;version&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;version_set&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_version&nbsp;=&nbsp;<span class="constructor">OpamVersion</span>.<span class="constructor">Compiler</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_version_set&nbsp;=&nbsp;<span class="constructor">OpamVersion</span>.<span class="constructor">Compiler</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;opam_version&nbsp;=&nbsp;<span class="constructor">OpamVersion</span>.<span class="constructor">OPAM</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_constraint&nbsp;=&nbsp;<span class="constructor">OpamVersion</span>.<span class="constructor">Compiler</span>.constr<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;variable&nbsp;=&nbsp;<span class="constructor">OpamVariable</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;full_variable&nbsp;=&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Full</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;section&nbsp;=&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Section</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;full_section&nbsp;=&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Section</span>.<span class="constructor">Full</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;variable_contents&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamVariable</span>.variable_contents&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">B</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">S</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ppflag&nbsp;=&nbsp;<span class="constructor">Camlp4</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Cmd</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;generic_formula&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Empty</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Atom</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Block</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamTypes</span>.generic_formula<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">And</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamTypes</span>.generic_formula&nbsp;*&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamTypes</span>.generic_formula<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Or</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamTypes</span>.generic_formula&nbsp;*&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamTypes</span>.generic_formula<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;formula&nbsp;=&nbsp;<span class="constructor">OpamFormula</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;conjunction&nbsp;=&nbsp;<span class="constructor">OpamFormula</span>.conjunction<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;kind&nbsp;=&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;address&nbsp;=&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;repository&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;repo_name&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;repo_kind&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.kind;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;repo_address&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.address;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create_repository&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;kind:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;address:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;action&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">To_change</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;option&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.package<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">To_delete</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.package<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">To_recompile</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.package<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;(<span class="keywordsign">'</span>a,&nbsp;<span class="keywordsign">'</span>b)&nbsp;result&nbsp;=&nbsp;<span class="constructor">Success</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Conflicts</span>&nbsp;<span class="keyword">of</span>&nbsp;(unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b)<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;request&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wish_install&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.conjunction;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wish_remove&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.conjunction;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;wish_upgrade&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.conjunction;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;solution&nbsp;=&nbsp;{&nbsp;to_remove&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;list;&nbsp;to_add&nbsp;:&nbsp;<span class="keywordsign">'</span>a;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;upload&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upl_opam&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upl_descr&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upl_archive&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_upload&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.upload&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;remote&nbsp;=&nbsp;<span class="constructor">RList</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">RAdd</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">RRm</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_remote&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.remote&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pin_option&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Version</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.version<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Path</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Git</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unpin</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pin&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pin_package&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pin_arg&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_pin&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pin_option_of_string&nbsp;:&nbsp;?kind:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;path_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;kind_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config_option&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;conf_is_rec&nbsp;:&nbsp;bool;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;conf_is_byte&nbsp;:&nbsp;bool;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;conf_is_link&nbsp;:&nbsp;bool;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;conf_options&nbsp;:&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Section</span>.<span class="constructor">Full</span>.t&nbsp;list;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">CEnv</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CList</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CVariable</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.full_variable<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CIncludes</span>&nbsp;<span class="keyword">of</span>&nbsp;bool&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CCompil</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.config_option<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CSubst</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;symbol&nbsp;=&nbsp;<span class="constructor">Eq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Neq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Le</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ge</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Lt</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Gt</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filter&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">FBool</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">FString</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">FOp</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.symbol&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">FAnd</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">FOr</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filter<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;arg&nbsp;=&nbsp;string&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;command&nbsp;=&nbsp;<span class="constructor">OpamTypes</span>.arg&nbsp;list&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;value&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Bool</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Int</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">String</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Symbol</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ident</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">List</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Group</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Option</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;file_section&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;section_kind&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;section_name&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;section_items&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.file_item&nbsp;list;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">and</span>&nbsp;file_item&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Section</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.file_section<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Variable</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.value<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;file&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;file_contents&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.file_item&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;file_name&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;alias&nbsp;=&nbsp;<span class="constructor">OpamAlias</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;alias_set&nbsp;=&nbsp;<span class="constructor">OpamAlias</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;file_attribute&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Attribute</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;file_attribute_set&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Attribute</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;optional&nbsp;=&nbsp;{&nbsp;c&nbsp;:&nbsp;<span class="keywordsign">'</span>a;&nbsp;optional&nbsp;:&nbsp;bool;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;stats&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;s_install&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;s_reinstall&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;s_upgrade&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;s_downgrade&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;s_remove&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;env&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;add_to_env&nbsp;:&nbsp;(string&nbsp;*&nbsp;string)&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;add_to_path&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.dirname;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;new_env&nbsp;:&nbsp;(string&nbsp;*&nbsp;string)&nbsp;list;<br>
+&nbsp;&nbsp;}<br>
+<span class="keyword">end</span></code></body></html>

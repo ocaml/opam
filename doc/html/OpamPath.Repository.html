@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamPath.Alias.html">
+<link rel="Up" href="OpamPath.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamPath.Repository</title>
+</head>
+<body>
+<div class="navbar"><a href="OpamPath.Alias.html">Previous</a>
+&nbsp;<a href="OpamPath.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_OpamPath.Repository.html">OpamPath.Repository</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Repository: <code class="code">sig</code> <a href="OpamPath.Repository.html">..</a> <code class="code">end</code></pre>Repository paths<br>
+<hr width="100%">
+<pre><span id="TYPEr"><span class="keyword">type</span> <code class="type"></code>r</span> </pre>
+<div class="info">
+Repository root<br>
+</div>
+
+<pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Get the directory root<br>
+</div>
+<pre><span id="VALraw"><span class="keyword">val</span> raw</span> : <code class="type"><a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamPath.Repository.html#TYPEr">r</a></code></pre><div class="info">
+Create an arbitrary repository root<br>
+</div>
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamPath.Repository.html#TYPEr">r</a></code></pre><div class="info">
+Return the repository folder: <i>$opam/repo/$repo</i><br>
+</div>
+<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Return the version file<br>
+</div>
+<pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Return the repository config: <i>$opam/repo/$repo/config</i><br>
+</div>
+<pre><span id="VALpackages_dir"><span class="keyword">val</span> packages_dir</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Packages folder: <i>$opam/repo/$repo/packages</i><br>
+</div>
+<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Package folder: <i>$opam/repo/$repo/packages/$NAME.$VERSION</i><br>
+</div>
+<pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Return the OPAM file for a given package:
+      <i>$opam/repo/$repo/packages/$NAME.$VERSION/opam</i><br>
+</div>
+<pre><span id="VALdescr"><span class="keyword">val</span> descr</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Return the description file for a given package:
+      <i>$opam/repo/$repo/packages/$NAME.VERSION/descr</i><br>
+</div>
+<pre><span id="VALarchive"><span class="keyword">val</span> archive</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Return the archive for a given package:
+      <i>$opam/repo/$repo/archives/$NAME.$VERSION.tar.gz</i><br>
+</div>
+<pre><span id="VALarchives_dir"><span class="keyword">val</span> archives_dir</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Return the archive folder: <i>$opam/repo/$repo/archives/</i><br>
+</div>
+<pre><span id="VALupdated"><span class="keyword">val</span> updated</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Return the list of updated packages:
+      <i>$opam/repo/$repo/updated</i><br>
+</div>
+<pre><span id="VALupload_dir"><span class="keyword">val</span> upload_dir</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Return the upload folder for a given version:
+      <i>$opam/repo/$repo/upload/</i><br>
+</div>
+<pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Compiler files: <i>$opam/repo/$repo/compilers/$OVERSION.comp</i><br>
+</div>
+<pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Compiler files: <i>$opam/repo/$repo/compilers/</i><br>
+</div>
+<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+urls <i>$opma/repo/$repo/package/$NAME.$VERSION/url</i><br>
+</div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+files <i>$opam/repo/$repo/packages/$NAME.$VERSION/files</i><br>
+</div>
+<pre><span id="VALtmp"><span class="keyword">val</span> tmp</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Tempory folder <i>$opam/repo/$repo/tmp</i><br>
+</div>
+<pre><span id="VALtmp_dir"><span class="keyword">val</span> tmp_dir</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Tempory folder <i>$opam/repo/$repo/tmp/$NAME.$VERSION/</i><br>
+</div>
+</body></html>

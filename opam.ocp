@@ -11,19 +11,30 @@ begin
 begin library "opam-lib"
   subdir = [ "src" ]
   files   = [
-    "globals.ml"
-    "utils.ml"
-    "process.ml"
-    "run.ml"
-    "parallel.ml"
-    "types.ml"
-    "file_format.ml"
-    "lexer.mll"
-    "linelexer.mll"
-    "parser.mly"
+    "opamGlobals.ml"
+    "opamMisc.ml"
+    "opamProcess.ml"
+    "opamSystem.ml"
+    "opamParallel.ml"
+    "opamFilename.ml"
+    "opamPackage.ml"
+    "opamVersion.ml"
+    "opamVariable.ml"
+    "opamAlias.ml"
+    "opamFormula.ml"
+    "opamTypes.ml"
+    "opamFormat.ml"
+    "opamParser.mly"
+    "opamLexer.mll"
+    "opamLineLexer.mll"
     "opamFile.ml"
-    "path.ml"
-    "repositories.ml"
+    "opamPath.ml"
+    "opamRepository.ml"
+    "repo/opamCurl.ml"
+    "repo/opamRsync.ml"
+    "repo/opamGit.ml"
+    "opamSolver.ml"
+    "opamClient.ml"
   ]
 
   requires = [
@@ -38,12 +49,7 @@ end
 begin program "opam"
   subdir  = [ "src" ]
   files    = [
-    "repo/curl.ml"
-    "repo/rsync.ml"
-    "repo/git.ml"
-    "solver.ml"
-    "client.ml"
-    "opam.ml"
+    "opamMain.ml"
   ]
   requires = [
     "opam-lib"
@@ -54,12 +60,7 @@ end
 (* Helpers *)
 
 begin program "opam-mk-repo"
-  files = [
-    "src/repo/curl.ml"
-    "src/repo/rsync.ml"
-    "src/repo/git.ml"
-    "src/scripts/opam_mk_repo.ml"
-  ]
+  files = [ "src/scripts/opam_mk_repo.ml"]
   requires = [ "opam-lib" ]
 end
 
@@ -69,9 +70,7 @@ begin program "opam-check"
 end
 
 begin program "opam-repo-check"
-  files = [
-    "src/scripts/opam_repo_check.ml"
-  ]
+  files = [ "src/scripts/opam_repo_check.ml" ]
   requires = [ "opam-lib" ]
 end
 

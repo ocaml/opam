@@ -1,6 +1,8 @@
 all: opam.wiki
 	cd opam.wiki && git pull
-	$(MAKE) Packaging.pdf Tutorial.pdf Developing.pdf
+	$(MAKE) Advanced_Install.pdf Basic_Usage.pdf \
+	        Advanced_Usage.pdf Basic_Usage.pdf \
+	        Packaging.pdf Developing.pdf
 
 opam.wiki:
 	git clone git://github.com/OCamlPro/opam.wiki.git
