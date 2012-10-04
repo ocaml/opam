@@ -446,7 +446,16 @@ let download ~filename:src ~dirname:dst =
   );
   dst_file
 
-let patch p =
-  try command ["patch"; "-p1"; "-i"; p]
-  with e ->
-    command ["patch"; "-p0"; "-i"; p]
+let patch =
+  let max_trying = 20 in
+  fun p ->
+    let patch opts n =
+      command ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
+    let rec aux n =
+      if n = max_trying then
+        OpamGlobals.error_and_exit "Patching failed, can not determine the '-p' level to patch."
+      else if None = try Some (patch ["--dry-run"] n) with _ -> None then
+        aux (succ n)
+        else
+        patch [] n in
+    aux 0
