@@ -41,7 +41,7 @@ let global_args = [
   "--debug"     , Arg.Set Globals.debug   , " Print internal debug messages (very verbose)";
   "--verbose"   , Arg.Set Globals.verbose , " Display the output of subprocesses";
   "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
-  "--version"   , Arg.Unit Globals.version, " Display version information";
+  "--version"   , Arg.Unit Globals.version_msg, " Display version information";
   "--yes"       , Arg.Set Globals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.Set_string Globals.makecmd,
     Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !Globals.makecmd;

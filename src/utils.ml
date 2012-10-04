@@ -40,6 +40,10 @@ module StringMap = Map.Make(OString)
 
 let (|>) f g x = g (f x)
 
+let string_of_list f l =
+  Printf.sprintf "{%s}"
+    (String.concat ", " (List.map f l))
+
 let string_strip str =
   let p = ref 0 in
   let l = String.length str in
@@ -94,7 +98,7 @@ let contains s c =
   with Not_found -> false
 
 let split s c =
-  Pcre.split (Pcre.regexp (String.make 1 c)) s
+  Pcre.split (Re_perl.compile (Re.char c)) s
 
 (* Remove from a ':' separated list of string the one with the given prefix *)
 let reset_env_value ~prefix v =

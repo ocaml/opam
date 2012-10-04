@@ -108,13 +108,13 @@ module OPAM: sig
   val remove: t -> command list
 
   (** Package dependencies *)
-  val depends: t -> cnf_formula
+  val depends: t -> Formula.t
 
   (** Optional dependencies *)
-  val depopts: t -> cnf_formula
+  val depopts: t -> Formula.t
 
   (** Package conflicts *)
-  val conflicts: t -> and_formula
+  val conflicts: t -> Formula.t
 
   (** List of exported libraries *)
   val libraries: t -> section list
@@ -135,10 +135,10 @@ module OPAM: sig
   val patches: t -> (basename * filter option) list
 
   (** Construct as [depends] *)
-  val with_depends : t -> cnf_formula -> t
+  val with_depends : t -> Formula.t -> t
 
   (** Construct as [depopts] *)
-  val with_depopts : t -> cnf_formula -> t
+  val with_depopts : t -> Formula.t -> t
 
   (** Construct as [build] *)
   val with_build: t -> command list -> t
@@ -202,7 +202,7 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    OCaml_V.t -> and_formula -> (string * string * string) list -> t
+    OCaml_V.t -> name list -> (string * string * string) list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
@@ -227,7 +227,7 @@ module Comp: sig
   val build: t -> string list list
 
   (** Packages to install immediately after the creation of OCaml *)
-  val packages: t -> and_formula
+  val packages: t -> Formula.t
 
   (** Linking options to give to the native code compiler *)
   val asmlink: t -> string list

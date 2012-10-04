@@ -435,15 +435,14 @@ let update_repo_index t =
     ) repo_s
   ) repo_index
 
-let base_packages = [ "base-unix"; "base-bigarray"; "base-threads" ]
+let base_packages = List.map N.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
 let create_default_compiler_description t =
   let ocaml_version = OCaml_V.of_string Globals.default_compiler_version in
-  let mk name = ((name,None),None) in
   let f =
     OpamFile.Comp.create_preinstalled
       ocaml_version
-      (List.map mk (if !Globals.base_packages then base_packages else []))
+      (if !Globals.base_packages then base_packages else [])
       [ ("CAML_LD_LIBRARY_PATH", "=",
            "%{lib}%/stublibs"
            ^ ":" ^
@@ -613,22 +612,22 @@ let update_packages t ~show_packages repos =
         (N.to_string name)
         (V.to_string version);
       has_error := true);
-    let map_b b = List.map (List.map (fun s -> b, s)) in
+    let map_b b = Formula.fold_left (fun accu (n,_) -> (b, n) :: accu) [] in
     let depends = map_b true (OpamFile.OPAM.depends opam) in
     let depopts = map_b false (OpamFile.OPAM.depopts opam) in
-    List.iter (List.iter (fun (mandatory, ((d,_),_)) ->
-      match find_available_package_by_name t (N.of_string d) with
+    List.iter (fun (mandatory, d) ->
+      match find_available_package_by_name t d with
         | None   ->
           if mandatory then
             Globals.warning
               "Package %s depends on the unknown package %s"
-              (NV.to_string nv) d
+              (NV.to_string nv) (N.to_string d)
           else
             Globals.warning
               "Package %s depends optionally on the unknown package %s"
-              (NV.to_string nv) d
+              (NV.to_string nv) (N.to_string d)
         | Some _ -> ()
-    )) (depends @ depopts)
+    ) (depends @ depopts)
   ) (get_available_current t);
   if !has_error then
     Globals.exit 1
@@ -637,9 +636,8 @@ let update_packages t ~show_packages repos =
 let contents_of_variable t v =
   let name = Full_variable.package v in
   let var = Full_variable.variable v in
-  let name_str = N.to_string name in
   let var_str = Variable.to_string var in
-  let read_var () =
+  let read_var name =
     let c = OpamFile.Dot_config.safe_read (Path.C.config t.compiler name) in
     try match Full_variable.section v with
       | None   -> OpamFile.Dot_config.variable c var
@@ -650,7 +648,7 @@ let contents_of_variable t v =
     try S (Sys.getenv var_str)
     with Not_found ->
       match current_ocaml_version t with
-      | None -> read_var ()
+      | None -> read_var name
       | Some ocaml_version ->
         if var_str = "ocaml-version" then (
           let ocaml_version_str = OCaml_V.to_string ocaml_version in
@@ -664,21 +662,54 @@ let contents_of_variable t v =
           let comp = OpamFile.Comp.read (Path.G.compiler t.global ocaml_version) in
           B (OpamFile.Comp.preinstalled comp)
         ) else
-          read_var ()
+          read_var name
 ) else (
-    try S (Sys.getenv (name_str ^"_"^ var_str))
-    with Not_found ->
-      let installed = mem_installed_package_by_name t name in
-      if var = Variable.enable && installed then
-        S "enable"
-      else if var = Variable.enable && not installed then
-        S "disable"
-      else if var = Variable.installed then
-        B installed
-      else if not installed then
-        Globals.error_and_exit "Package %s is not installed" (N.to_string name)
-      else
-        read_var ()
+    let process_one name =
+      let name_str = N.to_string name in
+      try Some (S (Sys.getenv (name_str ^"_"^ var_str)))
+      with Not_found ->
+        let installed = mem_installed_package_by_name t name in
+        if var = Variable.enable && installed then
+          Some (S "enable")
+        else if var = Variable.enable && not installed then
+          Some (S "disable")
+        else if var = Variable.installed then
+          Some (B installed)
+        else if not installed then
+          None
+        else
+          Some (read_var name) in
+    match process_one name with
+    | Some r -> r
+    | None   ->
+      let name_str = N.to_string name in
+      let names = Utils.split name_str '+' in
+      if List.length names = 1 then
+        Globals.error_and_exit "Package %s is not installed" name_str;
+      let names = List.map N.of_string names in
+      let results =
+        List.map (fun name ->
+          match process_one name with
+          | None   -> Globals.error_and_exit "Package %s is not installed" (N.to_string name)
+          | Some r -> r
+        ) names in
+      let rec compose x y = match x,y with
+        | S "enable" , S "enable"  -> S "enable"
+        | S "disable", S "enable"
+        | S "enable" , S "disable"
+        | S "disable", S "disable" -> S "disable"
+        | B b1       , B b2        -> B (b1 && b2)
+        | S b, r     | r, S b      ->
+          if b = "true" then compose (B true) r
+          else if b = "false" then compose (B false) r
+          else
+            Globals.error_and_exit
+              "Cannot compose %s and %s"
+              (string_of_variable_contents x)
+              (string_of_variable_contents y) in
+      match results with
+      | [] | [_] -> assert false
+      | h::t     -> List.fold_left compose h t
   )
 
 (* Substitute the file contents *)
@@ -1074,15 +1105,12 @@ let proceed_toinstall t nv =
        in depends (XXX there is surely a way to get it from the solver) *)
     let local_sections = OpamFile.Dot_config.Section.available config in
     let libraries_in_opam =
-      List.fold_left (fun accu l ->
-        List.fold_left (fun accu ((n,_),_) ->
-          let n = N.of_string n in
-          let nv = find_installed_package_by_name t n in
-          let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
-          let libs = OpamFile.OPAM.libraries opam in
-          let syntax = OpamFile.OPAM.syntax opam in
-          List.fold_right Section.Set.add (libs @ syntax) accu
-        ) accu l
+      Formula.fold_left (fun accu (n,_) ->
+        let nv = find_installed_package_by_name t n in
+        let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
+        let libs = OpamFile.OPAM.libraries opam in
+        let syntax = OpamFile.OPAM.syntax opam in
+        List.fold_right Section.Set.add (libs @ syntax) accu
       ) Section.Set.empty (OpamFile.OPAM.depends opam) in
     let libraries_in_config =
       List.fold_left (fun accu s ->
@@ -1568,32 +1596,27 @@ module Heuristic = struct
 
     let pkg_available, pkg_not =
       List.partition
-        (function (name, _), _ ->
-          N.Map.mem (N.of_string name) available)
-        (OpamFile.Comp.packages comp) in
+        (fun (n, _) -> N.Map.mem n available)
+        (Formula.atoms (OpamFile.Comp.packages comp)) in
 
-    let () = (* check that all packages in [comp] are in [available]
-                except for "base-..."
-                (depending if "-no-base-packages" is set or not) *)
-      match
-        let pkg_not = List.rev_map (function (n, _), _ -> n) pkg_not in
-        if !Globals.base_packages then
-          pkg_not
-        else
-          List.filter (fun n -> not (List.mem n base_packages)) pkg_not
-      with
-        | [] -> ()
-        | l ->
-            let () = List.iter (Globals.error "Package %s not found") l in
-            Globals.exit 66 in
+    (* check that all packages in [comp] are in [available]
+       except for "base-..."
+       (depending if "-no-base-packages" is set or not) *)
+    let pkg_not = List.rev_map (function (n, _) -> n) pkg_not in
+    let pkg_not =
+      if !Globals.base_packages then
+        pkg_not
+      else
+        List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
+    if pkg_not <> [] then (
+      List.iter (N.to_string |> Globals.error "Package %s not found") pkg_not;
+      Globals.exit 2
+    );
 
-    List.rev_map
-      (function
-        | (name, _), None ->
-            let name = N.of_string name in
-            f_h None (N.Map.find name available) name
-        | n, v -> n, v)
-      pkg_available
+    List.rev_map (function
+      | n, None       -> f_h None (N.Map.find n available) n
+      | n, Some (r,v) -> (N.to_string n, None), Some (r, V.to_string v)
+    )  pkg_available
 
   (* Take a list of version constraints and an heuristic, and return a list of
      packages constraints satisfying the constraints *)
@@ -1890,6 +1913,77 @@ let dry_upgrade () =
   | Conflicts _ -> None
   | Success sol -> Some (get_stats sol)
 
+let upgrade names =
+  log "upgrade %s" (N.Set.to_string names);
+  let t = update_available_current (load_state ()) in
+  let reinstall = NV.Set.inter t.reinstall t.installed in
+  let to_not_reinstall = ref NV.Set.empty in
+  let solution_found = ref No_solution in
+  if N.Set.is_empty names then (
+    let solution = Heuristic.resolve (`upgrade reinstall) t
+      (List.map (fun to_upgrade ->
+        { wish_install = [];
+          wish_remove  = [];
+          wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
+         [ Heuristic.v_max; Heuristic.v_ge ]) in
+    solution_found := solution;
+  ) else (
+    let names = Heuristic.nv_of_names t names in
+    let partial_reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
+    to_not_reinstall := NV.Set.diff reinstall partial_reinstall;
+    let solution = Heuristic.resolve (`upgrade partial_reinstall)  t
+      (List.map (fun (to_upgrade, to_keep) ->
+        let wish_install = Heuristic.get_installed t to_keep in
+        let wish_install =
+          (* Remove the packages in [names] *)
+          N.Map.filter
+            (fun n _ -> List.for_all (fun vc -> name_of_version_constraint vc <> n) names)
+            wish_install in
+        let wish_install = N.Map.values wish_install in
+        let wish_upgrade = Heuristic.apply to_upgrade names in
+        { wish_install;
+          wish_remove  = [];
+          wish_upgrade })
+         [ (Heuristic.v_max, Heuristic.v_eq);
+           (Heuristic.v_max, Heuristic.v_ge);
+           (Heuristic.v_max, Heuristic.v_any);
+           (Heuristic.v_ge , Heuristic.v_eq);
+           (Heuristic.v_ge , Heuristic.v_ge);
+           (Heuristic.v_ge , Heuristic.v_any); ]
+      ) in
+    solution_found := solution;
+  );
+  let t = load_state () in
+  begin match !solution_found with
+    | OK            -> ()
+    | Nothing_to_do -> Globals.msg "Already up-to-date.\n"
+    | Aborted
+    | No_solution   -> to_not_reinstall := reinstall
+  end;
+  let reinstall = NV.Set.inter t.installed !to_not_reinstall in
+  let reinstall_f = Path.C.reinstall t.compiler in
+  if NV.Set.is_empty reinstall then
+    Filename.remove reinstall_f
+  else
+    OpamFile.Reinstall.write reinstall_f reinstall
+
+let check_opam_version () =
+  let t = load_state () in
+  let n = N.of_string "opam" in
+  let current_version =
+    let v = match Run.read_command_output ["opam"; "--version"] with
+      | s::_ -> List.hd (List.rev (Utils.split s ' '))
+      | _    -> assert false in
+    V.of_string v in
+  let max_version = V.Set.max_elt (Path.G.available_versions t.global n) in
+  if V.compare max_version current_version > 0 then (
+    if confirm "Your version of opam (%s) is not up-to-date. Do you want to upgrade to version %s ?"
+        (V.to_string current_version)
+        (V.to_string max_version)
+    then
+      upgrade (N.Set.singleton n)
+  )
+
 let update repos =
   log "update %s" (String.concat " " repos);
   let t = load_state () in
@@ -1910,13 +2004,19 @@ let update repos =
     update_packages t ~show_packages:true repos;
   );
   match dry_upgrade () with
-  | None -> Globals.msg "Already up-to-date.\n"
-  | Some stats ->
-    if sum stats > 0 then (
-      print_stats stats;
-      Globals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
-    ) else
-      Globals.msg "Already up-to-date.\n"
+  | None   -> Globals.msg "Already up-to-date.\n"
+  | Some _ ->
+    check_opam_version ();
+    (* we re-run dry_upgrade, as some packages might have been
+       upgraded by the precedent function *)
+    match dry_upgrade () with
+    | None       -> Globals.msg "Already up-to-date.\n"
+    | Some stats ->
+      if sum stats > 0 then (
+        print_stats stats;
+        Globals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
+      ) else
+        Globals.msg "Already up-to-date.\n"
 
 let init repo ocaml_version cores =
   log "init %s" (Repository.to_string repo);
@@ -2000,16 +2100,16 @@ let install names =
     List.iter
       (fun nv ->
         let opam = OpamFile.OPAM.read (Path.G.opam t.global nv) in
-        let f_warn =
-          List.iter
-            (fun ((n, _), _) ->
-              if not (N.Map.mem (N.of_string n) available) then
-              Globals.warning "unknown package %S" n) in
-        List.iter (List.iter f_warn)
-          [ OpamFile.OPAM.depends opam
-          ; OpamFile.OPAM.depopts opam ];
-        f_warn (OpamFile.OPAM.conflicts opam))
-      pkg_new;
+        let f_warn (n, _) =
+          if not (N.Map.mem n available) then
+            Globals.warning "unknown package %S" (N.to_string n)
+        in
+        List.iter (Formula.iter f_warn) [
+          OpamFile.OPAM.depends opam;
+          OpamFile.OPAM.depopts opam;
+          OpamFile.OPAM.conflicts opam;
+        ]
+      ) pkg_new;
 
     let name_new = List.map NV.name pkg_new in
     List.iter (fun n -> log "new: %s" (N.to_string n)) name_new;
@@ -2136,60 +2236,6 @@ let remove names =
          ; Heuristic.v_any ]) in
     ())
 
-let upgrade names =
-  log "upgrade %s" (N.Set.to_string names);
-  let t = update_available_current (load_state ()) in
-  let reinstall = NV.Set.inter t.reinstall t.installed in
-  let to_not_reinstall = ref NV.Set.empty in
-  let solution_found = ref No_solution in
-  if N.Set.is_empty names then (
-    let solution = Heuristic.resolve (`upgrade reinstall) t
-      (List.map (fun to_upgrade ->
-        { wish_install = [];
-          wish_remove  = [];
-          wish_upgrade = N.Map.values (Heuristic.get_installed t to_upgrade) })
-         [ Heuristic.v_max; Heuristic.v_ge ]) in
-    solution_found := solution;
-  ) else (
-    let names = Heuristic.nv_of_names t names in
-    let partial_reinstall = NV.Set.of_list (List.map nv_of_version_constraint names) in
-    to_not_reinstall := NV.Set.diff reinstall partial_reinstall;
-    let solution = Heuristic.resolve (`upgrade partial_reinstall)  t
-      (List.map (fun (to_upgrade, to_keep) ->
-        let wish_install = Heuristic.get_installed t to_keep in
-        let wish_install =
-          (* Remove the packages in [names] *)
-          N.Map.filter
-            (fun n _ -> List.for_all (fun vc -> name_of_version_constraint vc <> n) names)
-            wish_install in
-        let wish_install = N.Map.values wish_install in
-        let wish_upgrade = Heuristic.apply to_upgrade names in
-        { wish_install;
-          wish_remove  = [];
-          wish_upgrade })
-         [ (Heuristic.v_max, Heuristic.v_eq);
-           (Heuristic.v_max, Heuristic.v_ge);
-           (Heuristic.v_max, Heuristic.v_any);
-           (Heuristic.v_ge , Heuristic.v_eq);
-           (Heuristic.v_ge , Heuristic.v_ge);
-           (Heuristic.v_ge , Heuristic.v_any); ]
-      ) in
-    solution_found := solution;
-  );
-  let t = load_state () in
-  begin match !solution_found with
-    | OK            -> ()
-    | Nothing_to_do -> Globals.msg "Already up-to-date.\n"
-    | Aborted
-    | No_solution   -> to_not_reinstall := reinstall
-  end;
-  let reinstall = NV.Set.inter t.installed !to_not_reinstall in
-  let reinstall_f = Path.C.reinstall t.compiler in
-  if NV.Set.is_empty reinstall then
-    Filename.remove reinstall_f
-  else
-    OpamFile.Reinstall.write reinstall_f reinstall
-
 let reinstall names =
   log "reinstall %s" (N.Set.to_string names);
   let t = update_available_current (load_state ()) in
@@ -2314,9 +2360,12 @@ let config request =
     | Some oversion ->
       let comp = OpamFile.Comp.read (Path.G.compiler t.global oversion) in
       let names =
-        List.filter
-          (fun n -> NV.Set.exists (fun nv -> NV.name nv = n) t.installed)
-          (List.map (function (n, _), _ -> N.of_string n) (OpamFile.Comp.packages comp))
+        Utils.filter_map
+          (fun (n,_) ->
+            if NV.Set.exists (fun nv -> NV.name nv = n) t.installed
+            then Some n
+            else None)
+          (Formula.atoms (OpamFile.Comp.packages comp))
         @ List.map Full_section.package c.options in
       (* Compute the transitive closure of package dependencies *)
       let package_deps =

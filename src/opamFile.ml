@@ -499,9 +499,9 @@ module OPAM = struct
     build_env  : (string * string * string) list;
     build      : command list;
     remove     : command list;
-    depends    : cnf_formula;
-    depopts    : cnf_formula;
-    conflicts  : and_formula;
+    depends    : Formula.t;
+    depopts    : Formula.t;
+    conflicts  : Formula.t;
     libraries  : section list;
     syntax     : section list;
     patches    : (basename * filter option) list;
@@ -518,9 +518,9 @@ module OPAM = struct
     build_env  = [];
     build      = [];
     remove     = [];
-    depends    = [];
-    depopts    = [];
-    conflicts  = [];
+    depends    = Formula.Empty;
+    depopts    = Formula.Empty;
+    conflicts  = Formula.Empty;
     libraries  = [];
     syntax     = [];
     files      = [];
@@ -552,6 +552,7 @@ module OPAM = struct
   let s_ocaml_version = "ocaml-version"
   let s_patches     = "patches"
   let s_files       = "files"
+  let s_configure_style = "configure-style"
 
   (* to convert to cudf *)
   (* see [Debcudf.add_inst] for more details about the format *)
@@ -584,6 +585,7 @@ module OPAM = struct
       s_homepage;
       s_version;
       s_name;
+      s_configure_style;
     ]
 
   let name t = t.name
@@ -617,17 +619,15 @@ module OPAM = struct
 
   (* XXX: Pre-encode the depends and conflict fields to avoid
      headaches when interfacing with the solver *)
-  let lencode = List.map (fun ((n,a),c) -> (Common.CudfAdd.encode n,a), c)
-  let llencode = List.map lencode
+  let encode = Formula.map (fun (n,c) -> N.of_string (Common.CudfAdd.encode (N.to_string n)), c)
 
   let default_package t =
-    let depopts =
-      string_of_value (File_format.make_cnf_formula (llencode t.depopts)) in
+    let depopts = string_of_value (File_format.make_opt_formula t.depopts) in
     { D.default_package with
       D.name      = N.to_string t.name ;
       D.version   = V.to_string t.version ;
-      D.depends   = llencode t.depends ;
-      D.conflicts = lencode t.conflicts ;
+      D.depends   = Formula.to_cnf (encode t.depends);
+      D.conflicts = Formula.to_conjunction (encode t.conflicts);
       D.extras    = (s_depopts, depopts) :: D.default_package.D.extras }
 
   let to_package t ~installed =
@@ -650,9 +650,9 @@ module OPAM = struct
         Variable (s_build_env, make_list make_env_variable t.build_env);
         Variable (s_build, make_list make_command t.build);
         Variable (s_remove, make_list make_command t.remove);
-        Variable (s_depends, make_cnf_formula t.depends);
-        Variable (s_depopts, make_cnf_formula t.depopts);
-        Variable (s_conflicts, make_and_formula t.conflicts);
+        Variable (s_depends, make_formula t.depends);
+        Variable (s_depopts, make_opt_formula t.depopts);
+        Variable (s_conflicts, make_formula t.conflicts);
         Variable (s_libraries, make_list (Section.to_string |> make_string) t.libraries);
         Variable (s_syntax, make_list (Section.to_string |> make_string) t.syntax);
         Variable (s_files, make_list make_file t.files);
@@ -708,9 +708,9 @@ module OPAM = struct
     let build_env = assoc_list s s_build_env (parse_list parse_env_variable) in
     let build      = assoc_default [] s s_build parse_commands in
     let remove     = assoc_list s s_remove parse_commands in
-    let depends    = assoc_list s s_depends parse_cnf_formula in
-    let depopts    = assoc_list s s_depopts parse_cnf_formula in
-    let conflicts  = assoc_list s s_conflicts parse_and_formula in
+    let depends    = assoc_default Formula.Empty s s_depends parse_formula in
+    let depopts    = assoc_default Formula.Empty s s_depopts parse_opt_formula in
+    let conflicts  = assoc_default Formula.Empty s s_conflicts parse_formula in
     let libraries  = assoc_list s s_libraries (parse_list (parse_string |> Section.of_string)) in
     let syntax     = assoc_list s s_syntax (parse_list (parse_string |> Section.of_string)) in
     let ocaml_version = assoc_option s s_ocaml_version parse_constraint in
@@ -1054,7 +1054,7 @@ module Comp = struct
     asmcomp      : string list ;
     bytelink     : string list ;
     asmlink      : string list ;
-    packages     : and_formula ;
+    packages     : Formula.t ;
     requires     : section list;
     pp           : ppflag option;
     env          : (string * string * string) list;
@@ -1073,13 +1073,19 @@ module Comp = struct
     asmcomp   = [];
     bytelink  = [];
     asmlink   = [];
-    packages  = [];
+    packages  = Formula.Empty;
     requires  = [];
     pp        = None;
     env       = [];
   }
 
   let create_preinstalled name packages env =
+    let open Formula in
+    let mk n = Atom (n, Empty) in
+    let rec aux accu t = match accu, t with
+      | Empty, x  -> mk x
+      | _    , x  -> And(accu, mk x) in
+    let packages = List.fold_left aux Formula.Empty packages in
     { empty with name; preinstalled = true; packages; env }
 
   let s_name      = "name"
@@ -1158,7 +1164,7 @@ module Comp = struct
     let asmcomp   = assoc_string_list s s_asmcomp   in
     let bytelink  = assoc_string_list s s_bytecomp  in
     let asmlink   = assoc_string_list s s_asmlink   in
-    let packages  = assoc_list s s_packages parse_and_formula in
+    let packages  = assoc_default Formula.Empty s s_packages parse_formula in
     let requires  =
       assoc_list s s_requires (parse_list (parse_string |> Section.of_string)) in
     let pp = assoc_default None s s_pp parse_ppflags in
@@ -1200,7 +1206,7 @@ module Comp = struct
         Variable (s_asmcomp     , make_list make_string s.asmcomp);
         Variable (s_bytelink    , make_list make_string s.bytelink);
         Variable (s_asmlink     , make_list make_string s.asmlink);
-        Variable (s_packages    , make_and_formula s.packages);
+        Variable (s_packages    , make_formula s.packages);
         Variable (s_requires    , make_list (Section.to_string |> make_string) s.requires);
         Variable (s_env         , make_list make_env_variable s.env);
       ] @ match s.pp with

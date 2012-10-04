@@ -72,7 +72,7 @@ uninstall:
 	rm -f $(mandir)/man1/opam*
 
 LIB =   opam-lib
-CMI =   file path file_format process globals repositories lexer run\
+CMI =   opamFile path file_format process globals repositories lexer run\
 	linelexer types parallel utils parser
 _FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
 	$(CMI:%=%.cmi)

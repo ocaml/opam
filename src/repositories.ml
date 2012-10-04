@@ -208,6 +208,8 @@ let make_archive ?(gener_digest=false) ?local_path nv =
 
     (* Eventually add the <package>/files/* to the extracted dir *)
     let files =
+      if not (Dirname.exists extract_dir) then
+        Dirname.mkdir extract_dir;
       Dirname.in_dir extract_dir (fun () -> copy_files local_repo nv) in
 
     (* And finally create the final archive *)
@@ -243,12 +245,23 @@ let download r nv =
         (NV.to_string nv);
       Dirname.in_dir local_dir (fun () -> make_archive nv)
 
+let check_version repo =
+  let repo_version =
+    try V.of_string (Utils.string_strip (Raw.to_string (Filename.read (Path.R.version repo))))
+    with e -> V.of_string "0.7.5" in
+  if V.compare repo_version (V.of_string Globals.version)  >= 0 then
+    Globals.error_and_exit
+      "\nThe current version of OPAM cannot read the repository. \
+       You should upgrade to at least the version %s.\n" (V.to_string repo_version)
+
 let update r =
   log "update %s" (Repository.to_string r);
   let local_repo = Path.R.create r in
   let local_dir = Path.R.root local_repo in
   let module B = (val find_backend r: BACKEND) in
   let updated_files = Dirname.in_dir local_dir (fun () -> B.update (Repository.address r)) in
+
+  check_version local_repo;
   let updated_packages = nv_set_of_files updated_files in
 
   (* Clean-up archives and tmp files on URL changes *)

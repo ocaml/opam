@@ -1,4 +1,10 @@
-0.7.5 (trunk)
+0.7.6 (trunk)
+* repositories are now versionned, and we try to auto-update when possible
+
+0.7.5 [Oct 2012]
+* dependencies can now be expressed by any formula (instead of just CNF)
+* It's easier to compose the value of environment variable (ie. to write %{lwt+ssl:enable}%)
+* Fix regression on init for rsync repositories
 
 0.7.4 [Oct 2012]
 * improve 'opam pin': the code is more robust and it is now possible to pin a package to a git repository

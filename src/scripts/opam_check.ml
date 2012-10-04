@@ -8,7 +8,7 @@ let label = ref ""
 let spec = Arg.align [
   ("--root", Arg.Set_string Globals.root_path, " Set opam path");
   ("-l"    , Arg.Set_string label            , " Set a test label");
-  ("--version", Arg.Unit Globals.version     , " Display version information");
+  ("--version", Arg.Unit Globals.version_msg , " Display version information");
 ]
 
 let packages = ref []

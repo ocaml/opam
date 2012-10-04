@@ -102,6 +102,7 @@ module B = struct
     let updates = Filename.Set.of_list archives
     ++ sync_dir Path.R.packages_dir
     ++ sync_dir Path.R.compilers_dir in
+    ignore (rsync_file (Path.R.version remote_repo) (Path.R.version local_repo));
     updates
 
   let upload_dir ~address local_dir =

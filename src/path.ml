@@ -164,6 +164,8 @@ module R = struct
 
   let root t = t
 
+  let version t = t // "version"
+
   let config t = t // "config"
 
   let packages_dir t = t / "packages"

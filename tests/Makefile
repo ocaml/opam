@@ -197,8 +197,9 @@ downgrade:
 switch-alias:
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias P1.1 P2.1
+	$(OPAM) switch -export $(OPAM_ROOT)/export
 	$(OPAM) switch -install test -alias-of system -no-base-packages
-	$(OPAM)	switch -clone system
+	$(OPAM)	switch -import $(OPAM_ROOT)/export
 	$(CHECK) -l switch-alias-clone P1.1 P2.1
 	$(OPAM) switch -install test2 -alias-of 20
 	$(OPAM) install P1

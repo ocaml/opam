@@ -35,8 +35,8 @@ let all, index, packages, gener_digest, dryrun, recurse =
   let dryrun = ref false in
   let recurse = ref false in
   let specs = Arg.align [
-    ("-v"       , Arg.Unit Globals.version, " Display version information");
-    ("--version", Arg.Unit Globals.version, " Display version information");
+    ("-v"       , Arg.Unit Globals.version_msg, " Display version information");
+    ("--version", Arg.Unit Globals.version_msg, " Display version information");
 
     ("-a"   , Arg.Set all, "");
     ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
@@ -83,11 +83,9 @@ let () =
         let opam = OpamFile.OPAM.read opam_f in
         let deps = OpamFile.OPAM.depends opam in
         let depopts = OpamFile.OPAM.depopts opam in
-        List.fold_left (fun accu l ->
-          List.fold_left (fun accu ((n,_),_) ->
-            N.Set.add (N.of_string n) accu
-          ) accu l
-        ) N.Set.empty (deps @ depopts)
+        Formula.fold_left (fun accu (n,_) ->
+            N.Set.add n accu
+        ) N.Set.empty (Formula.And (deps, depopts))
       ) else
         N.Set.empty in
     V.Set.fold (fun v set ->

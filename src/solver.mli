@@ -54,9 +54,9 @@ end
 
 (** Solver request *)
 type request = {
-  wish_install:  and_formula;
-  wish_remove :  and_formula;
-  wish_upgrade:  and_formula;
+  wish_install: Formula.conjunction;
+  wish_remove : Formula.conjunction;
+  wish_upgrade: Formula.conjunction;
 }
 
 (** Convert a request to a string *)
