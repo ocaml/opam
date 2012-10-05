@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="OpamSolver.PA_graph.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamSolver.PA_graph.Parallel</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="OpamSolver.PA_graph.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_OpamSolver.PA_graph.Parallel.html">OpamSolver.PA_graph.Parallel</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Parallel: <code class="type"><a href="OpamParallel.SIG.html">OpamParallel.SIG</a></code><code class="type"> 
+    with type G.t = t
+     and type G.V.t = V.t</code></pre><hr width="100%">
+<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
+<code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
+      cores. <code class="code">child</code> is evaluated in a remote process and when it as
+      finished, whereas <code class="code">pre</code> and <code class="code">post</code> are evaluated on the current
+      process (respectively before and after the child process has
+      been created).<br>
+</div>
+<pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">(G.V.t * <a href="OpamParallel.html#TYPEerror">OpamParallel.error</a>) list * G.V.t list</code></pre>
+<div class="info">
+Errors (<code class="code">errors</code>, <code class="code">remaining</code>)<br>
+</div>
+</body></html>

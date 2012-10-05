@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamVariable.Section.G.html">
+<link rel="Up" href="OpamVariable.Section.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamVariable.Section.Full</title>
+</head>
+<body>
+<div class="navbar"><a href="OpamVariable.Section.G.html">Previous</a>
+&nbsp;<a href="OpamVariable.Section.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_OpamVariable.Section.Full.html">OpamVariable.Section.Full</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Full: <code class="code">sig</code> <a href="OpamVariable.Section.Full.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">OpamPackage.Name.t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> -> t</code></pre><div class="info">
+Create a fully qualified section<br>
+</div>
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type">OpamPackage.Name.t -> t</code></pre><div class="info">
+All the sections in a package<br>
+</div>
+<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type">t -> OpamPackage.Name.t</code></pre><div class="info">
+Return the package name in which the section is<br>
+</div>
+<pre><span id="VALsection"><span class="keyword">val</span> section</span> : <code class="type">t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> option</code></pre><div class="info">
+Return the optional section OpamPackage.Name.t: <code class="code">None</code> means all available
+        sections.<br>
+</div>
+</body></html>

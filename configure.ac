@@ -22,7 +22,7 @@ fi
 
 AC_CONFIG_FILES(
   Makefile.config
-  src/globals.ml
+  src/opamGlobals.ml
 )
 AC_OUTPUT
 

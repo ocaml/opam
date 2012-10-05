@@ -13,9 +13,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open Types
+open OpamTypes
 
-(** Functions to read and write configuration files in a typed way. *)
+(** Functions to read and write OPAM configuration files in a typed way. *)
 module type IO_FILE = sig
 
   (** File contents *)
@@ -33,12 +33,6 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
-  (** Return the file contents *)
-  val to_raw: t -> raw
-
-  (** Convert a raw string into a file *)
-  val of_raw: raw -> t
-
 end
 
 (** Configuration file: [$opam/config] *)
@@ -47,28 +41,28 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: OPAM_V.t -> repository list -> int -> t
+  val create: opam_version -> repository list -> int -> t
 
   (** OCaml alias updates *)
-  val with_ocaml_version : t -> Alias.t -> t
+  val with_alias : t -> alias -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository list -> t
 
   (** system-wide's OCaml version updates *)
-  val with_system_ocaml_version: t -> OCaml_V.t -> t
+  val with_system_version: t -> compiler_version -> t
 
   (** Return the OPAM version *)
-  val opam_version: t  -> OPAM_V.t
+  val opam_version: t  -> opam_version
 
   (** Return the list of repository *)
   val repositories: t  -> repository list
 
   (** Return the OCaml alias *)
-  val ocaml_version: t -> Alias.t
+  val alias: t -> alias
 
   (** Return the system's OCaml version *)
-  val system_ocaml_version: t -> OCaml_V.t option
+  val system_version: t -> compiler_version option
 
   (** Return the number of cores *)
   val cores: t -> int
@@ -81,7 +75,7 @@ module OPAM: sig
   include IO_FILE
 
   (** Create an opam file *)
-  val create: nv -> t
+  val create: package -> t
 
   (** Package name *)
   val name: t -> name
@@ -90,7 +84,7 @@ module OPAM: sig
   val version: t -> version
 
   (** Compiler constraint *)
-  val ocaml_version: t -> ocaml_constraint option
+  val ocaml_version: t -> compiler_constraint option
 
   (** Package maintainer *)
   val maintainer: t -> string
@@ -108,13 +102,13 @@ module OPAM: sig
   val remove: t -> command list
 
   (** Package dependencies *)
-  val depends: t -> Formula.t
+  val depends: t -> formula
 
   (** Optional dependencies *)
-  val depopts: t -> Formula.t
+  val depopts: t -> formula
 
   (** Package conflicts *)
-  val conflicts: t -> Formula.t
+  val conflicts: t -> formula
 
   (** List of exported libraries *)
   val libraries: t -> section list
@@ -135,10 +129,10 @@ module OPAM: sig
   val patches: t -> (basename * filter option) list
 
   (** Construct as [depends] *)
-  val with_depends : t -> Formula.t -> t
+  val with_depends : t -> formula -> t
 
   (** Construct as [depopts] *)
-  val with_depopts : t -> Formula.t -> t
+  val with_depopts : t -> formula -> t
 
   (** Construct as [build] *)
   val with_build: t -> command list -> t
@@ -152,8 +146,8 @@ module OPAM: sig
   (** Construct as [substs] *)
   val with_substs : t -> basename list -> t
 
-  (** Construct as [ocaml_version] *)
-  val with_ocaml_version: t -> ocaml_constraint option -> t
+  (** Construct as [compiler_version] *)
+  val with_ocaml_version: t -> compiler_constraint option -> t
 
   (** Construct as [maintainer] *)
   val with_maintainer: t -> string -> t
@@ -163,6 +157,7 @@ module OPAM: sig
 
   (** Construct as [patches] *)
   val with_patches: t -> (basename * filter option) list -> t
+
 end
 
 (** Package descriptions: [$opam/descr/] *)
@@ -181,16 +176,16 @@ module Descr: sig
 end
 
 (** Compiler aliases: [$opam/aliases] *)
-module Aliases: IO_FILE with type t = (Alias.t * OCaml_V.t) list
+module Aliases: IO_FILE with type t = (alias * compiler_version) list
 
 (** List of installed packages: [$opam/$oversion/installed] *)
-module Installed: IO_FILE with type t = NV.Set.t
+module Installed: IO_FILE with type t = package_set
 
 (** List of packages to reinstall: [$opam/$oversion/reinstall] *)
-module Reinstall: IO_FILE with type t = NV.Set.t
+module Reinstall: IO_FILE with type t = package_set
 
 (** List of updated packages: [$opam/$repo/$repo/updated] *)
-module Updated: IO_FILE with type t = NV.Set.t
+module Updated: IO_FILE with type t = package_set
 
 (** Environement variables *)
 module Env: IO_FILE with type t = (string * string) list
@@ -202,13 +197,13 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    OCaml_V.t -> name list -> (string * string * string) list -> t
+    compiler_version -> name list -> (string * string * string) list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
 
   (** Return the compiler name *)
-  val name: t -> OCaml_V.t
+  val name: t -> compiler_version
 
   (** Return the url of the compiler *)
   val src: t -> filename option
@@ -227,7 +222,7 @@ module Comp: sig
   val build: t -> string list list
 
   (** Packages to install immediately after the creation of OCaml *)
-  val packages: t -> Formula.t
+  val packages: t -> formula
 
   (** Linking options to give to the native code compiler *)
   val asmlink: t -> string list
@@ -363,13 +358,13 @@ end
 (** {2 Repository files} *)
 
 (** Association between package names and repository: [$opam/repo/index] *)
-module Repo_index: IO_FILE with type t = string list N.Map.t
+module Repo_index: IO_FILE with type t = string list name_map
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
 
 (** Pinned package files *)
-module Pinned: IO_FILE with type t = pin_option N.Map.t
+module Pinned: IO_FILE with type t = pin_option name_map
 
 (** {2 Substitution files} *)
 
@@ -409,7 +404,7 @@ module URL: sig
 end
 
 (** {2 urls.txt file *} *)
-module Urls_txt: IO_FILE with type t = Remote_file.Set.t
+module Urls_txt: IO_FILE with type t = file_attribute_set
 
 (** List of filenames *)
-module Filenames: IO_FILE with type t = Filename.Set.t
+module Filenames: IO_FILE with type t = filename_set

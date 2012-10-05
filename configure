@@ -3718,7 +3718,7 @@ echo "$as_me: error: Your version of OCaml: $OCAMLVERSION is not supported" >&2;
 
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/globals.ml"
+ac_config_files="$ac_config_files Makefile.config src/opamGlobals.ml"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -4288,7 +4288,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
-    "src/globals.ml") CONFIG_FILES="$CONFIG_FILES src/globals.ml" ;;
+    "src/opamGlobals.ml") CONFIG_FILES="$CONFIG_FILES src/opamGlobals.ml" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
