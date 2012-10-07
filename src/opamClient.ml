@@ -2038,11 +2038,7 @@ let upgrade names =
 let check_opam_version () =
   let t = load_state () in
   let n = OpamPackage.Name.of_string "opam" in
-  let current_version =
-    let v = match OpamSystem.read_command_output ["opam"; "--version"] with
-      | s::_ -> List.hd (List.rev (OpamMisc.split s ' '))
-      | _    -> assert false in
-   OpamPackage.Version.of_string v in
+  let current_version = OpamPackage.Version.of_string OpamGlobals.version in
   match find_package_by_name t n with
   | None   -> ()
   | Some _ ->
