@@ -62,11 +62,22 @@ module Syntax = struct
     OpamFormat.string_of_file ~indent_variable t
 
   let check f fields =
-    if not (OpamFormat.is_valid f.file_contents fields) then
-      OpamGlobals.error_and_exit "{ %s } are invalid field names in %s. Valid fields are { %s }"
-        (String.concat ", " (OpamFormat.invalid_fields f.file_contents fields))
-        f.file_name
-        (String.concat ", " fields)
+    if not (OpamFormat.is_valid f.file_contents fields) then (
+      let invalids = OpamFormat.invalid_fields f.file_contents fields in
+      let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
+      if too_many <> [] then
+        OpamGlobals.error
+          "%s appear too many times in %s"
+          f.file_name
+          (OpamMisc.string_of_list (fun x -> x) too_many);
+      if invalids <> [] then
+        OpamGlobals.error "%s are invalid field names in %s. Valid fields are %s"
+          (OpamMisc.string_of_list (fun x -> x) invalids)
+          f.file_name
+          (OpamMisc.string_of_list (fun x -> x) fields);
+      OpamGlobals.error "foo!";
+      OpamGlobals.exit 2;
+    )
 end
 
 module X = struct

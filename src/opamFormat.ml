@@ -43,17 +43,30 @@ let bad_format fmt =
     (fun str -> raise (Bad_format (Printf.sprintf "Bad format! %s" str)))
     fmt
 
-let rec is_valid items fields =
-  List.for_all (function
-    | Variable (f, _) -> List.mem f fields
-    | Section s       -> is_valid s.section_items fields
-  ) items
+let names items =
+  let tbl = ref OpamMisc.StringMap.empty in
+  let add f =
+    if OpamMisc.StringMap.mem f !tbl then
+      let i = OpamMisc.StringMap.find f !tbl in
+      tbl := OpamMisc.StringMap.add f (i+1) (OpamMisc.StringMap.remove f !tbl)
+    else
+      tbl := OpamMisc.StringMap.add f 1 !tbl in
+  let rec aux items =
+    List.iter (function
+      | Variable (f, _) -> add f
+      | Section s       -> aux s.section_items
+  ) items in
+  aux items;
+  !tbl
 
 let invalid_fields items fields =
-  let rec aux accu = function
-    | Variable(f,_) -> if List.mem f fields then accu else f :: accu
-    | Section s     -> List.fold_left aux accu s.section_items in
-  List.fold_left aux [] items
+  let tbl = names items in
+  OpamMisc.StringMap.fold (fun f i accu ->
+    if List.mem f fields && i = 1 then accu else f :: accu
+  ) tbl []
+
+let is_valid items fields =
+  invalid_fields items fields = []
 
 let rec kind = function
   | Bool b   -> Printf.sprintf "bool(%b)" b
