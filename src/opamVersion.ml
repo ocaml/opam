@@ -21,7 +21,7 @@ module Compiler = struct
 
   include OpamMisc.Base
 
-  type constr = relop * t
+  type constr = (relop * t) OpamFormula.formula
 
   let current () =
     match OpamSystem.ocaml_version () with

@@ -679,7 +679,7 @@ module OPAM = struct
       ] @ (
         match t.ocaml_version with
         | None   -> []
-        | Some v -> [ Variable (s_ocaml_version, OpamFormat.make_constraint v) ]
+        | Some v -> [ Variable (s_ocaml_version, OpamFormat.make_compiler_constraint v) ]
       ) @
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
@@ -735,7 +735,7 @@ module OPAM = struct
     let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts OpamFormat.parse_formula in
     let libraries = OpamFormat.assoc_list s s_libraries (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
     let syntax = OpamFormat.assoc_list s s_syntax (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
-    let ocaml_version = OpamFormat.assoc_option s s_ocaml_version OpamFormat.parse_constraint in
+    let ocaml_version = OpamFormat.assoc_option s s_ocaml_version OpamFormat.parse_compiler_constraint in
     let parse_file = OpamFormat.parse_option (OpamFormat.parse_string |> OpamFilename.Base.of_string) OpamFormat.parse_filter in
     let patches = OpamFormat.assoc_list s s_patches (OpamFormat.parse_list parse_file) in
     let files = OpamFormat.assoc_list s s_files (OpamFormat.parse_list parse_file) in

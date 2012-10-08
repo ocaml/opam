@@ -35,6 +35,9 @@ type 'a formula =
   | And of 'a formula * 'a formula
   | Or of 'a formula * 'a formula
 
+(** Eval a formula *)
+val eval: ('a -> bool) -> 'a formula -> bool
+
 (** Pretty print a formula *)
 val string_of_formula: ('a -> string) -> 'a formula -> string
 

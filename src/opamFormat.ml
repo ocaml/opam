@@ -349,16 +349,6 @@ let parse_relop = function
   | "<"  -> `Lt
   | _    -> invalid_arg "parse_relop"
 
-let parse_constraint = function
-  | List [ Symbol r; String v ] ->
-      (try (parse_relop r, OpamVersion.Compiler.of_string v)
-       with _ -> bad_format "Expecting a relop, got %s" r)
-  | x -> bad_format "Expecting a constraint, got %s" (kind x)
-
-let make_constraint = function
-  | (name,_), None       -> String name
-  | (name,_), Some (r,v) -> Option (String name, [Symbol r; String v])
-
 let string_of_relop = function
   | `Eq  -> "="
   | `Geq -> ">="
@@ -367,11 +357,33 @@ let string_of_relop = function
   | `Lt  -> "<"
   | _    -> invalid_arg "parse_relop"
 
-let make_constraint (r, v) =
-  List [
-    Symbol (string_of_relop r);
-    String (OpamVersion.Compiler.to_string v);
-  ]
+let rec parse_compiler_constraint t =
+  let module F = OpamFormula in
+  match t with
+  | []                     -> F.Empty
+  | [Symbol r; String v ]  ->
+    (try F.Atom (parse_relop r, OpamVersion.Compiler.of_string v)
+     with _ -> bad_format "Expecting a relop, got %s" r)
+  | [Group g]              -> parse_compiler_constraint g
+  | e1::e2 :: Symbol "|" :: e3 -> F.Or (parse_compiler_constraint [e1;e2], parse_compiler_constraint e3)
+  | e1::e2 :: Symbol "&" :: e3 -> F.And (parse_compiler_constraint [e1;e2], parse_compiler_constraint e3)
+  | x -> bad_format "Expecting a compiler constraint, got %s" (kinds x)
+
+let parse_compiler_constraint = function
+  | List l -> parse_compiler_constraint l
+  | x      -> bad_format "Expecting a list, got %s" (kind x)
+
+let rec make_compiler_constraint t =
+  let module F = OpamFormula in
+  match t with
+  | F.Empty       -> []
+  | F.Atom (r, v) -> [Symbol (string_of_relop r); String (OpamVersion.Compiler.to_string  v)]
+  | F.Block f     -> [Group (make_compiler_constraint f)]
+  | F.And(e,f)    -> make_compiler_constraint e @ [Symbol "|"] @ make_compiler_constraint f
+  | F.Or(e,f)     -> make_compiler_constraint e @ [Symbol "|"] @ make_compiler_constraint f
+
+let make_compiler_constraint t =
+  List (make_compiler_constraint t)
 
 let parse_env_variable v =
   let l = parse_sequence [
