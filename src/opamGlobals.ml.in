@@ -85,9 +85,18 @@ type os =
   | Unix
   | Other of string
 
+let uname_s () =
+  let stdout_in, stdout = Unix.pipe () in
+  let _, stderr = Unix.pipe () in
+  let stdin, _ = Unix.pipe () in
+  let _ = Unix.create_process "uname" [|"-s"|] stdin stdout stderr in
+  let buf = String.create 128 in
+  let r = Unix.read stdout_in buf 0 128 in
+  String.sub buf 0 r
+
 let os = match Sys.os_type with
   | "Unix" -> begin
-    match input_line (Unix.open_process_in "uname -s") with
+    match uname_s () with
     | "Darwin"  -> Darwin
     | "Linux"   -> Linux
     | "FreeBSD" -> FreeBSD
