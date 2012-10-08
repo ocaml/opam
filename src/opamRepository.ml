@@ -184,7 +184,7 @@ let download_archive r nv =
 
 (* Copy the file in local_repo in current dir *)
 let copy_files local_repo nv =
-  let local_dir = OpamPath.Repository.root local_repo in
+  let local_dir = OpamFilename.cwd () in
   (* Eventually add the <package>/files/* to the extracted dir *)
   log "Adding the files to the archive";
   let files = OpamFilename.list_files (OpamPath.Repository.files local_repo nv) in
