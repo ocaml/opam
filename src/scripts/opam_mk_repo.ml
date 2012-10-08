@@ -16,6 +16,11 @@
 open OpamTypes
 open OpamFilename.OP
 
+let () =
+  OpamCurl.register ();
+  OpamGit.register ();
+  OpamRsync.register ()
+
 let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
 
 let all, index, packages, gener_digest, dryrun, recurse =

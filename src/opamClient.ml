@@ -92,9 +92,10 @@ let available_packages root compiler config pinned packages =
   let filter nv =
     let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
     let consistent_ocaml_version =
+      let atom (r,v) = OpamVersion.Compiler.compare ocaml_version r v in
       match OpamFile.OPAM.ocaml_version opam with
-      | None       -> true
-      | Some (r,v) -> OpamVersion.Compiler.compare ocaml_version r v in
+      | None   -> true
+      | Some c -> OpamFormula.eval atom c in
     let consistent_pinned_version =
       not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) ||
         match OpamPackage.Name.Map.find (OpamPackage.name nv) pinned with
@@ -258,46 +259,6 @@ let find_installed_package_by_name t name =
   try OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) t.installed
   with Not_found ->
     OpamGlobals.error_and_exit "Package %s is not installed" (OpamPackage.Name.to_string name)
-
-(* Remove the packages which does not fullfil the compiler constraints
-   & deal with pinned packages. *)
-let packages t =
-  let ocaml_version =
-    let current_alias = t.alias in
-    let default_alias = OpamAlias.of_string OpamGlobals.default_alias in
-    if current_alias = default_alias then (
-      let current = OpamVersion.Compiler.current () in
-      let system = OpamFile.Config.system_version t.config in
-      match current, system  with
-      | None  , None   -> OpamGlobals.error_and_exit "No OCaml compiler installed."
-      | None  , Some s -> s
-      | Some c, Some s ->
-        if s <> c then (
-          OpamGlobals.warning "The version of OCaml in your path (%S) \
-                                 is not the same as the one OPAM has been \
-                                 initialized with (%S)."
-            (OpamVersion.Compiler.to_string c)
-            (OpamVersion.Compiler.to_string s)
-        );
-        s
-      | Some c, None   -> c
-    ) else
-      match t.compiler with
-      | Some v -> v
-      | None   -> OpamGlobals.error_and_exit "No OCaml compiler defined."in
-  let filter nv =
-    let opam = opam t nv in
-    let consistent_ocaml_version =
-      match OpamFile.OPAM.ocaml_version opam with
-      | None       -> true
-      | Some (r,v) -> OpamVersion.Compiler.compare ocaml_version r v in
-    let consistent_pinned_version =
-      not (OpamPackage.Name.Map.mem (OpamPackage.name nv) t.pinned) ||
-        match OpamPackage.Name.Map.find (OpamPackage.name nv) t.pinned with
-        | Version v -> v = OpamPackage.version nv
-        | _         -> true (* any version is fine, as this will be overloaded on install *) in
-    consistent_ocaml_version && consistent_pinned_version in
-  OpamPackage.Set.filter filter t.packages
 
 let find_package_by_name t name =
   let r = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) t.packages in

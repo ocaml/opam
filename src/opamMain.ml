@@ -33,6 +33,9 @@ let () = OpamGlobals.root_dir := OpamGlobals.default_opam_dir
 (* Useful for switch, which can overwrite the default verbose flag *)
 let quiet = ref false
 
+let set_root_dir dir =
+  OpamGlobals.root_dir := OpamSystem.real_path dir
+
 let global_args = [
   "--debug"     , Arg.Set OpamGlobals.debug   , " Print internal debug messages (very verbose)";
   "--verbose"   , Arg.Set OpamGlobals.verbose , " Display the output of subprocesses";
@@ -41,7 +44,7 @@ let global_args = [
   "--yes"       , Arg.Set OpamGlobals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.Set_string OpamGlobals.makecmd,
     Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !OpamGlobals.makecmd;
-  "--root"      , Arg.Set_string OpamGlobals.root_dir,
+  "--root"      , Arg.String set_root_dir,
     (Printf.sprintf " Change root path (default is %s)" OpamGlobals.default_opam_dir);
   "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";
 ]

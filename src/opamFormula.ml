@@ -68,6 +68,13 @@ let rec fold_left f i = function
 
 type t = (OpamPackage.Name.t * (string * OpamPackage.Version.t) formula) formula
 
+let rec eval atom = function
+  | Empty    -> true
+  | Atom x   -> atom x
+  | Block x  -> eval atom x
+  | And(x,y) -> eval atom x && eval atom y
+  | Or(x,y)  -> eval atom x && eval atom y
+
 let to_string t =
   let string_of_constraint (relop, version) =
     Printf.sprintf "%s %s" relop (OpamPackage.Version.to_string version) in

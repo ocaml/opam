@@ -192,11 +192,11 @@ val parse_opt_formula : value -> formula
 (** Build a formula where OR are implicit. *)
 val make_opt_formula : formula -> value
 
-(** Parse a simple constraint *)
-val parse_constraint: value -> compiler_constraint
+(** Parse compiler constraints *)
+val parse_compiler_constraint: value -> compiler_constraint
 
-(** Build a simple constraint *)
-val make_constraint: compiler_constraint -> value
+(** Build a compiler constraint *)
+val make_compiler_constraint: compiler_constraint -> value
 
 (** {2 Environment variables} *)
 

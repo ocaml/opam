@@ -24,7 +24,7 @@ module Compiler: sig
   include OpamMisc.ABSTRACT
 
   (** Compiler constraint *)
-  type constr = relop * t
+  type constr = (relop * t) OpamFormula.formula
 
   (** Return the version of the compiler currently installed *)
   val current: unit -> t option

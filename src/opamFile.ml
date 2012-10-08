@@ -62,11 +62,22 @@ module Syntax = struct
     OpamFormat.string_of_file ~indent_variable t
 
   let check f fields =
-    if not (OpamFormat.is_valid f.file_contents fields) then
-      OpamGlobals.error_and_exit "{ %s } are invalid field names in %s. Valid fields are { %s }"
-        (String.concat ", " (OpamFormat.invalid_fields f.file_contents fields))
-        f.file_name
-        (String.concat ", " fields)
+    if not (OpamFormat.is_valid f.file_contents fields) then (
+      let invalids = OpamFormat.invalid_fields f.file_contents fields in
+      let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
+      if too_many <> [] then
+        OpamGlobals.error
+          "%s appear too many times in %s"
+          f.file_name
+          (OpamMisc.string_of_list (fun x -> x) too_many);
+      if invalids <> [] then
+        OpamGlobals.error "%s are invalid field names in %s. Valid fields are %s"
+          (OpamMisc.string_of_list (fun x -> x) invalids)
+          f.file_name
+          (OpamMisc.string_of_list (fun x -> x) fields);
+      OpamGlobals.error "foo!";
+      OpamGlobals.exit 2;
+    )
 end
 
 module X = struct
@@ -668,7 +679,7 @@ module OPAM = struct
       ] @ (
         match t.ocaml_version with
         | None   -> []
-        | Some v -> [ Variable (s_ocaml_version, OpamFormat.make_constraint v) ]
+        | Some v -> [ Variable (s_ocaml_version, OpamFormat.make_compiler_constraint v) ]
       ) @
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
@@ -724,7 +735,7 @@ module OPAM = struct
     let conflicts = OpamFormat.assoc_default OpamFormula.Empty s s_conflicts OpamFormat.parse_formula in
     let libraries = OpamFormat.assoc_list s s_libraries (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
     let syntax = OpamFormat.assoc_list s s_syntax (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
-    let ocaml_version = OpamFormat.assoc_option s s_ocaml_version OpamFormat.parse_constraint in
+    let ocaml_version = OpamFormat.assoc_option s s_ocaml_version OpamFormat.parse_compiler_constraint in
     let parse_file = OpamFormat.parse_option (OpamFormat.parse_string |> OpamFilename.Base.of_string) OpamFormat.parse_filter in
     let patches = OpamFormat.assoc_list s s_patches (OpamFormat.parse_list parse_file) in
     let files = OpamFormat.assoc_list s s_files (OpamFormat.parse_list parse_file) in
