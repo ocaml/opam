@@ -14,7 +14,7 @@ let () =
 let () =
   let t = OpamPath.Repository.raw (OpamFilename.cwd ()) in
   OpamPackage.Set.iter (fun nv ->
-    OpamGlobals.msg "Processing %s\n" (OpamPackage.to_string nv);
+    OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string nv);
 
     (** Descr *)
     let descr = OpamPath.Repository.descr t nv in
@@ -35,8 +35,12 @@ let () =
     if OpamFilename.exists dot_install then (
       OpamFile.Dot_install.Raw.write dot_install (OpamFile.Dot_install.Raw.read dot_install);
     );
+  ) (OpamRepository.packages t);
 
-    (** Comp *)
-    (* TODO *)
-
-  ) (OpamRepository.packages t)
+  (** Comp *)
+  let comps = OpamFilename.list_files (OpamPath.Repository.compilers_dir t) in
+  List.iter (fun comp ->
+    let comp_ = OpamFile.Comp.read comp in
+    OpamGlobals.msg "Processing (compiler) %s\n" (OpamVersion.Compiler.to_string (OpamFile.Comp.name comp_));
+    OpamFile.Comp.write comp comp_;
+  ) comps

@@ -1075,8 +1075,8 @@ let init_ocaml t quiet alias ocaml_version =
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
              discarded. *)
-          ; ( "make" :: OpamFile.Comp.make comp )
-          ; [ "make" ; "install" ]
+          ; ( !OpamGlobals.makecmd :: OpamFile.Comp.make comp )
+          ; [ !OpamGlobals.makecmd ; "install" ]
           ]
       end else begin
         let t = { t with alias } in

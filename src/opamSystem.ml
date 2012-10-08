@@ -456,6 +456,6 @@ let patch =
         OpamGlobals.error_and_exit "Patching failed, can not determine the '-p' level to patch."
       else if None = try Some (patch ["--dry-run"] n) with _ -> None then
         aux (succ n)
-        else
+      else
         patch [] n in
     aux 0
