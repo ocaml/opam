@@ -68,7 +68,7 @@ let make_state ~download_index remote_dir =
             | Some p -> p in
           let digest = OpamFilename.Attribute.md5 r in
           let remote = OpamFilename.create remote_dir base in
-          let local = OpamFilename.create (OpamFilename.cwd()) base in
+          let local = OpamFilename.create local_dir base in
           OpamFilename.Map.add remote local rl,
           OpamFilename.Map.add local remote lr,
           OpamFilename.Set.add local locals,
@@ -89,6 +89,7 @@ let make_state ~download_index remote_dir =
 let is_up_to_date state local_file =
   List.mem_assoc local_file state.file_digests
   && OpamFilename.exists local_file
+  && not (Sys.is_directory (OpamFilename.to_string local_file))
   && List.assoc local_file state.file_digests = OpamFilename.digest local_file
 
 module B = struct
