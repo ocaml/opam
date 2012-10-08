@@ -1,6 +1,7 @@
 0.7.6 (trunk)
 * major internal API refactoring
 * repositories are now versionned, and we try to auto-update when possible
+* more expressive compiler constraints in opam files
 
 0.7.5 [Oct 2012]
 * dependencies can now be expressed by any formula (instead of just CNF)
