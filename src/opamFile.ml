@@ -1205,13 +1205,12 @@ module Comp = struct
     Syntax.to_string filename {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
+        Variable (s_opam_version, OpamFormat.make_string (OpamVersion.OPAM.to_string s.opam_version));
         Variable (s_name, OpamFormat.make_string (OpamVersion.Compiler.to_string s.name));
       ] @ (match s.src with
           | None   -> []
           | Some s -> [Variable (s_src, OpamFormat.make_string (OpamFilename.to_string s))]
       ) @ [
-        Variable (s_opam_version, OpamFormat.make_string (OpamVersion.OPAM.to_string s.opam_version));
-        Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled);
         Variable (s_patches     , OpamFormat.make_list (OpamFilename.to_string |> OpamFormat.make_string) s.patches);
         Variable (s_configure   , OpamFormat.make_list OpamFormat.make_string s.configure);
         Variable (s_make        , OpamFormat.make_list OpamFormat.make_string s.make);
@@ -1223,9 +1222,12 @@ module Comp = struct
         Variable (s_packages    , OpamFormat.make_formula s.packages);
         Variable (s_requires    , OpamFormat.make_list (OpamVariable.Section.to_string |> OpamFormat.make_string) s.requires);
         Variable (s_env         , OpamFormat.make_list OpamFormat.make_env_variable s.env);
-      ] @ match s.pp with
-         | None    -> []
-         | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
+      ] @ (match s.pp with
+        | None    -> []
+        | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
+      ) @ [
+        Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled);
+      ]
     }
 
 end

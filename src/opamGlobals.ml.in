@@ -98,7 +98,7 @@ let os = match Sys.os_type with
   | "Cygwin" -> Cygwin
   | s        -> Other s
 
-let os_string = match os with
+let string_of_os = function
   | Darwin  -> "darwin"
   | Linux   -> "linux"
   | FreeBSD
@@ -107,6 +107,8 @@ let os_string = match os with
   | Win32   -> "win32"
   | Unix    -> "unix"
   | Other x -> x
+
+let os_string = string_of_os os
 
 let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* WARNING check the result of "which gmake", "which make", ... *)
 
