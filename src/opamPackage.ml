@@ -91,8 +91,7 @@ let of_filename f =
   let base = Filename.basename f in
   let parent = Filename.basename (Filename.dirname f) in
   match base with
-  | "opam" | "descr" | "url" ->
-    of_string_opt parent
+  | "opam" | "url" -> of_string_opt parent
   | _ ->
     if Filename.check_suffix base ".opam" then
       of_string_opt (Filename.chop_suffix base ".opam")
