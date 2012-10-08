@@ -1,4 +1,6 @@
-0.7.6 (trunk)
+0.7.7 (trunk)
+
+0.7.6 [Oct 2012]
 * major internal API refactoring
 * repositories are now versionned, and we try to auto-update when possible
 * more expressive compiler constraints in opam files
