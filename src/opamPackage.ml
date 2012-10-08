@@ -86,28 +86,24 @@ let of_string s = match of_string_opt s with
 
 (* XXX: this function is quite hackish, as it mainly depends on the shape the paths
    built in path.ml *)
-let rec of_filename f =
+let of_filename f =
   let f = OpamMisc.strip (OpamFilename.to_string f) in
-  if OpamMisc.cut_at f ' ' <> None then
-    None
-  else begin
-    let base = Filename.basename f in
-    let parent = Filename.basename (Filename.dirname f) in
-    match base with
-    | "opam" | "descr" | "url" ->
-      of_string_opt parent
-    | _ ->
-      if Filename.check_suffix base ".opam" then
-        of_string_opt (Filename.chop_suffix base ".opam")
-      else if Filename.check_suffix base "+opam.tar.gz" then
-        of_string_opt (Filename.chop_suffix base "+opam.tar.gz")
-      else
-        match parent with
-        | "files" ->
-          let parent2 = Filename.basename (Filename.dirname (Filename.dirname f)) in
-          of_string_opt parent2
-        | _ -> None
-  end
+  let base = Filename.basename f in
+  let parent = Filename.basename (Filename.dirname f) in
+  match base with
+  | "opam" | "descr" | "url" ->
+    of_string_opt parent
+  | _ ->
+    if Filename.check_suffix base ".opam" then
+      of_string_opt (Filename.chop_suffix base ".opam")
+    else if Filename.check_suffix base "+opam.tar.gz" then
+      of_string_opt (Filename.chop_suffix base "+opam.tar.gz")
+    else
+      match parent with
+      | "files" ->
+        let parent2 = Filename.basename (Filename.dirname (Filename.dirname f)) in
+        of_string_opt parent2
+      | _ -> None
 
 let of_dirname d =
   of_string_opt (OpamFilename.Base.to_string (OpamFilename.basename_dir d))

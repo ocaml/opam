@@ -31,7 +31,7 @@ let create ?info ?stdout ?stderr ?env ~verbose cmd args =
     let fd = Unix.openfile f open_flags 0o644 in
     let close_fd () = Unix.close fd in
     if verbose then (
-      let chan = Unix.open_process_out ("tee " ^ f) in
+      let chan = Unix.open_process_out ("tee " ^ Filename.quote f) in
       let close () =
         match Unix.close_process_out chan with
         | _ -> close_fd () in
