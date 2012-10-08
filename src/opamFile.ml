@@ -1236,9 +1236,12 @@ module Comp = struct
       ] @ (match s.pp with
         | None    -> []
         | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
-      ) @ [
-        Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled);
-      ]
+      ) @ (
+        if s.preinstalled then
+          [ Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled) ]
+        else
+          []
+      )
     }
 
 end
