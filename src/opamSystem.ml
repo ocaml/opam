@@ -22,7 +22,7 @@ let _ =
     match exn with
       Process_error r ->
         let b = Buffer.create 1000 in
-        Printf.bprintf b "Exception Run.Process_error {\n";
+        Printf.bprintf b "Exception OpamSystem.Process_error {\n";
         Printf.bprintf b "\tr_code = %d\n" r.r_code;
         Printf.bprintf b "\tr_duration = %.2f\n" r.r_duration;
         Printf.bprintf b "\tr_info = [ %s\t]\n"
@@ -49,7 +49,7 @@ module Sys2 = struct
     (lstat file).st_kind = S_DIR
 end
 
-let log fmt = OpamGlobals.log "RUN" fmt
+let log fmt = OpamGlobals.log "SYSTEM" fmt
 
 let (/) = Filename.concat
 

@@ -15,7 +15,7 @@
 
 module Base = OpamMisc.Base
 
-let log fmt = OpamGlobals.log "DIRNAME" fmt
+let log fmt = OpamGlobals.log "FILENAME" fmt
 
 module Dir = struct
 
@@ -107,8 +107,6 @@ let exists_dir dirname =
 let (/) d1 s2 =
   let s1 = Dir.to_string d1 in
   raw_dir (Filename.concat s1 s2)
-
-let log fmt = OpamGlobals.log "FILENAME" fmt
 
 type t = {
   dirname:  Dir.t;

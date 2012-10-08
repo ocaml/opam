@@ -17,7 +17,7 @@ open OpamTypes
 open OpamMisc.OP
 open OpamFilename.OP
 
-let log fmt = OpamGlobals.log "REPOSITORIES" fmt
+let log fmt = OpamGlobals.log "REPOSITORY" fmt
 
 type t = repository
 
