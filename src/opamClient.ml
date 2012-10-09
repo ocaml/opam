@@ -30,6 +30,7 @@ type state = {
   alias: alias;
   compiler: compiler option;
   compiler_version: compiler_version option;
+  opams: OpamFile.OPAM.t package_map;
   repositories: repository list;
   packages: package_set;
   available_packages: package_set Lazy.t;
@@ -57,7 +58,7 @@ let print_state t =
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
-let available_packages root compiler_version config pinned packages =
+let available_packages root opams compiler_version config pinned packages =
   (* Remove the packages which does not fullfil the compiler
      constraints *)
   let ocaml_version =
@@ -88,7 +89,7 @@ let available_packages root compiler_version config pinned packages =
       | Some v -> v
       | None   -> OpamGlobals.error_and_exit "No OCaml compiler defined."in
   let filter nv =
-    let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
+    let opam = OpamPackage.Map.find nv opams in
     let consistent_ocaml_version =
       let atom (r,v) = OpamCompiler.Version.compare ocaml_version r v in
       match OpamFile.OPAM.ocaml_version opam with
@@ -152,6 +153,11 @@ let load_state () =
     | Some c ->
       let comp = OpamFile.Comp.read (OpamPath.compiler root c) in
       Some (OpamFile.Comp.version comp) in
+  let opams =
+    OpamPackage.Set.fold (fun nv map ->
+      let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
+      OpamPackage.Map.add nv opam map
+    ) (packages_in_dir (OpamPath.opam_dir root)) OpamPackage.Map.empty in
   let repositories = OpamFile.Config.repositories config in
   let repo_index =
     let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
@@ -177,9 +183,9 @@ let load_state () =
   let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed root alias) in
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Alias.reinstall root alias) in
   let packages = packages_in_dir (OpamPath.opam_dir root) in
-  let available_packages = lazy (available_packages root compiler_version config pinned packages) in
+  let available_packages = lazy (available_packages root opams compiler_version config pinned packages) in
   let t = {
-    root; alias; compiler; compiler_version; repositories;
+    root; alias; compiler; compiler_version; repositories; opams;
     packages; available_packages; installed; reinstall;
     repo_index; config; aliases; pinned;
   } in
@@ -207,8 +213,8 @@ let available_versions t n =
        (fun nv -> OpamPackage.name nv = n)
        t.packages)
 
-let opam t nv =
-  OpamFile.OPAM.read (OpamPath.opam t.root nv)
+let find_opam t nv =
+  OpamPackage.Map.find nv t.opams
 
 let available_archives t =
   OpamFilename.Set.of_list (OpamFilename.list_files (OpamPath.archives_dir t.root))
@@ -671,7 +677,7 @@ let update_packages t ~show_packages repos =
   let t = load_state () in
   let has_error = ref false in
   OpamPackage.Set.iter (fun nv ->
-    let opam = OpamFile.OPAM.read (OpamPath.opam t.root nv) in
+    let opam = find_opam t nv in
     let name = OpamFile.OPAM.name opam in
     let version = OpamFile.OPAM.version opam in
     if nv <> OpamPackage.create name version then
@@ -1175,7 +1181,7 @@ let info package =
   let libraries, syntax = match o_v with
     | None   -> [], []
     | Some v ->
-        let opam = OpamFile.OPAM.read (OpamPath.opam t.root (OpamPackage.create package v)) in
+        let opam = find_opam t (OpamPackage.create package v) in
         let libraries = match OpamFile.OPAM.libraries opam with
           | [] -> []
           | l  -> [ "libraries", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
@@ -1212,7 +1218,7 @@ let proceed_toinstall t nv =
     let t = load_state () in
     let name = OpamPackage.name nv in
     let opam_f = OpamPath.opam t.root nv in
-    let opam = OpamFile.OPAM.read opam_f in
+    let opam = find_opam t nv in
     let config_f = OpamPath.Alias.build_config t.root t.alias nv in
     let config = OpamFile.Dot_config.safe_read config_f in
     let install_f = OpamPath.Alias.build_install t.root t.alias nv in
@@ -1252,7 +1258,7 @@ let proceed_toinstall t nv =
     let libraries_in_opam =
       OpamFormula.fold_left (fun accu (n,_) ->
         let nv = find_installed_package_by_name t n in
-        let opam = OpamFile.OPAM.read (OpamPath.opam t.root nv) in
+        let opam = find_opam t nv in
         let libs = OpamFile.OPAM.libraries opam in
         let syntax = OpamFile.OPAM.syntax opam in
         List.fold_right OpamVariable.Section.Set.add (libs @ syntax) accu
@@ -1384,7 +1390,7 @@ let proceed_todelete ~rm_build t nv =
   (* Run the remove script *)
   let opam_f = OpamPath.opam t.root nv in
   if OpamFilename.exists opam_f then (
-    let opam = OpamFile.OPAM.read opam_f in
+    let opam = find_opam t nv in
     let remove = substitute_commands t (OpamFile.OPAM.remove opam) in
     match filter_commands t remove with
     | []     -> ()
@@ -1454,7 +1460,7 @@ let proceed_tochange t nv_old nv =
   | Some nv_old -> proceed_todelete ~rm_build:true t nv_old
   | None        -> ());
 
-  let opam = OpamFile.OPAM.read (OpamPath.opam t.root nv) in
+  let opam = find_opam t nv in
 
   (* Get the env variables set up in the compiler description file *)
   let env0 = get_env t in
@@ -1566,7 +1572,7 @@ let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
 
 let debpkg_of_nv t action nv =
-  let opam = opam t nv in
+  let opam = find_opam t nv in
   let installed =
     OpamPackage.Set.mem nv t.installed &&
     match action with
@@ -2132,7 +2138,7 @@ let install names =
     let available = OpamPackage.to_map (Lazy.force t.available_packages) in
     List.iter
       (fun nv ->
-        let opam = OpamFile.OPAM.read (OpamPath.opam t.root nv) in
+        let opam = find_opam t nv in
         let f_warn (n, _) =
           if not (OpamPackage.Name.Map.mem n available) then
             OpamGlobals.warning "unknown package %S" (OpamPackage.Name.to_string n)
@@ -2419,7 +2425,7 @@ let config_compil t c =
     let library_map =
       List.fold_left (fun accu n ->
         let nv = find_installed_package_by_name t n in
-        let opam = opam t nv in
+        let opam = find_opam t nv in
         let sections = (OpamFile.OPAM.libraries opam) @ (OpamFile.OPAM.syntax opam) in
         List.iter (fun s ->
           if OpamVariable.Section.Map.mem s accu then
