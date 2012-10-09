@@ -71,8 +71,10 @@ let log_file () =
   !OpamGlobals.root_dir / "log" / f
 
 let safe_mkdir dir =
+  let open Unix in
   if not (Sys.file_exists dir) then
-    Unix.mkdir dir 0o755
+    try mkdir dir 0o755 
+    with Unix_error(EEXIST,_,_) -> ()
 
 let mkdir dir =
   let rec aux dir =
