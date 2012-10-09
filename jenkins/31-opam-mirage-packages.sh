@@ -1,5 +1,6 @@
 #!/bin/sh -ex
-OPAM=$HOME/opam-bin/bin/opam
+PREFIX=$1
+OPAM=$HOME/opam-bin/$PREFIX/bin/opam
 ROOT=`echo /b/${JOB_NAME} | sed -e s,=,_,g`
 rm -rf ${ROOT}
 $OPAM --yes --root $ROOT init .
