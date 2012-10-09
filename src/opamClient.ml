@@ -54,9 +54,7 @@ let print_state t =
   log "REPO      : %s" (string_of_repos t.repositories);
   log "AVAILABLE : %s" (OpamPackage.Set.to_string t.packages);
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
-  log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall);
-  log "REPO_INDEX: %s" (OpamPackage.Name.Map.to_string (String.concat ",") t.repo_index)
-
+  log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
 let available_packages root compiler config pinned packages =
   (* Remove the packages which does not fullfil the compiler
@@ -1541,6 +1539,12 @@ let string_of_version_constraint = function
   | V_eq (n,v) ->
       Printf.sprintf "{name=%s version=%s}" (OpamPackage.Name.to_string n) (OpamPackage.Version.to_string v)
 
+let string_of_version_constraints =
+  OpamMisc.string_of_list string_of_version_constraint
+
+let string_of_version_constraints =
+  OpamMisc.string_of_list string_of_version_constraint
+
 let name_of_version_constraint = function
   | V_any (n,_,_) -> n
   | V_eq (n,_)    -> n
@@ -2203,16 +2207,15 @@ let remove names =
   let names = OpamPackage.Name.Set.filter (fun n -> n <> default_package) names in
   let t = load_state () in
   let wish_remove = Heuristic.nv_of_names t names in
-  log "wish_remove=%s" (String.concat " " (List.map string_of_version_constraint wish_remove));
-  let whish_remove, not_installed, does_not_exist =
-    let aux (whish_remove, not_installed, does_not_exist) c nv =
+  let wish_remove, not_installed, does_not_exist =
+    let aux (wish_remove, not_installed, does_not_exist) c nv =
       let name = OpamPackage.name nv in
       if not (OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = name) t.installed) then
-        (whish_remove, OpamPackage.Name.Set.add name not_installed, does_not_exist)
+        (wish_remove, OpamPackage.Name.Set.add name not_installed, does_not_exist)
       else if not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)) then
-        (whish_remove, not_installed, nv :: does_not_exist)
+        (wish_remove, not_installed, nv :: does_not_exist)
       else
-        (c :: whish_remove, not_installed, does_not_exist) in
+        (c :: wish_remove, not_installed, does_not_exist) in
     List.fold_left
       (fun accu c ->
         match c with
@@ -2239,8 +2242,9 @@ let remove names =
       OpamGlobals.msg "%s are not installed.\n" (OpamPackage.Name.Set.to_string not_installed)
   );
 
-  if whish_remove <> [] then (
-    let universe = OpamSolver.U (OpamPackage.Set.fold (fun nv l -> (debpkg_of_nv t `remove nv) :: l) (Lazy.force t.available_packages) []) in
+  if wish_remove <> [] then (
+    let universe =
+      OpamSolver.U (OpamPackage.Set.fold (fun nv l -> (debpkg_of_nv t `remove nv) :: l) (Lazy.force t.available_packages) []) in
     let depends =
       OpamSolver.get_forward_dependencies ~depopts:true universe
         (OpamSolver.P (List.rev_map

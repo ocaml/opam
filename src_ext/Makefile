@@ -7,28 +7,17 @@ depends.ocp: depends.ocp.boot
 
 clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp ocaml-arg.stamp
 
-cudf.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/cudf.tar.gz
+cudf-0.6.3.tar.gz:
+	$(FETCH) http://gforge.info.ucl.ac.be/frs/download.php/190/cudf-0.6.3.tar.gz
+
+cudf.stamp: cudf-0.6.3.tar.gz
+	tar xfz cudf-0.6.3.tar.gz
+	rm -rf cudf
+	mv cudf-0.6.3 cudf
+	@touch $@
 
 extlib-1.5.3.tar.gz:
 	$(FETCH) http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
-	@touch $@
-
-cudf.stamp: cudf.tar.gz
-	tar xfz cudf.tar.gz
-	@touch $@
-
-dose.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/dose.tar.gz
-
-ocaml-arg.0.3.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/ocaml-arg.0.3.tar.gz
-
-ocamlgraph-1.8.1.tar.gz:
-	$(FETCH) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
-
-ocaml-re.1.1.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/ocaml-re.1.1.tar.gz
 
 extlib.stamp: extlib-1.5.3.tar.gz
 	tar xfz extlib-1.5.3.tar.gz
@@ -36,19 +25,33 @@ extlib.stamp: extlib-1.5.3.tar.gz
 	mv extlib-1.5.3 extlib
 	@touch $@
 
-dose.stamp: dose.tar.gz
-	tar xfz dose.tar.gz
+dose3-3.1.1.tar.gz:
+	$(FETCH) http://gforge.info.ucl.ac.be/frs/download.php/192/dose3-3.1.1.tar.gz
+
+dose.stamp: dose3-3.1.1.tar.gz
+	tar xfz dose3-3.1.1.tar.gz
+	rm -rf dose
+	mv dose3-3.1.1 dose
 	@touch $@
+
+ocaml-arg.0.3.tar.gz:
+	$(FETCH) http://www.ocamlpro.com/pub/ocaml-arg.0.3.tar.gz
 
 ocaml-arg.stamp: ocaml-arg.0.3.tar.gz
 	tar xfz ocaml-arg.0.3.tar.gz
 	@touch $@
+
+ocamlgraph-1.8.1.tar.gz:
+	$(FETCH) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
 
 ocamlgraph.stamp: ocamlgraph-1.8.1.tar.gz
 	tar xfz ocamlgraph-1.8.1.tar.gz
 	rm -rf ocamlgraph
 	mv ocamlgraph-1.8.1 ocamlgraph
 	@touch $@
+
+ocaml-re.1.1.tar.gz:
+	$(FETCH) http://www.ocamlpro.com/pub/ocaml-re.1.1.tar.gz
 
 ocaml-re.stamp: ocaml-re.1.1.tar.gz
 	tar xfz ocaml-re.1.1.tar.gz

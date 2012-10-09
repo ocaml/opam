@@ -249,7 +249,7 @@ let make_chains root depends =
     | []       -> [[root]]
     | children ->
       let chains = List.flatten (List.map unroll children) in
-      if root.Cudf.package = "dummy" then
+      if root.Cudf.package = "dummy" || root.Cudf.package = "dose-dummy-request" then
         chains
       else
         List.map (fun cs -> root :: cs) chains in
@@ -340,18 +340,18 @@ module Graph = struct
   end
 
   module PG_topo = Graph.Topological.Make (PG)
- (* (* example of instantiation *)
-    module PG_bfs = Make_fs (Graph.Traverse.Bfs (PG))
-    module PG_dfs = Make_fs (Graph.Traverse.Dfs (PG))
- *)
 
   let dep_reduction v =
     let g = Defaultgraphs.PackageGraph.dependency_graph (Cudf.load_universe v) in
-    let () = PO.transitive_reduction g in
-    (* uncomment to view the dependency graph:
-       XXX: cycles are not detected, which can lead to very weird situations
-       Defaultgraphs.PackageGraph.D.output_graph stdout g; *)
+    PO.transitive_reduction g;
     g
+
+  let output_graph g filename =
+    if !OpamGlobals.debug then (
+      let fd = open_out (filename ^ ".dot") in
+      Defaultgraphs.PackageGraph.DotPrinter.output_graph fd g;
+      close_out fd
+    )
 
   let tocudf table pkg =
     let options = {
@@ -423,6 +423,7 @@ module Graph = struct
           PkgSet.empty
           pkg_l in
         let g = f_direction (dep_reduction pkglist) in
+        output_graph g "filter-depends";
         let pkg_topo = topo_fold g pkg_set in
         List.map
           (fun pkg -> OpamPackage.Map.find (OpamPackage.of_cudf table pkg) pkg_map)
@@ -625,9 +626,8 @@ let resolve (U l_pkg_pb) req installed =
     wish_remove  = List.filter filter req.wish_remove;
     wish_upgrade = List.filter filter req.wish_upgrade;
   } in
-  log "universe=%s request=<%s>"
-    (string_of_packages (List.rev l_pkg_pb))
-    (string_of_request req);
+  log "RESOLVE universe=%s" (string_of_packages (List.rev l_pkg_pb));
+  log "RESOLVE request=%s" (string_of_request req);
   Graph.get_table l_pkg_pb
     (fun table pkglist ->
       let package_map pkg = OpamPackage.of_cudf table pkg in
@@ -664,7 +664,10 @@ let resolve (U l_pkg_pb) req installed =
         resolve universe1 in
 
       log "full-universe: (*%B*) %s" req_only_remove (string_of_universe universe);
-      let create_graph filter = Graph.dep_reduction (Cudf.get_packages ~filter universe) in
+      let create_graph name filter =
+        let g = Graph.dep_reduction (Cudf.get_packages ~filter universe) in
+        Graph.output_graph g name;
+        g in
 
       let action_of_answer l =
         log "SOLUTION: %s" (string_of_answer l);
@@ -692,7 +695,7 @@ let resolve (U l_pkg_pb) req installed =
             the dependency relation is complete *)
         let graph_toinstall =
           Graph.PO.O.mirror
-            (create_graph (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
+            (create_graph "to-install" (fun p -> p.Cudf.installed || PkgMap.mem p map_add)) in
         let graph_toinstall =
           let graph_toinstall = Graph.PG.copy graph_toinstall in
           List.iter (Graph.PG.remove_vertex graph_toinstall) l_del_p;
@@ -726,7 +729,7 @@ let resolve (U l_pkg_pb) req installed =
 
         (** compute packages to recompile and remove *)
         let map_act, to_remove =
-          let l_remove = Graph.topo_fold (create_graph (fun p -> PkgSet.mem p set_del)) set_del in
+          let l_remove = Graph.topo_fold (create_graph "to-remove" (fun p -> PkgSet.mem p set_del)) set_del in
 
           (** partition the [l_remove] to decide for each element if we recompile them or delete. *)
           List.fold_left
