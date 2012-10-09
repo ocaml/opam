@@ -1,8 +1,9 @@
 #!/bin/sh -ex
-OPAM=$HOME/opam-bin/bin/opam
+PREFIX=$1
+OPAM=$HOME/opam-bin/$PREFIX/bin/opam
 ROOT=`echo /b/${JOB_NAME} | sed -e s,=,_,g`
 rm -rf ${ROOT}
-$OPAM --yes --root $ROOT init .
+$OPAM --yes --root $ROOT init $2
 if [ "${compiler}" != "system" ]; then
   $OPAM --yes --root $ROOT switch ${compiler}
 fi
