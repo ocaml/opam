@@ -27,8 +27,6 @@ let base_packages = ref true
 let verify_checksums = ref true
 let yes = ref false
 
-let version = "@PACKAGE_VERSION@"
-
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"
 let default_repository_kind    = "curl"
@@ -122,17 +120,6 @@ let os_string = string_of_os os
 let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* WARNING check the result of "which gmake", "which make", ... *)
 
 let default_cores = 1
-
-let version_msg () =
-  Printf.printf "\
-%s version %s
-
-Copyright (C) 2012 OCamlPro - INRIA
-
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.argv.(0) version;
-  exit 0
 
 let exit i =
   raise (Exit i)

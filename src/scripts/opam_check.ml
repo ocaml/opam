@@ -23,7 +23,7 @@ let label = ref ""
 let spec = Arg.align [
   ("--root", Arg.Set_string OpamGlobals.root_dir, " Set opam path");
   ("-l"    , Arg.Set_string label            , " Set a test label");
-  ("--version", Arg.Unit OpamGlobals.version_msg , " Display version information");
+  ("--version", Arg.Unit OpamVersion.message , " Display version information");
 ]
 
 let packages = ref []

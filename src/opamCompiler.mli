@@ -13,36 +13,36 @@
 (*                                                                     *)
 (***********************************************************************)
 
-type t = string
+(** Compiler and OPAM versions *)
 
-let to_string x = x
+(** Binary relations *)
+type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
 
-let of_string x = x
+(** OCaml compiler versions *)
+module Version: sig
 
-let compare = Debian.Version.compare
+  include OpamMisc.ABSTRACT
 
-module O = struct
-  type t = string
-  let to_string = to_string
-  let compare = compare
+  (** Compiler constraint *)
+  type constr = (relop * t) OpamFormula.formula
+
+  (** Return the version of the compiler currently installed *)
+  val current: unit -> t option
+
+  (** Compare OCaml versions *)
+  val compare: t -> relop -> t -> bool
+
+  (** Default compiler version *)
+  val default: t
+
 end
 
-module Set = OpamMisc.Set.Make(O)
+(** Compiler names *)
+include OpamMisc.ABSTRACT
 
-module Map = OpamMisc.Map.Make(O)
+(** List the compiler available in a directory *)
+val list: OpamFilename.Dir.t -> Set.t
 
-let current_raw = "0.7.7"
-
-let current = of_string current_raw
-
-let message () =
-  Printf.printf "\
-%s version %s
-
-Copyright (C) 2012 OCamlPro - INRIA
-
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.argv.(0) current_raw;
-  exit 0
+(** Default compiler *)
+val default: t
 

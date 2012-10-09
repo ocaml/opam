@@ -16,3 +16,6 @@
 (** Compiler aliases. *)
 
 include OpamMisc.ABSTRACT
+
+(** Default alias *)
+val default: t

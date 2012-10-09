@@ -368,7 +368,7 @@ module Aliases = struct
 
   let internal = "aliases"
 
-  type t = (alias * compiler_version) list
+  type t = (alias * compiler) list
 
   let empty = []
 
@@ -376,7 +376,7 @@ module Aliases = struct
     let l =
       List.map
         (fun (alias,oversion) -> [OpamAlias.to_string alias;
-                                  OpamVersion.Compiler.to_string oversion])
+                                  OpamCompiler.to_string oversion])
         t in
     Lines.to_string filename l
 
@@ -385,7 +385,7 @@ module Aliases = struct
     List.fold_left (fun accu -> function
       | []                -> accu
       | [alias; oversion] -> (OpamAlias.of_string alias,
-                              OpamVersion.Compiler.of_string oversion) :: accu
+                              OpamCompiler.of_string oversion) :: accu
       | _                 -> failwith "switches"
     ) [] l
 
@@ -432,7 +432,7 @@ module Config = struct
       { opam_version ; repositories ; alias = None ; system_version = None ; cores }
 
     let empty = {
-      opam_version = OpamVersion.OPAM.of_string OpamGlobals.opam_version;
+      opam_version = OpamVersion.of_string OpamGlobals.opam_version;
       repositories = [];
       alias = None;
       system_version = None;
@@ -460,7 +460,7 @@ module Config = struct
       let s = Syntax.of_string filename f in
       Syntax.check s valid_fields;
       let opam_version =
-        OpamFormat.assoc s.file_contents s_opam_version (OpamFormat.parse_string |> OpamVersion.OPAM.of_string) in
+        OpamFormat.assoc s.file_contents s_opam_version (OpamFormat.parse_string |> OpamVersion.of_string) in
       let repositories =
         OpamFormat.assoc_list s.file_contents s_repositories
           (OpamFormat.parse_list
@@ -470,9 +470,9 @@ module Config = struct
       let alias2 =
         OpamFormat.assoc_option s.file_contents s_alias (OpamFormat.parse_string |> OpamAlias.of_string) in
       let system_version =
-        OpamFormat.assoc_option s.file_contents s_system_version (OpamFormat.parse_string |> OpamVersion.Compiler.of_string) in
+        OpamFormat.assoc_option s.file_contents s_system_version (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
       let system_version2 =
-        OpamFormat.assoc_option s.file_contents s_system_version2 (OpamFormat.parse_string |> OpamVersion.Compiler.of_string) in
+        OpamFormat.assoc_option s.file_contents s_system_version2 (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
       let system_version =
         match system_version, system_version2 with
         | Some v, _
@@ -490,7 +490,7 @@ module Config = struct
      let s = {
        file_name     = OpamFilename.to_string filename;
        file_contents = [
-         Variable (s_opam_version , OpamFormat.make_string (OpamVersion.OPAM.to_string t.opam_version));
+         Variable (s_opam_version , OpamFormat.make_string (OpamVersion.to_string t.opam_version));
          Variable (s_repositories , OpamFormat.make_list of_repo t.repositories);
          Variable (s_cores        , OpamFormat.make_int t.cores);
        ]
@@ -502,7 +502,7 @@ module Config = struct
        @ (
          match t.system_version with
            | None   -> []
-           | Some v -> [ Variable (s_system_version, OpamFormat.make_string (OpamVersion.Compiler.to_string v)) ]
+           | Some v -> [ Variable (s_system_version, OpamFormat.make_string (OpamCompiler.Version.to_string v)) ]
        )
      } in
      Syntax.to_string filename s
@@ -1066,7 +1066,8 @@ module Comp = struct
 
   type t = {
     opam_version : opam_version ;
-    name         : compiler_version ;
+    name         : compiler ;
+    version      : compiler_version ;
     preinstalled : bool;
     src          : filename option ;
     patches      : filename list ;
@@ -1084,8 +1085,9 @@ module Comp = struct
   }
 
   let empty = {
-    opam_version = OpamVersion.OPAM.of_string OpamGlobals.opam_version;
-    name         = OpamVersion.Compiler.of_string "<none>";
+    opam_version = OpamVersion.of_string OpamGlobals.opam_version;
+    name         = OpamCompiler.of_string "<none>";
+    version      = OpamCompiler.Version.of_string "<none>";
     src          = None;
     preinstalled = false;
     patches   = [];
@@ -1102,15 +1104,16 @@ module Comp = struct
     env       = [];
   }
 
-  let create_preinstalled name packages env =
+  let create_preinstalled name version packages env =
     let mk n = Atom (n, Empty) in
     let rec aux accu t = match accu, t with
       | Empty, x  -> mk x
       | _    , x  -> And(accu, mk x) in
     let packages = List.fold_left aux OpamFormula.Empty packages in
-    { empty with name; preinstalled = true; packages; env }
+    { empty with name; version; preinstalled = true; packages; env }
 
   let s_name      = "name"
+  let s_version   = "version"
   let s_src       = "src"
   let s_patches   = "patches"
   let s_configure = "configure"
@@ -1129,6 +1132,7 @@ module Comp = struct
   let valid_fields = [
     s_opam_version;
     s_name;
+    s_version;
     s_src;
     s_patches;
     s_configure;
@@ -1146,6 +1150,7 @@ module Comp = struct
   ]
 
   let name t = t.name
+  let version t = t.version
   let patches t = t.patches
   let configure t = t.configure
   let make t = t.make
@@ -1174,8 +1179,21 @@ module Comp = struct
       ("string-list", OpamFormat.parse_string_list |> fun x -> Some (Cmd x));
     ] in
     let opam_version =
-      OpamFormat.assoc s s_opam_version (OpamFormat.parse_string |> OpamVersion.OPAM.of_string) in
-    let name = OpamFormat.assoc s s_name (OpamFormat.parse_string |> OpamVersion.Compiler.of_string) in
+      OpamFormat.assoc s s_opam_version (OpamFormat.parse_string |> OpamVersion.of_string) in
+    let name_d, version_d =
+      let base = (
+        OpamFilename.chop_extension
+        |> OpamFilename.basename
+        |> OpamFilename.Base.to_string
+        ) filename in
+      match OpamMisc.cut_at base '+' with
+      | None       -> OpamCompiler.of_string base, OpamCompiler.Version.of_string base
+      | Some (n,_) -> OpamCompiler.of_string base, OpamCompiler.Version.of_string n in
+    let name =
+      OpamFormat.assoc_default name_d s s_name (OpamFormat.parse_string |> OpamCompiler.of_string) in
+    let version =
+      OpamFormat.assoc_default version_d s s_version
+        (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
     let src = OpamFormat.assoc_option s s_src (OpamFormat.parse_string |> OpamFilename.raw_file) in
     let patches =
       OpamFormat.assoc_list s s_patches
@@ -1202,7 +1220,7 @@ module Comp = struct
       OpamGlobals.error_and_exit "You should either specify an url (with 'sources')  \
                               or use 'preinstalled: true' to pick the already installed \
                               compiler version.";
-    { opam_version; name; src;
+    { opam_version; name; version; src;
       patches; configure; make; build;
       bytecomp; asmcomp; bytelink; asmlink; packages;
       requires; pp;
@@ -1216,8 +1234,9 @@ module Comp = struct
     Syntax.to_string filename {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
-        Variable (s_opam_version, OpamFormat.make_string (OpamVersion.OPAM.to_string s.opam_version));
-        Variable (s_name, OpamFormat.make_string (OpamVersion.Compiler.to_string s.name));
+        Variable (s_opam_version, OpamFormat.make_string (OpamVersion.to_string s.opam_version));
+        Variable (s_name, OpamFormat.make_string (OpamCompiler.to_string s.name));
+        Variable (s_version, OpamFormat.make_string (OpamCompiler.Version.to_string s.version));
       ] @ (match s.src with
           | None   -> []
           | Some s -> [Variable (s_src, OpamFormat.make_string (OpamFilename.to_string s))]

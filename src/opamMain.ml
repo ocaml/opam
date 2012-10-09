@@ -40,7 +40,7 @@ let global_args = [
   "--debug"     , Arg.Set OpamGlobals.debug   , " Print internal debug messages (very verbose)";
   "--verbose"   , Arg.Set OpamGlobals.verbose , " Display the output of subprocesses";
   "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
-  "--version"   , Arg.Unit OpamGlobals.version_msg, " Display version information";
+  "--version"   , Arg.Unit OpamVersion.message, " Display version information";
   "--yes"       , Arg.Set OpamGlobals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.Set_string OpamGlobals.makecmd,
     Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !OpamGlobals.makecmd;
@@ -75,7 +75,7 @@ let init =
   synopsis = "Initial setup";
   help     = "Create the initial config files";
   specs    = [
-    ("-comp" , Arg.String (fun s -> comp := Some (OpamVersion.Compiler.of_string s)), " Which compiler version to use");
+    ("-comp" , Arg.String (fun s -> comp := Some (OpamCompiler.of_string s)), " Which compiler version to use");
     ("-cores", Arg.Set_int cores   , " Set the number of cores");
     ("-kind" , Arg.String (fun s -> kind := Some s) , " Set the repository kind");
     ("-no-base-packages", Arg.Clear OpamGlobals.base_packages, " Do not install the base packages");
@@ -362,8 +362,8 @@ let switch =
     if !alias_of <> "" then
       bad_argument "switch" "invalid -alias-of option" in
   let mk_comp alias = match !alias_of with
-    | ""   -> OpamVersion.Compiler.of_string alias
-    | comp -> OpamVersion.Compiler.of_string comp in
+    | ""   -> OpamCompiler.of_string alias
+    | comp -> OpamCompiler.of_string comp in
 {
   name     = "switch";
   usage    = "[compiler-name]";

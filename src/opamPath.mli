@@ -38,7 +38,7 @@ val aliases: t -> filename
 val opam: t -> package -> filename
 
 (** Compiler files: {i $opam/compilers/$OVERSION.comp} *)
-val compiler: t -> compiler_version -> filename
+val compiler: t -> compiler -> filename
 
 (** Compiler files: {i $opam/compilers/} *)
 val compilers_dir: t -> dirname
@@ -200,7 +200,7 @@ module Repository: sig
   val upload_dir: r -> dirname
 
   (** Compiler files: {i $opam/repo/$repo/compilers/$OVERSION.comp} *)
-  val compiler: r -> compiler_version -> filename
+  val compiler: r -> compiler -> filename
 
   (** Compiler files: {i $opam/repo/$repo/compilers/} *)
   val compilers_dir: r -> dirname

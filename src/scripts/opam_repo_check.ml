@@ -20,7 +20,7 @@ open OpamFilename.OP
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
   let specs = [
-    ("--version", Arg.Unit OpamGlobals.version_msg, " Display version information")
+    ("--version", Arg.Unit OpamVersion.message, " Display version information")
   ] in
   let ano x =
     Printf.eprintf "%s: invalid argument" x in
@@ -56,6 +56,6 @@ let () =
   let comps = OpamFilename.list_files (OpamPath.Repository.compilers_dir t) in
   List.iter (fun comp ->
     let comp_ = OpamFile.Comp.read comp in
-    OpamGlobals.msg "Processing (compiler) %s\n" (OpamVersion.Compiler.to_string (OpamFile.Comp.name comp_));
+    OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string (OpamFile.Comp.name comp_));
     OpamFile.Comp.write comp comp_;
   ) comps

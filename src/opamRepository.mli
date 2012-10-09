@@ -103,7 +103,7 @@ val make_archive: ?gener_digest:bool -> ?local_path:dirname -> package -> unit
 val packages: OpamPath.Repository.r -> package_set
 
 (** Get the list of compilers *)
-val compilers: OpamPath.Repository.r -> compiler_version_set
+val compilers: OpamPath.Repository.r -> compiler_set
 
 (** Get the available versions for a given compiler *)
 val versions: OpamPath.Repository.r -> name -> version_set

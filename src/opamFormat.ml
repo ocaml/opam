@@ -362,7 +362,7 @@ let rec parse_compiler_constraint t =
   match t with
   | []                     -> F.Empty
   | [Symbol r; String v ]  ->
-    (try F.Atom (parse_relop r, OpamVersion.Compiler.of_string v)
+    (try F.Atom (parse_relop r, OpamCompiler.Version.of_string v)
      with _ -> bad_format "Expecting a relop, got %s" r)
   | [Group g]              -> parse_compiler_constraint g
   | e1::e2 :: Symbol "|" :: e3 -> F.Or (parse_compiler_constraint [e1;e2], parse_compiler_constraint e3)
@@ -377,7 +377,7 @@ let rec make_compiler_constraint t =
   let module F = OpamFormula in
   match t with
   | F.Empty       -> []
-  | F.Atom (r, v) -> [Symbol (string_of_relop r); String (OpamVersion.Compiler.to_string  v)]
+  | F.Atom (r, v) -> [Symbol (string_of_relop r); String (OpamCompiler.Version.to_string  v)]
   | F.Block f     -> [Group (make_compiler_constraint f)]
   | F.And(e,f)    -> make_compiler_constraint e @ [Symbol "|"] @ make_compiler_constraint f
   | F.Or(e,f)     -> make_compiler_constraint e @ [Symbol "|"] @ make_compiler_constraint f

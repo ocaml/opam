@@ -176,7 +176,7 @@ module Descr: sig
 end
 
 (** Compiler aliases: [$opam/aliases] *)
-module Aliases: IO_FILE with type t = (alias * compiler_version) list
+module Aliases: IO_FILE with type t = (alias * compiler) list
 
 (** List of installed packages: [$opam/$oversion/installed] *)
 module Installed: IO_FILE with type t = package_set
@@ -197,13 +197,16 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    compiler_version -> name list -> (string * string * string) list -> t
+    compiler -> compiler_version -> name list -> (string * string * string) list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
 
   (** Return the compiler name *)
-  val name: t -> compiler_version
+  val name: t -> compiler
+
+  (** Return the compiler version *)
+  val version: t -> compiler_version
 
   (** Return the url of the compiler *)
   val src: t -> filename option

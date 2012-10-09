@@ -85,11 +85,13 @@ type file_attribute = OpamFilename.Attribute.t
 
 type file_attribute_set = OpamFilename.Attribute.Set.t
 
-type compiler_version = OpamVersion.Compiler.t
+type compiler = OpamCompiler.t
 
-type compiler_version_set = OpamVersion.Compiler.Set.t
+type compiler_set = OpamCompiler.Set.t
 
-type opam_version = OpamVersion.OPAM.t
+type compiler_version = OpamCompiler.Version.t
+
+type opam_version = OpamVersion.t
 
 type 'a generic_formula = 'a OpamFormula.formula =
   | Empty
@@ -102,7 +104,7 @@ type formula = OpamFormula.t
 
 type conjunction = OpamFormula.conjunction
 
-type compiler_constraint = OpamVersion.Compiler.constr
+type compiler_constraint = OpamCompiler.Version.constr
 
 type ppflag =
   | Camlp4 of string list

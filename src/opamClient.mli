@@ -23,7 +23,7 @@ open OpamTypes
     - [oversion] is the version of the compiler. [None] means we
       are using the system-wide installed compiler.
     - [cores] is the number of cores *)
-val init : repository -> compiler_version option -> int -> unit
+val init : repository -> compiler option -> int -> unit
 
 (** Display all available packages that matches any of the regexps. *)
 val list : print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_sensitive:bool
@@ -64,7 +64,7 @@ val remove : OpamPackage.Name.Set.t -> unit
 val remote : remote -> unit
 
 (** Install the given compiler. Take the global file lock. *)
-val compiler_install: bool -> alias -> compiler_version -> unit
+val compiler_install: bool -> alias -> compiler -> unit
 
 (** Import the packages from a file. Take the global file lock. *)
 val compiler_import: filename -> unit

@@ -302,15 +302,14 @@ let check_version repo =
       (OpamPath.Repository.version |>
        OpamFilename.read |>
        OpamMisc.strip |>
-       OpamPackage.Version.of_string
+       OpamVersion.of_string
       ) repo
     with e ->
-      OpamPackage.Version.of_string "0.7.5" in
-  let current_version = OpamPackage.Version.of_string OpamGlobals.version in
-  if OpamPackage.Version.compare repo_version current_version >= 0 then
+      OpamVersion.of_string "0.7.5" in
+  if OpamVersion.compare repo_version OpamVersion.current >= 0 then
     OpamGlobals.error_and_exit
       "\nThe current version of OPAM cannot read the repository. \
-       You should upgrade to at least the version %s.\n" (OpamPackage.Version.to_string repo_version)
+       You should upgrade to at least the version %s.\n" (OpamVersion.to_string repo_version)
 
 let update r =
   log "update %s" (to_string r);
@@ -381,7 +380,7 @@ let archives r =
     OpamFilename.Set.empty
 
 let compilers r =
-  OpamVersion.Compiler.list (OpamPath.Repository.compilers_dir r)
+  OpamCompiler.list (OpamPath.Repository.compilers_dir r)
 
 let files r nv =
   let l =

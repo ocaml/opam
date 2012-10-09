@@ -69,19 +69,22 @@ type version = OpamPackage.Version.t
 (** Set of package versions *)
 type version_set = OpamPackage.Version.Set.t
 
-(** {2 Versions} *)
+(** {2 Compilers} *)
+
+(** Compiler names *)
+type compiler = OpamCompiler.t
+
+(** Set of compiler names *)
+type compiler_set = OpamCompiler.Set.t
 
 (** Compiler versions *)
-type compiler_version = OpamVersion.Compiler.t
-
-(** Set of compiler versions *)
-type compiler_version_set = OpamVersion.Compiler.Set.t
+type compiler_version = OpamCompiler.Version.t
 
 (** OPAM versions *)
-type opam_version = OpamVersion.OPAM.t
+type opam_version = OpamVersion.t
 
 (** Compiler constraints *)
-type compiler_constraint = OpamVersion.Compiler.constr
+type compiler_constraint = OpamCompiler.Version.constr
 
 (** {2 Variables} *)
 

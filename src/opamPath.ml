@@ -36,7 +36,7 @@ let opam t nv = opam_dir t // (OpamPackage.to_string nv ^ ".opam")
 
 let compilers_dir t = t / "compilers"
 
-let compiler t ov = compilers_dir t // (OpamVersion.Compiler.to_string ov ^ ".comp")
+let compiler t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".comp")
 
 let descr_dir t = t / "descr"
 
@@ -130,7 +130,7 @@ module Repository = struct
 
   let compilers_dir t = t / "compilers"
 
-  let compiler t ov = compilers_dir t // (OpamVersion.Compiler.to_string ov ^ ".comp")
+  let compiler t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".comp")
 
   let url t nv = package t nv // "url"
 

@@ -13,6 +13,50 @@
 (*                                                                     *)
 (***********************************************************************)
 
+open OpamMisc.OP
+
+type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
+
+module Version = struct
+
+  include OpamMisc.Base
+
+  type constr = (relop * t) OpamFormula.formula
+
+  let current () =
+    match OpamSystem.ocaml_version () with
+    | None   -> None
+    | Some o -> Some (of_string o)
+
+  let compare v1 r v2 =
+    let v1 = to_string v1 in
+    let v2 = to_string v2 in
+    match r with
+    | `Eq  -> Debian.Version.equal v1 v2
+    | `Geq -> Debian.Version.compare v1 v2 >= 0
+    | `Gt  -> Debian.Version.compare v1 v2 > 0
+    | `Leq -> Debian.Version.compare v1 v2 <= 0
+    | `Lt  -> Debian.Version.compare v1 v2 < 0
+
+  let default = of_string OpamGlobals.default_alias
+
+end
+
 include OpamMisc.Base
+
+let list t =
+  if OpamFilename.exists_dir t then (
+    let files = OpamFilename.list_files t in
+    let files = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in
+    let l =
+      List.map
+        (OpamFilename.chop_extension
+        |> OpamFilename.basename
+        |> OpamFilename.Base.to_string
+        |> of_string)
+        files in
+    Set.of_list l
+  ) else
+    Set.empty
 
 let default = of_string OpamGlobals.default_alias

@@ -13,30 +13,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Compiler and OPAM versions *)
-
-(** Binary relations *)
-type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
-
-(** OCaml compiler versions *)
-module Compiler: sig
-
-  include OpamMisc.ABSTRACT
-
-  (** Compiler constraint *)
-  type constr = (relop * t) OpamFormula.formula
-
-  (** Return the version of the compiler currently installed *)
-  val current: unit -> t option
-
-  (** Compare OCaml versions *)
-  val compare: t -> relop -> t -> bool
-
-  (** List the compiler available in a directory *)
-  val list: OpamFilename.Dir.t -> Set.t
-
-end
-
 (** OPAM versions *)
-module OPAM: OpamMisc.ABSTRACT
 
+include OpamMisc.ABSTRACT
+
+(** The current OPAM version *)
+val current: t
+
+(** Display the version message *)
+val message: unit -> unit
+
+(** Version comparison *)
+val compare: t -> t -> int
