@@ -253,7 +253,7 @@ let make_chains root depends =
         chains
       else
         List.map (fun cs -> root :: cs) chains in
-  unroll root
+  List.filter (function [x] -> false | _ -> true) (unroll root)
 
 exception Found of Cudf.package
 
