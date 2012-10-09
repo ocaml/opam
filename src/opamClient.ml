@@ -2644,11 +2644,20 @@ let compiler_list () =
   OpamCompiler.Set.iter (fun c ->
     let comp = OpamFile.Comp.read (OpamPath.compiler t.root c) in
     let preinstalled = if OpamFile.Comp.preinstalled comp then "~" else " " in
-    let v = OpamFile.Comp.version comp in
-    OpamGlobals.msg " %s %s %s\n"
-      preinstalled
-      (OpamCompiler.to_string c)
-      (OpamCompiler.Version.to_string v)
+    let version = OpamFile.Comp.version comp in
+    let version, compiler =
+      if version = OpamCompiler.Version.default then
+        match OpamFile.Config.system_version t.config with
+        | None   -> "--", ""
+        | Some v ->
+          OpamCompiler.Version.to_string v,
+          Printf.sprintf "(%s)" (OpamCompiler.Version.to_string version)
+      else if OpamCompiler.Version.to_string version = OpamCompiler.to_string c then
+        OpamCompiler.Version.to_string version, ""
+      else
+        OpamCompiler.Version.to_string version,
+        Printf.sprintf "(%s)" (OpamCompiler.to_string c) in
+    OpamGlobals.msg " %s %-8s %s\n" preinstalled version compiler
   ) descrs
 
 let compiler_install quiet alias compiler =
