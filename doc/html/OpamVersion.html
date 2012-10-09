@@ -13,6 +13,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -35,17 +36,16 @@
 &nbsp;</div>
 <center><h1>Module <a href="type_OpamVersion.html">OpamVersion</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> OpamVersion: <code class="code">sig</code> <a href="OpamVersion.html">..</a> <code class="code">end</code></pre>Compiler and OPAM versions<br>
+<pre><span class="keyword">module</span> OpamVersion: <code class="code">sig</code> <a href="OpamVersion.html">..</a> <code class="code">end</code></pre>OPAM versions<br>
 <hr width="100%">
-<pre><span id="TYPErelop"><span class="keyword">type</span> <code class="type"></code>relop</span> = <code class="type">[ `Eq | `Geq | `Gt | `Leq | `Lt ]</code> </pre>
-<div class="info">
-Binary relations<br>
+<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
+<pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">t</code></pre><div class="info">
+The current OPAM version<br>
 </div>
-
-<pre><span class="keyword">module</span> <a href="OpamVersion.Compiler.html">Compiler</a>: <code class="code">sig</code> <a href="OpamVersion.Compiler.html">..</a> <code class="code">end</code></pre><div class="info">
-OCaml compiler versions
+<pre><span id="VALmessage"><span class="keyword">val</span> message</span> : <code class="type">unit -> unit</code></pre><div class="info">
+Display the version message<br>
 </div>
-<pre><span class="keyword">module</span> <a href="OpamVersion.OPAM.html">OPAM</a>: <code class="type"><a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
-OPAM versions
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> t -> int</code></pre><div class="info">
+Version comparison<br>
 </div>
 </body></html>

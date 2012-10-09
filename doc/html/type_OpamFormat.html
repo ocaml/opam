@@ -9,6 +9,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -102,8 +103,10 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_formula&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_opt_formula&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.formula<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_opt_formula&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_constraint&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_constraint<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_constraint&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_constraint&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_compiler_constraint&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_constraint<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_compiler_constraint&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.compiler_constraint&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_env_variable&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;*&nbsp;string&nbsp;*&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_env_variable&nbsp;:&nbsp;string&nbsp;*&nbsp;string&nbsp;*&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_filter&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filter<br>

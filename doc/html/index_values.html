@@ -10,6 +10,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -308,14 +309,19 @@ Clean-up process result files
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning.
 </div>
 </td></tr>
-<tr><td><a href="OpamVersion.Compiler.html#VALcompare">compare</a> [<a href="OpamVersion.Compiler.html">OpamVersion.Compiler</a>]</td>
+<tr><td><a href="OpamVersion.html#VALcompare">compare</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
 <td><div class="info">
-Compare OCaml versions
+Version comparison
 </div>
 </td></tr>
 <tr><td><a href="OpamPackage.Version.html#VALcompare">compare</a> [<a href="OpamPackage.Version.html">OpamPackage.Version</a>]</td>
 <td><div class="info">
 Compare two versions using the Debian version scheme
+</div>
+</td></tr>
+<tr><td><a href="OpamCompiler.Version.html#VALcompare">compare</a> [<a href="OpamCompiler.Version.html">OpamCompiler.Version</a>]</td>
+<td><div class="info">
+Compare OCaml versions
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALcompiler">compiler</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
@@ -538,7 +544,12 @@ Create a pre-installed compiler description file
 Constructor
 </div>
 </td></tr>
-<tr><td><a href="OpamVersion.Compiler.html#VALcurrent">current</a> [<a href="OpamVersion.Compiler.html">OpamVersion.Compiler</a>]</td>
+<tr><td><a href="OpamVersion.html#VALcurrent">current</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
+<td><div class="info">
+The current OPAM version
+</div>
+</td></tr>
+<tr><td><a href="OpamCompiler.Version.html#VALcurrent">current</a> [<a href="OpamCompiler.Version.html">OpamCompiler.Version</a>]</td>
 <td><div class="info">
 Return the version of the compiler currently installed
 </div>
@@ -562,6 +573,21 @@ Default repository
 <tr><td><a href="OpamPath.html#VALdefault">default</a> [<a href="OpamPath.html">OpamPath</a>]</td>
 <td><div class="info">
 Default root path
+</div>
+</td></tr>
+<tr><td><a href="OpamCompiler.Version.html#VALdefault">default</a> [<a href="OpamCompiler.Version.html">OpamCompiler.Version</a>]</td>
+<td><div class="info">
+Default compiler version
+</div>
+</td></tr>
+<tr><td><a href="OpamCompiler.html#VALdefault">default</a> [<a href="OpamCompiler.html">OpamCompiler</a>]</td>
+<td><div class="info">
+Default compiler
+</div>
+</td></tr>
+<tr><td><a href="OpamAlias.html#VALdefault">default</a> [<a href="OpamAlias.html">OpamAlias</a>]</td>
+<td><div class="info">
+Default alias
 </div>
 </td></tr>
 <tr><td><a href="OpamSolver.html#VALdelete_or_update">delete_or_update</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
@@ -691,6 +717,11 @@ Does a string ends with the given suffix ?
 <td><div class="info">
 Environment variable to set-up before running commands in the
       subtree
+</div>
+</td></tr>
+<tr><td><a href="OpamFormula.html#VALeval">eval</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
+<td><div class="info">
+Eval a formula
 </div>
 </td></tr>
 <tr><td><a href="OpamMisc.html#VALexact_match">exact_match</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
@@ -978,7 +1009,7 @@ Link a directory
 Symlink a file in a directory
 </div>
 </td></tr>
-<tr><td><a href="OpamVersion.Compiler.html#VALlist">list</a> [<a href="OpamVersion.Compiler.html">OpamVersion.Compiler</a>]</td>
+<tr><td><a href="OpamCompiler.html#VALlist">list</a> [<a href="OpamCompiler.html">OpamCompiler</a>]</td>
 <td><div class="info">
 List the compiler available in a directory
 </div>
@@ -1040,9 +1071,9 @@ Create a command
 Create a list of commands
 </div>
 </td></tr>
-<tr><td><a href="OpamFormat.html#VALmake_constraint">make_constraint</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
+<tr><td><a href="OpamFormat.html#VALmake_compiler_constraint">make_compiler_constraint</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
-Build a simple constraint
+Build a compiler constraint
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALmake_env_variable">make_env_variable</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1134,6 +1165,11 @@ MD5 digest of the remote file
 <td><div class="info">
 WARNING : Besides <code class="code">key</code>, the function could receive
       some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
+</div>
+</td></tr>
+<tr><td><a href="OpamVersion.html#VALmessage">message</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
+<td><div class="info">
+Display the version message
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_install.Raw.html#VALmisc">misc</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
@@ -1318,9 +1354,9 @@ Parse a command
 Parse a list of commands
 </div>
 </td></tr>
-<tr><td><a href="OpamFormat.html#VALparse_constraint">parse_constraint</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
+<tr><td><a href="OpamFormat.html#VALparse_compiler_constraint">parse_compiler_constraint</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
-Parse a simple constraint
+Parse compiler constraints
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALparse_env_variable">parse_env_variable</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -2039,6 +2075,11 @@ Return the version file
 Return the version name
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.Comp.html#VALversion">version</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
+<td><div class="info">
+Return the compiler version
+</div>
+</td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALversion">version</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Package version
@@ -2095,6 +2136,11 @@ Construct as <code class="code">depends</code>
 Construct as <code class="code">depopts</code>
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.OPAM.html#VALwith_files">with_files</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">files</code>
+</div>
+</td></tr>
 <tr><td><a href="OpamSystem.html#VALwith_flock">with_flock</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
 <td><div class="info">
 Functional version of <code class="code">flock / funlock</code>
@@ -2118,6 +2164,11 @@ Construct as <code class="code">maintainer</code>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_ocaml_version">with_ocaml_version</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Construct as <code class="code">compiler_version</code>
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.OPAM.html#VALwith_patches">with_patches</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
+<td><div class="info">
+Construct as <code class="code">patches</code>
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_remove">with_remove</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>

@@ -5,7 +5,7 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
 <link rel="previous" href="OpamAlias.html">
-<link rel="next" href="OpamFile.html">
+<link rel="next" href="OpamCompiler.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -14,6 +14,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -33,13 +34,13 @@
 <body>
 <div class="navbar"><a href="OpamAlias.html">Previous</a>
 &nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamFile.html">Next</a>
+&nbsp;<a href="OpamCompiler.html">Next</a>
 </div>
 <center><h1>Module <a href="type_OpamClient.html">OpamClient</a></h1></center>
 <br>
 <pre><span class="keyword">module</span> OpamClient: <code class="code">sig</code> <a href="OpamClient.html">..</a> <code class="code">end</code></pre>Client entry-point.<br>
 <hr width="100%">
-<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> option -> int -> unit</code></pre><div class="info">
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> option -> int -> unit</code></pre><div class="info">
 Initialize the client a consistent state.
     <code class="code">init repo alias oversion cores</code> means:<ul>
 <li><code class="code">repo</code> is the initial repository description,</li>
@@ -86,7 +87,7 @@ Remove the given set of packages. Take the global file lock.<br>
 <pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="OpamTypes.html#TYPEremote">OpamTypes.remote</a> -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_install"><span class="keyword">val</span> compiler_install</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEalias">OpamTypes.alias</a> -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> -> unit</code></pre><div class="info">
+<pre><span id="VALcompiler_install"><span class="keyword">val</span> compiler_install</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEalias">OpamTypes.alias</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
 Install the given compiler. Take the global file lock.<br>
 </div>
 <pre><span id="VALcompiler_import"><span class="keyword">val</span> compiler_import</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">

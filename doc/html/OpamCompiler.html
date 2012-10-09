@@ -4,8 +4,9 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="next" href="OpamVersion.OPAM.html">
-<link rel="Up" href="OpamVersion.html">
+<link rel="previous" href="OpamClient.html">
+<link rel="next" href="OpamFile.html">
+<link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
@@ -13,6 +14,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -27,29 +29,33 @@
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamVersion.Compiler</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamCompiler</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="OpamVersion.html">Up</a>
-&nbsp;<a href="OpamVersion.OPAM.html">Next</a>
+<div class="navbar"><a href="OpamClient.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="OpamFile.html">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamVersion.Compiler.html">OpamVersion.Compiler</a></h1></center>
+<center><h1>Module <a href="type_OpamCompiler.html">OpamCompiler</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Compiler: <code class="code">sig</code> <a href="OpamVersion.Compiler.html">..</a> <code class="code">end</code></pre>OCaml compiler versions<br>
+<pre><span class="keyword">module</span> OpamCompiler: <code class="code">sig</code> <a href="OpamCompiler.html">..</a> <code class="code">end</code></pre>Compiler and OPAM versions<br>
 <hr width="100%">
-<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
-<pre><span id="TYPEconstr"><span class="keyword">type</span> <code class="type"></code>constr</span> = <code class="type"><a href="OpamVersion.html#TYPErelop">OpamVersion.relop</a> * t</code> </pre>
+<pre><span id="TYPErelop"><span class="keyword">type</span> <code class="type"></code>relop</span> = <code class="type">[ `Eq | `Geq | `Gt | `Leq | `Lt ]</code> </pre>
 <div class="info">
-Compiler constraint<br>
+Binary relations<br>
 </div>
 
-<pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> t option</code></pre><div class="info">
-Return the version of the compiler currently installed<br>
+<pre><span class="keyword">module</span> <a href="OpamCompiler.Version.html">Version</a>: <code class="code">sig</code> <a href="OpamCompiler.Version.html">..</a> <code class="code">end</code></pre><div class="info">
+OCaml compiler versions
 </div>
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> <a href="OpamVersion.html#TYPErelop">OpamVersion.relop</a> -> t -> bool</code></pre><div class="info">
-Compare OCaml versions<br>
+<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
+<div class="info">
+Compiler names<br>
 </div>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
 List the compiler available in a directory<br>
+</div>
+<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type">t</code></pre><div class="info">
+Default compiler<br>
 </div>
 </body></html>

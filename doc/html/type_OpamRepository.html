@@ -9,6 +9,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -134,7 +135,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;?gener_digest:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?local_path:<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;packages&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.<span class="constructor">Repository</span>.r&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.<span class="constructor">Repository</span>.r&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_version_set<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.<span class="constructor">Repository</span>.r&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_set<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;versions&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.<span class="constructor">Repository</span>.r&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.version_set<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;files&nbsp;:<br>

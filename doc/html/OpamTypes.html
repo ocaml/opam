@@ -14,6 +14,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -30,7 +31,7 @@
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><link title="Filenames" rel="Section" href="#2_Filenames">
 <link title="Packages" rel="Section" href="#2_Packages">
-<link title="Versions" rel="Section" href="#2_Versions">
+<link title="Compilers" rel="Section" href="#2_Compilers">
 <link title="Variables" rel="Section" href="#2_Variables">
 <link title="Formulas" rel="Section" href="#2_Formulas">
 <link title="Repositories" rel="Section" href="#2_Repositories">
@@ -168,23 +169,28 @@ Set of package versions<br>
 </div>
 
 <br>
-<span id="2_Versions"><h2>Versions</h2></span><br>
-<pre><span id="TYPEcompiler_version"><span class="keyword">type</span> <code class="type"></code>compiler_version</span> = <code class="type">OpamVersion.Compiler.t</code> </pre>
+<span id="2_Compilers"><h2>Compilers</h2></span><br>
+<pre><span id="TYPEcompiler"><span class="keyword">type</span> <code class="type"></code>compiler</span> = <code class="type">OpamCompiler.t</code> </pre>
+<div class="info">
+Compiler names<br>
+</div>
+
+<pre><span id="TYPEcompiler_set"><span class="keyword">type</span> <code class="type"></code>compiler_set</span> = <code class="type">OpamCompiler.Set.t</code> </pre>
+<div class="info">
+Set of compiler names<br>
+</div>
+
+<pre><span id="TYPEcompiler_version"><span class="keyword">type</span> <code class="type"></code>compiler_version</span> = <code class="type">OpamCompiler.Version.t</code> </pre>
 <div class="info">
 Compiler versions<br>
 </div>
 
-<pre><span id="TYPEcompiler_version_set"><span class="keyword">type</span> <code class="type"></code>compiler_version_set</span> = <code class="type">OpamVersion.Compiler.Set.t</code> </pre>
-<div class="info">
-Set of compiler versions<br>
-</div>
-
-<pre><span id="TYPEopam_version"><span class="keyword">type</span> <code class="type"></code>opam_version</span> = <code class="type">OpamVersion.OPAM.t</code> </pre>
+<pre><span id="TYPEopam_version"><span class="keyword">type</span> <code class="type"></code>opam_version</span> = <code class="type">OpamVersion.t</code> </pre>
 <div class="info">
 OPAM versions<br>
 </div>
 
-<pre><span id="TYPEcompiler_constraint"><span class="keyword">type</span> <code class="type"></code>compiler_constraint</span> = <code class="type"><a href="OpamVersion.Compiler.html#TYPEconstr">OpamVersion.Compiler.constr</a></code> </pre>
+<pre><span id="TYPEcompiler_constraint"><span class="keyword">type</span> <code class="type"></code>compiler_constraint</span> = <code class="type"><a href="OpamCompiler.Version.html#TYPEconstr">OpamCompiler.Version.constr</a></code> </pre>
 <div class="info">
 Compiler constraints<br>
 </div>

@@ -14,6 +14,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -40,14 +41,17 @@
 <pre><span class="keyword">module</span> Comp: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre>Compiler version <code class="code">$opam/compilers/</code><br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALcreate_preinstalled"><span class="keyword">val</span> create_preinstalled</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> -><br>       <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list -> (string * string * string) list -> t</code></pre><div class="info">
+<pre><span id="VALcreate_preinstalled"><span class="keyword">val</span> create_preinstalled</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -><br>       <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> -><br>       <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list -> (string * string * string) list -> t</code></pre><div class="info">
 Create a pre-installed compiler description file<br>
 </div>
 <pre><span id="VALpreinstalled"><span class="keyword">val</span> preinstalled</span> : <code class="type">t -> bool</code></pre><div class="info">
 Is it a pre-installed compiler description file<br>
 </div>
-<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a></code></pre><div class="info">
+<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a></code></pre><div class="info">
 Return the compiler name<br>
+</div>
+<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a></code></pre><div class="info">
+Return the compiler version<br>
 </div>
 <pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option</code></pre><div class="info">
 Return the url of the compiler<br>

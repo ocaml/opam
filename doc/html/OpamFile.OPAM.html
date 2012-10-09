@@ -14,6 +14,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -117,5 +118,11 @@ Construct as <code class="code">compiler_version</code><br>
 </div>
 <pre><span id="VALwith_maintainer"><span class="keyword">val</span> with_maintainer</span> : <code class="type">t -> string -> t</code></pre><div class="info">
 Construct as <code class="code">maintainer</code><br>
+</div>
+<pre><span id="VALwith_files"><span class="keyword">val</span> with_files</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list -> t</code></pre><div class="info">
+Construct as <code class="code">files</code><br>
+</div>
+<pre><span id="VALwith_patches"><span class="keyword">val</span> with_patches</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list -> t</code></pre><div class="info">
+Construct as <code class="code">patches</code><br>
 </div>
 </body></html>

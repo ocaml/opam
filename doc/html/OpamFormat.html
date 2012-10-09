@@ -14,6 +14,7 @@
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
@@ -222,11 +223,11 @@ Parse optional package formula where OR are implicit: <code class="code">x y -&g
 <pre><span id="VALmake_opt_formula"><span class="keyword">val</span> make_opt_formula</span> : <code class="type"><a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
 Build a formula where OR are implicit.<br>
 </div>
-<pre><span id="VALparse_constraint"><span class="keyword">val</span> parse_constraint</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a></code></pre><div class="info">
-Parse a simple constraint<br>
+<pre><span id="VALparse_compiler_constraint"><span class="keyword">val</span> parse_compiler_constraint</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a></code></pre><div class="info">
+Parse compiler constraints<br>
 </div>
-<pre><span id="VALmake_constraint"><span class="keyword">val</span> make_constraint</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
-Build a simple constraint<br>
+<pre><span id="VALmake_compiler_constraint"><span class="keyword">val</span> make_compiler_constraint</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+Build a compiler constraint<br>
 </div>
 <br>
 <span id="2_Environmentvariables"><h2>Environment variables</h2></span><br>
