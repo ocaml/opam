@@ -638,17 +638,13 @@ module OPAM = struct
 
   module D = Debian.Packages
 
-  (* XXX: Pre-encode the depends and conflict fields to avoid
-     headaches when interfacing with the solver *)
-  let encode = OpamFormula.map (fun (n,c) -> OpamPackage.Name.of_string (Common.CudfAdd.encode (OpamPackage.Name.to_string n)), c)
-
   let default_package t =
     let depopts = OpamFormat.string_of_value (OpamFormat.make_opt_formula t.depopts) in
     { D.default_package with
       D.name      = OpamPackage.Name.to_string t.name ;
       D.version   = OpamPackage.Version.to_string t.version ;
-      D.depends   = OpamFormula.to_cnf (encode t.depends);
-      D.conflicts = OpamFormula.to_conjunction (encode t.conflicts);
+      D.depends   = OpamFormula.to_cnf t.depends;
+      D.conflicts = OpamFormula.to_conjunction t.conflicts;
       D.extras    = (s_depopts, depopts) :: D.default_package.D.extras }
 
   let to_package t ~installed =
