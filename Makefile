@@ -56,9 +56,11 @@ tests-git:
 	$(MAKE) -C tests git
 
 %-install:
-	if [ -e _obuild/$*/$*.asm ]; then \
+	@if [ -e _obuild/$*/$*.asm ]; then \
+	  echo "install _obuild/$*/$*.asm" && \
 	  cp _obuild/$*/$*.asm $(prefix)/bin/$*; \
 	else \
+	  echo "install _obuild/$*/$*.byte" && \
 	  cp _obuild/$*/$*.byte $(prefix)/bin/$*; \
 	fi
 
