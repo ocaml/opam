@@ -614,6 +614,15 @@ end = struct
 
 end
 
+let output_universe name universe =
+  if !OpamGlobals.debug then (
+    let oc = open_out (name ^ ".cudf") in
+    Cudf_printer.pp_universe oc universe;
+    close_out oc;
+    let g = Graph.dep_reduction (Cudf.get_packages universe) in
+    Graph.output_graph g name;
+  )
+
 let resolve (U l_pkg_pb) req installed =
   (* filter-out the default package from the universe *)
   let l_pkg_pb =
@@ -659,6 +668,8 @@ let resolve (U l_pkg_pb) req installed =
             universe
           else (* Universe without optional dependencies *)
             universe0 in
+        output_universe "universe-all" universe;
+        output_universe "universe" universe0;
         Graph.dep_reduction (Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe0),
         universe,
         resolve universe1 in
