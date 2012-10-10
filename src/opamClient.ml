@@ -995,7 +995,15 @@ let init_ocaml t quiet alias compiler =
     OpamGlobals.msg "The compiler %s is already installed.\n" (OpamAlias.to_string alias);
     OpamGlobals.exit 0;
   );
+
   OpamFilename.mkdir alias_dir;
+  OpamFilename.mkdir (OpamPath.Alias.lib_dir t.root alias);
+  OpamFilename.mkdir (OpamPath.Alias.build_dir t.root alias);
+  OpamFilename.mkdir (OpamPath.Alias.bin t.root alias);
+  OpamFilename.mkdir (OpamPath.Alias.doc_dir t.root alias);
+  OpamFilename.mkdir (OpamPath.Alias.man_dir t.root alias);
+  OpamFilename.mkdir (OpamPath.Alias.install_dir t.root alias);
+  OpamFilename.mkdir (OpamPath.Alias.config_dir t.root alias);
 
   let comp = OpamFile.Comp.read comp_f in
   begin try
