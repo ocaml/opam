@@ -2153,11 +2153,15 @@ let install names =
     let name_new = List.map OpamPackage.name pkg_new in
     List.iter (fun n -> log "new: %s" (OpamPackage.Name.to_string n)) name_new;
 
-    let universe = OpamSolver.U (OpamPackage.Set.fold (fun nv l -> (debpkg_of_nv t `install nv) :: l) (Lazy.force t.available_packages) []) in
+    let universe =
+      OpamSolver.U (OpamPackage.Set.fold
+                      (fun nv l -> (debpkg_of_nv t `install nv) :: l)
+                      (Lazy.force t.available_packages) []) in
     let depends =
       OpamSolver.get_backward_dependencies ~depopts:true universe
         (OpamSolver.P (List.rev_map (fun nv -> debpkg_of_nv t `install nv) pkg_new)) in
     let depends = OpamPackage.Set.of_list (List.rev_map OpamPackage.of_dpkg depends) in
+    log "depends=%s" (OpamPackage.Set.to_string depends);
     let depends =
       OpamPackage.Set.filter (fun nv ->
         let name = OpamPackage.name nv in
