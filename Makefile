@@ -1,7 +1,7 @@
 include Makefile.config
 
 LOCAL_OCPBUILD=./ocp-build/ocp-build
-OCPBUILD ?= $(LOCAL_OCPBUILD) # /usr/local/bin/ocp-build
+OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
 TARGETS = opam opam-mk-repo
 
@@ -56,7 +56,11 @@ tests-git:
 	$(MAKE) -C tests git
 
 %-install:
-	cp _obuild/$*/$*.asm $(prefix)/bin/$*
+	if [ -e _obuild/$*/$*.asm ]; then \
+	  cp _obuild/$*/$*.asm $(prefix)/bin/$*; \
+	else \
+	  cp _obuild/$*/$*.byte $(prefix)/bin/$*; \
+	fi
 
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
