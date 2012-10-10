@@ -1568,6 +1568,10 @@ type solver_result =
   | Aborted
   | No_solution
 
+let error_if_no_solution = function
+  | No_solution -> OpamGlobals.exit 3
+  | _           -> ()
+
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
 
@@ -2006,7 +2010,8 @@ let upgrade names =
   if OpamPackage.Set.is_empty reinstall then
     OpamFilename.remove reinstall_f
   else
-    OpamFile.Reinstall.write reinstall_f reinstall
+    OpamFile.Reinstall.write reinstall_f reinstall;
+  error_if_no_solution !solution_found
 
 let check_opam_version () =
   let t = load_state () in
@@ -2190,7 +2195,7 @@ let install names =
       List.filter
         (fun v_cstr -> List.mem (name_of_version_constraint v_cstr) name_new)
         names in
-    let _solution = Heuristic.resolve `install t
+    let solution = Heuristic.resolve `install t
       (List.map
          (fun (f_new, f_might, f_not) ->
            { wish_install =
@@ -2206,8 +2211,9 @@ let install names =
           ; v_any, v_eq , v_eq
           ; v_any, v_ge , v_eq
           ; v_any, v_any, v_eq
-          ; v_any, v_any, v_any ])) in
-    ()
+          ; v_any, v_any, v_any ])
+      ) in
+    error_if_no_solution solution
   )
 
 let remove names =
@@ -2264,7 +2270,7 @@ let remove names =
     let depends = OpamPackage.Set.of_list (List.rev_map OpamPackage.of_dpkg depends) in
     let depends = OpamPackage.Set.filter (fun nv -> OpamPackage.Set.mem nv t.installed) depends in
     let wish_remove = Heuristic.apply Heuristic.v_eq wish_remove in
-    let _solution = Heuristic.resolve `remove t
+    let solution = Heuristic.resolve `remove t
       (List.map
          (fun f_h ->
            let installed = Heuristic.get_installed t f_h in
@@ -2277,7 +2283,8 @@ let remove names =
            ; wish_upgrade = [] })
          [ Heuristic.v_eq
          ; Heuristic.v_any ]) in
-    ())
+    error_if_no_solution solution
+  )
 
 let reinstall names =
   log "reinstall %s" (OpamPackage.Name.Set.to_string names);
