@@ -52,22 +52,16 @@ type kind = string
 
 type address = dirname
 
-type repository = {
-  repo_name: string;
-  repo_kind: kind;
-  repo_address: address;
-}
+type repository_name = OpamRepositoryName.t
 
-let create_repository ~name ~kind ~address =
-  let address =
-    if Sys.file_exists address
-    then OpamFilename.Dir.of_string address
-    else OpamFilename.raw_dir address in
-  {
-    repo_name    = name;
-    repo_kind    = kind;
-    repo_address = address
-  }
+type 'a repository_name_map = 'a OpamRepositoryName.Map.t
+
+type repository = {
+  repo_name    : repository_name;
+  repo_kind    : string;
+  repo_address : dirname;
+  repo_priority: int;
+}
 
 type variable = OpamVariable.t
 
@@ -128,19 +122,23 @@ let string_of_upload u =
 (* Remote arguments *)
 type remote =
   | RList
-  | RAdd of repository
-  | RRm of string
-
-let string_of_repository r =
-  Printf.sprintf "%s(%s %s)"
-    r.repo_name
-    (OpamFilename.Dir.to_string r.repo_address)
-    r.repo_kind
+  | RAdd of repository_name * string * dirname * int
+  | RRm of repository_name
+  | RPriority of repository_name * int
 
 let string_of_remote = function
-  | RList  -> "list"
-  | RAdd s -> Printf.sprintf "add %s" (string_of_repository s)
-  | RRm  s -> Printf.sprintf "rm %s" s
+  | RList -> "list"
+  | RAdd (r, k, d, p) ->
+    Printf.sprintf "add %s %s %s %d"
+      (OpamRepositoryName.to_string r)
+      (OpamFilename.Dir.to_string d)
+      k p
+  | RRm  r ->
+    Printf.sprintf "rm %s"
+      (OpamRepositoryName.to_string r)
+  | RPriority (r, p) ->
+    Printf.sprintf "priority %s %d"
+      (OpamRepositoryName.to_string r) p
 
 type config_option = {
   conf_is_rec : bool;

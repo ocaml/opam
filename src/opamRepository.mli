@@ -19,13 +19,17 @@ open OpamTypes
 
 exception Unknown_backend
 
-include OpamMisc.ABSTRACT with type t = repository
+(** Pretty-print *)
+val to_string: repository -> string
+
+(** Compare repositories *)
+val compare: repository -> repository -> int
 
 (** Default repository *)
 val default: repository
 
 (** Constructor *)
-val create: name:string -> kind:string -> address:string -> repository
+val repository_address: string -> dirname
 
 (** Create a dummy local repository *)
 val local_repo: unit -> OpamPath.Repository.r
@@ -53,16 +57,16 @@ module type BACKEND = sig
 
   (** Initialize an OPAM repository in the current directory. The
       argument is the remote repository address. *)
-  val init: address -> unit
+  val init: address:dirname -> unit
 
   (** Update the OPAM repository in the current directory. Return the
       list of locally updated files. *)
-  val update: address -> OpamFilename.Set.t
+  val update: address:dirname -> OpamFilename.Set.t
 
   (** Download a (remote) archive file, stored on the (remote) OPAM
       repository, in the current repository. Return the local path to
       the downloaded archive.*)
-  val download_archive: address -> package -> filename download
+  val download_archive: address:dirname -> package -> filename download
 
   (** Download a (remote) file and return the local path to the
       downloaded file. As the opposite to [download_archive], the
@@ -79,15 +83,15 @@ module type BACKEND = sig
   (** Upload the content of the current directory to the directory
       given as argument. Return the local paths corresponding to the
       uploaded local files. *)
-  val upload_dir: address:address -> dirname -> OpamFilename.Set.t
+  val upload_dir: address:dirname -> dirname -> OpamFilename.Set.t
 
 end
 
 (** Register a repository backend *)
-val register_backend: kind -> (module BACKEND) -> unit
+val register_backend: string -> (module BACKEND) -> unit
 
 (** Find a backend *)
-val find_backend: kind -> (module BACKEND)
+val find_backend: string -> (module BACKEND)
 
 (** Copy the additional package files in the current dir *)
 val copy_files: OpamPath.Repository.r -> package -> OpamFilename.Set.t

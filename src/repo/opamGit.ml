@@ -69,12 +69,12 @@ module B = struct
     else
       Not_available
 
-  let init address =
+  let init ~address =
     let local_repo = OpamRepository.local_repo () in
     git_init address;
     OpamFile.Filenames.write (updates local_repo) (OpamFilename.Set.empty)
 
-  let download_archive address nv =
+  let download_archive ~address nv =
     let local_repo = OpamRepository.local_repo () in
     let archive = OpamPath.Repository.archive local_repo nv in
     check_file archive
@@ -103,10 +103,10 @@ module B = struct
         else
           Result dir
 
-  let update remote_address =
+  let update ~address =
     let local_repo = OpamRepository.local_repo () in
     let local_dir = OpamPath.Repository.root local_repo in
-    match check_updates local_dir remote_address with
+    match check_updates local_dir address with
     | Some f -> OpamFile.Filenames.write (updates local_repo) f; f
     | None   ->
         OpamGlobals.error_and_exit

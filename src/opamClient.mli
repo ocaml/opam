@@ -43,7 +43,7 @@ val install : name_set -> unit
 val reinstall : OpamPackage.Name.Set.t -> unit
 
 (** Refresh the available packages. Take the global file lock. *)
-val update : string list -> unit
+val update : repository_name list -> unit
 
 (** Find a consistent state where most of the installed packages are
     upgraded to their latest version.
@@ -55,7 +55,7 @@ val upgrade : OpamPackage.Name.Set.t -> unit
     will look for the repository associated with the package
     name. Otherwise, it will look for a repository having the right
     name. Take the global file lock. *)
-val upload : upload -> string option -> unit
+val upload : upload -> repository_name option -> unit
 
 (** Remove the given set of packages. Take the global file lock. *)
 val remove : OpamPackage.Name.Set.t -> unit

@@ -19,24 +19,29 @@ open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 
-type t = repository
+let compare r1 r2 =
+  match compare r2.repo_priority r1.repo_priority with
+  | 0 -> compare r2.repo_name r1.repo_name
+  | x -> x
 
 let to_string r =
-  Printf.sprintf "%s(%s %s)"
-    r.repo_name
-    (OpamFilename.Dir.to_string r.repo_address)
+  Printf.sprintf "%s(%d %s %s)"
+    (OpamRepositoryName.to_string r.repo_name)
+    r.repo_priority
     r.repo_kind
-
-let of_string _ =
-  failwith "Use Repository.create instead"
+    (OpamFilename.Dir.to_string r.repo_address)
 
 let default = {
-  repo_name    = OpamGlobals.default_repository_name;
-  repo_kind    = OpamGlobals.default_repository_kind;
-  repo_address = OpamFilename.raw_dir OpamGlobals.default_repository_address;
+  repo_name     = OpamRepositoryName.default;
+  repo_kind     = OpamGlobals.default_repository_kind;
+  repo_address  = OpamFilename.raw_dir OpamGlobals.default_repository_address;
+  repo_priority = 0;
 }
 
-let create = create_repository
+let repository_address address =
+  if Sys.file_exists address
+  then OpamFilename.Dir.of_string address
+  else OpamFilename.raw_dir address
 
 let with_kind r repo_kind = { r with repo_kind }
 
@@ -52,12 +57,12 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val init: address -> unit
-  val update: address -> OpamFilename.Set.t
-  val download_archive: address -> package -> filename download
+  val init: address:dirname -> unit
+  val update: address:dirname -> OpamFilename.Set.t
+  val download_archive: address:dirname -> package -> filename download
   val download_file: package -> filename -> filename download
   val download_dir: package -> ?dst:dirname -> dirname -> dirname download
-  val upload_dir: address:address -> dirname -> OpamFilename.Set.t
+  val upload_dir: address:dirname -> dirname -> OpamFilename.Set.t
 end
 
 exception Unknown_backend
@@ -84,7 +89,7 @@ let remote_repo remote_address =
   OpamPath.Repository.raw remote_address
 
 let repo r =
-  OpamPath.Repository.create (OpamPath.default ()) r
+  OpamPath.Repository.create (OpamPath.default ()) r.repo_name
 
 (* initialize the current directory *)
 let init r =

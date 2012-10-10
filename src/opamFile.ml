@@ -260,7 +260,7 @@ module Repo_index = struct
 
   let internal = "repo-index"
 
-  type t = string list OpamPackage.Name.Map.t
+  type t = repository_name list OpamPackage.Name.Map.t
 
   let empty = OpamPackage.Name.Map.empty
 
@@ -272,12 +272,14 @@ module Repo_index = struct
           if OpamPackage.Name.Map.mem name map then
             OpamGlobals.error_and_exit "multiple lines for package %s" name_s
           else
+            let repo_s = List.map OpamRepositoryName.of_string repo_s in
             OpamPackage.Name.Map.add name repo_s map
       | [] -> map
     ) OpamPackage.Name.Map.empty lines
 
   let to_string filename map =
     let lines = OpamPackage.Name.Map.fold (fun name repo_s lines ->
+      let repo_s = List.map OpamRepositoryName.to_string repo_s in
       (OpamPackage.Name.to_string name :: repo_s) :: lines
     ) map [] in
     Lines.to_string filename (List.rev lines)
@@ -293,16 +295,30 @@ module Pinned = struct
   let empty = OpamPackage.Name.Map.empty
 
   let of_string filename str =
-    let m = Repo_index.of_string filename str in
-    OpamPackage.Name.Map.map (function
-      | [x]   -> pin_option_of_string x
-      | [k;x] -> pin_option_of_string ?kind:(Some k) x
+    let lines = Lines.of_string filename str in
+    let add name_s pin map =
+      let name = OpamPackage.Name.of_string name_s in
+      if OpamPackage.Name.Map.mem name map then
+        OpamGlobals.error_and_exit "multiple lines for package %s" name_s
+      else
+        OpamPackage.Name.Map.add name pin map in
+    List.fold_left (fun map -> function
+      | []           -> map
+      | [name_s; x]  -> add name_s (pin_option_of_string x) map
+      | [name_s;k;x] -> add name_s (pin_option_of_string ?kind:(Some k) x) map
       | _     -> OpamGlobals.error_and_exit "too many pinning options"
-    ) m
+    ) OpamPackage.Name.Map.empty lines
 
   let to_string filename map =
-    let aux x = [ kind_of_pin_option x; path_of_pin_option x ] in
-    Repo_index.to_string filename (OpamPackage.Name.Map.map aux map)
+    let lines = OpamPackage.Name.Map.fold (fun name pin lines ->
+      let l = [
+        OpamPackage.Name.to_string name;
+        kind_of_pin_option pin;
+        path_of_pin_option pin
+      ] in
+      l :: lines
+    ) map [] in
+    Lines.to_string filename (List.rev lines)
 
 end
 
@@ -312,26 +328,38 @@ module Repo_config = struct
 
   type t = repository
 
-  let empty = create_repository ~name:"<none>" ~address:"<none>" ~kind:"<none>"
+  let empty = {
+    repo_name     = OpamRepositoryName.of_string "<none>";
+    repo_address  = OpamFilename.address_of_string "<none>";
+    repo_kind     = "<none>";
+    repo_priority = 0;
+  }
 
   let s_name = "name"
   let s_kind = "kind"
   let s_address = "address"
+  let s_priority = "priority"
 
   let of_string filename str =
     let s = Syntax.of_string filename str in
-    let name = OpamFormat.assoc s.file_contents s_name OpamFormat.parse_string in
-    let address = OpamFormat.assoc s.file_contents s_address OpamFormat.parse_string in
-    let kind = OpamFormat.assoc s.file_contents s_kind OpamFormat.parse_string in
-    create_repository ~name ~address ~kind
+    let repo_name =
+      OpamFormat.assoc s.file_contents s_name (OpamFormat.parse_string |> OpamRepositoryName.of_string) in
+    let repo_address =
+      OpamFormat.assoc s.file_contents s_address (OpamFormat.parse_string |> OpamFilename.address_of_string) in
+    let repo_kind =
+      OpamFormat.assoc s.file_contents s_kind OpamFormat.parse_string in
+    let repo_priority =
+      OpamFormat.assoc_default 0 s.file_contents s_priority OpamFormat.parse_int in
+    { repo_name; repo_address; repo_kind; repo_priority }
 
   let to_string filename t =
     let s = {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
-        Variable (s_name   , OpamFormat.make_string t.repo_name);
-        Variable (s_address, OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_address));
-        Variable (s_kind   , OpamFormat.make_string t.repo_kind);
+        Variable (s_name    , OpamFormat.make_string (OpamRepositoryName.to_string t.repo_name));
+        Variable (s_address , OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_address));
+        Variable (s_kind    , OpamFormat.make_string t.repo_kind);
+        Variable (s_priority, OpamFormat.make_int t.repo_priority);
       ] } in
     Syntax.to_string filename s
 
@@ -395,22 +423,9 @@ module Config = struct
 
     let internal = "config"
 
-    let to_repo (name, option) =
-      let address, kind = match option with
-        | Some (address, kind) -> address, kind
-        | None                 ->
-            OpamGlobals.default_repository_kind,
-            OpamGlobals.default_repository_address in
-      create_repository ~name ~address ~kind
-
-    let of_repo r =
-      Option (String r.repo_name,
-              [ String (OpamFilename.Dir.to_string r.repo_address);
-                String r.repo_kind ])
-
     type t = {
       opam_version  : opam_version ;
-      repositories  : repository list ;
+      repositories  : repository_name list ;
       alias         : alias option ;
       system_version: compiler_version option ;
       cores         : int;
@@ -463,8 +478,34 @@ module Config = struct
         OpamFormat.assoc s.file_contents s_opam_version (OpamFormat.parse_string |> OpamVersion.of_string) in
       let repositories =
         OpamFormat.assoc_list s.file_contents s_repositories
-          (OpamFormat.parse_list
-             (OpamFormat.parse_string_option OpamFormat.parse_string_pair_of_list |> to_repo)) in
+          (OpamFormat.parse_or [
+            ("new-version", OpamFormat.parse_list (OpamFormat.parse_string |> OpamRepositoryName.of_string));
+            ("old-version",
+             (* We try to keep backward compatibilty here. The following code is not very beautiful, but it works *)
+             fun x ->
+               let list =
+                 OpamFormat.parse_list (OpamFormat.parse_string_option OpamFormat.parse_string_pair_of_list) x in
+               let _ = List.fold_left (fun i (name, option) ->
+                 match option with
+                 | None                 -> i+1
+                 | Some (address, kind) ->
+                   let repo_name = OpamRepositoryName.of_string name in
+                   let repo = {
+                     repo_name;
+                     repo_kind     = kind;
+                     repo_address  = OpamFilename.address_of_string address;
+                     repo_priority = 10 * i;
+                   } in
+                   let repo_p = OpamPath.Repository.create (OpamPath.default ()) repo_name in
+                   let config_f = OpamPath.Repository.config repo_p in
+                   if not (OpamFilename.exists config_f) then (
+                     OpamGlobals.log internal "write %s" (OpamFilename.to_string config_f);
+                     OpamFilename.write config_f (Repo_config.to_string filename repo)
+                   );
+                   i+1)
+                 0 list in
+               List.map (fst |> OpamRepositoryName.of_string) list)
+          ]) in
       let alias =
         OpamFormat.assoc_option s.file_contents s_ocaml_version (OpamFormat.parse_string |> OpamAlias.of_string) in
       let alias2 =
@@ -491,7 +532,10 @@ module Config = struct
        file_name     = OpamFilename.to_string filename;
        file_contents = [
          Variable (s_opam_version , OpamFormat.make_string (OpamVersion.to_string t.opam_version));
-         Variable (s_repositories , OpamFormat.make_list of_repo t.repositories);
+         Variable (s_repositories ,
+                   OpamFormat.make_list
+                     (OpamRepositoryName.to_string |> OpamFormat.make_string)
+                     t.repositories);
          Variable (s_cores        , OpamFormat.make_int t.cores);
        ]
        @ (

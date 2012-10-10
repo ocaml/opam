@@ -31,7 +31,7 @@ type state = {
   compiler: compiler option;
   compiler_version: compiler_version option;
   opams: OpamFile.OPAM.t package_map;
-  repositories: repository list;
+  repositories: OpamFile.Repo_config.t repository_name_map;
   packages: package_set;
   available_packages: package_set Lazy.t;
   aliases: OpamFile.Aliases.t;
@@ -42,18 +42,16 @@ type state = {
   repo_index: OpamFile.Repo_index.t;
 }
 
+let string_of_repositories r =
+  OpamMisc.string_of_list
+    OpamRepositoryName.to_string
+    (OpamRepositoryName.Map.keys r)
+
 let print_state t =
-  let string_of_repos r =
-    let s r =
-      let p = OpamPath.Repository.create t.root r in
-      Printf.sprintf "%s:%s"
-        (OpamRepository.to_string r)
-        (OpamFilename.Dir.to_string (OpamPath.Repository.root p)) in
-    String.concat ", " (List.map s r) in
   log "ROOT      : %s" (OpamFilename.Dir.to_string (OpamPath.root t.root));
   log "ALIAS     : %s" (OpamAlias.to_string t.alias);
   log "COMPILER  : %s" (match t.compiler with None -> "<none>" | Some c -> OpamCompiler.to_string c);
-  log "REPO      : %s" (string_of_repos t.repositories);
+  log "REPOS     : %s" (string_of_repositories t.repositories);
   log "AVAILABLE : %s" (OpamPackage.Set.to_string t.packages);
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
@@ -104,7 +102,7 @@ let available_packages root opams compiler_version config pinned packages =
     OpamPackage.Set.filter filter packages
 
 let packages_in_dir dir =
-  log "packages";
+  log "packages in dir %s" (OpamFilename.Dir.to_string dir);
   if OpamFilename.exists_dir dir then (
     let files = OpamFilename.list_files dir in
     let files = List.filter (fun f -> OpamFilename.check_suffix f ".opam") files in
@@ -118,10 +116,10 @@ let packages_in_dir dir =
   ) else
     OpamPackage.Set.empty
 
-let compilers_in_dir t =
-  log "compilers";
-  if OpamFilename.exists_dir t then (
-    let files = OpamFilename.list_files t in
+let compilers_in_dir dir =
+  log "compilers in dir %s" (OpamFilename.Dir.to_string dir);
+  if OpamFilename.exists_dir dir then (
+    let files = OpamFilename.list_files dir in
     let files = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in
     let l =
       List.map
@@ -158,27 +156,13 @@ let load_state () =
       let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
       OpamPackage.Map.add nv opam map
     ) (packages_in_dir (OpamPath.opam_dir root)) OpamPackage.Map.empty in
-  let repositories = OpamFile.Config.repositories config in
-  let repo_index =
-    let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
-    let l_wrong =
-      List.fold_left (fun accu (n, repo_s) ->
-        List.fold_left (fun accu repo ->
-          if List.for_all (fun r -> r.repo_name <> repo) repositories then
-            (n, repo) :: accu
-          else
-            accu
-        ) accu repo_s
-      ) [] (OpamPackage.Name.Map.bindings repo_index) in
-    let () = List.iter
-      (fun (n, repo) ->
-        OpamGlobals.error "File %S: unbound repository %S associated to name %S"
-          (OpamFilename.to_string (OpamPath.repo_index root)) repo (OpamPackage.Name.to_string n))
-      l_wrong in
-    if l_wrong = [] then
-      repo_index
-    else
-      OpamGlobals.exit 66 in
+  let repositories =
+    List.fold_left (fun map repo ->
+      let repo_p = OpamPath.Repository.create root repo in
+      let config = OpamFile.Repo_config.read (OpamPath.Repository.config repo_p) in
+      OpamRepositoryName.Map.add repo config map
+    ) OpamRepositoryName.Map.empty (OpamFile.Config.repositories config) in
+  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
   let pinned = OpamFile.Pinned.safe_read (OpamPath.Alias.pinned root alias) in
   let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed root alias) in
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Alias.reinstall root alias) in
@@ -310,13 +294,10 @@ let check f =
       (OpamFilename.Dir.to_string root)
 
 let mem_repository t name =
-  List.exists (fun r -> r.repo_name = name) t.repositories
+  OpamRepositoryName.Map.exists (fun n _ -> n = name) t.repositories
 
 let find_repository t name =
-  List.find (fun r -> r.repo_name = name) t.repositories
-
-let string_of_repositories t =
-  String.concat ", " (List.map (fun r -> r.repo_name) t.repositories)
+  OpamRepositoryName.Map.find name t.repositories
 
 let print_updated t updated pinned_updated =
   let new_packages =
@@ -347,7 +328,7 @@ let print_updated t updated pinned_updated =
   )
 
 let print_compilers t compilers repo =
-  let repo_p = OpamPath.Repository.create t.root repo in
+  let repo_p = OpamPath.Repository.create t.root repo.repo_name in
   let repo_compilers = OpamRepository.compilers repo_p in
   let (--) = OpamCompiler.Set.diff in
   let new_compilers = repo_compilers -- compilers in
@@ -357,11 +338,11 @@ let print_compilers t compilers repo =
     OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
   ) new_compilers;
   let all_compilers =
-    List.fold_left (fun set repo ->
+    OpamRepositoryName.Map.fold (fun repo _ set ->
       let repo_p = OpamPath.Repository.create t.root repo in
       let repo_compilers = OpamRepository.compilers repo_p in
       OpamCompiler.Set.union repo_compilers set;
-    ) OpamCompiler.Set.empty t.repositories in
+    ) t.repositories OpamCompiler.Set.empty in
   let del_compilers = compilers -- all_compilers -- (OpamCompiler.Set.singleton OpamCompiler.default) in
   if not (OpamCompiler.Set.is_empty del_compilers) then
     OpamGlobals.msg "Some compilers are not available anymore:\n";
@@ -436,25 +417,28 @@ let reinstall_conf_ocaml () =
 let update_repo_index t =
 
   (* Update repo_index *)
+  let repositories =
+    List.sort OpamRepository.compare (OpamRepositoryName.Map.values t.repositories) in
   let repo_index =
     List.fold_left (fun repo_index r ->
-      let p = OpamPath.Repository.create t.root r in
+      let p = OpamPath.Repository.create t.root r.repo_name in
       let available = OpamRepository.packages p in
-      log "repo=%s packages=%s" r.repo_name (OpamPackage.Set.to_string available);
+      log "repo=%s packages=%s"
+        (OpamRepositoryName.to_string r.repo_name)
+        (OpamPackage.Set.to_string available);
       OpamPackage.Set.fold (fun nv repo_index ->
         let name = OpamPackage.name nv in
-        let repo = r.repo_name in
         if not (OpamPackage.Name.Map.mem name repo_index) then
-          OpamPackage.Name.Map.add name [repo] repo_index
+          OpamPackage.Name.Map.add name [r.repo_name] repo_index
         else
           let repo_s = OpamPackage.Name.Map.find name repo_index in
-          if not (List.mem repo repo_s) then
+          if not (List.mem r.repo_name repo_s) then
             let repo_index = OpamPackage.Name.Map.remove name repo_index in
-            OpamPackage.Name.Map.add name (repo_s @ [repo]) repo_index
+            OpamPackage.Name.Map.add name (repo_s @ [r.repo_name]) repo_index
           else
             repo_index
       ) available repo_index
-    ) t.repo_index t.repositories in
+    ) t.repo_index repositories in
   OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index;
 
   (* suppress previous links, but keep metadata of installed packages
@@ -483,7 +467,7 @@ let update_repo_index t =
     let all_versions = ref OpamPackage.Version.Set.empty in
     List.iter (fun r ->
       let repo = find_repository t r in
-      let repo_p = OpamPath.Repository.create t.root repo in
+      let repo_p = OpamPath.Repository.create t.root repo.repo_name in
       let available_versions = OpamRepository.versions repo_p n in
       OpamPackage.Version.Set.iter (fun v ->
         if not (OpamPackage.Version.Set.mem v !all_versions) then (
@@ -529,16 +513,21 @@ let create_default_compiler_description t =
   let comp = OpamPath.compiler t.root OpamCompiler.default in
   OpamFile.Comp.write comp f
 
-let update_repositories t ~show_compilers repos =
-  log "update_repositories";
+let update_repositories t ~show_compilers repositories =
+  log "update_repositories %s" (string_of_repositories repositories);
 
   let compilers = available_compilers t in
 
   (* first update all the given repositories *)
-  List.iter (fun r -> OpamRepository.update r) repos;
+  OpamRepositoryName.Map.iter (fun _ repo ->
+    OpamRepository.update repo
+  ) repositories;
 
   (* Display the new compilers available *)
-  List.iter (fun r -> if show_compilers then print_compilers t compilers r) repos;
+  OpamRepositoryName.Map.iter (fun _ repo ->
+    if show_compilers then
+      print_compilers t compilers repo
+  ) repositories;
 
   (* XXX: we could have a special index for compiler descriptions as
   well, but that's become a bit too heavy *)
@@ -549,7 +538,7 @@ let update_repositories t ~show_compilers repos =
       OpamFilename.remove comp_f;
     )
   ) (available_compilers t);
-  List.iter (fun repo ->
+  OpamRepositoryName.Map.iter (fun repo _ ->
     let repo_p = OpamPath.Repository.create t.root repo in
     let comps = OpamRepository.compilers repo_p in
     let comp_dir = OpamPath.compilers_dir t.root in
@@ -572,7 +561,7 @@ let find_repo t nv =
     | []          -> None
     | r :: repo_s ->
         let repo = find_repository t r in
-        let repo_p = OpamPath.Repository.create t.root repo in
+        let repo_p = OpamPath.Repository.create t.root r in
         let opam_f = OpamPath.Repository.opam repo_p nv in
         if OpamFilename.exists opam_f then (
           Some (repo_p, repo)
@@ -604,8 +593,8 @@ let update_pinned_package t nv pin =
   | Result _
   | Not_available -> Some nv
 
-let update_packages t ~show_packages repos =
-  log "update_packages";
+let update_packages t ~show_packages repositories =
+  log "update_packages %s" (string_of_repositories repositories);
   (* Update the pinned packages *)
   let pinned_updated =
     OpamPackage.Set.of_list (
@@ -624,7 +613,6 @@ let update_packages t ~show_packages repos =
   (* then update $opam/repo/index *)
   update_repo_index t;
   let t = load_state () in
-  let repos = OpamRepository.Set.of_list repos in
   let updated =
     OpamPackage.Name.Map.fold (fun n repo_s accu ->
       (* we do not try to upgrade pinned packages *)
@@ -633,11 +621,13 @@ let update_packages t ~show_packages repos =
       else (
         let all_versions = ref OpamPackage.Version.Set.empty in
         List.fold_left (fun accu r ->
-          let repo = find_repository t r in
-          let repo_p = OpamPath.Repository.create t.root repo in
+          let repo_p = OpamPath.Repository.create t.root r in
           let available_versions = OpamRepository.versions repo_p n in
           let new_versions = OpamPackage.Version.Set.diff available_versions !all_versions in
-          log "repo=%s n=%s new_versions= %s" r (OpamPackage.Name.to_string n) (OpamPackage.Version.Set.to_string new_versions);
+          log "repo=%s n=%s new_versions= %s"
+            (OpamRepositoryName.to_string r)
+            (OpamPackage.Name.to_string n)
+            (OpamPackage.Version.Set.to_string new_versions);
           if not (OpamPackage.Version.Set.is_empty new_versions) then (
             all_versions := OpamPackage.Version.Set.union !all_versions new_versions;
             let all_updated = OpamFile.Updated.safe_read (OpamPath.Repository.updated repo_p) in
@@ -645,7 +635,7 @@ let update_packages t ~show_packages repos =
               OpamPackage.Set.filter (fun nv ->
                 OpamPackage.name nv = n && OpamPackage.Version.Set.mem (OpamPackage.version nv) new_versions
               ) all_updated in
-            if OpamRepository.Set.mem repo repos then
+            if OpamRepositoryName.Map.exists (fun n _ -> n = r) repositories then
               OpamPackage.Set.union updated accu
             else
               accu
@@ -1420,8 +1410,7 @@ let proceed_todelete ~rm_build t nv =
     try OpamPackage.Name.Map.find (OpamPackage.name nv) t.repo_index
     with _ -> [] in
   List.iter (fun r ->
-    let repo = find_repository t r in
-    let repo_p = OpamPath.Repository.create t.root repo in
+    let repo_p = OpamPath.Repository.create t.root r in
     let tmp_dir = OpamPath.Repository.tmp_dir repo_p nv in
     OpamFilename.rmdir tmp_dir
   ) repos;
@@ -1944,7 +1933,7 @@ module Heuristic = struct
 
 end
 
-let dry_upgrade () =
+let dry_upgrade t =
   log "dry-upgrade";
   let t = load_state () in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
@@ -2030,23 +2019,17 @@ let check_opam_version () =
     )
 
 let update repos =
-  log "update %s" (String.concat " " repos);
+  log "update %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
   let t = load_state () in
-  let repos =
+  let repositories =
     if repos = [] then
       t.repositories
     else
-      let aux r =
-        if mem_repository t r then
-          Some (find_repository t r)
-        else (
-          OpamGlobals.msg "%s is not a valid repository.\n" r;
-          None
-        ) in
-      OpamMisc.filter_map aux repos in
-  if repos <> [] then (
-    update_repositories t ~show_compilers:true repos;
-    update_packages t ~show_packages:true repos;
+      let aux r _ = List.mem r repos in
+      OpamRepositoryName.Map.filter aux t.repositories in
+  if not (OpamRepositoryName.Map.is_empty repositories) then (
+    update_repositories t ~show_compilers:true repositories;
+    update_packages t ~show_packages:true repositories;
   );
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Already up-to-date.\n"
@@ -2070,9 +2053,9 @@ let init repo compiler cores =
   if OpamFilename.exists config_f then
     OpamGlobals.error_and_exit "%s already exist" (OpamFilename.to_string config_f)
   else try
-    let repo_p = OpamPath.Repository.create root repo in
+    let repo_p = OpamPath.Repository.create root repo.repo_name in
     (* Create (possibly empty) configuration files *)
-    OpamFile.Config.write config_f (OpamFile.Config.create OpamVersion.current [repo] cores);
+    OpamFile.Config.write config_f (OpamFile.Config.create OpamVersion.current [repo.repo_name] cores);
     OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
     OpamFile.Repo_config.write (OpamPath.Repository.config repo_p) repo;
     OpamRepository.init repo;
@@ -2323,8 +2306,9 @@ let upload upload repo =
         find_repository t repo
       else
         OpamGlobals.error_and_exit "Unbound repository %S (available = %s)"
-          repo (string_of_repositories t) in
-  let repo_p = OpamPath.Repository.create t.root repo in
+          (OpamRepositoryName.to_string repo)
+          (string_of_repositories t.repositories) in
+  let repo_p = OpamPath.Repository.create t.root repo.repo_name in
   let upload_repo = OpamPath.Repository.raw (OpamPath.Repository.upload_dir repo_p) in
   let upload_opam = OpamPath.Repository.opam upload_repo nv in
   let upload_descr = OpamPath.Repository.descr upload_repo nv in
@@ -2539,15 +2523,15 @@ let config request =
 let remote action =
   log "remote %s" (string_of_remote action);
   let t = load_state () in
-  let repos = OpamFile.Config.repositories t.config in
   let update_config repos =
     let new_config = OpamFile.Config.with_repositories t.config repos in
     OpamFile.Config.write (OpamPath.config t.root) new_config in
   let cleanup_repo repo =
-    update_config (List.filter ((!=) repo) repos);
+    let repos = OpamRepositoryName.Map.keys t.repositories in
+    update_config (List.filter ((<>) repo) repos);
     let repo_index =
       OpamPackage.Name.Map.fold (fun n repo_s repo_index ->
-        let repo_s = List.filter (fun r -> r <> repo.repo_name) repo_s in
+        let repo_s = List.filter (fun r -> r <> repo) repo_s in
         match repo_s with
         | [] ->
             (* The package does not exist anymore in any remote repository,
@@ -2567,38 +2551,74 @@ let remote action =
       ) t.repo_index OpamPackage.Name.Map.empty in
     OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index;
     OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo)) in
+  let sort_priority name =
+    let t = load_state () in
+    let compare_repo r1 r2 =
+      OpamRepository.compare
+        (OpamRepositoryName.Map.find r1 t.repositories)
+        (OpamRepositoryName.Map.find r2 t.repositories) in
+    let repo_index_f = OpamPath.repo_index t.root in
+    let repo_index =
+      OpamPackage.Name.Map.map (fun repo_s ->
+        if List.mem name repo_s then
+          let repo_s = List.filter ((<>) name) repo_s in
+          OpamMisc.insert compare_repo name repo_s
+        else
+          repo_s
+      ) t.repo_index in
+    OpamFile.Repo_index.write repo_index_f repo_index in
   match action with
   | RList  ->
       let pretty_print r =
-        OpamGlobals.msg "%-7s %10s     %s\n"
+        OpamGlobals.msg "%4d %-7s %10s     %s\n"
+          r.repo_priority
           (Printf.sprintf "[%s]" r.repo_kind)
-          r.repo_name
+          (OpamRepositoryName.to_string r.repo_name)
           (OpamFilename.Dir.to_string r.repo_address) in
-      List.iter pretty_print repos
-  | RAdd repo ->
-      let name = repo.repo_name in
-      if List.exists (fun r -> r.repo_name = name) repos then
-        OpamGlobals.error_and_exit "%s is already a remote repository" name
+      let repos = OpamRepositoryName.Map.values t.repositories in
+      let repos = List.sort OpamRepository.compare repos in
+      List.iter pretty_print repos;
+  | RAdd (name, kind, address, priority) ->
+      let repo = {
+        repo_name     = name;
+        repo_kind     = kind;
+        repo_address  = address;
+        repo_priority = 10 * (OpamRepositoryName.Map.cardinal t.repositories);
+      } in
+      if mem_repository t name then
+        OpamGlobals.error_and_exit "%s is already a remote repository" (OpamRepositoryName.to_string name)
       else (
         (try OpamRepository.init repo with
         | OpamRepository.Unknown_backend ->
             OpamGlobals.error_and_exit "\"%s\" is not a supported backend" repo.repo_kind
         | e ->
-            cleanup_repo repo;
+            cleanup_repo repo.repo_name;
             raise e);
         log "Adding %s" (OpamRepository.to_string repo);
-        update_config (repo :: repos)
+        update_config (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories)
       );
-      (try update [name]
+      (try
+         update [name];
+         sort_priority name;
        with e ->
-         cleanup_repo repo;
+         cleanup_repo name;
          raise e)
-  | RRm n  ->
-      let repo =
-        try List.find (fun r -> r.repo_name = n) repos
-        with Not_found ->
-          OpamGlobals.error_and_exit "%s is not a remote index" n in
-      cleanup_repo repo
+  | RRm name  ->
+      if mem_repository t name then
+        cleanup_repo name
+      else
+        OpamGlobals.error_and_exit "%s is not a a valid remote name"
+          (OpamRepositoryName.to_string name)
+  | RPriority (name, p) ->
+    if mem_repository t name then (
+      let config_f = OpamPath.Repository.config (OpamPath.Repository.create t.root name) in
+      let config = OpamFile.Repo_config.read config_f in
+      let config = { config with repo_priority = p } in
+      OpamFile.Repo_config.write config_f config;
+      sort_priority name;
+    ) else
+        OpamGlobals.error_and_exit "%s is not a a valid remote name"
+          (OpamRepositoryName.to_string name)
 
 let pin action =
   log "pin %s" (string_of_pin action);

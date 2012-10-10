@@ -162,7 +162,7 @@ module Repository: sig
   val raw: dirname -> r
 
    (** Return the repository folder: {i $opam/repo/$repo} *)
-  val create: t -> repository -> r
+  val create: t -> repository_name -> r
 
   (** Return the version file *)
   val version: r -> filename

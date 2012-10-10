@@ -47,8 +47,11 @@ module type MAP = sig
   (** Pretty-printing *)
   val to_string: ('a -> string) -> 'a t  -> string
 
-  (** Split with [bindings] and return the [snd] component. *)
+  (** Return the values in the map. *)
   val values: 'a t -> 'a list
+
+  (** Return the keys in the map. *)
+  val keys: 'a t -> key list
 
   (** Same as [merge] but only keys that appear in both maps
       are given in the merging function *)
@@ -159,7 +162,11 @@ val exact_match: Re.re -> string -> bool
 (** Filter and map *)
 val filter_map: ('a -> 'b option) -> 'a list -> 'b list
 
+(** Ask the user to press Y/y/N/n to continue *)
 val confirm: ('a, unit, string, bool) format4 -> 'a
+
+(** Insert a value in an ordered list *)
+val insert: ('a -> 'a -> int) -> 'a -> 'a list -> 'a list
 
 module OP: sig
 

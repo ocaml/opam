@@ -129,21 +129,19 @@ type conjunction = OpamFormula.conjunction
 
 (** {2 Repositories} *)
 
-(** Kind of repository *)
-type kind = string
+(** Repository names *)
+type repository_name = OpamRepositoryName.t
 
-(** The address of a repository *)
-type address = dirname
+(** Maps of repository names *)
+type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
 (** Repositories *)
 type repository = {
-  repo_name: string;
-  repo_kind: kind;
-  repo_address: address;
+  repo_name    : repository_name;
+  repo_kind    : string;
+  repo_address : dirname;
+  repo_priority: int;
 }
-
-(** Constructor *)
-val create_repository: name:string -> kind:string -> address:string -> repository
 
 (** {2 Solver} *)
 
@@ -195,8 +193,9 @@ val string_of_upload: upload -> string
 (** Remote arguments *)
 type remote =
   | RList
-  | RAdd of repository
-  | RRm of string
+  | RAdd of repository_name * string * dirname * int
+  | RRm of repository_name
+  | RPriority of repository_name * int
 
 (** Pretty-print or remote args *)
 val string_of_remote: remote -> string

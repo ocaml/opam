@@ -60,7 +60,7 @@ let rsync_file src dst =
 
 module B = struct
 
-  let init r = ()
+  let init ~address:r = ()
 
   let download_file nv remote_file =
     let local_path = OpamRepository.local_repo () in
@@ -81,14 +81,14 @@ module B = struct
     | Result _      -> Result local_dir
     | Not_available -> Not_available
 
-  let download_archive address nv =
+  let download_archive ~address nv =
     let remote_repo = OpamRepository.remote_repo address in
     let remote_file = OpamPath.Repository.archive remote_repo nv in
     let local_repo = OpamRepository.local_repo () in
     let local_file = OpamPath.Repository.archive local_repo nv in
     rsync_file remote_file local_file
 
-  let update address =
+  let update ~address =
     OpamGlobals.msg "Synchronizing with %s ...\n" (OpamFilename.Dir.to_string address);
     let remote_repo = OpamRepository.remote_repo address in
     let local_repo = OpamRepository.local_repo () in

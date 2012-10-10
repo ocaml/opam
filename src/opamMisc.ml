@@ -25,6 +25,7 @@ module type MAP = sig
   include Map.S
   val to_string: ('a -> string) -> 'a t -> string
   val values: 'a t -> 'a list
+  val keys: 'a t -> key list
   val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
 end
@@ -81,6 +82,8 @@ module Map = struct
     include M
 
     let values map = List.map snd (bindings map)
+
+    let keys map = List.map fst (bindings map)
 
     let merge_max f =
       merge
@@ -236,3 +239,11 @@ let confirm fmt =
     else
       true
   ) fmt
+
+(* XXX: not optimized *)
+let insert comp x l =
+  let rec aux = function
+    | [] -> [x]
+    | h::t when comp h x < 0 -> h::aux t
+    | l -> x :: l in
+  aux l

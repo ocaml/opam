@@ -236,6 +236,11 @@ let download_iter filenames dirname =
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
 
+let address_of_string address =
+  if Sys.file_exists address
+  then Dir.of_string address
+  else raw_dir address
+
 module O = struct
   type tmp = t
   type t = tmp

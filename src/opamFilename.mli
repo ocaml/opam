@@ -157,6 +157,10 @@ val touch: t -> unit
 (** Change file permissions *)
 val chmod: t -> int -> unit
 
+(** Create an local of remote address from a string,
+    depending whether the string exits in the filesystem. *)
+val address_of_string: string -> Dir.t
+
 module OP: sig
 
   (** Create a new directory *)

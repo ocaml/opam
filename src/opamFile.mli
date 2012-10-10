@@ -41,13 +41,13 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: opam_version -> repository list -> int -> t
+  val create: opam_version -> repository_name list -> int -> t
 
   (** OCaml alias updates *)
   val with_alias : t -> alias -> t
 
   (** Repository updates *)
-  val with_repositories: t -> repository list -> t
+  val with_repositories: t -> repository_name list -> t
 
   (** system-wide's OCaml version updates *)
   val with_system_version: t -> compiler_version -> t
@@ -56,7 +56,7 @@ module Config: sig
   val opam_version: t  -> opam_version
 
   (** Return the list of repository *)
-  val repositories: t  -> repository list
+  val repositories: t  -> repository_name list
 
   (** Return the OCaml alias *)
   val alias: t -> alias
@@ -361,7 +361,7 @@ end
 (** {2 Repository files} *)
 
 (** Association between package names and repository: [$opam/repo/index] *)
-module Repo_index: IO_FILE with type t = string list name_map
+module Repo_index: IO_FILE with type t = repository_name list name_map
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository

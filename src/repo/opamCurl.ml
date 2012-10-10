@@ -94,7 +94,7 @@ let is_up_to_date state local_file =
 
 module B = struct
 
-  let init address =
+  let init ~address =
     let state = make_state ~download_index:true address in
     (* Download index.tar.gz *)
     try
@@ -112,7 +112,7 @@ module B = struct
     OpamFilename.mkdir local_dir;
     OpamFilename.download remote_file local_dir
 
-  let update address =
+  let update ~address =
     OpamGlobals.msg "Synchronizing with %s ...\n" (OpamFilename.Dir.to_string address);
     let state = make_state ~download_index:true address in
     log "dir local_dir=%s remote_dir=%s"
@@ -126,7 +126,9 @@ module B = struct
           (OpamFilename.Set.singleton (index_archive state.local_dir)) in
       let current = OpamFilename.Set.of_list (OpamFilename.list_files state.local_dir) in
       let to_keep = OpamFilename.Set.filter (is_up_to_date state) state.local_files in
-      let to_delete = current -- to_keep -- indexes in
+      let config =
+        OpamFilename.Set.singleton (OpamPath.Repository.config (OpamPath.Repository.raw state.local_dir)) in
+      let to_delete = current -- to_keep -- indexes -- config in
       let local_repo = OpamRepository.local_repo () in
       let archive_dir = OpamPath.Repository.archives_dir local_repo in
       let new_files =
@@ -156,7 +158,7 @@ module B = struct
     end else
       OpamFilename.Set.empty
 
-  let download_archive address nv =
+  let download_archive ~address nv =
     let remote_repo = OpamRepository.remote_repo address in
     let remote_file = OpamPath.Repository.archive remote_repo nv in
     let state = make_state ~download_index:false address in

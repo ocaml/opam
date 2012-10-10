@@ -106,7 +106,7 @@ module Repository = struct
 
   let raw x = x
 
-  let create t r = t / "repo" / r.repo_name
+  let create t r = t / "repo" / OpamRepositoryName.to_string r
 
   let version t = t // "version"
 

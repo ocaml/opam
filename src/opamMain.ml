@@ -69,6 +69,7 @@ let init =
   let kind = ref None in
   let comp = ref None in
   let cores = ref OpamGlobals.default_cores in
+  let repo_priority = 0 in
 {
   name     = "init";
   usage    = "";
@@ -86,13 +87,16 @@ let init =
     | [] ->
         OpamClient.init OpamRepository.default !comp !cores
     | [address] ->
-        let name = OpamGlobals.default_repository_name in
-        let kind = guess_repository_kind !kind address in
-        let repo = OpamRepository.create ~name ~address ~kind in
+        let repo_name = OpamRepositoryName.default in
+        let repo_kind = guess_repository_kind !kind address in
+        let repo_address = OpamRepository.repository_address address in
+        let repo = { repo_name; repo_kind; repo_address; repo_priority } in
         OpamClient.init repo !comp !cores
     | [name; address] ->
-        let kind = guess_repository_kind !kind address in
-        let repo = OpamRepository.create ~name ~address ~kind in
+        let repo_name = OpamRepositoryName.of_string name in
+        let repo_kind = guess_repository_kind !kind address in
+        let repo_address = OpamRepository.repository_address address in
+        let repo = { repo_name; repo_address; repo_kind; repo_priority } in
         OpamClient.init repo !comp !cores
     | _ -> bad_argument "init" "Need a repository name and address")
 }
@@ -257,7 +261,9 @@ let update = {
   help     = "";
   specs    = [];
   anon;
-  main     = parse_args OpamClient.update
+  main     = parse_args (fun names ->
+    OpamClient.update (List.map OpamRepositoryName.of_string names)
+  )
 }
 
 (* opam upgrade *)
@@ -302,7 +308,7 @@ let upload =
     let upl_opam = OpamFilename.of_string !opam in
     let upl_descr = OpamFilename.of_string !descr in
     let upl_archive = OpamFilename.of_string !archive in
-    let repo = if !repo = "" then None else Some !repo in
+    let repo = if !repo = "" then None else Some (OpamRepositoryName.of_string !repo) in
     OpamClient.upload { upl_opam; upl_descr; upl_archive } repo)
 }
 
@@ -325,8 +331,13 @@ let remove = {
 (* opam remote [-list|-add <url>|-rm <url>] *)
 let remote =
   let kind = ref None in
-  let command : [`add|`list|`rm] option ref = ref None in
+  let command : [`add|`list|`rm|`priority] option ref = ref None in
   let set c () = command := Some c in
+  let add name address priority =
+    let name = OpamRepositoryName.of_string name in
+    let kind = guess_repository_kind !kind address in
+    let address = OpamRepository.repository_address address in
+    OpamClient.remote (RAdd (name, kind, address, priority)) in
 {
   name     = "remote";
   usage    = "[-list|add <name> <address>|rm <name>]";
@@ -337,15 +348,18 @@ let remote =
     ("-add"  , Arg.Unit (set `add) , " Add a new repository");
     ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
     ("-kind" , Arg.String (fun s -> kind := Some s) , " (optional) Specify the repository kind");
+    ("-priority", Arg.Unit (set `priority) , " Set the repository priority (higher is better)");
   ];
   anon;
   main     = parse_args (fun args ->
     match !command, args with
+    | Some `priority, [name; p]    ->
+      OpamClient.remote (RPriority (OpamRepositoryName.of_string name, int_of_string p))
     | Some `list, []                -> OpamClient.remote RList
-    | Some `rm,   [ name ]          -> OpamClient.remote (RRm name)
-    | Some `add , [ name; address ] ->
-        let kind = guess_repository_kind !kind address in
-        OpamClient.remote (RAdd (OpamRepository.create ~name ~kind ~address))
+    | Some `rm,   [ name ]          -> OpamClient.remote (RRm (OpamRepositoryName.of_string name))
+    | Some `add , [ name; address ] -> add name address 0
+    | Some `add ,
+      [ name; address; priority ]   -> add name address (int_of_string priority)
     | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
     | _        -> bad_argument "remote" "Wrong arguments")
 }
