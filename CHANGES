@@ -1,5 +1,7 @@
 0.7.7 (trunk)
 * Upgrade to the latest version of DOSE and CUDF (solver libraries)
+* Add repository priorities
+* Create the default directories (bin/, lib/ ...) when installing a new compiler
 
 0.7.6 [Oct 2012]
 * major internal API refactoring
