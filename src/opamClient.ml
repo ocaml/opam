@@ -257,7 +257,8 @@ let available_packages root opams repositories repo_index compiler_version confi
       | None   -> OpamGlobals.error_and_exit "No OCaml compiler defined."in
   let filter nv =
     let opam = OpamPackage.Map.find nv opams in
-    let available () = find_repo_aux repositories root repo_index nv <> None in
+    let available () =
+      find_repo_aux repositories root repo_index nv <> None in
     let consistent_ocaml_version () =
       let atom (r,v) = OpamCompiler.Version.compare ocaml_version r v in
       match OpamFile.OPAM.ocaml_version opam with
@@ -1147,34 +1148,49 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
     List.exists (fun re -> OpamMisc.exact_match re str) res in
   let partial_match str =
     List.exists (fun re -> Re.execp re str) res in
-  let map, max_n, max_v =
+  let packages = Lazy.force t.available_packages in
+  let names =
     OpamPackage.Set.fold
-      (fun nv (map, max_n, max_v) ->
-        let name = OpamPackage.name nv in
-        let version = OpamPackage.version nv in
-        if OpamPackage.Name.Map.mem name map (* If the packet has been processed yet *)
-        (* And the version processed was the installed version. *)
-        && fst (OpamPackage.Name.Map.find name map) <> None
-        then
-          map, max_n, max_v
-        else
-          let is_installed = OpamPackage.Set.mem nv t.installed in
-          let descr_f = OpamFile.Descr.safe_read (OpamPath.descr t.root nv) in
-          let synopsis = OpamFile.Descr.synopsis descr_f in
-          let map = OpamPackage.Name.Map.add name ((if is_installed then Some version else None), synopsis) map in
-          let max_n = max max_n (String.length (OpamPackage.Name.to_string name)) in
-          let max_v = if is_installed then max max_v (String.length (OpamPackage.Version.to_string version)) else max_v in
-          map, max_n, max_v)
-      (Lazy.force t.available_packages)
-      (OpamPackage.Name.Map.empty, min_int, String.length s_not_installed) in
-  let map =
-    OpamPackage.Name.Map.filter (fun name (version, descr) ->
+      (fun nv set -> OpamPackage.Name.Set.add (OpamPackage.name nv) set)
+      packages
+      OpamPackage.Name.Set.empty in
+  let names =
+    OpamPackage.Name.Set.fold (fun name map ->
+      let has_name nv = OpamPackage.name nv = name in
+      let version, nv =
+        if OpamPackage.Set.exists has_name t.installed then
+          let nv = OpamPackage.Set.find has_name t.installed in
+          Some (OpamPackage.version nv), nv
+        else (
+          let nv = OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
+          None, nv
+        ) in
+      let descr_f = OpamFile.Descr.safe_read (OpamPath.descr t.root nv) in
+      let synopsis = OpamFile.Descr.synopsis descr_f in
+      let descr = OpamFile.Descr.full descr_f in
+      OpamPackage.Name.Map.add name (version, synopsis, descr) map
+    ) names OpamPackage.Name.Map.empty in
+
+  let max_n, max_v =
+    OpamPackage.Name.Map.fold (fun name (version, _, _) (max_n, max_v) ->
+      let max_n = max max_n (String.length (OpamPackage.Name.to_string name)) in
+      let v_str = match version with
+        | None   -> s_not_installed
+        | Some v -> OpamPackage.Version.to_string v in
+      let max_v = max max_v (String.length v_str) in
+      max_n, max_v
+    ) names (0,0) in
+
+  (* Filter the list of packages, depending on user predicates *)
+  let names =
+    OpamPackage.Name.Map.filter (fun name (version, synopsis, descr) ->
       (* installp *) (not installed_only || version <> None)
       (* allp     *) && (res = []
       (* namep    *)  || name_only && exact_match (OpamPackage.Name.to_string name)
-      (* descrp   *)  || not name_only && (partial_match (OpamPackage.Name.to_string name) || partial_match descr))
-    ) map in
-  if not print_short && OpamPackage.Name.Map.cardinal map > 0 then (
+      (* descrp   *)  || not name_only
+                      && (partial_match (OpamPackage.Name.to_string name) || partial_match synopsis || partial_match descr))
+    ) names in
+  if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
     let kind = if installed_only then "Installed" else "Available" in
     OpamGlobals.msg "%s packages for %s:\n" kind (OpamAlias.to_string t.alias);
   );
@@ -1182,7 +1198,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
     if print_short then
       fun name _ -> OpamGlobals.msg "%s " (OpamPackage.Name.to_string name)
     else
-      fun name (version, description) ->
+      fun name (version, synopsis, _) ->
         let name = OpamPackage.Name.to_string name in
         let version = match version with
           | None   -> s_not_installed
@@ -1190,8 +1206,8 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
         OpamGlobals.msg "%s  %s  %s\n"
           (indent_left name max_n)
           (indent_right version max_v)
-          description
-  ) map
+          synopsis
+  ) names
 
 let info package =
   log "info %s" (OpamPackage.Name.to_string package);
