@@ -62,7 +62,10 @@ module Alias = struct
 
   let doc_dir t a = root t a / "doc"
 
-  let man_dir t a = root t a / "man"
+  let man_dir ?num t a = 
+    match num with 
+    | None -> root t a / "man"
+    | Some n -> root t a / "man" / ("man" ^ n)
 
   let doc t a n = doc_dir t a / OpamPackage.Name.to_string n
 

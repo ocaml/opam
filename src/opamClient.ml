@@ -1033,6 +1033,9 @@ let init_ocaml t quiet alias compiler =
   OpamFilename.mkdir (OpamPath.Alias.man_dir t.root alias);
   OpamFilename.mkdir (OpamPath.Alias.install_dir t.root alias);
   OpamFilename.mkdir (OpamPath.Alias.config_dir t.root alias);
+  List.iter (fun num ->
+    OpamFilename.mkdir (OpamPath.Alias.man_dir ~num t.root alias)
+  ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
 
   let comp = OpamFile.Comp.read comp_f in
   begin try
