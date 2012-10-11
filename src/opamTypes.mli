@@ -299,6 +299,9 @@ type alias = OpamAlias.t
 (** Set of compiler aliases *)
 type alias_set = OpamAlias.Set.t
 
+(** Map of compile aliases *)
+type 'a alias_map = 'a OpamAlias.Map.t
+
 (** {2 Misc} *)
 
 (** A line in {i urls.tx} *)

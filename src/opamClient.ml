@@ -88,7 +88,7 @@ let compilers_in_dir dir =
     OpamCompiler.Set.empty
 
 let compiler_of_alias t alias =
-  try Some (List.assoc alias t.aliases)
+  try Some (OpamAlias.Map.find alias t.aliases)
   with Not_found -> None
 
 let config t =
@@ -159,14 +159,20 @@ let repository_files r nv =
       [] in
   OpamFilename.Set.of_list l
 
-let mem_installed_package_by_name t name =
-  let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) t.installed in
+let mem_installed_package_by_name_aux installed name =
+  let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) installed in
   not (OpamPackage.Set.is_empty set)
 
-let find_installed_package_by_name t name =
-  try OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) t.installed
+let mem_installed_package_by_name t name =
+  mem_installed_package_by_name_aux t.installed name
+
+let find_installed_package_by_name_aux installed name =
+  try OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) installed
   with Not_found ->
     OpamGlobals.error_and_exit "Package %s is not installed" (OpamPackage.Name.to_string name)
+
+let find_installed_package_by_name t name =
+  find_installed_package_by_name_aux t.installed name
 
 let find_package_by_name t name =
   let r = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) t.packages in
@@ -275,7 +281,7 @@ let load_state () =
   let alias = OpamFile.Config.alias config in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
-    try Some (List.assoc alias aliases)
+    try Some (OpamAlias.Map.find alias aliases)
     with Not_found -> None in
   let compiler_version = match compiler with
     | None   -> None
@@ -501,11 +507,11 @@ let update_repo_index t =
   (* suppress previous links, but keep metadata of installed packages
      (because you need them to uninstall the package) *)
   let all_installed =
-    List.fold_left (fun accu (alias,_) ->
+    OpamAlias.Map.fold (fun alias _ accu ->
       let installed_f = OpamPath.Alias.installed t.root alias in
       let installed = OpamFile.Installed.safe_read installed_f in
       OpamPackage.Set.union installed accu
-    ) OpamPackage.Set.empty t.aliases in
+    ) t.aliases OpamPackage.Set.empty in
   OpamPackage.Set.iter (fun nv ->
     if not (OpamPackage.Set.mem nv all_installed) then (
       let opam_g = OpamPath.opam t.root nv in
@@ -590,11 +596,10 @@ let update_repositories t ~show_compilers repositories =
       print_compilers t compilers repo
   ) repositories;
 
-  (* Delete compiler descritions, but keep the one with no associated
-     repository *)
+  (* Delete compiler descritions which are not installed *)
   OpamCompiler.Set.iter (fun comp ->
     if comp <> OpamCompiler.default
-    && not (List.exists (fun (_,c) -> comp = c) t.aliases) then (
+    && OpamAlias.Map.for_all (fun _ c -> comp <> c) t.aliases then (
       let comp_f = OpamPath.compiler t.root comp in
       OpamFilename.remove comp_f;
     )
@@ -685,7 +690,7 @@ let update_packages t ~show_packages repositories =
 
   let updated = OpamPackage.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall *)
-  List.iter (fun (alias,_) ->
+  OpamAlias.Map.iter (fun alias _ ->
     let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed t.root alias) in
     let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Alias.reinstall t.root alias) in
     let reinstall =
@@ -1000,11 +1005,11 @@ let add_alias alias compiler =
     create_default_compiler_description t;
   let aliases_f = OpamPath.aliases t.root in
   let aliases = OpamFile.Aliases.safe_read aliases_f in
-  if not (List.mem_assoc alias aliases) then begin
+  if not (OpamAlias.Map.mem alias aliases) then begin
     (* Install the initial package and reload the global state *)
     install_conf_ocaml ();
     (* Update the list of aliases *)
-    OpamFile.Aliases.write aliases_f ((alias, compiler) :: aliases);
+    OpamFile.Aliases.write aliases_f (OpamAlias.Map.add alias compiler aliases);
   end
 
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[alias]
@@ -1169,7 +1174,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
       (* namep    *)  || name_only && exact_match (OpamPackage.Name.to_string name)
       (* descrp   *)  || not name_only && (partial_match (OpamPackage.Name.to_string name) || partial_match descr))
     ) map in
-  if not print_short then (
+  if not print_short && OpamPackage.Name.Map.cardinal map > 0 then (
     let kind = if installed_only then "Installed" else "Available" in
     OpamGlobals.msg "%s packages for %s:\n" kind (OpamAlias.to_string t.alias);
   );
@@ -1192,40 +1197,66 @@ let info package =
   log "info %s" (OpamPackage.Name.to_string package);
   let t = load_state () in
 
-  let o_v =
-    try Some (OpamPackage.Version.Set.choose_one (OpamPackage.Name.Map.find package (OpamPackage.to_map t.installed)))
-    with Not_found -> None in
+  (* Compute the installed versions, for each alias *)
+  let installed =
+    OpamAlias.Map.fold (fun alias _ map ->
+      let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed t.root alias) in
+      if mem_installed_package_by_name_aux installed package then
+        let nv = find_installed_package_by_name_aux installed package in
+        if OpamPackage.Map.mem nv map then
+          let aliases = OpamPackage.Map.find nv map in
+          let map = OpamPackage.Map.remove nv map in
+          OpamPackage.Map.add nv (alias :: aliases) map
+        else
+          OpamPackage.Map.add nv [alias] map
+      else
+        map
+    ) t.aliases OpamPackage.Map.empty in
 
-  let v_set =
-    let v_set = available_versions t package in
-    if OpamPackage.Version.Set.is_empty v_set then
-      unknown_package package None
-    else
-      match o_v with
-        | None   -> v_set
-        | Some v -> OpamPackage.Version.Set.remove v v_set in
+  let installed_str =
+    let one (nv, aliases) =
+      Printf.sprintf "%s [%s]"
+        (OpamPackage.to_string nv)
+        (String.concat " " (List.map OpamAlias.to_string aliases)) in
+    String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
-  let installed_version = match o_v with
-    | None   -> []
-    | Some v -> [ "installed-version", OpamPackage.Version.to_string v ] in
+  (* All the version of the package *)
+  let versions = available_versions t package in
+  if OpamPackage.Version.Set.is_empty versions then
+    unknown_package package None;
+  let versions =
+    OpamPackage.Version.Set.filter (fun v ->
+      OpamPackage.Map.for_all (fun nv _ -> OpamPackage.version nv <> v) installed
+    ) versions in
+
+  let installed_version = match OpamPackage.Map.cardinal installed with
+    | 0 -> []
+    | _ -> [ "installed-version", installed_str ] in
 
   let available_versions =
-    match List.map OpamPackage.Version.to_string (OpamPackage.Version.Set.elements v_set) with
+    match List.map OpamPackage.Version.to_string (OpamPackage.Version.Set.elements versions) with
     | []  -> []
     | [v] -> [ "available-version" , v ]
     | l   -> [ "available-versions", String.concat ", " l ] in
 
-  let libraries, syntax = match o_v with
-    | None   -> [], []
-    | Some v ->
-        let opam = find_opam t (OpamPackage.create package v) in
-        let libraries = match OpamFile.OPAM.libraries opam with
-          | [] -> []
-          | l  -> [ "libraries", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
-        let syntax = match OpamFile.OPAM.syntax opam with
-          | [] -> []
-          | l  -> [ "syntax", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
-        libraries, syntax in
+  let libraries, syntax = match OpamPackage.Map.cardinal installed with
+    | 0 -> [], []
+    | _ ->
+      let fold f =
+        let m =
+          OpamPackage.Map.fold (fun nv _ set ->
+            let opam = find_opam t nv in
+            let incr = OpamVariable.Section.Set.of_list (f opam) in
+            OpamVariable.Section.Set.union set incr
+          ) installed OpamVariable.Section.Set.empty in
+        OpamVariable.Section.Set.elements m in
+      let libraries = match fold OpamFile.OPAM.libraries with
+        | [] -> []
+        | l  -> [ "libraries", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
+      let syntax = match fold OpamFile.OPAM.syntax with
+        | [] -> []
+        | l  -> [ "syntax", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
+      libraries, syntax in
 
   List.iter
     (fun (tit, desc) -> OpamGlobals.msg "%20s: %s\n" tit desc)
@@ -1234,16 +1265,11 @@ let info package =
      @ available_versions
      @ libraries
      @ syntax
-     @ let latest = match o_v with
-         | Some v -> Some v
-         | None   ->
-             try Some (OpamPackage.Version.Set.max_elt v_set)
-             with Not_found -> None in
-       let descr =
-         match latest with
-         | None   -> OpamFile.Descr.empty
-         | Some v ->
-             OpamFile.Descr.safe_read (OpamPath.descr t.root (OpamPackage.create package v)) in
+     @ let descr = match OpamPackage.Map.cardinal installed with
+         | 0 -> OpamFile.Descr.empty
+         | _ ->
+           let nv, _ = OpamPackage.Map.max_binding installed in
+           OpamFile.Descr.safe_read (OpamPath.descr t.root nv) in
        [ "description", OpamFile.Descr.full descr ]
     )
 
@@ -1954,7 +1980,7 @@ module Heuristic = struct
           let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
           new_variables env in
         let vars = ref OpamMisc.StringSet.empty in
-        List.iter (fun (_,version) ->
+        OpamAlias.Map.iter (fun _ version ->
           vars := OpamMisc.StringSet.union !vars (new_variables version)
         ) t.aliases;
         begin match t.compiler with
@@ -2690,7 +2716,7 @@ let compiler_list () =
   let descrs = available_compilers t in
   let aliases = OpamFile.Aliases.read (OpamPath.aliases t.root) in
   OpamGlobals.msg "--- Installed compilers ---\n";
-  List.iter (fun (n,c) ->
+  OpamAlias.Map.iter (fun n c ->
     let current = if n = OpamFile.Config.alias t.config then "*" else " " in
     let compiler = OpamCompiler.to_string c in
     let alias_name = OpamAlias.to_string n in
@@ -2815,18 +2841,18 @@ let compiler_remove alias =
     OpamGlobals.msg "Cannot remove %s as it is the current compiler.\n" (OpamAlias.to_string alias);
     OpamGlobals.exit 1;
   );
-  let aliases = List.filter (fun (a,_) -> a <> alias) t.aliases in
+  let aliases = OpamAlias.Map.filter (fun a _ -> a <> alias) t.aliases in
   OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
   OpamFilename.rmdir comp_dir
 
 let compiler_reinstall alias =
   log "compiler_reinstall alias=%s" (OpamAlias.to_string alias);
   let t = load_state () in
-  if not (List.mem_assoc alias t.aliases) then (
+  if not (OpamAlias.Map.mem alias t.aliases) then (
     OpamGlobals.msg "The compiler alias %s does not exist.\n" (OpamAlias.to_string alias);
     OpamGlobals.exit 1;
   );
-  let ocaml_version = List.assoc alias t.aliases in
+  let ocaml_version = OpamAlias.Map.find alias t.aliases in
   compiler_remove alias;
   compiler_install false alias ocaml_version
 

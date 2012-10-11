@@ -75,6 +75,8 @@ type alias = OpamAlias.t
 
 type alias_set = OpamAlias.Set.t
 
+type 'a alias_map = 'a OpamAlias.Map.t
+
 type file_attribute = OpamFilename.Attribute.t
 
 type file_attribute_set = OpamFilename.Attribute.Set.t

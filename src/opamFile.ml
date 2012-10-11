@@ -396,26 +396,24 @@ module Aliases = struct
 
   let internal = "aliases"
 
-  type t = (alias * compiler) list
+  type t = compiler alias_map
 
-  let empty = []
+  let empty = OpamAlias.Map.empty
 
   let to_string filename t =
     let l =
-      List.map
-        (fun (alias,oversion) -> [OpamAlias.to_string alias;
-                                  OpamCompiler.to_string oversion])
-        t in
+      OpamAlias.Map.fold (fun alias compiler lines ->
+        [OpamAlias.to_string alias; OpamCompiler.to_string compiler] :: lines
+      ) t [] in
     Lines.to_string filename l
 
   let of_string filename s =
     let l = Lines.of_string filename s in
-    List.fold_left (fun accu -> function
-      | []                -> accu
-      | [alias; oversion] -> (OpamAlias.of_string alias,
-                              OpamCompiler.of_string oversion) :: accu
-      | _                 -> failwith "switches"
-    ) [] l
+    List.fold_left (fun map -> function
+      | []            -> map
+      | [alias; comp] -> OpamAlias.Map.add (OpamAlias.of_string alias) (OpamCompiler.of_string comp) map
+      | _             -> failwith "switches"
+    ) OpamAlias.Map.empty l
 
 end
 
