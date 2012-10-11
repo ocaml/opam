@@ -1440,6 +1440,10 @@ let proceed_todelete ~rm_build t nv =
   (* Remove the libraries *)
   OpamFilename.rmdir (OpamPath.Alias.lib t.root t.alias name);
 
+  (* Remove the documentation *)
+  OpamFilename.rmdir (OpamPath.Alias.doc t.root t.alias name);
+  (* XXX: remove the man pages *)
+
   (* Remove build/<package> if requested *)
   if rm_build then
     OpamFilename.rmdir (OpamPath.Alias.build t.root t.alias nv);
