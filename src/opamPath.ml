@@ -62,8 +62,8 @@ module Alias = struct
 
   let doc_dir t a = root t a / "doc"
 
-  let man_dir ?num t a = 
-    match num with 
+  let man_dir ?num t a =
+    match num with
     | None -> root t a / "man"
     | Some n -> root t a / "man" / ("man" ^ n)
 
