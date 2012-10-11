@@ -203,8 +203,11 @@ let copy_files local_repo nv =
           "Skipping %s as it already exists in %s"
           (OpamFilename.to_string f)
           (OpamFilename.Dir.to_string local_dir)
-      else
-        OpamFilename.copy_in f local_dir) files;
+      else (
+        OpamGlobals.msg "Copying %s\n" (OpamFilename.Base.to_string (OpamFilename.basename f));
+        OpamFilename.copy_in f local_dir
+      )
+    ) files;
   );
   OpamFilename.Set.of_list files
 
