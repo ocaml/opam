@@ -87,8 +87,9 @@ module Alias: sig
   (** Documentation path: {i $opam/$OVERSION/doc/} *)
   val doc_dir: t -> alias -> dirname
 
-  (** Man pages path: {i $opam/$OVERSION/man/} *)
-  val man_dir: t -> alias -> dirname
+  (** Man pages path: {i $opam/$OVERSION/man/}. The optional
+      [num] argument will add a {i manN } suffix if specified *)
+  val man_dir: ?num:string -> t -> alias -> dirname
 
   (** Installed binaries: {i $opam/$OVERSION/bin} *)
   val bin: t -> alias -> dirname
