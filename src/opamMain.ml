@@ -357,9 +357,9 @@ let remote =
       OpamClient.remote (RPriority (OpamRepositoryName.of_string name, int_of_string p))
     | Some `list, []                -> OpamClient.remote RList
     | Some `rm,   [ name ]          -> OpamClient.remote (RRm (OpamRepositoryName.of_string name))
-    | Some `add , [ name; address ] -> add name address 0
+    | Some `add , [ name; address ] -> add name address None
     | Some `add ,
-      [ name; address; priority ]   -> add name address (int_of_string priority)
+      [ name; address; priority ]   -> add name address (Some (int_of_string priority))
     | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
     | _        -> bad_argument "remote" "Wrong arguments")
 }
