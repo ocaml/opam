@@ -1121,6 +1121,12 @@ let indent_right s nb =
   else
     String.make nb ' ' ^ s
 
+let sub_at n s =
+  if String.length s <= n then
+    s
+  else
+    String.sub s 0 n
+
 let s_not_installed = "--"
 
 let unknown_package name version =
@@ -1206,7 +1212,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
         OpamGlobals.msg "%s  %s  %s\n"
           (indent_left name max_n)
           (indent_right version max_v)
-          synopsis
+          (sub_at 100 synopsis)
   ) names
 
 let info package =
