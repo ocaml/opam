@@ -7,10 +7,15 @@ add () { BASE="${BASE} $1"; }
 add autoconf
 # cairo
 add libcairo2-dev
+# lapack
+add libatlas-dev
+add liblapack-dev
 # ocaml-sdl
 add libsdl-dev
 # dbm
 add libgdbm-dev
+# liquidsoap
+add libao-dev
 # lablgtk2
 add libgtk2.0-dev
 # lwt-zmq
@@ -20,13 +25,16 @@ add libpq-dev
 # camlbz2
 add libbz2-dev
 # imagemagick
-add "libgraphicsmagick1-dev libmagickcore-dev"
+add libgraphicsmagick1-dev 
+add libmagickcore-dev
 # sqlite3
 add libsqlite3-dev
 # ocaml-glpk
 add libglpk-dev
 # lablgl
-add "mesa-common-dev libglu1-mesa-dev freeglut3-dev"
+add mesa-common-dev 
+add libglu1-mesa-dev
+add freeglut3-dev
 # ocamlgsl
 add gawk
 # mlgmp
@@ -42,10 +50,13 @@ add tcl8.5-dev tk8.5-dev
 # ocaml-mysql
 add libmysqlclient-dev
 # odepack
-add gfortran-4.7
+# lbfgs
+add gfortran
 # fftw-ocaml
 add libfftw3-dev
 # ocaml-taglib
 add libtag1-dev
+# ocaml-mad
+add libmad0-dev
 sudo apt-get -y install ${BASE}
 
