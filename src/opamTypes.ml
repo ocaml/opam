@@ -75,6 +75,8 @@ type alias = OpamAlias.t
 
 type alias_set = OpamAlias.Set.t
 
+type 'a alias_map = 'a OpamAlias.Map.t
+
 type file_attribute = OpamFilename.Attribute.t
 
 type file_attribute_set = OpamFilename.Attribute.Set.t
@@ -122,17 +124,18 @@ let string_of_upload u =
 (* Remote arguments *)
 type remote =
   | RList
-  | RAdd of repository_name * string * dirname * int
+  | RAdd of repository_name * string * dirname * int option
   | RRm of repository_name
   | RPriority of repository_name * int
 
 let string_of_remote = function
   | RList -> "list"
   | RAdd (r, k, d, p) ->
-    Printf.sprintf "add %s %s %s %d"
+    Printf.sprintf "add %s %s %s %s"
       (OpamRepositoryName.to_string r)
       (OpamFilename.Dir.to_string d)
-      k p
+      k
+      (match p with None -> "-" | Some p -> string_of_int p)
   | RRm  r ->
     Printf.sprintf "rm %s"
       (OpamRepositoryName.to_string r)

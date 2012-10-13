@@ -176,7 +176,7 @@ module Descr: sig
 end
 
 (** Compiler aliases: [$opam/aliases] *)
-module Aliases: IO_FILE with type t = (alias * compiler) list
+module Aliases: IO_FILE with type t = compiler alias_map
 
 (** List of installed packages: [$opam/$oversion/installed] *)
 module Installed: IO_FILE with type t = package_set

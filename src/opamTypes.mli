@@ -193,7 +193,7 @@ val string_of_upload: upload -> string
 (** Remote arguments *)
 type remote =
   | RList
-  | RAdd of repository_name * string * dirname * int
+  | RAdd of repository_name * string * dirname * int option
   | RRm of repository_name
   | RPriority of repository_name * int
 
@@ -298,6 +298,9 @@ type alias = OpamAlias.t
 
 (** Set of compiler aliases *)
 type alias_set = OpamAlias.Set.t
+
+(** Map of compile aliases *)
+type 'a alias_map = 'a OpamAlias.Map.t
 
 (** {2 Misc} *)
 
