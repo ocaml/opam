@@ -13,7 +13,7 @@ _opam_global_options()
 _opam_commands()
 {
   local res
-  res="$( opam --help 2>/dev/null | grep '^  ' | sed 's/ *//;s/ .*//' | grep -v '^-' )"
+  res="$( opam --help 2>/dev/null | grep '^  [^ ]' | sed 's/ *//;s/ .*//' | grep -v '^-' )"
   _opam_add "$res"
 }
 

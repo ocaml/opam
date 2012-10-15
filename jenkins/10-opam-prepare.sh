@@ -1,36 +1,78 @@
 #!/bin/sh
 BASE="ocaml ocaml-compiler-libs"
 
+add () { BASE="${BASE} $1"; }
+
 # alt-ergo
-BASE="${BASE} autoconf"
+add autoconf
 # cairo
-BASE="${BASE} libcairo2-dev"
+add libcairo2-dev
+# lapack
+add libatlas-dev
+add liblapack-dev
+# ocaml-sdl
+add libsdl-dev
 # dbm
-BASE="${BASE} libgdbm-dev"
+add libgdbm-dev
+# liquidsoap
+add libao-dev
+add portaudio19-dev 
+add libsamplerate-dev 
+add libgstreamer0.10-dev 
+add libgstreamer-plugins-base0.10-dev 
+add libmp3lame-dev 
+add libogg-dev 
+add libvorbis-dev
+add libspeex-dev
+add libtheora-dev 
+add libschroedinger-dev 
+add libvo-aacenc-dev 
+add libfaad-dev
+add libflac-dev
+add libsoundtouch-dev 
+add libgavl-dev 
+add liblo-dev
 # lablgtk2
-BASE="${BASE} libgtk2.0-dev"
+add libgtk2.0-dev
 # lwt-zmq
-BASE="${BASE} libzmq-dev"
+add libzmq-dev
 # postgresql-ocaml
-BASE="${BASE} libpq-dev"
+add libpq-dev
 # camlbz2
-BASE="${BASE} libbz2-dev"
+add libbz2-dev
 # imagemagick
-BASE="${BASE} libgraphicsmagick1-dev libmagickcore-dev"
+add libgraphicsmagick1-dev 
+add libmagickcore-dev
 # sqlite3
-BASE="${BASE} libsqlite3-dev"
+add libsqlite3-dev
 # ocaml-glpk
-BASE="${BASE} libglpk-dev"
+add libglpk-dev
 # lablgl
-BASE="${BASE} mesa-common-dev"
+add mesa-common-dev 
+add libglu1-mesa-dev
+add freeglut3-dev
 # ocamlgsl
-BASE="${BASE} gawk"
+add gawk
+# mlgmp
+add libmpfr-dev
 # ocaml-lua
-BASE="${BASE} liblua5.1-0-dev
+add liblua5.1-0-dev
 # ocurl
-BASE="${BASE} libcurl4-gnutls-dev"
+add libcurl4-gnutls-dev
+# gpr
+add libgsl0-dev
 # planets
-BASE="${BASE} tcl8.5-dev tk8.5-dev"
+add tcl8.5-dev tk8.5-dev
 # ocaml-mysql
-BASE="${BASE} libmysqlclient-dev"
+add libmysqlclient-dev
+# odepack
+# lbfgs
+add gfortran
+# fftw-ocaml
+add libfftw3-dev
+# ocaml-taglib
+add libtag1-dev
+# ocaml-mad
+add libmad0-dev
 sudo apt-get -y install ${BASE}
+
