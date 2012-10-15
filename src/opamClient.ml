@@ -299,9 +299,11 @@ let load_state () =
   let compiler =
     try OpamAlias.Map.find alias aliases
     with Not_found ->
-      OpamGlobals.error_and_exit "%S does not contain the compiler name associated to the alias %s"
+      OpamGlobals.error "%s is an unknown compiler alias" (OpamAlias.to_string alias);
+      log "%S does not contain the compiler name associated to the alias %s"
         (OpamFilename.to_string (OpamPath.aliases root))
-        (OpamAlias.to_string alias) in
+        (OpamAlias.to_string alias);
+      OpamGlobals.exit 2 in
   let compiler_version =
     let comp = OpamFile.Comp.read (OpamPath.compiler root compiler) in
     OpamFile.Comp.version comp in
