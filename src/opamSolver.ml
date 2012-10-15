@@ -185,16 +185,9 @@ let string_of_packages l =
   OpamMisc.string_of_list string_of_package l
 
 let string_of_cudf (p, c) =
-  let relop = function
-    | `Eq  -> "="
-    | `Neq -> "!="
-    | `Geq -> ">="
-    | `Gt  -> ">"
-    | `Leq -> "<="
-    | `Lt  -> "<" in
   let const = function
     | None       -> ""
-    | Some (r,v) -> Printf.sprintf " (%s %d)" (relop r) v in
+    | Some (r,v) -> Printf.sprintf " (%s %d)" (OpamCompiler.Version.string_of_relop r) v in
   Printf.sprintf "%s%s" p (const c)
 
 let string_of_internal_request =

@@ -15,11 +15,19 @@
 
 open OpamMisc.OP
 
-type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
-
 module Version = struct
 
   include OpamMisc.Base
+
+  type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
+
+  let string_of_relop = function
+    | `Eq  -> "="
+    | `Neq -> "!="
+    | `Geq -> ">="
+    | `Gt  -> ">"
+    | `Leq -> "<="
+    | `Lt  -> "<"
 
   type constr = (relop * t) OpamFormula.formula
 
@@ -33,6 +41,7 @@ module Version = struct
     let v2 = to_string v2 in
     match r with
     | `Eq  -> Debian.Version.equal v1 v2
+    | `Neq -> not (Debian.Version.equal v1 v2)
     | `Geq -> Debian.Version.compare v1 v2 >= 0
     | `Gt  -> Debian.Version.compare v1 v2 > 0
     | `Leq -> Debian.Version.compare v1 v2 <= 0

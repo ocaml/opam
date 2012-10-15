@@ -15,13 +15,16 @@
 
 (** Compiler and OPAM versions *)
 
-(** Binary relations *)
-type relop = [`Eq|`Geq|`Gt|`Leq|`Lt]
-
 (** OCaml compiler versions *)
 module Version: sig
 
   include OpamMisc.ABSTRACT
+
+  (** Binary relations *)
+  type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
+
+  (** Pretty printing *)
+  val string_of_relop: relop -> string
 
   (** Compiler constraint *)
   type constr = (relop * t) OpamFormula.formula
