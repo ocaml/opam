@@ -28,6 +28,9 @@ val default: unit -> t
 (** Root dir: {i $opam/} *)
 val root: t -> dirname
 
+(** lock file *)
+val lock: t -> filename
+
 (** Main configuration file: {i $opam/config} *)
 val config: t -> filename
 
@@ -66,6 +69,9 @@ module Alias: sig
 
   (** Root dir: {i $opam/$OVERSION} *)
   val root: t -> alias -> dirname
+
+  (** lock file *)
+  val lock: t -> alias -> filename
 
   (** Library path for a given package:
       {i $opam/$OVERSION/lib/NAME} *)
@@ -158,6 +164,9 @@ module Repository: sig
 
   (** Get the directory root *)
   val root: r -> dirname
+
+  (** lock file *)
+  val lock: r -> filename
 
   (** Create an arbitrary repository root *)
   val raw: dirname -> r

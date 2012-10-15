@@ -30,6 +30,8 @@ let config t = t // "config"
 
 let opam_dir t = t / "opam"
 
+let lock t = t // "lock"
+
 let aliases t = t // "aliases"
 
 let opam t nv = opam_dir t // (OpamPackage.to_string nv ^ ".opam")
@@ -51,6 +53,8 @@ let repo_index t = t / "repo" // "index"
 module Alias = struct
 
   let root t a = t / OpamAlias.to_string a
+
+  let lock t a = root t a // "lock"
 
   let lib_dir t a = root t a / "lib"
 
@@ -108,6 +112,8 @@ module Repository = struct
   let root x = x
 
   let raw x = x
+
+  let lock t = t // "lock"
 
   let create t r = t / "repo" / OpamRepositoryName.to_string r
 

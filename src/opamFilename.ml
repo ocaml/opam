@@ -241,6 +241,16 @@ let address_of_string address =
   then Dir.of_string address
   else raw_dir address
 
+let with_flock file f x =
+  try
+    OpamSystem.flock (to_string file);
+    let r = f x in
+    OpamSystem.funlock (to_string file);
+    r
+  with e ->
+    OpamSystem.funlock (to_string file);
+    raise e
+
 module O = struct
   type tmp = t
   type t = tmp

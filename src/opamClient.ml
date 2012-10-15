@@ -25,6 +25,45 @@ let () =
   OpamGit.register ();
   OpamRsync.register ()
 
+type lock =
+  | Read_lock of (unit -> unit)
+  | Global_lock of (unit -> unit)
+  | Alias_lock of (unit -> unit)
+
+let check f =
+  let root = OpamPath.default () in
+  let with_alias_lock a f = OpamFilename.with_flock (OpamPath.Alias.lock root a) f in
+  if OpamFilename.exists_dir root then
+    match f with
+
+    | Global_lock f ->
+      (* Take the global lock *)
+      OpamFilename.with_flock (OpamPath.lock root) (fun () ->
+        (* Take all the alias locks *)
+        let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+        let f = OpamAlias.Map.fold (fun a _ f -> with_alias_lock a (fun () -> f ())) aliases f in
+        f ()
+      ) ()
+
+    | Read_lock f ->
+      (* Simply check that OPAM is correctly initialized *)
+      if OpamFilename.exists_dir (OpamPath.root root) then
+        f ()
+      else
+        OpamGlobals.error_and_exit
+          "Cannot find %s. Have you run 'opam init first ?"
+          (OpamFilename.Dir.to_string root)
+
+    | Alias_lock f ->
+      (* Take an alias lock (and check that the global lock is free). *)
+      let alias =
+        OpamFilename.with_flock
+          (OpamPath.lock root)
+          (fun () -> OpamFile.Config.alias (OpamFile.Config.read (OpamPath.config root)))
+          () in
+      (* XXX: We can have a small race just here ... *)
+      with_alias_lock alias f ()
+
 type state = {
   root: OpamPath.t;
   alias: alias;
@@ -287,33 +326,6 @@ let load_state () =
   } in
   print_state t;
   t
-
-type main_function =
-  | Read_only of (unit -> unit)
-  | Write_lock of (unit -> unit)
-
-let check f =
-  let root = OpamPath.default () in
-  if OpamFilename.exists_dir root then
-    match f with
-    | Write_lock f -> OpamSystem.with_flock f
-    | Read_only f ->
-      let warn msg e = OpamGlobals.warning "%s: %s" msg (Printexc.to_string e) in
-      try f () with e ->
-        if
-          None = try Some ((load_state ()).compiler) with e -> let () = warn "check" e in None
-        then (
-          warn "main" e;
-          OpamGlobals.warning
-            "initialization is not yet finished (or the state %s is inconsistent)"
-            (OpamFilename.Dir.to_string root)
-          (* NOTE it is feasible to determine here if initialization is finished or not *)
-        ) else
-           raise e
-  else
-    OpamGlobals.error_and_exit
-      "Cannot find %s. Have you run 'opam init first ?"
-      (OpamFilename.Dir.to_string root)
 
 let print_updated t updated pinned_updated =
   let new_packages =
@@ -2834,61 +2846,61 @@ let compiler_reinstall alias =
 on some read/write data. *)
 
 let list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str =
-  check (Read_only (fun () -> list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str))
+  check (Read_lock (fun () -> list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str))
 
 let info package =
-  check (Read_only (fun () -> info package))
+  check (Read_lock (fun () -> info package))
 
 let config request =
-  check (Read_only (fun () -> config request))
+  check (Read_lock (fun () -> config request))
 
-let install name =
-  check (Write_lock (fun () -> install name))
+let install names =
+  check (Alias_lock (fun () -> install names))
 
-let reinstall name =
-  check (Write_lock (fun () -> reinstall name))
-
-let update repos =
-  check (Write_lock (fun () -> update repos))
+let reinstall names =
+  check (Alias_lock (fun () -> reinstall names))
 
 let upgrade names =
-  check (Write_lock (fun () -> upgrade names))
+  check (Alias_lock (fun () -> upgrade names))
+
+let remove names =
+  check (Alias_lock (fun () -> remove names))
+
+let update repos =
+  check (Global_lock (fun () -> update repos))
 
 let upload u r =
-  check (Write_lock (fun () -> upload u r))
-
-let remove name =
-  check (Write_lock (fun () -> remove name))
+  check (Global_lock (fun () -> upload u r))
 
 let remote action =
-  check (Write_lock (fun () -> remote action))
+  check (Global_lock (fun () -> remote action))
 
 let compiler_install quiet alias ocaml_version =
-  check (Write_lock (fun () -> compiler_install quiet alias ocaml_version))
+  check (Global_lock (fun () -> compiler_install quiet alias ocaml_version))
 
 let compiler_import filename =
-  check (Write_lock (fun () -> compiler_import filename))
+  check (Alias_lock (fun () -> compiler_import filename))
 
 let compiler_export filename =
-  check (Write_lock (fun () -> compiler_export filename))
+  check (Read_lock (fun () -> compiler_export filename))
 
 let compiler_remove alias =
-  check (Write_lock (fun () -> compiler_remove alias))
+  check (Global_lock (fun () -> compiler_remove alias))
 
 let compiler_switch quiet alias =
-  check (Write_lock (fun () -> compiler_switch quiet alias))
+  check (Global_lock (fun () -> compiler_switch quiet alias))
 
 let compiler_reinstall alias =
-  check (Write_lock (fun () -> compiler_reinstall alias))
+  check (Global_lock (fun () -> compiler_reinstall alias))
 
 let compiler_list () =
-  check (Read_only compiler_list)
+  check (Read_lock compiler_list)
 
 let compiler_current () =
-  check (Read_only compiler_current)
+  check (Read_lock compiler_current)
 
 let pin action =
-  check (Write_lock (fun () -> pin action))
+  check (Global_lock (fun () -> pin action))
 
 let pin_list () =
-  check (Read_only pin_list)
+  check (Read_lock pin_list)

@@ -62,9 +62,6 @@ let rec mk_temp_dir () =
   else
     s
 
-let lock_file () =
-  !OpamGlobals.root_dir / "opam.lock"
-
 let log_file () =
   Random.self_init ();
   let f = "command" ^ string_of_int (Random.int 2048) in
@@ -365,9 +362,8 @@ let link src dst =
     remove_file dst;
   Unix.link src dst
 
-let flock () =
+let flock file =
   let l = ref 0 in
-  let file = lock_file () in
   let id = string_of_int (Unix.getpid ()) in
   let max_l = 5 in
   let rec loop () =
@@ -393,9 +389,8 @@ let flock () =
     end in
   loop ()
 
-let funlock () =
+let funlock file =
   let id = string_of_int (Unix.getpid ()) in
-  let file = lock_file () in
   if Sys.file_exists file then begin
     let ic = open_in file in
     let s = input_line ic in
@@ -405,17 +400,8 @@ let funlock () =
       Unix.unlink file;
     end else
       OpamGlobals.error_and_exit "cannot unlock %s (%s)" file s
-  end else
-    OpamGlobals.error_and_exit "Cannot find %s" file
-
-let with_flock f =
-  try
-    flock ();
-    f ();
-    funlock ();
-  with e ->
-    funlock ();
-    raise e
+  end else if Sys.file_exists (Filename.basename file) then
+      OpamGlobals.error_and_exit "Cannot find %s" file
 
 let ocaml_version = lazy (
   try

@@ -50,7 +50,7 @@ val copy_dir: Dir.t -> Dir.t -> unit
 (** Link a directory *)
 val link_dir: Dir.t -> Dir.t -> unit
 
-(** Does the directory exists ? *)
+(** Does the directory existsb ? *)
 val exists_dir: Dir.t -> bool
 
 (** Return the parent directory *)
@@ -160,6 +160,9 @@ val chmod: t -> int -> unit
 (** Create an local of remote address from a string,
     depending whether the string exits in the filesystem. *)
 val address_of_string: string -> Dir.t
+
+(** File locks *)
+val with_flock: t -> ('a -> 'b) -> 'a -> 'b
 
 module OP: sig
 
