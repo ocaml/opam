@@ -1870,7 +1870,7 @@ module Heuristic = struct
                   (OpamSolver.P [debpkg_of_nv t `remove nv]) in
               let depends = OpamPackage.Set.of_list (List.rev_map OpamPackage.of_dpkg depends) in
               let depends = OpamPackage.Set.filter (fun nv -> OpamPackage.Set.mem nv t.installed) depends in
-              OpamPackage.Set.iter (proceed_todelete ~rm_build:true t) depends;
+              OpamPackage.Set.iter (proceed_todelete ~rm_build:false t) depends;
               installed := OpamPackage.Set.diff !installed depends;
               write_installed ();
           | To_delete nv            -> assert false in
