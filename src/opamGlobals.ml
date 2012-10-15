@@ -90,7 +90,12 @@ let uname_s () =
   let _ = Unix.create_process "uname" [|"-s"|] stdin stdout stderr in
   let buf = String.create 128 in
   let r = Unix.read stdout_in buf 0 128 in
-  String.sub buf 0 r
+  (* Trim a newline if one is present *)
+  try
+    let idx = String.index buf '\n' in
+    String.sub buf 0 (if idx < r then idx else r)
+  with _ ->
+    String.sub buf 0 r
 
 let os = match Sys.os_type with
   | "Unix" -> begin
