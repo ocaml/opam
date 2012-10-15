@@ -36,11 +36,15 @@ let quiet = ref false
 let set_root_dir dir =
   OpamGlobals.root_dir := OpamSystem.real_path dir
 
+let set_alias alias =
+  OpamGlobals.alias := Some alias
+
 let global_args = [
   "--debug"     , Arg.Set OpamGlobals.debug   , " Print internal debug messages (very verbose)";
   "--verbose"   , Arg.Set OpamGlobals.verbose , " Display the output of subprocesses";
   "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
   "--version"   , Arg.Unit OpamVersion.message, " Display version information";
+  "--alias"     , Arg.String set_alias        , " Use the given alias instead of looking into the config file";
   "--yes"       , Arg.Set OpamGlobals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.String (fun s -> OpamGlobals.makecmd := lazy s),
     Printf.sprintf " Set the 'make' program used when compiling packages";

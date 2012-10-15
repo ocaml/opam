@@ -37,6 +37,8 @@ let default_package = "conf-ocaml"
 
 let default_alias = "system"
 
+let alias : string option ref = ref None
+
 let opam_version = "1"
 
 let home = Unix.getenv "HOME"

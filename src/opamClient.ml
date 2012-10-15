@@ -59,7 +59,9 @@ let check f =
       let alias =
         OpamFilename.with_flock
           (OpamPath.lock root)
-          (fun () -> OpamFile.Config.alias (OpamFile.Config.read (OpamPath.config root)))
+          (fun () -> match !OpamGlobals.alias with
+          | None   -> OpamFile.Config.alias (OpamFile.Config.read (OpamPath.config root))
+          | Some a -> OpamAlias.of_string a)
           () in
       (* XXX: We can have a small race just here ... *)
       with_alias_lock alias f ()
@@ -290,7 +292,9 @@ let load_state () =
   log "root path is %s" (OpamFilename.Dir.to_string root);
 
   let config = OpamFile.Config.read (OpamPath.config root) in
-  let alias = OpamFile.Config.alias config in
+  let alias = match !OpamGlobals.alias with
+    | None   -> OpamFile.Config.alias config
+    | Some a -> OpamAlias.of_string a in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
     try OpamAlias.Map.find alias aliases
@@ -2709,7 +2713,7 @@ let compiler_list () =
   let aliases = OpamFile.Aliases.read (OpamPath.aliases t.root) in
   OpamGlobals.msg "--- Installed compilers ---\n";
   OpamAlias.Map.iter (fun n c ->
-    let current = if n = OpamFile.Config.alias t.config then "*" else " " in
+    let current = if n = t.alias then "*" else " " in
     let compiler = OpamCompiler.to_string c in
     let alias_name = OpamAlias.to_string n in
     if alias_name = compiler then
@@ -2812,8 +2816,7 @@ let compiler_export filename =
 
 let compiler_current () =
   let t = load_state () in
-  let current = OpamFile.Config.alias t.config in
-  OpamGlobals.msg "%s\n" (OpamAlias.to_string current)
+  OpamGlobals.msg "%s\n" (OpamAlias.to_string t.alias)
 
 let compiler_remove alias =
   log "compiler_remove alias=%s" (OpamAlias.to_string alias);
