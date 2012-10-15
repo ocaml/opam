@@ -189,9 +189,9 @@ let move src dst =
   OpamSystem.command [ "mv"; to_string src; to_string dst ]
 
 let link src dst =
-  if OpamGlobals.os = OpamGlobals.Win32 then
+(*  if Lazy.force OpamGlobals.os = OpamGlobals.Win32 then
     copy src dst
-  else
+  else *)
     OpamSystem.link (to_string src) (to_string dst)
 
 let process_in fn src dst =

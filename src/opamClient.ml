@@ -387,8 +387,8 @@ let install_conf_ocaml_config root alias =
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
       ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
-      ("make" , !OpamGlobals.makecmd);
-      ("os"   , OpamGlobals.os_string);
+      ("make" , Lazy.force !OpamGlobals.makecmd);
+      ("os"   , Lazy.force OpamGlobals.os_string);
     ] in
 
   let config = OpamFile.Dot_config.create vars in
@@ -1040,8 +1040,8 @@ let init_ocaml t quiet alias compiler =
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
              discarded. *)
-          ; ( !OpamGlobals.makecmd :: OpamFile.Comp.make comp )
-          ; [ !OpamGlobals.makecmd ; "install" ]
+          ; ( Lazy.force !OpamGlobals.makecmd :: OpamFile.Comp.make comp )
+          ; [ Lazy.force !OpamGlobals.makecmd ; "install" ]
           ]
       end else begin
         let t = { t with alias } in

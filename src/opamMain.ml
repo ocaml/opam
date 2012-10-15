@@ -42,8 +42,8 @@ let global_args = [
   "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
   "--version"   , Arg.Unit OpamVersion.message, " Display version information";
   "--yes"       , Arg.Set OpamGlobals.yes     , " Answer yes to all questions";
-  "--makecmd"   , Arg.Set_string OpamGlobals.makecmd,
-    Printf.sprintf " Set the 'make' program used when compiling packages (default is %s)" !OpamGlobals.makecmd;
+  "--makecmd"   , Arg.String (fun s -> OpamGlobals.makecmd := lazy s),
+    Printf.sprintf " Set the 'make' program used when compiling packages";
   "--root"      , Arg.String set_root_dir,
     (Printf.sprintf " Change root path (default is %s)" OpamGlobals.default_opam_dir);
   "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";

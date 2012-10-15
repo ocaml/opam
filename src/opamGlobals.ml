@@ -83,23 +83,13 @@ type os =
   | Unix
   | Other of string
 
-let uname_s () =
-  let stdout_in, stdout = Unix.pipe () in
-  let _, stderr = Unix.pipe () in
-  let stdin, _ = Unix.pipe () in
-  let _ = Unix.create_process "uname" [|"-s"|] stdin stdout stderr in
-  let buf = String.create 128 in
-  let r = Unix.read stdout_in buf 0 128 in
-  (* Trim a newline if one is present *)
-  try
-    let idx = String.index buf '\n' in
-    String.sub buf 0 (if idx < r then idx else r)
-  with _ ->
-    String.sub buf 0 r
+let uname_s =
+  ref (fun () -> assert false)
 
-let os = match Sys.os_type with
+let os = lazy (
+  match Sys.os_type with
   | "Unix" -> begin
-    match uname_s () with
+    match !uname_s () with
     | "Darwin"  -> Darwin
     | "Linux"   -> Linux
     | "FreeBSD" -> FreeBSD
@@ -109,6 +99,7 @@ let os = match Sys.os_type with
   | "Win32"  -> Win32
   | "Cygwin" -> Cygwin
   | s        -> Other s
+)
 
 let string_of_os = function
   | Darwin  -> "darwin"
@@ -120,10 +111,16 @@ let string_of_os = function
   | Unix    -> "unix"
   | Other x -> x
 
-let os_string = string_of_os os
+let os_string =
+  lazy (string_of_os (Lazy.force os))
 
-let makecmd = ref (match os with FreeBSD | OpenBSD -> "gmake" | _ -> "make") (* WARNING check the result of "which gmake", "which make", ... *)
-
+let makecmd = ref (lazy (
+  match Lazy.force os with
+  | FreeBSD
+  | OpenBSD -> "gmake"
+  | _ -> "make"
+)
+)
 let default_cores = 1
 
 let exit i =

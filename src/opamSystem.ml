@@ -288,6 +288,12 @@ let read_command_output ?verbose ?path cmd =
   else
     process_error r
 
+let () =
+  OpamGlobals.uname_s := function () ->
+    match read_command_output ~verbose:false [ "uname"; "-s"] with
+    | h::_ -> OpamMisc.strip h
+    | []   -> failwith "uname -s"
+
 let copy src dst =
   if Sys.is_directory src then
     internal_error "%s is a directory!" src;
