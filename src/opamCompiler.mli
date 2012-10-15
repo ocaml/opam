@@ -32,9 +32,6 @@ module Version: sig
   (** Compare OCaml versions *)
   val compare: t -> relop -> t -> bool
 
-  (** Default compiler version *)
-  val default: t
-
 end
 
 (** Compiler names *)

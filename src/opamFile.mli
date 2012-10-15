@@ -41,16 +41,19 @@ module Config: sig
   include IO_FILE
 
   (** Creation *)
-  val create: opam_version -> repository_name list -> int -> t
+  val create:
+    opam_version ->
+    alias ->
+    compiler_version option ->
+    repository_name list ->
+    int ->
+    t
 
   (** OCaml alias updates *)
   val with_alias : t -> alias -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository_name list -> t
-
-  (** system-wide's OCaml version updates *)
-  val with_system_version: t -> compiler_version -> t
 
   (** Return the OPAM version *)
   val opam_version: t  -> opam_version

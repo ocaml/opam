@@ -28,8 +28,8 @@ let () =
 type state = {
   root: OpamPath.t;
   alias: alias;
-  compiler: compiler option;
-  compiler_version: compiler_version option;
+  compiler: compiler;
+  compiler_version: compiler_version;
   opams: OpamFile.OPAM.t package_map;
   repositories: OpamFile.Repo_config.t repository_name_map;
   packages: package_set;
@@ -50,7 +50,7 @@ let string_of_repositories r =
 let print_state t =
   log "ROOT      : %s" (OpamFilename.Dir.to_string (OpamPath.root t.root));
   log "ALIAS     : %s" (OpamAlias.to_string t.alias);
-  log "COMPILER  : %s" (match t.compiler with None -> "<none>" | Some c -> OpamCompiler.to_string c);
+  log "COMPILER  : %s" (OpamCompiler.to_string t.compiler);
   log "REPOS     : %s" (string_of_repositories t.repositories);
   log "AVAILABLE : %s" (OpamPackage.Set.to_string t.packages);
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
@@ -225,42 +225,14 @@ let with_repo t nv fn =
       (OpamPackage.to_string nv)
   | Some (repo_p, repo) -> fn repo_p repo
 
+  (* List the packages which does fullfil the compiler constraints *)
 let available_packages root opams repositories repo_index compiler_version config pinned packages =
-  (* Remove the packages which does not fullfil the compiler
-     constraints *)
-  let ocaml_version =
-    let opam_version = OpamFile.Config.alias config in
-    if opam_version = OpamAlias.default then (
-      let current = OpamCompiler.Version.current () in
-      let system = OpamFile.Config.system_version config in
-      match current, system  with
-      | None  , None   -> OpamGlobals.error_and_exit "No OCaml compiler installed."
-      | None  , Some s ->
-        if not (OpamMisc.confirm "No OCaml compiler found. Continue ?") then
-          OpamGlobals.exit 0
-        else
-          s
-      | Some c, Some s ->
-        if s <> c
-          && not (OpamMisc.confirm "The version of OCaml in your path (%S) \
-                             is not the same as the one OPAM has been \
-                             initialized with (%S). Continue ?"
-                    (OpamCompiler.Version.to_string c)
-                    (OpamCompiler.Version.to_string s)) then
-          OpamGlobals.exit 1
-        else
-          s
-      | Some c, None   -> c
-    ) else
-      match compiler_version with
-      | Some v -> v
-      | None   -> OpamGlobals.error_and_exit "No OCaml compiler defined."in
   let filter nv =
     let opam = OpamPackage.Map.find nv opams in
     let available () =
       find_repo_aux repositories root repo_index nv <> None in
     let consistent_ocaml_version () =
-      let atom (r,v) = OpamCompiler.Version.compare ocaml_version r v in
+      let atom (r,v) = OpamCompiler.Version.compare compiler_version r v in
       match OpamFile.OPAM.ocaml_version opam with
       | None   -> true
       | Some c -> OpamFormula.eval atom c in
@@ -282,13 +254,14 @@ let load_state () =
   let alias = OpamFile.Config.alias config in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
-    try Some (OpamAlias.Map.find alias aliases)
-    with Not_found -> None in
-  let compiler_version = match compiler with
-    | None   -> None
-    | Some c ->
-      let comp = OpamFile.Comp.read (OpamPath.compiler root c) in
-      Some (OpamFile.Comp.version comp) in
+    try OpamAlias.Map.find alias aliases
+    with Not_found ->
+      OpamGlobals.error_and_exit "%S does not contain the compiler name associated to the alias %s"
+        (OpamFilename.to_string (OpamPath.aliases root))
+        (OpamAlias.to_string alias) in
+  let compiler_version =
+    let comp = OpamFile.Comp.read (OpamPath.compiler root compiler) in
+    OpamFile.Comp.version comp in
   let opams =
     OpamPackage.Set.fold (fun nv map ->
       let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
@@ -393,6 +366,7 @@ let print_compilers t compilers repo =
     OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
   ) del_compilers
 
+(* install ~/.opam/<alias>/config/conf-ocaml.config *)
 let install_conf_ocaml_config root alias =
   let name = OpamPackage.Name.of_string OpamGlobals.default_package in
   (* .config *)
@@ -420,42 +394,41 @@ let install_conf_ocaml_config root alias =
   let config = OpamFile.Dot_config.create vars in
   OpamFile.Dot_config.write (OpamPath.Alias.config root alias name) config
 
-let install_conf_ocaml () =
+(* install the package conf-ocaml.<alias> *)
+let install_conf_ocaml root alias =
   log "installing conf-ocaml";
-  let t = load_state () in
   let name = OpamPackage.Name.of_string OpamGlobals.default_package in
-  let version = OpamPackage.Version.of_string (OpamAlias.to_string t.alias) in
+  let version = OpamPackage.Version.of_string (OpamAlias.to_string alias) in
   let nv = OpamPackage.create name version in
   (* .opam *)
   let opam = OpamFile.OPAM.create nv in
-  OpamFile.OPAM.write (OpamPath.opam t.root nv) opam;
+  OpamFile.OPAM.write (OpamPath.opam root nv) opam;
   (* description *)
   let descr = OpamFile.Descr.create "Compiler configuration flags" in
-  OpamFile.Descr.write (OpamPath.descr t.root nv) descr;
-  install_conf_ocaml_config t.root t.alias;
+  OpamFile.Descr.write (OpamPath.descr root nv) descr;
+  install_conf_ocaml_config root alias;
   (* installed *)
-  let installed_p = OpamPath.Alias.installed t.root t.alias in
+  let installed_p = OpamPath.Alias.installed root alias in
   let installed = OpamFile.Installed.safe_read installed_p in
   let installed = OpamPackage.Set.add nv installed in
   OpamFile.Installed.write installed_p installed;
   (* stublibs *)
-  let stublibs = OpamPath.Alias.stublibs t.root t.alias in
+  let stublibs = OpamPath.Alias.stublibs root alias in
   OpamFilename.mkdir stublibs;
   (* toplevel dir *)
-  let toplevel = OpamPath.Alias.toplevel t.root t.alias in
+  let toplevel = OpamPath.Alias.toplevel root alias in
   OpamFilename.mkdir toplevel
 
-let uninstall_conf_ocaml () =
-  let t = load_state () in
+let uninstall_conf_ocaml root alias =
   let name = OpamPackage.Name.of_string OpamGlobals.default_package in
-  let version = OpamPackage.Version.of_string (OpamAlias.to_string t.alias) in
+  let version = OpamPackage.Version.of_string (OpamAlias.to_string alias) in
   let nv = OpamPackage.create name version in
-  OpamFilename.remove (OpamPath.opam t.root nv);
-  OpamFilename.remove (OpamPath.descr t.root nv)
+  OpamFilename.remove (OpamPath.opam root nv);
+  OpamFilename.remove (OpamPath.descr root nv)
 
-let reinstall_conf_ocaml () =
-  uninstall_conf_ocaml ();
-  install_conf_ocaml ()
+let reinstall_conf_ocaml root alias =
+  uninstall_conf_ocaml root alias;
+  install_conf_ocaml root alias
 
 let compare_repo t r1 r2 =
   OpamRepository.compare
@@ -524,7 +497,7 @@ let update_repo_index t =
     );
   ) t.packages;
 
-  reinstall_conf_ocaml ();
+  reinstall_conf_ocaml t.root t.alias;
 
   (* Create symbolic links from $repo dirs to main dir *)
   OpamPackage.Name.Map.iter (fun n repo_s ->
@@ -562,20 +535,22 @@ let update_repo_index t =
 
 let base_packages = List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
-let create_default_compiler_description t =
-  let f =
-    OpamFile.Comp.create_preinstalled
-      OpamCompiler.default OpamCompiler.Version.default
-      (if !OpamGlobals.base_packages then base_packages else [])
-      [ ("CAML_LD_LIBRARY_PATH", "=",
+let create_default_compiler_description root = function
+  | None         -> ()
+  | Some version ->
+    let f =
+      OpamFile.Comp.create_preinstalled
+        OpamCompiler.default version
+        (if !OpamGlobals.base_packages then base_packages else [])
+        [ ("CAML_LD_LIBRARY_PATH", "=",
            "%{lib}%/stublibs"
            ^ ":" ^
-           (match OpamSystem.system_ocamlc_where () with
-           | Some d -> Filename.concat d "stublibs"
-           | None   -> assert false))
-      ] in
-  let comp = OpamPath.compiler t.root OpamCompiler.default in
-  OpamFile.Comp.write comp f
+             (match Lazy.force OpamSystem.system_ocamlc_where with
+             | Some d -> Filename.concat d "stublibs"
+             | None   -> assert false))
+        ] in
+    let comp = OpamPath.compiler root OpamCompiler.default in
+    OpamFile.Comp.write comp f
 
 (* sync the repositories, display the new compilers, and create
    compiler description file links *)
@@ -618,11 +593,7 @@ let update_repositories t ~show_compilers repositories =
       if not (OpamFilename.exists comp_g) && OpamFilename.exists comp_f then
         OpamFilename.link_in comp_f comp_dir
     ) comps
-  ) (sorted_repositories t);
-  (* If system.comp has been deleted, create it *)
-  let default_compiler = OpamPath.compiler t.root OpamCompiler.default in
-  if not (OpamFilename.exists default_compiler) then
-    create_default_compiler_description t
+  ) (sorted_repositories t)
 
 let update_pinned_package t nv pin =
   let kind = kind_of_pin_option pin in
@@ -755,20 +726,15 @@ let contents_of_variable t v =
     try S (Sys.getenv var_str)
     with Not_found ->
       if var_str = "ocaml-version" then (
-        match t.compiler_version with
-        | None       -> S "<none>"
-        | Some comp ->
-          let comp_str = OpamCompiler.Version.to_string comp in
-          if comp_str = OpamGlobals.default_alias then
-            match OpamFile.Config.system_version t.config with
-            | None   -> S "<none>"
-            | Some v -> S (OpamCompiler.Version.to_string v)
-          else
-            S comp_str
+        let comp_str = OpamCompiler.Version.to_string t.compiler_version in
+        if comp_str = OpamGlobals.default_alias then
+          match OpamFile.Config.system_version t.config with
+          | None   -> S "<none>"
+          | Some v -> S (OpamCompiler.Version.to_string v)
+        else
+          S comp_str
       ) else if var_str = "preinstalled" then (
-        match t.compiler with
-        | None      -> S "<none>"
-        | Some comp -> B (OpamFile.Comp.preinstalled (compiler_description t comp))
+        B (OpamFile.Comp.preinstalled (compiler_description t t.compiler))
       ) else
           read_var name
   ) else (
@@ -945,25 +911,22 @@ let update_env t env e =
     new_env    = expanded @ env.new_env }
 
 let get_env t =
-  match t.compiler with
-  | None               -> empty_env
-  | Some ocaml_version ->
-    let comp = compiler_description t ocaml_version in
+  let comp = compiler_description t t.compiler in
 
-    let add_to_path = OpamPath.Alias.bin t.root t.alias in
-    let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
+  let add_to_path = OpamPath.Alias.bin t.root t.alias in
+  let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
 
-    let add_to_env = OpamFile.Comp.env comp in
-    let toplevel_dir =
-      "OCAML_TOPLEVEL_PATH", "=", OpamFilename.Dir.to_string (OpamPath.Alias.toplevel t.root t.alias) in
-    let man_path =
-      "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Alias.man_dir t.root t.alias) in
-    let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
+  let add_to_env = OpamFile.Comp.env comp in
+  let toplevel_dir =
+    "OCAML_TOPLEVEL_PATH", "=", OpamFilename.Dir.to_string (OpamPath.Alias.toplevel t.root t.alias) in
+  let man_path =
+    "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Alias.man_dir t.root t.alias) in
+  let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
 
-    let add_to_env = expand_env t add_to_env in
-    let new_env = expand_env t new_env in
+  let add_to_env = expand_env t add_to_env in
+  let new_env = expand_env t new_env in
 
-    { add_to_env; add_to_path; new_env }
+  { add_to_env; add_to_path; new_env }
 
 let print_env_warning ?(add_profile = false) t =
   match
@@ -997,18 +960,13 @@ let print_env_warning ?(add_profile = false) t =
         opam_root
         add_profile
 
-let add_alias alias compiler =
+let add_alias root alias compiler =
   log "adding alias %s %s" (OpamAlias.to_string alias) (OpamCompiler.to_string compiler);
-  let t = load_state () in
-  if compiler = OpamCompiler.default then
-    (* we create a dummy compiler description file the the system-wide
-       OCaml configuration *)
-    create_default_compiler_description t;
-  let aliases_f = OpamPath.aliases t.root in
+  let aliases_f = OpamPath.aliases root in
   let aliases = OpamFile.Aliases.safe_read aliases_f in
   if not (OpamAlias.Map.mem alias aliases) then begin
     (* Install the initial package and reload the global state *)
-    install_conf_ocaml ();
+    install_conf_ocaml root alias;
     (* Update the list of aliases *)
     OpamFile.Aliases.write aliases_f (OpamAlias.Map.add alias compiler aliases);
   end
@@ -1020,9 +978,6 @@ let init_ocaml t quiet alias compiler =
   log "init_ocaml alias=%s compiler=%s"
     (OpamAlias.to_string alias)
     (OpamCompiler.to_string compiler);
-
-  if compiler = OpamCompiler.default then
-    create_default_compiler_description t;
 
   let comp_f = OpamPath.compiler t.root compiler in
   if not (OpamFilename.exists comp_f) then (
@@ -1099,7 +1054,7 @@ let init_ocaml t quiet alias compiler =
     (* write the new version in the configuration file *)
     let config = OpamFile.Config.with_alias t.config alias in
     OpamFile.Config.write (OpamPath.config t.root) config;
-    add_alias alias compiler
+    add_alias t.root alias compiler
 
   with e ->
     if not !OpamGlobals.debug then
@@ -1974,52 +1929,49 @@ module Heuristic = struct
     let e = List.map (fun (v,_,_) -> v) e in
     List.fold_right StringSet.add e StringSet.empty
 
-  let print_variable_warnings =
-    let warnings = ref false in
-    fun t ->
-      let variables = ref [] in
-      if not !warnings then (
-        let warn w =
-          let is_defined s =
-            try let _ = Sys.getenv s in true
-            with Not_found -> false in
-          if is_defined w then
-            variables := w :: !variables in
+  let variable_warnings = ref false
+  let print_variable_warnings () =
+    let variables = ref [] in
+    if not !variable_warnings then (
+      let t = load_state () in
+      let warn w =
+        let is_defined s =
+          try let _ = Sys.getenv s in true
+          with Not_found -> false in
+        if is_defined w then
+          variables := w :: !variables in
 
       (* 1. Warn about OCAMLFIND variables if it is installed *)
-        let ocamlfind_vars = [
-          "OCAMLFIND_DESTDIR";
-          "OCAMLFIND_CONF";
-          "OCAMLFIND_METADIR";
-          "OCAMLFIND_COMMANDS";
-          "OCAMLFIND_LDCONF";
-        ] in
-        if OpamPackage.Set.exists (fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind") t.installed then
-          List.iter warn ocamlfind_vars;
+      let ocamlfind_vars = [
+        "OCAMLFIND_DESTDIR";
+        "OCAMLFIND_CONF";
+        "OCAMLFIND_METADIR";
+        "OCAMLFIND_COMMANDS";
+        "OCAMLFIND_LDCONF";
+      ] in
+      if OpamPackage.Set.exists (fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind") t.installed then
+        List.iter warn ocamlfind_vars;
       (* 2. Warn about variables possibly set by other compilers *)
-        let new_variables version =
-          let comp_f = OpamPath.compiler t.root version in
-          let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
-          new_variables env in
-        let vars = ref OpamMisc.StringSet.empty in
-        OpamAlias.Map.iter (fun _ version ->
-          vars := OpamMisc.StringSet.union !vars (new_variables version)
-        ) t.aliases;
-        begin match t.compiler with
-        | None   -> ()
-        | Some v -> vars := OpamMisc.StringSet.diff !vars (new_variables v);
-        end;
-        OpamMisc.StringSet.iter warn !vars;
-        if !variables <> [] then (
-          OpamGlobals.msg "The following variables are set in your environment, \
+      let new_variables version =
+        let comp_f = OpamPath.compiler t.root version in
+        let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
+        new_variables env in
+      let vars = ref OpamMisc.StringSet.empty in
+      OpamAlias.Map.iter (fun _ version ->
+        vars := OpamMisc.StringSet.union !vars (new_variables version)
+      ) t.aliases;
+      vars := OpamMisc.StringSet.diff !vars (new_variables t.compiler);
+      OpamMisc.StringSet.iter warn !vars;
+      if !variables <> [] then (
+        OpamGlobals.msg "The following variables are set in your environment, \
                      you should better unset it if you want OPAM to work \
                      correctly.\n";
-          List.iter (OpamGlobals.msg " - %s\n") !variables;
-          if not (OpamMisc.confirm "Do you want to continue ?") then
-            OpamGlobals.exit 0;
-        );
-        warnings := true;
-      )
+        List.iter (OpamGlobals.msg " - %s\n") !variables;
+        if not (OpamMisc.confirm "Do you want to continue ?") then
+          OpamGlobals.exit 0;
+      );
+      variable_warnings := true;
+    )
 
   let resolve ?(force=false) action_k t l_request =
     match find_solution action_k t l_request with
@@ -2027,12 +1979,12 @@ module Heuristic = struct
         OpamGlobals.msg "No solution has been found:\n%s\n" (cs ());
         No_solution
     | Success sol ->
-      print_variable_warnings t;
+      print_variable_warnings ();
       apply_solution ~force t sol
 
 end
 
-let dry_upgrade t =
+let dry_upgrade () =
   log "dry-upgrade";
   let t = load_state () in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
@@ -2064,7 +2016,7 @@ let upgrade names =
     let names = Heuristic.nv_of_names t names in
     let partial_reinstall = OpamPackage.Set.of_list (List.map nv_of_version_constraint names) in
     to_not_reinstall := OpamPackage.Set.diff reinstall partial_reinstall;
-    let solution = Heuristic.resolve (`upgrade partial_reinstall)  t
+    let solution = Heuristic.resolve (`upgrade partial_reinstall) t
       (List.map (fun (to_upgrade, to_keep) ->
         let wish_install = Heuristic.get_installed t to_keep in
         let wish_install =
@@ -2154,30 +2106,39 @@ let init repo compiler cores =
   else try
     let repo_p = OpamPath.Repository.create root repo.repo_name in
     (* Create (possibly empty) configuration files *)
-    OpamFile.Config.write config_f (OpamFile.Config.create OpamVersion.current [repo.repo_name] cores);
+    let alias = match compiler with
+      | None   -> OpamAlias.default
+      | Some c -> OpamAlias.of_string (OpamCompiler.to_string c) in
+    let compiler = match compiler with
+      | None   -> OpamCompiler.default
+      | Some c -> c in
+
+    (* Create ~/.opam/compilers/system.comp *)
+    let system_version = OpamCompiler.Version.current () in
+    create_default_compiler_description root system_version;
+
+    (* Create ~/.opam/config *)
+    let config = OpamFile.Config.create OpamVersion.current alias system_version [repo.repo_name] cores in
+    OpamFile.Config.write config_f config;
+
+    (* Create ~/.opam/aliases *)
+    OpamFile.Aliases.write (OpamPath.aliases root) (OpamAlias.Map.add alias compiler OpamAlias.Map.empty);
+
+    (* Init repository *)
     OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
     OpamFile.Repo_config.write (OpamPath.Repository.config repo_p) repo;
     OpamRepository.init repo;
+
+    (* Init global dirs *)
     OpamFilename.mkdir (OpamPath.opam_dir root);
     OpamFilename.mkdir (OpamPath.descr_dir root);
     OpamFilename.mkdir (OpamPath.archives_dir root);
     OpamFilename.mkdir (OpamPath.compilers_dir root);
+
+    (* Finally, load the partial state, and call the update functions to finish the initialisation *)
     let t = load_state () in
     update_repositories t ~show_compilers:false t.repositories;
-    let system_ocaml_version = OpamCompiler.Version.current () in
-    begin match system_ocaml_version with
-      | None   -> ()
-      | Some v ->
-          let config = OpamFile.Config.with_system_version t.config v in
-          OpamFile.Config.write (OpamPath.config t.root) config
-    end;
     let t = load_state () in
-    let compiler = match compiler, system_ocaml_version with
-      | None  , Some _ -> OpamCompiler.default
-      | Some v, _      -> v
-      | None  , None   ->
-          OpamGlobals.msg "No compiler found.\n";
-          OpamGlobals.exit 1 in
     let alias = OpamAlias.of_string (OpamCompiler.to_string compiler) in
     let quiet = (compiler = OpamCompiler.default) in
     init_ocaml t quiet alias compiler;
@@ -2493,118 +2454,115 @@ let config_includes t is_rec names =
   OpamGlobals.msg "%s\n" (String.concat " " includes)
 
 let config_compil t c =
-  match t.compiler with
-  | None          -> ()
-  | Some oversion ->
-    let comp = compiler_description t oversion in
-    let names =
-      OpamMisc.filter_map
-        (fun (n,_) ->
-          if OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.installed
-          then Some n
-          else None)
-        (OpamFormula.atoms (OpamFile.Comp.packages comp))
-      @ List.map OpamVariable.Section.Full.package c.conf_options in
-    (* Compute the transitive closure of package dependencies *)
-    let package_deps =
-      if c.conf_is_rec then
-        List.map OpamPackage.name (get_transitive_dependencies t ~depopts:true names)
-      else
-        names in
-    (* Map from libraries to package *)
-    (* NOTES: we check that the set of packages/libraries given on
-       the command line is consistent, ie. there isn't two libraries
-       with the same name in the transitive closure of
-       depedencies *)
-    let library_map =
-      List.fold_left (fun accu n ->
-        let nv = find_installed_package_by_name t n in
-        let opam = find_opam t nv in
-        let sections = (OpamFile.OPAM.libraries opam) @ (OpamFile.OPAM.syntax opam) in
-        List.iter (fun s ->
-          if OpamVariable.Section.Map.mem s accu then
-            OpamGlobals.error_and_exit "Conflict: the library %s appears in %s and %s"
-              (OpamVariable.Section.to_string s)
-              (OpamPackage.Name.to_string n)
-              (OpamPackage.Name.to_string (OpamVariable.Section.Map.find s accu))
-        ) sections;
-        List.fold_left (fun accu s -> OpamVariable.Section.Map.add s n accu) accu sections
-      ) OpamVariable.Section.Map.empty package_deps in
-    (* Compute the transitive closure of libraries dependencies *)
-    let library_deps =
-      let graph = OpamVariable.Section.G.create () in
-      let todo = ref OpamVariable.Section.Set.empty in
-      let add_todo s =
-        if OpamVariable.Section.Map.mem s library_map then
-          todo := OpamVariable.Section.Set.add s !todo
-        else
-          OpamGlobals.error_and_exit "Unbound section %S" (OpamVariable.Section.to_string s) in
-      let seen = ref OpamVariable.Section.Set.empty in
-      (* Init the graph with vertices from the command-line *)
-      (* NOTES: we check that [todo] is initialized before the [loop] *)
+  let comp = compiler_description t t.compiler in
+  let names =
+    OpamMisc.filter_map
+      (fun (n,_) ->
+        if OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.installed
+        then Some n
+        else None)
+      (OpamFormula.atoms (OpamFile.Comp.packages comp))
+    @ List.map OpamVariable.Section.Full.package c.conf_options in
+  (* Compute the transitive closure of package dependencies *)
+  let package_deps =
+    if c.conf_is_rec then
+      List.map OpamPackage.name (get_transitive_dependencies t ~depopts:true names)
+    else
+      names in
+  (* Map from libraries to package *)
+  (* NOTES: we check that the set of packages/libraries given on
+     the command line is consistent, ie. there isn't two libraries
+     with the same name in the transitive closure of
+     depedencies *)
+  let library_map =
+    List.fold_left (fun accu n ->
+      let nv = find_installed_package_by_name t n in
+      let opam = find_opam t nv in
+      let sections = (OpamFile.OPAM.libraries opam) @ (OpamFile.OPAM.syntax opam) in
       List.iter (fun s ->
-        let name = OpamVariable.Section.Full.package s in
-        let sections = match OpamVariable.Section.Full.section s with
-          | None   ->
-            let config = dot_config t name in
-            OpamFile.Dot_config.Section.available config
-          | Some s -> [s] in
-        List.iter (fun s ->
-          OpamVariable.Section.G.add_vertex graph s;
-          add_todo s;
-        ) sections
-      ) c.conf_options;
-      (* Also add the [requires] field of the compiler description *)
+        if OpamVariable.Section.Map.mem s accu then
+          OpamGlobals.error_and_exit "Conflict: the library %s appears in %s and %s"
+            (OpamVariable.Section.to_string s)
+            (OpamPackage.Name.to_string n)
+            (OpamPackage.Name.to_string (OpamVariable.Section.Map.find s accu))
+      ) sections;
+      List.fold_left (fun accu s -> OpamVariable.Section.Map.add s n accu) accu sections
+    ) OpamVariable.Section.Map.empty package_deps in
+  (* Compute the transitive closure of libraries dependencies *)
+  let library_deps =
+    let graph = OpamVariable.Section.G.create () in
+    let todo = ref OpamVariable.Section.Set.empty in
+    let add_todo s =
+      if OpamVariable.Section.Map.mem s library_map then
+        todo := OpamVariable.Section.Set.add s !todo
+      else
+        OpamGlobals.error_and_exit "Unbound section %S" (OpamVariable.Section.to_string s) in
+    let seen = ref OpamVariable.Section.Set.empty in
+    (* Init the graph with vertices from the command-line *)
+    (* NOTES: we check that [todo] is initialized before the [loop] *)
+    List.iter (fun s ->
+      let name = OpamVariable.Section.Full.package s in
+      let sections = match OpamVariable.Section.Full.section s with
+        | None   ->
+          let config = dot_config t name in
+          OpamFile.Dot_config.Section.available config
+        | Some s -> [s] in
       List.iter (fun s ->
         OpamVariable.Section.G.add_vertex graph s;
-        add_todo s
-      ) (OpamFile.Comp.requires comp);
-      (* Least fix-point to add edges and missing vertices *)
-      let rec loop () =
-        if not (OpamVariable.Section.Set.is_empty !todo) then
-          let s = OpamVariable.Section.Set.choose !todo in
-          todo := OpamVariable.Section.Set.remove s !todo;
-          seen := OpamVariable.Section.Set.add s !seen;
-          let name = OpamVariable.Section.Map.find s library_map in
-          let config = dot_config t name in
-          let childs = OpamFile.Dot_config.Section.requires config s in
-          (* keep only the build reqs which are in the package dependency list
-             and the ones we haven't already seen *)
-          List.iter (fun child ->
-            OpamVariable.Section.G.add_vertex graph child;
-            OpamVariable.Section.G.add_edge graph child s;
-          ) childs;
-          let new_childs =
-            List.filter (fun s ->
-              OpamVariable.Section.Map.mem s library_map && not (OpamVariable.Section.Set.mem s !seen)
-            ) childs in
-          todo := OpamVariable.Section.Set.union (OpamVariable.Section.Set.of_list new_childs) !todo;
-          loop ()
-      in
-      loop ();
-      let nodes = ref [] in
-      OpamVariable.Section.graph_iter (fun n -> nodes := n :: !nodes) graph;
-      !nodes in
-    let fn_comp = match c.conf_is_byte, c.conf_is_link with
-      | true , true  -> OpamFile.Comp.bytelink
-      | true , false -> OpamFile.Comp.bytecomp
-      | false, true  -> OpamFile.Comp.asmlink
-      | false, false -> OpamFile.Comp.asmcomp in
-    let fn = match c.conf_is_byte, c.conf_is_link with
-      | true , true  -> OpamFile.Dot_config.Section.bytelink
-      | true , false -> OpamFile.Dot_config.Section.bytecomp
-      | false, true  -> OpamFile.Dot_config.Section.asmlink
-      | false, false -> OpamFile.Dot_config.Section.asmcomp in
-    let strs =
-      fn_comp comp ::
-        List.fold_left (fun accu s ->
-          let name = OpamVariable.Section.Map.find s library_map in
-          let config = dot_config t name in
-          fn config s :: accu
-        ) [] library_deps in
-    let output = String.concat " " (List.flatten strs) in
-    log "OUTPUT: %S" output;
-    OpamGlobals.msg "%s\n" output
+        add_todo s;
+      ) sections
+    ) c.conf_options;
+    (* Also add the [requires] field of the compiler description *)
+    List.iter (fun s ->
+      OpamVariable.Section.G.add_vertex graph s;
+      add_todo s
+    ) (OpamFile.Comp.requires comp);
+    (* Least fix-point to add edges and missing vertices *)
+    let rec loop () =
+      if not (OpamVariable.Section.Set.is_empty !todo) then
+        let s = OpamVariable.Section.Set.choose !todo in
+        todo := OpamVariable.Section.Set.remove s !todo;
+        seen := OpamVariable.Section.Set.add s !seen;
+        let name = OpamVariable.Section.Map.find s library_map in
+        let config = dot_config t name in
+        let childs = OpamFile.Dot_config.Section.requires config s in
+        (* keep only the build reqs which are in the package dependency list
+           and the ones we haven't already seen *)
+        List.iter (fun child ->
+          OpamVariable.Section.G.add_vertex graph child;
+          OpamVariable.Section.G.add_edge graph child s;
+        ) childs;
+        let new_childs =
+          List.filter (fun s ->
+            OpamVariable.Section.Map.mem s library_map && not (OpamVariable.Section.Set.mem s !seen)
+          ) childs in
+        todo := OpamVariable.Section.Set.union (OpamVariable.Section.Set.of_list new_childs) !todo;
+        loop ()
+    in
+    loop ();
+    let nodes = ref [] in
+    OpamVariable.Section.graph_iter (fun n -> nodes := n :: !nodes) graph;
+    !nodes in
+  let fn_comp = match c.conf_is_byte, c.conf_is_link with
+    | true , true  -> OpamFile.Comp.bytelink
+    | true , false -> OpamFile.Comp.bytecomp
+    | false, true  -> OpamFile.Comp.asmlink
+    | false, false -> OpamFile.Comp.asmcomp in
+  let fn = match c.conf_is_byte, c.conf_is_link with
+    | true , true  -> OpamFile.Dot_config.Section.bytelink
+    | true , false -> OpamFile.Dot_config.Section.bytecomp
+    | false, true  -> OpamFile.Dot_config.Section.asmlink
+    | false, false -> OpamFile.Dot_config.Section.asmcomp in
+  let strs =
+    fn_comp comp ::
+      List.fold_left (fun accu s ->
+        let name = OpamVariable.Section.Map.find s library_map in
+        let config = dot_config t name in
+        fn config s :: accu
+      ) [] library_deps in
+  let output = String.concat " " (List.flatten strs) in
+  log "OUTPUT: %S" output;
+  OpamGlobals.msg "%s\n" output
 
 let config request =
   log "config %s" (string_of_config request);
@@ -2753,13 +2711,7 @@ let compiler_list () =
     let preinstalled = if OpamFile.Comp.preinstalled comp then "~" else " " in
     let version = OpamFile.Comp.version comp in
     let version, compiler =
-      if version = OpamCompiler.Version.default then
-        match OpamFile.Config.system_version t.config with
-        | None   -> "--", ""
-        | Some v ->
-          OpamCompiler.Version.to_string v,
-          Printf.sprintf "(%s)" (OpamCompiler.Version.to_string version)
-      else if OpamCompiler.Version.to_string version = OpamCompiler.to_string c then
+      if OpamCompiler.Version.to_string version = OpamCompiler.to_string c then
         OpamCompiler.Version.to_string version, ""
       else
         OpamCompiler.Version.to_string version,

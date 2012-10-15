@@ -424,30 +424,27 @@ module Config = struct
     type t = {
       opam_version  : opam_version ;
       repositories  : repository_name list ;
-      alias         : alias option ;
+      alias         : alias;
       system_version: compiler_version option ;
       cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
-    let with_alias t v = { t with alias = Some v }
-    let with_system_version t v = { t with system_version = Some v}
+    let with_alias t alias = { t with alias }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
-    let alias t = match t.alias with
-      | None   -> OpamAlias.of_string "<none>"
-      | Some v -> v
+    let alias t = t.alias
     let system_version t = t.system_version
     let cores t = t.cores
 
-    let create opam_version repositories cores =
-      { opam_version ; repositories ; alias = None ; system_version = None ; cores }
+    let create opam_version alias system_version repositories cores =
+      { opam_version ; repositories ; alias ; system_version ; cores }
 
     let empty = {
       opam_version = OpamVersion.of_string OpamGlobals.opam_version;
       repositories = [];
-      alias = None;
+      alias = OpamAlias.of_string "<empty";
       system_version = None;
       cores = OpamGlobals.default_cores;
     }
@@ -520,8 +517,8 @@ module Config = struct
       let alias =
         match alias, alias2 with
         | Some v, _
-        | _     , Some v -> Some v
-        | None  , None   -> None in
+        | _     , Some v -> v
+        | None  , None   -> OpamAlias.of_string "<none>" in
       let cores = OpamFormat.assoc s.file_contents s_cores OpamFormat.parse_int in
       { opam_version; repositories; alias; system_version; cores }
 
@@ -535,13 +532,8 @@ module Config = struct
                      (OpamRepositoryName.to_string |> OpamFormat.make_string)
                      t.repositories);
          Variable (s_cores        , OpamFormat.make_int t.cores);
-       ]
-       @ (
-         match t.alias with
-           | None   -> []
-           | Some v -> [ Variable (s_alias, OpamFormat.make_string (OpamAlias.to_string v)) ]
-       )
-       @ (
+         Variable (s_alias, OpamFormat.make_string (OpamAlias.to_string t.alias))
+       ] @ (
          match t.system_version with
            | None   -> []
            | Some v -> [ Variable (s_system_version, OpamFormat.make_string (OpamCompiler.Version.to_string v)) ]

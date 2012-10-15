@@ -24,7 +24,7 @@ module Version = struct
   type constr = (relop * t) OpamFormula.formula
 
   let current () =
-    match OpamSystem.ocaml_version () with
+    match Lazy.force OpamSystem.ocaml_version with
     | None   -> None
     | Some o -> Some (of_string o)
 
@@ -37,8 +37,6 @@ module Version = struct
     | `Gt  -> Debian.Version.compare v1 v2 > 0
     | `Leq -> Debian.Version.compare v1 v2 <= 0
     | `Lt  -> Debian.Version.compare v1 v2 < 0
-
-  let default = of_string OpamGlobals.default_alias
 
 end
 

@@ -77,10 +77,10 @@ val rec_files: string -> string list
 
 (** Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns [None]. *)
-val ocaml_version: unit -> string option
+val ocaml_version: string option Lazy.t
 
 (** Return the path where the system ocamlc library is installed *)
-val system_ocamlc_where: unit -> string option
+val system_ocamlc_where: string option Lazy.t
 
 (** [directories_with_links dir] returns the directories in the directory [dir].
     Links pointing to directory are also returned. *)
@@ -105,7 +105,11 @@ val commands:
 
 (** [read_command_output cmd] executes the command [cmd] and return
     the lines from stdout *)
-val read_command_output: ?path:string list  -> command -> string list
+val read_command_output:
+  ?verbose:bool ->
+  ?path:string list
+  -> command
+  -> string list
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool
@@ -137,10 +141,13 @@ val funlock: unit -> unit
 (** Functional version of [flock / funlock] *)
 val with_flock: (unit -> unit) -> unit
 
-(** {2 Function used only by the switch commnand} *)
+(** {2 Misc} *)
 
 (** download compiler sources *)
 val download: filename:string -> dirname:string -> string
 
 (** Apply a patch file in the current directory. *)
 val patch: string -> unit
+
+(** Lazy environment *)
+val getenv: string -> string

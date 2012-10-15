@@ -73,7 +73,7 @@ let log_file () =
 let safe_mkdir dir =
   let open Unix in
   if not (Sys.file_exists dir) then
-    try mkdir dir 0o755 
+    try mkdir dir 0o755
     with Unix_error(EEXIST,_,_) -> ()
 
 let mkdir dir =
@@ -230,8 +230,20 @@ let replace_path bins =
   done;
   env, !path
 
+let env = lazy (
+  let e = Unix.environment () in
+  List.map (fun s ->
+    match OpamMisc.cut_at s '=' with
+    | None   -> s, ""
+    | Some p -> p
+  ) (Array.to_list e)
+)
+
+let getenv n =
+  List.assoc n (Lazy.force env)
+
 let get_current_path () =
-  try OpamMisc.split (Sys.getenv "PATH") ':'
+  try OpamMisc.split (getenv "PATH") ':'
   with Not_found -> []
 
 type command = string list
@@ -269,8 +281,8 @@ let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
 let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) commands =
   List.iter (command ?verbose ~add_to_env ~add_to_path) commands
 
-let read_command_output ?path cmd =
-  let r = run_process ?path cmd in
+let read_command_output ?verbose ?path cmd =
+  let r = run_process ?verbose ?path cmd in
   if OpamProcess.is_success r then
     r.OpamProcess.r_stdout
   else
@@ -399,25 +411,27 @@ let with_flock f =
     funlock ();
     raise e
 
-let ocaml_version () =
+let ocaml_version = lazy (
   try
-    match read_command_output [ "ocamlc" ; "-version" ] with
+    match read_command_output ~verbose:false [ "ocamlc" ; "-version" ] with
     | h::_ -> Some (OpamMisc.strip h)
     | []   -> internal_error "ocamlc -version"
   with _ ->
     None
+)
 
-let system_ocamlc_where () =
+let system_ocamlc_where = lazy (
   try
     let path =
-      try Sys.getenv "PATH"
+      try getenv "PATH"
       with Not_found -> "" in
     let path = OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir path in
-    match read_command_output ~path [ "ocamlc"; "-where" ] with
+    match read_command_output ~verbose:false ~path [ "ocamlc"; "-where" ] with
     | h::_ -> Some (OpamMisc.strip h)
     | []   -> internal_error "ocamlc -where"
   with _ ->
     None
+)
 
 let download_command = lazy (
   try
