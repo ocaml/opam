@@ -25,13 +25,13 @@ extlib.stamp: extlib-1.5.3.tar.gz
 	mv extlib-1.5.3 extlib
 	@touch $@
 
-dose3-3.1.1.tar.gz:
-	$(FETCH) http://gforge.info.ucl.ac.be/frs/download.php/192/dose3-3.1.1.tar.gz
+dose3-3.1.2.tar.gz:
+	$(FETCH) https://gforge.inria.fr/frs/download.php/31595/dose3-3.1.2.tar.gz
 
-dose.stamp: dose3-3.1.1.tar.gz
-	tar xfz dose3-3.1.1.tar.gz
+dose.stamp: dose3-3.1.2.tar.gz
+	tar xfz dose3-3.1.2.tar.gz
 	rm -rf dose
-	mv dose3-3.1.1 dose
+	mv dose3-3.1.2 dose
 	@touch $@
 
 ocaml-arg.0.3.tar.gz:
