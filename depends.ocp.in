@@ -32,13 +32,13 @@ begin library "arg"
 end
 
 begin library "cudf"
-  dirname  = "%{lib}%/mancoosi-cudf"
+  dirname  = "%{lib}%/cudf"
   generated = true
   requires  = [ "extLib" ]
 end
 
 begin library "dose"
-  dirname  = "%{lib}%/mancoosi-dose"
+  dirname  = "%{lib}%/dose"
   generated = true
   requires  = [ "re_pcre" "extLib" "cudf" "graph" "unix" "str" ]
 end
