@@ -275,7 +275,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
     if local_path <> None || not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_f then (
       OpamFilename.mkdir (OpamPath.Repository.archives_dir local_repo);
       let local_archive = OpamPath.Repository.archive local_repo nv in
-      OpamGlobals.msg "Creating the archive file in %s\n" (OpamFilename.to_string local_archive);
+      OpamGlobals.msg "Creating %s\n" (OpamFilename.to_string local_archive);
       OpamFilename.exec extract_root [
         [ "tar" ; "czf" ; OpamFilename.to_string local_archive ; OpamPackage.to_string nv ]
       ]

@@ -634,7 +634,7 @@ let update_packages t ~show_packages repositories =
           | n, (Path p | Git p as k) ->
             if mem_installed_package_by_name t n then
               let nv = find_installed_package_by_name t n in
-              OpamGlobals.msg "Synchronizing with %s ...\n" (OpamFilename.Dir.to_string p);
+              OpamGlobals.msg "Synchronizing with %s\n" (OpamFilename.Dir.to_string p);
               update_pinned_package t nv k
             else
               None
@@ -1272,7 +1272,7 @@ let proceed_toinstall t nv =
   let build_dir = OpamPath.Alias.build t.root t.alias nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
-    OpamGlobals.msg "Installing %s ...\n" (OpamPackage.to_string nv);
+    OpamGlobals.msg "Installing %s\n" (OpamPackage.to_string nv);
     let t = load_state () in
     let name = OpamPackage.name nv in
     let opam_f = OpamPath.opam t.root nv in
@@ -1425,7 +1425,7 @@ let extract_package t nv =
   let p_build = OpamPath.Alias.build t.root t.alias nv in
   match pinned_path t nv with
   | Some (Git p| Path p as pin) ->
-    OpamGlobals.msg "Synchronizing pinned package ...\n";
+    OpamGlobals.msg "Synchronizing pinned package\n";
     ignore (update_pinned_package t nv pin);
     OpamFilename.mkdir p_build;
     let _files = with_repo t nv (fun repo _ ->
@@ -1437,12 +1437,12 @@ let extract_package t nv =
     match get_archive t nv with
     | None         -> ()
     | Some archive ->
-      OpamGlobals.msg "Extracting %s ...\n" (OpamFilename.to_string archive);
+      OpamGlobals.msg "Extracting %s\n" (OpamFilename.to_string archive);
       OpamFilename.extract archive p_build
 
 let proceed_todelete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
-  OpamGlobals.msg "Uninstalling %s ...\n" (OpamPackage.to_string nv);
+  OpamGlobals.msg "Uninstalling %s\n" (OpamPackage.to_string nv);
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
