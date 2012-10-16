@@ -287,7 +287,7 @@ let available_packages root opams repositories repo_index compiler_version confi
     && consistent_pinned_version () in
   OpamPackage.Set.filter filter packages
 
-let load_state () =
+let load_state ?(allow_errors=false) () =
   let root = OpamPath.default () in
   log "root path is %s" (OpamFilename.Dir.to_string root);
 
@@ -309,8 +309,14 @@ let load_state () =
     OpamFile.Comp.version comp in
   let opams =
     OpamPackage.Set.fold (fun nv map ->
-      let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
-      OpamPackage.Map.add nv opam map
+      try
+        let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
+        OpamPackage.Map.add nv opam map
+      with e ->
+        if allow_errors then
+          map
+        else
+          raise e
     ) (packages_in_dir (OpamPath.opam_dir root)) OpamPackage.Map.empty in
   let repositories =
     List.fold_left (fun map repo ->
@@ -2089,7 +2095,7 @@ let check_opam_version () =
 
 let update repos =
   log "update %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
-  let t = load_state () in
+  let t = load_state ~allow_errors:true () in
   let repositories =
     if repos = [] then
       t.repositories
