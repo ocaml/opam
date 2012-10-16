@@ -1542,6 +1542,16 @@ let proceed_tochange t nv_old nv =
   if not (OpamFilename.exists_dir p_build) then
     OpamFilename.mkdir p_build;
 
+  (* Apply the patches *)
+  let patches = OpamFile.OPAM.patches opam in
+  List.iter (fun (base, filter) ->
+    let root = OpamPath.Alias.build t.root t.alias nv in
+    let patch = root // OpamFilename.Base.to_string base in
+    if eval_filter t filter then (
+      OpamGlobals.msg "Applying %s\n" (OpamFilename.Base.to_string base);
+      OpamFilename.patch patch p_build)
+  ) patches;
+
   (* Substitute the configuration files. We should be in the right
      directory to get the correct absolute path for the
      substitution files (see [substitute_file] and
@@ -1553,16 +1563,6 @@ let proceed_tochange t nv_old nv =
   (* Generate an environnement file *)
   let env_f = OpamPath.Alias.build_env t.root t.alias nv in
   OpamFile.Env.write env_f env.new_env;
-
-  (* Apply the patches *)
-  let patches = OpamFile.OPAM.patches opam in
-  List.iter (fun (base, filter) ->
-    let root = OpamPath.Alias.build t.root t.alias nv in
-    let patch = root // OpamFilename.Base.to_string base in
-    if eval_filter t filter then (
-      OpamGlobals.msg "Applying %s\n" (OpamFilename.Base.to_string base);
-      OpamFilename.patch patch p_build)
-  ) patches;
 
   (* Call the build script and copy the output files *)
   let commands = substitute_commands t (OpamFile.OPAM.build opam) in
