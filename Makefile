@@ -80,7 +80,7 @@ uninstall:
 LIB =   opam-lib
 CMI =   $(shell ls src/*.mli)
 _FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
-	$(CMI:%=%.cmi)
+	$(CMI:src/%.mli=%.cmi)
 FILES = $(_FILES:%=_obuild/opam-lib/%)
 
 .PHONY: libuninstall libinstall
