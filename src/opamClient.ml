@@ -1542,8 +1542,18 @@ let proceed_tochange t nv_old nv =
   if not (OpamFilename.exists_dir p_build) then
     OpamFilename.mkdir p_build;
 
-  (* Apply the patches *)
+  (* Substitute the patched files.*)
   let patches = OpamFile.OPAM.patches opam in
+  OpamFilename.in_dir p_build (fun () ->
+    let all = OpamFile.OPAM.substs opam in
+    let patches =
+      OpamMisc.filter_map (fun (f,_) ->
+        if List.mem f all then Some f else None
+      ) patches in
+    List.iter (substitute_file t) patches
+  );
+
+  (* Apply the patches *)
   List.iter (fun (base, filter) ->
     let root = OpamPath.Alias.build t.root t.alias nv in
     let patch = root // OpamFilename.Base.to_string base in
