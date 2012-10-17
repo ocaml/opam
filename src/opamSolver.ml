@@ -286,6 +286,11 @@ let encode ((n,a),c) = (Common.CudfAdd.encode n,a),c
 let lencode = List.map encode
 let llencode = List.map lencode
 
+(* Extra CUDF properties *)
+let extra_properties = [
+  (OpamFile.OPAM.s_depopts, `String None)
+]
+
 module O_pkg = struct
   type t = Cudf.package
   let to_string = string_of_cudf_package
@@ -347,11 +352,9 @@ module Graph = struct
     )
 
   let tocudf table pkg =
+    let open Debian.Debcudf in
     let options = {
-      Debian.Debcudf.default_options with
-        Debian.Debcudf.extras_opt = [
-          OpamFile.OPAM.s_depopts, (OpamFile.OPAM.s_depopts, `String None)
-        ]
+      default_options with extras_opt = List.map (fun (s,t) -> (s, (s,t))) extra_properties
     } in
     Debian.Debcudf.tocudf ~options table pkg
 
@@ -455,23 +458,30 @@ end = struct
 
   end
 
-  let to_cudf_doc univ req =
-    None,
-    Cudf.fold_packages (fun l x -> x :: l) [] univ,
-    { Cudf.request_id = "";
-      install   = req.i_wish_install;
-      remove    = req.i_wish_remove;
-      upgrade   = req.i_wish_upgrade;
-      req_extra = [] }
+  let to_cudf univ req = (
+    Common.CudfAdd.add_properties Cudf.default_preamble extra_properties,
+    univ,
+    { Cudf.request_id = "opam";
+           install    = req.i_wish_install;
+           remove     = req.i_wish_remove;
+           upgrade    = req.i_wish_upgrade;
+           req_extra  = [] }
+  )
 
-  (* Return the state in which the system has to go *)
-  let resolve_final_state univ req =
+  (* Return the universe in which the system has to go *)
+  let get_final_universe univ req =
+    let open Algo.Depsolver in
     log "RESOLVE(final-state): universe=%s" (string_of_universe univ);
     log "RESOLVE(final-state): request=%s" (string_of_internal_request req);
-    let r = Algo.Depsolver.check_request (to_cudf_doc univ req) in
-(*    Diagnostic.fprintf ~explain:true ~failure:true ~success:true Format.err_formatter r;
-      Format.pp_print_flush Format.err_formatter (); *)
-    r.Algo.Diagnostic.result
+    match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
+    | Sat (_,u) -> Success u
+    | Error str -> OpamGlobals.error_and_exit "solver error: str"
+    | Unsat r   ->
+      let open Algo.Diagnostic in
+      match r with
+      | Some {result=Failure f} -> Conflicts f
+      | _                       -> failwith "opamSolver"
+
 
   (* Transform a diff from current to final state into a list of actions *)
   let actions_of_diff diff =
@@ -493,13 +503,12 @@ end = struct
   (* Do not try to optimize installations *)
   let resolve_simple univ req =
     let open Algo in
-    match resolve_final_state univ req with
-    | Diagnostic.Failure e -> Conflicts e
-    | Diagnostic.Success f ->
-      let final_state = f ~all:true () in
-      log "RESOLVE(simple): final-state=%s" (string_of_cudf_packages final_state);
+    match get_final_universe univ req with
+    | Conflicts e -> Conflicts e
+    | Success final_universe ->
+      log "RESOLVE(simple): final-universe=%s" (string_of_universe final_universe);
         try
-          let diff = Common.CudfDiff.diff univ (Cudf.load_universe final_state) in
+          let diff = Common.CudfDiff.diff univ final_universe in
           Success (actions_of_diff diff)
         with Cudf.Constraint_violation s ->
           OpamGlobals.error_and_exit "constraint violations: %s" s
