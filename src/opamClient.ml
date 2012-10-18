@@ -1652,15 +1652,6 @@ let error_if_no_solution = function
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
 
-let debpkg_of_nv t action nv =
-  let opam = find_opam t nv in
-  let installed =
-    OpamPackage.Set.mem nv t.installed &&
-    match action with
-    | `upgrade reinstall -> not (OpamPackage.Set.mem nv reinstall)
-    | _                  -> true in
-  OpamFile.OPAM.to_package opam installed
-
 module Heuristic = struct
 
   let vpkg_of_n op name =

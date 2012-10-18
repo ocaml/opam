@@ -609,13 +609,6 @@ module OPAM = struct
   let s_files       = "files"
   let s_configure_style = "configure-style"
 
-  (* to convert to cudf *)
-  (* see [Debcudf.add_inst] for more details about the format *)
-  let s_status = "status"
-
-  (* see [Debcudf.add_inst] for more details about the format *)
-  let s_installed   = "  installed"
-
   let useful_fields = [
     s_opam_version;
     s_maintainer;
@@ -669,24 +662,6 @@ module OPAM = struct
   let with_maintainer t maintainer = { t with maintainer }
   let with_files t files = { t with files }
   let with_patches t patches = { t with patches }
-
-  module D = Debian.Packages
-
-  let default_package t =
-    let depopts = OpamFormat.string_of_value (OpamFormat.make_opt_formula t.depopts) in
-    { D.default_package with
-      D.name      = OpamPackage.Name.to_string t.name ;
-      D.version   = OpamPackage.Version.to_string t.version ;
-      D.depends   = OpamFormula.to_cnf t.depends;
-      D.conflicts = OpamFormula.to_conjunction t.conflicts;
-      D.extras    = (s_depopts, depopts) :: D.default_package.D.extras }
-
-  let to_package t ~installed =
-    let p = default_package t in
-    if installed then
-      { p with D.extras = (s_status, s_installed) :: p.D.extras }
-    else
-      p
 
   let to_string filename t =
     let make_file = OpamFormat.make_option (OpamFilename.Base.to_string |> OpamFormat.make_string) OpamFormat.make_filter in

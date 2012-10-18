@@ -51,12 +51,6 @@ val of_filename: OpamFilename.t -> t option
     $name} and {i $version} from {i /path/to/$name.$version/} *)
 val of_dirname: OpamFilename.Dir.t -> t option
 
-(** Create a new pair from a debian package *)
-val of_dpkg: Debian.Packages.package -> t
-
-(** Create a new pair from a cudf package *)
-val of_cudf: Debian.Debcudf.tables -> Cudf.package -> t
-
 (** Convert a set of pairs to a map [name -> versions] *)
 val to_map: Set.t -> Version.Set.t Name.Map.t
 
@@ -65,3 +59,15 @@ val versions_of_packages: Set.t -> Version.Set.t
 
 (** Look for all .opam files in directory *)
 val opam_files: OpamFilename.Dir.t -> Set.t
+
+(** default package *)
+val default: t
+
+(** Compare two packages *)
+val compare: t -> t -> int
+
+(** Are two packages equal ? *)
+val equal: t -> t -> bool
+
+(** Hash a package *)
+val hash: t -> int

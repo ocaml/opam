@@ -36,7 +36,7 @@ module type SIG = sig
       finished, whereas [pre] and [post] are evaluated on the current
       process (respectively before and after the child process has
       been created). *)
-  val iter: int -> G.t ->
+  val parallel_iter: int -> G.t ->
     pre:(G.V.t -> unit) ->
     child:(G.V.t -> unit) ->
     post:(G.V.t -> unit) ->

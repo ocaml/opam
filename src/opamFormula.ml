@@ -13,20 +13,45 @@
 (*                                                                     *)
 (***********************************************************************)
 
-type conjunction = Debian.Format822.vpkglist
+type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
 
-type cnf = Debian.Format822.vpkgformula
+let string_of_relop = function
+  | `Eq  -> "="
+  | `Neq -> "!="
+  | `Geq -> ">="
+  | `Gt  -> ">"
+  | `Leq -> "<="
+  | `Lt  -> "<"
 
-let string_of_vpkg = function
-  | ((n,_), None)       -> n
-  | ((n,_), Some (r,c)) -> Printf.sprintf "%s (%s %s)" n r c
+let relop_of_string = function
+  | "="  -> `Eq
+  | "!=" -> `Neq
+  | ">=" -> `Geq
+  | ">"  -> `Gt
+  | "<=" -> `Leq
+  | "<"  -> `Lt
+  | x    -> failwith (x ^ " is not a valid relop")
 
-let string_of_conjunction c =
-  Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_vpkg c))
+type atom = OpamPackage.Name.t * (relop * OpamPackage.Version.t) option
 
-let string_of_cnf cnf =
+let string_of_atom = function
+  | n, None       -> OpamPackage.Name.to_string n
+  | n, Some (r,c) ->
+    Printf.sprintf "%s (%s %s)"
+      (OpamPackage.Name.to_string n)
+      (string_of_relop r)
+      (OpamPackage.Version.to_string c)
+
+type 'a conjunction = 'a list
+
+let string_of_conjunction string_of_atom c =
+  Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_atom c))
+
+type 'a cnf = 'a list list
+
+let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (String.concat " | " (List.map string_of_vpkg c)) in
+    Printf.sprintf "(%s)" (String.concat " | " (List.map string_of_atom c)) in
   Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_clause cnf))
 
 type 'a formula =
@@ -66,7 +91,7 @@ let rec fold_left f i = function
   | And(x,y) -> fold_left f (fold_left f i x) y
   | Or(x,y)  -> fold_left f (fold_left f i x) y
 
-type t = (OpamPackage.Name.t * (string * OpamPackage.Version.t) formula) formula
+type t = (OpamPackage.Name.t * (relop * OpamPackage.Version.t) formula) formula
 
 let rec eval atom = function
   | Empty    -> true
@@ -77,7 +102,7 @@ let rec eval atom = function
 
 let to_string t =
   let string_of_constraint (relop, version) =
-    Printf.sprintf "%s %s" relop (OpamPackage.Version.to_string version) in
+    Printf.sprintf "%s %s" (string_of_relop relop) (OpamPackage.Version.to_string version) in
   let string_of_pkg = function
     | n, Empty -> OpamPackage.Name.to_string n
     | n, c     ->
@@ -118,9 +143,8 @@ let atoms t =
 (* Convert to dose-CNF *)
 let to_cnf t =
   let rec or_formula = function
-    | Atom (x,None)      -> [(OpamPackage.Name.to_string x, None), None]
-    | Atom (x,Some(r,v)) -> [(OpamPackage.Name.to_string x, None),
-                             Some(r, OpamPackage.Version.to_string v)]
+    | Atom (x,None)      -> [x, None]
+    | Atom (x,Some(r,v)) -> [x, Some(r,v)]
     | Or(x,y)            -> or_formula x @ or_formula y
     | Empty
     | Block _

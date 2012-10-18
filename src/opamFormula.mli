@@ -15,17 +15,32 @@
 
 (** Management of formulas *)
 
+(** binary operations *)
+type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
+
+(** Pretty-printing of relops *)
+val string_of_relop: relop -> string
+
+(** Parsing relops *)
+val relop_of_string: string -> relop
+
+(** Formula atoms for OPAM *)
+type atom = OpamPackage.Name.t * (relop * OpamPackage.Version.t) option
+
+(** Pretty-printing of atoms *)
+val string_of_atom: atom -> string
+
 (** AND formulas *)
-type conjunction = Debian.Format822.vpkglist
+type 'a conjunction = 'a list
 
 (** Pretty print AND formulas *)
-val string_of_conjunction: conjunction -> string
+val string_of_conjunction: ('a -> string) -> 'a conjunction -> string
 
 (** CNF formulas *)
-type cnf = Debian.Format822.vpkgformula
+type 'a cnf = 'a list list
 
 (** Pretty print CNF formulas *)
-val string_of_cnf: cnf -> string
+val string_of_cnf: ('a -> string) -> 'a cnf -> string
 
 (** General formulas *)
 type 'a formula =
@@ -54,17 +69,17 @@ val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
     Examples of valid formulaes:
     - "foo" \{> "1" & (<"3" | ="5")\}
     - "foo" \{= "1" | > "4"\} | ("bar" "bouh") *)
-type t = (OpamPackage.Name.t * (string * OpamPackage.Version.t) formula) formula
+type t = (OpamPackage.Name.t * (relop * OpamPackage.Version.t) formula) formula
 
 (** Return all the atoms *)
-val atoms: t -> (OpamPackage.Name.t * (string * OpamPackage.Version.t) option) list
+val atoms: t -> atom list
 
 (** Pretty print the formula *)
 val to_string: t -> string
 
 (** Return a conjunction. If the initial formula is not a
     conjunction, fail. *)
-val to_conjunction: t -> conjunction
+val to_conjunction: t -> atom conjunction
 
 (** Return an equivalent CNF formula *)
-val to_cnf: t -> cnf
+val to_cnf: t -> atom cnf

@@ -283,11 +283,12 @@ let assoc_string_list s n =
 let rec parse_constraints t =
   let module F = OpamFormula in
   let version = OpamPackage.Version.of_string in
+  let relop = OpamFormula.relop_of_string in
   match t with
   | []                                            -> F.Empty
-  | (Symbol r) :: (String v) :: []                -> F.Atom (r, version v)
-  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> F.And (F.Atom (r, version v), parse_constraints t)
-  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> F.Or (F.Atom (r, version v), parse_constraints t)
+  | (Symbol r) :: (String v) :: []                -> F.Atom (relop r, version v)
+  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> F.And (F.Atom (relop r, version v), parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> F.Or (F.Atom (relop r, version v), parse_constraints t)
   | [Group g]                                     -> F.Block (parse_constraints g)
   | x                                             -> bad_format "Expecting a list of constraints, got %s" (kinds x)
 
@@ -295,7 +296,7 @@ let rec make_constraints t =
   let module F = OpamFormula in
   match t with
   | F.Empty       -> []
-  | F.Atom (r, v) -> [Symbol r; String (OpamPackage.Version.to_string v)]
+  | F.Atom (r, v) -> [Symbol (OpamFormula.string_of_relop r); String (OpamPackage.Version.to_string v)]
   | F.And (x, y)  -> make_constraints x @ [Symbol "&"] @ make_constraints y
   | F.Or (x, y)   -> make_constraints x @ [Symbol "|"] @ make_constraints y
   | F.Block g     -> [Group (make_constraints g)]

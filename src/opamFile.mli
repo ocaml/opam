@@ -119,12 +119,6 @@ module OPAM: sig
   (** List of exported syntax extensions *)
   val syntax: t -> section list
 
-  (** Convert to Debian packages to feed the solver *)
-  val to_package: t -> installed:bool -> Debian.Packages.package
-
-  (** deptopts (optional dependencies) string *)
-  val s_depopts: string
-
   (** Files *)
   val files: t -> (basename * filter option) list
 

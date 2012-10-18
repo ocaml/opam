@@ -19,17 +19,7 @@ module Version = struct
 
   include OpamMisc.Base
 
-  type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
-
-  let string_of_relop = function
-    | `Eq  -> "="
-    | `Neq -> "!="
-    | `Geq -> ">="
-    | `Gt  -> ">"
-    | `Leq -> "<="
-    | `Lt  -> "<"
-
-  type constr = (relop * t) OpamFormula.formula
+  type constr = (OpamFormula.relop * t) OpamFormula.formula
 
   let current () =
     match Lazy.force OpamSystem.ocaml_version with

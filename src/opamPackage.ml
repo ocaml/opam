@@ -107,28 +107,23 @@ let of_filename f =
 let of_dirname d =
   of_string_opt (OpamFilename.Base.to_string (OpamFilename.basename_dir d))
 
-let of_dpkg d =
-  { name    = Name.of_string d.Debian.Packages.name;
-    version = Version.of_string d.Debian.Packages.version }
-
-let of_cudf table pkg =
-  let real_version =
-    Debian.Debcudf.get_real_version
-      table
-      (pkg.Cudf.package, pkg.Cudf.version) in
-  { name    = Name.of_string (Common.CudfAdd.decode pkg.Cudf.package);
-    version = Version.of_string real_version; }
-
 let to_string t =
   Printf.sprintf "%s%c%s" (Name.to_string t.name) sep (Version.to_string t.version)
+
+let compare nv1 nv2 =
+  match Name.compare nv1.name nv2.name with
+  | 0 -> Version.compare nv1.version nv2.version
+  | i -> i
+
+let hash nv = Hashtbl.hash nv
+
+let equal nv1 nv2 =
+  compare nv1 nv2 = 0
 
 module O = struct
   type tmp = t
   type t = tmp
-  let compare nv1 nv2 =
-    match Name.compare nv1.name nv2.name with
-    | 0 -> Version.compare nv1.version nv2.version
-    | i -> i
+  let compare = compare
   let to_string = to_string
 end
 
@@ -165,3 +160,5 @@ let opam_files dir =
     ) Set.empty files
   ) else
     Set.empty
+
+let default = of_string OpamGlobals.default_package

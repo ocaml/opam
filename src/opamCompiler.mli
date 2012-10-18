@@ -20,20 +20,14 @@ module Version: sig
 
   include OpamMisc.ABSTRACT
 
-  (** Binary relations *)
-  type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
-
-  (** Pretty printing *)
-  val string_of_relop: relop -> string
-
   (** Compiler constraint *)
-  type constr = (relop * t) OpamFormula.formula
+  type constr = (OpamFormula.relop * t) OpamFormula.formula
 
   (** Return the version of the compiler currently installed *)
   val current: unit -> t option
 
   (** Compare OCaml versions *)
-  val compare: t -> relop -> t -> bool
+  val compare: t -> OpamFormula.relop -> t -> bool
 
 end
 

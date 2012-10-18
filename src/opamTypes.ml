@@ -96,9 +96,11 @@ type 'a generic_formula = 'a OpamFormula.formula =
   | And of 'a generic_formula * 'a generic_formula
   | Or of 'a generic_formula * 'a generic_formula
 
+type atom = OpamFormula.atom
+
 type formula = OpamFormula.t
 
-type conjunction = OpamFormula.conjunction
+type 'a conjunction = 'a OpamFormula.conjunction
 
 type compiler_constraint = OpamCompiler.Version.constr
 
@@ -271,28 +273,109 @@ type file = {
   file_name    : string;
 }
 
-type action =
-  | To_change of package option * package
-  | To_delete of package
-  | To_recompile of package
+type 'a action =
+  | To_change of 'a option * 'a
+  | To_delete of 'a
+  | To_recompile of 'a
+
+module type ACTION_GRAPH = sig
+
+  type package
+
+  include Graph.Sig.I with type V.t = package action
+
+  module Parallel: OpamParallel.SIG
+    with type G.t = t
+     and type G.V.t = V.t
+
+  module Topological: sig
+    val iter: (package action -> unit) -> t -> unit
+  end
+
+  type solution = {
+    to_remove : package list;
+    to_process: t;
+  }
+
+end
+
+module type PKG = sig
+  include Graph.Sig.COMPARABLE
+  val to_string: t -> string
+  val string_of_action: t action -> string
+end
+
+module MakeActionGraph (Pkg: PKG) = struct
+  type package = Pkg.t
+  module Vertex =  struct
+    type t = Pkg.t action
+    let package = function
+      | To_change (_, p)
+      | To_recompile p
+      | To_delete p -> p
+    let compare t1 t2 = Pkg.compare (package t1) (package t2)
+    let hash t = Pkg.hash (package t)
+    let equal t1 t2 = Pkg.equal (package t1) (package t2)
+  end
+  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
+  module Topological = Graph.Topological.Make (PG)
+  module Parallel = OpamParallel.Make(struct
+    include PG
+    include Topological
+    let string_of_vertex = Pkg.string_of_action
+  end)
+  include PG
+  type solution = {
+    to_remove : package list;
+    to_process: t;
+  }
+end
+
+module PackageAction = struct
+  include OpamPackage
+  let string_of_action = function
+  | To_change (None, p)   -> Printf.sprintf " - install %s" (OpamPackage.to_string p)
+  | To_change (Some o, p) ->
+    let f action =
+      Printf.sprintf " - %s %s to %s" action
+        (OpamPackage.to_string o) (OpamPackage.Version.to_string (OpamPackage.version p)) in
+    if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version p) < 0 then
+      f "upgrade"
+    else
+      f "downgrade"
+  | To_recompile p        -> Printf.sprintf " - recompile %s" (OpamPackage.to_string p)
+  | To_delete p           -> Printf.sprintf " - delete %s" (OpamPackage.to_string p)
+end
+
+module PackageActionGraph = MakeActionGraph(PackageAction)
+
+type solution = PackageActionGraph.solution
 
 type ('a, 'b) result =
   | Success of 'a
   | Conflicts of (unit -> 'b)
 
-type request = {
-  wish_install: conjunction;
-  wish_remove : conjunction;
-  wish_upgrade: conjunction;
-}
-
-type 'a solution = {
-  to_remove: package list;
-  to_add   : 'a;
+type 'a request = {
+  wish_install: 'a conjunction;
+  wish_remove : 'a conjunction;
+  wish_upgrade: 'a conjunction;
 }
 
 type env = {
   add_to_env : (string * string) list;
   add_to_path: dirname;
   new_env    : (string * string) list;
+}
+
+type user_action =
+  | Install
+  | Upgrade of package_set
+
+type universe = {
+  installed: package_set;
+  available: package_set;
+  depends  : formula package_map;
+  depopts  : formula package_map;
+  conflicts: formula package_map;
+  action   : user_action;
 }

@@ -121,11 +121,14 @@ type 'a generic_formula = 'a OpamFormula.formula =
   | And of 'a generic_formula * 'a generic_formula
   | Or of 'a generic_formula * 'a generic_formula
 
+(** Formula atoms *)
+type atom = OpamFormula.atom
+
 (** Formula over versionned packages *)
 type formula = OpamFormula.t
 
 (** AND formulat *)
-type conjunction = OpamFormula.conjunction
+type 'a conjunction = 'a OpamFormula.conjunction
 
 (** {2 Repositories} *)
 
@@ -146,36 +149,94 @@ type repository = {
 (** {2 Solver} *)
 
 (** The solver answer is a list of actions *)
-type action =
+type 'a action =
 
   (** The package must be installed. The package could have been
       present or not, but if present, it is another version than the
       proposed solution. *)
-  | To_change of package option * package
+  | To_change of 'a option * 'a
 
   (** The package must be deleted. *)
-  | To_delete of package
+  | To_delete of 'a
 
   (** The package is already installed, but it must be recompiled. *)
-  | To_recompile of package
+  | To_recompile of 'a
+
+(** Graph of package actions *)
+module type ACTION_GRAPH = sig
+
+  type package
+
+  include Graph.Sig.I with type V.t = package action
+
+  (** Parallel iterator *)
+  module Parallel: OpamParallel.SIG
+    with type G.t = t
+     and type G.V.t = V.t
+
+  (** Topological traversal *)
+  module Topological: sig
+    val iter: (package action -> unit) -> t -> unit
+  end
+
+  (** Solver solution *)
+  type solution = {
+    to_remove : package list;
+    to_process: t;
+  }
+
+end
+
+(** Signature of packages *)
+module type PKG = sig
+
+  include Graph.Sig.COMPARABLE
+
+  (** Pretty printing of packages *)
+  val to_string: t -> string
+
+  (** Pretty-printing of package actions *)
+  val string_of_action: t action -> string
+
+end
+
+(** Functor to create a graph af actions *)
+module MakeActionGraph (Pkg:PKG): ACTION_GRAPH with type package = Pkg.t
+
+(** Package actions *)
+module PackageAction: PKG with type t = package
+
+(** Graph of OPAM packages *)
+module PackageActionGraph: ACTION_GRAPH with type package = package
+
+(** The type for solutions *)
+type solution = PackageActionGraph.solution
 
 (** Solver result *)
 type ('a, 'b) result =
   | Success of 'a
   | Conflicts of (unit -> 'b)
 
-
 (** Solver request *)
-type request = {
-  wish_install: conjunction;
-  wish_remove : conjunction;
-  wish_upgrade: conjunction;
+type 'a request = {
+  wish_install: 'a conjunction;
+  wish_remove : 'a conjunction;
+  wish_upgrade: 'a conjunction;
 }
 
-(** Solver solution *)
-type 'a solution = {
-  to_remove: package list;
-  to_add   : 'a;
+(** user request action *)
+type user_action =
+  | Install
+  | Upgrade of package_set
+
+(** Solver universe *)
+type universe = {
+  installed: package_set;
+  available: package_set;
+  depends  : formula package_map;
+  depopts  : formula package_map;
+  conflicts: formula package_map;
+  action   : user_action;
 }
 
 (** {2 Command line arguments} *)
