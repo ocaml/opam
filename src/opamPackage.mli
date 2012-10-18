@@ -71,3 +71,10 @@ val equal: t -> t -> bool
 
 (** Hash a package *)
 val hash: t -> int
+
+(** List all the .opam files and the package directories in a given
+    path *)
+val list: OpamFilename.Dir.t -> Set.t
+
+(** Return the list of versions for a given package *)
+val versions: Set.t -> Name.t -> Version.Set.t

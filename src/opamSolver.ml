@@ -13,6 +13,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* TODO:
+   1/ reinstall
+   2/ heuristics *)
+
 open OpamTypes
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
@@ -154,15 +158,15 @@ let s_installed   = "  installed"
 
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
-  let depends = OpamPackage.Map.find package universe.depends in
+  let depends = OpamPackage.Map.find package universe.u_depends in
   let depends =
     if depopts
-    then And (depends, OpamPackage.Map.find package universe.depopts)
+    then And (depends, OpamPackage.Map.find package universe.u_depopts)
     else depends in
-  let conflicts = OpamPackage.Map.find package universe.conflicts in
+  let conflicts = OpamPackage.Map.find package universe.u_conflicts in
   let installed =
-    OpamPackage.Set.mem package universe.installed &&
-    match universe.action with
+    OpamPackage.Set.mem package universe.u_installed &&
+    match universe.u_action with
     | Upgrade reinstall -> not (OpamPackage.Set.mem package reinstall)
     | _                 -> true in
   let open Debian.Packages in
@@ -199,7 +203,7 @@ let load_cudf_universe ?(depopts=false) universe =
   let opam2debian =
     OpamPackage.Set.fold
       (fun pkg map -> OpamPackage.Map.add pkg (opam2debian universe depopts pkg) map)
-      universe.available
+      universe.u_available
       OpamPackage.Map.empty in
   let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
   let opam2cudf = OpamPackage.Map.map (debian2cudf tables) opam2debian in
@@ -458,7 +462,7 @@ let opam_solution cudf2opam cudf_solution =
   { PackageActionGraph.to_remove ; to_process }
 
 let resolve universe request =
-  log "RESOLVE universe=%s" (OpamPackage.Set.to_string universe.available);
+  log "RESOLVE universe=%s" (OpamPackage.Set.to_string universe.u_available);
   log "RESOLVE request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
@@ -469,12 +473,16 @@ let resolve universe request =
     let solution = solution_of_actions ~simple_universe ~complete_universe actions in
     Success (opam_solution cudf2opam solution)
 
-let filter_dependencies f_direction ?(depopts=false) universe packages =
+let filter_dependencies f_direction ~depopts ~installed universe packages =
   let opam2cudf, cudf2opam, cudf_universe = load_cudf_universe ~depopts universe in
   let cudf_packages = List.map opam2cudf (OpamPackage.Set.elements packages) in
   let graph = f_direction (CudfGraph.dep_reduction cudf_universe) in
   let packages_topo = CudfGraph.topo_closure graph (CudfSet.of_list cudf_packages) in
-  List.map cudf2opam packages_topo
+  let list = List.map cudf2opam packages_topo in
+  if installed then
+    List.filter (fun nv -> OpamPackage.Set.mem nv universe.u_installed) list
+  else
+    list
 
 let get_backward_dependencies = filter_dependencies (fun x -> x)
 

@@ -13,6 +13,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
+open OpamMisc.OP
+
+let log fmt = OpamGlobals.log "package" fmt
+
 module Version = struct
 
   type t = string
@@ -162,3 +166,41 @@ let opam_files dir =
     Set.empty
 
 let default = of_string OpamGlobals.default_package
+
+let list dir =
+  log "packages in dir %s" (OpamFilename.Dir.to_string dir);
+  if OpamFilename.exists_dir dir then (
+    let dot_opams =
+      let files = OpamFilename.list_files dir in
+      let files = List.filter (fun f -> OpamFilename.check_suffix f ".opam") files in
+      List.fold_left (fun set file ->
+        match of_filename file with
+        | None    ->
+          log "%s is not a valid package filename!" (OpamFilename.to_string file);
+          set
+        | Some nv -> Set.add nv set
+      ) Set.empty files in
+    let opam =
+      let all = OpamFilename.list_dirs dir in
+      let basenames = List.map OpamFilename.basename_dir all in
+      Set.of_list
+        (OpamMisc.filter_map
+           (OpamFilename.Base.to_string |> of_string_opt)
+           basenames) in
+
+    Set.union dot_opams opam
+  ) else
+    Set.empty
+
+let versions_of_packages nvset =
+  Set.fold
+    (fun nv vset -> Version.Set.add (version nv) vset)
+    nvset
+    Version.Set.empty
+
+let versions packages n =
+  versions_of_packages
+    (Set.filter
+       (fun nv -> name nv = n)
+       packages)
+

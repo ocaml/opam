@@ -46,14 +46,19 @@ val print_solution: solution -> unit
     is obtained by upgrading from its next element. *)
 val resolve : universe -> atom request -> (solution, string) result
 
-(** Return the recursive dependencies of a package. Note : the given
-    package exists in the list in input because this list describes
-    the entire universe.  By convention, it also appears in output.
-    If [depopts] (= [false] by default) is set to [true],
-    optional dependencies are added to the dependency relation.
-    The packages are return in topological order. *)
-val get_backward_dependencies : ?depopts:bool -> universe -> package_set -> package list
+(** Return the topological sort of the transitive dependency closures
+    of a collection of packages.*)
+val get_backward_dependencies :
+  depopts:bool ->
+  installed:bool ->
+  universe ->
+  package_set ->
+  package list
 
-(** Same as [get_backward_dependencies] but for forward
-    dependencies *)
-val get_forward_dependencies : ?depopts:bool -> universe -> package_set -> package list
+(** Same as [get_backward_dependencies] but for forward dependencies *)
+val get_forward_dependencies :
+  depopts:bool ->
+  installed:bool ->
+  universe ->
+  package_set ->
+  package list

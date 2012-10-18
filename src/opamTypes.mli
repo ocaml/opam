@@ -228,15 +228,19 @@ type 'a request = {
 type user_action =
   | Install
   | Upgrade of package_set
+  | Depends
+  | Init
+  | Remove
+  | Switch
 
 (** Solver universe *)
 type universe = {
-  installed: package_set;
-  available: package_set;
-  depends  : formula package_map;
-  depopts  : formula package_map;
-  conflicts: formula package_map;
-  action   : user_action;
+  u_installed: package_set;
+  u_available: package_set;
+  u_depends  : formula package_map;
+  u_depopts  : formula package_map;
+  u_conflicts: formula package_map;
+  u_action   : user_action;
 }
 
 (** {2 Command line arguments} *)
