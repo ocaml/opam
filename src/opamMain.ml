@@ -402,29 +402,29 @@ let switch =
   main     = parse_args (function args ->
     match !command, args with
     | `install, [alias] ->
-        OpamClient.compiler_install !quiet (OpamAlias.of_string alias) (mk_comp alias)
+        OpamClient.switch_install !quiet (OpamAlias.of_string alias) (mk_comp alias)
     | `export f, [] ->
         no_alias_of ();
-        OpamClient.compiler_export (OpamFilename.of_string f)
+        OpamClient.switch_export (OpamFilename.of_string f)
     | `import f, [] ->
         no_alias_of ();
-        OpamClient.compiler_import (OpamFilename.of_string f)
+        OpamClient.switch_import (OpamFilename.of_string f)
     | `remove, aliases ->
         no_alias_of ();
-        List.iter (fun alias -> OpamClient.compiler_remove (OpamAlias.of_string alias)) aliases
+        List.iter (fun alias -> OpamClient.switch_remove (OpamAlias.of_string alias)) aliases
     | `reinstall, [alias] ->
         no_alias_of ();
-        OpamClient.compiler_reinstall (OpamAlias.of_string alias)
+        OpamClient.switch_reinstall (OpamAlias.of_string alias)
     | `list, [] ->
         no_alias_of ();
-        OpamClient.compiler_list ()
+        OpamClient.switch_list ()
     | `current, [] ->
         no_alias_of ();
-        OpamClient.compiler_current ()
+        OpamClient.switch_current ()
     | `switch, [alias] ->
         begin match !alias_of with
-          | "" -> OpamClient.compiler_switch !quiet (OpamAlias.of_string alias)
-          | _  -> OpamClient.compiler_install !quiet (OpamAlias.of_string alias) (mk_comp alias)
+          | "" -> OpamClient.switch !quiet (OpamAlias.of_string alias)
+          | _  -> OpamClient.switch_install !quiet (OpamAlias.of_string alias) (mk_comp alias)
         end
     | _ -> bad_argument "switch" "too many arguments"
   )

@@ -15,6 +15,8 @@
 
 open OpamMisc.OP
 
+let log fmt = OpamGlobals.log "COMPILER" fmt
+
 module Version = struct
 
   include OpamMisc.Base
@@ -42,6 +44,7 @@ end
 include OpamMisc.Base
 
 let list t =
+  log "list dir=%s" (OpamFilename.Dir.to_string t);
   if OpamFilename.exists_dir t then (
     let files = OpamFilename.list_files t in
     let files = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in

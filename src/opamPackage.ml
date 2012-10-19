@@ -15,7 +15,7 @@
 
 open OpamMisc.OP
 
-let log fmt = OpamGlobals.log "package" fmt
+let log fmt = OpamGlobals.log "PACKAGE" fmt
 
 module Version = struct
 
@@ -46,6 +46,8 @@ module Name = struct
   let to_string x = x
 
   let of_string x = x
+
+  let default = OpamGlobals.default_package
 
   let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with
@@ -165,10 +167,8 @@ let opam_files dir =
   ) else
     Set.empty
 
-let default = of_string OpamGlobals.default_package
-
 let list dir =
-  log "packages in dir %s" (OpamFilename.Dir.to_string dir);
+  log "list %s" (OpamFilename.Dir.to_string dir);
   if OpamFilename.exists_dir dir then (
     let dot_opams =
       let files = OpamFilename.list_files dir in

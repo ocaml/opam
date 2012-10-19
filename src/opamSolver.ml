@@ -208,10 +208,16 @@ let load_cudf_universe ?(depopts=false) universe =
   let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
   let opam2cudf = OpamPackage.Map.map (debian2cudf tables) opam2debian in
   let cudf2opam = Hashtbl.create 1024 in
-  OpamPackage.Map.iter (fun opam cudf -> Hashtbl.add cudf2opam cudf opam) opam2cudf;
+  OpamPackage.Map.iter (fun opam cudf -> Hashtbl.add cudf2opam (cudf.Cudf.package,cudf.Cudf.version) opam) opam2cudf;
   let universe = Cudf.load_universe (OpamPackage.Map.values opam2cudf) in
-  (fun opam -> OpamPackage.Map.find opam opam2cudf),
-  (fun cudf -> Hashtbl.find cudf2opam cudf),
+  (fun opam ->
+    try OpamPackage.Map.find opam opam2cudf
+    with Not_found ->
+      OpamGlobals.error_and_exit "Cannot find %s" (OpamPackage.to_string opam)),
+  (fun cudf ->
+    try Hashtbl.find cudf2opam (cudf.Cudf.package,cudf.Cudf.version)
+    with Not_found ->
+      OpamGlobals.error_and_exit "Cannot find %s.%d" cudf.Cudf.package cudf.Cudf.version),
   universe
 
 (* Graph of cudf packages *)
@@ -228,6 +234,9 @@ module CudfGraph = struct
         end in
       g1
     include G
+    let succ g v =
+      try succ g v
+      with _ -> []
   end
 
   module PO = Algo.Defaultgraphs.GraphOper (PG)
@@ -291,8 +300,8 @@ let to_cudf univ req = (
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
   let open Algo.Depsolver in
-  log "RESOLVE(final-state): universe=%s" (string_of_universe univ);
-  log "RESOLVE(final-state): request=%s" (string_of_request req);
+  log "get_final_universe universe=%s" (string_of_universe univ);
+  log "get_final_universe request=%s" (string_of_request req);
   match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
   | Sat (_,u) -> Success u
   | Error str -> OpamGlobals.error_and_exit "solver error: str"
@@ -326,7 +335,7 @@ let cudf_resolve univ req =
   match get_final_universe univ req with
   | Conflicts e -> Conflicts e
   | Success final_universe ->
-    log "cudf_resolve: final-universe=%s" (string_of_universe final_universe);
+    log "cudf_resolve success=%s" (string_of_universe final_universe);
     try
       let diff = Common.CudfDiff.diff univ final_universe in
       Success (actions_of_diff diff)
@@ -351,7 +360,7 @@ let create_graph filter universe =
    - [simple_universe] is the graph with 'depends' only
    - [complex_universe] is the graph with 'depends' + 'depopts' *)
 let solution_of_actions ~simple_universe ~complete_universe actions =
-  log "graph_of_actions: actions=%s" (string_of_actions actions);
+  log "graph_of_actions actions=%s" (string_of_actions actions);
 
   (* The packages to remove or upgrade *)
   let to_remove_or_upgrade =
@@ -462,8 +471,8 @@ let opam_solution cudf2opam cudf_solution =
   { PackageActionGraph.to_remove ; to_process }
 
 let resolve universe request =
-  log "RESOLVE universe=%s" (OpamPackage.Set.to_string universe.u_available);
-  log "RESOLVE request=%s" (string_of_request request);
+  log "resolve universe=%s" (OpamPackage.Set.to_string universe.u_available);
+  log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
   match cudf_resolve simple_universe cudf_request with
@@ -474,6 +483,7 @@ let resolve universe request =
     Success (opam_solution cudf2opam solution)
 
 let filter_dependencies f_direction ~depopts ~installed universe packages =
+  log "filter_dependencies packages=%s" (OpamPackage.Set.to_string packages);
   let opam2cudf, cudf2opam, cudf_universe = load_cudf_universe ~depopts universe in
   let cudf_packages = List.map opam2cudf (OpamPackage.Set.elements packages) in
   let graph = f_direction (CudfGraph.dep_reduction cudf_universe) in

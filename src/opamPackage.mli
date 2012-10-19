@@ -25,7 +25,12 @@ module Version: sig
 end
 
 (** Names *)
-module Name: OpamMisc.ABSTRACT
+module Name: sig
+  include OpamMisc.ABSTRACT
+
+  (** default package *)
+  val default: t
+end
 
 (** Package (name x version) pairs *)
 include OpamMisc.ABSTRACT
@@ -59,9 +64,6 @@ val versions_of_packages: Set.t -> Version.Set.t
 
 (** Look for all .opam files in directory *)
 val opam_files: OpamFilename.Dir.t -> Set.t
-
-(** default package *)
-val default: t
 
 (** Compare two packages *)
 val compare: t -> t -> int

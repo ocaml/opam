@@ -42,6 +42,10 @@ module type OrderedType = sig
   val to_string: t -> string
 end
 
+let string_of_list f = function
+  | [] -> "{}"
+  | l  -> Printf.sprintf "{ %s }" (String.concat ", " (List.map f l))
+
 module Set = struct
 
   module Make (O : OrderedType) = struct
@@ -61,7 +65,7 @@ module Set = struct
 
     let to_string s =
       let l = fold (fun nv l -> O.to_string nv :: l) s [] in
-      Printf.sprintf "{ %s }" (String.concat ", " l)
+      string_of_list (fun x -> x) l
 
     let map f t =
       of_list (List.map f (elements t))
@@ -96,7 +100,7 @@ module Map = struct
   let to_string string_of_value m =
     let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
     let l = fold (fun k v l -> s (k,v)::l) m [] in
-    Printf.sprintf "{ %s }" (String.concat ", " l)
+    string_of_list (fun x -> x) l
 
   let of_list l =
     List.fold_left (fun map (k,v) -> add k v map) empty l
@@ -150,10 +154,6 @@ module OP = struct
   let (|>) f g x = g (f x)
 
 end
-
-let string_of_list f l =
-  Printf.sprintf "{%s}"
-    (String.concat ", " (List.map f l))
 
 let strip str =
   let p = ref 0 in

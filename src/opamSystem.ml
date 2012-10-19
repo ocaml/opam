@@ -63,8 +63,8 @@ let rec mk_temp_dir () =
     s
 
 let log_file () =
-  Random.self_init ();
-  let f = "command" ^ string_of_int (Random.int 2048) in
+  let stamp = int_of_float (1000. *. mod_float (Unix.gettimeofday ()) 600.) in
+  let f = string_of_int stamp in
   !OpamGlobals.root_dir / "log" / f
 
 let safe_mkdir dir =
@@ -257,7 +257,7 @@ let run_process ?verbose ?path ?(add_to_env=[]) ?(add_to_path=[]) = function
       let name = log_file () in
       mkdir (Filename.dirname name);
       let str = String.concat " " (cmd :: args) in
-      log "cwd=%s path=%s name=%s %s" (Unix.getcwd ()) path name str;
+      log "[%s] %s" (Filename.basename name) str;
       if None <> try Some (String.index cmd ' ') with Not_found -> None then
         OpamGlobals.warning "Command %S contains 1 space" cmd;
       let verbose = match verbose with
