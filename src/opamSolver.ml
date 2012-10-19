@@ -333,17 +333,90 @@ let actions_of_diff diff =
     | None      , None       -> acc
   ) diff []
 
-let cudf_resolve univ req =
-  let open Algo in
-  match get_final_universe univ req with
+let cudf_resolve universe request =
+  match get_final_universe universe request with
   | Conflicts e -> Conflicts e
-  | Success final_universe ->
-    log "cudf_resolve success=%s" (string_of_universe final_universe);
+  | Success u   ->
+    log "cudf_resolve success=%s" (string_of_universe u);
     try
-      let diff = Common.CudfDiff.diff univ final_universe in
+      let diff = Common.CudfDiff.diff universe u in
       Success (actions_of_diff diff)
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "constraint violations: %s" s
+
+(* Try to play all the possible upgrade scenarios ... *)
+let cudf_resolve_opt universe request =
+  match get_final_universe universe request with
+  | Conflicts e -> Conflicts e
+  | Success u   ->
+
+    (* All the packages in the request *)
+    let all = Hashtbl.create 1024 in
+
+    (* The packages to upgrade *)
+    let upgrade = Hashtbl.create 1024 in
+    let add_upgrade name =
+      let packages = Cudf.get_packages ~filter:(fun p -> p.Cudf.package = name) universe in
+      let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
+      let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
+      Hashtbl.add upgrade name (Array.of_list atoms) in
+
+    (* Register the packages in the request *)
+    List.iter (fun (n,_) -> Hashtbl.add all n false) request.wish_install;
+    List.iter (fun (n,_) -> Hashtbl.add all n true) request.wish_upgrade;
+
+    (* Register the upgraded packages *)
+    List.iter (fun (n,v as x) ->
+      match v with
+      | Some _ -> Hashtbl.add upgrade n [| x |]
+      | None   -> add_upgrade n
+    ) request.wish_upgrade;
+
+    (* Register the new packages *)
+    let diff = Common.CudfDiff.diff universe u in
+    Hashtbl.iter (fun name s ->
+      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then
+        add_upgrade name
+    ) diff;
+
+    (* sort the requests by the distance to the optimal state *)
+    let score_atom (n,_ as a) =
+      let t = Hashtbl.find upgrade n in
+      let s = ref 0 in
+      while t.(!s) <> a do incr s done;
+      !s in
+    let score_wish request =
+      List.fold_left (fun accu a -> score_atom a + accu) 0 request in
+    let compare_wish r1 r2 =
+      let s1 = score_wish r1 and s2 = score_wish r2 in
+    if s1 = s2 then
+      compare r1 r2
+    else
+      s1 - s2 in
+
+  (* enumerate all the upgrade strategy: can be very costly when too many packages *)
+  let wish_upgrades =
+    let aux _ array acc = match acc with
+      | [] -> List.map (fun elt -> [elt]) (Array.to_list array)
+      | l  ->
+        List.fold_left (fun accu elt ->
+          (List.map (fun l -> elt::l) acc) @ accu
+        ) [] (Array.to_list array) in
+    Hashtbl.fold aux upgrade [] in
+  let wish_upgrades = List.sort compare_wish wish_upgrades in
+  let requests = List.map (fun wish_upgrade -> { request with wish_upgrade }) wish_upgrades in
+
+  let solution =
+    List.fold_left (fun accu request ->
+      match accu with
+      | Success _ -> accu
+      | _         -> cudf_resolve universe request
+    ) (Conflicts (fun _ -> assert false)) requests in
+
+  match solution with
+  | Success _ -> solution
+  | _         -> cudf_resolve universe request
+
 
 let output_universe name universe =
   if !OpamGlobals.debug then (
@@ -478,7 +551,7 @@ let resolve universe request =
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
-  match cudf_resolve simple_universe cudf_request with
+  match cudf_resolve_opt simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () -> string_of_reasons cudf2opam (c ()))
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
