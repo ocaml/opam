@@ -115,7 +115,7 @@ let make_chains root depends =
     | []       -> [[root]]
     | children ->
       let chains = List.flatten (List.map unroll children) in
-      if root.Cudf.package = "dummy" || root.Cudf.package = "dose-dummy-request" then
+      if root.Cudf.package = "dose-dummy-request" then
         chains
       else
         List.map (fun cs -> root :: cs) chains in
@@ -300,13 +300,16 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
+let uninstall name universe =
+  let packages = Cudf.get_packages universe in
+  let packages = List.filter (fun p -> p.Cudf.package <> name) packages in
+  Cudf.load_universe packages
+
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
   let open Algo.Depsolver in
-  log "get_final_universe universe=%s" (string_of_universe univ);
-  log "get_final_universe request=%s" (string_of_request req);
   match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
-  | Sat (_,u) -> Success u
+  | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
   | Error str -> OpamGlobals.error_and_exit "solver error: str"
   | Unsat r   ->
     let open Algo.Diagnostic in
@@ -334,6 +337,7 @@ let actions_of_diff diff =
   ) diff []
 
 let cudf_resolve universe request =
+  log "cudf_resolve request=%s" (string_of_request request);
   match get_final_universe universe request with
   | Conflicts e -> Conflicts e
   | Success u   ->
@@ -344,14 +348,39 @@ let cudf_resolve universe request =
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "constraint violations: %s" s
 
+let rec minimize minimizable universe =
+  log "minimize minimizable=%s" (OpamMisc.StringSet.to_string minimizable);
+  if OpamMisc.StringSet.is_empty minimizable then
+    universe
+  else
+    let is_removable universe name =
+      let b, r = Cudf_checker.is_consistent (uninstall name universe) in
+      (match r with
+      | None   -> ()
+      | Some r ->
+        log "cannot remove %s: %s" name
+          (Cudf_checker.explain_reason (r:>Cudf_checker.bad_solution_reason)));
+      b in
+    let to_remove = OpamMisc.StringSet.filter (is_removable universe) minimizable in
+    let minimizable = OpamMisc.StringSet.diff minimizable to_remove in
+    if OpamMisc.StringSet.is_empty to_remove then
+      universe
+    else
+      let universe = OpamMisc.StringSet.fold uninstall to_remove universe in
+      minimize minimizable universe
+
 (* Try to play all the possible upgrade scenarios ... *)
 let cudf_resolve_opt universe request =
+  log "cudf_resolve_opt request=%s" (string_of_request request);
   match get_final_universe universe request with
   | Conflicts e -> Conflicts e
   | Success u   ->
 
     (* All the packages in the request *)
     let all = Hashtbl.create 1024 in
+
+    (* Package which are maybe not so useful *)
+    let minimizable = ref OpamMisc.StringSet.empty in
 
     (* The packages to upgrade *)
     let upgrade = Hashtbl.create 1024 in
@@ -375,8 +404,11 @@ let cudf_resolve_opt universe request =
     (* Register the new packages *)
     let diff = Common.CudfDiff.diff universe u in
     Hashtbl.iter (fun name s ->
-      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then
-        add_upgrade name
+      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed)
+      && not (Hashtbl.mem upgrade name) then (
+        minimizable := OpamMisc.StringSet.add name !minimizable;
+        add_upgrade name;
+      )
     ) diff;
 
     (* sort the requests by the distance to the optimal state *)
@@ -410,13 +442,17 @@ let cudf_resolve_opt universe request =
     List.fold_left (fun accu request ->
       match accu with
       | Success _ -> accu
-      | _         -> cudf_resolve universe request
+      | _         -> get_final_universe universe request
     ) (Conflicts (fun _ -> assert false)) requests in
 
   match solution with
-  | Success _ -> solution
-  | _         -> cudf_resolve universe request
-
+  | Conflicts _ -> cudf_resolve universe request
+  | Success u   ->
+    try
+      let diff = Common.CudfDiff.diff universe (minimize !minimizable u) in
+      Success (actions_of_diff diff)
+    with Cudf.Constraint_violation s ->
+      OpamGlobals.error_and_exit "constraint violations: %s" s
 
 let output_universe name universe =
   if !OpamGlobals.debug then (
