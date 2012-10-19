@@ -64,6 +64,71 @@ end
 module CudfActionGraph = MakeActionGraph(CudfPkg)
 module CudfMap = OpamMisc.Map.Make(CudfPkg)
 module CudfSet = OpamMisc.Set.Make(CudfPkg)
+module CudfGraph = struct
+
+  module PG = struct
+    include Algo.Defaultgraphs.PackageGraph.G
+    let union g1 g2 =
+      let g1 = copy g1 in
+      let () =
+        begin
+          iter_vertex (add_vertex g1) g2;
+          iter_edges (add_edge g1) g2;
+        end in
+      g1
+    let succ g v =
+      try succ g v
+      with _ -> []
+  end
+
+  module PO = Algo.Defaultgraphs.GraphOper (PG)
+
+  module type FS = sig
+    type iterator
+    val start : PG.t -> iterator
+    val step : iterator -> iterator
+    val get : iterator -> PG.V.t
+  end
+
+  module Make_fs (F : FS) = struct
+    let fold f acc g =
+      let rec aux acc iter =
+        match try Some (F.get iter, F.step iter) with Exit -> None with
+        | None -> acc
+        | Some (x, iter) -> aux (f acc x) iter in
+      aux acc (F.start g)
+  end
+
+  module Topo = Graph.Topological.Make (PG)
+
+  let dep_reduction u =
+    let g = Algo.Defaultgraphs.PackageGraph.dependency_graph u in
+    PO.transitive_reduction g;
+    g
+
+  let output g filename =
+    if !OpamGlobals.debug then (
+      let fd = open_out (filename ^ ".dot") in
+      Algo.Defaultgraphs.PackageGraph.DotPrinter.output_graph fd g;
+      close_out fd
+    )
+
+  (* Return a topoligal sort of the closures of pkgs in g *)
+  let topo_closure g pkgs =
+    let _, l =
+      Topo.fold
+        (fun pkg (closure, topo) ->
+          if CudfSet.mem pkg closure then
+            CudfSet.union closure (CudfSet.of_list (PG.succ g pkg)),
+            pkg :: topo
+          else
+            closure, topo)
+        g
+        (pkgs, []) in
+    l
+
+  include PG
+end
 
 let string_of_atom (p, c) =
   let const = function
@@ -103,39 +168,47 @@ let string_of_reason cudf2opam r =
     Printf.sprintf "Missing %s." (OpamPackage.to_string nv)
   | Dependency _ -> ""
 
-let make_chains root depends =
+let make_chains depends =
   let open Algo.Diagnostic in
-  let d = Hashtbl.create 16 in
+  let g = CudfGraph.create () in
   let init = function
-    | Dependency (i,_,j) -> List.iter (Hashtbl.add d i) j
+    | Dependency (i,_,jl) ->
+      CudfGraph.add_vertex g i;
+      List.iter (CudfGraph.add_vertex g) jl;
+      List.iter (CudfGraph.add_edge g i) jl
     | _ -> () in
   List.iter init depends;
+  CudfGraph.iter_vertex (fun v ->
+    if v.Cudf.package = "dose-dummy-request" then
+      CudfGraph.remove_vertex g v
+  ) g;
+  let roots =
+    CudfGraph.fold_vertex (fun v accu ->
+      if CudfGraph.in_degree g v = 0
+      then v :: accu
+      else accu
+    ) g [] in
   let rec unroll root =
-    match Hashtbl.find_all d root with
+    match CudfGraph.succ g root with
     | []       -> [[root]]
     | children ->
       let chains = List.flatten (List.map unroll children) in
-      if root.Cudf.package = "dose-dummy-request" then
-        chains
-      else
-        List.map (fun cs -> root :: cs) chains in
-  List.filter (function [x] -> false | _ -> true) (unroll root)
+      List.map (fun cs -> root :: cs) chains in
+  let chains = List.flatten (List.map unroll roots) in
+  List.filter (function [x] -> false | _ -> true) chains
 
 exception Found of Cudf.package
 
 let string_of_reasons cudf2opam reasons =
   let open Algo.Diagnostic in
   let depends, reasons = List.partition (function Dependency _ -> true | _ -> false) reasons in
-  let root =
-    try List.iter (function Dependency (p,_,_) -> raise (Found p) | _ -> ()) depends; assert false
-    with Found p -> p in
-  let chains = make_chains root depends in
+  let chains = make_chains depends in
   let rec string_of_chain = function
     | []   -> ""
     | [p]  -> OpamPackage.to_string (cudf2opam p)
     | p::t -> Printf.sprintf "%s <- %s" (OpamPackage.to_string (cudf2opam p)) (string_of_chain t) in
-  let b = Buffer.create 1024 in
   let string_of_chain c = string_of_chain (List.rev c) in
+  let b = Buffer.create 1024 in
   List.iter (fun r ->
     Printf.bprintf b " - %s\n" (string_of_reason cudf2opam r)
   ) reasons;
@@ -205,6 +278,15 @@ let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
           (OpamPackage.Version.to_string v) in
     Some (r, pkg.Cudf.version)
 
+let output_universe name universe =
+  if !OpamGlobals.debug then (
+    let oc = open_out (name ^ ".cudf") in
+    Cudf_printer.pp_universe oc universe;
+    close_out oc;
+    let g = CudfGraph.dep_reduction universe in
+    CudfGraph.output g name;
+  )
+
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?(depopts=false) universe =
   let opam2debian =
@@ -220,85 +302,17 @@ let load_cudf_universe ?(depopts=false) universe =
     try Cudf.load_universe (OpamPackage.Map.values opam2cudf)
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
+  output_universe "opam-universe" universe;
   (fun opam ->
     try OpamPackage.Map.find opam opam2cudf
     with Not_found ->
-      OpamGlobals.error_and_exit "Cannot find %s" (OpamPackage.to_string opam)),
+      OpamGlobals.error_and_exit "opam2cudf: Cannot find %s" (OpamPackage.to_string opam)),
   (fun cudf ->
     try Hashtbl.find cudf2opam (cudf.Cudf.package,cudf.Cudf.version)
     with Not_found ->
-      OpamGlobals.error_and_exit "Cannot find %s.%d" cudf.Cudf.package cudf.Cudf.version),
+      OpamGlobals.error "cudf2opam: Cannot find %s.%d" cudf.Cudf.package cudf.Cudf.version;
+      OpamPackage.create (OpamPackage.Name.of_string "xxx") (OpamPackage.Version.of_string "yyy")),
   universe
-
-(* Graph of cudf packages *)
-module CudfGraph = struct
-
-  module PG = struct
-    module G = Algo.Defaultgraphs.PackageGraph.G
-    let union g1 g2 =
-      let g1 = G.copy g1 in
-      let () =
-        begin
-          G.iter_vertex (G.add_vertex g1) g2;
-          G.iter_edges (G.add_edge g1) g2;
-        end in
-      g1
-    include G
-    let succ g v =
-      try succ g v
-      with _ -> []
-  end
-
-  module PO = Algo.Defaultgraphs.GraphOper (PG)
-
-  module type FS = sig
-    type iterator
-    val start : PG.t -> iterator
-    val step : iterator -> iterator
-    val get : iterator -> PG.V.t
-  end
-
-  module Make_fs (F : FS) = struct
-    let fold f acc g =
-      let rec aux acc iter =
-        match try Some (F.get iter, F.step iter) with Exit -> None with
-        | None -> acc
-        | Some (x, iter) -> aux (f acc x) iter in
-      aux acc (F.start g)
-  end
-
-  module PG_topo = Graph.Topological.Make (PG)
-
-  let dep_reduction u =
-    let g = Algo.Defaultgraphs.PackageGraph.dependency_graph u in
-    PO.transitive_reduction g;
-    g
-
-  let output g filename =
-    if !OpamGlobals.debug then (
-      let fd = open_out (filename ^ ".dot") in
-      Algo.Defaultgraphs.PackageGraph.DotPrinter.output_graph fd g;
-      close_out fd
-    )
-
-  (* Return a topoligal sort of the closures of pkgs in g *)
-  let topo_closure g pkgs =
-    let _, l =
-      PG_topo.fold
-        (fun pkg (closure, topo) ->
-          if CudfSet.mem pkg closure then
-            CudfSet.union closure (CudfSet.of_list (PG.succ g pkg)),
-            pkg :: topo
-          else
-            closure, topo)
-        g
-        (pkgs, []) in
-    l
-
-end
-
-let needs_reinstall pkg =
-  List.mem_assoc s_reinstall pkg.Cudf.pkg_extra
 
 let to_cudf univ req = (
   { Cudf.default_preamble with Cudf.property = [s_reinstall,`Bool None] },
@@ -326,7 +340,6 @@ let get_final_universe univ req =
     match r with
     | Some {result=Failure f} -> Conflicts f
     | _                       -> failwith "opamSolver"
-
 
 (* Transform a diff from current to final state into a list of
    actions *)
@@ -366,7 +379,7 @@ let rec minimize minimizable universe =
     let is_removable universe name =
       let b, r = Cudf_checker.is_consistent (uninstall name universe) in
       (match r with
-      | None   -> ()
+      | None   -> log "%s is not necessary" name
       | Some r ->
         log "cannot remove %s: %s" name
           (Cudf_checker.explain_reason (r:>Cudf_checker.bad_solution_reason)));
@@ -383,8 +396,13 @@ let rec minimize minimizable universe =
 let cudf_resolve_opt universe request =
   log "cudf_resolve_opt request=%s" (string_of_request request);
   match get_final_universe universe request with
-  | Conflicts e -> Conflicts e
+
+  | Conflicts e ->
+    log "cudf_resolve_opt conflict!";
+    Conflicts e
+
   | Success u   ->
+    log "cudf_resolve_opt success!";
 
     (* All the packages in the request *)
     let all = Hashtbl.create 1024 in
@@ -397,6 +415,11 @@ let cudf_resolve_opt universe request =
     let add_upgrade name =
       let packages = Cudf.get_packages ~filter:(fun p -> p.Cudf.package = name) universe in
       let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
+      let packages =
+        (* only keep the version greater or equal to the currently installed package *)
+        match List.filter (fun p -> p.Cudf.installed) packages with
+        | []   -> packages
+        | i::_ -> List.filter (fun p -> p.Cudf.version >= i.Cudf.version) packages in
       let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
       Hashtbl.add upgrade name (Array.of_list atoms) in
 
@@ -414,11 +437,11 @@ let cudf_resolve_opt universe request =
     (* Register the new packages *)
     let diff = Common.CudfDiff.diff universe u in
     Hashtbl.iter (fun name s ->
-      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed)
-      && not (Hashtbl.mem upgrade name) then (
-        minimizable := OpamMisc.StringSet.add name !minimizable;
-        add_upgrade name;
-      )
+      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then (
+        if not (Hashtbl.mem all name) then
+          minimizable := OpamMisc.StringSet.add name !minimizable;
+        if not (Hashtbl.mem upgrade name) then
+          add_upgrade name)
     ) diff;
 
     (* sort the requests by the distance to the optimal state *)
@@ -436,41 +459,40 @@ let cudf_resolve_opt universe request =
     else
       s1 - s2 in
 
-  (* enumerate all the upgrade strategy: can be very costly when too many packages *)
-  let wish_upgrades =
-    let aux _ array acc = match acc with
-      | [] -> List.map (fun elt -> [elt]) (Array.to_list array)
-      | l  ->
-        List.fold_left (fun accu elt ->
-          (List.map (fun l -> elt::l) acc) @ accu
-        ) [] (Array.to_list array) in
-    Hashtbl.fold aux upgrade [] in
-  let wish_upgrades = List.sort compare_wish wish_upgrades in
-  let requests = List.map (fun wish_upgrade -> { request with wish_upgrade }) wish_upgrades in
+  (* enumerate all the upgrade strategies: can be very costly when too many packages *)
+  let size =
+    Hashtbl.fold (fun _ a accu -> accu * Array.length a) upgrade 1 in
+  log "Number of upgrade scenarios: %d" size;
+  if size > 10000 then (
+    log "the universe is too big, do not try to be too clever";
+    cudf_resolve universe request
+  ) else (
+    let wish_upgrades =
+      let aux _ array state = match state with
+        | [] -> List.map (fun elt -> [elt]) (Array.to_list array)
+        | l  ->
+          List.fold_left (fun accu elt ->
+            List.fold_left (fun accu l -> (elt::l)::accu) accu state
+          ) [] (Array.to_list array) in
+      Hashtbl.fold aux upgrade [] in
+    let wish_upgrades = List.sort compare_wish wish_upgrades in
+    let requests = List.map (fun wish_upgrade -> { request with wish_upgrade }) wish_upgrades in
 
-  let solution =
-    List.fold_left (fun accu request ->
-      match accu with
-      | Success _ -> accu
-      | _         -> get_final_universe universe request
-    ) (Conflicts (fun _ -> assert false)) requests in
+    let solution =
+      List.fold_left (fun accu request ->
+        match accu with
+        | Success _ -> accu
+        | _         -> get_final_universe universe request
+      ) (Conflicts (fun _ -> assert false)) requests in
 
-  match solution with
-  | Conflicts _ -> cudf_resolve universe request
-  | Success u   ->
-    try
-      let diff = Common.CudfDiff.diff universe (minimize !minimizable u) in
-      Success (actions_of_diff diff)
-    with Cudf.Constraint_violation s ->
-      OpamGlobals.error_and_exit "constraint violations: %s" s
-
-let output_universe name universe =
-  if !OpamGlobals.debug then (
-    let oc = open_out (name ^ ".cudf") in
-    Cudf_printer.pp_universe oc universe;
-    close_out oc;
-    let g = CudfGraph.dep_reduction universe in
-    CudfGraph.output g name;
+    match solution with
+    | Conflicts _ -> cudf_resolve universe request
+    | Success u   ->
+      try
+        let diff = Common.CudfDiff.diff universe (minimize !minimizable u) in
+        Success (actions_of_diff diff)
+      with Cudf.Constraint_violation s ->
+        OpamGlobals.error_and_exit "constraint violations: %s" s
   )
 
 let create_graph filter universe =
@@ -518,13 +540,13 @@ let solution_of_actions ~simple_universe ~complete_universe actions =
     let g =
       CudfGraph.PO.O.mirror
         (create_graph (fun p -> p.Cudf.installed || CudfMap.mem p to_process_init) complete_universe) in
-    List.iter (CudfGraph.PG.remove_vertex g) to_remove_or_upgrade;
+    List.iter (CudfGraph.remove_vertex g) to_remove_or_upgrade;
     g in
 
   (* compute packages to recompile due to the REMOVAL of packages *)
   let to_recompile =
     CudfSet.fold (fun pkg to_recompile ->
-      let succ = CudfGraph.PG.succ complete_graph pkg in
+      let succ = CudfGraph.succ complete_graph pkg in
       CudfSet.union to_recompile (CudfSet.of_list succ)
     ) to_remove to_recompile in
 
@@ -533,10 +555,10 @@ let solution_of_actions ~simple_universe ~complete_universe actions =
 
   (* compute packages to recompile and to process due to NEW packages *)
   let to_recompile, to_process_map =
-    CudfGraph.PG_topo.fold
+    CudfGraph.Topo.fold
       (fun pkg (to_recompile, to_process_map) ->
         let add_succ pkg action =
-          (CudfSet.union to_recompile (CudfSet.of_list (CudfGraph.PG.succ complete_graph pkg)),
+          (CudfSet.union to_recompile (CudfSet.of_list (CudfGraph.succ complete_graph pkg)),
            CudfMap.add pkg action (CudfMap.remove pkg to_process_map)) in
         if CudfMap.mem pkg to_process_init then
           add_succ pkg (CudfMap.find pkg to_process_init)
@@ -552,7 +574,7 @@ let solution_of_actions ~simple_universe ~complete_universe actions =
      by following the action given at each node (install or recompile). *)
   let to_process = CudfActionGraph.create () in
   CudfMap.iter (fun _ act -> CudfActionGraph.add_vertex to_process act) to_process_map;
-  CudfGraph.PG.iter_edges
+  CudfGraph.iter_edges
     (fun v1 v2 ->
       try
         let v1 = CudfMap.find v1 to_process_map in

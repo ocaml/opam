@@ -143,7 +143,7 @@ let find_installed_package_by_name_aux installed name =
 let find_installed_package_by_name t name =
   find_installed_package_by_name_aux t.installed name
 
-let find_package_by_name t name =
+let find_packages_by_name t name =
   let r = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) t.packages in
   if OpamPackage.Set.is_empty r then
     None
@@ -265,6 +265,17 @@ let load_state () =
     repo_index; config; aliases; pinned;
   } in
   print_state t;
+  (* update from opam 0.7 to 0.8: Remove spurious conf-ocaml packages *)
+  if mem_installed_package_by_name t OpamPackage.Name.default then
+    OpamFile.Installed.write (OpamPath.Alias.installed t.root t.alias)
+      (OpamPackage.Set.filter (fun nv -> OpamPackage.name nv <> OpamPackage.Name.default) t.installed);
+  (match find_packages_by_name t OpamPackage.Name.default with
+  | None          -> ()
+  | Some packages ->
+    OpamPackage.Set.iter (fun nv ->
+      OpamFilename.remove (OpamPath.opam t.root nv);
+      OpamFilename.remove (OpamPath.descr t.root nv);
+    ) packages);
   t
 
 let print_updated t updated pinned_updated =
@@ -608,7 +619,7 @@ let update_packages t ~show_packages repositories =
     let depends = map_b true (OpamFile.OPAM.depends opam) in
     let depopts = map_b false (OpamFile.OPAM.depopts opam) in
     List.iter (fun (mandatory, d) ->
-      match find_package_by_name t d with
+      match find_packages_by_name t d with
         | None   ->
           if mandatory then
             OpamGlobals.warning
@@ -1863,7 +1874,7 @@ let upgrade names =
 let check_opam_version () =
   let t = load_state () in
   let n = OpamPackage.Name.of_string "opam" in
-  match find_package_by_name t n with
+  match find_packages_by_name t n with
   | None   -> ()
   | Some _ ->
     let max_version = OpamPackage.Version.Set.max_elt (OpamPackage.versions (Lazy.force t.available_packages) n) in
