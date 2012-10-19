@@ -155,6 +155,7 @@ let atom2debian (n, v) =
 (* see [Debcudf.add_inst] for more details about the format *)
 let s_status = "status"
 let s_installed   = "  installed"
+let s_reinstall = "reinstall"
 
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
@@ -164,11 +165,10 @@ let opam2debian universe depopts package =
     then And (depends, OpamPackage.Map.find package universe.u_depopts)
     else depends in
   let conflicts = OpamPackage.Map.find package universe.u_conflicts in
-  let installed =
-    OpamPackage.Set.mem package universe.u_installed &&
-    match universe.u_action with
-    | Upgrade reinstall -> not (OpamPackage.Set.mem package reinstall)
-    | _                 -> true in
+  let installed = OpamPackage.Set.mem package universe.u_installed in
+  let reinstall = match universe.u_action with
+    | Upgrade reinstall -> OpamPackage.Set.mem package reinstall
+    | _                 -> false in
   let open Debian.Packages in
   { Debian.Packages.default_package with
     name      = OpamPackage.Name.to_string (OpamPackage.name package) ;
@@ -176,14 +176,21 @@ let opam2debian universe depopts package =
     depends   = List.map (List.map atom2debian) (OpamFormula.to_cnf depends);
     conflicts = List.map atom2debian (OpamFormula.to_conjunction conflicts);
     extras    =
-      if installed then
-        (s_status, s_installed) :: Debian.Packages.default_package.extras
-      else
+      (if installed && reinstall
+       then [s_reinstall, "true"]
+       else []) @
+      (if installed
+       then [s_status, s_installed]
+       else []) @
         Debian.Packages.default_package.extras }
 
 (* Convert an debian package to a CUDF package *)
 let debian2cudf tables package =
-  Debian.Debcudf.tocudf tables package
+    let options = {
+      Debian.Debcudf.default_options with
+        Debian.Debcudf.extras_opt = [ s_reinstall, (s_reinstall, `Bool None) ]
+    } in
+  Debian.Debcudf.tocudf ~options tables package
 
 let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
   Common.CudfAdd.encode (OpamPackage.Name.to_string n),
@@ -290,8 +297,11 @@ module CudfGraph = struct
 
 end
 
+let needs_reinstall pkg =
+  List.mem_assoc s_reinstall pkg.Cudf.pkg_extra
+
 let to_cudf univ req = (
-  Cudf.default_preamble,
+  { Cudf.default_preamble with Cudf.property = [s_reinstall,`Bool None] },
   univ,
   { Cudf.request_id = "opam";
     install         = req.wish_install;
