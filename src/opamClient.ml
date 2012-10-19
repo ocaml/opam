@@ -1514,17 +1514,14 @@ let error_if_no_solution = function
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
 
-let eq_atom_of_package nv =
-  OpamPackage.name nv, Some (`Eq, OpamPackage.version nv)
+let atom name version =
+  name, Some (`Eq, version)
 
-let any_atom_of_package nv =
+let atom_of_package nv =
   OpamPackage.name nv, None
 
-let any_atoms_of_packages packages =
-  List.map any_atom_of_package (OpamPackage.Set.elements packages)
-
-let eq_atoms_of_packages packages =
-  List.map eq_atom_of_package (OpamPackage.Set.elements packages)
+let atoms_of_packages set =
+  List.map atom_of_package (OpamPackage.Set.elements set)
 
 let atom_of_name name =
   name, None
@@ -1532,18 +1529,15 @@ let atom_of_name name =
 (* transform a name into:
    - <name, installed version> package
    - <$n,$v> package when name = $n.$v *)
-let atoms_of_names ~eq t names =
+let atoms_of_names t names =
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
   let installed = installed_map t in
   let packages = OpamPackage.to_map t.packages in
   List.map
     (fun name ->
       if OpamPackage.Name.Map.mem name packages then (
-        if OpamPackage.Name.Map.mem name installed && not (OpamPackage.Name.Map.mem name available) then
-          (if eq
-           then eq_atom_of_package (OpamPackage.create name (OpamPackage.Name.Map.find name installed))
-           else atom_of_name name)
-        else if OpamPackage.Name.Map.mem name available then
+        if OpamPackage.Name.Map.mem name installed
+        || OpamPackage.Name.Map.mem name available then
           atom_of_name name
         else
         (* perhaps the package is unavailable for this compiler *)
@@ -1564,22 +1558,14 @@ let atoms_of_names ~eq t names =
           (OpamPackage.Name.to_string sname)
           (OpamPackage.Version.to_string sversion);
         if OpamPackage.Name.Map.mem sname available
-          && OpamPackage.Version.Set.mem sversion (OpamPackage.Name.Map.find sname available) then
-          eq_atom_of_package (OpamPackage.create sname sversion)
+        && OpamPackage.Version.Set.mem sversion (OpamPackage.Name.Map.find sname available) then
+          atom sname sversion
         else if OpamPackage.Name.Map.mem sname packages then
           unavailable_package sname (Some sversion)
         else
           unknown_package sname (Some sversion)
       ))
     (OpamPackage.Name.Set.elements names)
-
-let eq_atoms_of_names = atoms_of_names ~eq:true
-let any_atoms_of_names = atoms_of_names ~eq:false
-
-let complete_with_installed atoms installed =
-  let installed_atoms = any_atoms_of_packages installed in
-  let filter (n,_) = not (List.exists (fun (nn,_) -> n=nn) atoms) in
-  atoms @ List.filter filter installed_atoms
 
 let get_comp_packages t compiler =
   let comp = compiler_description t compiler in
@@ -1818,7 +1804,7 @@ let dry_upgrade () =
   let solution = resolve t (Upgrade reinstall)
     { wish_install = [];
       wish_remove  = [];
-      wish_upgrade = any_atoms_of_packages t.installed } in
+      wish_upgrade = atoms_of_packages t.installed } in
   match solution with
   | Conflicts _ -> None
   | Success sol -> Some (OpamSolver.stats sol)
@@ -1833,15 +1819,14 @@ let upgrade names =
     let solution = resolve_and_apply t (Upgrade reinstall)
       { wish_install = [];
         wish_remove  = [];
-        wish_upgrade = any_atoms_of_packages t.installed } in
+        wish_upgrade = atoms_of_packages t.installed } in
     solution_found := solution;
   ) else (
-    let names = any_atoms_of_names t names in
-    let installed = installed_map t in
+    let names = atoms_of_names t names in
     let partial_reinstall =
       OpamMisc.filter_map (fun (n,_) ->
-        if OpamPackage.Name.Map.mem n installed then
-          Some (OpamPackage.create n (OpamPackage.Name.Map.find n installed))
+        if mem_installed_package_by_name t n then
+          Some (find_installed_package_by_name t n)
         else (
           OpamGlobals.msg "%s is not installed" (OpamPackage.Name.to_string n);
           None
@@ -1853,11 +1838,11 @@ let upgrade names =
     let partial_reinstall =
       OpamPackage.Set.of_list
         (OpamSolver.get_backward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
-    let install = OpamPackage.Set.diff t.installed partial_reinstall in
+    let installed = OpamPackage.Set.diff t.installed partial_reinstall in
     let solution = resolve_and_apply t (Upgrade partial_reinstall)
-      { wish_install = [];
+      { wish_install = atoms_of_packages installed;
         wish_remove  = [];
-        wish_upgrade = eq_atoms_of_packages install @ any_atoms_of_packages partial_reinstall } in
+        wish_upgrade = atoms_of_packages partial_reinstall } in
     solution_found := solution;
   );
   let t = load_state () in
@@ -1974,9 +1959,9 @@ let init repo compiler cores =
     log "installing compiler packages";
     let t = load_state () in
     let _solution = resolve_and_apply ~force:true t Init
-      { wish_install = get_comp_packages t compiler;
-        wish_remove = [];
-        wish_upgrade = [] } in
+      { wish_install = [];
+        wish_remove  = [];
+        wish_upgrade = get_comp_packages t compiler } in
 
     print_env_warning ~add_profile:true t
 
@@ -1988,7 +1973,7 @@ let init repo compiler cores =
 let install names =
   log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
   let t = load_state () in
-  let atoms = any_atoms_of_names t names in
+  let atoms = atoms_of_names t names in
 
   let pkg_skip, pkg_new =
     List.partition (fun (n,_) ->
@@ -2031,16 +2016,16 @@ let install names =
       ) pkg_new;
 
     let solution = resolve_and_apply t Install
-      { wish_install = complete_with_installed atoms t.installed;
+      { wish_install = atoms_of_packages t.installed;
         wish_remove  = [] ;
-        wish_upgrade = [] } in
+        wish_upgrade = atoms } in
     error_if_no_solution solution
   )
 
 let remove names =
   log "REMOVE %s" (OpamPackage.Name.Set.to_string names);
   let t = load_state () in
-  let atoms = eq_atoms_of_names t names in
+  let atoms = atoms_of_names t names in
   let atoms =
     List.filter (fun (n,_) ->
       if n = OpamPackage.Name.default then (
@@ -2100,16 +2085,16 @@ let remove names =
         (OpamSolver.get_forward_dependencies ~depopts:false ~installed:true universe packages) in
     let installed = OpamPackage.Set.diff t.installed to_remove in
     let solution = resolve_and_apply t Remove
-      { wish_install = [];
-        wish_remove  = any_atoms_of_packages to_remove;
-        wish_upgrade = eq_atoms_of_packages installed } in
+      { wish_install = atoms_of_packages installed;
+        wish_remove  = atoms_of_packages to_remove;
+        wish_upgrade = [] } in
     error_if_no_solution solution
   )
 
 let reinstall names =
   log "reinstall %s" (OpamPackage.Name.Set.to_string names);
   let t = load_state () in
-  let atoms = any_atoms_of_names t names in
+  let atoms = atoms_of_names t names in
   let reinstall_new =
     OpamMisc.filter_map (function (n, _) ->
       if not (mem_installed_package_by_name t n) then (
@@ -2501,7 +2486,7 @@ let switch_install quiet alias compiler =
 
   (* install the compiler packages *)
   let t = load_state () in
-  let atoms = get_comp_packages t compiler in
+  let to_install = get_comp_packages t compiler in
 
   let is_ok =
     List.for_all (fun (n, c) ->
@@ -2511,12 +2496,12 @@ let switch_install quiet alias compiler =
       ) else (
         false
       )
-    ) atoms in
+    ) to_install in
   if not is_ok then (
     let solution = resolve_and_apply ~force:true t Switch
-      { wish_install = atoms;
-        wish_remove = [];
-        wish_upgrade = [] } in
+      { wish_install = [];
+        wish_remove  = [];
+        wish_upgrade = to_install } in
     error_if_no_solution solution
   );
 
@@ -2551,12 +2536,16 @@ let switch_import filename =
       not (OpamPackage.Set.exists (fun nv -> name = OpamPackage.name nv) new_packages)
     ) t.installed in
 
-  let constraints = OpamPackage.Set.union new_packages installed in
+  let to_install = OpamPackage.Set.union new_packages installed in
+  let to_install =
+    List.map
+      (fun nv -> atom (OpamPackage.name nv) (OpamPackage.version nv))
+      (OpamPackage.Set.elements to_install) in
 
   let solution = resolve_and_apply t Switch
-    { wish_install = eq_atoms_of_packages constraints;
+    { wish_install = [];
       wish_remove  = [];
-      wish_upgrade = [] } in
+      wish_upgrade = to_install } in
   error_if_no_solution solution
 
 let switch_export filename =

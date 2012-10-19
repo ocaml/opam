@@ -209,7 +209,10 @@ let load_cudf_universe ?(depopts=false) universe =
   let opam2cudf = OpamPackage.Map.map (debian2cudf tables) opam2debian in
   let cudf2opam = Hashtbl.create 1024 in
   OpamPackage.Map.iter (fun opam cudf -> Hashtbl.add cudf2opam (cudf.Cudf.package,cudf.Cudf.version) opam) opam2cudf;
-  let universe = Cudf.load_universe (OpamPackage.Map.values opam2cudf) in
+  let universe =
+    try Cudf.load_universe (OpamPackage.Map.values opam2cudf)
+    with Cudf.Constraint_violation s ->
+      OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
   (fun opam ->
     try OpamPackage.Map.find opam opam2cudf
     with Not_found ->
@@ -291,10 +294,10 @@ let to_cudf univ req = (
   Cudf.default_preamble,
   univ,
   { Cudf.request_id = "opam";
-    install    = req.wish_install;
-    remove     = req.wish_remove;
-    upgrade    = req.wish_upgrade;
-    req_extra  = [] }
+    install         = req.wish_install;
+    remove          = req.wish_remove;
+    upgrade         = req.wish_upgrade;
+    req_extra       = [] }
 )
 
 (* Return the universe in which the system has to go *)
