@@ -1,0 +1,30 @@
+
+# All tests are performed in a clean repository
+
+Initial state of the repository
+
+    Available packages for system:
+    P1  --  A very useful package
+    P2  --  An other very useful package
+    P3  --  Testing version names
+    P4  --  Testing transitive closure
+    P5  --  Testing optional dependencies
+
+
+* install-P1
+  install P1 
+
+* install-P1-P2-P3-P4
+  install P1, P2, P3, P4
+
+* install-remove-P1
+  install P1 and then remove P1
+
+* install-upgrade-P2
+  install P4 and then upgrade P2
+
+* reinstall-P2
+  install P2 and the re-install P2
+
+* install_opt
+  install P5 , install P2, remove P5, remove P2, remove P1
