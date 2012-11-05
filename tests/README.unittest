@@ -1,0 +1,28 @@
+
+# to create a new unit test
+
+* clean the test repository : 
+
+      ./init-repo.sh -c
+
+* init the test repository : 
+
+      ./init-repo.sh -i
+
+* load a inital scenario (this command can be invoked multiple times): 
+
+      ./init-repo.sh -s 1
+      ./init-repo.sh -s 2
+
+* install/remove/upgrade : 
+
+    OPAM_ROOT=/tmp/OPAM.ROOT PATH=/tmp/OPAM.BIN:$PATH opam --yes --root /tmp/OPAM.ROOT install P4
+
+* crearte a new expected result file in as
+
+      OPAM_ROOT=/tmp/OPAM.ROOT PATH=/tmp/OPAM.BIN:$PATH \
+      opam --yes --root /tmp/OPAM.ROOT list > results/new-expected-result
+
+* Make sure that the result correct !
+
+* Add a new test case in the file tests.py
