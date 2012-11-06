@@ -1,0 +1,6 @@
+Available packages for system:
+P1                     1  A very useful package
+P2                     1  An other very useful package
+P3  1~weird-version.test  Testing version names
+P4                     1  Testing transitive closure
+P5                    --  Testing optional dependencies

@@ -428,31 +428,45 @@ let system_ocamlc_where = lazy (
 let download_command = lazy (
   try
     command ~verbose:false ["which"; "curl"];
-    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
+    (fun src -> [ "curl"; "--insecure" ; "-OLJ"; src ])
   with Process_error _ ->
     try
       command ~verbose:false ["which"; "wget"];
-      (fun src -> [ "wget"; "--no-check-certificate" ; src ])
+      (fun src -> [ "wget"; "--content-disposition";
+                  "--no-check-certificate"; src ])
     with Process_error _ ->
       internal_error "Cannot find curl nor wget"
 )
 
-let download ~filename:src ~dirname:dst =
+let really_download ~src ~dst =
   let cmd = (Lazy.force download_command) src in
+  let aux () =
+    command cmd;
+    match list (fun _ -> true) "." with
+      ( [] | _::_::_ ) ->
+        internal_error "there should be exactly one file in download directory"
+    | [filename] ->
+        let dst_file = dst / Filename.basename filename in
+        if Sys.file_exists dst_file
+        then internal_error "download overwriting file %s" dst_file;
+        command [ "mv"; filename; dst_file ];
+        dst_file
+  in
+  try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
+  with _ ->
+    OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
+
+let download ~filename:src ~dirname:dst =
   let dst_file = dst / Filename.basename src in
   if dst_file = src then
-    ()
+    dst_file
   else if Sys.file_exists src then
-    commands [
-      [ "rm"; "-f"; dst_file ];
-      [ "cp"; src; dst ]
-    ]
-  else (
-    try in_dir dst (fun () -> command cmd)
-    with _ ->
-      OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
-  );
-  dst_file
+    ( commands [
+          [ "rm"; "-f"; dst_file ];
+          [ "cp"; src; dst ]
+        ];
+      dst_file )
+  else really_download ~src ~dst
 
 let patch =
   let max_trying = 20 in
