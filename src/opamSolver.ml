@@ -257,6 +257,10 @@ let opam2debian universe depopts package =
        else []) @
         Debian.Packages.default_package.extras }
 
+let reinstall p =
+  try Cudf.lookup_package_property p s_reinstall = "true"
+  with Not_found -> false
+
 (* Convert an debian package to a CUDF package *)
 let debian2cudf tables package =
     let options = {
@@ -341,22 +345,54 @@ let get_final_universe univ req =
     | Some {result=Failure f} -> Conflicts f
     | _                       -> failwith "opamSolver"
 
+(* A modified version of CudfDiff to handle reinstallations *)
+module MyCudfDiff = struct
+
+  type solution = {
+    installed : CudfSet.t;
+    removed : CudfSet.t;
+    reinstalled: CudfSet.t;
+  }
+
+  (* for each pkgname I've the list of all versions that were installed or removed *)
+  let diff univ sol =
+    let pkgnames =
+      OpamMisc.StringSet.of_list (List.map (fun p -> p.Cudf.package) (Cudf.get_packages univ)) in
+    let h = Hashtbl.create (OpamMisc.StringSet.cardinal pkgnames) in
+    let needed_reinstall = CudfSet.of_list (Cudf.get_packages ~filter:reinstall univ) in
+    OpamMisc.StringSet.iter (fun pkgname ->
+      let were_installed = CudfSet.of_list (Cudf.get_installed univ pkgname) in
+      let are_installed = CudfSet.of_list (Cudf.get_installed sol pkgname) in
+      let removed = CudfSet.diff were_installed are_installed in
+      let installed = CudfSet.diff are_installed were_installed in
+      let reinstalled = CudfSet.inter are_installed needed_reinstall in
+      let s = { removed; installed; reinstalled } in
+      Hashtbl.add h pkgname s
+    ) pkgnames ;
+    h
+
+end
+
 (* Transform a diff from current to final state into a list of
    actions *)
 let actions_of_diff diff =
   Hashtbl.fold (fun pkgname s acc ->
     let add x = x :: acc in
     let removed =
-      try Some (Common.CudfAdd.Cudf_set.choose s.Common.CudfDiff.removed)
+      try Some (CudfSet.choose_one s.MyCudfDiff.removed)
       with Not_found -> None in
     let installed =
-      try Some (Common.CudfAdd.Cudf_set.choose s.Common.CudfDiff.installed)
+      try Some (CudfSet.choose_one s.MyCudfDiff.installed)
       with Not_found -> None in
-    match removed, installed with
-    | None      , Some p     -> add (To_change (None, p))
-    | Some p    , None       -> add (To_delete p)
-    | Some p_old, Some p_new -> add (To_change (Some p_old, p_new))
-    | None      , None       -> acc
+    let reinstalled =
+      try Some (CudfSet.choose_one s.MyCudfDiff.reinstalled)
+      with Not_found -> None in
+    match removed, installed, reinstalled with
+    | None      , Some p     , _      -> add (To_change (None, p))
+    | Some p    , None       , _      -> add (To_delete p)
+    | Some p_old, Some p_new , _      -> add (To_change (Some p_old, p_new))
+    | None      , None       , Some p -> add (To_recompile p)
+    | None      , None       , None   -> acc
   ) diff []
 
 let cudf_resolve universe request =
@@ -366,7 +402,7 @@ let cudf_resolve universe request =
   | Success u   ->
     log "cudf_resolve success=%s" (string_of_universe u);
     try
-      let diff = Common.CudfDiff.diff universe u in
+      let diff = MyCudfDiff.diff universe u in
       Success (actions_of_diff diff)
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "constraint violations: %s" s
@@ -489,7 +525,7 @@ let cudf_resolve_opt universe request =
     | Conflicts _ -> cudf_resolve universe request
     | Success u   ->
       try
-        let diff = Common.CudfDiff.diff universe (minimize !minimizable u) in
+        let diff = MyCudfDiff.diff universe (minimize !minimizable u) in
         Success (actions_of_diff diff)
       with Cudf.Constraint_violation s ->
         OpamGlobals.error_and_exit "constraint violations: %s" s

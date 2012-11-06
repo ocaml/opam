@@ -1848,7 +1848,7 @@ let upgrade names =
     let universe = universe t Depends in
     let partial_reinstall =
       OpamPackage.Set.of_list
-        (OpamSolver.get_backward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
+        (OpamSolver.get_forward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
     let installed = OpamPackage.Set.diff t.installed partial_reinstall in
     let solution = resolve_and_apply t (Upgrade partial_reinstall)
       { wish_install = atoms_of_packages installed;
@@ -2118,7 +2118,10 @@ let reinstall names =
   let reinstall_f = OpamPath.Alias.reinstall t.root t.alias in
   let reinstall_old = OpamFile.Reinstall.safe_read reinstall_f in
   OpamFile.Reinstall.write reinstall_f (OpamPackage.Set.union reinstall_new reinstall_old);
-  upgrade names
+  try upgrade names
+  with e ->
+    OpamFile.Reinstall.write reinstall_f reinstall_old;
+    raise e
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);
