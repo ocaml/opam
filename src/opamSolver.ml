@@ -13,10 +13,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* TODO:
-   1/ reinstall
-   2/ heuristics *)
-
 open OpamTypes
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
@@ -267,7 +263,7 @@ let opam2debian universe depopts package =
        else []) @
         Debian.Packages.default_package.extras }
 
-let reinstall p =
+let need_reinstall p =
   try Cudf.lookup_package_property p s_reinstall = "true"
   with Not_found -> false
 
@@ -369,7 +365,7 @@ module MyCudfDiff = struct
     let pkgnames =
       OpamMisc.StringSet.of_list (List.map (fun p -> p.Cudf.package) (Cudf.get_packages univ)) in
     let h = Hashtbl.create (OpamMisc.StringSet.cardinal pkgnames) in
-    let needed_reinstall = CudfSet.of_list (Cudf.get_packages ~filter:reinstall univ) in
+    let needed_reinstall = CudfSet.of_list (Cudf.get_packages ~filter:need_reinstall univ) in
     OpamMisc.StringSet.iter (fun pkgname ->
       let were_installed = CudfSet.of_list (Cudf.get_installed univ pkgname) in
       let are_installed = CudfSet.of_list (Cudf.get_installed sol pkgname) in
@@ -417,129 +413,147 @@ let cudf_resolve universe request =
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "constraint violations: %s" s
 
-let rec minimize minimizable universe =
-  log "minimize minimizable=%s" (OpamMisc.StringSet.to_string minimizable);
-  if OpamMisc.StringSet.is_empty minimizable then
-    universe
-  else
-    let is_removable universe name =
-      let b, r = Cudf_checker.is_consistent (uninstall name universe) in
-      (match r with
-      | None   -> log "%s is not necessary" name
-      | Some r ->
-        log "cannot remove %s: %s" name
-          (Cudf_checker.explain_reason (r:>Cudf_checker.bad_solution_reason)));
-      b in
-    let to_remove = OpamMisc.StringSet.filter (is_removable universe) minimizable in
-    let minimizable = OpamMisc.StringSet.diff minimizable to_remove in
-    if OpamMisc.StringSet.is_empty to_remove then
+module Heuristic = struct
+
+  let rec minimize minimizable universe =
+    log "minimize minimizable=%s" (OpamMisc.StringSet.to_string minimizable);
+    if OpamMisc.StringSet.is_empty minimizable then
       universe
     else
-      let universe = OpamMisc.StringSet.fold uninstall to_remove universe in
-      minimize minimizable universe
+      let is_removable universe name =
+        let b, r = Cudf_checker.is_consistent (uninstall name universe) in
+        (match r with
+        | None   -> log "%s is not necessary" name
+        | Some r ->
+          log "cannot remove %s: %s" name
+            (Cudf_checker.explain_reason (r:>Cudf_checker.bad_solution_reason)));
+        b in
+      let to_remove = OpamMisc.StringSet.filter (is_removable universe) minimizable in
+      let minimizable = OpamMisc.StringSet.diff minimizable to_remove in
+      if OpamMisc.StringSet.is_empty to_remove then
+        universe
+      else
+        let universe = OpamMisc.StringSet.fold uninstall to_remove universe in
+        minimize minimizable universe
 
-(* Try to play all the possible upgrade scenarios ... *)
-let cudf_resolve_opt universe request =
-  log "cudf_resolve_opt request=%s" (string_of_request request);
-  match get_final_universe universe request with
+  (* Try to play all the possible upgrade scenarios ... *)
+  let resolve universe request =
+    log "cudf_resolve_opt request=%s" (string_of_request request);
+    match get_final_universe universe request with
 
-  | Conflicts e ->
-    log "cudf_resolve_opt conflict!";
-    Conflicts e
+    | Conflicts e ->
+      log "cudf_resolve_opt conflict!";
+      Conflicts e
 
-  | Success u   ->
-    log "cudf_resolve_opt success!";
-
-    (* All the packages in the request *)
-    let all = Hashtbl.create 1024 in
-
-    (* Package which are maybe not so useful *)
-    let minimizable = ref OpamMisc.StringSet.empty in
-
-    (* The packages to upgrade *)
-    let upgrade = Hashtbl.create 1024 in
-    let add_upgrade name =
-      let packages = Cudf.get_packages ~filter:(fun p -> p.Cudf.package = name) universe in
-      let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
-      let packages =
-        (* only keep the version greater or equal to the currently installed package *)
-        match List.filter (fun p -> p.Cudf.installed) packages with
-        | []   -> packages
-        | i::_ -> List.filter (fun p -> p.Cudf.version >= i.Cudf.version) packages in
-      let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
-      Hashtbl.add upgrade name (Array.of_list atoms) in
-
-    (* Register the packages in the request *)
-    List.iter (fun (n,_) -> Hashtbl.add all n false) request.wish_install;
-    List.iter (fun (n,_) -> Hashtbl.add all n true) request.wish_upgrade;
-
-    (* Register the upgraded packages *)
-    List.iter (fun (n,v as x) ->
-      match v with
-      | Some _ -> Hashtbl.add upgrade n [| x |]
-      | None   -> add_upgrade n
-    ) request.wish_upgrade;
-
-    (* Register the new packages *)
-    let diff = Common.CudfDiff.diff universe u in
-    Hashtbl.iter (fun name s ->
-      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then (
-        if not (Hashtbl.mem all name) then
-          minimizable := OpamMisc.StringSet.add name !minimizable;
-        if not (Hashtbl.mem upgrade name) then
-          add_upgrade name)
-    ) diff;
-
-    (* sort the requests by the distance to the optimal state *)
-    let score_atom (n,_ as a) =
-      let t = Hashtbl.find upgrade n in
-      let s = ref 0 in
-      while t.(!s) <> a do incr s done;
-      !s in
-    let score_wish request =
-      List.fold_left (fun accu a -> score_atom a + accu) 0 request in
-    let compare_wish r1 r2 =
-      let s1 = score_wish r1 and s2 = score_wish r2 in
-    if s1 = s2 then
-      compare r1 r2
-    else
-      s1 - s2 in
-
-  (* enumerate all the upgrade strategies: can be very costly when too many packages *)
-  let size =
-    Hashtbl.fold (fun _ a accu -> accu * Array.length a) upgrade 1 in
-  log "Number of upgrade scenarios: %d" size;
-  if size > 10000 then (
-    log "the universe is too big, do not try to be too clever";
-    cudf_resolve universe request
-  ) else (
-    let wish_upgrades =
-      let aux _ array state = match state with
-        | [] -> List.map (fun elt -> [elt]) (Array.to_list array)
-        | l  ->
-          List.fold_left (fun accu elt ->
-            List.fold_left (fun accu l -> (elt::l)::accu) accu state
-          ) [] (Array.to_list array) in
-      Hashtbl.fold aux upgrade [] in
-    let wish_upgrades = List.sort compare_wish wish_upgrades in
-    let requests = List.map (fun wish_upgrade -> { request with wish_upgrade }) wish_upgrades in
-
-    let solution =
-      List.fold_left (fun accu request ->
-        match accu with
-        | Success _ -> accu
-        | _         -> get_final_universe universe request
-      ) (Conflicts (fun _ -> assert false)) requests in
-
-    match solution with
-    | Conflicts _ -> cudf_resolve universe request
     | Success u   ->
-      try
-        let diff = MyCudfDiff.diff universe (minimize !minimizable u) in
-        Success (actions_of_diff diff)
-      with Cudf.Constraint_violation s ->
-        OpamGlobals.error_and_exit "constraint violations: %s" s
-  )
+      log "cudf_resolve_opt success!";
+
+      (* All the packages in the request *)
+      let all = Hashtbl.create 1024 in
+
+      (* Package which are maybe not so useful *)
+      let minimizable = ref OpamMisc.StringSet.empty in
+
+      (* The packages to upgrade *)
+      let upgrade = Hashtbl.create 1024 in
+
+      (* The versions given by the solution *)
+      let versions = Hashtbl.create 1024 in
+      List.iter (fun pkg -> Hashtbl.add versions pkg.Cudf.package pkg.Cudf.version) (Cudf.get_packages u);
+      let version name =
+        try Some (Hashtbl.find versions name)
+        with Not_found -> None in
+
+      let add_upgrade name =
+        let packages = Cudf.get_packages ~filter:(fun p -> p.Cudf.package = name) universe in
+        let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
+        (* only keep the version greater or equal to either:
+           - the currently installed package; or
+           - the version proposed by the solver *)
+        let min_version =
+          match version name, List.filter (fun p -> p.Cudf.installed) packages with
+          | None  , []  -> min_int
+          | None  , [i] -> i.Cudf.version
+          | Some v, []  -> v
+          | Some v, [i] -> max v i.Cudf.version
+          | _ -> assert false (* at most one version is installed *) in
+        let packages = List.filter (fun p -> p.Cudf.version >= min_version) packages in
+        let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
+        Hashtbl.add upgrade name (Array.of_list atoms) in
+
+      (* Register the packages in the request *)
+      List.iter (fun (n,_) -> Hashtbl.add all n false) request.wish_install;
+      List.iter (fun (n,_) -> Hashtbl.add all n true) request.wish_upgrade;
+
+      (* Register the upgraded packages *)
+      List.iter (fun (n,v as x) ->
+        match v with
+        | Some _ -> Hashtbl.add upgrade n [| x |]
+        | None   -> add_upgrade n
+      ) request.wish_upgrade;
+
+      (* Register the new packages *)
+      let diff = Common.CudfDiff.diff universe u in
+      Hashtbl.iter (fun name s ->
+        if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then (
+          if not (Hashtbl.mem all name) then
+            minimizable := OpamMisc.StringSet.add name !minimizable;
+          if not (Hashtbl.mem upgrade name) then
+            add_upgrade name)
+      ) diff;
+
+      (* sort the requests by the distance to the optimal state *)
+      let score_atom (n,_ as a) =
+        let t = Hashtbl.find upgrade n in
+        let s = ref 0 in
+        while t.(!s) <> a do incr s done;
+        !s in
+      let score_wish request =
+        List.fold_left (fun accu a -> score_atom a + accu) 0 request in
+      let compare_wish r1 r2 =
+        let s1 = score_wish r1 and s2 = score_wish r2 in
+        if s1 = s2 then
+          compare r1 r2
+        else
+          s1 - s2 in
+
+      (* enumerate all the upgrade strategies: can be very costly when too many packages *)
+      let size =
+        Hashtbl.fold (fun _ a accu -> accu * Array.length a) upgrade 1 in
+      log "Number of upgrade scenarios: %d" size;
+      if size > 10000 then (
+        OpamGlobals.msg "the universe is too big (%d states), do not try to be too clever" size;
+        cudf_resolve universe request
+      ) else (
+        let wish_upgrades =
+          let aux _ array state = match state with
+            | [] -> List.map (fun elt -> [elt]) (Array.to_list array)
+            | l  ->
+              List.fold_left (fun accu elt ->
+                List.fold_left (fun accu l -> (elt::l)::accu) accu state
+              ) [] (Array.to_list array) in
+          Hashtbl.fold aux upgrade [] in
+        let wish_upgrades = List.sort compare_wish wish_upgrades in
+        let requests = List.map (fun wish_upgrade -> { request with wish_upgrade }) wish_upgrades in
+
+        let solution =
+          List.fold_left (fun accu request ->
+            match accu with
+            | Success _ -> accu
+            | _         -> get_final_universe universe request
+          ) (Conflicts (fun _ -> assert false)) requests in
+
+        match solution with
+        | Conflicts _ -> cudf_resolve universe request
+        | Success u   ->
+          try
+            let diff = MyCudfDiff.diff universe (minimize !minimizable u) in
+            Success (actions_of_diff diff)
+          with Cudf.Constraint_violation s ->
+            OpamGlobals.error_and_exit "constraint violations: %s" s
+      )
+
+end
 
 let create_graph filter universe =
   let pkgs = Cudf.get_packages ~filter universe in
@@ -665,7 +679,7 @@ let resolve universe request =
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
-  match cudf_resolve_opt simple_universe cudf_request with
+  match Heuristic.resolve simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () -> string_of_reasons cudf2opam (c ()))
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
