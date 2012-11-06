@@ -436,6 +436,84 @@ module Heuristic = struct
         let universe = OpamMisc.StringSet.fold uninstall to_remove universe in
         minimize minimizable universe
 
+  (* Given a list of bounds, create the least tuple such that the sum of
+     components is equal to n.
+     For instance: init [1;2;1] 3 is [0;2;1] *)
+  let init ~bounds n =
+    let rec zero n =
+      if n > 0 then
+        0 :: zero (n-1)
+      else
+        [] in
+    let rec aux = function
+      | 0, []   -> Some []
+      | 0, l    -> Some (zero (List.length l))
+      | n, []   -> None
+      | n, b::t ->
+        if n <= b then
+          Some (n :: zero (List.length t))
+        else match aux (n-b, t) with
+        | None   -> None
+        | Some l -> Some (b::l) in
+    match aux (n, List.rev bounds) with
+    | None   -> None
+    | Some l -> Some (List.rev l)
+
+  (* Given a list of bounds and a tuple, return the next tuple while
+     keeping the sum of components of the tuple constant *)
+  let rec cst_succ ~bounds l =
+    let k = List.fold_left (+) 0 l in
+    match l, bounds with
+    | [] , []  -> None
+    | [n], [b] ->
+      if n+1 = k && n < b then
+        Some [k]
+      else
+        None
+    | n::nt, b::bt ->
+      if n >= k then
+        None
+      else (
+        match cst_succ ~bounds:bt nt with
+        | Some s -> Some (n::s)
+        | None   ->
+          if n < b then
+            match init ~bounds:bt (k-n-1) with
+            | None   -> None
+            | Some l -> Some (n+1 :: l)
+          else
+            None)
+    | _ ->
+      failwith "Bounds and tuples do not have the same size"
+
+  (* Given a list of bounds and a tuple, return the next tuple *)
+  let succ ~bounds l =
+    match cst_succ ~bounds l with
+    | Some t -> Some t
+    | None   ->
+      let k = List.fold_left (+) 0 l in
+      init ~bounds (k+1)
+
+  (* explore a state-space given by the bounds *)
+  let explore f default upgrade_tbl =
+    let upgrades =
+      Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
+    let bounds = List.map (fun (_,v) -> Array.length v - 1) upgrades in
+    let constrs t =
+      List.map2 (fun (n, vs) i -> vs.(i)) upgrades t in
+    let count = ref 0 in
+    let rec aux = function
+      | None   -> default
+      | Some t ->
+        incr count;
+        if !count > 10000 then (
+          OpamGlobals.msg "the universe is too big (at least %d states) we cannot explore everything" !count;
+          default
+        ) else match f (constrs t) with
+          | Success _ as s -> s
+          | _              -> aux (succ ~bounds t) in
+    aux (init ~bounds 0)
+
   (* Try to play all the possible upgrade scenarios ... *)
   let resolve universe request =
     log "cudf_resolve_opt request=%s" (string_of_request request);
@@ -502,56 +580,19 @@ module Heuristic = struct
             add_upgrade name)
       ) diff;
 
-      (* sort the requests by the distance to the optimal state *)
-      let score_atom (n,_ as a) =
-        let t = Hashtbl.find upgrade n in
-        let s = ref 0 in
-        while t.(!s) <> a do incr s done;
-        !s in
-      let score_wish request =
-        List.fold_left (fun accu a -> score_atom a + accu) 0 request in
-      let compare_wish r1 r2 =
-        let s1 = score_wish r1 and s2 = score_wish r2 in
-        if s1 = s2 then
-          compare r1 r2
-        else
-          s1 - s2 in
-
       (* enumerate all the upgrade strategies: can be very costly when too many packages *)
-      let size =
-        Hashtbl.fold (fun _ a accu -> accu * Array.length a) upgrade 1 in
-      log "Number of upgrade scenarios: %d" size;
-      if size > 10000 then (
-        OpamGlobals.msg "the universe is too big (%d states), do not try to be too clever" size;
-        cudf_resolve universe request
-      ) else (
-        let wish_upgrades =
-          let aux _ array state = match state with
-            | [] -> List.map (fun elt -> [elt]) (Array.to_list array)
-            | l  ->
-              List.fold_left (fun accu elt ->
-                List.fold_left (fun accu l -> (elt::l)::accu) accu state
-              ) [] (Array.to_list array) in
-          Hashtbl.fold aux upgrade [] in
-        let wish_upgrades = List.sort compare_wish wish_upgrades in
-        let requests = List.map (fun wish_upgrade -> { request with wish_upgrade }) wish_upgrades in
+      let resolve wish_upgrade =
+        let request = { request with wish_upgrade } in
+        get_final_universe universe request in
 
-        let solution =
-          List.fold_left (fun accu request ->
-            match accu with
-            | Success _ -> accu
-            | _         -> get_final_universe universe request
-          ) (Conflicts (fun _ -> assert false)) requests in
-
-        match solution with
-        | Conflicts _ -> cudf_resolve universe request
-        | Success u   ->
-          try
-            let diff = MyCudfDiff.diff universe (minimize !minimizable u) in
-            Success (actions_of_diff diff)
-          with Cudf.Constraint_violation s ->
-            OpamGlobals.error_and_exit "constraint violations: %s" s
-      )
+      match explore resolve (Conflicts (fun _ -> assert false)) upgrade with
+      | Conflicts _ -> cudf_resolve universe request
+      | Success u   ->
+        try
+          let diff = MyCudfDiff.diff universe (minimize !minimizable u) in
+          Success (actions_of_diff diff)
+        with Cudf.Constraint_violation s ->
+          OpamGlobals.error_and_exit "constraint violations: %s" s
 
 end
 
