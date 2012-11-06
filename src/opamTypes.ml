@@ -102,6 +102,8 @@ type formula = OpamFormula.t
 
 type 'a conjunction = 'a OpamFormula.conjunction
 
+type 'a disjunction = 'a OpamFormula.disjunction
+
 type compiler_constraint = OpamCompiler.Version.constr
 
 type ppflag =

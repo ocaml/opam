@@ -234,9 +234,19 @@ let s_reinstall = "reinstall"
 let opam2debian universe depopts package =
   let depends = OpamPackage.Map.find package universe.u_depends in
   let depends =
-    if depopts
-    then And (depends, OpamPackage.Map.find package universe.u_depopts)
-    else depends in
+    let opts = OpamFormula.to_dnf (OpamPackage.Map.find package universe.u_depopts) in
+    if depopts then
+      let opts = List.map OpamFormula.of_conjunction opts in
+      And (depends, Or(depends,OpamFormula.ors opts))
+    else
+      let mem_installed conj =
+        let is_installed (name,_) =
+          OpamPackage.Set.exists (fun pkg -> OpamPackage.name pkg = name) universe.u_installed in
+        List.exists is_installed conj in
+      let opts = List.filter mem_installed opts in
+      let opts = List.map OpamFormula.of_conjunction opts in
+      And (depends, OpamFormula.ands opts) in
+
   let conflicts = OpamPackage.Map.find package universe.u_conflicts in
   let installed = OpamPackage.Set.mem package universe.u_installed in
   let reinstall = match universe.u_action with
@@ -663,16 +673,20 @@ let resolve universe request =
     Success (opam_solution cudf2opam solution)
 
 let filter_dependencies f_direction ~depopts ~installed universe packages =
-  log "filter_dependencies packages=%s" (OpamPackage.Set.to_string packages);
   let opam2cudf, cudf2opam, cudf_universe = load_cudf_universe ~depopts universe in
+  let cudf_universe =
+    if installed then
+      Cudf.load_universe (List.filter (fun pkg -> pkg.Cudf.installed) (Cudf.get_packages cudf_universe))
+    else
+      cudf_universe in
   let cudf_packages = List.map opam2cudf (OpamPackage.Set.elements packages) in
   let graph = f_direction (CudfGraph.dep_reduction cudf_universe) in
   let packages_topo = CudfGraph.topo_closure graph (CudfSet.of_list cudf_packages) in
-  let list = List.map cudf2opam packages_topo in
-  if installed then
-    List.filter (fun nv -> OpamPackage.Set.mem nv universe.u_installed) list
-  else
-    list
+  let result = List.map cudf2opam packages_topo in
+  log "filter_dependencies packages=%s result=%s"
+    (OpamPackage.Set.to_string packages)
+    (OpamMisc.string_of_list OpamPackage.to_string result);
+  result
 
 let get_backward_dependencies = filter_dependencies (fun x -> x)
 

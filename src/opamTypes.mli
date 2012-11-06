@@ -130,6 +130,9 @@ type formula = OpamFormula.t
 (** AND formulat *)
 type 'a conjunction = 'a OpamFormula.conjunction
 
+(** OR formulat *)
+type 'a disjunction = 'a OpamFormula.disjunction
+
 (** {2 Repositories} *)
 
 (** Repository names *)
