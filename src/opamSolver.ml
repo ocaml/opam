@@ -514,13 +514,15 @@ module Heuristic = struct
     let bounds = List.map (fun (_,v) -> Array.length v - 1) upgrades in
     let constrs t =
       List.map2 (fun (n, vs) i -> vs.(i)) upgrades t in
+    let t0 = Unix.time () in
     let count = ref 0 in
     let rec aux = function
       | None   -> default_conflict
       | Some t ->
         incr count;
-        if !count > 10000 then (
-          OpamGlobals.msg "the state-space is too big (at least %d states) we cannot explore everything\n" !count;
+        let t1 = Unix.time () in
+        if t1 -. t0 > 5. then (
+          OpamGlobals.msg "The state-space is too big (at least %d states), so we cannot explore everything\n" !count;
           default_conflict
         ) else match f (constrs t) with
         | Success _ as s -> s
