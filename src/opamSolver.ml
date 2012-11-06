@@ -494,8 +494,21 @@ module Heuristic = struct
       let k = List.fold_left (+) 0 l in
       init ~bounds (k+1)
 
-  (* explore a state-space given by the bounds *)
-  let explore f default upgrade_tbl =
+  (* explore the state-space given by an upgrade table.
+
+     - [upgrade_tbl] associate pkg name to pacake constraints, for a
+     collection of possible versions.
+
+     - [f] is applied on each possible state of the system, where a
+     state is where each pacakge has a fix version. We ensure that we
+     apply [f] in increasing order regarding the difference between
+     the maximum version and the current version for each
+     package. That is, we apply [f] first on the state where all
+     package have the maximum version, then on all the states where at
+     all the package have their maximum version but one which has the
+     second version, etc... *)
+  let explore f upgrade_tbl =
+    let default_conflict = Conflicts (fun _ -> assert false)  in
     let upgrades =
       Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
     let bounds = List.map (fun (_,v) -> Array.length v - 1) upgrades in
@@ -503,15 +516,15 @@ module Heuristic = struct
       List.map2 (fun (n, vs) i -> vs.(i)) upgrades t in
     let count = ref 0 in
     let rec aux = function
-      | None   -> default
+      | None   -> default_conflict
       | Some t ->
         incr count;
         if !count > 10000 then (
-          OpamGlobals.msg "the universe is too big (at least %d states) we cannot explore everything" !count;
-          default
+          OpamGlobals.msg "the state-space is too big (at least %d states) we cannot explore everything\n" !count;
+          default_conflict
         ) else match f (constrs t) with
-          | Success _ as s -> s
-          | _              -> aux (succ ~bounds t) in
+        | Success _ as s -> s
+        | _              -> aux (succ ~bounds t) in
     aux (init ~bounds 0)
 
   (* Try to play all the possible upgrade scenarios ... *)
@@ -585,7 +598,7 @@ module Heuristic = struct
         let request = { request with wish_upgrade } in
         get_final_universe universe request in
 
-      match explore resolve (Conflicts (fun _ -> assert false)) upgrade with
+      match explore resolve upgrade with
       | Conflicts _ -> cudf_resolve universe request
       | Success u   ->
         try
