@@ -1824,7 +1824,7 @@ let upgrade names =
   log "UPGRADE %s" (OpamPackage.Name.Set.to_string names);
   let t = load_state () in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
-  let to_not_reinstall = ref OpamPackage.Set.empty in
+  let to_not_reinstall_yet = ref OpamPackage.Set.empty in
   let solution_found = ref No_solution in
   if OpamPackage.Name.Set.is_empty names then (
     let solution = resolve_and_apply t (Upgrade reinstall)
@@ -1844,7 +1844,7 @@ let upgrade names =
         )
       ) names in
     let partial_reinstall = OpamPackage.Set.of_list partial_reinstall in
-    to_not_reinstall := OpamPackage.Set.diff reinstall partial_reinstall;
+    to_not_reinstall_yet := OpamPackage.Set.diff reinstall partial_reinstall;
     let universe = universe t Depends in
     let partial_reinstall =
       OpamPackage.Set.of_list
@@ -1861,9 +1861,9 @@ let upgrade names =
     | OK            -> ()
     | Nothing_to_do -> OpamGlobals.msg "Already up-to-date.\n"
     | Aborted
-    | No_solution   -> to_not_reinstall := reinstall
+    | No_solution   -> to_not_reinstall_yet := reinstall
   end;
-  let reinstall = OpamPackage.Set.inter t.installed !to_not_reinstall in
+  let reinstall = OpamPackage.Set.inter t.installed !to_not_reinstall_yet in
   let reinstall_f = OpamPath.Alias.reinstall t.root t.alias in
   if OpamPackage.Set.is_empty reinstall then
     OpamFilename.remove reinstall_f
@@ -2106,7 +2106,7 @@ let reinstall names =
   log "reinstall %s" (OpamPackage.Name.Set.to_string names);
   let t = load_state () in
   let atoms = atoms_of_names t names in
-  let reinstall_new =
+  let reinstall =
     OpamMisc.filter_map (function (n, _) ->
       if not (mem_installed_package_by_name t n) then (
         OpamGlobals.msg "%s is not installed" (OpamPackage.Name.to_string n);
@@ -2114,14 +2114,14 @@ let reinstall names =
       ) else
         Some (find_installed_package_by_name t n)
     ) atoms in
-  let reinstall_new = OpamPackage.Set.of_list reinstall_new in
-  let reinstall_f = OpamPath.Alias.reinstall t.root t.alias in
-  let reinstall_old = OpamFile.Reinstall.safe_read reinstall_f in
-  OpamFile.Reinstall.write reinstall_f (OpamPackage.Set.union reinstall_new reinstall_old);
-  try upgrade names
-  with e ->
-    OpamFile.Reinstall.write reinstall_f reinstall_old;
-    raise e
+  let reinstall = OpamPackage.Set.of_list reinstall in
+  let depends =
+    let universe = universe t Depends in
+    OpamSolver.get_forward_dependencies ~depopts:true ~installed:true universe reinstall in
+  let to_process =
+    List.map (fun pkg -> To_recompile pkg) depends in
+  let solution = apply_solution t (OpamSolver.sequential_solution to_process) in
+  error_if_no_solution solution
 
 let upload upload repo =
   log "upload %s" (string_of_upload upload);

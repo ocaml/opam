@@ -62,3 +62,6 @@ val get_forward_dependencies :
   universe ->
   package_set ->
   package list
+
+(** Create a sequential solution from a list of actions *)
+val sequential_solution: package action list -> solution

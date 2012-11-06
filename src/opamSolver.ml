@@ -740,3 +740,14 @@ let print_solution t =
     PackageActionGraph.Topological.iter
       (function action -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action action))
       t.PackageActionGraph.to_process
+
+let sequential_solution l =
+  let g = PackageActionGraph.create () in
+  List.iter (PackageActionGraph.add_vertex g) l;
+  let rec aux = function
+    | [] | [_]       -> ()
+    | x::(y::_ as t) ->
+      PackageActionGraph.add_edge g x y;
+      aux t in
+  aux l;
+  { PackageActionGraph.to_remove=[]; to_process = g }
