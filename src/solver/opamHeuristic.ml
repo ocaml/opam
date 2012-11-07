@@ -112,26 +112,37 @@ let succ ~bounds l =
 let explore f upgrade_tbl =
   let default_conflict = Conflicts (fun _ -> assert false)  in
   let upgrades =
-    Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
+    List.sort compare (Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl []) in
   let bounds = List.map (fun (_,v) -> Array.length v - 1) upgrades in
   let constrs t =
     List.map2 (fun (n, vs) i -> vs.(i)) upgrades t in
   let t0 = Unix.time () in
   let count = ref 0 in
+  let interval = 500 in
+  let timeout = 30. in
+  let flush_output () =
+    if !count >= interval then OpamGlobals.msg "[%d]\n" !count in
   let rec aux = function
-    | None   -> default_conflict
+    | None   ->
+      log "no better solution found";
+      flush_output ();
+      default_conflict
     | Some t ->
       let constrs = constrs t in
-      log "explore %s %s"
-        (OpamMisc.string_of_list string_of_int t)
-        (OpamFormula.string_of_conjunction OpamCudf.string_of_atom constrs);
+      (* log "explore %s %s"
+        (OpamMisc.string_of_list
+           (fun (i,b) -> Printf.sprintf "%d/%d" (i+1) (b+1))
+           (List.combine t bounds))
+        (OpamFormula.string_of_conjunction OpamCudf.string_of_atom constrs); *)
       incr count;
       let t1 = Unix.time () in
-      if t1 -. t0 > 5. then (
-        OpamGlobals.msg "The state-space is too big (at least %d states), so we cannot explore everything\n" !count;
+      if !count mod interval = interval - 1 then
+        OpamGlobals.msg ".";
+      if t1 -. t0 > timeout then (
+        if !count >= interval - 1 then OpamGlobals.msg "T";
         default_conflict
       ) else match f constrs with
-      | Success _ as s -> s
+      | Success _ as s -> flush_output (); s
       | _              -> aux (succ ~bounds t) in
   aux (init ~bounds 0)
 
@@ -146,7 +157,7 @@ let filter_dependencies universe constrs =
   let packages = Cudf.get_packages ~filter universe in
   let graph = OpamCudf.Graph.of_universe universe in
   let packages = OpamCudf.Graph.closure graph (OpamCudf.Set.of_list packages) in
-  List.map (fun p -> p.Cudf.package) packages
+  OpamMisc.StringSet.of_list (List.map (fun p -> p.Cudf.package) packages)
 
 (* Try to play all the possible upgrade scenarios ... *)
 let resolve universe request =
@@ -157,10 +168,11 @@ let resolve universe request =
     Conflicts e
 
   | Success u   ->
-    log "cudf_resolve_opt success!";
+    log "cudf_resolve_opt u=%s" (OpamCudf.string_of_universe u);
 
     (* Get all the possible package which can be modified *)
     let names = filter_dependencies universe request.wish_upgrade in
+    log "names=%s" (OpamMisc.StringSet.to_string names);
 
     (* All the packages in the request *)
     let all = Hashtbl.create 1024 in
@@ -169,7 +181,7 @@ let resolve universe request =
     let minimizable = ref OpamMisc.StringSet.empty in
 
     (* The packages to upgrade *)
-    let upgrade = Hashtbl.create 1024 in
+    let upgrade_tbl = Hashtbl.create 1024 in
 
     (* The versions given by the solution *)
     let versions = Hashtbl.create 1024 in
@@ -188,12 +200,14 @@ let resolve universe request =
         match version name, List.filter (fun p -> p.Cudf.installed) packages with
         | None  , []  -> min_int
         | None  , [i] -> i.Cudf.version
-        | Some v, []  -> v
-        | Some v, [i] -> max v i.Cudf.version
+        | Some v, _   -> v
         | _ -> assert false (* at most one version is installed *) in
       let packages = List.filter (fun p -> p.Cudf.version >= min_version) packages in
       let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
-      Hashtbl.add upgrade name (Array.of_list atoms) in
+      log "add_upgrade name=%s versions=%s"
+        name
+        (OpamMisc.string_of_list (fun pkg -> string_of_int pkg.Cudf.version) packages);
+      Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
 
     (* Register the packages in the request *)
     List.iter (fun (n,_) -> Hashtbl.add all n false) request.wish_install;
@@ -202,11 +216,12 @@ let resolve universe request =
     (* Register the upgraded packages *)
     let add_constr (n,v as x) =
       match v with
-      | Some _ -> Hashtbl.add upgrade n [| x |]
+      | Some _ -> Hashtbl.add upgrade_tbl n [| x |]
       | None   -> add_upgrade n in
 
     List.iter add_constr request.wish_upgrade;
-    List.iter add_constr (List.filter (fun (n,_) -> List.mem n names) request.wish_install);
+    List.iter add_constr
+      (List.filter (fun (n,_) -> OpamMisc.StringSet.mem n names) request.wish_install);
 
     (* Register the new packages *)
     let diff = Common.CudfDiff.diff universe u in
@@ -214,29 +229,31 @@ let resolve universe request =
       if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then (
         if not (Hashtbl.mem all name) then
           minimizable := OpamMisc.StringSet.add name !minimizable;
-        if not (Hashtbl.mem upgrade name) then
-          add_upgrade name)
+        if not (Hashtbl.mem upgrade_tbl name) then
+          add_upgrade name
+      )
     ) diff;
 
+    let wish_install =
+      List.filter (fun (n,_) -> not (Hashtbl.mem upgrade_tbl n)) request.wish_install in
     let wish_install = List.map (fun (n,v) ->
       n,
       match v with
+      | Some _ -> v
       | None   ->
-        if not (List.mem n names) then
-          match Cudf.get_installed universe n with
-          | []   -> None
-          | p::_ -> Some (`Eq, p.Cudf.version)
-        else
-          None
-      | _ -> v
-    ) request.wish_install in
+        match Cudf.get_installed universe n with
+        | []   -> None
+        | p::_ -> Some (`Eq, p.Cudf.version)
+    ) wish_install in
 
     let resolve wish_upgrade =
       let request = { request with wish_install; wish_upgrade } in
       OpamCudf.get_final_universe universe request in
 
-    match explore resolve upgrade with
-    | Conflicts _ -> OpamCudf.resolve universe request
+    match explore resolve upgrade_tbl with
+    | Conflicts _ ->
+      log "no optimized solution found";
+      OpamCudf.resolve universe request
     | Success u   ->
       log "succes=%s" (OpamCudf.string_of_universe u);
       try
