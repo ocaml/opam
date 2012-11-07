@@ -1933,7 +1933,7 @@ let init repo compiler cores =
     create_default_compiler_description root system_version;
 
     (* Create ~/.opam/config *)
-    let config = OpamFile.Config.create OpamVersion.current switch system_version [repo.repo_name] cores in
+    let config = OpamFile.Config.create OpamVersion.current switch [repo.repo_name] cores in
     OpamFile.Config.write config_f config;
 
     (* Create ~/.opam/aliases *)

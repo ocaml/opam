@@ -44,7 +44,6 @@ module Config: sig
   val create:
     opam_version ->
     switch ->
-    compiler_version option ->
     repository_name list ->
     int ->
     t
@@ -63,9 +62,6 @@ module Config: sig
 
   (** Return the OCaml switch *)
   val switch: t -> switch
-
-  (** Return the system's OCaml version *)
-  val system_version: t -> compiler_version option
 
   (** Return the number of cores *)
   val cores: t -> int
