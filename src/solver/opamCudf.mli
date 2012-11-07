@@ -112,3 +112,6 @@ val string_of_atom: Cudf_types.vpkg -> string
 
 (** Pretty-print the universe *)
 val string_of_universe: Cudf.universe -> string
+
+(** {2 External solver} *)
+val external_solver_available: unit -> bool

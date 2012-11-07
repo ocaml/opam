@@ -227,8 +227,22 @@ let output_universe name universe =
     Graph.output g name;
   )
 
+let default_preamble =
+  let l = [
+    ("recommends",(`Vpkgformula (Some [])));
+    ("number",(`String None));
+    ("source",(`String (Some ""))) ;
+    ("sourcenumber",(`String (Some "")));
+    ("sourceversion",(`Int (Some 1))) ;
+    ("essential",(`Bool (Some false))) ;
+    ("buildessential",(`Bool (Some false))) ;
+    ("depopts",(`Enum (["None"],Some "None")));
+    (s_reinstall,`Bool None);
+  ] in
+  Common.CudfAdd.add_properties Cudf.default_preamble l
+
 let to_cudf univ req = (
-  { Cudf.default_preamble with Cudf.property = [s_reinstall,`Bool None] },
+  default_preamble,
   univ,
   { Cudf.request_id = "opam";
     install         = req.wish_install;
@@ -242,11 +256,47 @@ let uninstall name universe =
   let packages = List.filter (fun p -> p.Cudf.package <> name) packages in
   Cudf.load_universe packages
 
+let aspcud_path = lazy (
+  try
+    match OpamSystem.read_command_output ~verbose:false [ "which"; "aspcud" ] with
+    | []   -> None
+    | h::t -> Some (OpamMisc.strip h)
+  with _ ->
+    None
+)
+
+let external_solver_available () =
+  match Lazy.force aspcud_path with
+  | None   -> false
+  | Some _ -> true
+
+let solver_call = ref 0
+let call_external_solver univ req =
+  match Lazy.force aspcud_path with
+  | None ->
+    (* No external solver is available, use the default one *)
+    Algo.Depsolver.check_request ~explain:true (to_cudf univ req)
+  | Some path ->
+  if Cudf.universe_size univ > 0 then begin
+    let cmd = Printf.sprintf "%s $in $out $pref" path in
+    let criteria = "-removed,-new" in
+    let cudf = to_cudf univ req in
+    if !OpamGlobals.debug then (
+      Common.Util.Debug.all_enabled ();
+      let oc = open_out (Printf.sprintf "/tmp/univ%d.cudf" !solver_call) in
+      Cudf_printer.pp_cudf oc cudf;
+      incr solver_call;
+      close_out oc;
+    );
+    Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf
+  end else
+    Algo.Depsolver.Sat(None,Cudf.load_universe [])
+
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
   log "get_final_universe req=%s" (string_of_request req);
   let open Algo.Depsolver in
-  match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
+  match call_external_solver univ req with
   | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
   | Error str -> OpamGlobals.error_and_exit "solver error: str"
   | Unsat r   ->

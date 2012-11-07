@@ -156,7 +156,11 @@ let resolve universe request =
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
-  match OpamHeuristic.resolve simple_universe cudf_request with
+  let resolve =
+    if OpamCudf.external_solver_available ()
+    then OpamCudf.resolve
+    else OpamHeuristic.resolve in
+  match resolve simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam (c ()))
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
