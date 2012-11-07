@@ -102,7 +102,10 @@ let print_state t =
   log "ALIAS     : %s" (OpamAlias.to_string t.alias);
   log "COMPILER  : %s" (OpamCompiler.to_string t.compiler);
   log "REPOS     : %s" (string_of_repositories t.repositories);
-  log "AVAILABLE : %s" (OpamPackage.Set.to_string t.packages);
+  if !OpamGlobals.debug then
+    log "AVAILABLE : %s" (OpamPackage.Set.to_string (Lazy.force t.available_packages))
+  else
+    log "PACKAGES  : %s" (OpamPackage.Set.to_string t.packages);
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 

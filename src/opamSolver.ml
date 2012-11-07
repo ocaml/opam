@@ -149,7 +149,7 @@ let string_of_cudf_answer l =
   OpamMisc.string_of_list string_of_action  l
 
 let string_of_universe u =
-  string_of_packages (Cudf.get_packages u)
+  string_of_packages (List.sort compare (Cudf.get_packages u))
 
 let string_of_reason cudf2opam r =
   let open Algo.Diagnostic in
@@ -341,6 +341,7 @@ let uninstall name universe =
 
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
+  log "get_final_universe req=%s" (string_of_request req);
   let open Algo.Depsolver in
   match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
   | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
@@ -519,19 +520,35 @@ module Heuristic = struct
     let rec aux = function
       | None   -> default_conflict
       | Some t ->
+        let constrs = constrs t in
+        log "explore %s %s"
+          (OpamMisc.string_of_list string_of_int t)
+          (OpamFormula.string_of_conjunction string_of_atom constrs);
         incr count;
         let t1 = Unix.time () in
         if t1 -. t0 > 5. then (
           OpamGlobals.msg "The state-space is too big (at least %d states), so we cannot explore everything\n" !count;
           default_conflict
-        ) else match f (constrs t) with
+        ) else match f constrs with
         | Success _ as s -> s
         | _              -> aux (succ ~bounds t) in
     aux (init ~bounds 0)
 
+  let filter_dependencies universe constrs =
+    let filter pkg =
+      List.exists (fun (n,v) ->
+        n = pkg.Cudf.package
+        && match v with
+          | None       -> true
+          | Some (_,x) -> x=pkg.Cudf.version
+      ) constrs in
+    let packages = Cudf.get_packages ~filter universe in
+    let graph = CudfGraph.dep_reduction universe in
+    let packages = CudfGraph.topo_closure graph (CudfSet.of_list packages) in
+    List.map (fun p -> p.Cudf.package) packages
+
   (* Try to play all the possible upgrade scenarios ... *)
   let resolve universe request =
-    log "cudf_resolve_opt request=%s" (string_of_request request);
     match get_final_universe universe request with
 
     | Conflicts e ->
@@ -540,6 +557,9 @@ module Heuristic = struct
 
     | Success u   ->
       log "cudf_resolve_opt success!";
+
+      (* Get all the possible package which can be modified *)
+      let names = filter_dependencies universe request.wish_upgrade in
 
       (* All the packages in the request *)
       let all = Hashtbl.create 1024 in
@@ -579,11 +599,13 @@ module Heuristic = struct
       List.iter (fun (n,_) -> Hashtbl.add all n true) request.wish_upgrade;
 
       (* Register the upgraded packages *)
-      List.iter (fun (n,v as x) ->
+      let add_constr (n,v as x) =
         match v with
         | Some _ -> Hashtbl.add upgrade n [| x |]
-        | None   -> add_upgrade n
-      ) request.wish_upgrade;
+        | None   -> add_upgrade n in
+
+      List.iter add_constr request.wish_upgrade;
+      List.iter add_constr (List.filter (fun (n,_) -> List.mem n names) request.wish_install);
 
       (* Register the new packages *)
       let diff = Common.CudfDiff.diff universe u in
@@ -595,14 +617,27 @@ module Heuristic = struct
             add_upgrade name)
       ) diff;
 
-      (* enumerate all the upgrade strategies: can be very costly when too many packages *)
+      let wish_install = List.map (fun (n,v) ->
+        n,
+        match v with
+        | None   ->
+          if not (List.mem n names) then
+            match Cudf.get_installed universe n with
+            | []   -> None
+            | p::_ -> Some (`Eq, p.Cudf.version)
+          else
+            None
+        | _ -> v
+      ) request.wish_install in
+
       let resolve wish_upgrade =
-        let request = { request with wish_upgrade } in
+        let request = { request with wish_install; wish_upgrade } in
         get_final_universe universe request in
 
       match explore resolve upgrade with
       | Conflicts _ -> cudf_resolve universe request
       | Success u   ->
+        log "succes=%s" (string_of_universe u);
         try
           let diff = MyCudfDiff.diff universe (minimize !minimizable u) in
           Success (actions_of_diff diff)
