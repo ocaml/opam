@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Compiler switches. *)
+(** Compiler switches *)
 
 include OpamMisc.ABSTRACT
 

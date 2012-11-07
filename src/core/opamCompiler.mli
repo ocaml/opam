@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Compiler and OPAM versions *)
+(** Compiler names and versions *)
 
 (** OCaml compiler versions *)
 module Version: sig

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Configuration requests *)
+(** Configuration commands *)
 
 (** Answer to client requests about configuration *)
 val config: OpamTypes.config -> unit

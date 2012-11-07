@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamTypes.PackageAction.html">
+<link rel="Up" href="OpamTypes.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamTypes.PackageActionGraph</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OpamTypes.PackageAction.html" title="OpamTypes.PackageAction">Previous</a>
+&nbsp;<a class="up" href="OpamTypes.html" title="OpamTypes">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_OpamTypes.PackageActionGraph.html">OpamTypes.PackageActionGraph</a></h1>
+<pre><span class="keyword">module</span> PackageActionGraph: <code class="type"><a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a></code><code class="type">  with type package = package</code></pre>Graph of OPAM packages<br>
+<hr width="100%">
+<pre><span id="TYPEpackage"><span class="keyword">type</span> <code class="type"></code>package</span> </pre>
+
+<pre><span class="keyword">include</span> Graph.Sig.I</pre>
+<pre><span class="keyword">module</span> <a href="OpamTypes.ACTION_GRAPH.Parallel.html">Parallel</a>: <code class="type"><a href="OpamParallel.SIG.html">OpamParallel.SIG</a></code><code class="type"> 
+    with type G.t = t
+     and type G.V.t = V.t</code></pre><div class="info">
+Parallel iterator
+</div>
+<pre><span class="keyword">module</span> <a href="OpamTypes.ACTION_GRAPH.Topological.html">Topological</a>: <code class="code">sig</code> <a href="OpamTypes.ACTION_GRAPH.Topological.html">..</a> <code class="code">end</code></pre><div class="info">
+Topological traversal
+</div>
+<pre><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsolution.to_remove">to_remove</span>&nbsp;:<code class="type"><a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsolution.to_process">to_process</span>&nbsp;:<code class="type">t</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Solver solution<br>
+</div>
+
+</body></html>

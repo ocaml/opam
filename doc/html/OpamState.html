@@ -1,0 +1,276 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamSolution.html">
+<link rel="next" href="OpamSwitchCommand.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Environment" rel="Section" href="#2_Environment">
+<link title="Substitutions" rel="Section" href="#2_Substitutions">
+<link title="Filters" rel="Section" href="#2_Filters">
+<link title="Repositories" rel="Section" href="#2_Repositories">
+<link title="Compilers" rel="Section" href="#2_Compilers">
+<link title="Packages" rel="Section" href="#2_Packages">
+<link title="Configuration files" rel="Section" href="#2_Configurationfiles">
+<link title="Locks" rel="Section" href="#2_Locks">
+<title>OpamState</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OpamSolution.html" title="OpamSolution">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamSwitchCommand.html" title="OpamSwitchCommand">Next</a>
+</div>
+<h1>Module <a href="type_OpamState.html">OpamState</a></h1>
+<pre><span class="keyword">module</span> OpamState: <code class="code">sig</code> <a href="OpamState.html">..</a> <code class="code">end</code></pre>OPAM client state<br>
+<hr width="100%">
+<pre><code><span id="TYPEstate"><span class="keyword">type</span> <code class="type"></code>state</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.root">root</span>&nbsp;:<code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.switch">switch</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.compiler">compiler</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.compiler_version">compiler_version</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.opams">opams</span>&nbsp;:<code class="type">OpamFile.OPAM.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.repositories">repositories</span>&nbsp;:<code class="type">OpamFile.Repo_config.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.packages">packages</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.available_packages">available_packages</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> Lazy.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.aliases">aliases</span>&nbsp;:<code class="type">OpamFile.Aliases.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.pinned">pinned</span>&nbsp;:<code class="type">OpamFile.Pinned.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.installed">installed</span>&nbsp;:<code class="type">OpamFile.Installed.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.reinstall">reinstall</span>&nbsp;:<code class="type">OpamFile.Reinstall.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.config">config</span>&nbsp;:<code class="type">OpamFile.Config.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.repo_index">repo_index</span>&nbsp;:<code class="type">OpamFile.Repo_index.t</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Client state<br>
+</div>
+
+<pre><span id="VALload_state"><span class="keyword">val</span> load_state</span> : <code class="type">unit -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
+Load the client state<br>
+</div>
+<pre><span id="VALuniverse"><span class="keyword">val</span> universe</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -> <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a></code></pre><div class="info">
+Create a universe from the current state<br>
+</div>
+<br>
+<span id="2_Environment"><h2>Environment</h2></span><br>
+<pre><span id="VALget_env"><span class="keyword">val</span> get_env</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEenv">OpamTypes.env</a></code></pre><div class="info">
+Get the current environment<br>
+</div>
+<pre><span id="VALupdate_env"><span class="keyword">val</span> update_env</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPEenv">OpamTypes.env</a> -> (string * string * string) list -> <a href="OpamTypes.html#TYPEenv">OpamTypes.env</a></code></pre><div class="info">
+Update an environment.<br>
+</div>
+<pre><span id="VALprint_env_warning"><span class="keyword">val</span> print_env_warning</span> : <code class="type">?add_profile:bool -> <a href="OpamState.html#TYPEstate">state</a> -> unit</code></pre><div class="info">
+Print a warning if the environment is not set-up properly.<br>
+</div>
+<br>
+<span id="2_Substitutions"><h2>Substitutions</h2></span><br>
+<pre><span id="VALcontents_of_variable"><span class="keyword">val</span> contents_of_variable</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEfull_variable">OpamTypes.full_variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a></code></pre><div class="info">
+Compute the value of a variable<br>
+</div>
+<pre><span id="VALsubstitute_string"><span class="keyword">val</span> substitute_string</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> string -> string</code></pre><div class="info">
+Substitute a string<br>
+</div>
+<pre><span id="VALsubstitute_file"><span class="keyword">val</span> substitute_file</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> -> unit</code></pre><div class="info">
+Substitute file<br>
+</div>
+<pre><span id="VALsubstitute_commands"><span class="keyword">val</span> substitute_commands</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
+Substitute a list of commands<br>
+</div>
+<br>
+<span id="2_Filters"><h2>Filters</h2></span><br>
+<pre><span id="VALeval_filter"><span class="keyword">val</span> eval_filter</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option -> bool</code></pre><div class="info">
+Evaluate a filter<br>
+</div>
+<pre><span id="VALfilter_commands"><span class="keyword">val</span> filter_commands</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> string list list</code></pre><div class="info">
+Filter a list of commands<br>
+</div>
+<br>
+<span id="2_Repositories"><h2>Repositories</h2></span><br>
+<pre><span id="VALmem_repository"><span class="keyword">val</span> mem_repository</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> bool</code></pre><div class="info">
+Check if a package belongs to a repository<br>
+</div>
+<pre><span id="VALwith_repository"><span class="keyword">val</span> with_repository</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       (<a href="OpamPath.Repository.html#TYPEr">OpamPath.Repository.r</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> 'a) -> 'a</code></pre><div class="info">
+Apply a function on the repository which contains a given package<br>
+</div>
+<pre><span id="VALmem_repository_name"><span class="keyword">val</span> mem_repository_name</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> bool</code></pre><div class="info">
+Check whether a repository name is valid<br>
+</div>
+<pre><span id="VALfind_repository_name"><span class="keyword">val</span> find_repository_name</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
+Find a repository state, given its name<br>
+</div>
+<pre><span id="VALstring_of_repositories"><span class="keyword">val</span> string_of_repositories</span> : <code class="type">OpamFile.Repo_config.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a> -> string</code></pre><div class="info">
+Pretty print a map of repositories<br>
+</div>
+<br>
+<span id="2_Compilers"><h2>Compilers</h2></span><br>
+<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a></code></pre><div class="info">
+Return the list of available compilers<br>
+</div>
+<pre><span id="VALinstall_compiler"><span class="keyword">val</span> install_compiler</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
+Install the given compiler<br>
+</div>
+<pre><span id="VALget_compiler_packages"><span class="keyword">val</span> get_compiler_packages</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
+Get the packages associated with the given compiler<br>
+</div>
+<br>
+<span id="2_Packages"><h2>Packages</h2></span><br>
+<pre><span id="VALmem_installed_package_by_name"><span class="keyword">val</span> mem_installed_package_by_name</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> bool</code></pre><div class="info">
+Check whether a package name is installed<br>
+</div>
+<pre><span id="VALfind_installed_package_by_name"><span class="keyword">val</span> find_installed_package_by_name</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a></code></pre><div class="info">
+Return the installed package with the right name<br>
+</div>
+<pre><span id="VALmem_installed_package_by_name_aux"><span class="keyword">val</span> mem_installed_package_by_name_aux</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> bool</code></pre><div class="info">
+Check whether a package name is installed, but this time
+    using the collection of installed packages as argument<br>
+</div>
+<pre><span id="VALfind_installed_package_by_name_aux"><span class="keyword">val</span> find_installed_package_by_name_aux</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a></code></pre><div class="info">
+Return the installed package with the right name, but this time
+    using the collection of installed packages as argument<br>
+</div>
+<pre><span id="VALfind_packages_by_name"><span class="keyword">val</span> find_packages_by_name</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> option</code></pre><div class="info">
+Return all the packages with the given name<br>
+</div>
+<pre><span id="VALinstalled_map"><span class="keyword">val</span> installed_map</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a></code></pre><div class="info">
+Return a map from package names to package installed version<br>
+</div>
+<pre><span id="VALbase_packages"><span class="keyword">val</span> base_packages</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list</code></pre><div class="info">
+Return the base packages<br>
+</div>
+<br>
+<span id="2_Configurationfiles"><h2>Configuration files</h2></span><br>
+<pre><span id="VALdot_config"><span class="keyword">val</span> dot_config</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> OpamFile.Dot_config.t</code></pre><div class="info">
+Return the .config file for the given package<br>
+</div>
+<pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> OpamFile.OPAM.t</code></pre><div class="info">
+Return the OPAM file for the given package<br>
+</div>
+<pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> OpamFile.Comp.t</code></pre><div class="info">
+Return the compiler descritpion file for the given compiler name<br>
+</div>
+<br>
+<span id="2_Locks"><h2>Locks</h2></span><br>
+<pre><span id="VALcheck"><span class="keyword">val</span> check</span> : <code class="type"><a href="OpamTypes.html#TYPElock">OpamTypes.lock</a> -> unit</code></pre><div class="info">
+Apply a function while taking the right locks<br>
+</div>
+<pre><span class="keyword">module</span> <a href="OpamState.Types.html">Types</a>: <code class="code">sig</code> <a href="OpamState.Types.html">..</a> <code class="code">end</code></pre><div class="info">
+To be able to open <code class="code">OpamState.Types</code>
+</div>
+</body></html>

@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,11 +28,18 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><link title="Filenames" rel="Section" href="#2_Filenames">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Filenames" rel="Section" href="#2_Filenames">
 <link title="Packages" rel="Section" href="#2_Packages">
 <link title="Compilers" rel="Section" href="#2_Compilers">
 <link title="Variables" rel="Section" href="#2_Variables">
@@ -39,18 +49,17 @@
 <link title="Command line arguments" rel="Section" href="#2_Commandlinearguments">
 <link title="Filtered commands" rel="Section" href="#2_Filteredcommands">
 <link title="Untyped generic file format" rel="Section" href="#2_Untypedgenericfileformat">
-<link title="Aliases" rel="Section" href="#2_Aliases">
+<link title="Switches" rel="Section" href="#2_Switches">
 <link title="Misc" rel="Section" href="#2_Misc">
 <title>OpamTypes</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamSystem.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamVariable.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamSystem.html" title="OpamSystem">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamVariable.html" title="OpamVariable">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamTypes.html">OpamTypes</a></h1></center>
-<br>
-<pre><span class="keyword">module</span> OpamTypes: <code class="code">sig</code> <a href="OpamTypes.html">..</a> <code class="code">end</code></pre>OPAM types<br>
+<h1>Module <a href="type_OpamTypes.html">OpamTypes</a></h1>
+<pre><span class="keyword">module</span> OpamTypes: <code class="code">sig</code> <a href="OpamTypes.html">..</a> <code class="code">end</code></pre>Common types used by other modules<br>
 <hr width="100%">
 <br>
 <span id="2_Filenames"><h2>Filenames</h2></span><br>
@@ -79,19 +88,19 @@ Set of files<br>
 Map of files<br>
 </div>
 
-<br><code><span id="TYPEgeneric_file"><span class="keyword">type</span> <code class="type"></code>generic_file</span> = </code><table class="typetable">
+<pre><code><span id="TYPEgeneric_file"><span class="keyword">type</span> <code class="type"></code>generic_file</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">D</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTgeneric_file.D"><span class="constructor">D</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">F</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code></code></td>
+<code><span id="TYPEELTgeneric_file.F"><span class="constructor">F</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code></code></td>
 
 </tr></table>
 
@@ -99,26 +108,26 @@ Map of files<br>
 Generalized file type<br>
 </div>
 
-<br><code><span id="TYPEdownload"><span class="keyword">type</span> <code class="type">'a</code> download</span> = </code><table class="typetable">
+<pre><code><span id="TYPEdownload"><span class="keyword">type</span> <code class="type">'a</code> download</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Up_to_date</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTdownload.Up_to_date"><span class="constructor">Up_to_date</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Not_available</span></code></td>
+<code><span id="TYPEELTdownload.Not_available"><span class="constructor">Not_available</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Result</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTdownload.Result"><span class="constructor">Result</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr></table>
 
@@ -223,14 +232,14 @@ Fully qualified section names<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">B</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+<code><span id="TYPEELTvariable_contents.B"><span class="constructor">B</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">S</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvariable_contents.S"><span class="constructor">S</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr></table>
 
@@ -238,19 +247,19 @@ Fully qualified section names<br>
 Content of user-defined variables<br>
 </div>
 
-<br><code><span id="TYPEppflag"><span class="keyword">type</span> <code class="type"></code>ppflag</span> = </code><table class="typetable">
+<pre><code><span id="TYPEppflag"><span class="keyword">type</span> <code class="type"></code>ppflag</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Camlp4</span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
+<code><span id="TYPEELTppflag.Camlp4"><span class="constructor">Camlp4</span></span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Cmd</span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
+<code><span id="TYPEELTppflag.Cmd"><span class="constructor">Cmd</span></span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
 
 </tr></table>
 
@@ -265,35 +274,35 @@ Content of <code class="code">pp</code> variables<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Empty</span></code></td>
+<code><span id="TYPEELTgeneric_formula.Empty"><span class="constructor">Empty</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Atom</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTgeneric_formula.Atom"><span class="constructor">Atom</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Block</span> <span class="keyword">of</span> <code class="type">'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a></code></code></td>
+<code><span id="TYPEELTgeneric_formula.Block"><span class="constructor">Block</span></span> <span class="keyword">of</span> <code class="type">'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">And</span> <span class="keyword">of</span> <code class="type">'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a> * 'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a></code></code></td>
+<code><span id="TYPEELTgeneric_formula.And"><span class="constructor">And</span></span> <span class="keyword">of</span> <code class="type">'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a> * 'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Or</span> <span class="keyword">of</span> <code class="type">'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a> * 'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a></code></code></td>
+<code><span id="TYPEELTgeneric_formula.Or"><span class="constructor">Or</span></span> <span class="keyword">of</span> <code class="type">'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a> * 'a <a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a></code></code></td>
 
 </tr></table>
 
@@ -301,48 +310,65 @@ Content of <code class="code">pp</code> variables<br>
 A generic formula<br>
 </div>
 
+<pre><span id="TYPEatom"><span class="keyword">type</span> <code class="type"></code>atom</span> = <code class="type"><a href="OpamFormula.html#TYPEatom">OpamFormula.atom</a></code> </pre>
+<div class="info">
+Formula atoms<br>
+</div>
+
 <pre><span id="TYPEformula"><span class="keyword">type</span> <code class="type"></code>formula</span> = <code class="type"><a href="OpamFormula.html#TYPEt">OpamFormula.t</a></code> </pre>
 <div class="info">
 Formula over versionned packages<br>
 </div>
 
-<pre><span id="TYPEconjunction"><span class="keyword">type</span> <code class="type"></code>conjunction</span> = <code class="type"><a href="OpamFormula.html#TYPEconjunction">OpamFormula.conjunction</a></code> </pre>
+<pre><span id="TYPEconjunction"><span class="keyword">type</span> <code class="type">'a</code> conjunction</span> = <code class="type">'a <a href="OpamFormula.html#TYPEconjunction">OpamFormula.conjunction</a></code> </pre>
 <div class="info">
 AND formulat<br>
 </div>
 
+<pre><span id="TYPEdisjunction"><span class="keyword">type</span> <code class="type">'a</code> disjunction</span> = <code class="type">'a <a href="OpamFormula.html#TYPEdisjunction">OpamFormula.disjunction</a></code> </pre>
+<div class="info">
+OR formulat<br>
+</div>
+
 <br>
 <span id="2_Repositories"><h2>Repositories</h2></span><br>
-<pre><span id="TYPEkind"><span class="keyword">type</span> <code class="type"></code>kind</span> = <code class="type">string</code> </pre>
+<pre><span id="TYPErepository_name"><span class="keyword">type</span> <code class="type"></code>repository_name</span> = <code class="type">OpamRepositoryName.t</code> </pre>
 <div class="info">
-Kind of repository<br>
+Repository names<br>
 </div>
 
-<pre><span id="TYPEaddress"><span class="keyword">type</span> <code class="type"></code>address</span> = <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code> </pre>
+<pre><span id="TYPErepository_name_map"><span class="keyword">type</span> <code class="type">'a</code> repository_name_map</span> = <code class="type">'a OpamRepositoryName.Map.t</code> </pre>
 <div class="info">
-The address of a repository<br>
+Maps of repository names<br>
 </div>
 
-<br><code><span id="TYPErepository"><span class="keyword">type</span> <code class="type"></code>repository</span> = {</code><table class="typetable">
+<pre><code><span id="TYPErepository"><span class="keyword">type</span> <code class="type"></code>repository</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>repo_name&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTrepository.repo_name">repo_name</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>repo_kind&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEkind">kind</a></code>;</code></td>
+<code><span id="TYPEELTrepository.repo_kind">repo_kind</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>repo_address&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEaddress">address</a></code>;</code></td>
+<code><span id="TYPEELTrepository.repo_address">repo_address</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrepository.repo_priority">repo_priority</span>&nbsp;:<code class="type">int</code>;</code></td>
 
 </tr></table>
 }
@@ -351,31 +377,28 @@ The address of a repository<br>
 Repositories<br>
 </div>
 
-<pre><span id="VALcreate_repository"><span class="keyword">val</span> create_repository</span> : <code class="type">name:string -> kind:string -> address:string -> <a href="OpamTypes.html#TYPErepository">repository</a></code></pre><div class="info">
-Constructor<br>
-</div>
 <br>
 <span id="2_Solver"><h2>Solver</h2></span><br>
-<br><code><span id="TYPEaction"><span class="keyword">type</span> <code class="type"></code>action</span> = </code><table class="typetable">
+<pre><code><span id="TYPEaction"><span class="keyword">type</span> <code class="type">'a</code> action</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">To_change</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEpackage">package</a> option * <a href="OpamTypes.html#TYPEpackage">package</a></code></code></td>
+<code><span id="TYPEELTaction.To_change"><span class="constructor">To_change</span></span> <span class="keyword">of</span> <code class="type">'a option * 'a</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">To_delete</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEpackage">package</a></code></code></td>
+<code><span id="TYPEELTaction.To_delete"><span class="constructor">To_delete</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">To_recompile</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEpackage">package</a></code></code></td>
+<code><span id="TYPEELTaction.To_recompile"><span class="constructor">To_recompile</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr></table>
 
@@ -383,19 +406,53 @@ Constructor<br>
 The solver answer is a list of actions<br>
 </div>
 
-<br><code><span id="TYPEresult"><span class="keyword">type</span> <code class="type">('a, 'b)</code> result</span> = </code><table class="typetable">
+<pre><span class="keyword">module type</span> <a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a> = <code class="code">sig</code> <a href="OpamTypes.ACTION_GRAPH.html">..</a> <code class="code">end</code></pre><div class="info">
+Graph of package actions
+</div>
+<pre><span class="keyword">module type</span> <a href="OpamTypes.PKG.html">PKG</a> = <code class="code">sig</code> <a href="OpamTypes.PKG.html">..</a> <code class="code">end</code></pre><div class="info">
+Signature of packages
+</div>
+<pre><span class="keyword">module</span> <a href="OpamTypes.MakeActionGraph.html">MakeActionGraph</a>: <div class="sig_block"><code class="code">functor (</code><code class="code">Pkg</code><code class="code"> : </code><code class="type"><a href="OpamTypes.PKG.html">PKG</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a></code><code class="type">  with type package = Pkg.t</code></div></pre><div class="info">
+Functor to create a graph af actions
+</div>
+<pre><span class="keyword">module</span> <a href="OpamTypes.PackageAction.html">PackageAction</a>: <code class="type"><a href="OpamTypes.PKG.html">PKG</a></code><code class="type">  with type t = package</code></pre><div class="info">
+Package actions
+</div>
+<pre><span class="keyword">module</span> <a href="OpamTypes.PackageActionGraph.html">PackageActionGraph</a>: <code class="type"><a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a></code><code class="type">  with type package = package</code></pre><div class="info">
+Graph of OPAM packages
+</div>
+<pre><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = <code class="type">PackageActionGraph.solution</code> </pre>
+<div class="info">
+The type for solutions<br>
+</div>
+
+<pre><code><span id="TYPEsolver_result"><span class="keyword">type</span> <code class="type"></code>solver_result</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Success</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTsolver_result.Nothing_to_do"><span class="constructor">Nothing_to_do</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Conflicts</span> <span class="keyword">of</span> <code class="type">(unit -> 'b)</code></code></td>
+<code><span id="TYPEELTsolver_result.OK"><span class="constructor">OK</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsolver_result.Aborted"><span class="constructor">Aborted</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsolver_result.No_solution"><span class="constructor">No_solution</span></span></code></td>
 
 </tr></table>
 
@@ -403,26 +460,46 @@ The solver answer is a list of actions<br>
 Solver result<br>
 </div>
 
-<br><code><span id="TYPErequest"><span class="keyword">type</span> <code class="type"></code>request</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEresult"><span class="keyword">type</span> <code class="type">('a, 'b)</code> result</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTresult.Success"><span class="constructor">Success</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTresult.Conflicts"><span class="constructor">Conflicts</span></span> <span class="keyword">of</span> <code class="type">(unit -> 'b)</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Solver result<br>
+</div>
+
+<pre><code><span id="TYPErequest"><span class="keyword">type</span> <code class="type">'a</code> request</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>wish_install&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEconjunction">conjunction</a></code>;</code></td>
+<code><span id="TYPEELTrequest.wish_install">wish_install</span>&nbsp;:<code class="type">'a <a href="OpamTypes.html#TYPEconjunction">conjunction</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>wish_remove&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEconjunction">conjunction</a></code>;</code></td>
+<code><span id="TYPEELTrequest.wish_remove">wish_remove</span>&nbsp;:<code class="type">'a <a href="OpamTypes.html#TYPEconjunction">conjunction</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>wish_upgrade&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEconjunction">conjunction</a></code>;</code></td>
+<code><span id="TYPEELTrequest.wish_upgrade">wish_upgrade</span>&nbsp;:<code class="type">'a <a href="OpamTypes.html#TYPEconjunction">conjunction</a></code>;</code></td>
 
 </tr></table>
 }
@@ -431,49 +508,125 @@ Solver result<br>
 Solver request<br>
 </div>
 
-<br><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type">'a</code> solution</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEuser_action"><span class="keyword">type</span> <code class="type"></code>user_action</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Install"><span class="constructor">Install</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Upgrade"><span class="constructor">Upgrade</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Depends"><span class="constructor">Depends</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Init"><span class="constructor">Init</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Remove"><span class="constructor">Remove</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Switch"><span class="constructor">Switch</span></span></code></td>
+
+</tr></table>
+
+<div class="info">
+user request action<br>
+</div>
+
+<pre><code><span id="TYPEuniverse"><span class="keyword">type</span> <code class="type"></code>universe</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>to_remove&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEpackage">package</a> list</code>;</code></td>
+<code><span id="TYPEELTuniverse.u_installed">u_installed</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>to_add&nbsp;: <code class="type">'a</code>;</code></td>
+<code><span id="TYPEELTuniverse.u_available">u_available</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuniverse.u_depends">u_depends</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEformula">formula</a> <a href="OpamTypes.html#TYPEpackage_map">package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuniverse.u_depopts">u_depopts</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEformula">formula</a> <a href="OpamTypes.html#TYPEpackage_map">package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuniverse.u_conflicts">u_conflicts</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEformula">formula</a> <a href="OpamTypes.html#TYPEpackage_map">package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuniverse.u_action">u_action</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEuser_action">user_action</a></code>;</code></td>
 
 </tr></table>
 }
 
 <div class="info">
-Solver solution<br>
+Solver universe<br>
 </div>
 
 <br>
 <span id="2_Commandlinearguments"><h2>Command line arguments</h2></span><br>
-<br><code><span id="TYPEupload"><span class="keyword">type</span> <code class="type"></code>upload</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEupload"><span class="keyword">type</span> <code class="type"></code>upload</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>upl_opam&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
+<code><span id="TYPEELTupload.upl_opam">upl_opam</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>upl_descr&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
+<code><span id="TYPEELTupload.upl_descr">upl_descr</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>upl_archive&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
+<code><span id="TYPEELTupload.upl_archive">upl_archive</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
 
 </tr></table>
 }
@@ -485,26 +638,33 @@ Upload arguments<br>
 <pre><span id="VALstring_of_upload"><span class="keyword">val</span> string_of_upload</span> : <code class="type"><a href="OpamTypes.html#TYPEupload">upload</a> -> string</code></pre><div class="info">
 Pretty-print<br>
 </div>
-<br><code><span id="TYPEremote"><span class="keyword">type</span> <code class="type"></code>remote</span> = </code><table class="typetable">
+<pre><code><span id="TYPEremote"><span class="keyword">type</span> <code class="type"></code>remote</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">RList</span></code></td>
+<code><span id="TYPEELTremote.RList"><span class="constructor">RList</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">RAdd</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository">repository</a></code></code></td>
+<code><span id="TYPEELTremote.RAdd"><span class="constructor">RAdd</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a> * string * <a href="OpamTypes.html#TYPEdirname">dirname</a> * int option</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">RRm</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTremote.RRm"><span class="constructor">RRm</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTremote.RPriority"><span class="constructor">RPriority</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a> * int</code></code></td>
 
 </tr></table>
 
@@ -515,33 +675,33 @@ Remote arguments<br>
 <pre><span id="VALstring_of_remote"><span class="keyword">val</span> string_of_remote</span> : <code class="type"><a href="OpamTypes.html#TYPEremote">remote</a> -> string</code></pre><div class="info">
 Pretty-print or remote args<br>
 </div>
-<br><code><span id="TYPEpin_option"><span class="keyword">type</span> <code class="type"></code>pin_option</span> = </code><table class="typetable">
+<pre><code><span id="TYPEpin_option"><span class="keyword">type</span> <code class="type"></code>pin_option</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Version</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEversion">version</a></code></code></td>
+<code><span id="TYPEELTpin_option.Version"><span class="constructor">Version</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEversion">version</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Path</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTpin_option.Path"><span class="constructor">Path</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Git</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTpin_option.Git"><span class="constructor">Git</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Unpin</span></code></td>
+<code><span id="TYPEELTpin_option.Unpin"><span class="constructor">Unpin</span></span></code></td>
 
 </tr></table>
 
@@ -549,19 +709,19 @@ Pretty-print or remote args<br>
 Pinned packages options<br>
 </div>
 
-<br><code><span id="TYPEpin"><span class="keyword">type</span> <code class="type"></code>pin</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEpin"><span class="keyword">type</span> <code class="type"></code>pin</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>pin_package&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEname">name</a></code>;</code></td>
+<code><span id="TYPEELTpin.pin_package">pin_package</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEname">name</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>pin_arg&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a></code>;</code></td>
+<code><span id="TYPEELTpin.pin_arg">pin_arg</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a></code>;</code></td>
 
 </tr></table>
 }
@@ -576,33 +736,33 @@ Pretty-printing of pinned packages<br>
 <pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">?kind:string -> string -> <a href="OpamTypes.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
 Read pin options args<br>
 </div>
-<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><br><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code><table class="typetable">
+<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>conf_is_rec&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig_option.conf_is_rec">conf_is_rec</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>conf_is_byte&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig_option.conf_is_byte">conf_is_byte</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>conf_is_link&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig_option.conf_is_link">conf_is_link</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>conf_options&nbsp;: <code class="type">OpamVariable.Section.Full.t list</code>;</code></td>
+<code><span id="TYPEELTconfig_option.conf_options">conf_options</span>&nbsp;:<code class="type">OpamVariable.Section.Full.t list</code>;</code></td>
 
 </tr></table>
 }
@@ -611,94 +771,94 @@ Read pin options args<br>
 Configuration requests<br>
 </div>
 
-<br><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = </code><table class="typetable">
+<pre><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">CEnv</span></code></td>
+<code><span id="TYPEELTconfig.CEnv"><span class="constructor">CEnv</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">CList</span></code></td>
+<code><span id="TYPEELTconfig.CList"><span class="constructor">CList</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">CVariable</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfull_variable">full_variable</a></code></code></td>
+<code><span id="TYPEELTconfig.CVariable"><span class="constructor">CVariable</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfull_variable">full_variable</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">CIncludes</span> <span class="keyword">of</span> <code class="type">bool * <a href="OpamTypes.html#TYPEname">name</a> list</code></code></td>
+<code><span id="TYPEELTconfig.CIncludes"><span class="constructor">CIncludes</span></span> <span class="keyword">of</span> <code class="type">bool * <a href="OpamTypes.html#TYPEname">name</a> list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">CCompil</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEconfig_option">config_option</a></code></code></td>
+<code><span id="TYPEELTconfig.CCompil"><span class="constructor">CCompil</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEconfig_option">config_option</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">CSubst</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEbasename">basename</a> list</code></code></td>
+<code><span id="TYPEELTconfig.CSubst"><span class="constructor">CSubst</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEbasename">basename</a> list</code></code></td>
 
 </tr></table>
 
 
 <br>
 <span id="2_Filteredcommands"><h2>Filtered commands</h2></span><br>
-<br><code><span id="TYPEsymbol"><span class="keyword">type</span> <code class="type"></code>symbol</span> = </code><table class="typetable">
+<pre><code><span id="TYPEsymbol"><span class="keyword">type</span> <code class="type"></code>symbol</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Eq</span></code></td>
+<code><span id="TYPEELTsymbol.Eq"><span class="constructor">Eq</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Neq</span></code></td>
+<code><span id="TYPEELTsymbol.Neq"><span class="constructor">Neq</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Le</span></code></td>
+<code><span id="TYPEELTsymbol.Le"><span class="constructor">Le</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Ge</span></code></td>
+<code><span id="TYPEELTsymbol.Ge"><span class="constructor">Ge</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Lt</span></code></td>
+<code><span id="TYPEELTsymbol.Lt"><span class="constructor">Lt</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Gt</span></code></td>
+<code><span id="TYPEELTsymbol.Gt"><span class="constructor">Gt</span></span></code></td>
 
 </tr></table>
 
@@ -706,40 +866,40 @@ Configuration requests<br>
 Symbols<br>
 </div>
 
-<br><code><span id="TYPEfilter"><span class="keyword">type</span> <code class="type"></code>filter</span> = </code><table class="typetable">
+<pre><code><span id="TYPEfilter"><span class="keyword">type</span> <code class="type"></code>filter</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">FBool</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+<code><span id="TYPEELTfilter.FBool"><span class="constructor">FBool</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">FString</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTfilter.FString"><span class="constructor">FString</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">FOp</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEsymbol">symbol</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
+<code><span id="TYPEELTfilter.FOp"><span class="constructor">FOp</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEsymbol">symbol</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">FAnd</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
+<code><span id="TYPEELTfilter.FAnd"><span class="constructor">FAnd</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">FOr</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
+<code><span id="TYPEELTfilter.FOr"><span class="constructor">FOr</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
 
 </tr></table>
 
@@ -759,61 +919,61 @@ Command<br>
 
 <br>
 <span id="2_Untypedgenericfileformat"><h2>Untyped generic file format</h2></span><br>
-<br><code><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> = </code><table class="typetable">
+<pre><code><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Bool</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+<code><span id="TYPEELTvalue.Bool"><span class="constructor">Bool</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Int</span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+<code><span id="TYPEELTvalue.Int"><span class="constructor">Int</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">String</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvalue.String"><span class="constructor">String</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Symbol</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvalue.Symbol"><span class="constructor">Symbol</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Ident</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+<code><span id="TYPEELTvalue.Ident"><span class="constructor">Ident</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">List</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEvalue">value</a> list</code></code></td>
+<code><span id="TYPEELTvalue.List"><span class="constructor">List</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEvalue">value</a> list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Group</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEvalue">value</a> list</code></code></td>
+<code><span id="TYPEELTvalue.Group"><span class="constructor">Group</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEvalue">value</a> list</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Option</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEvalue">value</a> * <a href="OpamTypes.html#TYPEvalue">value</a> list</code></code></td>
+<code><span id="TYPEELTvalue.Option"><span class="constructor">Option</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEvalue">value</a> * <a href="OpamTypes.html#TYPEvalue">value</a> list</code></code></td>
 
 </tr></table>
 
@@ -821,26 +981,26 @@ Command<br>
 Base values<br>
 </div>
 
-<br><code><span id="TYPEfile_section"><span class="keyword">type</span> <code class="type"></code>file_section</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEfile_section"><span class="keyword">type</span> <code class="type"></code>file_section</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>section_kind&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTfile_section.section_kind">section_kind</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>section_name&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTfile_section.section_name">section_name</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>section_items&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEfile_item">file_item</a> list</code>;</code></td>
+<code><span id="TYPEELTfile_section.section_items">section_items</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfile_item">file_item</a> list</code>;</code></td>
 
 </tr></table>
 }
@@ -849,19 +1009,19 @@ Base values<br>
 A file section<br>
 </div>
 
-<br><code><span id="TYPEfile_item"><span class="keyword">type</span> <code class="type"></code>file_item</span> = </code><table class="typetable">
+<pre><code><span id="TYPEfile_item"><span class="keyword">type</span> <code class="type"></code>file_item</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Section</span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfile_section">file_section</a></code></code></td>
+<code><span id="TYPEELTfile_item.Section"><span class="constructor">Section</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfile_section">file_section</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Variable</span> <span class="keyword">of</span> <code class="type">string * <a href="OpamTypes.html#TYPEvalue">value</a></code></code></td>
+<code><span id="TYPEELTfile_item.Variable"><span class="constructor">Variable</span></span> <span class="keyword">of</span> <code class="type">string * <a href="OpamTypes.html#TYPEvalue">value</a></code></code></td>
 
 </tr></table>
 
@@ -869,19 +1029,19 @@ A file section<br>
 A file is composed of sections and variable definitions<br>
 </div>
 
-<br><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEfile"><span class="keyword">type</span> <code class="type"></code>file</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>file_contents&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEfile_item">file_item</a> list</code>;</code></td>
+<code><span id="TYPEELTfile.file_contents">file_contents</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfile_item">file_item</a> list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>file_name&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTfile.file_name">file_name</span>&nbsp;:<code class="type">string</code>;</code></td>
 
 </tr></table>
 }
@@ -891,19 +1051,51 @@ A file is a list of items and the filename<br>
 </div>
 
 <br>
-<span id="2_Aliases"><h2>Aliases</h2></span><br>
-<pre><span id="TYPEalias"><span class="keyword">type</span> <code class="type"></code>alias</span> = <code class="type">OpamAlias.t</code> </pre>
+<span id="2_Switches"><h2>Switches</h2></span><br>
+<pre><span id="TYPEswitch"><span class="keyword">type</span> <code class="type"></code>switch</span> = <code class="type">OpamSwitch.t</code> </pre>
 <div class="info">
-Compiler aliases<br>
+Compiler switches<br>
 </div>
 
-<pre><span id="TYPEalias_set"><span class="keyword">type</span> <code class="type"></code>alias_set</span> = <code class="type">OpamAlias.Set.t</code> </pre>
+<pre><span id="TYPEswitch_set"><span class="keyword">type</span> <code class="type"></code>switch_set</span> = <code class="type">OpamSwitch.Set.t</code> </pre>
 <div class="info">
-Set of compiler aliases<br>
+Set of compiler switches<br>
+</div>
+
+<pre><span id="TYPEswitch_map"><span class="keyword">type</span> <code class="type">'a</code> switch_map</span> = <code class="type">'a OpamSwitch.Map.t</code> </pre>
+<div class="info">
+Map of compile switches<br>
 </div>
 
 <br>
 <span id="2_Misc"><h2>Misc</h2></span><br>
+<pre><code><span id="TYPElock"><span class="keyword">type</span> <code class="type"></code>lock</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTlock.Read_lock"><span class="constructor">Read_lock</span></span> <span class="keyword">of</span> <code class="type">(unit -> unit)</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTlock.Global_lock"><span class="constructor">Global_lock</span></span> <span class="keyword">of</span> <code class="type">(unit -> unit)</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTlock.Switch_lock"><span class="constructor">Switch_lock</span></span> <span class="keyword">of</span> <code class="type">(unit -> unit)</code></code></td>
+
+</tr></table>
+
+<div class="info">
+The different kinds of locks<br>
+</div>
+
 <pre><span id="TYPEfile_attribute"><span class="keyword">type</span> <code class="type"></code>file_attribute</span> = <code class="type">OpamFilename.Attribute.t</code> </pre>
 <div class="info">
 A line in <i>urls.tx</i><br>
@@ -914,19 +1106,19 @@ A line in <i>urls.tx</i><br>
 All the lines in <i>urls.txt</i><br>
 </div>
 
-<br><code><span id="TYPEoptional"><span class="keyword">type</span> <code class="type">'a</code> optional</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEoptional"><span class="keyword">type</span> <code class="type">'a</code> optional</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>c&nbsp;: <code class="type">'a</code>;</code></td>
+<code><span id="TYPEELToptional.c">c</span>&nbsp;:<code class="type">'a</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Contents</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>optional&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELToptional.optional">optional</span>&nbsp;:<code class="type">bool</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Is the contents optional</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 }
@@ -935,40 +1127,40 @@ All the lines in <i>urls.txt</i><br>
 Optional contents<br>
 </div>
 
-<br><code><span id="TYPEstats"><span class="keyword">type</span> <code class="type"></code>stats</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEstats"><span class="keyword">type</span> <code class="type"></code>stats</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>s_install&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTstats.s_install">s_install</span>&nbsp;:<code class="type">int</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>s_reinstall&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTstats.s_reinstall">s_reinstall</span>&nbsp;:<code class="type">int</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>s_upgrade&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTstats.s_upgrade">s_upgrade</span>&nbsp;:<code class="type">int</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>s_downgrade&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTstats.s_downgrade">s_downgrade</span>&nbsp;:<code class="type">int</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>s_remove&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTstats.s_remove">s_remove</span>&nbsp;:<code class="type">int</code>;</code></td>
 
 </tr></table>
 }
@@ -977,26 +1169,26 @@ Optional contents<br>
 Upgrade statistics<br>
 </div>
 
-<br><code><span id="TYPEenv"><span class="keyword">type</span> <code class="type"></code>env</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEenv"><span class="keyword">type</span> <code class="type"></code>env</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>add_to_env&nbsp;: <code class="type">(string * string) list</code>;</code></td>
+<code><span id="TYPEELTenv.add_to_env">add_to_env</span>&nbsp;:<code class="type">(string * string) list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>add_to_path&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code>;</code></td>
+<code><span id="TYPEELTenv.add_to_path">add_to_path</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>new_env&nbsp;: <code class="type">(string * string) list</code>;</code></td>
+<code><span id="TYPEELTenv.new_env">new_env</span>&nbsp;:<code class="type">(string * string) list</code>;</code></td>
 
 </tr></table>
 }

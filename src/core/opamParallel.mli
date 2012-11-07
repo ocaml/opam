@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Concurrent process execution. *)
+(** Concurrent process execution *)
 
 (** Functor argument *)
 module type G = sig

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Low-level untyped system operations. *)
+(** Low-level untyped system operations *)
 
 (** Exception raised when subprocess fails *)
 exception Process_error of OpamProcess.result

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** SAT-solver for package dependencies and conflicts. *)
+(** SAT-solver for package dependencies and conflicts *)
 
 open OpamTypes
 

@@ -11,8 +11,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -24,25 +27,34 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamMisc.ABSTRACT.Map</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamMisc.ABSTRACT.Map</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamMisc.ABSTRACT.Set.html">Previous</a>
-&nbsp;<a href="OpamMisc.ABSTRACT.html">Up</a>
+<div class="navbar"><a class="pre" href="OpamMisc.ABSTRACT.Set.html" title="OpamMisc.ABSTRACT.Set">Previous</a>
+&nbsp;<a class="up" href="OpamMisc.ABSTRACT.html" title="OpamMisc.ABSTRACT">Up</a>
 &nbsp;</div>
-<center><h1>Module <a href="type_OpamMisc.ABSTRACT.Map.html">OpamMisc.ABSTRACT.Map</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamMisc.ABSTRACT.Map.html">OpamMisc.ABSTRACT.Map</a></h1>
 <pre><span class="keyword">module</span> Map: <code class="type"><a href="OpamMisc.MAP.html">OpamMisc.MAP</a></code><code class="type">  with type key = t</code></pre><hr width="100%">
 <pre><span class="keyword">include</span> Map.S</pre>
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">('a -> string) -> 'a t -> string</code></pre><div class="info">
 Pretty-printing<br>
 </div>
 <pre><span id="VALvalues"><span class="keyword">val</span> values</span> : <code class="type">'a t -> 'a list</code></pre><div class="info">
-Split with <code class="code">bindings</code> and return the <code class="code">snd</code> component.<br>
+Return the values in the map.<br>
+</div>
+<pre><span id="VALkeys"><span class="keyword">val</span> keys</span> : <code class="type">'a t -> key list</code></pre><div class="info">
+Return the keys in the map.<br>
 </div>
 <br>
 Same as <code class="code">merge</code> but only keys that appear in both maps

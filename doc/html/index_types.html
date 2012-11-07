@@ -8,8 +8,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -21,14 +24,23 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>Index of types</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>Index of types</title>
 </head>
 <body>
-<center><h1>Index of types</h1></center>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of types</h1>
 <table>
 <tr><td align="left"><br>A</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEaction">action</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -36,24 +48,19 @@
 The solver answer is a list of actions
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html#TYPEaddress">address</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-The address of a repository
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.html#TYPEalias">alias</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Compiler aliases
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.html#TYPEalias_set">alias_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Set of compiler aliases
-</div>
-</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEarg">arg</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Command argument
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEatom">atom</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Formula atoms
+</div>
+</td></tr>
+<tr><td><a href="OpamFormula.html#TYPEatom">atom</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
+<td><div class="info">
+Formula atoms for OPAM
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
@@ -65,7 +72,7 @@ Basenames
 <tr><td align="left"><br>C</td></tr>
 <tr><td><a href="OpamFormula.html#TYPEcnf">cnf</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
-CNF formulas
+CNF formulas (Conjunctive Normal Form)
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEcommand">command</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -124,6 +131,21 @@ Compiler constraint
 <tr><td><a href="OpamTypes.html#TYPEdirname">dirname</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Directory names
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEdisjunction">disjunction</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+OR formulat
+</div>
+</td></tr>
+<tr><td><a href="OpamFormula.html#TYPEdisjunction">disjunction</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
+<td><div class="info">
+OR formulas
+</div>
+</td></tr>
+<tr><td><a href="OpamFormula.html#TYPEdnf">dnf</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
+<td><div class="info">
+DNF formulas (Disjunctive Normal Form)
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEdownload">download</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -221,10 +243,10 @@ When folding recursively a value <code class="code">Variable (s, v)</code> for p
     (i.e.
 </div>
 </td></tr>
-<tr><td align="left"><br>K</td></tr>
-<tr><td><a href="OpamTypes.html#TYPEkind">kind</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<tr><td align="left"><br>L</td></tr>
+<tr><td><a href="OpamTypes.html#TYPElock">lock</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
-Kind of repository
+The different kinds of locks
 </div>
 </td></tr>
 <tr><td align="left"><br>N</td></tr>
@@ -255,19 +277,16 @@ Optional contents
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>
+<tr><td><a href="OpamCudf.Diff.html#TYPEpackage">package</a> [<a href="OpamCudf.Diff.html">OpamCudf.Diff</a>]</td>
+<td><div class="info">
+Differences between the versions of a given package
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> [<a href="OpamTypes.ACTION_GRAPH.html">OpamTypes.ACTION_GRAPH</a>]</td>
+<td></td></tr>
 <tr><td><a href="OpamTypes.html#TYPEpackage">package</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Packages are (<code class="code">name</code> * <code class="code">version</code>) tuple
-</div>
-</td></tr>
-<tr><td><a href="OpamSolver.html#TYPEpackage">package</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
-<td><div class="info">
-Package
-</div>
-</td></tr>
-<tr><td><a href="OpamSolver.html#TYPEpackage_action">package_action</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
-<td><div class="info">
-Package with associated build action
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEpackage_map">package_map</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -278,11 +297,6 @@ Map of packages
 <tr><td><a href="OpamTypes.html#TYPEpackage_set">package_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Set of packages
-</div>
-</td></tr>
-<tr><td><a href="OpamSolver.html#TYPEpackages">packages</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
-<td><div class="info">
-Subset of packages
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEpin">pin</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -306,9 +320,9 @@ Content of <code class="code">pp</code> variables
 Repository root
 </div>
 </td></tr>
-<tr><td><a href="OpamCompiler.html#TYPErelop">relop</a> [<a href="OpamCompiler.html">OpamCompiler</a>]</td>
+<tr><td><a href="OpamFormula.html#TYPErelop">relop</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
-Binary relations
+binary operations
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEremote">remote</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -319,6 +333,16 @@ Remote arguments
 <tr><td><a href="OpamTypes.html#TYPErepository">repository</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Repositories
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPErepository_name">repository_name</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Repository names
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPErepository_name_map">repository_name_map</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Maps of repository names
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPErequest">request</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -347,19 +371,44 @@ Shortcut to sections
 Section names
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html#TYPEsolution">solution</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<tr><td><a href="OpamTypes.ACTION_GRAPH.html#TYPEsolution">solution</a> [<a href="OpamTypes.ACTION_GRAPH.html">OpamTypes.ACTION_GRAPH</a>]</td>
 <td><div class="info">
 Solver solution
 </div>
 </td></tr>
-<tr><td><a href="OpamSolver.html#TYPEsolution">solution</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
+<tr><td><a href="OpamTypes.html#TYPEsolution">solution</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
-Solver solution
+The type for solutions
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEsolver_result">solver_result</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Solver result
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#TYPEstate">state</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Client state
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEstats">stats</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Upgrade statistics
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEswitch">switch</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Compiler switches
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEswitch_map">switch_map</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Map of compile switches
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEswitch_set">switch_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Set of compiler switches
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEsymbol">symbol</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -368,6 +417,11 @@ Symbols
 </div>
 </td></tr>
 <tr><td align="left"><br>T</td></tr>
+<tr><td><a href="OpamCudf.Graph.html#TYPEt">t</a> [<a href="OpamCudf.Graph.html">OpamCudf.Graph</a>]</td>
+<td><div class="info">
+Graph of cudf packages
+</div>
+</td></tr>
 <tr><td><a href="OpamProcess.html#TYPEt">t</a> [<a href="OpamProcess.html">OpamProcess</a>]</td>
 <td><div class="info">
 The type for processes
@@ -395,15 +449,27 @@ ABSTRACT type
 File contents
 </div>
 </td></tr>
+<tr><td><a href="OpamState.Types.html#TYPEt">t</a> [<a href="OpamState.Types.html">OpamState.Types</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>U</td></tr>
-<tr><td><a href="OpamSolver.html#TYPEuniverse">universe</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
+<tr><td><a href="OpamCudf.Diff.html#TYPEuniverse">universe</a> [<a href="OpamCudf.Diff.html">OpamCudf.Diff</a>]</td>
 <td><div class="info">
-Universe of packages
+Difference between universe
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEuniverse">universe</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Solver universe
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEupload">upload</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Upload arguments
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEuser_action">user_action</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+user request action
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>
@@ -442,6 +508,6 @@ Package versions
 Set of package versions
 </div>
 </td></tr>
-</table><br>
+</table>
 </body>
 </html>

@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(** Curl repository backend *)
+
 open OpamTypes
 
 val make_index_tar_gz: OpamPath.Repository.r -> unit

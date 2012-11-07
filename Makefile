@@ -93,10 +93,12 @@ libuninstall:
 doc: compile
 	mkdir -p doc/html/
 	ocamldoc \
+	  -I _obuild/opam-core -I _obuild/opam-solver \
+	  -I _obuild/opam-repositories -I _obuild/opam-client \
 	  -I _obuild/opam-lib -I _obuild/cudf -I _obuild/dose \
 	  -I _obuild/re -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
-	  src/*.mli -html -d doc/html/
+	  src/**/*.mli -html -d doc/html/
 	$(MAKE) -C doc/man-src
 	$(MAKE) -C doc/tutorials
 

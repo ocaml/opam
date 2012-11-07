@@ -15,7 +15,9 @@
 
 open OpamTypes
 
-(** Functions to read and write OPAM configuration files in a typed way. *)
+(** Functions to read and write OPAM configuration files in a typed way *)
+
+(** All Configuration files satisfies this signature *)
 module type IO_FILE = sig
 
   (** File contents *)

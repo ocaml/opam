@@ -10,8 +10,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -23,28 +26,34 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamRepository.BACKEND</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamRepository.BACKEND</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="OpamRepository.html">Up</a>
+<div class="navbar">&nbsp;<a class="up" href="OpamRepository.html" title="OpamRepository">Up</a>
 &nbsp;</div>
-<center><h1>Module type <a href="type_OpamRepository.BACKEND.html">OpamRepository.BACKEND</a></h1></center>
-<br>
+<h1>Module type <a href="type_OpamRepository.BACKEND.html">OpamRepository.BACKEND</a></h1>
 <pre><span class="keyword">module type</span> BACKEND = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre>Backend signature<br>
 <hr width="100%">
-<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> unit</code></pre><div class="info">
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type">address:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> unit</code></pre><div class="info">
 Initialize an OPAM repository in the current directory. The
       argument is the remote repository address.<br>
 </div>
-<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> OpamFilename.Set.t</code></pre><div class="info">
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">address:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> OpamFilename.Set.t</code></pre><div class="info">
 Update the OPAM repository in the current directory. Return the
       list of locally updated files.<br>
 </div>
-<pre><span id="VALdownload_archive"><span class="keyword">val</span> download_archive</span> : <code class="type"><a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -><br>       <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
+<pre><span id="VALdownload_archive"><span class="keyword">val</span> download_archive</span> : <code class="type">address:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
 Download a (remote) archive file, stored on the (remote) OPAM
       repository, in the current repository. Return the local path to
       the downloaded archive.<br>
@@ -60,7 +69,7 @@ Download a (remote) file and return the local path to the
 Download a (remote) directory and return the local path to the
       downloaded directory. If needed, the function can use <i>      $repo/tmp/$nv/</i> to store transient states between downloads.<br>
 </div>
-<pre><span id="VALupload_dir"><span class="keyword">val</span> upload_dir</span> : <code class="type">address:<a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> OpamFilename.Set.t</code></pre><div class="info">
+<pre><span id="VALupload_dir"><span class="keyword">val</span> upload_dir</span> : <code class="type">address:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> OpamFilename.Set.t</code></pre><div class="info">
 Upload the content of the current directory to the directory
       given as argument. Return the local paths corresponding to the
       uploaded local files.<br>

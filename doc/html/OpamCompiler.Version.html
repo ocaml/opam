@@ -10,8 +10,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -23,21 +26,27 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamCompiler.Version</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamCompiler.Version</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="OpamCompiler.html">Up</a>
+<div class="navbar">&nbsp;<a class="up" href="OpamCompiler.html" title="OpamCompiler">Up</a>
 &nbsp;</div>
-<center><h1>Module <a href="type_OpamCompiler.Version.html">OpamCompiler.Version</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamCompiler.Version.html">OpamCompiler.Version</a></h1>
 <pre><span class="keyword">module</span> Version: <code class="code">sig</code> <a href="OpamCompiler.Version.html">..</a> <code class="code">end</code></pre>OCaml compiler versions<br>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
-<pre><span id="TYPEconstr"><span class="keyword">type</span> <code class="type"></code>constr</span> = <code class="type">(<a href="OpamCompiler.html#TYPErelop">OpamCompiler.relop</a> * t) <a href="OpamFormula.html#TYPEformula">OpamFormula.formula</a></code> </pre>
+<pre><span id="TYPEconstr"><span class="keyword">type</span> <code class="type"></code>constr</span> = <code class="type">(<a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> * t) <a href="OpamFormula.html#TYPEformula">OpamFormula.formula</a></code> </pre>
 <div class="info">
 Compiler constraint<br>
 </div>
@@ -45,10 +54,7 @@ Compiler constraint<br>
 <pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> t option</code></pre><div class="info">
 Return the version of the compiler currently installed<br>
 </div>
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> <a href="OpamCompiler.html#TYPErelop">OpamCompiler.relop</a> -> t -> bool</code></pre><div class="info">
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> <a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> -> t -> bool</code></pre><div class="info">
 Compare OCaml versions<br>
-</div>
-<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type">t</code></pre><div class="info">
-Default compiler version<br>
 </div>
 </body></html>
