@@ -372,6 +372,24 @@ type 'a switch_map = 'a OpamSwitch.Map.t
 
 (** {2 Misc} *)
 
+(** The different kinds of locks *)
+type lock =
+
+  (** The function does not modify anything, but it needs the state
+      not to change while it is running. *)
+  | Read_lock of (unit -> unit)
+
+  (** Take the global lock, all subsequent calls to OPAM are
+      blocked. *)
+  | Global_lock of (unit -> unit)
+
+  (** Take the lock only for [OpamGlobals.current_switch] if it not
+      [None], otherwise for the current lock. We do not pass the
+      switch directly as argument as we might need to read some
+      configuration file and we thus need to take the global loock for
+      a short time. *)
+  | Switch_lock of (unit -> unit)
+
 (** A line in {i urls.tx} *)
 type file_attribute = OpamFilename.Attribute.t
 

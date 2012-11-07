@@ -38,7 +38,8 @@ begin library "opam-lib"
     "solver/opamCudf.ml"
     "solver/opamHeuristic.ml"
     "solver/opamSolver.ml"
-    "opamClient.ml"
+    "client/opamState.ml"
+    "client/opamClient.ml"
   ]
 
   requires = [

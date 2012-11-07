@@ -8,6 +8,7 @@ lib: [
   "_obuild/opam-lib/opam-lib.cmxa"
   "_obuild/opam-lib/opam-lib.a"
   "_obuild/opam-lib/opamSwitch.cmi"
+  "_obuild/opam-lib/opamState.cmi"
   "_obuild/opam-lib/opamClient.cmi"
   "_obuild/opam-lib/opamCurl.cmi"
   "_obuild/opam-lib/opamFile.cmi"

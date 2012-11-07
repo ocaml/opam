@@ -385,3 +385,8 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
 }
+
+type lock =
+  | Read_lock of (unit -> unit)
+  | Global_lock of (unit -> unit)
+  | Switch_lock of (unit -> unit)
