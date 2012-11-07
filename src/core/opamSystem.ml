@@ -473,13 +473,15 @@ let patch =
   fun p ->
     if not (Sys.file_exists p) then
       OpamGlobals.error_and_exit "Cannot find %s" p;
-    let patch opts n =
-      command ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
+    let patch ~dryrun n =
+      let opts = if dryrun then ["--dry-run"] else [] in
+      let verbose = if dryrun then Some false else None in
+      command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
     let rec aux n =
       if n = max_trying then
         OpamGlobals.error_and_exit "Application of patch %s failed, can not determine the '-p' level to patch." p
-      else if None = try Some (patch ["--dry-run"] n) with _ -> None then
+      else if None = try Some (patch ~dryrun:true n) with _ -> None then
         aux (succ n)
       else
-        patch [] n in
+        patch ~dryrun:false n in
     aux 0
