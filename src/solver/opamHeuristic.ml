@@ -112,7 +112,7 @@ let succ ~bounds l =
 let explore f upgrade_tbl =
   let default_conflict = Conflicts (fun _ -> assert false)  in
   let upgrades =
-    List.sort compare (Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl []) in
+    Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
   let bounds = List.map (fun (_,v) -> Array.length v - 1) upgrades in
   let constrs t =
     List.map2 (fun (n, vs) i -> vs.(i)) upgrades t in
