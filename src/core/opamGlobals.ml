@@ -41,7 +41,10 @@ let switch : string option ref = ref None
 
 let opam_version = "1"
 
-let home = Unix.getenv "HOME"
+let home =
+  try Unix.getenv "HOME"
+  with _ -> Unix.getcwd ()
+
 let default_opam_dir = Filename.concat home ".opam"
 
 let root_dir = ref default_opam_dir
