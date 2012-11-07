@@ -1,5 +1,6 @@
 0.8.0 (trunk)
 * Improvements in the solver interface
+* The solver now use an external SAT-solver (aspcud) if found in the path
 
 0.7.7 [Oct 2012]
 * Add an --alias global command-line argument to overwrite the default alias value
