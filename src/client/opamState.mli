@@ -125,6 +125,12 @@ val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 (** Return the list of available compilers *)
 val compilers: state -> compiler_set
 
+(** Install the given compiler *)
+val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
+
+(** Get the packages associated with the given compiler *)
+val get_compiler_packages: state -> compiler -> atom list
+
 (** {2 Packages} *)
 
 (** Check whether a package name is installed *)
@@ -146,6 +152,9 @@ val find_packages_by_name: state -> name -> package_set option
 
 (** Return a map from package names to package installed version *)
 val installed_map: state -> version name_map
+
+(** Return the base packages *)
+val base_packages: name list
 
 (** {2 Configuration files} *)
 

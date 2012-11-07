@@ -353,6 +353,12 @@ module PackageActionGraph = MakeActionGraph(PackageAction)
 
 type solution = PackageActionGraph.solution
 
+type solver_result =
+  | Nothing_to_do
+  | OK
+  | Aborted
+  | No_solution
+
 type ('a, 'b) result =
   | Success of 'a
   | Conflicts of (unit -> 'b)

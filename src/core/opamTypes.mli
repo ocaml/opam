@@ -216,6 +216,13 @@ module PackageActionGraph: ACTION_GRAPH with type package = package
 type solution = PackageActionGraph.solution
 
 (** Solver result *)
+type solver_result =
+  | Nothing_to_do
+  | OK
+  | Aborted
+  | No_solution
+
+(** Solver result *)
 type ('a, 'b) result =
   | Success of 'a
   | Conflicts of (unit -> 'b)

@@ -1,0 +1,42 @@
+(***********************************************************************)
+(*                                                                     *)
+(*    Copyright 2012 OCamlPro                                          *)
+(*    Copyright 2012 INRIA                                             *)
+(*                                                                     *)
+(*  All rights reserved.  This file is distributed under the terms of  *)
+(*  the GNU Public License version 3.0.                                *)
+(*                                                                     *)
+(*  OPAM is distributed in the hope that it will be useful,            *)
+(*  but WITHOUT ANY WARRANTY; without even the implied warranty of     *)
+(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      *)
+(*  GNU General Public License for more details.                       *)
+(*                                                                     *)
+(***********************************************************************)
+
+(** Switch commands *)
+
+open OpamTypes
+
+(** Install a new switch *)
+val install: quiet:bool -> switch -> compiler -> unit
+
+(** Import a file which contains the packages to install *)
+val import: filename -> unit
+
+(** Export a file which contains the installed packages *)
+val export: filename -> unit
+
+(** Remove the given compiler switch *)
+val remove: switch -> unit
+
+(** Switch to the given compiler switch *)
+val switch: quiet:bool -> switch -> unit
+
+(** Reinstall the given compiler switch *)
+val reinstall: switch -> unit
+
+(** Display the current compiler switch *)
+val current: unit -> unit
+
+(** List all the available compiler switches *)
+val list: unit -> unit
