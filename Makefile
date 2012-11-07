@@ -79,9 +79,9 @@ uninstall:
 
 LIB   = opam-lib
 NOMLI = opamGlobals.ml
-CMI   = $(shell ls src/*.mli)
+MLI   = $(foreach i, $(shell find src/ -name "*.mli"), $(notdir $i))
 _FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
-	$(CMI:src/%.mli=%.cmi)
+	$(MLI:%.mli=%.cmi)
 FILES = $(_FILES:%=_obuild/opam-lib/%) $(NOMLI:%.ml=_obuild/opam-lib/%.cmi)
 
 .PHONY: libuninstall libinstall

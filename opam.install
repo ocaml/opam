@@ -27,6 +27,8 @@ lib: [
   "_obuild/opam-lib/opamRepository.cmi"
   "_obuild/opam-lib/opamRepositoryName.cmi"
   "_obuild/opam-lib/opamRsync.cmi"
+  "_obuild/opam-lib/opamCudf.cmi"
+  "_obuild/opam-lib/opamHeuristic.cmi"
   "_obuild/opam-lib/opamSolver.cmi"
   "_obuild/opam-lib/opamSystem.cmi"
   "_obuild/opam-lib/opamTypes.cmi"

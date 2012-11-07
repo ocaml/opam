@@ -35,7 +35,9 @@ begin library "opam-lib"
     "repo/opamCurl.ml"
     "repo/opamRsync.ml"
     "repo/opamGit.ml"
-    "opamSolver.ml"
+    "solver/opamCudf.ml"
+    "solver/opamHeuristic.ml"
+    "solver/opamSolver.ml"
     "opamClient.ml"
   ]
 

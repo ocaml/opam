@@ -1692,7 +1692,7 @@ let apply_solution ?(force = false) t sol =
           let depends =
             let set = OpamPackage.Set.singleton nv in
             OpamPackage.Set.of_list
-              (OpamSolver.get_forward_dependencies ~depopts:true ~installed:true universe set) in
+              (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe set) in
           OpamPackage.Set.iter (proceed_todelete ~rm_build:false t) depends;
           installed := OpamPackage.Set.diff !installed depends;
           write_installed ();
@@ -1851,7 +1851,7 @@ let upgrade names =
     let universe = universe t Depends in
     let partial_reinstall =
       OpamPackage.Set.of_list
-        (OpamSolver.get_forward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
+        (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
     let installed = OpamPackage.Set.diff t.installed partial_reinstall in
     let solution = resolve_and_apply t (Upgrade partial_reinstall)
       { wish_install = atoms_of_packages installed;
@@ -2096,7 +2096,7 @@ let remove names =
     let universe = universe t Depends in
     let to_remove =
       OpamPackage.Set.of_list
-        (OpamSolver.get_forward_dependencies ~depopts:false ~installed:true universe packages) in
+        (OpamSolver.forward_dependencies ~depopts:false ~installed:true universe packages) in
     let installed = OpamPackage.Set.diff t.installed to_remove in
     let solution = resolve_and_apply t Remove
       { wish_install = atoms_of_packages installed;
@@ -2120,7 +2120,7 @@ let reinstall names =
   let reinstall = OpamPackage.Set.of_list reinstall in
   let depends =
     let universe = universe t Depends in
-    OpamSolver.get_forward_dependencies ~depopts:true ~installed:true universe reinstall in
+    OpamSolver.forward_dependencies ~depopts:true ~installed:true universe reinstall in
   let to_process =
     List.map (fun pkg -> To_recompile pkg) depends in
   let solution = apply_solution t (OpamSolver.sequential_solution to_process) in
@@ -2213,7 +2213,7 @@ let get_transitive_dependencies t ?(depopts = false) names =
   let universe = universe t Depends in
   (* Compute the transitive closure of dependencies *)
   let packages = OpamPackage.Set.of_list (List.map (find_installed_package_by_name t) names) in
-  OpamSolver.get_backward_dependencies ~depopts universe packages
+  OpamSolver.backward_dependencies ~depopts universe packages
 
 let config_includes t is_rec names =
   let deps =

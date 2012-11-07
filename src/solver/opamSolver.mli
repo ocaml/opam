@@ -48,15 +48,15 @@ val resolve : universe -> atom request -> (solution, string) result
 
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)
-val get_backward_dependencies :
+val backward_dependencies :
   depopts:bool ->
   installed:bool ->
   universe ->
   package_set ->
   package list
 
-(** Same as [get_backward_dependencies] but for forward dependencies *)
-val get_forward_dependencies :
+(** Same as [backward_dependencies] but for forward dependencies *)
+val forward_dependencies :
   depopts:bool ->
   installed:bool ->
   universe ->
