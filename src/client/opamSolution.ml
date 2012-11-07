@@ -147,7 +147,9 @@ let proceed_to_install t nv =
         (String.concat "\n" (List.map print !warnings));
       OpamGlobals.exit 2;
     )
-  )
+  );
+  if not !OpamGlobals.debug then
+    OpamFilename.rmdir build_dir
 
 let pinned_path t nv =
   let name = OpamPackage.name nv in
