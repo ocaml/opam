@@ -41,7 +41,7 @@ clean:
 	$(MAKE) -C ocp-build clean
 
 distclean: clean
-	rm -f META Makefile.config src/opamVersion.ml config.log config.status
+	rm -f META Makefile.config src/core/opamVersion.ml config.log config.status
 	$(MAKE) -C $(SRC_EXT) distclean
 
 .PHONY: tests
