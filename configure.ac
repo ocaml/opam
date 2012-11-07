@@ -22,7 +22,7 @@ fi
 
 AC_CONFIG_FILES(
   Makefile.config
-  src/opamVersion.ml
+  src/core/opamVersion.ml
 )
 AC_OUTPUT
 

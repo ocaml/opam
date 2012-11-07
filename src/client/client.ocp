@@ -1,0 +1,29 @@
+comp += [ "-warn-error" "A" ]
+
+begin library "opam-lib"
+
+  files   = [
+    "opamState.ml"
+    "opamConfig.ml"
+    "opamClient.ml"
+  ]
+
+  requires = [
+    "opam-core"
+    "opam-solver"
+    "opam-repositories"
+  ]
+
+end
+
+begin program "opam"
+
+  files    = [
+    "opamMain.ml"
+  ]
+  requires = [
+    "opam-lib"
+    "arg"
+ ]
+
+end
