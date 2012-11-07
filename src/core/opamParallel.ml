@@ -153,7 +153,7 @@ module Make (G : G) = struct
     S.cardinal s1 = S.cardinal s2
 
   let (/) = Filename.concat
-  let pid_dir = Filename.temp_dir_name / "opam.pid"
+  let pid_dir = !OpamGlobals.root_dir / "opam.pid"
   let pid_file pid = pid_dir  / string_of_int pid
 
   let write_error r =
