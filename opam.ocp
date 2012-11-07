@@ -39,6 +39,7 @@ begin library "opam-lib"
     "solver/opamHeuristic.ml"
     "solver/opamSolver.ml"
     "client/opamState.ml"
+    "client/opamConfig.ml"
     "client/opamClient.ml"
   ]
 

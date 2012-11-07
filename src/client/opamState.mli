@@ -70,6 +70,39 @@ val load_state: unit -> state
 (** Create a universe from the current state *)
 val universe: state -> user_action -> universe
 
+(** {2 Environment} *)
+
+(** Get the current environment *)
+val get_env: state -> env
+
+(** Update an environment. *)
+val update_env: state -> env -> (string * string * string) list -> env
+
+(** Print a warning if the environment is not set-up properly. *)
+val print_env_warning: ?add_profile:bool -> state -> unit
+
+(** {2 Substitutions} *)
+
+(** Compute the value of a variable *)
+val contents_of_variable: state -> full_variable -> variable_contents
+
+(** Substitute a string *)
+val substitute_string: state -> string -> string
+
+(** Substitute file *)
+val substitute_file: state -> basename -> unit
+
+(** Substitute a list of commands *)
+val substitute_commands: state -> command list -> command list
+
+(** {2 Filters} *)
+
+(** Evaluate a filter *)
+val eval_filter: state -> filter option -> bool
+
+(** Filter a list of commands *)
+val filter_commands: state -> command list -> string list list
+
 (** {2 Repositories} *)
 
 (** Check if a package belongs to a repository *)
@@ -83,6 +116,9 @@ val mem_repository_name: state -> repository_name -> bool
 
 (** Find a repository state, given its name *)
 val find_repository_name: state -> repository_name -> repository
+
+(** Pretty print a map of repositories *)
+val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
 (** {2 Compilers} *)
 
@@ -126,11 +162,6 @@ val compiler: state -> compiler -> OpamFile.Comp.t
 
 (** Apply a function while taking the right locks *)
 val check: lock -> unit
-
-(** {2 Pretty-printing} *)
-
-(** Pretty print a map of repositories *)
-val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
 (** To be able to open [OpamState.Types] *)
 module Types: sig
