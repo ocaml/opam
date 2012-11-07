@@ -59,4 +59,4 @@ let list t =
   ) else
     Set.empty
 
-let default = of_string OpamGlobals.default_alias
+let default = of_string OpamGlobals.default_switch

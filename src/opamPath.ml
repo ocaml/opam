@@ -50,9 +50,9 @@ let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 let repo_index t = t / "repo" // "index"
 
-module Alias = struct
+module Switch = struct
 
-  let root t a = t / OpamAlias.to_string a
+  let root t a = t / OpamSwitch.to_string a
 
   let lock t a = root t a // "lock"
 

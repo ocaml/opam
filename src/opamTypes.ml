@@ -71,11 +71,11 @@ type section = OpamVariable.Section.t
 
 type full_section = OpamVariable.Section.Full.t
 
-type alias = OpamAlias.t
+type switch = OpamSwitch.t
 
-type alias_set = OpamAlias.Set.t
+type switch_set = OpamSwitch.Set.t
 
-type 'a alias_map = 'a OpamAlias.Map.t
+type 'a switch_map = 'a OpamSwitch.Map.t
 
 type file_attribute = OpamFilename.Attribute.t
 

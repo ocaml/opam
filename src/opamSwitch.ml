@@ -13,9 +13,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Compiler aliases. *)
+include OpamMisc.Base
 
-include OpamMisc.ABSTRACT
-
-(** Default alias *)
-val default: t
+let default = of_string OpamGlobals.default_switch

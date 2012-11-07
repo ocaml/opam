@@ -43,14 +43,14 @@ module Config: sig
   (** Creation *)
   val create:
     opam_version ->
-    alias ->
+    switch ->
     compiler_version option ->
     repository_name list ->
     int ->
     t
 
-  (** OCaml alias updates *)
-  val with_alias : t -> alias -> t
+  (** OCaml switch updates *)
+  val with_switch : t -> switch -> t
 
   (** Repository updates *)
   val with_repositories: t -> repository_name list -> t
@@ -61,8 +61,8 @@ module Config: sig
   (** Return the list of repository *)
   val repositories: t  -> repository_name list
 
-  (** Return the OCaml alias *)
-  val alias: t -> alias
+  (** Return the OCaml switch *)
+  val switch: t -> switch
 
   (** Return the system's OCaml version *)
   val system_version: t -> compiler_version option
@@ -173,7 +173,7 @@ module Descr: sig
 end
 
 (** Compiler aliases: [$opam/aliases] *)
-module Aliases: IO_FILE with type t = compiler alias_map
+module Aliases: IO_FILE with type t = compiler switch_map
 
 (** List of installed packages: [$opam/$oversion/installed] *)
 module Installed: IO_FILE with type t = package_set

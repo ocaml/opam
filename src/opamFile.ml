@@ -396,14 +396,14 @@ module Aliases = struct
 
   let internal = "aliases"
 
-  type t = compiler alias_map
+  type t = compiler switch_map
 
-  let empty = OpamAlias.Map.empty
+  let empty = OpamSwitch.Map.empty
 
   let to_string filename t =
     let l =
-      OpamAlias.Map.fold (fun alias compiler lines ->
-        [OpamAlias.to_string alias; OpamCompiler.to_string compiler] :: lines
+      OpamSwitch.Map.fold (fun switch compiler lines ->
+        [OpamSwitch.to_string switch; OpamCompiler.to_string compiler] :: lines
       ) t [] in
     Lines.to_string filename l
 
@@ -411,9 +411,9 @@ module Aliases = struct
     let l = Lines.of_string filename s in
     List.fold_left (fun map -> function
       | []            -> map
-      | [alias; comp] -> OpamAlias.Map.add (OpamAlias.of_string alias) (OpamCompiler.of_string comp) map
+      | [switch; comp] -> OpamSwitch.Map.add (OpamSwitch.of_string switch) (OpamCompiler.of_string comp) map
       | _             -> failwith "switches"
-    ) OpamAlias.Map.empty l
+    ) OpamSwitch.Map.empty l
 
 end
 
@@ -424,33 +424,34 @@ module Config = struct
     type t = {
       opam_version  : opam_version ;
       repositories  : repository_name list ;
-      alias         : alias;
+      switch         : switch;
       system_version: compiler_version option ;
       cores         : int;
     }
 
     let with_repositories t repositories = { t with repositories }
-    let with_alias t alias = { t with alias }
+    let with_switch t switch = { t with switch }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
-    let alias t = t.alias
+    let switch t = t.switch
     let system_version t = t.system_version
     let cores t = t.cores
 
-    let create opam_version alias system_version repositories cores =
-      { opam_version ; repositories ; alias ; system_version ; cores }
+    let create opam_version switch system_version repositories cores =
+      { opam_version ; repositories ; switch ; system_version ; cores }
 
     let empty = {
       opam_version = OpamVersion.of_string OpamGlobals.opam_version;
       repositories = [];
-      alias = OpamAlias.of_string "<empty";
+      switch = OpamSwitch.of_string "<empty";
       system_version = None;
       cores = OpamGlobals.default_cores;
     }
 
     let s_repositories = "repositories"
     let s_ocaml_version = "ocaml-version"
+    let s_switch = "switch"
     let s_alias = "alias"
     let s_system_version = "system-ocaml-version"
     let s_system_version2 = "system_ocaml-version"
@@ -459,6 +460,7 @@ module Config = struct
     let valid_fields = [
       s_opam_version;
       s_repositories;
+      s_switch;
       s_alias;
       s_ocaml_version;
       s_system_version;
@@ -501,26 +503,30 @@ module Config = struct
                  0 list in
                List.map (fst |> OpamRepositoryName.of_string) list)
           ]) in
-      let alias =
-        OpamFormat.assoc_option s.file_contents s_ocaml_version (OpamFormat.parse_string |> OpamAlias.of_string) in
-      let alias2 =
-        OpamFormat.assoc_option s.file_contents s_alias (OpamFormat.parse_string |> OpamAlias.of_string) in
+
+      let switch str =
+        OpamFormat.assoc_option s.file_contents str (OpamFormat.parse_string |> OpamSwitch.of_string) in
+      let switch1 = switch s_ocaml_version in
+      let switch2 = switch s_alias in
+      let switch3 = switch s_switch in
+      let switch =
+        match switch3, switch2, switch1 with
+        | Some v, _     , _
+        | _     , Some v, _
+        | _     , _     , Some v -> v
+        | None  , None  , None   -> OpamGlobals.error_and_exit "No current switch defined" in
+
+      let system_version str =
+        OpamFormat.assoc_option s.file_contents str (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
+      let system_version1 = system_version s_system_version in
+      let system_version2 = system_version s_system_version2 in
       let system_version =
-        OpamFormat.assoc_option s.file_contents s_system_version (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
-      let system_version2 =
-        OpamFormat.assoc_option s.file_contents s_system_version2 (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
-      let system_version =
-        match system_version, system_version2 with
+        match system_version2, system_version1 with
         | Some v, _
         | _     , Some v -> Some v
         | None  , None   -> None in
-      let alias =
-        match alias, alias2 with
-        | Some v, _
-        | _     , Some v -> v
-        | None  , None   -> OpamAlias.of_string "<none>" in
       let cores = OpamFormat.assoc s.file_contents s_cores OpamFormat.parse_int in
-      { opam_version; repositories; alias; system_version; cores }
+      { opam_version; repositories; switch; system_version; cores }
 
    let to_string filename t =
      let s = {
@@ -532,7 +538,7 @@ module Config = struct
                      (OpamRepositoryName.to_string |> OpamFormat.make_string)
                      t.repositories);
          Variable (s_cores        , OpamFormat.make_int t.cores);
-         Variable (s_alias, OpamFormat.make_string (OpamAlias.to_string t.alias))
+         Variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
        ] @ (
          match t.system_version with
            | None   -> []

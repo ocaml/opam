@@ -36,15 +36,15 @@ let quiet = ref false
 let set_root_dir dir =
   OpamGlobals.root_dir := OpamSystem.real_path dir
 
-let set_alias alias =
-  OpamGlobals.alias := Some alias
+let set_switch switch =
+  OpamGlobals.switch := Some switch
 
 let global_args = [
   "--debug"     , Arg.Set OpamGlobals.debug   , " Print internal debug messages (very verbose)";
   "--verbose"   , Arg.Set OpamGlobals.verbose , " Display the output of subprocesses";
   "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
   "--version"   , Arg.Unit OpamVersion.message, " Display version information";
-  "--alias"     , Arg.String set_alias        , " Use the given alias instead of looking into the config file";
+  "--switch"    , Arg.String set_switch       , " Use the given alias instead of looking into the config file";
   "--yes"       , Arg.Set OpamGlobals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.String (fun s -> OpamGlobals.makecmd := lazy s),
     Printf.sprintf " Set the 'make' program used when compiling packages";
@@ -401,30 +401,30 @@ let switch =
   anon;
   main     = parse_args (function args ->
     match !command, args with
-    | `install, [alias] ->
-        OpamClient.switch_install !quiet (OpamAlias.of_string alias) (mk_comp alias)
+    | `install, [switch] ->
+        OpamClient.switch_install !quiet (OpamSwitch.of_string switch) (mk_comp switch)
     | `export f, [] ->
         no_alias_of ();
         OpamClient.switch_export (OpamFilename.of_string f)
     | `import f, [] ->
         no_alias_of ();
         OpamClient.switch_import (OpamFilename.of_string f)
-    | `remove, aliases ->
+    | `remove, switches ->
         no_alias_of ();
-        List.iter (fun alias -> OpamClient.switch_remove (OpamAlias.of_string alias)) aliases
-    | `reinstall, [alias] ->
+        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
+    | `reinstall, [switch] ->
         no_alias_of ();
-        OpamClient.switch_reinstall (OpamAlias.of_string alias)
+        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
     | `list, [] ->
         no_alias_of ();
         OpamClient.switch_list ()
     | `current, [] ->
         no_alias_of ();
         OpamClient.switch_current ()
-    | `switch, [alias] ->
+    | `switch, [switch] ->
         begin match !alias_of with
-          | "" -> OpamClient.switch !quiet (OpamAlias.of_string alias)
-          | _  -> OpamClient.switch_install !quiet (OpamAlias.of_string alias) (mk_comp alias)
+          | "" -> OpamClient.switch !quiet (OpamSwitch.of_string switch)
+          | _  -> OpamClient.switch_install !quiet (OpamSwitch.of_string switch) (mk_comp switch)
         end
     | _ -> bad_argument "switch" "too many arguments"
   )

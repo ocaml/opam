@@ -28,20 +28,20 @@ let () =
 type lock =
   | Read_lock of (unit -> unit)
   | Global_lock of (unit -> unit)
-  | Alias_lock of (unit -> unit)
+  | Switch_lock of (unit -> unit)
 
 let check f =
   let root = OpamPath.default () in
-  let with_alias_lock a f = OpamFilename.with_flock (OpamPath.Alias.lock root a) f in
+  let with_switch_lock a f = OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
   if OpamFilename.exists_dir root then
     match f with
 
     | Global_lock f ->
       (* Take the global lock *)
       OpamFilename.with_flock (OpamPath.lock root) (fun () ->
-        (* Take all the alias locks *)
+        (* Take all the switch locks *)
         let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-        let f = OpamAlias.Map.fold (fun a _ f -> with_alias_lock a (fun () -> f ())) aliases f in
+        let f = OpamSwitch.Map.fold (fun a _ f -> with_switch_lock a (fun () -> f ())) aliases f in
         f ()
       ) ()
 
@@ -54,21 +54,21 @@ let check f =
           "Cannot find %s. Have you run 'opam init first ?"
           (OpamFilename.Dir.to_string root)
 
-    | Alias_lock f ->
-      (* Take an alias lock (and check that the global lock is free). *)
-      let alias =
+    | Switch_lock f ->
+      (* Take a switch lock (and check that the global lock is free). *)
+      let switch =
         OpamFilename.with_flock
           (OpamPath.lock root)
-          (fun () -> match !OpamGlobals.alias with
-          | None   -> OpamFile.Config.alias (OpamFile.Config.read (OpamPath.config root))
-          | Some a -> OpamAlias.of_string a)
+          (fun () -> match !OpamGlobals.switch with
+          | None   -> OpamFile.Config.switch (OpamFile.Config.read (OpamPath.config root))
+          | Some a -> OpamSwitch.of_string a)
           () in
       (* XXX: We can have a small race just here ... *)
-      with_alias_lock alias f ()
+      with_switch_lock switch f ()
 
 type state = {
   root: OpamPath.t;
-  alias: alias;
+  switch: switch;
   compiler: compiler;
   compiler_version: compiler_version;
   opams: OpamFile.OPAM.t package_map;
@@ -99,7 +99,7 @@ let string_of_repositories r =
 
 let print_state t =
   log "ROOT      : %s" (OpamFilename.Dir.to_string (OpamPath.root t.root));
-  log "ALIAS     : %s" (OpamAlias.to_string t.alias);
+  log "SWITCH     : %s" (OpamSwitch.to_string t.switch);
   log "COMPILER  : %s" (OpamCompiler.to_string t.compiler);
   log "REPOS     : %s" (string_of_repositories t.repositories);
   if !OpamGlobals.debug then
@@ -109,8 +109,8 @@ let print_state t =
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
-let compiler_of_alias t alias =
-  try Some (OpamAlias.Map.find alias t.aliases)
+let compiler_of_switch t switch =
+  try Some (OpamSwitch.Map.find switch t.aliases)
   with Not_found -> None
 
 let config t =
@@ -157,10 +157,10 @@ let installed_map t =
   OpamPackage.Name.Map.map OpamPackage.Version.Set.choose_one (OpamPackage.to_map t.installed)
 
 let dot_config t nv =
-  OpamFile.Dot_config.safe_read (OpamPath.Alias.config t.root t.alias nv)
+  OpamFile.Dot_config.safe_read (OpamPath.Switch.config t.root t.switch nv)
 
 let reinstall t =
-  OpamFile.Reinstall.safe_read (OpamPath.Alias.reinstall t.root t.alias)
+  OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root t.switch)
 
 let mem_repository t name =
   OpamRepositoryName.Map.exists (fun n _ -> n = name) t.repositories
@@ -226,17 +226,17 @@ let load_state () =
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
 
   let config = OpamFile.Config.read (OpamPath.config root) in
-  let alias = match !OpamGlobals.alias with
-    | None   -> OpamFile.Config.alias config
-    | Some a -> OpamAlias.of_string a in
+  let switch = match !OpamGlobals.switch with
+    | None   -> OpamFile.Config.switch config
+    | Some a -> OpamSwitch.of_string a in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
-    try OpamAlias.Map.find alias aliases
+    try OpamSwitch.Map.find switch aliases
     with Not_found ->
-      OpamGlobals.error "%s is an unknown compiler alias" (OpamAlias.to_string alias);
-      log "%S does not contain the compiler name associated to the alias %s"
+      OpamGlobals.error "%s is an unknown compiler switch" (OpamSwitch.to_string switch);
+      log "%S does not contain the compiler name associated to the switch %s"
         (OpamFilename.to_string (OpamPath.aliases root))
-        (OpamAlias.to_string alias);
+        (OpamSwitch.to_string switch);
       OpamGlobals.exit 2 in
   let compiler_version =
     let comp = OpamFile.Comp.read (OpamPath.compiler root compiler) in
@@ -256,21 +256,21 @@ let load_state () =
       OpamRepositoryName.Map.add repo config map
     ) OpamRepositoryName.Map.empty (OpamFile.Config.repositories config) in
   let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
-  let pinned = OpamFile.Pinned.safe_read (OpamPath.Alias.pinned root alias) in
-  let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed root alias) in
-  let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Alias.reinstall root alias) in
+  let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
+  let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) in
+  let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages = OpamPackage.list (OpamPath.opam_dir root) in
   let available_packages =
     lazy (available_packages root opams repositories repo_index compiler_version config pinned packages) in
   let t = {
-    root; alias; compiler; compiler_version; repositories; opams;
+    root; switch; compiler; compiler_version; repositories; opams;
     packages; available_packages; installed; reinstall;
     repo_index; config; aliases; pinned;
   } in
   print_state t;
   (* update from opam 0.7 to 0.8: Remove spurious conf-ocaml packages *)
   if mem_installed_package_by_name t OpamPackage.Name.default then
-    OpamFile.Installed.write (OpamPath.Alias.installed t.root t.alias)
+    OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch)
       (OpamPackage.Set.filter (fun nv -> OpamPackage.name nv <> OpamPackage.Name.default) t.installed);
   (match find_packages_by_name t OpamPackage.Name.default with
   | None          -> ()
@@ -332,9 +332,9 @@ let print_compilers t compilers repo =
     OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
   ) del_compilers
 
-(* install ~/.opam/<alias>/config/conf-ocaml.config *)
-let install_conf_ocaml_config root alias =
-  log "install_conf_ocaml_config alias=%s" (OpamAlias.to_string alias);
+(* install ~/.opam/<switch>/config/conf-ocaml.config *)
+let install_conf_ocaml_config root switch =
+  log "install_conf_ocaml_config switch=%s" (OpamSwitch.to_string switch);
   (* .config *)
   let vars =
     let map f l = List.map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
@@ -342,13 +342,13 @@ let install_conf_ocaml_config root alias =
 
     map OpamFilename.Dir.to_string
       [
-        ("prefix", OpamPath.Alias.root root alias);
-        ("lib", OpamPath.Alias.lib_dir root alias);
-        ("bin", OpamPath.Alias.bin root alias);
-        ("doc", OpamPath.Alias.doc_dir root alias);
-        ("stublibs", OpamPath.Alias.stublibs root alias);
-        ("toplevel", OpamPath.Alias.toplevel root alias);
-        ("man", OpamPath.Alias.man_dir root alias);
+        ("prefix", OpamPath.Switch.root root switch);
+        ("lib", OpamPath.Switch.lib_dir root switch);
+        ("bin", OpamPath.Switch.bin root switch);
+        ("doc", OpamPath.Switch.doc_dir root switch);
+        ("stublibs", OpamPath.Switch.stublibs root switch);
+        ("toplevel", OpamPath.Switch.toplevel root switch);
+        ("man", OpamPath.Switch.man_dir root switch);
       ]
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
@@ -358,7 +358,7 @@ let install_conf_ocaml_config root alias =
     ] in
 
   let config = OpamFile.Dot_config.create vars in
-  OpamFile.Dot_config.write (OpamPath.Alias.config root alias OpamPackage.Name.default) config
+  OpamFile.Dot_config.write (OpamPath.Switch.config root switch OpamPackage.Name.default) config
 
 let compare_repo t r1 r2 =
   OpamRepository.compare
@@ -411,8 +411,8 @@ let update_repo_index t =
   (* suppress previous links, but keep metadata of installed packages
      (because you need them to uninstall the package) *)
   let all_installed =
-    OpamAlias.Map.fold (fun alias _ accu ->
-      let installed_f = OpamPath.Alias.installed t.root alias in
+    OpamSwitch.Map.fold (fun switch _ accu ->
+      let installed_f = OpamPath.Switch.installed t.root switch in
       let installed = OpamFile.Installed.safe_read installed_f in
       OpamPackage.Set.union installed accu
     ) t.aliases OpamPackage.Set.empty in
@@ -503,7 +503,7 @@ let update_repositories t ~show_compilers repositories =
   (* Delete compiler descritions which are not installed *)
   OpamCompiler.Set.iter (fun comp ->
     if comp <> OpamCompiler.default
-    && OpamAlias.Map.for_all (fun _ c -> comp <> c) t.aliases then (
+    && OpamSwitch.Map.for_all (fun _ c -> comp <> c) t.aliases then (
       let comp_f = OpamPath.compiler t.root comp in
       OpamFilename.remove comp_f;
     )
@@ -527,7 +527,7 @@ let update_pinned_package t nv pin =
   let kind = kind_of_pin_option pin in
   let path = OpamFilename.raw_dir (path_of_pin_option pin) in
   let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
-  let build = OpamPath.Alias.build t.root t.alias nv in
+  let build = OpamPath.Switch.build t.root t.switch nv in
   match B.download_dir nv ~dst:build path with
   | Up_to_date _    -> None
   | Result _
@@ -590,9 +590,9 @@ let update_packages t ~show_packages repositories =
 
   let updated = OpamPackage.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall *)
-  OpamAlias.Map.iter (fun alias _ ->
-    let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed t.root alias) in
-    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Alias.reinstall t.root alias) in
+  OpamSwitch.Map.iter (fun switch _ ->
+    let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
+    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) in
     let reinstall =
       OpamPackage.Set.fold (fun nv reinstall ->
         if OpamPackage.Set.mem nv installed then
@@ -601,7 +601,7 @@ let update_packages t ~show_packages repositories =
           reinstall
       ) updated reinstall in
     if not (OpamPackage.Set.is_empty reinstall) then
-      OpamFile.Reinstall.write (OpamPath.Alias.reinstall t.root alias) reinstall
+      OpamFile.Reinstall.write (OpamPath.Switch.reinstall t.root switch) reinstall
   ) t.aliases;
 
   (* Check all the dependencies exist *)
@@ -653,18 +653,12 @@ let contents_of_variable t v =
   if name = OpamPackage.Name.default then (
     try S (OpamSystem.getenv var_str)
     with Not_found ->
-      if var_str = "ocaml-version" then (
-        let comp_str = OpamCompiler.Version.to_string t.compiler_version in
-        if comp_str = OpamGlobals.default_alias then
-          match OpamFile.Config.system_version t.config with
-          | None   -> S "<none>"
-          | Some v -> S (OpamCompiler.Version.to_string v)
-        else
-          S comp_str
-      ) else if var_str = "preinstalled" then (
+      if var_str = "ocaml-version" then
+        S (OpamCompiler.Version.to_string t.compiler_version)
+      else if var_str = "preinstalled" then
         B (OpamFile.Comp.preinstalled (compiler_description t t.compiler))
-      ) else
-          read_var name
+      else
+        read_var name
   ) else (
     let process_one name =
       let name_str = OpamPackage.Name.to_string name in
@@ -841,14 +835,14 @@ let update_env t env e =
 let get_env t =
   let comp = compiler_description t t.compiler in
 
-  let add_to_path = OpamPath.Alias.bin t.root t.alias in
+  let add_to_path = OpamPath.Switch.bin t.root t.switch in
   let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
 
   let add_to_env = OpamFile.Comp.env comp in
   let toplevel_dir =
-    "OCAML_TOPLEVEL_PATH", "=", OpamFilename.Dir.to_string (OpamPath.Alias.toplevel t.root t.alias) in
+    "OCAML_TOPLEVEL_PATH", "=", OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
-    "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Alias.man_dir t.root t.alias) in
+    "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
 
   let add_to_env = expand_env t add_to_env in
@@ -888,20 +882,20 @@ let print_env_warning ?(add_profile = false) t =
         opam_root
         add_profile
 
-let add_alias root alias compiler =
-  log "add_alias alias=%s compiler=%s" (OpamAlias.to_string alias) (OpamCompiler.to_string compiler);
+let add_switch root switch compiler =
+  log "add_switch switch=%s compiler=%s" (OpamSwitch.to_string switch) (OpamCompiler.to_string compiler);
   let aliases_f = OpamPath.aliases root in
   let aliases = OpamFile.Aliases.safe_read aliases_f in
-  if not (OpamAlias.Map.mem alias aliases) then begin
-    OpamFile.Aliases.write aliases_f (OpamAlias.Map.add alias compiler aliases);
+  if not (OpamSwitch.Map.mem switch aliases) then begin
+    OpamFile.Aliases.write aliases_f (OpamSwitch.Map.add switch compiler aliases);
   end
 
-(* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[alias]
-   - update $opam/alias
+(* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[switch]
+   - update $opam/switch
    - update $opam/config *)
-let install_compiler t quiet alias compiler =
-  log "install_compiler alias=%s compiler=%s"
-    (OpamAlias.to_string alias)
+let install_compiler t quiet switch compiler =
+  log "install_compiler switch=%s compiler=%s"
+    (OpamSwitch.to_string switch)
     (OpamCompiler.to_string compiler);
 
   let comp_f = OpamPath.compiler t.root compiler in
@@ -912,28 +906,28 @@ let install_compiler t quiet alias compiler =
     OpamGlobals.exit 0;
   );
 
-  let alias_dir = OpamPath.Alias.root t.root alias in
-  if OpamFilename.exists_dir alias_dir then (
-    OpamGlobals.msg "The compiler %s is already installed.\n" (OpamAlias.to_string alias);
+  let switch_dir = OpamPath.Switch.root t.root switch in
+  if OpamFilename.exists_dir switch_dir then (
+    OpamGlobals.msg "The compiler %s is already installed.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 0;
   );
 
   (* Create base directories *)
-  OpamFilename.mkdir alias_dir;
-  OpamFilename.mkdir (OpamPath.Alias.lib_dir t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.stublibs t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.toplevel t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.build_dir t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.bin t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.doc_dir t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.man_dir t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.install_dir t.root alias);
-  OpamFilename.mkdir (OpamPath.Alias.config_dir t.root alias);
+  OpamFilename.mkdir switch_dir;
+  OpamFilename.mkdir (OpamPath.Switch.lib_dir t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.stublibs t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.toplevel t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.build_dir t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.bin t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.doc_dir t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.man_dir t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.install_dir t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.config_dir t.root switch);
   List.iter (fun num ->
-    OpamFilename.mkdir (OpamPath.Alias.man_dir ~num t.root alias)
+    OpamFilename.mkdir (OpamPath.Switch.man_dir ~num t.root switch)
   ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
 
-  install_conf_ocaml_config t.root alias;
+  install_conf_ocaml_config t.root switch;
 
   let comp = OpamFile.Comp.read comp_f in
   begin try
@@ -948,7 +942,7 @@ let install_compiler t quiet alias compiler =
           OpamGlobals.error_and_exit
             "No source for compiler %s"
             (OpamCompiler.to_string compiler) in
-      let build_dir = OpamPath.Alias.build_ocaml t.root alias in
+      let build_dir = OpamPath.Switch.build_ocaml t.root switch in
       let comp_src_raw = OpamFilename.to_string comp_src in
       if Sys.file_exists comp_src_raw && Sys.is_directory comp_src_raw then
         OpamFilename.link_dir (OpamFilename.Dir.of_string comp_src_raw) build_dir
@@ -964,7 +958,7 @@ let install_compiler t quiet alias compiler =
       if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
         OpamFilename.exec build_dir
           [ ( "./configure" :: OpamFile.Comp.configure comp )
-            @ [ "-prefix";  OpamFilename.Dir.to_string alias_dir ]
+            @ [ "-prefix";  OpamFilename.Dir.to_string switch_dir ]
           (*-bindir %s/bin -libdir %s/lib -mandir %s/man*)
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
@@ -973,7 +967,7 @@ let install_compiler t quiet alias compiler =
           ; [ Lazy.force !OpamGlobals.makecmd ; "install" ]
           ]
       end else begin
-        let t = { t with alias } in
+        let t = { t with switch } in
         let builds =
           List.map (List.map (substitute_string t)) (OpamFile.Comp.build comp) in
         OpamFilename.exec build_dir builds
@@ -981,13 +975,13 @@ let install_compiler t quiet alias compiler =
     end;
 
     (* write the new version in the configuration file *)
-    let config = OpamFile.Config.with_alias t.config alias in
+    let config = OpamFile.Config.with_switch t.config switch in
     OpamFile.Config.write (OpamPath.config t.root) config;
-    add_alias t.root alias compiler
+    add_switch t.root switch compiler
 
   with e ->
     if not !OpamGlobals.debug then
-      OpamFilename.rmdir alias_dir;
+      OpamFilename.rmdir switch_dir;
     raise e
   end
 
@@ -1082,7 +1076,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
     ) names in
   if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
     let kind = if installed_only then "Installed" else "Available" in
-    OpamGlobals.msg "%s packages for %s:\n" kind (OpamAlias.to_string t.alias);
+    OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
   );
   OpamPackage.Name.Map.iter (
     if print_short then
@@ -1103,18 +1097,18 @@ let info package =
   log "info %s" (OpamPackage.Name.to_string package);
   let t = load_state () in
 
-  (* Compute the installed versions, for each alias *)
+  (* Compute the installed versions, for each switch *)
   let installed =
-    OpamAlias.Map.fold (fun alias _ map ->
-      let installed = OpamFile.Installed.safe_read (OpamPath.Alias.installed t.root alias) in
+    OpamSwitch.Map.fold (fun switch _ map ->
+      let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
       if mem_installed_package_by_name_aux installed package then
         let nv = find_installed_package_by_name_aux installed package in
         if OpamPackage.Map.mem nv map then
           let aliases = OpamPackage.Map.find nv map in
           let map = OpamPackage.Map.remove nv map in
-          OpamPackage.Map.add nv (alias :: aliases) map
+          OpamPackage.Map.add nv (switch :: aliases) map
         else
-          OpamPackage.Map.add nv [alias] map
+          OpamPackage.Map.add nv [switch] map
       else
         map
     ) t.aliases OpamPackage.Map.empty in
@@ -1123,7 +1117,7 @@ let info package =
     let one (nv, aliases) =
       Printf.sprintf "%s [%s]"
         (OpamPackage.to_string nv)
-        (String.concat " " (List.map OpamAlias.to_string aliases)) in
+        (String.concat " " (List.map OpamSwitch.to_string aliases)) in
     String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
   (* All the version of the package *)
@@ -1180,7 +1174,7 @@ let info package =
     )
 
 let proceed_toinstall t nv =
-  let build_dir = OpamPath.Alias.build t.root t.alias nv in
+  let build_dir = OpamPath.Switch.build t.root t.switch nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
     OpamGlobals.msg "Installing %s\n" (OpamPackage.to_string nv);
@@ -1188,9 +1182,9 @@ let proceed_toinstall t nv =
     let name = OpamPackage.name nv in
     let opam_f = OpamPath.opam t.root nv in
     let opam_ = opam t nv in
-    let config_f = OpamPath.Alias.build_config t.root t.alias nv in
+    let config_f = OpamPath.Switch.build_config t.root t.switch nv in
     let config = OpamFile.Dot_config.safe_read config_f in
-    let install_f = OpamPath.Alias.build_install t.root t.alias nv in
+    let install_f = OpamPath.Switch.build_install t.root t.switch nv in
     let install = OpamFile.Dot_install.safe_read install_f in
 
     (* check that libraries and syntax extensions specified in .opam and
@@ -1241,7 +1235,7 @@ let proceed_toinstall t nv =
     OpamVariable.Section.Set.iter (fun s ->
       if not (List.mem s local_sections)
       && not (OpamVariable.Section.Set.mem s libraries_in_opam) then
-        let config_f = OpamFilename.to_string (OpamPath.Alias.build_config t.root t.alias nv) in
+        let config_f = OpamFilename.to_string (OpamPath.Switch.build_config t.root t.switch nv) in
         let opam_f = OpamFilename.to_string (OpamPath.opam t.root nv) in
         let local_sections = List.map OpamVariable.Section.to_string local_sections in
         let opam_sections = List.map OpamVariable.Section.to_string (OpamVariable.Section.Set.elements libraries_in_opam) in
@@ -1255,10 +1249,10 @@ let proceed_toinstall t nv =
     ) libraries_in_config;
 
     (* .install *)
-    OpamFile.Dot_install.write (OpamPath.Alias.install t.root t.alias name) install;
+    OpamFile.Dot_install.write (OpamPath.Switch.install t.root t.switch name) install;
 
     (* .config *)
-    OpamFile.Dot_config.write (OpamPath.Alias.config t.root t.alias name) config;
+    OpamFile.Dot_config.write (OpamPath.Switch.config t.root t.switch name) config;
 
     (* lib *)
     let warnings = ref [] in
@@ -1267,14 +1261,14 @@ let proceed_toinstall t nv =
         warnings := (f.c, dst) :: !warnings
       );
       OpamFilename.exists f.c in
-    let lib = OpamPath.Alias.lib t.root t.alias name in
+    let lib = OpamPath.Switch.lib t.root t.switch name in
     List.iter (fun f ->
       if check f lib then
         OpamFilename.copy_in f.c lib
     ) (OpamFile.Dot_install.lib install);
 
     (* toplevel *)
-    let toplevel = OpamPath.Alias.toplevel t.root t.alias in
+    let toplevel = OpamPath.Switch.toplevel t.root t.switch in
     List.iter (fun f ->
       if check f toplevel then
         OpamFilename.copy_in f.c toplevel
@@ -1282,9 +1276,9 @@ let proceed_toinstall t nv =
 
     (* bin *)
     List.iter (fun (src, dst) ->
-      let dst = OpamPath.Alias.bin t.root t.alias // OpamFilename.Base.to_string dst in
+      let dst = OpamPath.Switch.bin t.root t.switch // OpamFilename.Base.to_string dst in
       (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
-      if check src  (OpamPath.Alias.bin t.root t.alias) then
+      if check src  (OpamPath.Switch.bin t.root t.switch) then
         OpamFilename.copy src.c dst;
     ) (OpamFile.Dot_install.bin install);
 
@@ -1333,7 +1327,7 @@ let get_archive t nv =
 
 let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
-  let p_build = OpamPath.Alias.build t.root t.alias nv in
+  let p_build = OpamPath.Switch.build t.root t.switch nv in
   match pinned_path t nv with
   | Some (Git p| Path p as pin) ->
     OpamGlobals.msg "Synchronizing pinned package\n";
@@ -1364,7 +1358,7 @@ let proceed_todelete ~rm_build t nv =
     match filter_commands t remove with
     | []     -> ()
     | remove ->
-      let p_build = OpamPath.Alias.build t.root t.alias nv in
+      let p_build = OpamPath.Switch.build t.root t.switch nv in
       (* We try to run the remove scripts in the folder where it was extracted
          If it does not exist, we try to download and extract the archive again,
          if that fails, we don't really care. *)
@@ -1372,20 +1366,20 @@ let proceed_todelete ~rm_build t nv =
         try extract_package t nv
         with _ -> OpamFilename.mkdir p_build;
       );
-      try OpamFilename.exec ~add_to_path:[OpamPath.Alias.bin t.root t.alias] p_build remove
+      try OpamFilename.exec ~add_to_path:[OpamPath.Switch.bin t.root t.switch] p_build remove
       with _ -> ();
   );
 
   (* Remove the libraries *)
-  OpamFilename.rmdir (OpamPath.Alias.lib t.root t.alias name);
+  OpamFilename.rmdir (OpamPath.Switch.lib t.root t.switch name);
 
   (* Remove the documentation *)
-  OpamFilename.rmdir (OpamPath.Alias.doc t.root t.alias name);
+  OpamFilename.rmdir (OpamPath.Switch.doc t.root t.switch name);
   (* XXX: remove the man pages *)
 
   (* Remove build/<package> if requested *)
   if rm_build then
-    OpamFilename.rmdir (OpamPath.Alias.build t.root t.alias nv);
+    OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
   (* Clean-up the repositories *)
   log "Cleaning-up the repositories";
@@ -1400,9 +1394,9 @@ let proceed_todelete ~rm_build t nv =
 
   (* Remove the binaries *)
   log "Removing the binaries";
-  let install = OpamFile.Dot_install.safe_read (OpamPath.Alias.install t.root t.alias name) in
+  let install = OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
   List.iter (fun (_,dst) ->
-    let dst = OpamPath.Alias.bin t.root t.alias // (OpamFilename.Base.to_string dst) in
+    let dst = OpamPath.Switch.bin t.root t.switch // (OpamFilename.Base.to_string dst) in
     OpamFilename.remove dst
   ) (OpamFile.Dot_install.bin install);
 
@@ -1418,8 +1412,8 @@ let proceed_todelete ~rm_build t nv =
 
   (* Remove .config and .install *)
   log "Removing config and install files";
-  OpamFilename.remove (OpamPath.Alias.install t.root t.alias name);
-  OpamFilename.remove (OpamPath.Alias.config t.root t.alias name)
+  OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
+  OpamFilename.remove (OpamPath.Switch.config t.root t.switch name)
 
 (* In case of error, simply return the error traces, and let the
    repo in a state that the user can explore.
@@ -1442,7 +1436,7 @@ let proceed_tochange t nv_old nv =
 
   extract_package t nv;
 
-  let p_build = OpamPath.Alias.build t.root t.alias nv in
+  let p_build = OpamPath.Switch.build t.root t.switch nv in
 
   if not (OpamFilename.exists_dir p_build) then
     OpamFilename.mkdir p_build;
@@ -1460,7 +1454,7 @@ let proceed_tochange t nv_old nv =
 
   (* Apply the patches *)
   List.iter (fun (base, filter) ->
-    let root = OpamPath.Alias.build t.root t.alias nv in
+    let root = OpamPath.Switch.build t.root t.switch nv in
     let patch = root // OpamFilename.Base.to_string base in
     if eval_filter t filter then (
       OpamGlobals.msg "Applying %s\n" (OpamFilename.Base.to_string base);
@@ -1476,7 +1470,7 @@ let proceed_tochange t nv_old nv =
   );
 
   (* Generate an environnement file *)
-  let env_f = OpamPath.Alias.build_env t.root t.alias nv in
+  let env_f = OpamPath.Switch.build_env t.root t.switch nv in
   OpamFile.Env.write env_f env.new_env;
 
   (* Call the build script and copy the output files *)
@@ -1629,7 +1623,7 @@ let apply_solution ?(force = false) t sol =
       (* This function should be called by the parent process only, as it modifies
          the global state of OPAM *)
       let write_installed () =
-        OpamFile.Installed.write (OpamPath.Alias.installed t.root t.alias) !installed in
+        OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch) !installed in
 
       (* Delete the requested packages in the parent process *)
       (* In case of errors, we try to keep the list of installed packages up-to-date *)
@@ -1783,7 +1777,7 @@ let print_variable_warnings () =
       let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
       new_variables env in
     let vars = ref OpamMisc.StringSet.empty in
-    OpamAlias.Map.iter (fun _ version ->
+    OpamSwitch.Map.iter (fun _ version ->
       vars := OpamMisc.StringSet.union !vars (new_variables version)
     ) t.aliases;
     vars := OpamMisc.StringSet.diff !vars (new_variables t.compiler);
@@ -1867,7 +1861,7 @@ let upgrade names =
     | No_solution   -> to_not_reinstall_yet := reinstall
   end;
   let reinstall = OpamPackage.Set.inter t.installed !to_not_reinstall_yet in
-  let reinstall_f = OpamPath.Alias.reinstall t.root t.alias in
+  let reinstall_f = OpamPath.Switch.reinstall t.root t.switch in
   if OpamPackage.Set.is_empty reinstall then
     OpamFilename.remove reinstall_f
   else
@@ -1927,9 +1921,9 @@ let init repo compiler cores =
   else try
     let repo_p = OpamPath.Repository.create root repo.repo_name in
     (* Create (possibly empty) configuration files *)
-    let alias = match compiler with
-      | None   -> OpamAlias.default
-      | Some c -> OpamAlias.of_string (OpamCompiler.to_string c) in
+    let switch = match compiler with
+      | None   -> OpamSwitch.default
+      | Some c -> OpamSwitch.of_string (OpamCompiler.to_string c) in
     let compiler = match compiler with
       | None   -> OpamCompiler.default
       | Some c -> c in
@@ -1939,11 +1933,11 @@ let init repo compiler cores =
     create_default_compiler_description root system_version;
 
     (* Create ~/.opam/config *)
-    let config = OpamFile.Config.create OpamVersion.current alias system_version [repo.repo_name] cores in
+    let config = OpamFile.Config.create OpamVersion.current switch system_version [repo.repo_name] cores in
     OpamFile.Config.write config_f config;
 
     (* Create ~/.opam/aliases *)
-    OpamFile.Aliases.write (OpamPath.aliases root) (OpamAlias.Map.add alias compiler OpamAlias.Map.empty);
+    OpamFile.Aliases.write (OpamPath.aliases root) (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
 
     (* Init repository *)
     OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
@@ -1964,9 +1958,9 @@ let init repo compiler cores =
     (* Load the partial state, and update the packages state *)
     log "updating package state";
     let t = load_state () in
-    let alias = OpamAlias.of_string (OpamCompiler.to_string compiler) in
+    let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
     let quiet = (compiler = OpamCompiler.default) in
-    install_compiler t quiet alias compiler;
+    install_compiler t quiet switch compiler;
     update_packages t ~show_packages:false t.repositories;
 
     (* Finally, load the complete state and install the compiler packages *)
@@ -2073,7 +2067,7 @@ let remove names =
 
   if does_not_exist <> [] then (
     List.iter (proceed_todelete ~rm_build:true t) does_not_exist;
-    let installed_f = OpamPath.Alias.installed t.root t.alias in
+    let installed_f = OpamPath.Switch.installed t.root t.switch in
     let installed = OpamFile.Installed.read installed_f in
     let installed = OpamPackage.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in
     OpamFile.Installed.write installed_f installed;
@@ -2223,7 +2217,7 @@ let config_includes t is_rec names =
       names in
   let includes =
     List.fold_left (fun accu n ->
-      "-I" :: OpamFilename.Dir.to_string (OpamPath.Alias.lib t.root t.alias n) :: accu
+      "-I" :: OpamFilename.Dir.to_string (OpamPath.Switch.lib t.root t.switch n) :: accu
     ) [] (List.rev deps) in
   OpamGlobals.msg "%s\n" (String.concat " " includes)
 
@@ -2425,17 +2419,17 @@ let rec remote action =
 let pin action =
   log "pin %s" (string_of_pin action);
   let t = load_state () in
-  let pin_f = OpamPath.Alias.pinned t.root t.alias in
+  let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
   let name = action.pin_package in
   let update_config pins =
     OpamPackage.Version.Set.iter (fun version ->
       let nv = OpamPackage.create name version in
-      OpamFilename.rmdir (OpamPath.Alias.build t.root t.alias nv)
+      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv)
     ) (OpamPackage.versions t.packages name);
     OpamFile.Pinned.write pin_f pins in
   if mem_installed_package_by_name t name then (
-    let reinstall_f = OpamPath.Alias.reinstall t.root t.alias in
+    let reinstall_f = OpamPath.Switch.reinstall t.root t.switch in
     let reinstall = OpamFile.Reinstall.safe_read reinstall_f in
     let nv = find_installed_package_by_name t name in
     OpamFile.Reinstall.write reinstall_f (OpamPackage.Set.add nv reinstall)
@@ -2459,7 +2453,7 @@ let pin action =
 let pin_list () =
   log "pin_list";
   let t = load_state () in
-  let pins = OpamFile.Pinned.safe_read (OpamPath.Alias.pinned t.root t.alias) in
+  let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
   let print n a =
     OpamGlobals.msg "%-20s %-8s %s\n" (OpamPackage.Name.to_string n) (kind_of_pin_option a) (path_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
@@ -2470,14 +2464,14 @@ let switch_list () =
   let descrs = compilers t in
   let aliases = OpamFile.Aliases.read (OpamPath.aliases t.root) in
   OpamGlobals.msg "--- Installed compilers ---\n";
-  OpamAlias.Map.iter (fun n c ->
-    let current = if n = t.alias then "*" else " " in
+  OpamSwitch.Map.iter (fun n c ->
+    let current = if n = t.switch then "*" else " " in
     let compiler = OpamCompiler.to_string c in
-    let alias_name = OpamAlias.to_string n in
-    if alias_name = compiler then
-      OpamGlobals.msg " %s %s\n" current alias_name
+    let switch_name = OpamSwitch.to_string n in
+    if switch_name = compiler then
+      OpamGlobals.msg " %s %s\n" current switch_name
     else
-      OpamGlobals.msg " %s %s [%s]\n" current compiler alias_name
+      OpamGlobals.msg " %s %s [%s]\n" current compiler switch_name
   ) aliases;
   OpamGlobals.msg "\n--- Available compilers ---\n";
   OpamCompiler.Set.iter (fun c ->
@@ -2493,13 +2487,13 @@ let switch_list () =
     OpamGlobals.msg " %s %-8s %s\n" preinstalled version compiler
   ) descrs
 
-let switch_install quiet alias compiler =
+let switch_install quiet switch compiler =
   log "switch_install %b %s %s" quiet
-    (OpamAlias.to_string alias)
+    (OpamSwitch.to_string switch)
     (OpamCompiler.to_string compiler);
 
   (* install the new OCaml version *)
-  install_compiler (load_state ()) quiet alias compiler;
+  install_compiler (load_state ()) quiet switch compiler;
 
   (* install the compiler packages *)
   let t = load_state () in
@@ -2524,25 +2518,25 @@ let switch_install quiet alias compiler =
 
   print_env_warning t
 
-let switch quiet alias =
-  log "sswitch alias=%s" (OpamAlias.to_string alias);
+let switch quiet switch =
+  log "sswitch switch=%s" (OpamSwitch.to_string switch);
   let t = load_state () in
-  let comp_dir = OpamPath.Alias.root t.root alias in
-  let compiler = OpamCompiler.of_string (OpamAlias.to_string alias) in
+  let comp_dir = OpamPath.Switch.root t.root switch in
+  let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
   let comp_f = OpamPath.compiler t.root compiler in
   if not (OpamFilename.exists_dir comp_dir) && not (OpamFilename.exists comp_f) then (
-    OpamGlobals.error "The compiler's description for %s does not exist.\n" (OpamAlias.to_string alias);
+    OpamGlobals.error "The compiler's description for %s does not exist.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
   if not (OpamFilename.exists_dir comp_dir) then
-    switch_install quiet alias compiler
+    switch_install quiet switch compiler
   else
-    let config = OpamFile.Config.with_alias t.config alias in
+    let config = OpamFile.Config.with_switch t.config switch in
     OpamFile.Config.write (OpamPath.config t.root) config;
     print_env_warning (load_state ())
 
 let switch_import filename =
-  log "switch_import alias=%s" (OpamFilename.to_string filename);
+  log "switch_import switch=%s" (OpamFilename.to_string filename);
   let t = load_state () in
 
   let imported = OpamFile.Installed.read filename in
@@ -2571,34 +2565,34 @@ let switch_export filename =
 
 let switch_current () =
   let t = load_state () in
-  OpamGlobals.msg "%s\n" (OpamAlias.to_string t.alias)
+  OpamGlobals.msg "%s\n" (OpamSwitch.to_string t.switch)
 
-let switch_remove alias =
-  log "switch_remove alias=%s" (OpamAlias.to_string alias);
+let switch_remove switch =
+  log "switch_remove switch=%s" (OpamSwitch.to_string switch);
   let t = load_state () in
-  let comp_dir = OpamPath.Alias.root t.root alias in
+  let comp_dir = OpamPath.Switch.root t.root switch in
   if not (OpamFilename.exists_dir comp_dir) then (
-    OpamGlobals.msg "The compiler alias %s does not exist.\n" (OpamAlias.to_string alias);
+    OpamGlobals.msg "The compiler switch %s does not exist.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  if t.alias = alias then (
-    OpamGlobals.msg "Cannot remove %s as it is the current compiler.\n" (OpamAlias.to_string alias);
+  if t.switch = switch then (
+    OpamGlobals.msg "Cannot remove %s as it is the current compiler.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  let aliases = OpamAlias.Map.filter (fun a _ -> a <> alias) t.aliases in
+  let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
   OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
   OpamFilename.rmdir comp_dir
 
-let switch_reinstall alias =
-  log "switch_reinstall alias=%s" (OpamAlias.to_string alias);
+let switch_reinstall switch =
+  log "switch_reinstall switch=%s" (OpamSwitch.to_string switch);
   let t = load_state () in
-  if not (OpamAlias.Map.mem alias t.aliases) then (
-    OpamGlobals.msg "The compiler alias %s does not exist.\n" (OpamAlias.to_string alias);
+  if not (OpamSwitch.Map.mem switch t.aliases) then (
+    OpamGlobals.msg "The compiler switch %s does not exist.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  let ocaml_version = OpamAlias.Map.find alias t.aliases in
-  switch_remove alias;
-  switch_install false alias ocaml_version
+  let ocaml_version = OpamSwitch.Map.find switch t.aliases in
+  switch_remove switch;
+  switch_install false switch ocaml_version
 
 (** We protect each main functions with a lock depending on its access
 on some read/write data. *)
@@ -2613,16 +2607,16 @@ let config request =
   check (Read_lock (fun () -> config request))
 
 let install names =
-  check (Alias_lock (fun () -> install names))
+  check (Switch_lock (fun () -> install names))
 
 let reinstall names =
-  check (Alias_lock (fun () -> reinstall names))
+  check (Switch_lock (fun () -> reinstall names))
 
 let upgrade names =
-  check (Alias_lock (fun () -> upgrade names))
+  check (Switch_lock (fun () -> upgrade names))
 
 let remove names =
-  check (Alias_lock (fun () -> remove names))
+  check (Switch_lock (fun () -> remove names))
 
 let update repos =
   check (Global_lock (fun () -> update repos))
@@ -2633,23 +2627,23 @@ let upload u r =
 let remote action =
   check (Global_lock (fun () -> remote action))
 
-let switch_install quiet alias ocaml_version =
-  check (Global_lock (fun () -> switch_install quiet alias ocaml_version))
+let switch_install quiet switch ocaml_version =
+  check (Global_lock (fun () -> switch_install quiet switch ocaml_version))
 
 let switch_import filename =
-  check (Alias_lock (fun () -> switch_import filename))
+  check (Switch_lock (fun () -> switch_import filename))
 
 let switch_export filename =
   check (Read_lock (fun () -> switch_export filename))
 
-let switch_remove alias =
-  check (Global_lock (fun () -> switch_remove alias))
+let switch_remove switch =
+  check (Global_lock (fun () -> switch_remove switch))
 
-let switch quiet alias =
-  check (Global_lock (fun () -> switch quiet alias))
+let switch quiet name =
+  check (Global_lock (fun () -> switch quiet name))
 
-let switch_reinstall alias =
-  check (Global_lock (fun () -> switch_reinstall alias))
+let switch_reinstall switch =
+  check (Global_lock (fun () -> switch_reinstall switch))
 
 let switch_list () =
   check (Read_lock switch_list)

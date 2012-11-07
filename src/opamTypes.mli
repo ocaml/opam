@@ -359,16 +359,16 @@ type file = {
 }
 
 
-(** {2 Aliases} *)
+(** {2 Switches} *)
 
-(** Compiler aliases *)
-type alias = OpamAlias.t
+(** Compiler switches *)
+type switch = OpamSwitch.t
 
-(** Set of compiler aliases *)
-type alias_set = OpamAlias.Set.t
+(** Set of compiler switches *)
+type switch_set = OpamSwitch.Set.t
 
-(** Map of compile aliases *)
-type 'a alias_map = 'a OpamAlias.Map.t
+(** Map of compile switches *)
+type 'a switch_map = 'a OpamSwitch.Map.t
 
 (** {2 Misc} *)
 

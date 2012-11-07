@@ -64,7 +64,7 @@ val remove : OpamPackage.Name.Set.t -> unit
 val remote : remote -> unit
 
 (** Install the given compiler. Take the global file lock. *)
-val switch_install: bool -> alias -> compiler -> unit
+val switch_install: bool -> switch -> compiler -> unit
 
 (** Import the packages from a file. Take the global file lock. *)
 val switch_import: filename -> unit
@@ -73,13 +73,13 @@ val switch_import: filename -> unit
 val switch_export: filename -> unit
 
 (** Remove the given compiler. Take the global file lock. *)
-val switch_remove: alias -> unit
+val switch_remove: switch -> unit
 
 (** Switch to the given compiler. Take the global file lock. *)
-val switch: bool -> alias -> unit
+val switch: bool -> switch -> unit
 
 (** Reinstall the given compiler. Take the global file lock. *)
-val switch_reinstall: alias -> unit
+val switch_reinstall: switch -> unit
 
 (** List the available compiler descriptions *)
 val switch_list: unit -> unit

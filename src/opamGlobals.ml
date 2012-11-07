@@ -35,9 +35,9 @@ let default_build_command = [ [ "./build.sh" ] ]
 
 let default_package = "conf-ocaml"
 
-let default_alias = "system"
+let default_switch = "system"
 
-let alias : string option ref = ref None
+let switch : string option ref = ref None
 
 let opam_version = "1"
 

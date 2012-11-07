@@ -64,96 +64,96 @@ val archives_dir: t -> dirname
 (** Return the repository index: {i $opam/repo/index} *)
 val repo_index: t -> filename
 
-(** Alias related paths *)
-module Alias: sig
+(** Switch related paths *)
+module Switch: sig
 
   (** Root dir: {i $opam/$OVERSION} *)
-  val root: t -> alias -> dirname
+  val root: t -> switch -> dirname
 
   (** lock file *)
-  val lock: t -> alias -> filename
+  val lock: t -> switch -> filename
 
   (** Library path for a given package:
       {i $opam/$OVERSION/lib/NAME} *)
-  val lib: t -> alias -> name -> dirname
+  val lib: t -> switch -> name -> dirname
 
   (** Library path: {i $opam/$OVERSION/lib/} *)
-  val lib_dir: t -> alias -> dirname
+  val lib_dir: t -> switch -> dirname
 
   (** DLL paths *)
-  val stublibs: t -> alias -> dirname
+  val stublibs: t -> switch -> dirname
 
   (** toplevel path: {i $opam/$OVERSION/lib/toplevel} *)
-  val toplevel: t -> alias -> dirname
+  val toplevel: t -> switch -> dirname
 
   (** Documentation path for a given package:
       {i $opam/$OVERSION/doc/NAME} *)
-  val doc: t -> alias -> name -> dirname
+  val doc: t -> switch -> name -> dirname
 
   (** Documentation path: {i $opam/$OVERSION/doc/} *)
-  val doc_dir: t -> alias -> dirname
+  val doc_dir: t -> switch -> dirname
 
   (** Man pages path: {i $opam/$OVERSION/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
-  val man_dir: ?num:string -> t -> alias -> dirname
+  val man_dir: ?num:string -> t -> switch -> dirname
 
   (** Installed binaries: {i $opam/$OVERSION/bin} *)
-  val bin: t -> alias -> dirname
+  val bin: t -> switch -> dirname
 
   (** List of installed packages with their version:
       {i $opam/$OVERSION/installed} *)
-  val installed: t -> alias -> filename
+  val installed: t -> switch -> filename
 
   (** Tempory folders used to decompress and compile
       the corresponding archives:
       {i $opam/$OVERSION/build/$NAME-$VERSION} *)
-  val build: t -> alias -> package -> dirname
+  val build: t -> switch -> package -> dirname
 
   (** Tempory folders used to decompress and compile
       the OCaml compiler:
       {i $opam/$OVERSION/build/_} *)
-  val build_ocaml: t -> alias -> dirname
+  val build_ocaml: t -> switch -> dirname
 
   (** Tempory folder: {i $opam/$OVERSION/build} *)
-  val build_dir: t -> alias -> dirname
+  val build_dir: t -> switch -> dirname
 
   (** A file containing the env variables in which build command are
       processed: {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.env} *)
-  val build_env: t -> alias -> package -> filename
+  val build_env: t -> switch -> package -> filename
 
   (** A file containing a copy of the current env variables, before
       the env variables for the build are set:
       {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env} *)
-  val build_old_env: t -> alias -> package -> filename
+  val build_old_env: t -> switch -> package -> filename
 
   (** Tempory location of install files:
       {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.install} *)
-  val build_install: t -> alias -> package -> filename
+  val build_install: t -> switch -> package -> filename
 
   (** Tempory location of config files: {i
       $opam/$OVERSION/build/$NAME.$VERSION/$NAME.config} *)
-  val build_config: t -> alias -> package -> filename
+  val build_config: t -> switch -> package -> filename
 
   (** Installed files for a given package:
       {i $opam/$OVERSION/install/$NAME.install} *)
-  val install: t -> alias -> name -> filename
+  val install: t -> switch -> name -> filename
 
   (** Installed files: {i $opam/$OVERSION/install/} *)
-  val install_dir: t -> alias -> dirname
+  val install_dir: t -> switch -> dirname
 
   (** Packages to reinstall on next upgrade:
       {i $opam/$OVERSION/reinstall} *)
-  val reinstall: t -> alias -> filename
+  val reinstall: t -> switch -> filename
 
   (** Compile and link flags for a given package:
       {i $opam/$OVERSION/config/$NAME.config} *)
-  val config: t -> alias -> name -> filename
+  val config: t -> switch -> name -> filename
 
   (** Configuration folder: {i $opam/$OVERSION/config} *)
-  val config_dir: t -> alias -> dirname
+  val config_dir: t -> switch -> dirname
 
   (** Pinned package file *)
-  val pinned: t -> alias -> filename
+  val pinned: t -> switch -> filename
 end
 
 (** Repository paths *)
