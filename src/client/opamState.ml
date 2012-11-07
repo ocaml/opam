@@ -220,7 +220,17 @@ let load_state () =
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
 
-  let config = OpamFile.Config.read (OpamPath.config root) in
+  let config_p = OpamPath.config root in
+  let config =
+    let config = OpamFile.Config.read config_p in
+    if OpamFile.Config.opam_version config <> OpamVersion.current then
+      (* opam has been updated, so refresh the configuration file *)
+      let config = OpamFile.Config.with_current_opam_version config in
+      OpamFile.Config.write config_p config;
+      config
+    else
+      config in
+
   let switch = match !OpamGlobals.switch with
     | None   -> OpamFile.Config.switch config
     | Some a -> OpamSwitch.of_string a in

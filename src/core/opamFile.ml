@@ -430,6 +430,7 @@ module Config = struct
 
     let with_repositories t repositories = { t with repositories }
     let with_switch t switch = { t with switch }
+    let with_current_opam_version t = { t with opam_version = OpamVersion.current }
 
     let opam_version t = t.opam_version
     let repositories t = t.repositories
@@ -448,17 +449,26 @@ module Config = struct
 
     let s_repositories = "repositories"
     let s_switch = "switch"
-    let s_alias = "alias"
+    let s_switch1 = "alias"
+    let s_switch2 = "ocaml-version"
+
     let s_cores = "cores"
-    let s_system_version = "system-ocaml-version"
+
+    let s_system_version1 = "system_ocaml-version"
+    let s_system_version2 = "system-ocaml-version"
 
     let valid_fields = [
       s_opam_version;
       s_repositories;
       s_switch;
-      s_alias;
-      s_system_version;
       s_cores;
+
+      (* this fields are no longer useful, but we keep it for backward
+         compatibility *)
+      s_switch1;
+      s_switch2;
+      s_system_version1;
+      s_system_version2;
     ]
 
     let of_string filename f =
@@ -497,15 +507,17 @@ module Config = struct
                List.map (fst |> OpamRepositoryName.of_string) list)
           ]) in
 
-      let switch str =
+      let mk_switch str =
         OpamFormat.assoc_option s.file_contents str (OpamFormat.parse_string |> OpamSwitch.of_string) in
-      let switch1 = switch s_alias in
-      let switch2 = switch s_switch in
+      let switch  = mk_switch s_switch in
+      let switch1 = mk_switch s_switch1 in
+      let switch2 = mk_switch s_switch2 in
       let switch =
-        match switch2, switch1 with
-        | Some v, _
-        | _     , Some v -> v
-        | None  , None   -> OpamGlobals.error_and_exit "No current switch defined" in
+        match switch, switch1, switch2 with
+        | Some v, _     , _
+        | _     , Some v, _
+        | _     , _     , Some v -> v
+        | None  , None  , None   -> OpamGlobals.error_and_exit "No current switch defined" in
 
       let cores = OpamFormat.assoc s.file_contents s_cores OpamFormat.parse_int in
       { opam_version; repositories; switch; cores }
