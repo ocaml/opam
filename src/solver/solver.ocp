@@ -1,0 +1,15 @@
+comp += [ "-warn-error" "A" ]
+
+begin library "opam-solver"
+
+  files   = [
+    "opamCudf.ml"
+    "opamHeuristic.ml"
+    "opamSolver.ml"
+  ]
+
+  requires = [
+    "opam-core"
+  ]
+
+end

@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamSolver.html">
+<link rel="previous" href="OpamSwitch.html">
 <link rel="next" href="OpamTypes.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,22 +28,28 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><link title="File locking function" rel="Section" href="#2_Filelockingfunction">
-<link title="Function used only by the switch commnand" rel="Section" href="#2_Functionusedonlybytheswitchcommnand">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="File locking function" rel="Section" href="#2_Filelockingfunction">
+<link title="Misc" rel="Section" href="#2_Misc">
 <title>OpamSystem</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamSolver.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamTypes.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamSwitch.html" title="OpamSwitch">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamTypes.html" title="OpamTypes">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamSystem.html">OpamSystem</a></h1></center>
-<br>
-<pre><span class="keyword">module</span> OpamSystem: <code class="code">sig</code> <a href="OpamSystem.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations.<br>
+<h1>Module <a href="type_OpamSystem.html">OpamSystem</a></h1>
+<pre><span class="keyword">module</span> OpamSystem: <code class="code">sig</code> <a href="OpamSystem.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations<br>
 <hr width="100%">
 <pre><span id="EXCEPTIONProcess_error"><span class="keyword">exception</span> Process_error</span> <span class="keyword">of</span> <code class="type"><a href="OpamProcess.html#TYPEresult">OpamProcess.result</a></code></pre>
 <div class="info">
@@ -103,11 +112,11 @@ Change the current working directory<br>
     recursively.
     Links behaving like directory are crossed.<br>
 </div>
-<pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">unit -> string option</code></pre><div class="info">
+<pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
 Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns <code class="code">None</code>.<br>
 </div>
-<pre><span id="VALsystem_ocamlc_where"><span class="keyword">val</span> system_ocamlc_where</span> : <code class="type">unit -> string option</code></pre><div class="info">
+<pre><span id="VALsystem_ocamlc_where"><span class="keyword">val</span> system_ocamlc_where</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
 Return the path where the system ocamlc library is installed<br>
 </div>
 <pre><span id="VALdirectories_with_links"><span class="keyword">val</span> directories_with_links</span> : <code class="type">string -> string list</code></pre><div class="info">
@@ -127,7 +136,7 @@ a command is a list of words<br>
     in a context where $PATH contains <code class="code">add_to_path</code> at the beginning.
     It stops whenever one command fails.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?path:string list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?verbose:bool -> ?path:string list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> and return
     the lines from stdout<br>
 </div>
@@ -149,24 +158,24 @@ Create a directory. Do not fail if the directory already
 </div>
 <br>
 <span id="2_Filelockingfunction"><h2>File locking function</h2></span><br>
-<pre><span id="VALflock"><span class="keyword">val</span> flock</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<pre><span id="VALflock"><span class="keyword">val</span> flock</span> : <code class="type">string -> unit</code></pre><div class="info">
 <code class="code">flock ()</code> takes the global file lock. If the lock is already
     taken, sleep for 1s and then retry. Abort after 5 tentatives.<br>
 </div>
-<pre><span id="VALfunlock"><span class="keyword">val</span> funlock</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<pre><span id="VALfunlock"><span class="keyword">val</span> funlock</span> : <code class="type">string -> unit</code></pre><div class="info">
 <code class="code">funlock ()</code> unlocks the global file lock. Work only if the
     current processus is the same as the one who took the lock at the
     first place.<br>
 </div>
-<pre><span id="VALwith_flock"><span class="keyword">val</span> with_flock</span> : <code class="type">(unit -> unit) -> unit</code></pre><div class="info">
-Functional version of <code class="code">flock / funlock</code><br>
-</div>
 <br>
-<span id="2_Functionusedonlybytheswitchcommnand"><h2>Function used only by the switch commnand</h2></span><br>
+<span id="2_Misc"><h2>Misc</h2></span><br>
 <pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">filename:string -> dirname:string -> string</code></pre><div class="info">
 download compiler sources<br>
 </div>
 <pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info">
 Apply a patch file in the current directory.<br>
+</div>
+<pre><span id="VALgetenv"><span class="keyword">val</span> getenv</span> : <code class="type">string -> string</code></pre><div class="info">
+Lazy environment<br>
 </div>
 </body></html>

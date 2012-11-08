@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,20 +28,26 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><link title="Global paths" rel="Section" href="#2_Globalpaths">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Global paths" rel="Section" href="#2_Globalpaths">
 <title>OpamPath</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamParallel.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamProcess.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamParallel.html" title="OpamParallel">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamProcess.html" title="OpamProcess">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamPath.html">OpamPath</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamPath.html">OpamPath</a></h1>
 <pre><span class="keyword">module</span> OpamPath: <code class="code">sig</code> <a href="OpamPath.html">..</a> <code class="code">end</code></pre>The various paths where OPAM configuration files are stored.<br>
 <hr width="100%">
 <br>
@@ -53,6 +62,9 @@ Default root path<br>
 </div>
 <pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Root dir: <i>$opam/</i><br>
+</div>
+<pre><span id="VALlock"><span class="keyword">val</span> lock</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+lock file<br>
 </div>
 <pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 Main configuration file: <i>$opam/config</i><br>
@@ -87,8 +99,8 @@ Archives files folder: <i>$opam/archives/</i><br>
 <pre><span id="VALrepo_index"><span class="keyword">val</span> repo_index</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 Return the repository index: <i>$opam/repo/index</i><br>
 </div>
-<pre><span class="keyword">module</span> <a href="OpamPath.Alias.html">Alias</a>: <code class="code">sig</code> <a href="OpamPath.Alias.html">..</a> <code class="code">end</code></pre><div class="info">
-Alias related paths
+<pre><span class="keyword">module</span> <a href="OpamPath.Switch.html">Switch</a>: <code class="code">sig</code> <a href="OpamPath.Switch.html">..</a> <code class="code">end</code></pre><div class="info">
+Switch related paths
 </div>
 <pre><span class="keyword">module</span> <a href="OpamPath.Repository.html">Repository</a>: <code class="code">sig</code> <a href="OpamPath.Repository.html">..</a> <code class="code">end</code></pre><div class="info">
 Repository paths

@@ -1,0 +1,15 @@
+comp += [ "-warn-error" "A" ]
+
+begin library "opam-repositories"
+
+  files   = [
+    "opamCurl.ml"
+    "opamRsync.ml"
+    "opamGit.ml"
+  ]
+
+  requires = [
+    "opam-core"
+  ]
+
+end

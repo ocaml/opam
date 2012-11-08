@@ -5,15 +5,18 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
 <link rel="previous" href="OpamProcess.html">
-<link rel="next" href="OpamSolver.html">
+<link rel="next" href="OpamRepositoryName.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,28 +28,39 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><link title="Repository backends" rel="Section" href="#2_Repositorybackends">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Repository backends" rel="Section" href="#2_Repositorybackends">
 <title>OpamRepository</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamProcess.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamSolver.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamProcess.html" title="OpamProcess">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamRepositoryName.html" title="OpamRepositoryName">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamRepository.html">OpamRepository</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamRepository.html">OpamRepository</a></h1>
 <pre><span class="keyword">module</span> OpamRepository: <code class="code">sig</code> <a href="OpamRepository.html">..</a> <code class="code">end</code></pre>Mangagement of OPAM repositories.<br>
 <hr width="100%">
 <pre><span id="EXCEPTIONUnknown_backend"><span class="keyword">exception</span> Unknown_backend</span></pre>
-<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> string</code></pre><div class="info">
+Pretty-print<br>
+</div>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> int</code></pre><div class="info">
+Compare repositories<br>
+</div>
 <pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
 Default repository<br>
 </div>
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">name:string -> kind:string -> address:string -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
+<pre><span id="VALrepository_address"><span class="keyword">val</span> repository_address</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Constructor<br>
 </div>
 <pre><span id="VALlocal_repo"><span class="keyword">val</span> local_repo</span> : <code class="type">unit -> <a href="OpamPath.Repository.html#TYPEr">OpamPath.Repository.r</a></code></pre><div class="info">
@@ -73,10 +87,10 @@ Upload the content of <i>$opam/repo/$repo/upload</i> to the remote
 <pre><span class="keyword">module type</span> <a href="OpamRepository.BACKEND.html">BACKEND</a> = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre><div class="info">
 Backend signature
 </div>
-<pre><span id="VALregister_backend"><span class="keyword">val</span> register_backend</span> : <code class="type"><a href="OpamTypes.html#TYPEkind">OpamTypes.kind</a> -> (module OpamRepository.BACKEND) -> unit</code></pre><div class="info">
+<pre><span id="VALregister_backend"><span class="keyword">val</span> register_backend</span> : <code class="type">string -> (module OpamRepository.BACKEND) -> unit</code></pre><div class="info">
 Register a repository backend<br>
 </div>
-<pre><span id="VALfind_backend"><span class="keyword">val</span> find_backend</span> : <code class="type"><a href="OpamTypes.html#TYPEkind">OpamTypes.kind</a> -> (module OpamRepository.BACKEND)</code></pre><div class="info">
+<pre><span id="VALfind_backend"><span class="keyword">val</span> find_backend</span> : <code class="type">string -> (module OpamRepository.BACKEND)</code></pre><div class="info">
 Find a backend<br>
 </div>
 <pre><span id="VALcopy_files"><span class="keyword">val</span> copy_files</span> : <code class="type"><a href="OpamPath.Repository.html#TYPEr">OpamPath.Repository.r</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> OpamFilename.Set.t</code></pre><div class="info">

@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamRsync.html">
+<link rel="next" href="OpamHeuristic.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Pretty-printing" rel="Section" href="#2_Prettyprinting">
+<title>OpamCudf</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OpamRsync.html" title="OpamRsync">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamHeuristic.html" title="OpamHeuristic">Next</a>
+</div>
+<h1>Module <a href="type_OpamCudf.html">OpamCudf</a></h1>
+<pre><span class="keyword">module</span> OpamCudf: <code class="code">sig</code> <a href="OpamCudf.html">..</a> <code class="code">end</code></pre>Cudf interface<br>
+<hr width="100%">
+<pre><span class="keyword">module</span> <a href="OpamCudf.Set.html">Set</a>: <code class="type"><a href="OpamMisc.SET.html">OpamMisc.SET</a></code><code class="type">  with type elt = Cudf.package</code></pre><div class="info">
+Cudf sets
+</div>
+<pre><span class="keyword">module</span> <a href="OpamCudf.Map.html">Map</a>: <code class="type"><a href="OpamMisc.MAP.html">OpamMisc.MAP</a></code><code class="type">  with type key = Cudf.package</code></pre><div class="info">
+Cudf maps
+</div>
+<pre><span class="keyword">module</span> <a href="OpamCudf.Graph.html">Graph</a>: <code class="code">sig</code> <a href="OpamCudf.Graph.html">..</a> <code class="code">end</code></pre><div class="info">
+Cudf graph
+</div>
+<pre><span class="keyword">module</span> <a href="OpamCudf.Diff.html">Diff</a>: <code class="code">sig</code> <a href="OpamCudf.Diff.html">..</a> <code class="code">end</code></pre><div class="info">
+Difference between universes
+</div>
+<pre><span class="keyword">module</span> <a href="OpamCudf.ActionGraph.html">ActionGraph</a>: <code class="type">ACTION_GRAPH</code><code class="type">  with type package = Cudf.package</code></pre><div class="info">
+Cudf action graph
+</div>
+<pre><span id="VALbackward_dependencies"><span class="keyword">val</span> backward_dependencies</span> : <code class="type">Cudf.universe -> Cudf.package list -> Cudf.package list</code></pre><div class="info">
+Return the transitive closure of dependencies of <code class="code">set</code>,
+    sorted in topological order<br>
+</div>
+<pre><span id="VALforward_dependencies"><span class="keyword">val</span> forward_dependencies</span> : <code class="type">Cudf.universe -> Cudf.package list -> Cudf.package list</code></pre><div class="info">
+Return the transitive closure of dependencies of <code class="code">set</code>,
+    sorted in topological order<br>
+</div>
+<pre><span id="VALget_final_universe"><span class="keyword">val</span> get_final_universe</span> : <code class="type">Cudf.universe -><br>       Cudf_types.vpkg <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (Cudf.universe, Algo.Diagnostic.reason list) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
+Compute the final universe state<br>
+</div>
+<pre><span id="VALactions_of_diff"><span class="keyword">val</span> actions_of_diff</span> : <code class="type"><a href="OpamCudf.Diff.html#TYPEuniverse">Diff.universe</a> -> Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list</code></pre><div class="info">
+Compute the list of actions to match the difference between two
+    universe. Remark: the result order is unspecified, ie. need to use
+    <code class="code">solution_of_actions</code> to get a solution which respects the
+    topological order induced by dependencies.<br>
+</div>
+<pre><span id="VALsolution_of_actions"><span class="keyword">val</span> solution_of_actions</span> : <code class="type">simple_universe:Cudf.universe -><br>       complete_universe:Cudf.universe -><br>       Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list -> ActionGraph.solution</code></pre><div class="info">
+Compution the actions to process from a solution<br>
+</div>
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type">Cudf.universe -><br>       Cudf_types.vpkg <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list, Algo.Diagnostic.reason list)<br>       <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
+Resolve a CUDF request<br>
+</div>
+<pre><span id="VALuninstall"><span class="keyword">val</span> uninstall</span> : <code class="type">string -> Cudf.universe -> Cudf.universe</code></pre><div class="info">
+Remove a package from an universe<br>
+</div>
+<pre><span id="VALoutput_universe"><span class="keyword">val</span> output_universe</span> : <code class="type">string -> Cudf.universe -> unit</code></pre><div class="info">
+Output the universe<br>
+</div>
+<pre><span id="VALs_reinstall"><span class="keyword">val</span> s_reinstall</span> : <code class="type">string</code></pre><div class="info">
+The "reinstall" string<br>
+</div>
+<br>
+<span id="2_Prettyprinting"><h2>Pretty-printing</h2></span><br>
+<pre><span id="VALstring_of_reason"><span class="keyword">val</span> string_of_reason</span> : <code class="type">(Cudf.package -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a>) -> Algo.Diagnostic.reason -> string</code></pre><div class="info">
+Convert a reason to something readable by the user<br>
+</div>
+<pre><span id="VALstring_of_reasons"><span class="keyword">val</span> string_of_reasons</span> : <code class="type">(Cudf.package -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a>) -> Algo.Diagnostic.reason list -> string</code></pre><div class="info">
+Convert a list of reasons to something readable by the user<br>
+</div>
+<pre><span id="VALstring_of_atom"><span class="keyword">val</span> string_of_atom</span> : <code class="type">Cudf_types.vpkg -> string</code></pre><div class="info">
+Pretty-print atoms<br>
+</div>
+<pre><span id="VALstring_of_universe"><span class="keyword">val</span> string_of_universe</span> : <code class="type">Cudf.universe -> string</code></pre><div class="info">
+Pretty-print the universe<br>
+</div>
+<pre><span id="VALexternal_solver_available"><span class="keyword">val</span> external_solver_available</span> : <code class="type">unit -> bool</code></pre><div class="info">
+<span id="2_Externalsolver"><h2>External solver</h2></span><br>
+</div>
+</body></html>

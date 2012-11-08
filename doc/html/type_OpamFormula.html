@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -20,18 +23,37 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamFormula</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFormula</title>
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;conjunction&nbsp;=&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkglist<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_conjunction&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.conjunction&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;cnf&nbsp;=&nbsp;<span class="constructor">Debian</span>.<span class="constructor">Format822</span>.vpkgformula<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_cnf&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.cnf&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;relop&nbsp;=&nbsp;[&nbsp;<span class="keywordsign">`</span><span class="constructor">Eq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Geq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Gt</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Leq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Lt</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">Neq</span>&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_relop&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.relop&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;relop_of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.relop<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;atom&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.t&nbsp;*&nbsp;(<span class="constructor">OpamFormula</span>.relop&nbsp;*&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.t)&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_atom&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;conjunction&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_conjunction&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.conjunction&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;disjunction&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_disjunction&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.disjunction&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;cnf&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.disjunction&nbsp;<span class="constructor">OpamFormula</span>.conjunction<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;dnf&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.conjunction&nbsp;<span class="constructor">OpamFormula</span>.disjunction<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_cnf&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.cnf&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_dnf&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.dnf&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;formula&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Empty</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Atom</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a<br>
@@ -40,17 +62,31 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Or</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;*&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;eval&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_formula&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;ands&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;ors&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;<span class="constructor">OpamFormula</span>.formula)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fold_left&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.t&nbsp;*<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(string&nbsp;*&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.t)&nbsp;<span class="constructor">OpamFormula</span>.formula)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamFormula</span>.relop&nbsp;*&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.t)&nbsp;<span class="constructor">OpamFormula</span>.formula)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;atoms&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.t&nbsp;*&nbsp;(string&nbsp;*&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.t)&nbsp;option)&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;cnf_of_formula&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dnf_of_formula&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_atom_formula&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.formula<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_atom_formula&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;atoms&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_conjunction&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.conjunction<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_cnf&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.cnf<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_conjunction&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.conjunction<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_conjunction&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.conjunction&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_disjunction&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.disjunction<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_disjunction&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.disjunction&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_cnf&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.cnf<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_dnf&nbsp;:&nbsp;<span class="constructor">OpamFormula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFormula</span>.atom&nbsp;<span class="constructor">OpamFormula</span>.dnf<br>
 <span class="keyword">end</span></code></body></html>
