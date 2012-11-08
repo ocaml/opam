@@ -453,8 +453,11 @@ let really_download ~src ~dst =
         dst_file
   in
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
-  with _ ->
-    OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
+  with
+  | Internal_error s as e ->
+    OpamGlobals.error "%s" s;
+    raise e
+  | _ -> OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
 
 let download ~filename:src ~dirname:dst =
   let dst_file = dst / Filename.basename src in

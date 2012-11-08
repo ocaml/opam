@@ -22,6 +22,7 @@ type state = {
   remote_dir          : dirname;
   local_dir           : dirname;
   remote_index_archive: filename;
+  local_index_archive : filename;
   local_files         : filename_set;
   remote_local        : filename filename_map;
   local_remote        : filename filename_map;
@@ -44,6 +45,7 @@ let make_state ~download_index remote_dir =
     let local_index_file = index_file local_dir in
     let local_index_file_save = index_file_save local_dir in
     let remote_index_archive = remote_dir // "index.tar.gz" in
+    let local_index_archive = local_dir // "index.tar.gz" in
     let index =
       if download_index then (
         if OpamFilename.exists local_index_file then
@@ -78,7 +80,7 @@ let make_state ~download_index remote_dir =
       remote_local, local_remote, locals, perms, digests in
     let state = {
       remote_dir; local_dir;
-      remote_index_archive;
+      remote_index_archive; local_index_archive;
       local_files; remote_local; local_remote;
       file_permissions; file_digests;
     } in
@@ -98,12 +100,12 @@ module B = struct
     let state = make_state ~download_index:true address in
     (* Download index.tar.gz *)
     try
-      OpamFilename.remove state.remote_index_archive;
+      OpamFilename.remove state.local_index_archive;
       let file = OpamFilename.download state.remote_index_archive state.local_dir in
       OpamFilename.extract_in file state.local_dir
     with _ ->
       OpamGlobals.msg
-        "Cannot find index.tar.gz on the OPAM repository.\n\
+        "Cannot find index.tar.gz on the OPAM repository. \
          Initialisation might take some time ...\n"
 
   let curl ~remote_file ~local_file =
