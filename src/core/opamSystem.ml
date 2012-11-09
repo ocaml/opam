@@ -391,17 +391,22 @@ let flock file =
 
 let funlock file =
   let id = string_of_int (Unix.getpid ()) in
-  if Sys.file_exists file then begin
+  if Sys.file_exists file then (
     let ic = open_in file in
-    let s = input_line ic in
-    close_in ic;
-    if s = id then begin
-      OpamGlobals.log id "unlocking %s" file;
+    try
+      let s = input_line ic in
+      close_in ic;
+      if s = id then (
+        OpamGlobals.log id "unlocking %s" file;
+        Unix.unlink file;
+      ) else
+        OpamGlobals.error_and_exit "cannot unlock %s (%s)" file s
+    with _ ->
+      OpamGlobals.error "%s is broken, removing it and continuing anyway ..." file;
+        close_in ic;
       Unix.unlink file;
-    end else
-      OpamGlobals.error_and_exit "cannot unlock %s (%s)" file s
-  end else if Sys.file_exists (Filename.basename file) then
-      OpamGlobals.error_and_exit "Cannot find %s" file
+  ) else
+    OpamGlobals.error "Cannot find %s, but continuing anyway..." file
 
 let ocaml_version = lazy (
   try
