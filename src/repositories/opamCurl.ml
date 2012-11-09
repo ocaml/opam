@@ -51,7 +51,7 @@ let make_state ~download_index remote_dir =
         if OpamFilename.exists local_index_file then
           OpamFilename.move local_index_file local_index_file_save;
         try
-          let file = OpamFilename.download remote_index_file local_dir in
+          let file = OpamFilename.download ~overwrite:false remote_index_file local_dir in
           OpamFilename.remove local_index_file_save;
           file;
         with e ->
@@ -100,8 +100,7 @@ module B = struct
     let state = make_state ~download_index:true address in
     (* Download index.tar.gz *)
     try
-      OpamFilename.remove state.local_index_archive;
-      let file = OpamFilename.download state.remote_index_archive state.local_dir in
+      let file = OpamFilename.download ~overwrite:true state.remote_index_archive state.local_dir in
       OpamFilename.extract_in file state.local_dir
     with _ ->
       OpamGlobals.msg
@@ -112,7 +111,7 @@ module B = struct
     log "dowloading %s" (OpamFilename.to_string remote_file);
     let local_dir = OpamFilename.dirname local_file in
     OpamFilename.mkdir local_dir;
-    OpamFilename.download remote_file local_dir
+    OpamFilename.download ~overwrite:true remote_file local_dir
 
   let update ~address =
     OpamGlobals.msg "Synchronizing with %s ...\n" (OpamFilename.Dir.to_string address);
@@ -175,7 +174,7 @@ module B = struct
         let local_dir = OpamFilename.dirname local_file in
         OpamFilename.mkdir local_dir;
         OpamGlobals.msg "Downloading %s ...\n" (OpamFilename.to_string remote_file);
-        let local_file = OpamFilename.download remote_file local_dir in
+        let local_file = OpamFilename.download ~overwrite:true remote_file local_dir in
         if not (OpamFilename.exists local_file) then
           (* This may happen with empty files *)
           OpamFilename.touch local_file;
@@ -197,7 +196,7 @@ module B = struct
     let dest_dir = OpamPath.Repository.tmp_dir local_repo nv in
     OpamGlobals.msg "Downloading %s ...\n" (OpamFilename.to_string remote_file);
     try
-      let file = OpamFilename.download remote_file dest_dir in
+      let file = OpamFilename.download ~overwrite:true remote_file dest_dir in
       Result file
     with _ ->
       Not_available

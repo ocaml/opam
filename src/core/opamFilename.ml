@@ -219,17 +219,17 @@ let remove_prefix ~prefix filename =
   let dirname = to_string filename in
   OpamMisc.remove_prefix ~prefix dirname
 
-let download filename dirname =
+let download ~overwrite filename dirname =
   mkdir dirname;
-  let file = OpamSystem.download ~filename:(to_string filename) ~dirname:(Dir.to_string dirname) in
+  let file = OpamSystem.download ~overwrite ~filename:(to_string filename) ~dirname:(Dir.to_string dirname) in
   of_string file
 
-let download_iter filenames dirname =
+let download_iter ~overwrite filenames dirname =
   let rec aux = function
     | []   ->
       OpamSystem.internal_error "Cannot download %s" (String.concat ", " (List.map to_string filenames))
     | h::t ->
-      try download h dirname
+      try download ~overwrite h dirname
       with _ -> aux t in
   aux filenames
 
