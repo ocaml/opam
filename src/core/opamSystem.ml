@@ -378,7 +378,7 @@ let flock file =
       incr l;
       loop ()
     end else if Sys.file_exists file then begin
-      OpamGlobals.msg "Too many attemps. Cancelling ...\n";
+      OpamGlobals.msg "Too many attempts. Cancelling ...\n";
       exit 1
     end else begin
       let oc = open_out file in
