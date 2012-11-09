@@ -63,8 +63,7 @@ let init ~bounds n =
 
   (* Given a list of bounds and a tuple, return the next tuple while
      keeping the sum of components of the tuple constant *)
-let rec cst_succ ~bounds l =
-  let k = List.fold_left (+) 0 l in
+let rec cst_succ ~bounds k l =
   match l, bounds with
   | [] , []  -> None
   | [n], [b] ->
@@ -76,7 +75,7 @@ let rec cst_succ ~bounds l =
     if n >= k then
       None
     else (
-      match cst_succ ~bounds:bt nt with
+      match cst_succ ~bounds:bt (k-n) nt with
       | Some s -> Some (n::s)
       | None   ->
         if n < b then
@@ -86,15 +85,25 @@ let rec cst_succ ~bounds l =
         else
           None)
   | _ ->
-    failwith "Bounds and tuples do not have the same size"
+    failwith "Bounds and tuple do not have the same size"
 
 (* Given a list of bounds and a tuple, return the next tuple *)
 let succ ~bounds l =
-  match cst_succ ~bounds l with
+  let k = List.fold_left (+) 0 l in
+  match cst_succ ~bounds k l with
   | Some t -> Some t
   | None   ->
     let k = List.fold_left (+) 0 l in
     init ~bounds (k+1)
+
+let count ~debug ~bounds =
+  let c = ref 0 in
+  let rec aux = function
+    | None   -> !c
+    | Some x ->
+      if debug then OpamGlobals.msg "%s\n" (OpamMisc.string_of_list string_of_int x);
+      incr c; aux (succ ~bounds x) in
+  aux (init ~bounds 0)
 
 (* explore the state-space given by an upgrade table.
 
