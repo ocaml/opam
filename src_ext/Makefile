@@ -8,7 +8,7 @@ depends.ocp: depends.ocp.boot
 clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp ocaml-arg.stamp
 
 cudf-0.6.3.tar.gz:
-	$(FETCH) http://gforge.info.ucl.ac.be/frs/download.php/190/cudf-0.6.3.tar.gz
+	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31543/cudf-0.6.3.tar.gz
 
 cudf.stamp: cudf-0.6.3.tar.gz
 	tar xfz cudf-0.6.3.tar.gz
@@ -24,6 +24,14 @@ extlib.stamp: extlib-1.5.3.tar.gz
 	rm -rf extlib
 	mv extlib-1.5.3 extlib
 	@touch $@
+
+dose3-git:
+	@if [ -e dose ]; then \
+	  cd dose; \
+	  git pull; \
+	else \
+	  git clone --depth 1 git://scm.gforge.inria.fr/dose/dose.git dose; \
+	fi
 
 dose3-3.1.2.tar.gz:
 	$(FETCH) https://gforge.inria.fr/frs/download.php/31595/dose3-3.1.2.tar.gz
