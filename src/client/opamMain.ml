@@ -178,6 +178,7 @@ let bytelink () =  has_cmd := true; is_byte := true ; is_link := true in
 let asmcomp  () =  has_cmd := true; is_byte := false; is_link := false in
 let asmlink  () =  has_cmd := true; is_byte := false; is_link := true in
 let command = ref None in
+let csh = ref false in
 let set cmd () =
   has_cmd := true;
   command := Some cmd in
@@ -192,6 +193,7 @@ let specs = [
   ("-var"      , Arg.Unit (set `Var)  , " Display the content of a variable");
   ("-subst"    , Arg.Unit (set `Subst), " Substitute variables in files");
   ("-env"      , Arg.Unit (set `Env)  , " Display the compiler environment variables");
+  ("-c"        , Arg.Set csh          , " Use csh-compatible output mode");
 ] in
 let mk options =
   if not !has_cmd then
@@ -215,7 +217,7 @@ let mk options =
   main = function () ->
     let names = List.rev !ano_args in
     let config = match !command with
-      | Some `Env   -> CEnv
+      | Some `Env   -> CEnv !csh
       | Some `I     -> CIncludes (!is_rec, List.map OpamPackage.Name.of_string names)
       | Some `List  -> CList
       | Some `Var when List.length names = 1

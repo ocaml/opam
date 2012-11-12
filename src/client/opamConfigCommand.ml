@@ -26,7 +26,7 @@ let string_of_config_option t =
     t.conf_is_rec t.conf_is_byte t.conf_is_link (full_sections t.conf_options)
 
 let string_of_config = function
-  | CEnv        -> "env"
+  | CEnv csh    -> Printf.sprintf "env(csh=%b)" csh
   | CList       -> "list-vars"
   | CVariable v -> Printf.sprintf "var(%s)" (OpamVariable.Full.to_string v)
   | CCompil c   -> string_of_config_option c
@@ -208,11 +208,21 @@ let print_env env =
       OpamGlobals.msg "%s=%s; export %s;\n" k v k;
     ) env.new_env
 
+let print_csh_env env =
+  if env <> empty_env then
+    List.iter (fun (k,v) ->
+      OpamGlobals.msg "setenv %s %S;\n" k v;
+    ) env.new_env
+
 let config request =
   log "config %s" (string_of_config request);
   let t = OpamState.load_state () in
   match request with
-  | CEnv                      -> print_env (OpamState.get_env t)
+  | CEnv csh                  ->
+    let env = OpamState.get_env t in
+    if csh
+    then print_csh_env env
+    else print_env env
   | CList                     -> config_list t
   | CSubst fs                 -> List.iter (OpamState.substitute_file t) fs
   | CIncludes (is_rec, names) -> config_includes t is_rec names
