@@ -263,10 +263,16 @@ let run_process ?verbose ?path ?(add_to_env=[]) ?(add_to_path=[]) = function
       let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
-      let r = OpamProcess.run ~env ~name ~verbose cmd args in
-      if not !OpamGlobals.debug then
-        OpamProcess.clean_files r;
-      r
+      let cmd_exists =
+        OpamProcess.run ~env ~name:"command" ~verbose:false "command" ["-v";cmd] in
+      OpamProcess.clean_files cmd_exists;
+      if OpamProcess.is_success cmd_exists then (
+        let r = OpamProcess.run ~env ~name ~verbose cmd args in
+        if not !OpamGlobals.debug then
+          OpamProcess.clean_files r;
+        r
+      ) else
+        OpamGlobals.error_and_exit "%S: command not found\n" cmd
 
 let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ?verbose ~add_to_env ~add_to_path cmd in
