@@ -140,10 +140,10 @@ val remove_prefix: prefix:Dir.t -> t -> string
 
 (** download a remote file in a given directory. Return the location
     of the downloaded file if the download is successful.  *)
-val download: t -> Dir.t -> t
+val download: overwrite:bool -> t -> Dir.t -> t
 
 (** iterate downloads until one is sucessful *)
-val download_iter: t list -> Dir.t -> t
+val download_iter: overwrite:bool -> t list -> Dir.t -> t
 
 (** Apply a patch to a directory *)
 val patch: t -> Dir.t -> unit

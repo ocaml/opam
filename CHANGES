@@ -1,6 +1,8 @@
-0.8.0 (trunk)
-* Improvements in the solver interface
+0.8.0 [Nov 2012]
+* Improvements in the solver interface and API
 * The solver now use an external SAT-solver (aspcud) if found in the path
+* More expressive constraints in optional dependencies
+* Clean-up the build directory when build succeeds
 
 0.7.7 [Oct 2012]
 * Add an --alias global command-line argument to overwrite the default alias value

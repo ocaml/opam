@@ -151,6 +151,12 @@ let map_request f r =
     wish_remove  = f r.wish_remove ;
     wish_upgrade = f r.wish_upgrade }
 
+(* Remove duplicate packages *)
+let cleanup_request req =
+  let update_packages = List.map (fun (n,_) -> n) req.wish_upgrade in
+  let wish_install = List.filter (fun (n,_) -> not (List.mem n update_packages)) req.wish_install in
+  { req with wish_install }
+
 let resolve universe request =
   log "resolve universe=%s" (OpamPackage.Set.to_string universe.u_available);
   log "resolve request=%s" (string_of_request request);

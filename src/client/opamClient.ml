@@ -704,8 +704,15 @@ let install names =
   let atoms = OpamSolution.atoms_of_names t names in
 
   let pkg_skip, pkg_new =
-    List.partition (fun (n,_) ->
-      OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.installed
+    List.partition (fun (n,v) ->
+      match v with
+      | None         -> OpamState.mem_installed_package_by_name t n
+      | Some (_,v) ->
+        if OpamState.mem_installed_package_by_name t n then
+          let nv = OpamState.find_installed_package_by_name t n in
+          OpamPackage.version nv = v
+        else
+          false
     ) atoms in
 
   (* Display a message if at least one package is already installed *)
@@ -824,12 +831,22 @@ let reinstall names =
   let t = OpamState.load_state () in
   let atoms = OpamSolution.atoms_of_names t names in
   let reinstall =
-    OpamMisc.filter_map (function (n, _) ->
-      if not (OpamState.mem_installed_package_by_name t n) then (
-        OpamGlobals.msg "%s is not installed" (OpamPackage.Name.to_string n);
-        None
-      ) else
-        Some (OpamState.find_installed_package_by_name t n)
+    OpamMisc.filter_map (function (n,v) ->
+      match v with
+      | None ->
+        if not (OpamState.mem_installed_package_by_name t n) then (
+          OpamGlobals.msg "%s is not installed\n" (OpamPackage.Name.to_string n);
+          None
+        ) else
+          Some (OpamState.find_installed_package_by_name t n)
+      | Some (_,v) ->
+        let nv = OpamPackage.create n v in
+        if OpamPackage.Set.mem nv t.installed then
+          Some nv
+        else (
+          OpamGlobals.msg "%s is not installed\n" (OpamPackage.to_string nv);
+          None
+        )
     ) atoms in
   let reinstall = OpamPackage.Set.of_list reinstall in
   let depends =

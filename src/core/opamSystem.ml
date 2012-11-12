@@ -378,7 +378,7 @@ let flock file =
       incr l;
       loop ()
     end else if Sys.file_exists file then begin
-      OpamGlobals.msg "Too many attemps. Cancelling ...\n";
+      OpamGlobals.msg "Too many attempts. Cancelling ...\n";
       exit 1
     end else begin
       let oc = open_out file in
@@ -391,17 +391,22 @@ let flock file =
 
 let funlock file =
   let id = string_of_int (Unix.getpid ()) in
-  if Sys.file_exists file then begin
+  if Sys.file_exists file then (
     let ic = open_in file in
-    let s = input_line ic in
-    close_in ic;
-    if s = id then begin
-      OpamGlobals.log id "unlocking %s" file;
+    try
+      let s = input_line ic in
+      close_in ic;
+      if s = id then (
+        OpamGlobals.log id "unlocking %s" file;
+        Unix.unlink file;
+      ) else
+        OpamGlobals.error_and_exit "cannot unlock %s (%s)" file s
+    with _ ->
+      OpamGlobals.error "%s is broken, removing it and continuing anyway ..." file;
+        close_in ic;
       Unix.unlink file;
-    end else
-      OpamGlobals.error_and_exit "cannot unlock %s (%s)" file s
-  end else if Sys.file_exists (Filename.basename file) then
-      OpamGlobals.error_and_exit "Cannot find %s" file
+  ) else
+    OpamGlobals.error "Cannot find %s, but continuing anyway..." file
 
 let ocaml_version = lazy (
   try
@@ -438,7 +443,7 @@ let download_command = lazy (
       internal_error "Cannot find curl nor wget"
 )
 
-let really_download ~src ~dst =
+let really_download ~overwrite ~src ~dst =
   let cmd = (Lazy.force download_command) src in
   let aux () =
     command cmd;
@@ -447,26 +452,35 @@ let really_download ~src ~dst =
         internal_error "there should be exactly one file in download directory"
     | [filename] ->
         let dst_file = dst / Filename.basename filename in
-        if Sys.file_exists dst_file
-        then internal_error "download overwriting file %s" dst_file;
-        command [ "mv"; filename; dst_file ];
+        if not overwrite && Sys.file_exists dst_file then
+          internal_error "download overwriting file %s" dst_file;
+        commands [
+          [ "rm"; "-f"; dst_file ];
+          [ "mv"; filename; dst_file ];
+        ];
         dst_file
   in
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
-  with _ ->
-    OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
+  with
+  | Internal_error s as e ->
+    OpamGlobals.error "%s" s;
+    raise e
+  | _ -> OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
 
-let download ~filename:src ~dirname:dst =
+let download ~overwrite ~filename:src ~dirname:dst =
   let dst_file = dst / Filename.basename src in
   if dst_file = src then
     dst_file
-  else if Sys.file_exists src then
-    ( commands [
-          [ "rm"; "-f"; dst_file ];
-          [ "cp"; src; dst ]
-        ];
-      dst_file )
-  else really_download ~src ~dst
+  else if Sys.file_exists src then (
+    if not overwrite && Sys.file_exists dst_file then
+      internal_error "download overwriting file %s" dst_file;
+    commands [
+      [ "rm"; "-f"; dst_file ];
+      [ "cp"; src; dst ]
+    ];
+    dst_file
+  ) else
+    really_download ~overwrite ~src ~dst
 
 let patch =
   let max_trying = 20 in

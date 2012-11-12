@@ -27,7 +27,8 @@ let () =
 
 let check f =
   let root = OpamPath.default () in
-  let with_switch_lock a f = OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
+  let with_switch_lock a f =
+    OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
   if OpamFilename.exists_dir root then
     match f with
 
@@ -36,7 +37,12 @@ let check f =
       OpamFilename.with_flock (OpamPath.lock root) (fun () ->
         (* Take all the switch locks *)
         let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-        let f = OpamSwitch.Map.fold (fun a _ f -> with_switch_lock a (fun () -> f ())) aliases f in
+        let f =
+          OpamSwitch.Map.fold (fun a _ f ->
+            if OpamFilename.exists_dir (OpamPath.Switch.root root a)
+            then with_switch_lock a (fun () -> f ())
+            else f
+          ) aliases f in
         f ()
       ) ()
 
@@ -639,11 +645,11 @@ let install_compiler t ~quiet switch compiler =
       else if Sys.file_exists comp_src_raw then
         OpamFilename.extract comp_src build_dir
       else OpamFilename.with_tmp_dir (fun download_dir ->
-        let file = OpamFilename.download comp_src download_dir in
+        let file = OpamFilename.download ~overwrite:true comp_src download_dir in
         OpamFilename.extract file build_dir;
       );
       let patches = OpamFile.Comp.patches comp in
-      let patches = List.map (fun f -> OpamFilename.download f build_dir) patches in
+      let patches = List.map (fun f -> OpamFilename.download ~overwrite:true f build_dir) patches in
       List.iter (fun f -> OpamFilename.patch f build_dir) patches;
       if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
         OpamFilename.exec build_dir
