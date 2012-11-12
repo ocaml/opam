@@ -77,12 +77,12 @@ uninstall:
 	rm -f $(prefix)/bin/opam*
 	rm -f $(mandir)/man1/opam*
 
-LIB   = opam-lib
+LIB   = opam-core
 NOMLI = opamGlobals.ml
-MLI   = $(foreach i, $(shell find src/ -name "*.mli"), $(notdir $i))
+MLI   = $(foreach i, $(shell find src/core -name "*.mli"), $(notdir $i))
 _FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
 	$(MLI:%.mli=%.cmi)
-FILES = $(_FILES:%=_obuild/opam-lib/%) $(NOMLI:%.ml=_obuild/opam-lib/%.cmi)
+FILES = $(_FILES:%=_obuild/opam-core/%) $(NOMLI:%.ml=_obuild/opam-core/%.cmi)
 
 .PHONY: libuninstall libinstall
 libinstall: META
