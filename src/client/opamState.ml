@@ -29,8 +29,15 @@ let check f =
   let root = OpamPath.default () in
   let with_switch_lock a f =
     OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
-  if OpamFilename.exists_dir root then
-    match f with
+  let error () =
+    OpamGlobals.error_and_exit
+      "Cannot find %s. Have you run 'opam init first ?"
+      (OpamFilename.Dir.to_string root) in
+
+  if not (OpamFilename.exists_dir root) then
+    error ()
+
+  else match f with
 
     | Global_lock f ->
       (* Take the global lock *)
@@ -51,9 +58,7 @@ let check f =
       if OpamFilename.exists_dir (OpamPath.root root) then
         f ()
       else
-        OpamGlobals.error_and_exit
-          "Cannot find %s. Have you run 'opam init first ?"
-          (OpamFilename.Dir.to_string root)
+       error ()
 
     | Switch_lock f ->
       (* Take a switch lock (and check that the global lock is free). *)
