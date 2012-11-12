@@ -79,7 +79,7 @@ module B = struct
     let archive = OpamPath.Repository.archive local_repo nv in
     check_file archive
 
-  let download_file nv filename =
+  let download_file ?checksum nv filename =
     let local_repo = OpamRepository.local_repo () in
     let basename = OpamFilename.basename filename in
     let file = OpamPath.Repository.tmp_dir local_repo nv // OpamFilename.Base.to_string basename in

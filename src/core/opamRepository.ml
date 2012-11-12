@@ -60,7 +60,7 @@ module type BACKEND = sig
   val init: address:dirname -> unit
   val update: address:dirname -> OpamFilename.Set.t
   val download_archive: address:dirname -> package -> filename download
-  val download_file: package -> filename -> filename download
+  val download_file: ?checksum:string -> package -> filename -> filename download
   val download_dir: package -> ?dst:dirname -> dirname -> dirname download
   val upload_dir: address:dirname -> dirname -> OpamFilename.Set.t
 end
@@ -112,11 +112,13 @@ let nv_set_of_files files =
        (OpamFilename.Set.elements files))
 
 let read_tmp dir =
-  let files = if OpamFilename.exists_dir dir then
-      OpamFilename.Set.of_list (OpamFilename.list_files dir)
+  let dirs =
+    if OpamFilename.exists_dir dir then
+      OpamFilename.Dir.Set.of_list (OpamFilename.list_dirs dir)
     else
-      OpamFilename.Set.empty in
-  OpamPackage.Set.of_list (OpamMisc.filter_map OpamPackage.of_filename (OpamFilename.Set.elements files))
+      OpamFilename.Dir.Set.empty in
+  OpamPackage.Set.of_list
+    (OpamMisc.filter_map OpamPackage.of_dirname (OpamFilename.Dir.Set.elements dirs))
 
 (* upload the content of ./upload to the given OPAM repository *)
 let upload r =
@@ -133,31 +135,32 @@ let upload r =
     OpamGlobals.msg "  - %s\n" (OpamPackage.to_string nv)
   ) packages
 
-(* Download file f in the current directory *)
+let iter fn = function
+  | Result x      -> fn x
+  | Up_to_date x  -> fn x
+  | Not_available -> ()
+
 let map fn = function
   | Result x      -> Result (fn x)
   | Up_to_date x  -> Up_to_date (fn x)
   | Not_available -> Not_available
 
-let download_file ~gener_digest k nv f c =
-  log "download_file %s %s %s" k (OpamPackage.to_string nv) (OpamFilename.to_string f);
-  let module B = (val find_backend_by_kind k: BACKEND) in
-  let check file = match c with
-    | None   -> true
-    | Some c -> OpamFilename.digest file = c in
-  let rename file =
-    if not gener_digest && !OpamGlobals.verify_checksums && not (check file) then
+(* Download file f in the current directory *)
+let download_file ~gener_digest kind nv remote_file checksum =
+  log "download_file %s %s %s" kind (OpamPackage.to_string nv) (OpamFilename.to_string remote_file);
+  let module B = (val find_backend_by_kind kind: BACKEND) in
+  let check file =
+    let digest () = match checksum with
+      | None   -> true
+      | Some c -> OpamFilename.digest file = c in
+    if not gener_digest && !OpamGlobals.verify_checksums && not (digest ()) then
       OpamGlobals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
         (OpamFilename.to_string file)
-        (match c with Some c -> c | None -> "<none>")
-        (OpamFilename.digest file);
-    if k = "curl" && not (OpamSystem.is_tar_archive (OpamFilename.to_string f)) then
-      let new_file = OpamFilename.raw_file (OpamFilename.to_string file ^ ".tar.gz") in
-      OpamFilename.move file new_file;
-      new_file
-    else
-      file in
-  map rename (B.download_file nv f)
+        (match checksum with Some c -> c | None -> "<none>")
+        (OpamFilename.digest file) in
+  let result = B.download_file ?checksum nv remote_file in
+  iter check result;
+  result
 
 (* Download directory d in the current directory *)
 let download_dir k nv ?dst d =
@@ -251,7 +254,10 @@ let make_archive ?(gener_digest=false) ?local_path nv =
           log "extracting %s to %s"
             (OpamFilename.to_string local_archive)
             (OpamFilename.Dir.to_string extract_dir);
-          OpamFilename.extract local_archive extract_dir
+          OpamFilename.extract local_archive extract_dir;
+          (* Remove the upstream archive *)
+          OpamFilename.remove local_archive
+
       | Up_to_date (D dir)
       | Result (D dir) ->
           log "copying %s to %s"
@@ -271,7 +277,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
         OpamFilename.mkdir extract_dir;
       OpamFilename.in_dir extract_dir (fun () -> copy_files local_repo nv) in
 
-    (* And finally create the final archive *)
+    (* Finally create the final archive *)
     if local_path <> None || not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_f then (
       OpamFilename.mkdir (OpamPath.Repository.archives_dir local_repo);
       let local_archive = OpamPath.Repository.archive local_repo nv in
@@ -342,19 +348,23 @@ let update r =
 
   (* For each package in the cache, look at what changed upstream *)
   let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
+  log "cached_packages: %s\n" (OpamPackage.Set.to_string cached_packages);
   let updated_cached_packages = OpamPackage.Set.filter (fun nv ->
     let url_f = OpamPath.Repository.url repo nv in
-    let url = OpamFile.URL.read url_f in
-    let kind = match OpamFile.URL.kind url with
-      | None   -> kind_of_url (OpamFile.URL.url url)
-      | Some k -> k in
-    let checksum = OpamFile.URL.checksum url in
-    let url = OpamFile.URL.url url in
-    log "updating %s:%s" url kind;
-    match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
-    | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
-    | Up_to_date _  -> false
-    | Result _      -> true
+    if OpamFilename.exists url_f then (
+      let url = OpamFile.URL.read url_f in
+      let kind = match OpamFile.URL.kind url with
+        | None   -> kind_of_url (OpamFile.URL.url url)
+        | Some k -> k in
+      let checksum = OpamFile.URL.checksum url in
+      let url = OpamFile.URL.url url in
+      log "updating %s:%s" url kind;
+      match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
+      | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
+      | Up_to_date _  -> false
+      | Result _      -> true
+    ) else
+      false
   ) cached_packages in
 
   let updated = OpamPackage.Set.union updated_packages updated_cached_packages in
