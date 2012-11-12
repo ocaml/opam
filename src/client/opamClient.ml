@@ -232,16 +232,6 @@ let update_repositories t ~show_compilers repositories =
     ) comps
   ) (sorted_repositories t)
 
-let update_pinned_package t nv pin =
-  let kind = kind_of_pin_option pin in
-  let path = OpamFilename.raw_dir (path_of_pin_option pin) in
-  let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
-  let build = OpamPath.Switch.build t.root t.switch nv in
-  match B.download_dir nv ~dst:build path with
-  | Up_to_date _    -> None
-  | Result _
-  | Not_available   -> Some nv
-
 (* Update the package contents, display the new packages and update reinstall *)
 let update_packages t ~show_packages repositories =
   log "update_packages %s" (OpamState.string_of_repositories repositories);
@@ -250,11 +240,16 @@ let update_packages t ~show_packages repositories =
     OpamPackage.Set.of_list (
       OpamMisc.filter_map
         (function
-          | n, (Path p | Git p as k) ->
+          | n, (Path p | Git p as pin) ->
             if OpamState.mem_installed_package_by_name t n then
               let nv = OpamState.find_installed_package_by_name t n in
               OpamGlobals.msg "Synchronizing with %s\n" (OpamFilename.Dir.to_string p);
-              update_pinned_package t nv k
+              match OpamState.update_pinned_package t nv pin with
+              | Up_to_date _  -> None
+              | Result _      -> Some nv
+              | Not_available ->
+                OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p);
+                None
             else
               None
           | _ -> None)

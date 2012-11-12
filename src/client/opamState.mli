@@ -172,6 +172,11 @@ val compiler: state -> compiler -> OpamFile.Comp.t
 (** Apply a function while taking the right locks *)
 val check: lock -> unit
 
+(** {2 Pinned packages} *)
+
+(** Update pinned package *)
+val update_pinned_package: state -> package -> pin_option -> dirname download
+
 (** To be able to open [OpamState.Types] *)
 module Types: sig
   type t = state = {
