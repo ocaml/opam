@@ -164,7 +164,7 @@ let info = {
   main     =
     parse_args (function
     | [] -> bad_argument "info" "Missing package argument"
-    | l  -> List.iter (fun name -> OpamClient.info (OpamPackage.Name.of_string name)) l)
+    | l  -> OpamClient.info l)
 }
 
 (* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
