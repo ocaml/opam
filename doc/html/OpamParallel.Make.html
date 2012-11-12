@@ -10,8 +10,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -23,17 +26,23 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamParallel.Make</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamParallel.Make</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="OpamParallel.html">Up</a>
+<div class="navbar">&nbsp;<a class="up" href="OpamParallel.html" title="OpamParallel">Up</a>
 &nbsp;</div>
-<center><h1>Functor <a href="type_OpamParallel.Make.html">OpamParallel.Make</a></h1></center>
-<br>
+<h1>Functor <a href="type_OpamParallel.Make.html">OpamParallel.Make</a></h1>
 <pre><span class="keyword">module</span> Make: <div class="sig_block"><code class="code">functor (</code><code class="code">G</code><code class="code"> : </code><code class="type"><a href="OpamParallel.G.html">G</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamParallel.SIG.html">SIG</a></code><code class="type">  with module G = G</code></div></pre>Functor<br>
 <table border="0" cellpadding="3" width="100%">
 <tr>
@@ -50,7 +59,7 @@
 </tr>
 </table>
 <hr width="100%">
-<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALparallel_iter"><span class="keyword">val</span> parallel_iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
 <code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
       cores. <code class="code">child</code> is evaluated in a remote process and when it as
       finished, whereas <code class="code">pre</code> and <code class="code">post</code> are evaluated on the current

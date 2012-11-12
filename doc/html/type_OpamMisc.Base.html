@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -20,11 +23,18 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamMisc.Base</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamMisc.Base</title>
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
@@ -62,6 +72,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mapi&nbsp;:&nbsp;(key&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;values&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;keys&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;key&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;merge_max&nbsp;:&nbsp;(key&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;option)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_list&nbsp;:&nbsp;(key&nbsp;*&nbsp;<span class="keywordsign">'</span>a)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>

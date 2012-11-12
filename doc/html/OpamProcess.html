@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,69 +28,75 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamProcess</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamProcess</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamPath.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamRepository.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamPath.html" title="OpamPath">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamRepository.html" title="OpamRepository">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamProcess.html">OpamProcess</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamProcess.html">OpamProcess</a></h1>
 <pre><span class="keyword">module</span> OpamProcess: <code class="code">sig</code> <a href="OpamProcess.html">..</a> <code class="code">end</code></pre>Process handling<br>
 <hr width="100%">
-<br><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_name&nbsp;: <code class="type">string</code>;</code></td>
+<code><span id="TYPEELTt.p_name">p_name</span>&nbsp;:<code class="type">string</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Command name</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_args&nbsp;: <code class="type">string list</code>;</code></td>
+<code><span id="TYPEELTt.p_args">p_args</span>&nbsp;:<code class="type">string list</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Command args</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_pid&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTt.p_pid">p_pid</span>&nbsp;:<code class="type">int</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process PID</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_time&nbsp;: <code class="type">float</code>;</code></td>
+<code><span id="TYPEELTt.p_time">p_time</span>&nbsp;:<code class="type">float</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process start time</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_stdout&nbsp;: <code class="type">string option</code>;</code></td>
+<code><span id="TYPEELTt.p_stdout">p_stdout</span>&nbsp;:<code class="type">string option</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >stdout dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_stderr&nbsp;: <code class="type">string option</code>;</code></td>
+<code><span id="TYPEELTt.p_stderr">p_stderr</span>&nbsp;:<code class="type">string option</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >stderr dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>p_info&nbsp;: <code class="type">string option</code>;</code></td>
+<code><span id="TYPEELTt.p_info">p_info</span>&nbsp;:<code class="type">string option</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >dump info file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 }
@@ -102,47 +111,47 @@ The type for processes<br>
     channels are redirected to files. The current environment can also
     be overriden if <code class="code">env</code> is set.<br>
 </div>
-<br><code><span id="TYPEresult"><span class="keyword">type</span> <code class="type"></code>result</span> = {</code><table class="typetable">
+<pre><code><span id="TYPEresult"><span class="keyword">type</span> <code class="type"></code>result</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>r_proc&nbsp;: <code class="type"><a href="OpamProcess.html#TYPEt">t</a></code>;</code></td>
+<code><span id="TYPEELTresult.r_proc">r_proc</span>&nbsp;:<code class="type"><a href="OpamProcess.html#TYPEt">t</a></code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>r_code&nbsp;: <code class="type">int</code>;</code></td>
+<code><span id="TYPEELTresult.r_code">r_code</span>&nbsp;:<code class="type">int</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process exit code</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>r_duration&nbsp;: <code class="type">float</code>;</code></td>
+<code><span id="TYPEELTresult.r_duration">r_duration</span>&nbsp;:<code class="type">float</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process duration</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>r_info&nbsp;: <code class="type">string list</code>;</code></td>
+<code><span id="TYPEELTresult.r_info">r_info</span>&nbsp;:<code class="type">string list</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Environment variables</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>r_stdout&nbsp;: <code class="type">string list</code>;</code></td>
+<code><span id="TYPEELTresult.r_stdout">r_stdout</span>&nbsp;:<code class="type">string list</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Content of stdout dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>r_stderr&nbsp;: <code class="type">string list</code>;</code></td>
+<code><span id="TYPEELTresult.r_stderr">r_stderr</span>&nbsp;:<code class="type">string list</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Content of stderr dump file</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 }

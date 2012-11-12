@@ -142,6 +142,7 @@ begin library "dose"
        "dose/common/cudfDiff.ml"
        "dose/common/cudfAdd.ml"
        "dose/common/edosSolver.ml"
+       "dose/common/cudfSolver.ml"
 (*     "dose/common/minisatSolver.ml" *)
      ]
 

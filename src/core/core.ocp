@@ -1,0 +1,36 @@
+comp += [ "-warn-error" "A" ]
+
+begin library "opam-core"
+  files   = [
+    "opamGlobals.ml"
+    "opamMisc.ml"
+    "opamVersion.ml"
+    "opamProcess.ml"
+    "opamSystem.ml"
+    "opamParallel.ml"
+    "opamFilename.ml"
+    "opamSwitch.ml"
+    "opamPackage.ml"
+    "opamFormula.ml"
+    "opamCompiler.ml"
+    "opamVariable.ml"
+    "opamRepositoryName.ml"
+    "opamTypes.ml"
+    "opamFormat.ml"
+    "opamParser.mly"
+    "opamLexer.mll"
+    "opamLineLexer.mll"
+    "opamPath.ml"
+    "opamFile.ml"
+    "opamRepository.ml"
+  ]
+
+  requires = [
+    "cudf"
+    "dose"
+    "unix"
+    "graph"
+    "re_glob"
+  ]
+
+end

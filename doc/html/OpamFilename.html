@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,19 +28,25 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamFilename</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFilename</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamFile.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamFormat.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamFile.html" title="OpamFile">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamFormat.html" title="OpamFormat">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamFilename.html">OpamFilename</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamFilename.html">OpamFilename</a></h1>
 <pre><span class="keyword">module</span> OpamFilename: <code class="code">sig</code> <a href="OpamFilename.html">..</a> <code class="code">end</code></pre>Typed filename manipulation<br>
 <hr width="100%">
 <pre><span class="keyword">module</span> <a href="OpamFilename.Base.html">Base</a>: <code class="type"><a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
@@ -74,7 +83,7 @@ Copy a directory<br>
 Link a directory<br>
 </div>
 <pre><span id="VALexists_dir"><span class="keyword">val</span> exists_dir</span> : <code class="type">Dir.t -> bool</code></pre><div class="info">
-Does the directory exists ?<br>
+Does the directory existsb ?<br>
 </div>
 <pre><span id="VALdirname_dir"><span class="keyword">val</span> dirname_dir</span> : <code class="type">Dir.t -> Dir.t</code></pre><div class="info">
 Return the parent directory<br>
@@ -178,6 +187,13 @@ Create an empty file<br>
 </div>
 <pre><span id="VALchmod"><span class="keyword">val</span> chmod</span> : <code class="type">t -> int -> unit</code></pre><div class="info">
 Change file permissions<br>
+</div>
+<pre><span id="VALaddress_of_string"><span class="keyword">val</span> address_of_string</span> : <code class="type">string -> Dir.t</code></pre><div class="info">
+Create an local of remote address from a string,
+    depending whether the string exits in the filesystem.<br>
+</div>
+<pre><span id="VALwith_flock"><span class="keyword">val</span> with_flock</span> : <code class="type">t -> ('a -> 'b) -> 'a -> 'b</code></pre><div class="info">
+File locks<br>
 </div>
 <pre><span class="keyword">module</span> <a href="OpamFilename.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamFilename.OP.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="OpamFilename.Attribute.html">Attribute</a>: <code class="code">sig</code> <a href="OpamFilename.Attribute.html">..</a> <code class="code">end</code></pre><div class="info">
 Simple structure to hanle file attributes

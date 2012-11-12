@@ -11,8 +11,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -24,21 +27,27 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamParallel.SIG</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamParallel.SIG</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamParallel.G.html">Previous</a>
-&nbsp;<a href="OpamParallel.html">Up</a>
+<div class="navbar"><a class="pre" href="OpamParallel.G.html" title="OpamParallel.G">Previous</a>
+&nbsp;<a class="up" href="OpamParallel.html" title="OpamParallel">Up</a>
 &nbsp;</div>
-<center><h1>Module type <a href="type_OpamParallel.SIG.html">OpamParallel.SIG</a></h1></center>
-<br>
+<h1>Module type <a href="type_OpamParallel.SIG.html">OpamParallel.SIG</a></h1>
 <pre><span class="keyword">module type</span> SIG = <code class="code">sig</code> <a href="OpamParallel.SIG.html">..</a> <code class="code">end</code></pre>Functor signature<br>
 <hr width="100%">
-<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALparallel_iter"><span class="keyword">val</span> parallel_iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
 <code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
       cores. <code class="code">child</code> is evaluated in a remote process and when it as
       finished, whereas <code class="code">pre</code> and <code class="code">post</code> are evaluated on the current

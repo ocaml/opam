@@ -41,7 +41,7 @@ clean:
 	$(MAKE) -C ocp-build clean
 
 distclean: clean
-	rm -f META Makefile.config src/opamVersion.ml config.log config.status
+	rm -f META Makefile.config src/core/opamVersion.ml config.log config.status
 	$(MAKE) -C $(SRC_EXT) distclean
 
 .PHONY: tests
@@ -77,11 +77,12 @@ uninstall:
 	rm -f $(prefix)/bin/opam*
 	rm -f $(mandir)/man1/opam*
 
-LIB =   opam-lib
-CMI =   $(shell ls src/*.mli)
+LIB   = opam-core
+NOMLI = opamGlobals.ml
+MLI   = $(foreach i, $(shell find src/core -name "*.mli"), $(notdir $i))
 _FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
-	$(CMI:src/%.mli=%.cmi)
-FILES = $(_FILES:%=_obuild/opam-lib/%)
+	$(MLI:%.mli=%.cmi)
+FILES = $(_FILES:%=_obuild/opam-core/%) $(NOMLI:%.ml=_obuild/opam-core/%.cmi)
 
 .PHONY: libuninstall libinstall
 libinstall: META
@@ -92,10 +93,12 @@ libuninstall:
 doc: compile
 	mkdir -p doc/html/
 	ocamldoc \
+	  -I _obuild/opam-core -I _obuild/opam-solver \
+	  -I _obuild/opam-repositories -I _obuild/opam-client \
 	  -I _obuild/opam-lib -I _obuild/cudf -I _obuild/dose \
 	  -I _obuild/re -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
-	  src/*.mli -html -d doc/html/
+	  src/**/*.mli -html -d doc/html/
 	$(MAKE) -C doc/man-src
 	$(MAKE) -C doc/tutorials
 

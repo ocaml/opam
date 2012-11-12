@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,71 +28,113 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamFormula</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Atoms" rel="Section" href="#2_Atoms">
+<title>OpamFormula</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamFormat.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamMisc.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamFormat.html" title="OpamFormat">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamMisc.html" title="OpamMisc">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamFormula.html">OpamFormula</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamFormula.html">OpamFormula</a></h1>
 <pre><span class="keyword">module</span> OpamFormula: <code class="code">sig</code> <a href="OpamFormula.html">..</a> <code class="code">end</code></pre>Management of formulas<br>
 <hr width="100%">
-<pre><span id="TYPEconjunction"><span class="keyword">type</span> <code class="type"></code>conjunction</span> = <code class="type">Debian.Format822.vpkglist</code> </pre>
+<pre><span id="TYPErelop"><span class="keyword">type</span> <code class="type"></code>relop</span> = <code class="type">[ `Eq | `Geq | `Gt | `Leq | `Lt | `Neq ]</code> </pre>
+<div class="info">
+binary operations<br>
+</div>
+
+<pre><span id="VALstring_of_relop"><span class="keyword">val</span> string_of_relop</span> : <code class="type"><a href="OpamFormula.html#TYPErelop">relop</a> -> string</code></pre><div class="info">
+Pretty-printing of relops<br>
+</div>
+<pre><span id="VALrelop_of_string"><span class="keyword">val</span> relop_of_string</span> : <code class="type">string -> <a href="OpamFormula.html#TYPErelop">relop</a></code></pre><div class="info">
+Parsing relops<br>
+</div>
+<pre><span id="TYPEatom"><span class="keyword">type</span> <code class="type"></code>atom</span> = <code class="type">OpamPackage.Name.t * (<a href="OpamFormula.html#TYPErelop">relop</a> * OpamPackage.Version.t) option</code> </pre>
+<div class="info">
+Formula atoms for OPAM<br>
+</div>
+
+<pre><span id="VALstring_of_atom"><span class="keyword">val</span> string_of_atom</span> : <code class="type"><a href="OpamFormula.html#TYPEatom">atom</a> -> string</code></pre><div class="info">
+Pretty-printing of atoms<br>
+</div>
+<pre><span id="TYPEconjunction"><span class="keyword">type</span> <code class="type">'a</code> conjunction</span> = <code class="type">'a list</code> </pre>
 <div class="info">
 AND formulas<br>
 </div>
 
-<pre><span id="VALstring_of_conjunction"><span class="keyword">val</span> string_of_conjunction</span> : <code class="type"><a href="OpamFormula.html#TYPEconjunction">conjunction</a> -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_conjunction"><span class="keyword">val</span> string_of_conjunction</span> : <code class="type">('a -> string) -> 'a <a href="OpamFormula.html#TYPEconjunction">conjunction</a> -> string</code></pre><div class="info">
 Pretty print AND formulas<br>
 </div>
-<pre><span id="TYPEcnf"><span class="keyword">type</span> <code class="type"></code>cnf</span> = <code class="type">Debian.Format822.vpkgformula</code> </pre>
+<pre><span id="TYPEdisjunction"><span class="keyword">type</span> <code class="type">'a</code> disjunction</span> = <code class="type">'a list</code> </pre>
 <div class="info">
-CNF formulas<br>
+OR formulas<br>
 </div>
 
-<pre><span id="VALstring_of_cnf"><span class="keyword">val</span> string_of_cnf</span> : <code class="type"><a href="OpamFormula.html#TYPEcnf">cnf</a> -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_disjunction"><span class="keyword">val</span> string_of_disjunction</span> : <code class="type">('a -> string) -> 'a <a href="OpamFormula.html#TYPEdisjunction">disjunction</a> -> string</code></pre><div class="info">
+Pretty print OR formulas<br>
+</div>
+<pre><span id="TYPEcnf"><span class="keyword">type</span> <code class="type">'a</code> cnf</span> = <code class="type">'a <a href="OpamFormula.html#TYPEdisjunction">disjunction</a> <a href="OpamFormula.html#TYPEconjunction">conjunction</a></code> </pre>
+<div class="info">
+CNF formulas (Conjunctive Normal Form)<br>
+</div>
+
+<pre><span id="TYPEdnf"><span class="keyword">type</span> <code class="type">'a</code> dnf</span> = <code class="type">'a <a href="OpamFormula.html#TYPEconjunction">conjunction</a> <a href="OpamFormula.html#TYPEdisjunction">disjunction</a></code> </pre>
+<div class="info">
+DNF formulas (Disjunctive Normal Form)<br>
+</div>
+
+<pre><span id="VALstring_of_cnf"><span class="keyword">val</span> string_of_cnf</span> : <code class="type">('a -> string) -> 'a <a href="OpamFormula.html#TYPEcnf">cnf</a> -> string</code></pre><div class="info">
 Pretty print CNF formulas<br>
 </div>
-<br><code><span id="TYPEformula"><span class="keyword">type</span> <code class="type">'a</code> formula</span> = </code><table class="typetable">
+<pre><span id="VALstring_of_dnf"><span class="keyword">val</span> string_of_dnf</span> : <code class="type">('a -> string) -> 'a <a href="OpamFormula.html#TYPEdnf">dnf</a> -> string</code></pre><div class="info">
+Pretty print DNF formulas<br>
+</div>
+<pre><code><span id="TYPEformula"><span class="keyword">type</span> <code class="type">'a</code> formula</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Empty</span></code></td>
+<code><span id="TYPEELTformula.Empty"><span class="constructor">Empty</span></span></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Atom</span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
+<code><span id="TYPEELTformula.Atom"><span class="constructor">Atom</span></span> <span class="keyword">of</span> <code class="type">'a</code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Block</span> <span class="keyword">of</span> <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a></code></code></td>
+<code><span id="TYPEELTformula.Block"><span class="constructor">Block</span></span> <span class="keyword">of</span> <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">And</span> <span class="keyword">of</span> <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> * 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></code></td>
+<code><span id="TYPEELTformula.And"><span class="constructor">And</span></span> <span class="keyword">of</span> <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> * 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Or</span> <span class="keyword">of</span> <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> * 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></code></td>
+<code><span id="TYPEELTformula.Or"><span class="constructor">Or</span></span> <span class="keyword">of</span> <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> * 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></code></td>
 
 </tr></table>
 
@@ -103,7 +148,13 @@ Eval a formula<br>
 <pre><span id="VALstring_of_formula"><span class="keyword">val</span> string_of_formula</span> : <code class="type">('a -> string) -> 'a <a href="OpamFormula.html#TYPEformula">formula</a> -> string</code></pre><div class="info">
 Pretty print a formula<br>
 </div>
-<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">('a -> 'b) -> 'a <a href="OpamFormula.html#TYPEformula">formula</a> -> 'b <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
+<pre><span id="VALands"><span class="keyword">val</span> ands</span> : <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> list -> 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
+Convert a list of formulas to an AND-formula<br>
+</div>
+<pre><span id="VALors"><span class="keyword">val</span> ors</span> : <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> list -> 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
+Convert a list of formulas to an OR-formula<br>
+</div>
+<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">('a -> 'b <a href="OpamFormula.html#TYPEformula">formula</a>) -><br>       'a <a href="OpamFormula.html#TYPEformula">formula</a> -> 'b <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
 Map function<br>
 </div>
 <pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">('a -> unit) -> 'a <a href="OpamFormula.html#TYPEformula">formula</a> -> unit</code></pre><div class="info">
@@ -112,7 +163,7 @@ Iter function<br>
 <pre><span id="VALfold_left"><span class="keyword">val</span> fold_left</span> : <code class="type">('a -> 'b -> 'a) -> 'a -> 'b <a href="OpamFormula.html#TYPEformula">formula</a> -> 'a</code></pre><div class="info">
 Fold function<br>
 </div>
-<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">(OpamPackage.Name.t * (string * OpamPackage.Version.t) <a href="OpamFormula.html#TYPEformula">formula</a>)<br>       <a href="OpamFormula.html#TYPEformula">formula</a></code> </pre>
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">(OpamPackage.Name.t *<br>        (<a href="OpamFormula.html#TYPErelop">relop</a> * OpamPackage.Version.t) <a href="OpamFormula.html#TYPEformula">formula</a>)<br>       <a href="OpamFormula.html#TYPEformula">formula</a></code> </pre>
 <div class="info">
 An atom is: <code class="code">name</code> * (<code class="code">relop</code> * <code class="code">version</code>) formula.
     Examples of valid formulaes:<ul>
@@ -122,17 +173,45 @@ An atom is: <code class="code">name</code> * (<code class="code">relop</code> * 
 <br>
 </div>
 
-<pre><span id="VALatoms"><span class="keyword">val</span> atoms</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -><br>       (OpamPackage.Name.t * (string * OpamPackage.Version.t) option) list</code></pre><div class="info">
+<pre><span id="VALcnf_of_formula"><span class="keyword">val</span> cnf_of_formula</span> : <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> -> 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
+Convert a formula to CNF<br>
+</div>
+<pre><span id="VALdnf_of_formula"><span class="keyword">val</span> dnf_of_formula</span> : <code class="type">'a <a href="OpamFormula.html#TYPEformula">formula</a> -> 'a <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
+Convert a formula to DNF<br>
+</div>
+<pre><span id="VALto_atom_formula"><span class="keyword">val</span> to_atom_formula</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEformula">formula</a></code></pre><div class="info">
+Transform a formula where versions can be expressed using formulas
+    to a flat atom formula<br>
+</div>
+<pre><span id="VALof_atom_formula"><span class="keyword">val</span> of_atom_formula</span> : <code class="type"><a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEformula">formula</a> -> <a href="OpamFormula.html#TYPEt">t</a></code></pre><div class="info">
+Convert an atom-formula to a t-formula<br>
+</div>
+<br>
+<span id="2_Atoms"><h2>Atoms</h2></span><br>
+<pre><span id="VALatoms"><span class="keyword">val</span> atoms</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> list</code></pre><div class="info">
 Return all the atoms<br>
 </div>
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> string</code></pre><div class="info">
 Pretty print the formula<br>
 </div>
-<pre><span id="VALto_conjunction"><span class="keyword">val</span> to_conjunction</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEconjunction">conjunction</a></code></pre><div class="info">
+<pre><span id="VALto_conjunction"><span class="keyword">val</span> to_conjunction</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEconjunction">conjunction</a></code></pre><div class="info">
 Return a conjunction. If the initial formula is not a
-    conjunction, fail.<br>
+    conjunction, then fail.<br>
 </div>
-<pre><span id="VALto_cnf"><span class="keyword">val</span> to_cnf</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEcnf">cnf</a></code></pre><div class="info">
+<pre><span id="VALof_conjunction"><span class="keyword">val</span> of_conjunction</span> : <code class="type"><a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEconjunction">conjunction</a> -> <a href="OpamFormula.html#TYPEt">t</a></code></pre><div class="info">
+Return a formula from a conjunction of atoms<br>
+</div>
+<pre><span id="VALto_disjunction"><span class="keyword">val</span> to_disjunction</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEdisjunction">disjunction</a></code></pre><div class="info">
+Return a disjunction. It the initial formula is not a
+    disjunction, then fail.<br>
+</div>
+<pre><span id="VALof_disjunction"><span class="keyword">val</span> of_disjunction</span> : <code class="type"><a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEdisjunction">disjunction</a> -> <a href="OpamFormula.html#TYPEt">t</a></code></pre><div class="info">
+Return a formula from a disjunction of atoms<br>
+</div>
+<pre><span id="VALto_cnf"><span class="keyword">val</span> to_cnf</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEcnf">cnf</a></code></pre><div class="info">
 Return an equivalent CNF formula<br>
+</div>
+<pre><span id="VALto_dnf"><span class="keyword">val</span> to_dnf</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> <a href="OpamFormula.html#TYPEdnf">dnf</a></code></pre><div class="info">
+Return an equivalent DNF formula<br>
 </div>
 </body></html>

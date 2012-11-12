@@ -9,8 +9,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -22,91 +25,140 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title></title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title></title>
 </head>
 <body>
-<center><h1></h1></center>
-<a href="index_types.html">Index of types</a><br>
-<a href="index_exceptions.html">Index of exceptions</a><br>
-<a href="index_values.html">Index of values</a><br>
-<a href="index_modules.html">Index of modules</a><br>
-<a href="index_module_types.html">Index of module types</a><br>
+<h1></h1>
+<ul class="indexlist">
+<li><a href="index_types.html">Index of types</a></li>
+<li><a href="index_exceptions.html">Index of exceptions</a></li>
+<li><a href="index_values.html">Index of values</a></li>
+<li><a href="index_modules.html">Index of modules</a></li>
+<li><a href="index_module_types.html">Index of module types</a></li>
+</ul>
 <br/><br>
 <table class="indextable">
-<tr><td><a href="OpamAlias.html">OpamAlias</a></td><td><div class="info">
-Compiler aliases.
-</div>
-</td></tr>
-<tr><td><a href="OpamClient.html">OpamClient</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamClient.html">OpamClient</a></td><td><div class="info">
 Client entry-point.
 </div>
 </td></tr>
-<tr><td><a href="OpamCompiler.html">OpamCompiler</a></td><td><div class="info">
-Compiler and OPAM versions
+<tr><td class="module"><a href="OpamConfigCommand.html">OpamConfigCommand</a></td><td><div class="info">
+Configuration commands
 </div>
 </td></tr>
-<tr><td><a href="OpamFile.html">OpamFile</a></td><td><div class="info">
-Functions to read and write OPAM configuration files in a typed way.
+<tr><td class="module"><a href="OpamSolution.html">OpamSolution</a></td><td><div class="info">
+Applying solver solutions
 </div>
 </td></tr>
-<tr><td><a href="OpamFilename.html">OpamFilename</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamState.html">OpamState</a></td><td><div class="info">
+OPAM client state
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamSwitchCommand.html">OpamSwitchCommand</a></td><td><div class="info">
+Switch commands
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamCompiler.html">OpamCompiler</a></td><td><div class="info">
+Compiler names and versions
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamFile.html">OpamFile</a></td><td><div class="info">
+Functions to read and write OPAM configuration files in a typed way
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamFilename.html">OpamFilename</a></td><td><div class="info">
 Typed filename manipulation
 </div>
 </td></tr>
-<tr><td><a href="OpamFormat.html">OpamFormat</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamFormat.html">OpamFormat</a></td><td><div class="info">
 Format of OPAM configuration files.
 </div>
 </td></tr>
-<tr><td><a href="OpamFormula.html">OpamFormula</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamFormula.html">OpamFormula</a></td><td><div class="info">
 Management of formulas
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html">OpamMisc</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamMisc.html">OpamMisc</a></td><td><div class="info">
 Basic functions
 </div>
 </td></tr>
-<tr><td><a href="OpamPackage.html">OpamPackage</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamPackage.html">OpamPackage</a></td><td><div class="info">
 Package name and versions
 </div>
 </td></tr>
-<tr><td><a href="OpamParallel.html">OpamParallel</a></td><td><div class="info">
-Concurrent process execution.
+<tr><td class="module"><a href="OpamParallel.html">OpamParallel</a></td><td><div class="info">
+Concurrent process execution
 </div>
 </td></tr>
-<tr><td><a href="OpamPath.html">OpamPath</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamPath.html">OpamPath</a></td><td><div class="info">
 The various paths where OPAM configuration files are stored.
 </div>
 </td></tr>
-<tr><td><a href="OpamProcess.html">OpamProcess</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamProcess.html">OpamProcess</a></td><td><div class="info">
 Process handling
 </div>
 </td></tr>
-<tr><td><a href="OpamRepository.html">OpamRepository</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamRepository.html">OpamRepository</a></td><td><div class="info">
 Mangagement of OPAM repositories.
 </div>
 </td></tr>
-<tr><td><a href="OpamSolver.html">OpamSolver</a></td><td><div class="info">
-SAT-solver for package dependencies and conflicts.
+<tr><td class="module"><a href="OpamRepositoryName.html">OpamRepositoryName</a></td><td><div class="info">
+Repository names
 </div>
 </td></tr>
-<tr><td><a href="OpamSystem.html">OpamSystem</a></td><td><div class="info">
-Low-level untyped system operations.
+<tr><td class="module"><a href="OpamSwitch.html">OpamSwitch</a></td><td><div class="info">
+Compiler switches
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html">OpamTypes</a></td><td><div class="info">
-OPAM types
+<tr><td class="module"><a href="OpamSystem.html">OpamSystem</a></td><td><div class="info">
+Low-level untyped system operations
 </div>
 </td></tr>
-<tr><td><a href="OpamVariable.html">OpamVariable</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamTypes.html">OpamTypes</a></td><td><div class="info">
+Common types used by other modules
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamVariable.html">OpamVariable</a></td><td><div class="info">
 Variable names
 </div>
 </td></tr>
-<tr><td><a href="OpamVersion.html">OpamVersion</a></td><td><div class="info">
+<tr><td class="module"><a href="OpamVersion.html">OpamVersion</a></td><td><div class="info">
 OPAM versions
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamCurl.html">OpamCurl</a></td><td><div class="info">
+Curl repository backend
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamGit.html">OpamGit</a></td><td><div class="info">
+Git repository backend
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamRsync.html">OpamRsync</a></td><td><div class="info">
+Rsync repository backend
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamCudf.html">OpamCudf</a></td><td><div class="info">
+Cudf interface
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamHeuristic.html">OpamHeuristic</a></td><td><div class="info">
+Solver heuristics
+</div>
+</td></tr>
+<tr><td class="module"><a href="OpamSolver.html">OpamSolver</a></td><td><div class="info">
+SAT-solver for package dependencies and conflicts
 </div>
 </td></tr>
 </table>

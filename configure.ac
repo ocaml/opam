@@ -1,4 +1,4 @@
-AC_INIT(opam,0.7.7)
+AC_INIT(opam,0.8.0)
 AC_COPYRIGHT(Copyright 2012 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -22,7 +22,7 @@ fi
 
 AC_CONFIG_FILES(
   Makefile.config
-  src/opamVersion.ml
+  src/core/opamVersion.ml
 )
 AC_OUTPUT
 

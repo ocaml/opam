@@ -4,16 +4,18 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamAlias.html">
-<link rel="next" href="OpamCompiler.html">
+<link rel="next" href="OpamConfigCommand.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,19 +27,24 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamClient</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamClient</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamAlias.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamCompiler.html">Next</a>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamConfigCommand.html" title="OpamConfigCommand">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamClient.html">OpamClient</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamClient.html">OpamClient</a></h1>
 <pre><span class="keyword">module</span> OpamClient: <code class="code">sig</code> <a href="OpamClient.html">..</a> <code class="code">end</code></pre>Client entry-point.<br>
 <hr width="100%">
 <pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> option -> int -> unit</code></pre><div class="info">
@@ -66,7 +73,7 @@ Install the given set of packages. Take the global file lock.<br>
 <pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type">OpamPackage.Name.Set.t -> unit</code></pre><div class="info">
 Reinstall the given set of packages. Take the global file lock.<br>
 </div>
-<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">string list -> unit</code></pre><div class="info">
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> unit</code></pre><div class="info">
 Refresh the available packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type">OpamPackage.Name.Set.t -> unit</code></pre><div class="info">
@@ -75,7 +82,7 @@ Find a consistent state where most of the installed packages are
     If no package packages are specified then try to upgrade everything.
     Take the global file lock.<br>
 </div>
-<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="OpamTypes.html#TYPEupload">OpamTypes.upload</a> -> string option -> unit</code></pre><div class="info">
+<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="OpamTypes.html#TYPEupload">OpamTypes.upload</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> option -> unit</code></pre><div class="info">
 Upload a package to a remote repository. If repo is <code class="code">None</code> then it
     will look for the repository associated with the package
     name. Otherwise, it will look for a repository having the right
@@ -87,28 +94,28 @@ Remove the given set of packages. Take the global file lock.<br>
 <pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="OpamTypes.html#TYPEremote">OpamTypes.remote</a> -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_install"><span class="keyword">val</span> compiler_install</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEalias">OpamTypes.alias</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_install"><span class="keyword">val</span> switch_install</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
 Install the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_import"><span class="keyword">val</span> compiler_import</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_import"><span class="keyword">val</span> switch_import</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
 Import the packages from a file. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_export"><span class="keyword">val</span> compiler_export</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_export"><span class="keyword">val</span> switch_export</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
 Export the packages to a file. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_remove"><span class="keyword">val</span> compiler_remove</span> : <code class="type"><a href="OpamTypes.html#TYPEalias">OpamTypes.alias</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_remove"><span class="keyword">val</span> switch_remove</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
 Remove the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_switch"><span class="keyword">val</span> compiler_switch</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEalias">OpamTypes.alias</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
 Switch to the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_reinstall"><span class="keyword">val</span> compiler_reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEalias">OpamTypes.alias</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_reinstall"><span class="keyword">val</span> switch_reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
 Reinstall the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALcompiler_list"><span class="keyword">val</span> compiler_list</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_list"><span class="keyword">val</span> switch_list</span> : <code class="type">unit -> unit</code></pre><div class="info">
 List the available compiler descriptions<br>
 </div>
-<pre><span id="VALcompiler_current"><span class="keyword">val</span> compiler_current</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_current"><span class="keyword">val</span> switch_current</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Display the name of the current compiler<br>
 </div>
 <pre><span id="VALpin"><span class="keyword">val</span> pin</span> : <code class="type"><a href="OpamTypes.html#TYPEpin">OpamTypes.pin</a> -> unit</code></pre><div class="info">

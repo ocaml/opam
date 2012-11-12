@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
-<link title="OpamAlias" rel="Chapter" href="OpamAlias.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
@@ -25,25 +28,31 @@
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
-<link title="OpamVersion" rel="Chapter" href="OpamVersion.html"><title>OpamPackage</title>
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamPackage</title>
 </head>
 <body>
-<div class="navbar"><a href="OpamMisc.html">Previous</a>
-&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="OpamParallel.html">Next</a>
+<div class="navbar"><a class="pre" href="OpamMisc.html" title="OpamMisc">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamParallel.html" title="OpamParallel">Next</a>
 </div>
-<center><h1>Module <a href="type_OpamPackage.html">OpamPackage</a></h1></center>
-<br>
+<h1>Module <a href="type_OpamPackage.html">OpamPackage</a></h1>
 <pre><span class="keyword">module</span> OpamPackage: <code class="code">sig</code> <a href="OpamPackage.html">..</a> <code class="code">end</code></pre><span id="2_Packagenameandversions"><h2>Package name and versions</h2></span><br>
 <hr width="100%">
 <pre><span class="keyword">module</span> <a href="OpamPackage.Version.html">Version</a>: <code class="code">sig</code> <a href="OpamPackage.Version.html">..</a> <code class="code">end</code></pre><div class="info">
 Versions
 </div>
-<pre><span class="keyword">module</span> <a href="OpamPackage.Name.html">Name</a>: <code class="type"><a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="OpamPackage.Name.html">Name</a>: <code class="code">sig</code> <a href="OpamPackage.Name.html">..</a> <code class="code">end</code></pre><div class="info">
 Names
 </div>
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
@@ -69,12 +78,6 @@ Create a new pair from a filename. This function extracts <i>    $name</i> and <
 <pre><span id="VALof_dirname"><span class="keyword">val</span> of_dirname</span> : <code class="type">OpamFilename.Dir.t -> t option</code></pre><div class="info">
 Create a new pair from a directory name. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version/</i><br>
 </div>
-<pre><span id="VALof_dpkg"><span class="keyword">val</span> of_dpkg</span> : <code class="type">Debian.Packages.package -> t</code></pre><div class="info">
-Create a new pair from a debian package<br>
-</div>
-<pre><span id="VALof_cudf"><span class="keyword">val</span> of_cudf</span> : <code class="type">Debian.Debcudf.tables -> Cudf.package -> t</code></pre><div class="info">
-Create a new pair from a cudf package<br>
-</div>
 <pre><span id="VALto_map"><span class="keyword">val</span> to_map</span> : <code class="type">Set.t -> Version.Set.t Name.Map.t</code></pre><div class="info">
 Convert a set of pairs to a map <code class="code">name -&gt; versions</code><br>
 </div>
@@ -83,5 +86,21 @@ Extract the versions from a collection of packages<br>
 </div>
 <pre><span id="VALopam_files"><span class="keyword">val</span> opam_files</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
 Look for all .opam files in directory<br>
+</div>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> t -> int</code></pre><div class="info">
+Compare two packages<br>
+</div>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type">t -> t -> bool</code></pre><div class="info">
+Are two packages equal ?<br>
+</div>
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">t -> int</code></pre><div class="info">
+Hash a package<br>
+</div>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
+List all the .opam files and the package directories in a given
+    path<br>
+</div>
+<pre><span id="VALversions"><span class="keyword">val</span> versions</span> : <code class="type">Set.t -> Name.t -> Version.Set.t</code></pre><div class="info">
+Return the list of versions for a given package<br>
 </div>
 </body></html>
