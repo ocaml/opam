@@ -5,6 +5,8 @@ add () { BASE="${BASE} $1"; }
 
 # alt-ergo
 add autoconf
+# yajl
+add cmake
 # cairo
 add libcairo2-dev
 # lapack
