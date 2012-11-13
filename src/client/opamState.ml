@@ -227,6 +227,36 @@ let available_packages root opams repositories repo_index compiler_version confi
     && consistent_pinned_version () in
   OpamPackage.Set.filter filter packages
 
+let base_packages =
+  List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
+
+let create_system_compiler_description root = function
+  | None         -> ()
+  | Some version ->
+    let comp = OpamPath.compiler root OpamCompiler.default in
+    OpamFilename.remove comp;
+    let f =
+      OpamFile.Comp.create_preinstalled
+        OpamCompiler.default version
+        (if !OpamGlobals.base_packages then base_packages else [])
+        [ ("CAML_LD_LIBRARY_PATH", "=",
+           "%{lib}%/stublibs"
+           ^ ":" ^
+             (match Lazy.force OpamSystem.system_ocamlc_where with
+             | Some d -> Filename.concat d "stublibs"
+             | None   -> assert false))
+        ] in
+    OpamFile.Comp.write comp f
+
+let system_needs_upgrade t =
+  t.compiler = OpamCompiler.default
+  && match OpamCompiler.Version.system () with
+  | None   -> OpamGlobals.error_and_exit "No OCaml compiler found in path"
+  | Some v -> t.compiler_version <> v
+
+let upgrade_system_compiler =
+  ref (fun _ -> assert false)
+
 let load_state () =
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
@@ -295,7 +325,12 @@ let load_state () =
       OpamFilename.remove (OpamPath.opam t.root nv);
       OpamFilename.remove (OpamPath.descr t.root nv);
     ) packages);
-  t
+  (* Check whether the system compiler has been updated *)
+  if system_needs_upgrade t then (
+    !upgrade_system_compiler t;
+    OpamGlobals.exit 0
+  ) else
+    t
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -528,8 +563,6 @@ let print_env_warning ?(add_profile = false) t =
         which_opam
         opam_root
         add_profile
-
-let base_packages = List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
 let get_compiler_packages t comp =
   let comp = compiler t comp in

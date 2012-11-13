@@ -28,6 +28,11 @@ module Version = struct
     | None   -> None
     | Some o -> Some (of_string o)
 
+  let system () =
+    match Lazy.force OpamSystem.system_ocamlc_version with
+    | None   -> None
+    | Some v -> Some (of_string v)
+
   let compare v1 r v2 =
     let v1 = to_string v1 in
     let v2 = to_string v2 in

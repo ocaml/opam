@@ -382,6 +382,9 @@ let unavailable_package name version =
 let eq_atom name version =
   name, Some (`Eq, version)
 
+let eq_atoms_of_packages set =
+  List.map (fun nv -> eq_atom (OpamPackage.name nv) (OpamPackage.version nv)) (OpamPackage.Set.elements set)
+
 let atom_of_package nv =
   OpamPackage.name nv, None
 

@@ -177,6 +177,17 @@ val check: lock -> unit
 (** Update pinned package *)
 val update_pinned_package: state -> package -> pin_option -> dirname download
 
+(** {2 System compilers} *)
+
+(** Upgrade all the compiler switches associated with the system
+    compiler *)
+val upgrade_system_compiler: (state -> unit) ref
+
+(** Create {i $opam/compilers/system.com}. Take the global root and
+    the new system compiler version as arguments. *)
+val create_system_compiler_description:
+  dirname -> compiler_version option -> unit
+
 (** To be able to open [OpamState.Types] *)
 module Types: sig
   type t = state = {
