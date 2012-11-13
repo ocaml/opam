@@ -204,7 +204,7 @@ let string_of_pin p =
     (kind_of_pin_option p.pin_arg)
 
 type config =
-  | CEnv
+  | CEnv of bool
   | CList
   | CVariable of full_variable
   | CIncludes of bool * (name list)

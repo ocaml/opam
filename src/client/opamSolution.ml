@@ -162,6 +162,7 @@ let pinned_path t nv =
     None
 
 let get_archive t nv =
+  log "get_archive %s" (OpamPackage.to_string nv);
   let aux repo_p repo =
     OpamRepository.download repo nv;
     let src = OpamPath.Repository.archive repo_p nv in
@@ -177,9 +178,14 @@ let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
   let p_build = OpamPath.Switch.build t.root t.switch nv in
   match pinned_path t nv with
-  | Some (Git p| Path p) ->
+  | Some (Git p| Path p as pin) ->
     OpamGlobals.msg "Synchronizing pinned package\n";
-    OpamFilename.mkdir p_build;
+    if not (OpamFilename.exists_dir p_build) then (
+      match OpamState.update_pinned_package t nv pin with
+      | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
+      | Result _
+      | Up_to_date _  -> ()
+    );
     let _files = OpamState.with_repository t nv (fun repo _ ->
       OpamFilename.in_dir p_build (fun () -> OpamRepository.copy_files repo nv)
     ) in

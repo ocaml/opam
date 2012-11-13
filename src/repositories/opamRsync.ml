@@ -62,11 +62,17 @@ module B = struct
 
   let init ~address:r = ()
 
-  let download_file nv remote_file =
+  let download_file ?checksum nv remote_file =
     let local_path = OpamRepository.local_repo () in
     let tmp_dir = OpamPath.Repository.tmp_dir local_path nv in
     let local_file = OpamFilename.create tmp_dir (OpamFilename.basename remote_file) in
-    rsync_file remote_file local_file
+    let up_to_date = match checksum with
+      | None   -> false
+      | Some c -> OpamFilename.exists local_file && OpamFilename.digest local_file = c in
+    if up_to_date then
+      Up_to_date local_file
+    else
+      rsync_file remote_file local_file
 
   let download_dir nv ?dst remote_dir =
     let local_repo = OpamRepository.local_repo () in

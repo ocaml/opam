@@ -29,8 +29,8 @@ val init : repository -> compiler option -> int -> unit
 val list : print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_sensitive:bool
   -> string list  -> unit
 
-(** Display a general summary of a package. *)
-val info : name -> unit
+(** Display a general summary of a collection of packages. *)
+val info : string list -> unit
 
 (** Depending on request, return options or directories where the
     package is installed. *)

@@ -73,7 +73,7 @@ module type BACKEND = sig
       downloaded file needs not to be stored on the remote
       repository. If needed, the function can use {i $repo/tmp/$nv/}
       to store transient states between downloads. *)
-  val download_file: package -> filename -> filename download
+  val download_file: ?checksum:string -> package -> filename -> filename download
 
   (** Download a (remote) directory and return the local path to the
       downloaded directory. If needed, the function can use {i

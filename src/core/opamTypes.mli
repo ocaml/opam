@@ -307,7 +307,7 @@ type config_option = {
 }
 
 type config =
-  | CEnv
+  | CEnv of bool
   | CList
   | CVariable of full_variable
   | CIncludes of bool * (name list)

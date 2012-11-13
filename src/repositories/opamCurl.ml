@@ -191,15 +191,23 @@ module B = struct
       end
     end
 
-  let download_file nv remote_file =
+  let download_file ?checksum nv remote_file =
     let local_repo = OpamRepository.local_repo () in
     let dest_dir = OpamPath.Repository.tmp_dir local_repo nv in
-    OpamGlobals.msg "Downloading %s ...\n" (OpamFilename.to_string remote_file);
-    try
-      let file = OpamFilename.download ~overwrite:true remote_file dest_dir in
-      Result file
-    with _ ->
-      Not_available
+    let local_file = OpamFilename.create dest_dir (OpamFilename.basename remote_file) in
+    let up_to_date = match checksum with
+      | None   -> false
+      | Some c -> OpamFilename.exists local_file && OpamFilename.digest local_file = c in
+    if up_to_date then
+      Up_to_date local_file
+    else (
+      OpamGlobals.msg "Downloading %s ...\n" (OpamFilename.to_string remote_file);
+      try
+        let file = OpamFilename.download ~overwrite:true remote_file dest_dir in
+        Result file
+      with _ ->
+        Not_available
+    )
 
   let not_supported action =
     failwith (action ^ ": not supported by CURL backend")

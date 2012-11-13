@@ -213,9 +213,6 @@ let resolve universe request =
         | _ -> assert false (* at most one version is installed *) in
       let packages = List.filter (fun p -> p.Cudf.version >= min_version) packages in
       let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
-      log "add_upgrade name=%s versions=%s"
-        name
-        (OpamMisc.string_of_list (fun pkg -> string_of_int pkg.Cudf.version) packages);
       Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
 
     (* Register the packages in the request *)
