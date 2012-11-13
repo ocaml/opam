@@ -88,10 +88,13 @@ let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
 
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?(depopts=false) universe =
+  (* Some installed packages might not be available anymore, so we
+     should add them here *)
+  let all_packages = OpamPackage.Set.union universe.u_available universe.u_installed in
   let opam2debian =
     OpamPackage.Set.fold
       (fun pkg map -> OpamPackage.Map.add pkg (opam2debian universe depopts pkg) map)
-      universe.u_available
+      all_packages
       OpamPackage.Map.empty in
   let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
   let opam2cudf = OpamPackage.Map.map (debian2cudf tables) opam2debian in
