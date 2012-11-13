@@ -69,15 +69,11 @@ module type BACKEND = sig
   val download_archive: address:dirname -> package -> filename download
 
   (** Download a (remote) file and return the local path to the
-      downloaded file. As the opposite to [download_archive], the
-      downloaded file needs not to be stored on the remote
-      repository. If needed, the function can use {i $repo/tmp/$nv/}
-      to store transient states between downloads. *)
+      downloaded file: {i $repo/tmp/$package/$filename}. *)
   val download_file: ?checksum:string -> package -> filename -> filename download
 
   (** Download a (remote) directory and return the local path to the
-      downloaded directory. If needed, the function can use {i
-      $repo/tmp/$nv/} to store transient states between downloads. *)
+      downloaded directory: {i $repo/tmp/$package/$dirname}. *)
   val download_dir: package -> ?dst:dirname -> dirname -> dirname download
 
   (** Upload the content of the current directory to the directory

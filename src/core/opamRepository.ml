@@ -256,7 +256,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
             (OpamFilename.Dir.to_string extract_dir);
           OpamFilename.extract local_archive extract_dir;
           (* Remove the upstream archive *)
-          OpamFilename.remove local_archive
+          OpamFilename.rmdir (OpamFilename.dirname local_archive)
 
       | Up_to_date (D dir)
       | Result (D dir) ->
@@ -358,7 +358,7 @@ let update r =
         | Some k -> k in
       let checksum = OpamFile.URL.checksum url in
       let url = OpamFile.URL.url url in
-      log "updating %s:%s" url kind;
+      log "updating %s:%s:%s" url kind (match checksum with None -> "*" | Some c -> c);
       match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
       | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
       | Up_to_date _  -> false
