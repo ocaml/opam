@@ -1,3 +1,6 @@
+0.8.1 (trunk)
+* Recompile the installed packages when the system compiler is upgraded
+
 0.8.0 [Nov 2012]
 * Improvements in the solver interface and API
 * The solver now use an external SAT-solver (aspcud) if found in the path
