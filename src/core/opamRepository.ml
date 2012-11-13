@@ -256,7 +256,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
             (OpamFilename.Dir.to_string extract_dir);
           OpamFilename.extract local_archive extract_dir;
           (* Remove the upstream archive *)
-          OpamFilename.remove local_archive
+          OpamFilename.rmdir (OpamFilename.dirname local_archive)
 
       | Up_to_date (D dir)
       | Result (D dir) ->
