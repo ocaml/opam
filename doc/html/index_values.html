@@ -600,6 +600,11 @@ Create a variable local for a given library/syntax extension
 Create a pre-installed compiler description file
 </div>
 </td></tr>
+<tr><td><a href="OpamState.html#VALcreate_system_compiler_description">create_system_compiler_description</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Create <i>$opam/compilers/system.com</i>.
+</div>
+</td></tr>
 <tr><td><a href="OpamVersion.html#VALcurrent">current</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
 <td><div class="info">
 The current OPAM version
@@ -759,13 +764,13 @@ Download a (remote) archive file, stored on the (remote) OPAM
 <tr><td><a href="OpamRepository.BACKEND.html#VALdownload_dir">download_dir</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
 <td><div class="info">
 Download a (remote) directory and return the local path to the
-      downloaded directory.
+      downloaded directory: <i>$repo/tmp/$package/$dirname</i>.
 </div>
 </td></tr>
 <tr><td><a href="OpamRepository.BACKEND.html#VALdownload_file">download_file</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
 <td><div class="info">
 Download a (remote) file and return the local path to the
-      downloaded file.
+      downloaded file: <i>$repo/tmp/$package/$filename</i>.
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.html#VALdownload_iter">download_iter</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
@@ -803,6 +808,11 @@ Environment variable to set-up before running commands in the
 <tr><td><a href="OpamSolution.html#VALeq_atom">eq_atom</a> [<a href="OpamSolution.html">OpamSolution</a>]</td>
 <td><div class="info">
 Return an atom with a string version constraint
+</div>
+</td></tr>
+<tr><td><a href="OpamSolution.html#VALeq_atoms_of_packages">eq_atoms_of_packages</a> [<a href="OpamSolution.html">OpamSolution</a>]</td>
+<td><div class="info">
+Return a list of constrained atoms from a set of packages
 </div>
 </td></tr>
 <tr><td><a href="OpamPackage.html#VALequal">equal</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
@@ -901,7 +911,7 @@ Files
 </td></tr>
 <tr><td><a href="OpamState.html#VALfilter_commands">filter_commands</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
-Filter a list of commands
+Filter a list of commands by: evaluating the substitution strings; and, removing the commands with a filter evaluating to "false"
 </div>
 </td></tr>
 <tr><td><a href="OpamMisc.html#VALfilter_map">filter_map</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
@@ -1031,7 +1041,7 @@ Evaluate a function in a given directory
 </td></tr>
 <tr><td><a href="OpamClient.html#VALinfo">info</a> [<a href="OpamClient.html">OpamClient</a>]</td>
 <td><div class="info">
-Display a general summary of a package.
+Display a general summary of a collection of packages.
 </div>
 </td></tr>
 <tr><td><a href="OpamRepository.BACKEND.html#VALinit">init</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
@@ -1269,11 +1279,6 @@ Options to give to the "make" command
 <td><div class="info">
 <code class="code">make_archive repo_kind nv</code> build ./$nv.tar.gz, assuming the
     repository kind is <code class="code">repo_kind</code>.
-</div>
-</td></tr>
-<tr><td><a href="OpamFormat.html#VALmake_arg">make_arg</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
-<td><div class="info">
-Create a command argument
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALmake_bool">make_bool</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1608,11 +1613,6 @@ Packages folder: <i>$opam/repo/$repo/packages</i>
 <td><div class="info">
 <code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
       cores.
-</div>
-</td></tr>
-<tr><td><a href="OpamFormat.html#VALparse_arg">parse_arg</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
-<td><div class="info">
-Parse a command argument
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALparse_bool">parse_bool</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -2255,11 +2255,6 @@ Strip a string
 DLL paths
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALsubstitute_commands">substitute_commands</a> [<a href="OpamState.html">OpamState</a>]</td>
-<td><div class="info">
-Substitute a list of commands
-</div>
-</td></tr>
 <tr><td><a href="OpamState.html#VALsubstitute_file">substitute_file</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Substitute file
@@ -2338,6 +2333,16 @@ Return the first line
 <tr><td><a href="OpamFile.OPAM.html#VALsyntax">syntax</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 List of exported syntax extensions
+</div>
+</td></tr>
+<tr><td><a href="OpamCompiler.Version.html#VALsystem">system</a> [<a href="OpamCompiler.Version.html">OpamCompiler.Version</a>]</td>
+<td><div class="info">
+Returm the version of the system compiler
+</div>
+</td></tr>
+<tr><td><a href="OpamSystem.html#VALsystem_ocamlc_version">system_ocamlc_version</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
+<td><div class="info">
+Return the version of the system compiler
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALsystem_ocamlc_where">system_ocamlc_where</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
@@ -2482,6 +2487,11 @@ Refresh the available packages.
 Update an environment.
 </div>
 </td></tr>
+<tr><td><a href="OpamState.html#VALupdate_pinned_package">update_pinned_package</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Update pinned package
+</div>
+</td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALupdated">updated</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
 Return the list of updated packages:
@@ -2492,6 +2502,12 @@ Return the list of updated packages:
 <td><div class="info">
 Find a consistent state where most of the installed packages are
     upgraded to their latest version.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALupgrade_system_compiler">upgrade_system_compiler</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Upgrade all the compiler switches associated with the system
+    compiler
 </div>
 </td></tr>
 <tr><td><a href="OpamRepository.html#VALupload">upload</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
@@ -2622,6 +2638,11 @@ Constructor
 <tr><td><a href="OpamFilename.html#VALwith_contents">with_contents</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Apply a function on the contents of a file
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.Config.html#VALwith_current_opam_version">with_current_opam_version</a> [<a href="OpamFile.Config.html">OpamFile.Config</a>]</td>
+<td><div class="info">
+Update opam-version to the current one
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_depends">with_depends</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>

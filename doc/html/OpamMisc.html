@@ -51,10 +51,12 @@
 &nbsp;<a class="post" href="OpamPackage.html" title="OpamPackage">Next</a>
 </div>
 <h1>Module <a href="type_OpamMisc.html">OpamMisc</a></h1>
-<pre><span class="keyword">module</span> OpamMisc: <code class="code">sig</code> <a href="OpamMisc.html">..</a> <code class="code">end</code></pre>Basic functions<br>
+<pre><span class="keyword">module</span> OpamMisc: <code class="code">sig</code> <a href="OpamMisc.html">..</a> <code class="code">end</code></pre><div class="info">
+Basic functions<br>
+</div>
 <hr width="100%">
 <br>
-<span id="2_Abstracttypes"><h2>Abstract types</h2></span><br>
+<h2 id="2_Abstracttypes">Abstract types</h2><br>
 <pre><span class="keyword">module type</span> <a href="OpamMisc.SET.html">SET</a> = <code class="code">sig</code> <a href="OpamMisc.SET.html">..</a> <code class="code">end</code></pre><div class="info">
 Collection of abstract values
 </div>
@@ -77,7 +79,7 @@ Map constructor
 Base module, useful to abstract strings
 </div>
 <br>
-<span id="2_Integermanipulation"><h2>Integer manipulation</h2></span><br>
+<h2 id="2_Integermanipulation">Integer manipulation</h2><br>
 <pre><span class="keyword">module</span> <a href="OpamMisc.IntMap.html">IntMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = int</code></pre><div class="info">
 Map of ints
 </div>
@@ -88,7 +90,7 @@ Set of ints
 Display a list of strings<br>
 </div>
 <br>
-<span id="2_Stringmanipulation"><h2>String manipulation</h2></span><br>
+<h2 id="2_Stringmanipulation">String manipulation</h2><br>
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringMap.html">StringMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = string</code></pre><div class="info">
 Map of strings
 </div>
@@ -120,7 +122,7 @@ Does a string contains the given chars ?<br>
 Split a string<br>
 </div>
 <br>
-<span id="2_Misc"><h2>Misc</h2></span><br>
+<h2 id="2_Misc">Misc</h2><br>
 <pre><span id="VALreset_env_value"><span class="keyword">val</span> reset_env_value</span> : <code class="type">prefix:string -> string -> string list</code></pre><div class="info">
 Remove from a ':' separated list of string the one with the given prefix<br>
 </div>

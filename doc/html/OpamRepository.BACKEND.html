@@ -43,7 +43,9 @@
 <div class="navbar">&nbsp;<a class="up" href="OpamRepository.html" title="OpamRepository">Up</a>
 &nbsp;</div>
 <h1>Module type <a href="type_OpamRepository.BACKEND.html">OpamRepository.BACKEND</a></h1>
-<pre><span class="keyword">module type</span> BACKEND = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre>Backend signature<br>
+<pre><span class="keyword">module type</span> BACKEND = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre><div class="info">
+Backend signature<br>
+</div>
 <hr width="100%">
 <pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type">address:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> unit</code></pre><div class="info">
 Initialize an OPAM repository in the current directory. The
@@ -58,16 +60,13 @@ Download a (remote) archive file, stored on the (remote) OPAM
       repository, in the current repository. Return the local path to
       the downloaded archive.<br>
 </div>
-<pre><span id="VALdownload_file"><span class="keyword">val</span> download_file</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
+<pre><span id="VALdownload_file"><span class="keyword">val</span> download_file</span> : <code class="type">?checksum:string -><br>       <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
 Download a (remote) file and return the local path to the
-      downloaded file. As the opposite to <code class="code">download_archive</code>, the
-      downloaded file needs not to be stored on the remote
-      repository. If needed, the function can use <i>$repo/tmp/$nv/</i>
-      to store transient states between downloads.<br>
+      downloaded file: <i>$repo/tmp/$package/$filename</i>.<br>
 </div>
 <pre><span id="VALdownload_dir"><span class="keyword">val</span> download_dir</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       ?dst:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
 Download a (remote) directory and return the local path to the
-      downloaded directory. If needed, the function can use <i>      $repo/tmp/$nv/</i> to store transient states between downloads.<br>
+      downloaded directory: <i>$repo/tmp/$package/$dirname</i>.<br>
 </div>
 <pre><span id="VALupload_dir"><span class="keyword">val</span> upload_dir</span> : <code class="type">address:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> OpamFilename.Set.t</code></pre><div class="info">
 Upload the content of the current directory to the directory

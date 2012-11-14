@@ -45,7 +45,9 @@
 &nbsp;<a class="up" href="OpamParallel.html" title="OpamParallel">Up</a>
 &nbsp;</div>
 <h1>Module type <a href="type_OpamParallel.SIG.html">OpamParallel.SIG</a></h1>
-<pre><span class="keyword">module type</span> SIG = <code class="code">sig</code> <a href="OpamParallel.SIG.html">..</a> <code class="code">end</code></pre>Functor signature<br>
+<pre><span class="keyword">module type</span> SIG = <code class="code">sig</code> <a href="OpamParallel.SIG.html">..</a> <code class="code">end</code></pre><div class="info">
+Functor signature<br>
+</div>
 <hr width="100%">
 <pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALparallel_iter"><span class="keyword">val</span> parallel_iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
 <code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>

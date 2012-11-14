@@ -48,7 +48,9 @@
 &nbsp;<a class="post" href="OpamMisc.html" title="OpamMisc">Next</a>
 </div>
 <h1>Module <a href="type_OpamFormula.html">OpamFormula</a></h1>
-<pre><span class="keyword">module</span> OpamFormula: <code class="code">sig</code> <a href="OpamFormula.html">..</a> <code class="code">end</code></pre>Management of formulas<br>
+<pre><span class="keyword">module</span> OpamFormula: <code class="code">sig</code> <a href="OpamFormula.html">..</a> <code class="code">end</code></pre><div class="info">
+Management of formulas<br>
+</div>
 <hr width="100%">
 <pre><span id="TYPErelop"><span class="keyword">type</span> <code class="type"></code>relop</span> = <code class="type">[ `Eq | `Geq | `Gt | `Leq | `Lt | `Neq ]</code> </pre>
 <div class="info">
@@ -187,7 +189,7 @@ Transform a formula where versions can be expressed using formulas
 Convert an atom-formula to a t-formula<br>
 </div>
 <br>
-<span id="2_Atoms"><h2>Atoms</h2></span><br>
+<h2 id="2_Atoms">Atoms</h2><br>
 <pre><span id="VALatoms"><span class="keyword">val</span> atoms</span> : <code class="type"><a href="OpamFormula.html#TYPEt">t</a> -> <a href="OpamFormula.html#TYPEatom">atom</a> list</code></pre><div class="info">
 Return all the atoms<br>
 </div>

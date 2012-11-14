@@ -49,7 +49,9 @@
 &nbsp;<a class="post" href="OpamState.html" title="OpamState">Next</a>
 </div>
 <h1>Module <a href="type_OpamSolution.html">OpamSolution</a></h1>
-<pre><span class="keyword">module</span> OpamSolution: <code class="code">sig</code> <a href="OpamSolution.html">..</a> <code class="code">end</code></pre>Applying solver solutions<br>
+<pre><span class="keyword">module</span> OpamSolution: <code class="code">sig</code> <a href="OpamSolution.html">..</a> <code class="code">end</code></pre><div class="info">
+Applying solver solutions<br>
+</div>
 <hr width="100%">
 <pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
 Resolve an user request<br>
@@ -67,7 +69,7 @@ Raise an error because a package is unknown<br>
 Raise an error because a package in unavailable<br>
 </div>
 <br>
-<span id="2_Atoms"><h2>Atoms</h2></span><br>
+<h2 id="2_Atoms">Atoms</h2><br>
 <pre><span id="VALeq_atom"><span class="keyword">val</span> eq_atom</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a></code></pre><div class="info">
 Return an atom with a string version constraint<br>
 </div>
@@ -78,15 +80,18 @@ Return a simple atom, with no version constrain, from a package<br>
 Return a list of simple atoms (ie. with no version constraints)
     from a set of packages<br>
 </div>
+<pre><span id="VALeq_atoms_of_packages"><span class="keyword">val</span> eq_atoms_of_packages</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
+Return a list of constrained atoms from a set of packages<br>
+</div>
 <pre><span id="VALatoms_of_names"><span class="keyword">val</span> atoms_of_names</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
 Return a list of atoms from a list of names (wich can eventually
     be of the form name.version)<br>
 </div>
 <pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type"><a href="OpamTypes.html#TYPEstats">OpamTypes.stats</a> -> int</code></pre><div class="info">
-<span id="2_Stats"><h2>Stats</h2></span><br>
+<h2 id="2_Stats">Stats</h2><br>
 </div>
 <br>
-<span id="2_Actions"><h2>Actions</h2></span><br>
+<h2 id="2_Actions">Actions</h2><br>
 <pre><span id="VALapply_solution"><span class="keyword">val</span> apply_solution</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
 Apply a solution return by the solver<br>
 </div>

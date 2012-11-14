@@ -57,6 +57,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rec_files&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;ocaml_version&nbsp;:&nbsp;string&nbsp;option&nbsp;<span class="constructor">Lazy</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;system_ocamlc_where&nbsp;:&nbsp;string&nbsp;option&nbsp;<span class="constructor">Lazy</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;system_ocamlc_version&nbsp;:&nbsp;string&nbsp;option&nbsp;<span class="constructor">Lazy</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;directories_with_links&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;command&nbsp;=&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;command&nbsp;:<br>
@@ -75,7 +76,8 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mkdir&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;flock&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;funlock&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download&nbsp;:&nbsp;filename:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dirname:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;overwrite:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;filename:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dirname:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;patch&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;getenv&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 <span class="keyword">end</span></code></body></html>

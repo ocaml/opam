@@ -50,7 +50,9 @@
 &nbsp;<a class="post" href="OpamFilename.html" title="OpamFilename">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.html">OpamFile</a></h1>
-<pre><span class="keyword">module</span> OpamFile: <code class="code">sig</code> <a href="OpamFile.html">..</a> <code class="code">end</code></pre>Functions to read and write OPAM configuration files in a typed way<br>
+<pre><span class="keyword">module</span> OpamFile: <code class="code">sig</code> <a href="OpamFile.html">..</a> <code class="code">end</code></pre><div class="info">
+Functions to read and write OPAM configuration files in a typed way<br>
+</div>
 <hr width="100%">
 <br>
 Functions to read and write OPAM configuration files in a typed way<br>
@@ -85,7 +87,7 @@ Environement variables
 Compiler version <code class="code">$opam/compilers/</code>
 </div>
 <br>
-<span id="2_Configurationfiles"><h2>Configuration files</h2></span><br>
+<h2 id="2_Configurationfiles">Configuration files</h2><br>
 <pre><span class="keyword">module</span> <a href="OpamFile.Dot_install.html">Dot_install</a>: <code class="code">sig</code> <a href="OpamFile.Dot_install.html">..</a> <code class="code">end</code></pre><div class="info">
 .install files
 </div>
@@ -93,7 +95,7 @@ Compiler version <code class="code">$opam/compilers/</code>
 .config files
 </div>
 <br>
-<span id="2_Repositoryfiles"><h2>Repository files</h2></span><br>
+<h2 id="2_Repositoryfiles">Repository files</h2><br>
 <pre><span class="keyword">module</span> <a href="OpamFile.Repo_index.html">Repo_index</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = repository_name list name_map</code></pre><div class="info">
 Association between package names and repository: <code class="code">$opam/repo/index</code>
 </div>
@@ -104,7 +106,7 @@ Repository config: <code class="code">$opam/repo/$repo/config</code>
 Pinned package files
 </div>
 <br>
-<span id="2_Substitutionfiles"><h2>Substitution files</h2></span><br>
+<h2 id="2_Substitutionfiles">Substitution files</h2><br>
 <pre><span class="keyword">module</span> <a href="OpamFile.Subst.html">Subst</a>: <code class="code">sig</code> <a href="OpamFile.Subst.html">..</a> <code class="code">end</code></pre><div class="info">
 Substitution files
 </div>
