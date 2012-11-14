@@ -227,6 +227,36 @@ let available_packages root opams repositories repo_index compiler_version confi
     && consistent_pinned_version () in
   OpamPackage.Set.filter filter packages
 
+let base_packages =
+  List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
+
+let create_system_compiler_description root = function
+  | None         -> ()
+  | Some version ->
+    let comp = OpamPath.compiler root OpamCompiler.default in
+    OpamFilename.remove comp;
+    let f =
+      OpamFile.Comp.create_preinstalled
+        OpamCompiler.default version
+        (if !OpamGlobals.base_packages then base_packages else [])
+        [ ("CAML_LD_LIBRARY_PATH", "=",
+           "%{lib}%/stublibs"
+           ^ ":" ^
+             (match Lazy.force OpamSystem.system_ocamlc_where with
+             | Some d -> Filename.concat d "stublibs"
+             | None   -> assert false))
+        ] in
+    OpamFile.Comp.write comp f
+
+let system_needs_upgrade t =
+  t.compiler = OpamCompiler.default
+  && match OpamCompiler.Version.system () with
+  | None   -> OpamGlobals.error_and_exit "No OCaml compiler found in path"
+  | Some v -> t.compiler_version <> v
+
+let upgrade_system_compiler =
+  ref (fun _ -> assert false)
+
 let load_state () =
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
@@ -295,7 +325,12 @@ let load_state () =
       OpamFilename.remove (OpamPath.opam t.root nv);
       OpamFilename.remove (OpamPath.descr t.root nv);
     ) packages);
-  t
+  (* Check whether the system compiler has been updated *)
+  if system_needs_upgrade t then (
+    !upgrade_system_compiler t;
+    OpamGlobals.exit 0
+  ) else
+    t
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -367,6 +402,11 @@ let contents_of_variable t v =
       | h::t     -> List.fold_left compose h t
   )
 
+let substitute_ident t i =
+  let v = OpamVariable.Full.of_string i in
+  let c = contents_of_variable t v in
+  OpamVariable.string_of_variable_contents c
+
 (* Substitute the file contents *)
 let substitute_file t f =
   let f = OpamFilename.of_basename f in
@@ -382,6 +422,7 @@ let substitute_string t s =
 let rec substitute_filter t = function
   | FBool b    -> FBool b
   | FString s  -> FString (substitute_string t s)
+  | FIdent s   -> FString (substitute_ident t s)
   | FOp(e,s,f) ->
     let e = substitute_filter t e in
     let f = substitute_filter t f in
@@ -396,7 +437,9 @@ let rec substitute_filter t = function
     FOr(e,f)
 
 let substitute_arg t (a, f) =
-  let a = substitute_string t a in
+  let a = match a with
+    | CString s -> CString (substitute_string t s)
+    | CIdent  i -> CString (substitute_ident t i) in
   let f = match f with
     | None   -> None
     | Some f -> Some (substitute_filter t f) in
@@ -415,6 +458,7 @@ let substitute_commands t c =
 let rec eval_filter t = function
   | FBool b    -> string_of_bool b
   | FString s  -> substitute_string t s
+  | FIdent s   -> substitute_string t s
   | FOp(e,s,f) ->
     (* We are supposed to compare version strings *)
     let s = match s with
@@ -442,7 +486,9 @@ let eval_filter t = function
 
 let filter_arg t (a,f) =
   if eval_filter t f then
-    Some a
+    match a with
+    | CString s -> Some (substitute_string t s)
+    | CIdent i  -> Some (substitute_ident t i)
   else
     None
 
@@ -528,8 +574,6 @@ let print_env_warning ?(add_profile = false) t =
         which_opam
         opam_root
         add_profile
-
-let base_packages = List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
 
 let get_compiler_packages t comp =
   let comp = compiler t comp in

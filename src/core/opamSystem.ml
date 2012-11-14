@@ -423,18 +423,22 @@ let ocaml_version = lazy (
     None
 )
 
-let system_ocamlc_where = lazy (
+let system command = lazy (
   try
     let path =
       try getenv "PATH"
       with Not_found -> "" in
     let path = OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir path in
-    match read_command_output ~verbose:false ~path [ "ocamlc"; "-where" ] with
+    match read_command_output ~verbose:false ~path command with
     | h::_ -> Some (OpamMisc.strip h)
     | []   -> internal_error "ocamlc -where"
   with _ ->
     None
 )
+
+let system_ocamlc_where = system [ "ocamlc"; "-where" ]
+
+let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
 let download_command = lazy (
   try

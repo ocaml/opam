@@ -172,23 +172,6 @@ let update_repo_index t =
     ) repo_s
   ) repo_index
 
-let create_default_compiler_description root = function
-  | None         -> ()
-  | Some version ->
-    let f =
-      OpamFile.Comp.create_preinstalled
-        OpamCompiler.default version
-        (if !OpamGlobals.base_packages then OpamState.base_packages else [])
-        [ ("CAML_LD_LIBRARY_PATH", "=",
-           "%{lib}%/stublibs"
-           ^ ":" ^
-             (match Lazy.force OpamSystem.system_ocamlc_where with
-             | Some d -> Filename.concat d "stublibs"
-             | None   -> assert false))
-        ] in
-    let comp = OpamPath.compiler root OpamCompiler.default in
-    OpamFile.Comp.write comp f
-
 (* sync the repositories, display the new compilers, and create
    compiler description file links *)
 (* XXX: the compiler things should splitted out, but the handling of
@@ -654,7 +637,7 @@ let init repo compiler cores =
 
     (* Create ~/.opam/compilers/system.comp *)
     let system_version = OpamCompiler.Version.current () in
-    create_default_compiler_description root system_version;
+    OpamState.create_system_compiler_description root system_version;
 
     (* Create ~/.opam/config *)
     let config = OpamFile.Config.create OpamVersion.current switch [repo.repo_name] cores in
@@ -1007,8 +990,31 @@ let pin_list () =
     OpamGlobals.msg "%-20s %-8s %s\n" (OpamPackage.Name.to_string n) (kind_of_pin_option a) (path_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
 
+let upgrade_system_compiler t =
+  let continue =
+    OpamMisc.confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
+
+  if continue then (
+
+    (* Update system.comp *)
+    OpamState.create_system_compiler_description t.root (OpamCompiler.Version.system ());
+
+  (* Reinstall all system compiler switches *)
+    OpamSwitch.Map.iter (fun s a ->
+      if a = OpamCompiler.default then (
+        OpamGlobals.msg "\n=o=o=o= Upgrading %s =o=o=o=\n" (OpamSwitch.to_string s);
+        OpamSwitchCommand.reinstall s
+      )
+    ) t.aliases
+
+  ) else
+    OpamGlobals.exit 1
+
+let () =
+  OpamState.upgrade_system_compiler := upgrade_system_compiler
+
 (** We protect each main functions with a lock depending on its access
-on some read/write data. *)
+    on some read/write data. *)
 
 let list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str =
  OpamState.check (Read_lock (fun () -> list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str))

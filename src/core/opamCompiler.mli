@@ -26,6 +26,9 @@ module Version: sig
   (** Return the version of the compiler currently installed *)
   val current: unit -> t option
 
+  (** Returm the version of the system compiler *)
+  val system: unit -> t option
+
   (** Compare OCaml versions *)
   val compare: t -> OpamFormula.relop -> t -> bool
 

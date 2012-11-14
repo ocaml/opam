@@ -68,7 +68,7 @@ let update_config t switch =
   OpamFile.Config.write (OpamPath.config t.root) config;
   OpamState.print_env_warning (OpamState.load_state ())
 
-let install ~quiet switch compiler =
+let install_with_packages ~quiet ~packages ~warning switch compiler =
   log "install %b %s %s" quiet
     (OpamSwitch.to_string switch)
     (OpamCompiler.to_string compiler);
@@ -82,7 +82,9 @@ let install ~quiet switch compiler =
 
   (* install the compiler packages *)
   let t = OpamState.load_state () in
-  let to_install = OpamState.get_compiler_packages t compiler in
+  let to_install = match packages with
+    | None   -> OpamState.get_compiler_packages t compiler
+    | Some p -> OpamSolution.eq_atoms_of_packages p in
 
   let bad_packages =
     OpamMisc.filter_map (fun (n, c) ->
@@ -116,7 +118,7 @@ let install ~quiet switch compiler =
         wish_upgrade = to_install } in
     begin try
       OpamSolution.error_if_no_solution solution;
-      OpamState.print_env_warning t
+      if warning then OpamState.print_env_warning t
     with e ->
       uninstall_compiler ();
       raise e
@@ -124,6 +126,9 @@ let install ~quiet switch compiler =
   | p::_ ->
     uninstall_compiler ();
     package_error p
+
+let install ~quiet switch compiler =
+  install_with_packages ~quiet ~packages:None ~warning:true switch compiler
 
 let switch ~quiet switch =
   log "sswitch switch=%s" (OpamSwitch.to_string switch);
@@ -180,5 +185,10 @@ let reinstall switch =
     OpamGlobals.exit 1;
   );
   let ocaml_version = OpamSwitch.Map.find switch t.aliases in
-  remove switch;
-  install false switch ocaml_version
+  let packages = Some (OpamFile.Installed.read (OpamPath.Switch.installed t.root switch)) in
+
+  (* Remove the directory *)
+  OpamFilename.rmdir (OpamPath.Switch.root t.root switch);
+
+  (* Install the compiler *)
+  install_with_packages ~quiet:false ~packages ~warning:false switch ocaml_version

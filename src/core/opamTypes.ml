@@ -222,11 +222,16 @@ type symbol =
 type filter =
   | FBool of bool
   | FString of string
+  | FIdent of string
   | FOp of filter * symbol * filter
   | FAnd of filter * filter
   | FOr of filter * filter
 
-type arg = string * filter option
+type simple_arg =
+  | CString of string
+  | CIdent of string
+
+type arg = simple_arg * filter option
 
 type command = arg list * filter option
 

@@ -92,15 +92,14 @@ val substitute_string: state -> string -> string
 (** Substitute file *)
 val substitute_file: state -> basename -> unit
 
-(** Substitute a list of commands *)
-val substitute_commands: state -> command list -> command list
-
 (** {2 Filters} *)
 
 (** Evaluate a filter *)
 val eval_filter: state -> filter option -> bool
 
-(** Filter a list of commands *)
+(** Filter a list of commands by:
+    - evaluating the substitution strings; and
+    - removing the commands with a filter evaluating to "false" *)
 val filter_commands: state -> command list -> string list list
 
 (** {2 Repositories} *)
@@ -176,6 +175,17 @@ val check: lock -> unit
 
 (** Update pinned package *)
 val update_pinned_package: state -> package -> pin_option -> dirname download
+
+(** {2 System compilers} *)
+
+(** Upgrade all the compiler switches associated with the system
+    compiler *)
+val upgrade_system_compiler: (state -> unit) ref
+
+(** Create {i $opam/compilers/system.com}. Take the global root and
+    the new system compiler version as arguments. *)
+val create_system_compiler_description:
+  dirname -> compiler_version option -> unit
 
 (** To be able to open [OpamState.Types] *)
 module Types: sig

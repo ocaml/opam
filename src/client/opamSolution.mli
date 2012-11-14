@@ -53,6 +53,9 @@ val atom_of_package: package -> atom
     from a set of packages *)
 val atoms_of_packages: package_set -> atom list
 
+(** Return a list of constrained atoms from a set of packages *)
+val eq_atoms_of_packages: package_set -> atom list
+
 (** Return a list of atoms from a list of names (wich can eventually
     be of the form name.version) *)
 val atoms_of_names: OpamState.state -> name_set -> atom list

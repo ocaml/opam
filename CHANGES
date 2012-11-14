@@ -1,3 +1,10 @@
+0.8.2 (trunk)
+
+0.8.1 [Nov 2012]
+* Simplify string substitution in OPAM files
+* Recompile the installed packages when the system compiler is upgraded
+* Fix various regressions in pinned and dev packages introduced in 0.8.0
+
 0.8.0 [Nov 2012]
 * Improvements in the solver interface and API
 * The solver now use an external SAT-solver (aspcud) if found in the path

@@ -14,6 +14,7 @@
 (***********************************************************************)
 
 open OpamTypes
+open OpamMisc.OP
 
 type indent_variable = string -> bool
 
@@ -404,6 +405,7 @@ let make_env_variable (ident, symbol, string) =
 let rec parse_filter = function
   | [Bool b]   -> FBool b
   | [String s] -> FString s
+  | [Ident s]  -> FIdent s
   | [Group g]  -> parse_filter g
   | [e; Symbol s; f] ->
     let open OpamTypes in
@@ -430,6 +432,7 @@ let lift = function
 
 let rec make_filter = function
   | FString s -> [String s]
+  | FIdent s  -> [Ident s]
   | FBool b   -> [Bool b]
   | FOp(e,s,f) ->
     let s = begin match s with
@@ -452,15 +455,30 @@ let rec make_filter = function
     let f = lift (make_filter f) in
     [ e; Symbol "&"; f ]
 
-let make_arg = make_option make_string make_filter
+let make_simple_arg = function
+  | CString s -> make_string s
+  | CIdent s  -> make_ident s
 
-let make_command = make_option (make_list make_arg) make_filter
+let make_arg =
+  make_option make_simple_arg make_filter
 
-let make_commands = make_list make_command
+let make_command =
+  make_option (make_list make_arg) make_filter
 
-let parse_arg = parse_option parse_string parse_filter
+let make_commands =
+  make_list make_command
 
-let parse_command = parse_option (parse_list parse_arg) parse_filter
+let parse_simple_arg =
+  parse_or [
+    "ident" , (parse_ident  |> fun x -> CIdent x);
+    "string", (parse_string |> fun x -> CString x);
+  ]
+
+let parse_arg =
+  parse_option parse_simple_arg parse_filter
+
+let parse_command =
+  parse_option (parse_list parse_arg) parse_filter
 
 let parse_commands = parse_or [
   "command"     , (fun x -> [parse_command x]);

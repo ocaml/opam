@@ -12,6 +12,7 @@ maintainer: "contact@ocamlpro.com"
 build: [
  [ "./build.sh" ]
  [ "this" "should" "never" "run" ] { "%{ocaml-version}%" > "100" }
+ [ make "this" ocaml-version "also" ] { os = "NO" }
  [ "this as well" { "%{os}%" = "myOS" } ]
 ]
 
