@@ -324,12 +324,18 @@ type symbol =
 type filter =
   | FBool of bool
   | FString of string
+  | FIdent of string
   | FOp of filter * symbol * filter
   | FAnd of filter * filter
   | FOr of filter * filter
 
+(** A command argument *)
+type simple_arg =
+  | CString of string
+  | CIdent of string
+
 (** Command argument *)
-type arg = string * filter option
+type arg = simple_arg * filter option
 
 (** Command *)
 type command = arg list * filter option

@@ -402,6 +402,11 @@ let contents_of_variable t v =
       | h::t     -> List.fold_left compose h t
   )
 
+let substitute_ident t i =
+  let v = OpamVariable.Full.of_string i in
+  let c = contents_of_variable t v in
+  OpamVariable.string_of_variable_contents c
+
 (* Substitute the file contents *)
 let substitute_file t f =
   let f = OpamFilename.of_basename f in
@@ -417,6 +422,7 @@ let substitute_string t s =
 let rec substitute_filter t = function
   | FBool b    -> FBool b
   | FString s  -> FString (substitute_string t s)
+  | FIdent s   -> FString (substitute_ident t s)
   | FOp(e,s,f) ->
     let e = substitute_filter t e in
     let f = substitute_filter t f in
@@ -431,7 +437,9 @@ let rec substitute_filter t = function
     FOr(e,f)
 
 let substitute_arg t (a, f) =
-  let a = substitute_string t a in
+  let a = match a with
+    | CString s -> CString (substitute_string t s)
+    | CIdent  i -> CString (substitute_ident t i) in
   let f = match f with
     | None   -> None
     | Some f -> Some (substitute_filter t f) in
@@ -450,6 +458,7 @@ let substitute_commands t c =
 let rec eval_filter t = function
   | FBool b    -> string_of_bool b
   | FString s  -> substitute_string t s
+  | FIdent s   -> substitute_string t s
   | FOp(e,s,f) ->
     (* We are supposed to compare version strings *)
     let s = match s with
@@ -477,7 +486,9 @@ let eval_filter t = function
 
 let filter_arg t (a,f) =
   if eval_filter t f then
-    Some a
+    match a with
+    | CString s -> Some (substitute_string t s)
+    | CIdent i  -> Some (substitute_ident t i)
   else
     None
 

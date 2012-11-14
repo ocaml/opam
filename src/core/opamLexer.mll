@@ -22,7 +22,7 @@ let newline lexbuf = Lexing.new_line lexbuf
 let space = [' ' '\t' '\r' '\n']
 let alpha = ['a'-'z' 'A'-'Z' '_']
 let digit = ['0'-'9']
-let char  = ['-']
+let char  = ['-' '_']
 let ident = alpha (alpha | digit | char)*
 let symbol = ['=' '<' '>' '!' '+' '|' '&']+
 let int = '-'? ['0'-'9']+

@@ -207,8 +207,7 @@ let proceed_to_delete ~rm_build t nv =
   let opam_f = OpamPath.opam t.root nv in
   if OpamFilename.exists opam_f then (
     let opam = OpamState.opam t nv in
-    let remove = OpamState.substitute_commands t (OpamFile.OPAM.remove opam) in
-    match OpamState.filter_commands t remove with
+    match OpamState.filter_commands t (OpamFile.OPAM.remove opam) with
     | []     -> ()
     | remove ->
       let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -327,8 +326,7 @@ let proceed_to_change t nv_old nv =
   OpamFile.Env.write env_f env.new_env;
 
   (* Call the build script and copy the output files *)
-  let commands = OpamState.substitute_commands t (OpamFile.OPAM.build opam) in
-  let commands = OpamState.filter_commands t commands in
+  let commands = OpamState.filter_commands t (OpamFile.OPAM.build opam) in
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   if commands_s <> [] then
     OpamGlobals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s)
