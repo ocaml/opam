@@ -663,6 +663,11 @@ let install_compiler t ~quiet switch compiler =
   );
 
   let switch_dir = OpamPath.Switch.root t.root switch in
+
+  (* Do some clean-up if necessary *)
+  if not (OpamSwitch.Map.mem switch t.aliases) && OpamFilename.exists_dir switch_dir then
+    OpamFilename.rmdir switch_dir;
+
   if OpamFilename.exists_dir switch_dir then (
     OpamGlobals.msg "The compiler %s is already installed.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 0;
