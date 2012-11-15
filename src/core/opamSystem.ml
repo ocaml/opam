@@ -412,7 +412,7 @@ let funlock file =
         close_in ic;
       Unix.unlink file;
   ) else
-    OpamGlobals.error "Cannot find %s, but continuing anyway..." file
+    log "Cannot find %s, but continuing anyway..." file
 
 let ocaml_version = lazy (
   try
