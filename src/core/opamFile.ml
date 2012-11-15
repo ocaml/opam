@@ -1192,6 +1192,11 @@ module Comp = struct
       | Some (n,_) -> OpamCompiler.of_string base, OpamCompiler.Version.of_string n in
     let name =
       OpamFormat.assoc_default name_d s s_name (OpamFormat.parse_string |> OpamCompiler.of_string) in
+    if OpamCompiler.of_filename filename <> name then
+      OpamGlobals.warning "The file %s contains a bad 'name' field: %s instead of %s"
+        (OpamFilename.to_string filename)
+        (OpamCompiler.to_string name)
+        (OpamCompiler.to_string (OpamCompiler.of_filename filename));
     let version =
       OpamFormat.assoc_default version_d s s_version
         (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
