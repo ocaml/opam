@@ -131,7 +131,7 @@ let install ~quiet switch compiler =
   install_with_packages ~quiet ~packages:None ~warning:true switch compiler
 
 let switch ~quiet switch =
-  log "sswitch switch=%s" (OpamSwitch.to_string switch);
+  log "switch switch=%s" (OpamSwitch.to_string switch);
   let t = OpamState.load_state () in
   let comp_dir = OpamPath.Switch.root t.root switch in
   let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
@@ -140,7 +140,7 @@ let switch ~quiet switch =
     OpamGlobals.error "The compiler's description for %s does not exist.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  if not (OpamFilename.exists_dir comp_dir) then
+  if not (OpamSwitch.Map.mem switch t.aliases) then
     install quiet switch compiler
   else
     update_config t switch
