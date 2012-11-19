@@ -552,6 +552,13 @@ let get_env t =
   let add_to_env = expand_env t add_to_env in
   let new_env = expand_env t new_env in
 
+  (* if --root <dir> is passed on the command line, or if OPAMROOT is set. *)
+  let new_env =
+    if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
+      ("OPAMROOT", !OpamGlobals.root_dir) :: new_env
+    else
+      new_env in
+
   { add_to_env; add_to_path; new_env }
 
 let print_env_warning ?(add_profile = false) t =

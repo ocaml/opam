@@ -28,8 +28,6 @@ let bad_argument cmd fmt =
 let noanon cmd s =
   raise (Bad (cmd, s ^ " is not expected"))
 
-let () = OpamGlobals.root_dir := OpamGlobals.default_opam_dir
-
 (* Useful for switch, which can overwrite the default verbose flag *)
 let quiet = ref false
 
