@@ -318,6 +318,7 @@ module Tar = struct
     let ic = open_in f in
     let c1 = input_char ic in
     let c2 = input_char ic in
+    close_in ic;
     match c1, c2 with
     | '\031', '\139' -> Some 'z'
     | 'B'   , 'Z'    -> Some 'j'
