@@ -20,6 +20,16 @@ if test "$VERSION_CHECK" = "yes" ; then
      AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 fi
 
+AC_CHECK_PROGS(FETCH,[curl wget],no)
+
+if test x"$FETCH" = x"curl" ; then
+  AC_SUBST(fetch, "curl -OL")
+elif test x"$FETCH" = x"wget" ; then
+  AC_SUBST(fetch, "wget")
+else
+  AC_MSG_ERROR([You must have either curl or wget installed.])
+fi
+
 AC_CONFIG_FILES(
   Makefile.config
   src/core/opamVersion.ml
