@@ -584,9 +584,11 @@ let check_opam_version () =
     let max_version = OpamPackage.Version.Set.max_elt (OpamPackage.versions (Lazy.force t.available_packages) n) in
     let max_version = OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
     if OpamVersion.compare max_version OpamVersion.current > 0 then (
-      if OpamMisc.confirm "Your version of opam (%s) is not up-to-date. Do you want to upgrade to version %s ?"
+      OpamGlobals.warning "Your version of OPAM (%s) is not up-to-date! The latest version is %s."
         (OpamVersion.to_string OpamVersion.current)
-        (OpamVersion.to_string max_version)
+        (OpamVersion.to_string max_version);
+      if OpamState.mem_installed_package_by_name t n
+      && OpamMisc.confirm "Do you want to upgrade OPAM ?"
       then
         upgrade (OpamPackage.Name.Set.singleton n)
     )
@@ -840,7 +842,7 @@ let reinstall names =
     let universe = OpamState.universe t Depends in
     OpamSolver.forward_dependencies ~depopts:true ~installed:true universe reinstall in
   let to_process =
-    List.map (fun pkg -> To_recompile pkg) depends in
+    List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
   let solution = OpamSolution.apply_solution t (OpamSolver.sequential_solution to_process) in
   OpamSolution.error_if_no_solution solution
 

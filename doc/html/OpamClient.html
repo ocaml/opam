@@ -45,7 +45,9 @@
 &nbsp;<a class="post" href="OpamConfigCommand.html" title="OpamConfigCommand">Next</a>
 </div>
 <h1>Module <a href="type_OpamClient.html">OpamClient</a></h1>
-<pre><span class="keyword">module</span> OpamClient: <code class="code">sig</code> <a href="OpamClient.html">..</a> <code class="code">end</code></pre>Client entry-point.<br>
+<pre><span class="keyword">module</span> OpamClient: <code class="code">sig</code> <a href="OpamClient.html">..</a> <code class="code">end</code></pre><div class="info">
+Client entry-point.<br>
+</div>
 <hr width="100%">
 <pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> option -> int -> unit</code></pre><div class="info">
 Initialize the client a consistent state.
@@ -60,8 +62,8 @@ Initialize the client a consistent state.
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -><br>       installed_only:bool -><br>       ?name_only:bool -> ?case_sensitive:bool -> string list -> unit</code></pre><div class="info">
 Display all available packages that matches any of the regexps.<br>
 </div>
-<pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> unit</code></pre><div class="info">
-Display a general summary of a package.<br>
+<pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">string list -> unit</code></pre><div class="info">
+Display a general summary of a collection of packages.<br>
 </div>
 <pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="OpamTypes.html#TYPEconfig">OpamTypes.config</a> -> unit</code></pre><div class="info">
 Depending on request, return options or directories where the

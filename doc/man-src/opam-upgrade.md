@@ -13,7 +13,7 @@ opam-upgrade - Upgrade installed packages
 # DESCRIPTION
 
 This command upgrades the installed packages to their latest available
-versions. More precisely, this command call the dependency solver to
+versions. More precisely, this command calls the dependency solver to
 find a consistent state where **most** of the installed packages are
 upgraded to their latest versions.
 

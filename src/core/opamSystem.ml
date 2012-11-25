@@ -314,6 +314,16 @@ module Tar = struct
     [ [ "tar.gz" ; "tgz" ], 'z'
     ; [ "tar.bz2" ; "tbz" ], 'j' ]
 
+  let guess_type f =
+    let ic = open_in f in
+    let c1 = input_char ic in
+    let c2 = input_char ic in
+    close_in ic;
+    match c1, c2 with
+    | '\031', '\139' -> Some 'z'
+    | 'B'   , 'Z'    -> Some 'j'
+    | _              -> None
+
   let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
 
@@ -326,17 +336,26 @@ module Tar = struct
       (List.concat (List.map fst extensions))
 
   let extract_function file =
-    List.fold_left
-      (function
-        | Some s -> (fun _ -> Some s)
+    let command c dir =
+      command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ] in
+
+    let ext =
+      List.fold_left
+        (fun acc (ext, c) -> match acc with
+        | Some f -> Some f
         | None   ->
-            (fun (ext, c) ->
-              if match_ext file ext then
-                Some (fun dir -> command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ])
-              else
-                None))
-      None
-      extensions
+          if match_ext file ext
+          then Some (command c)
+          else None)
+        None
+        extensions in
+    match ext with
+    | Some f -> Some f
+    | None   ->
+      match guess_type file with
+      | None   -> None
+      | Some c -> Some (command c)
+
 end
 
 let is_tar_archive = Tar.is_archive
@@ -412,7 +431,7 @@ let funlock file =
         close_in ic;
       Unix.unlink file;
   ) else
-    OpamGlobals.error "Cannot find %s, but continuing anyway..." file
+    log "Cannot find %s, but continuing anyway..." file
 
 let ocaml_version = lazy (
   try
@@ -443,7 +462,7 @@ let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 let download_command = lazy (
   try
     command ~verbose:false ["which"; "curl"];
-    (fun src -> [ "curl"; "--insecure" ; "-OLJ"; src ])
+    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
   with Process_error _ ->
     try
       command ~verbose:false ["which"; "wget"];

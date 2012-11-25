@@ -47,7 +47,9 @@
 <h1>Module <a href="type_OpamTypes.ACTION_GRAPH.Parallel.html">OpamTypes.ACTION_GRAPH.Parallel</a></h1>
 <pre><span class="keyword">module</span> Parallel: <code class="type"><a href="OpamParallel.SIG.html">OpamParallel.SIG</a></code><code class="type"> 
     with type G.t = t
-     and type G.V.t = V.t</code></pre>Parallel iterator<br>
+     and type G.V.t = V.t</code></pre><div class="info">
+Parallel iterator<br>
+</div>
 <hr width="100%">
 <pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALparallel_iter"><span class="keyword">val</span> parallel_iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
 <code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>

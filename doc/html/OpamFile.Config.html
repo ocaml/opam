@@ -45,7 +45,9 @@
 &nbsp;<a class="post" href="OpamFile.OPAM.html" title="OpamFile.OPAM">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.Config.html">OpamFile.Config</a></h1>
-<pre><span class="keyword">module</span> Config: <code class="code">sig</code> <a href="OpamFile.Config.html">..</a> <code class="code">end</code></pre>Configuration file: <code class="code">$opam/config</code><br>
+<pre><span class="keyword">module</span> Config: <code class="code">sig</code> <a href="OpamFile.Config.html">..</a> <code class="code">end</code></pre><div class="info">
+Configuration file: <code class="code">$opam/config</code><br>
+</div>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a> -><br>       <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> int -> t</code></pre><div class="info">
@@ -56,6 +58,9 @@ OCaml switch updates<br>
 </div>
 <pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> t</code></pre><div class="info">
 Repository updates<br>
+</div>
+<pre><span id="VALwith_current_opam_version"><span class="keyword">val</span> with_current_opam_version</span> : <code class="type">t -> t</code></pre><div class="info">
+Update opam-version to the current one<br>
 </div>
 <pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a></code></pre><div class="info">
 Return the OPAM version<br>

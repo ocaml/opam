@@ -43,7 +43,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;print_short:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;installed_only:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?name_only:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?case_sensitive:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;info&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;info&nbsp;:&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;config&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.config&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;install&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;reinstall&nbsp;:&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Name</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>

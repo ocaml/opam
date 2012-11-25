@@ -2,3 +2,4 @@ datarootdir = @datarootdir@
 prefix=@prefix@
 mandir=@mandir@
 version=@PACKAGE_VERSION@
+FETCH=@fetch@

@@ -48,7 +48,9 @@
 &nbsp;<a class="post" href="OpamRepositoryName.html" title="OpamRepositoryName">Next</a>
 </div>
 <h1>Module <a href="type_OpamRepository.html">OpamRepository</a></h1>
-<pre><span class="keyword">module</span> OpamRepository: <code class="code">sig</code> <a href="OpamRepository.html">..</a> <code class="code">end</code></pre>Mangagement of OPAM repositories.<br>
+<pre><span class="keyword">module</span> OpamRepository: <code class="code">sig</code> <a href="OpamRepository.html">..</a> <code class="code">end</code></pre><div class="info">
+Mangagement of OPAM repositories.<br>
+</div>
 <hr width="100%">
 <pre><span id="EXCEPTIONUnknown_backend"><span class="keyword">exception</span> Unknown_backend</span></pre>
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> string</code></pre><div class="info">
@@ -83,7 +85,7 @@ Upload the content of <i>$opam/repo/$repo/upload</i> to the remote
     repository.<br>
 </div>
 <br>
-<span id="2_Repositorybackends"><h2>Repository backends</h2></span><br>
+<h2 id="2_Repositorybackends">Repository backends</h2><br>
 <pre><span class="keyword">module type</span> <a href="OpamRepository.BACKEND.html">BACKEND</a> = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre><div class="info">
 Backend signature
 </div>

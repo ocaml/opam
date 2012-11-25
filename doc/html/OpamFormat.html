@@ -54,7 +54,9 @@
 &nbsp;<a class="post" href="OpamFormula.html" title="OpamFormula">Next</a>
 </div>
 <h1>Module <a href="type_OpamFormat.html">OpamFormat</a></h1>
-<pre><span class="keyword">module</span> OpamFormat: <code class="code">sig</code> <a href="OpamFormat.html">..</a> <code class="code">end</code></pre>Format of OPAM configuration files.<br>
+<pre><span class="keyword">module</span> OpamFormat: <code class="code">sig</code> <a href="OpamFormat.html">..</a> <code class="code">end</code></pre><div class="info">
+Format of OPAM configuration files.<br>
+</div>
 <hr width="100%">
 <pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="OpamTypes.html#TYPEfile">OpamTypes.file</a></code></pre><div class="info">
 The empty file<br>
@@ -72,7 +74,7 @@ Check whether a list of items contains only valid variable definitions<br>
 Find all the invalid fields<br>
 </div>
 <br>
-<span id="2_Parsingfunctions"><h2>Parsing functions</h2></span><br>
+<h2 id="2_Parsingfunctions">Parsing functions</h2><br>
 <pre><span id="EXCEPTIONBad_format"><span class="keyword">exception</span> Bad_format</span> <span class="keyword">of</span> <code class="type">string</code></pre>
 <div class="info">
 All the following parsing function raise <code class="code">Bad_format</code> in case the
@@ -129,7 +131,7 @@ Try to parse the value using function from the list. All the
 Parse a sequence of values<br>
 </div>
 <br>
-<span id="2_Creationfunctions"><h2>Creation functions</h2></span><br>
+<h2 id="2_Creationfunctions">Creation functions</h2><br>
 <pre><span id="VALmake_bool"><span class="keyword">val</span> make_bool</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
 Create a boolean<br>
 </div>
@@ -161,7 +163,7 @@ Create a pair<br>
 Create a pair of strings<br>
 </div>
 <br>
-<span id="2_Printingfunctions"><h2>Printing functions</h2></span><br>
+<h2 id="2_Printingfunctions">Printing functions</h2><br>
 <pre><span id="VALstring_of_value"><span class="keyword">val</span> string_of_value</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string</code></pre><div class="info">
 Print a value<br>
 </div>
@@ -185,7 +187,7 @@ Print a list of items<br>
 Print a file<br>
 </div>
 <br>
-<span id="2_Findingfunctions"><h2>Finding functions</h2></span><br>
+<h2 id="2_Findingfunctions">Finding functions</h2><br>
 <pre><span id="VALassoc"><span class="keyword">val</span> assoc</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -> 'a</code></pre><div class="info">
 Get the value of a field<br>
 </div>
@@ -215,7 +217,7 @@ Get all the sections of a certain kind<br>
 Get sections<br>
 </div>
 <br>
-<span id="2_Formula"><h2>Formula</h2></span><br>
+<h2 id="2_Formula">Formula</h2><br>
 <br>
 This section is dedicated to the parsing and creatin of dependency
     and conflict formaulas. It's maybe easier to do that directly in
@@ -239,7 +241,7 @@ Parse compiler constraints<br>
 Build a compiler constraint<br>
 </div>
 <br>
-<span id="2_Environmentvariables"><h2>Environment variables</h2></span><br>
+<h2 id="2_Environmentvariables">Environment variables</h2><br>
 <pre><span id="VALparse_env_variable"><span class="keyword">val</span> parse_env_variable</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string * string * string</code></pre><div class="info">
 Parsing<br>
 </div>
@@ -247,18 +249,12 @@ Parsing<br>
 Making<br>
 </div>
 <br>
-<span id="2_filterexpressions"><h2>filter expressions</h2></span><br>
+<h2 id="2_filterexpressions">filter expressions</h2><br>
 <pre><span id="VALparse_filter"><span class="keyword">val</span> parse_filter</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a></code></pre><div class="info">
 Parsing<br>
 </div>
 <pre><span id="VALmake_filter"><span class="keyword">val</span> make_filter</span> : <code class="type"><a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list</code></pre><div class="info">
 Creation<br>
-</div>
-<pre><span id="VALparse_arg"><span class="keyword">val</span> parse_arg</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEarg">OpamTypes.arg</a></code></pre><div class="info">
-Parse a command argument<br>
-</div>
-<pre><span id="VALmake_arg"><span class="keyword">val</span> make_arg</span> : <code class="type"><a href="OpamTypes.html#TYPEarg">OpamTypes.arg</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
-Create a command argument<br>
 </div>
 <pre><span id="VALparse_command"><span class="keyword">val</span> parse_command</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a></code></pre><div class="info">
 Parse a command<br>

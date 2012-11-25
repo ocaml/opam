@@ -1,4 +1,4 @@
-FETCH ?= curl -OL
+include ../Makefile.config
 
 all: clone depends.ocp
 

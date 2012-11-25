@@ -49,7 +49,9 @@
 &nbsp;<a class="post" href="OpamTypes.html" title="OpamTypes">Next</a>
 </div>
 <h1>Module <a href="type_OpamSystem.html">OpamSystem</a></h1>
-<pre><span class="keyword">module</span> OpamSystem: <code class="code">sig</code> <a href="OpamSystem.html">..</a> <code class="code">end</code></pre>Low-level untyped system operations<br>
+<pre><span class="keyword">module</span> OpamSystem: <code class="code">sig</code> <a href="OpamSystem.html">..</a> <code class="code">end</code></pre><div class="info">
+Low-level untyped system operations<br>
+</div>
 <hr width="100%">
 <pre><span id="EXCEPTIONProcess_error"><span class="keyword">exception</span> Process_error</span> <span class="keyword">of</span> <code class="type"><a href="OpamProcess.html#TYPEresult">OpamProcess.result</a></code></pre>
 <div class="info">
@@ -119,6 +121,9 @@ Return the version of the current OCaml compiler. If no OCaml
 <pre><span id="VALsystem_ocamlc_where"><span class="keyword">val</span> system_ocamlc_where</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
 Return the path where the system ocamlc library is installed<br>
 </div>
+<pre><span id="VALsystem_ocamlc_version"><span class="keyword">val</span> system_ocamlc_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
+Return the version of the system compiler<br>
+</div>
 <pre><span id="VALdirectories_with_links"><span class="keyword">val</span> directories_with_links</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">directories_with_links dir</code> returns the directories in the directory <code class="code">dir</code>.
     Links pointing to directory are also returned.<br>
@@ -157,7 +162,7 @@ Create a directory. Do not fail if the directory already
     exist.<br>
 </div>
 <br>
-<span id="2_Filelockingfunction"><h2>File locking function</h2></span><br>
+<h2 id="2_Filelockingfunction">File locking function</h2><br>
 <pre><span id="VALflock"><span class="keyword">val</span> flock</span> : <code class="type">string -> unit</code></pre><div class="info">
 <code class="code">flock ()</code> takes the global file lock. If the lock is already
     taken, sleep for 1s and then retry. Abort after 5 tentatives.<br>
@@ -168,8 +173,8 @@ Create a directory. Do not fail if the directory already
     first place.<br>
 </div>
 <br>
-<span id="2_Misc"><h2>Misc</h2></span><br>
-<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">filename:string -> dirname:string -> string</code></pre><div class="info">
+<h2 id="2_Misc">Misc</h2><br>
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">overwrite:bool -> filename:string -> dirname:string -> string</code></pre><div class="info">
 download compiler sources<br>
 </div>
 <pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info">

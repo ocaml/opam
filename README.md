@@ -9,7 +9,7 @@ things, used by Debian to manage their packages.
 ### Prerequisites:
 
 * ocaml (>= 3.12.1)
-* curl (>= 7.20.0) or wget
+* curl or wget
 * git
 * rsync
 

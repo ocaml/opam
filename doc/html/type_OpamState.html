@@ -66,8 +66,6 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.full_variable&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.variable_contents<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;substitute_string&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;substitute_file&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;substitute_commands&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.command&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.command&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;eval_filter&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;filter_commands&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.command&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;list<br>
@@ -104,6 +102,13 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;opam&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">OPAM</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Comp</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;check&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.lock&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_pinned_package&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="constructor">OpamTypes</span>.download<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upgrade_system_compiler&nbsp;:&nbsp;(<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="constructor">Pervasives</span>.ref<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create_system_compiler_description&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_version&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Types</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=<br>

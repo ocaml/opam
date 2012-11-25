@@ -1182,19 +1182,26 @@ module Comp = struct
     let opam_version =
       OpamFormat.assoc s s_opam_version (OpamFormat.parse_string |> OpamVersion.of_string) in
     let name_d, version_d =
-      let base = (
-        OpamFilename.chop_extension
-        |> OpamFilename.basename
-        |> OpamFilename.Base.to_string
-        ) filename in
+      let base = OpamCompiler.to_string (OpamCompiler.of_filename filename) in
+      OpamCompiler.of_string base,
       match OpamMisc.cut_at base '+' with
-      | None       -> OpamCompiler.of_string base, OpamCompiler.Version.of_string base
-      | Some (n,_) -> OpamCompiler.of_string base, OpamCompiler.Version.of_string n in
+      | None       -> OpamCompiler.Version.of_string base
+      | Some (n,_) -> OpamCompiler.Version.of_string n in
     let name =
       OpamFormat.assoc_default name_d s s_name (OpamFormat.parse_string |> OpamCompiler.of_string) in
+    if name_d <> name then
+      OpamGlobals.warning "The file %s contains a bad 'name' field: %s instead of %s"
+        (OpamFilename.to_string filename)
+        (OpamCompiler.to_string name)
+        (OpamCompiler.to_string name_d);
     let version =
       OpamFormat.assoc_default version_d s s_version
         (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
+    if name <> OpamCompiler.default && version_d <> version then
+      OpamGlobals.warning "The file %s contains a bad 'version' field: %s instead of %s"
+        (OpamFilename.to_string filename)
+        (OpamCompiler.Version.to_string version)
+        (OpamCompiler.Version.to_string version_d);
     let src = OpamFormat.assoc_option s s_src (OpamFormat.parse_string |> OpamFilename.raw_file) in
     let patches =
       OpamFormat.assoc_list s s_patches

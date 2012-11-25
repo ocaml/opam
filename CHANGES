@@ -1,4 +1,5 @@
 0.8.2 (trunk)
+* Fix an issue with 'opam reinstall <packages>' where packages were reinstalled in reverse order
 
 0.8.1 [Nov 2012]
 * Simplify string substitution in OPAM files

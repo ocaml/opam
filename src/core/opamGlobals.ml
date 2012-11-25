@@ -42,12 +42,16 @@ let switch : string option ref = ref None
 let opam_version = "1"
 
 let home =
-  try Unix.getenv "HOME"
-  with _ -> Unix.getcwd ()
+  try Sys.getenv "HOME"
+  with _ -> Sys.getcwd ()
 
-let default_opam_dir = Filename.concat home ".opam"
+let default_opam_dir =
+  Filename.concat home ".opam"
 
-let root_dir = ref default_opam_dir
+let root_dir = ref (
+  try Sys.getenv "OPAMROOT"
+  with _ -> default_opam_dir
+)
 
 let log section fmt =
   Printf.ksprintf (fun str ->

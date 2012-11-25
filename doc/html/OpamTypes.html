@@ -59,10 +59,12 @@
 &nbsp;<a class="post" href="OpamVariable.html" title="OpamVariable">Next</a>
 </div>
 <h1>Module <a href="type_OpamTypes.html">OpamTypes</a></h1>
-<pre><span class="keyword">module</span> OpamTypes: <code class="code">sig</code> <a href="OpamTypes.html">..</a> <code class="code">end</code></pre>Common types used by other modules<br>
+<pre><span class="keyword">module</span> OpamTypes: <code class="code">sig</code> <a href="OpamTypes.html">..</a> <code class="code">end</code></pre><div class="info">
+Common types used by other modules<br>
+</div>
 <hr width="100%">
 <br>
-<span id="2_Filenames"><h2>Filenames</h2></span><br>
+<h2 id="2_Filenames">Filenames</h2><br>
 <pre><span id="TYPEbasename"><span class="keyword">type</span> <code class="type"></code>basename</span> = <code class="type">OpamFilename.Base.t</code> </pre>
 <div class="info">
 Basenames<br>
@@ -136,7 +138,7 @@ Download result<br>
 </div>
 
 <br>
-<span id="2_Packages"><h2>Packages</h2></span><br>
+<h2 id="2_Packages">Packages</h2><br>
 <pre><span id="TYPEpackage"><span class="keyword">type</span> <code class="type"></code>package</span> = <code class="type">OpamPackage.t</code> </pre>
 <div class="info">
 Packages are (<code class="code">name</code> * <code class="code">version</code>) tuple<br>
@@ -178,7 +180,7 @@ Set of package versions<br>
 </div>
 
 <br>
-<span id="2_Compilers"><h2>Compilers</h2></span><br>
+<h2 id="2_Compilers">Compilers</h2><br>
 <pre><span id="TYPEcompiler"><span class="keyword">type</span> <code class="type"></code>compiler</span> = <code class="type">OpamCompiler.t</code> </pre>
 <div class="info">
 Compiler names<br>
@@ -205,7 +207,7 @@ Compiler constraints<br>
 </div>
 
 <br>
-<span id="2_Variables"><h2>Variables</h2></span><br>
+<h2 id="2_Variables">Variables</h2><br>
 <pre><span id="TYPEvariable"><span class="keyword">type</span> <code class="type"></code>variable</span> = <code class="type">OpamVariable.t</code> </pre>
 <div class="info">
 Variables<br>
@@ -268,7 +270,7 @@ Content of <code class="code">pp</code> variables<br>
 </div>
 
 <br>
-<span id="2_Formulas"><h2>Formulas</h2></span><br>
+<h2 id="2_Formulas">Formulas</h2><br>
 <pre><span id="TYPEgeneric_formula"><span class="keyword">type</span> <code class="type">'a</code> generic_formula</span> = <code class="type">'a <a href="OpamFormula.html#TYPEformula">OpamFormula.formula</a></code> = </pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -331,7 +333,7 @@ OR formulat<br>
 </div>
 
 <br>
-<span id="2_Repositories"><h2>Repositories</h2></span><br>
+<h2 id="2_Repositories">Repositories</h2><br>
 <pre><span id="TYPErepository_name"><span class="keyword">type</span> <code class="type"></code>repository_name</span> = <code class="type">OpamRepositoryName.t</code> </pre>
 <div class="info">
 Repository names<br>
@@ -378,7 +380,7 @@ Repositories<br>
 </div>
 
 <br>
-<span id="2_Solver"><h2>Solver</h2></span><br>
+<h2 id="2_Solver">Solver</h2><br>
 <pre><code><span id="TYPEaction"><span class="keyword">type</span> <code class="type">'a</code> action</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -606,7 +608,7 @@ Solver universe<br>
 </div>
 
 <br>
-<span id="2_Commandlinearguments"><h2>Command line arguments</h2></span><br>
+<h2 id="2_Commandlinearguments">Command line arguments</h2><br>
 <pre><code><span id="TYPEupload"><span class="keyword">type</span> <code class="type"></code>upload</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -776,7 +778,7 @@ Configuration requests<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CEnv"><span class="constructor">CEnv</span></span></code></td>
+<code><span id="TYPEELTconfig.CEnv"><span class="constructor">CEnv</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
 
 </tr>
 <tr>
@@ -817,7 +819,7 @@ Configuration requests<br>
 
 
 <br>
-<span id="2_Filteredcommands"><h2>Filtered commands</h2></span><br>
+<h2 id="2_Filteredcommands">Filtered commands</h2><br>
 <pre><code><span id="TYPEsymbol"><span class="keyword">type</span> <code class="type"></code>symbol</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -885,6 +887,13 @@ Symbols<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTfilter.FIdent"><span class="constructor">FIdent</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTfilter.FOp"><span class="constructor">FOp</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEsymbol">symbol</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
 
 </tr>
@@ -907,7 +916,27 @@ Symbols<br>
 Filter<br>
 </div>
 
-<pre><span id="TYPEarg"><span class="keyword">type</span> <code class="type"></code>arg</span> = <code class="type">string * <a href="OpamTypes.html#TYPEfilter">filter</a> option</code> </pre>
+<pre><code><span id="TYPEsimple_arg"><span class="keyword">type</span> <code class="type"></code>simple_arg</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsimple_arg.CString"><span class="constructor">CString</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsimple_arg.CIdent"><span class="constructor">CIdent</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr></table>
+
+<div class="info">
+A command argument<br>
+</div>
+
+<pre><span id="TYPEarg"><span class="keyword">type</span> <code class="type"></code>arg</span> = <code class="type"><a href="OpamTypes.html#TYPEsimple_arg">simple_arg</a> * <a href="OpamTypes.html#TYPEfilter">filter</a> option</code> </pre>
 <div class="info">
 Command argument<br>
 </div>
@@ -918,7 +947,7 @@ Command<br>
 </div>
 
 <br>
-<span id="2_Untypedgenericfileformat"><h2>Untyped generic file format</h2></span><br>
+<h2 id="2_Untypedgenericfileformat">Untyped generic file format</h2><br>
 <pre><code><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -1051,7 +1080,7 @@ A file is a list of items and the filename<br>
 </div>
 
 <br>
-<span id="2_Switches"><h2>Switches</h2></span><br>
+<h2 id="2_Switches">Switches</h2><br>
 <pre><span id="TYPEswitch"><span class="keyword">type</span> <code class="type"></code>switch</span> = <code class="type">OpamSwitch.t</code> </pre>
 <div class="info">
 Compiler switches<br>
@@ -1068,7 +1097,7 @@ Map of compile switches<br>
 </div>
 
 <br>
-<span id="2_Misc"><h2>Misc</h2></span><br>
+<h2 id="2_Misc">Misc</h2><br>
 <pre><code><span id="TYPElock"><span class="keyword">type</span> <code class="type"></code>lock</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >

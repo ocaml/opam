@@ -43,7 +43,9 @@
 <div class="navbar">&nbsp;<a class="up" href="OpamCompiler.html" title="OpamCompiler">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_OpamCompiler.Version.html">OpamCompiler.Version</a></h1>
-<pre><span class="keyword">module</span> Version: <code class="code">sig</code> <a href="OpamCompiler.Version.html">..</a> <code class="code">end</code></pre>OCaml compiler versions<br>
+<pre><span class="keyword">module</span> Version: <code class="code">sig</code> <a href="OpamCompiler.Version.html">..</a> <code class="code">end</code></pre><div class="info">
+OCaml compiler versions<br>
+</div>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
 <pre><span id="TYPEconstr"><span class="keyword">type</span> <code class="type"></code>constr</span> = <code class="type">(<a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> * t) <a href="OpamFormula.html#TYPEformula">OpamFormula.formula</a></code> </pre>
@@ -53,6 +55,9 @@ Compiler constraint<br>
 
 <pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> t option</code></pre><div class="info">
 Return the version of the compiler currently installed<br>
+</div>
+<pre><span id="VALsystem"><span class="keyword">val</span> system</span> : <code class="type">unit -> t option</code></pre><div class="info">
+Returm the version of the system compiler<br>
 </div>
 <pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> <a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> -> t -> bool</code></pre><div class="info">
 Compare OCaml versions<br>

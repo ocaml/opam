@@ -37,6 +37,9 @@ end
 (** Compiler names *)
 include OpamMisc.ABSTRACT
 
+(** Convert a filename into a compiler name *)
+val of_filename: OpamFilename.t -> t
+
 (** List the compiler available in a directory *)
 val list: OpamFilename.Dir.t -> Set.t
 
