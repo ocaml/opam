@@ -13,6 +13,14 @@ things, used by Debian to manage their packages.
 * git
 * rsync
 
+### Quick install
+
+To download, compile and install OPAM, you can simplt run:
+
+```
+wget https://raw.github.com/OCamlPro/opam/master/shell/install.sh && sh install.sh
+```
+
 ### Compiling OPAM
 
 To compile `opam`, simply run:
