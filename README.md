@@ -1,8 +1,8 @@
 # OPAM - A package manager for OCaml
 
-OPAM is a package manager for OCaml, based on the
+OPAM is a source-based package manager for OCaml, based on the
 [CUDF](http://mancoosi.org/cudf/) and the 
-[Dose](http://www.mancoosi.org/software/) libraries developped by the
+[Dose](http://www.mancoosi.org/software/) libraries developed by the
 [Mancoosi](http://www.mancoosi.org/) project, which are, among other
 things, used by Debian to manage their packages.
  
@@ -15,10 +15,10 @@ things, used by Debian to manage their packages.
 
 ### Quick install
 
-To download, compile and install OPAM, you can simplt run:
+To download, compile and install OPAM, you can simply run:
 
 ```
-wget https://raw.github.com/OCamlPro/opam/master/shell/install.sh && sh install.sh
+wget https://raw.github.com/OCamlPro/opam/master/shell/install.sh && sh ./install.sh
 ```
 
 ### Compiling OPAM
@@ -26,14 +26,14 @@ wget https://raw.github.com/OCamlPro/opam/master/shell/install.sh && sh install.
 To compile `opam`, simply run:
 
 ```
-$ ./configure # (or ./configure --prefix=$HOME if you want to install under your $HOME)
+$ ./configure
+# (or ./configure --prefix=$HOME if you want to install under your $HOME)
 $ make
 ```
 
-This will fetch the necessary archives if they are not already
-downloaded and then build OPAM. If you just want to get the
-necessary dependencies without compiling the project, run
-`make clone`.
+This will fetch the archives if they are not already downloaded and then build
+OPAM. If you just want to get the necessary dependencies without compiling the
+project, run `make clone`.
 
 If you don't have `curl` installed on your system, you can run
 `make FETCH=wget clone` before `make`.
@@ -54,33 +54,32 @@ $ sudo make install
 
 if you need root privileges.
 
-This way, opam binaries will be installed in `$prefix/bin`, where
-prefix might have been specified during the ./configure phase.
+This way, OPAM binaries will be installed in `$prefix/bin`, where
+`prefix` can been specified during the `./configure` phase.
 
 ### Using opam
 
 All of the OPAM state is held in the `~\.opam` directory in your home
-directory, including compiler installations. You should never need to
-switch to a root user to install packages. Package listings are
-obtained through remote sources.
+directory, including compiler installations. You should never need to switch to
+a root user to install packages. Package listings are obtained through remote
+sources.
 
 ```
 $ opam init
 $ eval `opam config -env`
 ```
 
-The first command creates `~\.opam` and set-up `opam.ocamlpro.com` as
-default repository. 
-The second command updates your local environment
-to use the packages installed by OPAM. For convenience, you can add
-this line in your `~/.profile`.
+The first command creates `~\.opam` and sets up `opam.ocamlpro.com` as the
+default repository.  The second command updates your local environment to use
+the packages installed by OPAM.  You should add the `eval` line to your
+`~/.profile` so you don't forget to run it before using OCaml.
 
 ```
 $ opam list
 ```
 
-As expected, this command lists all the available packages. We can now
-install some packages (for instance `lwt`):
+As expected, this command lists all the available packages. We can now install
+some packages (for instance `lwt`):
 
 ```
 $ opam install lwt
@@ -94,25 +93,26 @@ forward dependencies. For instance:
 $ opam install react
 ```
 
-will install `react`, will recompile `lwt` (with the right `./configure` options)
-and all the packages which depend on `lwt`.
+will install `react` and also recompile `lwt` with the right `./configure`
+options to support `react`, and also all the packages which further depend on
+`lwt`.
 
 
 ### Installing on other OCaml compiler
 
-OPAM also manages meta-data about OCaml compilers. So in order to install a new version
-of the compiler, you can run:
+OPAM also manages meta-data about OCaml compilers. So in order to install a new
+version of the compiler, you can run:
 
 ```
-$ opam switch 4.00.0
+$ opam switch 4.00.1
 $ eval `opam config -env`
 ```
 
-The first command will download and install ocaml-4.00.0, and the second command will
-update the environment variables. You can then install packages -- they will be installed
-on a different under `~/.opam/4.00.0`.
+The first command will download and install ocaml-4.00.1, and the second
+command will update the environment variables. You can then install packages --
+they will be installed on a different under `~/.opam/4.00.1`.
 
-In order to come-back to the system-wide OCaml installation, simply run:
+In order to return to the system-wide OCaml installation, simply run:
 
 ```
 $ opam switch system
@@ -127,10 +127,11 @@ You can use `opam switch -list` to display the list of available compilers.
 $ opam pin <package> </local/path>
 ```
 
-This command will use the content of `</local/path>` to compile `<package>`. This means
-that the next time you will do `opam install <package>`, the compilation process will be
-using a mirror of `</local/path>` instead of downloading the archive. This also means that
-any modification to `</local/path>` will be picked up by `opam update`, and thus `opam upgrade`
+This command will use the content of `</local/path>` to compile `<package>`.
+This means that the next time you will do `opam install <package>`, the
+compilation process will be using a mirror of `</local/path>` instead of
+downloading the archive. This also means that any modification to
+`</local/path>` will be picked up by `opam update`, and thus `opam upgrade`
 will recompile `<package>` (and its forward dependencies) if needed.
 
 To unpin a package, simply run:
@@ -143,7 +144,8 @@ You can also pin a package to a specific version: `opam pin <package> <version>`
 
 ### Repositories
 
-OPAM supports multiple repositories.
+OPAM supports multiple package repositories, for example for development
+packages.
 
 ```
 $ opam remote -list
