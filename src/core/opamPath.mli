@@ -93,6 +93,12 @@ module Switch: sig
   (** Documentation path: {i $opam/$OVERSION/doc/} *)
   val doc_dir: t -> switch -> dirname
 
+  (** Shared directory: {i $opam/$OVERSION/share} *)
+  val share_dir: t -> switch -> dirname
+
+  (** Share directory for a given package: {i $opam/$OVERSION/share/$package} *)
+  val share: t -> switch -> name -> dirname
+
   (** Man pages path: {i $opam/$OVERSION/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
   val man_dir: ?num:string -> t -> switch -> dirname

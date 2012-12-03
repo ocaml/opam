@@ -642,6 +642,7 @@ let install_conf_ocaml_config root switch =
         ("stublibs", OpamPath.Switch.stublibs root switch);
         ("toplevel", OpamPath.Switch.toplevel root switch);
         ("man", OpamPath.Switch.man_dir root switch);
+        ("share", OpamPath.Switch.share_dir root switch);
       ]
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");

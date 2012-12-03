@@ -71,6 +71,10 @@ module Switch = struct
     | None -> root t a / "man"
     | Some n -> root t a / "man" / ("man" ^ n)
 
+  let share_dir t a = root t a / "share"
+
+  let share t a n = share_dir t a / OpamPackage.Name.to_string n
+
   let doc t a n = doc_dir t a / OpamPackage.Name.to_string n
 
   let bin t a = root t a / "bin"

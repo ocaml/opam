@@ -13,6 +13,7 @@ build: [
  [ "./build.sh" ]
  [ "this" "should" "never" "run" ] { "%{ocaml-version}%" > "100" }
  [ make "this" ocaml-version "also" ] { os = "NO" }
+ [ "echo" make share ocaml-version ]
  [ "this as well" { "%{os}%" = "myOS" } ]
 ]
 

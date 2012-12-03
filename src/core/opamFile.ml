@@ -759,12 +759,14 @@ module Dot_install_raw = struct
     bin : (string optional * string option) list;
     toplevel: string optional list;
     misc: (string optional * string option) list;
+    share: (string optional * string option) list;
   }
 
   let lib t = t.lib
   let bin t = t.bin
   let toplevel t = t.toplevel
   let misc t = t.misc
+  let share t = t.share
 
   let with_bin t bin = { t with bin }
   let with_lib t lib = { t with lib }
@@ -775,12 +777,14 @@ module Dot_install_raw = struct
     bin  = [] ;
     toplevel = [] ;
     misc = [] ;
+    share = [];
   }
 
   let s_lib = "lib"
   let s_bin = "bin"
   let s_misc = "misc"
   let s_toplevel = "toplevel"
+  let s_share = "share"
 
   let valid_fields = [
     s_opam_version;
@@ -788,6 +792,7 @@ module Dot_install_raw = struct
     s_bin;
     s_toplevel;
     s_misc;
+    s_share;
   ]
 
   (* Filenames starting by ? are not always present. *)
@@ -814,6 +819,7 @@ module Dot_install_raw = struct
         Variable (s_bin     , OpamFormat.make_list make_option t.bin);
         Variable (s_toplevel, OpamFormat.make_list (string_of_optional |> OpamFormat.make_string) t.toplevel);
         Variable (s_misc    , OpamFormat.make_list make_option t.misc);
+        Variable (s_share   , OpamFormat.make_list make_option t.share);
       ]
     } in
     Syntax.to_string ~indent_variable:(fun _ -> true) filename s
@@ -835,7 +841,8 @@ module Dot_install_raw = struct
       OpamFormat.assoc_list s.file_contents s_toplevel
         (OpamFormat.parse_list (OpamFormat.parse_string |> optional_of_string)) in
     let misc = OpamFormat.assoc_list s.file_contents s_misc (OpamFormat.parse_list parse_option) in
-    { lib; bin; misc; toplevel }
+    let share = OpamFormat.assoc_list s.file_contents s_share (OpamFormat.parse_list parse_option) in
+    { lib; bin; misc; toplevel; share }
 
 end
 
@@ -848,6 +855,7 @@ module Dot_install = struct
     bin : (filename optional * basename) list ;
     toplevel : filename optional list;
     misc: (filename optional * filename) list ;
+    share: (filename optional * basename) list;
   }
 
   let string_of_move (src, dst) =
@@ -859,6 +867,7 @@ module Dot_install = struct
   let bin t = t.bin
   let misc t = t.misc
   let toplevel t = t.toplevel
+  let share t = t.share
 
   module R = Dot_install_raw
 
@@ -866,7 +875,8 @@ module Dot_install = struct
     lib  = [] ;
     bin  = [] ;
     toplevel = [];
-    misc = [] ;
+    misc = [];
+    share = [];
   }
 
   let map_o fn x =
@@ -883,6 +893,7 @@ module Dot_install = struct
       { lib = List.map (map_o OpamFilename.to_string) t.lib
       ; bin = List.map to_bin t.bin
       ; toplevel = List.map (map_o OpamFilename.to_string) t.toplevel
+      ; share = List.map to_bin t.share
       ; R.misc = List.map to_misc t.misc }
 
   let of_string filename str =
@@ -896,6 +907,7 @@ module Dot_install = struct
     { lib = List.map (map_o OpamFilename.of_string) t.R.lib
     ; bin = List.map of_bin t.R.bin
     ; toplevel = List.map (map_o OpamFilename.of_string) t.R.toplevel
+    ; share = List.map of_bin t.R.share
     ; misc = List.map of_misc t.R.misc }
 
 end

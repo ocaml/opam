@@ -140,6 +140,16 @@ let proceed_to_install t nv =
         end
       ) (OpamFile.Dot_install.misc install);
 
+    (* Shared files *)
+    List.iter (fun (src, dst) ->
+      let share = OpamPath.Switch.share t.root t.switch name in
+      let dst = share // OpamFilename.Base.to_string dst in
+      (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
+      if not (OpamFilename.exists_dir share) then
+        OpamFilename.mkdir share;
+      OpamFilename.copy src.c dst;
+    ) (OpamFile.Dot_install.share install);
+
     if !warnings <> [] then (
       let print (f, dst) = Printf.sprintf " - %s in %s" (OpamFilename.to_string f) (OpamFilename.Dir.to_string dst) in
       OpamGlobals.error
@@ -261,6 +271,21 @@ let proceed_to_delete ~rm_build t nv =
         OpamFilename.remove dst
     end
   ) (OpamFile.Dot_install.misc install);
+
+  (* Remove the shared files *)
+  log "Removing the shared files";
+  let share = OpamPath.Switch.share t.root t.switch name in
+  List.iter (fun (_,dst) ->
+    let dst = share // (OpamFilename.Base.to_string dst) in
+    if OpamFilename.exists dst then
+      OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
+  ) (OpamFile.Dot_install.share install);
+  (match OpamFilename.list_files share, OpamFilename.list_dirs share with
+  | [], [] -> OpamFilename.rmdir share
+  | _      ->
+    OpamGlobals.msg
+      "%s is not empty, I'm keeping its content for futur installations"
+      (OpamFilename.Dir.to_string share));
 
   (* Remove .config and .install *)
   log "Removing config and install files";
