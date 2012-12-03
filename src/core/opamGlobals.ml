@@ -23,6 +23,11 @@ let verbose = ref (
   with _ -> false
 )
 
+let keep_build_dir = ref (
+  try Sys.getenv "OPAMKEEPBUILDDIR" <> ""
+  with _ -> false
+)
+
 let base_packages = ref true
 let verify_checksums = ref true
 let yes = ref false

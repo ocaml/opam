@@ -49,6 +49,7 @@ let global_args = [
   "--root"      , Arg.String set_root_dir,
     (Printf.sprintf " Change root path (default is %s)" OpamGlobals.default_opam_dir);
   "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";
+  "--keep-build-dir", Arg.Set OpamGlobals.keep_build_dir, " Keep the build directory";
 ]
 
 let parse_args fn () =
