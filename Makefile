@@ -58,10 +58,10 @@ tests-git:
 %-install:
 	@if [ -e _obuild/$*/$*.asm ]; then \
 	  echo "install _obuild/$*/$*.asm" && \
-	  cp _obuild/$*/$*.asm $(prefix)/bin/$*; \
+	  cp _obuild/$*/$*.asm $(DESTDIR)$(prefix)/bin/$*; \
 	else \
 	  echo "install _obuild/$*/$*.byte" && \
-	  cp _obuild/$*/$*.byte $(prefix)/bin/$*; \
+	  cp _obuild/$*/$*.byte $(DESTDIR)$(prefix)/bin/$*; \
 	fi
 
 META: META.in
@@ -69,9 +69,9 @@ META: META.in
 
 .PHONY: uninstall install
 install:
-	mkdir -p $(prefix)/bin
+	mkdir -p $(DESTDIR)$(prefix)/bin
 	$(MAKE) $(TARGETS:%=%-install)
-	mkdir -p $(mandir)/man1 && cp doc/man/* $(mandir)/man1
+	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
 
 uninstall:
 	rm -f $(prefix)/bin/opam*
