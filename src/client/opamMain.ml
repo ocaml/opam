@@ -14,8 +14,9 @@
 (***********************************************************************)
 
 open OpamTypes
-open SubCommand
+open Cmdliner
 
+(*
 let ano_args = ref []
 let anon s =
   ano_args := s :: !ano_args
@@ -31,11 +32,6 @@ let noanon cmd s =
 (* Useful for switch, which can overwrite the default verbose flag *)
 let quiet = ref false
 
-let set_root_dir dir =
-  OpamGlobals.root_dir := OpamSystem.real_path dir
-
-let set_switch switch =
-  OpamGlobals.switch := Some switch
 
 let global_args = [
   "--debug"     , Arg.Set OpamGlobals.debug   , " Print internal debug messages (very verbose)";
@@ -469,7 +465,7 @@ let commands = [
   pin;
 ]
 
-let () =
+let f () =
   Sys.catch_break true;
   Printexc.register_printer (function
     | Unix.Unix_error (e,fn, msg) ->
@@ -500,3 +496,141 @@ let () =
       Printf.fprintf stderr "Fatal error: exception %s\n%s%!"
         (Printexc.to_string e) bt;
       exit 2
+
+let global_args = [
+  "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";
+  "--keep-build-dir", Arg.Set OpamGlobals.keep_build_dir, " Keep the build directory";
+]
+
+*)
+type global_options = {
+  debug  : bool;
+  verbose: bool;
+  switch : string option;
+  yes    : bool;
+  root   : string;
+}
+
+let apply f o =
+  OpamGlobals.debug := o.debug;
+  OpamGlobals.verbose := o.verbose;
+  OpamGlobals.switch := o.switch;
+  OpamGlobals.root_dir := OpamSystem.real_path o.root;
+  f
+
+let help copts man_format cmds topic = match topic with
+  | None       -> `Help (`Pager, None) (* help about the program. *)
+  | Some topic ->
+    let topics = "topics" :: cmds in
+    let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+    match conv topic with
+    | `Error e -> `Error (false, e)
+    | `Ok t when t = "topics" -> List.iter print_endline topics; `Ok ()
+    | `Ok t -> `Help (man_format, Some t)
+
+(* Help sections common to all commands *)
+let global_option_section = "COMMON OPTIONS"
+let help_sections = [
+  `S global_option_section;
+  `P "These options are common to all commands.";
+  `S "MORE HELP";
+  `P "Use `$(mname) $(i,COMMAND) --help' for help on a single command.";`Noblank;
+  `P "Use `$(mname) help patterns' for help on patch matching."; `Noblank;
+  `P "Use `$(mname) help environment' for help on environment variables.";
+  `S "BUGS"; `P "Check bug reports at http://bugs.example.org.";]
+
+(* Options common to all commands *)
+let create_global_options debug verbose switch yes root =
+  { debug; verbose; switch; yes; root }
+
+let global_options =
+  let docs = global_option_section in
+  let debug =
+    let doc = "Give only debug output." in
+    Arg.(value & flag & info ["debug"] ~docs ~doc)
+  in
+  let verbose =
+    let quiet =
+      let doc = "Suppress informational output." in
+      false, Arg.info ["q"; "quiet"] ~docs ~doc in
+    let verbose =
+      let doc = "Give verbose output." in
+      true, Arg.info ["v"; "verbose"] ~docs ~doc in
+    Arg.(last & vflag_all [false] [quiet; verbose])
+  in
+  let switch =
+    let doc = Printf.sprintf
+      "Overwrite the compiler switch name%s."
+      (match !OpamGlobals.switch with
+      | None   -> ""
+      | Some s -> Printf.sprintf "(current is %s)" s) in
+    Arg.(value & opt (some string) !OpamGlobals.switch & info ["switch"] ~docs ~doc)
+  in
+  let yes =
+    let doc = "Always answer 'yes' to questions." in
+    Arg.(value & flag & info ["yes"] ~docs ~doc)
+  in
+  let root =
+    let doc = Printf.sprintf
+      "Change root patch (default is %s)"
+      !OpamGlobals.root_dir in
+    Arg.(value & opt string !OpamGlobals.root_dir & info ["root"] ~docs ~doc)
+  in
+  Term.(pure create_global_options $ debug $ verbose $ switch $ yes $ root)
+
+(* Commands *)
+type repo = GIT | LOCAL | HTTP
+let repo_list = [
+  "git"  , GIT;
+  "local", LOCAL;
+  "http" , HTTP;
+]
+let init =
+  let _kind =
+    let doc = "Set the repository kind." in
+    Arg.(value & opt (enum repo_list) HTTP & info ["kind"] ~docv:"KIND" ~doc) in
+  let compiler = Term.pure None in
+  let cores =
+    let doc = "Number of cores." in
+    Arg.(value & opt int 1 & info ["cores"] ~docv:"CORES" ~doc) in
+  let doc = "Initialize opam." in
+  let repository = OpamRepository.default in
+  let man = [
+    `S "DESCRIPTION";
+    `P "Turns the current directory into a Darcs repository. Any
+
+       existing files and subdirectories become ..."
+  ] @ help_sections
+  in
+  Term.(pure apply $ pure OpamClient.init $ global_options $ pure repository $ compiler $ cores),
+  Term.info "initialize" ~sdocs:global_option_section ~doc ~man
+
+let help =
+  let topic =
+    let doc = "The topic to get help on. `topics' lists the topics." in
+    Arg.(value & pos 0 (some string) None & info [] ~docv:"TOPIC" ~doc)
+  in
+  let doc = "display help about opam and opam commands" in
+  let man =
+    [`S "DESCRIPTION";
+     `P "Prints help about opam commands"] @ help_sections
+  in
+  Term.(ret (pure help $ global_options $ Term.man_format $ Term.choice_names $ topic)),
+  Term.info "help" ~doc ~man
+
+let default =
+  let doc = "a Package Manager for OCaml" in
+  let man = help_sections in
+  Term.(ret (pure (fun _ -> `Help (`Pager, None)) $ global_options)),
+  Term.info "opam"
+    ~version:(OpamVersion.to_string OpamVersion.current)
+    ~sdocs:global_option_section
+    ~doc
+    ~man
+
+let cmds = [init; help]
+
+let () =
+  match Term.eval_choice default cmds with
+  | `Error _ -> exit 1
+  | _        -> exit 0
