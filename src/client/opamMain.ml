@@ -110,46 +110,6 @@ let list =
     )
 }
 
-(* opam search [PACKAGE_REGEXP]* *)
-let search =
-  let print_short = ref false in
-  let installed_only = ref false in
-  let case_sensitive = ref false in
-{
-  name     = "search";
-  usage    = "<package-regexp>*";
-  synopsis = "Search into the package list";
-  help     = "";
-  specs    = [
-    ("-short"    , Arg.Set print_short   , " Minimize the output by displaying only package name");
-    ("-installed", Arg.Set installed_only, " Display only the list of installed packages");
-    ("-case-sensitive", Arg.Set case_sensitive, " Force the search in case sensitive (insensitive by default)");
-  ];
-
-  anon;
-  main     =
-    parse_args (function args ->
-      let print_short = !print_short in
-      let installed_only = !installed_only in
-      let case_sensitive = !case_sensitive in
-      OpamClient.list ~print_short ~installed_only ~name_only:false ~case_sensitive args
-    )
-}
-
-(* opam info [PACKAGE] *)
-let info = {
-  name     = "info";
-  usage    = "[package]+";
-  synopsis = "Display information about specific packages";
-  help     = "";
-  specs    = [];
-  anon;
-  main     =
-    parse_args (function
-    | [] -> bad_argument "info" "Missing package argument"
-    | l  -> OpamClient.info l)
-}
-
 (* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
 let config =
 let has_cmd = ref false in
@@ -640,7 +600,7 @@ let list =
          You can search into the package list with the $(b,opam search) command."
   ] @ help_sections in
   let packages =
-    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of regular expressions to match." [] in
+    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of package patterns." [] in
     Arg.(value & pos_all string [] & doc) in
   let print_short =
     let doc = Arg.info ~docv:"SHORT" ~doc:"Output the names of packages separated\
@@ -656,6 +616,65 @@ let list =
   Term.(pure list $global_options $print_short $installed_only $packages),
   Term.info "list" ~sdocs:global_option_section ~doc ~man
 
+(* SEARCH *)
+
+(* opam search [PACKAGE_REGEXP]* *)
+let search =
+  let doc = "Search into the package list" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command displays the list of available packages that match one of
+        the package patterns specified as arguments.";
+    `P "Unless the -$(i,short) flag is used, the output format is the same as the
+        $(b,opam list) command. It displays one package per line, and each line
+        contains the name of the package, the installed version or -- if the package
+        is not installed, and a short description.";
+    `P "The full description can be obtained by doing $(b,opam info <package>).";
+  ] @ help_sections in
+  let packages =
+    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of package patterns." [] in
+    Arg.(value & pos_all string [] & doc) in
+  let print_short =
+    let doc = Arg.info ~docv:"SHORT" ~doc:"Output the names of packages separated\
+                                           by one whitespace instead of using the\
+                                           usual formatting." ["s";"short"] in
+    Arg.(value & flag & doc) in
+  let installed_only =
+    let doc = Arg.info ~docv:"INSTALLED" ~doc:"List installed packages only." ["i";"installed"] in
+    Arg.(value & flag & doc) in
+  let case_sensitive =
+    let doc = Arg.info ~docv:"CASE-SENSITIVE" ~doc:"Force the search in case sensitive mode." ["c";"case-sensitive"] in
+    Arg.(value & flag & doc) in
+  let search global_options print_short installed_only case_sensitive packages =
+    set_global_options global_options;
+    OpamClient.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
+  Term.(pure search $global_options $print_short $installed_only $case_sensitive $packages),
+  Term.info "search" ~sdocs:global_option_section ~doc ~man
+
+(* INFO *)
+let info =
+  let doc = "Display information about specific packages" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command displays the information block for the selected
+        package(s).";
+    `P "The information block consists in the name of the package,
+        the installed version if this package is installed in the current
+        selected compiler, the list of available (installable) versions, and a
+        complete description.";
+    `P "$(b,opam list) can be used to display the list of
+        available packages as well as a short description for each.";
+  ] @ help_sections in
+  let packages =
+    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of package patterns." [] in
+    Arg.(value & pos_all string [] & doc) in
+  let client_info global_options packages =
+    set_global_options global_options;
+    OpamClient.info packages in
+  Term.(pure client_info $global_options $packages),
+  Term.info "info" ~sdocs:global_option_section ~doc ~man
+
+(* HELP *)
 let help =
   let doc = "display help about opam and opam commands" in
   let man =
@@ -690,7 +709,9 @@ let default =
     ~man
 
 let cmds = [
-  init; list; help
+  init;
+  list; search; info;
+  help;
 ]
 
 let () =
