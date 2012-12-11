@@ -978,6 +978,12 @@ let pin action =
           (path_of_pin_option action.pin_arg)
           (path_of_pin_option current);
       );
+    match OpamState.find_packages_by_name t name with
+    | None   ->
+      OpamGlobals.error_and_exit
+        "%s is not a valid package name."
+        (OpamPackage.Name.to_string name)
+    | Some _ ->
       log "Adding %s(%s) => %s"
         (path_of_pin_option action.pin_arg)
         (kind_of_pin_option action.pin_arg)
