@@ -17,160 +17,13 @@ open OpamTypes
 open Cmdliner
 
 (*
-let ano_args = ref []
-let anon s =
-  ano_args := s :: !ano_args
-
-exception Bad of string * string
-
-let bad_argument cmd fmt =
-  Printf.ksprintf (fun msg -> raise (Bad (cmd, msg))) fmt
-
-let noanon cmd s =
-  raise (Bad (cmd, s ^ " is not expected"))
-
-(* Useful for switch, which can overwrite the default verbose flag *)
-let quiet = ref false
-
 
 let global_args = [
-  "--debug"     , Arg.Set OpamGlobals.debug   , " Print internal debug messages (very verbose)";
-  "--verbose"   , Arg.Set OpamGlobals.verbose , " Display the output of subprocesses";
-  "--quiet"     , Arg.Clear quiet         , " Do not display the output of subprocesses";
-  "--version"   , Arg.Unit OpamVersion.message, " Display version information";
-  "--switch"    , Arg.String set_switch       , " Use the given alias instead of looking into the config file";
-  "--yes"       , Arg.Set OpamGlobals.yes     , " Answer yes to all questions";
   "--makecmd"   , Arg.String (fun s -> OpamGlobals.makecmd := lazy s),
     Printf.sprintf " Set the 'make' program used when compiling packages";
-  "--root"      , Arg.String set_root_dir,
-    (Printf.sprintf " Change root path (default is %s)" OpamGlobals.default_opam_dir);
   "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";
   "--keep-build-dir", Arg.Set OpamGlobals.keep_build_dir, " Keep the build directory";
 ]
-
-let parse_args fn () =
-  fn (List.rev !ano_args)
-
-(* opam init [-kind $kind] $repo $adress *)
-let init =
-  let kind = ref None in
-  let comp = ref None in
-  let cores = ref OpamGlobals.default_cores in
-  let repo_priority = 0 in
-{
-  name     = "init";
-  usage    = "";
-  synopsis = "Initial setup";
-  help     = "Create the initial config files";
-  specs    = [
-    ("-comp" , Arg.String (fun s -> comp := Some (OpamCompiler.of_string s)), " Which compiler version to use");
-    ("-cores", Arg.Set_int cores   , " Set the number of cores");
-    ("-kind" , Arg.String (fun s -> kind := Some s) , " Set the repository kind");
-    ("-no-base-packages", Arg.Clear OpamGlobals.base_packages, " Do not install the base packages");
-  ];
-  anon;
-  main     =
-    parse_args (function
-    | [] ->
-        OpamClient.init OpamRepository.default !comp !cores
-    | [address] ->
-        let repo_name = OpamRepositoryName.default in
-        let repo_kind = guess_repository_kind !kind address in
-        let repo_address = OpamRepository.repository_address address in
-        let repo = { repo_name; repo_kind; repo_address; repo_priority } in
-        OpamClient.init repo !comp !cores
-    | [name; address] ->
-        let repo_name = OpamRepositoryName.of_string name in
-        let repo_kind = guess_repository_kind !kind address in
-        let repo_address = OpamRepository.repository_address address in
-        let repo = { repo_name; repo_address; repo_kind; repo_priority } in
-        OpamClient.init repo !comp !cores
-    | _ -> bad_argument "init" "Need a repository name and address")
-}
-
-(* opam list [PACKAGE_REGEXP]* *)
-let list =
-  let print_short = ref false in
-  let installed_only = ref false in
-{
-  name     = "list";
-  usage    = "<package-regexp>*";
-  synopsis = "Display the list of available packages";
-  help     = "";
-  specs    = [
-    ("-short"    , Arg.Set print_short   , " Minimize the output by displaying only package name");
-    ("-installed", Arg.Set installed_only, " Display only the list of installed packages");
-  ];
-  anon;
-  main     =
-    parse_args (function args ->
-      let print_short = !print_short in
-      let installed_only = !installed_only in
-      OpamClient.list ~print_short ~installed_only args
-    )
-}
-
-(* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
-let config =
-let has_cmd = ref false in
-let is_rec = ref false in
-let is_link = ref false in
-let is_byte = ref false in
-let bytecomp () =  has_cmd := true; is_byte := true ; is_link := false in
-let bytelink () =  has_cmd := true; is_byte := true ; is_link := true in
-let asmcomp  () =  has_cmd := true; is_byte := false; is_link := false in
-let asmlink  () =  has_cmd := true; is_byte := false; is_link := true in
-let command = ref None in
-let csh = ref false in
-let set cmd () =
-  has_cmd := true;
-  command := Some cmd in
-let specs = [
-  ("-r"        , Arg.Set is_rec       , " Recursive search");
-  ("-I"        , Arg.Unit (set `I)    , " Display include options");
-  ("-bytecomp" , Arg.Unit bytecomp    , " Display bytecode compile options");
-  ("-asmcomp"  , Arg.Unit asmcomp     , " Display native compile options");
-  ("-bytelink" , Arg.Unit bytelink    , " Display bytecode link options");
-  ("-asmlink"  , Arg.Unit asmlink     , " Display native link options");
-  ("-list-vars", Arg.Unit (set `List) , " Display the contents of all available variables");
-  ("-var"      , Arg.Unit (set `Var)  , " Display the content of a variable");
-  ("-subst"    , Arg.Unit (set `Subst), " Substitute variables in files");
-  ("-env"      , Arg.Unit (set `Env)  , " Display the compiler environment variables");
-  ("-c"        , Arg.Set csh          , " Use csh-compatible output mode");
-] in
-let mk options =
-  if not !has_cmd then
-    bad_argument "config"
-      "Wrong options (has_cmd=%b is_rec=%b,is_link=%b,is_byte=%b)"
-      !has_cmd !is_rec !is_link !is_byte
-  else
-    CCompil {
-      conf_is_rec  = !is_rec;
-      conf_is_link = !is_link;
-      conf_is_byte = !is_byte;
-      conf_options = List.map OpamVariable.Section.Full.of_string options;
-    } in
-{
-  name     = "config";
-  usage    = "[...]+";
-  synopsis = "Display configuration options for packages";
-  help     = "";
-  specs;
-  anon;
-  main = function () ->
-    let names = List.rev !ano_args in
-    let config = match !command with
-      | Some `Env   -> CEnv !csh
-      | Some `I     -> CIncludes (!is_rec, List.map OpamPackage.Name.of_string names)
-      | Some `List  -> CList
-      | Some `Var when List.length names = 1
-                    -> CVariable (OpamVariable.Full.of_string (List.hd names))
-      | Some `Var   ->
-          bad_argument "config" "-var takes exactly one parameter"
-      | Some `Subst -> CSubst (List.map OpamFilename.Base.of_string names)
-      | None        -> mk names in
-    OpamClient.config config
-}
 
 (* opam install <PACKAGE>+ *)
 let install = {
@@ -493,26 +346,26 @@ let create_global_options debug verbose switch yes root =
 let global_options =
   let docs = global_option_section in
   let debug =
-    let doc = Arg.info ~docs ~doc:"Print debug message on stdout." ["d";"debug"] in
+    let doc = Arg.info ~docs ~doc:"Print debug message on stdout." ["debug"] in
     Arg.(value & flag & doc) in
   let verbose =
     let quiet =
-      let doc = Arg.info ["q"; "quiet"] ~docs ~doc:"Suppress informational output." in
+      let doc = Arg.info ["quiet"] ~docs ~doc:"Suppress informational output." in
       false, doc in
     let verbose =
-      let doc = Arg.info ["v"; "verbose"] ~docs ~doc:"Give verbose output." in
+      let doc = Arg.info ["verbose"] ~docs ~doc:"Give verbose output." in
       true, doc in
     Arg.(last & vflag_all [false] [quiet; verbose]) in
   let switch =
-    let doc = Arg.info ~docs ~doc:"Overwrite the compiler switch name." ["s";"switch"] in
+    let doc = Arg.info ~docs ~doc:"Overwrite the compiler switch name." ["switch"] in
     Arg.(value & opt (some string) !OpamGlobals.switch & doc) in
   let yes =
     let doc = Arg.info ~docs ~doc:"Disable interactive mode and answer yes \
                                to all questions that would otherwise be\
-                               asked to the user." ["y";"yes"] in
+                               asked to the user." ["yes"] in
     Arg.(value & flag & doc) in
   let root =
-    let doc = Arg.info ~docs ~doc:"Change the root path." ["r";"root"]  in
+    let doc = Arg.info ~docs ~doc:"Change the root path." ["root"]  in
     Arg.(value & opt string !OpamGlobals.root_dir & doc) in
   Term.(pure create_global_options $ debug $ verbose $ switch $ yes $ root)
 
@@ -547,7 +400,36 @@ let compiler: compiler Arg.converter =
   let print ppf comp = pr_str ppf (OpamCompiler.to_string comp) in
   parse, print
 
+(* Helpers *)
+let mk_info title doc flags =
+  Arg.info ~docv:title ~doc flags
+
+let mk_flag title doc flags =
+  Arg.(value & flag & mk_info title doc flags)
+
+let mk_opt title doc conv default flags =
+  let doc = Arg.info ~docv:title ~doc flags in
+  Arg.(value & opt conv default & doc)
+
+let term_info title ~doc ~man =
+  let man = man @ help_sections in
+  Term.info ~sdocs:global_option_section ~doc ~man title
+
 (* Commands *)
+
+let print_short_flag =
+  mk_flag "SHORT" "Output the names of packages separated by one whitespace \
+                   instead of using the usual formatting." ["s";"short"]
+
+let installed_only_flag =
+  mk_flag "INSTALLED" "List installed packages only." ["i";"installed"]
+
+let arg_list name doc =
+  let doc = Arg.info ~docv:name ~doc [] in
+  Arg.(value & pos_all string [] & doc)
+
+let all_packages =
+  arg_list "PACKAGE" "List of package patterns."
 
 (* INIT *)
 let init =
@@ -558,18 +440,13 @@ let init =
         configuration in ~/.opam and setup a default repository.";
     `P "Additional repositories can later be added by using the $(b,opam remote) command.";
     `P "The local cache of a repository state can be updated by using $(b,opam update).";
-  ] @ help_sections
-  in
-  let cores =
-    let doc = Arg.info ~docv:"CORES" ~doc:"Number of cores." ["j";"cores"] in
-    Arg.(value & opt int 1 & doc) in
+  ] in
+  let cores = mk_opt "CORES" "Number of cores." Arg.int 1 ["j";"cores"] in
   let compiler =
-    let doc = Arg.info ~docv:"COMPILER" ~doc:"Which compiler version to use." ["c";"comp"] in
-    Arg.(value & opt compiler OpamCompiler.default & doc) in
+    mk_opt "COMPILER" "Which compiler version to use." compiler OpamCompiler.default ["c";"comp"] in
   let repo_kind =
-    let doc = Arg.info ~docv:"KIND" ~doc:"Specify the kind of the repository to be set." ["kind"] in
     let kinds = List.map (fun x -> x,x) [ "http";"rsync"; "git" ] in
-    Arg.(value & opt (some (enum kinds)) None & doc) in
+    mk_opt "KIND" "Specify the kind of the repository to be set." Arg.(some (enum kinds)) None ["kind"] in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
@@ -583,7 +460,7 @@ let init =
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
     OpamClient.init repository compiler cores in
   Term.(pure init $global_options $repo_kind $repo_name $repo_address $ compiler $cores),
-  Term.info "init" ~sdocs:global_option_section ~doc ~man
+  term_info "init" ~doc ~man
 
 (* LIST *)
 let list =
@@ -598,27 +475,14 @@ let list =
         description.";
     `P " The full description can be obtained by doing $(b,opam info <package>).
          You can search into the package list with the $(b,opam search) command."
-  ] @ help_sections in
-  let packages =
-    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of package patterns." [] in
-    Arg.(value & pos_all string [] & doc) in
-  let print_short =
-    let doc = Arg.info ~docv:"SHORT" ~doc:"Output the names of packages separated\
-                                           by one whitespace instead of using the\
-                                           usual formatting." ["s";"short"] in
-    Arg.(value & flag & doc) in
-  let installed_only =
-    let doc = Arg.info ~docv:"INSTALLED" ~doc:"List installed packages only." ["i";"installed"] in
-    Arg.(value & flag & doc) in
+  ] in
   let list global_options print_short installed_only packages =
     set_global_options global_options;
     OpamClient.list ~print_short ~installed_only packages in
-  Term.(pure list $global_options $print_short $installed_only $packages),
-  Term.info "list" ~sdocs:global_option_section ~doc ~man
+  Term.(pure list $global_options $print_short_flag $installed_only_flag $all_packages),
+  term_info "list" ~doc ~man
 
 (* SEARCH *)
-
-(* opam search [PACKAGE_REGEXP]* *)
 let search =
   let doc = "Search into the package list" in
   let man = [
@@ -630,26 +494,14 @@ let search =
         contains the name of the package, the installed version or -- if the package
         is not installed, and a short description.";
     `P "The full description can be obtained by doing $(b,opam info <package>).";
-  ] @ help_sections in
-  let packages =
-    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of package patterns." [] in
-    Arg.(value & pos_all string [] & doc) in
-  let print_short =
-    let doc = Arg.info ~docv:"SHORT" ~doc:"Output the names of packages separated\
-                                           by one whitespace instead of using the\
-                                           usual formatting." ["s";"short"] in
-    Arg.(value & flag & doc) in
-  let installed_only =
-    let doc = Arg.info ~docv:"INSTALLED" ~doc:"List installed packages only." ["i";"installed"] in
-    Arg.(value & flag & doc) in
+  ] in
   let case_sensitive =
-    let doc = Arg.info ~docv:"CASE-SENSITIVE" ~doc:"Force the search in case sensitive mode." ["c";"case-sensitive"] in
-    Arg.(value & flag & doc) in
+    mk_flag "CASE-SENSITIVE" "Force the search in case sensitive mode." ["c";"case-sensitive"] in
   let search global_options print_short installed_only case_sensitive packages =
     set_global_options global_options;
     OpamClient.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
-  Term.(pure search $global_options $print_short $installed_only $case_sensitive $packages),
-  Term.info "search" ~sdocs:global_option_section ~doc ~man
+  Term.(pure search $global_options $print_short_flag $installed_only_flag $case_sensitive $all_packages),
+  term_info "search" ~doc ~man
 
 (* INFO *)
 let info =
@@ -664,22 +516,90 @@ let info =
         complete description.";
     `P "$(b,opam list) can be used to display the list of
         available packages as well as a short description for each.";
-  ] @ help_sections in
-  let packages =
-    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of package patterns." [] in
-    Arg.(value & pos_all string [] & doc) in
+  ] in
   let client_info global_options packages =
     set_global_options global_options;
     OpamClient.info packages in
-  Term.(pure client_info $global_options $packages),
-  Term.info "info" ~sdocs:global_option_section ~doc ~man
+  Term.(pure client_info $global_options $all_packages),
+  term_info "info" ~doc ~man
+
+(* CONFIG *)
+
+(* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
+let config =
+  let doc = "Display configuration options for packages" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command uses opam state to output information on how to use
+        installed libraries, updating the user’s $PATH, and substitute
+        variables used in opam packages.";
+    `P "Apart from $(b,opam config -env), most of these commands are used
+        by opam internally, and thus are of limited interest for the casual
+        user.";
+  ] in
+  let options = arg_list "OPTIONS" "List of options." in
+  let is_rec  = mk_flag  "REC"     "Recursive query."                ["r";"rec"] in
+  let csh     = mk_flag  "CSH"     "Use csh-compatible output mode." ["c";"csh"] in
+
+  let compile_options =
+    let incl is_rec _ packages =
+      CIncludes (is_rec, List.map OpamPackage.Name.of_string packages) in
+    let mk is_link is_byte is_rec csh packages =
+      CCompil {
+        conf_is_rec  = is_rec;
+        conf_is_link = is_link;
+        conf_is_byte = is_byte;
+        conf_options = List.map OpamVariable.Section.Full.of_string packages;
+      } in
+    let bytecomp = mk true false in
+    let bytelink = mk true true in
+    let asmcomp  = mk false false in
+    let asmlink  = mk false true in
+    [
+      incl    , mk_info "INCLUDES" "Return include options."          ["I"];
+      bytecomp, mk_info "BYTECOMP" "Return bytecode compile options." ["bytecomp"];
+      asmcomp , mk_info "ASMCOMP"  "Return assembly compile options." ["asmcomp"];
+      bytelink, mk_info "BYTELINK" "Return bytecode linking options." ["bytelink"];
+      asmlink , mk_info "ASMLINK"  "Return assembly compile options." ["asmlink"];
+    ] in
+
+  let var_options =
+    let list _ _ _ = CList in
+    let var is_rec _ options = CVariable (OpamVariable.Full.of_string (List.hd options)) in
+    let subs is_rec _ options = CSubst (List.map OpamFilename.Base.of_string options) in
+    [
+      list, mk_info "LIST"  "Return the list of all variables defined in the \
+                             listed packages (no package = all)."                  ["l";"list";"list-vars"];
+      var , mk_info "VAR"   "Return the value associated with the given variable." ["v";"var"];
+      subs, mk_info "SUBST" "Substitute variables in the given files."             ["s";"subst"];
+    ] in
+
+  let display_env _ csh _ = CEnv csh in
+  let env =
+    display_env,
+    mk_info "ENVIRONMENT"
+      "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
+      and CAML_LD_LIBRARY_PATH according to the current selected \
+      compiler. The output of this command is meant to be evaluated by a \
+      shell, for example by doing $(b,eval `opam config -env`)." ["e";"env"] in
+
+  let config_option =
+    Arg.(value & vflag display_env (env :: compile_options @ var_options)) in
+
+  let config global_options option is_rec csh options =
+    set_global_options global_options;
+    OpamClient.config (option is_rec csh options) in
+
+  Term.(pure config $global_options $config_option $is_rec $csh$ options),
+  term_info "config" ~doc ~man
 
 (* HELP *)
 let help =
   let doc = "display help about opam and opam commands" in
-  let man =
-    [`S "DESCRIPTION";
-     `P "Prints help about opam commands"] @ help_sections
+  let man = [
+    `S "DESCRIPTION";
+     `P "Prints help about opam commands"
+]
   in
   let topic =
     let doc = Arg.info [] ~docv:"TOPIC" ~doc:"The topic to get help on. `topics' lists the topics." in
@@ -711,6 +631,7 @@ let default =
 let cmds = [
   init;
   list; search; info;
+  config;
   help;
 ]
 
