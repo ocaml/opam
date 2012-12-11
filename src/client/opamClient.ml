@@ -630,12 +630,11 @@ let init repo compiler cores =
   else try
     let repo_p = OpamPath.Repository.create root repo.repo_name in
     (* Create (possibly empty) configuration files *)
-    let switch = match compiler with
-      | None   -> OpamSwitch.default
-      | Some c -> OpamSwitch.of_string (OpamCompiler.to_string c) in
-    let compiler = match compiler with
-      | None   -> OpamCompiler.default
-      | Some c -> c in
+    let switch =
+      if compiler = OpamCompiler.default then
+        OpamSwitch.default
+      else
+        OpamSwitch.of_string (OpamCompiler.to_string compiler) in
 
     (* Create ~/.opam/compilers/system.comp *)
     let system_version = OpamCompiler.Version.current () in

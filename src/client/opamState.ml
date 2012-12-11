@@ -21,9 +21,9 @@ let log fmt =
   OpamGlobals.log "STATE" fmt
 
 let () =
-  OpamCurl.register ();
+  OpamHTTP.register ();
   OpamGit.register ();
-  OpamRsync.register ()
+  OpamLocal.register ()
 
 let check f =
   let root = OpamPath.default () in

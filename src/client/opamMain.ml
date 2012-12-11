@@ -51,18 +51,6 @@ let global_args = [
 let parse_args fn () =
   fn (List.rev !ano_args)
 
-let guess_repository_kind kind address =
-  match kind with
-  | None  ->
-      if Sys.file_exists address then
-        "rsync"
-      else if OpamMisc.starts_with ~prefix:"git" address
-           || OpamMisc.ends_with ~suffix:"git" address then
-        "git"
-      else
-        OpamGlobals.default_repository_kind
-  | Some k -> k
-
 (* opam init [-kind $kind] $repo $adress *)
 let init =
   let kind = ref None in
@@ -511,12 +499,11 @@ type global_options = {
   root   : string;
 }
 
-let apply f o =
-  OpamGlobals.debug := o.debug;
-  OpamGlobals.verbose := o.verbose;
-  OpamGlobals.switch := o.switch;
-  OpamGlobals.root_dir := OpamSystem.real_path o.root;
-  f
+let set_global_options o =
+  OpamGlobals.debug    := o.debug;
+  OpamGlobals.verbose  := o.verbose;
+  OpamGlobals.switch   := o.switch;
+  OpamGlobals.root_dir := OpamSystem.real_path o.root
 
 let help copts man_format cmds topic = match topic with
   | None       -> `Help (`Pager, None) (* help about the program. *)
@@ -537,7 +524,7 @@ let help_sections = [
   `P "Use `$(mname) $(i,COMMAND) --help' for help on a single command.";`Noblank;
   `P "Use `$(mname) help patterns' for help on patch matching."; `Noblank;
   `P "Use `$(mname) help environment' for help on environment variables.";
-  `S "BUGS"; `P "Check bug reports at http://bugs.example.org.";]
+  `S "BUGS"; `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";]
 
 (* Options common to all commands *)
 let create_global_options debug verbose switch yes root =
@@ -546,81 +533,122 @@ let create_global_options debug verbose switch yes root =
 let global_options =
   let docs = global_option_section in
   let debug =
-    let doc = "Give only debug output." in
-    Arg.(value & flag & info ["debug"] ~docs ~doc)
-  in
+    let doc = Arg.info ~docs ~doc:"Print debug message on stdout." ["d";"debug"] in
+    Arg.(value & flag & doc) in
   let verbose =
     let quiet =
-      let doc = "Suppress informational output." in
-      false, Arg.info ["q"; "quiet"] ~docs ~doc in
+      let doc = Arg.info ["q"; "quiet"] ~docs ~doc:"Suppress informational output." in
+      false, doc in
     let verbose =
-      let doc = "Give verbose output." in
-      true, Arg.info ["v"; "verbose"] ~docs ~doc in
-    Arg.(last & vflag_all [false] [quiet; verbose])
-  in
+      let doc = Arg.info ["v"; "verbose"] ~docs ~doc:"Give verbose output." in
+      true, doc in
+    Arg.(last & vflag_all [false] [quiet; verbose]) in
   let switch =
-    let doc = Printf.sprintf
-      "Overwrite the compiler switch name%s."
-      (match !OpamGlobals.switch with
-      | None   -> ""
-      | Some s -> Printf.sprintf "(current is %s)" s) in
-    Arg.(value & opt (some string) !OpamGlobals.switch & info ["switch"] ~docs ~doc)
-  in
+    let doc = Arg.info ~docs ~doc:"Overwrite the compiler switch name." ["s";"switch"] in
+    Arg.(value & opt (some string) !OpamGlobals.switch & doc) in
   let yes =
-    let doc = "Always answer 'yes' to questions." in
-    Arg.(value & flag & info ["yes"] ~docs ~doc)
-  in
+    let doc = Arg.info ~docs ~doc:"Disable interactive mode and answer yes \
+                               to all questions that would otherwise be\
+                               asked to the user." ["y";"yes"] in
+    Arg.(value & flag & doc) in
   let root =
-    let doc = Printf.sprintf
-      "Change root patch (default is %s)"
-      !OpamGlobals.root_dir in
-    Arg.(value & opt string !OpamGlobals.root_dir & info ["root"] ~docs ~doc)
-  in
+    let doc = Arg.info ~docs ~doc:"Change the root path." ["r";"root"]  in
+    Arg.(value & opt string !OpamGlobals.root_dir & doc) in
   Term.(pure create_global_options $ debug $ verbose $ switch $ yes $ root)
 
+let guess_repository_kind kind address =
+  match kind with
+  | None  ->
+    let address = OpamFilename.Dir.to_string address in
+    if Sys.file_exists address then
+      "local"
+    else if OpamMisc.starts_with ~prefix:"git" address
+        || OpamMisc.ends_with ~suffix:"git" address then
+      "git"
+    else
+      OpamGlobals.default_repository_kind
+  | Some k -> k
+
+(* Converters *)
+let pr_str = Format.pp_print_string
+
+let repository_name =
+  let parse str = `Ok (OpamRepositoryName.of_string str) in
+  let print ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
+  parse, print
+
+let repository_address =
+  let parse str = `Ok (OpamFilename.raw_dir str) in
+  let print ppf address = pr_str ppf (OpamFilename.Dir.to_string address) in
+  parse, print
+
+let compiler: compiler Arg.converter =
+  let parse str = `Ok (OpamCompiler.of_string str) in
+  let print ppf comp = pr_str ppf (OpamCompiler.to_string comp) in
+  parse, print
+
 (* Commands *)
-type repo = GIT | LOCAL | HTTP
-let repo_list = [
-  "git"  , GIT;
-  "local", LOCAL;
-  "http" , HTTP;
-]
 let init =
-  let _kind =
-    let doc = "Set the repository kind." in
-    Arg.(value & opt (enum repo_list) HTTP & info ["kind"] ~docv:"KIND" ~doc) in
-  let compiler = Term.pure None in
-  let cores =
-    let doc = "Number of cores." in
-    Arg.(value & opt int 1 & info ["cores"] ~docv:"CORES" ~doc) in
   let doc = "Initialize opam." in
-  let repository = OpamRepository.default in
   let man = [
     `S "DESCRIPTION";
-    `P "Turns the current directory into a Darcs repository. Any
-
-       existing files and subdirectories become ..."
+    `P "The init command creates a fresh client state, that is initialize opam
+        configuration in ~/.opam and setup a default repository.";
+    `P "Additional repositories can later be added by using the $(b,opam remote) command.";
+    `P "The local cache of a repository state can be updated by using $(b,opam update).";
   ] @ help_sections
   in
-  Term.(pure apply $ pure OpamClient.init $ global_options $ pure repository $ compiler $ cores),
-  Term.info "initialize" ~sdocs:global_option_section ~doc ~man
+  let cores =
+    let doc = Arg.info ~docv:"CORES" ~doc:"Number of cores." ["j";"cores"] in
+    Arg.(value & opt int 1 & doc) in
+  let compiler =
+    let doc = Arg.info ~docv:"COMPILER" ~doc:"Which compiler version to use." ["c";"comp"] in
+    Arg.(value & opt compiler OpamCompiler.default & doc) in
+  let repo_kind =
+    let doc = Arg.info ~docv:"KIND" ~doc:"Specify the kind of the repository to be set." ["kind"] in
+    let kinds = List.map (fun x -> x,x) [ "http";"rsync"; "git" ] in
+    Arg.(value & opt (some (enum kinds)) None & doc) in
+  let repo_name =
+    let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
+    Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
+  let repo_address =
+    let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
+    Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
+  let init global_options repo_kind repo_name repo_address compiler cores =
+    set_global_options global_options;
+    let repo_kind = guess_repository_kind repo_kind repo_address in
+    let repo_priority = 0 in
+    let repository = { repo_name; repo_kind; repo_address; repo_priority } in
+    OpamClient.init repository compiler cores in
+  Term.(pure init $global_options $repo_kind $repo_name $repo_address $ compiler $cores),
+  Term.info "init" ~sdocs:global_option_section ~doc ~man
 
 let help =
-  let topic =
-    let doc = "The topic to get help on. `topics' lists the topics." in
-    Arg.(value & pos 0 (some string) None & info [] ~docv:"TOPIC" ~doc)
-  in
   let doc = "display help about opam and opam commands" in
   let man =
     [`S "DESCRIPTION";
      `P "Prints help about opam commands"] @ help_sections
+  in
+  let topic =
+    let doc = Arg.info [] ~docv:"TOPIC" ~doc:"The topic to get help on. `topics' lists the topics." in
+    Arg.(value & pos 0 (some string) None & doc )
   in
   Term.(ret (pure help $ global_options $ Term.man_format $ Term.choice_names $ topic)),
   Term.info "help" ~doc ~man
 
 let default =
   let doc = "a Package Manager for OCaml" in
-  let man = help_sections in
+  let man = [
+    `S "DESCRIPTION";
+    `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi
+        tools to handle dependencies, including support for version
+        constraints, optional dependencies, and conflicts management.";
+    `P "It has support for different repository backends such as HTTP, rsync and
+        git. It handles multiple OCaml versions concurrently, and is flexible
+        enough to allow you to use your own repositories and packages in
+        addition of the ones it provides.";
+  ] @  help_sections
+  in
   Term.(ret (pure (fun _ -> `Help (`Pager, None)) $ global_options)),
   Term.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
@@ -631,6 +659,26 @@ let default =
 let cmds = [init; help]
 
 let () =
-  match Term.eval_choice default cmds with
-  | `Error _ -> exit 1
-  | _        -> exit 0
+  Sys.catch_break true;
+  Printexc.register_printer (function
+    | Unix.Unix_error (e,fn, msg) ->
+      let msg = if msg = "" then "" else " on " ^ msg in
+      let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in
+      Some error
+    | _ -> None);
+  try
+    match Term.eval_choice ~catch:false default cmds with
+    | `Error _ -> exit 1
+    | _        -> exit 0
+  with
+  | OpamGlobals.Exit 0 -> ()
+  | e ->
+    OpamGlobals.error "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
+    match e with
+    | OpamGlobals.Exit i -> exit i
+    | e ->
+      let bt = Printexc.get_backtrace () in
+      let bt = if bt = "" then "" else Printf.sprintf "    at\n %s\n" bt in
+      Printf.fprintf stderr "Fatal error: exception %s\n%s%!"
+        (Printexc.to_string e) bt;
+      exit 2

@@ -28,6 +28,9 @@ val compare: repository -> repository -> int
 (** Default repository *)
 val default: repository
 
+(** Default repository address *)
+val default_address: dirname
+
 (** Constructor *)
 val repository_address: string -> dirname
 

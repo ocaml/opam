@@ -31,10 +31,13 @@ let to_string r =
     r.repo_kind
     (OpamFilename.Dir.to_string r.repo_address)
 
+let default_address =
+  OpamFilename.raw_dir OpamGlobals.default_repository_address
+
 let default = {
   repo_name     = OpamRepositoryName.default;
   repo_kind     = OpamGlobals.default_repository_kind;
-  repo_address  = OpamFilename.raw_dir OpamGlobals.default_repository_address;
+  repo_address  = default_address;
   repo_priority = 0;
 }
 
