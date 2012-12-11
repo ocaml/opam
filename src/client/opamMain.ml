@@ -588,6 +588,8 @@ let compiler: compiler Arg.converter =
   parse, print
 
 (* Commands *)
+
+(* INIT *)
 let init =
   let doc = "Initialize opam." in
   let man = [
@@ -623,6 +625,37 @@ let init =
   Term.(pure init $global_options $repo_kind $repo_name $repo_address $ compiler $cores),
   Term.info "init" ~sdocs:global_option_section ~doc ~man
 
+(* LIST *)
+let list =
+  let doc = "Display the list of available packages." in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command displays the list of available packages, or the list of
+         installed packages if the $(i,-installed) switch is used.";
+    `P "Unless the $(i,-short) switch is used, the output format displays one
+        package per line, and each line contains the name of the package, the
+        installed version or -- if the package is not installed, and a short
+        description.";
+    `P " The full description can be obtained by doing $(b,opam info <package>).
+         You can search into the package list with the $(b,opam search) command."
+  ] @ help_sections in
+  let packages =
+    let doc = Arg.info ~docv:"PACKAGES" ~doc:"List of regular expressions to match." [] in
+    Arg.(value & pos_all string [] & doc) in
+  let print_short =
+    let doc = Arg.info ~docv:"SHORT" ~doc:"Output the names of packages separated\
+                                           by one whitespace instead of using the\
+                                           usual formatting." ["s";"short"] in
+    Arg.(value & flag & doc) in
+  let installed_only =
+    let doc = Arg.info ~docv:"INSTALLED" ~doc:"List installed packages only." ["i";"installed"] in
+    Arg.(value & flag & doc) in
+  let list global_options print_short installed_only packages =
+    set_global_options global_options;
+    OpamClient.list ~print_short ~installed_only packages in
+  Term.(pure list $global_options $print_short $installed_only $packages),
+  Term.info "list" ~sdocs:global_option_section ~doc ~man
+
 let help =
   let doc = "display help about opam and opam commands" in
   let man =
@@ -656,7 +689,9 @@ let default =
     ~doc
     ~man
 
-let cmds = [init; help]
+let cmds = [
+  init; list; help
+]
 
 let () =
   Sys.catch_break true;
@@ -673,7 +708,7 @@ let () =
   with
   | OpamGlobals.Exit 0 -> ()
   | e ->
-    OpamGlobals.error "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
+    OpamGlobals.error "  '%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
     match e with
     | OpamGlobals.Exit i -> exit i
     | e ->
