@@ -41,47 +41,6 @@ let install = {
   )
 }
 
-(* opam reinstall <PACKAGE>+ *)
-let reinstall = {
-  name     = "reinstall";
-  usage    = "[package]+";
-  synopsis = "Reinstall a list of packages";
-  help     = "";
-  specs    = [];
-  anon;
-  main     = parse_args (fun names ->
-    let names = List.map OpamPackage.Name.of_string names in
-    OpamClient.reinstall (OpamPackage.Name.Set.of_list names)
-  )
-}
-
-(* opam update *)
-let update = {
-  name     = "update";
-  usage    = "[repo]*";
-  synopsis = "Update the list of available packages";
-  help     = "";
-  specs    = [];
-  anon;
-  main     = parse_args (fun names ->
-    OpamClient.update (List.map OpamRepositoryName.of_string names)
-  )
-}
-
-(* opam upgrade *)
-let upgrade = {
-  name     = "upgrade";
-  usage    = "[package]*";
-  synopsis = "Upgrade the installed package to latest version";
-  help     = "";
-  specs    = [];
-  anon;
-  main     = parse_args (fun names ->
-    let names = List.map OpamPackage.Name.of_string names in
-    OpamClient.upgrade (OpamPackage.Name.Set.of_list names);
-  )
-}
-
 (* opam upload PACKAGE *)
 let upload =
   let opam = ref "" in
@@ -395,9 +354,14 @@ let repository_address =
   let print ppf address = pr_str ppf (OpamFilename.Dir.to_string address) in
   parse, print
 
-let compiler: compiler Arg.converter =
+let compiler =
   let parse str = `Ok (OpamCompiler.of_string str) in
   let print ppf comp = pr_str ppf (OpamCompiler.to_string comp) in
+  parse, print
+
+let package_name =
+  let parse str = `Ok (OpamPackage.Name.of_string str) in
+  let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
 (* Helpers *)
@@ -424,12 +388,18 @@ let print_short_flag =
 let installed_only_flag =
   mk_flag "INSTALLED" "List installed packages only." ["i";"installed"]
 
-let arg_list name doc =
+let arg_list name doc conv =
   let doc = Arg.info ~docv:name ~doc [] in
-  Arg.(value & pos_all string [] & doc)
+  Arg.(value & pos_all conv [] & doc)
 
-let all_packages =
-  arg_list "PACKAGE" "List of package patterns."
+let pattern_list =
+  arg_list "PATTERNS" "List of package patterns." Arg.string
+
+let package_list =
+  arg_list "PACKAGES" "List of package names." package_name
+
+let repository_list =
+  arg_list "REPOSITORIES" "List of repository names." repository_name
 
 (* INIT *)
 let init =
@@ -479,7 +449,7 @@ let list =
   let list global_options print_short installed_only packages =
     set_global_options global_options;
     OpamClient.list ~print_short ~installed_only packages in
-  Term.(pure list $global_options $print_short_flag $installed_only_flag $all_packages),
+  Term.(pure list $global_options $print_short_flag $installed_only_flag $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
@@ -500,7 +470,7 @@ let search =
   let search global_options print_short installed_only case_sensitive packages =
     set_global_options global_options;
     OpamClient.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
-  Term.(pure search $global_options $print_short_flag $installed_only_flag $case_sensitive $all_packages),
+  Term.(pure search $global_options $print_short_flag $installed_only_flag $case_sensitive $pattern_list),
   term_info "search" ~doc ~man
 
 (* INFO *)
@@ -517,10 +487,10 @@ let info =
     `P "$(b,opam list) can be used to display the list of
         available packages as well as a short description for each.";
   ] in
-  let client_info global_options packages =
+  let pkg_info global_options packages =
     set_global_options global_options;
     OpamClient.info packages in
-  Term.(pure client_info $global_options $all_packages),
+  Term.(pure pkg_info $global_options $pattern_list),
   term_info "info" ~doc ~man
 
 (* CONFIG *)
@@ -537,9 +507,9 @@ let config =
         by opam internally, and thus are of limited interest for the casual
         user.";
   ] in
-  let options = arg_list "OPTIONS" "List of options." in
-  let is_rec  = mk_flag  "REC"     "Recursive query."                ["r";"rec"] in
-  let csh     = mk_flag  "CSH"     "Use csh-compatible output mode." ["c";"csh"] in
+  let params = arg_list "PARAMETERS" "List of parameters." Arg.string in
+  let is_rec = mk_flag  "REC"        "Recursive query."                ["r";"rec"] in
+  let csh    = mk_flag  "CSH"        "Use csh-compatible output mode." ["c";"csh"] in
 
   let compile_options =
     let incl is_rec _ packages =
@@ -565,8 +535,9 @@ let config =
 
   let var_options =
     let list _ _ _ = CList in
-    let var is_rec _ options = CVariable (OpamVariable.Full.of_string (List.hd options)) in
-    let subs is_rec _ options = CSubst (List.map OpamFilename.Base.of_string options) in
+    (* TODO: fail if more than one variable *)
+    let var is_rec _ params = CVariable (OpamVariable.Full.of_string (List.hd params)) in
+    let subs is_rec _ params = CSubst (List.map OpamFilename.Base.of_string params) in
     [
       list, mk_info "LIST"  "Return the list of all variables defined in the \
                              listed packages (no package = all)."                  ["l";"list";"list-vars"];
@@ -586,12 +557,61 @@ let config =
   let config_option =
     Arg.(value & vflag display_env (env :: compile_options @ var_options)) in
 
-  let config global_options option is_rec csh options =
+  let config global_options fn is_rec csh params =
     set_global_options global_options;
-    OpamClient.config (option is_rec csh options) in
+    OpamClient.config (fn is_rec csh params) in
 
-  Term.(pure config $global_options $config_option $is_rec $csh$ options),
+  Term.(pure config $global_options $config_option $is_rec $csh $params),
   term_info "config" ~doc ~man
+
+
+(* REINSTALL *)
+let reinstall =
+  let doc = "Reinstall a list of packages" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command does removes the given packages, reinstall them and
+        recompile the right package dependencies."
+  ] in
+  let reinstall global_options packages =
+    set_global_options global_options;
+    let packages = OpamPackage.Name.Set.of_list packages in
+    OpamClient.reinstall packages in
+  Term.(pure reinstall $global_options $package_list),
+  term_info "reinstall" ~doc ~man
+
+(* UPDATE *)
+let update =
+  let doc = "Update the list of available packages" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command updates each repository that has been previously set up
+        by the $(b,opam init) or $(b,opam remote) commands. The list of packages
+        that can be upgraded will be printed out, and the user can use
+        $(b,opam upgrade) to upgrade those.";
+  ] in
+  let update global_options repositories =
+    set_global_options global_options;
+    OpamClient.update repositories in
+  Term.(pure update $global_options $repository_list),
+  term_info "update" ~doc ~man
+
+(* UPGRADE *)
+let upgrade =
+  let doc ="Upgrade the installed package to latest version" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command upgrades the installed packages to their latest available
+        versions. More precisely, this command calls the dependency solver to
+        find a consistent state where $(i,most) of the installed packages are
+        upgraded to their latest versions.";
+  ] in
+  let upgrade global_options names =
+    set_global_options global_options;
+    let packages = OpamPackage.Name.Set.of_list names in
+    OpamClient.upgrade packages in
+  Term.(pure upgrade $global_options $package_list),
+  term_info "upgrade" ~doc ~man
 
 (* HELP *)
 let help =
@@ -631,6 +651,8 @@ let default =
 let cmds = [
   init;
   list; search; info;
+  reinstall;
+  update; upgrade;
   config;
   help;
 ]
