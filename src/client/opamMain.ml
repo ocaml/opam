@@ -25,22 +25,6 @@ let global_args = [
   "--keep-build-dir", Arg.Set OpamGlobals.keep_build_dir, " Keep the build directory";
 ]
 
-(* opam install <PACKAGE>+ *)
-let install = {
-  name     = "install";
-  usage    = "[package]+";
-  synopsis = "Install a list of packages";
-  help     = "";
-  specs    = [];
-  anon;
-  main     = parse_args (fun names ->
-    if names <> [] then
-      let names = List.map OpamPackage.Name.of_string names in
-      OpamClient.install (OpamPackage.Name.Set.of_list names)
-    else OpamGlobals.error_and_exit "You need to specify at least one package to install."
-  )
-}
-
 (* opam upload PACKAGE *)
 let upload =
   let opam = ref "" in
@@ -71,22 +55,6 @@ let upload =
     let upl_archive = OpamFilename.of_string !archive in
     let repo = if !repo = "" then None else Some (OpamRepositoryName.of_string !repo) in
     OpamClient.upload { upl_opam; upl_descr; upl_archive } repo)
-}
-
-(* opam remove PACKAGE *)
-let remove = {
-  name     = "remove";
-  usage    = "[package]+";
-  synopsis = "Remove a list of packages";
-  help     = "";
-  specs    = [];
-  anon;
-  main     = parse_args (fun names ->
-    if names <> [] then
-      let names = List.map OpamPackage.Name.of_string names in
-      OpamClient.remove (OpamPackage.Name.Set.of_list names)
-    else OpamGlobals.error_and_exit "You need to specify at least one package to remove."
-  )
 }
 
 (* opam remote [-list|-add <url>|-rm <url>] *)
@@ -277,6 +245,9 @@ let set_global_options o =
   OpamGlobals.switch   := o.switch;
   OpamGlobals.root_dir := OpamSystem.real_path o.root
 
+let set_global_keep_build_dir b =
+  OpamGlobals.keep_build_dir := b
+
 let help copts man_format cmds topic = match topic with
   | None       -> `Help (`Pager, None) (* help about the program. *)
   | Some topic ->
@@ -387,6 +358,9 @@ let print_short_flag =
 
 let installed_only_flag =
   mk_flag "INSTALLED" "List installed packages only." ["i";"installed"]
+
+let keep_build_dir_flag =
+  mk_flag "KEEP-BUILD-DIR" "Keep the build directory." ["k";"keep-build-dir"]
 
 let arg_list name doc conv =
   let doc = Arg.info ~docv:name ~doc [] in
@@ -565,6 +539,50 @@ let config =
   term_info "config" ~doc ~man
 
 
+(* INSTALL *)
+let install =
+  let doc = "Install a list of packages" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command installs one or more packages to the currently selected
+        compiler. To install packages for another compiler, you need to switch
+        compilers using $(b,opam switch). You can remove installed packages with
+        $(b,opam remove), and list installed packages with $(b,opam list -i).
+        See $(b,opam pin) as well to understand how to manage package versions.";
+    `P "This command will make opam use the dependency solver to compute the
+        transitive closure of dependencies to be installed, and will handle
+        conflicts as well. If the dependency solver returns more than one
+        solution, opam will arbitraty select the first one. If dependencies
+        are to be installed, opam will ask if the installation should really
+        be performed.";
+  ] in
+  let install global_options keep_build_dir packages =
+    set_global_options global_options;
+    set_global_keep_build_dir keep_build_dir;
+    let packages = OpamPackage.Name.Set.of_list packages in
+    OpamClient.install packages in
+  Term.(pure install $global_options $keep_build_dir_flag $package_list),
+  term_info "install" ~doc ~man
+
+(* REMOVE *)
+let remove =
+  let doc = "Remove a list of packages" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command removes (i.e. uninstall) one or more packages currently
+        installed in the currently selected compiler. To remove packages
+        installed in another compiler, you need to switch compilers using
+        $(b,opam switch) or use the $(b,--switch) flag. This command is the
+        inverse of $(b,opam-install).";
+  ] in
+  let remove global_options keep_build_dir packages =
+    set_global_options global_options;
+    set_global_keep_build_dir keep_build_dir;
+    let packages = OpamPackage.Name.Set.of_list packages in
+    OpamClient.remove packages in
+  Term.(pure remove $global_options $keep_build_dir_flag $package_list),
+  term_info "remove" ~doc ~man
+
 (* REINSTALL *)
 let reinstall =
   let doc = "Reinstall a list of packages" in
@@ -573,11 +591,12 @@ let reinstall =
     `P "This command does removes the given packages, reinstall them and
         recompile the right package dependencies."
   ] in
-  let reinstall global_options packages =
+  let reinstall global_options keep_build_dir packages =
     set_global_options global_options;
+    set_global_keep_build_dir keep_build_dir;
     let packages = OpamPackage.Name.Set.of_list packages in
     OpamClient.reinstall packages in
-  Term.(pure reinstall $global_options $package_list),
+  Term.(pure reinstall $global_options $keep_build_dir_flag $package_list),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
@@ -651,7 +670,7 @@ let default =
 let cmds = [
   init;
   list; search; info;
-  reinstall;
+  install; remove; reinstall;
   update; upgrade;
   config;
   help;
