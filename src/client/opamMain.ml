@@ -18,38 +18,6 @@ open Cmdliner
 
 (*
 
-(* opam upload PACKAGE *)
-let upload =
-  let opam = ref "" in
-  let descr = ref "" in
-  let archive = ref "" in
-  let repo = ref "" in
-{
-  name     = "upload";
-  usage    = "";
-  synopsis = "Upload a package to an OPAM repository";
-  help     = "";
-  specs    = [
-    ("-opam"   , Arg.Set_string opam   , " specify the OPAM file to upload");
-    ("-descr"  , Arg.Set_string descr  , " specify the description file to upload");
-    ("-archive", Arg.Set_string archive, " specify the archive file to upload");
-    ("-repo"   , Arg.Set_string repo   , " (optional) specify the repository to upload")
-  ];
-  anon = noanon "upload";
-  main     = (function () ->
-    if !opam = "" then
-      bad_argument "upload" "missing OPAM file";
-    if !descr = "" then
-      bad_argument "upload" "missing description file";
-    if !archive = "" then
-      bad_argument "upload" "missing archive file";
-    let upl_opam = OpamFilename.of_string !opam in
-    let upl_descr = OpamFilename.of_string !descr in
-    let upl_archive = OpamFilename.of_string !archive in
-    let repo = if !repo = "" then None else Some (OpamRepositoryName.of_string !repo) in
-    OpamClient.upload { upl_opam; upl_descr; upl_archive } repo)
-}
-
 (* opam remote [-list|-add <url>|-rm <url>] *)
 let remote =
   let kind = ref None in
@@ -228,6 +196,11 @@ let repository_name =
 let repository_address =
   let parse str = `Ok (OpamFilename.raw_dir str) in
   let print ppf address = pr_str ppf (OpamFilename.Dir.to_string address) in
+  parse, print
+
+let filename =
+  let parse str = `Ok (OpamFilename.of_string str) in
+  let print ppf filename = pr_str ppf (OpamFilename.to_string filename) in
   parse, print
 
 let compiler =
@@ -591,6 +564,46 @@ let upgrade =
     OpamClient.upgrade packages in
   Term.(pure upgrade $global_options $package_list),
   term_info "upgrade" ~doc ~man
+
+
+(* UPLOAD *)
+let upload =
+  let doc = "Upload a package to an OPAM repository" in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command uploads an already built package to a remote repository,
+        if the remote repository is not read-only.";
+  ] in
+  let opam =
+    mk_opt ["opam"]
+      "FILE" "Specify the .opam file that will be uploaded to repo://packages/name.version/opam"
+       Arg.(some filename) None in
+  let descr =
+    mk_opt ["descr"]
+      "FILE" "Specify the .descr file that will be uploaded to repo://packages/name.version/descr"
+      Arg.(some filename) None in
+  let archive =
+    mk_opt ["archive"]
+      "FILE" "Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz"
+      Arg.(some filename) None in
+  let repo =
+    mk_opt ["repo";"repository"]
+      "REPO" "Specify the repository to upload to. Defaults to the default repository."
+      Arg.(some repository_name) None in
+  let upload global_options opam descr archive repo =
+    set_global_options global_options;
+    let upl_opam = match opam with
+      | None   -> OpamGlobals.error_and_exit "missing OPAM file"
+      | Some s -> s in
+    let upl_descr = match descr with
+      | None   -> OpamGlobals.error_and_exit "missing description file"
+      | Some s -> s in
+    let upl_archive = match archive with
+      | None   -> OpamGlobals.error_and_exit "missing archive file"
+      | Some s -> s in
+    OpamClient.upload { upl_opam; upl_descr; upl_archive } repo in
+  Term.(pure upload $global_options $opam $descr $archive $repo),
+  term_info "upload" ~doc ~man
 
 (* HELP *)
 let help =
