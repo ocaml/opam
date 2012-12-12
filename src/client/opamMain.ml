@@ -18,13 +18,6 @@ open Cmdliner
 
 (*
 
-let global_args = [
-  "--makecmd"   , Arg.String (fun s -> OpamGlobals.makecmd := lazy s),
-    Printf.sprintf " Set the 'make' program used when compiling packages";
-  "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";
-  "--keep-build-dir", Arg.Set OpamGlobals.keep_build_dir, " Keep the build directory";
-]
-
 (* opam upload PACKAGE *)
 let upload =
   let opam = ref "" in
@@ -176,61 +169,9 @@ let pin =
     | _                -> bad_argument "pin" "Wrong arguments")
 }
 
-let commands = [
-  init;
-  list;
-  search;
-  info;
-  config;
-  install;
-  reinstall;
-  update;
-  upgrade;
-  upload;
-  remove;
-  remote;
-  switch;
-  pin;
-]
-
-let f () =
-  Sys.catch_break true;
-  Printexc.register_printer (function
-    | Unix.Unix_error (e,fn, msg) ->
-      let msg = if msg = "" then "" else " on " ^ msg in
-      let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in
-      Some error
-    | _ -> None);
-  List.iter SubCommand.register commands;
-  try ArgExt.parse ~man_fun:
-        (fun cmd -> ignore (Sys.command ("man opam-" ^ cmd))) global_args
-  with
-  | OpamGlobals.Exit 0 -> ()
-  | e ->
-    OpamGlobals.error "  '%s' failed\n" (String.concat " " (Array.to_list Sys.argv));
-    match e with
-    | Bad (cmd, msg) ->
-        ArgExt.pp_print_help (ArgExt.SubCommand cmd) Format.err_formatter global_args ();
-        OpamGlobals.error "%s" msg;
-        exit 1;
-    | Failure ("no subcommand defined" as s) ->
-        ArgExt.pp_print_help ArgExt.NoSubCommand Format.err_formatter global_args ();
-        OpamGlobals.error "%s" s;
-        exit 2
-    | OpamGlobals.Exit i -> exit i
-    | e ->
-      let bt = Printexc.get_backtrace () in
-      let bt = if bt = "" then "" else Printf.sprintf "    at\n %s\n" bt in
-      Printf.fprintf stderr "Fatal error: exception %s\n%s%!"
-        (Printexc.to_string e) bt;
-      exit 2
-
-let global_args = [
-  "--no-checksums", Arg.Clear OpamGlobals.verify_checksums, " Do not verify checksums on download";
-  "--keep-build-dir", Arg.Set OpamGlobals.keep_build_dir, " Keep the build directory";
-]
-
 *)
+
+(* Global options *)
 type global_options = {
   debug  : bool;
   verbose: bool;
@@ -239,24 +180,31 @@ type global_options = {
   root   : string;
 }
 
+let create_global_options debug verbose switch yes root =
+  { debug; verbose; switch; yes; root }
+
 let set_global_options o =
   OpamGlobals.debug    := o.debug;
   OpamGlobals.verbose  := o.verbose;
   OpamGlobals.switch   := o.switch;
   OpamGlobals.root_dir := OpamSystem.real_path o.root
 
-let set_global_keep_build_dir b =
-  OpamGlobals.keep_build_dir := b
+(* Build options *)
+type build_options = {
+  keep_build_dir: bool;
+  make          : string option;
+  no_checksums  : bool;
+}
 
-let help copts man_format cmds topic = match topic with
-  | None       -> `Help (`Pager, None) (* help about the program. *)
-  | Some topic ->
-    let topics = "topics" :: cmds in
-    let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
-    match conv topic with
-    | `Error e -> `Error (false, e)
-    | `Ok t when t = "topics" -> List.iter print_endline topics; `Ok ()
-    | `Ok t -> `Help (man_format, Some t)
+let create_build_options keep_build_dir make no_checksums =
+  { keep_build_dir; make; no_checksums }
+
+let set_build_options b =
+  OpamGlobals.keep_build_dir   := b.keep_build_dir;
+  OpamGlobals.verify_checksums := not b.no_checksums;
+  match b.make with
+  | None   -> ()
+  | Some s -> OpamGlobals.makecmd := lazy s
 
 (* Help sections common to all commands *)
 let global_option_section = "COMMON OPTIONS"
@@ -268,49 +216,6 @@ let help_sections = [
   `P "Use `$(mname) help patterns' for help on patch matching."; `Noblank;
   `P "Use `$(mname) help environment' for help on environment variables.";
   `S "BUGS"; `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";]
-
-(* Options common to all commands *)
-let create_global_options debug verbose switch yes root =
-  { debug; verbose; switch; yes; root }
-
-let global_options =
-  let docs = global_option_section in
-  let debug =
-    let doc = Arg.info ~docs ~doc:"Print debug message on stdout." ["debug"] in
-    Arg.(value & flag & doc) in
-  let verbose =
-    let quiet =
-      let doc = Arg.info ["quiet"] ~docs ~doc:"Suppress informational output." in
-      false, doc in
-    let verbose =
-      let doc = Arg.info ["verbose"] ~docs ~doc:"Give verbose output." in
-      true, doc in
-    Arg.(last & vflag_all [false] [quiet; verbose]) in
-  let switch =
-    let doc = Arg.info ~docs ~doc:"Overwrite the compiler switch name." ["switch"] in
-    Arg.(value & opt (some string) !OpamGlobals.switch & doc) in
-  let yes =
-    let doc = Arg.info ~docs ~doc:"Disable interactive mode and answer yes \
-                               to all questions that would otherwise be\
-                               asked to the user." ["yes"] in
-    Arg.(value & flag & doc) in
-  let root =
-    let doc = Arg.info ~docs ~doc:"Change the root path." ["root"]  in
-    Arg.(value & opt string !OpamGlobals.root_dir & doc) in
-  Term.(pure create_global_options $ debug $ verbose $ switch $ yes $ root)
-
-let guess_repository_kind kind address =
-  match kind with
-  | None  ->
-    let address = OpamFilename.Dir.to_string address in
-    if Sys.file_exists address then
-      "local"
-    else if OpamMisc.starts_with ~prefix:"git" address
-        || OpamMisc.ends_with ~suffix:"git" address then
-      "git"
-    else
-      OpamGlobals.default_repository_kind
-  | Some k -> k
 
 (* Converters *)
 let pr_str = Format.pp_print_string
@@ -336,35 +241,30 @@ let package_name =
   parse, print
 
 (* Helpers *)
-let mk_info title doc flags =
-  Arg.info ~docv:title ~doc flags
+let mk_flag ?section flags doc =
+  let doc = Arg.info ?docs:section ~doc flags in
+  Arg.(value & flag & doc)
 
-let mk_flag title doc flags =
-  Arg.(value & flag & mk_info title doc flags)
-
-let mk_opt title doc conv default flags =
-  let doc = Arg.info ~docv:title ~doc flags in
+let mk_opt ?section flags value doc conv default =
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt conv default & doc)
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
   Term.info ~sdocs:global_option_section ~doc ~man title
 
-(* Commands *)
-
-let print_short_flag =
-  mk_flag "SHORT" "Output the names of packages separated by one whitespace \
-                   instead of using the usual formatting." ["s";"short"]
-
-let installed_only_flag =
-  mk_flag "INSTALLED" "List installed packages only." ["i";"installed"]
-
-let keep_build_dir_flag =
-  mk_flag "KEEP-BUILD-DIR" "Keep the build directory." ["k";"keep-build-dir"]
-
 let arg_list name doc conv =
   let doc = Arg.info ~docv:name ~doc [] in
   Arg.(value & pos_all conv [] & doc)
+
+(* Common flags *)
+let print_short_flag =
+  mk_flag ["s";"short"]
+    "Output the names of packages separated by one whitespace \
+     instead of using the usual formatting."
+
+let installed_only_flag =
+  mk_flag ["i";"installed"] "List installed packages only."
 
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
@@ -374,6 +274,67 @@ let package_list =
 
 let repository_list =
   arg_list "REPOSITORIES" "List of repository names." repository_name
+
+let help copts man_format cmds topic = match topic with
+  | None       -> `Help (`Pager, None) (* help about the program. *)
+  | Some topic ->
+    let topics = "topics" :: cmds in
+    let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+    match conv topic with
+    | `Error e -> `Error (false, e)
+    | `Ok t when t = "topics" -> List.iter print_endline topics; `Ok ()
+    | `Ok t -> `Help (man_format, Some t)
+
+(* Options common to all commands *)
+let global_options =
+  let section = global_option_section in
+  let debug = mk_flag ~section ["debug"] "Print debug message on stdout."  in
+  let verbose =
+    let quiet =
+      let doc = Arg.info ["quiet"] ~docs:section ~doc:"Suppress informational output." in
+      false, doc in
+    let verbose =
+      let doc = Arg.info ["verbose"] ~docs:section ~doc:"Give verbose output." in
+      true, doc in
+    Arg.(last & vflag_all [false] [quiet; verbose]) in
+  let switch =
+    mk_opt ~section ["s";"switch"]
+      "SWITCH" "Use $(docv) as the current compiler switch."
+      Arg.(some string) !OpamGlobals.switch in
+  let yes =
+    mk_flag ~section ["y";"yes"]
+      "Disable interactive mode and answer yes \
+       to all questions that would otherwise be\
+       asked to the user."  in
+  let root =
+    mk_opt ~section ["r";"root"]
+      "ROOT" "Use $(docv) as the current root path."
+      Arg.string !OpamGlobals.root_dir in
+  Term.(pure create_global_options $debug $verbose $switch $yes $root)
+
+(* Options common to all build commands *)
+let build_options =
+  let keep_build_dir = mk_flag ["k";"keep-build-dir"] "Keep the build directory." in
+  let no_checksums =
+    mk_flag ["n";"no-checksums"]   "Do not verify the checksum of downloaded archives." in
+  let make =
+    mk_opt ["m";"makecmd";"make"] "MAKE"
+      "Use $(docv) as the default 'make' command."
+      Arg.(some string) None in
+  Term.(pure create_build_options $keep_build_dir $make $no_checksums)
+
+let guess_repository_kind kind address =
+  match kind with
+  | None  ->
+    let address = OpamFilename.Dir.to_string address in
+    if Sys.file_exists address then
+      "local"
+    else if OpamMisc.starts_with ~prefix:"git" address
+        || OpamMisc.ends_with ~suffix:"git" address then
+      "git"
+    else
+      OpamGlobals.default_repository_kind
+  | Some k -> k
 
 (* INIT *)
 let init =
@@ -385,12 +346,12 @@ let init =
     `P "Additional repositories can later be added by using the $(b,opam remote) command.";
     `P "The local cache of a repository state can be updated by using $(b,opam update).";
   ] in
-  let cores = mk_opt "CORES" "Number of cores." Arg.int 1 ["j";"cores"] in
+  let cores = mk_opt ["j";"cores"] "CORES" "Number of process to use when building packages." Arg.int 1 in
   let compiler =
-    mk_opt "COMPILER" "Which compiler version to use." compiler OpamCompiler.default ["c";"comp"] in
+    mk_opt ["c";"comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.default in
   let repo_kind =
     let kinds = List.map (fun x -> x,x) [ "http";"rsync"; "git" ] in
-    mk_opt "KIND" "Specify the kind of the repository to be set." Arg.(some (enum kinds)) None ["kind"] in
+    mk_opt ["kind"] "KIND" "Specify the kind of the repository to be set." Arg.(some (enum kinds)) None in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
@@ -440,7 +401,7 @@ let search =
     `P "The full description can be obtained by doing $(b,opam info <package>).";
   ] in
   let case_sensitive =
-    mk_flag "CASE-SENSITIVE" "Force the search in case sensitive mode." ["c";"case-sensitive"] in
+    mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
   let search global_options print_short installed_only case_sensitive packages =
     set_global_options global_options;
     OpamClient.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
@@ -468,8 +429,6 @@ let info =
   term_info "info" ~doc ~man
 
 (* CONFIG *)
-
-(* opam config [-r [-I|-bytelink|-asmlink] PACKAGE+ *)
 let config =
   let doc = "Display configuration options for packages" in
   let man = [
@@ -482,9 +441,10 @@ let config =
         user.";
   ] in
   let params = arg_list "PARAMETERS" "List of parameters." Arg.string in
-  let is_rec = mk_flag  "REC"        "Recursive query."                ["r";"rec"] in
-  let csh    = mk_flag  "CSH"        "Use csh-compatible output mode." ["c";"csh"] in
+  let is_rec = mk_flag  ["r";"rec"] "Recursive query." in
+  let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
 
+  let mk_info flags doc = Arg.info ~doc flags in
   let compile_options =
     let incl is_rec _ packages =
       CIncludes (is_rec, List.map OpamPackage.Name.of_string packages) in
@@ -500,11 +460,11 @@ let config =
     let asmcomp  = mk false false in
     let asmlink  = mk false true in
     [
-      incl    , mk_info "INCLUDES" "Return include options."          ["I"];
-      bytecomp, mk_info "BYTECOMP" "Return bytecode compile options." ["bytecomp"];
-      asmcomp , mk_info "ASMCOMP"  "Return assembly compile options." ["asmcomp"];
-      bytelink, mk_info "BYTELINK" "Return bytecode linking options." ["bytelink"];
-      asmlink , mk_info "ASMLINK"  "Return assembly compile options." ["asmlink"];
+      incl    , mk_info ["I"]        "Return include options.";
+      bytecomp, mk_info ["bytecomp"] "Return bytecode compile options.";
+      asmcomp , mk_info ["asmcomp"]  "Return assembly compile options.";
+      bytelink, mk_info ["bytelink"] "Return bytecode linking options.";
+      asmlink , mk_info ["asmlink"]  "Return assembly compile options.";
     ] in
 
   let var_options =
@@ -513,20 +473,21 @@ let config =
     let var is_rec _ params = CVariable (OpamVariable.Full.of_string (List.hd params)) in
     let subs is_rec _ params = CSubst (List.map OpamFilename.Base.of_string params) in
     [
-      list, mk_info "LIST"  "Return the list of all variables defined in the \
-                             listed packages (no package = all)."                  ["l";"list";"list-vars"];
-      var , mk_info "VAR"   "Return the value associated with the given variable." ["v";"var"];
-      subs, mk_info "SUBST" "Substitute variables in the given files."             ["s";"subst"];
+      list, mk_info ["l";"list";"list-vars"]
+                                  "Return the list of all variables defined in the listed \
+                                   packages (no package = all).";
+      var , mk_info ["v";"var"]   "Return the value associated with the given variable.";
+      subs, mk_info ["s";"subst"] "Substitute variables in the given files.";
     ] in
 
   let display_env _ csh _ = CEnv csh in
   let env =
     display_env,
-    mk_info "ENVIRONMENT"
+    mk_info ["e";"env"]
       "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
       and CAML_LD_LIBRARY_PATH according to the current selected \
       compiler. The output of this command is meant to be evaluated by a \
-      shell, for example by doing $(b,eval `opam config -env`)." ["e";"env"] in
+      shell, for example by doing $(b,eval `opam config -env`)." in
 
   let config_option =
     Arg.(value & vflag display_env (env :: compile_options @ var_options)) in
@@ -537,7 +498,6 @@ let config =
 
   Term.(pure config $global_options $config_option $is_rec $csh $params),
   term_info "config" ~doc ~man
-
 
 (* INSTALL *)
 let install =
@@ -556,12 +516,12 @@ let install =
         are to be installed, opam will ask if the installation should really
         be performed.";
   ] in
-  let install global_options keep_build_dir packages =
+  let install global_options build_options packages =
     set_global_options global_options;
-    set_global_keep_build_dir keep_build_dir;
+    set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
     OpamClient.install packages in
-  Term.(pure install $global_options $keep_build_dir_flag $package_list),
+  Term.(pure install $global_options $build_options $package_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
@@ -575,12 +535,12 @@ let remove =
         $(b,opam switch) or use the $(b,--switch) flag. This command is the
         inverse of $(b,opam-install).";
   ] in
-  let remove global_options keep_build_dir packages =
+  let remove global_options build_options packages =
     set_global_options global_options;
-    set_global_keep_build_dir keep_build_dir;
+    set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
     OpamClient.remove packages in
-  Term.(pure remove $global_options $keep_build_dir_flag $package_list),
+  Term.(pure remove $global_options $build_options $package_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
@@ -591,12 +551,12 @@ let reinstall =
     `P "This command does removes the given packages, reinstall them and
         recompile the right package dependencies."
   ] in
-  let reinstall global_options keep_build_dir packages =
+  let reinstall global_options build_options packages =
     set_global_options global_options;
-    set_global_keep_build_dir keep_build_dir;
+    set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
     OpamClient.reinstall packages in
-  Term.(pure reinstall $global_options $keep_build_dir_flag $package_list),
+  Term.(pure reinstall $global_options $build_options $package_list),
   term_info "reinstall" ~doc ~man
 
 (* UPDATE *)
