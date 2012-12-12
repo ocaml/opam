@@ -569,10 +569,10 @@ let update =
         that can be upgraded will be printed out, and the user can use
         $(b,opam upgrade) to upgrade those.";
   ] in
-  let update global_options repositories =
+  let update global_options build_options repositories =
     set_global_options global_options;
     OpamClient.update repositories in
-  Term.(pure update $global_options $repository_list),
+  Term.(pure update $global_options $build_options $repository_list),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
