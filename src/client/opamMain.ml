@@ -57,11 +57,18 @@ let global_option_section = "COMMON OPTIONS"
 let help_sections = [
   `S global_option_section;
   `P "These options are common to all commands.";
+
   `S "MORE HELP";
   `P "Use `$(mname) $(i,COMMAND) --help' for help on a single command.";`Noblank;
   `P "Use `$(mname) help patterns' for help on patch matching."; `Noblank;
   `P "Use `$(mname) help environment' for help on environment variables.";
-  `S "BUGS"; `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";]
+
+  `S "AUTHORS";
+  `P "Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>";
+
+  `S "BUGS";
+  `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";
+]
 
 (* Converters *)
 let pr_str = Format.pp_print_string
