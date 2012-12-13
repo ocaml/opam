@@ -222,6 +222,27 @@ let mk_opt ?section flags value doc conv default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt conv default & doc)
 
+let mk_subdoc commands =
+  `S "COMMANDS" ::
+  List.map (fun (cs,_,d) ->
+    let bold s = Printf.sprintf "$(i,%s)" s in
+    let cmds = String.concat ", " (List.map bold cs) in
+    `I (cmds, d)
+  ) commands
+
+let mk_subcommands commands =
+  let command =
+    let doc = Arg.info ~docs:"COMMAND" ~doc:"Name of the sub-command." [] in
+    let commands =
+      List.fold_left
+        (fun acc (cs,f,_) -> List.map (fun c -> c,f) cs @ acc)
+        [] commands in
+    Arg.(required & pos 0 (some & enum commands) None & doc) in
+  let params =
+    let doc = Arg.info ~doc:"Optional parameters." [] in
+    Arg.(value & pos_left 0 string [] & doc) in
+  command, params
+
 let term_info title ~doc ~man =
   let man = man @ help_sections in
   Term.info ~sdocs:global_option_section ~doc ~man title
@@ -401,9 +422,24 @@ let info =
   Term.(pure pkg_info $global_options $pattern_list),
   term_info "info" ~doc ~man
 
+
 (* CONFIG *)
 let config =
   let doc = "Display configuration options for packages" in
+  let commands = [
+    ["env"]     , `env     , "returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH
+                            and CAML_LD_LIBRARY_PATH according to the current selected
+                            compiler. The output of this command is meant to be evaluated by a
+                            shell, for example by doing $(b,eval `opam config -env`).";
+    ["var"]     , `var     , "returns the value associated with the given variable.";
+    ["list"]    , `list    , "returns the list of all variables defined in the listed packages (no package = all).";
+    ["subst"]   , `subst   , "substitutes variables in the given files.";
+    ["includes"], `includes, "returns include options.";
+    ["bytecomp"], `bytecomp, "returns bytecode compile options.";
+    ["asmcomp"] , `asmcomp , "returns assembly compile options.";
+    ["bytelink"], `bytelink, "returns bytecode linking options.";
+    ["asmlink"] , `asmlink , "returns assembly compile options.";
+  ] in
   let man = [
     `S "DESCRIPTION";
     `P "This command uses opam state to output information on how to use
@@ -412,64 +448,34 @@ let config =
     `P "Apart from $(b,opam config -env), most of these commands are used
         by opam internally, and thus are of limited interest for the casual
         user.";
-  ] in
-  let params = arg_list "PARAMETERS" "List of parameters." Arg.string in
+  ] @ mk_subdoc commands in
+
+  let command, params = mk_subcommands commands in
   let is_rec = mk_flag  ["r";"rec"] "Recursive query." in
   let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
 
-  let mk_info flags doc = Arg.info ~doc flags in
-  let compile_options =
-    let incl is_rec _ packages =
-      CIncludes (is_rec, List.map OpamPackage.Name.of_string packages) in
-    let mk is_link is_byte is_rec csh packages =
+  let config global_options command is_rec csh params =
+    set_global_options global_options;
+    let mk is_link is_byte =
       CCompil {
         conf_is_rec  = is_rec;
         conf_is_link = is_link;
         conf_is_byte = is_byte;
-        conf_options = List.map OpamVariable.Section.Full.of_string packages;
+        conf_options = List.map OpamVariable.Section.Full.of_string params;
       } in
-    let bytecomp = mk true false in
-    let bytelink = mk true true in
-    let asmcomp  = mk false false in
-    let asmlink  = mk false true in
-    [
-      incl    , mk_info ["I"]        "Return include options.";
-      bytecomp, mk_info ["bytecomp"] "Return bytecode compile options.";
-      asmcomp , mk_info ["asmcomp"]  "Return assembly compile options.";
-      bytelink, mk_info ["bytelink"] "Return bytecode linking options.";
-      asmlink , mk_info ["asmlink"]  "Return assembly compile options.";
-    ] in
+    let cmd = match command with
+      | `env      -> CEnv csh
+      | `list     -> CList
+      | `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
+      | `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
+      | `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
+      | `bytecomp -> mk true false
+      | `bytelink -> mk true true
+      | `asmcomp  -> mk false false
+      | `asmlink  -> mk false true in
+    OpamClient.config cmd in
 
-  let var_options =
-    let list _ _ _ = CList in
-    (* TODO: fail if more than one variable *)
-    let var is_rec _ params = CVariable (OpamVariable.Full.of_string (List.hd params)) in
-    let subs is_rec _ params = CSubst (List.map OpamFilename.Base.of_string params) in
-    [
-      list, mk_info ["l";"list";"list-vars"]
-                                  "Return the list of all variables defined in the listed \
-                                   packages (no package = all).";
-      var , mk_info ["v";"var"]   "Return the value associated with the given variable.";
-      subs, mk_info ["s";"subst"] "Substitute variables in the given files.";
-    ] in
-
-  let display_env _ csh _ = CEnv csh in
-  let env =
-    display_env,
-    mk_info ["e";"env"]
-      "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
-      and CAML_LD_LIBRARY_PATH according to the current selected \
-      compiler. The output of this command is meant to be evaluated by a \
-      shell, for example by doing $(b,eval `opam config -env`)." in
-
-  let config_option =
-    Arg.(value & vflag display_env (env :: compile_options @ var_options)) in
-
-  let config global_options fn is_rec csh params =
-    set_global_options global_options;
-    OpamClient.config (fn is_rec csh params) in
-
-  Term.(pure config $global_options $config_option $is_rec $csh $params),
+  Term.(pure config $global_options $command $is_rec $csh $params),
   term_info "config" ~doc ~man
 
 (* INSTALL *)
@@ -564,7 +570,6 @@ let upgrade =
     OpamClient.upgrade packages in
   Term.(pure upgrade $global_options $package_list),
   term_info "upgrade" ~doc ~man
-
 
 (* UPLOAD *)
 let upload =
