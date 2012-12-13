@@ -110,7 +110,10 @@ let mk_subdoc commands =
 
 let mk_subcommands commands =
   let command =
-    let doc = Arg.info ~docs:"COMMAND" ~doc:"Name of the sub-command." [] in
+    let doc =
+      Arg.info ~docv:"COMMAND" ~doc:
+        "Name of the sub-command. See the $(b,COMMANDS) section for more info."
+        [] in
     let commands =
       List.fold_left
         (fun acc (cs,f,_) -> List.map (fun c -> c,f) cs @ acc)
@@ -118,7 +121,7 @@ let mk_subcommands commands =
     Arg.(required & pos 0 (some & enum commands) None & doc) in
   let params =
     let doc = Arg.info ~doc:"Optional parameters." [] in
-    Arg.(value & pos_left 0 string [] & doc) in
+    Arg.(value & pos_right 0 string [] & doc) in
   command, params
 
 let term_info title ~doc ~man =
