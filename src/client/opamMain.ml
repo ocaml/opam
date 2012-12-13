@@ -98,6 +98,14 @@ let package_name =
   let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
   parse, print
 
+let enum_with_default sl =
+  let parse, print = Arg.enum sl in
+  let parse s =
+    match parse s with
+    | `Ok _ as x -> x
+    | _ -> `Ok (`default s) in
+  parse, print
+
 (* Helpers *)
 let mk_flag ?section flags doc =
   let doc = Arg.info ?docs:section ~doc flags in
@@ -115,21 +123,30 @@ let mk_subdoc commands =
     `I (cmds, d)
   ) commands
 
-let mk_subcommands commands =
+let mk_subcommands_aux my_enum commands default =
   let command =
     let doc =
       Arg.info ~docv:"COMMAND" ~doc:
-        "Name of the sub-command. See the $(b,COMMANDS) section for more info."
+        ("Name of the sub-command. See the $(b,COMMANDS) section for more info."
+         ^ (match default with
+           | None   -> ""
+           | Some d -> d))
         [] in
     let commands =
       List.fold_left
         (fun acc (cs,f,_) -> List.map (fun c -> c,f) cs @ acc)
         [] commands in
-    Arg.(required & pos 0 (some & enum commands) None & doc) in
+    Arg.(required & pos 0 (some & my_enum commands) None & doc) in
   let params =
     let doc = Arg.info ~doc:"Optional parameters." [] in
     Arg.(value & pos_right 0 string [] & doc) in
   command, params
+
+let mk_subcommands commands =
+  mk_subcommands_aux Arg.enum commands None
+
+let mk_subcommands_with_default commands default =
+  mk_subcommands_aux enum_with_default commands (Some default)
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
@@ -568,7 +585,10 @@ let switch =
         the EXAMPLES section to learn how to use this command.";
   ] @ mk_subdoc commands in
 
-  let command, params = mk_subcommands commands in
+  let command, params = mk_subcommands_with_default commands
+    "If a compiler switch is given instead of an usual command, this command will switch to \
+     the given compiler. You will then need to run $(b,eval `opam config env`) to update your \
+     environment variables." in
   let alias_of =
     mk_opt ["a";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
@@ -605,7 +625,7 @@ let switch =
     | `current, [] ->
         no_alias_of ();
         OpamClient.switch_current ()
-    | `switch, [switch] ->
+    | `default switch, [] ->
         (match alias_of with
         | None -> OpamClient.switch global_options.quiet (OpamSwitch.of_string switch)
         | _    ->
