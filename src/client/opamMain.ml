@@ -18,41 +18,6 @@ open Cmdliner
 
 (*
 
-(* opam remote [-list|-add <url>|-rm <url>] *)
-let remote =
-  let kind = ref None in
-  let command : [`add|`list|`rm|`priority] option ref = ref None in
-  let set c () = command := Some c in
-  let add name address priority =
-    let name = OpamRepositoryName.of_string name in
-    let kind = guess_repository_kind !kind address in
-    let address = OpamRepository.repository_address address in
-    OpamClient.remote (RAdd (name, kind, address, priority)) in
-{
-  name     = "remote";
-  usage    = "[-list|add <name> <address>|rm <name>]";
-  synopsis = "Manage remote servers";
-  help     = "";
-  specs    = [
-    ("-list" , Arg.Unit (set `list), " List the repositories");
-    ("-add"  , Arg.Unit (set `add) , " Add a new repository");
-    ("-rm"   , Arg.Unit (set `rm)  , " Remove a remote repository");
-    ("-kind" , Arg.String (fun s -> kind := Some s) , " (optional) Specify the repository kind");
-    ("-priority", Arg.Unit (set `priority) , " Set the repository priority (higher is better)");
-  ];
-  anon;
-  main     = parse_args (fun args ->
-    match !command, args with
-    | Some `priority, [name; p]    ->
-      OpamClient.remote (RPriority (OpamRepositoryName.of_string name, int_of_string p))
-    | Some `list, []                -> OpamClient.remote RList
-    | Some `rm,   [ name ]          -> OpamClient.remote (RRm (OpamRepositoryName.of_string name))
-    | Some `add , [ name; address ] -> add name address None
-    | Some `add ,
-      [ name; address; priority ]   -> add name address (Some (int_of_string priority))
-    | None, _  -> bad_argument "remote" "Command missing [-list|-add|-rm]"
-    | _        -> bad_argument "remote" "Wrong arguments")
-}
 
 (* opam switch [-clone] OVERSION *)
 let switch =
@@ -260,6 +225,18 @@ let print_short_flag =
 let installed_only_flag =
   mk_flag ["i";"installed"] "List installed packages only."
 
+let repo_kind_flag =
+  let kinds = [
+    "http"; "curl"; "wget";
+    "local"; "rsync";
+    "git";
+  ] in
+  let kinds = List.map (fun x -> x,x) kinds in
+  mk_opt ["kind"]
+    "KIND" "Specify the kind of the repository to be set (the main ones \
+            are 'http', 'local' or 'git')."
+    Arg.(some (enum kinds)) None
+
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
 
@@ -343,9 +320,6 @@ let init =
   let cores = mk_opt ["j";"cores"] "CORES" "Number of process to use when building packages." Arg.int 1 in
   let compiler =
     mk_opt ["c";"comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.default in
-  let repo_kind =
-    let kinds = List.map (fun x -> x,x) [ "http";"rsync"; "git" ] in
-    mk_opt ["kind"] "KIND" "Specify the kind of the repository to be set." Arg.(some (enum kinds)) None in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
@@ -358,7 +332,7 @@ let init =
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
     OpamClient.init repository compiler cores in
-  Term.(pure init $global_options $repo_kind $repo_name $repo_address $ compiler $cores),
+  Term.(pure init $global_options $repo_kind_flag $repo_name $repo_address $ compiler $cores),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -610,6 +584,61 @@ let upload =
   Term.(pure upload $global_options $opam $descr $archive $repo),
   term_info "upload" ~doc ~man
 
+(* REPOSITORY *)
+let repository name =
+  let doc = "Manage OPAM repositories." in
+  let commands = [
+    ["add"]        , `add     , "Add the repository $(b,name) available at address
+                                 $(b,address) to the list of repositories used by OPAM,
+                                 with priority $(b,priority).
+                                 The repository priority can be optionally specified with
+                                 $(b,--priority), otherwise the new repository has a higher
+                                 priority then any other existing repositories.
+                                 The kind of the repository can be specified with the
+                                 $(b,--kind) option, otherwise it will be determined
+                                 automatically.";
+    ["remove";"rm"], `remove  , "Removes the repository named $(b,name) from the list of
+                                 repositories used by OPAM.";
+    ["list"]       , `list    , "Lists all repositories used by OPAM.";
+    ["priority"]   , `priority, "Change the priority of repository named $(b,name) to
+                                $(b,priority).";
+  ] in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command is used to manage OPAM repositories. To synchronize OPAM
+        with the last versions of the packages available in remote
+        repositories, *opam update* should be used.";
+  ] @ mk_subdoc commands in
+
+  let command, params = mk_subcommands commands in
+  let priority =
+    mk_opt ["p";"priority"]
+      "INT" "Set the repository priority (bigger is better)"
+      Arg.(some int) None in
+
+  let repository global_options command kind priority params =
+    set_global_options global_options;
+    let add name address =
+      let name = OpamRepositoryName.of_string name in
+      let address = OpamRepository.repository_address address in
+      let kind = guess_repository_kind kind address in
+      RAdd (name, kind, address, priority) in
+    let cmd = match command, params with
+      | `priority, [name; p] ->
+        RPriority (OpamRepositoryName.of_string name, int_of_string p)
+      | `list, []              -> RList
+      | `rm  , [name]          -> RRm (OpamRepositoryName.of_string name)
+      | `add , [name; address] -> add name address
+      | _ -> OpamGlobals.error_and_exit "Too many parameters" in
+    OpamClient.remote cmd in
+
+  Term.(pure repository $global_options $command $repo_kind_flag $priority $params),
+  term_info name  ~doc ~man
+
+(* THOMAS: we keep 'opam remote' for backward compatibity *)
+let remote = repository "remote"
+let repository = repository "repository"
+
 (* HELP *)
 let help =
   let doc = "display help about opam and opam commands" in
@@ -651,6 +680,7 @@ let cmds = [
   install; remove; reinstall;
   update; upgrade;
   config;
+  remote; repository;
   help;
 ]
 
