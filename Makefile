@@ -99,7 +99,7 @@ doc: compile
 	  -I _obuild/re -I _obuild/unix -I _obuild/extlib \
 	  -I _obuild/arg -I _obuild/graph \
 	  src/**/*.mli -html -d doc/html/
-	$(MAKE) -C doc/man-src
+	$(MAKE) -C doc
 	$(MAKE) -C doc/tutorials
 
 trailing:
