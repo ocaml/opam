@@ -100,7 +100,6 @@ doc: compile
 	  -I _obuild/arg -I _obuild/graph \
 	  src/**/*.mli -html -d doc/html/
 	$(MAKE) -C doc
-	$(MAKE) -C doc/tutorials
 
 trailing:
 	find src -name "*.ml*" -exec \
