@@ -16,31 +16,6 @@
 open OpamTypes
 open Cmdliner
 
-(*
-
-(* opam pin [-list|<package> <version>|<package> <path>] *)
-let pin =
-  let list = ref false in
-  let kind = ref None in
-  let set_kind s = kind := Some s in
-{
-  name     = "pin";
-  usage    = "<package> [<version>|<url>|none]";
-  synopsis = "Pin a given package to a specific version";
-  help     = "";
-  specs    = [
-    ("-list", Arg.Set list       , " List the current status of pinned packages");
-    ("-kind", Arg.String set_kind, " Force the pin action (options are: 'git', 'rsync', 'version'");
-  ];
-  anon;
-  main     = parse_args (function
-    | [] when !list    -> OpamClient.pin_list ()
-    | [name; arg]      -> OpamClient.pin { pin_package = OpamPackage.Name.of_string name; pin_arg = pin_option_of_string ?kind:!kind arg }
-    | _                -> bad_argument "pin" "Wrong arguments")
-}
-
-*)
-
 (* Global options *)
 type global_options = {
   debug  : bool;
@@ -641,14 +616,54 @@ let switch =
   Term.(pure switch $global_options $command $alias_of $no_base_package $params),
   term_info "switch" ~doc ~man
 
+(* PIN *)
+let pin =
+  let doc = "Pin a given package to a specific version." in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command will 'pin' a package to a specific version, or use a
+        specific source path for installing and upgrading the package. Using
+        $(b,opam pin <package> none) will undo the 'pinned' status of
+        <package>.";
+    `P "To list all the currently pinned packages, call the $(b,opam pin)
+        without arguments or use $(b,--list)."
+  ] in
+
+  let package =
+    let doc = Arg.info ~docv:"PACKAGE" ~doc:"Package name." [] in
+    Arg.(value & pos 0 (some string) None & doc) in
+  let pin_option =
+    let doc =
+      Arg.info ~docv:"PIN" ~doc:
+        "Specific version, local path or git url to pin the package to,
+         or 'none' to unpin the package." [] in
+    Arg.(value & pos 0 (some string) None & doc) in
+  let list = mk_flag ["l";"list"] "List the currently pinned packages." in
+
+  let pin global_options kind list package pin =
+    set_global_options global_options;
+    if list then
+      OpamClient.pin_list ()
+    else match package, pin with
+    | None  , None   -> OpamClient.pin_list ()
+    | Some n, Some p ->
+      let pin = {
+        pin_package = OpamPackage.Name.of_string n;
+        pin_arg = pin_option_of_string ?kind:kind p
+      } in
+      OpamClient.pin pin
+    | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
+
+  Term.(pure pin $global_options $repo_kind_flag $list $package $pin_option),
+  term_info "pin" ~doc ~man
+
 (* HELP *)
 let help =
   let doc = "display help about opam and opam commands" in
   let man = [
     `S "DESCRIPTION";
      `P "Prints help about opam commands"
-]
-  in
+  ] in
   let topic =
     let doc = Arg.info [] ~docv:"TOPIC" ~doc:"The topic to get help on. `topics' lists the topics." in
     Arg.(value & pos 0 (some string) None & doc )
@@ -684,6 +699,7 @@ let cmds = [
   config;
   remote; repository;
   switch;
+  pin;
   help;
 ]
 
