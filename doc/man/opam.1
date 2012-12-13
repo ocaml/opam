@@ -1,159 +1,110 @@
-.TH OPAM 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
-.SH NAME
-.PP
-opam - The OCaml Package Manager
-.SH SYNOPSIS
-.PP
-\f[I]opam\f[] [--version] [--help] [--debug] [--verbose] [--quiet]
-[--yes] [--makecmd] [--root] [--no-checksums] <command>
-.SH DESCRIPTION
-.PP
-OPAM is a package manager for OCaml.
-It uses the powerful mancoosi tools to handle dependencies, including
-support for version constraints, optional dependencies, and conflicts
-management.
-It has support for different repository backends such as HTTP, rsync and
-git.
-It handles multiple OCaml versions concurrently, and is flexible enough
-to allow you to use your own repositories and packages in addition of
-the ones it provides.
-.SH OPTIONS
-.TP
-.B --version
-Print version information and exit.
-.RS
-.RE
-.TP
-.B --help
-Display help and exit.
-.RS
-.RE
-.TP
-.B --debug
-Print debug messages on stdout.
-.RS
-.RE
-.TP
-.B --verbose
-Be more verbose.
-.RS
-.RE
-.TP
-.B --quiet
-Be less verbose.
-.RS
-.RE
-.TP
-.B --yes
-Disable interactive mode and answer yes to all questions that would
-otherwise be asked to the user.
-.RS
-.RE
-.TP
-.B --makecmd <command>
-Use <command> instead of the standard \f[I]make\f[] (\f[I]make\f[] on
-Linux, \f[I]gmake\f[] on BSDs) to build packages in opam.
-.RS
-.RE
-.TP
-.B --root <root-path>
-Change root path (default is ~/.opam).
-.RS
-.RE
-.TP
-.B --no-checksum
-Do not verify packages checksum on download.
-.RS
-.RE
-.SH COMMANDS
-.PP
-To obtain help about any of these commands, use \f[I]opam\f[] <command>
---help
-.TP
-.B \f[B]init\f[]
-Initialize OPAM state in ~/.opam, or in the directory specified as
-argument of the --root option.
-.RS
-.RE
-.SS Query packages
-.TP
-.B \f[B]list\f[]
-Display a list of packages.
-.RS
-.RE
-.TP
-.B \f[B]search\f[]
-Search repositories for packages.
-.RS
-.RE
-.TP
-.B \f[B]info\f[]
-Display information about packages.
-.RS
-.RE
-.SS Manage packages
-.TP
-.B \f[B]install\f[]
-Install packages.
-.RS
-.RE
-.TP
-.B \f[B]reinstall\f[]
-Reinstall packages.
-.RS
-.RE
-.TP
-.B \f[B]upgrade\f[]
-Upgrade your packages.
-.RS
-.RE
-.TP
-.B \f[B]remove\f[]
-Remove packages.
-.RS
-.RE
-.SS Manage repositories
-.TP
-.B \f[B]remote\f[]
-Manage remote repositories.
-.RS
-.RE
-.TP
-.B \f[B]update\f[]
-Fetch latest packages from remote repositories.
-.RS
-.RE
-.TP
-.B \f[B]upload\f[]
-Upload packages to repositories.
-.RS
-.RE
-.SS Advanced
-.TP
-.B \f[B]pin\f[]
-Pin a package to a specific version.
-.RS
-.RE
-.TP
-.B \f[B]switch\f[]
-Manage multiple compiler installations.
-.RS
-.RE
-.TP
-.B \f[B]config\f[]
-Manage various configuration options about opam and packages.
-.RS
-.RE
-.SH SEE ALSO
-.PP
-\f[B]curl\f[](1), \f[B]wget\f[](1), \f[B]git\f[](1), \f[B]rsync(1)\f[]
-.SH LINKS
-.IP \[bu] 2
-\f[B]http://opam.ocamlpro.com\f[]
-.IP \[bu] 2
-\f[B]http://www.mancoosi.org\f[]
-.SH OPAM
-.PP
-Part of the opam(1) suite
-.SH AUTHORS
-OCamlPro.
+OPAM(1)                           Opam Manual                          OPAM(1)
+
+
+
+NNAAMMEE
+       opam - a Package Manager for OCaml
+
+SSYYNNOOPPSSIISS
+       ooppaamm _C_O_M_M_A_N_D ...
+
+DDEESSCCRRIIPPTTIIOONN
+       OPAM is a package manager for OCaml. It uses the powerful mancoosi
+       tools to handle dependencies, including support for version
+       constraints, optional dependencies, and conflicts management.
+
+       It has support for different repository backends such as HTTP, rsync
+       and git. It handles multiple OCaml versions concurrently, and is
+       flexible enough to allow you to use your own repositories and packages
+       in addition of the ones it provides.
+
+CCOOMMMMAANNDDSS
+       ccoonnffiigg
+           Display configuration options for packages
+
+       hheellpp
+           display help about opam and opam commands
+
+       iinnffoo
+           Display information about specific packages
+
+       iinniitt
+           Initialize opam.
+
+       iinnssttaallll
+           Install a list of packages
+
+       lliisstt
+           Display the list of available packages.
+
+       ppiinn Pin a given package to a specific version.
+
+       rreeiinnssttaallll
+           Reinstall a list of packages
+
+       rreemmoottee
+           Manage OPAM repositories.
+
+       rreemmoovvee
+           Remove a list of packages
+
+       rreeppoossiittoorryy
+           Manage OPAM repositories.
+
+       sseeaarrcchh
+           Search into the package list
+
+       sswwiittcchh
+           Manage multiple installation of compilers.
+
+       uuppddaattee
+           Update the list of available packages
+
+       uuppggrraaddee
+           Upgrade the installed package to latest version
+
+       uuppllooaadd
+           Upload a package to an OPAM repository
+
+CCOOMMMMOONN OOPPTTIIOONNSS
+       These options are common to all commands.
+
+       ----ddeebbuugg
+           Print debug message on stdout.
+
+       ----hheellpp[=_F_M_T] (default=pager)
+           Show this help in format _F_M_T (pager, plain or groff).
+
+       --qq, ----qquuiieett
+           Be quiet.
+
+       --rr _R_O_O_T, ----rroooott=_R_O_O_T (absent=/Users/tgazagna/.opam)
+           Use _R_O_O_T as the current root path.
+
+       --ss _S_W_I_T_C_H, ----sswwiittcchh=_S_W_I_T_C_H
+           Use _S_W_I_T_C_H as the current compiler switch.
+
+       --vv, ----vveerrbboossee
+           Be more verbose.
+
+       ----vveerrssiioonn
+           Show version information.
+
+       --yy, ----yyeess
+           Disable interactive mode and answer yes to all questions that would
+           otherwise beasked to the user.
+
+MMOORREE HHEELLPP
+       Use `opam _C_O_M_M_A_N_D --help' for help on a single command.
+       Use `opam help patterns' for help on patch matching.
+       Use `opam help environment' for help on environment variables.
+
+AAUUTTHHOORRSS
+       Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+
+BBUUGGSS
+       Check bug reports at https://github.com/OCamlPro/opam/issues.
+
+
+
+Opam 0.8.2                                                             OPAM(1)

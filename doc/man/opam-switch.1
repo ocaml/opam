@@ -1,122 +1,48 @@
-.TH OPAM-SWITCH 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-switch - Switch compiler version
+.P
+opam\-help \- display help about opam and opam commands
 .SH SYNOPSIS
-.PP
-\f[I]opam switch\f[] -list
-.PP
-\f[I]opam switch\f[] -current
-.PP
-\f[I]opam switch\f[] <alias>
-.PP
-\f[I]opam switch\f[] [-no-base-packages] -install <alias> [-alias-of
-<alias>]
-.PP
-\f[I]opam switch\f[] -remove <alias>
-.PP
-\f[I]opam switch\f[] [-no-base-packages] -clone <alias>
+.P
+\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
 .SH DESCRIPTION
-.PP
-This command allows to switch between different compiler versions,
-installing the compiler if \f[I]opam switch\f[] is used to switch to
-that compiler for the first time.
-The different compiler versions are totally independant from each other,
-meaning that OPAM maintains a separate state (e.g.
-list of installed packages...)
- for each.
-See the EXAMPLES section to learn how to use this command.
-.SH PARAMETERS
-.TP
-.B -list
-Displays the list of available compilers.
-.RS
-.RE
-.TP
-.B -current
-Displays the current compiler in use.
-.RS
-.RE
-.TP
-.B <alias>
-Switch to the compiler version <alias>, installing it if it is not
-already installed.
-This is a shortcut to \f[I]opam switch -install <alias>\f[].
-The list of available versions is obtained by doing \f[I]opam switch
--list\f[].
-.RS
-.RE
-.TP
-.B -install <alias>
-Install a compiler version <alias>.
-See EXAMPLES.
-.RS
-.RE
-.TP
-.B -remove <alias>
-Remove the compiler <alias>.
-.RS
-.RE
-.TP
-.B -clone <alias>
-Install all packages installed in compiler <alias> into the currently
-selected compiler.
-.RS
-.RE
+.P
+Prints help about opam commands
+.SH ARGUMENTS
+.TP 4
+\fITOPIC\fR
+The topic to get help on. `topics' lists the topics.
+.SH COMMON OPTIONS
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH OPTIONS
-.TP
-.B -no-base-packages
-Will prevent \f[I]opam switch\f[] from installing the base packages.
-.RS
-.RE
-.TP
-.B -alias-of <alias>
-Will switch to compiler version <alias>, but use the name specified as
-an argument to -install instead of <alias>.
-This is useful to create multiple instances of the same compiler
-version.
-See EXAMPLES.
-.RS
-.RE
-.SH EXAMPLES
-.IP \[bu] 2
-To install a brand new OCaml 4.00.0 and switch into it as the current
-compiler, do:
-.IP
-.nf
-\f[C]
-$\ opam\ switch\ -install\ 4.00.0
-\f[]
-.fi
-.IP \[bu] 2
-To remove OCaml 3.12.1, do:
-.IP
-.nf
-\f[C]
-$\ opam\ switch\ -remove\ 3.12.1
-\f[]
-.fi
-.IP \[bu] 2
-To install OCaml 4.00.0 under alias "foo" such that you will have two
-instances of OCaml 4.00.0, each with its own environment (i.e.
-list of installed packages, and so on):
-.IP
-.nf
-\f[C]
-$\ opam\ switch\ -install\ foo\ -alias-of\ 4.00.0
-\f[]
-.fi
-.IP \[bu] 2
-To install in "foo" all packages that are installed in "4.00.0":
-.IP
-.nf
-\f[C]
-$\ opam\ switch\ foo
-$\ opam\ switch\ -clone\ 4.00.0
-\f[]
-.fi
-.SH OPAM
-.PP
-Part of the opam(1) suite
-.SH AUTHORS
-OCamlPro.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
+Show output in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-version\fR
+Show version information.
