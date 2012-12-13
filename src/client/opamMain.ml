@@ -18,69 +18,6 @@ open Cmdliner
 
 (*
 
-
-(* opam switch [-clone] OVERSION *)
-let switch =
-  let alias_of = ref "" in
-  let command = ref `switch in
-  let set c () =
-    if !command <> `switch then
-      bad_argument "switch" "two many sub-commands";
-    command := c in
-  let no_alias_of () =
-    if !alias_of <> "" then
-      bad_argument "switch" "invalid -alias-of option" in
-  let mk_comp alias = match !alias_of with
-    | ""   -> OpamCompiler.of_string alias
-    | comp -> OpamCompiler.of_string comp in
-{
-  name     = "switch";
-  usage    = "[compiler-name]";
-  synopsis = "Manage multiple installation of compilers";
-  help     = "";
-  specs    = [
-    ("-alias-of"        , Arg.Set_string alias_of        , " Compiler name");
-    ("-no-base-packages", Arg.Clear OpamGlobals.base_packages, " Do not install the base packages");
-    ("-install"         , Arg.Unit (set `install)        , " Install the given compiler");
-    ("-remove"          , Arg.Unit (set `remove)         , " Remove the given compiler");
-    ("-export"          , Arg.String (fun s -> set (`export s) ()), " Export the libraries installed with the given alias");
-    ("-import"          , Arg.String (fun s -> set (`import s) ()), " Import the libraries installed with the given alias");
-    ("-reinstall"       , Arg.Unit (set `reinstall)      , " Reinstall the given compiler");
-    ("-list"            , Arg.Unit (set `list)           , " List the available compilers");
-    ("-current"         , Arg.Unit (set `current)        , " Display the current compiler");
-  ];
-  anon;
-  main     = parse_args (function args ->
-    match !command, args with
-    | `install, [switch] ->
-        OpamClient.switch_install !quiet (OpamSwitch.of_string switch) (mk_comp switch)
-    | `export f, [] ->
-        no_alias_of ();
-        OpamClient.switch_export (OpamFilename.of_string f)
-    | `import f, [] ->
-        no_alias_of ();
-        OpamClient.switch_import (OpamFilename.of_string f)
-    | `remove, switches ->
-        no_alias_of ();
-        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
-    | `reinstall, [switch] ->
-        no_alias_of ();
-        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
-    | `list, [] ->
-        no_alias_of ();
-        OpamClient.switch_list ()
-    | `current, [] ->
-        no_alias_of ();
-        OpamClient.switch_current ()
-    | `switch, [switch] ->
-        begin match !alias_of with
-          | "" -> OpamClient.switch !quiet (OpamSwitch.of_string switch)
-          | _  -> OpamClient.switch_install !quiet (OpamSwitch.of_string switch) (mk_comp switch)
-        end
-    | _ -> bad_argument "switch" "too many arguments"
-  )
-}
-
 (* opam pin [-list|<package> <version>|<package> <path>] *)
 let pin =
   let list = ref false in
@@ -108,17 +45,18 @@ let pin =
 type global_options = {
   debug  : bool;
   verbose: bool;
+  quiet  : bool;
   switch : string option;
   yes    : bool;
   root   : string;
 }
 
-let create_global_options debug verbose switch yes root =
-  { debug; verbose; switch; yes; root }
+let create_global_options debug verbose quiet switch yes root =
+  { debug; verbose; quiet; switch; yes; root }
 
 let set_global_options o =
-  OpamGlobals.debug    := o.debug;
-  OpamGlobals.verbose  := o.verbose;
+  OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
+  OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   OpamGlobals.switch   := o.switch;
   OpamGlobals.root_dir := OpamSystem.real_path o.root
 
@@ -190,7 +128,7 @@ let mk_opt ?section flags value doc conv default =
 let mk_subdoc commands =
   `S "COMMANDS" ::
   List.map (fun (cs,_,d) ->
-    let bold s = Printf.sprintf "$(i,%s)" s in
+    let bold s = Printf.sprintf "$(b,%s)" s in
     let cmds = String.concat ", " (List.map bold cs) in
     `I (cmds, d)
   ) commands
@@ -260,14 +198,8 @@ let help copts man_format cmds topic = match topic with
 let global_options =
   let section = global_option_section in
   let debug = mk_flag ~section ["debug"] "Print debug message on stdout."  in
-  let verbose =
-    let quiet =
-      let doc = Arg.info ["quiet"] ~docs:section ~doc:"Suppress informational output." in
-      false, doc in
-    let verbose =
-      let doc = Arg.info ["verbose"] ~docs:section ~doc:"Give verbose output." in
-      true, doc in
-    Arg.(last & vflag_all [false] [quiet; verbose]) in
+  let verbose = mk_flag ~section ["v";"verbose"] "Be more verbose." in
+  let quiet = mk_flag ~section ["q";"quiet"] "Be quiet." in
   let switch =
     mk_opt ~section ["s";"switch"]
       "SWITCH" "Use $(docv) as the current compiler switch."
@@ -281,7 +213,7 @@ let global_options =
     mk_opt ~section ["r";"root"]
       "ROOT" "Use $(docv) as the current root path."
       Arg.string !OpamGlobals.root_dir in
-  Term.(pure create_global_options $debug $verbose $switch $yes $root)
+  Term.(pure create_global_options $debug $verbose $quiet $switch $yes $root)
 
 (* Options common to all build commands *)
 let build_options =
@@ -597,9 +529,9 @@ let repository name =
                                  The kind of the repository can be specified with the
                                  $(b,--kind) option, otherwise it will be determined
                                  automatically.";
-    ["remove";"rm"], `remove  , "Removes the repository named $(b,name) from the list of
+    ["remove";"rm"], `remove  , "Remove the repository named $(b,name) from the list of
                                  repositories used by OPAM.";
-    ["list"]       , `list    , "Lists all repositories used by OPAM.";
+    ["list"]       , `list    , "List all repositories used by OPAM.";
     ["priority"]   , `priority, "Change the priority of repository named $(b,name) to
                                 $(b,priority).";
   ] in
@@ -638,6 +570,76 @@ let repository name =
 (* THOMAS: we keep 'opam remote' for backward compatibity *)
 let remote = repository "remote"
 let repository = repository "repository"
+
+(* SWITCH *)
+let switch =
+  let doc = "Manage multiple installation of compilers." in
+  let commands = [
+    ["add";"install"], `add      , "Install the given compiler.";
+    ["rm";"remove"]  , `rm       , "Remove the given compiler.";
+    ["export"]       , `export   , "Export the libraries installed with the given alias.";
+    ["import"]       , `import   , "Import the libraries installed with the given alias.";
+    ["reinstall"]    , `reinstall, "Reinstall the given compiler.";
+    ["list"]         , `list     , "List the available compilers.";
+    ["current"]      , `current  , "Show the current compiler.";
+  ] in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command allows to switch between different compiler versions,
+        installing the compiler if $(b,opam switch) is used to switch to that
+        compiler for the first time. The different compiler versions are
+        totally independant from each other, meaning that OPAM maintains a
+        separate state (e.g. list of installed packages...) for each. See
+        the EXAMPLES section to learn how to use this command.";
+  ] @ mk_subdoc commands in
+
+  let command, params = mk_subcommands commands in
+  let alias_of =
+    mk_opt ["a";"alias-of"]
+      "COMP" "The name of the compiler description which will be aliased."
+      Arg.(some string) None in
+  let no_base_package =
+    mk_flag ["no-base-packages"] "Do not install base packages (useful when testing)." in
+
+  let switch global_options command alias_of no_base_package params =
+    set_global_options global_options;
+    let no_alias_of () =
+      if alias_of <> None then
+        OpamGlobals.error_and_exit "invalid -alias-of option" in
+    let mk_comp alias = match alias_of with
+      | None      -> OpamCompiler.of_string alias
+      | Some comp -> OpamCompiler.of_string comp in
+    match command, params with
+    | `install, [switch] ->
+        OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
+    | `export, [f] ->
+        no_alias_of ();
+        OpamClient.switch_export (OpamFilename.of_string f)
+    | `import, [f] ->
+        no_alias_of ();
+        OpamClient.switch_import (OpamFilename.of_string f)
+    | `remove, switches ->
+        no_alias_of ();
+        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
+    | `reinstall, [switch] ->
+        no_alias_of ();
+        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
+    | `list, [] ->
+        no_alias_of ();
+        OpamClient.switch_list ()
+    | `current, [] ->
+        no_alias_of ();
+        OpamClient.switch_current ()
+    | `switch, [switch] ->
+        (match alias_of with
+        | None -> OpamClient.switch global_options.quiet (OpamSwitch.of_string switch)
+        | _    ->
+          OpamClient.switch_install global_options.quiet
+            (OpamSwitch.of_string switch) (mk_comp switch))
+    | _ -> OpamGlobals.error_and_exit "too many arguments" in
+
+  Term.(pure switch $global_options $command $alias_of $no_base_package $params),
+  term_info "switch" ~doc ~man
 
 (* HELP *)
 let help =
@@ -681,6 +683,7 @@ let cmds = [
   update; upgrade;
   config;
   remote; repository;
+  switch;
   help;
 ]
 
