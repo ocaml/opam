@@ -6,6 +6,7 @@ HELPFMT = --help=groff
 all: man pdf
 
 man:
+	rm man/*
 	$(OPAM) $(HELP) > man/opam.1
 	for i in $(TOPICS); do\
 	  $(OPAM) help $$i $(HELPFMT) > man/opam-$$i.1; \

@@ -311,7 +311,7 @@ let config =
     ["env"]     , `env     , "returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH
                             and CAML_LD_LIBRARY_PATH according to the current selected
                             compiler. The output of this command is meant to be evaluated by a
-                            shell, for example by doing $(b,eval `opam config -env`).";
+                            shell, for example by doing $(b,eval `opam config env`).";
     ["var"]     , `var     , "returns the value associated with the given variable.";
     ["list"]    , `list    , "returns the list of all variables defined in the listed packages (no package = all).";
     ["subst"]   , `subst   , "substitutes variables in the given files.";
@@ -326,7 +326,7 @@ let config =
     `P "This command uses opam state to output information on how to use
         installed libraries, updating the user’s $PATH, and substitute
         variables used in opam packages.";
-    `P "Apart from $(b,opam config -env), most of these commands are used
+    `P "Apart from $(b,opam config env), most of these commands are used
         by opam internally, and thus are of limited interest for the casual
         user.";
   ] @ mk_subdoc commands in
