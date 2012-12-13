@@ -169,16 +169,6 @@ let package_list =
 let repository_list =
   arg_list "REPOSITORIES" "List of repository names." repository_name
 
-let help copts man_format cmds topic = match topic with
-  | None       -> `Help (`Pager, None) (* help about the program. *)
-  | Some topic ->
-    let topics = "topics" :: cmds in
-    let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
-    match conv topic with
-    | `Error e -> `Error (false, e)
-    | `Ok t when t = "topics" -> List.iter print_endline topics; `Ok ()
-    | `Ok t -> `Help (man_format, Some t)
-
 (* Options common to all commands *)
 let global_options =
   let section = global_option_section in
@@ -678,6 +668,16 @@ let help =
     let doc = Arg.info [] ~docv:"TOPIC" ~doc:"The topic to get help on. `topics' lists the topics." in
     Arg.(value & pos 0 (some string) None & doc )
   in
+  let help copts man_format cmds topic = match topic with
+    | None       -> `Help (`Pager, None) (* help about the program. *)
+    | Some topic ->
+      let topics = "topics" :: cmds in
+      let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      match conv topic with
+      | `Error e -> `Error (false, e)
+      | `Ok t when t = "topics" -> List.iter print_endline cmds; `Ok ()
+      | `Ok t -> `Help (man_format, Some t) in
+
   Term.(ret (pure help $ global_options $ Term.man_format $ Term.choice_names $ topic)),
   Term.info "help" ~doc ~man
 
@@ -710,6 +710,7 @@ let cmds = [
   remote; repository;
   switch;
   pin;
+  upload;
   help;
 ]
 
