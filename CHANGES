@@ -1,4 +1,7 @@
-0.8.2 (trunk)
+0.9.0 (trunk)
+* improve (but break) the command-line interface by using cmdliner
+
+0.8.2 [Dec 2012]
 * Fix an issue with 'opam reinstall <packages>' where packages were reinstalled in reverse order
 
 0.8.1 [Nov 2012]
