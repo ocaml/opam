@@ -569,8 +569,8 @@ let switch =
   let commands = [
     ["add";"install"], `add      , "Install the given compiler.";
     ["rm";"remove"]  , `rm       , "Remove the given compiler.";
-    ["export"]       , `export   , "Export the libraries installed with the given alias.";
-    ["import"]       , `import   , "Import the libraries installed with the given alias.";
+    ["export"]       , `export   , "Export the list installed package to a file.";
+    ["import"]       , `import   , "Install the packages from a file.";
     ["reinstall"]    , `reinstall, "Reinstall the given compiler.";
     ["list"]         , `list     , "List the available compilers.";
     ["current"]      , `current  , "Show the current compiler.";
