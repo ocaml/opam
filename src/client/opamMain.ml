@@ -698,7 +698,7 @@ let help =
       | `Ok t when t = "topics" -> List.iter print_endline cmds; `Ok ()
       | `Ok t -> `Help (man_format, Some t) in
 
-  Term.(ret (pure help $ global_options $ Term.man_format $ Term.choice_names $ topic)),
+  Term.(ret (pure help $global_options $Term.man_format $Term.choice_names $topic)),
   Term.info "help" ~doc ~man
 
 let default =
