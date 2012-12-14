@@ -895,7 +895,7 @@ let rec remote action =
       let pretty_print r =
         OpamGlobals.msg "%4d %-7s %10s     %s\n"
           r.repo_priority
-          (Printf.sprintf "[%s]" r.repo_kind)
+          (Printf.sprintf "[%s]" (string_of_repository_kind r.repo_kind))
           (OpamRepositoryName.to_string r.repo_name)
           (OpamFilename.Dir.to_string r.repo_address) in
       let repos = sorted_repositories t in
@@ -908,11 +908,15 @@ let rec remote action =
         repo_priority = min_int; (* we initially put it as low-priority *)
       } in
       if OpamState.mem_repository_name t name then
-        OpamGlobals.error_and_exit "%s is already a remote repository" (OpamRepositoryName.to_string name)
+        OpamGlobals.error_and_exit
+          "%s is already a remote repository"
+          (OpamRepositoryName.to_string name)
       else (
         (try OpamRepository.init repo with
         | OpamRepository.Unknown_backend ->
-            OpamGlobals.error_and_exit "\"%s\" is not a supported backend" repo.repo_kind
+            OpamGlobals.error_and_exit
+              "\"%s\" is not a supported backend"
+              (string_of_repository_kind repo.repo_kind)
         | e ->
             cleanup_repo repo.repo_name;
             raise e);
@@ -967,14 +971,14 @@ let pin action =
     let nv = OpamState.find_installed_package_by_name t name in
     OpamFile.Reinstall.write reinstall_f (OpamPackage.Set.add nv reinstall)
   );
-  match action.pin_arg with
+  match action.pin_option with
   | Unpin -> update_config (OpamPackage.Name.Map.remove name pins)
   | _     ->
       if OpamPackage.Name.Map.mem name pins then (
         let current = OpamPackage.Name.Map.find name pins in
         OpamGlobals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
           (OpamPackage.Name.to_string name)
-          (path_of_pin_option action.pin_arg)
+          (path_of_pin_option action.pin_option)
           (path_of_pin_option current);
       );
     match OpamState.find_packages_by_name t name with
@@ -984,17 +988,20 @@ let pin action =
         (OpamPackage.Name.to_string name)
     | Some _ ->
       log "Adding %s(%s) => %s"
-        (path_of_pin_option action.pin_arg)
-        (kind_of_pin_option action.pin_arg)
+        (path_of_pin_option action.pin_option)
+        (string_of_pin_kind (kind_of_pin_option action.pin_option))
         (OpamPackage.Name.to_string name);
-      update_config (OpamPackage.Name.Map.add name action.pin_arg pins)
+      update_config (OpamPackage.Name.Map.add name action.pin_option pins)
 
 let pin_list () =
   log "pin_list";
   let t = OpamState.load_state () in
   let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
   let print n a =
-    OpamGlobals.msg "%-20s %-8s %s\n" (OpamPackage.Name.to_string n) (kind_of_pin_option a) (path_of_pin_option a) in
+    OpamGlobals.msg "%-20s %-8s %s\n"
+      (OpamPackage.Name.to_string n)
+      (string_of_pin_kind (kind_of_pin_option a))
+      (path_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
 
 let upgrade_system_compiler t =

@@ -755,11 +755,16 @@ let install_compiler t ~quiet switch compiler =
   end
 
 let update_pinned_package t nv pin =
-  let kind = kind_of_pin_option pin in
-  let path = OpamFilename.raw_dir (path_of_pin_option pin) in
-  let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
-  let build = OpamPath.Switch.build t.root t.switch nv in
-  B.download_dir nv ~dst:build path
+  match kind_of_pin_option pin with
+  | `git ->
+    let path = OpamFilename.raw_dir (path_of_pin_option pin) in
+    let module B = (val OpamRepository.find_backend `git: OpamRepository.BACKEND) in
+    let build = OpamPath.Switch.build t.root t.switch nv in
+    B.download_dir nv ~dst:build path
+  | _ ->
+    OpamGlobals.error_and_exit
+      "Cannot update the pinned package %s: wrong backend."
+      (OpamPackage.to_string nv)
 
 module Types = struct
   type t = state = {

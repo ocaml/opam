@@ -128,4 +128,4 @@ module B = struct
 end
 
 let register () =
-  OpamRepository.register_backend "git" (module B: OpamRepository.BACKEND)
+  OpamRepository.register_backend `git (module B: OpamRepository.BACKEND)

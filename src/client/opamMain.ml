@@ -24,16 +24,18 @@ type global_options = {
   switch : string option;
   yes    : bool;
   root   : string;
+  no_base_packages: bool;
 }
 
-let create_global_options debug verbose quiet switch yes root =
-  { debug; verbose; quiet; switch; yes; root }
+let create_global_options debug verbose quiet switch yes root no_base_packages =
+  { debug; verbose; quiet; switch; yes; root; no_base_packages }
 
 let set_global_options o =
   OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   OpamGlobals.switch   := o.switch;
-  OpamGlobals.root_dir := OpamSystem.real_path o.root
+  OpamGlobals.root_dir := OpamSystem.real_path o.root;
+  OpamGlobals.base_packages := !OpamGlobals.base_packages && not o.no_base_packages
 
 (* Build options *)
 type build_options = {
@@ -167,12 +169,17 @@ let installed_only_flag =
 
 let repo_kind_flag =
   let kinds = [
-    "http"; "curl"; "wget";
-    "local"; "rsync";
-    "git";
+    (* main kinds *)
+    "http" , `http;
+    "local", `local;
+    "git"  , `git;
+
+    (* aliases *)
+    "wget" , `http;
+    "curl" , `http;
+    "rsync", `local;
   ] in
-  let kinds = List.map (fun x -> x,x) kinds in
-  mk_opt ["kind"]
+  mk_opt ["k";"kind"]
     "KIND" "Specify the kind of the repository to be set (the main ones \
             are 'http', 'local' or 'git')."
     Arg.(some (enum kinds)) None
@@ -205,11 +212,14 @@ let global_options =
     mk_opt ~section ["r";"root"]
       "ROOT" "Use $(docv) as the current root path."
       Arg.string !OpamGlobals.root_dir in
-  Term.(pure create_global_options $debug $verbose $quiet $switch $yes $root)
+  let no_base_packages =
+    mk_flag ["no-base-packages"]
+      "Do not install base packages (useful for testing purposes)." in
+  Term.(pure create_global_options $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
 (* Options common to all build commands *)
 let build_options =
-  let keep_build_dir = mk_flag ["k";"keep-build-dir"] "Keep the build directory." in
+  let keep_build_dir = mk_flag ["b";"keep-build-dir"] "Keep the build directory." in
   let no_checksums =
     mk_flag ["n";"no-checksums"]   "Do not verify the checksum of downloaded archives." in
   let make =
@@ -223,12 +233,12 @@ let guess_repository_kind kind address =
   | None  ->
     let address = OpamFilename.Dir.to_string address in
     if Sys.file_exists address then
-      "local"
+      `local
     else if OpamMisc.starts_with ~prefix:"git" address
         || OpamMisc.ends_with ~suffix:"git" address then
-      "git"
+      `git
     else
-      OpamGlobals.default_repository_kind
+      `http
   | Some k -> k
 
 (* INIT *)
@@ -256,7 +266,7 @@ let init =
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
     OpamClient.init repository compiler cores in
-  Term.(pure init $global_options $repo_kind_flag $repo_name $repo_address $ compiler $cores),
+  Term.(pure init $global_options $repo_kind_flag $repo_name $repo_address $compiler $cores),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -593,10 +603,8 @@ let switch =
     mk_opt ["a";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
       Arg.(some string) None in
-  let no_base_package =
-    mk_flag ["no-base-packages"] "Do not install base packages (useful when testing)." in
 
-  let switch global_options command alias_of no_base_package params =
+  let switch global_options command alias_of params =
     set_global_options global_options;
     let no_alias_of () =
       if alias_of <> None then
@@ -633,7 +641,7 @@ let switch =
             (OpamSwitch.of_string switch) (mk_comp switch))
     | _ -> OpamGlobals.error_and_exit "too many arguments" in
 
-  Term.(pure switch $global_options $command $alias_of $no_base_package $params),
+  Term.(pure switch $global_options $command $alias_of $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)
@@ -659,6 +667,15 @@ let pin =
          or 'none' to unpin the package." [] in
     Arg.(value & pos 0 (some string) None & doc) in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
+  let kind =
+    let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
+    let kinds = [
+      "git"    , `git;
+      "version", `version;
+      "local"  , `local;
+      "rsync"  , `local;
+    ] in
+    Arg.(value & opt (some & enum kinds) None & doc) in
 
   let pin global_options kind list package pin =
     set_global_options global_options;
@@ -669,12 +686,12 @@ let pin =
     | Some n, Some p ->
       let pin = {
         pin_package = OpamPackage.Name.of_string n;
-        pin_arg = pin_option_of_string ?kind:kind p
+        pin_option  = pin_option_of_string ?kind:kind p
       } in
       OpamClient.pin pin
     | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
 
-  Term.(pure pin $global_options $repo_kind_flag $list $package $pin_option),
+  Term.(pure pin $global_options $kind $list $package $pin_option),
   term_info "pin" ~doc ~man
 
 (* HELP *)

@@ -369,7 +369,7 @@ module URL: sig
   val url: t -> string
 
   (** Backend kind (could be curl/rsync/git at the moment) *)
-  val kind: t -> string option
+  val kind: t -> repository_kind option
 
   (** Archive checksum *)
   val checksum: t -> string option

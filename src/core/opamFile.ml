@@ -136,7 +136,7 @@ module URL = struct
 
   type t = {
     url     : string;
-    kind    : string option;
+    kind    : repository_kind option;
     checksum: string option;
   }
 
@@ -165,17 +165,16 @@ module URL = struct
     let url, kind = match archive, git with
       | None  , None   -> OpamGlobals.error_and_exit "Missing URL"
       | Some x, None   -> x, None
-      | None  , Some x -> x, Some "git"
+      | None  , Some x -> x, Some `git
       | _ -> OpamGlobals.error_and_exit "Too many URLS" in
     { url; kind; checksum }
 
   let to_string filename t =
     let url_name = match t.kind with
-      | Some "git"   -> "git"
-      | Some "curl"
-      | Some "rsync"
-      | None         -> "archive"
-      | Some x -> OpamGlobals.error_and_exit "%s is an unknown backend" x in
+      | Some `git   -> "git"
+      | None
+      | Some `http  -> "archive"
+      | Some `local -> OpamGlobals.error_and_exit "Local packages are not (yet) supported." in
     let s = {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
@@ -305,7 +304,9 @@ module Pinned = struct
     List.fold_left (fun map -> function
       | []           -> map
       | [name_s; x]  -> add name_s (pin_option_of_string x) map
-      | [name_s;k;x] -> add name_s (pin_option_of_string ?kind:(Some k) x) map
+      | [name_s;k;x] ->
+        let kind = Some (pin_kind_of_string k) in
+        add name_s (pin_option_of_string ?kind x) map
       | _     -> OpamGlobals.error_and_exit "too many pinning options"
     ) OpamPackage.Name.Map.empty lines
 
@@ -313,7 +314,7 @@ module Pinned = struct
     let lines = OpamPackage.Name.Map.fold (fun name pin lines ->
       let l = [
         OpamPackage.Name.to_string name;
-        kind_of_pin_option pin;
+        string_of_pin_kind (kind_of_pin_option pin);
         path_of_pin_option pin
       ] in
       l :: lines
@@ -331,7 +332,7 @@ module Repo_config = struct
   let empty = {
     repo_name     = OpamRepositoryName.of_string "<none>";
     repo_address  = OpamFilename.address_of_string "<none>";
-    repo_kind     = "<none>";
+    repo_kind     = `local;
     repo_priority = 0;
   }
 
@@ -347,7 +348,7 @@ module Repo_config = struct
     let repo_address =
       OpamFormat.assoc s.file_contents s_address (OpamFormat.parse_string |> OpamFilename.address_of_string) in
     let repo_kind =
-      OpamFormat.assoc s.file_contents s_kind OpamFormat.parse_string in
+      OpamFormat.assoc s.file_contents s_kind (OpamFormat.parse_string |> repository_kind_of_string) in
     let repo_priority =
       OpamFormat.assoc_default 0 s.file_contents s_priority OpamFormat.parse_int in
     { repo_name; repo_address; repo_kind; repo_priority }
@@ -358,7 +359,7 @@ module Repo_config = struct
       file_contents = [
         Variable (s_name    , OpamFormat.make_string (OpamRepositoryName.to_string t.repo_name));
         Variable (s_address , OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_address));
-        Variable (s_kind    , OpamFormat.make_string t.repo_kind);
+        Variable (s_kind    , OpamFormat.make_string (string_of_repository_kind t.repo_kind));
         Variable (s_priority, OpamFormat.make_int t.repo_priority);
       ] } in
     Syntax.to_string filename s
@@ -492,7 +493,7 @@ module Config = struct
                    let repo_name = OpamRepositoryName.of_string name in
                    let repo = {
                      repo_name;
-                     repo_kind     = kind;
+                     repo_kind     = repository_kind_of_string kind;
                      repo_address  = OpamFilename.address_of_string address;
                      repo_priority = 10 * i;
                    } in

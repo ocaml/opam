@@ -247,6 +247,4 @@ let make_index_tar_gz local_repo =
   )
 
 let register () =
-  OpamRepository.register_backend "http" (module B : OpamRepository.BACKEND);
-  OpamRepository.register_backend "curl" (module B : OpamRepository.BACKEND);
-  OpamRepository.register_backend "wget" (module B : OpamRepository.BACKEND)
+  OpamRepository.register_backend `http (module B : OpamRepository.BACKEND)
