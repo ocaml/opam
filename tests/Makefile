@@ -1,4 +1,4 @@
-TMP_DIR   = tmp
+TMP_DIR   = $(realpath .)/tmp
 OPAM_ROOT = $(TMP_DIR)/OPAM.ROOT
 OPAM_REPO = $(TMP_DIR)/OPAM.REPO
 
@@ -11,9 +11,10 @@ OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-ENV   = PATH=$(PATH) OCAMLRUNPARAM=b OPAMDEBUG=2 OPAMROOT=$(OPAM_ROOT) OPAMYES=1
-OPAM  = $(ENV) $(realpath ../_obuild/opam/opam.asm)
-CHECK = $(ENV) $(realpath _obuild/opam-check/opam-check.asm) --root $(OPAM_ROOT)
+_OPAM = $(realpath ../_obuild/opam/opam.asm)
+ENV   = PATH=$(PATH) OCAMLRUNPARAM=b OPAMDEBUG=2 OPAMROOT=$(OPAM_ROOT) OPAMYES=1 OPAM=$(_OPAM)
+OPAM  = $(ENV) $(_OPAM)
+CHECK = $(ENV) $(realpath ../_obuild/opam-check/opam-check.asm)
 
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
@@ -23,7 +24,6 @@ all: local git
 	@
 
 run:
-	$(MAKE) fresh && \
 	$(MAKE) init && \
 	$(MAKE) list && \
 	$(MAKE) upload && \
@@ -44,9 +44,11 @@ run:
 	$(MAKE) switch-env-packages
 
 local:
+	$(MAKE) clean
 	$(MAKE) REPOKIND=local run
 
 git:
+	$(MAKE) clean
 	$(MAKE) REPOKIND=git run
 
 init:
@@ -106,11 +108,11 @@ else
 	cd packages && \
 	$(OPAM) upload --opam P2.opam --descr P2/README --archive P2.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload --opam P3.opam --descr P3/README -archive P3.tar.gz $(REPO)
+	$(OPAM) upload --opam P3.opam --descr P3/README --archive P3.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload --opam P4-1.opam --descr P4/README -archive P4.tar.gz $(REPO)
+	$(OPAM) upload --opam P4-1.opam --descr P4/README --archive P4.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload --opam P5.opam --descr P5/README -archive P5.tar.gz $(REPO)
+	$(OPAM) upload --opam P5.opam --descr P5/README --archive P5.tar.gz $(REPO)
 endif
 	cp compilers/* $(OPAM_REPO)/compilers/
 	$(OPAM) update # update the list of available packages with the one being updated
@@ -183,10 +185,10 @@ switch-alias:
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias P1.1 P2.1
 	$(OPAM) switch export $(OPAM_ROOT)/export
-	$(OPAM) switch install test -alias-of system -no-base-packages
+	$(OPAM) switch install test --alias-of system --no-base-packages
 	$(OPAM)	switch import $(OPAM_ROOT)/export
 	$(CHECK) -l switch-alias-clone P1.1 P2.1
-	$(OPAM) switch install test2 -alias-of 20
+	$(OPAM) switch install test2 --alias-of 20
 	$(OPAM) install P1
 	$(CHECK) -l switch-alias-20 P1.1
 	$(OPAM) switch system
@@ -206,8 +208,4 @@ packages/%.tar.gz: packages/% packages/%/*
 
 clean:
 	rm -f $(ARCHIVES)
-	rm -f $(TMP_DIR)
-
-fresh:
-	rm -rf $(OPAM_ROOT)
-	rm -rf $(OPAM_REPO) 
+	rm -rf $(TMP_DIR)

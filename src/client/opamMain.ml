@@ -364,7 +364,8 @@ let config =
 
   let config global_options command is_rec csh params =
     set_global_options global_options;
-    let mk is_link is_byte =
+    let mk ~is_byte ~is_link =
+      OpamGlobals.log "MAIN" "XXXX: is_byte:%b is_link:%b" is_byte is_link;
       CCompil {
         conf_is_rec  = is_rec;
         conf_is_link = is_link;
@@ -377,10 +378,10 @@ let config =
       | `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
       | `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
       | `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
-      | `bytecomp -> mk true false
-      | `bytelink -> mk true true
-      | `asmcomp  -> mk false false
-      | `asmlink  -> mk false true in
+      | `bytecomp -> mk ~is_byte:true  ~is_link:false
+      | `bytelink -> mk ~is_byte:true  ~is_link:true
+      | `asmcomp  -> mk ~is_byte:false ~is_link:false
+      | `asmlink  -> mk ~is_byte:false ~is_link:true in
     OpamClient.config cmd in
 
   Term.(pure config $global_options $command $is_rec $csh $params),
@@ -576,8 +577,8 @@ let repository = repository "repository"
 let switch =
   let doc = "Manage multiple installation of compilers." in
   let commands = [
-    ["add";"install"], `add      , "Install the given compiler.";
-    ["rm";"remove"]  , `rm       , "Remove the given compiler.";
+    ["add";"install"], `install  , "Install the given compiler.";
+    ["rm";"remove"]  , `remove   , "Remove the given compiler.";
     ["export"]       , `export   , "Export the list installed package to a file.";
     ["import"]       , `import   , "Install the packages from a file.";
     ["reinstall"]    , `reinstall, "Reinstall the given compiler.";
@@ -638,7 +639,7 @@ let switch =
         | _    ->
           OpamClient.switch_install global_options.quiet
             (OpamSwitch.of_string switch) (mk_comp switch))
-    | _ -> OpamGlobals.error_and_exit "too many arguments" in
+    | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
   Term.(pure switch $global_options $command $alias_of $params),
   term_info "switch" ~doc ~man

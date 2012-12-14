@@ -79,6 +79,7 @@ let config_includes t is_rec names =
       List.map OpamPackage.name (get_transitive_dependencies t ~depopts:true ~installed:true names)
     else
       names in
+  log "deps: %s" (String.concat ", " (List.map OpamPackage.Name.to_string deps));
   let includes =
     List.fold_left (fun accu n ->
       "-I" :: OpamFilename.Dir.to_string (OpamPath.Switch.lib t.root t.switch n) :: accu
