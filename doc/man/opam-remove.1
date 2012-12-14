@@ -6,7 +6,7 @@
 .ad l
 .SH NAME
 .P
-opam\-remove \- Remove a list of packages
+opam\-remove \- Remove a list of packages.
 .SH SYNOPSIS
 .P
 \fBopam remove\fR [\fIOPTION\fR]... [\fIPACKAGES\fR]...
@@ -19,7 +19,7 @@ This command removes (i.e. uninstall) one or more packages currently installed i
 List of package names.
 .SH OPTIONS
 .TP 4
-\fB\-k\fR, \fB\-\-keep\-build\-dir\fR
+\fB\-b\fR, \fB\-\-keep\-build\-dir\fR
 Keep the build directory.
 .TP 4
 \fB\-m\fR \fIMAKE\fR, \fB\-\-makecmd\fR=\fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
@@ -27,6 +27,9 @@ Use \fIMAKE\fR as the default 'make' command.
 .TP 4
 \fB\-n\fR, \fB\-\-no\-checksums\fR
 Do not verify the checksum of downloaded archives.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
@@ -54,15 +57,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>

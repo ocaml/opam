@@ -1,110 +1,18 @@
-OPAM(1)                           Opam Manual                          OPAM(1)
+usage: opam [--version]
+            [--help]
+            <command> [<args>]
 
+The most commonly used opam commands are:
+   init         Initialize opam.
+   list         Display the list of available packages.
+   info         Display information about specific packages.
+   install      Install a list of packages.
+   remove       Remove a list of packages.
+   update       Update the list of available packages.
+   upgrade      Upgrade the installed package to latest version.
+   config       Display configuration options for packages.
+   repository   Manage OPAM repositories.
+   switch       Manage multiple installation of compilers.
+   pin          Pin a given package to a specific version.
 
-
-NNAAMMEE
-       opam - a Package Manager for OCaml
-
-SSYYNNOOPPSSIISS
-       ooppaamm _C_O_M_M_A_N_D ...
-
-DDEESSCCRRIIPPTTIIOONN
-       OPAM is a package manager for OCaml. It uses the powerful mancoosi
-       tools to handle dependencies, including support for version
-       constraints, optional dependencies, and conflicts management.
-
-       It has support for different repository backends such as HTTP, rsync
-       and git. It handles multiple OCaml versions concurrently, and is
-       flexible enough to allow you to use your own repositories and packages
-       in addition of the ones it provides.
-
-CCOOMMMMAANNDDSS
-       ccoonnffiigg
-           Display configuration options for packages
-
-       hheellpp
-           display help about opam and opam commands
-
-       iinnffoo
-           Display information about specific packages
-
-       iinniitt
-           Initialize opam.
-
-       iinnssttaallll
-           Install a list of packages
-
-       lliisstt
-           Display the list of available packages.
-
-       ppiinn Pin a given package to a specific version.
-
-       rreeiinnssttaallll
-           Reinstall a list of packages
-
-       rreemmoottee
-           Manage OPAM repositories.
-
-       rreemmoovvee
-           Remove a list of packages
-
-       rreeppoossiittoorryy
-           Manage OPAM repositories.
-
-       sseeaarrcchh
-           Search into the package list
-
-       sswwiittcchh
-           Manage multiple installation of compilers.
-
-       uuppddaattee
-           Update the list of available packages
-
-       uuppggrraaddee
-           Upgrade the installed package to latest version
-
-       uuppllooaadd
-           Upload a package to an OPAM repository
-
-CCOOMMMMOONN OOPPTTIIOONNSS
-       These options are common to all commands.
-
-       ----ddeebbuugg
-           Print debug message on stdout.
-
-       ----hheellpp[=_F_M_T] (default=pager)
-           Show this help in format _F_M_T (pager, plain or groff).
-
-       --qq, ----qquuiieett
-           Be quiet.
-
-       --rr _R_O_O_T, ----rroooott=_R_O_O_T (absent=/Users/tgazagna/.opam)
-           Use _R_O_O_T as the current root path.
-
-       --ss _S_W_I_T_C_H, ----sswwiittcchh=_S_W_I_T_C_H
-           Use _S_W_I_T_C_H as the current compiler switch.
-
-       --vv, ----vveerrbboossee
-           Be more verbose.
-
-       ----vveerrssiioonn
-           Show version information.
-
-       --yy, ----yyeess
-           Disable interactive mode and answer yes to all questions that would
-           otherwise beasked to the user.
-
-MMOORREE HHEELLPP
-       Use `opam _C_O_M_M_A_N_D --help' for help on a single command.
-       Use `opam help patterns' for help on patch matching.
-       Use `opam help environment' for help on environment variables.
-
-AAUUTTHHOORRSS
-       Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
-
-BBUUGGSS
-       Check bug reports at https://github.com/OCamlPro/opam/issues.
-
-
-
-Opam 0.8.2                                                             OPAM(1)
+See 'opam help <command>' for more information on a specific command.

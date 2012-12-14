@@ -6,7 +6,7 @@
 .ad l
 .SH NAME
 .P
-opam\-config \- Display configuration options for packages
+opam\-config \- Display configuration options for packages.
 .SH SYNOPSIS
 .P
 \fBopam config\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
@@ -23,6 +23,9 @@ Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
 .TP 4
 \fB\-c\fR, \fB\-\-csh\fR
 Use csh\-compatible output mode.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
 .TP 4
 \fB\-r\fR, \fB\-\-rec\fR
 Recursive query.
@@ -81,15 +84,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>

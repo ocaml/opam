@@ -12,18 +12,18 @@ opam\-switch \- Manage multiple installation of compilers.
 \fBopam switch\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-This command allows to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independant from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each. See the EXAMPLES section to learn how to use this command.
+This command allows to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independant from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each.
 .SH ARGUMENTS
 .TP 4
 \fICOMMAND\fR
-Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.If a compiler switch is given instead of an usual command, this command will switch to the given compiler. You will then need to run \fBeval `opam config env`\fR to update your environment variables.
+Name of the sub\-command. See the \fBCOMMANDS\fR section for more info. If a compiler switch is given instead of an usual command, this command will switch to the given compiler. You will then need to run \fBeval `opam config env`\fR to update your environment variables.
 .SH OPTIONS
 .TP 4
 \fB\-a\fR \fICOMP\fR, \fB\-\-alias\-of\fR=\fICOMP\fR
 The name of the compiler description which will be aliased.
 .TP 4
 \fB\-\-no\-base\-packages\fR
-Do not install base packages (useful when testing).
+Do not install base packages (useful for testing purposes).
 .SH COMMANDS
 .TP 4
 \fBadd\fR, \fBinstall\fR
@@ -73,15 +73,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
