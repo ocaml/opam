@@ -1,26 +1,48 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-INIT" 1 "" "Opam 0.8.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-help \- display help about opam and opam commands
+opam\-init \- Initialize opam.
 .SH SYNOPSIS
 .P
-\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
+\fBopam init\fR [\fIOPTION\fR]... [\fINAME\fR] [\fIADDRESS\fR]
 .SH DESCRIPTION
 .P
-Prints help about opam commands
+The init command creates a fresh client state, that is initialize opam configuration in ~/.opam and setup a default repository.
+.P
+Additional repositories can later be added by using the \fBopam remote\fR command.
+.P
+The local cache of a repository state can be updated by using \fBopam update\fR.
 .SH ARGUMENTS
 .TP 4
-\fITOPIC\fR
-The topic to get help on. `topics' lists the topics.
+\fIADDRESS\fR (absent=http://opam.ocamlpro.com)
+Address of the repository.
+.TP 4
+\fINAME\fR (absent=default)
+Name of the repository.
+.SH OPTIONS
+.TP 4
+\fB\-c\fR \fIVERSION\fR, \fB\-\-comp\fR=\fIVERSION\fR (absent=system)
+Which compiler version to use.
+.TP 4
+\fB\-j\fR \fICORES\fR, \fB\-\-cores\fR=\fICORES\fR (absent=1)
+Number of process to use when building packages.
+.TP 4
+\fB\-\-kind\fR=\fIKIND\fR
+Specify the kind of the repository to be set (the main ones are 'http', 'local' or 'git').
 .SH COMMON OPTIONS
+.P
+These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet.
@@ -34,15 +56,23 @@ Use \fISWITCH\fR as the current compiler switch.
 \fB\-v\fR, \fB\-\-verbose\fR
 Be more verbose.
 .TP 4
-\fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH OPTIONS
-.TP 4
-\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
-Show this help in format \fIFMT\fR (pager, plain or groff).
-.TP 4
-\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
-Show output in format \fIFMT\fR (pager, plain or groff).
-.TP 4
 \fB\-\-version\fR
 Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+.SH MORE HELP
+.P
+Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
+.sp -1
+.P
+Use `opam help patterns' for help on patch matching.
+.sp -1
+.P
+Use `opam help environment' for help on environment variables.
+.SH AUTHORS
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

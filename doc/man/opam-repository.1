@@ -1,26 +1,51 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-REPOSITORY" 1 "" "Opam 0.8.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-help \- display help about opam and opam commands
+opam\-repository \- Manage OPAM repositories.
 .SH SYNOPSIS
 .P
-\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
+\fBopam repository\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-Prints help about opam commands
+This command is used to manage OPAM repositories. To synchronize OPAM with the last versions of the packages available in remote repositories, *opam update* should be used.
 .SH ARGUMENTS
 .TP 4
-\fITOPIC\fR
-The topic to get help on. `topics' lists the topics.
+\fICOMMAND\fR
+Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
+.SH OPTIONS
+.TP 4
+\fB\-\-kind\fR=\fIKIND\fR
+Specify the kind of the repository to be set (the main ones are 'http', 'local' or 'git').
+.TP 4
+\fB\-p\fR \fIINT\fR, \fB\-\-priority\fR=\fIINT\fR
+Set the repository priority (bigger is better)
+.SH COMMANDS
+.TP 4
+\fBadd\fR
+Add the repository \fBname\fR available at address \fBaddress\fR to the list of repositories used by OPAM, with priority \fBpriority\fR. The repository priority can be optionally specified with \fB\-\-priority\fR, otherwise the new repository has a higher priority then any other existing repositories. The kind of the repository can be specified with the \fB\-\-kind\fR option, otherwise it will be determined automatically.
+.TP 4
+\fBremove\fR, \fBrm\fR
+Remove the repository named \fBname\fR from the list of repositories used by OPAM.
+.TP 4
+\fBlist\fR
+List all repositories used by OPAM.
+.TP 4
+\fBpriority\fR
+Change the priority of repository named \fBname\fR to \fBpriority\fR.
 .SH COMMON OPTIONS
+.P
+These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet.
@@ -34,15 +59,23 @@ Use \fISWITCH\fR as the current compiler switch.
 \fB\-v\fR, \fB\-\-verbose\fR
 Be more verbose.
 .TP 4
-\fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH OPTIONS
-.TP 4
-\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
-Show this help in format \fIFMT\fR (pager, plain or groff).
-.TP 4
-\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
-Show output in format \fIFMT\fR (pager, plain or groff).
-.TP 4
 \fB\-\-version\fR
 Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+.SH MORE HELP
+.P
+Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
+.sp -1
+.P
+Use `opam help patterns' for help on patch matching.
+.sp -1
+.P
+Use `opam help environment' for help on environment variables.
+.SH AUTHORS
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

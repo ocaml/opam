@@ -9,8 +9,8 @@ man:
 	rm man/*
 	$(OPAM) $(HELP) > man/opam.1
 	for i in $(TOPICS); do\
-	  $(OPAM) help $$i $(HELPFMT) > man/opam-$$i.1; \
+	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1; \
 	done
 
 pdf:
-	$(MAKE) -f tutorials
+	$(MAKE) -C tutorials

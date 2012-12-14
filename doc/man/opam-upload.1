@@ -1,26 +1,40 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-UPLOAD" 1 "" "Opam 0.8.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-help \- display help about opam and opam commands
+opam\-upload \- Upload a package to an OPAM repository
 .SH SYNOPSIS
 .P
-\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
+\fBopam upload\fR [\fIOPTION\fR]... 
 .SH DESCRIPTION
 .P
-Prints help about opam commands
-.SH ARGUMENTS
+This command uploads an already built package to a remote repository, if the remote repository is not read\-only.
+.SH OPTIONS
 .TP 4
-\fITOPIC\fR
-The topic to get help on. `topics' lists the topics.
+\fB\-\-archive\fR=\fIFILE\fR
+Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz
+.TP 4
+\fB\-\-descr\fR=\fIFILE\fR
+Specify the .descr file that will be uploaded to repo://packages/name.version/descr
+.TP 4
+\fB\-\-opam\fR=\fIFILE\fR
+Specify the .opam file that will be uploaded to repo://packages/name.version/opam
+.TP 4
+\fB\-\-repository\fR=\fIREPO\fR, \fB\-\-repo\fR=\fIREPO\fR
+Specify the repository to upload to. Defaults to the default repository.
 .SH COMMON OPTIONS
+.P
+These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet.
@@ -34,15 +48,23 @@ Use \fISWITCH\fR as the current compiler switch.
 \fB\-v\fR, \fB\-\-verbose\fR
 Be more verbose.
 .TP 4
-\fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH OPTIONS
-.TP 4
-\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
-Show this help in format \fIFMT\fR (pager, plain or groff).
-.TP 4
-\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
-Show output in format \fIFMT\fR (pager, plain or groff).
-.TP 4
 \fB\-\-version\fR
 Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+.SH MORE HELP
+.P
+Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
+.sp -1
+.P
+Use `opam help patterns' for help on patch matching.
+.sp -1
+.P
+Use `opam help environment' for help on environment variables.
+.SH AUTHORS
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

@@ -1,26 +1,43 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-INSTALL" 1 "" "Opam 0.8.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-help \- display help about opam and opam commands
+opam\-install \- Install a list of packages
 .SH SYNOPSIS
 .P
-\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
+\fBopam install\fR [\fIOPTION\fR]... [\fIPACKAGES\fR]...
 .SH DESCRIPTION
 .P
-Prints help about opam commands
+This command installs one or more packages to the currently selected compiler. To install packages for another compiler, you need to switch compilers using \fBopam switch\fR. You can remove installed packages with \fBopam remove\fR, and list installed packages with \fBopam list \-i\fR. See \fBopam pin\fR as well to understand how to manage package versions.
+.P
+This command will make opam use the dependency solver to compute the transitive closure of dependencies to be installed, and will handle conflicts as well. If the dependency solver returns more than one solution, opam will arbitraty select the first one. If dependencies are to be installed, opam will ask if the installation should really be performed.
 .SH ARGUMENTS
 .TP 4
-\fITOPIC\fR
-The topic to get help on. `topics' lists the topics.
+\fIPACKAGES\fR
+List of package names.
+.SH OPTIONS
+.TP 4
+\fB\-k\fR, \fB\-\-keep\-build\-dir\fR
+Keep the build directory.
+.TP 4
+\fB\-m\fR \fIMAKE\fR, \fB\-\-makecmd\fR=\fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
+Use \fIMAKE\fR as the default 'make' command.
+.TP 4
+\fB\-n\fR, \fB\-\-no\-checksums\fR
+Do not verify the checksum of downloaded archives.
 .SH COMMON OPTIONS
+.P
+These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet.
@@ -34,15 +51,23 @@ Use \fISWITCH\fR as the current compiler switch.
 \fB\-v\fR, \fB\-\-verbose\fR
 Be more verbose.
 .TP 4
-\fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH OPTIONS
-.TP 4
-\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
-Show this help in format \fIFMT\fR (pager, plain or groff).
-.TP 4
-\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
-Show output in format \fIFMT\fR (pager, plain or groff).
-.TP 4
 \fB\-\-version\fR
 Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+.SH MORE HELP
+.P
+Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
+.sp -1
+.P
+Use `opam help patterns' for help on patch matching.
+.sp -1
+.P
+Use `opam help environment' for help on environment variables.
+.SH AUTHORS
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

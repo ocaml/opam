@@ -1,26 +1,60 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-SWITCH" 1 "" "Opam 0.8.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-help \- display help about opam and opam commands
+opam\-switch \- Manage multiple installation of compilers.
 .SH SYNOPSIS
 .P
-\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
+\fBopam switch\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-Prints help about opam commands
+This command allows to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independant from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each. See the EXAMPLES section to learn how to use this command.
 .SH ARGUMENTS
 .TP 4
-\fITOPIC\fR
-The topic to get help on. `topics' lists the topics.
+\fICOMMAND\fR
+Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.If a compiler switch is given instead of an usual command, this command will switch to the given compiler. You will then need to run \fBeval `opam config env`\fR to update your environment variables.
+.SH OPTIONS
+.TP 4
+\fB\-a\fR \fICOMP\fR, \fB\-\-alias\-of\fR=\fICOMP\fR
+The name of the compiler description which will be aliased.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful when testing).
+.SH COMMANDS
+.TP 4
+\fBadd\fR, \fBinstall\fR
+Install the given compiler.
+.TP 4
+\fBrm\fR, \fBremove\fR
+Remove the given compiler.
+.TP 4
+\fBexport\fR
+Export the list installed package to a file.
+.TP 4
+\fBimport\fR
+Install the packages from a file.
+.TP 4
+\fBreinstall\fR
+Reinstall the given compiler.
+.TP 4
+\fBlist\fR
+List the available compilers.
+.TP 4
+\fBcurrent\fR
+Show the current compiler.
 .SH COMMON OPTIONS
+.P
+These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet.
@@ -34,15 +68,23 @@ Use \fISWITCH\fR as the current compiler switch.
 \fB\-v\fR, \fB\-\-verbose\fR
 Be more verbose.
 .TP 4
-\fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH OPTIONS
-.TP 4
-\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
-Show this help in format \fIFMT\fR (pager, plain or groff).
-.TP 4
-\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
-Show output in format \fIFMT\fR (pager, plain or groff).
-.TP 4
 \fB\-\-version\fR
 Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+.SH MORE HELP
+.P
+Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
+.sp -1
+.P
+Use `opam help patterns' for help on patch matching.
+.sp -1
+.P
+Use `opam help environment' for help on environment variables.
+.SH AUTHORS
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.
