@@ -185,7 +185,7 @@ module B = struct
           with Not_found ->
             ()
         end;
-        if !OpamGlobals.verify_checksums && not (is_up_to_date state local_file) then
+        if not !OpamGlobals.no_checksums && not (is_up_to_date state local_file) then
           OpamSystem.internal_error "Wrong checksum for %s" (OpamFilename.to_string remote_file);
         Result local_file
       end

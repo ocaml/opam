@@ -181,9 +181,9 @@ let ends_with ~suffix s =
 
 let remove_prefix ~prefix s =
   if starts_with prefix s then
-    String.sub s (String.length prefix) (String.length s - String.length prefix)
+    Some (String.sub s (String.length prefix) (String.length s - String.length prefix))
   else
-    OpamGlobals.error_and_exit "%s is not a prefix of %s" prefix s
+    None
 
 let cut_at_aux fn s sep =
   try
@@ -228,18 +228,6 @@ let exact_match re s =
   with Not_found ->
     false
 
-let confirm fmt =
-  Printf.ksprintf (fun msg ->
-    OpamGlobals.msg "%s [Y/n] " msg;
-    if not !OpamGlobals.yes then
-      match read_line () with
-      | "y" | "Y"
-      | "" -> true
-      | _  -> false
-    else
-      true
-  ) fmt
-
 (* XXX: not optimized *)
 let insert comp x l =
   let rec aux = function
@@ -247,3 +235,15 @@ let insert comp x l =
     | h::t when comp h x < 0 -> h::aux t
     | l -> x :: l in
   aux l
+
+let env = lazy (
+  let e = Unix.environment () in
+  List.map (fun s ->
+    match cut_at s '=' with
+    | None   -> s, ""
+    | Some p -> p
+  ) (Array.to_list e)
+)
+
+let getenv n =
+  List.assoc n (Lazy.force env)

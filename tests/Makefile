@@ -1,19 +1,19 @@
-# never use /tmp
-# should be absolute
-TEST_DIR=/tmp
-OPAM_ROOT = $(TEST_DIR)/OPAM.ROOT
-OPAM_REPO = $(TEST_DIR)/OPAM.REPO
+TMP_DIR   = tmp
+OPAM_ROOT = $(TMP_DIR)/OPAM.ROOT
+OPAM_REPO = $(TMP_DIR)/OPAM.REPO
+
+# repositoy name
 REPO      = test
 REPOKIND ?= local
 
 # To test GIT repo
-OPAM_GIT = $(TEST_DIR)/OPAM.GIT
+OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-ENV   = OCAMLRUNPARAM=b OPAMDEBUG=2 OPAM_ROOT=$(OPAM_ROOT) PATH=$(PATH)
-OPAM  = $(ENV) ../_obuild/opam/opam.asm --yes --root $(OPAM_ROOT)
-CHECK = $(ENV) ../_obuild/opam-check/opam-check.asm --root $(OPAM_ROOT)
+ENV   = PATH=$(PATH) OCAMLRUNPARAM=b OPAMDEBUG=2 OPAMROOT=$(OPAM_ROOT) OPAMYES=1
+OPAM  = $(ENV) $(realpath ../_obuild/opam/opam.asm)
+CHECK = $(ENV) $(realpath _obuild/opam-check/opam-check.asm) --root $(OPAM_ROOT)
 
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
@@ -206,6 +206,7 @@ packages/%.tar.gz: packages/% packages/%/*
 
 clean:
 	rm -f $(ARCHIVES)
+	rm -f $(TMP_DIR)
 
 fresh:
 	rm -rf $(OPAM_ROOT)

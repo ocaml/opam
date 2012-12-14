@@ -25,6 +25,18 @@ let () =
   OpamGit.register ();
   OpamLocal.register ()
 
+let confirm fmt =
+  Printf.ksprintf (fun msg ->
+    OpamGlobals.msg "%s [Y/n] %!" msg;
+    if not !OpamGlobals.yes then
+      match read_line () with
+      | "y" | "Y"
+      | "" -> true
+      | _  -> false
+    else
+      true
+  ) fmt
+
 let check f =
   let root = OpamPath.default () in
   let with_switch_lock a f =
@@ -238,7 +250,7 @@ let create_system_compiler_description root = function
     let f =
       OpamFile.Comp.create_preinstalled
         OpamCompiler.default version
-        (if !OpamGlobals.base_packages then base_packages else [])
+        (if not !OpamGlobals.no_base_packages then base_packages else [])
         [ ("CAML_LD_LIBRARY_PATH", "=",
            "%{lib}%/stublibs"
            ^ ":" ^
@@ -356,7 +368,7 @@ let contents_of_variable t v =
     with Not_found ->
       OpamGlobals.error_and_exit "%s is not defined" (OpamVariable.Full.to_string v) in
   if name = OpamPackage.Name.default then (
-    try S (OpamSystem.getenv var_str)
+    try S (OpamMisc.getenv var_str)
     with Not_found ->
       if var_str = "ocaml-version" then
         S (OpamCompiler.Version.to_string t.compiler_version)
@@ -367,7 +379,7 @@ let contents_of_variable t v =
   ) else (
     let process_one name =
       let name_str = OpamPackage.Name.to_string name in
-      try Some (S (OpamSystem.getenv (name_str ^"_"^ var_str)))
+      try Some (S (OpamMisc.getenv (name_str ^"_"^ var_str)))
       with Not_found ->
         let installed = mem_installed_package_by_name t name in
         if var = OpamVariable.enable && installed then
@@ -519,7 +531,7 @@ let expand_env t env =
     let string = substitute_string t string in
     let read_env () =
       let prefix = OpamFilename.Dir.to_string t.root in
-      try OpamMisc.reset_env_value ~prefix (OpamSystem.getenv ident)
+      try OpamMisc.reset_env_value ~prefix (OpamMisc.getenv ident)
       with _ -> [] in
     match symbol with
     | "="  -> (ident, string)
@@ -565,7 +577,7 @@ let print_env_warning ?(add_profile = false) t =
   match
     List.filter
       (fun (s, v) ->
-        Some v <> try Some (OpamSystem.getenv s) with _ -> None)
+        Some v <> try Some (OpamMisc.getenv s) with _ -> None)
       (get_env t).new_env
   with
     | [] -> () (* every variables are correctly set *)
@@ -606,7 +618,7 @@ let get_compiler_packages t comp =
      "base-..."  (depending if "-no-base-packages" is set or not) *)
   let pkg_not = List.rev_map (function (n, _) -> n) pkg_not in
   let pkg_not =
-    if !OpamGlobals.base_packages then
+    if not !OpamGlobals.no_base_packages then
       pkg_not
     else
       List.filter (fun n -> not (List.mem n base_packages)) pkg_not in

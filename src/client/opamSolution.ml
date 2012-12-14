@@ -131,11 +131,11 @@ let proceed_to_install t nv =
     (* misc *)
     List.iter
       (fun (src, dst) ->
-        if OpamFilename.exists dst && OpamMisc.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+        if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
           OpamFilename.copy src.c dst
         else begin
           OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.to_string src.c) (OpamFilename.to_string dst);
-          if OpamMisc.confirm "Continue ?" then
+          if OpamState.confirm "Continue ?" then
             OpamFilename.copy src.c dst
         end
       ) (OpamFile.Dot_install.misc install);
@@ -267,7 +267,7 @@ let proceed_to_delete ~rm_build t nv =
   List.iter (fun (_,dst) ->
     if OpamFilename.exists dst then begin
       OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
-      if OpamMisc.confirm "Continue ?" then
+      if OpamState.confirm "Continue ?" then
         OpamFilename.remove dst
     end
   ) (OpamFile.Dot_install.misc install);
@@ -474,7 +474,7 @@ let apply_solution ?(force = false) t sol =
       if force || sum stats <= 1 then
         true
       else
-        OpamMisc.confirm "Do you want to continue ?" in
+        OpamState.confirm "Do you want to continue ?" in
 
     if continue then (
 
@@ -615,7 +615,7 @@ let print_variable_warnings () =
     let t = OpamState.load_state () in
     let warn w =
       let is_defined s =
-        try let _ = OpamSystem.getenv s in true
+        try let _ = OpamMisc.getenv s in true
         with Not_found -> false in
       if is_defined w then
         variables := w :: !variables in
@@ -646,7 +646,7 @@ let print_variable_warnings () =
                      you should better unset it if you want OPAM to work \
                      correctly.\n";
       List.iter (OpamGlobals.msg " - %s\n") !variables;
-      if not (OpamMisc.confirm "Do you want to continue ?") then
+      if not (OpamState.confirm "Do you want to continue ?") then
         OpamGlobals.exit 0;
     );
     variable_warnings := true;

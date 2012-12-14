@@ -187,6 +187,11 @@ val upgrade_system_compiler: (state -> unit) ref
 val create_system_compiler_description:
   dirname -> compiler_version option -> unit
 
+(** {2 Misc} *)
+
+(** Ask the user to press Y/y/N/n to continue *)
+val confirm: ('a, unit, string, bool) format4 -> 'a
+
 (** To be able to open [OpamState.Types] *)
 module Types: sig
   type t = state = {

@@ -148,6 +148,3 @@ val download: overwrite:bool -> filename:string -> dirname:string -> string
 
 (** Apply a patch file in the current directory. *)
 val patch: string -> unit
-
-(** Lazy environment *)
-val getenv: string -> string

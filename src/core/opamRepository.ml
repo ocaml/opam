@@ -159,7 +159,7 @@ let download_file ~gener_digest kind nv remote_file checksum =
     let digest () = match checksum with
       | None   -> true
       | Some c -> OpamFilename.digest file = c in
-    if not gener_digest && !OpamGlobals.verify_checksums && not (digest ()) then
+    if not gener_digest && not !OpamGlobals.no_checksums && not (digest ()) then
       OpamGlobals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
         (OpamFilename.to_string file)
         (match checksum with Some c -> c | None -> "<none>")

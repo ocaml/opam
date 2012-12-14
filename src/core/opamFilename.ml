@@ -217,7 +217,9 @@ let remove_prefix ~prefix filename =
     let str = Dir.to_string prefix in
     if str = "" then "" else Filename.concat str "" in
   let dirname = to_string filename in
-  OpamMisc.remove_prefix ~prefix dirname
+  match OpamMisc.remove_prefix ~prefix dirname with
+  | None   -> OpamGlobals.error_and_exit "%s is not a prefix of %s" prefix dirname
+  | Some s -> s
 
 let download ~overwrite filename dirname =
   mkdir dirname;

@@ -35,7 +35,7 @@ let set_global_options o =
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   OpamGlobals.switch   := o.switch;
   OpamGlobals.root_dir := OpamSystem.real_path o.root;
-  OpamGlobals.base_packages := !OpamGlobals.base_packages && not o.no_base_packages
+  OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages
 
 (* Build options *)
 type build_options = {
@@ -48,8 +48,8 @@ let create_build_options keep_build_dir make no_checksums =
   { keep_build_dir; make; no_checksums }
 
 let set_build_options b =
-  OpamGlobals.keep_build_dir   := b.keep_build_dir;
-  OpamGlobals.verify_checksums := not b.no_checksums;
+  OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
+  OpamGlobals.no_checksums   := !OpamGlobals.no_checksums || b.no_checksums;
   match b.make with
   | None   -> ()
   | Some s -> OpamGlobals.makecmd := lazy s

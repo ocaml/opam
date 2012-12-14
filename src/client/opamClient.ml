@@ -588,7 +588,7 @@ let check_opam_version () =
         (OpamVersion.to_string OpamVersion.current)
         (OpamVersion.to_string max_version);
       if OpamState.mem_installed_package_by_name t n
-      && OpamMisc.confirm "Do you want to upgrade OPAM ?"
+      && OpamState.confirm "Do you want to upgrade OPAM ?"
       then
         upgrade (OpamPackage.Name.Set.singleton n)
     )
@@ -999,7 +999,7 @@ let pin_list () =
 
 let upgrade_system_compiler t =
   let continue =
-    OpamMisc.confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
+    OpamState.confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
 
   if continue then (
 

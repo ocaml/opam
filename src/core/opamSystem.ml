@@ -227,20 +227,8 @@ let replace_path bins =
   done;
   env, !path
 
-let env = lazy (
-  let e = Unix.environment () in
-  List.map (fun s ->
-    match OpamMisc.cut_at s '=' with
-    | None   -> s, ""
-    | Some p -> p
-  ) (Array.to_list e)
-)
-
-let getenv n =
-  List.assoc n (Lazy.force env)
-
 let get_current_path () =
-  try OpamMisc.split (getenv "PATH") ':'
+  try OpamMisc.split (OpamMisc.getenv "PATH") ':'
   with Not_found -> []
 
 type command = string list
@@ -445,7 +433,7 @@ let ocaml_version = lazy (
 let system command = lazy (
   try
     let path =
-      try getenv "PATH"
+      try OpamMisc.getenv "PATH"
       with Not_found -> "" in
     let path = OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir path in
     match read_command_output ~verbose:false ~path command with

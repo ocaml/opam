@@ -134,7 +134,7 @@ val starts_with: prefix:string -> string -> bool
 val ends_with: suffix:string -> string -> bool
 
 (** Remove a prefix *)
-val remove_prefix: prefix:string -> string -> string
+val remove_prefix: prefix:string -> string -> string option
 
 (** Cut a string at the first occurence of the given char *)
 val cut_at: string -> char -> (string * string) option
@@ -162,11 +162,11 @@ val exact_match: Re.re -> string -> bool
 (** Filter and map *)
 val filter_map: ('a -> 'b option) -> 'a list -> 'b list
 
-(** Ask the user to press Y/y/N/n to continue *)
-val confirm: ('a, unit, string, bool) format4 -> 'a
-
 (** Insert a value in an ordered list *)
 val insert: ('a -> 'a -> int) -> 'a -> 'a list -> 'a list
+
+(** Lazy environment *)
+val getenv: string -> string
 
 module OP: sig
 
