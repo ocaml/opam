@@ -500,9 +500,8 @@ let upload =
       "FILE" "Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz"
       Arg.(some filename) None in
   let repo =
-    mk_opt ["repo";"repository"]
-      "REPO" "Specify the repository to upload to. Defaults to the default repository."
-      Arg.(some repository_name) None in
+    let doc = Arg.info ~docv:"REPO" ~doc:"Specify the repository to upload to." [] in
+    Arg.(required & pos 0 (some repository_name) None & doc) in
   let upload global_options opam descr archive repo =
     set_global_options global_options;
     let upl_opam = match opam with

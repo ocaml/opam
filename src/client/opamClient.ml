@@ -846,26 +846,19 @@ let reinstall names =
   OpamSolution.error_if_no_solution solution
 
 let upload upload repo =
-  log "upload %s" (string_of_upload upload);
+  log "upload %s %s" (string_of_upload upload) (OpamRepositoryName.to_string repo);
   let t = OpamState.load_state () in
   let opam = OpamFile.OPAM.read upload.upl_opam in
   let name = OpamFile.OPAM.name opam in
   let version = OpamFile.OPAM.version opam in
   let nv = OpamPackage.create name version in
-  let repo = match repo with
-  | None ->
-      if OpamPackage.Name.Map.mem name t.repo_index then
-        (* We upload the package to the first available repository. *)
-        OpamState.find_repository_name t (List.hd (OpamPackage.Name.Map.find name t.repo_index))
-      else
-        OpamGlobals.error_and_exit "No repository found to upload %s" (OpamPackage.to_string nv)
-  | Some repo ->
-      if OpamState.mem_repository_name t repo then
-        OpamState.find_repository_name t repo
-      else
-        OpamGlobals.error_and_exit "Unbound repository %S (available = %s)"
-          (OpamRepositoryName.to_string repo)
-          (OpamState.string_of_repositories t.repositories) in
+  let repo =
+    if OpamState.mem_repository_name t repo then
+      OpamState.find_repository_name t repo
+    else
+      OpamGlobals.error_and_exit "Unbound repository %S (available = %s)"
+        (OpamRepositoryName.to_string repo)
+        (OpamState.string_of_repositories t.repositories) in
   let repo_p = OpamPath.Repository.create t.root repo.repo_name in
   let upload_repo = OpamPath.Repository.raw (OpamPath.Repository.upload_dir repo_p) in
   let upload_opam = OpamPath.Repository.opam upload_repo nv in
