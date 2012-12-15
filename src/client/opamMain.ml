@@ -240,14 +240,14 @@ let guess_repository_kind kind address =
   | Some k -> k
 
 (* INIT *)
-let init_doc = "Initialize opam."
+let init_doc = "Initialize OPAM state."
 let init =
   let doc = init_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "The init command creates a fresh client state, that is initialize opam
-        configuration in ~/.opam and setup a default repository.";
-    `P "Additional repositories can later be added by using the $(b,opam repository) command.";
+    `P "The $(b,init) command creates a fresh client state.  This initializes OPAM
+        configuration in $(i,~/.opam) and configures a default package repository.";
+    `P "Additional repositories can be added later by using the $(b,opam repository) command.";
     `P "The local cache of a repository state can be updated by using $(b,opam update).";
   ] in
   let cores = mk_opt ["j";"cores"] "CORES" "Number of process to use when building packages." Arg.int 1 in
@@ -319,7 +319,7 @@ let info =
     `P "This command displays the information block for the selected
         package(s).";
     `P "The information block consists in the name of the package,
-        the installed version if this package is installed in the current
+        the installed version if this package is installed in the currently
         selected compiler, the list of available (installable) versions, and a
         complete description.";
     `P "$(b,opam list) can be used to display the list of
@@ -703,10 +703,10 @@ let pin =
 
 (* HELP *)
 let help =
-  let doc = "display help about opam and opam commands." in
+  let doc = "Display help about OPAM and OPAM commands." in
   let man = [
     `S "DESCRIPTION";
-     `P "Prints help about opam commands.";
+     `P "Prints help about OPAM commands.";
      `P "Use `$(mname) help topics' to get the full list of help topics.";
   ] in
   let topic =
