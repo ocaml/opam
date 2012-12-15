@@ -1,42 +1,45 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-INIT" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-REPOSITORY" 1 "" "Opam 0.8.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-init \- Initialize opam.
+opam\-repository \- Manage OPAM repositories.
 .SH SYNOPSIS
 .P
-\fBopam init\fR [\fIOPTION\fR]... [\fINAME\fR] [\fIADDRESS\fR]
+\fBopam repository\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-The init command creates a fresh client state, that is initialize opam configuration in ~/.opam and setup a default repository.
-.P
-Additional repositories can later be added by using the \fBopam repository\fR command.
-.P
-The local cache of a repository state can be updated by using \fBopam update\fR.
+This command is used to manage OPAM repositories. To synchronize OPAM with the last versions of the packages available in remote repositories, \fBopam update\fR should be used.
 .SH ARGUMENTS
 .TP 4
-\fIADDRESS\fR (absent=http://opam.ocamlpro.com)
-Address of the repository.
-.TP 4
-\fINAME\fR (absent=default)
-Name of the repository.
+\fICOMMAND\fR
+Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
 .SH OPTIONS
-.TP 4
-\fB\-c\fR \fIVERSION\fR, \fB\-\-comp\fR=\fIVERSION\fR (absent=system)
-Which compiler version to use.
-.TP 4
-\fB\-j\fR \fICORES\fR, \fB\-\-cores\fR=\fICORES\fR (absent=1)
-Number of process to use when building packages.
 .TP 4
 \fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
 Specify the kind of the repository to be set (the main ones are 'http', 'local' or 'git').
 .TP 4
 \fB\-\-no\-base\-packages\fR
 Do not install base packages (useful for testing purposes).
+.TP 4
+\fB\-p\fR \fIINT\fR, \fB\-\-priority\fR=\fIINT\fR
+Set the repository priority (bigger is better)
+.SH COMMANDS
+.TP 4
+\fBadd\fR
+Add the repository \fBname\fR available at address \fBaddress\fR to the list of repositories used by OPAM, with priority \fBpriority\fR. The repository priority can be optionally specified with \fB\-\-priority\fR, otherwise the new repository has a higher priority then any other existing repositories. The kind of the repository can be specified with the \fB\-\-kind\fR option, otherwise it will be determined automatically.
+.TP 4
+\fBremove\fR, \fBrm\fR
+Remove the repository named \fBname\fR from the list of repositories used by OPAM.
+.TP 4
+\fBlist\fR
+List all repositories used by OPAM.
+.TP 4
+\fBpriority\fR
+Change the priority of repository named \fBname\fR to \fBpriority\fR.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.

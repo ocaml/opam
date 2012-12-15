@@ -1,36 +1,29 @@
-# never use /tmp
-# should be absolute
-TEST_DIR=/tmp
-OPAM_ROOT = $(TEST_DIR)/OPAM.ROOT
-OPAM_REPO = $(TEST_DIR)/OPAM.REPO
-BIN       = $(TEST_DIR)/OPAM.BIN
+TMP_DIR   = $(realpath .)/tmp
+OPAM_ROOT = $(TMP_DIR)/OPAM.ROOT
+OPAM_REPO = $(TMP_DIR)/OPAM.REPO
+
+# repositoy name
 REPO      = test
-REPOKIND ?= rsync
+REPOKIND ?= local
 
 # To test GIT repo
-OPAM_GIT = $(TEST_DIR)/OPAM.GIT
-
-BINARIES  = opam-check opam
+OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
-# opam in the path should not be a requirement
-ENV  = OCAMLRUNPARAM=b OPAMDEBUG=2 OPAM_ROOT=$(OPAM_ROOT) PATH=$(BIN):$(PATH)
-OPAM = $(ENV) opam --yes --root $(OPAM_ROOT)
-CHECK = $(ENV) opam-check --root $(OPAM_ROOT)
+_OPAM = $(realpath ../_obuild/opam/opam.asm)
+ENV   = PATH=$(PATH) OCAMLRUNPARAM=b OPAMDEBUG=2 OPAMROOT=$(OPAM_ROOT) OPAMYES=1 OPAM=$(_OPAM)
+OPAM  = $(ENV) $(_OPAM)
+CHECK = $(ENV) $(realpath ../_obuild/opam-check/opam-check.asm)
 
-BINARIES_ = $(BINARIES:%=$(BIN)/%)
-BUILDS    = $(foreach bin, $(BINARIES), ../_obuild/$(bin)/$(bin).asm)
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
-.PHONY: all rsync git
+.PHONY: all local git
 
-all: rsync git
+all: local git
 	@
 
 run:
-	$(MAKE) fresh && \
-	$(MAKE) binaries && \
 	$(MAKE) init && \
 	$(MAKE) list && \
 	$(MAKE) upload && \
@@ -50,19 +43,13 @@ run:
 	$(MAKE) list && \
 	$(MAKE) switch-env-packages
 
-rsync:
-	$(MAKE) REPOKIND=rsync run
+local:
+	$(MAKE) clean
+	$(MAKE) REPOKIND=local run
 
 git:
+	$(MAKE) clean
 	$(MAKE) REPOKIND=git run
-
-$(BINARIES_): $(BUILDS)
-	mkdir -p $(BIN)
-	for bin in $(BINARIES); do \
-	  cp ../_obuild/$$bin/$$bin.asm $(BIN)/$$bin ; \
-	done
-
-binaries: $(BINARIES_)
 
 init:
 	rm -rf $(OPAM_REPO)
@@ -72,7 +59,7 @@ ifeq ($(REPOKIND), git)
 	  touch README && git add README && \
 	  git commit -a -m "Initial commit"
 endif
-	$(OPAM) init -no-base-packages $(REPO) $(OPAM_REPO) -kind $(REPOKIND)
+	$(OPAM) init --no-base-packages $(REPO) $(OPAM_REPO) -k $(REPOKIND)
 
 upload: $(ARCHIVES)
 ifeq ($(REPOKIND), git)
@@ -117,15 +104,15 @@ ifeq ($(REPOKIND), git)
 	cd $(OPAM_GIT)/P5   && git init && git add * && git commit -a -m "initial commit"
 else
 	cd packages && \
-	$(OPAM) upload -opam P1-1.opam -descr P1-1/README -archive P1-1.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P1-1.opam --descr P1-1/README --archive P1-1.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload -opam P2.opam -descr P2/README -archive P2.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P2.opam --descr P2/README --archive P2.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload -opam P3.opam -descr P3/README -archive P3.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P3.opam --descr P3/README --archive P3.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload -opam P4-1.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P4-1.opam --descr P4/README --archive P4.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload -opam P5.opam -descr P5/README -archive P5.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P5.opam --descr P5/README --archive P5.tar.gz $(REPO)
 endif
 	cp compilers/* $(OPAM_REPO)/compilers/
 	$(OPAM) update # update the list of available packages with the one being updated
@@ -173,11 +160,11 @@ ifeq ($(REPOKIND), git)
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4.2 and P4.3"
 else
 	cd packages && \
-	$(OPAM) upload -opam P1-2.opam -descr P1-2/README -archive P1-2.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P1-2.opam --descr P1-2/README --archive P1-2.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload -opam P4-2.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P4-2.opam --descr P4/README --archive P4.tar.gz $(REPO)
 	cd packages && \
-	$(OPAM) upload -opam P4-3.opam -descr P4/README -archive P4.tar.gz -repo $(REPO)
+	$(OPAM) upload --opam P4-3.opam --descr P4/README --archive P4.tar.gz $(REPO)
 endif
 	$(OPAM) update # update the list of available packages with the one being updated
 
@@ -197,15 +184,15 @@ downgrade:
 switch-alias:
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias P1.1 P2.1
-	$(OPAM) switch -export $(OPAM_ROOT)/export
-	$(OPAM) switch -install test -alias-of system -no-base-packages
-	$(OPAM)	switch -import $(OPAM_ROOT)/export
+	$(OPAM) switch export $(OPAM_ROOT)/export
+	$(OPAM) switch install test --alias-of system --no-base-packages
+	$(OPAM)	switch import $(OPAM_ROOT)/export
 	$(CHECK) -l switch-alias-clone P1.1 P2.1
-	$(OPAM) switch -install test2 -alias-of 20
+	$(OPAM) switch install test2 --alias-of 20
 	$(OPAM) install P1
 	$(CHECK) -l switch-alias-20 P1.1
 	$(OPAM) switch system
-	$(OPAM) switch -remove test test2
+	$(OPAM) switch remove test test2
 
 switch-env-packages:
 	$(OPAM) switch 10
@@ -221,7 +208,4 @@ packages/%.tar.gz: packages/% packages/%/*
 
 clean:
 	rm -f $(ARCHIVES)
-
-fresh:
-	rm -rf $(OPAM_ROOT) $(BIN)
-	rm -rf $(OPAM_REPO) 
+	rm -rf $(TMP_DIR)

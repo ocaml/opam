@@ -21,9 +21,21 @@ let log fmt =
   OpamGlobals.log "STATE" fmt
 
 let () =
-  OpamCurl.register ();
+  OpamHTTP.register ();
   OpamGit.register ();
-  OpamRsync.register ()
+  OpamLocal.register ()
+
+let confirm fmt =
+  Printf.ksprintf (fun msg ->
+    OpamGlobals.msg "%s [Y/n] %!" msg;
+    if not !OpamGlobals.yes then
+      match read_line () with
+      | "y" | "Y"
+      | "" -> true
+      | _  -> false
+    else
+      true
+  ) fmt
 
 let check f =
   let root = OpamPath.default () in
@@ -238,7 +250,7 @@ let create_system_compiler_description root = function
     let f =
       OpamFile.Comp.create_preinstalled
         OpamCompiler.default version
-        (if !OpamGlobals.base_packages then base_packages else [])
+        (if not !OpamGlobals.no_base_packages then base_packages else [])
         [ ("CAML_LD_LIBRARY_PATH", "=",
            "%{lib}%/stublibs"
            ^ ":" ^
@@ -356,7 +368,7 @@ let contents_of_variable t v =
     with Not_found ->
       OpamGlobals.error_and_exit "%s is not defined" (OpamVariable.Full.to_string v) in
   if name = OpamPackage.Name.default then (
-    try S (OpamSystem.getenv var_str)
+    try S (OpamMisc.getenv var_str)
     with Not_found ->
       if var_str = "ocaml-version" then
         S (OpamCompiler.Version.to_string t.compiler_version)
@@ -367,7 +379,7 @@ let contents_of_variable t v =
   ) else (
     let process_one name =
       let name_str = OpamPackage.Name.to_string name in
-      try Some (S (OpamSystem.getenv (name_str ^"_"^ var_str)))
+      try Some (S (OpamMisc.getenv (name_str ^"_"^ var_str)))
       with Not_found ->
         let installed = mem_installed_package_by_name t name in
         if var = OpamVariable.enable && installed then
@@ -519,7 +531,7 @@ let expand_env t env =
     let string = substitute_string t string in
     let read_env () =
       let prefix = OpamFilename.Dir.to_string t.root in
-      try OpamMisc.reset_env_value ~prefix (OpamSystem.getenv ident)
+      try OpamMisc.reset_env_value ~prefix (OpamMisc.getenv ident)
       with _ -> [] in
     match symbol with
     | "="  -> (ident, string)
@@ -565,7 +577,7 @@ let print_env_warning ?(add_profile = false) t =
   match
     List.filter
       (fun (s, v) ->
-        Some v <> try Some (OpamSystem.getenv s) with _ -> None)
+        Some v <> try Some (OpamMisc.getenv s) with _ -> None)
       (get_env t).new_env
   with
     | [] -> () (* every variables are correctly set *)
@@ -587,7 +599,7 @@ let print_env_warning ?(add_profile = false) t =
             Printf.sprintf " --root %s" !OpamGlobals.root_dir) in
       let variables = String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l) in
       OpamGlobals.msg "\nTo update %s; you can now run:
-            \n\    $ %seval `opam%s config -env`\n%s\n"
+            \n\    $ %seval `opam%s config env`\n%s\n"
         variables
         which_opam
         opam_root
@@ -606,7 +618,7 @@ let get_compiler_packages t comp =
      "base-..."  (depending if "-no-base-packages" is set or not) *)
   let pkg_not = List.rev_map (function (n, _) -> n) pkg_not in
   let pkg_not =
-    if !OpamGlobals.base_packages then
+    if not !OpamGlobals.no_base_packages then
       pkg_not
     else
       List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
@@ -642,6 +654,7 @@ let install_conf_ocaml_config root switch =
         ("stublibs", OpamPath.Switch.stublibs root switch);
         ("toplevel", OpamPath.Switch.toplevel root switch);
         ("man", OpamPath.Switch.man_dir root switch);
+        ("share", OpamPath.Switch.share_dir root switch);
       ]
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
@@ -754,11 +767,16 @@ let install_compiler t ~quiet switch compiler =
   end
 
 let update_pinned_package t nv pin =
-  let kind = kind_of_pin_option pin in
-  let path = OpamFilename.raw_dir (path_of_pin_option pin) in
-  let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
-  let build = OpamPath.Switch.build t.root t.switch nv in
-  B.download_dir nv ~dst:build path
+  match kind_of_pin_option pin with
+  | `git ->
+    let path = OpamFilename.raw_dir (path_of_pin_option pin) in
+    let module B = (val OpamRepository.find_backend `git: OpamRepository.BACKEND) in
+    let build = OpamPath.Switch.build t.root t.switch nv in
+    B.download_dir nv ~dst:build path
+  | _ ->
+    OpamGlobals.error_and_exit
+      "Cannot update the pinned package %s: wrong backend."
+      (OpamPackage.to_string nv)
 
 module Types = struct
   type t = state = {

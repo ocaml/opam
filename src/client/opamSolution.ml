@@ -131,14 +131,24 @@ let proceed_to_install t nv =
     (* misc *)
     List.iter
       (fun (src, dst) ->
-        if OpamFilename.exists dst && OpamMisc.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+        if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
           OpamFilename.copy src.c dst
         else begin
           OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.to_string src.c) (OpamFilename.to_string dst);
-          if OpamMisc.confirm "Continue ?" then
+          if OpamState.confirm "Continue ?" then
             OpamFilename.copy src.c dst
         end
       ) (OpamFile.Dot_install.misc install);
+
+    (* Shared files *)
+    List.iter (fun (src, dst) ->
+      let share = OpamPath.Switch.share t.root t.switch name in
+      let dst = share // OpamFilename.Base.to_string dst in
+      (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
+      if not (OpamFilename.exists_dir share) then
+        OpamFilename.mkdir share;
+      OpamFilename.copy src.c dst;
+    ) (OpamFile.Dot_install.share install);
 
     if !warnings <> [] then (
       let print (f, dst) = Printf.sprintf " - %s in %s" (OpamFilename.to_string f) (OpamFilename.Dir.to_string dst) in
@@ -148,7 +158,7 @@ let proceed_to_install t nv =
       OpamGlobals.exit 2;
     )
   );
-  if not !OpamGlobals.debug then
+  if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
     OpamFilename.rmdir build_dir
 
 let pinned_path t nv =
@@ -257,10 +267,25 @@ let proceed_to_delete ~rm_build t nv =
   List.iter (fun (_,dst) ->
     if OpamFilename.exists dst then begin
       OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
-      if OpamMisc.confirm "Continue ?" then
+      if OpamState.confirm "Continue ?" then
         OpamFilename.remove dst
     end
   ) (OpamFile.Dot_install.misc install);
+
+  (* Remove the shared files *)
+  log "Removing the shared files";
+  let share = OpamPath.Switch.share t.root t.switch name in
+  List.iter (fun (_,dst) ->
+    let dst = share // (OpamFilename.Base.to_string dst) in
+    if OpamFilename.exists dst then
+      OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
+  ) (OpamFile.Dot_install.share install);
+  (match OpamFilename.list_files share, OpamFilename.list_dirs share with
+  | [], [] -> OpamFilename.rmdir share
+  | _      ->
+    OpamGlobals.msg
+      "%s is not empty, I'm keeping its content for futur installations"
+      (OpamFilename.Dir.to_string share));
 
   (* Remove .config and .install *)
   log "Removing config and install files";
@@ -449,7 +474,7 @@ let apply_solution ?(force = false) t sol =
       if force || sum stats <= 1 then
         true
       else
-        OpamMisc.confirm "Do you want to continue ?" in
+        OpamState.confirm "Do you want to continue ?" in
 
     if continue then (
 
@@ -590,7 +615,7 @@ let print_variable_warnings () =
     let t = OpamState.load_state () in
     let warn w =
       let is_defined s =
-        try let _ = OpamSystem.getenv s in true
+        try let _ = OpamMisc.getenv s in true
         with Not_found -> false in
       if is_defined w then
         variables := w :: !variables in
@@ -621,7 +646,7 @@ let print_variable_warnings () =
                      you should better unset it if you want OPAM to work \
                      correctly.\n";
       List.iter (OpamGlobals.msg " - %s\n") !variables;
-      if not (OpamMisc.confirm "Do you want to continue ?") then
+      if not (OpamState.confirm "Do you want to continue ?") then
         OpamGlobals.exit 0;
     );
     variable_warnings := true;

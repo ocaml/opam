@@ -588,7 +588,7 @@ let check_opam_version () =
         (OpamVersion.to_string OpamVersion.current)
         (OpamVersion.to_string max_version);
       if OpamState.mem_installed_package_by_name t n
-      && OpamMisc.confirm "Do you want to upgrade OPAM ?"
+      && OpamState.confirm "Do you want to upgrade OPAM ?"
       then
         upgrade (OpamPackage.Name.Set.singleton n)
     )
@@ -630,12 +630,11 @@ let init repo compiler cores =
   else try
     let repo_p = OpamPath.Repository.create root repo.repo_name in
     (* Create (possibly empty) configuration files *)
-    let switch = match compiler with
-      | None   -> OpamSwitch.default
-      | Some c -> OpamSwitch.of_string (OpamCompiler.to_string c) in
-    let compiler = match compiler with
-      | None   -> OpamCompiler.default
-      | Some c -> c in
+    let switch =
+      if compiler = OpamCompiler.default then
+        OpamSwitch.default
+      else
+        OpamSwitch.of_string (OpamCompiler.to_string compiler) in
 
     (* Create ~/.opam/compilers/system.comp *)
     let system_version = OpamCompiler.Version.current () in
@@ -847,26 +846,19 @@ let reinstall names =
   OpamSolution.error_if_no_solution solution
 
 let upload upload repo =
-  log "upload %s" (string_of_upload upload);
+  log "upload %s %s" (string_of_upload upload) (OpamRepositoryName.to_string repo);
   let t = OpamState.load_state () in
   let opam = OpamFile.OPAM.read upload.upl_opam in
   let name = OpamFile.OPAM.name opam in
   let version = OpamFile.OPAM.version opam in
   let nv = OpamPackage.create name version in
-  let repo = match repo with
-  | None ->
-      if OpamPackage.Name.Map.mem name t.repo_index then
-        (* We upload the package to the first available repository. *)
-        OpamState.find_repository_name t (List.hd (OpamPackage.Name.Map.find name t.repo_index))
-      else
-        OpamGlobals.error_and_exit "No repository found to upload %s" (OpamPackage.to_string nv)
-  | Some repo ->
-      if OpamState.mem_repository_name t repo then
-        OpamState.find_repository_name t repo
-      else
-        OpamGlobals.error_and_exit "Unbound repository %S (available = %s)"
-          (OpamRepositoryName.to_string repo)
-          (OpamState.string_of_repositories t.repositories) in
+  let repo =
+    if OpamState.mem_repository_name t repo then
+      OpamState.find_repository_name t repo
+    else
+      OpamGlobals.error_and_exit "Unbound repository %S (available = %s)"
+        (OpamRepositoryName.to_string repo)
+        (OpamState.string_of_repositories t.repositories) in
   let repo_p = OpamPath.Repository.create t.root repo.repo_name in
   let upload_repo = OpamPath.Repository.raw (OpamPath.Repository.upload_dir repo_p) in
   let upload_opam = OpamPath.Repository.opam upload_repo nv in
@@ -896,7 +888,7 @@ let rec remote action =
       let pretty_print r =
         OpamGlobals.msg "%4d %-7s %10s     %s\n"
           r.repo_priority
-          (Printf.sprintf "[%s]" r.repo_kind)
+          (Printf.sprintf "[%s]" (string_of_repository_kind r.repo_kind))
           (OpamRepositoryName.to_string r.repo_name)
           (OpamFilename.Dir.to_string r.repo_address) in
       let repos = sorted_repositories t in
@@ -909,11 +901,15 @@ let rec remote action =
         repo_priority = min_int; (* we initially put it as low-priority *)
       } in
       if OpamState.mem_repository_name t name then
-        OpamGlobals.error_and_exit "%s is already a remote repository" (OpamRepositoryName.to_string name)
+        OpamGlobals.error_and_exit
+          "%s is already a remote repository"
+          (OpamRepositoryName.to_string name)
       else (
         (try OpamRepository.init repo with
         | OpamRepository.Unknown_backend ->
-            OpamGlobals.error_and_exit "\"%s\" is not a supported backend" repo.repo_kind
+            OpamGlobals.error_and_exit
+              "\"%s\" is not a supported backend"
+              (string_of_repository_kind repo.repo_kind)
         | e ->
             cleanup_repo repo.repo_name;
             raise e);
@@ -968,33 +964,42 @@ let pin action =
     let nv = OpamState.find_installed_package_by_name t name in
     OpamFile.Reinstall.write reinstall_f (OpamPackage.Set.add nv reinstall)
   );
-  match action.pin_arg with
+  match action.pin_option with
   | Unpin -> update_config (OpamPackage.Name.Map.remove name pins)
   | _     ->
       if OpamPackage.Name.Map.mem name pins then (
         let current = OpamPackage.Name.Map.find name pins in
         OpamGlobals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
           (OpamPackage.Name.to_string name)
-          (path_of_pin_option action.pin_arg)
+          (path_of_pin_option action.pin_option)
           (path_of_pin_option current);
       );
+    match OpamState.find_packages_by_name t name with
+    | None   ->
+      OpamGlobals.error_and_exit
+        "%s is not a valid package name."
+        (OpamPackage.Name.to_string name)
+    | Some _ ->
       log "Adding %s(%s) => %s"
-        (path_of_pin_option action.pin_arg)
-        (kind_of_pin_option action.pin_arg)
+        (path_of_pin_option action.pin_option)
+        (string_of_pin_kind (kind_of_pin_option action.pin_option))
         (OpamPackage.Name.to_string name);
-      update_config (OpamPackage.Name.Map.add name action.pin_arg pins)
+      update_config (OpamPackage.Name.Map.add name action.pin_option pins)
 
 let pin_list () =
   log "pin_list";
   let t = OpamState.load_state () in
   let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
   let print n a =
-    OpamGlobals.msg "%-20s %-8s %s\n" (OpamPackage.Name.to_string n) (kind_of_pin_option a) (path_of_pin_option a) in
+    OpamGlobals.msg "%-20s %-8s %s\n"
+      (OpamPackage.Name.to_string n)
+      (string_of_pin_kind (kind_of_pin_option a))
+      (path_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
 
 let upgrade_system_compiler t =
   let continue =
-    OpamMisc.confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
+    OpamState.confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
 
   if continue then (
 

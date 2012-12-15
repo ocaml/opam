@@ -13,23 +13,31 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* Convention:
+   all the global OPAM variables can be set using environment variables
+   using OPAM<variable> *)
+
+let check var = ref (
+  try OpamMisc.getenv ("OPAM"^var) <> ""
+  with Not_found -> false
+)
+
 let debug = ref (
-  try int_of_string (Sys.getenv "OPAMDEBUG") >= 2
+  try int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 2
   with _ -> false
 )
 
-let verbose = ref (
-  try int_of_string (Sys.getenv "OPAMDEBUG") >= 1
-  with _ -> false
-)
+let verbose =
+  try ref (int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 1)
+  with _ -> check "VERBOSE"
 
-let base_packages = ref true
-let verify_checksums = ref true
-let yes = ref false
+let keep_build_dir   = check "KEEPBUILDDIR"
+let no_base_packages = check "NOBASEPACKAGES"
+let no_checksums     = check "NOCHECKSUMS"
+let yes              = check "YES"
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"
-let default_repository_kind    = "curl"
 
 let default_build_command = [ [ "./build.sh" ] ]
 
@@ -42,14 +50,14 @@ let switch : string option ref = ref None
 let opam_version = "1"
 
 let home =
-  try Sys.getenv "HOME"
+  try OpamMisc.getenv "HOME"
   with _ -> Sys.getcwd ()
 
 let default_opam_dir =
   Filename.concat home ".opam"
 
 let root_dir = ref (
-  try Sys.getenv "OPAMROOT"
+  try OpamMisc.getenv "OPAMROOT"
   with _ -> default_opam_dir
 )
 

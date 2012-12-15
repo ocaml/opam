@@ -1,47 +1,67 @@
-.TH OPAM-PIN 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-PIN" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-pin - Pin a package to a specific version
+.P
+opam\-pin \- Pin a given package to a specific version.
 .SH SYNOPSIS
-.PP
-\f[I]opam pin\f[] <package> <version>
-.PP
-\f[I]opam pin\f[] <package> <path>
-.PP
-\f[I]opam pin\f[] <package> none
+.P
+\fBopam pin\fR [\fIOPTION\fR]... [\fIPACKAGE\fR] [\fIPIN\fR]
 .SH DESCRIPTION
-.PP
-This command will "pin" a package to a specific version, or use a
-specific source path for installing and upgrading the package.
-Using \f[I]opam pin <package> none\f[] will undo the "pinned" status of
-<package>.
-.SH PARAMETERS
-.TP
-.B <package>
-Specify package to pin or unpin.
-.RS
-.RE
-.TP
-.B <version>
-Pin the selected package to a specific version.
-.RS
-.RE
-.TP
-.B <path>
-Use the specified path for installing or upgrading the package.
-This means that from now on, \f[I]opam install\f[] and \f[I]opam
-upgrade\f[] will use the specified path to install (respectively
-upgrade) the package.
-.RS
-.RE
-.TP
-.B none
-Unpin the package, i.e.
-use the default sources and version for the package.
-.RS
-.RE
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.P
+This command will 'pin' a package to a specific version, or use a specific source path for installing and upgrading the package. Using \fBopam pin <package> none\fR will undo the 'pinned' status of <package>.
+.P
+To list all the currently pinned packages, call the \fBopam pin\fR without arguments or use \fB\-\-list\fR.
+.SH ARGUMENTS
+.TP 4
+\fIPACKAGE\fR
+Package name.
+.TP 4
+\fIPIN\fR
+Specific version, local path or git url to pin the package to, or 'none' to unpin the package.
+.SH OPTIONS
+.TP 4
+\fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
+Force the kind of pinning.
+.TP 4
+\fB\-l\fR, \fB\-\-list\fR
+List the currently pinned packages.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

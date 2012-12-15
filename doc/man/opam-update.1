@@ -1,21 +1,65 @@
-.TH OPAM-UPDATE 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-UPDATE" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-update - Synchronize repositories
+.P
+opam\-update \- Update the list of available packages.
 .SH SYNOPSIS
-.PP
-\f[I]opam update\f[]
+.P
+\fBopam update\fR [\fIOPTION\fR]... [\fIREPOSITORIES\fR]...
 .SH DESCRIPTION
-.PP
-This command updates each repository that has been previously set up by
-the \f[I]opam init\f[] or \f[I]opam remote\f[] commands.
-The list of packages that can be upgraded will be printed out, and the
-user can use \f[I]opam upgrade\f[] to upgrade those.
-.SH SEE ALSO
-.PP
-\f[B]opam-init\f[](1), \f[B]opam-remote\f[](1), \f[B]opam-upgrade\f[](1)
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.P
+This command updates each repository that has been previously set up by the \fBopam init\fR or \fBopam repository\fR commands. The list of packages that can be upgraded will be printed out, and the user can use \fBopam upgrade\fR to upgrade those.
+.SH ARGUMENTS
+.TP 4
+\fIREPOSITORIES\fR
+List of repository names.
+.SH OPTIONS
+.TP 4
+\fB\-b\fR, \fB\-\-keep\-build\-dir\fR
+Keep the build directory.
+.TP 4
+\fB\-m\fR \fIMAKE\fR, \fB\-\-makecmd\fR=\fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
+Use \fIMAKE\fR as the default 'make' command.
+.TP 4
+\fB\-n\fR, \fB\-\-no\-checksums\fR
+Do not verify the checksum of downloaded archives.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

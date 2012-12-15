@@ -20,10 +20,9 @@ open OpamTypes
 (** Initialize the client a consistent state.
     [init repo alias oversion cores] means:
     - [repo] is the initial repository description,
-    - [oversion] is the version of the compiler. [None] means we
-      are using the system-wide installed compiler.
+    - [compiler] is the version of the compiler.
     - [cores] is the number of cores *)
-val init : repository -> compiler option -> int -> unit
+val init : repository -> compiler -> int -> unit
 
 (** Display all available packages that matches any of the regexps. *)
 val list : print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_sensitive:bool
@@ -51,11 +50,8 @@ val update : repository_name list -> unit
     Take the global file lock. *)
 val upgrade : OpamPackage.Name.Set.t -> unit
 
-(** Upload a package to a remote repository. If repo is [None] then it
-    will look for the repository associated with the package
-    name. Otherwise, it will look for a repository having the right
-    name. Take the global file lock. *)
-val upload : upload -> repository_name option -> unit
+(** Upload a package to a remote repository. Take the global file lock. *)
+val upload : upload -> repository_name -> unit
 
 (** Remove the given set of packages. Take the global file lock. *)
 val remove : OpamPackage.Name.Set.t -> unit

@@ -1,51 +1,67 @@
-.TH OPAM-INSTALL 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-INSTALL" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-install - Install packages
+.P
+opam\-install \- Install a list of packages.
 .SH SYNOPSIS
-.PP
-\f[I]opam install\f[] <package>[.<version>]...
+.P
+\fBopam install\fR [\fIOPTION\fR]... [\fIPACKAGES\fR]...
 .SH DESCRIPTION
-.PP
-This command installs one or more packages to the currently selected
-compiler.
-To install packages for another compiler, you need to switch compilers
-using \f[I]opam switch\f[].
-You can remove installed packages with \f[I]opam remove\f[], and list
-installed packages with \f[I]opam list -installed\f[].
-See \f[I]opam pin\f[] as well to understand how to manage package
-versions.
-.PP
-This command will make opam use the dependency solver to compute the
-transitive closure of dependencies to be installed, and will handle
-conflicts as well.
-If the dependency solver returns more than one solution, opam will ask
-which one should be selected.
-If dependencies are to be installed, opam will ask if the installation
-should really be performed.
-.SH PARAMETERS
-.TP
-.B <package>[.<version>]...
-Package(s) to be installed.
-An optional version can be specified, instructing opam to install a
-particular version of the specified package.
-.RS
-.RE
-.SH EXAMPLES
-.IP \[bu] 2
-To install the last version of package "lwt", do:
-.PP
-\f[C]$\ opam\ install\ lwt\f[]
-.IP \[bu] 2
-To install "lwt" version 2.4.0, do:
-.PP
-\f[C]$\ opam\ install\ lwt.2.4.0\f[]
-.SH SEE ALSO
-.PP
-\f[B]opam-remove\f[](1), \f[B]opam-switch\f[](1), \f[B]opam-list\f[](1),
-\f[B]opam-pin\f[](1)
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.P
+This command installs one or more packages to the currently selected compiler. To install packages for another compiler, you need to switch compilers using \fBopam switch\fR. You can remove installed packages with \fBopam remove\fR, and list installed packages with \fBopam list \-i\fR. See \fBopam pin\fR as well to understand how to manage package versions.
+.P
+This command will make opam use the dependency solver to compute the transitive closure of dependencies to be installed, and will handle conflicts as well. If the dependency solver returns more than one solution, opam will arbitraty select the first one. If dependencies are to be installed, opam will ask if the installation should really be performed.
+.SH ARGUMENTS
+.TP 4
+\fIPACKAGES\fR
+List of package names.
+.SH OPTIONS
+.TP 4
+\fB\-b\fR, \fB\-\-keep\-build\-dir\fR
+Keep the build directory.
+.TP 4
+\fB\-m\fR \fIMAKE\fR, \fB\-\-makecmd\fR=\fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
+Use \fIMAKE\fR as the default 'make' command.
+.TP 4
+\fB\-n\fR, \fB\-\-no\-checksums\fR
+Do not verify the checksum of downloaded archives.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

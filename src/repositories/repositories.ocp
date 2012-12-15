@@ -3,8 +3,8 @@ comp += [ "-warn-error" "A" ]
 begin library "opam-repositories"
 
   files   = [
-    "opamCurl.ml"
-    "opamRsync.ml"
+    "opamHTTP.ml"
+    "opamLocal.ml"
     "opamGit.ml"
   ]
 

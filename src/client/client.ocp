@@ -25,7 +25,7 @@ begin program "opam"
   ]
   requires = [
     "opam-lib"
-    "arg"
+    "cmdliner"
  ]
 
 end

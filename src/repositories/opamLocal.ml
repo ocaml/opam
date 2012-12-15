@@ -149,4 +149,5 @@ module B = struct
 end
 
 let register () =
-  OpamRepository.register_backend "rsync" (module B: OpamRepository.BACKEND)
+  OpamRepository.register_backend `local (module B: OpamRepository.BACKEND)
+

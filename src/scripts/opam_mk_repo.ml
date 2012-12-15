@@ -17,9 +17,9 @@ open OpamTypes
 open OpamFilename.OP
 
 let () =
-  OpamCurl.register ();
+  OpamHTTP.register ();
   OpamGit.register ();
-  OpamRsync.register ()
+  OpamLocal.register ()
 
 let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
 
@@ -65,7 +65,7 @@ let () =
   log "Reading urls.txt";
   let local_index_file = OpamFilename.of_string "urls.txt" in
   let old_index = OpamFile.Urls_txt.safe_read local_index_file in
-  let new_index = OpamCurl.make_urls_txt local_repo in
+  let new_index = OpamHTTP.make_urls_txt local_repo in
 
   let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in
   let to_add = OpamFilename.Attribute.Set.diff new_index old_index in
@@ -160,7 +160,7 @@ let () =
   || not (OpamPackage.Set.is_empty to_remove) then (
     OpamGlobals.msg "Rebuilding index.tar.gz ...\n";
     if not dryrun then
-      OpamCurl.make_index_tar_gz local_repo;
+      OpamHTTP.make_index_tar_gz local_repo;
   ) else
     OpamGlobals.msg "OPAM Repository already up-to-date.\n";
 
@@ -171,7 +171,7 @@ let () =
   if dryrun then
     OpamGlobals.msg "Rebuilding urls.txt\n"
   else
-    let _index = OpamCurl.make_urls_txt local_repo in
+    let _index = OpamHTTP.make_urls_txt local_repo in
 
     if !errors <> [] then
       let display_error (nv, error) =

@@ -5,7 +5,7 @@ all: clone depends.ocp
 depends.ocp: depends.ocp.boot
 	cp $< $@
 
-clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp ocaml-arg.stamp
+clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp cmdliner.stamp
 
 cudf-0.6.3.tar.gz:
 	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31543/cudf-0.6.3.tar.gz
@@ -42,11 +42,12 @@ dose.stamp: dose3-3.1.2.tar.gz
 	mv dose3-3.1.2 dose
 	@touch $@
 
-ocaml-arg.0.3.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/ocaml-arg.0.3.tar.gz
+cmdliner-0.9.2.tbz:
+	$(FETCH) http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.2.tbz
 
-ocaml-arg.stamp: ocaml-arg.0.3.tar.gz
-	tar xfz ocaml-arg.0.3.tar.gz
+cmdliner.stamp: cmdliner-0.9.2.tbz
+	tar xfj cmdliner-0.9.2.tbz
+	mv cmdliner-0.9.2 cmdliner
 	@touch $@
 
 ocamlgraph-1.8.1.tar.gz:
@@ -69,6 +70,6 @@ clean:
 	rm -rf *~
 
 distclean: clean
-	rm -rf cudf extlib ocaml-re ocamlgraph dose ocaml-arg
+	rm -rf cudf extlib ocaml-re ocamlgraph dose cmdliner
 	rm -f depends.ocp
 	rm -f *.tar.gz *.stamp

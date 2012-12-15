@@ -26,11 +26,6 @@ begin library "graph"
   generated = true
 end
 
-begin library "arg"
-  dirname  = "%{lib}%/ocaml-arg"
-  generated = true
-end
-
 begin library "cudf"
   dirname  = "%{lib}%/cudf"
   generated = true
@@ -48,3 +43,7 @@ begin library "extLib"
   generated = true
 end
 
+begin library "cmdliner"
+  dirname = "%{lib}%/cmdliner"
+  generated = true
+end

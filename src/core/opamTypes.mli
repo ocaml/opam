@@ -141,10 +141,19 @@ type repository_name = OpamRepositoryName.t
 (** Maps of repository names *)
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
+(** Repository kind *)
+type repository_kind = [`http|`local|`git]
+
+(** Pretty-print repository kinds. *)
+val string_of_repository_kind: [`http|`local|`git] -> string
+
+(** Parser of repository kinds. Raise an error if the kind is not valid. *)
+val repository_kind_of_string: string -> [`http|`local|`git]
+
 (** Repositories *)
 type repository = {
   repo_name    : repository_name;
-  repo_kind    : string;
+  repo_kind    : repository_kind;
   repo_address : dirname;
   repo_priority: int;
 }
@@ -268,7 +277,7 @@ val string_of_upload: upload -> string
 (** Remote arguments *)
 type remote =
   | RList
-  | RAdd of repository_name * string * dirname * int option
+  | RAdd of repository_name * repository_kind * dirname * int option
   | RRm of repository_name
   | RPriority of repository_name * int
 
@@ -285,18 +294,27 @@ type pin_option =
 (** Pinned packages *)
 type pin = {
   pin_package: name;
-  pin_arg: pin_option;
+  pin_option : pin_option;
 }
 
 (** Pretty-printing of pinned packages *)
 val string_of_pin: pin -> string
 
+(** Pin kind *)
+type pin_kind = [`version|`git|`local|`unpin]
+
+(** Pretty-printing of pin kinds. *)
+val pin_kind_of_string: string -> pin_kind
+
+(** Parsing of pin kinds. Raise an error if it is not a valid value. *)
+val string_of_pin_kind: pin_kind -> string
+
 (** Read pin options args *)
-val pin_option_of_string: ?kind:string -> string -> pin_option
+val pin_option_of_string: ?kind:pin_kind -> string -> pin_option
 
 val path_of_pin_option: pin_option -> string
 
-val kind_of_pin_option: pin_option -> string
+val kind_of_pin_option: pin_option -> pin_kind
 
 (** Configuration requests *)
 type config_option = {

@@ -56,11 +56,9 @@ begin library "re_glob"
   requires = [ "re" ]
 end
 
-begin library "arg"
+begin library "cmdliner"
    files = [
-     "ocaml-arg/src/subCommand.ml"
-     "ocaml-arg/src/formatExt.ml"
-     "ocaml-arg/src/argExt.ml"
+     "cmdliner/src/cmdliner.ml"
    ]
 
 end

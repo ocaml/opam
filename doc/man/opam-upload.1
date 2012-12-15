@@ -1,46 +1,65 @@
-.TH OPAM-UPLOAD 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-UPLOAD" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-upload - Upload a new package to a remote repository
+.P
+opam\-upload \- Upload a package to an OPAM repository.
 .SH SYNOPSIS
-.PP
-\f[I]opam upload\f[] -opam <opam-file> -descr <descr-file> -archive
-<name.version.tar.gz> [-repo <repository>]
+.P
+\fBopam upload\fR [\fIOPTION\fR]... \fIREPO\fR
 .SH DESCRIPTION
-.PP
-This command uploads an already built package to a remote repository, if
-the remote repository is not read-only.
-.SH PARAMETERS
-.TP
-.B -opam <opam-file>
-Specify the .opam file that will be uploaded to
-repo://packages/name.version/opam
-.RS
-.RE
-.TP
-.B -descr <descr-file>
-Specify the .descr file that will be uploaded to
-repo://packages/name.version/descr
-.RS
-.RE
-.TP
-.B -archive <name.version.tar.gz>
-Specify the archive that will be uploaded to
-repo://archives/name.version+opam.tar.gz
-.RS
-.RE
-.SH OPTIONS
-.TP
-.B -repo <repository>
+.P
+This command uploads an already built package to a remote repository, if the remote repository is not read\-only.
+.SH ARGUMENTS
+.TP 4
+\fIREPO\fR
 Specify the repository to upload to.
-Defaults to the default repository.
-.RS
-.RE
-.SH SEE ALSO
-.PP
-\f[B]opam-remote\f[](1), \f[B]opam-upgrade\f[](1)
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.SH OPTIONS
+.TP 4
+\fB\-\-archive\fR=\fIFILE\fR
+Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz
+.TP 4
+\fB\-\-descr\fR=\fIFILE\fR
+Specify the .descr file that will be uploaded to repo://packages/name.version/descr
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.TP 4
+\fB\-\-opam\fR=\fIFILE\fR
+Specify the .opam file that will be uploaded to repo://packages/name.version/opam
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

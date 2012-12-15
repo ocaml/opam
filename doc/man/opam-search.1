@@ -1,50 +1,69 @@
-.TH OPAM-SEARCH 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-SEARCH" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-search - Search into the package database
+.P
+opam\-search \- Search into the package list.
 .SH SYNOPSIS
-.PP
-\f[I]opam search\f[] [-short] [-installed] <packagepattern>...
+.P
+\fBopam search\fR [\fIOPTION\fR]... [\fIPATTERNS\fR]...
 .SH DESCRIPTION
-.PP
-This command displays the list of available packages that match one of
-the <packagepattern>s specified as arguments.
-.PP
-Unless the -short switch is used, the output format is the same as the
-\f[I]opam list\f[] command.
-It displays one package per line, and each line contains the name of the
-package, the installed version or "--" if the package is not installed,
-and a short description.
-The full description can be obtained by doing \f[I]opam info \f[].
+.P
+This command displays the list of available packages that match one of the package patterns specified as arguments.
+.P
+Unless the \fB\-\-short\fR flag is used, the output format is the same as the \fBopam list\fR command. It displays one package per line, and each line contains the name of the package, the installed version or \-\- if the package is not installed, and a short description.
+.P
+The full description can be obtained by doing \fBopam info <package>\fR.
+.SH ARGUMENTS
+.TP 4
+\fIPATTERNS\fR
+List of package patterns.
 .SH OPTIONS
-.TP
-.B <packagepattern>...
-Search for packages whose name or description matches (in the "glob"
-sense) at least one <packagepattern>.
-The case is not taken into account by default.
-.RS
-.RE
-.TP
-.B -case-sensitive
-Force the search in case sensitive mode
-.RS
-.RE
-.TP
-.B -short
-Output the names of packages separated by one whitespace instead of
-using the usual formatting.
-.RS
-.RE
-.TP
-.B -installed
+.TP 4
+\fB\-c\fR, \fB\-\-case\-sensitive\fR
+Force the search in case sensitive mode.
+.TP 4
+\fB\-i\fR, \fB\-\-installed\fR
 List installed packages only.
-.RS
-.RE
-.SH SEE ALSO
-.PP
-\f[B]opam-list\f[](1), \f[B]opam-info\f[](1)
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.TP 4
+\fB\-s\fR, \fB\-\-short\fR
+Output the names of packages separated by one whitespace instead of using the usual formatting.
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

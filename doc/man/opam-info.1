@@ -1,30 +1,60 @@
-.TH OPAM-INFO 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-INFO" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-info - Displays information about packages
+.P
+opam\-info \- Display information about specific packages.
 .SH SYNOPSIS
-.PP
-\f[I]opam info\f[] <package>...
+.P
+\fBopam info\fR [\fIOPTION\fR]... [\fIPATTERNS\fR]...
 .SH DESCRIPTION
-.PP
+.P
 This command displays the information block for the selected package(s).
-The information block consists in the name of the package, the installed
-version if this package is installed in the current selected compiler,
-the list of available (installable) versions, and a complete
-description.
-\f[I]opam list\f[] can be used to display the list of available packages
-as well as a short description for each.
+.P
+The information block consists in the name of the package, the installed version if this package is installed in the current selected compiler, the list of available (installable) versions, and a complete description.
+.P
+\fBopam list\fR can be used to display the list of available packages as well as a short description for each.
+.SH ARGUMENTS
+.TP 4
+\fIPATTERNS\fR
+List of package patterns.
 .SH OPTIONS
-.TP
-.B <package>...
-Display the information block for multiple packages.
-.RS
-.RE
-.SH SEE ALSO
-.PP
-\f[B]opam-list\f[](1)
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

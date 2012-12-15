@@ -28,6 +28,9 @@ val compare: repository -> repository -> int
 (** Default repository *)
 val default: repository
 
+(** Default repository address *)
+val default_address: dirname
+
 (** Constructor *)
 val repository_address: string -> dirname
 
@@ -84,10 +87,10 @@ module type BACKEND = sig
 end
 
 (** Register a repository backend *)
-val register_backend: string -> (module BACKEND) -> unit
+val register_backend: repository_kind -> (module BACKEND) -> unit
 
 (** Find a backend *)
-val find_backend: string -> (module BACKEND)
+val find_backend: repository_kind -> (module BACKEND)
 
 (** Copy the additional package files in the current dir *)
 val copy_files: OpamPath.Repository.r -> package -> OpamFilename.Set.t

@@ -48,20 +48,34 @@ type package_set = OpamPackage.Set.t
 
 type 'a package_map = 'a OpamPackage.Map.t
 
-type kind = string
-
 type address = dirname
 
 type repository_name = OpamRepositoryName.t
 
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
+type repository_kind = [`http|`local|`git]
+
 type repository = {
   repo_name    : repository_name;
-  repo_kind    : string;
+  repo_kind    : repository_kind;
   repo_address : dirname;
   repo_priority: int;
 }
+
+let string_of_repository_kind = function
+  | `http  -> "http"
+  | `local -> "local"
+  | `git   -> "git"
+
+let repository_kind_of_string = function
+  | "wget"
+  | "curl"
+  | "http"  -> `http
+  | "rsync"
+  | "local" -> `local
+  | "git"   -> `git
+  | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
 
 type variable = OpamVariable.t
 
@@ -128,7 +142,7 @@ let string_of_upload u =
 (* Remote arguments *)
 type remote =
   | RList
-  | RAdd of repository_name * string * dirname * int option
+  | RAdd of repository_name * repository_kind * dirname * int option
   | RRm of repository_name
   | RPriority of repository_name * int
 
@@ -138,7 +152,7 @@ let string_of_remote = function
     Printf.sprintf "add %s %s %s %s"
       (OpamRepositoryName.to_string r)
       (OpamFilename.Dir.to_string d)
-      k
+      (string_of_repository_kind k)
       (match p with None -> "-" | Some p -> string_of_int p)
   | RRm  r ->
     Printf.sprintf "rm %s"
@@ -162,27 +176,42 @@ type pin_option =
 
 let pin_option_of_string ?kind s =
   match kind with
-  | Some "version" -> Version (OpamPackage.Version.of_string s)
-  | Some "git"     ->
+  | Some `version -> Version (OpamPackage.Version.of_string s)
+  | Some `git     ->
     if Sys.file_exists s then
       Git (OpamFilename.Dir.of_string s)
     else
       Git (OpamFilename.raw_dir s)
-  | Some "rsync"   -> Path (OpamFilename.Dir.of_string s)
-  | None | Some _  ->
-    let d = OpamSystem.real_path s in
+  | Some `local   -> Path (OpamFilename.Dir.of_string s)
+  | Some `unpin   -> Unpin
+  | None          ->
     if s = "none" then
       Unpin
-    else if Sys.file_exists d then
+    else if Sys.file_exists s then
       Path (OpamFilename.Dir.of_string s)
-    else if OpamMisc.contains d ('/') then
+    else if OpamMisc.contains s ('/') then
       Git (OpamFilename.raw_dir s)
     else
       Version (OpamPackage.Version.of_string s)
 
+type pin_kind = [`version|`git|`local|`unpin]
+
+let string_of_pin_kind = function
+  | `version -> "version"
+  | `git     -> "git"
+  | `local   -> "local"
+  | `unpin   -> "unpin"
+
+let pin_kind_of_string = function
+  | "version" -> `version
+  | "git"     -> `git
+  | "local"   -> `local
+  | "unpin"   -> `unpin
+  | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
+
 type pin = {
   pin_package: name;
-  pin_arg: pin_option;
+  pin_option : pin_option;
 }
 
 let path_of_pin_option = function
@@ -192,16 +221,16 @@ let path_of_pin_option = function
   | Unpin     -> "none"
 
 let kind_of_pin_option = function
-  | Version _ -> "version"
-  | Git _     -> "git"
-  | Path _    -> "rsync"
-  | Unpin     -> "<none>"
+  | Version _ -> `version
+  | Git _     -> `git
+  | Path _    -> `local
+  | Unpin     -> `unpin
 
 let string_of_pin p =
   Printf.sprintf "{package=%s; path=%s; kind=%s}"
     (OpamPackage.Name.to_string p.pin_package)
-    (path_of_pin_option p.pin_arg)
-    (kind_of_pin_option p.pin_arg)
+    (path_of_pin_option p.pin_option)
+    (string_of_pin_kind (kind_of_pin_option p.pin_option))
 
 type config =
   | CEnv of bool

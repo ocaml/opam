@@ -1,73 +1,92 @@
-.TH OPAM-CONFIG 1 "10/09/2012" "opam 0.6.0" "OPAM Manual"
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-CONFIG" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
 .SH NAME
-.PP
-opam-config - Getting package configuration
+.P
+opam\-config \- Display configuration options for packages.
 .SH SYNOPSIS
-.PP
-\f[I]opam config\f[] -env
-.PP
-\f[I]opam config\f[] -list-vars
-.PP
-\f[I]opam config\f[] -var <var>
-.PP
-\f[I]opam config\f[] -subst <filename>...
-.PP
-\f[I]opam config\f[] [-r] -I <name>...
-.PP
-\f[I]opam config\f[] [-r] -bytecomp <name>[.<lib>]...
-.PP
-\f[I]opam config\f[] [-r] -asmcomp <name>[.<lib>]...
-.PP
-\f[I]opam config\f[] [-r] -bytelink <name>[.<lib>]...
-.PP
-\f[I]opam config\f[] [-r] -asmlink <name>[.<lib>]...
+.P
+\fBopam config\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
 .SH DESCRIPTION
-.PP
-This command uses opam state to output information on how to use
-installed libraries, updating the user's $PATH, and substitute variables
-used in opam packages.
-Apart from \f[I]opam config -env\f[], most of these commands are used by
-opam internally, and thus are of limited interest for the user.
+.P
+This command uses opam state to output information on how to use installed libraries, updating the user’s PATH, and substitute variables used in opam packages.
+.P
+Apart from \fBopam config env\fR, most of these commands are used by opam internally, and thus are of limited interest for the casual user.
+.SH ARGUMENTS
+.TP 4
+\fICOMMAND\fR
+Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
 .SH OPTIONS
-.TP
-.B -env
-Set the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and
-CAML_LD_LIBRARY_PATH according to the current selected compiler.
-The output of this command is meant to be evaluated by a shell, for
-example by doing \f[I]eval \f[C]opam\ config\ -env\f[]\f[].
-.RS
-.RE
-.TP
-.B -list-vars
-Return the list of all variables defined in installed packages.
-.RS
-.RE
-.TP
-.B -var <var>
-Return the value associated with variable <var>
-.RS
-.RE
-.TP
-.B -subst <filename>...
-Substitute variables in file <filename>.in to create <filename>
-.RS
-.RE
-.TP
-.B -I <name>...
-Return the list of paths to include when compiling a project using the
-package <name>.
-Using the -r option will take into account the transitive closure of
-dependencies.
-.RS
-.RE
-.TP
-.B -bytecomp|-asmcomp|-bytelink|-asmlink <name>[.<lib>]...
-Return the associated value for section <lib> in the config file for
-package <name>.
-.RS
-.RE
-.SH OPAM
-.PP
-Part of the opam(1) suite
+.TP 4
+\fB\-c\fR, \fB\-\-csh\fR
+Use csh\-compatible output mode.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.TP 4
+\fB\-r\fR, \fB\-\-rec\fR
+Recursive query.
+.SH COMMANDS
+.TP 4
+\fBenv\fR
+returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH according to the current selected compiler. The output of this command is meant to be evaluated by a shell, for example by doing \fBeval `opam config env`\fR.
+.TP 4
+\fBvar\fR
+returns the value associated with the given variable.
+.TP 4
+\fBlist\fR
+returns the list of all variables defined in the listed packages (no package = all).
+.TP 4
+\fBsubst\fR
+substitutes variables in the given files.
+.TP 4
+\fBincludes\fR
+returns include options.
+.TP 4
+\fBbytecomp\fR
+returns bytecode compile options.
+.TP 4
+\fBasmcomp\fR
+returns assembly compile options.
+.TP 4
+\fBbytelink\fR
+returns bytecode linking options.
+.TP 4
+\fBasmlink\fR
+returns assembly compile options.
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
 .SH AUTHORS
-OCamlPro.
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.

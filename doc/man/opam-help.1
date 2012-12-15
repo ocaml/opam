@@ -1,0 +1,31 @@
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM-HELP" 1 "" "Opam 0.8.2" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
+.SH NAME
+.P
+opam\-help \- display help about opam and opam commands.
+.SH SYNOPSIS
+.P
+\fBopam help\fR [\fIOPTION\fR]... [\fITOPIC\fR]
+.SH DESCRIPTION
+.P
+Prints help about opam commands.
+.P
+Use `opam help topics' to get the full list of help topics.
+.SH ARGUMENTS
+.TP 4
+\fITOPIC\fR
+The topic to get help on.
+.SH OPTIONS
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-man\-format\fR=\fIFMT\fR (absent=pager)
+Show output in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-version\fR
+Show version information.

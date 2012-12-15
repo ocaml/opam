@@ -257,32 +257,7 @@ end
 (** .install files *)
 module Dot_install: sig
 
-  module Raw : sig
-
-    include IO_FILE
-
-    (** List of files to install in $lib/ *)
-    val lib:  t -> string optional list
-
-    (** List of files to install in $bin/ *)
-    val bin:  t -> (string optional * string option) list
-
-    (** List of other files to install *)
-    val misc: t -> (string optional * string option) list
-
-    (** List of toplevel files *)
-    val toplevel: t -> string optional list
-
-    (** Construct as [bin] *)
-    val with_bin: t -> (string optional * string option) list -> t
-
-    (** Construct as [lib] *)
-    val with_lib: t -> string optional list -> t
-
-    (** Construct as [toplevel] *)
-    val with_toplevel: t -> string optional list -> t
-
-  end
+  module Raw : IO_FILE
 
   include IO_FILE
 
@@ -297,6 +272,9 @@ module Dot_install: sig
 
   (** List of other files to install *)
   val misc: t -> (filename optional * filename) list
+
+  (** List of shared files *)
+  val share: t -> (filename optional * basename) list
 
 end
 
@@ -391,7 +369,7 @@ module URL: sig
   val url: t -> string
 
   (** Backend kind (could be curl/rsync/git at the moment) *)
-  val kind: t -> string option
+  val kind: t -> repository_kind option
 
   (** Archive checksum *)
   val checksum: t -> string option

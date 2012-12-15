@@ -28,13 +28,16 @@ let to_string r =
   Printf.sprintf "%s(%d %s %s)"
     (OpamRepositoryName.to_string r.repo_name)
     r.repo_priority
-    r.repo_kind
+    (OpamTypes.string_of_repository_kind r.repo_kind)
     (OpamFilename.Dir.to_string r.repo_address)
+
+let default_address =
+  OpamFilename.raw_dir OpamGlobals.default_repository_address
 
 let default = {
   repo_name     = OpamRepositoryName.default;
-  repo_kind     = OpamGlobals.default_repository_kind;
-  repo_address  = OpamFilename.raw_dir OpamGlobals.default_repository_address;
+  repo_kind     = `http;
+  repo_address  = default_address;
   repo_priority = 0;
 }
 
@@ -147,13 +150,16 @@ let map fn = function
 
 (* Download file f in the current directory *)
 let download_file ~gener_digest kind nv remote_file checksum =
-  log "download_file %s %s %s" kind (OpamPackage.to_string nv) (OpamFilename.to_string remote_file);
+  log "download_file %s %s %s"
+    (string_of_repository_kind kind)
+    (OpamPackage.to_string nv)
+    (OpamFilename.to_string remote_file);
   let module B = (val find_backend_by_kind kind: BACKEND) in
   let check file =
     let digest () = match checksum with
       | None   -> true
       | Some c -> OpamFilename.digest file = c in
-    if not gener_digest && !OpamGlobals.verify_checksums && not (digest ()) then
+    if not gener_digest && not !OpamGlobals.no_checksums && not (digest ()) then
       OpamGlobals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
         (OpamFilename.to_string file)
         (match checksum with Some c -> c | None -> "<none>")
@@ -164,7 +170,10 @@ let download_file ~gener_digest kind nv remote_file checksum =
 
 (* Download directory d in the current directory *)
 let download_dir k nv ?dst d =
-  log "download_dir %s %s %s" k (OpamPackage.to_string nv) (OpamFilename.Dir.to_string d);
+  log "download_dir %s %s %s"
+    (string_of_repository_kind k)
+    (OpamPackage.to_string nv)
+    (OpamFilename.Dir.to_string d);
   let module B = (val find_backend_by_kind k: BACKEND) in
   B.download_dir nv ?dst d
 
@@ -172,7 +181,7 @@ let download_dir k nv ?dst d =
 let download_one ?(gener_digest = false) k nv url checksum =
   let f x = F x in
   let d x = D x in
-  if k = "curl" || OpamSystem.is_tar_archive url then
+  if k = `http || OpamSystem.is_tar_archive url then
     map f (download_file ~gener_digest k nv (OpamFilename.raw_file url) checksum)
   else
     map d (download_dir k nv (OpamFilename.raw_dir url))
@@ -181,10 +190,9 @@ let download_one ?(gener_digest = false) k nv url checksum =
    rsync backend, otherwise use the curl one. This function is only
    used when the user hasn't specified a repository kind. *)
 let kind_of_url url =
-  if Sys.file_exists url then
-  "rsync"
-  else
-  "curl"
+  if Sys.file_exists url
+  then `local
+  else `http
 
 let download_archive r nv =
   let module B = (val find_backend r: BACKEND) in
@@ -234,7 +242,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
       | None   -> kind_of_url (OpamFile.URL.url url_file)
       | Some k -> k in
       let url = OpamFile.URL.url url_file in
-      log "downloading %s:%s" url kind;
+      log "downloading %s:%s" url (string_of_repository_kind kind);
 
       match OpamFilename.in_dir local_dir (fun () -> download_one ~gener_digest kind nv url checksum) with
       | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
@@ -358,7 +366,9 @@ let update r =
         | Some k -> k in
       let checksum = OpamFile.URL.checksum url in
       let url = OpamFile.URL.url url in
-      log "updating %s:%s:%s" url kind (match checksum with None -> "*" | Some c -> c);
+      log "updating %s:%s:%s" url
+        (string_of_repository_kind kind)
+        (match checksum with None -> "*" | Some c -> c);
       match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
       | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
       | Up_to_date _  -> false
