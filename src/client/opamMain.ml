@@ -672,7 +672,7 @@ let pin =
       Arg.info ~docv:"PIN" ~doc:
         "Specific version, local path or git url to pin the package to,
          or 'none' to unpin the package." [] in
-    Arg.(value & pos 0 (some string) None & doc) in
+    Arg.(value & pos 1 (some string) None & doc) in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
   let kind =
     let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in

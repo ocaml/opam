@@ -174,6 +174,8 @@ type pin_option =
   | Git of dirname
   | Unpin
 
+type pin_kind = [`version|`git|`local|`unpin]
+
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
@@ -193,8 +195,6 @@ let pin_option_of_string ?kind s =
       Git (OpamFilename.raw_dir s)
     else
       Version (OpamPackage.Version.of_string s)
-
-type pin_kind = [`version|`git|`local|`unpin]
 
 let string_of_pin_kind = function
   | `version -> "version"
