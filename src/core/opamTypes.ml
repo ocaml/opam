@@ -205,6 +205,7 @@ let string_of_pin_kind = function
 let pin_kind_of_string = function
   | "version" -> `version
   | "git"     -> `git
+  | "rsync"
   | "local"   -> `local
   | "unpin"   -> `unpin
   | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
