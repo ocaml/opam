@@ -326,7 +326,7 @@ type config_option = {
 
 type config =
   | CEnv of bool
-  | CList
+  | CList of name list
   | CVariable of full_variable
   | CIncludes of bool * (name list)
   | CCompil   of config_option

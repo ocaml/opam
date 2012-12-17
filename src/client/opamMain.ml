@@ -375,7 +375,9 @@ let config =
                               which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enable) which is
                               either $(b,\"enable\") or $(b,\"disable\"). Finally, OPAM will look into
                               its global and package config files to find whether these variables exist.";
-    ["list"]    , `list    , "returns the list of all variables defined in the listed packages (no package = all).";
+    ["list"]    , `list    , "returns the list of all variables defined in the listed packages. It is possible
+                              to filter the list of variables by giving package names (use $(b,globals) to get
+                              the list of global variables). No parameter means displaying all the variables.";
     ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are
                               replaced by the value of the variable $(i,var) (see the documentation associated
                               to $(b,opam config var)).";
@@ -414,7 +416,7 @@ let config =
       match command with
       | None           -> if env="nv" then CEnv csh else OpamGlobals.error_and_exit "Missing subcommand"
       | Some `env      -> CEnv csh
-      | Some `list     -> CList
+      | Some `list     -> CList (List.map OpamPackage.Name.of_string params)
       | Some `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
       | Some `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
       | Some `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)

@@ -235,7 +235,7 @@ let string_of_pin p =
 
 type config =
   | CEnv of bool
-  | CList
+  | CList of name list
   | CVariable of full_variable
   | CIncludes of bool * (name list)
   | CCompil   of config_option

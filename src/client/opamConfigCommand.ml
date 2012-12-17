@@ -27,7 +27,7 @@ let string_of_config_option t =
 
 let string_of_config = function
   | CEnv csh    -> Printf.sprintf "env(csh=%b)" csh
-  | CList       -> "list-vars"
+  | CList ns    -> Printf.sprintf "list-vars %s" (String.concat "," (List.map OpamPackage.Name.to_string ns))
   | CVariable v -> Printf.sprintf "var(%s)" (OpamVariable.Full.to_string v)
   | CCompil c   -> string_of_config_option c
   | CSubst l    -> String.concat "," (List.map OpamFilename.Base.to_string l)
@@ -35,32 +35,53 @@ let string_of_config = function
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map OpamPackage.Name.to_string l))
 
+let need_globals ns =
+  ns = []
+  || List.mem OpamPackage.Name.default ns
+  || List.mem (OpamPackage.Name.of_string "globals") ns
+
 (* Implicit variables *)
-let implicits t =
+let implicits t ns =
   let global_implicits =
-    List.map (fun variable ->
-      OpamVariable.Full.create_global OpamPackage.Name.default (OpamVariable.of_string variable)
-    ) [ "ocaml-version"; "preinstalled" ] in
+    if need_globals ns then
+      List.map (fun variable ->
+        OpamVariable.Full.create_global OpamPackage.Name.default (OpamVariable.of_string variable)
+      ) [ "ocaml-version"; "preinstalled" ]
+    else
+      [] in
   let names =
-    OpamPackage.Name.Set.of_list (List.map OpamPackage.name (OpamPackage.Set.elements t.packages)) in
+    if ns = [] then
+      List.map OpamPackage.name (OpamPackage.Set.elements t.packages)
+    else
+      ns in
+  (* keep only the existing packages *)
+  let names =
+    List.filter (fun n ->
+      OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.packages
+    ) names in
   List.fold_left
     (fun accu variable ->
-      OpamPackage.Name.Set.fold (fun name accu ->
+      List.fold_left (fun accu name ->
         OpamVariable.Full.create_global name (OpamVariable.of_string variable) :: accu
-      ) names accu
+      ) accu names
     ) global_implicits [ "installed"; "enable" ]
 
 (* List all the available variables *)
-let config_list t =
+let config_list t ns =
+  let globals =
+    if need_globals ns then
+      [OpamPackage.Name.default, OpamState.dot_config t OpamPackage.Name.default]
+    else
+      [] in
   let configs =
-    (OpamPackage.Name.default, OpamState.dot_config t OpamPackage.Name.default) ::
+    globals @
     OpamPackage.Set.fold (fun nv l ->
       let name = OpamPackage.name nv in
       let file = OpamState.dot_config t (OpamPackage.name nv) in
       (name, file) :: l
     ) t.installed [] in
   let variables =
-    implicits t @
+    implicits t ns @
     List.fold_left (fun accu (name, config) ->
       (* add all the global variables *)
       let globals =
@@ -244,7 +265,7 @@ let config request =
     if csh
     then print_csh_env env
     else print_env env
-  | CList                     -> config_list t
+  | CList ns                  -> config_list t ns
   | CSubst fs                 -> List.iter (OpamState.substitute_file t) fs
   | CIncludes (is_rec, names) -> config_includes t is_rec names
   | CCompil c                 -> config_compil t c
