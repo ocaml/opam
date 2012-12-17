@@ -60,8 +60,12 @@ let help_sections = [
   `S global_option_section;
   `P "These options are common to all commands.";
 
+  `S "FURTHER DOCUMENTATION";
+  `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
+
   `S "AUTHORS";
-  `P "Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>";
+  `P "Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>"; `Noblank;
+  `P "Frederic Tuong";
 
   `S "BUGS";
   `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";
