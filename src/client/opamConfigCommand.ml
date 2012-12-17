@@ -35,6 +35,21 @@ let string_of_config = function
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map OpamPackage.Name.to_string l))
 
+(* Implicit variables *)
+let implicits t =
+  let global_implicits =
+    List.map (fun variable ->
+      OpamVariable.Full.create_global OpamPackage.Name.default (OpamVariable.of_string variable)
+    ) [ "ocaml-version"; "preinstalled" ] in
+  let names =
+    OpamPackage.Name.Set.of_list (List.map OpamPackage.name (OpamPackage.Set.elements t.packages)) in
+  List.fold_left
+    (fun accu variable ->
+      OpamPackage.Name.Set.fold (fun name accu ->
+        OpamVariable.Full.create_global name (OpamVariable.of_string variable) :: accu
+      ) names accu
+    ) global_implicits [ "installed"; "enable" ]
+
 (* List all the available variables *)
 let config_list t =
   let configs =
@@ -45,27 +60,31 @@ let config_list t =
       (name, file) :: l
     ) t.installed [] in
   let variables =
-    List.fold_left (fun accu (name, c) ->
+    implicits t @
+    List.fold_left (fun accu (name, config) ->
       (* add all the global variables *)
       let globals =
-        List.fold_left (fun accu v ->
-          (OpamVariable.Full.create_global name v, OpamFile.Dot_config.variable c v) :: accu
-        ) accu (OpamFile.Dot_config.variables c) in
-      (* then add the local variables *)
+        List.fold_left (fun accu variable ->
+          OpamVariable.Full.create_global name variable :: accu
+        ) accu (OpamFile.Dot_config.variables config) in
+      (* then add the local section variables *)
       List.fold_left
-        (fun accu n ->
-          let variables = OpamFile.Dot_config.Section.variables c n in
-          List.fold_left (fun accu v ->
-            (OpamVariable.Full.create_local name n v,
-             OpamFile.Dot_config.Section.variable c n v) :: accu
+        (fun accu section ->
+          let variables = OpamFile.Dot_config.Section.variables config section in
+          List.fold_left (fun accu variable ->
+            OpamVariable.Full.create_local name section variable :: accu
           ) accu variables
-        ) globals (OpamFile.Dot_config.Section.available c)
+        ) globals (OpamFile.Dot_config.Section.available config)
     ) [] configs in
-  List.iter (fun (fv, contents) ->
-    OpamGlobals.msg "%-20s %s\n"
-      (OpamVariable.Full.to_string fv)
+  let contents =
+    List.map
+      (fun v -> v, OpamState.contents_of_variable t v)
+      variables in
+  List.iter (fun (variable, contents) ->
+    OpamGlobals.msg "%-40s %s\n"
+      (OpamVariable.Full.to_string variable)
       (OpamVariable.string_of_variable_contents contents)
-  ) (List.rev variables)
+  ) (List.rev contents)
 
 (* Return the transitive closure of dependencies sorted in topological order *)
 let get_transitive_dependencies t ?(depopts = false) names =
