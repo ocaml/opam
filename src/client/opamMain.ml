@@ -139,7 +139,7 @@ let mk_subcommands_aux ?(name="COMMAND") my_enum commands default =
       List.fold_left
         (fun acc (cs,f,_) -> List.map (fun c -> c,f) cs @ acc)
         [] commands in
-    Arg.(required & pos 0 (some & my_enum commands) None & doc) in
+    Arg.(value & pos 0 (some & my_enum commands) None & doc) in
   let params =
     let doc = Arg.info ~doc:"Optional parameters." [] in
     Arg.(value & pos_right 0 string [] & doc) in
@@ -355,7 +355,7 @@ let info =
   term_info "info" ~doc ~man
 
 
-(* CONFIG *)
+(* CONIG *)
 let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
@@ -408,16 +408,18 @@ let config =
         conf_is_byte = is_byte;
         conf_options = List.map OpamVariable.Section.Full.of_string params;
       } in
-    let cmd = match command with
-      | `env      -> CEnv csh
-      | `list     -> CList
-      | `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
-      | `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
-      | `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
-      | `bytecomp -> mk ~is_byte:true  ~is_link:false
-      | `bytelink -> mk ~is_byte:true  ~is_link:true
-      | `asmcomp  -> mk ~is_byte:false ~is_link:false
-      | `asmlink  -> mk ~is_byte:false ~is_link:true in
+    let cmd =
+      match command with
+      | None           -> OpamGlobals.error_and_exit "Missing subcommand"
+      | Some `env      -> CEnv csh
+      | Some `list     -> CList
+      | Some `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
+      | Some `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
+      | Some `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
+      | Some `bytecomp -> mk ~is_byte:true  ~is_link:false
+      | Some `bytelink -> mk ~is_byte:true  ~is_link:true
+      | Some `asmcomp  -> mk ~is_byte:false ~is_link:false
+      | Some `asmlink  -> mk ~is_byte:false ~is_link:true in
     OpamClient.config cmd in
 
   Term.(pure config $global_options $command $is_rec $csh $params),
@@ -599,11 +601,12 @@ let repository name =
       let kind = guess_repository_kind kind address in
       RAdd (name, kind, address, priority) in
     let cmd = match command, params with
-      | `priority, [name; p] ->
+      | None          , []
+      | Some `list    , []              -> RList
+      | Some `priority, [name; p] ->
         RPriority (OpamRepositoryName.of_string name, int_of_string p)
-      | `list, []              -> RList
-      | `rm  , [name]          -> RRm (OpamRepositoryName.of_string name)
-      | `add , [name; address] -> add name address
+       | Some `remove , [name]          -> RRm (OpamRepositoryName.of_string name)
+      | Some `add     , [name; address] -> add name address
       | _ -> OpamGlobals.error_and_exit "Too many parameters" in
     OpamClient.remote cmd in
 
@@ -654,27 +657,28 @@ let switch =
       | None      -> OpamCompiler.of_string alias
       | Some comp -> OpamCompiler.of_string comp in
     match command, params with
-    | `install, [switch] ->
-        OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
-    | `export, [f] ->
-        no_alias_of ();
-        OpamClient.switch_export (OpamFilename.of_string f)
-    | `import, [f] ->
-        no_alias_of ();
-        OpamClient.switch_import (OpamFilename.of_string f)
-    | `remove, switches ->
-        no_alias_of ();
-        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
-    | `reinstall, [switch] ->
-        no_alias_of ();
-        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
-    | `list, [] ->
+    | None      , []
+    | Some `list, [] ->
         no_alias_of ();
         OpamClient.switch_list ()
-    | `current, [] ->
+    | Some `install, [switch] ->
+        OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
+    | Some `export, [f] ->
+        no_alias_of ();
+        OpamClient.switch_export (OpamFilename.of_string f)
+    | Some `import, [f] ->
+        no_alias_of ();
+        OpamClient.switch_import (OpamFilename.of_string f)
+    | Some `remove, switches ->
+        no_alias_of ();
+        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
+    | Some `reinstall, [switch] ->
+        no_alias_of ();
+        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
+    | Some `current, [] ->
         no_alias_of ();
         OpamClient.switch_current ()
-    | `default switch, [] ->
+    | Some `default switch, [] ->
         (match alias_of with
         | None -> OpamClient.switch global_options.quiet (OpamSwitch.of_string switch)
         | _    ->
