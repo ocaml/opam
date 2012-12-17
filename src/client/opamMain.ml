@@ -367,16 +367,16 @@ let config =
     ["var"]     , `var     , "returns the value associated with the given variable. If the variable
                               contains a colon such as $(i,pkg:var), then the left element will be
                               understood as the package in which the variable is defined.
-                              The variable resolution is done as follows: first, OPAM will check whether 
+                              The variable resolution is done as follows: first, OPAM will check whether
                               $(b,\\$var) exists; for package variables, it will look for $(b,\\$pkg_var).
                               If the variable is not found, OPAM will then check whether the variable is
                               implicit. There are two global implicit variables: $(i,ocaml-version) and
                               $(i,preinstalled) and two implicit variables per package: $(i,pkg:installed)
-                              which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enabled) which is
-                              either $(b,\"enabled\") or $(b,\"disabled\"). Finally, OPAM will look into
+                              which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enable) which is
+                              either $(b,\"enable\") or $(b,\"disable\"). Finally, OPAM will look into
                               its global and package config files to find whether these variables exist.";
     ["list"]    , `list    , "returns the list of all variables defined in the listed packages (no package = all).";
-    ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are 
+    ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are
                               replaced by the value of the variable $(i,var) (see the documentation associated
                               to $(b,opam config var)).";
     ["includes"], `includes, "returns include options.";
