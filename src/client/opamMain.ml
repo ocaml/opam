@@ -398,8 +398,10 @@ let config =
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
   let is_rec = mk_flag  ["r";"rec"] "Recursive query." in
   let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
+  let env    =
+    mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
-  let config global_options command is_rec csh params =
+  let config global_options command env is_rec csh params =
     set_global_options global_options;
     let mk ~is_byte ~is_link =
       CCompil {
@@ -410,7 +412,7 @@ let config =
       } in
     let cmd =
       match command with
-      | None           -> OpamGlobals.error_and_exit "Missing subcommand"
+      | None           -> if env="nv" then CEnv csh else OpamGlobals.error_and_exit "Missing subcommand"
       | Some `env      -> CEnv csh
       | Some `list     -> CList
       | Some `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
@@ -422,7 +424,7 @@ let config =
       | Some `asmlink  -> mk ~is_byte:false ~is_link:true in
     OpamClient.config cmd in
 
-  Term.(pure config $global_options $command $is_rec $csh $params),
+  Term.(pure config $global_options $command $env $is_rec $csh $params),
   term_info "config" ~doc ~man
 
 (* INSTALL *)
