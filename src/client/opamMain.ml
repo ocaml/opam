@@ -60,8 +60,12 @@ let help_sections = [
   `S global_option_section;
   `P "These options are common to all commands.";
 
+  `S "FURTHER DOCUMENTATION";
+  `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
+
   `S "AUTHORS";
-  `P "Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>";
+  `P "Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>"; `Noblank;
+  `P "Frederic Tuong";
 
   `S "BUGS";
   `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";
@@ -112,20 +116,22 @@ let mk_opt ?section flags value doc conv default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt conv default & doc)
 
-let mk_subdoc commands =
-  `S "COMMANDS" ::
+let mk_subdoc ?(names="COMMANDS") commands =
+  `S names ::
   List.map (fun (cs,_,d) ->
     let bold s = Printf.sprintf "$(b,%s)" s in
     let cmds = String.concat ", " (List.map bold cs) in
     `I (cmds, d)
   ) commands
 
-let mk_subcommands_aux my_enum commands default =
+let mk_subcommands_aux ?(name="COMMAND") my_enum commands default =
   let command =
     let doc =
-      Arg.info ~docv:"COMMAND" ~doc:
-        ("Name of the sub-command. See the $(b,COMMANDS) section for more info."
-         ^ (match default with
+      Arg.info ~docv:name ~doc:
+        (Printf.sprintf
+           "Name of the sub-command. See the $(b,%sS) section for more info.%s"
+           name
+           (match default with
            | None   -> ""
            | Some d -> " " ^ d))
         [] in
@@ -133,17 +139,17 @@ let mk_subcommands_aux my_enum commands default =
       List.fold_left
         (fun acc (cs,f,_) -> List.map (fun c -> c,f) cs @ acc)
         [] commands in
-    Arg.(required & pos 0 (some & my_enum commands) None & doc) in
+    Arg.(value & pos 0 (some & my_enum commands) None & doc) in
   let params =
     let doc = Arg.info ~doc:"Optional parameters." [] in
     Arg.(value & pos_right 0 string [] & doc) in
   command, params
 
-let mk_subcommands commands =
-  mk_subcommands_aux Arg.enum commands None
+let mk_subcommands ?name commands =
+  mk_subcommands_aux ?name Arg.enum commands None
 
-let mk_subcommands_with_default commands default =
-  mk_subcommands_aux enum_with_default commands (Some default)
+let mk_subcommands_with_default ?name commands default =
+  mk_subcommands_aux ?name enum_with_default commands (Some default)
 
 let term_info title ~doc ~man =
   let man = man @ help_sections in
@@ -194,32 +200,49 @@ let param_list =
 (* Options common to all commands *)
 let global_options =
   let section = global_option_section in
-  let debug = mk_flag ~section ["debug"] "Print debug message on stdout."  in
-  let verbose = mk_flag ~section ["v";"verbose"] "Be more verbose." in
-  let quiet = mk_flag ~section ["q";"quiet"] "Be quiet." in
+  let debug =
+    mk_flag ~section ["debug"]
+      "Print debug message on stdout. \
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or equal to 2."  in
+  let verbose =
+    mk_flag ~section ["v";"verbose"]
+      "Be more verbose. \
+       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater or equal to 1 \
+       or (b,\\$OPAMVERBOSE) to a non-empty string." in
+  let quiet =
+    mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let switch =
     mk_opt ~section ["s";"switch"]
-      "SWITCH" "Use $(docv) as the current compiler switch."
+      "SWITCH" "Use $(docv) as the current compiler switch. \
+                This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) !OpamGlobals.switch in
   let yes =
     mk_flag ~section ["y";"yes"]
       "Disable interactive mode and answer yes \
-       to all questions that would otherwise be\
-       asked to the user."  in
+       to all questions that would otherwise be \
+       asked to the user. \
+       This is equivalent to setting $(b,\\$OPAMYES) to a non-empty string." in
   let root =
     mk_opt ~section ["r";"root"]
-      "ROOT" "Use $(docv) as the current root path."
+      "ROOT" "Use $(docv) as the current root path. \
+              This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.string !OpamGlobals.root_dir in
   let no_base_packages =
-    mk_flag ["no-base-packages"]
-      "Do not install base packages (useful for testing purposes)." in
+    mk_flag ~section ["no-base-packages"]
+      "Do not install base packages (useful for testing purposes). \
+       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty string." in
   Term.(pure create_global_options $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
 (* Options common to all build commands *)
 let build_options =
-  let keep_build_dir = mk_flag ["b";"keep-build-dir"] "Keep the build directory." in
+  let keep_build_dir =
+    mk_flag ["b";"keep-build-dir"]
+      "Keep the build directory. \
+       This is equivalent to setting $(b,\\$OPAMKEEPBUILDIR) to a non-empty string." in
   let no_checksums =
-    mk_flag ["n";"no-checksums"]   "Do not verify the checksum of downloaded archives." in
+    mk_flag ["n";"no-checksums"]
+      "Do not verify the checksum of downloaded archives. \
+       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
   let make =
     mk_opt ["m";"makecmd";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
@@ -332,18 +355,30 @@ let info =
   term_info "info" ~doc ~man
 
 
-(* CONFIG *)
+(* CONIG *)
 let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
   let commands = [
     ["env"]     , `env     , "returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH
-                            and CAML_LD_LIBRARY_PATH according to the current selected
-                            compiler. The output of this command is meant to be evaluated by a
-                            shell, for example by doing $(b,eval `opam config env`).";
-    ["var"]     , `var     , "returns the value associated with the given variable.";
+                              and CAML_LD_LIBRARY_PATH according to the current selected
+                              compiler. The output of this command is meant to be evaluated by a
+                              shell, for example by doing $(b,eval `opam config env`).";
+    ["var"]     , `var     , "returns the value associated with the given variable. If the variable
+                              contains a colon such as $(i,pkg:var), then the left element will be
+                              understood as the package in which the variable is defined.
+                              The variable resolution is done as follows: first, OPAM will check whether 
+                              $(b,\\$var) exists; for package variables, it will look for $(b,\\$pkg_var).
+                              If the variable is not found, OPAM will then check whether the variable is
+                              implicit. There are two global implicit variables: $(i,ocaml-version) and
+                              $(i,preinstalled) and two implicit variables per package: $(i,pkg:installed)
+                              which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enabled) which is
+                              either $(b,\"enabled\") or $(b,\"disabled\"). Finally, OPAM will look into
+                              its global and package config files to find whether these variables exist.";
     ["list"]    , `list    , "returns the list of all variables defined in the listed packages (no package = all).";
-    ["subst"]   , `subst   , "substitutes variables in the given files.";
+    ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are 
+                              replaced by the value of the variable $(i,var) (see the documentation associated
+                              to $(b,opam config var)).";
     ["includes"], `includes, "returns include options.";
     ["bytecomp"], `bytecomp, "returns bytecode compile options.";
     ["asmcomp"] , `asmcomp , "returns assembly compile options.";
@@ -358,13 +393,15 @@ let config =
     `P "Apart from $(b,opam config env), most of these commands are used
         by opam internally, and thus are of limited interest for the casual
         user.";
-  ] @ mk_subdoc commands in
+  ] @ mk_subdoc ~names:"DOMAINS" commands in
 
-  let command, params = mk_subcommands commands in
+  let command, params = mk_subcommands ~name:"DOMAIN" commands in
   let is_rec = mk_flag  ["r";"rec"] "Recursive query." in
   let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
+  let env    =
+    mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
-  let config global_options command is_rec csh params =
+  let config global_options command env is_rec csh params =
     set_global_options global_options;
     let mk ~is_byte ~is_link =
       CCompil {
@@ -373,19 +410,21 @@ let config =
         conf_is_byte = is_byte;
         conf_options = List.map OpamVariable.Section.Full.of_string params;
       } in
-    let cmd = match command with
-      | `env      -> CEnv csh
-      | `list     -> CList
-      | `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
-      | `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
-      | `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
-      | `bytecomp -> mk ~is_byte:true  ~is_link:false
-      | `bytelink -> mk ~is_byte:true  ~is_link:true
-      | `asmcomp  -> mk ~is_byte:false ~is_link:false
-      | `asmlink  -> mk ~is_byte:false ~is_link:true in
+    let cmd =
+      match command with
+      | None           -> if env="nv" then CEnv csh else OpamGlobals.error_and_exit "Missing subcommand"
+      | Some `env      -> CEnv csh
+      | Some `list     -> CList
+      | Some `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
+      | Some `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
+      | Some `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
+      | Some `bytecomp -> mk ~is_byte:true  ~is_link:false
+      | Some `bytelink -> mk ~is_byte:true  ~is_link:true
+      | Some `asmcomp  -> mk ~is_byte:false ~is_link:false
+      | Some `asmlink  -> mk ~is_byte:false ~is_link:true in
     OpamClient.config cmd in
 
-  Term.(pure config $global_options $command $is_rec $csh $params),
+  Term.(pure config $global_options $command $env $is_rec $csh $params),
   term_info "config" ~doc ~man
 
 (* INSTALL *)
@@ -564,11 +603,12 @@ let repository name =
       let kind = guess_repository_kind kind address in
       RAdd (name, kind, address, priority) in
     let cmd = match command, params with
-      | `priority, [name; p] ->
+      | None          , []
+      | Some `list    , []              -> RList
+      | Some `priority, [name; p] ->
         RPriority (OpamRepositoryName.of_string name, int_of_string p)
-      | `list, []              -> RList
-      | `rm  , [name]          -> RRm (OpamRepositoryName.of_string name)
-      | `add , [name; address] -> add name address
+       | Some `remove , [name]          -> RRm (OpamRepositoryName.of_string name)
+      | Some `add     , [name; address] -> add name address
       | _ -> OpamGlobals.error_and_exit "Too many parameters" in
     OpamClient.remote cmd in
 
@@ -619,27 +659,28 @@ let switch =
       | None      -> OpamCompiler.of_string alias
       | Some comp -> OpamCompiler.of_string comp in
     match command, params with
-    | `install, [switch] ->
-        OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
-    | `export, [f] ->
-        no_alias_of ();
-        OpamClient.switch_export (OpamFilename.of_string f)
-    | `import, [f] ->
-        no_alias_of ();
-        OpamClient.switch_import (OpamFilename.of_string f)
-    | `remove, switches ->
-        no_alias_of ();
-        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
-    | `reinstall, [switch] ->
-        no_alias_of ();
-        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
-    | `list, [] ->
+    | None      , []
+    | Some `list, [] ->
         no_alias_of ();
         OpamClient.switch_list ()
-    | `current, [] ->
+    | Some `install, [switch] ->
+        OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
+    | Some `export, [f] ->
+        no_alias_of ();
+        OpamClient.switch_export (OpamFilename.of_string f)
+    | Some `import, [f] ->
+        no_alias_of ();
+        OpamClient.switch_import (OpamFilename.of_string f)
+    | Some `remove, switches ->
+        no_alias_of ();
+        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
+    | Some `reinstall, [switch] ->
+        no_alias_of ();
+        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
+    | Some `current, [] ->
         no_alias_of ();
         OpamClient.switch_current ()
-    | `default switch, [] ->
+    | Some `default switch, [] ->
         (match alias_of with
         | None -> OpamClient.switch global_options.quiet (OpamSwitch.of_string switch)
         | _    ->
@@ -764,7 +805,7 @@ See 'opam help <command>' for more information on a specific command.
 "
       init_doc list_doc info_doc install_doc remove_doc update_doc
       upgrade_doc config_doc repository_doc switch_doc pin_doc in
-  Term.(pure usage $param_list),
+  Term.(pure usage $global_options),
   Term.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:global_option_section
