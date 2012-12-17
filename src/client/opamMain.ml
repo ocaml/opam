@@ -194,32 +194,49 @@ let param_list =
 (* Options common to all commands *)
 let global_options =
   let section = global_option_section in
-  let debug = mk_flag ~section ["debug"] "Print debug message on stdout."  in
-  let verbose = mk_flag ~section ["v";"verbose"] "Be more verbose." in
-  let quiet = mk_flag ~section ["q";"quiet"] "Be quiet." in
+  let debug =
+    mk_flag ~section ["debug"]
+      "Print debug message on stdout. \
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or equal to 2."  in
+  let verbose =
+    mk_flag ~section ["v";"verbose"]
+      "Be more verbose. \
+       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater or equal to 1 \
+       or (b,\\$OPAMVERBOSE) to a non-empty string." in
+  let quiet =
+    mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let switch =
     mk_opt ~section ["s";"switch"]
-      "SWITCH" "Use $(docv) as the current compiler switch."
+      "SWITCH" "Use $(docv) as the current compiler switch. \
+                This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) !OpamGlobals.switch in
   let yes =
     mk_flag ~section ["y";"yes"]
       "Disable interactive mode and answer yes \
-       to all questions that would otherwise be\
-       asked to the user."  in
+       to all questions that would otherwise be \
+       asked to the user. \
+       This is equivalent to setting $(b,\\$OPAMYES) to a non-empty string." in
   let root =
     mk_opt ~section ["r";"root"]
-      "ROOT" "Use $(docv) as the current root path."
+      "ROOT" "Use $(docv) as the current root path. \
+              This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.string !OpamGlobals.root_dir in
   let no_base_packages =
     mk_flag ["no-base-packages"]
-      "Do not install base packages (useful for testing purposes)." in
+      "Do not install base packages (useful for testing purposes). \
+       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty string." in
   Term.(pure create_global_options $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
 (* Options common to all build commands *)
 let build_options =
-  let keep_build_dir = mk_flag ["b";"keep-build-dir"] "Keep the build directory." in
+  let keep_build_dir =
+    mk_flag ["b";"keep-build-dir"]
+      "Keep the build directory. \
+       This is equivalent to setting $(b,\\$OPAMKEEPBUILDIR) to a non-empty string." in
   let no_checksums =
-    mk_flag ["n";"no-checksums"]   "Do not verify the checksum of downloaded archives." in
+    mk_flag ["n";"no-checksums"]
+      "Do not verify the checksum of downloaded archives. \
+       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
   let make =
     mk_opt ["m";"makecmd";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
@@ -764,7 +781,7 @@ See 'opam help <command>' for more information on a specific command.
 "
       init_doc list_doc info_doc install_doc remove_doc update_doc
       upgrade_doc config_doc repository_doc switch_doc pin_doc in
-  Term.(pure usage $param_list),
+  Term.(pure usage $global_options),
   Term.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:global_option_section
