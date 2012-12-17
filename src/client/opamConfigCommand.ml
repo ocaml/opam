@@ -38,13 +38,14 @@ let string_of_config = function
 (* List all the available variables *)
 let config_list t =
   let configs =
+    (OpamPackage.Name.default, OpamState.dot_config t OpamPackage.Name.default) ::
     OpamPackage.Set.fold (fun nv l ->
+      let name = OpamPackage.name nv in
       let file = OpamState.dot_config t (OpamPackage.name nv) in
-      (nv, file) :: l
+      (name, file) :: l
     ) t.installed [] in
   let variables =
-    List.fold_left (fun accu (nv, c) ->
-      let name = OpamPackage.name nv in
+    List.fold_left (fun accu (name, c) ->
       (* add all the global variables *)
       let globals =
         List.fold_left (fun accu v ->
@@ -61,7 +62,7 @@ let config_list t =
         ) globals (OpamFile.Dot_config.Section.available c)
     ) [] configs in
   List.iter (fun (fv, contents) ->
-    OpamGlobals.msg "%-20s : %s\n"
+    OpamGlobals.msg "%-20s %s\n"
       (OpamVariable.Full.to_string fv)
       (OpamVariable.string_of_variable_contents contents)
   ) (List.rev variables)
