@@ -29,7 +29,10 @@ let darcs_fetch local_path remote_address =
 
 let darcs_merge local_path =
   OpamFilename.in_dir local_path (fun () ->
-    OpamSystem.command [ "darcs" ; "apply"; "opam_update.bundle" ]
+    let patches_bundle = OpamFilename.of_string "opam_update.bundle" in
+    if OpamFilename.exists patches_bundle then
+      OpamSystem.command [ "darcs" ; "apply"; "opam_update.bundle" ];
+      OpamFilename.remove patches_bundle
   )
 
 (* Look for file pathes {packages,compilers}/* in a set of XML lines. *)
