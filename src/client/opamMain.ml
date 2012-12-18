@@ -35,6 +35,7 @@ let set_global_options o =
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   OpamGlobals.switch   := o.switch;
   OpamGlobals.root_dir := OpamSystem.real_path o.root;
+  OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages
 
 (* Build options *)
