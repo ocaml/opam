@@ -637,13 +637,13 @@ let print_env_warning ?(add_profile = false) t =
         else
           "" in
       let opam_root =
-        (if !OpamGlobals.root_dir = OpamGlobals.default_opam_dir then
-            ""
-         else
-            Printf.sprintf " --root %s" !OpamGlobals.root_dir) in
+        if !OpamGlobals.root_dir = OpamGlobals.default_opam_dir then
+          ""
+        else
+          Printf.sprintf " --root %s" !OpamGlobals.root_dir in
       let variables = String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l) in
       OpamGlobals.msg "\nTo update %s; you can now run:
-            \n\    $ %seval `opam%s config env`\n%s\n"
+            \n\    $ %seval `opam config env %s`\n%s\n"
         variables
         which_opam
         opam_root
