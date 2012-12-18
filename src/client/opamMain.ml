@@ -245,7 +245,7 @@ let build_options =
       "Do not verify the checksum of downloaded archives. \
        This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
   let make =
-    mk_opt ["m";"makecmd";"make"] "MAKE"
+    mk_opt ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
   Term.(pure create_build_options $keep_build_dir $make $no_checksums)
@@ -579,7 +579,7 @@ let repository name =
                                  The kind of the repository can be specified with the
                                  $(b,--kind) option, otherwise it will be determined
                                  automatically.";
-    ["remove";"rm"], `remove  , "Remove the repository named $(b,name) from the list of
+    ["remove"]     , `remove  , "Remove the repository named $(b,name) from the list of
                                  repositories used by OPAM.";
     ["list"]       , `list    , "List all repositories used by OPAM.";
     ["priority"]   , `priority, "Change the priority of repository named $(b,name) to
@@ -627,10 +627,10 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    ["add";"install"], `install  , "Install the given compiler. The commands fails if the package is \
+    ["install"]      , `install  , "Install the given compiler. The commands fails if the package is \
                                     already installed (e.g. it will not transparently switch to the \
                                     installed compiler switch, as $(b,opam switch <name>) does).";
-    ["rm";"remove"]  , `remove   , "Remove the given compiler.";
+    ["remove"]       , `remove   , "Remove the given compiler.";
     ["export"]       , `export   , "Export the list installed package to a file.";
     ["import"]       , `import   , "Install the packages from a file.";
     ["reinstall"]    , `reinstall, "Reinstall the given compiler switch. This will also try reinstall the
@@ -646,7 +646,7 @@ let switch =
                                     If you want to create a new compiler alias (for instance because you already have \
                                     this compiler version installed), use $(b,opam switch <name> --alias-of <comp>). In case \
                                     <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
-    ["show";"current"], `current  , "Show the current compiler.";
+    ["show"]          , `current  , "Show the current compiler.";
   ] in
   let man = [
     `S "DESCRIPTION";
