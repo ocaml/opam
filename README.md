@@ -4,7 +4,7 @@ OPAM is a source-based package manager for OCaml. It supports multiple simultane
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
 
- ### Prerequisites:
+### Prerequisites:
 
 * ocaml (>= 3.12.1)
 * curl or wget
