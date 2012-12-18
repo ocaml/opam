@@ -1,6 +1,6 @@
 # OPAM - A package manager for OCaml
 
-OPAM is a source-based package manager for OCaml, which handle multiple compiler
+OPAM is a source-based package manager for OCaml, which can handle multiple compiler
 installations and custom package repositories.
 
 OPAM is based on the
