@@ -1,6 +1,9 @@
 # OPAM - A package manager for OCaml
 
-OPAM is a source-based package manager for OCaml, based on the
+OPAM is a source-based package manager for OCaml, which handle multiple compiler
+installations and custom package repositories.
+
+OPAM is based on the
 [CUDF](http://mancoosi.org/cudf/) and the 
 [Dose](http://www.mancoosi.org/software/) libraries developed by the
 [Mancoosi](http://www.mancoosi.org/) project, which are, among other
@@ -10,8 +13,8 @@ things, used by Debian to manage their packages.
 
 * ocaml (>= 3.12.1)
 * curl or wget
-* git
-* rsync
+* git   (optional)
+* rsync (optional)
 
 ### Quick install
 
