@@ -148,6 +148,15 @@ val contains: string -> char -> bool
 (** Split a string *)
 val split: string -> char -> string list
 
+(** left indenting *)
+val indent_left: string -> int -> string
+
+(** right indenting *)
+val indent_right: string -> int -> string
+
+(** Cut a string *)
+val sub_at: int -> string -> string
+
 (** {2 Misc} *)
 
 (** Remove from a ':' separated list of string the one with the given prefix *)

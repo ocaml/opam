@@ -166,14 +166,12 @@ module Descr: sig
 
   include IO_FILE
 
-  (** Create a description file *)
-  val create: string -> t
-
   (** Return the first line *)
   val synopsis: t -> string
 
   (** Return the full description *)
   val full: t -> string
+
 end
 
 (** Compiler aliases: [$opam/aliases] *)
@@ -254,6 +252,9 @@ module Comp: sig
   val env: t -> (string * string * string) list
 
 end
+
+(** Compiler descriptions *)
+module Comp_descr: IO_FILE with type t = string
 
 (** {2 Configuration files} *)
 

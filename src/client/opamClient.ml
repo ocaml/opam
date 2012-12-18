@@ -197,7 +197,9 @@ let update_repositories t ~show_compilers repositories =
     if comp <> OpamCompiler.default
     && OpamSwitch.Map.for_all (fun _ c -> comp <> c) t.aliases then (
       let comp_f = OpamPath.compiler t.root comp in
+      let descr_f = OpamPath.compiler_descr t.root comp in
       OpamFilename.remove comp_f;
+      OpamFilename.remove descr_f;
     )
   ) (OpamState.compilers t);
 
@@ -209,9 +211,13 @@ let update_repositories t ~show_compilers repositories =
     let comp_dir = OpamPath.compilers_dir t.root in
     OpamCompiler.Set.iter (fun o ->
       let comp_g = OpamPath.compiler t.root o in
-      let comp_f = OpamPath.Repository.compiler repo_p o in
-      if not (OpamFilename.exists comp_g) && OpamFilename.exists comp_f then
-        OpamFilename.link_in comp_f comp_dir
+      let comp_r = OpamPath.Repository.compiler repo_p o in
+      if not (OpamFilename.exists comp_g) && OpamFilename.exists comp_r then
+        OpamFilename.link_in comp_r comp_dir;
+      let descr_g = OpamPath.compiler_descr t.root o in
+      let descr_r = OpamPath.Repository.compiler_descr repo_p o in
+      if not (OpamFilename.exists descr_g) && OpamFilename.exists descr_r then
+        OpamFilename.link_in descr_r comp_dir;
     ) comps
   ) (sorted_repositories t)
 
@@ -325,26 +331,6 @@ let update_packages t ~show_packages repositories =
   if !has_error then
     OpamGlobals.exit 1
 
-let indent_left s nb =
-  let nb = nb - String.length s in
-  if nb <= 0 then
-    s
-  else
-    s ^ String.make nb ' '
-
-let indent_right s nb =
-  let nb = nb - String.length s in
-  if nb <= 0 then
-    s
-  else
-    String.make nb ' ' ^ s
-
-let sub_at n s =
-  if String.length s <= n then
-    s
-  else
-    String.sub s 0 n
-
 let s_not_installed = "--"
 
 let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
@@ -423,9 +409,9 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
           | None   -> s_not_installed
           | Some v -> OpamPackage.Version.to_string v in
         OpamGlobals.msg "%s  %s  %s\n"
-          (indent_left name max_n)
-          (indent_right version max_v)
-          (sub_at 100 synopsis)
+          (OpamMisc.indent_left name max_n)
+          (OpamMisc.indent_right version max_v)
+          (OpamMisc.sub_at 100 synopsis)
   ) names
 
 let info regexps =

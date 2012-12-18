@@ -370,24 +370,20 @@ module Descr = struct
 
   let internal = "descr"
 
-  type t = Lines.t
+  type t = string
 
-  let empty = []
+  let empty = ""
 
-  let create str =
-    [[str]]
+  let synopsis str =
+    match OpamMisc.cut_at str '\n' with
+    | None       -> str
+    | Some (s,_) -> s
 
-  let synopsis = function
-    | []   -> ""
-    | h::_ -> String.concat " " h
+  let full str = str
 
-  let full l =
-    let one l = String.concat " " l in
-    String.concat "\n" (List.map one l)
+  let of_string _ x = x
 
-  let of_string = Lines.of_string
-
-  let to_string = Lines.to_string
+  let to_string _ x = x
 
 end
 
@@ -1296,6 +1292,20 @@ module Comp = struct
 
 end
 
+module Comp_descr = struct
+
+  let internal = "comp_descr"
+
+  type t = string
+
+  let empty = ""
+
+  let of_string _ x = x
+
+  let to_string _ x = x
+
+end
+
 module Subst = struct
 
   let internal = "subst"
@@ -1391,6 +1401,11 @@ end
 module Descr = struct
   include Descr
   include Make (Descr)
+end
+
+module Comp_descr = struct
+  include Comp_descr
+  include Make (Comp_descr)
 end
 
 module Aliases = struct

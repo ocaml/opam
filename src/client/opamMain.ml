@@ -626,13 +626,26 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    ["add";"install"], `install  , "Install the given compiler.";
+    ["add";"install"], `install  , "Install the given compiler. The commands fails if the package is \
+                                    already installed (e.g. it will not transparently switch to the \
+                                    installed compiler switch, as $(b,opam switch <name>) does).";
     ["rm";"remove"]  , `remove   , "Remove the given compiler.";
     ["export"]       , `export   , "Export the list installed package to a file.";
     ["import"]       , `import   , "Install the packages from a file.";
-    ["reinstall"]    , `reinstall, "Reinstall the given compiler.";
-    ["list"]         , `list     , "List the available compilers.";
-    ["current"]      , `current  , "Show the current compiler.";
+    ["reinstall"]    , `reinstall, "Reinstall the given compiler switch. This will also try reinstall the
+                                    installed packages.";
+    ["list"]         , `list     , "List the available compilers. \
+                                    The first column displays the switch name (if any), the second one \
+                                    the switch state (C = current, I = installed, -- = not installed), \
+                                    the third one the compiler name and the last one the compiler \
+                                    description. To switch to an already installed compiler alias (with \
+                                    state = I), use $(b,opam switch <name>). If you want to use a new \
+                                    compiler <comp>, use $(b,opam switch <comp>): this will download, \
+                                    compile and create a fresh and independant environment where new packages can be installed.
+                                    If you want to create a new compiler alias (for instance because you already have \
+                                    this compiler version installed), use $(b,opam switch <name> --alias-of <comp>). In case \
+                                    <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
+    ["show";"current"], `current  , "Show the current compiler.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -641,6 +654,8 @@ let switch =
         compiler for the first time. The different compiler versions are
         totally independant from each other, meaning that OPAM maintains a
         separate state (e.g. list of installed packages...) for each.";
+    `P "See the documentation of $(b,opam switch list) to see the compilers which
+        are available, and how to switch or to install a new one."
   ] @ mk_subdoc commands in
 
   let command, params = mk_subcommands_with_default commands
