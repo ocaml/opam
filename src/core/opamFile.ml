@@ -560,6 +560,7 @@ module OPAM = struct
     files      : (basename * filter option) list;
     others     : (string * value) list;
     ocaml_version: compiler_constraint option;
+    os         : (bool * string) list;
   }
 
   let empty = {
@@ -579,6 +580,7 @@ module OPAM = struct
     patches    = [];
     others     = [];
     ocaml_version = None;
+    os         = [];
   }
 
   let create nv =
@@ -605,6 +607,7 @@ module OPAM = struct
   let s_patches     = "patches"
   let s_files       = "files"
   let s_configure_style = "configure-style"
+  let s_os          = "os"
 
   let useful_fields = [
     s_opam_version;
@@ -621,6 +624,7 @@ module OPAM = struct
     s_build_env;
     s_patches;
     s_files;
+    s_os;
   ]
 
   let valid_fields =
@@ -648,6 +652,7 @@ module OPAM = struct
   let build_env t = t.build_env
   let patches t = t.patches
   let files t = t.files
+  let os t = t.os
 
   let with_depends t depends = { t with depends }
   let with_depopts t depopts = { t with depopts }
@@ -682,6 +687,10 @@ module OPAM = struct
         match t.ocaml_version with
         | None   -> []
         | Some v -> [ Variable (s_ocaml_version, OpamFormat.make_compiler_constraint v) ]
+      ) @ (
+        match t.os with
+        | []     -> []
+        | l      -> [ Variable (s_os, OpamFormat.make_os_constraint l) ]
       ) @
         List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
@@ -738,6 +747,7 @@ module OPAM = struct
     let libraries = OpamFormat.assoc_list s s_libraries (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
     let syntax = OpamFormat.assoc_list s s_syntax (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
     let ocaml_version = OpamFormat.assoc_option s s_ocaml_version OpamFormat.parse_compiler_constraint in
+    let os = OpamFormat.assoc_list s s_os OpamFormat.parse_os_constraint in
     let parse_file = OpamFormat.parse_option (OpamFormat.parse_string |> OpamFilename.Base.of_string) OpamFormat.parse_filter in
     let patches = OpamFormat.assoc_list s s_patches (OpamFormat.parse_list parse_file) in
     let files = OpamFormat.assoc_list s s_files (OpamFormat.parse_list parse_file) in
@@ -748,12 +758,12 @@ module OPAM = struct
       ) s in
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
-      files; patches; ocaml_version; build_env }
+      files; patches; ocaml_version; os; build_env }
 end
 
 module Dot_install_raw = struct
 
-  let internal = ".install(*raw*)"
+  let internal = ".install(raw)"
 
   type t =  {
     lib : string optional list;

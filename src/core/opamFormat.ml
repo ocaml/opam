@@ -387,6 +387,27 @@ let rec make_compiler_constraint t =
 let make_compiler_constraint t =
   List (make_compiler_constraint t)
 
+let parse_os_constraint l =
+  let rec aux = function
+    | []                         -> []
+    | String os             :: l -> (true, os) :: aux l
+    | Symbol n :: String os :: l ->
+      if n = "!" then
+        (false, os) :: aux l
+      else
+        bad_format "Expecting '!', got %s" n
+    | e :: _ -> bad_format "Expecting an OS constraint, got %s" (kind e) in
+  match l with
+  | List l -> aux l
+  | e      -> bad_format "Expecting an OS constraint, got %s" (kind e)
+
+let make_os_constraint l =
+  let rec aux = function
+    | []               -> []
+    | (true , os) :: l -> String os :: aux l
+    | (false, os) :: l -> Symbol "!" :: String os :: aux l in
+  List (aux l)
+
 let parse_env_variable v =
   let l = parse_sequence [
     ("ident" , parse_ident);

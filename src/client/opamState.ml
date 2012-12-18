@@ -229,6 +229,14 @@ let available_packages root opams repositories repo_index compiler_version confi
       match OpamFile.OPAM.ocaml_version opam with
       | None   -> true
       | Some c -> OpamFormula.eval atom c in
+    let consistent_os () =
+      match OpamFile.OPAM.os opam with
+      | [] -> true
+      | l  ->
+        List.fold_left (fun accu (b,os) ->
+          let ($) = if b then (=) else (<>) in
+          accu || (os $ Lazy.force OpamGlobals.os_string)
+        ) false l in
     let consistent_pinned_version () =
       not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) ||
         match OpamPackage.Name.Map.find (OpamPackage.name nv) pinned with
@@ -236,7 +244,8 @@ let available_packages root opams repositories repo_index compiler_version confi
         | _         -> true (* any version is fine, as this will be overloaded on install *) in
     available ()
     && consistent_ocaml_version ()
-    && consistent_pinned_version () in
+    && consistent_pinned_version ()
+    && consistent_os () in
   OpamPackage.Set.filter filter packages
 
 let base_packages =
