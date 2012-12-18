@@ -768,9 +768,9 @@ let install_compiler t ~quiet switch compiler =
 
 let update_pinned_package t nv pin =
   match kind_of_pin_option pin with
-  | (`git|`local) ->
+  | (`git|`local as k) ->
     let path = OpamFilename.raw_dir (path_of_pin_option pin) in
-    let module B = (val OpamRepository.find_backend `git: OpamRepository.BACKEND) in
+    let module B = (val OpamRepository.find_backend k: OpamRepository.BACKEND) in
     let build = OpamPath.Switch.build t.root t.switch nv in
     B.download_dir nv ~dst:build path
   | _ ->
