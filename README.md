@@ -1,15 +1,10 @@
 # OPAM - A package manager for OCaml
 
-OPAM is a source-based package manager for OCaml, which can handle multiple compiler
-installations and custom package repositories.
+OPAM is a source-based package manager for OCaml. It supports multiple simultaneous
+compiler installations, flexible package constraints, and a Git-friendly development
+workflow.
 
-OPAM is based on the
-[CUDF](http://mancoosi.org/cudf/) and the 
-[Dose](http://www.mancoosi.org/software/) libraries developed by the
-[Mancoosi](http://www.mancoosi.org/) project, which are, among other
-things, used by Debian to manage their packages.
- 
-### Prerequisites:
+ ### Prerequisites:
 
 * ocaml (>= 3.12.1)
 * curl or wget
@@ -69,7 +64,7 @@ sources.
 
 ```
 $ opam init
-$ eval `opam config -env`
+$ eval `opam config env`
 ```
 
 The first command creates `~\.opam` and sets up `opam.ocamlpro.com` as the
@@ -108,7 +103,7 @@ version of the compiler, you can run:
 
 ```
 $ opam switch 4.00.1
-$ eval `opam config -env`
+$ eval `opam config env`
 ```
 
 The first command will download and install ocaml-4.00.1, and the second
@@ -119,10 +114,10 @@ In order to return to the system-wide OCaml installation, simply run:
 
 ```
 $ opam switch system
-$ eval `opam config -env`
+$ eval `opam config env`
 ```
 
-You can use `opam switch -list` to display the list of available compilers.
+You can use `opam switch list` to display the list of available compilers.
 
 ### Version pinning
 
@@ -151,7 +146,7 @@ OPAM supports multiple package repositories, for example for development
 packages.
 
 ```
-$ opam remote -list
+$ opam remote list
 ```
 
 ### Auto-completion
