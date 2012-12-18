@@ -149,11 +149,13 @@ module URL = struct
   let s_archive = "archive"
   let s_checksum = "checksum"
   let s_git = "git"
+  let s_darcs = "darcs"
 
   let valid_fields = [
     s_archive;
     s_checksum;
     s_git;
+    s_darcs;
   ]
 
   let of_string filename str =
@@ -161,11 +163,13 @@ module URL = struct
     Syntax.check s valid_fields;
     let archive = OpamFormat.assoc_option s.file_contents s_archive OpamFormat.parse_string in
     let git = OpamFormat.assoc_option s.file_contents s_git OpamFormat.parse_string in
+    let darcs = OpamFormat.assoc_option s.file_contents s_darcs OpamFormat.parse_string in
     let checksum = OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
-    let url, kind = match archive, git with
-      | None  , None   -> OpamGlobals.error_and_exit "Missing URL"
-      | Some x, None   -> x, None
-      | None  , Some x -> x, Some `git
+    let url, kind = match archive, git, darcs with
+      | None  , None  , None   -> OpamGlobals.error_and_exit "Missing URL"
+      | Some x, None  , None   -> x, None
+      | None  , Some x, None   -> x, Some `git
+      | None  , None  , Some x -> x, Some `darcs
       | _ -> OpamGlobals.error_and_exit "Too many URLS" in
     { url; kind; checksum }
 
