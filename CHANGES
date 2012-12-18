@@ -2,7 +2,7 @@
 * improve (but break) the command-line interface by using cmdliner
 
 0.8.2 [Dec 2012]
-* Fix an issue with 'opam reinstall <packages>' where packages were reinstalled in reverse order
+* Fix an issue with `opam reinstall <packages>` where packages were reinstalled in reverse order
 
 0.8.1 [Nov 2012]
 * Simplify string substitution in OPAM files
@@ -16,11 +16,11 @@
 * Clean-up the build directory when build succeeds
 
 0.7.7 [Oct 2012]
-* Add an --alias global command-line argument to overwrite the default alias value
+* Add an `--alias` global command-line argument to overwrite the default alias value
 * Allow more concurrency between no conflicting opam commands
 * Upgrade to the latest version of DOSE and CUDF (solver libraries)
 * Add repository priorities
-* Create the default directories (bin/, lib/ ...) when installing a new compiler
+* Create the default directories (`bin/`, `lib/` ...) when installing a new compiler
 
 0.7.6 [Oct 2012]
 * major internal API refactoring
@@ -29,13 +29,13 @@
 
 0.7.5 [Oct 2012]
 * dependencies can now be expressed by any formula (instead of just CNF)
-* It's easier to compose the value of environment variable (ie. to write %{lwt+ssl:enable}%)
+* It's easier to compose the value of environment variable (ie. to write `%{lwt+ssl:enable}%`)
 * Fix regression on init for rsync repositories
 
 0.7.4 [Oct 2012]
-* improve 'opam pin': the code is more robust and it is now possible to pin a package to a git repository
+* improve `opam pin`: the code is more robust and it is now possible to pin a package to a git repository
 * add support for patches per package
-* add 'opam swith -import <file>' and 'opam switch -export <file>'
+* add `opam swith -import <file>` and `opam switch -export <file>`
 
 0.7.3 [Sep 2012]
 * Better user-message when no solution is found
@@ -52,7 +52,7 @@
 * report upgrade statistic on update
 * do no ask y/n when installing compiler's base packages
 * improve opam-mk-repo
-* fix 'opam search' to be caseless
+* fix `opam search` to be caseless
 * ability to filter some commands (depending on some predicates) in opam file
 * improvments when packages disapear upstream
 * check for ocaml 3.12.1 on configure
@@ -60,18 +60,18 @@
 * fix few git backend issues
 
 0.6.0 [Sep 2012]
-* semantics changes in 'opam switch'
+* semantics changes in `opam switch`
 * solver improvements in case of install and remove
 * better error reporting
 * fix caching of package archives
-* fix ~/.opam/repo/index priorities
+* fix `~/.opam/repo/index` priorities
 
 0.5.0 [Sep 2012]
 * add opam search
 * add opam reinstall
 * ability to upgrade only a subset of packages
 * lot of bug fixes in the rsync and curl backend
-* better --help messages
+* better `--help` messages
 * better information displayed to the user
 
 0.4.0 [Aug 2012]
@@ -85,22 +85,22 @@
   to the kind of package archives
 
 0.3.2 [Aug 2012]
-* fix regression for 'opam switch' introduced in 0.3
+* fix regression for `opam switch` introduced in 0.3
 * fix deletion of optional dependencies
 * support for pinned packages
 * fix compilation for ocaml 4.00
 * fix compilation for *BSD
 
 0.3.1 [Jul 2012]
-* fix regression for 'opam install' introduced in 0.3
+* fix regression for `opam install` introduced in 0.3
 
 0.3.0 [Jul 2012]
 * improve parallel compilation of packages
 * better recovery on compilation/installation errors
 * first draft of version pinnig
-* fix 'opam config -env' for old shells
+* fix`'opam config -env` for old shells
 * install the latest version of packages when possible
-* more robust 'opam update' (ie. old files are gc-ed)
+* more robust `opam update` (ie. old files are gc-ed)
 * add a (more or less) generic way to install and use topfind
 
 0.2.0 [Jul 2012]
