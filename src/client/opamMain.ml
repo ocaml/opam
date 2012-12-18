@@ -173,6 +173,7 @@ let repo_kind_flag =
     "http" , `http;
     "local", `local;
     "git"  , `git;
+    "darcs"  , `darcs;
 
     (* aliases *)
     "wget" , `http;
@@ -181,7 +182,7 @@ let repo_kind_flag =
   ] in
   mk_opt ["k";"kind"]
     "KIND" "Specify the kind of the repository to be set (the main ones \
-            are 'http', 'local' or 'git')."
+            are 'http', 'local', 'git' or 'darcs')."
     Arg.(some (enum kinds)) None
 
 let pattern_list =
@@ -663,7 +664,7 @@ let pin =
   let pin_option =
     let doc =
       Arg.info ~docv:"PIN" ~doc:
-        "Specific version, local path or git url to pin the package to,
+        "Specific version, local path, git or darcs url to pin the package to,
          or 'none' to unpin the package." [] in
     Arg.(value & pos 0 (some string) None & doc) in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
@@ -671,6 +672,7 @@ let pin =
     let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
     let kinds = [
       "git"    , `git;
+      "darcs"  , `darcs;
       "version", `version;
       "local"  , `local;
       "rsync"  , `local;
@@ -725,10 +727,10 @@ let default =
     `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi
         tools to handle dependencies, including support for version
         constraints, optional dependencies, and conflicts management.";
-    `P "It has support for different repository backends such as HTTP, rsync and
-        git. It handles multiple OCaml versions concurrently, and is flexible
-        enough to allow you to use your own repositories and packages in
-        addition of the ones it provides.";
+    `P "It has support for different repository backends such as HTTP, rsync, git
+        and darcs. It handles multiple OCaml versions concurrently, and is
+        flexible enough to allow you to use your own repositories and packages
+        in addition of the ones it provides.";
   ] @  help_sections
   in
   Term.(ret (pure (fun _ -> `Help (`Pager, None)) $ global_options)),

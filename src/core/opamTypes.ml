@@ -54,7 +54,7 @@ type repository_name = OpamRepositoryName.t
 
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
-type repository_kind = [`http|`local|`git]
+type repository_kind = [`http|`local|`git|`darcs]
 
 type repository = {
   repo_name    : repository_name;
@@ -67,6 +67,7 @@ let string_of_repository_kind = function
   | `http  -> "http"
   | `local -> "local"
   | `git   -> "git"
+  | `darcs -> "darcs"
 
 let repository_kind_of_string = function
   | "wget"
@@ -75,6 +76,7 @@ let repository_kind_of_string = function
   | "rsync"
   | "local" -> `local
   | "git"   -> `git
+  | "darcs" -> `darcs
   | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
 
 type variable = OpamVariable.t
@@ -172,6 +174,7 @@ type pin_option =
   | Version of version
   | Path of dirname
   | Git of dirname
+  | Darcs of dirname
   | Unpin
 
 let pin_option_of_string ?kind s =
@@ -182,6 +185,11 @@ let pin_option_of_string ?kind s =
       Git (OpamFilename.Dir.of_string s)
     else
       Git (OpamFilename.raw_dir s)
+  | Some `darcs   ->
+    if Sys.file_exists s then
+      Darcs (OpamFilename.Dir.of_string s)
+    else
+      Darcs (OpamFilename.raw_dir s)
   | Some `local   -> Path (OpamFilename.Dir.of_string s)
   | Some `unpin   -> Unpin
   | None          ->
@@ -194,17 +202,19 @@ let pin_option_of_string ?kind s =
     else
       Version (OpamPackage.Version.of_string s)
 
-type pin_kind = [`version|`git|`local|`unpin]
+type pin_kind = [`version|`git|`darcs|`local|`unpin]
 
 let string_of_pin_kind = function
   | `version -> "version"
   | `git     -> "git"
+  | `darcs   -> "darcs"
   | `local   -> "local"
   | `unpin   -> "unpin"
 
 let pin_kind_of_string = function
   | "version" -> `version
   | "git"     -> `git
+  | "darcs"   -> `darcs
   | "local"   -> `local
   | "unpin"   -> `unpin
   | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
@@ -217,12 +227,14 @@ type pin = {
 let path_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
   | Git p
+  | Darcs p
   | Path p    -> OpamFilename.Dir.to_string p
   | Unpin     -> "none"
 
 let kind_of_pin_option = function
   | Version _ -> `version
   | Git _     -> `git
+  | Darcs _   -> `darcs
   | Path _    -> `local
   | Unpin     -> `unpin
 

@@ -172,6 +172,7 @@ module URL = struct
   let to_string filename t =
     let url_name = match t.kind with
       | Some `git   -> "git"
+      | Some `darcs -> "darcs"
       | None
       | Some `http  -> "archive"
       | Some `local -> OpamGlobals.error_and_exit "Local packages are not (yet) supported." in

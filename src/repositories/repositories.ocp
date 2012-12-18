@@ -6,6 +6,7 @@ begin library "opam-repositories"
     "opamHTTP.ml"
     "opamLocal.ml"
     "opamGit.ml"
+    "opamDarcs.ml"
   ]
 
   requires = [

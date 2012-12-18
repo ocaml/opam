@@ -19,6 +19,7 @@ open OpamFilename.OP
 let () =
   OpamHTTP.register ();
   OpamGit.register ();
+  OpamDarcs.register ();
   OpamLocal.register ()
 
 let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
