@@ -1,4 +1,5 @@
 0.9.0 (trunk)
+* 'opam init' works without preinstalled compiler
 * support for DARCS backends
 * Each global command-line flag `xxx` as can be set using the `$OPAMxxx` instead
 * Better display of compiler switch (+ read compiler descriptions)
