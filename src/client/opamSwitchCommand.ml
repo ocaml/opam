@@ -25,7 +25,11 @@ let list () =
 
   let t = OpamState.load_state () in
   let descrs = OpamState.compilers t in
-  let descr c = OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
+  let descr c =
+    if c = OpamCompiler.default then
+      Printf.sprintf "System compiler (%s)" (OpamCompiler.Version.to_string t.compiler_version)
+    else
+      OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
 
   let installed = "I" in
   let current = "C" in
