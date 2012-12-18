@@ -23,6 +23,7 @@ let log fmt =
 let () =
   OpamHTTP.register ();
   OpamGit.register ();
+  OpamDarcs.register();
   OpamLocal.register ()
 
 let confirm fmt =
@@ -777,7 +778,7 @@ let install_compiler t ~quiet switch compiler =
 
 let update_pinned_package t nv pin =
   match kind_of_pin_option pin with
-  | (`git|`local as k) ->
+  | (`git|`darcs|`local as k) ->
     let path = OpamFilename.raw_dir (path_of_pin_option pin) in
     let module B = (val OpamRepository.find_backend k: OpamRepository.BACKEND) in
     let build = OpamPath.Switch.build t.root t.switch nv in
