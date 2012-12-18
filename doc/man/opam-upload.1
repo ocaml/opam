@@ -6,13 +6,17 @@
 .ad l
 .SH NAME
 .P
-opam\-upload \- Upload a package to an OPAM repository
+opam\-upload \- Upload a package to an OPAM repository.
 .SH SYNOPSIS
 .P
-\fBopam upload\fR [\fIOPTION\fR]... 
+\fBopam upload\fR [\fIOPTION\fR]... \fIREPO\fR
 .SH DESCRIPTION
 .P
 This command uploads an already built package to a remote repository, if the remote repository is not read\-only.
+.SH ARGUMENTS
+.TP 4
+\fIREPO\fR
+Specify the repository to upload to.
 .SH OPTIONS
 .TP 4
 \fB\-\-archive\fR=\fIFILE\fR
@@ -21,11 +25,11 @@ Specify the archive that will be uploaded to repo://archives/name.version+opam.t
 \fB\-\-descr\fR=\fIFILE\fR
 Specify the .descr file that will be uploaded to repo://packages/name.version/descr
 .TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
+.TP 4
 \fB\-\-opam\fR=\fIFILE\fR
 Specify the .opam file that will be uploaded to repo://packages/name.version/opam
-.TP 4
-\fB\-\-repository\fR=\fIREPO\fR, \fB\-\-repo\fR=\fIREPO\fR
-Specify the repository to upload to. Defaults to the default repository.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
@@ -53,15 +57,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>

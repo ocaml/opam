@@ -43,6 +43,9 @@ val opam: t -> package -> filename
 (** Compiler files: {i $opam/compilers/$OVERSION.comp} *)
 val compiler: t -> compiler -> filename
 
+(** Compiler description files: {i $opam/compilers/$OVERSION.descr} *)
+val compiler_descr: t -> compiler -> filename
+
 (** Compiler files: {i $opam/compilers/} *)
 val compilers_dir: t -> dirname
 
@@ -217,6 +220,9 @@ module Repository: sig
 
   (** Compiler files: {i $opam/repo/$repo/compilers/$OVERSION.comp} *)
   val compiler: r -> compiler -> filename
+
+  (** Compiler description files: {i $opam/repo/$repo/compilers/$OVERSION.descr} *)
+  val compiler_descr: r -> compiler -> filename
 
   (** Compiler files: {i $opam/repo/$repo/compilers/} *)
   val compilers_dir: r -> dirname

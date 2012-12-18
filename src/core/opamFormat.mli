@@ -198,6 +198,12 @@ val parse_compiler_constraint: value -> compiler_constraint
 (** Build a compiler constraint *)
 val make_compiler_constraint: compiler_constraint -> value
 
+(** Parse an OS constraint *)
+val parse_os_constraint: value -> (bool * string) list
+
+(** Build an OS constraint *)
+val make_os_constraint: (bool * string) list -> value
+
 (** {2 Environment variables} *)
 
 (** Parsing *)

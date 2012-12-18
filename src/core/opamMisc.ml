@@ -247,3 +247,23 @@ let env = lazy (
 
 let getenv n =
   List.assoc n (Lazy.force env)
+
+let indent_left s nb =
+  let nb = nb - String.length s in
+  if nb <= 0 then
+    s
+  else
+    s ^ String.make nb ' '
+
+let indent_right s nb =
+  let nb = nb - String.length s in
+  if nb <= 0 then
+    s
+  else
+    String.make nb ' ' ^ s
+
+let sub_at n s =
+  if String.length s <= n then
+    s
+  else
+    String.sub s 0 n

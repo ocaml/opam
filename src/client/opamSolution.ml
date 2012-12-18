@@ -399,8 +399,15 @@ let unknown_package name version =
 
 let unavailable_package name version =
   match version with
-  | None   -> OpamGlobals.error_and_exit "%S is not available for your compiler.\n" (OpamPackage.Name.to_string name)
-  | Some v -> OpamGlobals.error_and_exit "Version %s of %S is incompatible with your compiler." (OpamPackage.Version.to_string v) (OpamPackage.Name.to_string name)
+  | None   ->
+    OpamGlobals.error_and_exit
+      "%S is not available for your compiler or your OS.\n"
+      (OpamPackage.Name.to_string name)
+  | Some v ->
+    OpamGlobals.error_and_exit
+      "Version %s of %S is incompatible with your compiler or your OS."
+      (OpamPackage.Version.to_string v)
+      (OpamPackage.Name.to_string name)
 
 let eq_atom name version =
   name, Some (`Eq, version)

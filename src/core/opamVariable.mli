@@ -48,6 +48,7 @@ module Section: sig
   (** Shortcut to sections *)
   type section = t
 
+  (** Fully qualified section names *)
   module Full: sig
 
     include OpamMisc.ABSTRACT

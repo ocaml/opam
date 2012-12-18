@@ -6,7 +6,7 @@
 .ad l
 .SH NAME
 .P
-opam\-upgrade \- Upgrade the installed package to latest version
+opam\-upgrade \- Upgrade the installed package to latest version.
 .SH SYNOPSIS
 .P
 \fBopam upgrade\fR [\fIOPTION\fR]... [\fIPACKAGES\fR]...
@@ -17,6 +17,10 @@ This command upgrades the installed packages to their latest available versions.
 .TP 4
 \fIPACKAGES\fR
 List of package names.
+.SH OPTIONS
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
@@ -44,15 +48,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>

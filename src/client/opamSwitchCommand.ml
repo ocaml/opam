@@ -18,34 +18,76 @@ let log fmt = OpamGlobals.log "SWITCH" fmt
 open OpamTypes
 open OpamState.Types
 
+(* name + state + compiler + description *)
+(* TODO: add repo *)
 let list () =
   log "list";
+
   let t = OpamState.load_state () in
   let descrs = OpamState.compilers t in
-  let aliases = OpamFile.Aliases.read (OpamPath.aliases t.root) in
-  OpamGlobals.msg "--- Installed compilers ---\n";
-  OpamSwitch.Map.iter (fun n c ->
-    let current = if n = t.switch then "*" else " " in
-    let compiler = OpamCompiler.to_string c in
-    let switch_name = OpamSwitch.to_string n in
-    if switch_name = compiler then
-      OpamGlobals.msg " %s %s\n" current switch_name
-    else
-      OpamGlobals.msg " %s %s [%s]\n" current compiler switch_name
-  ) aliases;
-  OpamGlobals.msg "\n--- Available compilers ---\n";
-  OpamCompiler.Set.iter (fun c ->
-    let comp = OpamFile.Comp.read (OpamPath.compiler t.root c) in
-    let preinstalled = if OpamFile.Comp.preinstalled comp then "~" else " " in
-    let version = OpamFile.Comp.version comp in
-    let version, compiler =
-      if OpamCompiler.Version.to_string version = OpamCompiler.to_string c then
-        OpamCompiler.Version.to_string version, ""
+  let descr c = OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
+
+  let installed = "I" in
+  let current = "C" in
+  let not_installed = "--" in
+
+  let installed =
+    OpamSwitch.Map.fold (fun name comp acc ->
+      let s =
+        if name = t.switch
+        then current
+        else installed in
+      let n = OpamSwitch.to_string name in
+      let c = OpamCompiler.to_string comp in
+      let d = descr comp in
+      (n, s, c, d) :: acc
+    ) t.aliases [] in
+
+  let descrs =
+    OpamCompiler.Set.filter (fun comp ->
+      OpamSwitch.Map.for_all (fun s c ->
+        (* it is either not installed *)
+        c <> comp
+        (* or it is installed with an alias name. *)
+        || OpamSwitch.to_string s <> OpamCompiler.to_string comp
+      ) t.aliases
+    ) descrs in
+
+  let officials, patches =
+    OpamCompiler.Set.fold (fun comp (officials, patches) ->
+      let c = OpamFile.Comp.read (OpamPath.compiler t.root comp) in
+      let version = OpamFile.Comp.version c in
+      if OpamCompiler.Version.to_string version = OpamCompiler.to_string comp then
+        comp :: officials, patches
       else
-        OpamCompiler.Version.to_string version,
-        Printf.sprintf "(%s)" (OpamCompiler.to_string c) in
-    OpamGlobals.msg " %s %-8s %s\n" preinstalled version compiler
-  ) descrs
+        officials, comp :: patches
+     ) descrs ([],[]) in
+
+  let mk l =
+    List.fold_left (fun acc comp ->
+      let c = OpamCompiler.to_string comp in
+      let d = descr comp in
+      (not_installed, not_installed, c, d) :: acc
+  ) [] l in
+
+  let all = installed @ mk officials @ mk patches in
+
+  let max_name, max_state, max_compiler =
+    List.fold_left (fun (n,s,c) (name, state, compiler, _) ->
+      let n = max (String.length name) n in
+      let s = max (String.length state) s in
+      let c = max (String.length compiler) c in
+      (n, s, c)
+    ) (0,0,0) all in
+
+  let print_compiler (name, state, compiler, descr) =
+    OpamGlobals.msg "%s %s %s  %s\n"
+      (OpamMisc.indent_left name max_name)
+      (OpamMisc.indent_right state max_state)
+      (OpamMisc.indent_left compiler max_compiler)
+      descr in
+
+  List.iter print_compiler all
 
 let remove switch =
   log "remove switch=%s" (OpamSwitch.to_string switch);

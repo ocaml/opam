@@ -27,7 +27,7 @@ let string_of_config_option t =
 
 let string_of_config = function
   | CEnv csh    -> Printf.sprintf "env(csh=%b)" csh
-  | CList       -> "list-vars"
+  | CList ns    -> Printf.sprintf "list-vars %s" (String.concat "," (List.map OpamPackage.Name.to_string ns))
   | CVariable v -> Printf.sprintf "var(%s)" (OpamVariable.Full.to_string v)
   | CCompil c   -> string_of_config_option c
   | CSubst l    -> String.concat "," (List.map OpamFilename.Base.to_string l)
@@ -35,36 +35,77 @@ let string_of_config = function
       Printf.sprintf "include(%b,%s)"
         b (String.concat "," (List.map OpamPackage.Name.to_string l))
 
+let need_globals ns =
+  ns = []
+  || List.mem OpamPackage.Name.default ns
+  || List.mem (OpamPackage.Name.of_string "globals") ns
+
+(* Implicit variables *)
+let implicits t ns =
+  let global_implicits =
+    if need_globals ns then
+      List.map (fun variable ->
+        OpamVariable.Full.create_global OpamPackage.Name.default (OpamVariable.of_string variable)
+      ) [ "ocaml-version"; "preinstalled" ]
+    else
+      [] in
+  let names =
+    if ns = [] then
+      List.map OpamPackage.name (OpamPackage.Set.elements t.packages)
+    else
+      ns in
+  (* keep only the existing packages *)
+  let names =
+    List.filter (fun n ->
+      OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.packages
+    ) names in
+  List.fold_left
+    (fun accu variable ->
+      List.fold_left (fun accu name ->
+        OpamVariable.Full.create_global name (OpamVariable.of_string variable) :: accu
+      ) accu names
+    ) global_implicits [ "installed"; "enable" ]
+
 (* List all the available variables *)
-let config_list t =
+let config_list t ns =
+  let globals =
+    if need_globals ns then
+      [OpamPackage.Name.default, OpamState.dot_config t OpamPackage.Name.default]
+    else
+      [] in
   let configs =
+    globals @
     OpamPackage.Set.fold (fun nv l ->
+      let name = OpamPackage.name nv in
       let file = OpamState.dot_config t (OpamPackage.name nv) in
-      (nv, file) :: l
+      (name, file) :: l
     ) t.installed [] in
   let variables =
-    List.fold_left (fun accu (nv, c) ->
-      let name = OpamPackage.name nv in
+    implicits t ns @
+    List.fold_left (fun accu (name, config) ->
       (* add all the global variables *)
       let globals =
-        List.fold_left (fun accu v ->
-          (OpamVariable.Full.create_global name v, OpamFile.Dot_config.variable c v) :: accu
-        ) accu (OpamFile.Dot_config.variables c) in
-      (* then add the local variables *)
+        List.fold_left (fun accu variable ->
+          OpamVariable.Full.create_global name variable :: accu
+        ) accu (OpamFile.Dot_config.variables config) in
+      (* then add the local section variables *)
       List.fold_left
-        (fun accu n ->
-          let variables = OpamFile.Dot_config.Section.variables c n in
-          List.fold_left (fun accu v ->
-            (OpamVariable.Full.create_local name n v,
-             OpamFile.Dot_config.Section.variable c n v) :: accu
+        (fun accu section ->
+          let variables = OpamFile.Dot_config.Section.variables config section in
+          List.fold_left (fun accu variable ->
+            OpamVariable.Full.create_local name section variable :: accu
           ) accu variables
-        ) globals (OpamFile.Dot_config.Section.available c)
+        ) globals (OpamFile.Dot_config.Section.available config)
     ) [] configs in
-  List.iter (fun (fv, contents) ->
-    OpamGlobals.msg "%-20s : %s\n"
-      (OpamVariable.Full.to_string fv)
+  let contents =
+    List.map
+      (fun v -> v, OpamState.contents_of_variable t v)
+      variables in
+  List.iter (fun (variable, contents) ->
+    OpamGlobals.msg "%-40s %s\n"
+      (OpamVariable.Full.to_string variable)
       (OpamVariable.string_of_variable_contents contents)
-  ) (List.rev variables)
+  ) (List.rev contents)
 
 (* Return the transitive closure of dependencies sorted in topological order *)
 let get_transitive_dependencies t ?(depopts = false) names =
@@ -224,7 +265,7 @@ let config request =
     if csh
     then print_csh_env env
     else print_env env
-  | CList                     -> config_list t
+  | CList ns                  -> config_list t ns
   | CSubst fs                 -> List.iter (OpamState.substitute_file t) fs
   | CIncludes (is_rec, names) -> config_includes t is_rec names
   | CCompil c                 -> config_compil t c

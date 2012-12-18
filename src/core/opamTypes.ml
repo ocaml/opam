@@ -177,6 +177,8 @@ type pin_option =
   | Darcs of dirname
   | Unpin
 
+type pin_kind = [`version|`git|`darcs|`local|`unpin]
+
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
@@ -202,8 +204,6 @@ let pin_option_of_string ?kind s =
     else
       Version (OpamPackage.Version.of_string s)
 
-type pin_kind = [`version|`git|`darcs|`local|`unpin]
-
 let string_of_pin_kind = function
   | `version -> "version"
   | `git     -> "git"
@@ -215,6 +215,7 @@ let pin_kind_of_string = function
   | "version" -> `version
   | "git"     -> `git
   | "darcs"   -> `darcs
+  | "rsync"
   | "local"   -> `local
   | "unpin"   -> `unpin
   | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
@@ -246,7 +247,7 @@ let string_of_pin p =
 
 type config =
   | CEnv of bool
-  | CList
+  | CList of name list
   | CVariable of full_variable
   | CIncludes of bool * (name list)
   | CCompil   of config_option

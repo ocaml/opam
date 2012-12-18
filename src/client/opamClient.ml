@@ -197,7 +197,9 @@ let update_repositories t ~show_compilers repositories =
     if comp <> OpamCompiler.default
     && OpamSwitch.Map.for_all (fun _ c -> comp <> c) t.aliases then (
       let comp_f = OpamPath.compiler t.root comp in
+      let descr_f = OpamPath.compiler_descr t.root comp in
       OpamFilename.remove comp_f;
+      OpamFilename.remove descr_f;
     )
   ) (OpamState.compilers t);
 
@@ -209,9 +211,13 @@ let update_repositories t ~show_compilers repositories =
     let comp_dir = OpamPath.compilers_dir t.root in
     OpamCompiler.Set.iter (fun o ->
       let comp_g = OpamPath.compiler t.root o in
-      let comp_f = OpamPath.Repository.compiler repo_p o in
-      if not (OpamFilename.exists comp_g) && OpamFilename.exists comp_f then
-        OpamFilename.link_in comp_f comp_dir
+      let comp_r = OpamPath.Repository.compiler repo_p o in
+      if not (OpamFilename.exists comp_g) && OpamFilename.exists comp_r then
+        OpamFilename.link_in comp_r comp_dir;
+      let descr_g = OpamPath.compiler_descr t.root o in
+      let descr_r = OpamPath.Repository.compiler_descr repo_p o in
+      if not (OpamFilename.exists descr_g) && OpamFilename.exists descr_r then
+        OpamFilename.link_in descr_r comp_dir;
     ) comps
   ) (sorted_repositories t)
 
@@ -325,29 +331,9 @@ let update_packages t ~show_packages repositories =
   if !has_error then
     OpamGlobals.exit 1
 
-let indent_left s nb =
-  let nb = nb - String.length s in
-  if nb <= 0 then
-    s
-  else
-    s ^ String.make nb ' '
-
-let indent_right s nb =
-  let nb = nb - String.length s in
-  if nb <= 0 then
-    s
-  else
-    String.make nb ' ' ^ s
-
-let sub_at n s =
-  if String.length s <= n then
-    s
-  else
-    String.sub s 0 n
-
 let s_not_installed = "--"
 
-let names_of_regexp t ~installed_only ~name_only ~case_sensitive regexps =
+let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
   log "packages_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
   let regexps =
     OpamMisc.filter_map (fun re ->
@@ -361,7 +347,11 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive regexps =
     List.exists (fun re -> OpamMisc.exact_match re str) regexps in
   let partial_match str =
     List.exists (fun re -> Re.execp re str) regexps in
-  let packages = Lazy.force t.available_packages in
+  let packages =
+    if all then
+      t.packages
+    else
+      Lazy.force t.available_packages in
   let names =
     OpamPackage.Set.fold
       (fun nv set -> OpamPackage.Name.Set.add (OpamPackage.name nv) set)
@@ -395,7 +385,7 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive regexps =
 
 let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = false) regexp =
   let t = OpamState.load_state () in
-  let names = names_of_regexp t ~installed_only ~name_only ~case_sensitive regexp in
+  let names = names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all:false regexp in
   if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
     let kind = if installed_only then "Installed" else "Available" in
     OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
@@ -419,14 +409,14 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
           | None   -> s_not_installed
           | Some v -> OpamPackage.Version.to_string v in
         OpamGlobals.msg "%s  %s  %s\n"
-          (indent_left name max_n)
-          (indent_right version max_v)
-          (sub_at 100 synopsis)
+          (OpamMisc.indent_left name max_n)
+          (OpamMisc.indent_right version max_v)
+          (OpamMisc.sub_at 100 synopsis)
   ) names
 
 let info regexps =
   let t = OpamState.load_state () in
-  let names = names_of_regexp t ~installed_only:false ~name_only:true ~case_sensitive:false regexps in
+  let names = names_of_regexp t ~installed_only:false ~name_only:true ~case_sensitive:false ~all:true regexps in
 
   let print_one name _ =
 
@@ -506,8 +496,11 @@ let info regexps =
                 | Some s -> OpamPackage.Set.choose s
               end
             | _ -> fst (OpamPackage.Map.max_binding installed) in
-          let descr = OpamFile.Descr.safe_read (OpamPath.descr t.root nv) in
-          [ "description", OpamFile.Descr.full descr ]
+          let descr = OpamFile.Descr.full (OpamFile.Descr.safe_read (OpamPath.descr t.root nv)) in
+          let short, long = match OpamMisc.cut_at descr '\n' with
+            | None   -> descr, ""
+            | Some p -> p in
+          [ "description", Printf.sprintf "\n%s\n\n%s\n" short (OpamMisc.strip long) ]
       ) in
 
   OpamPackage.Name.Map.iter print_one names

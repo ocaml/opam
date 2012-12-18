@@ -12,15 +12,18 @@ opam\-repository \- Manage OPAM repositories.
 \fBopam repository\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-This command is used to manage OPAM repositories. To synchronize OPAM with the last versions of the packages available in remote repositories, *opam update* should be used.
+This command is used to manage OPAM repositories. To synchronize OPAM with the last versions of the packages available in remote repositories, \fBopam update\fR should be used.
 .SH ARGUMENTS
 .TP 4
 \fICOMMAND\fR
 Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
 .SH OPTIONS
 .TP 4
-\fB\-\-kind\fR=\fIKIND\fR
+\fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
 Specify the kind of the repository to be set (the main ones are 'http', 'local' or 'git').
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
 .TP 4
 \fB\-p\fR \fIINT\fR, \fB\-\-priority\fR=\fIINT\fR
 Set the repository priority (bigger is better)
@@ -64,15 +67,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>

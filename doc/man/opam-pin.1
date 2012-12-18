@@ -24,11 +24,14 @@ Package name.
 Specific version, local path or git url to pin the package to, or 'none' to unpin the package.
 .SH OPTIONS
 .TP 4
-\fB\-\-kind\fR=\fIKIND\fR
-Specify the kind of the repository to be set (the main ones are 'http', 'local' or 'git').
+\fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
+Force the kind of pinning.
 .TP 4
 \fB\-l\fR, \fB\-\-list\fR
 List the currently pinned packages.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
@@ -56,15 +59,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>

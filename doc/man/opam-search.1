@@ -6,7 +6,7 @@
 .ad l
 .SH NAME
 .P
-opam\-search \- Search into the package list
+opam\-search \- Search into the package list.
 .SH SYNOPSIS
 .P
 \fBopam search\fR [\fIOPTION\fR]... [\fIPATTERNS\fR]...
@@ -14,7 +14,7 @@ opam\-search \- Search into the package list
 .P
 This command displays the list of available packages that match one of the package patterns specified as arguments.
 .P
-Unless the \-\fIshort\fR flag is used, the output format is the same as the \fBopam list\fR command. It displays one package per line, and each line contains the name of the package, the installed version or \-\- if the package is not installed, and a short description.
+Unless the \fB\-\-short\fR flag is used, the output format is the same as the \fBopam list\fR command. It displays one package per line, and each line contains the name of the package, the installed version or \-\- if the package is not installed, and a short description.
 .P
 The full description can be obtained by doing \fBopam info <package>\fR.
 .SH ARGUMENTS
@@ -28,6 +28,9 @@ Force the search in case sensitive mode.
 .TP 4
 \fB\-i\fR, \fB\-\-installed\fR
 List installed packages only.
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes).
 .TP 4
 \fB\-s\fR, \fB\-\-short\fR
 Output the names of packages separated by one whitespace instead of using the usual formatting.
@@ -58,15 +61,6 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
-.SH MORE HELP
-.P
-Use `opam \fICOMMAND\fR \-\-help' for help on a single command.
-.sp -1
-.P
-Use `opam help patterns' for help on patch matching.
-.sp -1
-.P
-Use `opam help environment' for help on environment variables.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
