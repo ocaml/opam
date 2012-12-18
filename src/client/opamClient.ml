@@ -653,7 +653,7 @@ let init repo compiler cores =
 
     (* Load the partial state, and update the repository state *)
     log "updating repository state";
-    let t = OpamState.load_state () in
+    let t = OpamState.load_repository_state () in
     update_repositories t ~show_compilers:false t.repositories;
 
     (* Load the partial state, and update the packages state *)

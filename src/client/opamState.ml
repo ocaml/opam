@@ -279,6 +279,40 @@ let system_needs_upgrade t =
 let upgrade_system_compiler =
   ref (fun _ -> assert false)
 
+(* Only used during init: load only repository-related information *)
+let load_repository_state () =
+  let root = OpamPath.default () in
+  log "load_partial_state root=%s" (OpamFilename.Dir.to_string root);
+  let config_p = OpamPath.config root in
+  let config = OpamFile.Config.read config_p in
+  let repositories =
+    List.fold_left (fun map repo ->
+      let repo_p = OpamPath.Repository.create root repo in
+      let config = OpamFile.Repo_config.read (OpamPath.Repository.config repo_p) in
+      OpamRepositoryName.Map.add repo config map
+    ) OpamRepositoryName.Map.empty (OpamFile.Config.repositories config) in
+  let switch = match !OpamGlobals.switch with
+    | None   -> OpamFile.Config.switch config
+    | Some a -> OpamSwitch.of_string a in
+
+  (* evertything else is empty *)
+  let aliases = OpamSwitch.Map.empty in
+  let compiler = OpamCompiler.of_string "none" in
+  let compiler_version = OpamCompiler.Version.of_string "none" in
+  let opams = OpamPackage.Map.empty in
+  let packages = OpamPackage.Set.empty in
+  let available_packages = lazy OpamPackage.Set.empty in
+  let installed = OpamPackage.Set.empty in
+  let reinstall = OpamPackage.Set.empty in
+  let repo_index = OpamPackage.Name.Map.empty in
+  let pinned = OpamPackage.Name.Map.empty in
+  {
+    root; switch; compiler; compiler_version; repositories; opams;
+    packages; available_packages; installed; reinstall;
+    repo_index; config; aliases; pinned;
+  }
+
+
 let load_state () =
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
