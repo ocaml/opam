@@ -210,7 +210,7 @@ let global_options =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. \
        This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater or equal to 1 \
-       or (b,\\$OPAMVERBOSE) to a non-empty string." in
+       or $(b,\\$OPAMVERBOSE) to a non-empty string." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let switch =
