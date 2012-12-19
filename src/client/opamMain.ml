@@ -210,7 +210,7 @@ let global_options =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. \
        This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater or equal to 1 \
-       or (b,\\$OPAMVERBOSE) to a non-empty string." in
+       or $(b,\\$OPAMVERBOSE) to a non-empty string." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let switch =
@@ -400,7 +400,7 @@ let config =
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
-  let is_rec = mk_flag  ["r";"rec"] "Recursive query." in
+  let is_rec = mk_flag  ["R";"rec"] "Recursive query." in
   let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
   let env    =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
