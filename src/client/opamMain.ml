@@ -720,6 +720,8 @@ let pin =
         specific source path for installing and upgrading the package. Using
         $(b,opam pin <package> none) will undo the 'pinned' status of
         <package>.";
+    `P "It is possible to pin a package to a specific git commit/tag/branch
+        with $(b,opam pin <package> </path/to/git>#<commit>).";
     `P "To list all the currently pinned packages, call the $(b,opam pin)
         without arguments or use $(b,--list)."
   ] in
