@@ -18,31 +18,34 @@ open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "GIT" fmt
 
-let git_fetch local_path remote_address =
-  OpamGlobals.msg "Synchronizing %s with %s.\n"
+let git_fetch local_path remote_address commit =
+  OpamGlobals.msg "Synchronizing %s with %s%s.\n"
     (OpamFilename.Dir.to_string local_path)
-    (OpamFilename.Dir.to_string remote_address);
+    (OpamFilename.Dir.to_string remote_address)
+    (match commit with
+    | None   -> ""
+    | Some c -> Printf.sprintf " (%s)" c);
   OpamFilename.in_dir local_path (fun () ->
     OpamSystem.command [ "git" ; "fetch" ; "origin" ]
   )
 
 let git_merge local_path commit =
   let commit = match commit with
-    | None   -> "master"
+    | None   -> "origin/master"
     | Some c -> c in
   OpamFilename.in_dir local_path (fun () ->
-    OpamSystem.command [ "git" ; "merge" ; "origin/" ^ commit ]
+    OpamSystem.command [ "git" ; "merge" ; commit ]
   )
 
 (* Return the list of modified files of the git repository located
    at [dirname] *)
 let git_diff local_path commit =
   let commit = match commit with
-    | None   -> "master"
+    | None   -> "remotes/origin/master"
     | Some c -> c in
   OpamFilename.in_dir local_path (fun () ->
     let lines = OpamSystem.read_command_output
-      [ "git" ; "diff" ; "remotes/origin/" ^ commit ; "--name-only" ] in
+      [ "git" ; "diff" ; commit ; "--name-only" ] in
     OpamFilename.Set.of_list (List.map OpamFilename.of_string lines)
   )
 
@@ -55,7 +58,7 @@ let git_init address =
 
 let check_updates local_path remote_address commit =
   if OpamFilename.exists_dir (local_path / ".git") then begin
-    git_fetch local_path remote_address;
+    git_fetch local_path remote_address commit;
     let files = git_diff local_path commit in
     git_merge local_path commit;
     Some files
@@ -101,16 +104,16 @@ module B = struct
 
   let rec download_dir nv ?dst remote_address =
     let local_repo = OpamRepository.local_repo () in
-    let remote_address, commit = git_of_string remote_address in
+    let address, commit = git_of_string remote_address in
     let dir = match dst with
       | None   ->
-        let basename = OpamFilename.Base.to_string (OpamFilename.basename_dir remote_address) in
+        let basename = OpamFilename.Base.to_string (OpamFilename.basename_dir address) in
         OpamPath.Repository.tmp_dir local_repo nv / basename
       | Some d -> d in
-    match check_updates dir remote_address commit with
+    match check_updates dir address commit with
     | None ->
         OpamFilename.mkdir dir;
-        OpamFilename.in_dir dir (fun () -> git_init remote_address);
+        OpamFilename.in_dir dir (fun () -> git_init address);
         download_dir nv ?dst remote_address
     | Some f ->
         if OpamFilename.Set.empty = f then

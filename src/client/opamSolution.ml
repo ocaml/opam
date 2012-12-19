@@ -199,9 +199,6 @@ let extract_package t nv =
   match pinned_path t nv with
   | Some (Git p | Darcs p | Path p as pin) ->
     let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
-    OpamGlobals.msg "Synchronizing %s with %s.\n"
-      (OpamFilename.Dir.to_string pinned_dir)
-      (OpamFilename.Dir.to_string p);
     if not (OpamFilename.exists_dir pinned_dir) then (
       match OpamState.update_pinned_package t nv pin with
       | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
