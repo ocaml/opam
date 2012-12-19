@@ -105,7 +105,7 @@ module B = struct
     with _ ->
       OpamGlobals.msg
         "Cannot find index.tar.gz on the OPAM repository. \
-         Initialisation might take some time ...\n"
+         Initialisation might take some time.\n"
 
   let curl ~remote_file ~local_file =
     log "dowloading %s" (OpamFilename.to_string remote_file);
@@ -114,11 +114,10 @@ module B = struct
     OpamFilename.download ~overwrite:true remote_file local_dir
 
   let update ~address =
-    OpamGlobals.msg "Synchronizing with %s ...\n" (OpamFilename.Dir.to_string address);
     let state = make_state ~download_index:true address in
-    log "dir local_dir=%s remote_dir=%s"
+    OpamGlobals.msg "Synchronizing %s with %s.\n"
       (OpamFilename.Dir.to_string state.local_dir)
-      (OpamFilename.Dir.to_string state.remote_dir);
+      (OpamFilename.Dir.to_string address);
     if state.local_dir <> state.remote_dir then begin
       let (--) = OpamFilename.Set.diff in
       let indexes =
@@ -173,7 +172,7 @@ module B = struct
         log "dowloading %s" (OpamFilename.to_string remote_file);
         let local_dir = OpamFilename.dirname local_file in
         OpamFilename.mkdir local_dir;
-        OpamGlobals.msg "Downloading %s ...\n" (OpamFilename.to_string remote_file);
+        OpamGlobals.msg "Downloading %s.\n" (OpamFilename.to_string remote_file);
         let local_file = OpamFilename.download ~overwrite:true remote_file local_dir in
         if not (OpamFilename.exists local_file) then
           (* This may happen with empty files *)

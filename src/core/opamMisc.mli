@@ -157,6 +157,9 @@ val indent_right: string -> int -> string
 (** Cut a string *)
 val sub_at: int -> string -> string
 
+(** Cut a git string of the form /git/address[#SHA] into (address * commit) *)
+val git_of_string: string -> string * string option
+
 (** {2 Misc} *)
 
 (** Remove from a ':' separated list of string the one with the given prefix *)

@@ -267,3 +267,8 @@ let sub_at n s =
     s
   else
     String.sub s 0 n
+
+let git_of_string a =
+  match cut_at a '#' with
+  | None       -> a, None
+  | Some (a,c) -> a, Some c

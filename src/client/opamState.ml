@@ -814,9 +814,9 @@ let update_pinned_package t nv pin =
   match kind_of_pin_option pin with
   | (`git|`darcs|`local as k) ->
     let path = OpamFilename.raw_dir (path_of_pin_option pin) in
+    let dst = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
     let module B = (val OpamRepository.find_backend k: OpamRepository.BACKEND) in
-    let build = OpamPath.Switch.build t.root t.switch nv in
-    B.download_dir nv ~dst:build path
+    B.download_dir nv ~dst path
   | _ ->
     OpamGlobals.error_and_exit
       "Cannot update the pinned package %s: wrong backend."

@@ -229,10 +229,9 @@ let update_packages t ~show_packages repositories =
     OpamPackage.Set.of_list (
       OpamMisc.filter_map
         (function
-          | n, (Path p | Git p as pin) ->
+          | n, (Path p | Git p | Darcs p as pin) ->
             if OpamState.mem_installed_package_by_name t n then
               let nv = OpamState.find_installed_package_by_name t n in
-              OpamGlobals.msg "Synchronizing with %s\n" (OpamFilename.Dir.to_string p);
               match OpamState.update_pinned_package t nv pin with
               | Up_to_date _  -> None
               | Result _      -> Some nv
@@ -948,7 +947,8 @@ let pin action =
   let update_config pins =
     OpamPackage.Version.Set.iter (fun version ->
       let nv = OpamPackage.create name version in
-      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv)
+      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
+      OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv));
     ) (OpamPackage.versions t.packages name);
     OpamFile.Pinned.write pin_f pins in
   if OpamState.mem_installed_package_by_name t name then (

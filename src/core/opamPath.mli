@@ -163,6 +163,10 @@ module Switch: sig
 
   (** Pinned package file *)
   val pinned: t -> switch -> filename
+
+  (** Build dir for pinned packages *)
+  val pinned_dir: t -> switch -> name -> dirname
+
 end
 
 (** Repository paths *)

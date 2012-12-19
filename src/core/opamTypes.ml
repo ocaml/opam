@@ -183,8 +183,14 @@ let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
   | Some `git     ->
-    if Sys.file_exists s then
-      Git (OpamFilename.Dir.of_string s)
+    let path, commit = OpamMisc.git_of_string s in
+    if Sys.file_exists path then
+      let real_path = OpamFilename.Dir.of_string path in
+      match commit with
+      | None   -> Git real_path
+      | Some c ->
+        let path = Printf.sprintf "%s#%s" (OpamFilename.Dir.to_string real_path) c in
+        Git (OpamFilename.Dir.of_string path)
     else
       Git (OpamFilename.raw_dir s)
   | Some `darcs   ->
@@ -195,6 +201,7 @@ let pin_option_of_string ?kind s =
   | Some `local   -> Path (OpamFilename.Dir.of_string s)
   | Some `unpin   -> Unpin
   | None          ->
+    let s, _ = OpamMisc.git_of_string s in
     if s = "none" then
       Unpin
     else if Sys.file_exists s then

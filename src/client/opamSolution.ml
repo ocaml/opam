@@ -169,6 +169,7 @@ let pinned_path t nv =
   if OpamPackage.Name.Map.mem name t.pinned then
     match OpamPackage.Name.Map.find name t.pinned with
     | Path _
+    | Darcs _
     | Git _ as k -> Some k
     | _          -> None
   else
@@ -187,29 +188,36 @@ let get_archive t nv =
       None in
   OpamState.with_repository t nv aux
 
+(* For pinned packages, we keep the build cache in
+   ~/.opam/<switch>/pinned.cache/<name> as:
+   i) it's quite important to build and sync-up in different places
+   ii) the build directory will be deleted afterwards anyway *)
 let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
-  let p_build = OpamPath.Switch.build t.root t.switch nv in
+  let build_dir = OpamPath.Switch.build t.root t.switch nv in
+  OpamFilename.rmdir build_dir;
   match pinned_path t nv with
-  | Some (Git p| Path p as pin) ->
-    OpamGlobals.msg "Synchronizing pinned package\n";
-    if not (OpamFilename.exists_dir p_build) then (
+  | Some (Git p | Darcs p | Path p as pin) ->
+    let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
+    OpamGlobals.msg "Synchronizing %s with %s.\n"
+      (OpamFilename.Dir.to_string pinned_dir)
+      (OpamFilename.Dir.to_string p);
+    if not (OpamFilename.exists_dir pinned_dir) then (
       match OpamState.update_pinned_package t nv pin with
       | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
       | Result _
       | Up_to_date _  -> ()
     );
     let _files = OpamState.with_repository t nv (fun repo _ ->
-      OpamFilename.in_dir p_build (fun () -> OpamRepository.copy_files repo nv)
+      OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
     ) in
-    ()
+    OpamFilename.link_dir pinned_dir build_dir
   | _ ->
-    OpamFilename.rmdir p_build;
     match get_archive t nv with
     | None         -> ()
     | Some archive ->
       OpamGlobals.msg "Extracting %s\n" (OpamFilename.to_string archive);
-      OpamFilename.extract archive p_build
+      OpamFilename.extract archive build_dir
 
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
