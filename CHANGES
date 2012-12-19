@@ -1,13 +1,14 @@
 0.9.0 (trunk)
+* Improve `opam remove` efficiency when using `ocamlfind` command(s) only
 * Git pinning now works with commits/tags/branches
-* 'opam init' works without preinstalled compiler
-* support for DARCS backends
+* `opam init` works without preinstalled compiler
+* Support for DARCS backends
 * Each global command-line flag `xxx` as can be set using the `$OPAMxxx` instead
 * Better display of compiler switch (+ read compiler descriptions)
 * Clearer error message when trying to pin a non-existing package
 * Fix issue with pinning to version number
-* add a `shared` location to be used in OPAM files
-* improve (but break) the command-line interface by using cmdliner
+* Add a `shared` location to be used in OPAM files
+* Improve (but break) the command-line interface by using cmdliner
 
 0.8.2 [Dec 2012]
 * Fix an issue with `opam reinstall <packages>` where packages were reinstalled in reverse order
