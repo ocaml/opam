@@ -12,9 +12,10 @@ esac
 
 export OPAMROOT=$ROOT
 export OPAMYES=1
+export OPAMVERBOSE=1
 
 $OPAM init $2
-$OPAM config -list-vars
+$OPAM config list
 
 case "${compiler}" in
 system)
@@ -22,8 +23,8 @@ system)
 system4)
   ;;
 *)
-  $OPAM $ROOT switch ${compiler}
+  $OPAM switch ${compiler}
   ;;
 esac
 
-$OPAM --verbose install ${packages}
+$OPAM install ${packages}
