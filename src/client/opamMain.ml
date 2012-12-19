@@ -400,7 +400,7 @@ let config =
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
-  let is_rec = mk_flag  ["r";"rec"] "Recursive query." in
+  let is_rec = mk_flag  ["R";"rec"] "Recursive query." in
   let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
   let env    =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
