@@ -205,7 +205,7 @@ let extract_package t nv =
       | Result _
       | Up_to_date _  -> ()
     ) else
-      OpamGlobals.msg "The pinned package has already been initialized, using the cached version.\n";
+      OpamGlobals.msg "Synchronization: nothing to do as the pinned package has already been initialized.\n";
     let _files = OpamState.with_repository t nv (fun repo _ ->
       OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
     ) in
@@ -233,7 +233,15 @@ let proceed_to_delete ~rm_build t nv =
       (* We try to run the remove scripts in the folder where it was extracted
          If it does not exist, we try to download and extract the archive again,
          if that fails, we don't really care. *)
-      if not (OpamFilename.exists_dir p_build) && OpamState.mem_repository t nv then (
+      (* We also use a small hack: if the remove command is simply 'ocamlfind remove xxx'
+         then, no need to extract the archive again. *)
+      let use_ocamlfind = function
+        | [] -> true
+        | "ocamlfind" :: _ -> true
+        | _ -> false in
+      if not (OpamFilename.exists_dir p_build)
+      && OpamState.mem_repository t nv
+      && not (List.for_all use_ocamlfind remove) then (
         try extract_package t nv
         with _ -> OpamFilename.mkdir p_build;
       );
