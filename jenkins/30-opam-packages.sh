@@ -14,7 +14,7 @@ export OPAMROOT=$ROOT
 export OPAMYES=1
 
 $OPAM init $2
-$OPAM config -list-vars
+$OPAM config list
 
 case "${compiler}" in
 system)
