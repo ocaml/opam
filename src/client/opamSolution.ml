@@ -204,7 +204,8 @@ let extract_package t nv =
       | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
       | Result _
       | Up_to_date _  -> ()
-    );
+    ) else
+      OpamGlobals.msg "The pinned package has already been initialized, using the cached version.\n";
     let _files = OpamState.with_repository t nv (fun repo _ ->
       OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
     ) in

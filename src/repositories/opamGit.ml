@@ -24,7 +24,7 @@ let git_fetch local_path remote_address commit =
     (OpamFilename.Dir.to_string remote_address)
     (match commit with
     | None   -> ""
-    | Some c -> Printf.sprintf " (%s)" c);
+    | Some c -> Printf.sprintf " [%s]" c);
   OpamFilename.in_dir local_path (fun () ->
     OpamSystem.command [ "git" ; "fetch" ; "origin" ]
   )
