@@ -8,7 +8,7 @@ depends.ocp: depends.ocp.boot
 clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp cmdliner.stamp
 
 cudf-0.6.3.tar.gz:
-	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31543/cudf-0.6.3.tar.gz
+	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31910/cudf-0.6.3.tar.gz
 
 cudf.stamp: cudf-0.6.3.tar.gz
 	tar xfz cudf-0.6.3.tar.gz
