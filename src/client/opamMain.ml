@@ -65,8 +65,10 @@ let help_sections = [
   `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
 
   `S "AUTHORS";
-  `P "Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>"; `Noblank;
-  `P "Frederic Tuong";
+  `P "Thomas Gazagnaire   <thomas.gazagnaire@ocamlpro.com>"; `Noblank;
+  `P "Frederic Tuong      <frederic.tuong@inria.com>"; `Noblank;
+  `P "Vincent Bernardoff  <vb@luminar.eu.org>"; `Noblank;
+  `P "Guillem Rieu        <guillem.rieu@ocamlpro.com>";
 
   `S "BUGS";
   `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";
