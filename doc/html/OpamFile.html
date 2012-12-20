@@ -22,23 +22,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Configuration files" rel="Section" href="#2_Configurationfiles">
 <link title="Repository files" rel="Section" href="#2_Repositoryfiles">
 <link title="Substitution files" rel="Section" href="#2_Substitutionfiles">
@@ -85,6 +79,9 @@ Environement variables
 </div>
 <pre><span class="keyword">module</span> <a href="OpamFile.Comp.html">Comp</a>: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre><div class="info">
 Compiler version <code class="code">$opam/compilers/</code>
+</div>
+<pre><span class="keyword">module</span> <a href="OpamFile.Comp_descr.html">Comp_descr</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = string</code></pre><div class="info">
+Compiler descriptions
 </div>
 <br>
 <h2 id="2_Configurationfiles">Configuration files</h2><br>

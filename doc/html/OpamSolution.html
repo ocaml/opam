@@ -22,23 +22,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Atoms" rel="Section" href="#2_Atoms">
 <link title="Actions" rel="Section" href="#2_Actions">
 <title>OpamSolution</title>
@@ -53,49 +47,49 @@
 Applying solver solutions<br>
 </div>
 <hr width="100%">
-<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       OpamTypes.user_action -><br>       OpamTypes.atom OpamTypes.request -><br>       (OpamTypes.solution, string) OpamTypes.result</code></pre><div class="info">
 Resolve an user request<br>
 </div>
-<pre><span id="VALresolve_and_apply"><span class="keyword">val</span> resolve_and_apply</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
+<pre><span id="VALresolve_and_apply"><span class="keyword">val</span> resolve_and_apply</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       OpamTypes.user_action -><br>       OpamTypes.atom OpamTypes.request -> OpamTypes.solver_result</code></pre><div class="info">
 Resolve a request and apply the solution<br>
 </div>
-<pre><span id="VALerror_if_no_solution"><span class="keyword">val</span> error_if_no_solution</span> : <code class="type"><a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a> -> unit</code></pre><div class="info">
+<pre><span id="VALerror_if_no_solution"><span class="keyword">val</span> error_if_no_solution</span> : <code class="type">OpamTypes.solver_result -> unit</code></pre><div class="info">
 Raise an error if no solution is found<br>
 </div>
-<pre><span id="VALunknown_package"><span class="keyword">val</span> unknown_package</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option -> 'a</code></pre><div class="info">
+<pre><span id="VALunknown_package"><span class="keyword">val</span> unknown_package</span> : <code class="type">OpamTypes.name -> OpamTypes.version option -> 'a</code></pre><div class="info">
 Raise an error because a package is unknown<br>
 </div>
-<pre><span id="VALunavailable_package"><span class="keyword">val</span> unavailable_package</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option -> 'a</code></pre><div class="info">
+<pre><span id="VALunavailable_package"><span class="keyword">val</span> unavailable_package</span> : <code class="type">OpamTypes.name -> OpamTypes.version option -> 'a</code></pre><div class="info">
 Raise an error because a package in unavailable<br>
 </div>
 <br>
 <h2 id="2_Atoms">Atoms</h2><br>
-<pre><span id="VALeq_atom"><span class="keyword">val</span> eq_atom</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a></code></pre><div class="info">
+<pre><span id="VALeq_atom"><span class="keyword">val</span> eq_atom</span> : <code class="type">OpamTypes.name -> OpamTypes.version -> OpamTypes.atom</code></pre><div class="info">
 Return an atom with a string version constraint<br>
 </div>
-<pre><span id="VALatom_of_package"><span class="keyword">val</span> atom_of_package</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a></code></pre><div class="info">
+<pre><span id="VALatom_of_package"><span class="keyword">val</span> atom_of_package</span> : <code class="type">OpamTypes.package -> OpamTypes.atom</code></pre><div class="info">
 Return a simple atom, with no version constrain, from a package<br>
 </div>
-<pre><span id="VALatoms_of_packages"><span class="keyword">val</span> atoms_of_packages</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
+<pre><span id="VALatoms_of_packages"><span class="keyword">val</span> atoms_of_packages</span> : <code class="type">OpamTypes.package_set -> OpamTypes.atom list</code></pre><div class="info">
 Return a list of simple atoms (ie. with no version constraints)
     from a set of packages<br>
 </div>
-<pre><span id="VALeq_atoms_of_packages"><span class="keyword">val</span> eq_atoms_of_packages</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
+<pre><span id="VALeq_atoms_of_packages"><span class="keyword">val</span> eq_atoms_of_packages</span> : <code class="type">OpamTypes.package_set -> OpamTypes.atom list</code></pre><div class="info">
 Return a list of constrained atoms from a set of packages<br>
 </div>
-<pre><span id="VALatoms_of_names"><span class="keyword">val</span> atoms_of_names</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
+<pre><span id="VALatoms_of_names"><span class="keyword">val</span> atoms_of_names</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -> OpamTypes.name_set -> OpamTypes.atom list</code></pre><div class="info">
 Return a list of atoms from a list of names (wich can eventually
     be of the form name.version)<br>
 </div>
-<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type"><a href="OpamTypes.html#TYPEstats">OpamTypes.stats</a> -> int</code></pre><div class="info">
+<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type">OpamTypes.stats -> int</code></pre><div class="info">
 <h2 id="2_Stats">Stats</h2><br>
 </div>
 <br>
 <h2 id="2_Actions">Actions</h2><br>
-<pre><span id="VALapply_solution"><span class="keyword">val</span> apply_solution</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
+<pre><span id="VALapply_solution"><span class="keyword">val</span> apply_solution</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -> OpamTypes.solution -> OpamTypes.solver_result</code></pre><div class="info">
 Apply a solution return by the solver<br>
 </div>
-<pre><span id="VALproceed_to_delete"><span class="keyword">val</span> proceed_to_delete</span> : <code class="type">rm_build:bool -> <a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
+<pre><span id="VALproceed_to_delete"><span class="keyword">val</span> proceed_to_delete</span> : <code class="type">rm_build:bool -> <a href="OpamState.html#TYPEstate">OpamState.state</a> -> OpamTypes.package -> unit</code></pre><div class="info">
 Remove a package<br>
 </div>
 </body></html>

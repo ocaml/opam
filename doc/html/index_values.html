@@ -18,23 +18,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>Index of values</title>
 </head>
 <body>
@@ -53,18 +47,7 @@ Create a new directory
 Create a new filename
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.OP.html#VAL(|>)">(|&gt;)</a> [<a href="OpamMisc.OP.html">OpamMisc.OP</a>]</td>
-<td><div class="info">
-Pipe operator
-</div>
-</td></tr>
 <tr><td align="left"><br>A</td></tr>
-<tr><td><a href="OpamCudf.html#VALactions_of_diff">actions_of_diff</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Compute the list of actions to match the difference between two
-    universe.
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.html#VALadd_extension">add_extension</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Add a file extension
@@ -79,11 +62,6 @@ Create an local of remote address from a string,
 <tr><td><a href="OpamPath.html#VALaliases">aliases</a> [<a href="OpamPath.html">OpamPath</a>]</td>
 <td><div class="info">
 Compiler aliases
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Section.Full.html#VALall">all</a> [<a href="OpamVariable.Section.Full.html">OpamVariable.Section.Full</a>]</td>
-<td><div class="info">
-All the sections in a package
 </div>
 </td></tr>
 <tr><td><a href="OpamFormula.html#VALands">ands</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
@@ -200,12 +178,6 @@ Return the topological sort of the transitive dependency closures
     of a collection of packages.
 </div>
 </td></tr>
-<tr><td><a href="OpamCudf.html#VALbackward_dependencies">backward_dependencies</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Return the transitive closure of dependencies of <code class="code">set</code>,
-    sorted in topological order
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.Attribute.html#VALbase">base</a> [<a href="OpamFilename.Attribute.html">OpamFilename.Attribute</a>]</td>
 <td><div class="info">
 Get remote filename
@@ -229,11 +201,6 @@ Return the deeper directory name
 <tr><td><a href="OpamPath.Switch.html#VALbin">bin</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Installed binaries: <i>$opam/$OVERSION/bin</i>
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALbin">bin</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-List of files to install in $bin/
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_install.html#VALbin">bin</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
@@ -345,11 +312,6 @@ Archive checksum
 Change file permissions
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.SET.html#VALchoose_one">choose_one</a> [<a href="OpamMisc.SET.html">OpamMisc.SET</a>]</td>
-<td><div class="info">
-Return one element.
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.html#VALchop_extension">chop_extension</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Remove the file extension
@@ -358,12 +320,6 @@ Remove the file extension
 <tr><td><a href="OpamProcess.html#VALclean_files">clean_files</a> [<a href="OpamProcess.html">OpamProcess</a>]</td>
 <td><div class="info">
 Clean-up process result files
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.Graph.html#VALclosure">closure</a> [<a href="OpamCudf.Graph.html">OpamCudf.Graph</a>]</td>
-<td><div class="info">
-Return the transitive closure of dependencies of <code class="code">set</code>,
-      sorted in topological order
 </div>
 </td></tr>
 <tr><td><a href="OpamFormula.html#VALcnf_of_formula">cnf_of_formula</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
@@ -420,6 +376,16 @@ Compiler files: <i>$opam/compilers/$OVERSION.comp</i>
 <tr><td><a href="OpamState.html#VALcompiler">compiler</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Return the compiler descritpion file for the given compiler name
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Repository.html#VALcompiler_descr">compiler_descr</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Compiler description files: <i>$opam/repo/$repo/compilers/$OVERSION.descr</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.html#VALcompiler_descr">compiler_descr</a> [<a href="OpamPath.html">OpamPath</a>]</td>
+<td><div class="info">
+Compiler description files: <i>$opam/compilers/$OVERSION.descr</i>
 </div>
 </td></tr>
 <tr><td><a href="OpamRepository.html#VALcompilers">compilers</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
@@ -479,7 +445,7 @@ Configuration folder: <i>$opam/$OVERSION/config</i>
 Options to give to the "./configure" command
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALconfirm">confirm</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
+<tr><td><a href="OpamState.html#VALconfirm">confirm</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Ask the user to press Y/y/N/n to continue
 </div>
@@ -487,11 +453,6 @@ Ask the user to press Y/y/N/n to continue
 <tr><td><a href="OpamFile.OPAM.html#VALconflicts">conflicts</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Package conflicts
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.html#VALcontains">contains</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Does a string contains the given chars ?
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALcontents_of_variable">contents_of_variable</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -527,11 +488,6 @@ Copy a file in a directory
 <tr><td><a href="OpamFile.Config.html#VALcores">cores</a> [<a href="OpamFile.Config.html">OpamFile.Config</a>]</td>
 <td><div class="info">
 Return the number of cores
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Section.Full.html#VALcreate">create</a> [<a href="OpamVariable.Section.Full.html">OpamVariable.Section.Full</a>]</td>
-<td><div class="info">
-Create a fully qualified section
 </div>
 </td></tr>
 <tr><td><a href="OpamProcess.html#VALcreate">create</a> [<a href="OpamProcess.html">OpamProcess</a>]</td>
@@ -570,11 +526,6 @@ Constructor
 Create a new .config file (containing only variables)
 </div>
 </td></tr>
-<tr><td><a href="OpamFile.Descr.html#VALcreate">create</a> [<a href="OpamFile.Descr.html">OpamFile.Descr</a>]</td>
-<td><div class="info">
-Create a description file
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALcreate">create</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Create an opam file
@@ -583,16 +534,6 @@ Create an opam file
 <tr><td><a href="OpamFile.Config.html#VALcreate">create</a> [<a href="OpamFile.Config.html">OpamFile.Config</a>]</td>
 <td><div class="info">
 Creation
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Full.html#VALcreate_global">create_global</a> [<a href="OpamVariable.Full.html">OpamVariable.Full</a>]</td>
-<td><div class="info">
-Create a global variable for a package
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Full.html#VALcreate_local">create_local</a> [<a href="OpamVariable.Full.html">OpamVariable.Full</a>]</td>
-<td><div class="info">
-Create a variable local for a given library/syntax extension
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Comp.html#VALcreate_preinstalled">create_preinstalled</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
@@ -618,11 +559,6 @@ Return the version of the compiler currently installed
 <tr><td><a href="OpamSwitchCommand.html#VALcurrent">current</a> [<a href="OpamSwitchCommand.html">OpamSwitchCommand</a>]</td>
 <td><div class="info">
 Display the current compiler switch
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.html#VALcut_at">cut_at</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Cut a string at the first occurence of the given char
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.html#VALcwd">cwd</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
@@ -661,6 +597,11 @@ default package
 Default compiler
 </div>
 </td></tr>
+<tr><td><a href="OpamRepository.html#VALdefault_address">default_address</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+Default repository address
+</div>
+</td></tr>
 <tr><td><a href="OpamSolver.html#VALdelete_or_update">delete_or_update</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
 <td><div class="info">
 Does the solution implies deleting or updating a package
@@ -690,11 +631,6 @@ Description file: <i>$opam/descr/$NAME.$VERSION</i>
 <tr><td><a href="OpamPath.html#VALdescr_dir">descr_dir</a> [<a href="OpamPath.html">OpamPath</a>]</td>
 <td><div class="info">
 Description files folder: <i>$opam/descr/</i>
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.Diff.html#VALdiff">diff</a> [<a href="OpamCudf.Diff.html">OpamCudf.Diff</a>]</td>
-<td><div class="info">
-Computation of differences between universe
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.html#VALdigest">digest</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
@@ -789,16 +725,6 @@ The empty file
 Empty file
 </div>
 </td></tr>
-<tr><td><a href="OpamVariable.html#VALenable">enable</a> [<a href="OpamVariable.html">OpamVariable</a>]</td>
-<td><div class="info">
-the variable <code class="code">enable</code>
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.html#VALends_with">ends_with</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Does a string ends with the given suffix ?
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Comp.html#VALenv">env</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
 <td><div class="info">
 Environment variable to set-up before running commands in the
@@ -835,11 +761,6 @@ Eval a formula
 Evaluate a filter
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALexact_match">exact_match</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Exact regexp matching
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.html#VALexec">exec</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Execute a list of commands in a given directory
@@ -858,11 +779,6 @@ Does the directory existsb ?
 <tr><td><a href="OpamSwitchCommand.html#VALexport">export</a> [<a href="OpamSwitchCommand.html">OpamSwitchCommand</a>]</td>
 <td><div class="info">
 Export a file which contains the installed packages
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html#VALexternal_solver_available">external_solver_available</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-External solver
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALextract">extract</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
@@ -914,16 +830,6 @@ Files
 Filter a list of commands by: evaluating the substitution strings; and, removing the commands with a filter evaluating to "false"
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALfilter_map">filter_map</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Filter and map
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.SET.html#VALfind">find</a> [<a href="OpamMisc.SET.html">OpamMisc.SET</a>]</td>
-<td><div class="info">
-Find an element in the list
-</div>
-</td></tr>
 <tr><td><a href="OpamRepository.html#VALfind_backend">find_backend</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
 Find a backend
@@ -965,12 +871,6 @@ Fold function
 Same as <code class="code">backward_dependencies</code> but for forward dependencies
 </div>
 </td></tr>
-<tr><td><a href="OpamCudf.html#VALforward_dependencies">forward_dependencies</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Return the transitive closure of dependencies of <code class="code">set</code>,
-    sorted in topological order
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Descr.html#VALfull">full</a> [<a href="OpamFile.Descr.html">OpamFile.Descr</a>]</td>
 <td><div class="info">
 Return the full description
@@ -997,24 +897,9 @@ Get the packages associated with the given compiler
 Get the current environment
 </div>
 </td></tr>
-<tr><td><a href="OpamCudf.html#VALget_final_universe">get_final_universe</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Compute the final universe state
-</div>
-</td></tr>
 <tr><td><a href="OpamFormat.html#VALget_section_by_kind">get_section_by_kind</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Get one section of a certain kind
-</div>
-</td></tr>
-<tr><td><a href="OpamSystem.html#VALgetenv">getenv</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
-<td><div class="info">
-Lazy environment
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Section.html#VALgraph_iter">graph_iter</a> [<a href="OpamVariable.Section.html">OpamVariable.Section</a>]</td>
-<td><div class="info">
-Iteration in topological order
 </div>
 </td></tr>
 <tr><td align="left"><br>H</td></tr>
@@ -1059,11 +944,6 @@ Initialize <i>$opam/repo/$repo</i>
 Initialize the client a consistent state.
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALinsert">insert</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Insert a value in an ordered list
-</div>
-</td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALinstall">install</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Installed files for a given package:
@@ -1088,11 +968,6 @@ Install the given compiler
 <tr><td><a href="OpamPath.Switch.html#VALinstall_dir">install_dir</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Installed files: <i>$opam/$OVERSION/install/</i>
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.html#VALinstalled">installed</a> [<a href="OpamVariable.html">OpamVariable</a>]</td>
-<td><div class="info">
-the variable <code class="code">installed</code>
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALinstalled">installed</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
@@ -1136,22 +1011,15 @@ Test whether the file is an archive, by looking as its extension
 Check whether a list of items contains only valid variable definitions
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.ACTION_GRAPH.Topological.html#VALiter">iter</a> [<a href="OpamTypes.ACTION_GRAPH.Topological.html">OpamTypes.ACTION_GRAPH.Topological</a>]</td>
-<td></td></tr>
 <tr><td><a href="OpamFormula.html#VALiter">iter</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Iter function
 </div>
 </td></tr>
 <tr><td align="left"><br>K</td></tr>
-<tr><td><a href="OpamMisc.MAP.html#VALkeys">keys</a> [<a href="OpamMisc.MAP.html">OpamMisc.MAP</a>]</td>
-<td><div class="info">
-Return the keys in the map.
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.URL.html#VALkind">kind</a> [<a href="OpamFile.URL.html">OpamFile.URL</a>]</td>
 <td><div class="info">
-Backend kind (could be curl/rsync/git at the moment)
+Backend kind (could be curl/rsync/git/darcs at the moment)
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_config.SECTION.html#VALkind">kind</a> [<a href="OpamFile.Dot_config.SECTION.html">OpamFile.Dot_config.SECTION</a>]</td>
@@ -1159,18 +1027,11 @@ Backend kind (could be curl/rsync/git at the moment)
 Return the section kind
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html#VALkind_of_pin_option">kind_of_pin_option</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td></td></tr>
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALlib">lib</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Library path for a given package:
       <i>$opam/$OVERSION/lib/NAME</i>
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALlib">lib</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-List of files to install in $lib/
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_install.html#VALlib">lib</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
@@ -1237,6 +1098,11 @@ List the sub-directory
 <tr><td><a href="OpamFilename.html#VALlist_files">list_files</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 List all the filenames, recursively
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALload_repository_state">load_repository_state</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Load repository related states only.
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALload_state">load_state</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -1326,7 +1192,7 @@ Create a group of 'things'
 Create an ident
 </div>
 </td></tr>
-<tr><td><a href="OpamCurl.html#VALmake_index_tar_gz">make_index_tar_gz</a> [<a href="OpamCurl.html">OpamCurl</a>]</td>
+<tr><td><a href="OpamHTTP.html#VALmake_index_tar_gz">make_index_tar_gz</a> [<a href="OpamHTTP.html">OpamHTTP</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamFormat.html#VALmake_int">make_int</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
@@ -1346,6 +1212,11 @@ Build a formula where OR are implicit.
 <tr><td><a href="OpamFormat.html#VALmake_option">make_option</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Create a value and its optional arguments
+</div>
+</td></tr>
+<tr><td><a href="OpamFormat.html#VALmake_os_constraint">make_os_constraint</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
+<td><div class="info">
+Build an OS constraint
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALmake_pair">make_pair</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1368,7 +1239,7 @@ Create a pair of strings
 Create a symbol
 </div>
 </td></tr>
-<tr><td><a href="OpamCurl.html#VALmake_urls_txt">make_urls_txt</a> [<a href="OpamCurl.html">OpamCurl</a>]</td>
+<tr><td><a href="OpamHTTP.html#VALmake_urls_txt">make_urls_txt</a> [<a href="OpamHTTP.html">OpamHTTP</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALman_dir">man_dir</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
@@ -1378,11 +1249,6 @@ Man pages path: <i>$opam/$OVERSION/man/</i>.
 <tr><td><a href="OpamFormula.html#VALmap">map</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Map function
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.SET.html#VALmap">map</a> [<a href="OpamMisc.SET.html">OpamMisc.SET</a>]</td>
-<td><div class="info">
-auto-map
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.Attribute.html#VALmd5">md5</a> [<a href="OpamFilename.Attribute.html">OpamFilename.Attribute</a>]</td>
@@ -1411,20 +1277,9 @@ Check if a package belongs to a repository
 Check whether a repository name is valid
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.MAP.html#VALmerge_max">merge_max</a> [<a href="OpamMisc.MAP.html">OpamMisc.MAP</a>]</td>
-<td><div class="info">
-WARNING : Besides <code class="code">key</code>, the function could receive
-      some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.
-</div>
-</td></tr>
 <tr><td><a href="OpamVersion.html#VALmessage">message</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
 <td><div class="info">
 Display the version message
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALmisc">misc</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-List of other files to install
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_install.html#VALmisc">misc</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
@@ -1510,31 +1365,14 @@ Return a formula from a disjunction of atoms
 Create a new pair from a filename.
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.MAP.html#VALof_list">of_list</a> [<a href="OpamMisc.MAP.html">OpamMisc.MAP</a>]</td>
+<tr><td><a href="OpamCompiler.html#VALof_filename">of_filename</a> [<a href="OpamCompiler.html">OpamCompiler</a>]</td>
 <td><div class="info">
-Convert an assoc list to a map
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.SET.html#VALof_list">of_list</a> [<a href="OpamMisc.SET.html">OpamMisc.SET</a>]</td>
-<td><div class="info">
-Make a set from a list
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.Base.html#VALof_string">of_string</a> [<a href="OpamMisc.Base.html">OpamMisc.Base</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.ABSTRACT.html#VALof_string">of_string</a> [<a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a>]</td>
-<td><div class="info">
-Create an abstract value from a string
+Convert a filename into a compiler name
 </div>
 </td></tr>
 <tr><td><a href="OpamPackage.html#VALof_string_opt">of_string_opt</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
 <td><div class="info">
 Return None if <code class="code">nv</code> is not a valid package name
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.Graph.html#VALof_universe">of_universe</a> [<a href="OpamCudf.Graph.html">OpamCudf.Graph</a>]</td>
-<td><div class="info">
-Build a graph from a CUDF universe
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALopam">opam</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
@@ -1573,22 +1411,12 @@ Return the OPAM version
 Convert a list of formulas to an OR-formula
 </div>
 </td></tr>
-<tr><td><a href="OpamCudf.html#VALoutput_universe">output_universe</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
+<tr><td><a href="OpamFile.OPAM.html#VALos">os</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
-Output the universe
+OS constraint
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>
-<tr><td><a href="OpamVariable.Full.html#VALpackage">package</a> [<a href="OpamVariable.Full.html">OpamVariable.Full</a>]</td>
-<td><div class="info">
-Return the package the variable is defined in
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Section.Full.html#VALpackage">package</a> [<a href="OpamVariable.Section.Full.html">OpamVariable.Section.Full</a>]</td>
-<td><div class="info">
-Return the package name in which the section is
-</div>
-</td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALpackage">package</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
 Package folder: <i>$opam/repo/$repo/packages/$NAME.$VERSION</i>
@@ -1607,12 +1435,6 @@ Packages to install immediately after the creation of OCaml
 <tr><td><a href="OpamPath.Repository.html#VALpackages_dir">packages_dir</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
 Packages folder: <i>$opam/repo/$repo/packages</i>
-</div>
-</td></tr>
-<tr><td><a href="OpamParallel.SIG.html#VALparallel_iter">parallel_iter</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
-<td><div class="info">
-<code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
-      cores.
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALparse_bool">parse_bool</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1685,6 +1507,11 @@ Parse a value and its option of 'things'
 Try to parse the value using function from the list.
 </div>
 </td></tr>
+<tr><td><a href="OpamFormat.html#VALparse_os_constraint">parse_os_constraint</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
+<td><div class="info">
+Parse an OS constraint
+</div>
+</td></tr>
 <tr><td><a href="OpamFormat.html#VALparse_sequence">parse_sequence</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Parse a sequence of values
@@ -1750,8 +1577,6 @@ Return the list of patches to apply
 Patches
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html#VALpath_of_pin_option">path_of_pin_option</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td></td></tr>
 <tr><td><a href="OpamFilename.Attribute.html#VALperm">perm</a> [<a href="OpamFilename.Attribute.html">OpamFilename.Attribute</a>]</td>
 <td><div class="info">
 File permission
@@ -1767,14 +1592,14 @@ Pin a package to a specific version.
 List the current pinned packages
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html#VALpin_option_of_string">pin_option_of_string</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Read pin options args
-</div>
-</td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALpinned">pinned</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Pinned package file
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Switch.html#VALpinned_dir">pinned_dir</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
+<td><div class="info">
+Build dir for pinned packages
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Comp.html#VALpp">pp</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
@@ -1823,11 +1648,6 @@ Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALrcut_at">rcut_at</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Same as <code class="code">cut_at</code>, but starts from the right
-</div>
-</td></tr>
 <tr><td><a href="OpamSystem.html#VALread">read</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
 <td><div class="info">
 <code class="code">read filename</code> returns the contents of <code class="code">filename</code>
@@ -1866,11 +1686,11 @@ Misc
     recursively.
 </div>
 </td></tr>
-<tr><td><a href="OpamRsync.html#VALregister">register</a> [<a href="OpamRsync.html">OpamRsync</a>]</td>
+<tr><td><a href="OpamLocal.html#VALregister">register</a> [<a href="OpamLocal.html">OpamLocal</a>]</td>
+<td></td></tr>
+<tr><td><a href="OpamHTTP.html#VALregister">register</a> [<a href="OpamHTTP.html">OpamHTTP</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamGit.html#VALregister">register</a> [<a href="OpamGit.html">OpamGit</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamCurl.html#VALregister">register</a> [<a href="OpamCurl.html">OpamCurl</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamRepository.html#VALregister_backend">register_backend</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
@@ -1943,11 +1763,6 @@ Remove the given set of packages.
 <code class="code">remove_file filename</code> removes <code class="code">filename</code>.
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALremove_prefix">remove_prefix</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Remove a prefix
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.html#VALremove_prefix">remove_prefix</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Remove a prefix from a file name
@@ -1988,25 +1803,10 @@ Return the build requirements
 Libraries to link with
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALreset_env_value">reset_env_value</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Remove from a ':' separated list of string the one with the given prefix
-</div>
-</td></tr>
 <tr><td><a href="OpamSolver.html#VALresolve">resolve</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
 <td><div class="info">
 Given a description of packages, return a solution preserving the
     consistency of the initial description.
-</div>
-</td></tr>
-<tr><td><a href="OpamHeuristic.html#VALresolve">resolve</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
-<td><div class="info">
-Optimized resolution
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html#VALresolve">resolve</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Resolve a CUDF request
 </div>
 </td></tr>
 <tr><td><a href="OpamSolution.html#VALresolve">resolve</a> [<a href="OpamSolution.html">OpamSolution</a>]</td>
@@ -2039,11 +1839,6 @@ Root dir: <i>$opam/$OVERSION</i>
 Root dir: <i>$opam/</i>
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALrsync_trim">rsync_trim</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-if rsync -arv return 4 lines, this means that no files have changed
-</div>
-</td></tr>
 <tr><td><a href="OpamProcess.html#VALrun">run</a> [<a href="OpamProcess.html">OpamProcess</a>]</td>
 <td><div class="info">
 <code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
@@ -2051,26 +1846,9 @@ if rsync -arv return 4 lines, this means that no files have changed
 </div>
 </td></tr>
 <tr><td align="left"><br>S</td></tr>
-<tr><td><a href="OpamCudf.html#VALs_reinstall">s_reinstall</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-The "reinstall" string
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.IO_FILE.html#VALsafe_read">safe_read</a> [<a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a>]</td>
 <td><div class="info">
 Read file contents.
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Full.html#VALsection">section</a> [<a href="OpamVariable.Full.html">OpamVariable.Full</a>]</td>
-<td><div class="info">
-Return the section (library or syntax extension) the package is
-      defined in
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Section.Full.html#VALsection">section</a> [<a href="OpamVariable.Section.Full.html">OpamVariable.Section.Full</a>]</td>
-<td><div class="info">
-Return the optional section OpamPackage.Name.t: <code class="code">None</code> means all available
-        sections.
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALsections">sections</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -2083,29 +1861,29 @@ Get all the sections from a list of items
 Create a sequential solution from a list of actions
 </div>
 </td></tr>
+<tr><td><a href="OpamPath.Switch.html#VALshare">share</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
+<td><div class="info">
+Share directory for a given package: <i>$opam/$OVERSION/share/$package</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.Dot_install.html#VALshare">share</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
+<td><div class="info">
+List of shared files
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Switch.html#VALshare_dir">share_dir</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
+<td><div class="info">
+Shared directory: <i>$opam/$OVERSION/share</i>
+</div>
+</td></tr>
 <tr><td><a href="OpamSolver.html#VALsolution_is_empty">solution_is_empty</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
 <td><div class="info">
 Is the solution empty ?
 </div>
 </td></tr>
-<tr><td><a href="OpamCudf.html#VALsolution_of_actions">solution_of_actions</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Compution the actions to process from a solution
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.html#VALsplit">split</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Split a string
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Comp.html#VALsrc">src</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
 <td><div class="info">
 Return the url of the compiler
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.html#VALstarts_with">starts_with</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Does a string starts with the given prefix ?
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.html#VALstarts_with">starts_with</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
@@ -2116,16 +1894,6 @@ Check wether a filename starts by a given Dir.t
 <tr><td><a href="OpamSolver.html#VALstats">stats</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
 <td><div class="info">
 Compute statistics about a solution
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.PKG.html#VALstring_of_action">string_of_action</a> [<a href="OpamTypes.PKG.html">OpamTypes.PKG</a>]</td>
-<td><div class="info">
-Pretty-printing of package actions
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html#VALstring_of_atom">string_of_atom</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Pretty-print atoms
 </div>
 </td></tr>
 <tr><td><a href="OpamFormula.html#VALstring_of_atom">string_of_atom</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
@@ -2173,34 +1941,9 @@ Print an file_item
 Print a list of items
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html#VALstring_of_list">string_of_list</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Display a list of strings
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.html#VALstring_of_pin">string_of_pin</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Pretty-printing of pinned packages
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html#VALstring_of_reason">string_of_reason</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Convert a reason to something readable by the user
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html#VALstring_of_reasons">string_of_reasons</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Convert a list of reasons to something readable by the user
-</div>
-</td></tr>
 <tr><td><a href="OpamFormula.html#VALstring_of_relop">string_of_relop</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Pretty-printing of relops
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.html#VALstring_of_remote">string_of_remote</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Pretty-print or remote args
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALstring_of_repositories">string_of_repositories</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -2218,16 +1961,6 @@ Convert a request to a string
 Pretty-printing of statistics
 </div>
 </td></tr>
-<tr><td><a href="OpamCudf.html#VALstring_of_universe">string_of_universe</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Pretty-print the universe
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.html#VALstring_of_upload">string_of_upload</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Pretty-print
-</div>
-</td></tr>
 <tr><td><a href="OpamFormat.html#VALstring_of_value">string_of_value</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Print a value
@@ -2236,18 +1969,6 @@ Print a value
 <tr><td><a href="OpamFormat.html#VALstring_of_values">string_of_values</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Print a list of values
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.html#VALstring_of_variable_contents">string_of_variable_contents</a> [<a href="OpamVariable.html">OpamVariable</a>]</td>
-<td><div class="info">
-Pretty print of variable contents
-</div>
-</td></tr>
-<tr><td><a href="OpamParallel.G.html#VALstring_of_vertex">string_of_vertex</a> [<a href="OpamParallel.G.html">OpamParallel.G</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.html#VALstrip">strip</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Strip a string
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALstublibs">stublibs</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
@@ -2392,48 +2113,19 @@ Return an equivalent DNF formula
 Convert a set of pairs to a map <code class="code">name -&gt; versions</code>
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.PKG.html#VALto_string">to_string</a> [<a href="OpamTypes.PKG.html">OpamTypes.PKG</a>]</td>
-<td><div class="info">
-Pretty printing of packages
-</div>
-</td></tr>
 <tr><td><a href="OpamRepository.html#VALto_string">to_string</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
 Pretty-print
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.OrderedType.html#VALto_string">to_string</a> [<a href="OpamMisc.OrderedType.html">OpamMisc.OrderedType</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.Base.html#VALto_string">to_string</a> [<a href="OpamMisc.Base.html">OpamMisc.Base</a>]</td>
-<td></td></tr>
 <tr><td><a href="OpamFormula.html#VALto_string">to_string</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Pretty print the formula
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.MAP.html#VALto_string">to_string</a> [<a href="OpamMisc.MAP.html">OpamMisc.MAP</a>]</td>
-<td><div class="info">
-Pretty-printing
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.SET.html#VALto_string">to_string</a> [<a href="OpamMisc.SET.html">OpamMisc.SET</a>]</td>
-<td><div class="info">
-Pretty-print a set
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.ABSTRACT.html#VALto_string">to_string</a> [<a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a>]</td>
-<td><div class="info">
-Convert an abstract value to a string
-</div>
-</td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALtoplevel">toplevel</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 toplevel path: <i>$opam/$OVERSION/lib/toplevel</i>
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALtoplevel">toplevel</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-List of toplevel files
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_install.html#VALtoplevel">toplevel</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
@@ -2450,11 +2142,6 @@ Create an empty file
 <tr><td><a href="OpamSolution.html#VALunavailable_package">unavailable_package</a> [<a href="OpamSolution.html">OpamSolution</a>]</td>
 <td><div class="info">
 Raise an error because a package in unavailable
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html#VALuninstall">uninstall</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Remove a package from an universe
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALuniverse">universe</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -2544,16 +2231,6 @@ URL address
 </div>
 </td></tr>
 <tr><td align="left"><br>V</td></tr>
-<tr><td><a href="OpamMisc.MAP.html#VALvalues">values</a> [<a href="OpamMisc.MAP.html">OpamMisc.MAP</a>]</td>
-<td><div class="info">
-Return the values in the map.
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Full.html#VALvariable">variable</a> [<a href="OpamVariable.Full.html">OpamVariable.Full</a>]</td>
-<td><div class="info">
-Return the variable name
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Dot_config.SECTION.html#VALvariable">variable</a> [<a href="OpamFile.Dot_config.SECTION.html">OpamFile.Dot_config.SECTION</a>]</td>
 <td><div class="info">
 Return the value of variables
@@ -2620,11 +2297,6 @@ Extract the versions from a collection of packages
 <code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results.
 </div>
 </td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALwith_bin">with_bin</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-Construct as <code class="code">bin</code>
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_build">with_build</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Construct as <code class="code">build</code>
@@ -2663,11 +2335,6 @@ Construct as <code class="code">files</code>
 <tr><td><a href="OpamFilename.html#VALwith_flock">with_flock</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 File locks
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALwith_lib">with_lib</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-Construct as <code class="code">lib</code>
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_libraries">with_libraries</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
@@ -2723,11 +2390,6 @@ OCaml switch updates
 <tr><td><a href="OpamFilename.html#VALwith_tmp_dir">with_tmp_dir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Execute a function in a temp directory
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html#VALwith_toplevel">with_toplevel</a> [<a href="OpamFile.Dot_install.Raw.html">OpamFile.Dot_install.Raw</a>]</td>
-<td><div class="info">
-Construct as <code class="code">toplevel</code>
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALwrite">write</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>

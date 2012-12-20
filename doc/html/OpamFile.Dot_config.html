@@ -22,23 +22,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.Dot_config</title>
 </head>
 <body>
@@ -52,7 +46,7 @@
 </div>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">(<a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> * <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a>) list -> t</code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">(OpamTypes.variable * OpamTypes.variable_contents) list -> t</code></pre><div class="info">
 Create a new .config file (containing only variables)<br>
 </div>
 <pre><span class="keyword">module type</span> <a href="OpamFile.Dot_config.SECTION.html">SECTION</a> = <code class="code">sig</code> <a href="OpamFile.Dot_config.SECTION.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="OpamFile.Dot_config.Section.html">Section</a>: <code class="type"><a href="OpamFile.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info">
@@ -64,10 +58,10 @@ Sections starting by <code class="code">library</code>
 <pre><span class="keyword">module</span> <a href="OpamFile.Dot_config.Syntax.html">Syntax</a>: <code class="type"><a href="OpamFile.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info">
 Sections starting by <code class="code">syntax</code>
 </div>
-<pre><span id="VALvariable"><span class="keyword">val</span> variable</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a></code></pre><div class="info">
+<pre><span id="VALvariable"><span class="keyword">val</span> variable</span> : <code class="type">t -> OpamTypes.variable -> OpamTypes.variable_contents</code></pre><div class="info">
 Top-level variables<br>
 </div>
-<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> list</code></pre><div class="info">
+<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type">t -> OpamTypes.variable list</code></pre><div class="info">
 The list of top-level variables<br>
 </div>
 </body></html>

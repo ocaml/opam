@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamFile.Comp.html">
+<link rel="previous" href="OpamFile.Comp_descr.html">
 <link rel="next" href="OpamFile.Dot_config.html">
 <link rel="Up" href="OpamFile.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -22,27 +22,21 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.Dot_install</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="OpamFile.Comp.html" title="OpamFile.Comp">Previous</a>
+<div class="navbar"><a class="pre" href="OpamFile.Comp_descr.html" title="OpamFile.Comp_descr">Previous</a>
 &nbsp;<a class="up" href="OpamFile.html" title="OpamFile">Up</a>
 &nbsp;<a class="post" href="OpamFile.Dot_config.html" title="OpamFile.Dot_config">Next</a>
 </div>
@@ -51,17 +45,20 @@
 .install files<br>
 </div>
 <hr width="100%">
-<pre><span class="keyword">module</span> <a href="OpamFile.Dot_install.Raw.html">Raw</a>: <code class="code">sig</code> <a href="OpamFile.Dot_install.Raw.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="OpamFile.Dot_install.Raw.html">Raw</a>: <code class="type"><a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></code><code class="type"> </code></pre><pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
+<pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type">t -> OpamTypes.filename OpamTypes.optional list</code></pre><div class="info">
 List of files to install in $lib/<br>
 </div>
-<pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a>) list</code></pre><div class="info">
+<pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type">t -> (OpamTypes.filename OpamTypes.optional * OpamTypes.basename) list</code></pre><div class="info">
 List of files to install in $bin/<br>
 </div>
-<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
+<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> OpamTypes.filename OpamTypes.optional list</code></pre><div class="info">
 List of toplevel files<br>
 </div>
-<pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a>) list</code></pre><div class="info">
+<pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (OpamTypes.filename OpamTypes.optional * OpamTypes.filename) list</code></pre><div class="info">
 List of other files to install<br>
+</div>
+<pre><span id="VALshare"><span class="keyword">val</span> share</span> : <code class="type">t -> (OpamTypes.filename OpamTypes.optional * OpamTypes.basename) list</code></pre><div class="info">
+List of shared files<br>
 </div>
 </body></html>

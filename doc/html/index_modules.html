@@ -18,23 +18,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>Index of modules</title>
 </head>
 <body>
@@ -43,11 +37,6 @@
 <h1>Index of modules</h1>
 <table>
 <tr><td align="left"><br>A</td></tr>
-<tr><td><a href="OpamCudf.ActionGraph.html">ActionGraph</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Cudf action graph
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Aliases.html">Aliases</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 Compiler aliases: <code class="code">$opam/aliases</code>
@@ -59,11 +48,6 @@ Simple structure to hanle file attributes
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
-<tr><td><a href="OpamMisc.Base.html">Base</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Base module, useful to abstract strings
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.Base.html">Base</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Basenames
@@ -75,6 +59,11 @@ Basenames
 Compiler version <code class="code">$opam/compilers/</code>
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.Comp_descr.html">Comp_descr</a> [<a href="OpamFile.html">OpamFile</a>]</td>
+<td><div class="info">
+Compiler descriptions
+</div>
+</td></tr>
 <tr><td><a href="OpamFile.Config.html">Config</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 Configuration file: <code class="code">$opam/config</code>
@@ -84,11 +73,6 @@ Configuration file: <code class="code">$opam/config</code>
 <tr><td><a href="OpamFile.Descr.html">Descr</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 Package descriptions: <code class="code">$opam/descr/</code>
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.Diff.html">Diff</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Difference between universes
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.Dir.html">Dir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
@@ -118,40 +102,10 @@ Environement variables
 List of filenames
 </div>
 </td></tr>
-<tr><td><a href="OpamVariable.Full.html">Full</a> [<a href="OpamVariable.html">OpamVariable</a>]</td>
-<td><div class="info">
-Fully qualified variables
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.Section.Full.html">Full</a> [<a href="OpamVariable.Section.html">OpamVariable.Section</a>]</td>
-<td></td></tr>
-<tr><td align="left"><br>G</td></tr>
-<tr><td><a href="OpamVariable.Section.G.html">G</a> [<a href="OpamVariable.Section.html">OpamVariable.Section</a>]</td>
-<td><div class="info">
-Graph of fully-qualified sections
-</div>
-</td></tr>
-<tr><td><a href="OpamParallel.SIG.G.html">G</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamCudf.Graph.html">Graph</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Cudf graph
-</div>
-</td></tr>
 <tr><td align="left"><br>I</td></tr>
 <tr><td><a href="OpamFile.Installed.html">Installed</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 List of installed packages: <code class="code">$opam/$oversion/installed</code>
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.IntMap.html">IntMap</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Map of ints
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.IntSet.html">IntSet</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Set of ints
 </div>
 </td></tr>
 <tr><td align="left"><br>L</td></tr>
@@ -160,35 +114,6 @@ Set of ints
 Sections starting by <code class="code">library</code>
 </div>
 </td></tr>
-<tr><td align="left"><br>M</td></tr>
-<tr><td><a href="OpamParallel.Make.html">Make</a> [<a href="OpamParallel.html">OpamParallel</a>]</td>
-<td><div class="info">
-Functor
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.Map.Make.html">Make</a> [<a href="OpamMisc.Map.html">OpamMisc.Map</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.Set.Make.html">Make</a> [<a href="OpamMisc.Set.html">OpamMisc.Set</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamTypes.MakeActionGraph.html">MakeActionGraph</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Functor to create a graph af actions
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.Map.html">Map</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Cudf maps
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.Base.Map.html">Map</a> [<a href="OpamMisc.Base.html">OpamMisc.Base</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.Map.html">Map</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Map constructor
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.ABSTRACT.Map.html">Map</a> [<a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a>]</td>
-<td></td></tr>
 <tr><td align="left"><br>N</td></tr>
 <tr><td><a href="OpamPackage.Name.html">Name</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
 <td><div class="info">
@@ -196,8 +121,6 @@ Names
 </div>
 </td></tr>
 <tr><td align="left"><br>O</td></tr>
-<tr><td><a href="OpamMisc.OP.html">OP</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td></td></tr>
 <tr><td><a href="OpamFilename.OP.html">OP</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamFile.OPAM.html">OPAM</a> [<a href="OpamFile.html">OpamFile</a>]</td>
@@ -218,16 +141,6 @@ Compiler names and versions
 <tr><td><a href="OpamConfigCommand.html">OpamConfigCommand</a> </td>
 <td><div class="info">
 Configuration commands
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.html">OpamCudf</a> </td>
-<td><div class="info">
-Cudf interface
-</div>
-</td></tr>
-<tr><td><a href="OpamCurl.html">OpamCurl</a> </td>
-<td><div class="info">
-Curl repository backend
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.html">OpamFile</a> </td>
@@ -255,24 +168,19 @@ Management of formulas
 Git repository backend
 </div>
 </td></tr>
-<tr><td><a href="OpamHeuristic.html">OpamHeuristic</a> </td>
+<tr><td><a href="OpamHTTP.html">OpamHTTP</a> </td>
 <td><div class="info">
-Solver heuristics
+Curl repository backend
 </div>
 </td></tr>
-<tr><td><a href="OpamMisc.html">OpamMisc</a> </td>
+<tr><td><a href="OpamLocal.html">OpamLocal</a> </td>
 <td><div class="info">
-Basic functions
+Rsync repository backend
 </div>
 </td></tr>
 <tr><td><a href="OpamPackage.html">OpamPackage</a> </td>
 <td><div class="info">
 Package name and versions
-</div>
-</td></tr>
-<tr><td><a href="OpamParallel.html">OpamParallel</a> </td>
-<td><div class="info">
-Concurrent process execution
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.html">OpamPath</a> </td>
@@ -293,11 +201,6 @@ Mangagement of OPAM repositories.
 <tr><td><a href="OpamRepositoryName.html">OpamRepositoryName</a> </td>
 <td><div class="info">
 Repository names
-</div>
-</td></tr>
-<tr><td><a href="OpamRsync.html">OpamRsync</a> </td>
-<td><div class="info">
-Rsync repository backend
 </div>
 </td></tr>
 <tr><td><a href="OpamSolution.html">OpamSolution</a> </td>
@@ -330,37 +233,12 @@ Switch commands
 Low-level untyped system operations
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html">OpamTypes</a> </td>
-<td><div class="info">
-Common types used by other modules
-</div>
-</td></tr>
-<tr><td><a href="OpamVariable.html">OpamVariable</a> </td>
-<td><div class="info">
-Variable names
-</div>
-</td></tr>
 <tr><td><a href="OpamVersion.html">OpamVersion</a> </td>
 <td><div class="info">
 OPAM versions
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>
-<tr><td><a href="OpamTypes.PackageAction.html">PackageAction</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Package actions
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.PackageActionGraph.html">PackageActionGraph</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Graph of OPAM packages
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.ACTION_GRAPH.Parallel.html">Parallel</a> [<a href="OpamTypes.ACTION_GRAPH.html">OpamTypes.ACTION_GRAPH</a>]</td>
-<td><div class="info">
-Parallel iterator
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Pinned.html">Pinned</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 Pinned package files
@@ -390,38 +268,9 @@ Repository paths
 </div>
 </td></tr>
 <tr><td align="left"><br>S</td></tr>
-<tr><td><a href="OpamVariable.Section.html">Section</a> [<a href="OpamVariable.html">OpamVariable</a>]</td>
-<td><div class="info">
-Section names
-</div>
-</td></tr>
 <tr><td><a href="OpamFile.Dot_config.Section.html">Section</a> [<a href="OpamFile.Dot_config.html">OpamFile.Dot_config</a>]</td>
 <td><div class="info">
 All library and syntax sections
-</div>
-</td></tr>
-<tr><td><a href="OpamCudf.Set.html">Set</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
-<td><div class="info">
-Cudf sets
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.Base.Set.html">Set</a> [<a href="OpamMisc.Base.html">OpamMisc.Base</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.Set.html">Set</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Set constructor
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.ABSTRACT.Set.html">Set</a> [<a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a>]</td>
-<td></td></tr>
-<tr><td><a href="OpamMisc.StringMap.html">StringMap</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Map of strings
-</div>
-</td></tr>
-<tr><td><a href="OpamMisc.StringSet.html">StringSet</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
-<td><div class="info">
-Set of strings
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Subst.html">Subst</a> [<a href="OpamFile.html">OpamFile</a>]</td>
@@ -440,11 +289,6 @@ Sections starting by <code class="code">syntax</code>
 </div>
 </td></tr>
 <tr><td align="left"><br>T</td></tr>
-<tr><td><a href="OpamTypes.ACTION_GRAPH.Topological.html">Topological</a> [<a href="OpamTypes.ACTION_GRAPH.html">OpamTypes.ACTION_GRAPH</a>]</td>
-<td><div class="info">
-Topological traversal
-</div>
-</td></tr>
 <tr><td><a href="OpamState.Types.html">Types</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 To be able to open <code class="code">OpamState.Types</code>

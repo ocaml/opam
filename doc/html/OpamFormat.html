@@ -22,23 +22,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Parsing functions" rel="Section" href="#2_Parsingfunctions">
 <link title="Creation functions" rel="Section" href="#2_Creationfunctions">
 <link title="Printing functions" rel="Section" href="#2_Printingfunctions">
@@ -58,19 +52,19 @@
 Format of OPAM configuration files.<br>
 </div>
 <hr width="100%">
-<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="OpamTypes.html#TYPEfile">OpamTypes.file</a></code></pre><div class="info">
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">OpamTypes.file</code></pre><div class="info">
 The empty file<br>
 </div>
-<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> (string * <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) list</code></pre><div class="info">
+<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type">OpamTypes.file_item list -> (string * OpamTypes.value) list</code></pre><div class="info">
 Get all the variable definitions from a list of items<br>
 </div>
-<pre><span id="VALsections"><span class="keyword">val</span> sections</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> (string * <a href="OpamTypes.html#TYPEfile_section">OpamTypes.file_section</a>) list</code></pre><div class="info">
+<pre><span id="VALsections"><span class="keyword">val</span> sections</span> : <code class="type">OpamTypes.file_item list -> (string * OpamTypes.file_section) list</code></pre><div class="info">
 Get all the sections from a list of items<br>
 </div>
-<pre><span id="VALis_valid"><span class="keyword">val</span> is_valid</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string list -> bool</code></pre><div class="info">
+<pre><span id="VALis_valid"><span class="keyword">val</span> is_valid</span> : <code class="type">OpamTypes.file_item list -> string list -> bool</code></pre><div class="info">
 Check whether a list of items contains only valid variable definitions<br>
 </div>
-<pre><span id="VALinvalid_fields"><span class="keyword">val</span> invalid_fields</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string list -> string list</code></pre><div class="info">
+<pre><span id="VALinvalid_fields"><span class="keyword">val</span> invalid_fields</span> : <code class="type">OpamTypes.file_item list -> string list -> string list</code></pre><div class="info">
 Find all the invalid fields<br>
 </div>
 <br>
@@ -80,94 +74,94 @@ Find all the invalid fields<br>
 All the following parsing function raise <code class="code">Bad_format</code> in case the
     input does not have the right format.<br>
 </div>
-<pre><span id="VALparse_bool"><span class="keyword">val</span> parse_bool</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> bool</code></pre><div class="info">
+<pre><span id="VALparse_bool"><span class="keyword">val</span> parse_bool</span> : <code class="type">OpamTypes.value -> bool</code></pre><div class="info">
 Parse a boolean<br>
 </div>
-<pre><span id="VALparse_int"><span class="keyword">val</span> parse_int</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> int</code></pre><div class="info">
+<pre><span id="VALparse_int"><span class="keyword">val</span> parse_int</span> : <code class="type">OpamTypes.value -> int</code></pre><div class="info">
 Parse an integer<br>
 </div>
-<pre><span id="VALparse_ident"><span class="keyword">val</span> parse_ident</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string</code></pre><div class="info">
+<pre><span id="VALparse_ident"><span class="keyword">val</span> parse_ident</span> : <code class="type">OpamTypes.value -> string</code></pre><div class="info">
 Parse an ident<br>
 </div>
-<pre><span id="VALparse_symbol"><span class="keyword">val</span> parse_symbol</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string</code></pre><div class="info">
+<pre><span id="VALparse_symbol"><span class="keyword">val</span> parse_symbol</span> : <code class="type">OpamTypes.value -> string</code></pre><div class="info">
 Parse a symbol<br>
 </div>
-<pre><span id="VALparse_string"><span class="keyword">val</span> parse_string</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string</code></pre><div class="info">
+<pre><span id="VALparse_string"><span class="keyword">val</span> parse_string</span> : <code class="type">OpamTypes.value -> string</code></pre><div class="info">
 Parse a string<br>
 </div>
-<pre><span id="VALparse_list"><span class="keyword">val</span> parse_list</span> : <code class="type">(<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a list</code></pre><div class="info">
+<pre><span id="VALparse_list"><span class="keyword">val</span> parse_list</span> : <code class="type">(OpamTypes.value -> 'a) -> OpamTypes.value -> 'a list</code></pre><div class="info">
 Parse a list of 'things'<br>
 </div>
-<pre><span id="VALparse_group"><span class="keyword">val</span> parse_group</span> : <code class="type">(<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a list</code></pre><div class="info">
+<pre><span id="VALparse_group"><span class="keyword">val</span> parse_group</span> : <code class="type">(OpamTypes.value -> 'a) -> OpamTypes.value -> 'a list</code></pre><div class="info">
 Parse a group of 'things'<br>
 </div>
-<pre><span id="VALparse_option"><span class="keyword">val</span> parse_option</span> : <code class="type">(<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -><br>       (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> 'b) -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a * 'b option</code></pre><div class="info">
+<pre><span id="VALparse_option"><span class="keyword">val</span> parse_option</span> : <code class="type">(OpamTypes.value -> 'a) -><br>       (OpamTypes.value list -> 'b) -> OpamTypes.value -> 'a * 'b option</code></pre><div class="info">
 Parse a value and its option of 'things'<br>
 </div>
-<pre><span id="VALparse_single_option"><span class="keyword">val</span> parse_single_option</span> : <code class="type">(<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -><br>       (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'b) -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a * 'b option</code></pre><div class="info">
+<pre><span id="VALparse_single_option"><span class="keyword">val</span> parse_single_option</span> : <code class="type">(OpamTypes.value -> 'a) -><br>       (OpamTypes.value -> 'b) -> OpamTypes.value -> 'a * 'b option</code></pre><div class="info">
 Parse a value and a single optional value<br>
 </div>
-<pre><span id="VALparse_string_option"><span class="keyword">val</span> parse_string_option</span> : <code class="type">(<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> 'a) -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string * 'a option</code></pre><div class="info">
+<pre><span id="VALparse_string_option"><span class="keyword">val</span> parse_string_option</span> : <code class="type">(OpamTypes.value list -> 'a) -> OpamTypes.value -> string * 'a option</code></pre><div class="info">
 Parse a string with an optional argument<br>
 </div>
-<pre><span id="VALparse_string_list"><span class="keyword">val</span> parse_string_list</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string list</code></pre><div class="info">
+<pre><span id="VALparse_string_list"><span class="keyword">val</span> parse_string_list</span> : <code class="type">OpamTypes.value -> string list</code></pre><div class="info">
 Parse a list of strings<br>
 </div>
-<pre><span id="VALparse_single_string"><span class="keyword">val</span> parse_single_string</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> string</code></pre><div class="info">
+<pre><span id="VALparse_single_string"><span class="keyword">val</span> parse_single_string</span> : <code class="type">OpamTypes.value list -> string</code></pre><div class="info">
 Parse a single string<br>
 </div>
-<pre><span id="VALparse_string_pair"><span class="keyword">val</span> parse_string_pair</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string * string</code></pre><div class="info">
+<pre><span id="VALparse_string_pair"><span class="keyword">val</span> parse_string_pair</span> : <code class="type">OpamTypes.value -> string * string</code></pre><div class="info">
 Parse a pair of strings<br>
 </div>
-<pre><span id="VALparse_string_pair_of_list"><span class="keyword">val</span> parse_string_pair_of_list</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> string * string</code></pre><div class="info">
+<pre><span id="VALparse_string_pair_of_list"><span class="keyword">val</span> parse_string_pair_of_list</span> : <code class="type">OpamTypes.value list -> string * string</code></pre><div class="info">
 Parse a pair of strings from a list of values<br>
 </div>
-<pre><span id="VALparse_or"><span class="keyword">val</span> parse_or</span> : <code class="type">(string * (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a)) list -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a</code></pre><div class="info">
+<pre><span id="VALparse_or"><span class="keyword">val</span> parse_or</span> : <code class="type">(string * (OpamTypes.value -> 'a)) list -> OpamTypes.value -> 'a</code></pre><div class="info">
 Try to parse the value using function from the list. All the
     parsing functions are tried until one succeeds. The first argument
     is a debug message.<br>
 </div>
-<pre><span id="VALparse_sequence"><span class="keyword">val</span> parse_sequence</span> : <code class="type">(string * (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a)) list -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a list</code></pre><div class="info">
+<pre><span id="VALparse_sequence"><span class="keyword">val</span> parse_sequence</span> : <code class="type">(string * (OpamTypes.value -> 'a)) list -> OpamTypes.value -> 'a list</code></pre><div class="info">
 Parse a sequence of values<br>
 </div>
 <br>
 <h2 id="2_Creationfunctions">Creation functions</h2><br>
-<pre><span id="VALmake_bool"><span class="keyword">val</span> make_bool</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_bool"><span class="keyword">val</span> make_bool</span> : <code class="type">bool -> OpamTypes.value</code></pre><div class="info">
 Create a boolean<br>
 </div>
-<pre><span id="VALmake_int"><span class="keyword">val</span> make_int</span> : <code class="type">int -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_int"><span class="keyword">val</span> make_int</span> : <code class="type">int -> OpamTypes.value</code></pre><div class="info">
 Create an integer<br>
 </div>
-<pre><span id="VALmake_ident"><span class="keyword">val</span> make_ident</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_ident"><span class="keyword">val</span> make_ident</span> : <code class="type">string -> OpamTypes.value</code></pre><div class="info">
 Create an ident<br>
 </div>
-<pre><span id="VALmake_symbol"><span class="keyword">val</span> make_symbol</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_symbol"><span class="keyword">val</span> make_symbol</span> : <code class="type">string -> OpamTypes.value</code></pre><div class="info">
 Create a symbol<br>
 </div>
-<pre><span id="VALmake_string"><span class="keyword">val</span> make_string</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_string"><span class="keyword">val</span> make_string</span> : <code class="type">string -> OpamTypes.value</code></pre><div class="info">
 Create a string<br>
 </div>
-<pre><span id="VALmake_list"><span class="keyword">val</span> make_list</span> : <code class="type">('a -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) -> 'a list -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_list"><span class="keyword">val</span> make_list</span> : <code class="type">('a -> OpamTypes.value) -> 'a list -> OpamTypes.value</code></pre><div class="info">
 Create a list of 'things'<br>
 </div>
-<pre><span id="VALmake_group"><span class="keyword">val</span> make_group</span> : <code class="type">('a -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) -> 'a list -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_group"><span class="keyword">val</span> make_group</span> : <code class="type">('a -> OpamTypes.value) -> 'a list -> OpamTypes.value</code></pre><div class="info">
 Create a group of 'things'<br>
 </div>
-<pre><span id="VALmake_option"><span class="keyword">val</span> make_option</span> : <code class="type">('a -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) -><br>       ('b -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list) -> 'a * 'b option -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_option"><span class="keyword">val</span> make_option</span> : <code class="type">('a -> OpamTypes.value) -><br>       ('b -> OpamTypes.value list) -> 'a * 'b option -> OpamTypes.value</code></pre><div class="info">
 Create a value and its optional arguments<br>
 </div>
-<pre><span id="VALmake_pair"><span class="keyword">val</span> make_pair</span> : <code class="type">('a -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) -> 'a * 'a -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_pair"><span class="keyword">val</span> make_pair</span> : <code class="type">('a -> OpamTypes.value) -> 'a * 'a -> OpamTypes.value</code></pre><div class="info">
 Create a pair<br>
 </div>
-<pre><span id="VALmake_string_pair"><span class="keyword">val</span> make_string_pair</span> : <code class="type">string * string -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_string_pair"><span class="keyword">val</span> make_string_pair</span> : <code class="type">string * string -> OpamTypes.value</code></pre><div class="info">
 Create a pair of strings<br>
 </div>
 <br>
 <h2 id="2_Printingfunctions">Printing functions</h2><br>
-<pre><span id="VALstring_of_value"><span class="keyword">val</span> string_of_value</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_value"><span class="keyword">val</span> string_of_value</span> : <code class="type">OpamTypes.value -> string</code></pre><div class="info">
 Print a value<br>
 </div>
-<pre><span id="VALstring_of_values"><span class="keyword">val</span> string_of_values</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_values"><span class="keyword">val</span> string_of_values</span> : <code class="type">OpamTypes.value list -> string</code></pre><div class="info">
 Print a list of values<br>
 </div>
 <pre><span id="TYPEindent_variable"><span class="keyword">type</span> <code class="type"></code>indent_variable</span> = <code class="type">string -> bool</code> </pre>
@@ -177,43 +171,43 @@ When folding recursively a value <code class="code">Variable (s, v)</code> for p
     (i.e. in case <code class="code">indent_variable s</code> is <code class="code">true</code>).<br>
 </div>
 
-<pre><span id="VALstring_of_item"><span class="keyword">val</span> string_of_item</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> -> string option</code></pre><div class="info">
+<pre><span id="VALstring_of_item"><span class="keyword">val</span> string_of_item</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       OpamTypes.file_item -> string option</code></pre><div class="info">
 Print an file_item<br>
 </div>
-<pre><span id="VALstring_of_items"><span class="keyword">val</span> string_of_items</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_items"><span class="keyword">val</span> string_of_items</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       OpamTypes.file_item list -> string</code></pre><div class="info">
 Print a list of items<br>
 </div>
-<pre><span id="VALstring_of_file"><span class="keyword">val</span> string_of_file</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -> <a href="OpamTypes.html#TYPEfile">OpamTypes.file</a> -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_file"><span class="keyword">val</span> string_of_file</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -> OpamTypes.file -> string</code></pre><div class="info">
 Print a file<br>
 </div>
 <br>
 <h2 id="2_Findingfunctions">Finding functions</h2><br>
-<pre><span id="VALassoc"><span class="keyword">val</span> assoc</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -> 'a</code></pre><div class="info">
+<pre><span id="VALassoc"><span class="keyword">val</span> assoc</span> : <code class="type">OpamTypes.file_item list -> string -> (OpamTypes.value -> 'a) -> 'a</code></pre><div class="info">
 Get the value of a field<br>
 </div>
-<pre><span id="VALassoc_option"><span class="keyword">val</span> assoc_option</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -> 'a option</code></pre><div class="info">
+<pre><span id="VALassoc_option"><span class="keyword">val</span> assoc_option</span> : <code class="type">OpamTypes.file_item list -> string -> (OpamTypes.value -> 'a) -> 'a option</code></pre><div class="info">
 Get the value of a field. If the field does not exist, return
     None<br>
 </div>
-<pre><span id="VALassoc_default"><span class="keyword">val</span> assoc_default</span> : <code class="type">'a -> <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a) -> 'a</code></pre><div class="info">
+<pre><span id="VALassoc_default"><span class="keyword">val</span> assoc_default</span> : <code class="type">'a -> OpamTypes.file_item list -> string -> (OpamTypes.value -> 'a) -> 'a</code></pre><div class="info">
 Get the value of a field. If the variable does not exist, return a
     default value<br>
 </div>
-<pre><span id="VALassoc_list"><span class="keyword">val</span> assoc_list</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> (<a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> 'a list) -> 'a list</code></pre><div class="info">
+<pre><span id="VALassoc_list"><span class="keyword">val</span> assoc_list</span> : <code class="type">OpamTypes.file_item list -> string -> (OpamTypes.value -> 'a list) -> 'a list</code></pre><div class="info">
 Get the value associated to a variable. If the variable does not
     exists, return []<br>
 </div>
-<pre><span id="VALassoc_string_list"><span class="keyword">val</span> assoc_string_list</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> string list</code></pre><div class="info">
+<pre><span id="VALassoc_string_list"><span class="keyword">val</span> assoc_string_list</span> : <code class="type">OpamTypes.file_item list -> string -> string list</code></pre><div class="info">
 Get the string list associated to a variable. If the variable does
     not exist, return []<br>
 </div>
-<pre><span id="VALget_section_by_kind"><span class="keyword">val</span> get_section_by_kind</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> <a href="OpamTypes.html#TYPEfile_section">OpamTypes.file_section</a></code></pre><div class="info">
+<pre><span id="VALget_section_by_kind"><span class="keyword">val</span> get_section_by_kind</span> : <code class="type">OpamTypes.file_item list -> string -> OpamTypes.file_section</code></pre><div class="info">
 Get one section of a certain kind<br>
 </div>
-<pre><span id="VALget_all_section_by_kind"><span class="keyword">val</span> get_all_section_by_kind</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string -> <a href="OpamTypes.html#TYPEfile_section">OpamTypes.file_section</a> list</code></pre><div class="info">
+<pre><span id="VALget_all_section_by_kind"><span class="keyword">val</span> get_all_section_by_kind</span> : <code class="type">OpamTypes.file_item list -> string -> OpamTypes.file_section list</code></pre><div class="info">
 Get all the sections of a certain kind<br>
 </div>
-<pre><span id="VALassoc_sections"><span class="keyword">val</span> assoc_sections</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -><br>       string -> (<a href="OpamTypes.html#TYPEfile_section">OpamTypes.file_section</a> -> 'a) -> 'a list</code></pre><div class="info">
+<pre><span id="VALassoc_sections"><span class="keyword">val</span> assoc_sections</span> : <code class="type">OpamTypes.file_item list -><br>       string -> (OpamTypes.file_section -> 'a) -> 'a list</code></pre><div class="info">
 Get sections<br>
 </div>
 <br>
@@ -222,50 +216,56 @@ Get sections<br>
 This section is dedicated to the parsing and creatin of dependency
     and conflict formaulas. It's maybe easier to do that directly in
     the parser ...<br>
-<pre><span id="VALparse_formula"><span class="keyword">val</span> parse_formula</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info">
+<pre><span id="VALparse_formula"><span class="keyword">val</span> parse_formula</span> : <code class="type">OpamTypes.value -> OpamTypes.formula</code></pre><div class="info">
 Parse package formula where AND are implicit: <code class="code">x y -&gt; x &amp; y</code><br>
 </div>
-<pre><span id="VALmake_formula"><span class="keyword">val</span> make_formula</span> : <code class="type"><a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_formula"><span class="keyword">val</span> make_formula</span> : <code class="type">OpamTypes.formula -> OpamTypes.value</code></pre><div class="info">
 Build a formula where AND are implicit.<br>
 </div>
-<pre><span id="VALparse_opt_formula"><span class="keyword">val</span> parse_opt_formula</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info">
+<pre><span id="VALparse_opt_formula"><span class="keyword">val</span> parse_opt_formula</span> : <code class="type">OpamTypes.value -> OpamTypes.formula</code></pre><div class="info">
 Parse optional package formula where OR are implicit: <code class="code">x y -&gt; x | y</code><br>
 </div>
-<pre><span id="VALmake_opt_formula"><span class="keyword">val</span> make_opt_formula</span> : <code class="type"><a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_opt_formula"><span class="keyword">val</span> make_opt_formula</span> : <code class="type">OpamTypes.formula -> OpamTypes.value</code></pre><div class="info">
 Build a formula where OR are implicit.<br>
 </div>
-<pre><span id="VALparse_compiler_constraint"><span class="keyword">val</span> parse_compiler_constraint</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a></code></pre><div class="info">
+<pre><span id="VALparse_compiler_constraint"><span class="keyword">val</span> parse_compiler_constraint</span> : <code class="type">OpamTypes.value -> OpamTypes.compiler_constraint</code></pre><div class="info">
 Parse compiler constraints<br>
 </div>
-<pre><span id="VALmake_compiler_constraint"><span class="keyword">val</span> make_compiler_constraint</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_compiler_constraint"><span class="keyword">val</span> make_compiler_constraint</span> : <code class="type">OpamTypes.compiler_constraint -> OpamTypes.value</code></pre><div class="info">
 Build a compiler constraint<br>
+</div>
+<pre><span id="VALparse_os_constraint"><span class="keyword">val</span> parse_os_constraint</span> : <code class="type">OpamTypes.value -> (bool * string) OpamTypes.generic_formula</code></pre><div class="info">
+Parse an OS constraint<br>
+</div>
+<pre><span id="VALmake_os_constraint"><span class="keyword">val</span> make_os_constraint</span> : <code class="type">(bool * string) OpamTypes.generic_formula -> OpamTypes.value</code></pre><div class="info">
+Build an OS constraint<br>
 </div>
 <br>
 <h2 id="2_Environmentvariables">Environment variables</h2><br>
-<pre><span id="VALparse_env_variable"><span class="keyword">val</span> parse_env_variable</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> string * string * string</code></pre><div class="info">
+<pre><span id="VALparse_env_variable"><span class="keyword">val</span> parse_env_variable</span> : <code class="type">OpamTypes.value -> string * string * string</code></pre><div class="info">
 Parsing<br>
 </div>
-<pre><span id="VALmake_env_variable"><span class="keyword">val</span> make_env_variable</span> : <code class="type">string * string * string -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_env_variable"><span class="keyword">val</span> make_env_variable</span> : <code class="type">string * string * string -> OpamTypes.value</code></pre><div class="info">
 Making<br>
 </div>
 <br>
 <h2 id="2_filterexpressions">filter expressions</h2><br>
-<pre><span id="VALparse_filter"><span class="keyword">val</span> parse_filter</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list -> <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a></code></pre><div class="info">
+<pre><span id="VALparse_filter"><span class="keyword">val</span> parse_filter</span> : <code class="type">OpamTypes.value list -> OpamTypes.filter</code></pre><div class="info">
 Parsing<br>
 </div>
-<pre><span id="VALmake_filter"><span class="keyword">val</span> make_filter</span> : <code class="type"><a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> list</code></pre><div class="info">
+<pre><span id="VALmake_filter"><span class="keyword">val</span> make_filter</span> : <code class="type">OpamTypes.filter -> OpamTypes.value list</code></pre><div class="info">
 Creation<br>
 </div>
-<pre><span id="VALparse_command"><span class="keyword">val</span> parse_command</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a></code></pre><div class="info">
+<pre><span id="VALparse_command"><span class="keyword">val</span> parse_command</span> : <code class="type">OpamTypes.value -> OpamTypes.command</code></pre><div class="info">
 Parse a command<br>
 </div>
-<pre><span id="VALmake_command"><span class="keyword">val</span> make_command</span> : <code class="type"><a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_command"><span class="keyword">val</span> make_command</span> : <code class="type">OpamTypes.command -> OpamTypes.value</code></pre><div class="info">
 Create a command<br>
 </div>
-<pre><span id="VALparse_commands"><span class="keyword">val</span> parse_commands</span> : <code class="type"><a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
+<pre><span id="VALparse_commands"><span class="keyword">val</span> parse_commands</span> : <code class="type">OpamTypes.value -> OpamTypes.command list</code></pre><div class="info">
 Parse a list of commands<br>
 </div>
-<pre><span id="VALmake_commands"><span class="keyword">val</span> make_commands</span> : <code class="type"><a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a></code></pre><div class="info">
+<pre><span id="VALmake_commands"><span class="keyword">val</span> make_commands</span> : <code class="type">OpamTypes.command list -> OpamTypes.value</code></pre><div class="info">
 Create a list of commands<br>
 </div>
 </body></html>

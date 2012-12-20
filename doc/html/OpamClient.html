@@ -21,23 +21,17 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
-<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
-<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
-<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
-<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
-<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
-<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamClient</title>
 </head>
 <body>
@@ -49,12 +43,11 @@
 Client entry-point.<br>
 </div>
 <hr width="100%">
-<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> option -> int -> unit</code></pre><div class="info">
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type">OpamTypes.repository -> OpamTypes.compiler -> int -> unit</code></pre><div class="info">
 Initialize the client a consistent state.
     <code class="code">init repo alias oversion cores</code> means:<ul>
 <li><code class="code">repo</code> is the initial repository description,</li>
-<li><code class="code">oversion</code> is the version of the compiler. <code class="code">None</code> means we
-      are using the system-wide installed compiler.</li>
+<li><code class="code">compiler</code> is the version of the compiler.</li>
 <li><code class="code">cores</code> is the number of cores</li>
 </ul>
 <br>
@@ -65,17 +58,17 @@ Display all available packages that matches any of the regexps.<br>
 <pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">string list -> unit</code></pre><div class="info">
 Display a general summary of a collection of packages.<br>
 </div>
-<pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="OpamTypes.html#TYPEconfig">OpamTypes.config</a> -> unit</code></pre><div class="info">
+<pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type">OpamTypes.config -> unit</code></pre><div class="info">
 Depending on request, return options or directories where the
     package is installed.<br>
 </div>
-<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">OpamTypes.name_set -> unit</code></pre><div class="info">
 Install the given set of packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type">OpamPackage.Name.Set.t -> unit</code></pre><div class="info">
 Reinstall the given set of packages. Take the global file lock.<br>
 </div>
-<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> unit</code></pre><div class="info">
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">OpamTypes.repository_name list -> unit</code></pre><div class="info">
 Refresh the available packages. Take the global file lock.<br>
 </div>
 <pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type">OpamPackage.Name.Set.t -> unit</code></pre><div class="info">
@@ -84,34 +77,31 @@ Find a consistent state where most of the installed packages are
     If no package packages are specified then try to upgrade everything.
     Take the global file lock.<br>
 </div>
-<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="OpamTypes.html#TYPEupload">OpamTypes.upload</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> option -> unit</code></pre><div class="info">
-Upload a package to a remote repository. If repo is <code class="code">None</code> then it
-    will look for the repository associated with the package
-    name. Otherwise, it will look for a repository having the right
-    name. Take the global file lock.<br>
+<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type">OpamTypes.upload -> OpamTypes.repository_name -> unit</code></pre><div class="info">
+Upload a package to a remote repository. Take the global file lock.<br>
 </div>
 <pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">OpamPackage.Name.Set.t -> unit</code></pre><div class="info">
 Remove the given set of packages. Take the global file lock.<br>
 </div>
-<pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="OpamTypes.html#TYPEremote">OpamTypes.remote</a> -> unit</code></pre><div class="info">
+<pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type">OpamTypes.remote -> unit</code></pre><div class="info">
 Manage remote repositories. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch_install"><span class="keyword">val</span> switch_install</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_install"><span class="keyword">val</span> switch_install</span> : <code class="type">bool -> OpamTypes.switch -> OpamTypes.compiler -> unit</code></pre><div class="info">
 Install the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch_import"><span class="keyword">val</span> switch_import</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_import"><span class="keyword">val</span> switch_import</span> : <code class="type">OpamTypes.filename -> unit</code></pre><div class="info">
 Import the packages from a file. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch_export"><span class="keyword">val</span> switch_export</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_export"><span class="keyword">val</span> switch_export</span> : <code class="type">OpamTypes.filename -> unit</code></pre><div class="info">
 Export the packages to a file. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch_remove"><span class="keyword">val</span> switch_remove</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_remove"><span class="keyword">val</span> switch_remove</span> : <code class="type">OpamTypes.switch -> unit</code></pre><div class="info">
 Remove the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">bool -> OpamTypes.switch -> unit</code></pre><div class="info">
 Switch to the given compiler. Take the global file lock.<br>
 </div>
-<pre><span id="VALswitch_reinstall"><span class="keyword">val</span> switch_reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
+<pre><span id="VALswitch_reinstall"><span class="keyword">val</span> switch_reinstall</span> : <code class="type">OpamTypes.switch -> unit</code></pre><div class="info">
 Reinstall the given compiler. Take the global file lock.<br>
 </div>
 <pre><span id="VALswitch_list"><span class="keyword">val</span> switch_list</span> : <code class="type">unit -> unit</code></pre><div class="info">
@@ -120,7 +110,7 @@ List the available compiler descriptions<br>
 <pre><span id="VALswitch_current"><span class="keyword">val</span> switch_current</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Display the name of the current compiler<br>
 </div>
-<pre><span id="VALpin"><span class="keyword">val</span> pin</span> : <code class="type"><a href="OpamTypes.html#TYPEpin">OpamTypes.pin</a> -> unit</code></pre><div class="info">
+<pre><span id="VALpin"><span class="keyword">val</span> pin</span> : <code class="type">OpamTypes.pin -> unit</code></pre><div class="info">
 Pin a package to a specific version. Take the global file lock.<br>
 </div>
 <pre><span id="VALpin_list"><span class="keyword">val</span> pin_list</span> : <code class="type">unit -> unit</code></pre><div class="info">
