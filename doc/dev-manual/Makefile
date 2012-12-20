@@ -1,5 +1,5 @@
 .PHONY: all
-all: roadmap.pdf
+all: dev-manual.pdf
 
 %.pdf: %.tex
 	pdflatex $*
