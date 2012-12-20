@@ -33,9 +33,6 @@ This will fetch the archives if they are not already downloaded and then build
 OPAM. If you just want to get the necessary dependencies without compiling the
 project, run `make clone`.
 
-If you don't have `curl` installed on your system, you can run
-`make FETCH=wget clone` before `make`.
-
 ### Installing OPAM
 
 To install opam simply run:
