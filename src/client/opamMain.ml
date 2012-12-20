@@ -802,7 +802,7 @@ let default =
         and darcs. It handles multiple OCaml versions concurrently, and is
         flexible enough to allow you to use your own repositories and packages
         in addition of the ones it provides.";
-    `P "Use either `$(mname) $(i,COMMAND) --help` or `$(mname) help $(i,COMMAND)'
+    `P "Use either $(b,opam <command> --help) or $(b,opam help <command>)
         for more information on a specific command.";
   ] @  help_sections
   in
