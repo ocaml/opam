@@ -161,8 +161,8 @@ installed by default, so to activate the mode you can either:
 ## Documentation
 
 * The main documentation entry point to OPAM is the user manual, available using `opam --help`.
-* The API documentation is available in `./doc/html/`.
+* The API documentation is available in `doc/html/`.
 * A collection of tutorials are available on the [OPAM wiki](https://github.com/OCamlPro/opam/wiki/_pages).
-  They are also available on [http://opam.ocamlpro.com/] in the `Documentation` menu, or in PDF
-  in `./doc/tutorials`.
+  They are also available on http://opam.ocamlpro.com/ (in the "Documentation" menu), or in PDF
+  in `doc/tutorials`.
 * The developer manual is available in `doc/dev-manual/`.
