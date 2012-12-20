@@ -535,7 +535,7 @@ let upgrade names =
         if OpamState.mem_installed_package_by_name t n then
           Some (OpamState.find_installed_package_by_name t n)
         else (
-          OpamGlobals.msg "%s is not installed" (OpamPackage.Name.to_string n);
+          OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
           None
         )
       ) names in
@@ -815,7 +815,7 @@ let reinstall names =
       match v with
       | None ->
         if not (OpamState.mem_installed_package_by_name t n) then (
-          OpamGlobals.msg "%s is not installed\n" (OpamPackage.Name.to_string n);
+          OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
           None
         ) else
           Some (OpamState.find_installed_package_by_name t n)
@@ -824,7 +824,7 @@ let reinstall names =
         if OpamPackage.Set.mem nv t.installed then
           Some nv
         else (
-          OpamGlobals.msg "%s is not installed\n" (OpamPackage.to_string nv);
+          OpamGlobals.msg "%s is not installed.\n" (OpamPackage.to_string nv);
           None
         )
     ) atoms in
