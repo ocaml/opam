@@ -199,10 +199,10 @@ val parse_compiler_constraint: value -> compiler_constraint
 val make_compiler_constraint: compiler_constraint -> value
 
 (** Parse an OS constraint *)
-val parse_os_constraint: value -> (bool * string) list
+val parse_os_constraint: value -> (bool * string) generic_formula
 
 (** Build an OS constraint *)
-val make_os_constraint: (bool * string) list -> value
+val make_os_constraint: (bool * string) generic_formula -> value
 
 (** {2 Environment variables} *)
 

@@ -232,12 +232,12 @@ let available_packages root opams repositories repo_index compiler_version confi
       | Some c -> OpamFormula.eval atom c in
     let consistent_os () =
       match OpamFile.OPAM.os opam with
-      | [] -> true
-      | l  ->
-        List.fold_left (fun accu (b,os) ->
+      | Empty -> true
+      | f ->
+        let atom (b, os) =
           let ($) = if b then (=) else (<>) in
-          accu || (os $ Lazy.force OpamGlobals.os_string)
-        ) false l in
+          os $ Lazy.force OpamGlobals.os_string in
+        OpamFormula.eval atom f in
     let consistent_pinned_version () =
       not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) ||
         match OpamPackage.Name.Map.find (OpamPackage.name nv) pinned with

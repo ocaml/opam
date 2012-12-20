@@ -91,7 +91,7 @@ module OPAM: sig
   val ocaml_version: t -> compiler_constraint option
 
   (** OS constraint *)
-  val os: t -> (bool * string) list
+  val os: t -> (bool * string) generic_formula
 
   (** Package maintainer *)
   val maintainer: t -> string

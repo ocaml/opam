@@ -282,66 +282,64 @@ let assoc_string_list s n =
 
 (* Parse any constraint list *)
 let rec parse_constraints t =
-  let module F = OpamFormula in
   let version = OpamPackage.Version.of_string in
   let relop = OpamFormula.relop_of_string in
   match t with
-  | []                                            -> F.Empty
-  | (Symbol r) :: (String v) :: []                -> F.Atom (relop r, version v)
-  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> F.And (F.Atom (relop r, version v), parse_constraints t)
-  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> F.Or (F.Atom (relop r, version v), parse_constraints t)
-  | [Group g]                                     -> F.Block (parse_constraints g)
+  | []                                            -> Empty
+  | (Symbol r) :: (String v) :: []                -> Atom (relop r, version v)
+  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> And (Atom (relop r, version v), parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> Or (Atom (relop r, version v), parse_constraints t)
+  | [Group g]                                     -> Block (parse_constraints g)
   | x                                             -> bad_format "Expecting a list of constraints, got %s" (kinds x)
 
 let rec make_constraints t =
-  let module F = OpamFormula in
   match t with
-  | F.Empty       -> []
-  | F.Atom (r, v) -> [Symbol (OpamFormula.string_of_relop r); String (OpamPackage.Version.to_string v)]
-  | F.And (x, y)  -> make_constraints x @ [Symbol "&"] @ make_constraints y
-  | F.Or (x, y)   -> make_constraints x @ [Symbol "|"] @ make_constraints y
-  | F.Block g     -> [Group (make_constraints g)]
+  | Empty       -> []
+  | Atom (r, v) -> [Symbol (OpamFormula.string_of_relop r); String (OpamPackage.Version.to_string v)]
+  | And (x, y)  -> make_constraints x @ [Symbol "&"] @ make_constraints y
+  | Or (x, y)   -> make_constraints x @ [Symbol "|"] @ make_constraints y
+  | Block g     -> [Group (make_constraints g)]
 
 (* parse a list of formulas *)
-let rec parse_formulas opt t =
-  let module F = OpamFormula in
+let parse_formulas opt t =
   let name = OpamPackage.Name.of_string in
+  let rec aux = function
+    | []                     -> Empty
+    | [String n]             -> Atom (name n, Empty)
+    | [Option(String n, g)]  -> Atom (name n, parse_constraints g)
+    | [Group g]              -> aux g
+    | e1 :: Symbol "|" :: e2 -> Or (aux [e1], aux e2)
+    | e1 :: Symbol "&" :: e2 -> And (aux [e1], aux e2)
+    | e1 :: e2 when opt      -> Or (aux [e1], aux e2)
+    | e1 :: e2               -> And (aux [e1], aux e2) in
   match t with
-  | []                     -> F.Empty
-  | [String n]             -> F.Atom (name n, F.Empty)
-  | [Option(String n, g)]  -> F.Atom (name n, parse_constraints g)
-  | [Group g]              -> parse_formulas opt g
-  | e1 :: Symbol "|" :: e2 -> F.Or (parse_formulas opt [e1], parse_formulas opt e2)
-  | e1 :: Symbol "&" :: e2 -> F.And (parse_formulas opt [e1], parse_formulas opt e2)
-  | e1 :: e2 when opt      -> F.Or (parse_formulas opt [e1], parse_formulas opt e2)
-  | e1 :: e2               -> F.And (parse_formulas opt [e1], parse_formulas opt e2)
+  | List l -> aux l
+  | x      -> bad_format "Expecting list, got %s" (kind x)
 
-let rec make_formulas opt t =
-  let module F = OpamFormula in
+let make_formulas opt t =
   let name = OpamPackage.Name.to_string in
-  match t with
-  | F.Empty             -> []
-  | F.Atom (n, F.Empty) -> [String (name n)]
-  | F.Atom (n, cs)      -> [Option(String (name n), make_constraints cs)]
-  | F.Block f           -> [Group (make_formulas opt f)]
-  | F.And(e,f) when opt -> make_formulas opt e @ [Symbol "&"] @ make_formulas opt f
-  | F.And(e,f)          -> make_formulas opt e @ make_formulas opt f
-  | F.Or(e,f) when opt  -> make_formulas opt e @ make_formulas opt f
-  | F.Or(e,f)           -> make_formulas opt e @ [Symbol "|"] @ make_formulas opt f
+  let rec aux = function
+    | Empty             -> []
+    | Atom (n, Empty)   -> [String (name n)]
+    | Atom (n, cs)      -> [Option(String (name n), make_constraints cs)]
+    | Block f           -> [Group (aux f)]
+    | And(e,f) when opt -> aux e @ [Symbol "&"] @ aux f
+    | And(e,f)          -> aux e @ aux f
+    | Or(e,f) when opt  -> aux e @ aux f
+    | Or(e,f)           -> aux e @ [Symbol "|"] @ aux f in
+  List (aux t)
 
-let parse_formula = function
-  | List l -> parse_formulas false l
-  | x      -> bad_format "Expecting list, got %s" (kind x)
+let make_formula =
+  make_formulas false
 
-let make_formula f =
-  List (make_formulas false f)
+let parse_formula =
+  parse_formulas false
 
-let parse_opt_formula = function
-  | List l -> parse_formulas true l
-  | x      -> bad_format "Expecting list, got %s" (kind x)
+let parse_opt_formula =
+  parse_formulas true
 
-let make_opt_formula f =
-  List (make_formulas true f)
+let make_opt_formula =
+  make_formulas true
 
 let parse_relop = function
   | "="  -> `Eq
@@ -359,53 +357,54 @@ let string_of_relop = function
   | `Lt  -> "<"
   | _    -> invalid_arg "parse_relop"
 
-let rec parse_compiler_constraint t =
-  let module F = OpamFormula in
+let parse_compiler_constraint t =
+  let rec aux = function
+    | []                         -> Empty
+    | [Symbol r; String v ]      ->
+      (try Atom (parse_relop r, OpamCompiler.Version.of_string v)
+       with _ -> bad_format "Expecting a relop, got %s" r)
+    | [Group g]                  -> Block (aux g)
+    | e1::e2 :: Symbol "|" :: e3 -> Or (aux [e1;e2], aux e3)
+    | e1::e2 :: Symbol "&" :: e3 -> And (aux [e1;e2], aux e3)
+    | x -> bad_format "Expecting a compiler constraint, got %s" (kinds x) in
   match t with
-  | []                     -> F.Empty
-  | [Symbol r; String v ]  ->
-    (try F.Atom (parse_relop r, OpamCompiler.Version.of_string v)
-     with _ -> bad_format "Expecting a relop, got %s" r)
-  | [Group g]              -> parse_compiler_constraint g
-  | e1::e2 :: Symbol "|" :: e3 -> F.Or (parse_compiler_constraint [e1;e2], parse_compiler_constraint e3)
-  | e1::e2 :: Symbol "&" :: e3 -> F.And (parse_compiler_constraint [e1;e2], parse_compiler_constraint e3)
-  | x -> bad_format "Expecting a compiler constraint, got %s" (kinds x)
-
-let parse_compiler_constraint = function
-  | List l -> parse_compiler_constraint l
+  | List l -> aux l
   | x      -> bad_format "Expecting a list, got %s" (kind x)
 
-let rec make_compiler_constraint t =
-  let module F = OpamFormula in
-  match t with
-  | F.Empty       -> []
-  | F.Atom (r, v) -> [Symbol (string_of_relop r); String (OpamCompiler.Version.to_string  v)]
-  | F.Block f     -> [Group (make_compiler_constraint f)]
-  | F.And(e,f)    -> make_compiler_constraint e @ [Symbol "|"] @ make_compiler_constraint f
-  | F.Or(e,f)     -> make_compiler_constraint e @ [Symbol "|"] @ make_compiler_constraint f
-
 let make_compiler_constraint t =
-  List (make_compiler_constraint t)
+  let rec aux = function
+    | Empty       -> []
+    | Atom (r, v) -> [Symbol (string_of_relop r); String (OpamCompiler.Version.to_string  v)]
+    | Block f     -> [Group (aux f)]
+    | And(e,f)    -> aux e @ [Symbol "&"] @ aux f
+    | Or(e,f)     -> aux e @ [Symbol "|"] @ aux f in
+  List (aux t)
 
 let parse_os_constraint l =
+  let pos s = Atom (true, s) in
+  let neg s = Atom (false, s) in
   let rec aux = function
-    | []                         -> []
-    | String os             :: l -> (true, os) :: aux l
-    | Symbol n :: String os :: l ->
-      if n = "!" then
-        (false, os) :: aux l
-      else
-        bad_format "Expecting '!', got %s" n
-    | e :: _ -> bad_format "Expecting an OS constraint, got %s" (kind e) in
+    | []                                         -> Empty
+    | [Group g]                                  -> Block (aux g)
+    | [String os]                                -> pos os
+    | [Symbol "!"; String os]                    -> neg os
+    | String os :: String "&" :: l               -> And (pos os, aux l)
+    | Symbol "!" :: String os :: String "&" :: l -> And (neg os, aux l)
+    | String os :: String "|" :: l               -> Or (pos os, aux l)
+    | Symbol "!" :: String os :: String "|" :: l -> Or (neg os, aux l)
+    | l -> bad_format "Expecting an OS constraint, got %s" (kinds l) in
   match l with
   | List l -> aux l
-  | e      -> bad_format "Expecting an OS constraint, got %s" (kind e)
+  | e      -> bad_format "Expecting a list, got %s" (kind e)
 
 let make_os_constraint l =
   let rec aux = function
-    | []               -> []
-    | (true , os) :: l -> String os :: aux l
-    | (false, os) :: l -> Symbol "!" :: String os :: aux l in
+    | Empty            -> []
+    | Atom (true , os) -> [String os]
+    | Atom (false, os) -> [Symbol "!"; String os]
+    | Block g          -> [Group (aux g)]
+    | And(e,f)         -> aux e @ [Symbol "&"] @ aux f
+    | Or(e,f)          -> aux e @ [Symbol "|"] @ aux f in
   List (aux l)
 
 let parse_env_variable v =
