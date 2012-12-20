@@ -136,6 +136,8 @@ $ opam pin <package> none
 ```
 
 You can also pin a package to a specific version: `opam pin <package> <version>`
+or to a git repository: `opam pin <package> </remote/path/to/git>` or 
+`opam pin <package> </local/path/to/git> -k git`.
 
 ### Repositories
 
@@ -158,7 +160,9 @@ installed by default, so to activate the mode you can either:
 
 ## Documentation
 
-Some technical documentation is available in `doc`:
-
-* the API is available in `doc/html/`
-* The design documents are available in `doc/specs/`
+* The main documentation entry point to OPAM is the user manual, available using `opam --help`.
+* The API documentation is available in `./doc/html/`.
+* A collection of tutorials are available on the [OPAM wiki](https://github.com/OCamlPro/opam/wiki/_pages).
+  They are also available on [http://opam.ocamlpro.com/] in the `Documentation` menu, or in PDF
+  in `./doc/tutorials`.
+* The developer manual is available in `doc/dev-manual/`.
