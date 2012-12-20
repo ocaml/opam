@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-SEARCH" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-SEARCH" 1 "" "Opam 0.9.0" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -29,9 +29,6 @@ Force the search in case sensitive mode.
 \fB\-i\fR, \fB\-\-installed\fR
 List installed packages only.
 .TP 4
-\fB\-\-no\-base\-packages\fR
-Do not install base packages (useful for testing purposes).
-.TP 4
 \fB\-s\fR, \fB\-\-short\fR
 Output the names of packages separated by one whitespace instead of using the usual formatting.
 .SH COMMON OPTIONS
@@ -39,31 +36,46 @@ Output the names of packages separated by one whitespace instead of using the us
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
-Print debug message on stdout.
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes). This is equivalent to setting \fB$OPAMNOBASEPACKAGES\fR to a non\-empty string.
+.TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
-Be quiet.
+Be quiet when installing a new compiler.
 .TP 4
 \fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
-Use \fIROOT\fR as the current root path.
+Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
-Use \fISWITCH\fR as the current compiler switch.
+Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
-Be more verbose.
+Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
 .TP 4
 \fB\-\-version\fR
 Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
+.SH FURTHER DOCUMENTATION
+.P
+See http://opam.ocamlpro.com.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.sp -1
+.P
+Frederic Tuong <frederic.tuong@inria.com>
+.sp -1
+.P
+Vincent Bernardoff <vb@luminar.eu.org>
+.sp -1
+.P
+Guillem Rieu <guillem.rieu@ocamlpro.com>
 .SH BUGS
 .P
 Check bug reports at https://github.com/OCamlPro/opam/issues.

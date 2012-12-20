@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-CONFIG" 1 "" "Opam 0.8.2" "Opam Manual"
+.TH "OPAM-CONFIG" 1 "" "Opam 0.9.0" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -9,7 +9,7 @@
 opam\-config \- Display configuration options for packages.
 .SH SYNOPSIS
 .P
-\fBopam config\fR [\fIOPTION\fR]... \fICOMMAND\fR [\fIARG\fR]...
+\fBopam config\fR [\fIOPTION\fR]... [\fIDOMAIN\fR] [\fIARG\fR]...
 .SH DESCRIPTION
 .P
 This command uses opam state to output information on how to use installed libraries, updating the user’s PATH, and substitute variables used in opam packages.
@@ -17,31 +17,31 @@ This command uses opam state to output information on how to use installed libra
 Apart from \fBopam config env\fR, most of these commands are used by opam internally, and thus are of limited interest for the casual user.
 .SH ARGUMENTS
 .TP 4
-\fICOMMAND\fR
-Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
+\fIDOMAIN\fR
+Name of the sub\-command. See the \fBDOMAINS\fR section for more info.
 .SH OPTIONS
 .TP 4
 \fB\-c\fR, \fB\-\-csh\fR
 Use csh\-compatible output mode.
 .TP 4
-\fB\-\-no\-base\-packages\fR
-Do not install base packages (useful for testing purposes).
+\fB\-e\fR \fIVAL\fR
+Backward\-compatible option, equivalent to \fBopam config env\fR.
 .TP 4
-\fB\-r\fR, \fB\-\-rec\fR
+\fB\-R\fR, \fB\-\-rec\fR
 Recursive query.
-.SH COMMANDS
+.SH DOMAINS
 .TP 4
 \fBenv\fR
 returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH according to the current selected compiler. The output of this command is meant to be evaluated by a shell, for example by doing \fBeval `opam config env`\fR.
 .TP 4
 \fBvar\fR
-returns the value associated with the given variable.
+returns the value associated with the given variable. If the variable contains a colon such as \fIpkg:var\fR, then the left element will be understood as the package in which the variable is defined. The variable resolution is done as follows: first, OPAM will check whether \fB$var\fR exists; for package variables, it will look for \fB$pkg_var\fR. If the variable is not found, OPAM will then check whether the variable is implicit. There are two global implicit variables: \fIocaml\-version\fR and \fIpreinstalled\fR and two implicit variables per package: \fIpkg:installed\fR which is either \fB"true"\fR or \fB"false"\fR, and \fIpkg:enable\fR which is either \fB"enable"\fR or \fB"disable"\fR. Finally, OPAM will look into its global and package config files to find whether these variables exist.
 .TP 4
 \fBlist\fR
-returns the list of all variables defined in the listed packages (no package = all).
+returns the list of all variables defined in the listed packages. It is possible to filter the list of variables by giving package names (use \fBglobals\fR to get the list of global variables). No parameter means displaying all the variables.
 .TP 4
 \fBsubst\fR
-substitutes variables in the given files.
+substitutes variables in the given files. The strings \fI%{var}%\fR are replaced by the value of the variable \fIvar\fR (see the documentation associated to \fBopam config var\fR).
 .TP 4
 \fBincludes\fR
 returns include options.
@@ -62,31 +62,46 @@ returns assembly compile options.
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
-Print debug message on stdout.
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes). This is equivalent to setting \fB$OPAMNOBASEPACKAGES\fR to a non\-empty string.
+.TP 4
 \fB\-q\fR, \fB\-\-quiet\fR
-Be quiet.
+Be quiet when installing a new compiler.
 .TP 4
 \fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
-Use \fIROOT\fR as the current root path.
+Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
-Use \fISWITCH\fR as the current compiler switch.
+Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
-Be more verbose.
+Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
 .TP 4
 \fB\-\-version\fR
 Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
-Disable interactive mode and answer yes to all questions that would otherwise beasked to the user.
+Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
+.SH FURTHER DOCUMENTATION
+.P
+See http://opam.ocamlpro.com.
 .SH AUTHORS
 .P
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.sp -1
+.P
+Frederic Tuong <frederic.tuong@inria.com>
+.sp -1
+.P
+Vincent Bernardoff <vb@luminar.eu.org>
+.sp -1
+.P
+Guillem Rieu <guillem.rieu@ocamlpro.com>
 .SH BUGS
 .P
 Check bug reports at https://github.com/OCamlPro/opam/issues.
