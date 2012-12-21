@@ -43,14 +43,18 @@ type build_options = {
   keep_build_dir: bool;
   make          : string option;
   no_checksums  : bool;
+  build_test    : bool;
+  build_doc     : bool;
 }
 
-let create_build_options keep_build_dir make no_checksums =
-  { keep_build_dir; make; no_checksums }
+let create_build_options keep_build_dir make no_checksums build_test build_doc =
+  { keep_build_dir; make; no_checksums; build_test; build_doc }
 
 let set_build_options b =
   OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
   OpamGlobals.no_checksums   := !OpamGlobals.no_checksums || b.no_checksums;
+  OpamGlobals.build_test     := !OpamGlobals.build_test || b.build_test;
+  OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
   match b.make with
   | None   -> ()
   | Some s -> OpamGlobals.makecmd := lazy s
@@ -247,11 +251,19 @@ let build_options =
     mk_flag ["n";"no-checksums"]
       "Do not verify the checksum of downloaded archives. \
        This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
+  let build_test =
+    mk_flag ["t";"build-test"]
+      "Build and $(b,run) the package unit-tests.
+       This is equivalent to setting $(b,\\$OPAMBUILDTEST) to a non-empty string." in
+  let build_doc =
+    mk_flag ["d";"build-doc"]
+      "Build the package documentation.
+       This is equivalent to setting $(b,\\$OPAMBUILDDOC) to a non-empty string." in
   let make =
     mk_opt ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
-  Term.(pure create_build_options $keep_build_dir $make $no_checksums)
+  Term.(pure create_build_options $keep_build_dir $make $no_checksums $build_test $build_doc)
 
 let guess_repository_kind kind address =
   match kind with

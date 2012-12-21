@@ -562,6 +562,8 @@ module OPAM = struct
     authors    : string list;
     license    : string option;
     doc        : string option;
+    build_test : command list;
+    build_doc  : command list;
   }
 
   let empty = {
@@ -585,6 +587,8 @@ module OPAM = struct
     authors    = [];
     license    = None;
     doc        = None;
+    build_test = [];
+    build_doc  = [];
   }
 
   let create nv =
@@ -612,6 +616,8 @@ module OPAM = struct
   let s_authors     = "authors"
   let s_license     = "license"
   let s_doc         = "doc"
+  let s_build_test  = "build-test"
+  let s_build_doc   = "build-doc"
 
   let useful_fields = [
     s_opam_version;
@@ -632,6 +638,8 @@ module OPAM = struct
     s_authors;
     s_homepage;
     s_doc;
+    s_build_test;
+    s_build_doc;
   ]
 
   let valid_fields =
@@ -660,6 +668,8 @@ module OPAM = struct
   let authors t = t.authors
   let license t = t.license
   let doc t = t.doc
+  let build_doc t = t.build_doc
+  let build_test t = t.build_test
 
   let with_depends t depends = { t with depends }
   let with_depopts t depopts = { t with depopts }
@@ -706,6 +716,8 @@ module OPAM = struct
         @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
         @ option  t.ocaml_version s_ocaml_version OpamFormat.make_compiler_constraint
         @ formula t.os            s_os            OpamFormat.make_os_constraint
+        @ listm   t.build_test    s_build_test    OpamFormat.make_command
+        @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
         @ List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string
@@ -768,6 +780,8 @@ module OPAM = struct
     let authors = OpamFormat.assoc_list s s_authors (OpamFormat.parse_list OpamFormat.parse_string) in
     let license = OpamFormat.assoc_option s s_license OpamFormat.parse_string in
     let doc = OpamFormat.assoc_option s s_doc OpamFormat.parse_string in
+    let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
+    let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
     let others     =
       OpamMisc.filter_map (function
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
@@ -776,7 +790,9 @@ module OPAM = struct
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
       patches; ocaml_version; os; build_env;
-      homepage; authors; license; doc }
+      homepage; authors; license; doc;
+      build_test; build_doc;
+    }
 end
 
 module Dot_install_raw = struct

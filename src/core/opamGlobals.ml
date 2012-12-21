@@ -35,6 +35,8 @@ let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
 let yes              = check "YES"
+let build_test       = check "BUILDTEST"
+let build_doc        = check "BUILDDOC"
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"

@@ -138,6 +138,12 @@ module OPAM: sig
   (** API documentation *)
   val doc: t -> string option
 
+  (** Commands to build and run the tests *)
+  val build_test: t -> command list
+
+  (** Commands to build the documentation *)
+  val build_doc: t -> command list
+
   (** Construct as [depends] *)
   val with_depends : t -> formula -> t
 

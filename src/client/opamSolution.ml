@@ -367,20 +367,33 @@ let proceed_to_change t nv_old nv =
   let env_f = OpamPath.Switch.build_env t.root t.switch nv in
   OpamFile.Env.write env_f env.new_env;
 
-  (* Call the build script and copy the output files *)
-  let commands = OpamState.filter_commands t (OpamFile.OPAM.build opam) in
-  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  if commands_s <> [] then
-    OpamGlobals.msg "Build commands:\n  %s\n" (String.concat "\n  " commands_s)
-  else
-    OpamGlobals.msg "Nothing to do.\n";
-  try
+  (* Exec the given commands. *)
+  let exec name f =
+    let commands = OpamState.filter_commands t (f opam) in
+    let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
+    if commands_s <> [] then
+      OpamGlobals.msg "%s:\n  %s\n" name (String.concat "\n  " commands_s)
+    else
+      OpamGlobals.msg "Nothing to do.\n";
     OpamFilename.exec
       ~add_to_env:env.add_to_env
       ~add_to_path:[env.add_to_path]
       p_build
-      commands;
-    proceed_to_install t nv;
+      commands in
+    try
+      (* First, we build the package. *)
+      exec "Building the package" OpamFile.OPAM.build;
+
+      (* If necessary, build and run the test. *)
+      if !OpamGlobals.build_test then
+        exec "Building and running the test" OpamFile.OPAM.build_test;
+
+      (* If necessary, build the documentation. *)
+      if !OpamGlobals.build_doc then
+        exec "Generating the documentation" OpamFile.OPAM.build_doc;
+
+      (* If everyting went fine, finally install the package. *)
+      proceed_to_install t nv;
   with e ->
     (* We keep the build dir to help debugging *)
     proceed_to_delete ~rm_build:false t nv;
