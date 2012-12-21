@@ -1,4 +1,6 @@
 0.9.0 (trunk)
+* Add a way to specify how to run tests and build documentation for the packages
+* Display homepage, authors, doc link, license with 'opam info'
 * Improve `opam remove` efficiency when using `ocamlfind` command(s) only
 * Git pinning now works with commits/tags/branches
 * `opam init` works without preinstalled compiler
