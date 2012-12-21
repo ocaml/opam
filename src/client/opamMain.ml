@@ -66,7 +66,7 @@ let help_sections = [
 
   `S "AUTHORS";
   `P "Thomas Gazagnaire   <thomas.gazagnaire@ocamlpro.com>"; `Noblank;
-  `P "Frederic Tuong      <frederic.tuong@inria.com>"; `Noblank;
+  `P "Frederic Tuong      <tuong@users.gforge.inria.fr>"; `Noblank;
   `P "Vincent Bernardoff  <vb@luminar.eu.org>"; `Noblank;
   `P "Guillem Rieu        <guillem.rieu@ocamlpro.com>";
 
