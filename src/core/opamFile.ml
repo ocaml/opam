@@ -196,9 +196,6 @@ module URL = struct
 
   let with_checksum t checksum = { t with checksum = Some checksum }
 
-  let create ?checksum url =
-    { url; checksum; kind = None }
-
 end
 
 module Updated = struct
@@ -558,10 +555,13 @@ module OPAM = struct
     libraries  : section list;
     syntax     : section list;
     patches    : (basename * filter option) list;
-    files      : (basename * filter option) list;
     others     : (string * value) list;
     ocaml_version: compiler_constraint option;
     os         : (bool * string) generic_formula;
+    homepage   : string option;
+    authors    : string list;
+    license    : string option;
+    doc        : string option;
   }
 
   let empty = {
@@ -577,11 +577,14 @@ module OPAM = struct
     conflicts  = OpamFormula.Empty;
     libraries  = [];
     syntax     = [];
-    files      = [];
     patches    = [];
     others     = [];
     ocaml_version = None;
     os         = Empty;
+    homepage   = None;
+    authors    = [];
+    license    = None;
+    doc        = None;
   }
 
   let create nv =
@@ -601,14 +604,14 @@ module OPAM = struct
   let s_conflicts   = "conflicts"
   let s_libraries   = "libraries"
   let s_syntax      = "syntax"
-  let s_license     = "license"
-  let s_authors     = "authors"
-  let s_homepage    = "homepage"
   let s_ocaml_version = "ocaml-version"
   let s_patches     = "patches"
-  let s_files       = "files"
   let s_configure_style = "configure-style"
   let s_os          = "os"
+  let s_homepage    = "homepage"
+  let s_authors     = "authors"
+  let s_license     = "license"
+  let s_doc         = "doc"
 
   let useful_fields = [
     s_opam_version;
@@ -624,15 +627,15 @@ module OPAM = struct
     s_ocaml_version;
     s_build_env;
     s_patches;
-    s_files;
     s_os;
+    s_license;
+    s_authors;
+    s_homepage;
+    s_doc;
   ]
 
   let valid_fields =
     useful_fields @ [
-      s_license;
-      s_authors;
-      s_homepage;
       s_version;
       s_name;
       s_configure_style;
@@ -652,8 +655,11 @@ module OPAM = struct
   let ocaml_version t = t.ocaml_version
   let build_env t = t.build_env
   let patches t = t.patches
-  let files t = t.files
   let os t = t.os
+  let homepage t = t.homepage
+  let authors t = t.authors
+  let license t = t.license
+  let doc t = t.doc
 
   let with_depends t depends = { t with depends }
   let with_depopts t depopts = { t with depopts }
@@ -663,37 +669,44 @@ module OPAM = struct
   let with_substs t substs = { t with substs }
   let with_ocaml_version t ocaml_version = { t with ocaml_version }
   let with_maintainer t maintainer = { t with maintainer }
-  let with_files t files = { t with files }
   let with_patches t patches = { t with patches }
 
   let to_string filename t =
     let make_file = OpamFormat.make_option (OpamFilename.Base.to_string |> OpamFormat.make_string) OpamFormat.make_filter in
+    let option c s f = match c with
+      | None   -> []
+      | Some v -> [ Variable (s, f v) ] in
+    let list c s f = match c with
+      | [] -> []
+      | l  -> [ Variable (s, f l) ] in
+    let listm c s f = match c with
+      | [] -> []
+      | l  -> [ Variable (s, OpamFormat.make_list f l) ] in
+    let formula c s f = match c with
+      | Empty -> []
+      | x     -> [ Variable (s, f x) ] in
     let s = {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
         Variable (s_opam_version, OpamFormat.make_string OpamGlobals.opam_version);
         Variable (s_maintainer  , OpamFormat.make_string t.maintainer);
-        Variable (s_substs      , OpamFormat.make_list (OpamFilename.Base.to_string |> OpamFormat.make_string) t.substs);
-        Variable (s_build_env   , OpamFormat.make_list OpamFormat.make_env_variable t.build_env);
-        Variable (s_build       , OpamFormat.make_list OpamFormat.make_command t.build);
-        Variable (s_remove      , OpamFormat.make_list OpamFormat.make_command t.remove);
-        Variable (s_depends     , OpamFormat.make_formula t.depends);
-        Variable (s_depopts     , OpamFormat.make_opt_formula t.depopts);
-        Variable (s_conflicts   , OpamFormat.make_formula t.conflicts);
-        Variable (s_libraries   , OpamFormat.make_list (OpamVariable.Section.to_string |> OpamFormat.make_string) t.libraries);
-        Variable (s_syntax      , OpamFormat.make_list (OpamVariable.Section.to_string |> OpamFormat.make_string) t.syntax);
-        Variable (s_files       , OpamFormat.make_list make_file t.files);
-        Variable (s_patches     , OpamFormat.make_list make_file t.patches);
-      ] @ (
-        match t.ocaml_version with
-        | None   -> []
-        | Some v -> [ Variable (s_ocaml_version, OpamFormat.make_compiler_constraint v) ]
-      ) @ (
-        match t.os with
-        | Empty -> []
-        | l     -> [ Variable (s_os, OpamFormat.make_os_constraint l) ]
-      ) @
-        List.map (fun (s, v) -> Variable (s, v)) t.others;
+      ] @ option  t.homepage      s_homepage      OpamFormat.make_string
+        @ list    t.authors       s_authors       (String.concat ", " |> OpamFormat.make_string)
+        @ option  t.license       s_license       OpamFormat.make_string
+        @ option  t.doc           s_doc           OpamFormat.make_string
+        @ listm   t.substs        s_substs        (OpamFilename.Base.to_string |> OpamFormat.make_string)
+        @ listm   t.build_env     s_build_env     OpamFormat.make_env_variable
+        @ listm   t.build         s_build         OpamFormat.make_command
+        @ listm   t.remove        s_remove        OpamFormat.make_command
+        @ formula t.depends       s_depends       OpamFormat.make_formula
+        @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
+        @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
+        @ listm   t.libraries     s_libraries     (OpamVariable.Section.to_string |> OpamFormat.make_string)
+        @ listm   t.syntax        s_syntax        (OpamVariable.Section.to_string |> OpamFormat.make_string)
+        @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
+        @ option  t.ocaml_version s_ocaml_version OpamFormat.make_compiler_constraint
+        @ formula t.os            s_os            OpamFormat.make_os_constraint
+        @ List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string
       ~indent_variable:(fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts])
@@ -751,7 +764,10 @@ module OPAM = struct
     let os = OpamFormat.assoc_default OpamFormula.Empty s s_os OpamFormat.parse_os_constraint in
     let parse_file = OpamFormat.parse_option (OpamFormat.parse_string |> OpamFilename.Base.of_string) OpamFormat.parse_filter in
     let patches = OpamFormat.assoc_list s s_patches (OpamFormat.parse_list parse_file) in
-    let files = OpamFormat.assoc_list s s_files (OpamFormat.parse_list parse_file) in
+    let homepage = OpamFormat.assoc_option s s_homepage OpamFormat.parse_string in
+    let authors = OpamFormat.assoc_list s s_authors (OpamFormat.parse_list OpamFormat.parse_string) in
+    let license = OpamFormat.assoc_option s s_license OpamFormat.parse_string in
+    let doc = OpamFormat.assoc_option s s_doc OpamFormat.parse_string in
     let others     =
       OpamMisc.filter_map (function
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
@@ -759,7 +775,8 @@ module OPAM = struct
       ) s in
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
-      files; patches; ocaml_version; os; build_env }
+      patches; ocaml_version; os; build_env;
+      homepage; authors; license; doc }
 end
 
 module Dot_install_raw = struct

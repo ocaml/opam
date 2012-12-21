@@ -413,9 +413,11 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
           (OpamMisc.sub_at 100 synopsis)
   ) names
 
-let info regexps =
+let info ~fields regexps =
   let t = OpamState.load_state () in
   let names = names_of_regexp t ~installed_only:false ~name_only:true ~case_sensitive:false ~all:true regexps in
+
+  let show_fields = List.length fields <> 1 in
 
   let print_one name _ =
 
@@ -442,6 +444,17 @@ let info regexps =
           (String.concat " " (List.map OpamSwitch.to_string aliases)) in
       String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
+    let nv =
+      match OpamPackage.Map.cardinal installed with
+      | 0 ->
+        begin match OpamState.find_packages_by_name t name with
+        | None   -> assert false
+        | Some s -> OpamPackage.Set.choose s
+        end
+      | _ -> fst (OpamPackage.Map.max_binding installed) in
+
+    let opam = OpamState.opam t nv in
+
     (* All the version of the package *)
     let versions = OpamPackage.versions t.packages name in
     if OpamPackage.Version.Set.is_empty versions then
@@ -461,6 +474,7 @@ let info regexps =
       | [v] -> [ "available-version" , v ]
       | l   -> [ "available-versions", String.concat ", " l ] in
 
+(*
     let libraries, syntax = match OpamPackage.Map.cardinal installed with
       | 0 -> [], []
       | _ ->
@@ -479,28 +493,49 @@ let info regexps =
           | [] -> []
           | l  -> [ "syntax", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
         libraries, syntax in
+*)
 
-    List.iter
-      (fun (tit, desc) -> OpamGlobals.msg "%20s: %s\n" tit desc)
-      ( [ "package", OpamPackage.Name.to_string name ]
-        @ installed_version
-        @ available_versions
-        @ libraries
-        @ syntax
-        @ let nv =
-            match OpamPackage.Map.cardinal installed with
-            | 0 ->
-              begin match OpamState.find_packages_by_name t name with
-                | None   -> assert false
-                | Some s -> OpamPackage.Set.choose s
-              end
-            | _ -> fst (OpamPackage.Map.max_binding installed) in
-          let descr = OpamFile.Descr.full (OpamFile.Descr.safe_read (OpamPath.descr t.root nv)) in
-          let short, long = match OpamMisc.cut_at descr '\n' with
-            | None   -> descr, ""
-            | Some p -> p in
-          [ "description", Printf.sprintf "\n%s\n\n%s\n" short (OpamMisc.strip long) ]
-      ) in
+    let authors = match OpamFile.OPAM.authors opam with
+      | [] -> []
+      | l  -> ["authors", String.concat ", " l] in
+
+    let homepage = match OpamFile.OPAM.homepage opam with
+      | None   -> []
+      | Some h -> ["homepage", h] in
+
+    let license = match OpamFile.OPAM.license opam with
+      | None   -> []
+      | Some l -> ["license", l] in
+
+    let doc = match OpamFile.OPAM.doc opam with
+      | None   -> []
+      | Some d -> ["doc",d] in
+
+    let descr =
+      let d = OpamFile.Descr.full (OpamFile.Descr.safe_read (OpamPath.descr t.root nv)) in
+      let short, long = match OpamMisc.cut_at d '\n' with
+        | None   -> d, ""
+        | Some p -> p in
+      ["description", Printf.sprintf "\n%s\n\n%s\n" short (OpamMisc.strip long)] in
+
+    let all_fields =
+      [ "package", OpamPackage.Name.to_string name ]
+      @ homepage
+      @ authors
+      @ license
+      @ doc
+      @ installed_version
+      @ available_versions
+      @ descr in
+
+    let all_fields = match fields with
+      | [] -> all_fields
+      | f  -> List.filter (fun (d,_) -> List.mem d f) all_fields in
+
+    List.iter (fun (f, desc) ->
+      if show_fields then OpamGlobals.msg "%20s: " f;
+      OpamGlobals.msg "%s\n" desc
+    ) all_fields in
 
   OpamPackage.Name.Map.iter print_one names
 
@@ -1019,8 +1054,8 @@ let () =
 let list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str =
  OpamState.check (Read_lock (fun () -> list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str))
 
-let info regexps =
-  OpamState.check (Read_lock (fun () -> info regexps))
+let info ~fields regexps =
+  OpamState.check (Read_lock (fun () -> info ~fields regexps))
 
 let config request =
   OpamState.check (Read_lock (fun () -> OpamConfigCommand.config request))

@@ -29,7 +29,7 @@ val list : print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_s
   -> string list  -> unit
 
 (** Display a general summary of a collection of packages. *)
-val info : string list -> unit
+val info : fields:string list -> string list -> unit
 
 (** Depending on request, return options or directories where the
     package is installed. *)

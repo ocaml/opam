@@ -123,11 +123,20 @@ module OPAM: sig
   (** List of exported syntax extensions *)
   val syntax: t -> section list
 
-  (** Files *)
-  val files: t -> (basename * filter option) list
-
   (** Patches *)
   val patches: t -> (basename * filter option) list
+
+  (** Homepage *)
+  val homepage: t -> string option
+
+  (** Authors *)
+  val authors: t -> string list
+
+  (** License *)
+  val license: t -> string option
+
+  (** API documentation *)
+  val doc: t -> string option
 
   (** Construct as [depends] *)
   val with_depends : t -> formula -> t
@@ -152,9 +161,6 @@ module OPAM: sig
 
   (** Construct as [maintainer] *)
   val with_maintainer: t -> string -> t
-
-  (** Construct as [files] *)
-  val with_files: t -> (basename * filter option) list -> t
 
   (** Construct as [patches] *)
   val with_patches: t -> (basename * filter option) list -> t
@@ -377,9 +383,6 @@ module URL: sig
 
   (** Archive checksum *)
   val checksum: t -> string option
-
-  (** Constructor *)
-  val create: ?checksum:string -> string -> t
 
   (** Constructor *)
   val with_checksum: t -> string -> t

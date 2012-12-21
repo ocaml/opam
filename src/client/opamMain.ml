@@ -352,10 +352,18 @@ let info =
     `P "$(b,opam list) can be used to display the list of
         available packages as well as a short description for each.";
   ] in
-  let pkg_info global_options packages =
+  let fields =
+    let doc =
+      Arg.info
+        ~docv:"FIELDS"
+        ~doc:"Only display these fields. You can specify multiple fields by separating them with commas."
+        ["f";"field"] in
+    Arg.(value & opt (list string) [] & doc) in
+
+  let pkg_info global_options fields packages =
     set_global_options global_options;
-    OpamClient.info packages in
-  Term.(pure pkg_info $global_options $pattern_list),
+    OpamClient.info ~fields packages in
+  Term.(pure pkg_info $global_options $fields $pattern_list),
   term_info "info" ~doc ~man
 
 
