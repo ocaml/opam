@@ -47,6 +47,7 @@ cmdliner-0.9.2.tbz:
 
 cmdliner.stamp: cmdliner-0.9.2.tbz
 	tar xfj cmdliner-0.9.2.tbz
+	rm -rf cmdliner
 	mv cmdliner-0.9.2 cmdliner
 	@touch $@
 
@@ -72,4 +73,4 @@ clean:
 distclean: clean
 	rm -rf cudf extlib ocaml-re ocamlgraph dose cmdliner
 	rm -f depends.ocp
-	rm -f *.tar.gz *.stamp
+	rm -f *.tar.gz *.tbz *.stamp
