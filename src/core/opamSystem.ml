@@ -385,7 +385,7 @@ let flock file =
       let pid = input_line ic in
       close_in ic;
       OpamGlobals.msg
-        "An other process (%s) has already locked %S. Retrying in 1s (%d/%d)\n"
+        "Another process (%s) has already locked %S. Retrying in 1s (%d/%d)\n"
         pid file !l max_l;
       Unix.sleep 1;
       incr l;
