@@ -16,6 +16,8 @@ add liblapack-dev
 add libsdl-dev
 # dbm
 add libgdbm-dev
+# ocamlfuse
+add libfuse-dev
 # liquidsoap
 add libao-dev
 add portaudio19-dev 
