@@ -16,6 +16,8 @@ add liblapack-dev
 add libsdl-dev
 # dbm
 add libgdbm-dev
+# ocamlfuse
+add libfuse-dev
 # liquidsoap
 add libao-dev
 add portaudio19-dev 
@@ -36,6 +38,9 @@ add libgavl-dev
 add liblo-dev
 # lablgtk2
 add libgtk2.0-dev
+add libgtksourceview2.0-dev
+# oqamldebug
+add qt4-qmake
 # lwt-zmq
 add libzmq-dev
 # postgresql-ocaml
