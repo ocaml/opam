@@ -7,7 +7,7 @@ all: man pdf
 
 man:
 	rm man/*
-	$(OPAM) $(HELP) > man/opam.1
+	$(OPAM) $(HELPFMT) > man/opam.1
 	for i in $(TOPICS); do\
 	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1; \
 	done
