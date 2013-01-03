@@ -426,6 +426,13 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt misc} should be processed as follows:
   for each pair \verb+$SRC { $DST }+, the tool should ask the user if
   he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
+\item OPAM will try to install all the file in sequence, and it will
+  fail in case a source filename is not available. To tell OPAM a
+  source filename might not be generated (because of byte/native
+  constraints or because of optional dependencies) the source filename
+  should start by \verb+?+. {\rm Remark:} it is much cleaner if the
+  underlying build-system can generate the right {\tt .install} files,
+  containing the existing files only.
 \end{itemize}
 
 \subsubsection{Pinned Packages: {\tt pinned}}
