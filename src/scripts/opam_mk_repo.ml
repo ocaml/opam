@@ -53,7 +53,7 @@ let all, index, packages, gener_digest, dryrun, recurse =
   ] in
   let ano p = packages := p :: !packages in
   Arg.parse specs ano usage;
-  !all, !index, OpamPackage.Name.Set.of_list (List.map OpamPackage.Name.of_string !packages), !gener_digest, !dryrun, !recurse
+  !all, !index, !packages, !gener_digest, !dryrun, !recurse
 
 let () =
   let local_path = OpamFilename.cwd () in
@@ -61,6 +61,20 @@ let () =
 
   OpamGlobals.root_dir := OpamFilename.Dir.to_string local_path;
   let local_repo = OpamPath.Repository.raw local_path in
+
+  let mk_packages str =
+    let dir = OpamPath.Repository.packages_dir local_repo / str in
+    if OpamFilename.exists_dir dir then
+      let nv = OpamPackage.of_string str in
+      OpamPackage.Set.singleton nv
+    else
+      let n = OpamPackage.Name.of_string str in
+      let versions = OpamPackage.Version.Set.elements (OpamRepository.versions local_repo n) in
+      OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
+  let packages =
+    List.fold_left
+      (fun accu str -> OpamPackage.Set.union accu (mk_packages str))
+      OpamPackage.Set.empty packages in
 
   (* Read urls.txt *)
   log "Reading urls.txt";
@@ -72,40 +86,31 @@ let () =
   let to_add = OpamFilename.Attribute.Set.diff new_index old_index in
 
   (* Compute the transitive closure of packages *)
-  let get_dependencies n =
-    let versions = OpamRepository.versions local_repo n in
-    let depends v =
-      let nv = OpamPackage.create n v in
-      let opam_f = OpamPath.Repository.opam local_repo nv in
-      if OpamFilename.exists opam_f then (
-        let opam = OpamFile.OPAM.read opam_f in
-        let deps = OpamFile.OPAM.depends opam in
-        let depopts = OpamFile.OPAM.depopts opam in
-        OpamFormula.fold_left (fun accu (n,_) ->
-            OpamPackage.Name.Set.add n accu
-        ) OpamPackage.Name.Set.empty (OpamFormula.And (deps, depopts))
-      ) else
-        OpamPackage.Name.Set.empty in
-    OpamPackage.Version.Set.fold (fun v set ->
-      OpamPackage.Name.Set.union (depends v) set
-    ) versions (OpamPackage.Name.Set.singleton n) in
-  let rec get_transitive_dependencies names =
-    let new_names =
-      OpamPackage.Name.Set.fold (fun n set -> OpamPackage.Name.Set.union (get_dependencies n) set) names OpamPackage.Name.Set.empty in
-    if OpamPackage.Name.Set.cardinal names = OpamPackage.Name.Set.cardinal new_names then
-      names
+  let get_dependencies nv =
+    let opam_f = OpamPath.Repository.opam local_repo nv in
+    if OpamFilename.exists opam_f then (
+      let opam = OpamFile.OPAM.read opam_f in
+      let deps = OpamFile.OPAM.depends opam in
+      let depopts = OpamFile.OPAM.depopts opam in
+      OpamFormula.fold_left (fun accu (n,_) ->
+        OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
+      ) OpamPackage.Set.empty (OpamFormula.And (deps, depopts))
+    ) else
+      OpamPackage.Set.empty in
+  let rec get_transitive_dependencies packages =
+    let new_packages =
+      OpamPackage.Set.fold
+        (fun nv set -> OpamPackage.Set.union (get_dependencies nv) set)
+        packages OpamPackage.Set.empty in
+    if OpamPackage.Set.cardinal packages = OpamPackage.Set.cardinal new_packages then
+      packages
     else
-      get_transitive_dependencies new_names in
+      get_transitive_dependencies new_packages in
   let packages =
     if recurse then
       get_transitive_dependencies packages
     else
       packages in
-  let packages =
-    OpamPackage.Name.Set.fold (fun n set ->
-      let versions = OpamRepository.versions local_repo n in
-      OpamPackage.Version.Set.fold (fun v set -> OpamPackage.Set.add (OpamPackage.create n v) set) versions set
-    ) packages OpamPackage.Set.empty in
 
   let nv_set_of_remotes remotes =
     let aux r = OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
@@ -124,6 +129,7 @@ let () =
       to_add
     else
       OpamPackage.Set.inter packages to_add in
+  let to_remove = OpamPackage.Set.diff to_remove to_add in
 
   let errors = ref [] in
   if not index then (
