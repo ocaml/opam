@@ -109,7 +109,7 @@ trailing:
 archive:
 	$(MAKE) -C src_ext distclean
 	$(MAKE) clone
-	tar cz $(wildcard src_ext/*.tar.gz) $(wildcard src_ext/*.tgz) > opam-extfiles.2.tar.gz
+	tar cz $(wildcard src_ext/*.tar.gz) $(wildcard src_ext/*.tbz) > opam-extfiles.2.tar.gz
 
 configure: configure.ac m4/*.m4
 	aclocal -I m4
