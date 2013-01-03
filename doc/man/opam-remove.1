@@ -22,11 +22,17 @@ List of package names.
 \fB\-b\fR, \fB\-\-keep\-build\-dir\fR
 Keep the build directory. This is equivalent to setting \fB$OPAMKEEPBUILDIR\fR to a non\-empty string.
 .TP 4
+\fB\-d\fR, \fB\-\-build\-doc\fR
+Build the package documentation. This is equivalent to setting \fB$OPAMBUILDDOC\fR to a non\-empty string.
+.TP 4
 \fB\-m\fR \fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
 Use \fIMAKE\fR as the default 'make' command.
 .TP 4
 \fB\-n\fR, \fB\-\-no\-checksums\fR
 Do not verify the checksum of downloaded archives. This is equivalent to setting \fB$OPAMNOCHECKSUMS\fR to a non\-empty string.
+.TP 4
+\fB\-t\fR, \fB\-\-build\-test\fR
+Build and \fBrun\fR the package unit\-tests. This is equivalent to setting \fB$OPAMBUILDTEST\fR to a non\-empty string.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.

@@ -1,18 +1,116 @@
-usage: opam [--version]
-            [--help]
-            <command> [<args>]
-
-The most commonly used opam commands are:
-   init         Initialize OPAM state.
-   list         Display the list of available packages.
-   info         Display information about specific packages.
-   install      Install a list of packages.
-   remove       Remove a list of packages.
-   update       Update the list of available packages.
-   upgrade      Upgrade the installed package to latest version.
-   config       Display configuration options for packages.
-   repository   Manage OPAM repositories.
-   switch       Manage multiple installation of compilers.
-   pin          Pin a given package to a specific version.
-
-See 'opam help <command>' for more information on a specific command.
+.\" Pipe this output to groff -man -Tutf8 | less
+.\"
+.TH "OPAM" 1 "" "Opam 0.9.0" "Opam Manual"
+.\" Disable hyphenantion and ragged-right
+.nh
+.ad l
+.SH NAME
+.P
+opam \- a Package Manager for OCaml
+.SH SYNOPSIS
+.P
+\fBopam\fR \fICOMMAND\fR ...
+.SH DESCRIPTION
+.P
+OPAM is a package manager for OCaml. It uses the powerful mancoosi tools to handle dependencies, including support for version constraints, optional dependencies, and conflicts management.
+.P
+It has support for different repository backends such as HTTP, rsync, git and darcs. It handles multiple OCaml versions concurrently, and is flexible enough to allow you to use your own repositories and packages in addition of the ones it provides.
+.P
+Use either \fBopam <command> \-\-help\fR or \fBopam help <command>\fR for more information on a specific command.
+.SH COMMANDS
+.TP 4
+\fBconfig\fR
+Display configuration options for packages.
+.TP 4
+\fBhelp\fR
+Display help about OPAM and OPAM commands.
+.TP 4
+\fBinfo\fR
+Display information about specific packages.
+.TP 4
+\fBinit\fR
+Initialize OPAM state.
+.TP 4
+\fBinstall\fR
+Install a list of packages.
+.TP 4
+\fBlist\fR
+Display the list of available packages.
+.TP 4
+\fBpin\fR
+Pin a given package to a specific version.
+.TP 4
+\fBreinstall\fR
+Reinstall a list of packages.
+.TP 4
+\fBremote\fR
+Manage OPAM repositories.
+.TP 4
+\fBremove\fR
+Remove a list of packages.
+.TP 4
+\fBrepository\fR
+Manage OPAM repositories.
+.TP 4
+\fBsearch\fR
+Search into the package list.
+.TP 4
+\fBswitch\fR
+Manage multiple installation of compilers.
+.TP 4
+\fBupdate\fR
+Update the list of available packages.
+.TP 4
+\fBupgrade\fR
+Upgrade the installed package to latest version.
+.TP 4
+\fBupload\fR
+Upload a package to an OPAM repository.
+.SH COMMON OPTIONS
+.P
+These options are common to all commands.
+.TP 4
+\fB\-\-debug\fR
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-no\-base\-packages\fR
+Do not install base packages (useful for testing purposes). This is equivalent to setting \fB$OPAMNOBASEPACKAGES\fR to a non\-empty string.
+.TP 4
+\fB\-q\fR, \fB\-\-quiet\fR
+Be quiet when installing a new compiler.
+.TP 4
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
+.TP 4
+\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
+.TP 4
+\fB\-v\fR, \fB\-\-verbose\fR
+Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
+.TP 4
+\fB\-\-version\fR
+Show version information.
+.TP 4
+\fB\-y\fR, \fB\-\-yes\fR
+Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
+.SH FURTHER DOCUMENTATION
+.P
+See http://opam.ocamlpro.com.
+.SH AUTHORS
+.P
+Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
+.sp -1
+.P
+Frederic Tuong <tuong@users.gforge.inria.fr>
+.sp -1
+.P
+Vincent Bernardoff <vb@luminar.eu.org>
+.sp -1
+.P
+Guillem Rieu <guillem.rieu@ocamlpro.com>
+.SH BUGS
+.P
+Check bug reports at https://github.com/OCamlPro/opam/issues.
