@@ -225,6 +225,10 @@ let string_of_commands commands =
   else
     "Nothing to do."
 
+let compilation_env t opam =
+  let env0 = OpamState.get_env t in
+  OpamState.update_env t env0 (OpamFile.OPAM.build_env opam)
+
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
   OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
@@ -234,6 +238,7 @@ let proceed_to_delete ~rm_build t nv =
   let opam_f = OpamPath.opam t.root nv in
   if OpamFilename.exists opam_f then (
     let opam = OpamState.opam t nv in
+    let env = compilation_env t opam in
     match OpamState.filter_commands t (OpamFile.OPAM.remove opam) with
     | []     -> ()
     | remove ->
@@ -255,7 +260,11 @@ let proceed_to_delete ~rm_build t nv =
       );
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
-        OpamFilename.exec ~add_to_path:[OpamPath.Switch.bin t.root t.switch] p_build remove
+        OpamFilename.exec
+          ~add_to_env:env.add_to_env
+          ~add_to_path:[OpamPath.Switch.bin t.root t.switch]
+          p_build
+          remove
       with _ ->
         ();
   );
@@ -334,8 +343,7 @@ let proceed_to_change t nv_old nv =
   let opam = OpamState.opam t nv in
 
   (* Get the env variables set up in the compiler description file *)
-  let env0 = OpamState.get_env t in
-  let env = OpamState.update_env t env0 (OpamFile.OPAM.build_env opam) in
+  let env = compilation_env t opam in
 
   (* Prepare the package for the build. *)
 
