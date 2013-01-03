@@ -87,7 +87,7 @@ let repository_name =
   parse, print
 
 let repository_address =
-  let parse str = `Ok (OpamFilename.raw_dir str) in
+  let parse str = `Ok (OpamRepository.repository_address str) in
   let print ppf address = pr_str ppf (OpamFilename.Dir.to_string address) in
   parse, print
 
