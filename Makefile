@@ -107,10 +107,9 @@ trailing:
 	find src -name "*xxx" -exec rm {} \;
 
 archive:
-	echo $(ARCHIVES)
-	$(MAKE) distclean
+	$(MAKE) -C src_ext distclean
 	$(MAKE) clone
-	tar cz $(wildcard src_ext/*.tar.gz) > opam-extfiles.1.tar.gz
+	tar cz $(wildcard src_ext/*.tar.gz) $(wildcard src_ext/*.tgz) > opam-extfiles.2.tar.gz
 
 configure: configure.ac m4/*.m4
 	aclocal -I m4
