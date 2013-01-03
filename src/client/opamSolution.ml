@@ -23,7 +23,7 @@ let proceed_to_install t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
-    OpamGlobals.msg "Installing %s\n" (OpamPackage.to_string nv);
+    OpamGlobals.msg "Installing %s.\n" (OpamPackage.to_string nv);
     let t = OpamState.load_state () in
     let name = OpamPackage.name nv in
     let opam_f = OpamPath.opam t.root nv in
@@ -214,12 +214,20 @@ let extract_package t nv =
     match get_archive t nv with
     | None         -> ()
     | Some archive ->
-      OpamGlobals.msg "Extracting %s\n" (OpamFilename.to_string archive);
+      OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
       OpamFilename.extract archive build_dir
+
+let string_of_commands commands =
+  let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
+  "  " ^
+  if commands_s <> [] then
+    String.concat "\n  " commands_s
+  else
+    "Nothing to do."
 
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
-  OpamGlobals.msg "Uninstalling %s\n" (OpamPackage.to_string nv);
+  OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -245,8 +253,11 @@ let proceed_to_delete ~rm_build t nv =
         try extract_package t nv
         with _ -> OpamFilename.mkdir p_build;
       );
-      try OpamFilename.exec ~add_to_path:[OpamPath.Switch.bin t.root t.switch] p_build remove
-      with _ -> ();
+      try
+        OpamGlobals.msg "%s\n" (string_of_commands remove);
+        OpamFilename.exec ~add_to_path:[OpamPath.Switch.bin t.root t.switch] p_build remove
+      with _ ->
+        ();
   );
 
   (* Remove the libraries *)
@@ -301,7 +312,7 @@ let proceed_to_delete ~rm_build t nv =
   | [], [] -> OpamFilename.rmdir share
   | _      ->
     OpamGlobals.msg
-      "%s is not empty, I'm keeping its content for futur installations"
+      "%s is not empty, I'm keeping its content for futur installations."
       (OpamFilename.Dir.to_string share));
 
   (* Remove .config and .install *)
@@ -351,7 +362,7 @@ let proceed_to_change t nv_old nv =
     let root = OpamPath.Switch.build t.root t.switch nv in
     let patch = root // OpamFilename.Base.to_string base in
     if OpamState.eval_filter t filter then (
-      OpamGlobals.msg "Applying %s\n" (OpamFilename.Base.to_string base);
+      OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
       OpamFilename.patch patch p_build)
   ) patches;
 
@@ -370,11 +381,7 @@ let proceed_to_change t nv_old nv =
   (* Exec the given commands. *)
   let exec name f =
     let commands = OpamState.filter_commands t (f opam) in
-    let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-    if commands_s <> [] then
-      OpamGlobals.msg "%s:\n  %s\n" name (String.concat "\n  " commands_s)
-    else
-      OpamGlobals.msg "Nothing to do.\n";
+    OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
     OpamFilename.exec
       ~add_to_env:env.add_to_env
       ~add_to_path:[env.add_to_path]
@@ -382,7 +389,7 @@ let proceed_to_change t nv_old nv =
       commands in
     try
       (* First, we build the package. *)
-      exec "Building the package" OpamFile.OPAM.build;
+      exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
 
       (* If necessary, build and run the test. *)
       if !OpamGlobals.build_test then

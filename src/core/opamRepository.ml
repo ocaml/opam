@@ -211,11 +211,11 @@ let copy_files local_repo nv =
       let dst = local_dir // OpamFilename.Base.to_string (OpamFilename.basename f) in
       if OpamFilename.exists dst then
         OpamGlobals.warning
-          "Skipping %s as it already exists in %s"
+          "Skipping %s as it already exists in %s."
           (OpamFilename.to_string f)
           (OpamFilename.Dir.to_string local_dir)
       else (
-        OpamGlobals.msg "Copying %s\n" (OpamFilename.Base.to_string (OpamFilename.basename f));
+        OpamGlobals.msg "Copying %s.\n" (OpamFilename.Base.to_string (OpamFilename.basename f));
         OpamFilename.copy_in f local_dir
       )
     ) files;
@@ -253,7 +253,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
             begin match checksum with
             | Some c when c <> digest ->
               OpamGlobals.msg
-                "Wrong checksum for %s (waiting: %s, got: %s)\nFixing %s ...\n"
+                "Wrong checksum for %s: waiting for %s, got %s. Fixing %s.\n"
                 (OpamFilename.to_string local_archive) c digest (OpamFilename.to_string url_f);
             | _ -> ();
             end;
@@ -289,7 +289,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
     if local_path <> None || not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_f then (
       OpamFilename.mkdir (OpamPath.Repository.archives_dir local_repo);
       let local_archive = OpamPath.Repository.archive local_repo nv in
-      OpamGlobals.msg "Creating %s\n" (OpamFilename.to_string local_archive);
+      OpamGlobals.msg "Creating %s.\n" (OpamFilename.to_string local_archive);
       OpamFilename.exec extract_root [
         [ "tar" ; "czf" ; OpamFilename.to_string local_archive ; OpamPackage.to_string nv ]
       ]
