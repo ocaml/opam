@@ -50,20 +50,22 @@ let implicits t ns =
     else
       [] in
   let names =
-    if ns = [] then
-      List.map OpamPackage.name (OpamPackage.Set.elements t.packages)
-    else
-      ns in
+    OpamPackage.Name.Set.of_list (
+      if ns = [] then
+        List.map OpamPackage.name (OpamPackage.Set.elements t.packages)
+      else
+        ns
+    ) in
   (* keep only the existing packages *)
   let names =
-    List.filter (fun n ->
+    OpamPackage.Name.Set.filter (fun n ->
       OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.packages
     ) names in
   List.fold_left
     (fun accu variable ->
-      List.fold_left (fun accu name ->
+      OpamPackage.Name.Set.fold (fun name accu ->
         OpamVariable.Full.create_global name (OpamVariable.of_string variable) :: accu
-      ) accu names
+      ) names accu
     ) global_implicits [ "installed"; "enable" ]
 
 (* List all the available variables *)
