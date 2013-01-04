@@ -106,10 +106,25 @@ trailing:
 	  sed -i xxx -e :a -e "/^\n*$$/{$$d;N;ba" -e '}' {} \;
 	find src -name "*xxx" -exec rm {} \;
 
+OPAM_FULL  = opam-full-$(version)
+OPAM_FILES = $(wildcard src_ext/*.tar.gz)\
+	     $(wildcard src_ext/*.tbz)\
+	     $(shell git ls-tree --name-only -r HEAD)
+
 archive:
 	$(MAKE) -C src_ext distclean
 	$(MAKE) clone
-	tar cz $(wildcard src_ext/*.tar.gz) $(wildcard src_ext/*.tbz) > opam-extfiles.2.tar.gz
+	rm -f $(OPAM_FULL) $(OPAM_FULL).tar.gz
+	ln -s . $(OPAM_FULL)
+	tar cz $(addprefix $(OPAM_FULL)/,$(OPAM_FILES)) > $(OPAM_FULL).tar.gz
+	rm -f $(OPAM_FULL)
+
+upload: archive
+	read -p "Upload $(OPAM_FULL_TARGZ) [Y/n]?" choice;\
+	case x"$$choice" in \
+	  x|xy|xY ) scp $(OPAM_FULL).tar.gz webmaster@ocamlpro.com:pub/;;\
+	  * ) echo "Cancelled.";;\
+	esac
 
 configure: configure.ac m4/*.m4
 	aclocal -I m4
