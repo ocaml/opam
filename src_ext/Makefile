@@ -3,7 +3,7 @@ include ../Makefile.config
 CUDF     = cudf-0.6.3
 EXTLIB   = extlib-1.5.3
 DOSE     = dose3-3.1.2
-CMDLINER = cmdliner-0.9.2
+CMDLINER = cmdliner-0.9.3
 GRAPH    = ocamlgraph-1.8.1
 RE       = ocaml-re.1.1
 
