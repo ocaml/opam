@@ -1,5 +1,12 @@
 include ../Makefile.config
 
+CUDF     = cudf-0.6.3
+EXTLIB   = extlib-1.5.3
+DOSE     = dose3-3.1.2
+CMDLINER = cmdliner-0.9.2
+GRAPH    = ocamlgraph-1.8.1
+RE       = ocaml-re.1.1
+
 all: clone depends.ocp
 
 depends.ocp: depends.ocp.boot
@@ -7,22 +14,23 @@ depends.ocp: depends.ocp.boot
 
 clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp cmdliner.stamp
 
-cudf-0.6.3.tar.gz:
-	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31910/cudf-0.6.3.tar.gz
 
-cudf.stamp: cudf-0.6.3.tar.gz
-	tar xfz cudf-0.6.3.tar.gz
+$(CUDF).tar.gz:
+	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31910/$(CUDF).tar.gz
+
+cudf.stamp: $(CUDF).tar.gz
+	tar xfz $(CUDF).tar.gz
 	rm -rf cudf
-	mv cudf-0.6.3 cudf
+	mv $(CUDF) cudf
 	@touch $@
 
-extlib-1.5.3.tar.gz:
-	$(FETCH) http://ocaml-extlib.googlecode.com/files/extlib-1.5.3.tar.gz
+$(EXTLIB).tar.gz:
+	$(FETCH) http://ocaml-extlib.googlecode.com/files/$(EXTLIB).tar.gz
 
-extlib.stamp: extlib-1.5.3.tar.gz
-	tar xfz extlib-1.5.3.tar.gz
+extlib.stamp: $(EXTLIB).tar.gz
+	tar xfz $(EXTLIB).tar.gz
 	rm -rf extlib
-	mv extlib-1.5.3 extlib
+	mv $(EXTLIB) extlib
 	@touch $@
 
 dose3-git:
@@ -33,38 +41,38 @@ dose3-git:
 	  git clone --depth 1 git://scm.gforge.inria.fr/dose/dose.git dose; \
 	fi
 
-dose3-3.1.2.tar.gz:
-	$(FETCH) https://gforge.inria.fr/frs/download.php/31595/dose3-3.1.2.tar.gz
+$(DOSE).tar.gz:
+	$(FETCH) https://gforge.inria.fr/frs/download.php/31595/$(DOSE).tar.gz
 
-dose.stamp: dose3-3.1.2.tar.gz
-	tar xfz dose3-3.1.2.tar.gz
+dose.stamp: $(DOSE).tar.gz
+	tar xfz $(DOSE).tar.gz
 	rm -rf dose
-	mv dose3-3.1.2 dose
+	mv $(DOSE) dose
 	@touch $@
 
-cmdliner-0.9.2.tbz:
-	$(FETCH) http://erratique.ch/software/cmdliner/releases/cmdliner-0.9.2.tbz
+$(CMDLINER).tbz:
+	$(FETCH) http://erratique.ch/software/cmdliner/releases/$(CMDLINER).tbz
 
-cmdliner.stamp: cmdliner-0.9.2.tbz
-	tar xfj cmdliner-0.9.2.tbz
+cmdliner.stamp: $(CMDLINER).tbz
+	tar xfj $(CMDLINER).tbz
 	rm -rf cmdliner
-	mv cmdliner-0.9.2 cmdliner
+	mv $(CMDLINER) cmdliner
 	@touch $@
 
-ocamlgraph-1.8.1.tar.gz:
-	$(FETCH) http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.1.tar.gz
+$(GRAPH).tar.gz:
+	$(FETCH) http://ocamlgraph.lri.fr/download/$(GRAPH).tar.gz
 
-ocamlgraph.stamp: ocamlgraph-1.8.1.tar.gz
-	tar xfz ocamlgraph-1.8.1.tar.gz
+ocamlgraph.stamp: $(GRAPH).tar.gz
+	tar xfz $(GRAPH).tar.gz
 	rm -rf ocamlgraph
-	mv ocamlgraph-1.8.1 ocamlgraph
+	mv $(GRAPH) ocamlgraph
 	@touch $@
 
-ocaml-re.1.1.tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/ocaml-re.1.1.tar.gz
+$(RE).tar.gz:
+	$(FETCH) http://www.ocamlpro.com/pub/$(RE).tar.gz
 
-ocaml-re.stamp: ocaml-re.1.1.tar.gz
-	tar xfz ocaml-re.1.1.tar.gz
+ocaml-re.stamp: $(RE).tar.gz
+	tar xfz $(RE).tar.gz
 	@touch $@
 
 clean:
