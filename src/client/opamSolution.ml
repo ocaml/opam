@@ -256,14 +256,18 @@ let proceed_to_delete ~rm_build t nv =
       && OpamState.mem_repository t nv
       && not (List.for_all use_ocamlfind remove) then (
         try extract_package t nv
-        with _ -> OpamFilename.mkdir p_build;
+        with _ -> ()
       );
+      let exec_dir =
+        if OpamFilename.exists_dir p_build
+        then p_build
+        else t.root in
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
         OpamFilename.exec
           ~add_to_env:env.add_to_env
           ~add_to_path:[OpamPath.Switch.bin t.root t.switch]
-          p_build
+          exec_dir
           remove
       with _ ->
         ();

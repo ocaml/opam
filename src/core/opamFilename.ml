@@ -61,7 +61,7 @@ let in_dir dirname fn =
     OpamGlobals.error_and_exit "%s does not exist!" dirname
 
 let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
-  OpamSystem.in_dir (Dir.to_string dirname)
+  in_dir dirname
     (fun () ->
       OpamSystem.commands
         ~add_to_env
