@@ -17,14 +17,19 @@
 open OpamTypes
 open OpamFilename.OP
 
+let normalize = ref false
+
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
   let specs = [
-    ("--version", Arg.Unit OpamVersion.message, " Display version information")
+    ("--version", Arg.Unit OpamVersion.message, " Display version information");
+    ("--normalize", Arg.Set normalize         , " Normalize all files in the repository");
   ] in
   let ano x =
     Printf.eprintf "%s: invalid argument" x in
   Arg.parse specs ano usage
+
+let write f_write fic st = if !normalize then f_write fic st
 
 let () =
   let t = OpamPath.Repository.raw (OpamFilename.cwd ()) in
@@ -33,22 +38,22 @@ let () =
 
     (** Descr *)
     let descr = OpamPath.Repository.descr t nv in
-    OpamFile.Descr.write descr (OpamFile.Descr.read descr);
+    write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (** OPAM *)
     let opam = OpamPath.Repository.opam t nv in
-    OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
+    write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
 
     (** URL *)
     let url = OpamPath.Repository.url t nv in
     if OpamFilename.exists url then (
-      OpamFile.URL.write url (OpamFile.URL.read url);
+      write OpamFile.URL.write url (OpamFile.URL.read url);
     );
 
     (** Dot_install *)
     let dot_install = OpamPath.Repository.files t nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install") in
     if OpamFilename.exists dot_install then (
-      OpamFile.Dot_install.Raw.write dot_install (OpamFile.Dot_install.Raw.read dot_install);
+      write OpamFile.Dot_install.Raw.write dot_install (OpamFile.Dot_install.Raw.read dot_install);
     );
   ) (OpamRepository.packages t);
 
@@ -57,5 +62,5 @@ let () =
   List.iter (fun comp ->
     let comp_ = OpamFile.Comp.read comp in
     OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string (OpamFile.Comp.name comp_));
-    OpamFile.Comp.write comp comp_;
+    write OpamFile.Comp.write comp comp_;
   ) comps
