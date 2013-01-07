@@ -248,20 +248,18 @@ let run_process ?verbose ?path ?(add_to_env=[]) ?(add_to_path=[]) = function
       log "[%s] %s" (Filename.basename name) str;
       if None <> try Some (String.index cmd ' ') with Not_found -> None then
         OpamGlobals.warning "Command %S contains 1 space" cmd;
-      let verb = match verbose with
+      let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
       let cmd_exists =
         OpamProcess.run ~env ~name:(log_file ()) ~verbose:false "which" [cmd] in
       OpamProcess.clean_files cmd_exists;
       if OpamProcess.is_success cmd_exists then (
-        let r = OpamProcess.run ~env ~name ~verbose:verb cmd args in
+        let r = OpamProcess.run ~env ~name ~verbose cmd args in
         if not !OpamGlobals.debug then
           OpamProcess.clean_files r;
         r
-      ) else if verbose <> Some false then
-        OpamGlobals.error_and_exit "%S: command not found\n" cmd
-      else
+      ) else
         internal_error "%S: command not found\n" cmd
 
 let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
@@ -366,7 +364,7 @@ let extract file dst =
 
 let extract_in file dst =
   if not (Sys.file_exists dst) then
-    OpamGlobals.error_and_exit "%s does not exist" file;
+    internal_error "%s does not exist" file;
   match Tar.extract_function file with
   | None   -> internal_error "%s is not a valid archive" file
   | Some f -> f dst
@@ -415,7 +413,7 @@ let funlock file =
         OpamGlobals.log id "unlocking %s" file;
         Unix.unlink file;
       ) else
-        OpamGlobals.error_and_exit "cannot unlock %s (%s)" file s
+        internal_error "cannot unlock %s (%s)" file s
     with _ ->
       OpamGlobals.error "%s is broken, removing it and continuing anyway ..." file;
         close_in ic;
@@ -484,7 +482,7 @@ let really_download ~overwrite ~src ~dst =
   | Internal_error s as e ->
     OpamGlobals.error "%s" s;
     raise e
-  | _ -> OpamGlobals.error_and_exit "Cannot download %s, please check your connection settings." src
+  | _ -> internal_error "Cannot download %s, please check your connection settings." src
 
 let download ~overwrite ~filename:src ~dirname:dst =
   let dst_file = dst / Filename.basename src in
@@ -505,14 +503,14 @@ let patch =
   let max_trying = 20 in
   fun p ->
     if not (Sys.file_exists p) then
-      OpamGlobals.error_and_exit "Cannot find %s" p;
+      internal_error "Cannot find %s" p;
     let patch ~dryrun n =
       let opts = if dryrun then ["--dry-run"] else [] in
       let verbose = if dryrun then Some false else None in
       command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
     let rec aux n =
       if n = max_trying then
-        OpamGlobals.error_and_exit "Application of patch %s failed, can not determine the '-p' level to patch." p
+        internal_error "Application of patch %s failed, can not determine the '-p' level to patch." p
       else if None = try Some (patch ~dryrun:true n) with _ -> None then
         aux (succ n)
       else
