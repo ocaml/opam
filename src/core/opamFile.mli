@@ -35,6 +35,12 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
+  (** Read from channel. *)
+  val read_from_channel: in_channel -> t
+
+  (** Write to channel. *)
+  val write_to_channel: out_channel -> t -> unit
+
 end
 
 (** Configuration file: [$opam/config] *)

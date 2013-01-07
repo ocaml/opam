@@ -21,10 +21,10 @@ open OpamTypes
 val install: quiet:bool -> switch -> compiler -> unit
 
 (** Import a file which contains the packages to install *)
-val import: filename -> unit
+val import: filename option -> unit
 
 (** Export a file which contains the installed packages *)
-val export: filename -> unit
+val export: filename option -> unit
 
 (** Remove the given compiler switch *)
 val remove: switch -> unit

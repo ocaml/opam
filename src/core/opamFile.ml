@@ -27,10 +27,10 @@ module Lines = struct
 
   let empty = []
 
-  let of_string _ raw =
+  let of_string raw =
     OpamLineLexer.main (Lexing.from_string raw)
 
-  let to_string _ lines =
+  let to_string lines =
     let buf = Buffer.create 1024 in
     List.iter (fun l ->
       Buffer.add_string buf (String.concat " " l);
@@ -48,17 +48,17 @@ module Syntax = struct
 
   let empty = OpamFormat.empty
 
-  let of_string f str =
+  let of_string filename str =
+    let filename = OpamFilename.to_string filename in
     try
       let lexbuf = Lexing.from_string str in
-      let filename = OpamFilename.to_string f in
       lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
       OpamParser.main OpamLexer.token lexbuf filename
     with e ->
-      OpamGlobals.error "Parsing error while reading %s" (OpamFilename.to_string f);
+      OpamGlobals.error "Parsing error while reading %s" filename;
       raise e
 
-  let to_string ?(indent_variable = fun _ -> false) _ t =
+  let to_string ?(indent_variable = fun _ -> false) t =
     OpamFormat.string_of_file ~indent_variable t
 
   let check f fields =
@@ -90,8 +90,8 @@ module Filenames = struct
 
   let empty = OpamFilename.Set.empty
 
-  let of_string f s =
-    let lines = Lines.of_string f s in
+  let of_string _ s =
+    let lines = Lines.of_string s in
     let lines = OpamMisc.filter_map (function
       | []  -> None
       | [f] -> Some (OpamFilename.of_string f)
@@ -100,10 +100,10 @@ module Filenames = struct
     ) lines in
     OpamFilename.Set.of_list lines
 
-  let to_string f s =
+  let to_string _ s =
     let lines =
       List.map (fun f -> [OpamFilename.to_string f]) (OpamFilename.Set.elements s) in
-    Lines.to_string f lines
+    Lines.to_string lines
 
 end
 
@@ -115,18 +115,18 @@ module Urls_txt = struct
 
   let empty = OpamFilename.Attribute.Set.empty
 
-  let of_string f s =
-    let lines = Lines.of_string f s in
+  let of_string _ s =
+    let lines = Lines.of_string s in
     let rs = OpamMisc.filter_map (function
       | [] -> None
       | l  -> Some (OpamFilename.Attribute.of_string (String.concat " " l))
     ) lines in
     OpamFilename.Attribute.Set.of_list rs
 
-  let to_string f t =
+  let to_string _ t =
     let lines =
       List.map (fun r -> [OpamFilename.Attribute.to_string r]) (OpamFilename.Attribute.Set.elements t) in
-    Lines.to_string f lines
+    Lines.to_string lines
 
 end
 
@@ -188,7 +188,7 @@ module URL = struct
         | None   -> []
         | Some c -> [Variable (s_checksum, OpamFormat.make_string c)]
     } in
-    Syntax.to_string filename s
+    Syntax.to_string s
 
   let url t = t.url
   let kind t = t.kind
@@ -206,8 +206,8 @@ module Updated = struct
 
   let empty = OpamPackage.Set.empty
 
-  let of_string f s =
-    let lines = Lines.of_string f s in
+  let of_string _ s =
+    let lines = Lines.of_string s in
     let map = ref empty in
     let add n v = map := OpamPackage.Set.add (OpamPackage.create n v) !map in
     List.iter (function
@@ -265,8 +265,8 @@ module Repo_index = struct
 
   let empty = OpamPackage.Name.Map.empty
 
-  let of_string filename str =
-    let lines = Lines.of_string filename str in
+  let of_string _ str =
+    let lines = Lines.of_string str in
     List.fold_left (fun map -> function
       | name_s :: repo_s ->
           let name = OpamPackage.Name.of_string name_s in
@@ -278,12 +278,12 @@ module Repo_index = struct
       | [] -> map
     ) OpamPackage.Name.Map.empty lines
 
-  let to_string filename map =
+  let to_string _ map =
     let lines = OpamPackage.Name.Map.fold (fun name repo_s lines ->
       let repo_s = List.map OpamRepositoryName.to_string repo_s in
       (OpamPackage.Name.to_string name :: repo_s) :: lines
     ) map [] in
-    Lines.to_string filename (List.rev lines)
+    Lines.to_string (List.rev lines)
 
 end
 
@@ -295,8 +295,8 @@ module Pinned = struct
 
   let empty = OpamPackage.Name.Map.empty
 
-  let of_string filename str =
-    let lines = Lines.of_string filename str in
+  let of_string _ str =
+    let lines = Lines.of_string str in
     let add name_s pin map =
       let name = OpamPackage.Name.of_string name_s in
       if OpamPackage.Name.Map.mem name map then
@@ -312,7 +312,7 @@ module Pinned = struct
       | _     -> OpamGlobals.error_and_exit "too many pinning options"
     ) OpamPackage.Name.Map.empty lines
 
-  let to_string filename map =
+  let to_string _ map =
     let lines = OpamPackage.Name.Map.fold (fun name pin lines ->
       let l = [
         OpamPackage.Name.to_string name;
@@ -321,7 +321,7 @@ module Pinned = struct
       ] in
       l :: lines
     ) map [] in
-    Lines.to_string filename (List.rev lines)
+    Lines.to_string (List.rev lines)
 
 end
 
@@ -364,7 +364,7 @@ module Repo_config = struct
         Variable (s_kind    , OpamFormat.make_string (string_of_repository_kind t.repo_kind));
         Variable (s_priority, OpamFormat.make_int t.repo_priority);
       ] } in
-    Syntax.to_string filename s
+    Syntax.to_string s
 
 end
 
@@ -399,15 +399,15 @@ module Aliases = struct
 
   let empty = OpamSwitch.Map.empty
 
-  let to_string filename t =
+  let to_string _ t =
     let l =
       OpamSwitch.Map.fold (fun switch compiler lines ->
         [OpamSwitch.to_string switch; OpamCompiler.to_string compiler] :: lines
       ) t [] in
-    Lines.to_string filename l
+    Lines.to_string l
 
-  let of_string filename s =
-    let l = Lines.of_string filename s in
+  let of_string _ s =
+    let l = Lines.of_string s in
     List.fold_left (fun map -> function
       | []            -> map
       | [switch; comp] -> OpamSwitch.Map.add (OpamSwitch.of_string switch) (OpamCompiler.of_string comp) map
@@ -542,7 +542,7 @@ module Config = struct
          Variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
        ]
      } in
-     Syntax.to_string filename s
+     Syntax.to_string s
 end
 
 module OPAM = struct
@@ -730,7 +730,7 @@ module OPAM = struct
     } in
     Syntax.to_string
       ~indent_variable:(fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts])
-      filename s
+      s
 
   let of_string filename str =
     let nv = OpamPackage.of_filename filename in
@@ -875,7 +875,7 @@ module Dot_install_raw = struct
         Variable (s_share   , OpamFormat.make_list make_option t.share);
       ]
     } in
-    Syntax.to_string ~indent_variable:(fun _ -> true) filename s
+    Syntax.to_string ~indent_variable:(fun _ -> true) s
 
   let of_string filename str =
     let s = Syntax.of_string filename str in
@@ -1055,7 +1055,7 @@ module Dot_config = struct
             Variable (s_requires, OpamFormat.make_list make_require s.requires);
           ] @ of_variables s.lvariables
         } in
-    Syntax.to_string filename {
+    Syntax.to_string {
       file_name     = OpamFilename.to_string filename;
       file_contents =
         of_variables t.variables
@@ -1108,8 +1108,8 @@ module Env = struct
 
   let empty = []
 
-  let of_string filename s =
-    let l = Lines.of_string filename s in
+  let of_string _ s =
+    let l = Lines.of_string s in
     List.fold_left (fun accu -> function
       | []  -> accu
       | [s] ->
@@ -1119,9 +1119,9 @@ module Env = struct
       | x   -> failwith (String.concat " " x ^ ": invalid env variable")
     ) [] l
 
-  let to_string filename t =
+  let to_string _ t =
     let l = List.map (fun (k,v) -> [ k^"="^v ]) t in
-    Lines.to_string filename l
+    Lines.to_string l
 
 end
 
@@ -1304,7 +1304,7 @@ module Comp = struct
     let make_ppflag = function
       | Cmd l    -> OpamFormat.make_list OpamFormat.make_string l
       | Camlp4 l -> List (Symbol "CAMLP4" :: List.map OpamFormat.make_string l) in
-    Syntax.to_string filename {
+    Syntax.to_string {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
         Variable (s_opam_version, OpamFormat.make_string (OpamVersion.to_string s.opam_version));
@@ -1412,6 +1412,19 @@ module Make (F : F) = struct
       F.empty
     )
 
+  let dummy_file = OpamFilename.of_string "<dummy>"
+
+  let read_from_channel ic =
+    let n = in_channel_length ic in
+    let s = String.create n in
+    really_input ic s 0 n;
+    try F.of_string dummy_file s
+    with OpamFormat.Bad_format msg ->
+      OpamGlobals.error_and_exit "%s" msg
+
+  let write_to_channel oc str =
+    output_string oc (F.to_string dummy_file str)
+
 end
 
 open X
@@ -1422,6 +1435,8 @@ module type IO_FILE = sig
   val write: filename -> t -> unit
   val read : filename -> t
   val safe_read: filename -> t
+  val read_from_channel: in_channel -> t
+  val write_to_channel: out_channel -> t -> unit
 end
 
 module Config = struct
