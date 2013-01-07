@@ -248,19 +248,21 @@ let run_process ?verbose ?path ?(add_to_env=[]) ?(add_to_path=[]) = function
       log "[%s] %s" (Filename.basename name) str;
       if None <> try Some (String.index cmd ' ') with Not_found -> None then
         OpamGlobals.warning "Command %S contains 1 space" cmd;
-      let verbose = match verbose with
+      let verb = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
       let cmd_exists =
         OpamProcess.run ~env ~name:(log_file ()) ~verbose:false "which" [cmd] in
       OpamProcess.clean_files cmd_exists;
       if OpamProcess.is_success cmd_exists then (
-        let r = OpamProcess.run ~env ~name ~verbose cmd args in
+        let r = OpamProcess.run ~env ~name ~verbose:verb cmd args in
         if not !OpamGlobals.debug then
           OpamProcess.clean_files r;
         r
-      ) else
+      ) else if verbose <> Some false then
         OpamGlobals.error_and_exit "%S: command not found\n" cmd
+      else
+        internal_error "%S: command not found\n" cmd
 
 let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
   let r = run_process ?verbose ~add_to_env ~add_to_path cmd in
