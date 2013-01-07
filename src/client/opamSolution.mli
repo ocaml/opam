@@ -35,12 +35,6 @@ val resolve_and_apply:
 (** Raise an error if no solution is found *)
 val error_if_no_solution: solver_result -> unit
 
-(** Raise an error because a package is unknown *)
-val unknown_package: name -> version option -> 'a
-
-(** Raise an error because a package in unavailable *)
-val unavailable_package: name -> version option -> 'a
-
 (** {2 Atoms} *)
 
 (** Return an atom with a string version constraint *)

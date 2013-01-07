@@ -38,6 +38,23 @@ let confirm fmt =
       true
   ) fmt
 
+let unknown_package name version =
+  match version with
+  | None   -> OpamGlobals.error_and_exit "%S is not a valid package.\n" (OpamPackage.Name.to_string name)
+  | Some v -> OpamGlobals.error_and_exit "The package %S has no version %s." (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v)
+
+let unavailable_package name version =
+  match version with
+  | None   ->
+    OpamGlobals.error_and_exit
+      "%S is not available for your compiler or your OS.\n"
+      (OpamPackage.Name.to_string name)
+  | Some v ->
+    OpamGlobals.error_and_exit
+      "Version %s of %S is incompatible with your compiler or your OS."
+      (OpamPackage.Version.to_string v)
+      (OpamPackage.Name.to_string name)
+
 let check f =
   let root = OpamPath.default () in
   let with_switch_lock a f =
@@ -422,16 +439,26 @@ let contents_of_variable t v =
         read_var name
   ) else (
     let process_one name =
+      let exists = find_packages_by_name t name <> None in
       let name_str = OpamPackage.Name.to_string name in
+      if not exists then
+        unknown_package name None;
       try Some (S (OpamMisc.getenv (name_str ^"_"^ var_str)))
       with Not_found ->
         let installed = mem_installed_package_by_name t name in
-        if var = OpamVariable.enable && installed then
+        let no_section = OpamVariable.Full.section v = None in
+        if var = OpamVariable.enable && installed && no_section then
           Some (S "enable")
-        else if var = OpamVariable.enable && not installed then
+        else if var = OpamVariable.enable && not installed && no_section then
           Some (S "disable")
-        else if var = OpamVariable.installed then
+        else if var = OpamVariable.installed && no_section then
           Some (B installed)
+        else if var = OpamVariable.installed || var = OpamVariable.enable then
+          OpamGlobals.error_and_exit
+            "Syntax error: invalid section argument in '%s'.\nUse '%s:%s' instead."
+            (OpamVariable.Full.to_string v)
+            name_str
+            (OpamVariable.to_string var)
         else if not installed then
           None
         else

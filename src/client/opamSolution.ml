@@ -441,23 +441,6 @@ let error_if_no_solution = function
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
 
-let unknown_package name version =
-  match version with
-  | None   -> OpamGlobals.error_and_exit "%S is not a valid package.\n" (OpamPackage.Name.to_string name)
-  | Some v -> OpamGlobals.error_and_exit "The package %S has no version %s." (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v)
-
-let unavailable_package name version =
-  match version with
-  | None   ->
-    OpamGlobals.error_and_exit
-      "%S is not available for your compiler or your OS.\n"
-      (OpamPackage.Name.to_string name)
-  | Some v ->
-    OpamGlobals.error_and_exit
-      "Version %s of %S is incompatible with your compiler or your OS."
-      (OpamPackage.Version.to_string v)
-      (OpamPackage.Name.to_string name)
-
 let eq_atom name version =
   name, Some (`Eq, version)
 
@@ -490,14 +473,14 @@ let atoms_of_names t names =
         (* perhaps the package is unavailable for this compiler *)
           let versions = OpamPackage.Name.Map.find name packages in
           if not (OpamPackage.Version.Set.is_empty versions) then
-            unavailable_package name None
+            OpamState.unavailable_package name None
           else
-            unknown_package name None
+            OpamState.unknown_package name None
       ) else (
         (* consider 'name' to be 'name.version' *)
         let nv =
           try OpamPackage.of_string (OpamPackage.Name.to_string name)
-          with Not_found -> unknown_package name None in
+          with Not_found -> OpamState.unknown_package name None in
         let sname = OpamPackage.name nv in
         let sversion = OpamPackage.version nv in
         log "The raw name %S not found, looking for package %s version %s"
@@ -508,9 +491,9 @@ let atoms_of_names t names =
         && OpamPackage.Version.Set.mem sversion (OpamPackage.Name.Map.find sname available) then
           eq_atom sname sversion
         else if OpamPackage.Name.Map.mem sname packages then
-          unavailable_package sname (Some sversion)
+          OpamState.unavailable_package sname (Some sversion)
         else
-          unknown_package sname (Some sversion)
+          OpamState.unknown_package sname (Some sversion)
       ))
     (OpamPackage.Name.Set.elements names)
 

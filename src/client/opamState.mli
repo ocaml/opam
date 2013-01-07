@@ -73,6 +73,15 @@ val load_repository_state: unit -> state
 (** Create a universe from the current state *)
 val universe: state -> user_action -> universe
 
+(** {2 Errors} *)
+
+(** Unknown package. *)
+val unknown_package: name -> version option -> 'a
+
+(** Unavailable package: the package is in the list of package but it
+    is not available for the current OS or compiler. *)
+val unavailable_package: name -> version option -> 'a
+
 (** {2 Environment} *)
 
 (** Get the current environment *)
