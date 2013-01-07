@@ -91,7 +91,7 @@ val unknown_compiler: compiler -> 'a
 val get_env: state -> env
 
 (** Update an environment. *)
-val update_env: state -> env -> (string * string * string) list -> env
+val add_to_env: state -> env -> (string * string * string) list -> env
 
 (** Print a warning if the environment is not set-up properly. *)
 val print_env_warning: ?add_profile:bool -> state -> unit

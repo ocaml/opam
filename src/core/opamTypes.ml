@@ -432,11 +432,9 @@ type 'a request = {
   wish_upgrade: 'a conjunction;
 }
 
-type env = {
-  add_to_env : (string * string) list;
-  add_to_path: dirname;
-  new_env    : (string * string) list;
-}
+type env = (string * string) list
+
+type env_updates = (string * string * string) list
 
 type user_action =
   | Install

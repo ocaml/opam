@@ -604,7 +604,7 @@ let filter_command t (l, f) =
 let filter_commands t l =
   OpamMisc.filter_map (filter_command t) l
 
-let expand_env t env =
+let expand_env t (env: env_updates) : env =
   List.map (fun (ident, symbol, string) ->
     let string = substitute_string t string in
     let read_env () =
@@ -620,43 +620,37 @@ let expand_env t env =
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
-let update_env t env e =
-  let expanded = expand_env t e in
-  { env with
-    add_to_env = expanded @ env.add_to_env;
-    new_env    = expanded @ env.new_env }
+let add_to_env t (env: env) (updates: env_updates) =
+  let env = List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
+  env @ expand_env t updates
 
 let get_env t =
   let comp = compiler t t.compiler in
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
   let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
-
-  let add_to_env = OpamFile.Comp.env comp in
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=", OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
     "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
-  let new_env = new_path :: man_path :: toplevel_dir :: add_to_env in
-
-  let add_to_env = expand_env t add_to_env in
-  let new_env = expand_env t new_env in
-
-  (* if --root <dir> is passed on the command line, or if OPAMROOT is set. *)
-  let new_env =
+  let comp_env = OpamFile.Comp.env comp in
+  let root =
     if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
-      ("OPAMROOT", !OpamGlobals.root_dir) :: new_env
+      [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
     else
-      new_env in
+      [] in
 
-  { add_to_env; add_to_path; new_env }
+  let updates = new_path :: man_path :: toplevel_dir :: (root @ comp_env) in
+  let env0 = OpamMisc.env () in
+
+  add_to_env t env0 updates
 
 let print_env_warning ?(add_profile = false) t =
   match
     List.filter
       (fun (s, v) ->
         Some v <> try Some (OpamMisc.getenv s) with _ -> None)
-      (get_env t).new_env
+      (get_env t)
   with
     | [] -> () (* every variables are correctly set *)
     | l ->

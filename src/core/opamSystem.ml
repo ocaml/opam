@@ -210,70 +210,63 @@ let real_path p =
     else
       dir / base
   )
-
-let replace_path bins =
-  let path = ref "<not set>" in
-  let env = Unix.environment () in
-  for i = 0 to Array.length env - 1 do
-    let k,v = match OpamMisc.cut_at env.(i) '=' with
-      | Some (k,v) -> k,v
-      | None       -> assert false in
-    if k = "PATH" then (
-      let bins = List.filter Sys.file_exists bins in
-      let new_path = String.concat ":" bins in
-      env.(i) <- "PATH=" ^ new_path;
-      path := new_path;
-    )
-  done;
-  env, !path
-
-let get_current_path () =
-  try OpamMisc.split (OpamMisc.getenv "PATH") ':'
-  with Not_found -> []
-
 type command = string list
 
-let run_process ?verbose ?path ?(add_to_env=[]) ?(add_to_path=[]) = function
+let default_env =
+  Unix.environment ()
+
+let reset_env = lazy (
+  let env = OpamMisc.env () in
+  let env =
+    List.map (fun (k,v as c) ->
+      match k with
+      | "PATH" -> k, String.concat ":" (OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir v)
+      | _      -> c
+    ) env in
+  let env = List.map (fun (k,v) -> k^"="^v) env in
+  Array.of_list env
+)
+
+let run_process ?verbose ?(env=default_env) = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
-      let env, path =
-        match path with
-        | None   -> replace_path (add_to_path @ get_current_path ())
-        | Some p -> replace_path p in
-      let add_to_env = List.map (fun (k,v) -> k^"="^v) add_to_env in
-      let env = Array.concat [ env; Array.of_list add_to_env ] in
-      let name = log_file () in
-      mkdir (Filename.dirname name);
-      let str = String.concat " " (cmd :: args) in
-      log "[%s] %s" (Filename.basename name) str;
-      if None <> try Some (String.index cmd ' ') with Not_found -> None then
-        OpamGlobals.warning "Command %S contains 1 space" cmd;
+
+    (* Set-up the log files *)
+    let name = log_file () in
+    mkdir (Filename.dirname name);
+    let str = String.concat " " (cmd :: args) in
+    log "[%s] %s" (Filename.basename name) str;
+
+    (* Check that the command doesn't contain whitespaces *)
+    if None <> try Some (String.index cmd ' ') with Not_found -> None then
+      OpamGlobals.warning "Command %S contains 1 space" cmd;
+
+    (* Display a user-friendly message if the command does not exists *)
+    let cmd_exists =
+      OpamProcess.run ~env ~name:(log_file ()) ~verbose:false "which" [cmd] in
+    OpamProcess.clean_files cmd_exists;
+
+    if OpamProcess.is_success cmd_exists then (
       let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
-      let cmd_exists =
-        OpamProcess.run ~env ~name:(log_file ()) ~verbose:false "which" [cmd] in
-      OpamProcess.clean_files cmd_exists;
-      if OpamProcess.is_success cmd_exists then (
-        let r = OpamProcess.run ~env ~name ~verbose cmd args in
-        if not !OpamGlobals.debug then
-          OpamProcess.clean_files r;
-        r
-      ) else
-        internal_error "%S: command not found\n" cmd
+      let r = OpamProcess.run ~env ~name ~verbose cmd args in
+      if not !OpamGlobals.debug then
+        OpamProcess.clean_files r;
+      r
+    ) else
+      internal_error "%S: command not found\n" cmd
 
-let command ?verbose ?(add_to_env=[]) ?(add_to_path=[]) cmd =
-  let r = run_process ?verbose ~add_to_env ~add_to_path cmd in
-  if OpamProcess.is_success r then
-    ()
-  else
+let command ?verbose ?env cmd =
+  let r = run_process ?verbose ?env cmd in
+  if not (OpamProcess.is_success r) then
     process_error r
 
-let commands ?verbose ?(add_to_env=[]) ?(add_to_path = []) commands =
-  List.iter (command ?verbose ~add_to_env ~add_to_path) commands
+let commands ?verbose ?env commands =
+  List.iter (command ?verbose ?env) commands
 
-let read_command_output ?verbose ?path cmd =
-  let r = run_process ?verbose ?path cmd in
+let read_command_output ?verbose ?env cmd =
+  let r = run_process ?verbose ?env cmd in
   if OpamProcess.is_success r then
     r.OpamProcess.r_stdout
   else
@@ -325,7 +318,7 @@ module Tar = struct
 
   let extract_function file =
     let command c dir =
-      command  [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ] in
+      command [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ] in
 
     let ext =
       List.fold_left
@@ -430,13 +423,10 @@ let ocaml_version = lazy (
     None
 )
 
+(* Reset the path to get the system compiler *)
 let system command = lazy (
   try
-    let path =
-      try OpamMisc.getenv "PATH"
-      with Not_found -> "" in
-    let path = OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir path in
-    match read_command_output ~verbose:false ~path command with
+    match read_command_output ~verbose:false ~env:(Lazy.force reset_env) command with
     | h::_ -> Some (OpamMisc.strip h)
     | []   -> internal_error "ocamlc -where"
   with _ ->

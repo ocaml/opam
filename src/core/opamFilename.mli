@@ -37,9 +37,7 @@ val list_dirs: Dir.t -> Dir.t list
 val in_dir: Dir.t -> (unit -> 'a) -> 'a
 
 (** Execute a list of commands in a given directory *)
-val exec: Dir.t
-  -> ?add_to_env:(string * string) list
-  -> ?add_to_path:Dir.t list -> string list list -> unit
+val exec: Dir.t -> ?env:(string * string) list -> string list list -> unit
 
 (** Move a directory *)
 val move_dir: Dir.t -> Dir.t -> unit

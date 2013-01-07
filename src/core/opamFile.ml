@@ -1104,7 +1104,7 @@ module Env = struct
 
   let internal = "env"
 
-  type t = (string * string) list
+  type t = env
 
   let empty = []
 

@@ -256,6 +256,8 @@ let env = lazy (
 let getenv n =
   List.assoc n (Lazy.force env)
 
+let env () = Lazy.force env
+
 let indent_left s nb =
   let nb = nb - String.length s in
   if nb <= 0 then

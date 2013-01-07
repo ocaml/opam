@@ -445,8 +445,9 @@ type stats = {
   s_downgrade: int;
   s_remove   : int;
 }
-type env = {
-  add_to_env : (string * string) list;
-  add_to_path: dirname;
-  new_env    : (string * string) list;
-}
+
+(** Environement variables *)
+type env = (string * string) list
+
+(** Environment updates *)
+type env_updates = (string * string * string) list
