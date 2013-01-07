@@ -153,31 +153,26 @@ module Make (G : G) = struct
     S.cardinal s1 = S.cardinal s2
 
   let (/) = Filename.concat
-  let pid_dir = !OpamGlobals.root_dir / "opam.pid"
-  let pid_file pid = pid_dir  / string_of_int pid
 
-  let write_error r =
-    OpamSystem.mkdir pid_dir;
-    let pid = Unix.getpid () in
-    log "write_error[%d]" pid;
-    let oc = open_out_bin (pid_file pid) in
-    Marshal.to_channel oc r [];
-    close_out oc
+  let write_error oc r =
+    log "write_error";
+    Marshal.to_channel oc r []
 
-  let read_error pid =
-    log "read_error[%d]" pid;
-    let file = pid_file pid in
-    let ic = open_in_bin file in
+  let read_error ic =
+    log "read_error";
     let r : error = Marshal.from_channel ic in
-    close_in ic;
-    Sys.remove file;
     r
 
   let parallel_iter n g ~pre ~child ~post =
     let t = ref (init g) in
+    (* pid -> node *)
     let pids = ref OpamMisc.IntMap.empty in
+    (* The nodes to process *)
     let todo = ref (!t.roots) in
+    (* node -> error *)
     let errors = ref M.empty in
+    (* node -> fd to read the error code *)
+    let from_childs = ref M.empty in
 
     (* All the node with a current worker currently doing some processing. *)
     let worker_nodes () =
@@ -213,13 +208,17 @@ module Make (G : G) = struct
         let pid, status = wait !pids in
         let n = OpamMisc.IntMap.find pid !pids in
         pids := OpamMisc.IntMap.remove pid !pids;
-        (match status with
+        let from_child = M.find n !from_childs in
+        from_childs := M.remove n !from_childs;
+        begin match status with
           | Unix.WEXITED 0 ->
               t := visit !t n;
               post n
           | _ ->
-              let error = read_error pid in
-              errors := M.add n error !errors);
+              let error = read_error from_child in
+              errors := M.add n error !errors
+        end;
+        close_in from_child;
         loop (nslots + 1)
       ) else (
 
@@ -233,27 +232,36 @@ module Make (G : G) = struct
            then simply process it *)
         let n = S.choose !todo in
         todo := S.remove n !todo;
+
+        (* Set-up a channel from the child to the parent *)
+        let from_child, to_parent = Unix.pipe () in
+        let to_parent = Unix.out_channel_of_descr to_parent in
+        let from_child = Unix.in_channel_of_descr from_child in
+        from_childs := M.add n from_child !from_childs;
+
         match Unix.fork () with
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
             log "Spawning a new process";
+            close_in from_child;
             Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
-            let aux p =
-              write_error p;
+            let return p =
+              write_error to_parent p;
               exit 1 in
             begin
               try child n; log "OK"; exit 0
               with
-              | OpamSystem.Process_error p  -> aux (Process_error p)
-              | OpamSystem.Internal_error s -> aux (Internal_error s)
+              | OpamSystem.Process_error p  -> return (Process_error p)
+              | OpamSystem.Internal_error s -> return (Internal_error s)
               | e ->
                   let b = Printexc.get_backtrace () in
                   let e = Printexc.to_string e in
                   let error = if b = "" then e else Printf.sprintf "%s\n%s" e b in
-                  aux (Internal_error error)
+                  return (Internal_error error)
             end
         | pid ->
             log "Creating process %d" pid;
+            close_out to_parent;
             pids := OpamMisc.IntMap.add pid n !pids;
             pre n;
             loop (nslots - 1)
