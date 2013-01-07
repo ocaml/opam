@@ -291,7 +291,7 @@ let init =
   ] in
   let cores = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int 1 in
   let compiler =
-    mk_opt ["c";"comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.default in
+    mk_opt ["comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.default in
   let repo_name =
     let doc = Arg.info ~docv:"NAME" ~doc:"Name of the repository." [] in
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
