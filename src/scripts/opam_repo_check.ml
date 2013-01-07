@@ -17,19 +17,45 @@
 open OpamTypes
 open OpamFilename.OP
 
-let normalize = ref false
+let opt_normalize = ref false
+let opt_repair = ref false
 
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
   let specs = [
     ("--version", Arg.Unit OpamVersion.message, " Display version information");
-    ("--normalize", Arg.Set normalize         , " Normalize all files in the repository");
+    ("--normalize", Arg.Set opt_normalize         , " Normalize all files in the repository");
+    ("--repair"   , Arg.Set opt_repair            , " Try to repair most of warnings");
   ] in
   let ano x =
     Printf.eprintf "%s: invalid argument" x in
   Arg.parse specs ano usage
 
-let write f_write fic st = if !normalize then f_write fic st
+let write f_write fic st = if !opt_normalize then f_write fic st
+
+module Check = struct
+(*   let descr x = x *)
+   let opam t =
+     List.fold_left
+       (fun t (s, f_cons, f_make) ->
+         f_make t (List.map
+                     (function
+                       | (CString "make", f0) :: l, f1 as x ->
+                           if !opt_repair then
+                             (CIdent "make", f0) :: l, f1
+                           else
+                             let _ = OpamGlobals.warning "unescaped 'make' in %s" s in
+                             x
+                       | x -> x)
+                     (f_cons t)))
+       t
+       [ "build", OpamFile.OPAM.build, OpamFile.OPAM.with_build
+       ; "remove", OpamFile.OPAM.remove, OpamFile.OPAM.with_remove ]
+(*   let url x = x *)
+(*   let dot_install x = x *)
+(*   let comp x = x *)
+(*   let comp_descr x = x *)
+end
 
 let () =
   let t = OpamPath.Repository.raw (OpamFilename.cwd ()) in
@@ -44,7 +70,7 @@ let () =
 
     (** OPAM *)
     let opam = OpamPath.Repository.opam t package in
-    write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
+    write OpamFile.OPAM.write opam (Check.opam (OpamFile.OPAM.read opam));
 
     (** URL *)
     let url = OpamPath.Repository.url t package in
