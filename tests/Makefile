@@ -12,9 +12,15 @@ OPAM_GIT = $(TMP_DIR)/OPAM.GIT
 PACKAGES  = P1-1 P1-2 P2 P3 P4 P5
 
 _OPAM = $(realpath ../_obuild/opam/opam.asm)
-ENV   = PATH=$(PATH) OCAMLRUNPARAM=b OPAMDEBUG=2 OPAMROOT=$(OPAM_ROOT) OPAMYES=1 OPAM=$(_OPAM)
+ENV   = PATH=$(PATH) $(DEBUG) OPAMKEEPBUILDDIR=1 OPAMROOT=$(OPAM_ROOT) OPAMYES=1 OPAM=$(_OPAM)
 OPAM  = $(ENV) $(_OPAM)
 CHECK = $(ENV) $(realpath ../_obuild/opam-check/opam-check.asm)
+
+ifeq ($(OPAMTESTQUIET), 1)
+  DEBUG =
+else
+  DEBUG = OPAMDEBUG=2 OCAMLRUNPARAM=b
+endif
 
 ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
@@ -22,6 +28,9 @@ ARCHIVES  = $(PACKAGES:%=packages/%.tar.gz)
 
 all: local git
 	@
+
+quiet:
+	$(MAKE) OPAMTESTQUIET=1 all
 
 run:
 	$(MAKE) init && \
