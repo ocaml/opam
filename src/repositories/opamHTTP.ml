@@ -97,15 +97,21 @@ let is_up_to_date state local_file =
 module B = struct
 
   let init ~address =
-    let state = make_state ~download_index:true address in
-    (* Download index.tar.gz *)
     try
-      let file = OpamFilename.download ~overwrite:true state.remote_index_archive state.local_dir in
-      OpamFilename.extract_in file state.local_dir
+      (* Download urls.txt *)
+      let state = make_state ~download_index:true address in
+      try
+        (* Download index.tar.gz *)
+        let file = OpamFilename.download ~overwrite:true state.remote_index_archive state.local_dir in
+        OpamFilename.extract_in file state.local_dir
+      with _ ->
+        OpamGlobals.msg
+          "Cannot find index.tar.gz on the OPAM repository. \
+           Initialisation might take some time.\n"
     with _ ->
-      OpamGlobals.msg
-        "Cannot find index.tar.gz on the OPAM repository. \
-         Initialisation might take some time.\n"
+      OpamGlobals.error_and_exit
+        "Error: %s is unavailable."
+        (OpamFilename.Dir.to_string address)
 
   let curl ~remote_file ~local_file =
     log "dowloading %s" (OpamFilename.to_string remote_file);

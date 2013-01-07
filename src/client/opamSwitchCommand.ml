@@ -182,10 +182,8 @@ let switch ~quiet switch =
   let comp_dir = OpamPath.Switch.root t.root switch in
   let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
   let comp_f = OpamPath.compiler t.root compiler in
-  if not (OpamFilename.exists_dir comp_dir) && not (OpamFilename.exists comp_f) then (
-    OpamGlobals.error "The compiler's description for %s does not exist.\n" (OpamSwitch.to_string switch);
-    OpamGlobals.exit 1;
-  );
+  if not (OpamFilename.exists_dir comp_dir) && not (OpamFilename.exists comp_f) then
+    OpamState.unknown_compiler compiler;
   if not (OpamSwitch.Map.mem switch t.aliases) then
     install quiet switch compiler
   else

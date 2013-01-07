@@ -82,6 +82,9 @@ val unknown_package: name -> version option -> 'a
     is not available for the current OS or compiler. *)
 val unavailable_package: name -> version option -> 'a
 
+(** Unknown compiler. *)
+val unknown_compiler: compiler -> 'a
+
 (** {2 Environment} *)
 
 (** Get the current environment *)

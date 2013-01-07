@@ -55,6 +55,11 @@ let unavailable_package name version =
       (OpamPackage.Version.to_string v)
       (OpamPackage.Name.to_string name)
 
+let unknown_compiler compiler =
+  OpamGlobals.error_and_exit
+    "%S is not a valid compiler."
+    (OpamCompiler.to_string compiler)
+
 let check f =
   let root = OpamPath.default () in
   let with_switch_lock a f =
@@ -369,8 +374,10 @@ let load_state () =
           (OpamSwitch.to_string switch) in
 
   let compiler_version =
-    let comp = OpamFile.Comp.read (OpamPath.compiler root compiler) in
-    OpamFile.Comp.version comp in
+    let comp_f = OpamPath.compiler root compiler in
+    if not (OpamFilename.exists comp_f) then
+      unknown_compiler compiler;
+    OpamFile.Comp.version (OpamFile.Comp.read comp_f) in
   let opams =
     OpamPackage.Set.fold (fun nv map ->
       try
