@@ -33,34 +33,42 @@ let write f_write fic st = if !normalize then f_write fic st
 
 let () =
   let t = OpamPath.Repository.raw (OpamFilename.cwd ()) in
-  OpamPackage.Set.iter (fun nv ->
-    OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string nv);
+
+  (** packages *)
+  OpamPackage.Set.iter (fun package ->
+    OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string package);
 
     (** Descr *)
-    let descr = OpamPath.Repository.descr t nv in
+    let descr = OpamPath.Repository.descr t package in
     write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (** OPAM *)
-    let opam = OpamPath.Repository.opam t nv in
+    let opam = OpamPath.Repository.opam t package in
     write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
 
     (** URL *)
-    let url = OpamPath.Repository.url t nv in
+    let url = OpamPath.Repository.url t package in
     if OpamFilename.exists url then (
       write OpamFile.URL.write url (OpamFile.URL.read url);
     );
 
     (** Dot_install *)
-    let dot_install = OpamPath.Repository.files t nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install") in
+    let dot_install = OpamPath.Repository.files t package // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
     if OpamFilename.exists dot_install then (
       write OpamFile.Dot_install.Raw.write dot_install (OpamFile.Dot_install.Raw.read dot_install);
     );
   ) (OpamRepository.packages t);
 
-  (** Comp *)
-  let comps = OpamFilename.list_files (OpamPath.Repository.compilers_dir t) in
-  List.iter (fun comp ->
-    let comp_ = OpamFile.Comp.read comp in
-    OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string (OpamFile.Comp.name comp_));
-    write OpamFile.Comp.write comp comp_;
-  ) comps
+  (** compilers *)
+  OpamCompiler.Set.iter (fun compiler ->
+    OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string compiler);
+
+    (** Comp *)
+    let comp = OpamPath.Repository.compiler t compiler in
+    write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
+
+    (** Comp_descr *)
+    let comp_descr = OpamPath.Repository.compiler_descr t compiler in
+    write OpamFile.Comp_descr.write comp_descr (OpamFile.Comp_descr.read comp_descr);
+
+  ) (OpamRepository.compilers t);
