@@ -53,11 +53,11 @@ module type MAP = sig
   (** Return the keys in the map. *)
   val keys: 'a t -> key list
 
-  (** Same as [merge] but only keys that appear in both maps
-      are given in the merging function *)
-  (** WARNING : Besides [key], the function could receive
-      some [v1] and some [v2] such that [v1 = v2] holds. *)
-  val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  (** A key will be in the union of [m1] and [m2] if it is appears
+      either [m1] or [m2], with the corresponding value. If a key
+      appears in both [m1] and [m2], then the resulting value is built
+      using the function given as argument. *)
+  val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
 
   (** Convert an assoc list to a map *)
   val of_list: (key * 'a) list -> 'a t
@@ -177,12 +177,18 @@ val filter_map: ('a -> 'b option) -> 'a list -> 'b list
 (** Insert a value in an ordered list *)
 val insert: ('a -> 'a -> int) -> 'a -> 'a list -> 'a list
 
-(** Lazy environment *)
+(** Lazy environment variable *)
 val getenv: string -> string
+
+(** Lazy environment *)
+val env: unit -> (string * string) list
 
 module OP: sig
 
   (** Pipe operator *)
   val (|>): ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
+
+  (** concatenation with uniqness. Elements are sorted. *)
+  val (@@): 'a list -> 'a list -> 'a list
 
 end

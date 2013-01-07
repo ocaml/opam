@@ -541,9 +541,9 @@ let apply_solution ?(force = false) t sol =
       let child n =
         let t = OpamState.load_state () in
         match n with
-        | To_change (o, nv) -> proceed_to_change t o nv
-        | To_recompile nv   -> proceed_to_recompile t nv
-        | To_delete _       -> assert false in
+        | To_change (o, nv)   -> proceed_to_change t o nv
+        | To_recompile (nv,_) -> proceed_to_recompile t nv
+        | To_delete _         -> assert false in
 
       let pre _ = () in
 
@@ -577,7 +577,7 @@ let apply_solution ?(force = false) t sol =
            with _ ->
              ())
         | To_change (None, _)   -> ()
-        | To_recompile nv       ->
+        | To_recompile (nv,_)   ->
           (* this case is quite tricky. We have to remove all the packages
              depending in nv, as they will be broken if nv is uninstalled. *)
           let universe = OpamState.universe t Depends in
@@ -603,7 +603,7 @@ let apply_solution ?(force = false) t sol =
           else
             f "downgrading to" nv
         | To_change (None, nv)   -> f "installing" nv
-        | To_recompile nv        -> f "recompiling" nv
+        | To_recompile (nv,_)    -> f "recompiling" nv
         | To_delete nv           -> f "removing" nv in
 
       let string_of_errors errors =
@@ -611,7 +611,7 @@ let apply_solution ?(force = false) t sol =
         let packages =
           List.map (function
           | To_change (_,nv)
-          | To_recompile nv
+          | To_recompile (nv,_)
           | To_delete nv -> nv
           ) actions in
         match packages with

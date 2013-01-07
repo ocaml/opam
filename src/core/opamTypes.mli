@@ -171,8 +171,11 @@ type 'a action =
   (** The package must be deleted. *)
   | To_delete of 'a
 
-  (** The package is already installed, but it must be recompiled. *)
-  | To_recompile of 'a
+  (** The package is already installed, but it must be recompiled.
+      The second parameter is the collection of packages causing the
+      reinstallation. An empty list means that the package has been
+      modified upstream. *)
+  | To_recompile of 'a * 'a list
 
 (** Graph of package actions *)
 module type ACTION_GRAPH = sig

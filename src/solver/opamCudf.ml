@@ -14,6 +14,7 @@
 (***********************************************************************)
 
 open OpamTypes
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
 
@@ -28,7 +29,7 @@ let string_of_action action =
       f "upgrade"
     else
       f "downgrade"
-  | To_recompile p        -> Printf.sprintf " - recompile %s" (aux p)
+  | To_recompile (p,_)    -> Printf.sprintf " - recompile %s" (aux p)
   | To_delete p           -> Printf.sprintf " - delete %s" (aux p)
 
 let string_of_actions l =
@@ -336,7 +337,9 @@ module Diff = struct
 end
 
 (* Transform a diff from current to final state into a list of
-   actions *)
+   actions. At this point, the transitive closure of actions has not
+   yet been taken, so the only reinstallation action we get come from
+   upstream changes. *)
 let actions_of_diff diff =
   Hashtbl.fold (fun pkgname s acc ->
     let add x = x :: acc in
@@ -353,7 +356,7 @@ let actions_of_diff diff =
     | None      , Some p     , _      -> add (To_change (None, p))
     | Some p    , None       , _      -> add (To_delete p)
     | Some p_old, Some p_new , _      -> add (To_change (Some p_old, p_new))
-    | None      , None       , Some p -> add (To_recompile p)
+    | None      , None       , Some p -> add (To_recompile (p, []))
     | None      , None       , None   -> acc
   ) diff []
 
@@ -374,11 +377,17 @@ let create_graph filter universe =
   let u = Cudf.load_universe pkgs in
   Graph.of_universe u
 
-(* Build the graph of actions.
-   - [simple_universe] is the graph with 'depends' only
-   - [complex_universe] is the graph with 'depends' + 'depopts' *)
-let solution_of_actions ~simple_universe ~complete_universe actions =
-  log "graph_of_actions actions=%s" (string_of_actions actions);
+(*
+  Compute a full solution from a set of root actions. This means:
+    1/ computing the right sequence of removal.
+    2/ computing the transitive closure of reinstallations.
+
+   Parameters:
+   - [simple _universe] is the graph with 'depends' only
+   - [complex_universe] is the graph with 'depends' + 'depopts'
+*)
+let solution_of_actions ~simple_universe ~complete_universe root_actions =
+  log "graph_of_actions root_actions=%s" (string_of_actions root_actions);
 
   (* The packages to remove or upgrade *)
   let to_remove_or_upgrade =
@@ -386,29 +395,29 @@ let solution_of_actions ~simple_universe ~complete_universe actions =
       | To_change (Some pkg, _)
       | To_delete pkg -> Some pkg
       | _ -> None
-    ) actions in
+    ) root_actions in
 
   (* the packages to remove *)
   let to_remove =
     Set.of_list (OpamMisc.filter_map (function
       | To_delete pkg -> Some pkg
       | _ -> None
-    ) actions) in
+    ) root_actions) in
 
   (* the packages to recompile *)
   let to_recompile =
-    Set.of_list (OpamMisc.filter_map (function
-      | To_recompile pkg -> Some pkg
+    Map.of_list (OpamMisc.filter_map (function
+      | To_recompile (pkg,causes) -> Some (pkg, causes)
       | _ -> None
-    ) actions) in
+    ) root_actions) in
 
   (* compute initial packages to install *)
   let to_process_init =
     Map.of_list (OpamMisc.filter_map (function
-      | To_recompile pkg
+      | To_recompile (pkg,_)
       | To_change (_, pkg) as act -> Some (pkg, act)
       | To_delete _ -> None
-    ) actions) in
+    ) root_actions) in
 
   let complete_graph =
     let g =
@@ -421,7 +430,8 @@ let solution_of_actions ~simple_universe ~complete_universe actions =
   let to_recompile =
     Set.fold (fun pkg to_recompile ->
       let succ = Graph.succ complete_graph pkg in
-      Set.union to_recompile (Set.of_list succ)
+      let succ = List.map (fun s -> s, [pkg]) succ in
+      Map.union (@@) to_recompile (Map.of_list succ)
     ) to_remove to_recompile in
 
   let to_remove =
@@ -432,12 +442,25 @@ let solution_of_actions ~simple_universe ~complete_universe actions =
     Graph.Topo.fold
       (fun pkg (to_recompile, to_process_map) ->
         let add_succ pkg action =
-          (Set.union to_recompile (Set.of_list (Graph.succ complete_graph pkg)),
-           Map.add pkg action (Map.remove pkg to_process_map)) in
+          let succ = Graph.succ complete_graph pkg in
+          let succ =
+            List.map (fun s ->
+              if Map.mem pkg to_recompile then
+              (* look for the root causes *)
+                let causes = Map.find pkg to_recompile in
+                (s, causes)
+              else
+                (* the root cause is pkg itself *)
+                (s, [pkg])
+            ) succ in
+          let to_recompile = Map.union (@@) to_recompile (Map.of_list succ) in
+          let to_process_map = Map.add pkg action (Map.remove pkg to_process_map) in
+          to_recompile, to_process_map in
         if Map.mem pkg to_process_init then
           add_succ pkg (Map.find pkg to_process_init)
-        else if Set.mem pkg to_recompile then
-          add_succ pkg (To_recompile pkg)
+        else if Map.mem pkg to_recompile then
+          let causes = Map.find pkg to_recompile in
+          add_succ pkg (To_recompile (pkg, causes))
         else
           to_recompile, to_process_map)
       complete_graph
