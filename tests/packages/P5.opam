@@ -5,9 +5,4 @@ version: "1"
 maintainer: "contact@ocamlpro.com"
 depends: [ "P1" ]
 depopts: [ "P2" ]
-build: [
-  ["false"] {"%{a_not_existing_name:installed}%"}
-  ["false"] {"%{a_not_existing_name.a_not_existing_version:installed}%"}
-  ["false"] {"%{P2.a_not_existing_version:installed}%"}
-  ["./build.sh"]
-]
+build: [ "./build.sh" ]
