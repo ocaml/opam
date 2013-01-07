@@ -424,7 +424,7 @@ module Config = struct
       opam_version  : opam_version ;
       repositories  : repository_name list ;
       switch        : switch;
-      cores         : int;
+      jobs          : int;
     }
 
     let with_repositories t repositories = { t with repositories }
@@ -434,22 +434,24 @@ module Config = struct
     let opam_version t = t.opam_version
     let repositories t = t.repositories
     let switch t = t.switch
-    let cores t = t.cores
+    let jobs t = t.jobs
 
-    let create opam_version switch repositories cores =
-      { opam_version ; repositories ; switch ; cores }
+    let create opam_version switch repositories jobs =
+      { opam_version ; repositories ; switch ; jobs }
 
     let empty = {
       opam_version = OpamVersion.of_string OpamGlobals.opam_version;
       repositories = [];
       switch = OpamSwitch.of_string "<empty>";
-      cores = OpamGlobals.default_cores;
+      jobs = OpamGlobals.default_jobs;
     }
 
     let s_repositories = "repositories"
     let s_switch = "switch"
     let s_switch1 = "alias"
     let s_switch2 = "ocaml-version"
+
+    let s_jobs = "jobs"
 
     let s_cores = "cores"
 
@@ -460,7 +462,7 @@ module Config = struct
       s_opam_version;
       s_repositories;
       s_switch;
-      s_cores;
+      s_jobs;
 
       (* this fields are no longer useful, but we keep it for backward
          compatibility *)
@@ -468,6 +470,7 @@ module Config = struct
       s_switch2;
       s_system_version1;
       s_system_version2;
+      s_cores;
     ]
 
     let of_string filename f =
@@ -516,10 +519,15 @@ module Config = struct
         | Some v, _     , _
         | _     , Some v, _
         | _     , _     , Some v -> v
-        | None  , None  , None   -> OpamGlobals.error_and_exit "No current switch defined" in
+        | None  , None  , None   -> OpamGlobals.error_and_exit "No current switch defined." in
 
-      let cores = OpamFormat.assoc s.file_contents s_cores OpamFormat.parse_int in
-      { opam_version; repositories; switch; cores }
+      let jobs =
+        let mk str = OpamFormat.assoc_option s.file_contents str OpamFormat.parse_int in
+        match mk s_jobs, mk s_cores with
+        | Some i, _      -> i
+        | _     , Some i -> i
+        | _              -> 1 in
+      { opam_version; repositories; switch; jobs }
 
    let to_string filename t =
      let s = {
@@ -530,7 +538,7 @@ module Config = struct
                    OpamFormat.make_list
                      (OpamRepositoryName.to_string |> OpamFormat.make_string)
                      t.repositories);
-         Variable (s_cores , OpamFormat.make_int t.cores);
+         Variable (s_jobs , OpamFormat.make_int t.jobs);
          Variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
        ]
      } in

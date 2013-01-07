@@ -68,8 +68,8 @@ module Config: sig
   (** Return the OCaml switch *)
   val switch: t -> switch
 
-  (** Return the number of cores *)
-  val cores: t -> int
+  (** Return the number of jobs *)
+  val jobs: t -> int
 
 end
 

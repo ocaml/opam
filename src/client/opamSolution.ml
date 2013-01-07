@@ -619,9 +619,9 @@ let apply_solution ?(force = false) t sol =
         | [h] -> OpamPackage.to_string h
         | l   -> OpamPackage.Set.to_string (OpamPackage.Set.of_list l) in
 
-      let cores = OpamFile.Config.cores t.config in
+      let jobs = OpamFile.Config.jobs t.config in
       try
-        PackageActionGraph.Parallel.parallel_iter cores sol.to_process ~pre ~child ~post;
+        PackageActionGraph.Parallel.parallel_iter jobs sol.to_process ~pre ~child ~post;
         OK
       with PackageActionGraph.Parallel.Errors (errors, remaining) ->
         OpamGlobals.msg "\n";

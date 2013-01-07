@@ -140,7 +140,7 @@ let makecmd = ref (lazy (
   | _ -> "make"
 )
 )
-let default_cores = 1
+let default_jobs = 1
 
 let exit i =
   raise (Exit i)
