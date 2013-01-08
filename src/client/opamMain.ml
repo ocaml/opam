@@ -300,7 +300,7 @@ let init =
     `P "Additional repositories can be added later by using the $(b,opam repository) command.";
     `P "The local cache of a repository state can be updated by using $(b,opam update).";
   ] in
-  let cores = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int 1 in
+  let cores = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamGlobals.default_jobs in
   let compiler =
     mk_opt ["comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.default in
   let repo_name =
