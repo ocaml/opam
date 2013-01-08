@@ -127,7 +127,7 @@ let map_action f = function
   | To_change (Some x, y) -> To_change (Some (f x), f y)
   | To_change (None, y)   -> To_change (None, f y)
   | To_delete y           -> To_delete (f y)
-  | To_recompile y        -> To_recompile (f y)
+  | To_recompile (y, l)   -> To_recompile (f y, List.map f l)
 
 let graph cudf2opam cudf_graph =
   let size = OpamCudf.ActionGraph.nb_vertex cudf_graph in

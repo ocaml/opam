@@ -49,8 +49,8 @@ distclean: clean
 tests:
 	$(MAKE) -C tests all
 
-tests-rsync:
-	$(MAKE) -C tests rsync
+tests-local:
+	$(MAKE) -C tests local
 
 tests-git:
 	$(MAKE) -C tests git

@@ -26,7 +26,7 @@ module type MAP = sig
   val to_string: ('a -> string) -> 'a t -> string
   val values: 'a t -> 'a list
   val keys: 'a t -> key list
-  val merge_max: (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val of_list: (key * 'a) list -> 'a t
 end
 module type ABSTRACT = sig
@@ -89,21 +89,21 @@ module Map = struct
 
     let keys map = List.map fst (bindings map)
 
-    let merge_max f =
-      merge
-        (fun k -> function
-          | None -> fun x -> x
-          | Some o1 -> function
-              | None -> Some o1
-              | Some o2 -> f k o1 o2)
+    let union f m1 m2 =
+      M.fold (fun k v m ->
+        if M.mem k m then
+          M.add k (f v (M.find k m)) (M.remove k m)
+        else
+          M.add k v m
+      ) m1 m2
 
-  let to_string string_of_value m =
-    let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
-    let l = fold (fun k v l -> s (k,v)::l) m [] in
-    string_of_list (fun x -> x) l
+    let to_string string_of_value m =
+      let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
+      let l = fold (fun k v l -> s (k,v)::l) m [] in
+      string_of_list (fun x -> x) l
 
-  let of_list l =
-    List.fold_left (fun map (k,v) -> add k v map) empty l
+    let of_list l =
+      List.fold_left (fun map (k,v) -> add k v map) empty l
 
   end
 
@@ -152,6 +152,14 @@ module StringMap = Map.Make(OString)
 module OP = struct
 
   let (|>) f g x = g (f x)
+
+  let (@@) l1 l2 =
+    let rec aux acc = function
+      | []  -> List.rev acc
+      | [h] -> List.rev (h::acc)
+      | h1::(h2::_ as t) ->
+        if h1 = h2 then aux acc t else aux (h1::acc) t in
+    aux [] (List.sort compare (l1 @ l2))
 
 end
 
@@ -247,6 +255,8 @@ let env = lazy (
 
 let getenv n =
   List.assoc n (Lazy.force env)
+
+let env () = Lazy.force env
 
 let indent_left s nb =
   let nb = nb - String.length s in

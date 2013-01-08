@@ -35,6 +35,12 @@ module type IO_FILE = sig
   (** Read file contents. Return [empty] if the file does not exist. *)
   val safe_read: filename -> t
 
+  (** Read from channel. *)
+  val read_from_channel: in_channel -> t
+
+  (** Write to channel. *)
+  val write_to_channel: out_channel -> t -> unit
+
 end
 
 (** Configuration file: [$opam/config] *)
@@ -199,7 +205,7 @@ module Reinstall: IO_FILE with type t = package_set
 module Updated: IO_FILE with type t = package_set
 
 (** Environement variables *)
-module Env: IO_FILE with type t = (string * string) list
+module Env: IO_FILE with type t = env
 
 (** Compiler version [$opam/compilers/] *)
 module Comp: sig

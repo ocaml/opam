@@ -60,13 +60,12 @@ let in_dir dirname fn =
   else
     OpamGlobals.error_and_exit "%s does not exist!" dirname
 
-let exec dirname ?(add_to_env=[]) ?(add_to_path=[]) cmds =
+let exec dirname ?env cmds =
+  let env = match env with
+    | None   -> None
+    | Some l -> Some (Array.of_list (List.map (fun (k,v) -> k^"="^v) l)) in
   in_dir dirname
-    (fun () ->
-      OpamSystem.commands
-        ~add_to_env
-        ~add_to_path:(List.map Dir.of_string add_to_path)
-        cmds)
+    (fun () -> OpamSystem.commands ?env cmds)
 
 let move_dir src dst =
   OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]

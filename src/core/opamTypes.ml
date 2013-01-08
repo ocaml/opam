@@ -13,6 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+open OpamMisc.OP
+
 type basename = OpamFilename.Base.t
 
 type dirname = OpamFilename.Dir.t
@@ -333,7 +335,7 @@ type file = {
 type 'a action =
   | To_change of 'a option * 'a
   | To_delete of 'a
-  | To_recompile of 'a
+  | To_recompile of 'a * 'a list
 
 module type ACTION_GRAPH = sig
 
@@ -368,7 +370,7 @@ module MakeActionGraph (Pkg: PKG) = struct
     type t = Pkg.t action
     let package = function
       | To_change (_, p)
-      | To_recompile p
+      | To_recompile (p, _)
       | To_delete p -> p
     let compare t1 t2 = Pkg.compare (package t1) (package t2)
     let hash t = Pkg.hash (package t)
@@ -390,6 +392,10 @@ end
 
 module PackageAction = struct
   include OpamPackage
+
+  let string_of_names ps =
+    String.concat ", " (List.map (OpamPackage.name |> OpamPackage.Name.to_string) ps)
+
   let string_of_action = function
   | To_change (None, p)   -> Printf.sprintf " - install %s" (OpamPackage.to_string p)
   | To_change (Some o, p) ->
@@ -400,7 +406,9 @@ module PackageAction = struct
       f "upgrade"
     else
       f "downgrade"
-  | To_recompile p        -> Printf.sprintf " - recompile %s" (OpamPackage.to_string p)
+  | To_recompile (p, [])  -> Printf.sprintf " - recompile %s (cause: upstream change)" (OpamPackage.to_string p)
+  | To_recompile (p, [c]) -> Printf.sprintf " - recompile %s (cause: %s)" (OpamPackage.to_string p) (string_of_names [c])
+  | To_recompile (p, c)   -> Printf.sprintf " - recompile %s (causes: %s)" (OpamPackage.to_string p) (string_of_names c)
   | To_delete p           -> Printf.sprintf " - delete %s" (OpamPackage.to_string p)
 end
 
@@ -424,11 +432,9 @@ type 'a request = {
   wish_upgrade: 'a conjunction;
 }
 
-type env = {
-  add_to_env : (string * string) list;
-  add_to_path: dirname;
-  new_env    : (string * string) list;
-}
+type env = (string * string) list
+
+type env_updates = (string * string * string) list
 
 type user_action =
   | Install

@@ -62,11 +62,13 @@ val remote : remote -> unit
 (** Install the given compiler. Take the global file lock. *)
 val switch_install: bool -> switch -> compiler -> unit
 
-(** Import the packages from a file. Take the global file lock. *)
-val switch_import: filename -> unit
+(** Import the packages from a file. Take the global file lock. If no
+    filename is specified, read stdin. *)
+val switch_import: filename option -> unit
 
-(** Export the packages to a file. Take the global file lock. *)
-val switch_export: filename -> unit
+(** Export the packages to a file. Take the global file lock. If no
+    filename is specified, write to stdout. *)
+val switch_export: filename option -> unit
 
 (** Remove the given compiler. Take the global file lock. *)
 val switch_remove: switch -> unit

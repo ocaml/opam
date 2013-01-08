@@ -690,8 +690,11 @@ let switch =
     mk_opt ["a";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
       Arg.(some string) None in
-
-  let switch global_options command alias_of params =
+  let filename =
+    mk_opt ["f";"filename"]
+      "FILENAME" "The name of the file to export to/import from."
+      Arg.(some filename) None in
+  let switch global_options command alias_of filename params =
     set_global_options global_options;
     let no_alias_of () =
       if alias_of <> None then
@@ -706,12 +709,12 @@ let switch =
         OpamClient.switch_list ()
     | Some `install, [switch] ->
         OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
-    | Some `export, [f] ->
+    | Some `export, [] ->
         no_alias_of ();
-        OpamClient.switch_export (OpamFilename.of_string f)
-    | Some `import, [f] ->
+        OpamClient.switch_export filename
+    | Some `import, [] ->
         no_alias_of ();
-        OpamClient.switch_import (OpamFilename.of_string f)
+        OpamClient.switch_import filename
     | Some `remove, switches ->
         no_alias_of ();
         List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
@@ -729,7 +732,7 @@ let switch =
             (OpamSwitch.of_string switch) (mk_comp switch))
     | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
-  Term.(pure switch $global_options $command $alias_of $params),
+  Term.(pure switch $global_options $command $alias_of $filename $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)

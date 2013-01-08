@@ -171,8 +171,11 @@ type 'a action =
   (** The package must be deleted. *)
   | To_delete of 'a
 
-  (** The package is already installed, but it must be recompiled. *)
-  | To_recompile of 'a
+  (** The package is already installed, but it must be recompiled.
+      The second parameter is the collection of packages causing the
+      reinstallation. An empty list means that the package has been
+      modified upstream. *)
+  | To_recompile of 'a * 'a list
 
 (** Graph of package actions *)
 module type ACTION_GRAPH = sig
@@ -442,8 +445,9 @@ type stats = {
   s_downgrade: int;
   s_remove   : int;
 }
-type env = {
-  add_to_env : (string * string) list;
-  add_to_path: dirname;
-  new_env    : (string * string) list;
-}
+
+(** Environement variables *)
+type env = (string * string) list
+
+(** Environment updates *)
+type env_updates = (string * string * string) list

@@ -92,27 +92,17 @@ val directories_with_links: string -> string list
 (** a command is a list of words *)
 type command = string list
 
-(** [command cmd] executes the command [cmd]. Return the exit code. *)
-val command:
-  ?verbose:bool ->
-  ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command -> unit
+(** [command cmd] executes the command [cmd] in the correct OPAM
+    environment. Return the exit code. *)
+val command: ?verbose:bool -> ?env:string array -> command -> unit
 
-(** [commands ~add_to_path cmds] executes the commands [cmds]
-    in a context where $PATH contains [add_to_path] at the beginning.
-    It stops whenever one command fails. *)
-val commands:
-  ?verbose:bool ->
-  ?add_to_env:(string*string) list ->
-  ?add_to_path:string list -> command list -> unit
+(** [commands cmds] executes the commands [cmds] in the correct
+    OPAM environment.  It stops whenever one command fails. *)
+val commands: ?verbose:bool -> ?env:string array -> command list -> unit
 
-(** [read_command_output cmd] executes the command [cmd] and return
-    the lines from stdout *)
-val read_command_output:
-  ?verbose:bool ->
-  ?path:string list
-  -> command
-  -> string list
+(** [read_command_output cmd] executes the command [cmd] in the
+    correct OPAM environment and return the lines from stdout *)
+val read_command_output: ?verbose:bool -> ?env:string array -> command -> string list
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool

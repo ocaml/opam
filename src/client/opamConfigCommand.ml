@@ -240,23 +240,15 @@ let config_compil t c =
   log "OUTPUT: %S" output;
   OpamGlobals.msg "%s\n" output
 
-let empty_env = {
-  add_to_env  = [];
-  add_to_path = OpamFilename.raw_dir "";
-  new_env     = []
-}
-
 let print_env env =
-  if env <> empty_env then
-    List.iter (fun (k,v) ->
-      OpamGlobals.msg "%s=%s; export %s;\n" k v k;
-    ) env.new_env
+  List.iter (fun (k,v) ->
+    OpamGlobals.msg "%s=%s; export %s;\n" k v k;
+  ) env
 
 let print_csh_env env =
-  if env <> empty_env then
-    List.iter (fun (k,v) ->
-      OpamGlobals.msg "setenv %s %S;\n" k v;
-    ) env.new_env
+  List.iter (fun (k,v) ->
+    OpamGlobals.msg "setenv %s %S;\n" k v;
+  ) env
 
 let config request =
   log "config %s" (string_of_config request);

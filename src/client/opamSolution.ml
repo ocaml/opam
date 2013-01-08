@@ -227,7 +227,7 @@ let string_of_commands commands =
 
 let compilation_env t opam =
   let env0 = OpamState.get_env t in
-  OpamState.update_env t env0 (OpamFile.OPAM.build_env opam)
+  OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
 
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
@@ -264,11 +264,7 @@ let proceed_to_delete ~rm_build t nv =
         else t.root in
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
-        OpamFilename.exec
-          ~add_to_env:env.add_to_env
-          ~add_to_path:[OpamPath.Switch.bin t.root t.switch]
-          exec_dir
-          remove
+        OpamFilename.exec ~env exec_dir remove
       with _ ->
         ();
   );
@@ -388,17 +384,13 @@ let proceed_to_change t nv_old nv =
 
   (* Generate an environnement file *)
   let env_f = OpamPath.Switch.build_env t.root t.switch nv in
-  OpamFile.Env.write env_f env.new_env;
+  OpamFile.Env.write env_f env;
 
   (* Exec the given commands. *)
   let exec name f =
     let commands = OpamState.filter_commands t (f opam) in
     OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-    OpamFilename.exec
-      ~add_to_env:env.add_to_env
-      ~add_to_path:[env.add_to_path]
-      p_build
-      commands in
+    OpamFilename.exec ~env p_build commands in
     try
       (* First, we build the package. *)
       exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
@@ -541,9 +533,9 @@ let apply_solution ?(force = false) t sol =
       let child n =
         let t = OpamState.load_state () in
         match n with
-        | To_change (o, nv) -> proceed_to_change t o nv
-        | To_recompile nv   -> proceed_to_recompile t nv
-        | To_delete _       -> assert false in
+        | To_change (o, nv)   -> proceed_to_change t o nv
+        | To_recompile (nv,_) -> proceed_to_recompile t nv
+        | To_delete _         -> assert false in
 
       let pre _ = () in
 
@@ -577,7 +569,7 @@ let apply_solution ?(force = false) t sol =
            with _ ->
              ())
         | To_change (None, _)   -> ()
-        | To_recompile nv       ->
+        | To_recompile (nv,_)   ->
           (* this case is quite tricky. We have to remove all the packages
              depending in nv, as they will be broken if nv is uninstalled. *)
           let universe = OpamState.universe t Depends in
@@ -603,7 +595,7 @@ let apply_solution ?(force = false) t sol =
           else
             f "downgrading to" nv
         | To_change (None, nv)   -> f "installing" nv
-        | To_recompile nv        -> f "recompiling" nv
+        | To_recompile (nv,_)    -> f "recompiling" nv
         | To_delete nv           -> f "removing" nv in
 
       let string_of_errors errors =
@@ -611,7 +603,7 @@ let apply_solution ?(force = false) t sol =
         let packages =
           List.map (function
           | To_change (_,nv)
-          | To_recompile nv
+          | To_recompile (nv,_)
           | To_delete nv -> nv
           ) actions in
         match packages with

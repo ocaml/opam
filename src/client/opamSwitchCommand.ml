@@ -190,10 +190,13 @@ let switch ~quiet switch =
     update_config t switch
 
 let import filename =
-  log "import switch=%s" (OpamFilename.to_string filename);
+  log "import switch=%s" (match filename with None -> "<none>" | Some f -> OpamFilename.to_string f);
   let t = OpamState.load_state () in
 
-  let imported = OpamFile.Installed.read filename in
+  let imported =
+    match filename with
+    | None   -> OpamFile.Installed.read_from_channel stdin
+    | Some f -> OpamFile.Installed.read f in
   let new_packages = OpamPackage.Set.diff imported t.installed in
   let installed =
     OpamPackage.Set.filter (fun nv ->
@@ -215,7 +218,9 @@ let import filename =
 
 let export filename =
   let t = OpamState.load_state () in
-  OpamFile.Installed.write filename t.installed
+  match filename with
+  | None   -> OpamFile.Installed.write_to_channel stdout t.installed
+  | Some f -> OpamFile.Installed.write f t.installed
 
 let current () =
   let t = OpamState.load_state () in
