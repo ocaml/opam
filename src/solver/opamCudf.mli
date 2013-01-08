@@ -93,9 +93,6 @@ val resolve:
 (** Remove a package from an universe *)
 val uninstall: string -> Cudf.universe -> Cudf.universe
 
-(** Output the universe *)
-val output_universe: string -> Cudf.universe -> unit
-
 (** The "reinstall" string *)
 val s_reinstall: string
 

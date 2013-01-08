@@ -502,7 +502,9 @@ let apply_solution ?(force = false) t sol =
     OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
 
     let continue =
-      if force || sum stats <= 1 then
+      if !OpamGlobals.dryrun then
+        false
+      else if force || sum stats <= 1 then
         true
       else
         OpamState.confirm "Do you want to continue ?" in

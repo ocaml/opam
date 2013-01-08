@@ -219,14 +219,16 @@ let need_reinstall p =
   try Cudf.lookup_package_property p s_reinstall = "true"
   with Not_found -> false
 
-let output_universe name universe =
-  if !OpamGlobals.debug then (
-    let oc = open_out (name ^ ".cudf") in
-    Cudf_printer.pp_universe oc universe;
-    close_out oc;
-    let g = Graph.of_universe universe in
-    Graph.output g name;
-  )
+let solver_calls = ref 0
+
+let dump_cudf_request cudf_request =
+  match !OpamGlobals.cudf_file with
+  | None   -> ()
+  | Some f ->
+    incr solver_calls;
+    let oc = open_out (Printf.sprintf "%s-%d.cudf" f !solver_calls) in
+    Cudf_printer.pp_cudf oc cudf_request;
+    close_out oc
 
 let default_preamble =
   let l = [
@@ -241,16 +243,6 @@ let default_preamble =
     (s_reinstall,`Bool None);
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
-
-let to_cudf univ req = (
-  default_preamble,
-  univ,
-  { Cudf.request_id = "opam";
-    install         = req.wish_install;
-    remove          = req.wish_remove;
-    upgrade         = req.wish_upgrade;
-    req_extra       = [] }
-)
 
 let uninstall name universe =
   let packages = Cudf.get_packages universe in
@@ -271,25 +263,28 @@ let external_solver_available () =
   | None   -> false
   | Some _ -> true
 
-let solver_call = ref 0
+let to_cudf univ req = (
+  default_preamble,
+  univ,
+  { Cudf.request_id = "opam";
+    install         = req.wish_install;
+    remove          = req.wish_remove;
+    upgrade         = req.wish_upgrade;
+    req_extra       = [] }
+)
+
 let call_external_solver univ req =
+  let cudf_request = to_cudf univ req in
+  dump_cudf_request cudf_request;
   match Lazy.force aspcud_path with
   | None ->
     (* No external solver is available, use the default one *)
-    Algo.Depsolver.check_request ~explain:true (to_cudf univ req)
+    Algo.Depsolver.check_request ~explain:true cudf_request
   | Some path ->
   if Cudf.universe_size univ > 0 then begin
     let cmd = Printf.sprintf "%s $in $out $pref" path in
     let criteria = "-removed,-new" in
-    let cudf = to_cudf univ req in
-    if !OpamGlobals.debug then (
-      Common.Util.Debug.all_enabled ();
-      let oc = open_out (Printf.sprintf "/tmp/univ%d.cudf" !solver_call) in
-      Cudf_printer.pp_cudf oc cudf;
-      incr solver_call;
-      close_out oc;
-    );
-    Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf
+    Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
   end else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 

@@ -173,15 +173,15 @@ let resolve universe request =
   match OpamCudf.get_final_universe universe request with
 
   | Conflicts e ->
-    log "cudf_resolve_opt conflict!";
+    log "resolve: conflict!";
     Conflicts e
 
   | Success u   ->
-    log "cudf_resolve_opt u=%s" (OpamCudf.string_of_universe u);
+    log "resolve: sucess! final-universe=%s" (OpamCudf.string_of_universe u);
 
     (* Get all the possible package which can be modified *)
     let names = filter_dependencies universe request.wish_upgrade in
-    log "names=%s" (OpamMisc.StringSet.to_string names);
+    log "resolve: impact=%s" (OpamMisc.StringSet.to_string names);
 
     (* All the packages in the request *)
     let all = Hashtbl.create 1024 in

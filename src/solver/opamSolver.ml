@@ -104,7 +104,6 @@ let load_cudf_universe ?(depopts=false) universe =
     try Cudf.load_universe (OpamPackage.Map.values opam2cudf)
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
-  OpamCudf.output_universe "opam-universe" universe;
   (fun opam ->
     try OpamPackage.Map.find opam opam2cudf
     with Not_found ->

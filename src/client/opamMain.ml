@@ -45,16 +45,20 @@ type build_options = {
   no_checksums  : bool;
   build_test    : bool;
   build_doc     : bool;
+  dryrun        : bool;
+  cudf_file     : string option;
 }
 
-let create_build_options keep_build_dir make no_checksums build_test build_doc =
-  { keep_build_dir; make; no_checksums; build_test; build_doc }
+let create_build_options keep_build_dir make no_checksums build_test build_doc dryrun cudf_file =
+  { keep_build_dir; make; no_checksums; build_test; build_doc; dryrun; cudf_file }
 
 let set_build_options b =
   OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
   OpamGlobals.no_checksums   := !OpamGlobals.no_checksums || b.no_checksums;
   OpamGlobals.build_test     := !OpamGlobals.build_test || b.build_test;
   OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
+  OpamGlobals.dryrun         := !OpamGlobals.dryrun || b.dryrun;
+  OpamGlobals.cudf_file      := b.cudf_file;
   match b.make with
   | None   -> ()
   | Some s -> OpamGlobals.makecmd := lazy s
@@ -263,7 +267,14 @@ let build_options =
     mk_opt ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
-  Term.(pure create_build_options $keep_build_dir $make $no_checksums $build_test $build_doc)
+  let dryrun =
+    mk_flag ["dry-run"]
+      "Simply call the solver without actually performing any build/install operations." in
+  let cudf_file =
+    mk_opt ["cudf"] "FILENAME"
+      "Save the CUDF request sent to the solver to $(docv)-<n>.cudf."
+      Arg.(some string) None in
+  Term.(pure create_build_options $keep_build_dir $make $no_checksums $build_test $build_doc $dryrun $cudf_file)
 
 let guess_repository_kind kind address =
   match kind with
@@ -543,11 +554,12 @@ let upgrade =
         find a consistent state where $(i,most) of the installed packages are
         upgraded to their latest versions.";
   ] in
-  let upgrade global_options names =
+  let upgrade global_options build_options names =
     set_global_options global_options;
+    set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list names in
     OpamClient.upgrade packages in
-  Term.(pure upgrade $global_options $package_list),
+  Term.(pure upgrade $global_options $build_options $package_list),
   term_info "upgrade" ~doc ~man
 
 (* UPLOAD *)
