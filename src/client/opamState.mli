@@ -87,8 +87,11 @@ val unknown_compiler: compiler -> 'a
 
 (** {2 Environment} *)
 
-(** Get the current environment *)
-val get_env: state -> env
+(** Get the current environment. *)
+val get_full_env: state -> env
+
+(** Get only environment modified by OPAM. *)
+val get_opam_env: state -> env
 
 (** Update an environment. *)
 val add_to_env: state -> env -> (string * string * string) list -> env

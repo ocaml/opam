@@ -624,7 +624,7 @@ let add_to_env t (env: env) (updates: env_updates) =
   let env = List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
   env @ expand_env t updates
 
-let get_env t =
+let env_updates t =
   let comp = compiler t t.compiler in
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
@@ -640,17 +640,21 @@ let get_env t =
     else
       [] in
 
-  let updates = new_path :: man_path :: toplevel_dir :: (root @ comp_env) in
-  let env0 = OpamMisc.env () in
+  new_path :: man_path :: toplevel_dir :: (root @ comp_env)
 
-  add_to_env t env0 updates
+let get_opam_env t =
+  add_to_env t [] (env_updates t)
+
+let get_full_env t =
+  let env0 = OpamMisc.env () in
+  add_to_env t env0 (env_updates t)
 
 let print_env_warning ?(add_profile = false) t =
   match
     List.filter
       (fun (s, v) ->
         Some v <> try Some (OpamMisc.getenv s) with _ -> None)
-      (get_env t)
+      (get_opam_env t)
   with
     | [] -> () (* every variables are correctly set *)
     | l ->

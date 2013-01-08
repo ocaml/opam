@@ -255,7 +255,7 @@ let config request =
   let t = OpamState.load_state () in
   match request with
   | CEnv csh                  ->
-    let env = OpamState.get_env t in
+    let env = OpamState.get_opam_env t in
     if csh
     then print_csh_env env
     else print_env env

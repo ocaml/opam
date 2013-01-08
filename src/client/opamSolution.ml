@@ -226,7 +226,7 @@ let string_of_commands commands =
     "Nothing to do."
 
 let compilation_env t opam =
-  let env0 = OpamState.get_env t in
+  let env0 = OpamState.get_full_env t in
   OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
 
 let proceed_to_delete ~rm_build t nv =
