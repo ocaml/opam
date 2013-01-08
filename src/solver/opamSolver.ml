@@ -126,7 +126,7 @@ let map_action f = function
   | To_change (Some x, y) -> To_change (Some (f x), f y)
   | To_change (None, y)   -> To_change (None, f y)
   | To_delete y           -> To_delete (f y)
-  | To_recompile (y, l)   -> To_recompile (f y, List.map f l)
+  | To_recompile y        -> To_recompile (f y)
 
 let graph cudf2opam cudf_graph =
   let size = OpamCudf.ActionGraph.nb_vertex cudf_graph in
@@ -145,7 +145,11 @@ let graph cudf2opam cudf_graph =
 let solution cudf2opam cudf_solution =
   let to_remove = List.map cudf2opam cudf_solution.OpamCudf.ActionGraph.to_remove in
   let to_process = graph cudf2opam cudf_solution.OpamCudf.ActionGraph.to_process in
-  { PackageActionGraph.to_remove ; to_process }
+  let root_causes =
+    List.map
+      (fun (p, pl) -> cudf2opam p, List.map cudf2opam pl)
+      cudf_solution.OpamCudf.ActionGraph.root_causes in
+  { PackageActionGraph.to_remove ; to_process; root_causes }
 
 let map_request f r =
   let f = List.map f in
@@ -237,10 +241,14 @@ let print_solution t =
   (*Globals.msg
     "No actions will be performed, the current state satisfies the request.\n"*)
   else
-    let f = OpamPackage.to_string in
-    List.iter (fun p -> OpamGlobals.msg " - remove %s\n" (f p)) t.PackageActionGraph.to_remove;
+    let causes pkg =
+      try List.assoc pkg t.PackageActionGraph.root_causes
+      with Not_found -> [] in
+    List.iter
+      (fun p -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes (To_delete p)))
+      t.PackageActionGraph.to_remove;
     PackageActionGraph.Topological.iter
-      (function action -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action action))
+      (function action -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes action))
       t.PackageActionGraph.to_process
 
 let sequential_solution l =
@@ -252,5 +260,9 @@ let sequential_solution l =
       PackageActionGraph.add_edge g x y;
       aux t in
   aux l;
-  { PackageActionGraph.to_remove=[]; to_process = g }
+  {
+    PackageActionGraph.to_remove = [];
+    to_process = g;
+    root_causes = []
+  }
 

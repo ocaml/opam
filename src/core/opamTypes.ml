@@ -335,7 +335,12 @@ type file = {
 type 'a action =
   | To_change of 'a option * 'a
   | To_delete of 'a
-  | To_recompile of 'a * 'a list
+  | To_recompile of 'a
+
+let action_contents = function
+  | To_change (_, p)
+  | To_recompile p
+  | To_delete p -> p
 
 module type ACTION_GRAPH = sig
 
@@ -343,17 +348,21 @@ module type ACTION_GRAPH = sig
 
   include Graph.Sig.I with type V.t = package action
 
+  include Graph.Oper.S with type g = t
+
   module Parallel: OpamParallel.SIG
     with type G.t = t
      and type G.V.t = V.t
 
   module Topological: sig
     val iter: (package action -> unit) -> t -> unit
+    val fold: (package action -> 'a -> 'a) -> t -> 'a -> 'a
   end
 
   type solution = {
     to_remove : package list;
     to_process: t;
+    root_causes: (package * package list) list;
   }
 
 end
@@ -361,42 +370,52 @@ end
 module type PKG = sig
   include Graph.Sig.COMPARABLE
   val to_string: t -> string
-  val string_of_action: t action -> string
+  val string_of_action: ?causes:(t -> t list) -> t action -> string
 end
 
 module MakeActionGraph (Pkg: PKG) = struct
   type package = Pkg.t
   module Vertex =  struct
     type t = Pkg.t action
-    let package = function
-      | To_change (_, p)
-      | To_recompile (p, _)
-      | To_delete p -> p
-    let compare t1 t2 = Pkg.compare (package t1) (package t2)
-    let hash t = Pkg.hash (package t)
-    let equal t1 t2 = Pkg.equal (package t1) (package t2)
+    let compare t1 t2 = Pkg.compare (action_contents t1) (action_contents t2)
+    let hash t = Pkg.hash (action_contents t)
+    let equal t1 t2 = Pkg.equal (action_contents t1) (action_contents t2)
   end
   module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
   module Topological = Graph.Topological.Make (PG)
+  module O = Graph.Oper.I (PG)
   module Parallel = OpamParallel.Make(struct
     include PG
     include Topological
-    let string_of_vertex = Pkg.string_of_action
+    let string_of_vertex v = Pkg.string_of_action v
   end)
   include PG
+  include O
   type solution = {
     to_remove : package list;
     to_process: t;
+    root_causes: (package * package list) list;
   }
 end
 
 module PackageAction = struct
   include OpamPackage
 
-  let string_of_names ps =
-    String.concat ", " (List.map (OpamPackage.name |> OpamPackage.Name.to_string) ps)
+  let string_of_name = OpamPackage.name |> OpamPackage.Name.to_string
 
-  let string_of_action = function
+  let string_of_names ps =
+    String.concat ", " (List.map string_of_name ps)
+
+  let string_of_cause causes a =
+    let causes = causes (action_contents a) in
+    match causes, a with
+    | [] , To_recompile _ -> "[upstream changes]"
+    | [] , _ -> ""
+    | _  , To_recompile _
+    | _  , To_delete _  -> Printf.sprintf "[uses %s]" (string_of_names causes)
+    | _  , To_change _  -> Printf.sprintf "[required by %s]" (string_of_names causes)
+
+  let string_of_raw_action = function
   | To_change (None, p)   -> Printf.sprintf " - install %s" (OpamPackage.to_string p)
   | To_change (Some o, p) ->
     let f action =
@@ -406,10 +425,17 @@ module PackageAction = struct
       f "upgrade"
     else
       f "downgrade"
-  | To_recompile (p, [])  -> Printf.sprintf " - recompile %s (cause: upstream change)" (OpamPackage.to_string p)
-  | To_recompile (p, [c]) -> Printf.sprintf " - recompile %s (cause: %s)" (OpamPackage.to_string p) (string_of_names [c])
-  | To_recompile (p, c)   -> Printf.sprintf " - recompile %s (causes: %s)" (OpamPackage.to_string p) (string_of_names c)
-  | To_delete p           -> Printf.sprintf " - delete %s" (OpamPackage.to_string p)
+  | To_recompile p -> Printf.sprintf " - recompile %s" (OpamPackage.to_string p)
+  | To_delete p    -> Printf.sprintf " - remove %s" (OpamPackage.to_string p)
+
+  let string_of_action ?causes a =
+    let causes = match causes with
+      | None   -> ""
+      | Some f -> string_of_cause f a in
+    match causes with
+    | "" -> string_of_raw_action a
+    | _  -> Printf.sprintf "%s %s" (string_of_raw_action a) causes
+
 end
 
 module PackageActionGraph = MakeActionGraph(PackageAction)

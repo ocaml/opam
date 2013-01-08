@@ -84,7 +84,12 @@ val solution_of_actions:
   Cudf.package action list ->
   ActionGraph.solution
 
-(** Resolve a CUDF request *)
+(** Resolve a CUDF request. The result is either a conflict explaining
+    the error, or a list of action to proceed. Note however than the
+    action list is not yet complete: the transitive closure of
+    reinstallations is not yet completed, as it requires to fold over
+    the dependency graph in considering the optional dependencies --
+    which is something that dose/cudf obviously does not handle.  *)
 val resolve:
   Cudf.universe ->
   Cudf_types.vpkg request ->

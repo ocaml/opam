@@ -868,7 +868,7 @@ let reinstall names =
     let universe = OpamState.universe t Depends in
     OpamSolver.forward_dependencies ~depopts:true ~installed:true universe reinstall in
   let to_process =
-    List.map (fun pkg -> To_recompile (pkg,[])) (List.rev depends) in
+    List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
   let solution = OpamSolution.apply_solution t (OpamSolver.sequential_solution to_process) in
   OpamSolution.error_if_no_solution solution
 

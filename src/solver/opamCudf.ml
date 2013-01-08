@@ -18,9 +18,9 @@ open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
 
-let string_of_action action =
+let string_of_action ?causes a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
-  match action with
+  match a with
   | To_change (None, p)   -> Printf.sprintf " - install %s" (aux p)
   | To_change (Some o, p) ->
     let f action =
@@ -29,7 +29,7 @@ let string_of_action action =
       f "upgrade"
     else
       f "downgrade"
-  | To_recompile (p,_)    -> Printf.sprintf " - recompile %s" (aux p)
+  | To_recompile p        -> Printf.sprintf " - recompile %s" (aux p)
   | To_delete p           -> Printf.sprintf " - delete %s" (aux p)
 
 let string_of_actions l =
@@ -331,9 +331,8 @@ module Diff = struct
 end
 
 (* Transform a diff from current to final state into a list of
-   actions. At this point, the transitive closure of actions has not
-   yet been taken, so the only reinstallation action we get come from
-   upstream changes. *)
+   actions. At this point, we don't know about the root causes of the
+   actions, they will be computed later. *)
 let actions_of_diff diff =
   Hashtbl.fold (fun pkgname s acc ->
     let add x = x :: acc in
@@ -350,7 +349,7 @@ let actions_of_diff diff =
     | None      , Some p     , _      -> add (To_change (None, p))
     | Some p    , None       , _      -> add (To_delete p)
     | Some p_old, Some p_new , _      -> add (To_change (Some p_old, p_new))
-    | None      , None       , Some p -> add (To_recompile (p, []))
+    | None      , None       , Some p -> add (To_recompile p)
     | None      , None       , None   -> acc
   ) diff []
 
@@ -373,12 +372,13 @@ let create_graph filter universe =
 
 (*
   Compute a full solution from a set of root actions. This means:
-    1/ computing the right sequence of removal.
-    2/ computing the transitive closure of reinstallations.
+  1/ computing the right sequence of removal.
+  2/ computing the transitive closure of reinstallations.
+  3/ computing the root causes of actions
 
-   Parameters:
-   - [simple _universe] is the graph with 'depends' only
-   - [complex_universe] is the graph with 'depends' + 'depopts'
+  Parameters:
+  - [simple _universe] is the graph with 'depends' only
+  - [complex_universe] is the graph with 'depends' + 'depopts'
 *)
 let solution_of_actions ~simple_universe ~complete_universe root_actions =
   log "graph_of_actions root_actions=%s" (string_of_actions root_actions);
@@ -400,15 +400,15 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
 
   (* the packages to recompile *)
   let to_recompile =
-    Map.of_list (OpamMisc.filter_map (function
-      | To_recompile (pkg,causes) -> Some (pkg, causes)
+    Set.of_list (OpamMisc.filter_map (function
+      | To_recompile pkg -> Some pkg
       | _ -> None
     ) root_actions) in
 
   (* compute initial packages to install *)
   let to_process_init =
     Map.of_list (OpamMisc.filter_map (function
-      | To_recompile (pkg,_)
+      | To_recompile pkg
       | To_change (_, pkg) as act -> Some (pkg, act)
       | To_delete _ -> None
     ) root_actions) in
@@ -424,45 +424,32 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
   let to_recompile =
     Set.fold (fun pkg to_recompile ->
       let succ = Graph.succ complete_graph pkg in
-      let succ = List.map (fun s -> s, [pkg]) succ in
-      Map.union (@@) to_recompile (Map.of_list succ)
+      Set.union to_recompile (Set.of_list succ)
     ) to_remove to_recompile in
 
   let to_remove =
     Graph.closure (create_graph (fun p -> Set.mem p to_remove) simple_universe) to_remove in
 
-  (* compute packages to recompile and to process due to NEW packages *)
-  let to_recompile, to_process_map =
+  (* Update the package to recompile *)
+  let _, to_process_map =
     Graph.Topo.fold
       (fun pkg (to_recompile, to_process_map) ->
         let add_succ pkg action =
           let succ = Graph.succ complete_graph pkg in
-          let succ =
-            List.map (fun s ->
-              if Map.mem pkg to_recompile then
-              (* look for the root causes *)
-                let causes = Map.find pkg to_recompile in
-                (s, causes)
-              else
-                (* the root cause is pkg itself *)
-                (s, [pkg])
-            ) succ in
-          let to_recompile = Map.union (@@) to_recompile (Map.of_list succ) in
+          let to_recompile = Set.union to_recompile (Set.of_list succ) in
           let to_process_map = Map.add pkg action (Map.remove pkg to_process_map) in
           to_recompile, to_process_map in
         if Map.mem pkg to_process_init then
           add_succ pkg (Map.find pkg to_process_init)
-        else if Map.mem pkg to_recompile then
-          let causes = Map.find pkg to_recompile in
-          add_succ pkg (To_recompile (pkg, causes))
+        else if Set.mem pkg to_recompile then
+          add_succ pkg (To_recompile pkg)
         else
           to_recompile, to_process_map)
       complete_graph
       (to_recompile, Map.empty) in
 
-  (* construct the answer [graph] to add.
-     Then, it suffices to fold it topologically
-     by following the action given at each node (install or recompile). *)
+  (* Construct the full graph of actions to proceed to reach the
+     new state given by the solver.  *)
   let to_process = ActionGraph.create () in
   Map.iter (fun _ act -> ActionGraph.add_vertex to_process act) to_process_map;
   Graph.iter_edges
@@ -474,4 +461,30 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
       with Not_found ->
         ())
     complete_graph;
-  { ActionGraph.to_remove; to_process }
+
+  (* Now we can compute the root causes. Install & Upgrades are either
+     the original cause of the action, or they are here because of some
+     dependency constrains: so we need to look forward in the graph. At
+     the opposite, Reinstall are there because of some install/upgrade,
+     so need to look backward in the graph. *)
+  let to_process_complete =
+    ActionGraph.add_transitive_closure (ActionGraph.copy to_process) in
+  let root_causes =
+    ActionGraph.Topological.fold (fun action root_causes ->
+      match ActionGraph.out_degree to_process action with
+      | 0 -> root_causes
+      | _ ->
+        match action with
+        | To_change (_, pkg) ->
+          let succ = ActionGraph.succ to_process_complete action in
+          let causes = List.filter (fun a -> ActionGraph.out_degree to_process a = 0) succ in
+          let causes = List.map action_contents causes in
+          (pkg, causes) :: root_causes
+        | To_recompile pkg | To_delete pkg ->
+          let pred = ActionGraph.pred to_process_complete action in
+          let causes = List.filter (fun a -> ActionGraph.in_degree to_process a = 0) pred in
+          let causes = List.map action_contents causes in
+          (pkg, causes) :: root_causes
+    ) to_process [] in
+
+  { ActionGraph.to_remove; to_process; root_causes }

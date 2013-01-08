@@ -160,7 +160,7 @@ type repository = {
 
 (** {2 Solver} *)
 
-(** The solver answer is a list of actions *)
+(** The solver answers a list of actions to perform *)
 type 'a action =
 
   (** The package must be installed. The package could have been
@@ -175,7 +175,10 @@ type 'a action =
       The second parameter is the collection of packages causing the
       reinstallation. An empty list means that the package has been
       modified upstream. *)
-  | To_recompile of 'a * 'a list
+  | To_recompile of 'a
+
+(** Extract a package from a package action. *)
+val action_contents: 'a action -> 'a
 
 (** Graph of package actions *)
 module type ACTION_GRAPH = sig
@@ -183,6 +186,8 @@ module type ACTION_GRAPH = sig
   type package
 
   include Graph.Sig.I with type V.t = package action
+
+  include Graph.Oper.S with type g = t
 
   (** Parallel iterator *)
   module Parallel: OpamParallel.SIG
@@ -192,12 +197,14 @@ module type ACTION_GRAPH = sig
   (** Topological traversal *)
   module Topological: sig
     val iter: (package action -> unit) -> t -> unit
+    val fold: (package action -> 'a -> 'a) -> t -> 'a -> 'a
   end
 
   (** Solver solution *)
   type solution = {
     to_remove : package list;
     to_process: t;
+    root_causes: (package * package list) list;
   }
 
 end
@@ -211,7 +218,7 @@ module type PKG = sig
   val to_string: t -> string
 
   (** Pretty-printing of package actions *)
-  val string_of_action: t action -> string
+  val string_of_action: ?causes:(t -> t list) -> t action -> string
 
 end
 
