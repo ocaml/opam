@@ -229,6 +229,10 @@ let compilation_env t opam =
   let env0 = OpamState.get_full_env t in
   OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
 
+let opam_env t opam =
+  let env0 = OpamState.get_opam_env t in
+  OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
+
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
   OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
@@ -384,7 +388,7 @@ let proceed_to_change t nv_old nv =
 
   (* Generate an environnement file *)
   let env_f = OpamPath.Switch.build_env t.root t.switch nv in
-  OpamFile.Env.write env_f env;
+  OpamFile.Env.write env_f (opam_env t opam);
 
   (* Exec the given commands. *)
   let exec name f =
