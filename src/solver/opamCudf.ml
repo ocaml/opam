@@ -239,8 +239,7 @@ let default_preamble =
     ("sourceversion",(`Int (Some 1))) ;
     ("essential",(`Bool (Some false))) ;
     ("buildessential",(`Bool (Some false))) ;
-    ("depopts",(`Enum (["None"],Some "None")));
-    (s_reinstall,`Bool None);
+    (s_reinstall,`Bool (Some false));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
