@@ -608,7 +608,8 @@ let apply_solution ?(force = false) t action sol =
           OpamGlobals.error "[ERROR] while %s %s" action (OpamPackage.to_string nv);
           match error with
           | OpamParallel.Process_error r  -> OpamProcess.display_error_message r
-          | OpamParallel.Internal_error s -> OpamGlobals.error "  %s" s in
+          | OpamParallel.Internal_error s -> OpamGlobals.error "  %s" s
+          | OpamParallel.Pipe_error       -> OpamGlobals.error "  Error when sending the compilation log." in
         match n with
         | To_change (Some o, nv) ->
           if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version nv) < 0 then

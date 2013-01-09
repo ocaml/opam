@@ -25,6 +25,7 @@ end
 type error =
   | Process_error of OpamProcess.result
   | Internal_error of string
+  | Pipe_error
 
 module type SIG = sig
 
@@ -143,7 +144,21 @@ module Make (G : G) = struct
 
   let write_error oc r =
     log "write_error";
-    Marshal.to_channel oc r []
+    (** [Marshal.to_channel] never terminates if the size of [r] is too large.
+        Here we try to reduce its size by preserving the most of its meaning. *)
+    let tl l = try List.tl l with _ -> [] in
+    let rec remove_lines r =
+      if String.length (Marshal.to_string r []) >= OpamGlobals.ulimit_pipe then
+        match r with
+          | Process_error r ->
+              remove_lines (Process_error OpamProcess.({ r with r_info   = tl r.r_info   ;
+                                                                r_stdout = tl r.r_stdout ;
+                                                                r_stderr = tl r.r_stderr ; }))
+          | Internal_error _ -> Pipe_error
+          | Pipe_error -> assert false
+      else
+        r in
+    Marshal.to_channel oc (remove_lines r) []
 
   let read_error ic =
     log "read_error";

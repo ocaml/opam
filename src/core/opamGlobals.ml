@@ -143,6 +143,9 @@ let makecmd = ref (lazy (
   | _ -> "make"
 )
 )
+
+let ulimit_pipe = 65536
+
 let default_jobs = 1
 
 let exit i =
