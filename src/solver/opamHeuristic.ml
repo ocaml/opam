@@ -17,7 +17,9 @@ open OpamTypes
 
 let log fmt = OpamGlobals.log "HEURISTIC" fmt
 
-let rec minimize minimizable universe =
+(* Try to remove a subset of the installed packages from the universe
+   and check whether the the resulting universe stays consistent. *)
+let rec minimize_universe minimizable universe =
   log "minimize minimizable=%s" (OpamMisc.StringSet.to_string minimizable);
   if OpamMisc.StringSet.is_empty minimizable then
     universe
@@ -36,7 +38,21 @@ let rec minimize minimizable universe =
       universe
     else
       let universe = OpamMisc.StringSet.fold OpamCudf.uninstall to_remove universe in
-      minimize minimizable universe
+      minimize_universe minimizable universe
+
+(* Forget about the changes which are not related to the packages we
+   are interested in.  We don't have yet computed the transitive
+   closure of dependencies: we are processing 'raw' actions which come
+   directly from the solver. It shoud be safe to discard
+   install/upgrade action outside of our the interesting packages;
+   delete actions are using a different code-path, so we arbitrary
+   keep it there. *)
+let minimize_actions interesting_packages actions =
+  List.filter (function
+  | To_change (_, p)
+  | To_recompile p -> OpamMisc.StringSet.mem p.Cudf.package interesting_packages
+  | To_delete _    -> assert false
+  ) actions
 
 (* Given a list of bounds, create the least tuple such that the sum of
    components is equal to n.  For instance: init [1;2;1] 3 is
@@ -96,6 +112,9 @@ let succ ~bounds l =
     let k = List.fold_left (+) 0 l in
     init ~bounds (k+1)
 
+(* Maximum duration of the state-space exploration. *)
+let exploration_timeout = 5.
+
 (* explore the state-space given by an upgrade table.
 
    - [upgrade_tbl] associate pkg name to pacake constraints, for a
@@ -119,7 +138,6 @@ let explore f upgrade_tbl =
   let t0 = Unix.time () in
   let count = ref 0 in
   let interval = 500 in
-  let timeout = 30. in
   let flush_output () =
     if !count >= interval then OpamGlobals.msg "[%d]\n" !count in
   let rec aux = function
@@ -138,7 +156,7 @@ let explore f upgrade_tbl =
       let t1 = Unix.time () in
       if !count mod interval = interval - 1 then
         OpamGlobals.msg ".";
-      if t1 -. t0 > timeout then (
+      if t1 -. t0 > exploration_timeout then (
         if !count >= interval - 1 then OpamGlobals.msg "T";
         default_conflict
       ) else match f constrs with
@@ -170,81 +188,92 @@ let resolve universe request =
   | Success u   ->
     log "resolve: sucess! final-universe=%s" (OpamCudf.string_of_universe u);
 
-    (* Get all the possible package which can be modified *)
-    let names = filter_dependencies universe request.wish_upgrade in
-    log "resolve: impact=%s" (OpamMisc.StringSet.to_string names);
+    (* Return the version of a given package in the initial
+       solution *)
+    let initial_version =
+      let initial_versions = Hashtbl.create 1024 in
+      List.iter (fun pkg -> Hashtbl.add initial_versions pkg.Cudf.package pkg.Cudf.version) (Cudf.get_packages u);
+      function name ->
+        try Some (Hashtbl.find initial_versions name)
+        with Not_found -> None in
 
-    (* All the packages in the request *)
-    let all = Hashtbl.create 1024 in
+    (* [upgrade_tbl] contains the packages which will be tested by the
+       brute-force state explorer. In the remaining parts of this
+       function, we try to minimize the state to explore for each
+       package. This means:
 
-    (* Package which are maybe not so useful *)
-    let minimizable = ref OpamMisc.StringSet.empty in
+       - if the package has a version constraint in the request,
+       that's the only we consider.
 
-    (* The packages to upgrade *)
+       - if the package has no version constraints in the request, or
+       if the package does not appear in the initial request, then we
+       consider only the versions greater or equals to the one
+       proposed by the solver.
+
+    *)
     let upgrade_tbl = Hashtbl.create 1024 in
+    let version_constraint =
+      let l = request.wish_install @ request.wish_upgrade in
+      function name ->
+        try List.assoc name l
+        with Not_found -> None in
+    let add_to_upgrade name =
+      if not (Hashtbl.mem upgrade_tbl name) then
+        match version_constraint name with
+        | Some v -> Hashtbl.add upgrade_tbl name [| (name, Some v) |]
+        | None   ->
+          match initial_version name with
+          | None             -> ()
+          | Some min_version ->
+            let packages =
+              Cudf.get_packages
+                ~filter:(fun p -> p.Cudf.package = name && p.Cudf.version >= min_version)
+                universe in
+            let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
+            let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
+            Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
 
-    (* The versions given by the solution *)
-    let versions = Hashtbl.create 1024 in
-    List.iter (fun pkg -> Hashtbl.add versions pkg.Cudf.package pkg.Cudf.version) (Cudf.get_packages u);
-    let version name =
-      try Some (Hashtbl.find versions name)
-      with Not_found -> None in
-
-    let add_upgrade name =
-      let packages = Cudf.get_packages ~filter:(fun p -> p.Cudf.package = name) universe in
-      let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
-      (* only keep the version greater or equal to either:
-         - the currently installed package; or
-         - the version proposed by the solver *)
-      let min_version =
-        match version name, List.filter (fun p -> p.Cudf.installed) packages with
-        | None  , []  -> min_int
-        | None  , [i] -> i.Cudf.version
-        | Some v, _   -> v
-        | _ -> assert false (* at most one version is installed *) in
-      let packages = List.filter (fun p -> p.Cudf.version >= min_version) packages in
-      let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
-      Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
-
-    (* Register the packages in the request *)
-    List.iter (fun (n,_) -> Hashtbl.add all n false) request.wish_install;
-    List.iter (fun (n,_) -> Hashtbl.add all n true) request.wish_upgrade;
-
-    (* Register the upgraded packages *)
-    let add_constr (n,v as x) =
-      match v with
-      | Some _ -> Hashtbl.add upgrade_tbl n [| x |]
-      | None   -> add_upgrade n in
-
-    List.iter add_constr request.wish_upgrade;
-    List.iter add_constr
-      (List.filter (fun (n,_) -> OpamMisc.StringSet.mem n names) request.wish_install);
-
-    (* Register the new packages *)
+    (* Compute the set of minimizable packages, eg. the ones which are
+       maybe not necessary to get a correct solution (ie. we will
+       later check whether an optimal solution without these package
+       exists). *)
+    let requested_packages = ref OpamMisc.StringSet.empty in
+    List.iter (fun (n,_) ->
+      requested_packages := OpamMisc.StringSet.add n !requested_packages
+    ) (request.wish_upgrade @ request.wish_install);
+    let minimizable = ref OpamMisc.StringSet.empty in
     let diff = Common.CudfDiff.diff universe u in
     Hashtbl.iter (fun name s ->
-      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed) then (
-        if not (Hashtbl.mem all name) then
-          minimizable := OpamMisc.StringSet.add name !minimizable;
-        if not (Hashtbl.mem upgrade_tbl name) then
-          add_upgrade name
-      )
+      if not (Common.CudfAdd.Cudf_set.is_empty s.Common.CudfDiff.installed)
+      && not (OpamMisc.StringSet.mem name !requested_packages) then
+        (* REMARK: non-root packages are 'minimizable' *)
+        minimizable := OpamMisc.StringSet.add name !minimizable
     ) diff;
 
+    (* Register the interesting packages (eg. the ones we want to optimize) *)
+    let interesting_packages = filter_dependencies universe request.wish_upgrade in
+    log "resolve: interesting_packages=%s" (OpamMisc.StringSet.to_string interesting_packages);
+    OpamMisc.StringSet.iter (fun n -> add_to_upgrade n) interesting_packages;
+
+    (* We build a new [wish_install] constraint, containing all the
+       packages initially installed which do not belong to the list of
+       interesting packages. We want these packages to stay unchanged. *)
     let wish_install =
-      List.filter (fun (n,_) -> not (Hashtbl.mem upgrade_tbl n)) request.wish_install in
-    let wish_install = List.map (fun (n,v) ->
-      n,
-      match v with
-      | Some _ -> v
-      | None   ->
-        match Cudf.get_installed universe n with
-        | []   -> None
-        | p::_ -> Some (`Eq, p.Cudf.version)
-    ) wish_install in
+      let installed = Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe in
+      let installed = List.filter (fun p -> not (Hashtbl.mem upgrade_tbl p.Cudf.package)) installed in
+      List.map (fun p ->
+        let constr =
+          try List.assoc p.Cudf.package request.wish_install
+          with Not_found -> None in
+        let constr = match constr with
+          | None   -> Some (`Eq, p.Cudf.version)
+          | Some v -> Some v in
+        p.Cudf.package, constr
+      ) installed in
 
     let resolve wish_upgrade =
       let request = { request with wish_install; wish_upgrade } in
+      (* log "explore: request=%s" (OpamCudf.string_of_request request); *)
       OpamCudf.get_final_universe universe request in
 
     match explore resolve upgrade_tbl with
@@ -254,7 +283,9 @@ let resolve universe request =
     | Success u   ->
       log "succes=%s" (OpamCudf.string_of_universe u);
       try
-        let diff = OpamCudf.Diff.diff universe (minimize !minimizable u) in
-        Success (OpamCudf.actions_of_diff diff)
+        let diff = OpamCudf.Diff.diff universe (minimize_universe !minimizable u) in
+        let actions = OpamCudf.actions_of_diff diff in
+        let actions = minimize_actions interesting_packages actions in
+        Success actions
       with Cudf.Constraint_violation s ->
         OpamGlobals.error_and_exit "constraint violations: %s" s

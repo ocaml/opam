@@ -115,6 +115,9 @@ val string_of_reasons: (Cudf.package -> package) -> Algo.Diagnostic.reason list 
 (** Pretty-print atoms *)
 val string_of_atom: Cudf_types.vpkg -> string
 
+(** Pretty-print requests *)
+val string_of_request: Cudf_types.vpkg request -> string
+
 (** Pretty-print the universe *)
 val string_of_universe: Cudf.universe -> string
 

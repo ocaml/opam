@@ -474,7 +474,10 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
         let causes = List.filter (fun a -> ActionGraph.out_degree to_process a = 0) succ in
         let causes = List.filter (function To_change _ -> true | _ -> false) causes in
         let causes = List.map action_contents causes in
-        (pkg, Required_by causes) :: root_causes
+        let cause = match causes with
+          | []  -> Unknown
+          | _   -> Required_by causes in
+        (pkg, cause) :: root_causes
       | _, To_recompile pkg ->
         let pred = ActionGraph.pred to_process_complete action in
         let causes = List.filter (fun a -> ActionGraph.in_degree to_process a = 0) pred in
@@ -484,7 +487,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
           | _  -> Use causes in
         (pkg, cause) :: root_causes
       | _, To_delete _ ->
-          (* the to_process graph should not contain removed packages. *)
+          (* the to_process graph should not contain remove actions. *)
           assert false
     ) to_process root_causes in
 
