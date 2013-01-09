@@ -474,7 +474,8 @@ type user_action =
   | Depends
   | Init of name_set
   | Remove
-  | Switch
+  | Switch of name_set
+  | Import of name_set
 
 type universe = {
   u_installed: package_set;

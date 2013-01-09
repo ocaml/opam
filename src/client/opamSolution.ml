@@ -514,7 +514,10 @@ let apply_solution ?(force = false) t action sol =
       let installed = ref t.installed in
       let user_installed = ref t.user_installed in
       let root_installs = match action with
-        | Init i | Install i -> i
+        | Init i
+        | Install i
+        | Import i
+        | Switch i -> i
         | _ -> OpamPackage.Name.Set.empty in
 
       (* This function should be called by the parent process only, as it modifies

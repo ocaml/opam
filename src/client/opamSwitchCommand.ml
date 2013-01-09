@@ -128,9 +128,12 @@ let install_with_packages ~quiet ~packages ~warning switch compiler =
 
   (* install the compiler packages *)
   let t = OpamState.load_state () in
-  let to_install = match packages with
-    | None   -> OpamState.get_compiler_packages t compiler
-    | Some p -> OpamSolution.eq_atoms_of_packages p in
+  let to_install, roots = match packages with
+    | Some (p, r)  -> (OpamSolution.eq_atoms_of_packages p, OpamPackage.names_of_packages r)
+    | None         ->
+      let to_install = OpamState.get_compiler_packages t compiler in
+      let roots = OpamPackage.Name.Set.of_list (List.map fst to_install) in
+      to_install, roots in
 
   let bad_packages =
     OpamMisc.filter_map (fun (n, c) ->
@@ -158,7 +161,7 @@ let install_with_packages ~quiet ~packages ~warning switch compiler =
 
   match bad_packages with
   | [] ->
-    let solution = OpamSolution.resolve_and_apply ~force:true t Switch
+    let solution = OpamSolution.resolve_and_apply ~force:true t (Switch roots)
       { wish_install = [];
         wish_remove  = [];
         wish_upgrade = to_install } in
@@ -210,7 +213,12 @@ let import filename =
       (fun nv -> OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv))
       (OpamPackage.Set.elements to_install) in
 
-  let solution = OpamSolution.resolve_and_apply t Switch
+  let roots =
+    OpamPackage.Name.Set.union
+      (OpamPackage.names_of_packages t.user_installed)
+      (OpamPackage.names_of_packages new_packages) in
+
+  let solution = OpamSolution.resolve_and_apply t (Import roots)
     { wish_install = [];
       wish_remove  = [];
       wish_upgrade = to_install } in
@@ -234,7 +242,7 @@ let reinstall switch =
     OpamGlobals.exit 1;
   );
   let ocaml_version = OpamSwitch.Map.find switch t.aliases in
-  let packages = Some (OpamFile.Installed.read (OpamPath.Switch.installed t.root switch)) in
+  let packages = Some (t.installed, t.user_installed) in
 
   (* Remove the directory *)
   OpamFilename.rmdir (OpamPath.Switch.root t.root switch);

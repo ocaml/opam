@@ -274,7 +274,8 @@ type user_action =
   | Depends
   | Init of name_set (** The 'root' packages to be installed *)
   | Remove
-  | Switch
+  | Switch of name_set  (** The 'root' packages to be installed *)
+  | Import of name_set  (** The 'root' packages to be installed *)
 
 (** Solver universe *)
 type universe = {
