@@ -118,7 +118,7 @@ type state = {
   aliases: OpamFile.Aliases.t;
   pinned: OpamFile.Pinned.t;
   installed: OpamFile.Installed.t;
-  user_installed: OpamFile.User_installed.t;
+  installed_roots: OpamFile.Installed_roots.t;
   reinstall: OpamFile.Reinstall.t;
   config: OpamFile.Config.t;
   repo_index: OpamFile.Repo_index.t;
@@ -131,7 +131,7 @@ let universe t action = {
   u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends t.opams;
   u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams;
   u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams;
-  u_user_installed = t.user_installed;
+  u_installed_roots = t.installed_roots;
 }
 
 let string_of_repositories r =
@@ -146,7 +146,7 @@ let print_state t =
   log "REPOS     : %s" (string_of_repositories t.repositories);
   log "PACKAGES  : %s" (OpamPackage.Set.to_string t.packages);
   log "INSTALLED : %s" (OpamPackage.Set.to_string t.installed);
-  log "USERS     : %s" (OpamPackage.Set.to_string t.user_installed);
+  log "ROOTS     : %s" (OpamPackage.Set.to_string t.installed_roots);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
 let compilers t =
@@ -308,13 +308,13 @@ let load_repository_state () =
   let packages = OpamPackage.Set.empty in
   let available_packages = lazy OpamPackage.Set.empty in
   let installed = OpamPackage.Set.empty in
-  let user_installed = OpamPackage.Set.empty in
+  let installed_roots = OpamPackage.Set.empty in
   let reinstall = OpamPackage.Set.empty in
   let repo_index = OpamPackage.Name.Map.empty in
   let pinned = OpamPackage.Name.Map.empty in
   {
     root; switch; compiler; compiler_version; repositories; opams;
-    packages; available_packages; installed; user_installed; reinstall;
+    packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   }
 
@@ -379,18 +379,18 @@ let load_state () =
   let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
   let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
   let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) in
-  let user_installed =
-    let user_installed = OpamFile.User_installed.safe_read (OpamPath.Switch.user_installed root switch) in
-    if OpamPackage.Set.is_empty user_installed && not (OpamPackage.Set.is_empty installed)
+  let installed_roots =
+    let installed_roots = OpamFile.Installed_roots.safe_read (OpamPath.Switch.installed_roots root switch) in
+    if OpamPackage.Set.is_empty installed_roots && not (OpamPackage.Set.is_empty installed)
     then installed (* compat-mode with older versions of OPAM *)
-    else user_installed in
+    else installed_roots in
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages = OpamPackage.list (OpamPath.opam_dir root) in
   let available_packages =
     lazy (available_packages root opams repositories repo_index compiler_version pinned packages) in
   let t = {
     root; switch; compiler; compiler_version; repositories; opams;
-    packages; available_packages; installed; user_installed; reinstall;
+    packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   } in
   print_state t;
@@ -819,7 +819,7 @@ module Types = struct
     aliases: OpamFile.Aliases.t;
     pinned: OpamFile.Pinned.t;
     installed: OpamFile.Installed.t;
-    user_installed: OpamFile.User_installed.t;
+    installed_roots: OpamFile.Installed_roots.t;
     reinstall: OpamFile.Reinstall.t;
     config: OpamFile.Config.t;
     repo_index: OpamFile.Repo_index.t;

@@ -578,9 +578,9 @@ let upgrade names =
     let partial_reinstall =
       OpamPackage.Set.of_list
         (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
-    let user_installed = OpamPackage.Set.diff t.user_installed partial_reinstall in
+    let installed_roots = OpamPackage.Set.diff t.installed_roots partial_reinstall in
     let solution = OpamSolution.resolve_and_apply t (Upgrade partial_reinstall)
-      { wish_install = OpamSolution.atoms_of_packages user_installed;
+      { wish_install = OpamSolution.atoms_of_packages installed_roots;
         wish_remove  = [];
         wish_upgrade = OpamSolution.atoms_of_packages partial_reinstall } in
     solution_found := solution;
@@ -767,7 +767,7 @@ let install names =
       ) pkg_new;
 
     let solution = OpamSolution.resolve_and_apply t (Install names)
-      { wish_install = OpamSolution.atoms_of_packages t.user_installed;
+      { wish_install = OpamSolution.atoms_of_packages t.installed_roots;
         wish_remove  = [] ;
         wish_upgrade = atoms } in
     OpamSolution.error_if_no_solution solution
@@ -834,9 +834,9 @@ let remove names =
     let to_remove =
       OpamPackage.Set.of_list
         (OpamSolver.forward_dependencies ~depopts:false ~installed:true universe packages) in
-    let user_installed = OpamPackage.Set.diff t.user_installed to_remove in
+    let installed_roots = OpamPackage.Set.diff t.installed_roots to_remove in
     let solution = OpamSolution.resolve_and_apply t Remove
-      { wish_install = OpamSolution.atoms_of_packages user_installed;
+      { wish_install = OpamSolution.atoms_of_packages installed_roots;
         wish_remove  = OpamSolution.atoms_of_packages to_remove;
         wish_upgrade = [] } in
     OpamSolution.error_if_no_solution solution

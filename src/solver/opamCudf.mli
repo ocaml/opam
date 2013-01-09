@@ -101,8 +101,8 @@ val uninstall: string -> Cudf.universe -> Cudf.universe
 (** The "reinstall" string *)
 val s_reinstall: string
 
-(** The "user-installed" string *)
-val s_user_installed: string
+(** The "installed-root" string *)
+val s_installed_root: string
 
 (** {2 Pretty-printing} *)
 

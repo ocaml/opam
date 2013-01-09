@@ -200,7 +200,7 @@ module Installed: IO_FILE with type t = package_set
 
 (** List of packages explicitely installed by the user:
     [$opam/$switch/installed.user] *)
-module User_installed: IO_FILE with type t = package_set
+module Installed_roots: IO_FILE with type t = package_set
 
 (** List of packages to reinstall: [$opam/$oversion/reinstall] *)
 module Reinstall: IO_FILE with type t = package_set

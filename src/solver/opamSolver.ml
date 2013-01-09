@@ -50,7 +50,7 @@ let opam2debian universe depopts package =
   let reinstall = match universe.u_action with
     | Upgrade reinstall -> OpamPackage.Set.mem package reinstall
     | _                 -> false in
-  let user_installed = OpamPackage.Set.mem package universe.u_user_installed in
+  let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
   let open Debian.Packages in
   { Debian.Packages.default_package with
     name      = OpamPackage.Name.to_string (OpamPackage.name package) ;
@@ -64,8 +64,8 @@ let opam2debian universe depopts package =
       (if installed
        then [s_status, s_installed]
        else []) @
-      (if user_installed
-       then [OpamCudf.s_user_installed, "true"]
+      (if installed_root
+       then [OpamCudf.s_installed_root, "true"]
        else []) @
       Debian.Packages.default_package.extras }
 
@@ -75,7 +75,7 @@ let debian2cudf tables package =
       Debian.Debcudf.default_options with
         Debian.Debcudf.extras_opt = [
           OpamCudf.s_reinstall, (OpamCudf.s_reinstall, `Bool (Some false));
-          OpamCudf.s_user_installed, (OpamCudf.s_user_installed, `Bool (Some false));
+          OpamCudf.s_installed_root, (OpamCudf.s_installed_root, `Bool (Some false));
         ]
     } in
   Debian.Debcudf.tocudf ~options tables package

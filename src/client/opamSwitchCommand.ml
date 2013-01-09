@@ -215,7 +215,7 @@ let import filename =
 
   let roots =
     OpamPackage.Name.Set.union
-      (OpamPackage.names_of_packages t.user_installed)
+      (OpamPackage.names_of_packages t.installed_roots)
       (OpamPackage.names_of_packages new_packages) in
 
   let solution = OpamSolution.resolve_and_apply t (Import roots)
@@ -242,7 +242,7 @@ let reinstall switch =
     OpamGlobals.exit 1;
   );
   let ocaml_version = OpamSwitch.Map.find switch t.aliases in
-  let packages = Some (t.installed, t.user_installed) in
+  let packages = Some (t.installed, t.installed_roots) in
 
   (* Remove the directory *)
   OpamFilename.rmdir (OpamPath.Switch.root t.root switch);

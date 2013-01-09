@@ -512,7 +512,7 @@ let apply_solution ?(force = false) t action sol =
     if continue then (
 
       let installed = ref t.installed in
-      let user_installed = ref t.user_installed in
+      let installed_roots = ref t.installed_roots in
       let root_installs = match action with
         | Init i
         | Install i
@@ -524,18 +524,18 @@ let apply_solution ?(force = false) t action sol =
          the global state of OPAM *)
       let flush () =
         OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch) !installed;
-        OpamFile.User_installed.write (OpamPath.Switch.user_installed t.root t.switch) !user_installed;
+        OpamFile.Installed_roots.write (OpamPath.Switch.installed_roots t.root t.switch) !installed_roots;
       in
 
       let add_to_install nv =
         installed := OpamPackage.Set.add nv !installed;
         if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
-          user_installed := OpamPackage.Set.add nv !user_installed;
+          installed_roots := OpamPackage.Set.add nv !installed_roots;
       in
 
       let rm_from_install nv =
         installed := OpamPackage.Set.remove nv !installed;
-        user_installed := OpamPackage.Set.remove nv !user_installed in
+        installed_roots := OpamPackage.Set.remove nv !installed_roots in
 
       (* Delete the requested packages in the parent process *)
       (* In case of errors, we try to keep the list of installed packages up-to-date *)

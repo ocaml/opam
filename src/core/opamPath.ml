@@ -80,7 +80,7 @@ module Switch = struct
 
   let installed t a = root t a // "installed"
 
-  let user_installed t a = root t a // "installed.user"
+  let installed_roots t a = root t a // "installed.roots"
 
   let build_dir t a = root t a / "build"
 

@@ -183,7 +183,7 @@ let string_of_reasons cudf2opam reasons =
   Buffer.contents b
 
 let s_reinstall = "reinstall"
-let s_user_installed = "user-installed"
+let s_installed_root = "installed-root"
 
 let check flag p =
   try Cudf.lookup_package_property p flag = "true"
@@ -191,7 +191,7 @@ let check flag p =
 
 let need_reinstall = check s_reinstall
 
-let user_installed = check s_user_installed
+let is_installed_root = check s_installed_root
 
 let solver_calls = ref 0
 
@@ -215,7 +215,7 @@ let default_preamble =
     ("essential",(`Bool (Some false))) ;
     ("buildessential",(`Bool (Some false))) ;
     (s_reinstall,`Bool (Some false));
-    (s_user_installed, `Bool (Some false));
+    (s_installed_root, `Bool (Some false));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
@@ -403,9 +403,9 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
       let graph = Graph.PO.O.add_transitive_closure graph in
       let cause pkg =
         let roots = List.filter (fun v -> Graph.in_degree graph v = 0) (Graph.pred graph pkg) in
-        let roots = List.filter user_installed roots in
+        let roots = List.filter is_installed_root roots in
         let sinks = List.filter (fun v -> Graph.out_degree graph v = 0) (Graph.succ graph pkg) in
-        let sinks = List.filter user_installed sinks in
+        let sinks = List.filter is_installed_root sinks in
         match roots, sinks with
         | [], [] -> Unknown
         | [], _  -> Use sinks

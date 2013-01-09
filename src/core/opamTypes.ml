@@ -484,7 +484,7 @@ type universe = {
   u_depopts  : formula package_map;
   u_conflicts: formula package_map;
   u_action   : user_action;
-  u_user_installed: package_set;
+  u_installed_roots: package_set;
 }
 
 type lock =

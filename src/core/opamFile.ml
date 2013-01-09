@@ -239,11 +239,11 @@ module Installed = struct
 
 end
 
-module User_installed = struct
+module Installed_roots = struct
 
   include Installed
 
-  let internal = "installed.user"
+  let internal = "installed.roots"
 
 end
 
@@ -1486,9 +1486,9 @@ module Installed = struct
   include Make (Installed)
 end
 
-module User_installed = struct
-  include User_installed
-  include Make (User_installed)
+module Installed_roots = struct
+  include Installed_roots
+  include Make (Installed_roots)
 end
 
 module Updated = struct

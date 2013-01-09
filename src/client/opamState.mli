@@ -54,7 +54,7 @@ type state = {
   installed: OpamFile.Installed.t;
 
   (** The list of packages explicitely installed by the user *)
-  user_installed: OpamFile.User_installed.t;
+  installed_roots: OpamFile.Installed_roots.t;
 
   (** The list of packages which needs to be reinsalled *)
   reinstall: OpamFile.Reinstall.t;
@@ -227,7 +227,7 @@ module Types: sig
     aliases: OpamFile.Aliases.t;
     pinned: OpamFile.Pinned.t;
     installed: OpamFile.Installed.t;
-    user_installed: OpamFile.User_installed.t;
+    installed_roots: OpamFile.Installed_roots.t;
     reinstall: OpamFile.Reinstall.t;
     config: OpamFile.Config.t;
     repo_index: OpamFile.Repo_index.t;

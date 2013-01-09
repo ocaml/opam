@@ -114,8 +114,8 @@ module Switch: sig
   val installed: t -> switch -> filename
 
   (** List of packages expliciterly installed by the user: {i
-      $opam/$switch/installed.bin} *)
-  val user_installed: t -> switch -> filename
+      $opam/$switch/installed.roots} *)
+  val installed_roots: t -> switch -> filename
 
   (** Tempory folders used to decompress and compile
       the corresponding archives:
