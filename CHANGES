@@ -1,7 +1,7 @@
 0.9.0 (trunk)
 * rename `--cores` to `--jobs`
 * better error messages for wrong argument of 'opam init'
-* show the root causes in the message displayed to the user when reinstalling packages
+* show the root causes of actions done by OPAM
 * opam import and export now uses -f to specify the filename, and uses stdin and stdout if no filename is specified
 * Fix environment initialisation for some corner-cases
 * Add a way to specify how to run tests and build documentation for the packages
