@@ -179,7 +179,7 @@ type 'a action =
 
 (** The possible causes of an action. *)
  type 'a cause =
-  | Uses of 'a list
+  | Use of 'a list
   | Required_by of 'a list
   | Upstream_changes
   | Unknown

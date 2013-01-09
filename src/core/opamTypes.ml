@@ -338,7 +338,7 @@ type 'a action =
   | To_recompile of 'a
 
 type 'a cause =
-  | Uses of 'a list
+  | Use of 'a list
   | Required_by of 'a list
   | Upstream_changes
   | Unknown
@@ -414,7 +414,7 @@ module PackageAction = struct
 
   let string_of_cause = function
     | Upstream_changes -> "[upstream changes]"
-    | Uses pkgs        -> Printf.sprintf "[uses %s]" (string_of_names pkgs)
+    | Use pkgs        -> Printf.sprintf "[use %s]" (string_of_names pkgs)
     | Required_by pkgs -> Printf.sprintf "[required by %s]" (string_of_names pkgs)
     | Unknown          -> ""
 

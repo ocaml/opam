@@ -439,7 +439,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
         let sinks = List.filter user_installed sinks in
         match roots, sinks with
         | [], [] -> Unknown
-        | [], _  -> Uses sinks
+        | [], _  -> Use sinks
         | _      -> Required_by roots in
       List.map (fun pkg -> pkg, cause pkg) to_remove in
     to_remove, root_causes in
@@ -498,24 +498,23 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
   let root_causes =
     let to_process_complete = ActionGraph.add_transitive_closure (ActionGraph.copy to_process) in
     ActionGraph.Topological.fold (fun action root_causes ->
-      match ActionGraph.out_degree to_process action with
-      | 0 -> root_causes
-      | _ ->
-        match action with
-        | To_change (_, pkg) ->
-          let succ = ActionGraph.succ to_process_complete action in
-          let causes = List.filter (fun a -> ActionGraph.out_degree to_process a = 0) succ in
-          let causes = List.map action_contents causes in
-          (pkg, Required_by causes) :: root_causes
-        | To_recompile pkg ->
-          let pred = ActionGraph.pred to_process_complete action in
-          let causes = List.filter (fun a -> ActionGraph.in_degree to_process a = 0) pred in
-          let causes = List.map action_contents causes in
-          let cause = match causes with
-            | [] -> Upstream_changes
-            | _  -> Uses causes in
-          (pkg, cause) :: root_causes
-        | To_delete _ ->
+      match ActionGraph.out_degree to_process action, action with
+      | 0, To_change _        -> root_causes
+      | _, To_change (_, pkg) ->
+        let succ = ActionGraph.succ to_process_complete action in
+        let causes = List.filter (fun a -> ActionGraph.out_degree to_process a = 0) succ in
+        let causes = List.filter (function To_change _ -> true | _ -> false) causes in
+        let causes = List.map action_contents causes in
+        (pkg, Required_by causes) :: root_causes
+      | _, To_recompile pkg ->
+        let pred = ActionGraph.pred to_process_complete action in
+        let causes = List.filter (fun a -> ActionGraph.in_degree to_process a = 0) pred in
+        let causes = List.map action_contents causes in
+        let cause = match causes with
+          | [] -> Upstream_changes
+          | _  -> Use causes in
+        (pkg, cause) :: root_causes
+      | _, To_delete _ ->
           (* the to_process graph should not contain removed packages. *)
           assert false
     ) to_process root_causes in

@@ -137,7 +137,7 @@ let map_action f = function
 
 let map_cause f = function
   | Upstream_changes -> Upstream_changes
-  | Uses l           -> Uses (List.map f l)
+  | Use l            -> Use (List.map f l)
   | Required_by l    -> Required_by (List.map f l)
   | Unknown          -> Unknown
 
