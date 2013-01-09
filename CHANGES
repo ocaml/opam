@@ -1,4 +1,5 @@
 0.9.0 (trunk)
+* OPAM proposes better solutions to the user
 * support for installed roots and auto-clean of unused packages
 * rename `--cores` to `--jobs`
 * better error messages for wrong argument of 'opam init'
