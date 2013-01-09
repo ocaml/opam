@@ -173,8 +173,7 @@ let arg_list name doc conv =
 (* Common flags *)
 let print_short_flag =
   mk_flag ["s";"short"]
-    "Output the names of packages separated by one whitespace \
-     instead of using the usual formatting."
+    "Output the names separated by one whitespace instead of using the usual formatting."
 
 let installed_only_flag =
   mk_flag ["i";"installed"] "List installed packages only."
