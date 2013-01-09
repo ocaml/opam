@@ -25,6 +25,7 @@ end
 type error =
   | Process_error of OpamProcess.result
   | Internal_error of string
+  | Pipe_error
 
 (** Functor signature *)
 module type SIG = sig
