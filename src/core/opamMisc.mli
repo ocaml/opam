@@ -188,7 +188,8 @@ module OP: sig
   (** Pipe operator *)
   val (|>): ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
 
-  (** concatenation with uniqness. Elements are sorted. *)
-  val (@@): 'a list -> 'a list -> 'a list
+  (** [finally f cleaner] call the [cleaner] function when [f] is
+      complete even in the presence of exceptions. *)
+  val finally: (unit -> 'a) -> (unit -> unit) -> 'a
 
 end

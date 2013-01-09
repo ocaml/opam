@@ -50,6 +50,7 @@ let opam2debian universe depopts package =
   let reinstall = match universe.u_action with
     | Upgrade reinstall -> OpamPackage.Set.mem package reinstall
     | _                 -> false in
+  let user_installed = OpamPackage.Set.mem package universe.u_user_installed in
   let open Debian.Packages in
   { Debian.Packages.default_package with
     name      = OpamPackage.Name.to_string (OpamPackage.name package) ;
@@ -63,13 +64,19 @@ let opam2debian universe depopts package =
       (if installed
        then [s_status, s_installed]
        else []) @
-        Debian.Packages.default_package.extras }
+      (if user_installed
+       then [OpamCudf.s_user_installed, "true"]
+       else []) @
+      Debian.Packages.default_package.extras }
 
 (* Convert an debian package to a CUDF package *)
 let debian2cudf tables package =
     let options = {
       Debian.Debcudf.default_options with
-        Debian.Debcudf.extras_opt = [ OpamCudf.s_reinstall, (OpamCudf.s_reinstall, `Bool None) ]
+        Debian.Debcudf.extras_opt = [
+          OpamCudf.s_reinstall, (OpamCudf.s_reinstall, `Bool (Some false));
+          OpamCudf.s_user_installed, (OpamCudf.s_user_installed, `Bool (Some false));
+        ]
     } in
   Debian.Debcudf.tocudf ~options tables package
 
@@ -128,6 +135,12 @@ let map_action f = function
   | To_delete y           -> To_delete (f y)
   | To_recompile y        -> To_recompile (f y)
 
+let map_cause f = function
+  | Upstream_changes -> Upstream_changes
+  | Uses l           -> Uses (List.map f l)
+  | Required_by l    -> Required_by (List.map f l)
+  | Unknown          -> Unknown
+
 let graph cudf2opam cudf_graph =
   let size = OpamCudf.ActionGraph.nb_vertex cudf_graph in
   let opam_graph = PackageActionGraph.create ~size () in
@@ -147,7 +160,7 @@ let solution cudf2opam cudf_solution =
   let to_process = graph cudf2opam cudf_solution.OpamCudf.ActionGraph.to_process in
   let root_causes =
     List.map
-      (fun (p, pl) -> cudf2opam p, List.map cudf2opam pl)
+      (fun (p, c) -> cudf2opam p, map_cause cudf2opam c)
       cudf_solution.OpamCudf.ActionGraph.root_causes in
   { PackageActionGraph.to_remove ; to_process; root_causes }
 
@@ -243,7 +256,7 @@ let print_solution t =
   else
     let causes pkg =
       try List.assoc pkg t.PackageActionGraph.root_causes
-      with Not_found -> [] in
+      with Not_found -> Unknown in
     List.iter
       (fun p -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes (To_delete p)))
       t.PackageActionGraph.to_remove;

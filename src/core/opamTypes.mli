@@ -177,6 +177,13 @@ type 'a action =
       modified upstream. *)
   | To_recompile of 'a
 
+(** The possible causes of an action. *)
+ type 'a cause =
+  | Uses of 'a list
+  | Required_by of 'a list
+  | Upstream_changes
+  | Unknown
+
 (** Extract a package from a package action. *)
 val action_contents: 'a action -> 'a
 
@@ -204,7 +211,7 @@ module type ACTION_GRAPH = sig
   type solution = {
     to_remove : package list;
     to_process: t;
-    root_causes: (package * package list) list;
+    root_causes: (package * package cause) list;
   }
 
 end
@@ -218,7 +225,7 @@ module type PKG = sig
   val to_string: t -> string
 
   (** Pretty-printing of package actions *)
-  val string_of_action: ?causes:(t -> t list) -> t action -> string
+  val string_of_action: ?causes:(t -> t cause) -> t action -> string
 
 end
 
@@ -255,8 +262,9 @@ type 'a request = {
 
 (** user request action *)
 type user_action =
-  | Install
-  | Upgrade of package_set
+  | Install of name_set (** The 'root' packages to be installed *)
+  | Upgrade of package_set (** The subset of packages to upgrade *)
+  | Reinstall
   | Depends
   | Init
   | Remove
@@ -270,6 +278,7 @@ type universe = {
   u_depopts  : formula package_map;
   u_conflicts: formula package_map;
   u_action   : user_action;
+  u_user_installed: package_set;
 }
 
 (** {2 Command line arguments} *)

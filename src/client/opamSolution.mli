@@ -60,7 +60,7 @@ val sum: stats -> int
 (** {2 Actions} *)
 
 (** Apply a solution return by the solver *)
-val apply_solution: ?force:bool -> OpamState.state -> solution -> solver_result
+val apply_solution: ?force:bool -> OpamState.state -> user_action -> solution -> solver_result
 
 (** Remove a package *)
 val proceed_to_delete: rm_build:bool -> OpamState.state -> package -> unit

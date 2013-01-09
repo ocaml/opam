@@ -580,9 +580,9 @@ let upgrade names =
     let partial_reinstall =
       OpamPackage.Set.of_list
         (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
-    let installed = OpamPackage.Set.diff t.installed partial_reinstall in
+    let user_installed = OpamPackage.Set.diff t.user_installed partial_reinstall in
     let solution = OpamSolution.resolve_and_apply t (Upgrade partial_reinstall)
-      { wish_install = OpamSolution.atoms_of_packages installed;
+      { wish_install = OpamSolution.atoms_of_packages user_installed;
         wish_remove  = [];
         wish_upgrade = OpamSolution.atoms_of_packages partial_reinstall } in
     solution_found := solution;
@@ -717,11 +717,12 @@ let install names =
   log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
   let t = OpamState.load_state () in
   let atoms = OpamSolution.atoms_of_names t names in
+  let names = OpamPackage.Name.Set.of_list (List.map fst atoms) in
 
   let pkg_skip, pkg_new =
     List.partition (fun (n,v) ->
       match v with
-      | None         -> OpamState.mem_installed_package_by_name t n
+      | None       -> OpamState.mem_installed_package_by_name t n
       | Some (_,v) ->
         if OpamState.mem_installed_package_by_name t n then
           let nv = OpamState.find_installed_package_by_name t n in
@@ -765,8 +766,8 @@ let install names =
         ) versions
       ) pkg_new;
 
-    let solution = OpamSolution.resolve_and_apply t Install
-      { wish_install = OpamSolution.atoms_of_packages t.installed;
+    let solution = OpamSolution.resolve_and_apply t (Install names)
+      { wish_install = OpamSolution.atoms_of_packages t.user_installed;
         wish_remove  = [] ;
         wish_upgrade = atoms } in
     OpamSolution.error_if_no_solution solution
@@ -833,9 +834,9 @@ let remove names =
     let to_remove =
       OpamPackage.Set.of_list
         (OpamSolver.forward_dependencies ~depopts:false ~installed:true universe packages) in
-    let installed = OpamPackage.Set.diff t.installed to_remove in
+    let user_installed = OpamPackage.Set.diff t.user_installed to_remove in
     let solution = OpamSolution.resolve_and_apply t Remove
-      { wish_install = OpamSolution.atoms_of_packages installed;
+      { wish_install = OpamSolution.atoms_of_packages user_installed;
         wish_remove  = OpamSolution.atoms_of_packages to_remove;
         wish_upgrade = [] } in
     OpamSolution.error_if_no_solution solution
@@ -869,7 +870,7 @@ let reinstall names =
     OpamSolver.forward_dependencies ~depopts:true ~installed:true universe reinstall in
   let to_process =
     List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
-  let solution = OpamSolution.apply_solution t (OpamSolver.sequential_solution to_process) in
+  let solution = OpamSolution.apply_solution t Reinstall (OpamSolver.sequential_solution to_process) in
   OpamSolution.error_if_no_solution solution
 
 let upload upload repo =

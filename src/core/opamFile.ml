@@ -249,6 +249,14 @@ module Installed = struct
 
 end
 
+module User_installed = struct
+
+  include Installed
+
+  let internal = "installed.user"
+
+end
+
 module Reinstall = struct
 
   include Installed
@@ -1501,6 +1509,11 @@ end
 module Installed = struct
   include Installed
   include Make (Installed)
+end
+
+module User_installed = struct
+  include User_installed
+  include Make (User_installed)
 end
 
 module Updated = struct

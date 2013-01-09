@@ -153,13 +153,17 @@ module OP = struct
 
   let (|>) f g x = g (f x)
 
-  let (@@) l1 l2 =
-    let rec aux acc = function
-      | []  -> List.rev acc
-      | [h] -> List.rev (h::acc)
-      | h1::(h2::_ as t) ->
-        if h1 = h2 then aux acc t else aux (h1::acc) t in
-    aux [] (List.sort compare (l1 @ l2))
+  let finally f clean =
+    let safe_clean () =
+      try clean ()
+      with _ -> () in
+    let result =
+      try f ()
+      with e ->
+        safe_clean ();
+        raise e in
+    safe_clean ();
+    result
 
 end
 

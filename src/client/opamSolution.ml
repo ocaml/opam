@@ -18,6 +18,7 @@ let log fmt = OpamGlobals.log "SOLUTION" fmt
 open OpamTypes
 open OpamFilename.OP
 open OpamState.Types
+open OpamMisc.OP
 
 let proceed_to_install t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
@@ -313,19 +314,14 @@ let proceed_to_delete ~rm_build t nv =
     end
   ) (OpamFile.Dot_install.misc install);
 
-  (* Remove the shared files *)
-  log "Removing the shared files";
+  (* Removing the shared dir if it is empty, overwise keep files for
+     future installation. TODO: is it the expected semantics ? *)
   let share = OpamPath.Switch.share t.root t.switch name in
-  List.iter (fun (_,dst) ->
-    let dst = share // (OpamFilename.Base.to_string dst) in
-    if OpamFilename.exists dst then
-      OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
-  ) (OpamFile.Dot_install.share install);
   (match OpamFilename.list_files share, OpamFilename.list_dirs share with
   | [], [] -> OpamFilename.rmdir share
   | _      ->
     OpamGlobals.msg
-      "%s is not empty, I'm keeping its content for futur installations."
+      "WARNING: %s is not empty. We keep its contents for futur installations.\n"
       (OpamFilename.Dir.to_string share));
 
   (* Remove .config and .install *)
@@ -494,7 +490,7 @@ let atoms_of_names t names =
     (OpamPackage.Name.Set.elements names)
 
 (* Apply a solution *)
-let apply_solution ?(force = false) t sol =
+let apply_solution ?(force = false) t action sol =
   let open PackageActionGraph in
   if OpamSolver.solution_is_empty sol then
     (* The current state satisfies the request contraints *)
@@ -508,7 +504,7 @@ let apply_solution ?(force = false) t sol =
     let continue =
       if !OpamGlobals.dryrun then
         false
-      else if force || sum stats <= 1 then
+      else if force || !OpamGlobals.yes || sum stats <= 1 then
         true
       else
         OpamState.confirm "Do you want to continue ?" in
@@ -516,24 +512,34 @@ let apply_solution ?(force = false) t sol =
     if continue then (
 
       let installed = ref t.installed in
+      let user_installed = ref t.user_installed in
+      let root_installs = match action with Install i -> i | _ -> OpamPackage.Name.Set.empty in
+
       (* This function should be called by the parent process only, as it modifies
          the global state of OPAM *)
-      let write_installed () =
-        OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch) !installed in
+      let flush () =
+        OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch) !installed;
+        OpamFile.User_installed.write (OpamPath.Switch.user_installed t.root t.switch) !user_installed;
+      in
+
+      let add_to_install nv =
+        installed := OpamPackage.Set.add nv !installed;
+        if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
+          user_installed := OpamPackage.Set.add nv !user_installed;
+      in
+
+      let rm_from_install nv =
+        installed := OpamPackage.Set.remove nv !installed;
+        user_installed := OpamPackage.Set.remove nv !user_installed in
 
       (* Delete the requested packages in the parent process *)
       (* In case of errors, we try to keep the list of installed packages up-to-date *)
       List.iter
         (fun nv ->
-          if OpamPackage.Set.mem nv !installed then begin
-            try
-              proceed_to_delete ~rm_build:true t nv;
-              installed := OpamPackage.Set.remove nv !installed;
-              write_installed ()
-            with _ ->
-              ()
-          end)
-        sol.to_remove;
+          finally
+            (fun () -> proceed_to_delete ~rm_build:true t nv)
+            (fun () -> rm_from_install nv; flush ())
+        ) sol.to_remove;
 
       (* Installation and recompilation are done by child processes *)
       let child n =
@@ -547,14 +553,10 @@ let apply_solution ?(force = false) t sol =
 
       (* Update the installed file in the parent process *)
       let post = function
-        | To_delete _    -> assert false
-        | To_recompile _ -> ()
-        | To_change (None, nv) ->
-          installed := OpamPackage.Set.add nv !installed;
-          write_installed ()
-        | To_change (Some o, nv)   ->
-          installed := OpamPackage.Set.add nv (OpamPackage.Set.remove o !installed);
-          write_installed () in
+        | To_delete _            -> assert false
+        | To_recompile _         -> ()
+        | To_change (None, nv)   -> add_to_install nv; flush ()
+        | To_change (Some o, nv) -> rm_from_install o; add_to_install nv; flush () in
 
       (* Try to recover from errors.
          XXX: this is higly experimental. *)
@@ -566,27 +568,35 @@ let apply_solution ?(force = false) t sol =
           | _ -> false
         ) l in
 
+      (* We remove all the packages depending in nv, as they will be
+         broken if nv is uninstalled. *)
+      let deleted = ref OpamPackage.Set.empty in
+      let remove_the_packages_using nv =
+        let universe = OpamState.universe t Depends in
+        let depends =
+          let set = OpamPackage.Set.singleton nv in
+          OpamPackage.Set.of_list
+            (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe set) in
+        OpamPackage.Set.iter (fun nv ->
+          finally
+            (fun () -> proceed_to_delete ~rm_build:false t nv)
+            (fun () ->
+              deleted := OpamPackage.Set.add nv !deleted;
+              rm_from_install nv;
+              flush ())
+        ) depends in
+
       let recover_from_error (n, _) = match n with
         | To_change (Some o, _) ->
-          (try
-            proceed_to_install t o;
-            installed := OpamPackage.Set.add o !installed;
-            write_installed ()
-           with _ ->
-             ())
+          if not (OpamPackage.Set.mem o !deleted) then
+            finally
+              (fun () ->
+                try proceed_to_install t o; add_to_install o;
+                with _ -> remove_the_packages_using o)
+              flush
         | To_change (None, _) -> ()
-        | To_recompile nv     ->
-          (* this case is quite tricky. We have to remove all the packages
-             depending in nv, as they will be broken if nv is uninstalled. *)
-          let universe = OpamState.universe t Depends in
-          let depends =
-            let set = OpamPackage.Set.singleton nv in
-            OpamPackage.Set.of_list
-              (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe set) in
-          OpamPackage.Set.iter (proceed_to_delete ~rm_build:false t) depends;
-          installed := OpamPackage.Set.diff !installed depends;
-          write_installed ();
-        | To_delete nv            -> assert false in
+        | To_recompile nv     -> remove_the_packages_using nv
+        | To_delete _         -> assert false in
 
       let display_error (n, error) =
         let f action nv =
@@ -699,4 +709,4 @@ let resolve_and_apply ?(force=false) t action request =
     No_solution
   | Success sol ->
     print_variable_warnings ();
-    apply_solution ~force t sol
+    apply_solution ~force t action sol

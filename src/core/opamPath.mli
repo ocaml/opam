@@ -113,6 +113,10 @@ module Switch: sig
       {i $opam/$OVERSION/installed} *)
   val installed: t -> switch -> filename
 
+  (** List of packages expliciterly installed by the user: {i
+      $opam/$switch/installed.bin} *)
+  val user_installed: t -> switch -> filename
+
   (** Tempory folders used to decompress and compile
       the corresponding archives:
       {i $opam/$OVERSION/build/$NAME-$VERSION} *)

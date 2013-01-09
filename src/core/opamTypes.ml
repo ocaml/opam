@@ -337,6 +337,12 @@ type 'a action =
   | To_delete of 'a
   | To_recompile of 'a
 
+type 'a cause =
+  | Uses of 'a list
+  | Required_by of 'a list
+  | Upstream_changes
+  | Unknown
+
 let action_contents = function
   | To_change (_, p)
   | To_recompile p
@@ -362,7 +368,7 @@ module type ACTION_GRAPH = sig
   type solution = {
     to_remove : package list;
     to_process: t;
-    root_causes: (package * package list) list;
+    root_causes: (package * package cause) list;
   }
 
 end
@@ -370,7 +376,7 @@ end
 module type PKG = sig
   include Graph.Sig.COMPARABLE
   val to_string: t -> string
-  val string_of_action: ?causes:(t -> t list) -> t action -> string
+  val string_of_action: ?causes:(t -> t cause) -> t action -> string
 end
 
 module MakeActionGraph (Pkg: PKG) = struct
@@ -394,7 +400,7 @@ module MakeActionGraph (Pkg: PKG) = struct
   type solution = {
     to_remove : package list;
     to_process: t;
-    root_causes: (package * package list) list;
+    root_causes: (package * package cause) list;
   }
 end
 
@@ -406,32 +412,29 @@ module PackageAction = struct
   let string_of_names ps =
     String.concat ", " (List.map string_of_name ps)
 
-  let string_of_cause causes a =
-    let causes = causes (action_contents a) in
-    match causes, a with
-    | [] , To_recompile _ -> "[upstream changes]"
-    | [] , _ -> ""
-    | _  , To_recompile _
-    | _  , To_delete _  -> Printf.sprintf "[uses %s]" (string_of_names causes)
-    | _  , To_change _  -> Printf.sprintf "[required by %s]" (string_of_names causes)
+  let string_of_cause = function
+    | Upstream_changes -> "[upstream changes]"
+    | Uses pkgs        -> Printf.sprintf "[uses %s]" (string_of_names pkgs)
+    | Required_by pkgs -> Printf.sprintf "[required by %s]" (string_of_names pkgs)
+    | Unknown          -> ""
 
   let string_of_raw_action = function
-  | To_change (None, p)   -> Printf.sprintf " - install %s" (OpamPackage.to_string p)
-  | To_change (Some o, p) ->
-    let f action =
-      Printf.sprintf " - %s %s to %s" action
-        (OpamPackage.to_string o) (OpamPackage.Version.to_string (OpamPackage.version p)) in
-    if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version p) < 0 then
-      f "upgrade"
-    else
-      f "downgrade"
-  | To_recompile p -> Printf.sprintf " - recompile %s" (OpamPackage.to_string p)
-  | To_delete p    -> Printf.sprintf " - remove %s" (OpamPackage.to_string p)
+    | To_change (None, p)   -> Printf.sprintf " - install %s" (OpamPackage.to_string p)
+    | To_change (Some o, p) ->
+      let f action =
+        Printf.sprintf " - %s %s to %s" action
+          (OpamPackage.to_string o) (OpamPackage.Version.to_string (OpamPackage.version p)) in
+      if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version p) < 0 then
+        f "upgrade"
+      else
+        f "downgrade"
+    | To_recompile p -> Printf.sprintf " - recompile %s" (OpamPackage.to_string p)
+    | To_delete p    -> Printf.sprintf " - remove %s" (OpamPackage.to_string p)
 
   let string_of_action ?causes a =
     let causes = match causes with
       | None   -> ""
-      | Some f -> string_of_cause f a in
+      | Some f -> string_of_cause (f (action_contents a)) in
     match causes with
     | "" -> string_of_raw_action a
     | _  -> Printf.sprintf "%s %s" (string_of_raw_action a) causes
@@ -463,8 +466,9 @@ type env = (string * string) list
 type env_updates = (string * string * string) list
 
 type user_action =
-  | Install
+  | Install of name_set
   | Upgrade of package_set
+  | Reinstall
   | Depends
   | Init
   | Remove
@@ -477,6 +481,7 @@ type universe = {
   u_depopts  : formula package_map;
   u_conflicts: formula package_map;
   u_action   : user_action;
+  u_user_installed: package_set;
 }
 
 type lock =

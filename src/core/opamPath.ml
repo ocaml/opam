@@ -83,6 +83,8 @@ module Switch = struct
 
   let installed t a = root t a // "installed"
 
+  let user_installed t a = root t a // "installed.user"
+
   let build_dir t a = root t a / "build"
 
   let build t a nv = build_dir t a / OpamPackage.to_string nv
