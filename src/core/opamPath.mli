@@ -176,75 +176,69 @@ end
 (** Repository paths *)
 module Repository: sig
 
-  (** Repository root *)
-  type r
-
   (** Get the directory root *)
-  val root: r -> dirname
+  val root: repository_root -> dirname
 
   (** lock file *)
-  val lock: r -> filename
-
-  (** Create an arbitrary repository root *)
-  val raw: dirname -> r
+  val lock: repository_root -> filename
 
    (** Return the repository folder: {i $opam/repo/$repo} *)
-  val create: t -> repository_name -> r
+  val create: repository_root -> repository_name -> repository_root
 
   (** Return the version file *)
-  val version: r -> filename
+  val version: repository_root -> filename
 
   (** Return the repository config: {i $opam/repo/$repo/config} *)
-  val config: r -> filename
+  val config: repository_root -> filename
 
   (** Packages folder: {i $opam/repo/$repo/packages} *)
-  val packages_dir: r -> dirname
+  val packages_dir: repository_root -> dirname
 
   (** Package folder: {i $opam/repo/$repo/packages/$NAME.$VERSION} *)
-  val package: r -> package -> dirname
+  val package: repository_root -> package -> dirname
 
   (** Return the OPAM file for a given package:
       {i $opam/repo/$repo/packages/$NAME.$VERSION/opam} *)
-  val opam: r -> package -> filename
+  val opam: repository_root -> package -> filename
 
   (** Return the description file for a given package:
       {i $opam/repo/$repo/packages/$NAME.VERSION/descr} *)
-  val descr: r -> package -> filename
+  val descr: repository_root -> package -> filename
 
   (** Return the archive for a given package:
       {i $opam/repo/$repo/archives/$NAME.$VERSION.tar.gz} *)
-  val archive: r -> package -> filename
+  val archive: repository_root -> package -> filename
 
   (** Return the archive folder: {i $opam/repo/$repo/archives/} *)
-  val archives_dir: r -> dirname
+  val archives_dir: repository_root -> dirname
 
   (** Return the list of updated packages:
       {i $opam/repo/$repo/updated} *)
-  val updated: r -> filename
+  val updated: repository_root -> filename
 
   (** Return the upload folder for a given version:
       {i $opam/repo/$repo/upload/} *)
-  val upload_dir: r -> dirname
+  val upload_dir: repository_root -> dirname
 
   (** Compiler files: {i $opam/repo/$repo/compilers/$OVERSION.comp} *)
-  val compiler: r -> compiler -> filename
+  val compiler: repository_root -> compiler -> filename
 
   (** Compiler description files: {i $opam/repo/$repo/compilers/$OVERSION.descr} *)
-  val compiler_descr: r -> compiler -> filename
+  val compiler_descr: repository_root -> compiler -> filename
 
   (** Compiler files: {i $opam/repo/$repo/compilers/} *)
-  val compilers_dir: r -> dirname
+  val compilers_dir: repository_root -> dirname
 
   (** urls {i $opma/repo/$repo/package/$NAME.$VERSION/url} *)
-  val url: r -> package -> filename
+  val url: repository_root -> package -> filename
 
   (** files {i $opam/repo/$repo/packages/$NAME.$VERSION/files} *)
-  val files: r -> package -> dirname
+  val files: repository_root -> package -> dirname
 
   (** Tempory folder {i $opam/repo/$repo/tmp} *)
-  val tmp: r -> dirname
+  val tmp: repository_root -> dirname
 
   (** Tempory folder {i $opam/repo/$repo/tmp/$NAME.$VERSION/} *)
-  val tmp_dir: r -> package -> dirname
+  val tmp_dir: repository_root -> package -> dirname
 
 end

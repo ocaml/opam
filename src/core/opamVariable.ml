@@ -42,7 +42,6 @@ module Section = struct
   module C = struct
     type t = string
     let compare = compare
-    let to_string x = x
     let equal = (=)
     let hash = Hashtbl.hash
   end
@@ -107,7 +106,6 @@ module Full = struct
   }
 
   let variable t = t.variable
-  let full_section t = t.section
   let section t = Section.Full.section t.section
   let package t = Section.Full.package t.section
 

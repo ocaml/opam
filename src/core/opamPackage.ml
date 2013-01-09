@@ -149,12 +149,6 @@ let to_map nv =
     Name.Map.add name (Version.Set.add version versions) (Name.Map.remove name map)
   ) nv Name.Map.empty
 
-let versions_of_packages nvset =
-  Set.fold
-    (fun nv vset -> Version.Set.add (version nv) vset)
-    nvset
-    Version.Set.empty
-
 let opam_files dir =
   if OpamFilename.exists_dir dir then (
     let files = OpamFilename.list_files dir in

@@ -417,7 +417,7 @@ let proceed_to_change t nv_old nv =
     | Some nv_old ->
       OpamGlobals.error
         "The recompilation of %s failed in %s."
-        (OpamPackage.to_string nv)
+        (OpamPackage.to_string nv_old)
         (OpamFilename.Dir.to_string p_build)
     end;
     raise e
@@ -650,7 +650,6 @@ let apply_solution ?(force = false) t action sol =
   )
 
 let new_variables e =
-  let open OpamMisc in
   let e = List.filter (fun (_,s,_) -> s="=") e in
   let e = List.map (fun (v,_,_) -> v) e in
   OpamMisc.StringSet.of_list e

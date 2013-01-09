@@ -129,7 +129,7 @@ val filter_commands: state -> command list -> string list list
 val mem_repository: state -> package -> bool
 
 (** Apply a function on the repository which contains a given package *)
-val with_repository: state -> package -> (OpamPath.Repository.r -> repository -> 'a) -> 'a
+val with_repository: state -> package -> (repository_root -> repository -> 'a) -> 'a
 
 (** Check whether a repository name is valid *)
 val mem_repository_name: state -> repository_name -> bool

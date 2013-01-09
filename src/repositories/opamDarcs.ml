@@ -110,22 +110,26 @@ module B = struct
       Not_available
 
   let init ~address =
+    log "init";
     let local_repo = OpamRepository.local_repo () in
     darcs_init address;
     OpamFile.Filenames.write (updates local_repo) (OpamFilename.Set.empty)
 
-  let download_archive ~address nv =
+  let download_archive ~address:_ nv =
+    log "download_archive";
     let local_repo = OpamRepository.local_repo () in
     let archive = OpamPath.Repository.archive local_repo nv in
     check_file archive
 
-  let download_file ?checksum nv filename =
+  let download_file ?checksum:_ nv filename =
+    log "download_file";
     let local_repo = OpamRepository.local_repo () in
     let basename = OpamFilename.basename filename in
     let file = OpamPath.Repository.tmp_dir local_repo nv // OpamFilename.Base.to_string basename in
     check_file file
 
   let rec download_dir nv ?dst remote_address =
+    log "download_dir";
     let local_repo = OpamRepository.local_repo () in
     let dir = match dst with
       | None   ->
@@ -144,6 +148,7 @@ module B = struct
           Result dir
 
   let update ~address =
+    log "update";
     let local_repo = OpamRepository.local_repo () in
     let local_dir = OpamPath.Repository.root local_repo in
     match check_updates local_dir address with
@@ -153,7 +158,8 @@ module B = struct
           "The repository %s is not initialized correctly"
           (OpamFilename.Dir.to_string local_dir)
 
-  let upload_dir ~address dirname =
+  let upload_dir ~address:_ dirname =
+    log "upload_dir";
     let files = OpamFilename.list_files dirname in
     try
       OpamSystem.commands [

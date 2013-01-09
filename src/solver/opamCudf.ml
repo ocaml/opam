@@ -14,11 +14,10 @@
 (***********************************************************************)
 
 open OpamTypes
-open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "SOLVER" fmt
 
-let string_of_action ?causes a =
+let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
   match a with
   | To_change (None, p)   -> Printf.sprintf " - install %s" (aux p)
@@ -49,7 +48,7 @@ module Pkg = struct
   type t = Cudf.package
   include Common.CudfAdd
   let to_string = string_of_package
-  let string_of_action = string_of_action
+  let string_of_action ?causes:_ = string_of_action
 end
 
 module ActionGraph = MakeActionGraph(Pkg)
@@ -59,36 +58,12 @@ module Graph = struct
 
   module PG = struct
     include Algo.Defaultgraphs.PackageGraph.G
-    let union g1 g2 =
-      let g1 = copy g1 in
-      let () =
-        begin
-          iter_vertex (add_vertex g1) g2;
-          iter_edges (add_edge g1) g2;
-        end in
-      g1
     let succ g v =
       try succ g v
       with _ -> []
   end
 
   module PO = Algo.Defaultgraphs.GraphOper (PG)
-
-  module type FS = sig
-    type iterator
-    val start : PG.t -> iterator
-    val step : iterator -> iterator
-    val get : iterator -> PG.V.t
-  end
-
-  module Make_fs (F : FS) = struct
-    let fold f acc g =
-      let rec aux acc iter =
-        match try Some (F.get iter, F.step iter) with Exit -> None with
-        | None -> acc
-        | Some (x, iter) -> aux (f acc x) iter in
-      aux acc (F.start g)
-  end
 
   module Topo = Graph.Topological.Make (PG)
 
@@ -98,11 +73,9 @@ module Graph = struct
     g
 
   let output g filename =
-    if !OpamGlobals.debug then (
-      let fd = open_out (filename ^ ".dot") in
-      Algo.Defaultgraphs.PackageGraph.DotPrinter.output_graph fd g;
-      close_out fd
-    )
+    let fd = open_out (filename ^ ".dot") in
+    Algo.Defaultgraphs.PackageGraph.DotPrinter.output_graph fd g;
+    close_out fd
 
   (* Return the transitive closure of [pkgs] in [g], sorted in topological order *)
   let closure g pkgs =
@@ -145,9 +118,6 @@ let string_of_request r =
     (to_string r.wish_install)
     (to_string r.wish_remove)
     (to_string r.wish_upgrade)
-
-let string_of_answer l =
-  OpamMisc.string_of_list string_of_action  l
 
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
@@ -192,9 +162,7 @@ let make_chains depends =
       let chains = List.flatten (List.map unroll children) in
       List.map (fun cs -> root :: cs) chains in
   let chains = List.flatten (List.map unroll roots) in
-  List.filter (function [x] -> false | _ -> true) chains
-
-exception Found of Cudf.package
+  List.filter (function [_] -> false | _ -> true) chains
 
 let string_of_reasons cudf2opam reasons =
   let open Algo.Diagnostic in
@@ -227,14 +195,15 @@ let user_installed = check s_user_installed
 
 let solver_calls = ref 0
 
-let dump_cudf_request cudf_request =
+let dump_cudf_request (_, univ,_ as cudf) =
   match !OpamGlobals.cudf_file with
   | None   -> ()
   | Some f ->
     incr solver_calls;
     let oc = open_out (Printf.sprintf "%s-%d.cudf" f !solver_calls) in
-    Cudf_printer.pp_cudf oc cudf_request;
-    close_out oc
+    Cudf_printer.pp_cudf oc cudf;
+    close_out oc;
+    Graph.output (Graph.of_universe univ) f
 
 let default_preamble =
   let l = [
@@ -259,7 +228,7 @@ let aspcud_path = lazy (
   try
     match OpamSystem.read_command_output ~verbose:false [ "which"; "aspcud" ] with
     | []   -> None
-    | h::t -> Some (OpamMisc.strip h)
+    | h::_ -> Some (OpamMisc.strip h)
   with _ ->
     None
 )
@@ -300,7 +269,7 @@ let get_final_universe univ req =
   let open Algo.Depsolver in
   match call_external_solver univ req with
   | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
-  | Error str -> OpamGlobals.error_and_exit "solver error: str"
+  | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->
     let open Algo.Diagnostic in
     match r with
@@ -341,7 +310,7 @@ end
    actions. At this point, we don't know about the root causes of the
    actions, they will be computed later. *)
 let actions_of_diff diff =
-  Hashtbl.fold (fun pkgname s acc ->
+  Hashtbl.fold (fun _ s acc ->
     let add x = x :: acc in
     let removed =
       try Some (Set.choose_one s.Diff.removed)

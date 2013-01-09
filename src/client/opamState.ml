@@ -14,7 +14,6 @@
 (***********************************************************************)
 
 open OpamTypes
-open OpamFilename.OP
 open OpamMisc.OP
 
 let log fmt =
@@ -150,24 +149,11 @@ let print_state t =
   log "USERS     : %s" (OpamPackage.Set.to_string t.user_installed);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
-let compiler_of_switch t switch =
-  try Some (OpamSwitch.Map.find switch t.aliases)
-  with Not_found -> None
-
-let config t =
-  OpamFile.Config.read (OpamPath.config t.root)
-
 let compilers t =
   OpamCompiler.list (OpamPath.compilers_dir t.root)
 
-let repositories t =
-  OpamFile.Config.repositories t.config
-
 let opam t nv =
   OpamPackage.Map.find nv t.opams
-
-let archives t =
-  OpamFilename.Set.of_list (OpamFilename.list_files (OpamPath.archives_dir t.root))
 
 let compiler t c =
   OpamFile.Comp.safe_read (OpamPath.compiler t.root c)
@@ -199,9 +185,6 @@ let installed_map t =
 
 let dot_config t nv =
   OpamFile.Dot_config.safe_read (OpamPath.Switch.config t.root t.switch nv)
-
-let reinstall t =
-  OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root t.switch)
 
 let mem_repository_name t name =
   OpamRepositoryName.Map.exists (fun n _ -> n = name) t.repositories
@@ -242,7 +225,7 @@ let with_repository t nv fn =
   | Some (repo_p, repo) -> fn repo_p repo
 
   (* List the packages which does fullfil the compiler constraints *)
-let available_packages root opams repositories repo_index compiler_version config pinned packages =
+let available_packages root opams repositories repo_index compiler_version pinned packages =
   let filter nv =
     let opam = OpamPackage.Map.find nv opams in
     let available () =
@@ -404,7 +387,7 @@ let load_state () =
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages = OpamPackage.list (OpamPath.opam_dir root) in
   let available_packages =
-    lazy (available_packages root opams repositories repo_index compiler_version config pinned packages) in
+    lazy (available_packages root opams repositories repo_index compiler_version pinned packages) in
   let t = {
     root; switch; compiler; compiler_version; repositories; opams;
     packages; available_packages; installed; user_installed; reinstall;
@@ -526,42 +509,6 @@ let substitute_file t f =
 let substitute_string t s =
   OpamFile.Subst.replace_string s (contents_of_variable t)
 
-let rec substitute_filter t = function
-  | FBool b    -> FBool b
-  | FString s  -> FString (substitute_string t s)
-  | FIdent s   -> FString (substitute_ident t s)
-  | FOp(e,s,f) ->
-    let e = substitute_filter t e in
-    let f = substitute_filter t f in
-    FOp(e, s, f)
-  | FAnd (e,f) ->
-    let e = substitute_filter t e in
-    let f = substitute_filter t f in
-    FAnd(e,f)
-  | FOr(e,f) ->
-    let e = substitute_filter t e in
-    let f = substitute_filter t f in
-    FOr(e,f)
-
-let substitute_arg t (a, f) =
-  let a = match a with
-    | CString s -> CString (substitute_string t s)
-    | CIdent  i -> CString (substitute_ident t i) in
-  let f = match f with
-    | None   -> None
-    | Some f -> Some (substitute_filter t f) in
-  (a, f)
-
-let substitute_command t (l, f) =
-  let l = List.map (substitute_arg t) l in
-  let f = match f with
-    | None   -> None
-    | Some f -> Some (substitute_filter t f) in
-  (l, f)
-
-let substitute_commands t c =
-  List.map (substitute_command t) c
-
 let rec eval_filter t = function
   | FBool b    -> string_of_bool b
   | FString s  -> substitute_string t s
@@ -680,8 +627,7 @@ let print_env_warning ?(add_profile = false) t =
         else
           Printf.sprintf " --root %s" !OpamGlobals.root_dir in
       let variables = String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l) in
-      OpamGlobals.msg "\nTo update %s; you can now run:
-            \n\    $ %seval `opam config env%s`\n%s\n"
+      OpamGlobals.msg "\nTo update %s; you can now run:\n\n    $ %seval `opam config env%s`\n%s\n"
         variables
         which_opam
         opam_root

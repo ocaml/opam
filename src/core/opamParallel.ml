@@ -60,17 +60,6 @@ module Make (G : G) = struct
     degree : int M.t ;  (* Node degrees *)
   }
 
-  let print_state t =
-    let string_of_set s =
-      let l = S.fold (fun v l -> G.string_of_vertex v :: l) s [] in
-      String.concat ", " l in
-    let string_of_imap m =
-      let s v i = Printf.sprintf "%s:%d" (G.string_of_vertex v) i in
-      let l = M.fold (fun v i l -> s v i :: l) m [] in
-      String.concat ", " l in
-    log "ROOTS:  %s" (string_of_set t.roots);
-    log "DEGREE: %s" (string_of_imap t.degree)
-
   let init graph =
     let degree = ref M.empty in
     let add_degree v d = degree := M.add v d !degree in
@@ -151,8 +140,6 @@ module Make (G : G) = struct
   let (++) = S.union
   let (=|=) s1 s2 =
     S.cardinal s1 = S.cardinal s2
-
-  let (/) = Filename.concat
 
   let write_error oc r =
     log "write_error";

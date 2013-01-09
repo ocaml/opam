@@ -17,8 +17,8 @@
 
 open OpamTypes
 
-val make_index_tar_gz: OpamPath.Repository.r -> unit
+val make_index_tar_gz: repository_root -> unit
 
-val make_urls_txt: OpamPath.Repository.r -> file_attribute_set
+val make_urls_txt: repository_root -> file_attribute_set
 
 val register: unit -> unit

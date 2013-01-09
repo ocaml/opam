@@ -124,7 +124,7 @@ let install_with_packages ~quiet ~packages ~warning switch compiler =
   let old_switch = t.switch in
 
   (* install the new OCaml version *)
-  OpamState.install_compiler t quiet switch compiler;
+  OpamState.install_compiler t ~quiet switch compiler;
 
   (* install the compiler packages *)
   let t = OpamState.load_state () in
@@ -185,7 +185,7 @@ let switch ~quiet switch =
   if not (OpamFilename.exists_dir comp_dir) && not (OpamFilename.exists comp_f) then
     OpamState.unknown_compiler compiler;
   if not (OpamSwitch.Map.mem switch t.aliases) then
-    install quiet switch compiler
+    install ~quiet switch compiler
   else
     update_config t switch
 

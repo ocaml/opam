@@ -13,24 +13,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-exception Parsing of string
-
 open OpamTypes
 open OpamMisc.OP
 
 module Lines = struct
 
-  let internal = "lines"
-
   (* Lines of space separated words *)
   type t = string list list
 
-  let empty = []
+  let of_string str =
+    OpamLineLexer.main (Lexing.from_string str)
 
-  let of_string raw =
-    OpamLineLexer.main (Lexing.from_string raw)
-
-  let to_string lines =
+  let to_string (lines: t) =
     let buf = Buffer.create 1024 in
     List.iter (fun l ->
       Buffer.add_string buf (String.concat " " l);
@@ -42,11 +36,7 @@ end
 
 module Syntax = struct
 
-  let internal = "syntax"
-
   type t = file
-
-  let empty = OpamFormat.empty
 
   let of_string filename str =
     let filename = OpamFilename.to_string filename in
@@ -58,7 +48,7 @@ module Syntax = struct
       OpamGlobals.error "Parsing error while reading %s" filename;
       raise e
 
-  let to_string ?(indent_variable = fun _ -> false) t =
+  let to_string ?(indent_variable = fun _ -> false) (t: t) =
     OpamFormat.string_of_file ~indent_variable t
 
   let check f fields =
@@ -823,16 +813,6 @@ module Dot_install_raw = struct
     share: (string optional * string option) list;
   }
 
-  let lib t = t.lib
-  let bin t = t.bin
-  let toplevel t = t.toplevel
-  let misc t = t.misc
-  let share t = t.share
-
-  let with_bin t bin = { t with bin }
-  let with_lib t lib = { t with lib }
-  let with_toplevel t toplevel = { t with toplevel }
-
   let empty = {
     lib  = [] ;
     bin  = [] ;
@@ -918,11 +898,6 @@ module Dot_install = struct
     misc: (filename optional * filename) list ;
     share: (filename optional * basename) list;
   }
-
-  let string_of_move (src, dst) =
-    let src = OpamFilename.to_string src in
-    let dst = OpamFilename.to_string dst in
-    Printf.sprintf "%s => %s" src dst
 
   let lib t = t.lib
   let bin t = t.bin
@@ -1044,7 +1019,7 @@ module Dot_config = struct
     let variables = parse_variables file.file_contents in
     { sections; variables }
 
-  let rec to_string filename t =
+  let to_string filename t =
     let of_value = function
       | B b -> Bool b
       | S s -> String s in
@@ -1180,7 +1155,7 @@ module Comp = struct
 
   let create_preinstalled name version packages env =
     let mk n = Atom (n, Empty) in
-    let rec aux accu t = match accu, t with
+    let aux accu t = match accu, t with
       | Empty, x  -> mk x
       | _    , x  -> And(accu, mk x) in
     let packages = List.fold_left aux OpamFormula.Empty packages in
@@ -1368,9 +1343,9 @@ module Subst = struct
 
   let empty = ""
 
-  let of_string filename str = str
+  let of_string _ str = str
 
-  let to_string filename t = t
+  let to_string _ t = t
 
   let replace t f =
     let subst str =

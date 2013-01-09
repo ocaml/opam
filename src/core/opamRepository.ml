@@ -46,8 +46,6 @@ let repository_address address =
   then OpamFilename.Dir.of_string address
   else OpamFilename.raw_dir address
 
-let with_kind r repo_kind = { r with repo_kind }
-
 module O = struct
   type tmp = repository
   type t = tmp
@@ -86,10 +84,7 @@ let register_backend name backend =
   Hashtbl.replace backends name backend
 
 let local_repo () =
-  OpamPath.Repository.raw (OpamFilename.cwd ())
-
-let remote_repo remote_address =
-  OpamPath.Repository.raw remote_address
+  OpamFilename.cwd ()
 
 let repo r =
   OpamPath.Repository.create (OpamPath.default ()) r.repo_name
@@ -106,7 +101,7 @@ let init r =
   OpamFilename.mkdir (archives_dir repo);
   OpamFilename.mkdir (compilers_dir repo);
   OpamFilename.mkdir (upload_dir repo);
-  OpamFilename.in_dir (root repo) (fun () -> B.init r.repo_address)
+  OpamFilename.in_dir (root repo) (fun () -> B.init ~address:r.repo_address)
 
 let nv_set_of_files files =
   OpamPackage.Set.of_list
@@ -196,7 +191,7 @@ let kind_of_url url =
 
 let download_archive r nv =
   let module B = (val find_backend r: BACKEND) in
-  B.download_archive r.repo_address nv
+  B.download_archive ~address:r.repo_address nv
 
 (* Copy the file in local_repo in current dir *)
 let copy_files local_repo nv =
@@ -307,7 +302,7 @@ let download r nv =
   let dir = OpamPath.Repository.root repo in
   (* If the archive is on the server, download it directly *)
   match OpamFilename.in_dir dir (fun () -> download_archive r nv) with
-  | Up_to_date local_file ->
+  | Up_to_date _ ->
       OpamGlobals.msg "The archive for %s is in the local cache.\n" (OpamPackage.to_string nv);
       log "The archive for %s is already downloaded and up-to-date"
         (OpamPackage.to_string nv)
@@ -326,7 +321,7 @@ let check_version repo =
        OpamMisc.strip |>
        OpamVersion.of_string
       ) repo
-    with e ->
+    with _ ->
       OpamVersion.of_string "0.7.5" in
   if OpamVersion.compare repo_version OpamVersion.current >= 0 then
     OpamGlobals.error_and_exit
@@ -338,7 +333,7 @@ let update r =
   let repo = repo r in
   let dir = OpamPath.Repository.root repo in
   let module B = (val find_backend r: BACKEND) in
-  let updated_files = OpamFilename.in_dir dir (fun () -> B.update r.repo_address) in
+  let updated_files = OpamFilename.in_dir dir (fun () -> B.update ~address:r.repo_address) in
 
   check_version repo;
 
@@ -399,13 +394,6 @@ let versions r n =
     (OpamPackage.Set.filter
        (fun nv -> OpamPackage.name nv = n)
        (packages r))
-
-let archives r =
-  let d = OpamPath.Repository.archives_dir r in
-  if OpamFilename.exists_dir d then
-    OpamFilename.Set.of_list (OpamFilename.list_files d)
-  else
-    OpamFilename.Set.empty
 
 let compilers r =
   OpamCompiler.list (OpamPath.Repository.compilers_dir r)

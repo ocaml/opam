@@ -80,8 +80,6 @@ let lexer_error lexbuf =
     (curr.Lexing.pos_cnum - curr.Lexing.pos_bol)
     (Lexing.lexeme lexbuf)
 
-open Lexing
-
 let main t l f =
   try main t l f
   with _ ->

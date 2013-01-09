@@ -50,7 +50,7 @@ let init ~bounds n =
   let rec aux = function
     | 0, []   -> Some []
     | 0, l    -> Some (zero (List.length l))
-    | n, []   -> None
+    | _, []   -> None
     | n, b::t ->
       if n <= b then
         Some (n :: zero (List.length t))
@@ -96,15 +96,6 @@ let succ ~bounds l =
     let k = List.fold_left (+) 0 l in
     init ~bounds (k+1)
 
-let count ~debug ~bounds =
-  let c = ref 0 in
-  let rec aux = function
-    | None   -> !c
-    | Some x ->
-      if debug then OpamGlobals.msg "%s\n" (OpamMisc.string_of_list string_of_int x);
-      incr c; aux (succ ~bounds x) in
-  aux (init ~bounds 0)
-
 (* explore the state-space given by an upgrade table.
 
    - [upgrade_tbl] associate pkg name to pacake constraints, for a
@@ -124,7 +115,7 @@ let explore f upgrade_tbl =
     Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
   let bounds = List.map (fun (_,v) -> Array.length v - 1) upgrades in
   let constrs t =
-    List.map2 (fun (n, vs) i -> vs.(i)) upgrades t in
+    List.map2 (fun (_, vs) i -> vs.(i)) upgrades t in
   let t0 = Unix.time () in
   let count = ref 0 in
   let interval = 500 in

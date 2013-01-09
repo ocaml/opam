@@ -192,7 +192,7 @@ let ends_with ~suffix s =
   && String.sub s (String.length s - String.length suffix) (String.length suffix) = suffix
 
 let remove_prefix ~prefix s =
-  if starts_with prefix s then
+  if starts_with ~prefix s then
     Some (String.sub s (String.length prefix) (String.length s - String.length prefix))
   else
     None
@@ -215,7 +215,7 @@ let contains s c =
   with Not_found -> false
 
 let split s c =
-  Pcre.split (Re_perl.compile (Re.char c)) s
+  Pcre.split ~rex:(Re_perl.compile (Re.char c)) s
 
 (* Remove from a ':' separated list of string the one with the given prefix *)
 let reset_env_value ~prefix v =

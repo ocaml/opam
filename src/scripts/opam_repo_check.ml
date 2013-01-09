@@ -58,7 +58,7 @@ module Check = struct
 end
 
 let () =
-  let t = OpamPath.Repository.raw (OpamFilename.cwd ()) in
+  let t = OpamFilename.cwd () in
 
   (** packages *)
   OpamPackage.Set.iter (fun package ->

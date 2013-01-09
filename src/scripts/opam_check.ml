@@ -15,8 +15,6 @@
 
 (* Utility helper to check if a given set of packages is installed *)
 
-open OpamTypes
-
 let usage = "opam-check [--root root] [-l label] <package>+"
 
 let label = ref ""

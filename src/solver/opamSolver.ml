@@ -180,6 +180,7 @@ let resolve universe request =
   log "resolve universe=%s" (OpamPackage.Set.to_string universe.u_available);
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
+  let request = cleanup_request request in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
   let resolve =
     if OpamCudf.external_solver_available ()

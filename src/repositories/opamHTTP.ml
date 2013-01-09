@@ -132,8 +132,7 @@ module B = struct
           (OpamFilename.Set.singleton (index_archive state.local_dir)) in
       let current = OpamFilename.Set.of_list (OpamFilename.list_files state.local_dir) in
       let to_keep = OpamFilename.Set.filter (is_up_to_date state) state.local_files in
-      let config =
-        OpamFilename.Set.singleton (OpamPath.Repository.config (OpamPath.Repository.raw state.local_dir)) in
+      let config = OpamFilename.Set.singleton (OpamPath.Repository.config state.local_dir) in
       let to_delete = current -- to_keep -- indexes -- config in
       let local_repo = OpamRepository.local_repo () in
       let archive_dir = OpamPath.Repository.archives_dir local_repo in
@@ -154,7 +153,7 @@ module B = struct
         )
       ) (OpamRepository.packages local_repo);
       if OpamFilename.Set.cardinal new_files > 4 then
-        init address
+        init ~address
       else
         OpamFilename.Set.iter (fun local_file ->
           let remote_file = OpamFilename.Map.find local_file state.local_remote in
@@ -165,8 +164,7 @@ module B = struct
       OpamFilename.Set.empty
 
   let download_archive ~address nv =
-    let remote_repo = OpamRepository.remote_repo address in
-    let remote_file = OpamPath.Repository.archive remote_repo nv in
+    let remote_file = OpamPath.Repository.archive address nv in
     let state = make_state ~download_index:false address in
     if not (OpamFilename.Map.mem remote_file state.remote_local) then
       Not_available
@@ -217,10 +215,10 @@ module B = struct
   let not_supported action =
     failwith (action ^ ": not supported by CURL backend")
 
-  let download_dir nv ?dst dir =
+  let download_dir _ ?dst:_ dir =
     not_supported ("Downloading " ^ OpamFilename.Dir.to_string dir)
 
-  let upload_dir ~address remote_dir =
+  let upload_dir ~address:_ remote_dir =
     not_supported ("Uploading to " ^ OpamFilename.Dir.to_string remote_dir)
 
 end

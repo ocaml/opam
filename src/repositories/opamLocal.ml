@@ -50,7 +50,7 @@ let rsync_file src dst =
     ] in
     match OpamMisc.rsync_trim lines with
     | []  -> Up_to_date dst
-    | [x] -> Result dst
+    | [_] -> Result dst
     | l   ->
         OpamSystem.internal_error
           "unknown rsync output: {%s}"
@@ -60,7 +60,7 @@ let rsync_file src dst =
 
 module B = struct
 
-  let init ~address:r = ()
+  let init ~address:_ = ()
 
   let download_file ?checksum nv remote_file =
     let local_path = OpamRepository.local_repo () in
@@ -91,20 +91,18 @@ module B = struct
     | Not_available -> Not_available
 
   let download_archive ~address nv =
-    let remote_repo = OpamRepository.remote_repo address in
-    let remote_file = OpamPath.Repository.archive remote_repo nv in
+    let remote_file = OpamPath.Repository.archive address nv in
     let local_repo = OpamRepository.local_repo () in
     let local_file = OpamPath.Repository.archive local_repo nv in
     rsync_file remote_file local_file
 
   let update ~address =
-    let remote_repo = OpamRepository.remote_repo address in
     let local_repo = OpamRepository.local_repo () in
     OpamGlobals.msg "Synchronizing %s with %s.\n"
       (OpamFilename.Dir.to_string (OpamPath.Repository.root local_repo))
       (OpamFilename.Dir.to_string address);
     let sync_dir fn =
-      match rsync_dirs ~delete:true (fn remote_repo) (fn local_repo) with
+      match rsync_dirs ~delete:true (fn address) (fn local_repo) with
       | Not_available
       | Up_to_date _ -> OpamFilename.Set.empty
       | Result lines ->
@@ -116,7 +114,7 @@ module B = struct
         let archive = OpamPath.Repository.archive local_repo nv in
         if not (OpamFilename.exists archive) then
           false
-        else match download_archive address nv with
+        else match download_archive ~address nv with
         | Not_available ->
             OpamFilename.remove archive;
             false
@@ -128,24 +126,22 @@ module B = struct
     let updates = OpamFilename.Set.of_list archives
     ++ sync_dir OpamPath.Repository.packages_dir
     ++ sync_dir OpamPath.Repository.compilers_dir in
-    ignore (rsync_file (OpamPath.Repository.version remote_repo) (OpamPath.Repository.version local_repo));
+    ignore (rsync_file (OpamPath.Repository.version address) (OpamPath.Repository.version local_repo));
     updates
 
   let upload_dir ~address local_dir =
-    let remote_repo = OpamRepository.remote_repo address in
-    let remote_dir = OpamPath.Repository.root remote_repo in
     (* we assume that rsync is only used locally *)
-    if OpamFilename.exists_dir (OpamFilename.dirname_dir remote_dir)
-    && not (OpamFilename.exists_dir remote_dir) then
-      OpamFilename.mkdir remote_dir;
+    if OpamFilename.exists_dir (OpamFilename.dirname_dir address)
+    && not (OpamFilename.exists_dir address) then
+      OpamFilename.mkdir address;
     if OpamFilename.exists_dir local_dir then
-      match rsync_dirs ~delete:false local_dir remote_dir with
+      match rsync_dirs ~delete:false local_dir address with
       | Not_available ->
           OpamGlobals.error_and_exit "Cannot upload %s to %s"
             (OpamFilename.Dir.to_string local_dir)
             (OpamFilename.Dir.to_string address)
       | Up_to_date _ -> OpamFilename.Set.empty
-      | Result lines ->
+      | Result _     ->
           let files = OpamFilename.list_files local_dir in
           OpamFilename.Set.of_list files
     else

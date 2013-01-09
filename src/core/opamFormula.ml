@@ -124,7 +124,7 @@ let to_string t =
   string_of_formula string_of_pkg t
 
 (* convert a formula to a CNF *)
-let rec cnf_of_formula t =
+let cnf_of_formula t =
   let rec mk_left x y = match y with
     | Block y   -> mk_left x y
     | And (a,b) -> And (mk_left x a, mk_left x b)
@@ -144,7 +144,7 @@ let rec cnf_of_formula t =
   mk t
 
 (* convert a formula to DNF *)
-let rec dnf_of_formula t =
+let dnf_of_formula t =
   let rec mk_left x y = match y with
     | Block y  -> mk_left x y
     | Or (a,b) -> Or (mk_left x a, mk_left x b)
@@ -189,7 +189,7 @@ let to_cnf (t : t) =
     | And _      -> assert false in
   let rec aux t = match t with
     | Empty    -> []
-    | Block x  -> assert false
+    | Block _  -> assert false
     | Atom _
     | Or _     -> [or_formula t]
     | And(x,y) -> aux x @ aux y in
@@ -206,7 +206,7 @@ let to_dnf t =
     | Or _      -> assert false in
   let rec aux t = match t with
     | Empty   -> []
-    | Block x -> assert false
+    | Block _ -> assert false
     | Atom _
     | And _   -> [and_formula t]
     | Or(x,y) -> aux x @ aux y in

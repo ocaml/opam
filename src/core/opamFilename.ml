@@ -209,7 +209,7 @@ let extract_in filename dirname =
   OpamSystem.extract_in (to_string filename) (Dir.to_string dirname)
 
 let starts_with dirname filename =
-  OpamMisc.starts_with (Dir.to_string dirname) (to_string filename)
+  OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
 let remove_prefix ~prefix filename =
   let prefix =

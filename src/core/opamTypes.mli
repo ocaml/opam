@@ -150,11 +150,17 @@ val string_of_repository_kind: [`http|`local|`git|`darcs] -> string
 (** Parser of repository kinds. Raise an error if the kind is not valid. *)
 val repository_kind_of_string: string -> [`http|`local|`git|`darcs]
 
+(** Repository address *)
+type address = dirname
+
+(** Repository root *)
+type repository_root = dirname
+
 (** Repositories *)
 type repository = {
   repo_name    : repository_name;
   repo_kind    : repository_kind;
-  repo_address : dirname;
+  repo_address : address;
   repo_priority: int;
 }
 

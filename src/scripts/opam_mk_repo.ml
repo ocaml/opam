@@ -13,7 +13,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-open OpamTypes
 open OpamFilename.OP
 
 let () =
@@ -60,16 +59,15 @@ let () =
   log "local_path=%s" (OpamFilename.Dir.to_string local_path);
 
   OpamGlobals.root_dir := OpamFilename.Dir.to_string local_path;
-  let local_repo = OpamPath.Repository.raw local_path in
 
   let mk_packages str =
-    let dir = OpamPath.Repository.packages_dir local_repo / str in
+    let dir = OpamPath.Repository.packages_dir local_path / str in
     if OpamFilename.exists_dir dir then
       let nv = OpamPackage.of_string str in
       OpamPackage.Set.singleton nv
     else
       let n = OpamPackage.Name.of_string str in
-      let versions = OpamPackage.Version.Set.elements (OpamRepository.versions local_repo n) in
+      let versions = OpamPackage.Version.Set.elements (OpamRepository.versions local_path n) in
       OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
   let packages =
     List.fold_left
@@ -80,14 +78,14 @@ let () =
   log "Reading urls.txt";
   let local_index_file = OpamFilename.of_string "urls.txt" in
   let old_index = OpamFile.Urls_txt.safe_read local_index_file in
-  let new_index = OpamHTTP.make_urls_txt local_repo in
+  let new_index = OpamHTTP.make_urls_txt local_path in
 
   let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in
   let to_add = OpamFilename.Attribute.Set.diff new_index old_index in
 
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
-    let opam_f = OpamPath.Repository.opam local_repo nv in
+    let opam_f = OpamPath.Repository.opam local_path nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
       let deps = OpamFile.OPAM.depends opam in
@@ -119,7 +117,7 @@ let () =
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
-      let archive = OpamPath.Repository.archive local_repo nv in
+      let archive = OpamPath.Repository.archive local_path nv in
       not (OpamFilename.exists archive)
     ) new_index in
   let to_remove = nv_set_of_remotes to_remove in
@@ -138,7 +136,7 @@ let () =
     if not (OpamPackage.Set.is_empty to_remove) then
       OpamGlobals.msg "Packages to remove: %s\n" (OpamPackage.Set.to_string to_remove);
     OpamPackage.Set.iter (fun nv ->
-      let archive = OpamPath.Repository.archive local_repo nv in
+      let archive = OpamPath.Repository.archive local_path nv in
       OpamGlobals.msg "Removing %s ...\n" (OpamFilename.to_string archive);
       if not dryrun then
         OpamFilename.remove archive
@@ -148,7 +146,7 @@ let () =
     if not (OpamPackage.Set.is_empty to_add) then
       OpamGlobals.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
     OpamPackage.Set.iter (fun nv ->
-      let archive = OpamPath.Repository.archive local_repo nv in
+      let archive = OpamPath.Repository.archive local_path nv in
       try
         if not dryrun then (
           OpamFilename.remove archive;
@@ -167,7 +165,7 @@ let () =
   || not (OpamPackage.Set.is_empty to_remove) then (
     OpamGlobals.msg "Rebuilding index.tar.gz ...\n";
     if not dryrun then
-      OpamHTTP.make_index_tar_gz local_repo;
+      OpamHTTP.make_index_tar_gz local_path;
   ) else
     OpamGlobals.msg "OPAM Repository already up-to-date.\n";
 
@@ -178,7 +176,7 @@ let () =
   if dryrun then
     OpamGlobals.msg "Rebuilding urls.txt\n"
   else
-    let _index = OpamHTTP.make_urls_txt local_repo in
+    let _index = OpamHTTP.make_urls_txt local_path in
 
     if !errors <> [] then
       let display_error (nv, error) =

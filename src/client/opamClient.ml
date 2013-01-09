@@ -15,8 +15,6 @@
 
 open OpamTypes
 open OpamState.Types
-open OpamFilename.OP
-open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 
@@ -695,7 +693,7 @@ let init repo compiler cores =
     let t = OpamState.load_state () in
     let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
     let quiet = (compiler = OpamCompiler.default) in
-    OpamState.install_compiler t quiet switch compiler;
+    OpamState.install_compiler t ~quiet switch compiler;
     update_packages t ~show_packages:false t.repositories;
 
     (* Finally, load the complete state and install the compiler packages *)
@@ -888,7 +886,7 @@ let upload upload repo =
         (OpamRepositoryName.to_string repo)
         (OpamState.string_of_repositories t.repositories) in
   let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-  let upload_repo = OpamPath.Repository.raw (OpamPath.Repository.upload_dir repo_p) in
+  let upload_repo = OpamPath.Repository.upload_dir repo_p in
   let upload_opam = OpamPath.Repository.opam upload_repo nv in
   let upload_descr = OpamPath.Repository.descr upload_repo nv in
   let upload_archives = OpamPath.Repository.archive upload_repo nv in
@@ -1083,7 +1081,7 @@ let remote action =
   OpamState.check (Global_lock (fun () -> remote action))
 
 let switch_install quiet switch ocaml_version =
-  OpamState.check (Global_lock (fun () -> OpamSwitchCommand.install quiet switch ocaml_version))
+  OpamState.check (Global_lock (fun () -> OpamSwitchCommand.install ~quiet switch ocaml_version))
 
 let switch_import filename =
   OpamState.check (Switch_lock (fun () -> OpamSwitchCommand.import filename))
@@ -1095,7 +1093,7 @@ let switch_remove switch =
   OpamState.check (Global_lock (fun () -> OpamSwitchCommand.remove switch))
 
 let switch quiet name =
-  OpamState.check (Global_lock (fun () -> OpamSwitchCommand.switch quiet name))
+  OpamState.check (Global_lock (fun () -> OpamSwitchCommand.switch ~quiet name))
 
 let switch_reinstall switch =
   OpamState.check (Global_lock (fun () -> OpamSwitchCommand.reinstall switch))

@@ -81,10 +81,6 @@ let mkdir dir =
     end in
   aux dir
 
-let is_link filename =
-  let open Unix in
-  (lstat filename).st_kind = S_LNK
-
 let remove_file file =
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
@@ -180,14 +176,7 @@ let getchdir s =
   chdir s;
   p
 
-let rec root path =
-  let d = Filename.dirname path in
-  if d = path || d = "" || d = "." then
-    path
-  else
-    root d
-
-(** Expand '..' and '.' *)
+(* Expand '..' and '.' *)
 let normalize s =
   if Sys.file_exists s then
     getchdir (getchdir s)
@@ -307,9 +296,6 @@ module Tar = struct
 
   let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
-
-  let assoc file =
-    snd (List.find (function ext, _ -> match_ext file ext) extensions)
 
   let is_archive f =
     List.exists

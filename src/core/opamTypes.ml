@@ -54,6 +54,8 @@ type address = dirname
 
 type repository_name = OpamRepositoryName.t
 
+type repository_root = dirname
+
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
 type repository_kind = [`http|`local|`git|`darcs]
@@ -61,7 +63,7 @@ type repository_kind = [`http|`local|`git|`darcs]
 type repository = {
   repo_name    : repository_name;
   repo_kind    : repository_kind;
-  repo_address : dirname;
+  repo_address : address;
   repo_priority: int;
 }
 

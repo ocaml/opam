@@ -253,15 +253,15 @@ let build_options =
        This is equivalent to setting $(b,\\$OPAMKEEPBUILDIR) to a non-empty string." in
   let no_checksums =
     mk_flag ["n";"no-checksums"]
-      "Do not verify the checksum of downloaded archives. \
+      "Do not verify the checksum of downloaded archives.\
        This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to a non-empty string." in
   let build_test =
     mk_flag ["t";"build-test"]
-      "Build and $(b,run) the package unit-tests.
+      "Build and $(b,run) the package unit-tests. \
        This is equivalent to setting $(b,\\$OPAMBUILDTEST) to a non-empty string." in
   let build_doc =
     mk_flag ["d";"build-doc"]
-      "Build the package documentation.
+      "Build the package documentation. \
        This is equivalent to setting $(b,\\$OPAMBUILDDOC) to a non-empty string." in
   let make =
     mk_opt ["m";"make"] "MAKE"
@@ -295,7 +295,7 @@ let init =
   let doc = init_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "The $(b,init) command creates a fresh client state.  This initializes OPAM
+    `P "The $(b,init) command creates a fresh client state.  This initializes OPAM \
         configuration in $(i,~/.opam) and configures a default package repository.";
     `P "Additional repositories can be added later by using the $(b,opam repository) command.";
     `P "The local cache of a repository state can be updated by using $(b,opam update).";
@@ -324,13 +324,13 @@ let list =
   let doc = list_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the list of available packages, or the list of
+    `P "This command displays the list of available packages, or the list of \
          installed packages if the $(b,--installed) switch is used.";
-    `P "Unless the $(b,--short) switch is used, the output format displays one
-        package per line, and each line contains the name of the package, the
-        installed version or -- if the package is not installed, and a short
+    `P "Unless the $(b,--short) switch is used, the output format displays one \
+        package per line, and each line contains the name of the package, the \
+        installed version or -- if the package is not installed, and a short \
         description.";
-    `P " The full description can be obtained by doing $(b,opam info <package>).
+    `P " The full description can be obtained by doing $(b,opam info <package>). \
          You can search through the package descriptions using the $(b,opam search) command."
   ] in
   let list global_options print_short installed_only packages =
@@ -344,11 +344,11 @@ let search =
   let doc = "Search into the package list." in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the list of available packages that match one of
+    `P "This command displays the list of available packages that match one of \
         the package patterns specified as arguments.";
-    `P "Unless the $(b,--short) flag is used, the output format is the same as the
-        $(b,opam list) command. It displays one package per line, and each line
-        contains the name of the package, the installed version or -- if the package
+    `P "Unless the $(b,--short) flag is used, the output format is the same as the \
+        $(b,opam list) command. It displays one package per line, and each line \
+        contains the name of the package, the installed version or -- if the package \
         is not installed, and a short description.";
     `P "The full description can be obtained by doing $(b,opam info <package>).";
   ] in
@@ -366,13 +366,13 @@ let info =
   let doc = info_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the information block for the selected
+    `P "This command displays the information block for the selected \
         package(s).";
-    `P "The information block consists in the name of the package,
-        the installed version if this package is installed in the currently
-        selected compiler, the list of available (installable) versions, and a
+    `P "The information block consists in the name of the package, \
+        the installed version if this package is installed in the currently \
+        selected compiler, the list of available (installable) versions, and a \
         complete description.";
-    `P "$(b,opam list) can be used to display the list of
+    `P "$(b,opam list) can be used to display the list of \
         available packages as well as a short description for each.";
   ] in
   let fields =
@@ -395,26 +395,26 @@ let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
   let commands = [
-    ["env"]     , `env     , "returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH
-                              and CAML_LD_LIBRARY_PATH according to the current selected
-                              compiler. The output of this command is meant to be evaluated by a
+    ["env"]     , `env     , "returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
+                              and CAML_LD_LIBRARY_PATH according to the current selected \
+                              compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
-    ["var"]     , `var     , "returns the value associated with the given variable. If the variable
-                              contains a colon such as $(i,pkg:var), then the left element will be
-                              understood as the package in which the variable is defined.
-                              The variable resolution is done as follows: first, OPAM will check whether
-                              $(b,\\$var) exists; for package variables, it will look for $(b,\\$pkg_var).
-                              If the variable is not found, OPAM will then check whether the variable is
-                              implicit. There are two global implicit variables: $(i,ocaml-version) and
-                              $(i,preinstalled) and two implicit variables per package: $(i,pkg:installed)
-                              which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enable) which is
-                              either $(b,\"enable\") or $(b,\"disable\"). Finally, OPAM will look into
+    ["var"]     , `var     , "returns the value associated with the given variable. If the variable \
+                              contains a colon such as $(i,pkg:var), then the left element will be \
+                              understood as the package in which the variable is defined. \
+                              The variable resolution is done as follows: first, OPAM will check whether \
+                              $(b,\\$var) exists; for package variables, it will look for $(b,\\$pkg_var). \
+                              If the variable is not found, OPAM will then check whether the variable is \
+                              implicit. There are two global implicit variables: $(i,ocaml-version) and \
+                              $(i,preinstalled) and two implicit variables per package: $(i,pkg:installed) \
+                              which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enable) which is \
+                              either $(b,\"enable\") or $(b,\"disable\"). Finally, OPAM will look into \
                               its global and package config files to find whether these variables exist.";
-    ["list"]    , `list    , "returns the list of all variables defined in the listed packages. It is possible
-                              to filter the list of variables by giving package names (use $(b,globals) to get
+    ["list"]    , `list    , "returns the list of all variables defined in the listed packages. It is possible \
+                              to filter the list of variables by giving package names (use $(b,globals) to get \
                               the list of global variables). No parameter means displaying all the variables.";
-    ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are
-                              replaced by the value of the variable $(i,var) (see the documentation associated
+    ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are \
+                              replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";
     ["includes"], `includes, "returns include options.";
     ["bytecomp"], `bytecomp, "returns bytecode compile options.";
@@ -424,11 +424,11 @@ let config =
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command uses opam state to output information on how to use
-        installed libraries, updating the user’s $PATH, and substitute
+    `P "This command uses opam state to output information on how to use \
+        installed libraries, updating the user’s $PATH, and substitute \
         variables used in opam packages.";
-    `P "Apart from $(b,opam config env), most of these commands are used
-        by opam internally, and thus are of limited interest for the casual
+    `P "Apart from $(b,opam config env), most of these commands are used \
+        by opam internally, and thus are of limited interest for the casual \
         user.";
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
@@ -470,16 +470,16 @@ let install =
   let doc = install_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command installs one or more packages to the currently selected
-        compiler. To install packages for another compiler, you need to switch
-        compilers using $(b,opam switch). You can remove installed packages with
-        $(b,opam remove), and list installed packages with $(b,opam list -i).
+    `P "This command installs one or more packages to the currently selected \
+        compiler. To install packages for another compiler, you need to switch \
+        compilers using $(b,opam switch). You can remove installed packages with \
+        $(b,opam remove), and list installed packages with $(b,opam list -i). \
         See $(b,opam pin) as well to understand how to manage package versions.";
-    `P "This command will make opam use the dependency solver to compute the
-        transitive closure of dependencies to be installed, and will handle
-        conflicts as well. If the dependency solver returns more than one
-        solution, opam will arbitraty select the first one. If dependencies
-        are to be installed, opam will ask if the installation should really
+    `P "This command will make opam use the dependency solver to compute the \
+        transitive closure of dependencies to be installed, and will handle \
+        conflicts as well. If the dependency solver returns more than one \
+        solution, opam will arbitraty select the first one. If dependencies \
+        are to be installed, opam will ask if the installation should really \
         be performed.";
   ] in
   let install global_options build_options packages =
@@ -496,10 +496,10 @@ let remove =
   let doc = remove_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command removes (i.e. uninstall) one or more packages currently
-        installed in the currently selected compiler. To remove packages
-        installed in another compiler, you need to switch compilers using
-        $(b,opam switch) or use the $(b,--switch) flag. This command is the
+    `P "This command removes (i.e. uninstall) one or more packages currently \
+        installed in the currently selected compiler. To remove packages \
+        installed in another compiler, you need to switch compilers using \
+        $(b,opam switch) or use the $(b,--switch) flag. This command is the \
         inverse of $(b,opam-install).";
   ] in
   let remove global_options build_options packages =
@@ -515,7 +515,7 @@ let reinstall =
   let doc = "Reinstall a list of packages." in
   let man = [
     `S "DESCRIPTION";
-    `P "This command does removes the given packages, reinstall them and
+    `P "This command does removes the given packages, reinstall them and \
         recompile the right package dependencies."
   ] in
   let reinstall global_options build_options packages =
@@ -532,15 +532,15 @@ let update =
   let doc = update_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command updates each repository that has been previously set up
-        by the $(b,opam init) or $(b,opam repository) commands. The list of packages
-        that can be upgraded will be printed out, and the user can use
+    `P "This command updates each repository that has been previously set up \
+        by the $(b,opam init) or $(b,opam repository) commands. The list of packages \
+        that can be upgraded will be printed out, and the user can use \
         $(b,opam upgrade) to upgrade those.";
   ] in
-  let update global_options build_options repositories =
+  let update global_options repositories =
     set_global_options global_options;
     OpamClient.update repositories in
-  Term.(pure update $global_options $build_options $repository_list),
+  Term.(pure update $global_options $repository_list),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
@@ -549,9 +549,9 @@ let upgrade =
   let doc = upgrade_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command upgrades the installed packages to their latest available
-        versions. More precisely, this command calls the dependency solver to
-        find a consistent state where $(i,most) of the installed packages are
+    `P "This command upgrades the installed packages to their latest available \
+        versions. More precisely, this command calls the dependency solver to \
+        find a consistent state where $(i,most) of the installed packages are \
         upgraded to their latest versions.";
   ] in
   let upgrade global_options build_options names =
@@ -567,7 +567,7 @@ let upload =
   let doc = "Upload a package to an OPAM repository." in
   let man = [
     `S "DESCRIPTION";
-    `P "This command uploads an already built package to a remote repository,
+    `P "This command uploads an already built package to a remote repository, \
         if the remote repository is not read-only.";
   ] in
   let opam =
@@ -605,25 +605,25 @@ let repository_doc = "Manage OPAM repositories."
 let repository name =
   let doc = repository_doc in
   let commands = [
-    ["add"]        , `add     , "Add the repository $(b,name) available at address
-                                 $(b,address) to the list of repositories used by OPAM,
-                                 with priority $(b,priority).
-                                 The repository priority can be optionally specified with
-                                 $(b,--priority), otherwise the new repository has a higher
-                                 priority then any other existing repositories.
-                                 The kind of the repository can be specified with the
-                                 $(b,--kind) option, otherwise it will be determined
+    ["add"]        , `add     , "Add the repository $(b,name) available at address \
+                                 $(b,address) to the list of repositories used by OPAM, \
+                                 with priority $(b,priority). \
+                                 The repository priority can be optionally specified with \
+                                 $(b,--priority), otherwise the new repository has a higher \
+                                 priority then any other existing repositories. \
+                                 The kind of the repository can be specified with the \
+                                 $(b,--kind) option, otherwise it will be determined \
                                  automatically.";
-    ["remove"]     , `remove  , "Remove the repository named $(b,name) from the list of
+    ["remove"]     , `remove  , "Remove the repository named $(b,name) from the list of \
                                  repositories used by OPAM.";
     ["list"]       , `list    , "List all repositories used by OPAM.";
-    ["priority"]   , `priority, "Change the priority of repository named $(b,name) to
+    ["priority"]   , `priority, "Change the priority of repository named $(b,name) to \
                                 $(b,priority).";
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command is used to manage OPAM repositories. To synchronize OPAM
-        with the last versions of the packages available in remote
+    `P "This command is used to manage OPAM repositories. To synchronize OPAM \
+        with the last versions of the packages available in remote \
         repositories, $(b,opam update) should be used.";
   ] @ mk_subdoc commands in
 
@@ -668,7 +668,7 @@ let switch =
     ["remove"]       , `remove   , "Remove the given compiler.";
     ["export"]       , `export   , "Export the list installed package to a file.";
     ["import"]       , `import   , "Install the packages from a file.";
-    ["reinstall"]    , `reinstall, "Reinstall the given compiler switch. This will also try reinstall the
+    ["reinstall"]    , `reinstall, "Reinstall the given compiler switch. This will also try reinstall the \
                                     installed packages.";
     ["list"]         , `list     , "List the available compilers. \
                                     The first column displays the switch name (if any), the second one \
@@ -677,7 +677,7 @@ let switch =
                                     description. To switch to an already installed compiler alias (with \
                                     state = I), use $(b,opam switch <name>). If you want to use a new \
                                     compiler <comp>, use $(b,opam switch <comp>): this will download, \
-                                    compile and create a fresh and independant environment where new packages can be installed.
+                                    compile and create a fresh and independant environment where new packages can be installed. \
                                     If you want to create a new compiler alias (for instance because you already have \
                                     this compiler version installed), use $(b,opam switch <name> --alias-of <comp>). In case \
                                     <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
@@ -685,12 +685,12 @@ let switch =
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command allows to switch between different compiler versions,
-        installing the compiler if $(b,opam switch) is used to switch to that
-        compiler for the first time. The different compiler versions are
-        totally independant from each other, meaning that OPAM maintains a
+    `P "This command allows to switch between different compiler versions, \
+        installing the compiler if $(b,opam switch) is used to switch to that \
+        compiler for the first time. The different compiler versions are \
+        totally independant from each other, meaning that OPAM maintains a \
         separate state (e.g. list of installed packages...) for each.";
-    `P "See the documentation of $(b,opam switch list) to see the compilers which
+    `P "See the documentation of $(b,opam switch list) to see the compilers which \
         are available, and how to switch or to install a new one."
   ] @ mk_subdoc commands in
 
@@ -753,13 +753,13 @@ let pin =
   let doc = pin_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command will 'pin' a package to a specific version, or use a
-        specific source path for installing and upgrading the package. Using
-        $(b,opam pin <package> none) will undo the 'pinned' status of
+    `P "This command will 'pin' a package to a specific version, or use a \
+        specific source path for installing and upgrading the package. Using \
+        $(b,opam pin <package> none) will undo the 'pinned' status of \
         <package>.";
-    `P "It is possible to pin a package to a specific git commit/tag/branch
+    `P "It is possible to pin a package to a specific git commit/tag/branch \
         with $(b,opam pin <package> </path/to/git>#<commit>).";
-    `P "To list all the currently pinned packages, call the $(b,opam pin)
+    `P "To list all the currently pinned packages, call the $(b,opam pin) \
         without arguments or use $(b,--list)."
   ] in
 
@@ -769,7 +769,7 @@ let pin =
   let pin_option =
     let doc =
       Arg.info ~docv:"PIN" ~doc:
-        "Specific version, local path, git or darcs url to pin the package to,
+        "Specific version, local path, git or darcs url to pin the package to, \
          or 'none' to unpin the package." [] in
     Arg.(value & pos 1 (some string) None & doc) in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
@@ -830,38 +830,37 @@ let default =
   let doc = "a Package Manager for OCaml" in
   let man = [
     `S "DESCRIPTION";
-    `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi
-        tools to handle dependencies, including support for version
+    `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi \
+        tools to handle dependencies, including support for version \
         constraints, optional dependencies, and conflicts management.";
-    `P "It has support for different repository backends such as HTTP, rsync, git
-        and darcs. It handles multiple OCaml versions concurrently, and is
-        flexible enough to allow you to use your own repositories and packages
+    `P "It has support for different repository backends such as HTTP, rsync, git \
+        and darcs. It handles multiple OCaml versions concurrently, and is \
+        flexible enough to allow you to use your own repositories and packages \
         in addition of the ones it provides.";
-    `P "Use either $(b,opam <command> --help) or $(b,opam help <command>)
+    `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
         for more information on a specific command.";
   ] @  help_sections
   in
   let usage _ =
-    OpamGlobals.msg "\
-usage: opam [--version]
-            [--help]
-            <command> [<args>]
-
-The most commonly used opam commands are:
-   init         %s
-   list         %s
-   info         %s
-   install      %s
-   remove       %s
-   update       %s
-   upgrade      %s
-   config       %s
-   repository   %s
-   switch       %s
-   pin          %s
-
-See 'opam help <command>' for more information on a specific command.
-"
+    OpamGlobals.msg
+      "usage: opam [--version]\n\
+      \            [--help]\n\
+      \            <command> [<args>]\n\
+      \n\
+      The most commonly used opam commands are:\n\
+      \    init         %s\n\
+      \    list         %s\n\
+      \    info         %s\n\
+      \    install      %s\n\
+      \    remove       %s\n\
+      \    update       %s\n\
+      \    upgrade      %s\n\
+      \    config       %s\n\
+      \    repository   %s\n\
+      \    switch       %s\n\
+      \    pin          %s\n\
+      \n\
+      See 'opam help <command>' for more information on a specific command.\n"
       init_doc list_doc info_doc install_doc remove_doc update_doc
       upgrade_doc config_doc repository_doc switch_doc pin_doc in
   Term.(pure usage $global_options),

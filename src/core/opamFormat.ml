@@ -231,8 +231,8 @@ and string_of_values l =
 let incr tab = "  " ^ tab
 
 let rec string_of_item_aux tab ?(indent_variable = fun _ -> false) = function
-  | Variable (i, List []) -> None
-  | Variable (i, List[List[]]) -> None
+  | Variable (_, List []) -> None
+  | Variable (_, List[List[]]) -> None
   | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value ~indent_hint:[indent_variable i] v))
   | Section s ->
       Some (Printf.sprintf "%s%s %S {\n%s\n}"

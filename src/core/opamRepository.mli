@@ -29,16 +29,13 @@ val compare: repository -> repository -> int
 val default: repository
 
 (** Default repository address *)
-val default_address: dirname
+val default_address: address
 
 (** Constructor *)
-val repository_address: string -> dirname
+val repository_address: string -> address
 
 (** Create a dummy local repository *)
-val local_repo: unit -> OpamPath.Repository.r
-
-(** Create a dummy remote repository *)
-val remote_repo: dirname -> OpamPath.Repository.r
+val local_repo: unit -> repository_root
 
 (** Initialize {i $opam/repo/$repo} *)
 val init: repository -> unit
@@ -60,16 +57,16 @@ module type BACKEND = sig
 
   (** Initialize an OPAM repository in the current directory. The
       argument is the remote repository address. *)
-  val init: address:dirname -> unit
+  val init: address:address -> unit
 
   (** Update the OPAM repository in the current directory. Return the
       list of locally updated files. *)
-  val update: address:dirname -> OpamFilename.Set.t
+  val update: address:address -> OpamFilename.Set.t
 
   (** Download a (remote) archive file, stored on the (remote) OPAM
       repository, in the current repository. Return the local path to
       the downloaded archive.*)
-  val download_archive: address:dirname -> package -> filename download
+  val download_archive: address:address -> package -> filename download
 
   (** Download a (remote) file and return the local path to the
       downloaded file: {i $repo/tmp/$package/$filename}. *)
@@ -77,12 +74,12 @@ module type BACKEND = sig
 
   (** Download a (remote) directory and return the local path to the
       downloaded directory: {i $repo/tmp/$package/$dirname}. *)
-  val download_dir: package -> ?dst:dirname -> dirname -> dirname download
+  val download_dir: package -> ?dst:dirname -> address -> dirname download
 
   (** Upload the content of the current directory to the directory
       given as argument. Return the local paths corresponding to the
       uploaded local files. *)
-  val upload_dir: address:dirname -> dirname -> OpamFilename.Set.t
+  val upload_dir: address:dirname -> address -> OpamFilename.Set.t
 
 end
 
@@ -93,7 +90,7 @@ val register_backend: repository_kind -> (module BACKEND) -> unit
 val find_backend: repository_kind -> (module BACKEND)
 
 (** Copy the additional package files in the current dir *)
-val copy_files: OpamPath.Repository.r -> package -> OpamFilename.Set.t
+val copy_files: repository_root -> package -> OpamFilename.Set.t
 
 (** [make_archive repo_kind nv] build ./$nv.tar.gz, assuming the
     repository kind is [repo_kind].
@@ -103,13 +100,13 @@ val copy_files: OpamPath.Repository.r -> package -> OpamFilename.Set.t
 val make_archive: ?gener_digest:bool -> ?local_path:dirname -> package -> unit
 
 (** Get the list of packages *)
-val packages: OpamPath.Repository.r -> package_set
+val packages: repository_root -> package_set
 
 (** Get the list of compilers *)
-val compilers: OpamPath.Repository.r -> compiler_set
+val compilers: repository_root -> compiler_set
 
 (** Get the available versions for a given compiler *)
-val versions: OpamPath.Repository.r -> name -> version_set
+val versions: repository_root -> name -> version_set
 
 (** Get the external files associated to a package *)
-val files: OpamPath.Repository.r -> package -> filename_set
+val files: repository_root -> package -> filename_set

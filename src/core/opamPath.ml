@@ -14,12 +14,9 @@
 (***********************************************************************)
 
 open OpamTypes
-open OpamMisc.OP
 open OpamFilename.OP
 
 type t = dirname
-
-let create x = x
 
 let default () =
   OpamFilename.Dir.of_string !OpamGlobals.root_dir
@@ -117,11 +114,7 @@ end
 
 module Repository = struct
 
-  type r = dirname
-
   let root x = x
-
-  let raw x = x
 
   let lock t = t // "lock"
 
