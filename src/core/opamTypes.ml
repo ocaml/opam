@@ -472,7 +472,7 @@ type user_action =
   | Upgrade of package_set
   | Reinstall
   | Depends
-  | Init
+  | Init of name_set
   | Remove
   | Switch
 

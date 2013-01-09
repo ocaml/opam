@@ -699,10 +699,12 @@ let init repo compiler cores =
     (* Finally, load the complete state and install the compiler packages *)
     log "installing compiler packages";
     let t = OpamState.load_state () in
-    let _solution = OpamSolution.resolve_and_apply ~force:true t Init
+    let compiler_packages = OpamState.get_compiler_packages t compiler in
+    let compiler_names = OpamPackage.Name.Set.of_list (List.map fst compiler_packages) in
+    let _solution = OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
       { wish_install = [];
         wish_remove  = [];
-        wish_upgrade = OpamState.get_compiler_packages t compiler } in
+        wish_upgrade = compiler_packages } in
 
     OpamState.print_env_warning ~add_profile:true t
 
