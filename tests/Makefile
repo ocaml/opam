@@ -130,29 +130,37 @@ list:
 	$(OPAM) list
 
 install-remove:
-	$(OPAM) install P1 &&\
-	$(CHECK) -l install-remove P1.1 &&\
+	$(CHECK) -l install-remove-1
+	$(OPAM) install P1
+	$(CHECK) -l install-remove-2 P1.1
 	$(OPAM) remove P1
+	$(CHECK) -l install-remove-3
 
 install-opt:
-	$(OPAM) install P5 &&\
-	$(CHECK) -l install-opt P1.1 P5.1 &&\
-	$(OPAM) install P2 &&\
-	$(CHECK) -l install-opt P1.1 P2.1 P5.1 &&\
-	$(OPAM) remove P5 &&\
-	$(OPAM) remove P2 &&\
-	$(OPAM) remove P1 &&\
-	$(CHECK) -l install-opt
+	$(CHECK) -l install-opt-1
+	$(OPAM) install P5
+	$(CHECK) -l install-opt-2 P1.1 P5.1
+	$(OPAM) remove P5
+	$(CHECK) -l install-opt-3
+	$(OPAM) install P5
+	$(CHECK) -l install-opt-4 P1.1 P5.1
+	$(OPAM) install P2
+	$(CHECK) -l install-opt-5 P1.1 P2.1 P5.1
+	$(OPAM) remove P5
+	$(CHECK) -l install-opt-6 P1.1 P2.1
+	$(OPAM) remove P2
+	$(CHECK) -l install-opt-7
 
 install:
-	$(OPAM) install P1 &&\
-	$(CHECK) -l install P1.1 &&\
-	$(OPAM) install P2 &&\
-	$(CHECK) -l install P1.1 P2.1 &&\
-	$(OPAM) install P3 &&\
-	$(CHECK) -l install P1.1 P2.1 P3.1~weird-version.test &&\
-	$(OPAM) install P4 &&\
-	$(CHECK) -l install P1.1 P2.1 P3.1~weird-version.test P4.1
+	$(CHECK) -l install-1
+	$(OPAM) install P1
+	$(CHECK) -l install-2 P1.1
+	$(OPAM) install P2
+	$(CHECK) -l install-3 P1.1 P2.1
+	$(OPAM) install P3
+	$(CHECK) -l install-4 P1.1 P2.1 P3.1~weird-version.test
+	$(OPAM) install P4
+	$(CHECK) -l install-5 P1.1 P2.1 P3.1~weird-version.test P4.1
 
 upload-new:
 ifeq ($(REPOKIND), git)
@@ -168,47 +176,54 @@ ifeq ($(REPOKIND), git)
 	echo 'git: "$(OPAM_GIT)/P4"' > $(OPAM_REPO)/packages/P4.3/url
 	cd $(OPAM_REPO) && git add * && git commit -a -m "Adding P4.2 and P4.3"
 else
-	cd packages && \
-	$(OPAM) upload --opam P1-2.opam --descr P1-2/README --archive P1-2.tar.gz $(REPO)
-	cd packages && \
-	$(OPAM) upload --opam P4-2.opam --descr P4/README --archive P4.tar.gz $(REPO)
-	cd packages && \
-	$(OPAM) upload --opam P4-3.opam --descr P4/README --archive P4.tar.gz $(REPO)
+	cd packages && $(OPAM) upload --opam P1-2.opam --descr P1-2/README --archive P1-2.tar.gz $(REPO)
+	cd packages && $(OPAM) upload --opam P4-2.opam --descr P4/README --archive P4.tar.gz $(REPO)
+	cd packages && $(OPAM) upload --opam P4-3.opam --descr P4/README --archive P4.tar.gz $(REPO)
 endif
-	$(OPAM) update # update the list of available packages with the one being updated
+	$(OPAM) update
 
 upgrade:
+	$(CHECK) -l upgrade-1 P1.1 P2.1 P3.1~weird-version.test P4.1
 	$(OPAM) upgrade
 ifeq ($(REPOKIND), git)
-	$(CHECK) -l upgrade P1.1 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l upgrade-2 P1.1 P2.1 P3.1~weird-version.test P4.3
 else
-	$(CHECK) -l upgrade P1.2 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l upgrade-2 P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
 
 downgrade:
-	$(OPAM) remove P4
+ifeq ($(REPOKIND), git)
+	$(CHECK) -l downgrade-1 P1.1 P2.1 P3.1~weird-version.test P4.3
+else
+	$(CHECK) -l downgrade-1 P1.2 P2.1 P3.1~weird-version.test P4.3
+endif
 	$(OPAM) install P4.2
-	$(CHECK) -l downgrade P1.1 P2.1 P3.1~weird-version.test P4.2
+	$(CHECK) -l downgrade-2 P1.1 P2.1 P3.1~weird-version.test P4.2
 
 switch-alias:
+	$(CHECK) -l switch-alias-1 P1.1 P2.1 P3.1~weird-version.test P4.2
 	$(OPAM) remove P3.1~weird-version.test P4.2
-	$(CHECK) -l switch-alias P1.1 P2.1
+	$(CHECK) -l switch-alias-2 P1.1 P2.1
 	$(OPAM) switch export -f $(OPAM_ROOT)/export
 	$(OPAM) switch install test --alias-of system --no-base-packages
+	$(CHECK) -l switch-alias-3
 	$(OPAM)	switch import -f $(OPAM_ROOT)/export
-	$(CHECK) -l switch-alias-clone P1.1 P2.1
+	$(CHECK) -l switch-alias-4 P1.1 P2.1
 	$(OPAM) switch install test2 --alias-of 20
+	$(CHECK) -l switch-alias-5
 	$(OPAM) install P1
-	$(CHECK) -l switch-alias-20 P1.1
+	$(CHECK) -l switch-alias-6 P1.1
 	$(OPAM) switch system
+	$(CHECK) -l switch-alias-7 P1.1 P2.1
 	$(OPAM) switch remove test test2
 
 switch-env-packages:
+	$(CHECK) -l switch-env-packages-1 P1.1 P2.1
 	$(OPAM) switch 10
 ifeq ($(REPOKIND), git)
-	$(CHECK) -l switch-env-packages P1.1 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l switch-env-packages-2 P1.1 P2.1 P3.1~weird-version.test P4.3
 else
-	$(CHECK) -l switch-env-packages P1.2 P2.1 P3.1~weird-version.test P4.3
+	$(CHECK) -l switch-env-packages-2 P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
 	./test-TEST.sh $(OPAM_ROOT)/10/build/P4.3/P4.env "1"
 
