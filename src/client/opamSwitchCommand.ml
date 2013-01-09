@@ -20,7 +20,7 @@ open OpamState.Types
 
 (* name + state + compiler + description *)
 (* TODO: add repo *)
-let list () =
+let list ~print_short ~installed_only =
   log "list";
 
   let t = OpamState.load_state () in
@@ -65,16 +65,22 @@ let list () =
         comp :: officials, patches
       else
         officials, comp :: patches
-     ) descrs ([],[]) in
+    ) descrs ([],[]) in
 
   let mk l =
     List.fold_left (fun acc comp ->
       let c = OpamCompiler.to_string comp in
-      let d = descr comp in
+      let d =
+        let d = descr comp in
+        match OpamMisc.cut_at d '\n' with None -> d | Some (d,_) -> d in
       (not_installed, not_installed, c, d) :: acc
-  ) [] l in
+    ) [] l in
 
-  let all = installed @ mk officials @ mk patches in
+  let all =
+    if installed_only then
+      installed
+    else
+      installed @ mk officials @ mk patches in
 
   let max_name, max_state, max_compiler =
     List.fold_left (fun (n,s,c) (name, state, compiler, _) ->
@@ -84,12 +90,25 @@ let list () =
       (n, s, c)
     ) (0,0,0) all in
 
+  let count = ref (List.length all) in
   let print_compiler (name, state, compiler, descr) =
-    OpamGlobals.msg "%s %s %s  %s\n"
-      (OpamMisc.indent_left name max_name)
-      (OpamMisc.indent_right state max_state)
-      (OpamMisc.indent_left compiler max_compiler)
-      descr in
+    decr count;
+    if print_short then (
+      let name =
+        if name = not_installed
+        then compiler
+        else name in
+      let sep =
+        if !count = 0
+        then "\n"
+        else " " in
+      OpamGlobals.msg "%s%s" name sep
+    ) else
+      OpamGlobals.msg "%s %s %s  %s\n"
+        (OpamMisc.indent_left name max_name)
+        (OpamMisc.indent_right state max_state)
+        (OpamMisc.indent_left compiler max_compiler)
+        descr in
 
   List.iter print_compiler all
 

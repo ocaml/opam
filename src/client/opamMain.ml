@@ -706,7 +706,7 @@ let switch =
     mk_opt ["f";"filename"]
       "FILENAME" "The name of the file to export to/import from."
       Arg.(some filename) None in
-  let switch global_options command alias_of filename params =
+  let switch global_options command alias_of filename print_short installed_only params =
     set_global_options global_options;
     let no_alias_of () =
       if alias_of <> None then
@@ -718,7 +718,7 @@ let switch =
     | None      , []
     | Some `list, [] ->
         no_alias_of ();
-        OpamClient.switch_list ()
+        OpamClient.switch_list ~print_short ~installed_only
     | Some `install, [switch] ->
         OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
     | Some `export, [] ->
@@ -744,7 +744,7 @@ let switch =
             (OpamSwitch.of_string switch) (mk_comp switch))
     | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
-  Term.(pure switch $global_options $command $alias_of $filename $params),
+  Term.(pure switch $global_options $command $alias_of $filename $print_short_flag $installed_only_flag $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)

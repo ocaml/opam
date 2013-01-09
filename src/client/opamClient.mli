@@ -80,7 +80,7 @@ val switch: bool -> switch -> unit
 val switch_reinstall: switch -> unit
 
 (** List the available compiler descriptions *)
-val switch_list: unit -> unit
+val switch_list: print_short:bool -> installed_only:bool -> unit
 
 (** Display the name of the current compiler *)
 val switch_current: unit -> unit

@@ -1100,8 +1100,8 @@ let switch quiet name =
 let switch_reinstall switch =
   OpamState.check (Global_lock (fun () -> OpamSwitchCommand.reinstall switch))
 
-let switch_list () =
-  OpamState.check (Read_lock OpamSwitchCommand.list)
+let switch_list ~print_short ~installed_only =
+  OpamState.check (Read_lock (fun () -> OpamSwitchCommand.list ~print_short ~installed_only))
 
 let switch_current () =
   OpamState.check (Read_lock OpamSwitchCommand.current)
