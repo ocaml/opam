@@ -490,14 +490,16 @@ let apply_solution ?(force = false) t action sol =
     Nothing_to_do
   else (
     let stats = OpamSolver.stats sol in
-    OpamGlobals.msg "The following actions will be performed:\n";
+    OpamGlobals.msg
+      "The following actions will be %s:\n"
+      (if !OpamGlobals.fake then "simulated" else "performed");
     OpamSolver.print_solution sol;
     OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
 
     let continue =
       if !OpamGlobals.dryrun then
         false
-      else if force || !OpamGlobals.yes || sum stats <= 1 then
+      else if force || !OpamGlobals.fake || !OpamGlobals.yes || sum stats <= 1 then
         true
       else
         OpamState.confirm "Do you want to continue ?" in
@@ -535,17 +537,20 @@ let apply_solution ?(force = false) t action sol =
       List.iter
         (fun nv ->
           finally
-            (fun () -> proceed_to_delete ~rm_build:true t nv)
+            (fun () -> if not !OpamGlobals.fake then proceed_to_delete ~rm_build:true t nv)
             (fun () -> rm_from_install nv; flush ())
         ) sol.to_remove;
 
       (* Installation and recompilation are done by child processes *)
       let child n =
-        let t = OpamState.load_state () in
-        match n with
-        | To_change (o, nv) -> proceed_to_change t o nv
-        | To_recompile nv   -> proceed_to_recompile t nv
-        | To_delete _       -> assert false in
+        if !OpamGlobals.fake then
+          ()
+        else
+          let t = OpamState.load_state () in
+          match n with
+          | To_change (o, nv) -> proceed_to_change t o nv
+          | To_recompile nv   -> proceed_to_recompile t nv
+          | To_delete _       -> assert false in
 
       let pre _ = () in
 
@@ -628,6 +633,8 @@ let apply_solution ?(force = false) t action sol =
       let jobs = OpamFile.Config.jobs t.config in
       try
         PackageActionGraph.Parallel.parallel_iter jobs sol.to_process ~pre ~child ~post;
+        if !OpamGlobals.fake then
+          OpamGlobals.msg "Simulation complete.\n";
         OK
       with PackageActionGraph.Parallel.Errors (errors, remaining) ->
         OpamGlobals.msg "\n";

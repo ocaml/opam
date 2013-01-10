@@ -38,6 +38,7 @@ let yes              = check "YES"
 let build_test       = check "BUILDTEST"
 let build_doc        = check "BUILDDOC"
 let dryrun           = check "DRYRUN"
+let fake             = check "FAKE"
 
 let cudf_file = ref (None: string option)
 

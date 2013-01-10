@@ -47,10 +47,11 @@ type build_options = {
   build_doc     : bool;
   dryrun        : bool;
   cudf_file     : string option;
+  fake          : bool;
 }
 
-let create_build_options keep_build_dir make no_checksums build_test build_doc dryrun cudf_file =
-  { keep_build_dir; make; no_checksums; build_test; build_doc; dryrun; cudf_file }
+let create_build_options keep_build_dir make no_checksums build_test build_doc dryrun cudf_file fake =
+  { keep_build_dir; make; no_checksums; build_test; build_doc; dryrun; cudf_file; fake }
 
 let set_build_options b =
   OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
@@ -59,6 +60,7 @@ let set_build_options b =
   OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
   OpamGlobals.dryrun         := !OpamGlobals.dryrun || b.dryrun;
   OpamGlobals.cudf_file      := b.cudf_file;
+  OpamGlobals.fake           := b.fake;
   match b.make with
   | None   -> ()
   | Some s -> OpamGlobals.makecmd := lazy s
@@ -273,7 +275,13 @@ let build_options =
     mk_opt ["cudf"] "FILENAME"
       "Save the CUDF request sent to the solver to $(docv)-<n>.cudf."
       Arg.(some string) None in
-  Term.(pure create_build_options $keep_build_dir $make $no_checksums $build_test $build_doc $dryrun $cudf_file)
+  let fake =
+    mk_flag ["fake"]
+      "WARNING: This option is fo testing purposes only! Using this option without care is \
+       the best way to corrupt your current compiler environement. When using this option \
+       OPAM will run a dry-run of the solver and then fake the build and install commands" in
+
+  Term.(pure create_build_options $keep_build_dir $make $no_checksums $build_test $build_doc $dryrun $cudf_file $fake)
 
 let guess_repository_kind kind address =
   match kind with
