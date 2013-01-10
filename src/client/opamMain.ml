@@ -897,12 +897,11 @@ let () =
   with
   | OpamGlobals.Exit 0 -> ()
   | e ->
-    OpamGlobals.error "  '%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
+    OpamGlobals.error "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
     match e with
     | OpamGlobals.Exit i -> exit i
     | e ->
-      let bt = Printexc.get_backtrace () in
-      let bt = if bt = "" then "" else Printf.sprintf "    at\n %s\n" bt in
+      let bt = OpamMisc.pretty_backtrace () in
       Printf.fprintf stderr "Fatal error: exception %s\n%s%!"
         (Printexc.to_string e) bt;
       exit 2

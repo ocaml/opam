@@ -86,10 +86,6 @@ module Switch = struct
 
   let build t a nv = build_dir t a / OpamPackage.to_string nv
 
-  let build_env t a nv = build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".env")
-
-  let build_old_env t a nv = build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".old.env")
-
   let build_ocaml t a = build_dir t a / "ocaml"
 
   let build_install t a nv = build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install")

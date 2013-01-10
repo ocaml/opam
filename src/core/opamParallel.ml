@@ -1,4 +1,3 @@
-
 (***********************************************************************)
 (*                                                                     *)
 (*    Copyright 2012 OCamlPro                                          *)
@@ -19,13 +18,11 @@ let log fmt = OpamGlobals.log "PARALLEL" fmt
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
-  val string_of_vertex: V.t -> string
 end
 
 type error =
   | Process_error of OpamProcess.result
   | Internal_error of string
-  | Pipe_error
 
 module type SIG = sig
 
@@ -142,24 +139,19 @@ module Make (G : G) = struct
   let (=|=) s1 s2 =
     S.cardinal s1 = S.cardinal s2
 
+  (* write and close the output channel *)
   let write_error oc r =
     log "write_error";
-    (** [Marshal.to_channel] never terminates if the size of [r] is too large.
-        Here we try to reduce its size by preserving the most of its meaning. *)
-    let rec remove_lines r =
-      if String.length (Marshal.to_string r []) >= OpamGlobals.ulimit_pipe then
-        let open OpamProcess in
-        match r with
-          | Process_error ({ r_stderr = _ :: r_stderr } as r) -> remove_lines (Process_error { r with r_stderr })
-          | Pipe_error -> assert false
-          | _ -> Pipe_error
-      else
-        r in
-    Marshal.to_channel oc (remove_lines r) []
+    Marshal.to_channel oc r [];
+    close_out oc
 
+  (* read and close the input channel *)
   let read_error ic =
     log "read_error";
-    let r : error = Marshal.from_channel ic in
+    let r : error =
+      try Marshal.from_channel ic
+      with _ -> Internal_error "Cannot read the error file" in
+    close_in ic;
     r
 
   let parallel_iter n g ~pre ~child ~post =
@@ -210,10 +202,10 @@ module Make (G : G) = struct
               t := visit !t n;
               post n
           | _ ->
+              let from_child = from_child () in
               let error = read_error from_child in
               errors := M.add n error !errors
         end;
-        close_in from_child;
         loop (nslots + 1)
       ) else (
 
@@ -229,20 +221,15 @@ module Make (G : G) = struct
         todo := S.remove n !todo;
 
         (* Set-up a channel from the child to the parent *)
-        let from_child, to_parent = Unix.pipe () in
-        let to_parent = Unix.out_channel_of_descr to_parent in
-        let from_child = Unix.in_channel_of_descr from_child in
+        let error_file = OpamSystem.temp_file "error" in
 
         match Unix.fork () with
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
             log "Spawning a new process";
-            close_in from_child;
             Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
-            let exit n =
-              close_out to_parent;
-              exit n in
             let return p =
+              let to_parent = open_out_bin error_file in
               write_error to_parent p;
               exit 1 in
             begin
@@ -251,14 +238,17 @@ module Make (G : G) = struct
               | OpamSystem.Process_error p  -> return (Process_error p)
               | OpamSystem.Internal_error s -> return (Internal_error s)
               | e ->
-                  let b = Printexc.get_backtrace () in
+                  let b = OpamMisc.pretty_backtrace () in
                   let e = Printexc.to_string e in
-                  let error = if b = "" then e else Printf.sprintf "%s\n%s" e b in
+                  let error =
+                    if b = ""
+                    then e
+                    else e ^ "\n" ^ b in
                   return (Internal_error error)
             end
         | pid ->
             log "Creating process %d" pid;
-            close_out to_parent;
+            let from_child () = open_in_bin error_file in
             pids := OpamMisc.IntMap.add pid (n, from_child) !pids;
             pre n;
             loop (nslots - 1)

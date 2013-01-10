@@ -351,7 +351,7 @@ let update r =
 
   (* For each package in the cache, look at what changed upstream *)
   let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
-  log "cached_packages: %s\n" (OpamPackage.Set.to_string cached_packages);
+  log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
   let updated_cached_packages = OpamPackage.Set.filter (fun nv ->
     let url_f = OpamPath.Repository.url repo nv in
     if OpamFilename.exists url_f then (

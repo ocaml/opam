@@ -180,9 +180,9 @@ let () =
 
     if !errors <> [] then
       let display_error (nv, error) =
-        OpamGlobals.error "[ERROR] Error while processing %s" (OpamPackage.to_string nv);
+        OpamGlobals.error "==== ERROR [%s] ====\n" (OpamPackage.to_string nv);
         match error with
-        | OpamSystem.Process_error r  -> OpamProcess.display_error_message r
+        | OpamSystem.Process_error r  -> OpamGlobals.error "%s" (OpamProcess.string_of_result r)
         | OpamSystem.Internal_error s -> OpamGlobals.error "  %s" s
         | _ -> OpamGlobals.error "%s" (Printexc.to_string error) in
       let all_errors = List.map fst !errors in

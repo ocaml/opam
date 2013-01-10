@@ -146,6 +146,9 @@ let makecmd = ref (lazy (
 
 let ulimit_pipe = 65536
 
+let log_limit = 10
+let log_line_limit = 5 * 80
+
 let default_jobs = 1
 
 let exit i =

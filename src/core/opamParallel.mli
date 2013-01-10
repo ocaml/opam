@@ -19,13 +19,11 @@
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
-  val string_of_vertex: V.t -> string
 end
 
 type error =
   | Process_error of OpamProcess.result
   | Internal_error of string
-  | Pipe_error
 
 (** Functor signature *)
 module type SIG = sig
