@@ -146,16 +146,13 @@ module Make (G : G) = struct
     log "write_error";
     (** [Marshal.to_channel] never terminates if the size of [r] is too large.
         Here we try to reduce its size by preserving the most of its meaning. *)
-    let tl l = try List.tl l with _ -> [] in
     let rec remove_lines r =
       if String.length (Marshal.to_string r []) >= OpamGlobals.ulimit_pipe then
+        let open OpamProcess in
         match r with
-          | Process_error r ->
-              remove_lines (Process_error OpamProcess.({ r with r_info   = tl r.r_info   ;
-                                                                r_stdout = tl r.r_stdout ;
-                                                                r_stderr = tl r.r_stderr ; }))
-          | Internal_error _ -> Pipe_error
+          | Process_error ({ r_stderr = _ :: r_stderr } as r) -> remove_lines (Process_error { r with r_stderr })
           | Pipe_error -> assert false
+          | _ -> Pipe_error
       else
         r in
     Marshal.to_channel oc (remove_lines r) []
@@ -167,18 +164,16 @@ module Make (G : G) = struct
 
   let parallel_iter n g ~pre ~child ~post =
     let t = ref (init g) in
-    (* pid -> node *)
+    (* pid -> node * (fd to read the error code) *)
     let pids = ref OpamMisc.IntMap.empty in
     (* The nodes to process *)
     let todo = ref (!t.roots) in
     (* node -> error *)
     let errors = ref M.empty in
-    (* node -> fd to read the error code *)
-    let from_childs = ref M.empty in
 
     (* All the node with a current worker currently doing some processing. *)
     let worker_nodes () =
-      OpamMisc.IntMap.fold (fun _ n accu -> S.add n accu) !pids S.empty in
+      OpamMisc.IntMap.fold (fun _ (n, _) accu -> S.add n accu) !pids S.empty in
     (* All the error nodes. *)
     let error_nodes () =
       M.fold (fun n _ accu -> S.add n accu) !errors S.empty in
@@ -208,10 +203,8 @@ module Make (G : G) = struct
            then wait for a child process to finish its work *)
         log "waiting for a child process to finish";
         let pid, status = wait !pids in
-        let n = OpamMisc.IntMap.find pid !pids in
+        let n, from_child = OpamMisc.IntMap.find pid !pids in
         pids := OpamMisc.IntMap.remove pid !pids;
-        let from_child = M.find n !from_childs in
-        from_childs := M.remove n !from_childs;
         begin match status with
           | Unix.WEXITED 0 ->
               t := visit !t n;
@@ -239,7 +232,6 @@ module Make (G : G) = struct
         let from_child, to_parent = Unix.pipe () in
         let to_parent = Unix.out_channel_of_descr to_parent in
         let from_child = Unix.in_channel_of_descr from_child in
-        from_childs := M.add n from_child !from_childs;
 
         match Unix.fork () with
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
@@ -247,6 +239,9 @@ module Make (G : G) = struct
             log "Spawning a new process";
             close_in from_child;
             Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
+            let exit n =
+              close_out to_parent;
+              exit n in
             let return p =
               write_error to_parent p;
               exit 1 in
@@ -264,7 +259,7 @@ module Make (G : G) = struct
         | pid ->
             log "Creating process %d" pid;
             close_out to_parent;
-            pids := OpamMisc.IntMap.add pid n !pids;
+            pids := OpamMisc.IntMap.add pid (n, from_child) !pids;
             pre n;
             loop (nslots - 1)
       ) in
