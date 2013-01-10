@@ -1,4 +1,6 @@
 0.9.0 (trunk)
+* add a new `--fake` option to simulate build and installation of packages. Use this option this care, it can easily corrupt the state of OPAM.
+* Better messages in case of error
 * OPAM proposes better solutions to the user
 * support for installed roots and auto-clean of unused packages
 * rename `--cores` to `--jobs`
