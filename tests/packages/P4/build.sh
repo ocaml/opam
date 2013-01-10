@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 echo "Building P4 with ${OPAM}"
 COMP0="`${OPAM} config -R asmcomp P2 P3`"
