@@ -713,8 +713,9 @@ let switch =
     mk_opt ["f";"filename"]
       "FILENAME" "The name of the file to export to/import from."
       Arg.(some filename) None in
-  let switch global_options command alias_of filename print_short installed_only params =
+  let switch global_options build_options command alias_of filename print_short installed_only params =
     set_global_options global_options;
+    set_build_options build_options;
     let no_alias_of () =
       if alias_of <> None then
         OpamGlobals.error_and_exit "invalid -alias-of option" in
@@ -751,7 +752,7 @@ let switch =
             (OpamSwitch.of_string switch) (mk_comp switch))
     | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
-  Term.(pure switch $global_options $command $alias_of $filename $print_short_flag $installed_only_flag $params),
+  Term.(pure switch $global_options $build_options $command $alias_of $filename $print_short_flag $installed_only_flag $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)
