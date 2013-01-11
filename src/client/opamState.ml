@@ -319,6 +319,23 @@ let load_repository_state () =
     repo_index; config; aliases; pinned;
   }
 
+(* Currently, only check that only installed packages have something
+   in $repo/tmp. This could be extended later on. *)
+let clean_state t =
+  let clean repo_root nv =
+    let tmp_dir = OpamPath.Repository.tmp_dir repo_root nv in
+    if OpamFilename.exists_dir tmp_dir then (
+      OpamGlobals.error "%s exists although %s is not installed. Removing it."
+        (OpamFilename.Dir.to_string tmp_dir)
+        (OpamPackage.to_string nv);
+      OpamFilename.rmdir tmp_dir
+    ) in
+  OpamRepositoryName.Map.iter (fun repo _ ->
+    let repo_root = OpamPath.Repository.create t.root repo in
+    let available = OpamRepository.packages repo_root in
+    let not_installed = OpamPackage.Set.diff available t.installed in
+    OpamPackage.Set.iter (clean repo_root) not_installed
+  ) t.repositories
 
 let load_state () =
   let root = OpamPath.default () in
@@ -394,18 +411,8 @@ let load_state () =
     packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   } in
+  clean_state t;
   print_state t;
-  (* update from opam 0.7 to 0.8: Remove spurious conf-ocaml packages *)
-  if mem_installed_package_by_name t OpamPackage.Name.default then
-    OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch)
-      (OpamPackage.Set.filter (fun nv -> OpamPackage.name nv <> OpamPackage.Name.default) t.installed);
-  (match find_packages_by_name t OpamPackage.Name.default with
-  | None          -> ()
-  | Some packages ->
-    OpamPackage.Set.iter (fun nv ->
-      OpamFilename.remove (OpamPath.opam t.root nv);
-      OpamFilename.remove (OpamPath.descr t.root nv);
-    ) packages);
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
     !upgrade_system_compiler t;
