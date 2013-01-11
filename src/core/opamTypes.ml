@@ -176,9 +176,9 @@ type config_option = {
 
 type pin_option =
   | Version of version
-  | Path of dirname
-  | Git of dirname
-  | Darcs of dirname
+  | Local of dirname
+  | Git of address
+  | Darcs of address
   | Unpin
 
 type pin_kind = [`version|`git|`darcs|`local|`unpin]
@@ -204,13 +204,13 @@ let pin_option_of_string ?kind s =
       Darcs (OpamFilename.Dir.of_string s)
     else
       Darcs (OpamFilename.raw_dir s)
-  | Some `local   -> Path (OpamFilename.Dir.of_string s)
+  | Some `local   -> Local (OpamFilename.Dir.of_string s)
   | Some `unpin   -> Unpin
   | None          ->
     if s = "none" then
       Unpin
     else if Sys.file_exists s then
-      Path (OpamFilename.Dir.of_string s)
+      Local (OpamFilename.Dir.of_string s)
     else if OpamMisc.contains s ('/') then
       mk_git s
     else
@@ -241,14 +241,14 @@ let path_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
   | Git p
   | Darcs p
-  | Path p    -> OpamFilename.Dir.to_string p
+  | Local p   -> OpamFilename.Dir.to_string p
   | Unpin     -> "none"
 
 let kind_of_pin_option = function
   | Version _ -> `version
   | Git _     -> `git
   | Darcs _   -> `darcs
-  | Path _    -> `local
+  | Local _   -> `local
   | Unpin     -> `unpin
 
 let string_of_pin p =

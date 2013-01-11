@@ -792,8 +792,9 @@ let pin =
       "rsync"  , `local;
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
+  let force = mk_flag ["f";"force"] "Disable consistency checks." in
 
-  let pin global_options kind list package pin =
+  let pin global_options force kind list package pin =
     set_global_options global_options;
     if list then
       OpamClient.pin_list ()
@@ -804,10 +805,10 @@ let pin =
         pin_package = OpamPackage.Name.of_string n;
         pin_option  = pin_option_of_string ?kind:kind p
       } in
-      OpamClient.pin pin
+      OpamClient.pin ~force pin
     | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
 
-  Term.(pure pin $global_options $kind $list $package $pin_option),
+  Term.(pure pin $global_options $force $kind $list $package $pin_option),
   term_info "pin" ~doc ~man
 
 (* HELP *)

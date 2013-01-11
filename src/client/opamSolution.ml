@@ -168,7 +168,7 @@ let pinned_path t nv =
   let name = OpamPackage.name nv in
   if OpamPackage.Name.Map.mem name t.pinned then
     match OpamPackage.Name.Map.find name t.pinned with
-    | Path _
+    | Local _
     | Darcs _
     | Git _ as k -> Some k
     | _          -> None
@@ -197,7 +197,7 @@ let extract_package t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
   match pinned_path t nv with
-  | Some (Git p | Darcs p | Path p as pin) ->
+  | Some (Git p | Darcs p | Local p as pin) ->
     let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
     if not (OpamFilename.exists_dir pinned_dir) then (
       match OpamState.update_pinned_package t nv pin with
@@ -602,7 +602,7 @@ let apply_solution ?(force = false) t action sol =
           if not (OpamPackage.Set.mem o !deleted) then
             finally
               (fun () ->
-                try proceed_to_install t o; add_to_install o;
+                try proceed_to_change t None o; add_to_install o;
                 with _ -> remove_the_packages_using o)
               flush
         | To_change (None, _) -> ()

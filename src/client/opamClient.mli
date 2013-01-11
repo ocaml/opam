@@ -86,7 +86,7 @@ val switch_list: print_short:bool -> installed_only:bool -> unit
 val switch_current: unit -> unit
 
 (** Pin a package to a specific version. Take the global file lock. *)
-val pin: pin -> unit
+val pin: force:bool -> pin -> unit
 
 (** List the current pinned packages *)
 val pin_list: unit -> unit

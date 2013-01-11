@@ -314,9 +314,9 @@ val string_of_remote: remote -> string
 (** Pinned packages options *)
 type pin_option =
   | Version of version
-  | Path of dirname
-  | Git of dirname
-  | Darcs of dirname
+  | Local of dirname
+  | Git of address
+  | Darcs of address
   | Unpin
 
 (** Pinned packages *)

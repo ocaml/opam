@@ -249,7 +249,7 @@ let update_packages t ~show_packages repositories =
     OpamPackage.Set.of_list (
       OpamMisc.filter_map
         (function
-          | n, (Path p | Git p | Darcs p as pin) ->
+          | n, (Local p | Git p | Darcs p as pin) ->
             if OpamState.mem_installed_package_by_name t n then
               let nv = OpamState.find_installed_package_by_name t n in
               match OpamState.update_pinned_package t nv pin with
@@ -992,7 +992,7 @@ let rec remote action =
         OpamGlobals.error_and_exit "%s is not a a valid remote name"
           (OpamRepositoryName.to_string name)
 
-let pin action =
+let pin ~force action =
   log "pin %s" (string_of_pin action);
   let t = OpamState.load_state () in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
@@ -1009,18 +1009,45 @@ let pin action =
 
   match action.pin_option with
   | Unpin ->
+    if not force || not (OpamState.mem_installed_package_by_name t name) then
+      OpamGlobals.error_and_exit "You must uninstall the package before unpining it (or use --force).";
     update_config (OpamPackage.Name.Map.remove name pins);
-    if OpamState.mem_installed_package_by_name t name then
-      let nv = OpamState.find_installed_package_by_name t name in
-      add_to_reinstall t ~all:false (OpamPackage.Set.singleton nv);
+    let nv = OpamState.find_installed_package_by_name t name in
+    add_to_reinstall t ~all:false (OpamPackage.Set.singleton nv)
   | _     ->
-    if OpamPackage.Name.Map.mem name pins then (
+    if not force && OpamPackage.Name.Map.mem name pins then (
       let current = OpamPackage.Name.Map.find name pins in
-      OpamGlobals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
+      OpamGlobals.error_and_exit "Cannot pin %s to %s as it is already associated to %s.\nYou must unpin it using 'opam pin %s none' first (or use --force)."
         (OpamPackage.Name.to_string name)
         (path_of_pin_option action.pin_option)
-        (path_of_pin_option current);
+        (path_of_pin_option current)
+        (OpamPackage.Name.to_string name);
     );
+    let pins = OpamPackage.Name.Map.remove name pins in
+
+    begin match action.pin_option with
+    | Unpin           -> ()
+    | Version version ->
+      if not force && not (OpamState.mem_installed_package_by_name t name) then
+        OpamGlobals.error_and_exit
+          "Cannot pin %s to %s, you must install the package first (or use --force)."
+          (OpamPackage.Name.to_string name)
+          (OpamPackage.Version.to_string version);
+      if OpamState.mem_installed_package_by_name t name then
+        let nv = OpamState.find_installed_package_by_name t name in
+        if not force && OpamPackage.version nv <> version then
+          OpamGlobals.error_and_exit
+            "Cannot pin %s as its current version is %s. You must install the version %s first (or use --force)."
+            (OpamPackage.Name.to_string name)
+            (OpamPackage.Version.to_string (OpamPackage.version nv))
+            (OpamPackage.Version.to_string version);
+    | Git _ | Darcs _ | Local _ ->
+      if not force || OpamState.mem_installed_package_by_name t name then
+        OpamGlobals.error_and_exit
+          "Cannot pin %s to a dev version as it is already installed. You must uninstall it first (or use --force)."
+          (OpamPackage.Name.to_string name);
+    end;
+
     match OpamState.find_packages_by_name t name with
     | None   ->
       OpamGlobals.error_and_exit
@@ -1124,8 +1151,8 @@ let switch_list ~print_short ~installed_only =
 let switch_current () =
   OpamState.check (Read_lock OpamSwitchCommand.current)
 
-let pin action =
-  OpamState.check (Global_lock (fun () -> pin action))
+let pin ~force action =
+  OpamState.check (Global_lock (fun () -> pin ~force action))
 
 let pin_list () =
   OpamState.check (Read_lock pin_list)
