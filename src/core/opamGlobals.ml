@@ -43,7 +43,7 @@ let fake             = check "FAKE"
 let cudf_file = ref (None: string option)
 let aspcud_criteria =
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
-  with _ -> "-removed,-new"
+  with _ -> "paranoid"
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"
