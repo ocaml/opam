@@ -325,6 +325,10 @@ let proceed_to_delete ~rm_build t nv =
   OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
   OpamFilename.remove (OpamPath.Switch.config t.root t.switch name)
 
+let proceed_to_delete ~rm_build t nv =
+  if not !OpamGlobals.fake then
+    proceed_to_delete ~rm_build t nv
+
 (* In case of error, simply return the error traces, and let the
    repo in a state that the user can explore.
    Do not try to recover yet. *)
