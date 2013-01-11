@@ -370,7 +370,13 @@ let consistency_checks t =
     OpamPackage.Set.iter (clean repo_root) not_installed
   ) t.repositories
 
+let loads = ref []
+
+let print_stats () =
+  List.iter (Printf.printf "load-state: %.2fs\n") !loads
+
 let load_state () =
+  let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
 
@@ -446,6 +452,8 @@ let load_state () =
   } in
   consistency_checks t;
   print_state t;
+  let t1 = Unix.gettimeofday () in
+  loads :=  (t1 -. t0) :: !loads;
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
     !upgrade_system_compiler t;

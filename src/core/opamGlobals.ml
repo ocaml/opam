@@ -39,6 +39,7 @@ let build_test       = check "BUILDTEST"
 let build_doc        = check "BUILDDOC"
 let dryrun           = check "DRYRUN"
 let fake             = check "FAKE"
+let print_stats      = check "STATS"
 
 let cudf_file = ref (None: string option)
 let aspcud_criteria =

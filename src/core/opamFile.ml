@@ -1383,15 +1383,29 @@ module type F = sig
   val to_string : filename -> t -> string
 end
 
+let reads = Hashtbl.create 64
+let writes = Hashtbl.create 64
+let incr tbl n =
+  let v =
+    try Hashtbl.find tbl n
+    with _ -> 0 in
+  Hashtbl.replace tbl n (v+1)
+
+let print_stats () =
+  Hashtbl.iter (Printf.eprintf "read(%s): %d\n") reads;
+  Hashtbl.iter (Printf.eprintf "write(%s): %d\n") writes
+
 module Make (F : F) = struct
 
   let log = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal)
 
   let write f v =
+    incr writes F.internal;
     log "write %s" (OpamFilename.to_string f);
     OpamFilename.write f (F.to_string f v)
 
   let read f =
+    incr reads F.internal;
     let filename = OpamFilename.to_string f in
     log "read %s" filename;
     if OpamFilename.exists f then

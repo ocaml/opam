@@ -70,6 +70,9 @@ type state = {
 (** Load the client state *)
 val load_state: unit -> state
 
+(** Display stats *)
+val print_stats: unit -> unit
+
 (** Load repository related states only. All the other fields are let empty. *)
 val load_repository_state: unit -> state
 

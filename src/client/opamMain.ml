@@ -898,7 +898,12 @@ let () =
   try
     match Term.eval_choice ~catch:false default commands with
     | `Error _ -> exit 1
-    | _        -> exit 0
+    | _        ->
+      if !OpamGlobals.print_stats then (
+        OpamFile.print_stats ();
+        OpamState.print_stats ();
+      );
+      exit 0
   with
   | OpamGlobals.Exit 0 -> ()
   | e ->
