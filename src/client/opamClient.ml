@@ -991,14 +991,14 @@ let pin ~force action =
     begin match OpamPackage.Name.Map.find name pins with
       | Version _ -> ()
       | _         ->
-        if not force || not (OpamState.mem_installed_package_by_name t name) then
+        if not force && not (OpamState.mem_installed_package_by_name t name) then
           OpamGlobals.error_and_exit "You must uninstall the package before unpining it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
   | _     ->
     if not force && OpamPackage.Name.Map.mem name pins then (
       let current = OpamPackage.Name.Map.find name pins in
-      OpamGlobals.error_and_exit "Cannot pin %s to %s as it is already associated to %s.\nYou must unpin it using 'opam pin %s none' first (or use --force)."
+      OpamGlobals.error_and_exit "Cannot pin %s to %s as it is already associated to %s. Use 'opam pin %s none' and retry (or use --force)."
         (OpamPackage.Name.to_string name)
         (path_of_pin_option action.pin_option)
         (path_of_pin_option current)
@@ -1023,7 +1023,7 @@ let pin ~force action =
             (OpamPackage.Version.to_string (OpamPackage.version nv))
             (OpamPackage.Version.to_string version);
     | Git _ | Darcs _ | Local _ ->
-      if not force || OpamState.mem_installed_package_by_name t name then
+      if not force && OpamState.mem_installed_package_by_name t name then
         OpamGlobals.error_and_exit
           "Cannot pin %s to a dev version as it is already installed. You must uninstall it first (or use --force)."
           (OpamPackage.Name.to_string name);
