@@ -847,8 +847,11 @@ let remove names =
       OpamPackage.Set.of_list
         (OpamSolver.forward_dependencies ~depopts:false ~installed:true universe packages) in
     let installed_roots = OpamPackage.Set.diff t.installed_roots to_remove in
+    let installed =
+      OpamPackage.Set.of_list
+        (OpamSolver.backward_dependencies ~depopts:true ~installed:true universe installed_roots) in
     let solution = OpamSolution.resolve_and_apply t Remove
-      { wish_install = OpamSolution.atoms_of_packages installed_roots;
+      { wish_install = OpamSolution.eq_atoms_of_packages installed;
         wish_remove  = OpamSolution.atoms_of_packages to_remove;
         wish_upgrade = [] } in
     OpamSolution.error_if_no_solution solution
