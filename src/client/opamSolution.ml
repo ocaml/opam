@@ -423,9 +423,12 @@ let proceed_to_change t nv_old nv =
 let proceed_to_recompile t nv =
   proceed_to_change t (Some nv) nv
 
-let error_if_no_solution = function
+let check_solution = function
   | No_solution -> OpamGlobals.exit 3
-  | _           -> ()
+  | Error _     -> OpamGlobals.exit 4
+  | Nothing_to_do
+  | OK
+  | Aborted     -> ()
 
 let sum stats =
   stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
@@ -650,11 +653,12 @@ let apply_solution ?(force = false) t action sol =
           List.iter (fun n -> OpamGlobals.error "%s" (PackageAction.string_of_action n)) remaining;
         );
         if can_try_to_recover_from_error errors then (
-          OpamGlobals.msg "\nRecovering from errors:\n";
+          let pkgs = List.map (fst |> action_contents |> OpamPackage.to_string) errors in
+          OpamGlobals.msg "==== ERROR RECOVERY [%s] ====\n" (String.concat ", " pkgs);
           List.iter recover_from_error errors;
         );
         List.iter display_error errors;
-        OpamGlobals.exit 3
+        Error (List.map fst errors @ remaining)
     ) else
       Aborted
   )

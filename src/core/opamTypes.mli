@@ -253,6 +253,7 @@ type solver_result =
   | OK
   | Aborted
   | No_solution
+  | Error of package action list
 
 (** Solver result *)
 type ('a, 'b) result =

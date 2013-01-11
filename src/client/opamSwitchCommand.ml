@@ -185,7 +185,7 @@ let install_with_packages ~quiet ~packages ~warning switch compiler =
         wish_remove  = [];
         wish_upgrade = to_install } in
     begin try
-      OpamSolution.error_if_no_solution solution;
+      OpamSolution.check_solution solution;
       if warning then OpamState.print_env_warning t
     with e ->
       uninstall_compiler ();
@@ -249,7 +249,7 @@ let import filename =
       { wish_install = to_keep;
         wish_remove  = [];
         wish_upgrade = to_import } in
-    OpamSolution.error_if_no_solution solution
+    OpamSolution.check_solution solution
 
 let export filename =
   let t = OpamState.load_state () in

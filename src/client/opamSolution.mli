@@ -32,8 +32,8 @@ val resolve_and_apply:
   atom request ->
   solver_result
 
-(** Raise an error if no solution is found *)
-val error_if_no_solution: solver_result -> unit
+(** Raise an error if no solution is found or in case of error. *)
+val check_solution: solver_result -> unit
 
 (** {2 Atoms} *)
 

@@ -451,6 +451,7 @@ type solver_result =
   | OK
   | Aborted
   | No_solution
+  | Error of package action list
 
 type ('a, 'b) result =
   | Success of 'a

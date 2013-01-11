@@ -601,6 +601,9 @@ let upgrade names =
     | Nothing_to_do -> OpamGlobals.msg "Already up-to-date.\n"
     | Aborted
     | No_solution   -> to_not_reinstall_yet := reinstall
+    | Error l       ->
+      let pkgs = OpamPackage.Set.of_list (List.map action_contents l) in
+      to_not_reinstall_yet := pkgs
   end;
   let reinstall = OpamPackage.Set.inter t.installed !to_not_reinstall_yet in
   let reinstall_f = OpamPath.Switch.reinstall t.root t.switch in
@@ -608,7 +611,7 @@ let upgrade names =
     OpamFilename.remove reinstall_f
   else
     OpamFile.Reinstall.write reinstall_f reinstall;
-  OpamSolution.error_if_no_solution !solution_found
+  OpamSolution.check_solution !solution_found
 
 let check_opam_version () =
   let t = OpamState.load_state () in
@@ -782,7 +785,7 @@ let install names =
       { wish_install = OpamSolution.atoms_of_packages t.installed_roots;
         wish_remove  = [] ;
         wish_upgrade = atoms } in
-    OpamSolution.error_if_no_solution solution
+    OpamSolution.check_solution solution
   )
 
 let remove names =
@@ -854,7 +857,7 @@ let remove names =
       { wish_install = OpamSolution.eq_atoms_of_packages installed;
         wish_remove  = OpamSolution.atoms_of_packages to_remove;
         wish_upgrade = [] } in
-    OpamSolution.error_if_no_solution solution
+    OpamSolution.check_solution solution
   )
 
 let reinstall names =
@@ -886,7 +889,7 @@ let reinstall names =
   let to_process =
     List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
   let solution = OpamSolution.apply_solution t Reinstall (OpamSolver.sequential_solution to_process) in
-  OpamSolution.error_if_no_solution solution
+  OpamSolution.check_solution solution
 
 let upload upload repo =
   log "upload %s %s" (string_of_upload upload) (OpamRepositoryName.to_string repo);
