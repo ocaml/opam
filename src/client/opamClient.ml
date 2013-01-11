@@ -522,9 +522,12 @@ let info ~fields regexps =
     let descr =
       let d = OpamFile.Descr.full (OpamFile.Descr.safe_read (OpamPath.descr t.root nv)) in
       let short, long = match OpamMisc.cut_at d '\n' with
-        | None   -> d, ""
-        | Some p -> p in
-      ["description", Printf.sprintf "\n%s\n\n%s\n" short (OpamMisc.strip long)] in
+        | None       -> OpamMisc.strip d, ""
+        | Some (s,l) -> s, OpamMisc.strip l in
+      let long = match long with
+        | "" -> ""
+        | _  -> Printf.sprintf "\n\n%s" long in
+      ["description", short ^ long] in
 
     let all_fields =
       [ "package", OpamPackage.Name.to_string name ]
