@@ -170,6 +170,28 @@ let update_repo_index t =
     ) repo_s
   ) repo_index
 
+(* Add the given packages to the set of package to reinstall. If [all]
+   is set, this is done for ALL the switches (useful when a package
+   change upstream for instance). If not, only the reinstall state of the
+   current switch is changed. *)
+let add_to_reinstall t ~all packages =
+  let aux switch =
+    let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
+    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) in
+    let reinstall =
+      OpamPackage.Set.fold (fun nv reinstall ->
+        if OpamPackage.Set.mem nv installed then
+          OpamPackage.Set.add nv reinstall
+        else
+          reinstall
+      ) packages reinstall in
+    if not (OpamPackage.Set.is_empty reinstall) then
+      OpamFile.Reinstall.write (OpamPath.Switch.reinstall t.root switch) reinstall
+  in
+  if all
+  then OpamSwitch.Map.iter (fun switch _ -> aux switch) t.aliases
+  else aux t.switch
+
 (* sync the repositories, display the new compilers, and create
    compiler description file links *)
 (* XXX: the compiler things should splitted out, but the handling of
@@ -279,20 +301,8 @@ let update_packages t ~show_packages repositories =
     print_updated t updated pinned_updated;
 
   let updated = OpamPackage.Set.union pinned_updated updated in
-  (* update $opam/$oversion/reinstall *)
-  OpamSwitch.Map.iter (fun switch _ ->
-    let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
-    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) in
-    let reinstall =
-      OpamPackage.Set.fold (fun nv reinstall ->
-        if OpamPackage.Set.mem nv installed then
-          OpamPackage.Set.add nv reinstall
-        else
-          reinstall
-      ) updated reinstall in
-    if not (OpamPackage.Set.is_empty reinstall) then
-      OpamFile.Reinstall.write (OpamPath.Switch.reinstall t.root switch) reinstall
-  ) t.aliases;
+  (* update $opam/$oversion/reinstall for all installed switches *)
+  add_to_reinstall ~all:true t updated;
 
   (* Check all the dependencies exist *)
   let t = OpamState.load_state () in
@@ -454,7 +464,7 @@ let info ~fields regexps =
     let opam = OpamState.opam t nv in
 
     (* All the version of the package *)
-    let versions = OpamPackage.versions t.packages name in
+    let versions = OpamPackage.versions_of_name t.packages name in
     if OpamPackage.Version.Set.is_empty versions then
       OpamState.unknown_package name None;
     let versions =
@@ -606,8 +616,10 @@ let check_opam_version () =
   match OpamState.find_packages_by_name t n with
   | None   -> ()
   | Some _ ->
-    let max_version = OpamPackage.Version.Set.max_elt (OpamPackage.versions (Lazy.force t.available_packages) n) in
-    let max_version = OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
+    let max_version =
+      let versions = OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
+      let max_version = OpamPackage.Version.Set.max_elt versions in
+      OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
     if OpamVersion.compare max_version OpamVersion.current > 0 then (
       OpamGlobals.warning "Your version of OPAM (%s) is not up-to-date! The latest version is %s."
         (OpamVersion.to_string OpamVersion.current)
@@ -749,7 +761,7 @@ let install names =
     List.iter
       (fun (n,v) ->
         let versions = match v with
-          | None       -> OpamPackage.versions t.packages n
+          | None       -> OpamPackage.versions_of_name t.packages n
           | Some (_,v) -> OpamPackage.Version.Set.singleton v in
         OpamPackage.Version.Set.iter (fun v ->
           let nv = OpamPackage.create n v in
@@ -981,28 +993,28 @@ let pin action =
   let pins = OpamFile.Pinned.safe_read pin_f in
   let name = action.pin_package in
   let update_config pins =
-    OpamPackage.Version.Set.iter (fun version ->
-      let nv = OpamPackage.create name version in
+    let packages = OpamPackage.packages_of_name t.packages name in
+    OpamPackage.Set.iter (fun nv ->
       OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
       OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv));
-    ) (OpamPackage.versions t.packages name);
+    ) packages;
+    add_to_reinstall t ~all:false packages;
     OpamFile.Pinned.write pin_f pins in
-  if OpamState.mem_installed_package_by_name t name then (
-    let reinstall_f = OpamPath.Switch.reinstall t.root t.switch in
-    let reinstall = OpamFile.Reinstall.safe_read reinstall_f in
-    let nv = OpamState.find_installed_package_by_name t name in
-    OpamFile.Reinstall.write reinstall_f (OpamPackage.Set.add nv reinstall)
-  );
+
   match action.pin_option with
-  | Unpin -> update_config (OpamPackage.Name.Map.remove name pins)
+  | Unpin ->
+    update_config (OpamPackage.Name.Map.remove name pins);
+    if OpamState.mem_installed_package_by_name t name then
+      let nv = OpamState.find_installed_package_by_name t name in
+      add_to_reinstall t ~all:false (OpamPackage.Set.singleton nv);
   | _     ->
-      if OpamPackage.Name.Map.mem name pins then (
-        let current = OpamPackage.Name.Map.find name pins in
-        OpamGlobals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
-          (OpamPackage.Name.to_string name)
-          (path_of_pin_option action.pin_option)
-          (path_of_pin_option current);
-      );
+    if OpamPackage.Name.Map.mem name pins then (
+      let current = OpamPackage.Name.Map.find name pins in
+      OpamGlobals.error_and_exit "Cannot pin %s to %s, it is already associated to %s."
+        (OpamPackage.Name.to_string name)
+        (path_of_pin_option action.pin_option)
+        (path_of_pin_option current);
+    );
     match OpamState.find_packages_by_name t name with
     | None   ->
       OpamGlobals.error_and_exit

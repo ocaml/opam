@@ -198,7 +198,13 @@ let names_of_packages nvset =
     nvset
     Name.Set.empty
 
-let versions packages n =
+let packages_of_name nvset n =
+  Set.fold
+    (fun nv set -> if name nv = n then Set.add nv set else set)
+    nvset
+    Set.empty
+
+let versions_of_name packages n =
   versions_of_packages
     (Set.filter
        (fun nv -> name nv = n)

@@ -62,8 +62,14 @@ val to_map: Set.t -> Version.Set.t Name.Map.t
 (** Extract the versions from a collection of packages *)
 val versions_of_packages: Set.t -> Version.Set.t
 
+(** Return the list of versions for a given package *)
+val versions_of_name: Set.t -> Name.t -> Version.Set.t
+
 (** Extract the naes from a collection of packages *)
 val names_of_packages: Set.t -> Name.Set.t
+
+(** Return all the packages with the given names *)
+val packages_of_name: Set.t -> Name.t -> Set.t
 
 (** Look for all .opam files in directory *)
 val opam_files: OpamFilename.Dir.t -> Set.t
@@ -80,6 +86,3 @@ val hash: t -> int
 (** List all the .opam files and the package directories in a given
     path *)
 val list: OpamFilename.Dir.t -> Set.t
-
-(** Return the list of versions for a given package *)
-val versions: Set.t -> Name.t -> Version.Set.t
