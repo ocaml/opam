@@ -20,40 +20,44 @@ type t = {
   p_name   : string;        (** Command name *)
   p_args   : string list;   (** Command args *)
   p_pid    : int;           (** Process PID *)
+  p_cwd    : string;        (** Process initial working directory *)
   p_time   : float;         (** Process start time *)
   p_stdout : string option; (** stdout dump file *)
   p_stderr : string option; (** stderr dump file *)
-  p_info   : string option; (** dump info file *)
+  p_env    : string option; (** dump environement variables *)
+  p_info   : string option; (** dump process info *)
 }
 
 (** [create cmd args] create a new process to execute the command
-    [cmd] with arguments [args].  If stdout/stderr are set, the
-    channels are redirected to files. The current environment can also
-    be overriden if [env] is set. *)
+    [cmd] with arguments [args]. If [stdout_file] or [stderr_file] are
+    set, the channels are redirected to the corresponding files.  The
+    outputs are discarded is [verbose] is set to false. The current
+    environment can also be overriden if [env] is set. The environment
+    which is used to run the process is recorded into [env_file] (if
+    set). *)
 val create :
-  ?info:string -> ?stdout:string -> ?stderr:string -> ?env:string array
-  -> verbose:bool -> string -> string list -> t
+  ?info_file:string -> ?env_file:string -> ?stdout_file:string -> ?stderr_file:string ->
+  ?env:string array ->
+  verbose:bool -> string -> string list -> t
 
-(** The type for result processes *)
+(** Process results *)
 type result = {
-  r_proc     : t;           (** Process *)
   r_code     : int;         (** Process exit code *)
   r_duration : float;       (** Process duration *)
-  r_info     : string list; (** Environment variables *)
+  r_info     : string;      (** Process info *)
   r_stdout   : string list; (** Content of stdout dump file *)
   r_stderr   : string list; (** Content of stderr dump file *)
+  r_cleanup  : string list; (** List of files to clean-up *)
 }
 
-(** [wait p] waits for the processus [p] to end and returns its results.
-    @raise Global.Exit as only possible error *)
-val wait : t -> result
+(** [wait p] waits for the processus [p] to end and returns its results. *)
+val wait: t -> result
 
 (** [run ~name cmd args] synchronously call the command [cmd] with
     arguments [args]. It waits until the process is finished. The file
-    [name.out], [name.err] and [name.info] are created, which contains
-    the standard output, the standart error and some process info
-    respectively.
-    @raise Global.Exit as only possible error *)
+    [name.info], [name.env], [name.out] and [name.err] and are
+    created, and contains the process main description, the environment
+    variables, the standard output and the standard error. *)
 val run : ?env:string array -> verbose:bool -> name:string -> string -> string list -> result
 
 (** Is the process result a success ? *)
@@ -68,4 +72,5 @@ val clean_files : result -> unit
 (** {2 Misc} *)
 val read_lines: string -> string list
 
-val display_error_message: result -> unit
+(** Pretty printing of process. *)
+val string_of_result: result -> string

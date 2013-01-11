@@ -93,12 +93,12 @@ val directories_with_links: string -> string list
 type command = string list
 
 (** [command cmd] executes the command [cmd] in the correct OPAM
-    environment. Return the exit code. *)
-val command: ?verbose:bool -> ?env:string array -> command -> unit
+    environment. *)
+val command: ?verbose:bool -> ?env:string array -> ?name:string -> command -> unit
 
 (** [commands cmds] executes the commands [cmds] in the correct
     OPAM environment.  It stops whenever one command fails. *)
-val commands: ?verbose:bool -> ?env:string array -> command list -> unit
+val commands: ?verbose:bool -> ?env:string array -> ?name:string -> command list -> unit
 
 (** [read_command_output cmd] executes the command [cmd] in the
     correct OPAM environment and return the lines from stdout *)
@@ -138,3 +138,6 @@ val download: overwrite:bool -> filename:string -> dirname:string -> string
 
 (** Apply a patch file in the current directory. *)
 val patch: string -> unit
+
+(** Create a tempory file in {i ~/.opam/logs/<name>XXX} *)
+val temp_file: string -> string

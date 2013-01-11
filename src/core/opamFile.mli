@@ -208,9 +208,6 @@ module Reinstall: IO_FILE with type t = package_set
 (** List of updated packages: [$opam/$repo/$repo/updated] *)
 module Updated: IO_FILE with type t = package_set
 
-(** Environement variables *)
-module Env: IO_FILE with type t = env
-
 (** Compiler version [$opam/compilers/] *)
 module Comp: sig
 

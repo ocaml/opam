@@ -18,21 +18,8 @@ exception Internal_error of string
 
 let _ =
   Printexc.register_printer (fun exn ->
-    let open OpamProcess in
     match exn with
-      Process_error r ->
-        let b = Buffer.create 1000 in
-        Printf.bprintf b "Exception OpamSystem.Process_error {\n";
-        Printf.bprintf b "\tr_code = %d\n" r.r_code;
-        Printf.bprintf b "\tr_duration = %.2f\n" r.r_duration;
-        Printf.bprintf b "\tr_info = [ %s\t]\n"
-          (String.concat "\n\t\t" r.r_info);
-        Printf.bprintf b "\tr_stdout = [ %s\t]\n"
-          (String.concat "\n\t\t" r.r_stdout);
-        Printf.bprintf b "\tr_stderr = [ %s\t]\n"
-          (String.concat "\n\t\t" r.r_stderr);
-        Printf.bprintf b "\t\t}\n";
-        Some (Buffer.contents b)
+    | Process_error r -> Some (OpamProcess.string_of_result r)
     | _ -> None)
 
 let internal_error fmt =
@@ -62,11 +49,6 @@ let rec mk_temp_dir () =
   else
     s
 
-let log_file () =
-  let stamp = int_of_float (1000. *. mod_float (Unix.gettimeofday ()) 600.) in
-  let f = string_of_int stamp in
-  !OpamGlobals.root_dir / "log" / f
-
 let safe_mkdir dir =
   let open Unix in
   if not (Sys.file_exists dir) then
@@ -80,6 +62,11 @@ let mkdir dir =
       safe_mkdir dir;
     end in
   aux dir
+
+let temp_file str =
+  let temp_dir = !OpamGlobals.root_dir / "log" in
+  mkdir temp_dir;
+  Filename.temp_file ~temp_dir str ""
 
 let remove_file file =
   try Unix.unlink file
@@ -107,7 +94,7 @@ let chdir dir =
 
 let in_dir dir fn =
   let reset_cwd =
-    let cwd = Unix.getcwd () in
+    let cwd = Sys.getcwd () in
     fun () -> chdir cwd in
   chdir dir;
   try
@@ -121,7 +108,7 @@ let in_dir dir fn =
 let list kind dir =
   if Sys.file_exists dir then
     in_dir dir (fun () ->
-      let d = Sys.readdir (Unix.getcwd ()) in
+      let d = Sys.readdir (Sys.getcwd ()) in
       let d = Array.to_list d in
       let l = List.filter kind d in
       List.sort compare (List.map (Filename.concat dir) l))
@@ -172,7 +159,7 @@ let remove file =
     remove_file file
 
 let getchdir s =
-  let p = Unix.getcwd () in
+  let p = Sys.getcwd () in
   chdir s;
   p
 
@@ -216,13 +203,15 @@ let reset_env = lazy (
   Array.of_list env
 )
 
-let run_process ?verbose ?(env=default_env) = function
+let run_process ?verbose ?(env=default_env) ?name = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
 
     (* Set-up the log files *)
-    let name = log_file () in
-    mkdir (Filename.dirname name);
+    let name = match name with
+      | None   -> temp_file "log"
+      | Some n -> Filename.temp_file ~temp_dir:(Sys.getcwd ()) n "" in
+
     let str = String.concat " " (cmd :: args) in
     log "[%s] %s" (Filename.basename name) str;
 
@@ -232,27 +221,24 @@ let run_process ?verbose ?(env=default_env) = function
 
     (* Display a user-friendly message if the command does not exists *)
     let cmd_exists =
-      OpamProcess.run ~env ~name:(log_file ()) ~verbose:false "which" [cmd] in
+      OpamProcess.run ~env ~name:(temp_file "which") ~verbose:false "which" [cmd] in
     OpamProcess.clean_files cmd_exists;
 
     if OpamProcess.is_success cmd_exists then (
       let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
-      let r = OpamProcess.run ~env ~name ~verbose cmd args in
-      if not !OpamGlobals.debug then
-        OpamProcess.clean_files r;
-      r
+      OpamProcess.run ~env ~name ~verbose cmd args
     ) else
       internal_error "%S: command not found\n" cmd
 
-let command ?verbose ?env cmd =
-  let r = run_process ?verbose ?env cmd in
+let command ?verbose ?env ?name cmd =
+  let r = run_process ?verbose ?env ?name cmd in
   if not (OpamProcess.is_success r) then
     process_error r
 
-let commands ?verbose ?env commands =
-  List.iter (command ?verbose ?env) commands
+let commands ?verbose ?env ?name commands =
+  List.iter (command ?verbose ?env ?name) commands
 
 let read_command_output ?verbose ?env cmd =
   let r = run_process ?verbose ?env cmd in

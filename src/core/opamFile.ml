@@ -65,8 +65,7 @@ module Syntax = struct
           (OpamMisc.string_of_list (fun x -> x) invalids)
           f.file_name
           (OpamMisc.string_of_list (fun x -> x) fields);
-      OpamGlobals.error "foo!";
-      OpamGlobals.exit 2;
+      OpamGlobals.exit 5;
     )
 end
 
@@ -1083,32 +1082,6 @@ module Dot_config = struct
   module Section  = MK (struct let get t = t.sections end)
 end
 
-module Env = struct
-
-  let internal = "env"
-
-  type t = env
-
-  let empty = []
-
-  let of_string _ s =
-    let l = Lines.of_string s in
-    List.fold_left (fun accu -> function
-      | []  -> accu
-      | [s] ->
-          (match OpamMisc.cut_at s '=' with
-          | None      -> failwith (s ^ ": invalid env variable")
-          | Some(k,v) -> (k, v) :: accu)
-      | x   -> failwith (String.concat " " x ^ ": invalid env variable")
-    ) [] l
-
-  let to_string _ t =
-    let l = List.map (fun (k,v) -> [ k^"="^v ]) t in
-    Lines.to_string l
-
-end
-
-
 module Comp = struct
 
   let internal = "comp"
@@ -1504,11 +1477,6 @@ end
 module Comp = struct
   include Comp
   include Make (Comp)
-end
-
-module Env = struct
-  include Env
-  include Make (Env)
 end
 
 module URL = struct

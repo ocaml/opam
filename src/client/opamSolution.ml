@@ -156,10 +156,9 @@ let proceed_to_install t nv =
 
     if !warnings <> [] then (
       let print (f, dst) = Printf.sprintf " - %s in %s" (OpamFilename.to_string f) (OpamFilename.Dir.to_string dst) in
-      OpamGlobals.error
+      OpamGlobals.error_and_exit
         "Error while installing the following files:\n%s"
         (String.concat "\n" (List.map print !warnings));
-      OpamGlobals.exit 2;
     )
   );
   if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
@@ -230,13 +229,8 @@ let compilation_env t opam =
   let env0 = OpamState.get_full_env t in
   OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
 
-let opam_env t opam =
-  let env0 = OpamState.get_opam_env t in
-  OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
-
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
-  OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -247,6 +241,7 @@ let proceed_to_delete ~rm_build t nv =
     match OpamState.filter_commands t (OpamFile.OPAM.remove opam) with
     | []     -> ()
     | remove ->
+      OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
       let p_build = OpamPath.Switch.build t.root t.switch nv in
       (* We try to run the remove scripts in the folder where it was extracted
          If it does not exist, we try to download and extract the archive again,
@@ -269,7 +264,8 @@ let proceed_to_delete ~rm_build t nv =
         else t.root in
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
-        OpamFilename.exec ~env exec_dir remove
+        let name = OpamPackage.Name.to_string name in
+        OpamFilename.exec ~env ~name exec_dir remove
       with _ ->
         ();
   );
@@ -382,44 +378,41 @@ let proceed_to_change t nv_old nv =
     List.iter (OpamState.substitute_file t) (OpamFile.OPAM.substs opam)
   );
 
-  (* Generate an environnement file *)
-  let env_f = OpamPath.Switch.build_env t.root t.switch nv in
-  OpamFile.Env.write env_f (opam_env t opam);
-
   (* Exec the given commands. *)
   let exec name f =
-    let commands = OpamState.filter_commands t (f opam) in
-    OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-    OpamFilename.exec ~env p_build commands in
-    try
-      (* First, we build the package. *)
-      exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
+    match OpamState.filter_commands t (f opam) with
+    | []       -> ()
+    | commands ->
+      OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
+      let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+      OpamFilename.exec ~env ~name p_build commands in
+  try
+    (* First, we build the package. *)
+    exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
 
-      (* If necessary, build and run the test. *)
-      if !OpamGlobals.build_test then
-        exec "Building and running the test" OpamFile.OPAM.build_test;
+    (* If necessary, build and run the test. *)
+    if !OpamGlobals.build_test then
+      exec "Building and running the test" OpamFile.OPAM.build_test;
 
-      (* If necessary, build the documentation. *)
-      if !OpamGlobals.build_doc then
-        exec "Generating the documentation" OpamFile.OPAM.build_doc;
+    (* If necessary, build the documentation. *)
+    if !OpamGlobals.build_doc then
+      exec "Generating the documentation" OpamFile.OPAM.build_doc;
 
-      (* If everyting went fine, finally install the package. *)
-      proceed_to_install t nv;
+    (* If everyting went fine, finally install the package. *)
+    proceed_to_install t nv;
   with e ->
     (* We keep the build dir to help debugging *)
-    proceed_to_delete ~rm_build:false t nv;
     begin match nv_old with
     | None        ->
       OpamGlobals.error
-        "The compilation of %s failed in %s."
+        "The compilation of %s failed."
         (OpamPackage.to_string nv)
-        (OpamFilename.Dir.to_string p_build)
     | Some nv_old ->
       OpamGlobals.error
-        "The recompilation of %s failed in %s."
+        "The recompilation of %s failed."
         (OpamPackage.to_string nv_old)
-        (OpamFilename.Dir.to_string p_build)
     end;
+    proceed_to_delete ~rm_build:false t nv;
     raise e
 
 (* We need to clean-up things before recompiling. *)
@@ -497,14 +490,16 @@ let apply_solution ?(force = false) t action sol =
     Nothing_to_do
   else (
     let stats = OpamSolver.stats sol in
-    OpamGlobals.msg "The following actions will be performed:\n";
+    OpamGlobals.msg
+      "The following actions will be %s:\n"
+      (if !OpamGlobals.fake then "simulated" else "performed");
     OpamSolver.print_solution sol;
     OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
 
     let continue =
       if !OpamGlobals.dryrun then
         false
-      else if force || !OpamGlobals.yes || sum stats <= 1 then
+      else if force || !OpamGlobals.fake || !OpamGlobals.yes || sum stats <= 1 then
         true
       else
         OpamState.confirm "Do you want to continue ?" in
@@ -542,17 +537,20 @@ let apply_solution ?(force = false) t action sol =
       List.iter
         (fun nv ->
           finally
-            (fun () -> proceed_to_delete ~rm_build:true t nv)
+            (fun () -> if not !OpamGlobals.fake then proceed_to_delete ~rm_build:true t nv)
             (fun () -> rm_from_install nv; flush ())
         ) sol.to_remove;
 
       (* Installation and recompilation are done by child processes *)
       let child n =
-        let t = OpamState.load_state () in
-        match n with
-        | To_change (o, nv) -> proceed_to_change t o nv
-        | To_recompile nv   -> proceed_to_recompile t nv
-        | To_delete _       -> assert false in
+        if !OpamGlobals.fake then
+          ()
+        else
+          let t = OpamState.load_state () in
+          match n with
+          | To_change (o, nv) -> proceed_to_change t o nv
+          | To_recompile nv   -> proceed_to_recompile t nv
+          | To_delete _       -> assert false in
 
       let pre _ = () in
 
@@ -605,11 +603,10 @@ let apply_solution ?(force = false) t action sol =
 
       let display_error (n, error) =
         let f action nv =
-          OpamGlobals.error "[ERROR] while %s %s" action (OpamPackage.to_string nv);
+          OpamGlobals.error "==== ERROR [while %s %s] ====" action (OpamPackage.to_string nv);
           match error with
-          | OpamParallel.Process_error r  -> OpamProcess.display_error_message r
-          | OpamParallel.Internal_error s -> OpamGlobals.error "  %s" s
-          | OpamParallel.Pipe_error       -> OpamGlobals.error "  Error when sending the compilation log." in
+          | OpamParallel.Process_error r  -> OpamGlobals.error "%s" (OpamProcess.string_of_result r)
+          | OpamParallel.Internal_error s -> OpamGlobals.error "Internal error:\n  %s" s in
         match n with
         | To_change (Some o, nv) ->
           if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version nv) < 0 then
@@ -636,6 +633,8 @@ let apply_solution ?(force = false) t action sol =
       let jobs = OpamFile.Config.jobs t.config in
       try
         PackageActionGraph.Parallel.parallel_iter jobs sol.to_process ~pre ~child ~post;
+        if !OpamGlobals.fake then
+          OpamGlobals.msg "Simulation complete.\n";
         OK
       with PackageActionGraph.Parallel.Errors (errors, remaining) ->
         OpamGlobals.msg "\n";
@@ -650,7 +649,7 @@ let apply_solution ?(force = false) t action sol =
           List.iter recover_from_error errors;
         );
         List.iter display_error errors;
-        OpamGlobals.exit 2
+        OpamGlobals.exit 3
     ) else
       Aborted
   )

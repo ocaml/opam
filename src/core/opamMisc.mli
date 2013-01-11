@@ -183,6 +183,9 @@ val getenv: string -> string
 (** Lazy environment *)
 val env: unit -> (string * string) list
 
+(** Return a pretty-printed backtrace *)
+val pretty_backtrace: unit -> string
+
 module OP: sig
 
   (** Pipe operator *)

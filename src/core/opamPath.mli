@@ -130,15 +130,6 @@ module Switch: sig
   (** Tempory folder: {i $opam/$OVERSION/build} *)
   val build_dir: t -> switch -> dirname
 
-  (** A file containing the env variables in which build command are
-      processed: {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.env} *)
-  val build_env: t -> switch -> package -> filename
-
-  (** A file containing a copy of the current env variables, before
-      the env variables for the build are set:
-      {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.old.env} *)
-  val build_old_env: t -> switch -> package -> filename
-
   (** Tempory location of install files:
       {i $opam/$OVERSION/build/$NAME.$VERSION/$NAME.install} *)
   val build_install: t -> switch -> package -> filename

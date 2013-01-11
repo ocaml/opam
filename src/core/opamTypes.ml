@@ -395,7 +395,6 @@ module MakeActionGraph (Pkg: PKG) = struct
   module Parallel = OpamParallel.Make(struct
     include PG
     include Topological
-    let string_of_vertex v = Pkg.string_of_action v
   end)
   include PG
   include O

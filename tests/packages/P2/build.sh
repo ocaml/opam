@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 FLAGS="`${OPAM} config includes P1`"
 

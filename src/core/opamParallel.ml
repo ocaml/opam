@@ -1,4 +1,3 @@
-
 (***********************************************************************)
 (*                                                                     *)
 (*    Copyright 2012 OCamlPro                                          *)
@@ -19,13 +18,11 @@ let log fmt = OpamGlobals.log "PARALLEL" fmt
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
-  val string_of_vertex: V.t -> string
 end
 
 type error =
   | Process_error of OpamProcess.result
   | Internal_error of string
-  | Pipe_error
 
 module type SIG = sig
 
@@ -142,43 +139,33 @@ module Make (G : G) = struct
   let (=|=) s1 s2 =
     S.cardinal s1 = S.cardinal s2
 
+  (* write and close the output channel *)
   let write_error oc r =
     log "write_error";
-    (** [Marshal.to_channel] never terminates if the size of [r] is too large.
-        Here we try to reduce its size by preserving the most of its meaning. *)
-    let tl l = try List.tl l with _ -> [] in
-    let rec remove_lines r =
-      if String.length (Marshal.to_string r []) >= OpamGlobals.ulimit_pipe then
-        match r with
-          | Process_error r ->
-              remove_lines (Process_error OpamProcess.({ r with r_info   = tl r.r_info   ;
-                                                                r_stdout = tl r.r_stdout ;
-                                                                r_stderr = tl r.r_stderr ; }))
-          | Internal_error _ -> Pipe_error
-          | Pipe_error -> assert false
-      else
-        r in
-    Marshal.to_channel oc (remove_lines r) []
+    Marshal.to_channel oc r [];
+    close_out oc
 
+  (* read and close the input channel *)
   let read_error ic =
     log "read_error";
-    let r : error = Marshal.from_channel ic in
+    let r : error =
+      try Marshal.from_channel ic
+      with _ -> Internal_error "Cannot read the error file" in
+    close_in ic;
     r
 
   let parallel_iter n g ~pre ~child ~post =
     let t = ref (init g) in
-    (* pid -> node *)
+    (* pid -> node * (fd to read the error code) *)
     let pids = ref OpamMisc.IntMap.empty in
     (* The nodes to process *)
     let todo = ref (!t.roots) in
     (* node -> error *)
     let errors = ref M.empty in
-    (* node -> fd to read the error code *)
-    let from_childs = ref M.empty in
 
     (* All the node with a current worker currently doing some processing. *)
     let worker_nodes () =
-      OpamMisc.IntMap.fold (fun _ n accu -> S.add n accu) !pids S.empty in
+      OpamMisc.IntMap.fold (fun _ (n, _) accu -> S.add n accu) !pids S.empty in
     (* All the error nodes. *)
     let error_nodes () =
       M.fold (fun n _ accu -> S.add n accu) !errors S.empty in
@@ -208,19 +195,17 @@ module Make (G : G) = struct
            then wait for a child process to finish its work *)
         log "waiting for a child process to finish";
         let pid, status = wait !pids in
-        let n = OpamMisc.IntMap.find pid !pids in
+        let n, from_child = OpamMisc.IntMap.find pid !pids in
         pids := OpamMisc.IntMap.remove pid !pids;
-        let from_child = M.find n !from_childs in
-        from_childs := M.remove n !from_childs;
         begin match status with
           | Unix.WEXITED 0 ->
               t := visit !t n;
               post n
           | _ ->
+              let from_child = from_child () in
               let error = read_error from_child in
               errors := M.add n error !errors
         end;
-        close_in from_child;
         loop (nslots + 1)
       ) else (
 
@@ -236,18 +221,15 @@ module Make (G : G) = struct
         todo := S.remove n !todo;
 
         (* Set-up a channel from the child to the parent *)
-        let from_child, to_parent = Unix.pipe () in
-        let to_parent = Unix.out_channel_of_descr to_parent in
-        let from_child = Unix.in_channel_of_descr from_child in
-        from_childs := M.add n from_child !from_childs;
+        let error_file = OpamSystem.temp_file "error" in
 
         match Unix.fork () with
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
             log "Spawning a new process";
-            close_in from_child;
             Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
             let return p =
+              let to_parent = open_out_bin error_file in
               write_error to_parent p;
               exit 1 in
             begin
@@ -256,15 +238,18 @@ module Make (G : G) = struct
               | OpamSystem.Process_error p  -> return (Process_error p)
               | OpamSystem.Internal_error s -> return (Internal_error s)
               | e ->
-                  let b = Printexc.get_backtrace () in
+                  let b = OpamMisc.pretty_backtrace () in
                   let e = Printexc.to_string e in
-                  let error = if b = "" then e else Printf.sprintf "%s\n%s" e b in
+                  let error =
+                    if b = ""
+                    then e
+                    else e ^ "\n" ^ b in
                   return (Internal_error error)
             end
         | pid ->
             log "Creating process %d" pid;
-            close_out to_parent;
-            pids := OpamMisc.IntMap.add pid n !pids;
+            let from_child () = open_in_bin error_file in
+            pids := OpamMisc.IntMap.add pid (n, from_child) !pids;
             pre n;
             loop (nslots - 1)
       ) in

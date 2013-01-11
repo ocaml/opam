@@ -225,7 +225,7 @@ ifeq ($(REPOKIND), git)
 else
 	$(CHECK) -l switch-env-packages-2 P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
-	./test-TEST.sh $(OPAM_ROOT)/10/build/P4.3/P4.env "1"
+	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10/build/P4.3/P4*.env) "1"
 
 packages/%.tar.gz: packages/% packages/%/*
 	cd packages && tar cz $* > $*.tar.gz

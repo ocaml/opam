@@ -286,3 +286,10 @@ let git_of_string a =
   match cut_at a '#' with
   | None       -> a, None
   | Some (a,c) -> a, Some c
+
+let pretty_backtrace () =
+  match Printexc.get_backtrace () with
+  | "" -> ""
+  | b  ->
+    let b = String.concat "\n  " (split b '\n') in
+    Printf.sprintf "Backtrace:\n  %s\n" b

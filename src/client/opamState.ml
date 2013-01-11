@@ -652,7 +652,7 @@ let get_compiler_packages t comp =
       List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
   if pkg_not <> [] then (
     List.iter (OpamPackage.Name.to_string |> OpamGlobals.error "Package %s not found") pkg_not;
-    OpamGlobals.exit 2
+    OpamGlobals.exit 1
   );
 
   pkg_available
