@@ -316,13 +316,14 @@ let init =
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
-  let init global_options repo_kind repo_name repo_address compiler cores =
+  let init global_options build_options repo_kind repo_name repo_address compiler cores =
     set_global_options global_options;
+    set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
     OpamClient.init repository compiler cores in
-  Term.(pure init $global_options $repo_kind_flag $repo_name $repo_address $compiler $cores),
+  Term.(pure init $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $cores),
   term_info "init" ~doc ~man
 
 (* LIST *)
