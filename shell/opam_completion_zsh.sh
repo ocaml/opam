@@ -13,7 +13,7 @@ _opam_global_options()
 _opam_commands()
 {
   local res
-  res="$( opam --help 2>/dev/null | grep '^  [^ ]' | sed 's/ *//;s/ .*//' | grep -v '^-' )"
+  res="$( opam 2>/dev/null | grep '^    [^ ]' | sed 's/ *//;s/ .*//' | grep -v '^-' )"
   _opam_add "$res"
 }
 
@@ -28,15 +28,21 @@ _opam_flags()
 _opam_packages()
 {
   local res
-  res="$( opam list -short )"
+  res="$( opam list --short )"
+  _opam_add "$res"
+}
+
+_opam_installed_packages()
+{
+  local res
+  res="$( opam list --short --installed )"
   _opam_add "$res"
 }
 
 _opam_compilers()
 {
   local res count
-  count="$( opam switch -list 2>/dev/null | grep -n '\--- Compilers available' | sed 's/\([:digit:]*\)\:.*/\1/' )"
-  res="$( opam switch -list 2>/dev/null | tail -n $(($count+1)) | sed 's/^[ ~] *//' )"
+  res="$( opam switch -s 2>/dev/null | sed 's/^[ ~] *//' )"
   _opam_add "$res"
 }
 
@@ -68,7 +74,7 @@ _opam()
               _opam_packages
               ;;
           remove)
-              _opam_packages
+              _opam_installed_packages
               ;;
           switch)
               _opam_compilers
