@@ -16,12 +16,6 @@
 exception Process_error of OpamProcess.result
 exception Internal_error of string
 
-let _ =
-  Printexc.register_printer (fun exn ->
-    match exn with
-    | Process_error r -> Some (OpamProcess.string_of_result r)
-    | _ -> None)
-
 let internal_error fmt =
   Printf.ksprintf (fun str -> raise (Internal_error str)) fmt
 
@@ -357,7 +351,7 @@ let flock file =
       loop ()
     end else if Sys.file_exists file then begin
       OpamGlobals.msg "Too many attempts. Cancelling.\n";
-      exit 1
+      OpamGlobals.exit 1
     end else begin
       let oc = open_out file in
       output_string oc id;
@@ -478,3 +472,13 @@ let patch =
       else
         patch ~dryrun:false n in
     aux 0
+
+let () =
+  Printexc.register_printer (function
+    | Process_error r -> Some (OpamProcess.string_of_result r)
+    | Unix.Unix_error (e,fn, msg) ->
+      let msg = if msg = "" then "" else " on " ^ msg in
+      let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in
+      Some error
+    | _ -> None
+  )

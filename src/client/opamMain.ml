@@ -892,12 +892,6 @@ let commands = [
 
 let () =
   Sys.catch_break true;
-  Printexc.register_printer (function
-    | Unix.Unix_error (e,fn, msg) ->
-      let msg = if msg = "" then "" else " on " ^ msg in
-      let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in
-      Some error
-    | _ -> None);
   try
     match Term.eval_choice ~catch:false default commands with
     | `Error _ -> exit 1
