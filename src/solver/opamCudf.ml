@@ -207,9 +207,6 @@ let aspcud_path = lazy (
 let aspcud_command path =
   Printf.sprintf "%s $in $out $pref" path
 
-let aspcud_criteria () =
-  !OpamGlobals.aspcud_criteria
-
 let external_solver_available () =
   match Lazy.force aspcud_path with
   | None   -> false
@@ -222,8 +219,8 @@ let dump_cudf_request (_, univ,_ as cudf) =
     incr solver_calls;
     let oc = open_out (Printf.sprintf "%s-%d.cudf" f !solver_calls) in
     begin match Lazy.force aspcud_path with
-    | None      -> ()
-    | Some path -> Printf.fprintf oc "#!%s %s\n" (aspcud_command path) (aspcud_criteria ())
+    | None      -> Printf.fprintf oc "#internal OPAM solver\n"
+    | Some path -> Printf.fprintf oc "#!%s %s\n" (aspcud_command path) OpamGlobals.aspcud_criteria
     end;
     Cudf_printer.pp_cudf oc cudf;
     close_out oc;
@@ -268,7 +265,7 @@ let call_external_solver univ req =
   | Some path ->
   if Cudf.universe_size univ > 0 then begin
     let cmd = aspcud_command path in
-    let criteria = aspcud_criteria () in
+    let criteria = OpamGlobals.aspcud_criteria in
     Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
   end else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
