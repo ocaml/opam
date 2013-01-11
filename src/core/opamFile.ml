@@ -187,6 +187,47 @@ module URL = struct
 
 end
 
+module Export = struct
+
+  let internal = "export"
+
+  type t = package_set * package_set
+
+  let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty)
+
+  let of_string _ s =
+    let lines = Lines.of_string s in
+    let installed = ref OpamPackage.Set.empty in
+    let roots = ref OpamPackage.Set.empty in
+    let add n v r =
+      let nv = OpamPackage.create (OpamPackage.Name.of_string n) (OpamPackage.Version.of_string v) in
+      installed := OpamPackage.Set.add nv !installed;
+      if r then
+        roots := OpamPackage.Set.add nv !roots;
+    in
+    List.iter (function
+      | []        -> ()
+      | [n; v]    -> add n v true
+      | [n; v; r] -> add n v (r = "root")
+      | l         ->
+        OpamGlobals.error_and_exit
+          "  Invalid line: %s\nThis is not a valid file to import."
+          (String.concat " " l)
+    ) lines;
+    (!installed, !roots)
+
+  let to_string _ (installed, roots) =
+    let buf = Buffer.create 1024 in
+    OpamPackage.Set.iter (fun nv ->
+      Printf.bprintf buf "%s %s %s\n"
+        (OpamPackage.Name.to_string (OpamPackage.name nv))
+        (OpamPackage.Version.to_string (OpamPackage.version nv))
+        (if OpamPackage.Set.mem nv roots then "root" else "noroot")
+    ) installed;
+    Buffer.contents buf
+
+end
+
 module Updated = struct
 
   let internal = "updated"
@@ -1454,6 +1495,11 @@ module Dot_config = struct
   include Make (Dot_config)
 end
 
+module Export = struct
+  include Export
+  include Make(Export)
+end
+
 module Installed = struct
   include Installed
   include Make (Installed)
@@ -1493,3 +1539,4 @@ module Filenames = struct
   include Filenames
   include Make(Filenames)
 end
+

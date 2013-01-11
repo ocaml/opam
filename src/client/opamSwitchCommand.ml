@@ -211,43 +211,52 @@ let switch ~quiet switch =
   else
     update_config t switch
 
+(* Remove from [set] all the packages whose names appear in
+   [filter]. *)
+let filter_names ~filter set =
+  let names = OpamPackage.names_of_packages filter in
+  OpamPackage.Set.filter (fun nv ->
+    not (OpamPackage.Name.Set.mem (OpamPackage.name nv) names)
+  ) set
+
 let import filename =
   log "import switch=%s" (match filename with None -> "<none>" | Some f -> OpamFilename.to_string f);
   let t = OpamState.load_state () in
 
-  let imported =
+  let imported, import_roots =
     match filename with
-    | None   -> OpamFile.Installed.read_from_channel stdin
-    | Some f -> OpamFile.Installed.read f in
-  let new_packages = OpamPackage.Set.diff imported t.installed in
-  let installed =
-    OpamPackage.Set.filter (fun nv ->
-      let name = OpamPackage.name nv in
-      not (OpamPackage.Set.exists (fun nv -> name = OpamPackage.name nv) new_packages)
-    ) t.installed in
+    | None   -> OpamFile.Export.read_from_channel stdin
+    | Some f -> OpamFile.Export.read f in
 
-  let to_install = OpamPackage.Set.union new_packages installed in
-  let to_install =
+  (* Import only the packages not currently installed at the right version. *)
+  let imported = OpamPackage.Set.diff imported t.installed in
+
+  let to_import =
     List.map
       (fun nv -> OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv))
-      (OpamPackage.Set.elements to_install) in
+      (OpamPackage.Set.elements imported) in
+
+  let to_keep =
+    let keep_installed = filter_names ~filter:imported t.installed in
+    List.map OpamSolution.atom_of_package (OpamPackage.Set.elements keep_installed) in
 
   let roots =
-    OpamPackage.Name.Set.union
-      (OpamPackage.names_of_packages t.installed_roots)
-      (OpamPackage.names_of_packages new_packages) in
+    let import_roots = OpamPackage.Set.diff import_roots t.installed_roots in
+    let to_keep = filter_names ~filter:import_roots t.installed_roots in
+    OpamPackage.names_of_packages (OpamPackage.Set.union import_roots to_keep) in
 
-  let solution = OpamSolution.resolve_and_apply t (Import roots)
-    { wish_install = [];
-      wish_remove  = [];
-      wish_upgrade = to_install } in
-  OpamSolution.error_if_no_solution solution
+    let solution = OpamSolution.resolve_and_apply t (Import roots)
+      { wish_install = to_keep;
+        wish_remove  = [];
+        wish_upgrade = to_import } in
+    OpamSolution.error_if_no_solution solution
 
 let export filename =
   let t = OpamState.load_state () in
+  let export = (t.installed, t.installed_roots) in
   match filename with
-  | None   -> OpamFile.Installed.write_to_channel stdout t.installed
-  | Some f -> OpamFile.Installed.write f t.installed
+  | None   -> OpamFile.Export.write_to_channel stdout export
+  | Some f -> OpamFile.Export.write f export
 
 let current () =
   let t = OpamState.load_state () in
