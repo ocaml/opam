@@ -245,7 +245,7 @@ let make_index_tar_gz local_repo =
     let dirs = [ "compilers"; "packages" ] in
     let dirs = List.filter Sys.file_exists dirs in
     OpamSystem.command [
-      "tar"; "czf"; String.concat " " dirs; "index.tar.gz";
+      "tar"; "czf"; "index.tar.gz"; String.concat " " dirs;
     ]
   )
 
