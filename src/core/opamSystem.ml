@@ -131,7 +131,8 @@ let rec_files dir =
     List.fold_left aux (f @ accu) d in
   aux [] dir
 
-let rec remove_dir dir = (** WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
+(* WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
+let rec remove_dir dir =
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);
     List.iter remove_dir (directories_strict dir);
@@ -478,7 +479,8 @@ let patch =
 
 let () =
   Printexc.register_printer (function
-    | Process_error r -> Some (OpamProcess.string_of_result r)
+    | Process_error r  -> Some (OpamProcess.string_of_result r)
+    | Internal_error m -> Some m
     | Unix.Unix_error (e,fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
       let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in

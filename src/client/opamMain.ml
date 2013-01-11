@@ -903,10 +903,12 @@ let () =
   | OpamGlobals.Exit 0 -> ()
   | e ->
     OpamGlobals.error "'%s' failed." (String.concat " " (Array.to_list Sys.argv));
-    match e with
-    | OpamGlobals.Exit i -> exit i
-    | e ->
-      let bt = OpamMisc.pretty_backtrace () in
-      Printf.fprintf stderr "Fatal error: exception %s\n%s%!"
-        (Printexc.to_string e) bt;
-      exit 2
+    let exit_code = ref 1 in
+    begin match e with
+    | OpamGlobals.Exit i -> exit_code := i
+    | OpamSystem.Internal_error _
+    | OpamSystem.Process_error _ -> Printf.eprintf "%s\n" (Printexc.to_string e);
+    | _ -> Printf.fprintf stderr "Fatal error: exception %s\n" (Printexc.to_string e)
+    end;
+    Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
+    exit !exit_code
