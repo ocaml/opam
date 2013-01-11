@@ -1007,16 +1007,20 @@ let pin ~force action =
       OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
       OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv));
     ) packages;
-    add_to_reinstall t ~all:false packages;
+    if force then add_to_reinstall t ~all:false packages;
     OpamFile.Pinned.write pin_f pins in
 
   match action.pin_option with
   | Unpin ->
-    if not force || not (OpamState.mem_installed_package_by_name t name) then
-      OpamGlobals.error_and_exit "You must uninstall the package before unpining it (or use --force).";
+    if not (OpamPackage.Name.Map.mem name pins) then
+      OpamGlobals.error_and_exit "%s is not pinned." (OpamPackage.Name.to_string name);
+    begin match OpamPackage.Name.Map.find name pins with
+      | Version _ -> ()
+      | _         ->
+        if not force || not (OpamState.mem_installed_package_by_name t name) then
+          OpamGlobals.error_and_exit "You must uninstall the package before unpining it (or use --force).";
+    end;
     update_config (OpamPackage.Name.Map.remove name pins);
-    let nv = OpamState.find_installed_package_by_name t name in
-    add_to_reinstall t ~all:false (OpamPackage.Set.singleton nv)
   | _     ->
     if not force && OpamPackage.Name.Map.mem name pins then (
       let current = OpamPackage.Name.Map.find name pins in

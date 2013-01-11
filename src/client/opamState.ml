@@ -248,11 +248,20 @@ let available_packages root opams installed repositories repo_index compiler_ver
       not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) ||
         match OpamPackage.Name.Map.find (OpamPackage.name nv) pinned with
         | Version v -> v = OpamPackage.version nv
-        | _         -> true (* any version is fine, as this will be overloaded on install *) in
+        | _         ->
+          (* We arbitrary select only the latest version; the solver
+             will see this package only, which means that it will use
+             the correspondng build instructions, but the location
+             will be the one pointed out by the pinned path. *)
+          let versions = OpamPackage.versions_of_name packages (OpamPackage.name nv) in
+          let max_version = OpamPackage.Version.Set.max_elt versions in
+          max_version = OpamPackage.version nv
+    in
     available ()
     && consistent_ocaml_version ()
     && consistent_pinned_version ()
     && consistent_os () in
+
   OpamPackage.Set.filter filter packages
 
 let base_packages =
