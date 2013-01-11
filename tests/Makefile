@@ -204,10 +204,10 @@ switch-alias:
 	$(CHECK) -l switch-alias-1 P1.1 P2.1 P3.1~weird-version.test P4.2
 	$(OPAM) remove P3.1~weird-version.test P4.2
 	$(CHECK) -l switch-alias-2 P1.1 P2.1
-	$(OPAM) switch export -f $(OPAM_ROOT)/export
+	$(OPAM) switch export -f $(TMP_DIR)/export
 	$(OPAM) switch install test --alias-of system --no-base-packages
 	$(CHECK) -l switch-alias-3
-	$(OPAM)	switch import -f $(OPAM_ROOT)/export
+	$(OPAM)	switch import -f $(TMP_DIR)/export
 	$(CHECK) -l switch-alias-4 P1.1 P2.1
 	$(OPAM) switch install test2 --alias-of 20
 	$(CHECK) -l switch-alias-5
