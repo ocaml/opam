@@ -51,6 +51,7 @@ run:
 	$(MAKE) switch-alias && \
 	$(MAKE) list && \
 	$(MAKE) switch-env-packages
+	@echo "SUCCESS!"
 
 local:
 	$(MAKE) clean
