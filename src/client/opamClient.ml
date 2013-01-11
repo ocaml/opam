@@ -616,26 +616,6 @@ let upgrade names =
     OpamFile.Reinstall.write reinstall_f reinstall;
   OpamSolution.check_solution !solution_found
 
-let check_opam_version () =
-  let t = OpamState.load_state () in
-  let n = OpamPackage.Name.of_string "opam" in
-  match OpamState.find_packages_by_name t n with
-  | None   -> ()
-  | Some _ ->
-    let max_version =
-      let versions = OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
-      let max_version = OpamPackage.Version.Set.max_elt versions in
-      OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
-    if OpamVersion.compare max_version OpamVersion.current > 0 then (
-      OpamGlobals.warning "Your version of OPAM (%s) is not up-to-date! The latest version is %s."
-        (OpamVersion.to_string OpamVersion.current)
-        (OpamVersion.to_string max_version);
-      if OpamState.mem_installed_package_by_name t n
-      && OpamState.confirm "Do you want to upgrade OPAM ?"
-      then
-        upgrade (OpamPackage.Name.Set.singleton n)
-    )
-
 let update repos =
   log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
   let t = OpamState.load_state () in
@@ -651,18 +631,12 @@ let update repos =
   );
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
-  | Some _ ->
-    check_opam_version ();
-    (* we re-run dry_upgrade, as some packages might have been
-       upgraded by the precedent function *)
-    match dry_upgrade () with
-    | None       -> OpamGlobals.msg "Everything is up-to-date.\n"
-    | Some stats ->
-      if OpamSolution.sum stats > 0 then (
-        OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
-        OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
-      ) else
-        OpamGlobals.msg "Everything is up-to-date.\n"
+  | Some stats ->
+    if OpamSolution.sum stats > 0 then (
+      OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
+      OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
+    ) else
+      OpamGlobals.msg "Everything is up-to-date.\n"
 
 let init repo compiler cores =
   log "INIT %s" (OpamRepository.to_string repo);

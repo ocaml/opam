@@ -328,9 +328,33 @@ let load_repository_state () =
     repo_index; config; aliases; pinned;
   }
 
+let check_opam_version t =
+  let n = OpamPackage.Name.of_string "opam" in
+  match find_packages_by_name t n with
+  | None   -> ()
+  | Some _ ->
+    let max_version =
+      let versions = OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
+      let max_version = OpamPackage.Version.Set.max_elt versions in
+      OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
+    if OpamVersion.compare max_version OpamVersion.current > 0 then (
+      OpamGlobals.msg "Your version of OPAM is not up-to-date!\n\n\
+                      \        opam-path: %s\n\
+                      \  current-version: %s\n\
+                      \   latest-version: %s\n\n\
+                      It is *highly* recommended to install the latest version of OPAM. Installation instructions can be found at:\n\n\
+                      \  http://opam.ocamlpro.com\n\n"
+        (try List.hd (OpamSystem.read_command_output ~verbose:false ["which"; "opam"]) with _ -> "...")
+        (OpamVersion.to_string OpamVersion.current)
+        (OpamVersion.to_string max_version);
+      if not (confirm "Do you want to continue anyway ?") then
+        OpamGlobals.exit 42
+    )
+
 (* Currently, only check that only installed packages have something
    in $repo/tmp. This could be extended later on. *)
-let clean_state t =
+let consistency_checks t =
+  check_opam_version t;
   let clean repo_root nv =
     let tmp_dir = OpamPath.Repository.tmp_dir repo_root nv in
     if OpamFilename.exists_dir tmp_dir then (
@@ -420,7 +444,7 @@ let load_state () =
     packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   } in
-  clean_state t;
+  consistency_checks t;
   print_state t;
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
