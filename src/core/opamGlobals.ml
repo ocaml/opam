@@ -41,6 +41,10 @@ let dryrun           = check "DRYRUN"
 let fake             = check "FAKE"
 
 let cudf_file = ref (None: string option)
+let aspcud_criteria = ref (
+  try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
+  with _ -> "-removed,-new"
+)
 
 let default_repository_name    = "default"
 let default_repository_address = "http://opam.ocamlpro.com"

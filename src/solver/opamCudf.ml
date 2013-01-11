@@ -195,12 +195,36 @@ let is_installed_root = check s_installed_root
 
 let solver_calls = ref 0
 
+let aspcud_path = lazy (
+  try
+    match OpamSystem.read_command_output ~verbose:false [ "which"; "aspcud" ] with
+    | []   -> None
+    | h::_ -> Some (OpamMisc.strip h)
+  with _ ->
+    None
+)
+
+let aspcud_command path =
+  Printf.sprintf "%s $in $out $pref" path
+
+let aspcud_criteria () =
+  !OpamGlobals.aspcud_criteria
+
+let external_solver_available () =
+  match Lazy.force aspcud_path with
+  | None   -> false
+  | Some _ -> true
+
 let dump_cudf_request (_, univ,_ as cudf) =
   match !OpamGlobals.cudf_file with
   | None   -> ()
   | Some f ->
     incr solver_calls;
     let oc = open_out (Printf.sprintf "%s-%d.cudf" f !solver_calls) in
+    begin match Lazy.force aspcud_path with
+    | None      -> ()
+    | Some path -> Printf.fprintf oc "#!%s %s\n" (aspcud_command path) (aspcud_criteria ())
+    end;
     Cudf_printer.pp_cudf oc cudf;
     close_out oc;
     Graph.output (Graph.of_universe univ) f
@@ -224,20 +248,6 @@ let uninstall name universe =
   let packages = List.filter (fun p -> p.Cudf.package <> name) packages in
   Cudf.load_universe packages
 
-let aspcud_path = lazy (
-  try
-    match OpamSystem.read_command_output ~verbose:false [ "which"; "aspcud" ] with
-    | []   -> None
-    | h::_ -> Some (OpamMisc.strip h)
-  with _ ->
-    None
-)
-
-let external_solver_available () =
-  match Lazy.force aspcud_path with
-  | None   -> false
-  | Some _ -> true
-
 let to_cudf univ req = (
   default_preamble,
   univ,
@@ -257,8 +267,8 @@ let call_external_solver univ req =
     Algo.Depsolver.check_request ~explain:true cudf_request
   | Some path ->
   if Cudf.universe_size univ > 0 then begin
-    let cmd = Printf.sprintf "%s $in $out $pref" path in
-    let criteria = "-removed,-new" in
+    let cmd = aspcud_command path in
+    let criteria = aspcud_criteria () in
     Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
   end else
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
