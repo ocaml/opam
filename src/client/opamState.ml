@@ -225,10 +225,11 @@ let with_repository t nv fn =
   | Some (repo_p, repo) -> fn repo_p repo
 
   (* List the packages which does fullfil the compiler constraints *)
-let available_packages root opams repositories repo_index compiler_version pinned packages =
+let available_packages root opams installed repositories repo_index compiler_version pinned packages =
   let filter nv =
     let opam = OpamPackage.Map.find nv opams in
     let available () =
+      OpamPackage.Set.mem nv installed ||
       find_repository_aux repositories root repo_index nv <> None in
     let consistent_ocaml_version () =
       let atom (r,v) = OpamCompiler.Version.compare compiler_version r v in
@@ -387,7 +388,7 @@ let load_state () =
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages = OpamPackage.list (OpamPath.opam_dir root) in
   let available_packages =
-    lazy (available_packages root opams repositories repo_index compiler_version pinned packages) in
+    lazy (available_packages root opams installed repositories repo_index compiler_version pinned packages) in
   let t = {
     root; switch; compiler; compiler_version; repositories; opams;
     packages; available_packages; installed; installed_roots; reinstall;
