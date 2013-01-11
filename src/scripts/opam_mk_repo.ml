@@ -54,7 +54,7 @@ let all, index, packages, gener_digest, dryrun, recurse =
   Arg.parse specs ano usage;
   !all, !index, !packages, !gener_digest, !dryrun, !recurse
 
-let () =
+let process () =
   let local_path = OpamFilename.cwd () in
   log "local_path=%s" (OpamFilename.Dir.to_string local_path);
 
@@ -189,3 +189,8 @@ let () =
       OpamGlobals.error "Got some errors while processing: %s"
         (String.concat ", " (List.map OpamPackage.to_string all_errors));
       List.iter display_error !errors
+
+let () =
+  try process ()
+  with e ->
+    Printf.eprintf "%s\n" (Printexc.to_string e)
