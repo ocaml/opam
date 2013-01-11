@@ -237,16 +237,16 @@ let make_urls_txt local_repo =
    @ OpamFilename.list_files (OpamPath.Repository.archives_dir local_repo)
    @ OpamFilename.list_files (OpamPath.Repository.compilers_dir local_repo)
   )) in
-  OpamFile.Urls_txt.write local_index_file index;
+  if not (OpamFilename.Attribute.Set.is_empty index) then
+    OpamFile.Urls_txt.write local_index_file index;
   index
 
 let make_index_tar_gz local_repo =
   OpamFilename.in_dir (OpamPath.Repository.root local_repo) (fun () ->
     let dirs = [ "compilers"; "packages" ] in
-    let dirs = List.filter Sys.file_exists dirs in
-    OpamSystem.command [
-      "tar"; "czf"; "index.tar.gz"; String.concat " " dirs;
-    ]
+    match List.filter Sys.file_exists dirs with
+    | [] -> ()
+    | d  -> OpamSystem.command ["tar"; "czf"; "index.tar.gz"; String.concat " " d]
   )
 
 let register () =

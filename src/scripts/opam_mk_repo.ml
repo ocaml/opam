@@ -67,12 +67,21 @@ let process () =
       OpamPackage.Set.singleton nv
     else
       let n = OpamPackage.Name.of_string str in
-      let versions = OpamPackage.Version.Set.elements (OpamRepository.versions local_path n) in
-      OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
+      match OpamPackage.Version.Set.elements (OpamRepository.versions local_path n) with
+      | []       ->
+        OpamGlobals.msg "Skipping unknown package %s.\n" str;
+        OpamPackage.Set.empty
+      | versions ->
+        OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
   let packages =
     List.fold_left
       (fun accu str -> OpamPackage.Set.union accu (mk_packages str))
       OpamPackage.Set.empty packages in
+
+  if OpamPackage.Set.is_empty packages then (
+    OpamGlobals.msg "No package to process.\n";
+    exit 0
+  );
 
   (* Read urls.txt *)
   log "Reading urls.txt";
