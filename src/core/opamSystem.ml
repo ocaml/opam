@@ -36,8 +36,8 @@ let (/) = Filename.concat
 
 let rec mk_temp_dir () =
   let s =
-    Filename.temp_dir_name /
-    Printf.sprintf "opam-%d-%d" (Unix.getpid ()) (Random.int 4096) in
+    Filename.get_temp_dir_name () /
+    Printf.sprintf "opam-%d-%06x" (Unix.getpid ()) (Random.int 100_000) in
   if Sys.file_exists s then
     mk_temp_dir ()
   else
@@ -57,10 +57,13 @@ let mkdir dir =
     end in
   aux dir
 
-let temp_file str =
-  let temp_dir = !OpamGlobals.root_dir / "log" in
+
+let temp_file ?dir prefix =
+  let temp_dir = match dir with
+    | None   -> !OpamGlobals.root_dir / "log"
+    | Some d -> d in
   mkdir temp_dir;
-  Filename.temp_file ~temp_dir str ""
+  temp_dir / Printf.sprintf "%s-%06x" prefix (Random.int 0xFFFFFF)
 
 let remove_file file =
   try Unix.unlink file
@@ -204,7 +207,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
     (* Set-up the log files *)
     let name = match name with
       | None   -> temp_file "log"
-      | Some n -> Filename.temp_file ~temp_dir:(Sys.getcwd ()) n "" in
+      | Some n -> temp_file ~dir:(Sys.getcwd ()) n in
 
     let str = String.concat " " (cmd :: args) in
     log "[%s] %s" (Filename.basename name) str;
@@ -222,7 +225,10 @@ let run_process ?verbose ?(env=default_env) ?name = function
       let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
-      OpamProcess.run ~env ~name ~verbose cmd args
+      let r = OpamProcess.run ~env ~name ~verbose cmd args in
+      if not !OpamGlobals.debug then
+        OpamProcess.clean_files r;
+      r
     ) else
       internal_error "%S: command not found\n" cmd
 

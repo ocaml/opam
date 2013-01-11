@@ -140,4 +140,4 @@ val download: overwrite:bool -> filename:string -> dirname:string -> string
 val patch: string -> unit
 
 (** Create a tempory file in {i ~/.opam/logs/<name>XXX} *)
-val temp_file: string -> string
+val temp_file: ?dir:string -> string -> string

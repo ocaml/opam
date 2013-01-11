@@ -258,14 +258,14 @@ let proceed_to_delete ~rm_build t nv =
         try extract_package t nv
         with _ -> ()
       );
-      let exec_dir =
+      let name = OpamPackage.Name.to_string name in
+      let exec_dir, name =
         if OpamFilename.exists_dir p_build
-        then p_build
-        else t.root in
+        then p_build, Some name
+        else t.root , None in
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
-        let name = OpamPackage.Name.to_string name in
-        OpamFilename.exec ~env ~name exec_dir remove
+        OpamFilename.exec ~env ?name exec_dir remove
       with _ ->
         ();
   );
