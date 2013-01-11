@@ -347,7 +347,7 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
       try Some (Re.compile (let re = Re_glob.globx re in
                             if case_sensitive then re else Re.no_case re))
       with Re_glob.Parse_error ->
-        OpamGlobals.error "\"%s\" is not a valid package descriptor" re;
+        OpamGlobals.error "%S is not a valid package descriptor." re;
         None
     ) regexps in
   let exact_match str =

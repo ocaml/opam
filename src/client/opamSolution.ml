@@ -608,7 +608,7 @@ let apply_solution ?(force = false) t action sol =
 
       let display_error (n, error) =
         let f action nv =
-          OpamGlobals.error "==== ERROR [while %s %s] ====" action (OpamPackage.to_string nv);
+          OpamGlobals.error "\n==== ERROR [while %s %s] ====" action (OpamPackage.to_string nv);
           match error with
           | OpamParallel.Process_error r  -> OpamGlobals.error "%s" (OpamProcess.string_of_result r)
           | OpamParallel.Internal_error s -> OpamGlobals.error "Internal error:\n  %s" s in

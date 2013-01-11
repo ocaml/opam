@@ -154,11 +154,13 @@ let download_file ~gener_digest kind nv remote_file checksum =
     let digest () = match checksum with
       | None   -> true
       | Some c -> OpamFilename.digest file = c in
-    if not gener_digest && not !OpamGlobals.no_checksums && not (digest ()) then
-      OpamGlobals.error_and_exit "Wrong checksum for %s (waiting for %s, got %s)"
-        (OpamFilename.to_string file)
+    if not gener_digest && not !OpamGlobals.no_checksums && not (digest ()) then (
+      OpamGlobals.error "Error: invalid checksum.";
+      OpamSystem.internal_error "Wrong checksum for %s:\n  - %s [expecting result]\n  - %s [actual result]"
+        (OpamFilename.to_string remote_file)
         (match checksum with Some c -> c | None -> "<none>")
-        (OpamFilename.digest file) in
+        (OpamFilename.digest file)
+    ) in
   let result = B.download_file ?checksum nv remote_file in
   iter check result;
   result
@@ -240,7 +242,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
       log "downloading %s:%s" url (string_of_repository_kind kind);
 
       match OpamFilename.in_dir local_dir (fun () -> download_one ~gener_digest kind nv url checksum) with
-      | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
+      | Not_available -> OpamSystem.internal_error "%s is not available." url
       | Up_to_date (F local_archive)
       | Result (F local_archive) ->
           if gener_digest then (
@@ -324,7 +326,7 @@ let check_version repo =
     with _ ->
       OpamVersion.of_string "0.7.5" in
   if OpamVersion.compare repo_version OpamVersion.current >= 0 then
-    OpamGlobals.error_and_exit
+    OpamSystem.internal_error
       "\nThe current version of OPAM cannot read the repository. \
        You should upgrade to at least the version %s.\n" (OpamVersion.to_string repo_version)
 
@@ -365,7 +367,7 @@ let update r =
         (string_of_repository_kind kind)
         (match checksum with None -> "*" | Some c -> c);
       match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
-      | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" url
+      | Not_available -> OpamSystem.internal_error "%s is not available." url
       | Up_to_date _  -> false
       | Result _      -> true
     ) else

@@ -87,7 +87,7 @@ let chdir dir =
   if Sys.file_exists dir then (
     Unix.chdir dir
   ) else
-    internal_error "%s does not exist!" dir
+    internal_error "%s does not exist." dir
 
 let in_dir dir fn =
   let reset_cwd =
@@ -230,7 +230,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
         OpamProcess.clean_files r;
       r
     ) else
-      internal_error "%S: command not found\n" cmd
+      internal_error "%S: command not found." cmd
 
 let command ?verbose ?env ?name cmd =
   let r = run_process ?verbose ?env ?name cmd in
@@ -255,9 +255,9 @@ let () =
 
 let copy src dst =
   if Sys.is_directory src then
-    internal_error "%s is a directory!" src;
+    internal_error "Cannot copy %s: it is a directory." src;
   if Sys.file_exists dst && Sys.is_directory dst then
-    internal_error "%s is a directory!" dst;
+    internal_error "Cannot copy to %s: it is a directory." dst;
   if  Sys.file_exists dst then
     remove_file dst;
   mkdir (Filename.dirname dst);
@@ -316,22 +316,22 @@ let is_tar_archive = Tar.is_archive
 let extract file dst =
   with_tmp_dir (fun tmp_dir ->
     match Tar.extract_function file with
-    | None   -> internal_error "%s is not a valid archive" file
+    | None   -> internal_error "%s is not a valid tar archive." file
     | Some f ->
         f tmp_dir;
-        if Sys.file_exists dst then internal_error "Cannot overwrite %s" dst;
+        if Sys.file_exists dst then internal_error "Extracting the archive will overwrite %s." dst;
         match directories_strict tmp_dir with
         | [x] ->
             mkdir (Filename.dirname dst);
             command [ "mv"; x; dst]
-        | _   -> internal_error "The archive contains mutliple root directories"
+        | _   -> internal_error "The archive contains mutliple root directories."
   )
 
 let extract_in file dst =
   if not (Sys.file_exists dst) then
-    internal_error "%s does not exist" file;
+    internal_error "%s does not exist." file;
   match Tar.extract_function file with
-  | None   -> internal_error "%s is not a valid archive" file
+  | None   -> internal_error "%s is not a valid tar archive." file
   | Some f -> f dst
 
 let link src dst =
@@ -355,10 +355,9 @@ let flock file =
       Unix.sleep 1;
       incr l;
       loop ()
-    end else if Sys.file_exists file then begin
-      OpamGlobals.msg "Too many attempts. Cancelling.\n";
-      OpamGlobals.exit 1
-    end else begin
+    end else if Sys.file_exists file then
+      internal_error "Too many attempts. Cancelling."
+    else begin
       let oc = open_out file in
       output_string oc id;
       flush oc;
@@ -378,9 +377,9 @@ let funlock file =
         OpamGlobals.log id "unlocking %s" file;
         Unix.unlink file;
       ) else
-        internal_error "cannot unlock %s (%s)" file s
+        internal_error "Cannot unlock %s (%s)." file s
     with _ ->
-      OpamGlobals.error "%s is broken, removing it and continuing anyway ..." file;
+      OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
         close_in ic;
       Unix.unlink file;
   ) else
@@ -390,7 +389,7 @@ let ocaml_version = lazy (
   try
     match read_command_output ~verbose:false [ "ocamlc" ; "-version" ] with
     | h::_ -> Some (OpamMisc.strip h)
-    | []   -> internal_error "ocamlc -version"
+    | []   -> internal_error "Cannot find ocamlc."
   with _ ->
     None
 )
@@ -400,7 +399,7 @@ let system command = lazy (
   try
     match read_command_output ~verbose:false ~env:(Lazy.force reset_env) command with
     | h::_ -> Some (OpamMisc.strip h)
-    | []   -> internal_error "ocamlc -where"
+    | []   -> internal_error "Cannot find %s." (try List.hd command with _ -> "<none>")
   with _ ->
     None
 )
@@ -419,7 +418,7 @@ let download_command = lazy (
       (fun src -> [ "wget"; "--content-disposition";
                   "--no-check-certificate"; src ])
     with Process_error _ ->
-      internal_error "Cannot find curl nor wget"
+      internal_error "Cannot find curl nor wget."
 )
 
 let really_download ~overwrite ~src ~dst =
@@ -428,11 +427,11 @@ let really_download ~overwrite ~src ~dst =
     command cmd;
     match list (fun _ -> true) "." with
       ( [] | _::_::_ ) ->
-        internal_error "there should be exactly one file in download directory"
+        internal_error "Too many downloaded files."
     | [filename] ->
         let dst_file = dst / Filename.basename filename in
         if not overwrite && Sys.file_exists dst_file then
-          internal_error "download overwriting file %s" dst_file;
+          internal_error "The downloaded file will overwrite %s." dst_file;
         commands [
           [ "rm"; "-f"; dst_file ];
           [ "mv"; filename; dst_file ];
@@ -441,9 +440,7 @@ let really_download ~overwrite ~src ~dst =
   in
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
   with
-  | Internal_error s as e ->
-    OpamGlobals.error "%s" s;
-    raise e
+  | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
   | _ -> internal_error "Cannot download %s, please check your connection settings." src
 
 let download ~overwrite ~filename:src ~dirname:dst =
@@ -452,7 +449,7 @@ let download ~overwrite ~filename:src ~dirname:dst =
     dst_file
   else if Sys.file_exists src then (
     if not overwrite && Sys.file_exists dst_file then
-      internal_error "download overwriting file %s" dst_file;
+      internal_error "The downloaded file will overwrite %s." dst_file;
     commands [
       [ "rm"; "-f"; dst_file ];
       [ "cp"; src; dst ]
@@ -465,14 +462,14 @@ let patch =
   let max_trying = 20 in
   fun p ->
     if not (Sys.file_exists p) then
-      internal_error "Cannot find %s" p;
+      internal_error "Cannot find %s." p;
     let patch ~dryrun n =
       let opts = if dryrun then ["--dry-run"] else [] in
       let verbose = if dryrun then Some false else None in
       command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
     let rec aux n =
       if n = max_trying then
-        internal_error "Application of patch %s failed, can not determine the '-p' level to patch." p
+        internal_error "Application of %s failed: can not determine the correct patch level." p
       else if None = try Some (patch ~dryrun:true n) with _ -> None then
         aux (succ n)
       else

@@ -901,7 +901,7 @@ let () =
   with
   | OpamGlobals.Exit 0 -> ()
   | e ->
-    OpamGlobals.error "'%s' failed.\n" (String.concat " " (Array.to_list Sys.argv));
+    OpamGlobals.error "'%s' failed." (String.concat " " (Array.to_list Sys.argv));
     match e with
     | OpamGlobals.Exit i -> exit i
     | e ->
