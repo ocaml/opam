@@ -92,11 +92,9 @@ module B = struct
     git_init address;
     OpamFile.Filenames.write (updates local_repo) (OpamFilename.Set.empty)
 
-  let download_archive ~address:_ nv =
+  let download_archive ~address:_ _ =
     log "downnload_archive";
-    let local_repo = OpamRepository.local_repo () in
-    let archive = OpamPath.Repository.archive local_repo nv in
-    check_file archive
+    Not_available
 
   let download_file ?checksum:_ nv filename =
     log "download_file";
