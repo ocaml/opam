@@ -650,19 +650,19 @@ let update repos =
     update_packages t ~show_packages:true repositories;
   );
   match dry_upgrade () with
-  | None   -> OpamGlobals.msg "Already up-to-date.\n"
+  | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
   | Some _ ->
     check_opam_version ();
     (* we re-run dry_upgrade, as some packages might have been
        upgraded by the precedent function *)
     match dry_upgrade () with
-    | None       -> OpamGlobals.msg "Already up-to-date.\n"
+    | None       -> OpamGlobals.msg "Everything is up-to-date.\n"
     | Some stats ->
       if OpamSolution.sum stats > 0 then (
         OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
         OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
       ) else
-        OpamGlobals.msg "Already up-to-date.\n"
+        OpamGlobals.msg "Everything is up-to-date.\n"
 
 let init repo compiler cores =
   log "INIT %s" (OpamRepository.to_string repo);
