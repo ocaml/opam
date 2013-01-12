@@ -36,7 +36,7 @@ let (/) = Filename.concat
 
 let rec mk_temp_dir () =
   let s =
-    Filename.get_temp_dir_name () /
+    Filename.temp_dir_name /
     Printf.sprintf "opam-%d-%06x" (Unix.getpid ()) (Random.int 100_000) in
   if Sys.file_exists s then
     mk_temp_dir ()
