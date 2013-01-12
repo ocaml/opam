@@ -250,8 +250,8 @@ let make_archive ?(gener_digest=false) ?local_path nv =
             begin match checksum with
             | Some c when c <> digest ->
               OpamGlobals.msg
-                "Wrong checksum for %s: waiting for %s, got %s. Fixing %s.\n"
-                (OpamFilename.to_string local_archive) c digest (OpamFilename.to_string url_f);
+                "Fixing wrong checksum for %s: current value is %s, setting it to %s.\n"
+                (OpamPackage.to_string nv) c digest;
             | _ -> ();
             end;
             OpamFile.URL.write url_f (OpamFile.URL.with_checksum url_file digest);
