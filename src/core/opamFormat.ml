@@ -307,7 +307,7 @@ let parse_formulas opt t =
     | []                     -> Empty
     | [String n]             -> Atom (name n, Empty)
     | [Option(String n, g)]  -> Atom (name n, parse_constraints g)
-    | [Group g]              -> aux g
+    | [Group g]              -> Block (aux g)
     | e1 :: Symbol "|" :: e2 -> Or (aux [e1], aux e2)
     | e1 :: Symbol "&" :: e2 -> And (aux [e1], aux e2)
     | e1 :: e2 when opt      -> Or (aux [e1], aux e2)
