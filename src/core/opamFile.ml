@@ -1367,7 +1367,7 @@ module Subst = struct
       let v = OpamVariable.Full.of_string str in
       OpamVariable.string_of_variable_contents (f v) in
     let rex = Re_perl.compile_pat "%\\{[^%]+\\}%" in
-    Pcre.substitute ~rex ~subst t
+    Re_pcre.substitute ~rex ~subst t
 
   let replace_string = replace
 
