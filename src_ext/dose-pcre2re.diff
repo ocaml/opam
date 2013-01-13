@@ -1,0 +1,219 @@
+diff --git a/common/cudfAdd.ml b/common/cudfAdd.ml
+index dbd38dd..21fdfe9 100644
+--- a/common/cudfAdd.ml
++++ b/common/cudfAdd.ml
+@@ -109,18 +109,18 @@ init_hashtables enc_ht dec_ht;;
+ 
+ (* encode *)
+ let encode_single s   = EncodingHashtable.find enc_ht s;;
+-let not_allowed_regexp = Pcre.regexp "[^a-zA-Z0-9@/+().-]";;
++let not_allowed_regexp = Re_pcre.regexp "[^a-zA-Z0-9@/+().-]";;
+ 
+ let encode s =
+-  Pcre.substitute ~rex:not_allowed_regexp ~subst:encode_single s
++  Re_pcre.substitute ~rex:not_allowed_regexp ~subst:encode_single s
+ ;;
+ 
+ (* decode *)
+ let decode_single s = DecodingHashtable.find dec_ht s;;
+-let encoded_char_regexp = Pcre.regexp "%[0-9a-f][0-9a-f]";;
++let encoded_char_regexp = Re_pcre.regexp "%[0-9a-f][0-9a-f]";;
+ 
+ let decode s =
+-  Pcre.substitute ~rex:encoded_char_regexp ~subst:decode_single s
++  Re_pcre.substitute ~rex:encoded_char_regexp ~subst:decode_single s
+ ;;
+ 
+ (* formatting *)
+diff --git a/common/extBenchmark.ml b/common/extBenchmark.ml
+index 839b12e..ebbc6c2 100644
+--- a/common/extBenchmark.ml
++++ b/common/extBenchmark.ml
+@@ -108,10 +108,10 @@ let parse_sample s =
+ (* "parse_date s" extracts the date from a date-string of a specific format.
+     e.g. parse_date "date 12345" = 12345 *)
+ let parse_date s =
+-  let date_regexp = Pcre.regexp "^date ([0-9]+)$" in
++  let date_regexp = Re_pcre.regexp "^date ([0-9]+)$" in
+   try
+-    let substrings = Pcre.exec ~rex:date_regexp s in
+-    float_of_string(Pcre.get_substring substrings 1)
++    let substrings = Re_pcre.exec ~rex:date_regexp s in
++    float_of_string(Re_pcre.get_substring substrings 1)
+   with Not_found -> failwith (Printf.sprintf "invalid date %s" s)
+ 
+ let parse_benchmark filename =
+diff --git a/common/tests.ml b/common/tests.ml
+index 21869e9..9e62a1c 100644
+--- a/common/tests.ml
++++ b/common/tests.ml
+@@ -140,7 +140,7 @@ let test_lookup_packages =
+ let (test_encode, test_decode) =
+   (* Some useful very long strings for testing encoding and decoding. *)
+   let a_lot_of =  (* a huge number *)
+-    (Pcre.config_match_limit + 111)
++    (Re_pcre.config_match_limit + 111)
+   in
+   let a_lot_of_a           = String.make a_lot_of 'a'
+   (* This test takes too much time... 
+diff --git a/deb/apt.ml b/deb/apt.ml
+index 6b8a2f2..c7b8c56 100644
+--- a/deb/apt.ml
++++ b/deb/apt.ml
+@@ -17,7 +17,7 @@ open Common
+ 
+ include Util.Logging(struct let label = __FILE__ end) ;;
+ 
+-let blank_regexp = Pcre.regexp "[ \t]+" ;;
++let blank_regexp = Re_pcre.regexp "[ \t]+" ;;
+ 
+ (* parse the output of "dpkg -l" *)
+ let parse_inst ch =
+@@ -25,7 +25,7 @@ let parse_inst ch =
+   try
+     while true do
+       let s = (input_line ch) in
+-      match Pcre.split ~rex:blank_regexp s with
++      match Re_pcre.split ~rex:blank_regexp s with
+       |status::name::version::_ when status = "ii"-> Hashtbl.add h (name,version) ()
+       |_ -> ()
+     done ;
+@@ -48,7 +48,7 @@ let parse_inst_from_file file =
+ 
+ (* parse the a popcon file *)
+ let parse_popcon s =
+-  match Pcre.split ~rex:blank_regexp s with
++  match Re_pcre.split ~rex:blank_regexp s with
+   |rank::name::inst::_ -> (int_of_string rank,name,int_of_string inst)
+   |_ -> fatal "Parse error %s\n" s
+ 
+@@ -107,7 +107,7 @@ let parse_request_apt s =
+   let reqlist = ref [] in
+   let anon s = reqlist := s :: !reqlist in
+   begin
+-    begin try Arg.parse_argv ~current:(ref 0) (Array.of_list (Pcre.split ~rex:blank_regexp s)) options anon ""
++    begin try Arg.parse_argv ~current:(ref 0) (Array.of_list (Re_pcre.split ~rex:blank_regexp s)) options anon ""
+     with Arg.Bad s -> fatal "%s" s end ;
+     match List.rev !reqlist with
+     |"install" :: tl -> Install(List.map (parse_pkg_req !suite) tl)
+@@ -140,7 +140,7 @@ let parse_request_aptitude s =
+   let reqlist = ref [] in
+   let anon s = reqlist := s :: !reqlist in
+   begin
+-    begin try Arg.parse_argv ~current:(ref 0) (Array.of_list (Pcre.split ~rex:blank_regexp s)) options anon ""
++    begin try Arg.parse_argv ~current:(ref 0) (Array.of_list (Re_pcre.split ~rex:blank_regexp s)) options anon ""
+     with Arg.Bad s -> fatal "%s" s end ;
+     match List.rev !reqlist with
+     |"install" :: tl -> Install(List.map (parse_pkg_req !suite) tl)
+@@ -174,36 +174,36 @@ module Pref = struct
+ 
+ end
+ 
+-let comma_regexp = Pcre.regexp "[ \t]*,[ \t]*" ;;
+-let eq_regexp = Pcre.regexp "[ \t]*=[ \t]*" ;;
+-let di_regexp = Pcre.regexp "[0-9.]+" ;;
+-let al_regexp = Pcre.regexp "[a-zA-Z]+" ;; 
++let comma_regexp = Re_pcre.regexp "[ \t]*,[ \t]*" ;;
++let eq_regexp = Re_pcre.regexp "[ \t]*=[ \t]*" ;;
++let di_regexp = Re_pcre.regexp "[0-9.]+" ;;
++let al_regexp = Re_pcre.regexp "[a-zA-Z]+" ;;
+ 
+ let parse_pref_labels s =
+   List.map (fun s' ->
+-    match Pcre.split ~rex:eq_regexp s' with
+-    |[v] when (Pcre.pmatch ~rex:di_regexp v) -> ("v",v)
+-    |[v] when (Pcre.pmatch ~rex:al_regexp v) -> ("a",v)
++    match Re_pcre.split ~rex:eq_regexp s' with
++    |[v] when (Re_pcre.pmatch ~rex:di_regexp v) -> ("v",v)
++    |[v] when (Re_pcre.pmatch ~rex:al_regexp v) -> ("a",v)
+     |[l;v] -> (l,v)
+     |_ -> fatal "To many '=' in label %s" s
+-  ) (Pcre.split ~rex:comma_regexp s)
++  ) (Re_pcre.split ~rex:comma_regexp s)
+ 
+-let general_regexp = Pcre.regexp "^[ \t]*[*][ \t]*$" ;;
++let general_regexp = Re_pcre.regexp "^[ \t]*[*][ \t]*$" ;;
+ 
+ let parse_pref_package (_,s) =
+-  if Pcre.pmatch ~rex:general_regexp s then Pref.Star
++  if Re_pcre.pmatch ~rex:general_regexp s then Pref.Star
+   else Pref.Package (Packages.parse_name (Format822.dummy_loc,s))
+ 
+-let pin_regexp = Pcre.regexp "^([A-Za-z]+)[ \t]+(.*)$" ;;
++let pin_regexp = Re_pcre.regexp "^([A-Za-z]+)[ \t]+(.*)$" ;;
+ 
+ let parse_pin (_,s) =
+   try
+-    let substrings = Pcre.exec ~rex:pin_regexp s
++    let substrings = Re_pcre.exec ~rex:pin_regexp s
+     in
+-    match Pcre.get_substring substrings 1 with
+-    |"release" -> Pref.Release (parse_pref_labels (Pcre.get_substring substrings 2))
+-    |"version" -> Pref.Version (Pcre.get_substring substrings 2) 
+-    |"origin"  -> Pref.Origin  (Pcre.get_substring substrings 2)
++    match Re_pcre.get_substring substrings 1 with
++    |"release" -> Pref.Release (parse_pref_labels (Re_pcre.get_substring substrings 2))
++    |"version" -> Pref.Version (Re_pcre.get_substring substrings 2)
++    |"origin"  -> Pref.Origin  (Re_pcre.get_substring substrings 2)
+     |s -> fatal "Unknown pin type %s" s
+   with Not_found -> fatal "Unknown pin format %s" s
+ 
+diff --git a/deb/version.ml b/deb/version.ml
+index d85207b..71be7e0 100644
+--- a/deb/version.ml
++++ b/deb/version.ml
+@@ -180,10 +180,10 @@ type version_analysis =
+     (* epoch,upstream,revision,binnmu *)
+ ;;
+ 
+-let binnmu_regexp = Pcre.regexp "^(.*)\\+(b[\\d]+)$" ;;
++let binnmu_regexp = Re_pcre.regexp "^(.*)\\+(b[\\d]+)$" ;;
+ let extract_binnmu v =
+   try
+-    let subs = Pcre.extract ~rex:binnmu_regexp v
++    let subs = Re_pcre.extract ~rex:binnmu_regexp v
+     in (subs.(1),subs.(2))
+   with Not_found -> (v,"")
+ ;;
+diff --git a/eclipse/version.ml b/eclipse/version.ml
+index 984f386..779fe8d 100644
+--- a/eclipse/version.ml
++++ b/eclipse/version.ml
+@@ -23,9 +23,9 @@ open Common
+ 
+ include Util.Logging(struct let label = __FILE__ end) ;;
+ 
+-let rex = Pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
++let rex = Re_pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
+ let parse_version s =
+-  if not(Pcre.pmatch ~rex s) then 
++  if not(Re_pcre.pmatch ~rex s) then
+     warning "bad version '%s'" s;
+   s
+ ;;
+diff --git a/opencsw/packages.ml b/opencsw/packages.ml
+index b626e5f..a31c6c8 100644
+--- a/opencsw/packages.ml
++++ b/opencsw/packages.ml
+@@ -86,7 +86,7 @@ let parse_paragraph pkg ch =
+     Some 
+       { pkg with
+         name = a.(2);
+-        version = List.hd(Pcre.split ~rex:(Pcre.regexp ",") a.(1));
++        version = List.hd(Re_pcre.split ~rex:(Re_pcre.regexp ",") a.(1));
+         depends = catcherr a 6;
+         conflicts = catcherr a 8
+       }
+diff --git a/rpm/packages.ml b/rpm/packages.ml
+index 7b89c0c..fb8b523 100644
+--- a/rpm/packages.ml
++++ b/rpm/packages.ml
+@@ -156,7 +156,7 @@ module Synthesis = struct
+       with IO.No_more_input -> raise Eof | End_of_file -> assert false
+     in
+     try
+-      match List.tl (Pcre.split ~rex:(Pcre.regexp "@") line) with
++      match List.tl (Re_pcre.split ~rex:(Re_pcre.regexp "@") line) with
+       |"provides"::l -> parse_paragraph {pkg with provides = parse_deps l} ch
+       |"requires"::l -> parse_paragraph {pkg with depends = parse_deps l} ch
+       |"obsoletes"::l -> parse_paragraph {pkg with obsoletes = parse_deps l} ch
