@@ -758,10 +758,18 @@ let install names =
         ) versions
       ) pkg_new;
 
-    let solution = OpamSolution.resolve_and_apply t (Install names)
-      { wish_install = OpamSolution.atoms_of_packages t.installed_roots;
-        wish_remove  = [] ;
-        wish_upgrade = atoms } in
+    let request =
+      if OpamCudf.external_solver_available ()
+      then
+        { wish_install = atoms;
+          wish_remove  = [] ;
+          wish_upgrade = [] }
+      else
+        { wish_install = OpamSolution.atoms_of_packages t.installed_roots;
+          wish_remove  = [] ;
+          wish_upgrade = atoms }
+    in
+    let solution = OpamSolution.resolve_and_apply t (Install names) request in
     OpamSolution.check_solution solution
   )
 
