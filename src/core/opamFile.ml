@@ -1391,29 +1391,50 @@ let incr tbl n =
     with _ -> 0 in
   Hashtbl.replace tbl n (v+1)
 
+let reads_t = Hashtbl.create 64
+let writes_t = Hashtbl.create 64
+let incr_t tbl n t =
+  let v =
+    try Hashtbl.find tbl n
+    with _ -> 0. in
+  Hashtbl.replace tbl n (v+.t)
+
 let print_stats () =
-  Hashtbl.iter (Printf.eprintf "read(%s): %d\n") reads;
-  Hashtbl.iter (Printf.eprintf "write(%s): %d\n") writes
+  Hashtbl.iter (fun n c -> Printf.eprintf "read(%s): %d - %.02fs\n" n c (Hashtbl.find reads_t n)) reads;
+  Hashtbl.iter (fun n c -> Printf.eprintf "write(%s): %d - %02fs\n" n c (Hashtbl.find writes_t n)) writes
+
+let with_time (tbl, tbl_t) n f =
+    let t0 = Unix.gettimeofday () in
+    let r = f () in
+    let t1 =  Unix.gettimeofday () in
+    incr tbl n;
+    incr_t tbl_t n (t1 -. t0);
+    r
+
+let reads = (reads, reads_t)
+let writes = (writes, writes_t)
 
 module Make (F : F) = struct
 
   let log = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal)
 
   let write f v =
-    incr writes F.internal;
     log "write %s" (OpamFilename.to_string f);
-    OpamFilename.write f (F.to_string f v)
+    with_time writes F.internal (fun () ->
+      OpamFilename.write f (F.to_string f v)
+    )
 
   let read f =
-    incr reads F.internal;
     let filename = OpamFilename.to_string f in
     log "read %s" filename;
-    if OpamFilename.exists f then
-      try F.of_string f (OpamFilename.read f)
-      with OpamFormat.Bad_format msg ->
-        OpamGlobals.error_and_exit "File %s: %s" (OpamFilename.to_string f) msg
-    else
-      OpamGlobals.error_and_exit "File %s does not exist" (OpamFilename.to_string f)
+    with_time reads F.internal (fun () ->
+      if OpamFilename.exists f then
+        try F.of_string f (OpamFilename.read f)
+        with OpamFormat.Bad_format msg ->
+          OpamGlobals.error_and_exit "File %s: %s" (OpamFilename.to_string f) msg
+      else
+        OpamGlobals.error_and_exit "File %s does not exist" (OpamFilename.to_string f)
+    )
 
   let safe_read f =
     if OpamFilename.exists f then
