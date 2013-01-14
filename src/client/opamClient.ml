@@ -47,12 +47,13 @@ let print_updated t updated pinned_updated =
   )
 
 let print_compilers t compilers repo =
+  let repo_str = OpamRepositoryName.to_string repo.repo_name in
   let repo_p = OpamPath.Repository.create t.root repo.repo_name in
   let repo_compilers = OpamRepository.compilers repo_p in
   let (--) = OpamCompiler.Set.diff in
   let new_compilers = repo_compilers -- compilers in
   if not (OpamCompiler.Set.is_empty new_compilers) then
-    OpamGlobals.msg "New compiler descriptions available:\n";
+    OpamGlobals.msg "New compiler descriptions available in %s:\n" repo_str;
   OpamCompiler.Set.iter (fun v ->
     OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
   ) new_compilers;
@@ -64,7 +65,7 @@ let print_compilers t compilers repo =
     ) t.repositories OpamCompiler.Set.empty in
   let del_compilers = compilers -- all_compilers -- (OpamCompiler.Set.singleton OpamCompiler.default) in
   if not (OpamCompiler.Set.is_empty del_compilers) then
-    OpamGlobals.msg "Some compilers are not available anymore:\n";
+    OpamGlobals.msg "Some compilers are not available anymore in %s:\n" repo_str;
   OpamCompiler.Set.iter (fun v ->
     OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
   ) del_compilers
@@ -201,7 +202,6 @@ let update_repositories t ~show_compilers repositories =
 
   let old_compilers = OpamState.compilers t in
 
-  (* first update all the given repositories *)
   OpamRepositoryName.Map.iter (fun _ repo ->
     OpamRepository.update repo
   ) repositories;
@@ -212,16 +212,22 @@ let update_repositories t ~show_compilers repositories =
       print_compilers t old_compilers repo
   ) repositories;
 
-  (* Delete compiler descritions which are not installed *)
+  let current = OpamState.compilers t in
+  let deleted = OpamCompiler.Set.diff old_compilers current in
+
+  (* Delete compiler descritions, but keep the ones who disapeared and
+     are still installed *)
+  (* keep if: =system || (deleted && used) *)
   OpamCompiler.Set.iter (fun comp ->
     if comp <> OpamCompiler.default
-    && OpamSwitch.Map.for_all (fun _ c -> comp <> c) t.aliases then (
-      let comp_f = OpamPath.compiler t.root comp in
-      let descr_f = OpamPath.compiler_descr t.root comp in
-      OpamFilename.remove comp_f;
-      OpamFilename.remove descr_f;
-    )
-  ) (OpamState.compilers t);
+    && not (OpamCompiler.Set.mem comp deleted
+            && OpamSwitch.Map.exists (fun _ c -> comp = c) t.aliases) then (
+        let comp_f = OpamPath.compiler t.root comp in
+        let descr_f = OpamPath.compiler_descr t.root comp in
+        OpamFilename.remove comp_f;
+        OpamFilename.remove descr_f;
+      )
+  ) current;
 
   (* Link existing compiler description files, following the
      repository priorities *)
