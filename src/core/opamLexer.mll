@@ -52,14 +52,17 @@ rule token = parse
 (* XXX: not optimal at all *)
 and string s = parse
 | '"'    { s }
-| "\n"   { newline lexbuf;
-           string (s ^ Lexing.lexeme lexbuf) lexbuf }
+| "\\n"  { newline lexbuf;
+           string (s ^ "\n") lexbuf }
+| "\\t"  { string (s ^ "\t") lexbuf }
 | "\\\"" { string (s ^ "\"") lexbuf }
 | "\\\\" { string (s ^ "\\") lexbuf }
-| "\\"   [^ '"' '\\']+
-          { string (s ^ Lexing.lexeme lexbuf) lexbuf }
-| eof  { s }
-| _    { string (s ^ Lexing.lexeme lexbuf) lexbuf }
+| "\\" (_ as c)
+         { OpamGlobals.error_and_exit "lexer error: illegal character after a backslash: `\\%c'" c }
+| eof    { OpamGlobals.error_and_exit "lexer error: unterminated string" }
+| "\n"   { newline lexbuf;
+           string (s ^ Lexing.lexeme lexbuf) lexbuf }
+| _      { string (s ^ Lexing.lexeme lexbuf) lexbuf }
 
 and comment n = parse
 | "*)" { if n > 1 then comment (n-1) lexbuf }
