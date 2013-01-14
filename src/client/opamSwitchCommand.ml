@@ -209,7 +209,10 @@ let switch ~quiet switch =
   if not (OpamSwitch.Map.mem switch t.aliases) then
     install ~quiet switch compiler
   else
-    update_config t switch
+    update_config t switch;
+  (* Check the consistency of the new switch *)
+  let new_state = OpamState.load_state () in
+  OpamState.check_base_packages new_state
 
 (* Remove from [set] all the packages whose names appear in
    [filter]. *)

@@ -355,25 +355,30 @@ let get_compiler_packages t comp =
   let comp = compiler t comp in
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
 
-  let pkg_available, pkg_not =
-    List.partition
-      (fun (n, _) -> OpamPackage.Name.Map.mem n available)
-      (OpamFormula.atoms (OpamFile.Comp.packages comp)) in
+  if OpamPackage.Name.Map.is_empty available then
+    []
 
-  (* check that all packages in [comp] are in [available] except for
-     "base-..."  (depending if "-no-base-packages" is set or not) *)
-  let pkg_not = List.rev_map (function (n, _) -> n) pkg_not in
-  let pkg_not =
-    if not !OpamGlobals.no_base_packages then
-      pkg_not
-    else
-      List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
-  if pkg_not <> [] then (
-    List.iter (OpamPackage.Name.to_string |> OpamGlobals.error "Package %s not found") pkg_not;
-    OpamGlobals.exit 1
-  );
+  else (
+    let pkg_available, pkg_not =
+      List.partition
+        (fun (n, _) -> OpamPackage.Name.Map.mem n available)
+        (OpamFormula.atoms (OpamFile.Comp.packages comp)) in
 
-  pkg_available
+    (* check that all packages in [comp] are in [available] except for
+       "base-..."  (depending if "-no-base-packages" is set or not) *)
+    let pkg_not = List.rev_map (function (n, _) -> n) pkg_not in
+    let pkg_not =
+      if not !OpamGlobals.no_base_packages then
+        pkg_not
+      else
+        List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
+    if pkg_not <> [] then (
+      List.iter (OpamPackage.Name.to_string |> OpamGlobals.error "Package %s not found") pkg_not;
+      OpamGlobals.exit 1
+    );
+
+    pkg_available
+  )
 
 let check_base_packages t =
   let base_packages = get_compiler_packages t t.compiler in
@@ -384,7 +389,7 @@ let check_base_packages t =
   if missing_packages <> [] then (
     let names = List.map (fst |> OpamPackage.Name.to_string) missing_packages in
     OpamGlobals.warning "Some of the compiler base packages are not installed. \
-                         You should run:\n\n    opam install %s\n\n"
+                         You should run:\n\n    $ opam install %s\n"
                          (String.concat " " names)
   )
 
@@ -392,7 +397,6 @@ let check_base_packages t =
    in $repo/tmp. This could be extended later on. *)
 let consistency_checks t =
   check_opam_version t;
-  check_base_packages t;
   let clean repo_root nv =
     let tmp_dir = OpamPath.Repository.tmp_dir repo_root nv in
     if OpamFilename.exists_dir tmp_dir then (

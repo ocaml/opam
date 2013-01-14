@@ -216,6 +216,10 @@ val create_system_compiler_description:
 (** Ask the user to press Y/y/N/n to continue *)
 val confirm: ('a, unit, string, bool) format4 -> 'a
 
+(** Consistency checks: do the base package for the current compiler
+    are installed ? *)
+val check_base_packages: state -> unit
+
 (** To be able to open [OpamState.Types] *)
 module Types: sig
   type t = state = {
