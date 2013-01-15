@@ -397,19 +397,18 @@ let check_base_packages t =
    * only installed packages have something in $opam/pinned.cache *)
 let consistency_checks t =
   check_opam_version t;
-  let clean dir nv =
+  let clean dir name =
     if OpamFilename.exists_dir dir then (
       OpamGlobals.error "%s exists although %s is not installed. Removing it."
-        (OpamFilename.Dir.to_string dir)
-        (OpamPackage.to_string nv);
+        (OpamFilename.Dir.to_string dir) name;
       OpamFilename.rmdir dir
     ) in
   let clean_repo repo_root nv =
     let tmp_dir = OpamPath.Repository.tmp_dir repo_root nv in
-    clean tmp_dir nv in
-  let clean_pin nv =
-    let pin_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
-    clean pin_dir nv in
+    clean tmp_dir (OpamPackage.to_string nv) in
+  let clean_pin name =
+    let pin_dir = OpamPath.Switch.pinned_dir t.root t.switch name in
+    clean pin_dir (OpamPackage.Name.to_string name) in
 
   OpamRepositoryName.Map.iter (fun repo _ ->
     let repo_root = OpamPath.Repository.create t.root repo in
@@ -417,10 +416,9 @@ let consistency_checks t =
     let not_installed = OpamPackage.Set.diff available t.installed in
     OpamPackage.Set.iter (clean_repo repo_root) not_installed
   ) t.repositories;
-  OpamPackage.Set.iter (fun nv ->
-    if not (OpamPackage.Set.mem nv t.installed) then
-      clean_pin nv
-  ) t.packages
+
+  let not_installed = OpamPackage.Set.diff t.packages t.installed in
+  OpamPackage.Name.Set.iter clean_pin (OpamPackage.names_of_packages not_installed)
 
 let loads = ref []
 
