@@ -843,7 +843,7 @@ let default =
     `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi \
         tools to handle dependencies, including support for version \
         constraints, optional dependencies, and conflict management.";
-    `P "It has support for different remote repositories such as HTTPS, rsync, git \
+    `P "It has support for different remote repositories such as HTTP, rsync, git \
         and darcs. It handles multiple OCaml versions concurrently, and is \
         flexible enough to allow you to use your own repositories and packages \
         in addition to the central ones it provides.";

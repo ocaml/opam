@@ -635,6 +635,10 @@ let update repos =
     update_repositories t ~show_compilers:true repositories;
     update_packages t ~show_packages:true repositories;
   );
+(* XXX:
+  if OpamPackage.Name.Map.mem (OpamPackage.Name.of_string (OpamRepositoryName.to_string r)) t.pinned then
+    update_pinned_package t (OpamPackage.
+*)
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
   | Some stats ->
