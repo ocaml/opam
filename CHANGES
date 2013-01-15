@@ -1,4 +1,7 @@
-0.9.0 (trunk)
+0.9.1 [Jan 2012]
+* Use ocaml-re 1.2.0
+
+0.9.0 [Jan 2012]
 * add a new `--fake` option to simulate build and installation of packages. Use this option this care, it can easily corrupt the state of OPAM.
 * Better messages in case of error
 * OPAM proposes better solutions to the user
