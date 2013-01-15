@@ -73,12 +73,12 @@ let process () =
         OpamPackage.Set.empty
       | versions ->
         OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
-  let packages =
+  let new_packages =
     List.fold_left
       (fun accu str -> OpamPackage.Set.union accu (mk_packages str))
       OpamPackage.Set.empty packages in
 
-  if OpamPackage.Set.is_empty packages then (
+  if packages <> [] && OpamPackage.Set.is_empty new_packages then (
     OpamGlobals.msg "No package to process.\n";
     exit 0
   );
@@ -115,9 +115,9 @@ let process () =
       get_transitive_dependencies new_packages in
   let packages =
     if recurse then
-      get_transitive_dependencies packages
+      get_transitive_dependencies new_packages
     else
-      packages in
+      new_packages in
 
   let nv_set_of_remotes remotes =
     let aux r = OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
