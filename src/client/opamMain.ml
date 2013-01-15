@@ -837,16 +837,16 @@ let help =
   Term.info "help" ~doc ~man
 
 let default =
-  let doc = "a Package Manager for OCaml" in
+  let doc = "source-based OCaml package management" in
   let man = [
     `S "DESCRIPTION";
     `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi \
         tools to handle dependencies, including support for version \
-        constraints, optional dependencies, and conflicts management.";
-    `P "It has support for different repository backends such as HTTP, rsync, git \
+        constraints, optional dependencies, and conflict management.";
+    `P "It has support for different remote repositories such as HTTPS, rsync, git \
         and darcs. It handles multiple OCaml versions concurrently, and is \
         flexible enough to allow you to use your own repositories and packages \
-        in addition of the ones it provides.";
+        in addition to the central ones it provides.";
     `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
         for more information on a specific command.";
   ] @  help_sections
