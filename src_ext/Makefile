@@ -5,7 +5,7 @@ EXTLIB   = extlib-1.5.3
 DOSE     = dose3-3.1.2
 CMDLINER = cmdliner-0.9.3
 GRAPH    = ocamlgraph-1.8.1
-RE       = ocaml-re.1.1
+RE       = ocaml-re-1.2.0
 
 all: clone depends.ocp
 
@@ -46,6 +46,7 @@ $(DOSE).tar.gz:
 
 dose.stamp: $(DOSE).tar.gz
 	tar xfz $(DOSE).tar.gz
+	cd $(DOSE) && patch -p1  < ../dose-pcre2re.diff && cd ..
 	rm -rf dose
 	mv $(DOSE) dose
 	@touch $@
@@ -69,7 +70,7 @@ ocamlgraph.stamp: $(GRAPH).tar.gz
 	@touch $@
 
 $(RE).tar.gz:
-	$(FETCH) http://www.ocamlpro.com/pub/$(RE).tar.gz
+	$(FETCH) https://github.com/ocaml/ocaml-re/archive/$(RE).tar.gz
 
 ocaml-re.stamp: $(RE).tar.gz
 	tar xfz $(RE).tar.gz
