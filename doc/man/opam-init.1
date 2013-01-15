@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-INIT" 1 "" "Opam 0.9.0" "Opam Manual"
+.TH "OPAM-INIT" 1 "" "Opam 0.9.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -26,14 +26,38 @@ Address of the repository.
 Name of the repository.
 .SH OPTIONS
 .TP 4
-\fB\-c\fR \fIVERSION\fR, \fB\-\-comp\fR=\fIVERSION\fR (absent=system)
+\fB\-b\fR, \fB\-\-keep\-build\-dir\fR
+Keep the build directory. This is equivalent to setting \fB$OPAMKEEPBUILDIR\fR to a non\-empty string.
+.TP 4
+\fB\-\-comp\fR=\fIVERSION\fR (absent=system)
 Which compiler version to use.
 .TP 4
-\fB\-j\fR \fICORES\fR, \fB\-\-cores\fR=\fICORES\fR (absent=1)
-Number of process to use when building packages.
+\fB\-\-cudf\fR=\fIFILENAME\fR
+Save the CUDF request sent to the solver to \fIFILENAME\fR\-<n>.cudf.
+.TP 4
+\fB\-d\fR, \fB\-\-build\-doc\fR
+Build the package documentation. This is equivalent to setting \fB$OPAMBUILDDOC\fR to a non\-empty string.
+.TP 4
+\fB\-\-dry\-run\fR
+Simply call the solver without actually performing any build/install operations.
+.TP 4
+\fB\-\-fake\fR
+WARNING: This option is fo testing purposes only! Using this option without care is the best way to corrupt your current compiler environement. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands
+.TP 4
+\fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR (absent=1)
+Number of jobs to use when building packages.
 .TP 4
 \fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
 Specify the kind of the repository to be set (the main ones are 'http', 'local', 'git' or 'darcs').
+.TP 4
+\fB\-m\fR \fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
+Use \fIMAKE\fR as the default 'make' command.
+.TP 4
+\fB\-n\fR, \fB\-\-no\-checksums\fR
+Do not verify the checksum of downloaded archives.This is equivalent to setting \fB$OPAMNOCHECKSUMS\fR to a non\-empty string.
+.TP 4
+\fB\-t\fR, \fB\-\-build\-test\fR
+Build and \fBrun\fR the package unit\-tests. This is equivalent to setting \fB$OPAMBUILDTEST\fR to a non\-empty string.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.

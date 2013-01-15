@@ -1,20 +1,20 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM" 1 "" "Opam 0.9.0" "Opam Manual"
+.TH "OPAM" 1 "" "Opam 0.9.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam \- a Package Manager for OCaml
+opam \- source\-based OCaml package management
 .SH SYNOPSIS
 .P
 \fBopam\fR \fICOMMAND\fR ...
 .SH DESCRIPTION
 .P
-OPAM is a package manager for OCaml. It uses the powerful mancoosi tools to handle dependencies, including support for version constraints, optional dependencies, and conflicts management.
+OPAM is a package manager for OCaml. It uses the powerful mancoosi tools to handle dependencies, including support for version constraints, optional dependencies, and conflict management.
 .P
-It has support for different repository backends such as HTTP, rsync, git and darcs. It handles multiple OCaml versions concurrently, and is flexible enough to allow you to use your own repositories and packages in addition of the ones it provides.
+It has support for different remote repositories such as HTTPS, rsync, git and darcs. It handles multiple OCaml versions concurrently, and is flexible enough to allow you to use your own repositories and packages in addition to the central ones it provides.
 .P
 Use either \fBopam <command> \-\-help\fR or \fBopam help <command>\fR for more information on a specific command.
 .SH COMMANDS

@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-PIN" 1 "" "Opam 0.9.0" "Opam Manual"
+.TH "OPAM-PIN" 1 "" "Opam 0.9.2" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -25,6 +25,9 @@ Package name.
 \fIPIN\fR
 Specific version, local path, git or darcs url to pin the package to, or 'none' to unpin the package.
 .SH OPTIONS
+.TP 4
+\fB\-f\fR, \fB\-\-force\fR
+Disable consistency checks.
 .TP 4
 \fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
 Force the kind of pinning.
