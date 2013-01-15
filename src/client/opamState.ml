@@ -153,7 +153,8 @@ let compilers t =
   OpamCompiler.list (OpamPath.compilers_dir t.root)
 
 let opam t nv =
-  OpamPackage.Map.find nv t.opams
+  try OpamPackage.Map.find nv t.opams
+  with Not_found -> unknown_package (OpamPackage.name nv) (Some (OpamPackage.version nv))
 
 let compiler t c =
   OpamFile.Comp.safe_read (OpamPath.compiler t.root c)

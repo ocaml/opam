@@ -30,9 +30,14 @@ let atom2debian (n, v) =
 
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
-  let depends = OpamPackage.Map.find package universe.u_depends in
   let depends =
-    let opts = OpamFormula.to_dnf (OpamPackage.Map.find package universe.u_depopts) in
+    try OpamPackage.Map.find package universe.u_depends
+    with Not_found -> Empty in
+  let depends =
+    let opts =
+      try OpamPackage.Map.find package universe.u_depopts
+      with Not_found -> Empty in
+    let opts = OpamFormula.to_dnf opts in
     if depopts then
       let opts = List.map OpamFormula.of_conjunction opts in
       And (depends, Or(depends,OpamFormula.ors opts))
@@ -45,7 +50,9 @@ let opam2debian universe depopts package =
       let opts = List.map OpamFormula.of_conjunction opts in
       And (depends, OpamFormula.ands opts) in
 
-  let conflicts = OpamPackage.Map.find package universe.u_conflicts in
+  let conflicts =
+    try OpamPackage.Map.find package universe.u_conflicts
+    with Not_found -> Empty in
   let installed = OpamPackage.Set.mem package universe.u_installed in
   let reinstall = match universe.u_action with
     | Upgrade reinstall -> OpamPackage.Set.mem package reinstall
