@@ -227,7 +227,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
       let r = OpamProcess.run ~env ~name ~verbose cmd args in
-      if not !OpamGlobals.debug then
+      if OpamProcess.is_success r && not !OpamGlobals.debug then
         OpamProcess.clean_files r;
       r
     ) else
