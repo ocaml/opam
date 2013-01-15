@@ -33,9 +33,9 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamMisc.OP</title>
@@ -48,5 +48,9 @@
 <pre><span class="keyword">module</span> OP: <code class="code">sig</code> <a href="OpamMisc.OP.html">..</a> <code class="code">end</code></pre><hr width="100%">
 <pre><span id="VAL(|>)"><span class="keyword">val</span> (|&gt;)</span> : <code class="type">('a -> 'b) -> ('b -> 'c) -> 'a -> 'c</code></pre><div class="info">
 Pipe operator<br>
+</div>
+<pre><span id="VALfinally"><span class="keyword">val</span> finally</span> : <code class="type">(unit -> 'a) -> (unit -> unit) -> 'a</code></pre><div class="info">
+<code class="code">finally f cleaner</code> call the <code class="code">cleaner</code> function when <code class="code">f</code> is
+      complete even in the presence of exceptions.<br>
 </div>
 </body></html>

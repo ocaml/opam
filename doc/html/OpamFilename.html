@@ -22,17 +22,23 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFilename</title>
 </head>
 <body>
@@ -45,10 +51,10 @@
 Typed filename manipulation<br>
 </div>
 <hr width="100%">
-<pre><span class="keyword">module</span> <a href="OpamFilename.Base.html">Base</a>: <code class="type">OpamMisc.ABSTRACT</code><code class="type"> </code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="OpamFilename.Base.html">Base</a>: <code class="type"><a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
 Basenames
 </div>
-<pre><span class="keyword">module</span> <a href="OpamFilename.Dir.html">Dir</a>: <code class="type">OpamMisc.ABSTRACT</code><code class="type"> </code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="OpamFilename.Dir.html">Dir</a>: <code class="type"><a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></code><code class="type"> </code></pre><div class="info">
 Directory names
 </div>
 <pre><span id="VALcwd"><span class="keyword">val</span> cwd</span> : <code class="type">unit -> Dir.t</code></pre><div class="info">
@@ -66,7 +72,7 @@ List the sub-directory<br>
 <pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">Dir.t -> (unit -> 'a) -> 'a</code></pre><div class="info">
 Evaluate a function in a given directory<br>
 </div>
-<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?add_to_env:(string * string) list -><br>       ?add_to_path:Dir.t list -> string list list -> unit</code></pre><div class="info">
+<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?env:(string * string) list -> ?name:string -> string list list -> unit</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
 <pre><span id="VALmove_dir"><span class="keyword">val</span> move_dir</span> : <code class="type">Dir.t -> Dir.t -> unit</code></pre><div class="info">
@@ -93,7 +99,7 @@ Creation from a raw string (as <i>http://&lt;path&gt;</i>)<br>
 <pre><span id="VALwith_tmp_dir"><span class="keyword">val</span> with_tmp_dir</span> : <code class="type">(Dir.t -> 'a) -> 'a</code></pre><div class="info">
 Execute a function in a temp directory<br>
 </div>
-<pre><span class="keyword">include</span> OpamMisc.ABSTRACT</pre>
+<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Dir.t -> Base.t -> t</code></pre><div class="info">
 Create a filename from a Dir.t and a basename<br>
 </div>

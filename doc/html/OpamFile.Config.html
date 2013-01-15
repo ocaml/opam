@@ -21,17 +21,23 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.Config</title>
 </head>
 <body>
@@ -44,28 +50,28 @@ Configuration file: <code class="code">$opam/config</code><br>
 </div>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">OpamTypes.opam_version -><br>       OpamTypes.switch -> OpamTypes.repository_name list -> int -> t</code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a> -><br>       <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> int -> t</code></pre><div class="info">
 Creation<br>
 </div>
-<pre><span id="VALwith_switch"><span class="keyword">val</span> with_switch</span> : <code class="type">t -> OpamTypes.switch -> t</code></pre><div class="info">
+<pre><span id="VALwith_switch"><span class="keyword">val</span> with_switch</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> t</code></pre><div class="info">
 OCaml switch updates<br>
 </div>
-<pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> OpamTypes.repository_name list -> t</code></pre><div class="info">
+<pre><span id="VALwith_repositories"><span class="keyword">val</span> with_repositories</span> : <code class="type">t -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> t</code></pre><div class="info">
 Repository updates<br>
 </div>
 <pre><span id="VALwith_current_opam_version"><span class="keyword">val</span> with_current_opam_version</span> : <code class="type">t -> t</code></pre><div class="info">
 Update opam-version to the current one<br>
 </div>
-<pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> OpamTypes.opam_version</code></pre><div class="info">
+<pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a></code></pre><div class="info">
 Return the OPAM version<br>
 </div>
-<pre><span id="VALrepositories"><span class="keyword">val</span> repositories</span> : <code class="type">t -> OpamTypes.repository_name list</code></pre><div class="info">
+<pre><span id="VALrepositories"><span class="keyword">val</span> repositories</span> : <code class="type">t -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list</code></pre><div class="info">
 Return the list of repository<br>
 </div>
-<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">t -> OpamTypes.switch</code></pre><div class="info">
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a></code></pre><div class="info">
 Return the OCaml switch<br>
 </div>
-<pre><span id="VALcores"><span class="keyword">val</span> cores</span> : <code class="type">t -> int</code></pre><div class="info">
-Return the number of cores<br>
+<pre><span id="VALjobs"><span class="keyword">val</span> jobs</span> : <code class="type">t -> int</code></pre><div class="info">
+Return the number of jobs<br>
 </div>
 </body></html>

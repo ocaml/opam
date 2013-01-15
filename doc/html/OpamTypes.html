@@ -34,9 +34,9 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Filenames" rel="Section" href="#2_Filenames">
@@ -344,6 +344,27 @@ Repository names<br>
 Maps of repository names<br>
 </div>
 
+<pre><span id="TYPErepository_kind"><span class="keyword">type</span> <code class="type"></code>repository_kind</span> = <code class="type">[ `darcs | `git | `http | `local ]</code> </pre>
+<div class="info">
+Repository kind<br>
+</div>
+
+<pre><span id="VALstring_of_repository_kind"><span class="keyword">val</span> string_of_repository_kind</span> : <code class="type">[ `darcs | `git | `http | `local ] -> string</code></pre><div class="info">
+Pretty-print repository kinds.<br>
+</div>
+<pre><span id="VALrepository_kind_of_string"><span class="keyword">val</span> repository_kind_of_string</span> : <code class="type">string -> [ `darcs | `git | `http | `local ]</code></pre><div class="info">
+Parser of repository kinds. Raise an error if the kind is not valid.<br>
+</div>
+<pre><span id="TYPEaddress"><span class="keyword">type</span> <code class="type"></code>address</span> = <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code> </pre>
+<div class="info">
+Repository address<br>
+</div>
+
+<pre><span id="TYPErepository_root"><span class="keyword">type</span> <code class="type"></code>repository_root</span> = <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code> </pre>
+<div class="info">
+Repository root<br>
+</div>
+
 <pre><code><span id="TYPErepository"><span class="keyword">type</span> <code class="type"></code>repository</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -356,14 +377,14 @@ Maps of repository names<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTrepository.repo_kind">repo_kind</span>&nbsp;:<code class="type">string</code>;</code></td>
+<code><span id="TYPEELTrepository.repo_kind">repo_kind</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_kind">repository_kind</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTrepository.repo_address">repo_address</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code>;</code></td>
+<code><span id="TYPEELTrepository.repo_address">repo_address</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEaddress">address</a></code>;</code></td>
 
 </tr>
 <tr>
@@ -405,9 +426,46 @@ Repositories<br>
 </tr></table>
 
 <div class="info">
-The solver answer is a list of actions<br>
+The solver answers a list of actions to perform<br>
 </div>
 
+<pre><code><span id="TYPEcause"><span class="keyword">type</span> <code class="type">'a</code> cause</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcause.Use"><span class="constructor">Use</span></span> <span class="keyword">of</span> <code class="type">'a list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcause.Required_by"><span class="constructor">Required_by</span></span> <span class="keyword">of</span> <code class="type">'a list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcause.Upstream_changes"><span class="constructor">Upstream_changes</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcause.Unknown"><span class="constructor">Unknown</span></span></code></td>
+
+</tr></table>
+
+<div class="info">
+The possible causes of an action.<br>
+</div>
+
+<pre><span id="VALaction_contents"><span class="keyword">val</span> action_contents</span> : <code class="type">'a <a href="OpamTypes.html#TYPEaction">action</a> -> 'a</code></pre><div class="info">
+Extract a package from a package action.<br>
+</div>
 <pre><span class="keyword">module type</span> <a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a> = <code class="code">sig</code> <a href="OpamTypes.ACTION_GRAPH.html">..</a> <code class="code">end</code></pre><div class="info">
 Graph of package actions
 </div>
@@ -455,6 +513,13 @@ The type for solutions<br>
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTsolver_result.No_solution"><span class="constructor">No_solution</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsolver_result.Error"><span class="constructor">Error</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEpackage">package</a> <a href="OpamTypes.html#TYPEaction">action</a> list</code></code></td>
 
 </tr></table>
 
@@ -515,14 +580,21 @@ Solver request<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTuser_action.Install"><span class="constructor">Install</span></span></code></td>
-
+<code><span id="TYPEELTuser_action.Install"><span class="constructor">Install</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEname_set">name_set</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >The 'root' packages to be installed</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTuser_action.Upgrade"><span class="constructor">Upgrade</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >The subset of packages to upgrade</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Reinstall"><span class="constructor">Reinstall</span></span></code></td>
 
 </tr>
 <tr>
@@ -536,8 +608,8 @@ Solver request<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTuser_action.Init"><span class="constructor">Init</span></span></code></td>
-
+<code><span id="TYPEELTuser_action.Init"><span class="constructor">Init</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEname_set">name_set</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >The 'root' packages to be installed</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
@@ -550,8 +622,15 @@ Solver request<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTuser_action.Switch"><span class="constructor">Switch</span></span></code></td>
-
+<code><span id="TYPEELTuser_action.Switch"><span class="constructor">Switch</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEname_set">name_set</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >The 'root' packages to be installed</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_action.Import"><span class="constructor">Import</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEname_set">name_set</a></code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >The 'root' packages to be installed</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 
 <div class="info">
@@ -599,6 +678,13 @@ user request action<br>
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTuniverse.u_action">u_action</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEuser_action">user_action</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuniverse.u_installed_roots">u_installed_roots</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code>;</code></td>
 
 </tr></table>
 }
@@ -652,7 +738,7 @@ Pretty-print<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTremote.RAdd"><span class="constructor">RAdd</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a> * string * <a href="OpamTypes.html#TYPEdirname">dirname</a> * int option</code></code></td>
+<code><span id="TYPEELTremote.RAdd"><span class="constructor">RAdd</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a> * <a href="OpamTypes.html#TYPErepository_kind">repository_kind</a> * <a href="OpamTypes.html#TYPEdirname">dirname</a><br>        * int option</code></code></td>
 
 </tr>
 <tr>
@@ -689,14 +775,21 @@ Pretty-print or remote args<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTpin_option.Path"><span class="constructor">Path</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTpin_option.Local"><span class="constructor">Local</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTpin_option.Git"><span class="constructor">Git</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code></code></td>
+<code><span id="TYPEELTpin_option.Git"><span class="constructor">Git</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEaddress">address</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpin_option.Darcs"><span class="constructor">Darcs</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEaddress">address</a></code></code></td>
 
 </tr>
 <tr>
@@ -723,7 +816,7 @@ Pinned packages options<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTpin.pin_arg">pin_arg</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a></code>;</code></td>
+<code><span id="TYPEELTpin.pin_option">pin_option</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a></code>;</code></td>
 
 </tr></table>
 }
@@ -735,10 +828,21 @@ Pinned packages<br>
 <pre><span id="VALstring_of_pin"><span class="keyword">val</span> string_of_pin</span> : <code class="type"><a href="OpamTypes.html#TYPEpin">pin</a> -> string</code></pre><div class="info">
 Pretty-printing of pinned packages<br>
 </div>
-<pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">?kind:string -> string -> <a href="OpamTypes.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
+<pre><span id="TYPEpin_kind"><span class="keyword">type</span> <code class="type"></code>pin_kind</span> = <code class="type">[ `darcs | `git | `local | `unpin | `version ]</code> </pre>
+<div class="info">
+Pin kind<br>
+</div>
+
+<pre><span id="VALpin_kind_of_string"><span class="keyword">val</span> pin_kind_of_string</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a></code></pre><div class="info">
+Pretty-printing of pin kinds.<br>
+</div>
+<pre><span id="VALstring_of_pin_kind"><span class="keyword">val</span> string_of_pin_kind</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_kind">pin_kind</a> -> string</code></pre><div class="info">
+Parsing of pin kinds. Raise an error if it is not a valid value.<br>
+</div>
+<pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">?kind:<a href="OpamTypes.html#TYPEpin_kind">pin_kind</a> -> string -> <a href="OpamTypes.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
 Read pin options args<br>
 </div>
-<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code></pre><table class="typetable">
+<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a></code></pre><pre><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -785,7 +889,7 @@ Configuration requests<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CList"><span class="constructor">CList</span></span></code></td>
+<code><span id="TYPEELTconfig.CList"><span class="constructor">CList</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEname">name</a> list</code></code></td>
 
 </tr>
 <tr>
@@ -1198,29 +1302,14 @@ Optional contents<br>
 Upgrade statistics<br>
 </div>
 
-<pre><code><span id="TYPEenv"><span class="keyword">type</span> <code class="type"></code>env</span> = {</code></pre><table class="typetable">
-<tr>
-<td align="left" valign="top" >
-<code>&nbsp;&nbsp;</code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTenv.add_to_env">add_to_env</span>&nbsp;:<code class="type">(string * string) list</code>;</code></td>
+<pre><span id="TYPEenv"><span class="keyword">type</span> <code class="type"></code>env</span> = <code class="type">(string * string) list</code> </pre>
+<div class="info">
+Environement variables<br>
+</div>
 
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code>&nbsp;&nbsp;</code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTenv.add_to_path">add_to_path</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code>;</code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code>&nbsp;&nbsp;</code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTenv.new_env">new_env</span>&nbsp;:<code class="type">(string * string) list</code>;</code></td>
-
-</tr></table>
-}
-
+<pre><span id="TYPEenv_updates"><span class="keyword">type</span> <code class="type"></code>env_updates</span> = <code class="type">(string * string * string) list</code> </pre>
+<div class="info">
+Environment updates<br>
+</div>
 
 </body></html>

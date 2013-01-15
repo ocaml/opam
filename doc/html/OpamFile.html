@@ -22,17 +22,23 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Configuration files" rel="Section" href="#2_Configurationfiles">
 <link title="Repository files" rel="Section" href="#2_Repositoryfiles">
 <link title="Substitution files" rel="Section" href="#2_Substitutionfiles">
@@ -65,17 +71,21 @@ Package descriptions: <code class="code">$opam/descr/</code>
 <pre><span class="keyword">module</span> <a href="OpamFile.Aliases.html">Aliases</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = compiler switch_map</code></pre><div class="info">
 Compiler aliases: <code class="code">$opam/aliases</code>
 </div>
+<pre><span class="keyword">module</span> <a href="OpamFile.Export.html">Export</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set * package_set</code></pre><div class="info">
+Import/export file.
+</div>
 <pre><span class="keyword">module</span> <a href="OpamFile.Installed.html">Installed</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
 List of installed packages: <code class="code">$opam/$oversion/installed</code>
+</div>
+<pre><span class="keyword">module</span> <a href="OpamFile.Installed_roots.html">Installed_roots</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
+List of packages explicitely installed by the user:
+    <code class="code">$opam/$switch/installed.user</code>
 </div>
 <pre><span class="keyword">module</span> <a href="OpamFile.Reinstall.html">Reinstall</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
 List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code>
 </div>
 <pre><span class="keyword">module</span> <a href="OpamFile.Updated.html">Updated</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
 List of updated packages: <code class="code">$opam/$repo/$repo/updated</code>
-</div>
-<pre><span class="keyword">module</span> <a href="OpamFile.Env.html">Env</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = (string * string) list</code></pre><div class="info">
-Environement variables
 </div>
 <pre><span class="keyword">module</span> <a href="OpamFile.Comp.html">Comp</a>: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre><div class="info">
 Compiler version <code class="code">$opam/compilers/</code>
@@ -115,5 +125,8 @@ urls.txt file *
 </div>
 <pre><span class="keyword">module</span> <a href="OpamFile.Filenames.html">Filenames</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = filename_set</code></pre><div class="info">
 List of filenames
+</div>
+<pre><span id="VALprint_stats"><span class="keyword">val</span> print_stats</span> : <code class="type">unit -> unit</code></pre><div class="info">
+Display statistics about file access.<br>
 </div>
 </body></html>

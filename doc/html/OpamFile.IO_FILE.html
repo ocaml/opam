@@ -20,17 +20,23 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.IO_FILE</title>
 </head>
 <body>
@@ -49,13 +55,19 @@ File contents<br>
 <pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Empty file<br>
 </div>
-<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type">OpamTypes.filename -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info">
+<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info">
 Write some contents to a file<br>
 </div>
-<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">OpamTypes.filename -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Read file contents. Raise an error if the file does not exist.<br>
 </div>
-<pre><span id="VALsafe_read"><span class="keyword">val</span> safe_read</span> : <code class="type">OpamTypes.filename -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALsafe_read"><span class="keyword">val</span> safe_read</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Read file contents. Return <code class="code">empty</code> if the file does not exist.<br>
+</div>
+<pre><span id="VALread_from_channel"><span class="keyword">val</span> read_from_channel</span> : <code class="type">Pervasives.in_channel -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
+Read from channel.<br>
+</div>
+<pre><span id="VALwrite_to_channel"><span class="keyword">val</span> write_to_channel</span> : <code class="type">Pervasives.out_channel -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info">
+Write to channel.<br>
 </div>
 </body></html>

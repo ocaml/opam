@@ -33,9 +33,9 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamVariable.Section.Full</title>
@@ -45,7 +45,10 @@
 &nbsp;<a class="up" href="OpamVariable.Section.html" title="OpamVariable.Section">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_OpamVariable.Section.Full.html">OpamVariable.Section.Full</a></h1>
-<pre><span class="keyword">module</span> Full: <code class="code">sig</code> <a href="OpamVariable.Section.Full.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span class="keyword">module</span> Full: <code class="code">sig</code> <a href="OpamVariable.Section.Full.html">..</a> <code class="code">end</code></pre><div class="info">
+Fully qualified section names<br>
+</div>
+<hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">OpamPackage.Name.t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> -> t</code></pre><div class="info">
 Create a fully qualified section<br>

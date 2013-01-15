@@ -29,9 +29,9 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamTypes.ACTION_GRAPH</title>
@@ -102,6 +102,13 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_edge_e&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;edge&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove_edge&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;vertex&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;vertex&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove_edge_e&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;edge&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;g&nbsp;=&nbsp;t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;transitive_closure&nbsp;:&nbsp;?reflexive:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_transitive_closure&nbsp;:&nbsp;?reflexive:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mirror&nbsp;:&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;complement&nbsp;:&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;intersect&nbsp;:&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;union&nbsp;:&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;g<br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Parallel</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">G</span>&nbsp;:<br>
@@ -160,7 +167,6 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_vertex&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_succ&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;in_degree&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_vertex&nbsp;:&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parallel_iter&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
@@ -174,9 +180,16 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fold&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solution&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;to_remove&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.package&nbsp;list;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;to_process&nbsp;:&nbsp;t;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;root_causes&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.package&nbsp;*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.package&nbsp;<span class="constructor">OpamTypes</span>.cause)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
 <span class="keyword">end</span></code></body></html>

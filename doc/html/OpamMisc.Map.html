@@ -34,9 +34,9 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamMisc.MAP</title>
@@ -61,12 +61,11 @@ Return the values in the map.<br>
 <pre><span id="VALkeys"><span class="keyword">val</span> keys</span> : <code class="type">'a t -> key list</code></pre><div class="info">
 Return the keys in the map.<br>
 </div>
-<br>
-Same as <code class="code">merge</code> but only keys that appear in both maps
-      are given in the merging function<br>
-<pre><span id="VALmerge_max"><span class="keyword">val</span> merge_max</span> : <code class="type">(key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t</code></pre><div class="info">
-WARNING : Besides <code class="code">key</code>, the function could receive
-      some <code class="code">v1</code> and some <code class="code">v2</code> such that <code class="code">v1 = v2</code> holds.<br>
+<pre><span id="VALunion"><span class="keyword">val</span> union</span> : <code class="type">('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t</code></pre><div class="info">
+A key will be in the union of <code class="code">m1</code> and <code class="code">m2</code> if it is appears
+      either <code class="code">m1</code> or <code class="code">m2</code>, with the corresponding value. If a key
+      appears in both <code class="code">m1</code> and <code class="code">m2</code>, then the resulting value is built
+      using the function given as argument.<br>
 </div>
 <pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">(key * 'a) list -> 'a t</code></pre><div class="info">
 Convert an assoc list to a map<br>

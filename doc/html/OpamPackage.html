@@ -4,8 +4,8 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamFormula.html">
-<link rel="next" href="OpamPath.html">
+<link rel="previous" href="OpamMisc.html">
+<link rel="next" href="OpamParallel.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -22,23 +22,29 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamPackage</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="OpamFormula.html" title="OpamFormula">Previous</a>
+<div class="navbar"><a class="pre" href="OpamMisc.html" title="OpamMisc">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
-&nbsp;<a class="post" href="OpamPath.html" title="OpamPath">Next</a>
+&nbsp;<a class="post" href="OpamParallel.html" title="OpamParallel">Next</a>
 </div>
 <h1>Module <a href="type_OpamPackage.html">OpamPackage</a></h1>
 <pre><span class="keyword">module</span> OpamPackage: <code class="code">sig</code> <a href="OpamPackage.html">..</a> <code class="code">end</code></pre><div class="info">
@@ -51,7 +57,7 @@ Versions
 <pre><span class="keyword">module</span> <a href="OpamPackage.Name.html">Name</a>: <code class="code">sig</code> <a href="OpamPackage.Name.html">..</a> <code class="code">end</code></pre><div class="info">
 Names
 </div>
-<pre><span class="keyword">include</span> OpamMisc.ABSTRACT</pre>
+<pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
 <div class="info">
 Package (name x version) pairs<br>
 </div>
@@ -80,6 +86,15 @@ Convert a set of pairs to a map <code class="code">name -&gt; versions</code><br
 <pre><span id="VALversions_of_packages"><span class="keyword">val</span> versions_of_packages</span> : <code class="type">Set.t -> Version.Set.t</code></pre><div class="info">
 Extract the versions from a collection of packages<br>
 </div>
+<pre><span id="VALversions_of_name"><span class="keyword">val</span> versions_of_name</span> : <code class="type">Set.t -> Name.t -> Version.Set.t</code></pre><div class="info">
+Return the list of versions for a given package<br>
+</div>
+<pre><span id="VALnames_of_packages"><span class="keyword">val</span> names_of_packages</span> : <code class="type">Set.t -> Name.Set.t</code></pre><div class="info">
+Extract the naes from a collection of packages<br>
+</div>
+<pre><span id="VALpackages_of_name"><span class="keyword">val</span> packages_of_name</span> : <code class="type">Set.t -> Name.t -> Set.t</code></pre><div class="info">
+Return all the packages with the given names<br>
+</div>
 <pre><span id="VALopam_files"><span class="keyword">val</span> opam_files</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
 Look for all .opam files in directory<br>
 </div>
@@ -95,8 +110,5 @@ Hash a package<br>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
 List all the .opam files and the package directories in a given
     path<br>
-</div>
-<pre><span id="VALversions"><span class="keyword">val</span> versions</span> : <code class="type">Set.t -> Name.t -> Version.Set.t</code></pre><div class="info">
-Return the list of versions for a given package<br>
 </div>
 </body></html>

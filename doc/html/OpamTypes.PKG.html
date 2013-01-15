@@ -33,9 +33,9 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
-<link title="OpamCurl" rel="Chapter" href="OpamCurl.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamRsync" rel="Chapter" href="OpamRsync.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamTypes.PKG</title>
@@ -53,7 +53,7 @@ Signature of packages<br>
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">t -> string</code></pre><div class="info">
 Pretty printing of packages<br>
 </div>
-<pre><span id="VALstring_of_action"><span class="keyword">val</span> string_of_action</span> : <code class="type">t <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_action"><span class="keyword">val</span> string_of_action</span> : <code class="type">?causes:(t -> t <a href="OpamTypes.html#TYPEcause">OpamTypes.cause</a>) -> t <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> -> string</code></pre><div class="info">
 Pretty-printing of package actions<br>
 </div>
 </body></html>

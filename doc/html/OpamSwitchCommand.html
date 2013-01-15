@@ -22,17 +22,23 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
 <link title="OpamPath" rel="Chapter" href="OpamPath.html">
 <link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
 <link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
 <link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
 <link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
 <link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamSwitchCommand</title>
 </head>
 <body>
@@ -45,28 +51,28 @@
 Switch commands<br>
 </div>
 <hr width="100%">
-<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">quiet:bool -> OpamTypes.switch -> OpamTypes.compiler -> unit</code></pre><div class="info">
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
 Install a new switch<br>
 </div>
-<pre><span id="VALimport"><span class="keyword">val</span> import</span> : <code class="type">OpamTypes.filename -> unit</code></pre><div class="info">
+<pre><span id="VALimport"><span class="keyword">val</span> import</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option -> unit</code></pre><div class="info">
 Import a file which contains the packages to install<br>
 </div>
-<pre><span id="VALexport"><span class="keyword">val</span> export</span> : <code class="type">OpamTypes.filename -> unit</code></pre><div class="info">
+<pre><span id="VALexport"><span class="keyword">val</span> export</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option -> unit</code></pre><div class="info">
 Export a file which contains the installed packages<br>
 </div>
-<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">OpamTypes.switch -> unit</code></pre><div class="info">
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
 Remove the given compiler switch<br>
 </div>
-<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">quiet:bool -> OpamTypes.switch -> unit</code></pre><div class="info">
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
 Switch to the given compiler switch<br>
 </div>
-<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type">OpamTypes.switch -> unit</code></pre><div class="info">
+<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
 Reinstall the given compiler switch<br>
 </div>
 <pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Display the current compiler switch<br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">unit -> unit</code></pre><div class="info">
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -> installed_only:bool -> unit</code></pre><div class="info">
 List all the available compiler switches<br>
 </div>
 </body></html>
