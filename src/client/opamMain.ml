@@ -824,7 +824,7 @@ let help =
     Arg.(value & pos 0 (some string) None & doc )
   in
   let help man_format cmds topic = match topic with
-    | None       -> `Help (`Pager, Some "help")
+    | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
       let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
