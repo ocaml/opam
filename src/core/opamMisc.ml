@@ -215,7 +215,7 @@ let contains s c =
   with Not_found -> false
 
 let split s c =
-  Pcre.split ~rex:(Re_perl.compile (Re.char c)) s
+  Re_pcre.split ~rex:(Re_perl.compile (Re.char c)) s
 
 (* Remove from a ':' separated list of string the one with the given prefix *)
 let reset_env_value ~prefix v =
