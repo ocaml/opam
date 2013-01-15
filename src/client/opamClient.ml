@@ -15,6 +15,7 @@
 
 open OpamTypes
 open OpamState.Types
+open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 
@@ -631,14 +632,25 @@ let update repos =
     else
       let aux r _ = List.mem r repos in
       OpamRepositoryName.Map.filter aux t.repositories in
-  if not (OpamRepositoryName.Map.is_empty repositories) then (
+  let repositories_need_update = not (OpamRepositoryName.Map.is_empty repositories) in
+
+  let pinned_packages_need_update =
+    let pinned_packages =
+      if repos = [] then
+        OpamPackage.Name.Map.keys t.pinned
+      else
+        let names =
+          List.map (OpamRepositoryName.to_string |> OpamPackage.Name.of_string) repos in
+        List.filter (OpamState.is_pinned t) names in
+    pinned_packages <> [] in
+
+  if repositories_need_update then
     update_repositories t ~show_compilers:true repositories;
+
+  if repositories_need_update
+  || pinned_packages_need_update then
     update_packages t ~show_packages:true repositories;
-  );
-(* XXX:
-  if OpamPackage.Name.Map.mem (OpamPackage.Name.of_string (OpamRepositoryName.to_string r)) t.pinned then
-    update_pinned_package t (OpamPackage.
-*)
+
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
   | Some stats ->

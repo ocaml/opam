@@ -197,6 +197,14 @@ val check: lock -> unit
 
 (** {2 Pinned packages} *)
 
+(** Is a package pinned ? *)
+val is_pinned: state -> name -> bool
+
+(** Get the corresponding pinned package. If the package is pinned to
+    a path (locally or via git/darcs), it returns the latest package as we
+    assume that the most up-to-date build descriptions. *)
+val get_pinned_package: state -> name -> package
+
 (** Update pinned package *)
 val update_pinned_package: state -> package -> pin_option -> dirname download
 

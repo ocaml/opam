@@ -225,7 +225,26 @@ let with_repository t nv fn =
       (OpamPackage.to_string nv)
   | Some (repo_p, repo) -> fn repo_p repo
 
-  (* List the packages which does fullfil the compiler constraints *)
+let is_pinned_aux pinned n =
+  OpamPackage.Name.Map.mem n pinned
+
+let get_pinned_package_aux pinned packages n =
+  match OpamPackage.Name.Map.find n pinned with
+  | Version v -> OpamPackage.create n v
+  | _         ->
+    (* We arbitrary select only the latest version; the solver
+       will see this package only, which means that it will use
+       the correspondng build instructions, but the location
+       will be the one pointed out by the pinned path. *)
+    let versions = OpamPackage.versions_of_name packages n in
+    OpamPackage.create n (OpamPackage.Version.Set.max_elt versions)
+
+let is_pinned t n = is_pinned_aux t.pinned n
+
+let get_pinned_package t n =
+  get_pinned_package_aux t.pinned t.packages n
+
+(* List the packages which does fullfil the compiler constraints *)
 let available_packages root opams installed repositories repo_index compiler_version pinned packages =
   let filter nv =
     let opam = OpamPackage.Map.find nv opams in
@@ -246,17 +265,9 @@ let available_packages root opams installed repositories repo_index compiler_ver
           os $ Lazy.force OpamGlobals.os_string in
         OpamFormula.eval atom f in
     let consistent_pinned_version () =
-      not (OpamPackage.Name.Map.mem (OpamPackage.name nv) pinned) ||
-        match OpamPackage.Name.Map.find (OpamPackage.name nv) pinned with
-        | Version v -> v = OpamPackage.version nv
-        | _         ->
-          (* We arbitrary select only the latest version; the solver
-             will see this package only, which means that it will use
-             the correspondng build instructions, but the location
-             will be the one pointed out by the pinned path. *)
-          let versions = OpamPackage.versions_of_name packages (OpamPackage.name nv) in
-          let max_version = OpamPackage.Version.Set.max_elt versions in
-          max_version = OpamPackage.version nv
+      let name = OpamPackage.name nv in
+      not (is_pinned_aux pinned name)
+      || get_pinned_package_aux pinned packages name = nv
     in
     available ()
     && consistent_ocaml_version ()
