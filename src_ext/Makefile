@@ -74,6 +74,7 @@ $(RE).tar.gz:
 
 ocaml-re.stamp: $(RE).tar.gz
 	tar xfz $(RE).tar.gz
+	mv ocaml-re-$(RE) ocaml-re
 	@touch $@
 
 clean:

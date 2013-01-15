@@ -43,7 +43,7 @@ begin library "re_perl"
   sort = true
   files = [
      "ocaml-re/lib/re_perl.ml"
-     "ocaml-re/lib/pcre.ml"
+     "ocaml-re/lib/re_pcre.ml"
   ]
   requires = [ "re" ]
 end
