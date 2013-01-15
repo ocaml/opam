@@ -217,3 +217,32 @@ index 7b89c0c..fb8b523 100644
        |"provides"::l -> parse_paragraph {pkg with provides = parse_deps l} ch
        |"requires"::l -> parse_paragraph {pkg with depends = parse_deps l} ch
        |"obsoletes"::l -> parse_paragraph {pkg with obsoletes = parse_deps l} ch
+diff --git a/deb/edsp.ml b/deb/edsp.ml
+index bc656a6..c6cf472 100644
+--- a/deb/edsp.ml
++++ b/deb/edsp.ml
+@@ -62,7 +62,7 @@ let parse_string (_,s) = s
+ let parse_int_s (_,s) = string_of_int(int_of_string s)
+ let parse_req (loc,s) = 
+   let aux = Packages.lexbuf_wrapper Packages_parser.vpkg_top in
+-  let l = Pcre.split ~rex:Apt.blank_regexp s in 
++  let l = Re_pcre.split ~rex:Apt.blank_regexp s in
+   List.map (fun s -> aux (loc,s)) l
+ 
+ let parse_request_stanza par =
+diff --git a/opencsw/version.ml b/opencsw/version.ml
+index 984f386..779fe8d 100644
+--- a/opencsw/version.ml
++++ b/opencsw/version.ml
+@@ -23,9 +23,9 @@ open Common
+ 
+ include Util.Logging(struct let label = __FILE__ end) ;;
+ 
+-let rex = Pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
++let rex = Re_pcre.regexp "^\\d+(\\.\\d+(\\.\\d+(\\.[\\w_-]+)?)?)?$" ;;
+ let parse_version s =
+-  if not(Pcre.pmatch ~rex s) then 
++  if not(Re_pcre.pmatch ~rex s) then
+     warning "bad version '%s'" s;
+   s
+ ;;
