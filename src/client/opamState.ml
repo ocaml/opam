@@ -417,8 +417,10 @@ let consistency_checks t =
     OpamPackage.Set.iter (clean_repo repo_root) not_installed
   ) t.repositories;
 
-  let not_installed = OpamPackage.Set.diff t.packages t.installed in
-  OpamPackage.Name.Set.iter clean_pin (OpamPackage.names_of_packages not_installed)
+  let available = OpamPackage.names_of_packages t.packages in
+  let installed = OpamPackage.names_of_packages t.installed in
+  let not_installed = OpamPackage.Name.Set.diff available installed in
+  OpamPackage.Name.Set.iter clean_pin not_installed
 
 let loads = ref []
 
