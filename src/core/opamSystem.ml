@@ -201,6 +201,11 @@ let reset_env = lazy (
   Array.of_list env
 )
 
+let command_exists ?(env=default_env) name =
+  let r = OpamProcess.run ~env ~name:(temp_file "which") ~verbose:false "which" [name] in
+  OpamProcess.clean_files r;
+  OpamProcess.is_success r
+
 let run_process ?verbose ?(env=default_env) ?name = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
@@ -217,12 +222,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
     if None <> try Some (String.index cmd ' ') with Not_found -> None then
       OpamGlobals.warning "Command %S contains 1 space" cmd;
 
-    (* Display a user-friendly message if the command does not exists *)
-    let cmd_exists =
-      OpamProcess.run ~env ~name:(temp_file "which") ~verbose:false "which" [cmd] in
-    OpamProcess.clean_files cmd_exists;
-
-    if OpamProcess.is_success cmd_exists then (
+    if command_exists ~env cmd then (
       let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
@@ -231,6 +231,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
         OpamProcess.clean_files r;
       r
     ) else
+      (* Display a user-friendly message if the command does not exists *)
       internal_error "%S: command not found." cmd
 
 let command ?verbose ?env ?name cmd =

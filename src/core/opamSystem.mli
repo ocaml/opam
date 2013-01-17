@@ -92,6 +92,9 @@ val directories_with_links: string -> string list
 (** a command is a list of words *)
 type command = string list
 
+(** Test wether a command exists in the environement. *)
+val command_exists: ?env:string array -> string -> bool
+
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
 val command: ?verbose:bool -> ?env:string array -> ?name:string -> command -> unit
