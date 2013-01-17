@@ -58,7 +58,7 @@ val wait: t -> result
     [name.info], [name.env], [name.out] and [name.err] and are
     created, and contains the process main description, the environment
     variables, the standard output and the standard error. *)
-val run : ?env:string array -> verbose:bool -> name:string -> string -> string list -> result
+val run : ?env:string array -> ?verbose:bool -> ?name:string -> string -> string list -> result
 
 (** Is the process result a success ? *)
 val is_success : result -> bool

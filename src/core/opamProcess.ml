@@ -182,15 +182,18 @@ let wait p =
     OpamGlobals.error "Exception %s in waitpid" (Printexc.to_string e);
     OpamGlobals.exit 2
 
-let run ?env ~verbose ~name cmd args =
+let run ?env ?(verbose=false) ?name cmd args =
   try
-    let stdout_file = Printf.sprintf "%s.out" name in
-    let stderr_file = Printf.sprintf "%s.err" name in
-    let env_file    = Printf.sprintf "%s.env" name in
-    let info_file   = Printf.sprintf "%s.info" name in
+    let file f = match name with
+      | None   -> None
+      | Some n -> Some (f n) in
+    let stdout_file = file (Printf.sprintf "%s.out") in
+    let stderr_file = file (Printf.sprintf "%s.err") in
+    let env_file    = file (Printf.sprintf "%s.env") in
+    let info_file   = file (Printf.sprintf "%s.info") in
     let env = match env with Some e -> e | None -> Unix.environment () in
 
-    let p = create ~env ~info_file ~env_file ~stdout_file ~stderr_file ~verbose cmd args in
+    let p = create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose cmd args in
     wait p
   with e ->
     OpamGlobals.error "Exception %s in run" (Printexc.to_string e);
