@@ -225,7 +225,7 @@ let global_options =
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let switch =
-    mk_opt ~section ["s";"switch"]
+    mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
                 This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) !OpamGlobals.switch in
