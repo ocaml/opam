@@ -893,9 +893,31 @@ let commands = [
   help;
 ]
 
+let is_external_command () =
+  Array.length Sys.argv > 1 &&
+  let opam = Sys.argv.(0) in
+  let name = Sys.argv.(1) in
+  List.for_all (fun (_,info) -> Term.name info <> name) commands &&
+  OpamSystem.command_exists (opam ^ "-" ^ name)
+
+let run_external_command () =
+  let n = Array.length Sys.argv in
+  if n > 1 then (
+    let opam = Sys.argv.(0) in
+    let name = Sys.argv.(1) in
+    let args = Array.sub Sys.argv 2 (n-2) in
+    let r = OpamProcess.run (opam ^ "-" ^ name) (Array.to_list args) in
+    exit r.OpamProcess.r_code 
+  ) else
+    ()
+
 let () =
   Sys.catch_break true;
   try
+    if is_external_command () then
+      run_external_command ()
+    else
+      Printf.printf "This is not an external command!\n";
     match Term.eval_choice ~catch:false default commands with
     | `Error _ -> exit 1
     | _        ->
