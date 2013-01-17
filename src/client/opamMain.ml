@@ -915,9 +915,7 @@ let () =
   Sys.catch_break true;
   try
     if is_external_command () then
-      run_external_command ()
-    else
-      Printf.printf "This is not an external command!\n";
+      run_external_command ();
     match Term.eval_choice ~catch:false default commands with
     | `Error _ -> exit 1
     | _        ->
