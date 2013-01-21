@@ -23,6 +23,19 @@ let () =
 
 let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
 
+let tmp_dirs = [ "tmp"; "log" ]
+
+let () =
+  List.iter (fun dir ->
+    if Sys.file_exists dir then (
+      Printf.eprintf
+        "ERROR: The subdirectory '%s' already exists in the current directory. \n\
+         Please remove or rename it or run %s in a different folder.\n"
+        dir Sys.argv.(0);
+      exit 1;
+    )
+  ) tmp_dirs
+
 let all, index, packages, gener_digest, dryrun, recurse =
   let usage = Printf.sprintf "%s [-all] [<package>]*" (Filename.basename Sys.argv.(0)) in
   let all = ref true in
@@ -178,8 +191,7 @@ let process () =
   ) else
     OpamGlobals.msg "OPAM Repository already up-to-date.\n";
 
-  OpamSystem.remove "log";
-  OpamSystem.remove "tmp";
+  List.iter OpamSystem.remove tmp_dirs;
 
   (* Rebuild urls.txt now the archives have been updated *)
   if dryrun then
@@ -201,5 +213,6 @@ let process () =
 
 let () =
   try process ()
-  with e ->
-    Printf.eprintf "%s\n" (Printexc.to_string e)
+  with
+  | OpamGlobals.Exit i -> exit i
+  | e -> Printf.eprintf "%s\n" (Printexc.to_string e)
