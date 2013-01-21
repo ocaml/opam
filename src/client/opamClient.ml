@@ -1022,7 +1022,7 @@ let pin ~force action =
       | Version _ -> ()
       | _         ->
         if not force && not (OpamState.mem_installed_package_by_name t name) then
-          OpamGlobals.error_and_exit "You must uninstall the package before unpining it (or use --force).";
+          OpamGlobals.error_and_exit "You must uninstall the package before unpinning it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
   | _     ->
