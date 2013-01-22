@@ -3765,10 +3765,10 @@ test -n "$FETCH" || FETCH="no"
 
 
 if test x"$FETCH" = x"curl" ; then
-  fetch="curl -OL"
+  fetch="curl --insecure -OL"
 
 elif test x"$FETCH" = x"wget" ; then
-  fetch="wget"
+  fetch="wget --no-check-certificate"
 
 else
   { { echo "$as_me:$LINENO: error: You must have either curl or wget installed." >&5

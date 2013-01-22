@@ -23,9 +23,9 @@ fi
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
 if test x"$FETCH" = x"curl" ; then
-  AC_SUBST(fetch, "curl -OL")
+  AC_SUBST(fetch, "curl --insecure -OL")
 elif test x"$FETCH" = x"wget" ; then
-  AC_SUBST(fetch, "wget")
+  AC_SUBST(fetch, "wget --no-check-certificate")
 else
   AC_MSG_ERROR([You must have either curl or wget installed.])
 fi
