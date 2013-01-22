@@ -15,6 +15,9 @@
 
 (** Common types used by other modules *)
 
+(** {2 Exceptions} *)
+exception Lexer_error of string
+
 (** {2 Filenames} *)
 
 (** Basenames *)

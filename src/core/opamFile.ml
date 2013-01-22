@@ -40,13 +40,9 @@ module Syntax = struct
 
   let of_string filename str =
     let filename = OpamFilename.to_string filename in
-    try
-      let lexbuf = Lexing.from_string str in
-      lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
-      OpamParser.main OpamLexer.token lexbuf filename
-    with e ->
-      OpamGlobals.error "Parsing error while reading %s" filename;
-      raise e
+    let lexbuf = Lexing.from_string str in
+    lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
+    OpamParser.main OpamLexer.token lexbuf filename
 
   let to_string ?(indent_variable = fun _ -> false) (t: t) =
     OpamFormat.string_of_file ~indent_variable t

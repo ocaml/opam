@@ -17,6 +17,8 @@
 open OpamParser
 
 let newline lexbuf = Lexing.new_line lexbuf
+let error fmt =
+  Printf.kprintf (fun msg -> raise (OpamTypes.Lexer_error msg)) fmt
 }
 
 let space = [' ' '\t' '\r']
@@ -47,7 +49,7 @@ rule token = parse
 | symbol { SYMBOL (Lexing.lexeme lexbuf) }
 | eof    { EOF }
 | _      { let token = Lexing.lexeme lexbuf in
-           OpamGlobals.error_and_exit "lexer error: '%s' is not a valid token" token }
+           error "'%s' is not a valid token" token }
 
 (* XXX: not optimal at all *)
 and string s = parse
@@ -58,8 +60,8 @@ and string s = parse
 | "\\\"" { string (s ^ "\"") lexbuf }
 | "\\\\" { string (s ^ "\\") lexbuf }
 | "\\" (_ as c)
-         { OpamGlobals.error_and_exit "lexer error: illegal character after a backslash: `\\%c'" c }
-| eof    { OpamGlobals.error_and_exit "lexer error: unterminated string" }
+         { error "illegal character after a backslash: `\\%c'" c }
+| eof    { error "unterminated string" }
 | '\n'   { newline lexbuf;
            string (s ^ Lexing.lexeme lexbuf) lexbuf }
 | _      { string (s ^ Lexing.lexeme lexbuf) lexbuf }

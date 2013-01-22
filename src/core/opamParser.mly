@@ -70,17 +70,20 @@ values:
 
 %%
 
-let lexer_error lexbuf =
+let error lexbuf exn msg =
   let curr = lexbuf.Lexing.lex_curr_p in
   let start = lexbuf.Lexing.lex_start_p in
-  OpamGlobals.error_and_exit "File %S, line %d, character %d-%d:\n%s"
-    curr.Lexing.pos_fname
-    start.Lexing.pos_lnum
-    (start.Lexing.pos_cnum - start.Lexing.pos_bol)
-    (curr.Lexing.pos_cnum - curr.Lexing.pos_bol)
-    (Lexing.lexeme lexbuf)
+  OpamGlobals.error
+      "File %S, line %d, character %d-%d: %s."
+      curr.Lexing.pos_fname
+      start.Lexing.pos_lnum
+      (start.Lexing.pos_cnum - start.Lexing.pos_bol)
+      (curr.Lexing.pos_cnum - curr.Lexing.pos_bol)
+      msg;
+  raise exn
 
 let main t l f =
   try main t l f
-  with _ ->
-    lexer_error l
+  with
+  | Lexer_error msg     as e -> error l e msg
+  | Parsing.Parse_error as e -> error l e "parse error"

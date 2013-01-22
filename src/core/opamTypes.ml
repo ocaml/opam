@@ -15,6 +15,8 @@
 
 open OpamMisc.OP
 
+exception Lexer_error of string
+
 type basename = OpamFilename.Base.t
 
 type dirname = OpamFilename.Dir.t
