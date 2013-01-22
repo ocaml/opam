@@ -19,7 +19,7 @@ open OpamParser
 let newline lexbuf = Lexing.new_line lexbuf
 }
 
-let space = [' ' '\t' '\r' '\n']
+let space = [' ' '\t' '\r']
 let alpha = ['a'-'z' 'A'-'Z' '_']
 let digit = ['0'-'9']
 let char  = ['-' '_']
@@ -29,7 +29,7 @@ let int = '-'? ['0'-'9']+
 
 rule token = parse
 | space  { token lexbuf }
-| "\n"   { newline lexbuf; token lexbuf }
+| '\n'   { newline lexbuf; token lexbuf }
 | ":"    { COLON }
 | "{"    { LBRACE }
 | "}"    { RBRACE }
@@ -52,15 +52,15 @@ rule token = parse
 (* XXX: not optimal at all *)
 and string s = parse
 | '"'    { s }
-| "\\n"  { newline lexbuf;
+| '\n'  { newline lexbuf;
            string (s ^ "\n") lexbuf }
-| "\\t"  { string (s ^ "\t") lexbuf }
+| '\t'  { string (s ^ "\t") lexbuf }
 | "\\\"" { string (s ^ "\"") lexbuf }
 | "\\\\" { string (s ^ "\\") lexbuf }
 | "\\" (_ as c)
          { OpamGlobals.error_and_exit "lexer error: illegal character after a backslash: `\\%c'" c }
 | eof    { OpamGlobals.error_and_exit "lexer error: unterminated string" }
-| "\n"   { newline lexbuf;
+| '\n'   { newline lexbuf;
            string (s ^ Lexing.lexeme lexbuf) lexbuf }
 | _      { string (s ^ Lexing.lexeme lexbuf) lexbuf }
 
@@ -68,5 +68,5 @@ and comment n = parse
 | "*)" { if n > 1 then comment (n-1) lexbuf }
 | "(*" { comment (n+1)lexbuf }
 | eof  { }
-| "\n" { newline lexbuf; comment n lexbuf }
+| '\n' { newline lexbuf; comment n lexbuf }
 | _    { comment n lexbuf }
