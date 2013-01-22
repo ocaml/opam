@@ -306,7 +306,7 @@ val string_of_upload: upload -> string
 
 (** Remote arguments *)
 type remote =
-  | RList
+  | RList of bool
   | RAdd of repository_name * repository_kind * dirname * int option
   | RRm of repository_name
   | RPriority of repository_name * int

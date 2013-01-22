@@ -937,7 +937,14 @@ let rec remote action =
     update_repo_index t;
     OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo)) in
   match action with
-  | RList  ->
+  | RList short ->
+    if short then (
+      let repos =
+        List.map
+          (fun r -> OpamRepositoryName.to_string r.repo_name)
+          (sorted_repositories t) in
+      OpamGlobals.msg "%s\n" (String.concat " " repos)
+    ) else (
       let pretty_print r =
         OpamGlobals.msg "%4d %-7s %10s     %s\n"
           r.repo_priority
@@ -945,7 +952,8 @@ let rec remote action =
           (OpamRepositoryName.to_string r.repo_name)
           (OpamFilename.Dir.to_string r.repo_address) in
       let repos = sorted_repositories t in
-      List.iter pretty_print repos;
+      List.iter pretty_print repos
+    )
   | RAdd (name, kind, address, priority) ->
       let repo = {
         repo_name     = name;

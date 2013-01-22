@@ -641,7 +641,7 @@ let repository name =
       "INT" "Set the repository priority (bigger is better)"
       Arg.(some int) None in
 
-  let repository global_options command kind priority params =
+  let repository global_options command kind priority short params =
     set_global_options global_options;
     let add name address =
       let name = OpamRepositoryName.of_string name in
@@ -650,7 +650,7 @@ let repository name =
       RAdd (name, kind, address, priority) in
     let cmd = match command, params with
       | None          , []
-      | Some `list    , []              -> RList
+      | Some `list    , []              -> RList short
       | Some `priority, [name; p] ->
         RPriority (OpamRepositoryName.of_string name, int_of_string p)
        | Some `remove , [name]          -> RRm (OpamRepositoryName.of_string name)
@@ -658,7 +658,7 @@ let repository name =
       | _ -> OpamGlobals.error_and_exit "Too many parameters" in
     OpamClient.remote cmd in
 
-  Term.(pure repository $global_options $command $repo_kind_flag $priority $params),
+  Term.(pure repository $global_options $command $repo_kind_flag $priority $print_short_flag $params),
   term_info name  ~doc ~man
 
 (* THOMAS: we keep 'opam remote' for backward compatibity *)
@@ -907,7 +907,7 @@ let run_external_command () =
     let name = Sys.argv.(1) in
     let args = Array.sub Sys.argv 2 (n-2) in
     let r = OpamProcess.run (opam ^ "-" ^ name) (Array.to_list args) in
-    exit r.OpamProcess.r_code 
+    exit r.OpamProcess.r_code
   ) else
     ()
 

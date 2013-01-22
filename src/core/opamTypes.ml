@@ -149,13 +149,13 @@ let string_of_upload u =
 
 (* Remote arguments *)
 type remote =
-  | RList
+  | RList of bool
   | RAdd of repository_name * repository_kind * dirname * int option
   | RRm of repository_name
   | RPriority of repository_name * int
 
 let string_of_remote = function
-  | RList -> "list"
+  | RList b -> Printf.sprintf "list(%b)" b
   | RAdd (r, k, d, p) ->
     Printf.sprintf "add %s %s %s %s"
       (OpamRepositoryName.to_string r)
