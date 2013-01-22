@@ -340,7 +340,11 @@ let link src dst =
   mkdir (Filename.dirname dst);
   if Sys.file_exists dst then
     remove_file dst;
-  Unix.link src dst
+  try
+    Unix.link src dst
+  with Unix.Unix_error (Unix.EXDEV, _, _) ->
+    (* Fall back to copy if hard links are not supported *)
+    copy src dst
 
 let flock file =
   let l = ref 0 in
