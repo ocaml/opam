@@ -1021,7 +1021,7 @@ let pin ~force action =
     begin match OpamPackage.Name.Map.find name pins with
       | Version _ -> ()
       | _         ->
-        if not force && not (OpamState.mem_installed_package_by_name t name) then
+        if not force && OpamState.mem_installed_package_by_name t name then
           OpamGlobals.error_and_exit "You must uninstall the package before unpinning it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
