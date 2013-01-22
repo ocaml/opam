@@ -943,7 +943,9 @@ let rec remote action =
         List.map
           (fun r -> OpamRepositoryName.to_string r.repo_name)
           (sorted_repositories t) in
-      OpamGlobals.msg "%s\n" (String.concat " " repos)
+      let pinned = List.map OpamPackage.Name.to_string (OpamPackage.Name.Map.keys t.pinned) in
+      let all = repos @ pinned in
+      OpamGlobals.msg "%s\n" (String.concat " " all)
     ) else (
       let pretty_print r =
         OpamGlobals.msg "%4d %-7s %10s     %s\n"
