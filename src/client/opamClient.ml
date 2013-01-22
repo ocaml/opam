@@ -272,7 +272,7 @@ let update_packages t ~show_packages repositories =
 
   (* then update $opam/repo/index *)
   update_repo_index t;
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "update-packages-1" in
   let updated =
     OpamPackage.Name.Map.fold (fun n repo_s accu ->
       (* we do not try to update pinned packages *)
@@ -312,7 +312,7 @@ let update_packages t ~show_packages repositories =
   add_to_reinstall ~all:true t updated;
 
   (* Check all the dependencies exist *)
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "update-packages-2" in
   let has_error = ref false in
   OpamPackage.Set.iter (fun nv ->
     let opam = OpamState.opam t nv in
@@ -398,7 +398,7 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
   ) names
 
 let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = false) regexp =
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "list" in
   let names = names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all:false regexp in
   if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
     let kind = if installed_only then "Installed" else "Available" in
@@ -429,7 +429,7 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
   ) names
 
 let info ~fields regexps =
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "info" in
   let names = names_of_regexp t ~installed_only:false ~name_only:true ~case_sensitive:false ~all:true regexps in
 
   let show_fields = List.length fields <> 1 in
@@ -559,7 +559,7 @@ let info ~fields regexps =
 
 let dry_upgrade () =
   log "dry-upgrade";
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "dry-upgrade" in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
   let solution = OpamSolution.resolve t (Upgrade reinstall)
     { wish_install = [];
@@ -571,7 +571,7 @@ let dry_upgrade () =
 
 let upgrade names =
   log "UPGRADE %s" (OpamPackage.Name.Set.to_string names);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "upgrade-1" in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
   let to_not_reinstall_yet = ref OpamPackage.Set.empty in
   let solution_found = ref No_solution in
@@ -605,7 +605,7 @@ let upgrade names =
         wish_upgrade = OpamSolution.atoms_of_packages partial_reinstall } in
     solution_found := solution;
   );
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "upgrade-2" in
   begin match !solution_found with
     | OK            -> ()
     | Nothing_to_do -> OpamGlobals.msg "Already up-to-date.\n"
@@ -625,7 +625,7 @@ let upgrade names =
 
 let update repos =
   log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "update" in
   let repositories =
     if repos = [] then
       t.repositories
@@ -704,7 +704,7 @@ let init repo compiler cores =
 
     (* Load the partial state, and update the packages state *)
     log "updating package state";
-    let t = OpamState.load_state () in
+    let t = OpamState.load_state "init-1" in
     let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
     let quiet = (compiler = OpamCompiler.default) in
     OpamState.install_compiler t ~quiet switch compiler;
@@ -712,7 +712,7 @@ let init repo compiler cores =
 
     (* Finally, load the complete state and install the compiler packages *)
     log "installing compiler packages";
-    let t = OpamState.load_state () in
+    let t = OpamState.load_state "init-2" in
     let compiler_packages = OpamState.get_compiler_packages t compiler in
     let compiler_names = OpamPackage.Name.Set.of_list (List.map fst compiler_packages) in
     let _solution = OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
@@ -729,7 +729,7 @@ let init repo compiler cores =
 
 let install names =
   log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "install" in
   let atoms = OpamSolution.atoms_of_names t names in
   let names = OpamPackage.Name.Set.of_list (List.map fst atoms) in
 
@@ -797,7 +797,7 @@ let install names =
 
 let remove names =
   log "REMOVE %s" (OpamPackage.Name.Set.to_string names);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "remove" in
   let atoms = OpamSolution.atoms_of_names t names in
   let atoms =
     List.filter (fun (n,_) ->
@@ -869,7 +869,7 @@ let remove names =
 
 let reinstall names =
   log "reinstall %s" (OpamPackage.Name.Set.to_string names);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "reinstall" in
   let atoms = OpamSolution.atoms_of_names t names in
   let reinstall =
     OpamMisc.filter_map (function (n,v) ->
@@ -900,7 +900,7 @@ let reinstall names =
 
 let upload upload repo =
   log "upload %s %s" (string_of_upload upload) (OpamRepositoryName.to_string repo);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "upload" in
   let opam = OpamFile.OPAM.read upload.upl_opam in
   let name = OpamFile.OPAM.name opam in
   let version = OpamFile.OPAM.version opam in
@@ -926,14 +926,14 @@ let upload upload repo =
 
 let rec remote action =
   log "remote %s" (string_of_remote action);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "remote-1" in
   let update_config repos =
     let new_config = OpamFile.Config.with_repositories t.config repos in
     OpamFile.Config.write (OpamPath.config t.root) new_config in
   let cleanup_repo repo =
     let repos = OpamRepositoryName.Map.keys t.repositories in
     update_config (List.filter ((<>) repo) repos);
-    let t = OpamState.load_state () in
+    let t = OpamState.load_state "remote-2" in
     update_repo_index t;
     OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo)) in
   match action with
@@ -993,7 +993,7 @@ let rec remote action =
       let repo_index_f = OpamPath.repo_index t.root in
       let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) t.repo_index in
       OpamFile.Repo_index.write repo_index_f repo_index;
-      let t = OpamState.load_state () in
+      let t = OpamState.load_state "remote-3" in
       update_repo_index t;
     ) else
         OpamGlobals.error_and_exit "%s is not a a valid remote name"
@@ -1001,7 +1001,7 @@ let rec remote action =
 
 let pin ~force action =
   log "pin %s" (string_of_pin action);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "pin" in
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
   let name = action.pin_package in
@@ -1073,7 +1073,7 @@ let pin ~force action =
 
 let pin_list () =
   log "pin_list";
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "pin-list" in
   let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
   let print n a =
     OpamGlobals.msg "%-20s %-8s %s\n"

@@ -441,7 +441,8 @@ let loads = ref []
 let print_stats () =
   List.iter (Printf.printf "load-state: %.2fs\n") !loads
 
-let load_state () =
+let load_state orig =
+  log "LOAD-STATE %s\n" orig;
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);

@@ -252,7 +252,7 @@ let print_csh_env env =
 
 let config request =
   log "config %s" (string_of_config request);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "config" in
   match request with
   | CEnv csh                  ->
     let env = OpamState.get_opam_env t in

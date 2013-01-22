@@ -67,8 +67,9 @@ type state = {
 
 }
 
-(** Load the client state *)
-val load_state: unit -> state
+(** Load the client state. The string argument is to identify to call
+   site. *)
+val load_state: string -> state
 
 (** Display stats *)
 val print_stats: unit -> unit

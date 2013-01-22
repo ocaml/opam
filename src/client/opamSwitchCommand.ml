@@ -23,7 +23,7 @@ open OpamState.Types
 let list ~print_short ~installed_only =
   log "list";
 
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-list" in
   let descrs = OpamState.compilers t in
   let descr c =
     if c = OpamCompiler.default then
@@ -114,7 +114,7 @@ let list ~print_short ~installed_only =
 
 let remove switch =
   log "remove switch=%s" (OpamSwitch.to_string switch);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-remove" in
   let comp_dir = OpamPath.Switch.root t.root switch in
   if not (OpamFilename.exists_dir comp_dir) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n" (OpamSwitch.to_string switch);
@@ -131,7 +131,7 @@ let remove switch =
 let update_config t switch =
   let config = OpamFile.Config.with_switch t.config switch in
   OpamFile.Config.write (OpamPath.config t.root) config;
-  OpamState.print_env_warning (OpamState.load_state ())
+  OpamState.print_env_warning (OpamState.load_state "switch-update-config")
 
 let install_with_packages ~quiet ~packages ~warning switch compiler =
   log "install %b %s %s" quiet
@@ -139,14 +139,14 @@ let install_with_packages ~quiet ~packages ~warning switch compiler =
     (OpamCompiler.to_string compiler);
 
   (* Remember the current switch to be able to roll-back *)
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-install-with-packages-1" in
   let old_switch = t.switch in
 
   (* install the new OCaml version *)
   OpamState.install_compiler t ~quiet switch compiler;
 
   (* install the compiler packages *)
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-install-with-packages-2" in
   let to_install, roots = match packages with
     | Some (p, r)  -> (OpamSolution.eq_atoms_of_packages p, OpamPackage.names_of_packages r)
     | None         ->
@@ -200,7 +200,7 @@ let install ~quiet switch compiler =
 
 let switch ~quiet switch =
   log "switch switch=%s" (OpamSwitch.to_string switch);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-1" in
   let comp_dir = OpamPath.Switch.root t.root switch in
   let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
   let comp_f = OpamPath.compiler t.root compiler in
@@ -211,7 +211,7 @@ let switch ~quiet switch =
   else
     update_config t switch;
   (* Check the consistency of the new switch *)
-  let new_state = OpamState.load_state () in
+  let new_state = OpamState.load_state "switch-2" in
   OpamState.check_base_packages new_state
 
 (* Remove from [set] all the packages whose names appear in
@@ -224,7 +224,7 @@ let filter_names ~filter set =
 
 let import filename =
   log "import switch=%s" (match filename with None -> "<none>" | Some f -> OpamFilename.to_string f);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-import" in
 
   let imported, import_roots =
     match filename with
@@ -255,19 +255,19 @@ let import filename =
     OpamSolution.check_solution solution
 
 let export filename =
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-export" in
   let export = (t.installed, t.installed_roots) in
   match filename with
   | None   -> OpamFile.Export.write_to_channel stdout export
   | Some f -> OpamFile.Export.write f export
 
 let current () =
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-current" in
   OpamGlobals.msg "%s\n" (OpamSwitch.to_string t.switch)
 
 let reinstall switch =
   log "reinstall switch=%s" (OpamSwitch.to_string switch);
-  let t = OpamState.load_state () in
+  let t = OpamState.load_state "switch-reinstall" in
   if not (OpamSwitch.Map.mem switch t.aliases) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n" (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;

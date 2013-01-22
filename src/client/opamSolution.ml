@@ -553,7 +553,7 @@ let apply_solution ?(force = false) t action sol =
         if !OpamGlobals.fake then
           ()
         else
-          let t = OpamState.load_state () in
+          let t = OpamState.load_state "child" in
           match n with
           | To_change (o, nv) -> proceed_to_change t o nv
           | To_recompile nv   -> proceed_to_recompile t nv
@@ -671,7 +671,7 @@ let variable_warnings = ref false
 let print_variable_warnings () =
   let variables = ref [] in
   if not !variable_warnings then (
-    let t = OpamState.load_state () in
+    let t = OpamState.load_state "env-warnings" in
     let warn w =
       let is_defined s =
         try let _ = OpamMisc.getenv s in true
