@@ -247,33 +247,35 @@ let get_pinned_package t n =
 (* List the packages which does fullfil the compiler constraints *)
 let available_packages root opams installed repositories repo_index compiler_version pinned packages =
   let filter nv =
-    let opam = OpamPackage.Map.find nv opams in
-    let available () =
-      OpamPackage.Set.mem nv installed ||
-      find_repository_aux repositories root repo_index nv <> None in
-    let consistent_ocaml_version () =
-      let atom (r,v) = OpamCompiler.Version.compare compiler_version r v in
-      match OpamFile.OPAM.ocaml_version opam with
-      | None   -> true
-      | Some c -> OpamFormula.eval atom c in
-    let consistent_os () =
-      match OpamFile.OPAM.os opam with
-      | Empty -> true
-      | f ->
-        let atom (b, os) =
-          let ($) = if b then (=) else (<>) in
-          os $ Lazy.force OpamGlobals.os_string in
-        OpamFormula.eval atom f in
-    let consistent_pinned_version () =
-      let name = OpamPackage.name nv in
-      not (is_pinned_aux pinned name)
-      || get_pinned_package_aux pinned packages name = nv
-    in
-    available ()
-    && consistent_ocaml_version ()
-    && consistent_pinned_version ()
-    && consistent_os () in
-
+    if OpamPackage.Map.mem nv opams then (
+      let opam = OpamPackage.Map.find nv opams in
+      let available () =
+        OpamPackage.Set.mem nv installed ||
+        find_repository_aux repositories root repo_index nv <> None in
+      let consistent_ocaml_version () =
+        let atom (r,v) = OpamCompiler.Version.compare compiler_version r v in
+        match OpamFile.OPAM.ocaml_version opam with
+        | None   -> true
+        | Some c -> OpamFormula.eval atom c in
+      let consistent_os () =
+        match OpamFile.OPAM.os opam with
+        | Empty -> true
+        | f ->
+          let atom (b, os) =
+            let ($) = if b then (=) else (<>) in
+            os $ Lazy.force OpamGlobals.os_string in
+          OpamFormula.eval atom f in
+      let consistent_pinned_version () =
+        let name = OpamPackage.name nv in
+        not (is_pinned_aux pinned name)
+        || get_pinned_package_aux pinned packages name = nv
+      in
+      available ()
+      && consistent_ocaml_version ()
+      && consistent_pinned_version ()
+      && consistent_os ()
+    ) else
+      false in
   OpamPackage.Set.filter filter packages
 
 let base_packages =
