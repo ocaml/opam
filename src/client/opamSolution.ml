@@ -25,7 +25,6 @@ let proceed_to_install t nv =
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
     OpamGlobals.msg "Installing %s.\n" (OpamPackage.to_string nv);
-    let t = OpamState.load_state () in
     let name = OpamPackage.name nv in
     let opam_f = OpamPath.opam t.root nv in
     let opam_ = OpamState.opam t nv in
