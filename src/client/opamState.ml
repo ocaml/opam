@@ -309,9 +309,9 @@ let upgrade_system_compiler =
   ref (fun _ -> assert false)
 
 (* Only used during init: load only repository-related information *)
-let load_repository_state () =
+let load_repository_state call_site =
+  log "LOAD-REPO-STATE(%s)" call_site;
   let root = OpamPath.default () in
-  log "load_partial_state root=%s" (OpamFilename.Dir.to_string root);
   let config_p = OpamPath.config root in
   let config = OpamFile.Config.read config_p in
   let repositories =
@@ -325,6 +325,35 @@ let load_repository_state () =
     | Some a -> OpamSwitch.of_string a in
 
   (* evertything else is empty *)
+  let aliases = OpamSwitch.Map.empty in
+  let compiler = OpamCompiler.of_string "none" in
+  let compiler_version = OpamCompiler.Version.of_string "none" in
+  let opams = OpamPackage.Map.empty in
+  let packages = OpamPackage.Set.empty in
+  let available_packages = lazy OpamPackage.Set.empty in
+  let installed = OpamPackage.Set.empty in
+  let installed_roots = OpamPackage.Set.empty in
+  let reinstall = OpamPackage.Set.empty in
+  let repo_index = OpamPackage.Name.Map.empty in
+  let pinned = OpamPackage.Name.Map.empty in
+  {
+    root; switch; compiler; compiler_version; repositories; opams;
+    packages; available_packages; installed; installed_roots; reinstall;
+    repo_index; config; aliases; pinned;
+  }
+
+(* load partial state to be able to read env variables *)
+let load_env_state call_site =
+  log "LOAD-ENV-STATE(%s)" call_site;
+  let root = OpamPath.default () in
+  let config_p = OpamPath.config root in
+  let config = OpamFile.Config.read config_p in
+  let switch = match !OpamGlobals.switch with
+    | None   -> OpamFile.Config.switch config
+    | Some a -> OpamSwitch.of_string a in
+
+  (* evertything else is empty *)
+  let repositories = OpamRepositoryName.Map.empty in
   let aliases = OpamSwitch.Map.empty in
   let compiler = OpamCompiler.of_string "none" in
   let compiler_version = OpamCompiler.Version.of_string "none" in
@@ -441,8 +470,8 @@ let loads = ref []
 let print_stats () =
   List.iter (Printf.printf "load-state: %.2fs\n") !loads
 
-let load_state orig =
-  log "LOAD-STATE %s\n" orig;
+let load_state call_site =
+  log "LOAD-STATE(%s)\n" call_site;
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);

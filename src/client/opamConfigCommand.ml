@@ -252,17 +252,26 @@ let print_csh_env env =
 
 let config request =
   log "config %s" (string_of_config request);
-  let t = OpamState.load_state "config" in
+  let with_full f =
+    let t = OpamState.load_state "config" in
+    f t in
+  let with_partial f =
+    let t = OpamState.load_env_state "config" in
+    f t in
   match request with
-  | CEnv csh                  ->
-    let env = OpamState.get_opam_env t in
-    if csh
-    then print_csh_env env
-    else print_env env
-  | CList ns                  -> config_list t ns
-  | CSubst fs                 -> List.iter (OpamState.substitute_file t) fs
-  | CIncludes (is_rec, names) -> config_includes t is_rec names
-  | CCompil c                 -> config_compil t c
+  | CEnv csh ->
+    with_partial (fun t ->
+        let env = OpamState.get_opam_env t in
+        if csh
+        then print_csh_env env
+        else print_env env
+      )
+  | CList ns                  -> with_full (fun t -> config_list t ns)
+  | CSubst fs                 -> with_full (fun t -> List.iter (OpamState.substitute_file t) fs)
+  | CIncludes (is_rec, names) -> with_full (fun t -> config_includes t is_rec names)
+  | CCompil c                 -> with_full (fun t -> config_compil t c)
   | CVariable v               ->
-    let contents = OpamState.contents_of_variable t v in
-    OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+    with_full (fun t ->
+        let contents = OpamState.contents_of_variable t v in
+        OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+      )

@@ -74,8 +74,11 @@ val load_state: string -> state
 (** Display stats *)
 val print_stats: unit -> unit
 
-(** Load repository related states only. All the other fields are let empty. *)
-val load_repository_state: unit -> state
+(** Load repository related states only. All the other fields are left empty. *)
+val load_repository_state: string -> state
+
+(** Load state associated to env variables. All other fields are left empty. *)
+val load_env_state: string -> state
 
 (** Create a universe from the current state *)
 val universe: state -> user_action -> universe
