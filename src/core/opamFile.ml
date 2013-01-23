@@ -1442,23 +1442,8 @@ module Make (F : F) = struct
 
   let dummy_file = OpamFilename.of_string "<dummy>"
 
-  let string_of_channel ic =
-    let n = 32768 in
-    let s = String.create n in
-    let b = Buffer.create 1024 in
-    let rec iter ic b s =
-      let nread =
-        try input ic s 0 n
-        with End_of_file -> 0 in
-      if nread > 0 then (
-        Buffer.add_substring b s 0 nread;
-        iter ic b s
-      ) in
-    iter ic b s;
-    Buffer.contents b
-
   let read_from_channel ic =
-    try F.of_string dummy_file (string_of_channel ic)
+    try F.of_string dummy_file (OpamSystem.string_of_channel ic)
     with OpamFormat.Bad_format msg ->
       OpamGlobals.error_and_exit "%s" msg
 

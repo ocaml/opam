@@ -42,6 +42,9 @@ val link: string -> string -> unit
     expanded and relative paths become absolute. *)
 val real_path: string -> string
 
+(** Return the contents of a channel. *)
+val string_of_channel: in_channel -> string
+
 (** [read filename] returns the contents of [filename] *)
 val read: string -> string
 

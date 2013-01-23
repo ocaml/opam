@@ -69,11 +69,25 @@ let remove_file file =
   try Unix.unlink file
   with Unix.Unix_error _ -> ()
 
+
+let string_of_channel ic =
+  let n = 32768 in
+  let s = String.create n in
+  let b = Buffer.create 1024 in
+  let rec iter ic b s =
+    let nread =
+      try input ic s 0 n
+      with End_of_file -> 0 in
+    if nread > 0 then (
+      Buffer.add_substring b s 0 nread;
+      iter ic b s
+    ) in
+  iter ic b s;
+  Buffer.contents b
+
 let read file =
   let ic = open_in_bin file in
-  let n = in_channel_length ic in
-  let s = String.create n in
-  really_input ic s 0 n;
+  let s = string_of_channel ic in
   close_in ic;
   s
 
