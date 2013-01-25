@@ -199,13 +199,16 @@ let find_repository_aux repositories root repo_index nv =
   let rec aux = function
     | []          -> None
     | r :: repo_s ->
+      if OpamRepositoryName.Map.mem r repositories then (
         let repo = OpamRepositoryName.Map.find r repositories in
         let repo_p = OpamPath.Repository.create root r in
         let opam_f = OpamPath.Repository.opam repo_p nv in
         if OpamFilename.exists opam_f then (
           Some (repo_p, repo)
         ) else
-          aux repo_s in
+          aux repo_s
+      ) else
+        aux repo_s in
   if OpamPackage.Name.Map.mem name repo_index then
     aux (OpamPackage.Name.Map.find name repo_index)
   else
