@@ -95,7 +95,9 @@ let init r =
   let module B = (val find_backend r: BACKEND) in
   let open OpamPath.Repository in
   let repo = repo r in
-  OpamFilename.mkdir (root repo);
+  let repodir = root repo in
+  OpamFilename.rmdir repodir;
+  OpamFilename.mkdir repodir;
   OpamFile.Repo_config.write (config repo) r;
   OpamFilename.mkdir (packages_dir repo);
   OpamFilename.mkdir (archives_dir repo);
