@@ -57,7 +57,7 @@ val upload : upload -> repository_name -> unit
 val remove : OpamPackage.Name.Set.t -> unit
 
 (** Manage remote repositories. Take the global file lock. *)
-val remote : remote -> unit
+val repository : remote -> unit
 
 (** Install the given compiler. Take the global file lock. *)
 val switch_install: bool -> switch -> compiler -> unit

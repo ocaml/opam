@@ -924,16 +924,16 @@ let upload upload repo =
   OpamFilename.rmdir (OpamPath.Repository.package upload_repo nv);
   OpamFilename.remove (OpamPath.Repository.archive upload_repo nv)
 
-let rec remote action =
-  log "remote %s" (string_of_remote action);
-  let t = OpamState.load_state "remote-1" in
+let rec repository action =
+  log "repository %s" (string_of_remote action);
+  let t = OpamState.load_state "repository-1" in
   let update_config repos =
     let new_config = OpamFile.Config.with_repositories t.config repos in
     OpamFile.Config.write (OpamPath.config t.root) new_config in
   let cleanup_repo repo =
     let repos = OpamRepositoryName.Map.keys t.repositories in
     update_config (List.filter ((<>) repo) repos);
-    let t = OpamState.load_state "remote-2" in
+    let t = OpamState.load_state "repository-2" in
     update_repo_index t;
     OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo)) in
   match action with
@@ -984,7 +984,7 @@ let rec remote action =
          let priority = match priority with
            | None   -> 10 * (OpamRepositoryName.Map.cardinal t.repositories);
            | Some p -> p in
-         remote (RPriority (name, priority))
+         repository (RPriority (name, priority))
        with e ->
          cleanup_repo name;
          raise e)
@@ -1003,7 +1003,7 @@ let rec remote action =
       let repo_index_f = OpamPath.repo_index t.root in
       let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) t.repo_index in
       OpamFile.Repo_index.write repo_index_f repo_index;
-      let t = OpamState.load_state "remote-3" in
+      let t = OpamState.load_state "repository-3" in
       update_repo_index t;
     ) else
         OpamGlobals.error_and_exit "%s is not a a valid remote name"
@@ -1145,8 +1145,8 @@ let update repos =
 let upload u r =
   OpamState.check (Global_lock (fun () -> upload u r))
 
-let remote action =
-  OpamState.check (Global_lock (fun () -> remote action))
+let repository action =
+  OpamState.check (Global_lock (fun () -> repository action))
 
 let switch_install quiet switch ocaml_version =
   OpamState.check (Global_lock (fun () -> OpamSwitchCommand.install ~quiet switch ocaml_version))

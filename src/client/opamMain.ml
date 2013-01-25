@@ -656,7 +656,7 @@ let repository name =
        | Some `remove , [name]          -> RRm (OpamRepositoryName.of_string name)
       | Some `add     , [name; address] -> add name address
       | _ -> OpamGlobals.error_and_exit "Too many parameters" in
-    OpamClient.remote cmd in
+    OpamClient.repository cmd in
 
   Term.(pure repository $global_options $command $repo_kind_flag $priority $print_short_flag $params),
   term_info name  ~doc ~man
