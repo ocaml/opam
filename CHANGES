@@ -1,4 +1,6 @@
 0.9.2 (trunk)
+* Fix `opam repo remove <repo>`
+* speed-up `opam config env`
 * support for `opam-foo` scripts (which can be called using `opam foo`)
 * 'opam update <pinned-package>' works
 * Fix 'opam-mk-repo -a'
