@@ -3,3 +3,21 @@ description = "OCaml Package Manager base API"
 requires = "dose, cudf, ocamlgraph, unix, re"
 archive(byte) = "opam-core.cma"
 archive(native) = "opam-core.cmxa"
+
+package "repositories" (
+  archive(byte) = "opam-repositories.cma"
+  archive(native) = "opam-repositories.cmxa"
+  requires = "opam"
+)
+
+package "solver" (
+  archive(byte) = "opam-solver.cma"
+  archive(native) = "opam-solver.cmxa"
+  requires = "opam"
+)
+
+package "client" (
+  archive(byte) = "opam-client.cma"
+  archive(native) = "opam-client.cmxa"
+  requires = "opam, opam.solver, opam.repositories"
+)

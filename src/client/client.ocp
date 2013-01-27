@@ -1,6 +1,6 @@
 comp += [ "-warn-error" "A" ]
 
-begin library "opam-lib"
+begin library "opam-client"
 
   files   = [
     "opamState.ml"
@@ -24,7 +24,7 @@ begin program "opam"
     "opamMain.ml"
   ]
   requires = [
-    "opam-lib"
+    "opam-client"
     "cmdliner"
  ]
 

@@ -77,12 +77,30 @@ uninstall:
 	rm -f $(prefix)/bin/opam*
 	rm -f $(mandir)/man1/opam*
 
-LIB   = opam-core
-NOMLI = opamGlobals.ml
-MLI   = $(foreach i, $(shell find src/core -name "*.mli"), $(notdir $i))
-_FILES= $(LIB:%=%.a) $(LIB:%=%.cma) $(LIB:%=%.cmxa)\
-	$(MLI:%.mli=%.cmi)
-FILES = $(_FILES:%=_obuild/opam-core/%) $(NOMLI:%.ml=_obuild/opam-core/%.cmi)
+CORE_LIB   = opam-core
+REPO_LIB   = opam-repositories
+SOLVER_LIB = opam-solver
+CLIENT_LIB = opam-client
+
+CORE_NOMLI = opamGlobals.ml
+CORE_MLI   = $(foreach i, $(shell find src/core -name "*.mli"), $(notdir $i))
+REPO_MLI   = $(foreach i, $(shell find src/repositories -name "*.mli"), $(notdir $i))
+SOLVER_MLI = $(foreach i, $(shell find src/solver -name "*.mli"), $(notdir $i))
+CLIENT_MLI = $(foreach i, $(shell find src/client -name "*.mli"), $(notdir $i))
+
+CORE_FILES   = $(CORE_LIB:%=%.a) $(CORE_LIB:%=%.cma) $(CORE_LIB:%=%.cmxa)\
+	       $(CORE_MLI:%.mli=%.cmi) $(CORE_NOMLI:%.ml=%.cmi)
+REPO_FILES   = $(REPO_LIB:%=%.a) $(REPO_LIB:%=%.cma) $(REPO_LIB:%=%.cmxa)\
+	       $(REPO_MLI:%.mli=%.cmi)
+SOLVER_FILES = $(SOLVER_LIB:%=%.a) $(SOLVER_LIB:%=%.cma) $(SOLVER_LIB:%=%.cmxa)\
+	       $(SOLVER_MLI:%.mli=%.cmi)
+CLIENT_FILES = $(CLIENT_LIB:%=%.a) $(CLIENT_LIB:%=%.cma) $(CLIENT_LIB:%=%.cmxa)\
+	       $(CLIENT_MLI:%.mli=%.cmi)
+
+FILES = $(CORE_FILES:%=_obuild/opam-core/%)\
+	$(REPO_FILES:%=_obuild/opam-repositories/%)\
+	$(SOLVER_FILES:%=_obuild/opam-solver/%)\
+	$(CLIENT_FILES:%=_obuild/opam-client/%)
 
 .PHONY: libuninstall libinstall
 libinstall: META
