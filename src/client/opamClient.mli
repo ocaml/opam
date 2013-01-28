@@ -22,42 +22,56 @@ open OpamTypes
     - [repo] is the initial repository description,
     - [compiler] is the version of the compiler.
     - [cores] is the number of cores *)
-val init : repository -> compiler -> int -> unit
+val init: repository -> compiler -> int -> unit
 
 (** Display all available packages that matches any of the regexps. *)
-val list : print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_sensitive:bool
+val list: print_short:bool -> installed_only:bool -> ?name_only:bool -> ?case_sensitive:bool
   -> string list  -> unit
 
 (** Display a general summary of a collection of packages. *)
-val info : fields:string list -> string list -> unit
+val info: fields:string list -> string list -> unit
 
-(** Depending on request, return options or directories where the
-    package is installed. *)
-val config : config -> unit
+(** Display configuration options. *)
+val config: config -> unit
+
+(** Display environment. *)
+val config_env: csh:bool -> unit
+
+(** Display includes files. *)
+val config_includes: is_rec:bool -> name list -> unit
+
+(** Display variables and their contents. *)
+val config_list: name list -> unit
+
+(** Display a given variable content. *)
+val config_variable: full_variable -> unit
+
+(** Substitute files. *)
+val config_subst: basename list -> unit
 
 (** Install the given set of packages. Take the global file lock. *)
-val install : name_set -> unit
+val install: name_set -> unit
 
 (** Reinstall the given set of packages. Take the global file lock. *)
-val reinstall : OpamPackage.Name.Set.t -> unit
+val reinstall: OpamPackage.Name.Set.t -> unit
 
 (** Refresh the available packages. Take the global file lock. *)
-val update : repository_name list -> unit
+val update: repository_name list -> unit
 
 (** Find a consistent state where most of the installed packages are
     upgraded to their latest version.
     If no package packages are specified then try to upgrade everything.
     Take the global file lock. *)
-val upgrade : OpamPackage.Name.Set.t -> unit
+val upgrade: OpamPackage.Name.Set.t -> unit
 
 (** Upload a package to a remote repository. Take the global file lock. *)
-val upload : upload -> repository_name -> unit
+val upload: upload -> repository_name -> unit
 
 (** Remove the given set of packages. Take the global file lock. *)
-val remove : OpamPackage.Name.Set.t -> unit
+val remove: OpamPackage.Name.Set.t -> unit
 
 (** Manage remote repositories. Take the global file lock. *)
-val repository : remote -> unit
+val repository: remote -> unit
 
 (** Install the given compiler. Take the global file lock. *)
 val switch_install: bool -> switch -> compiler -> unit

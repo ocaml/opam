@@ -159,7 +159,10 @@ module Switch: sig
   (** Pinned package file *)
   val pinned: t -> switch -> filename
 
-  (** Build dir for pinned packages *)
+  (** Build dir for all pinned packages *)
+  val pinned_cache: t -> switch -> dirname
+
+  (** Build dir for a given pinned package *)
   val pinned_dir: t -> switch -> name -> dirname
 
 end

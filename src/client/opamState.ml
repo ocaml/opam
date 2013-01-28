@@ -15,6 +15,7 @@
 
 open OpamTypes
 open OpamMisc.OP
+open OpamFilename.OP
 
 let log fmt =
   OpamGlobals.log "STATE" fmt
@@ -58,53 +59,6 @@ let unknown_compiler compiler =
   OpamGlobals.error_and_exit
     "%S is not a valid compiler."
     (OpamCompiler.to_string compiler)
-
-let check f =
-  let root = OpamPath.default () in
-  let with_switch_lock a f =
-    OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
-  let error () =
-    OpamGlobals.error_and_exit
-      "Cannot find %s. Have you run 'opam init' first ?"
-      (OpamFilename.Dir.to_string root) in
-
-  if not (OpamFilename.exists_dir root) then
-    error ()
-
-  else match f with
-
-    | Global_lock f ->
-      (* Take the global lock *)
-      OpamFilename.with_flock (OpamPath.lock root) (fun () ->
-        (* Take all the switch locks *)
-        let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-        let f =
-          OpamSwitch.Map.fold (fun a _ f ->
-            if OpamFilename.exists_dir (OpamPath.Switch.root root a)
-            then with_switch_lock a (fun () -> f ())
-            else f
-          ) aliases f in
-        f ()
-      ) ()
-
-    | Read_lock f ->
-      (* Simply check that OPAM is correctly initialized *)
-      if OpamFilename.exists_dir (OpamPath.root root) then
-        f ()
-      else
-       error ()
-
-    | Switch_lock f ->
-      (* Take a switch lock (and check that the global lock is free). *)
-      let switch =
-        OpamFilename.with_flock
-          (OpamPath.lock root)
-          (fun () -> match !OpamGlobals.switch with
-          | None   -> OpamFile.Config.switch (OpamFile.Config.read (OpamPath.config root))
-          | Some a -> OpamSwitch.of_string a)
-          () in
-      (* XXX: We can have a small race just here ... *)
-      with_switch_lock switch f ()
 
 type state = {
   root: OpamPath.t;
@@ -448,30 +402,45 @@ let all_installed t =
    * correct opam version
    * only installed packages have something in $repo/tmp
    * only installed packages have something in $opam/pinned.cache *)
-let consistency_checks t =
+let clean dir name =
+  if OpamFilename.exists_dir dir then (
+    OpamGlobals.error "%s exists although %s is not installed. Removing it."
+      (OpamFilename.Dir.to_string dir) name;
+    OpamFilename.rmdir dir
+  )
+
+let global_consistency_checks t =
   check_opam_version t;
-  let clean dir name =
-    if OpamFilename.exists_dir dir then (
-      OpamGlobals.error "%s exists although %s is not installed. Removing it."
-        (OpamFilename.Dir.to_string dir) name;
-      OpamFilename.rmdir dir
-    ) in
   let clean_repo repo_root nv =
     let tmp_dir = OpamPath.Repository.tmp_dir repo_root nv in
     clean tmp_dir (OpamPackage.to_string nv) in
-  let clean_pin name =
-    let pin_dir = OpamPath.Switch.pinned_dir t.root t.switch name in
-    clean pin_dir (OpamPackage.Name.to_string name) in
-
+  let all_installed = all_installed t in
   OpamRepositoryName.Map.iter (fun repo _ ->
     let repo_root = OpamPath.Repository.create t.root repo in
-    let available = OpamRepository.packages repo_root in
-    let all_installed = all_installed t in
+    let tmp_dir = OpamPath.Repository.tmp repo_root in
+    let available =
+      let dirs = OpamFilename.list_dirs tmp_dir in
+      let pkgs = OpamMisc.filter_map OpamPackage.of_dirname dirs in
+      OpamPackage.Set.of_list pkgs in
     let not_installed = OpamPackage.Set.diff available all_installed in
     OpamPackage.Set.iter (clean_repo repo_root) not_installed
-  ) t.repositories;
+  ) t.repositories
 
-  let available = OpamPackage.names_of_packages t.packages in
+let switch_consistency_checks t =
+  check_opam_version t;
+  let pin_cache = OpamPath.Switch.pinned_cache t.root t.switch in
+  let clean_pin name =
+    let name = OpamPackage.Name.to_string name in
+    let pin_dir = pin_cache / name in
+    clean pin_dir name in
+  let available =
+      let dirs = OpamFilename.list_dirs pin_cache in
+      let pkgs = List.map (
+          OpamFilename.basename_dir
+          |> OpamFilename.Base.to_string
+          |> OpamPackage.Name.of_string
+        ) dirs in
+      OpamPackage.Name.Set.of_list pkgs in
   let installed = OpamPackage.names_of_packages t.installed in
   let not_installed = OpamPackage.Name.Set.diff available installed in
   OpamPackage.Name.Set.iter clean_pin not_installed
@@ -557,7 +526,6 @@ let load_state call_site =
     packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   } in
-  consistency_checks t;
   print_state t;
   let t1 = Unix.gettimeofday () in
   loads :=  (t1 -. t0) :: !loads;
@@ -937,6 +905,58 @@ let update_pinned_package t nv pin =
     OpamGlobals.error_and_exit
       "Cannot update the pinned package %s: wrong backend."
       (OpamPackage.to_string nv)
+
+
+let check f =
+  let root = OpamPath.default () in
+  let with_switch_lock a f =
+    OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
+  let error () =
+    OpamGlobals.error_and_exit
+      "Cannot find %s. Have you run 'opam init' first ?"
+      (OpamFilename.Dir.to_string root) in
+
+  if not (OpamFilename.exists_dir root) then
+    error ()
+
+  else match f with
+
+    | Global_lock f ->
+      (* Take the global lock *)
+      OpamFilename.with_flock (OpamPath.lock root) (fun () ->
+        (* Take all the switch locks *)
+        let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+        let f =
+          OpamSwitch.Map.fold (fun a _ f ->
+            if OpamFilename.exists_dir (OpamPath.Switch.root root a)
+            then with_switch_lock a (fun () -> f ())
+            else f
+          ) aliases f in
+        let t = load_state "global-lock" in
+        global_consistency_checks t;
+        f ()
+      ) ()
+
+    | Read_lock f ->
+      (* Simply check that OPAM is correctly initialized *)
+      if OpamFilename.exists_dir (OpamPath.root root) then
+        f ()
+      else
+       error ()
+
+    | Switch_lock f ->
+      (* Take a switch lock (and check that the global lock is free). *)
+      let switch =
+        OpamFilename.with_flock
+          (OpamPath.lock root)
+          (fun () -> match !OpamGlobals.switch with
+          | None   -> OpamFile.Config.switch (OpamFile.Config.read (OpamPath.config root))
+          | Some a -> OpamSwitch.of_string a)
+          () in
+      (* XXX: We can have a small race just here ... *)
+      let t = load_state "switch-lock" in
+      switch_consistency_checks t;
+      with_switch_lock switch f ()
 
 module Types = struct
   type t = state = {

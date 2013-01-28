@@ -15,5 +15,22 @@
 
 (** Configuration commands *)
 
-(** Answer to client requests about configuration *)
-val config: OpamTypes.config -> unit
+open OpamTypes
+
+(** Display the current environment *)
+val env: csh:bool -> unit
+
+(** Display the content of all available variables *)
+val list: name list -> unit
+
+(** Display the content of a given variable *)
+val variable:  full_variable -> unit
+
+(** Display includes directives *)
+val includes: is_rec:bool -> name list -> unit
+
+(** Display configuration options *)
+val config: config -> unit
+
+(** Substitute files *)
+val subst: basename list -> unit

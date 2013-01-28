@@ -169,7 +169,7 @@ let string_of_remote = function
     Printf.sprintf "priority %s %d"
       (OpamRepositoryName.to_string r) p
 
-type config_option = {
+type config = {
   conf_is_rec : bool;
   conf_is_byte: bool;
   conf_is_link: bool;
@@ -258,14 +258,6 @@ let string_of_pin p =
     (OpamPackage.Name.to_string p.pin_package)
     (path_of_pin_option p.pin_option)
     (string_of_pin_kind (kind_of_pin_option p.pin_option))
-
-type config =
-  | CEnv of bool
-  | CList of name list
-  | CVariable of full_variable
-  | CIncludes of bool * (name list)
-  | CCompil   of config_option
-  | CSubst    of basename list
 
 (** Variable contents *)
 type variable_contents = OpamVariable.variable_contents =

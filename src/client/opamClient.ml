@@ -1119,8 +1119,23 @@ let list ~print_short ~installed_only ?name_only ?case_sensitive pkg_str =
 let info ~fields regexps =
   OpamState.check (Read_lock (fun () -> info ~fields regexps))
 
-let config request =
-  OpamState.check (Read_lock (fun () -> OpamConfigCommand.config request))
+let config_env ~csh =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.env ~csh))
+
+let config_list names =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.list names))
+
+let config_variable var =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.variable var))
+
+let config_subst files =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.subst files))
+
+let config_includes ~is_rec names =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.includes ~is_rec names))
+
+let config option =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.config option))
 
 let install names =
   OpamState.check (Switch_lock (fun () -> install names))

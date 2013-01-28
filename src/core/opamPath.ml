@@ -104,7 +104,9 @@ module Switch = struct
 
   let pinned t a = root t a // "pinned"
 
-  let pinned_dir t a n = root t a / "pinned.cache" / OpamPackage.Name.to_string n
+  let pinned_cache t a = root t a / "pinned.cache"
+
+  let pinned_dir t a n = pinned_cache t a / OpamPackage.Name.to_string n
 
 end
 

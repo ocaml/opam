@@ -448,26 +448,27 @@ let config =
 
   let config global_options command env is_rec csh params =
     set_global_options global_options;
-    let mk ~is_byte ~is_link =
-      CCompil {
-        conf_is_rec  = is_rec;
-        conf_is_link = is_link;
-        conf_is_byte = is_byte;
-        conf_options = List.map OpamVariable.Section.Full.of_string params;
-      } in
-    let cmd =
-      match command with
-      | None           -> if env="nv" then CEnv csh else OpamGlobals.error_and_exit "Missing subcommand"
-      | Some `env      -> CEnv csh
-      | Some `list     -> CList (List.map OpamPackage.Name.of_string params)
-      | Some `var      -> CVariable (OpamVariable.Full.of_string (List.hd params))
-      | Some `subst    -> CSubst (List.map OpamFilename.Base.of_string params)
-      | Some `includes -> CIncludes (is_rec, List.map OpamPackage.Name.of_string params)
-      | Some `bytecomp -> mk ~is_byte:true  ~is_link:false
-      | Some `bytelink -> mk ~is_byte:true  ~is_link:true
-      | Some `asmcomp  -> mk ~is_byte:false ~is_link:false
-      | Some `asmlink  -> mk ~is_byte:false ~is_link:true in
-    OpamClient.config cmd in
+    let mk ~is_byte ~is_link = {
+      conf_is_rec  = is_rec;
+      conf_is_link = is_link;
+      conf_is_byte = is_byte;
+      conf_options = List.map OpamVariable.Section.Full.of_string params;
+    } in
+    match command with
+    | None           ->
+      if env="nv" then
+        OpamConfigCommand.env ~csh
+      else
+        OpamGlobals.error_and_exit "Missing subcommand"
+    | Some `env      -> OpamClient.config_env ~csh
+    | Some `list     -> OpamClient.config_list (List.map OpamPackage.Name.of_string params)
+    | Some `var      -> OpamClient.config_variable (OpamVariable.Full.of_string (List.hd params))
+    | Some `subst    -> OpamClient.config_subst (List.map OpamFilename.Base.of_string params)
+    | Some `includes -> OpamClient.config_includes ~is_rec (List.map OpamPackage.Name.of_string params)
+    | Some `bytecomp -> OpamClient.config (mk ~is_byte:true  ~is_link:false)
+    | Some `bytelink -> OpamClient.config (mk ~is_byte:true  ~is_link:true)
+    | Some `asmcomp  -> OpamClient.config (mk ~is_byte:false ~is_link:false)
+    | Some `asmlink  -> OpamClient.config (mk ~is_byte:false ~is_link:true) in
 
   Term.(pure config $global_options $command $env $is_rec $csh $params),
   term_info "config" ~doc ~man

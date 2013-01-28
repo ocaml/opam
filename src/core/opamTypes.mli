@@ -348,20 +348,12 @@ val path_of_pin_option: pin_option -> string
 val kind_of_pin_option: pin_option -> pin_kind
 
 (** Configuration requests *)
-type config_option = {
+type config = {
   conf_is_rec : bool;
   conf_is_byte: bool;
   conf_is_link: bool;
   conf_options: OpamVariable.Section.Full.t list;
 }
-
-type config =
-  | CEnv of bool
-  | CList of name list
-  | CVariable of full_variable
-  | CIncludes of bool * (name list)
-  | CCompil   of config_option
-  | CSubst    of basename list
 
 (** {2 Filtered commands} *)
 

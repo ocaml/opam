@@ -22,7 +22,6 @@ open OpamState.Types
 (* TODO: add repo *)
 let list ~print_short ~installed_only =
   log "list";
-
   let t = OpamState.load_state "switch-list" in
   let descrs = OpamState.compilers t in
   let descr c =
