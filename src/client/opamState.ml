@@ -437,6 +437,13 @@ let check_base_packages t =
                          (String.concat " " names)
   )
 
+let all_installed t =
+  OpamSwitch.Map.fold (fun switch _ accu ->
+    let installed_f = OpamPath.Switch.installed t.root switch in
+    let installed = OpamFile.Installed.safe_read installed_f in
+    OpamPackage.Set.union installed accu
+  ) t.aliases OpamPackage.Set.empty
+
 (* Checks:
    * correct opam version
    * only installed packages have something in $repo/tmp
@@ -459,7 +466,8 @@ let consistency_checks t =
   OpamRepositoryName.Map.iter (fun repo _ ->
     let repo_root = OpamPath.Repository.create t.root repo in
     let available = OpamRepository.packages repo_root in
-    let not_installed = OpamPackage.Set.diff available t.installed in
+    let all_installed = all_installed t in
+    let not_installed = OpamPackage.Set.diff available all_installed in
     OpamPackage.Set.iter (clean_repo repo_root) not_installed
   ) t.repositories;
 

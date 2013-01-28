@@ -121,12 +121,7 @@ let update_repo_index t =
 
   (* suppress previous links, but keep metadata of installed packages
      (because you need them to uninstall the package) *)
-  let all_installed =
-    OpamSwitch.Map.fold (fun switch _ accu ->
-      let installed_f = OpamPath.Switch.installed t.root switch in
-      let installed = OpamFile.Installed.safe_read installed_f in
-      OpamPackage.Set.union installed accu
-    ) t.aliases OpamPackage.Set.empty in
+  let all_installed = OpamState.all_installed t in
   OpamPackage.Set.iter (fun nv ->
     if not (OpamPackage.Set.mem nv all_installed) then (
       let opam_g = OpamPath.opam t.root nv in

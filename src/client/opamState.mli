@@ -183,6 +183,10 @@ val installed_map: state -> version name_map
 (** Return the base packages *)
 val base_packages: name list
 
+(** Return all the collection of installed packages, for all the
+   available packages *)
+val all_installed: state -> package_set
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)
