@@ -308,11 +308,16 @@ let load_env_state call_site =
   let switch = match !OpamGlobals.switch with
     | None   -> OpamFile.Config.switch config
     | Some a -> OpamSwitch.of_string a in
+  let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+  let compiler =
+    try OpamSwitch.Map.find switch aliases
+    with Not_found ->
+      OpamGlobals.error_and_exit
+        "The current switch (%s) is an unknown compiler switch."
+        (OpamSwitch.to_string switch) in
 
   (* evertything else is empty *)
   let repositories = OpamRepositoryName.Map.empty in
-  let aliases = OpamSwitch.Map.empty in
-  let compiler = OpamCompiler.of_string "none" in
   let compiler_version = OpamCompiler.Version.of_string "none" in
   let opams = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
