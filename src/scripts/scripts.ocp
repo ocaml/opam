@@ -2,15 +2,15 @@ comp += [ "-warn-error" "A" ]
 
 begin program "opam-mk-repo"
   files = [ "opam_mk_repo.ml"]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-client" ]
 end
 
 begin program "opam-check"
   files = [ "opam_check.ml" ]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-client" ]
 end
 
 begin program "opam-repo-check"
   files = [ "opam_repo_check.ml" ]
-  requires = [ "opam-lib" ]
+  requires = [ "opam-client" ]
 end
