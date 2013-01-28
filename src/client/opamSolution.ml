@@ -226,7 +226,11 @@ let string_of_commands commands =
 
 let compilation_env t opam =
   let env0 = OpamState.get_full_env t in
-  OpamState.add_to_env t env0 (OpamFile.OPAM.build_env opam)
+  let env1 = [
+    ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
+    ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
+  ] @ env0 in
+  OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
 let proceed_to_delete ~rm_build t nv =
   log "deleting %s" (OpamPackage.to_string nv);
