@@ -484,7 +484,7 @@ let patch =
     if not (Sys.file_exists p) then
       internal_error "Cannot find %s." p;
     let patch ~dryrun n =
-      let opts = if dryrun then ["--dry-run"] else [] in
+      let opts = if dryrun then ["-o"; "/dev/null"] else [] in
       let verbose = if dryrun then Some false else None in
       command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
     let rec aux n =
