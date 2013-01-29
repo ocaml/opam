@@ -462,7 +462,11 @@ let config =
         OpamGlobals.error_and_exit "Missing subcommand"
     | Some `env      -> OpamClient.config_env ~csh
     | Some `list     -> OpamClient.config_list (List.map OpamPackage.Name.of_string params)
-    | Some `var      -> OpamClient.config_variable (OpamVariable.Full.of_string (List.hd params))
+    | Some `var      ->
+      if params = [] then
+        OpamGlobals.error_and_exit "Missing paramater. Usage: 'opam config var <VARIABLE>'"
+      else
+        OpamClient.config_variable (OpamVariable.Full.of_string (List.hd params))
     | Some `subst    -> OpamClient.config_subst (List.map OpamFilename.Base.of_string params)
     | Some `includes -> OpamClient.config_includes ~is_rec (List.map OpamPackage.Name.of_string params)
     | Some `bytecomp -> OpamClient.config (mk ~is_byte:true  ~is_link:false)
