@@ -182,6 +182,41 @@ let with_repository t nv fn =
       (OpamPackage.to_string nv)
   | Some (repo_p, repo) -> fn repo_p repo
 
+let package_repository_map t =
+  OpamPackage.Name.Map.fold (fun n repo_s map ->
+    let all_versions = ref OpamPackage.Version.Set.empty in
+    List.fold_left (fun map r ->
+      let repo = find_repository_name t r in
+      let repo_p = OpamPath.Repository.create t.root repo.repo_name in
+      let available_versions = OpamRepository.versions repo_p n in
+      OpamPackage.Version.Set.fold (fun v map ->
+        if not (OpamPackage.Version.Set.mem v !all_versions) then (
+          all_versions := OpamPackage.Version.Set.add v !all_versions;
+          let nv = OpamPackage.create n v in
+          OpamPackage.Map.add nv repo map
+        ) else
+          map
+      ) available_versions map
+    ) map repo_s
+  ) t.repo_index OpamPackage.Map.empty
+
+(* Sort repositories by priority *)
+let sorted_repositories  t =
+  let repos = OpamRepositoryName.Map.values t.repositories in
+  List.sort OpamRepository.compare repos
+
+let compiler_repository_map t =
+  List.fold_left (fun map repo ->
+    let repo_p = OpamPath.Repository.create t.root repo.repo_name in
+    let comps = OpamRepository.compilers repo_p in
+    OpamCompiler.Set.fold (fun c map ->
+      if OpamCompiler.Map.mem c map then
+        map
+      else
+        OpamCompiler.Map.add c repo map
+    ) comps map
+  ) OpamCompiler.Map.empty (sorted_repositories t)
+
 let is_pinned_aux pinned n =
   OpamPackage.Name.Map.mem n pinned
 
@@ -761,6 +796,29 @@ let print_env_warning ?(add_profile = false) t =
         which_opam
         opam_root
         add_profile
+
+
+(* Add the given packages to the set of package to reinstall. If [all]
+   is set, this is done for ALL the switches (useful when a package
+   change upstream for instance). If not, only the reinstall state of the
+   current switch is changed. *)
+let add_to_reinstall t ~all packages =
+  let aux switch =
+    let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
+    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) in
+    let reinstall =
+      OpamPackage.Set.fold (fun nv reinstall ->
+        if OpamPackage.Set.mem nv installed then
+          OpamPackage.Set.add nv reinstall
+        else
+          reinstall
+      ) packages reinstall in
+    if not (OpamPackage.Set.is_empty reinstall) then
+      OpamFile.Reinstall.write (OpamPath.Switch.reinstall t.root switch) reinstall
+  in
+  if all
+  then OpamSwitch.Map.iter (fun switch _ -> aux switch) t.aliases
+  else aux t.switch
 
 let add_switch root switch compiler =
   log "add_switch switch=%s compiler=%s" (OpamSwitch.to_string switch) (OpamCompiler.to_string compiler);

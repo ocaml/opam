@@ -107,6 +107,8 @@ type compiler = OpamCompiler.t
 
 type compiler_set = OpamCompiler.Set.t
 
+type 'a compiler_map = 'a OpamCompiler.Map.t
+
 type compiler_version = OpamCompiler.Version.t
 
 type opam_version = OpamVersion.t
@@ -146,28 +148,6 @@ let string_of_upload u =
     (OpamFilename.to_string u.upl_opam)
     (OpamFilename.to_string u.upl_descr)
     (OpamFilename.to_string u.upl_archive)
-
-(* Remote arguments *)
-type remote =
-  | RList of bool
-  | RAdd of repository_name * repository_kind * dirname * int option
-  | RRm of repository_name
-  | RPriority of repository_name * int
-
-let string_of_remote = function
-  | RList b -> Printf.sprintf "list(%b)" b
-  | RAdd (r, k, d, p) ->
-    Printf.sprintf "add %s %s %s %s"
-      (OpamRepositoryName.to_string r)
-      (OpamFilename.Dir.to_string d)
-      (string_of_repository_kind k)
-      (match p with None -> "-" | Some p -> string_of_int p)
-  | RRm  r ->
-    Printf.sprintf "rm %s"
-      (OpamRepositoryName.to_string r)
-  | RPriority (r, p) ->
-    Printf.sprintf "priority %s %d"
-      (OpamRepositoryName.to_string r) p
 
 type config = {
   conf_is_rec : bool;

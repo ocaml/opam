@@ -147,6 +147,17 @@ val find_repository_name: state -> repository_name -> repository
 (** Pretty print a map of repositories *)
 val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
+(** Build a map which says in which repository the latest metadata for
+    a given package is. *)
+val package_repository_map: state -> repository package_map
+
+(** Build a map which says in which repository the latest metadata for
+    a given compiler is. *)
+val compiler_repository_map: state -> repository compiler_map
+
+(** Sort repositories by priority *)
+val sorted_repositories: state -> repository list
+
 (** {2 Compilers} *)
 
 (** Return the list of available compilers *)
@@ -215,6 +226,12 @@ val get_pinned_package: state -> name -> package
 
 (** Update pinned package *)
 val update_pinned_package: state -> package -> pin_option -> dirname download
+
+(** Add the given packages to the set of package to reinstall. If [all]
+    is set, this is done for ALL the switches (useful when a package
+    change upstream for instance). If not, only the reinstall state of the
+    current switch is changed. *)
+val add_to_reinstall: state -> all:bool -> package_set -> unit
 
 (** {2 System compilers} *)
 

@@ -80,6 +80,9 @@ type compiler = OpamCompiler.t
 (** Set of compiler names *)
 type compiler_set = OpamCompiler.Set.t
 
+(** Maps of compiler names *)
+type 'a compiler_map = 'a OpamCompiler.Map.t
+
 (** Compiler versions *)
 type compiler_version = OpamCompiler.Version.t
 
@@ -303,16 +306,6 @@ type upload = {
 
 (** Pretty-print *)
 val string_of_upload: upload -> string
-
-(** Remote arguments *)
-type remote =
-  | RList of bool
-  | RAdd of repository_name * repository_kind * dirname * int option
-  | RRm of repository_name
-  | RPriority of repository_name * int
-
-(** Pretty-print or remote args *)
-val string_of_remote: remote -> string
 
 (** Pinned packages options *)
 type pin_option =

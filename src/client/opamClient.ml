@@ -919,91 +919,6 @@ let upload upload repo =
   OpamFilename.rmdir (OpamPath.Repository.package upload_repo nv);
   OpamFilename.remove (OpamPath.Repository.archive upload_repo nv)
 
-let rec repository action =
-  log "repository %s" (string_of_remote action);
-  let t = OpamState.load_state "repository-1" in
-  let update_config repos =
-    let new_config = OpamFile.Config.with_repositories t.config repos in
-    OpamFile.Config.write (OpamPath.config t.root) new_config in
-  let cleanup_repo repo =
-    let repos = OpamRepositoryName.Map.keys t.repositories in
-    update_config (List.filter ((<>) repo) repos);
-    let t = OpamState.load_state "repository-2" in
-    update_repo_index t;
-    OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo)) in
-  match action with
-  | RList short ->
-    if short then (
-      let repos =
-        List.map
-          (fun r -> OpamRepositoryName.to_string r.repo_name)
-          (sorted_repositories t) in
-      let pinned = List.map OpamPackage.Name.to_string (OpamPackage.Name.Map.keys t.pinned) in
-      let all = repos @ pinned in
-      OpamGlobals.msg "%s\n" (String.concat " " all)
-    ) else (
-      let pretty_print r =
-        OpamGlobals.msg "%4d %-7s %10s     %s\n"
-          r.repo_priority
-          (Printf.sprintf "[%s]" (string_of_repository_kind r.repo_kind))
-          (OpamRepositoryName.to_string r.repo_name)
-          (OpamFilename.Dir.to_string r.repo_address) in
-      let repos = sorted_repositories t in
-      List.iter pretty_print repos
-    )
-  | RAdd (name, kind, address, priority) ->
-      let repo = {
-        repo_name     = name;
-        repo_kind     = kind;
-        repo_address  = address;
-        repo_priority = min_int; (* we initially put it as low-priority *)
-      } in
-      if OpamState.mem_repository_name t name then
-        OpamGlobals.error_and_exit
-          "%s is already a remote repository"
-          (OpamRepositoryName.to_string name)
-      else (
-        (try OpamRepository.init repo with
-        | OpamRepository.Unknown_backend ->
-            OpamGlobals.error_and_exit
-              "\"%s\" is not a supported backend"
-              (string_of_repository_kind repo.repo_kind)
-        | e ->
-            cleanup_repo repo.repo_name;
-            raise e);
-        log "Adding %s" (OpamRepository.to_string repo);
-        update_config (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories)
-      );
-      (try
-         update [name];
-         let priority = match priority with
-           | None   -> 10 * (OpamRepositoryName.Map.cardinal t.repositories);
-           | Some p -> p in
-         repository (RPriority (name, priority))
-       with e ->
-         cleanup_repo name;
-         raise e)
-  | RRm name  ->
-      if OpamState.mem_repository_name t name then
-        cleanup_repo name
-      else
-        OpamGlobals.error_and_exit "%s is not a a valid remote name"
-          (OpamRepositoryName.to_string name)
-  | RPriority (name, p) ->
-    if OpamState.mem_repository_name t name then (
-      let config_f = OpamPath.Repository.config (OpamPath.Repository.create t.root name) in
-      let config = OpamFile.Repo_config.read config_f in
-      let config = { config with repo_priority = p } in
-      OpamFile.Repo_config.write config_f config;
-      let repo_index_f = OpamPath.repo_index t.root in
-      let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) t.repo_index in
-      OpamFile.Repo_index.write repo_index_f repo_index;
-      let t = OpamState.load_state "repository-3" in
-      update_repo_index t;
-    ) else
-        OpamGlobals.error_and_exit "%s is not a a valid remote name"
-          (OpamRepositoryName.to_string name)
-
 let pin ~force action =
   log "pin %s" (string_of_pin action);
   let t = OpamState.load_state "pin" in
@@ -1107,6 +1022,103 @@ let upgrade_system_compiler t =
   ) else
     OpamGlobals.exit 1
 
+(* update the repository config file: ~/.opam/repo/<repo>/config *)
+let update_repository_config t repos =
+  let new_config = OpamFile.Config.with_repositories t.config repos in
+  OpamFile.Config.write (OpamPath.config t.root) new_config
+
+(* Remove any remaining of [repo] from OPAM state *)
+let repository_cleanup t repo =
+  let repos = OpamRepositoryName.Map.keys t.repositories in
+  update_repository_config t (List.filter ((<>) repo) repos);
+  let t = OpamState.load_state "repository-cleanup-repo" in
+  update_repo_index t;
+  OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo))
+
+let repository_priority name priority =
+  log "repository-priority";
+  let t = OpamState.load_state "repository-priority" in
+  if OpamState.mem_repository_name t name then (
+    let config_f = OpamPath.Repository.config (OpamPath.Repository.create t.root name) in
+    let config = OpamFile.Repo_config.read config_f in
+    let config = { config with repo_priority = priority } in
+    OpamFile.Repo_config.write config_f config;
+    let repo_index_f = OpamPath.repo_index t.root in
+    let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) t.repo_index in
+    OpamFile.Repo_index.write repo_index_f repo_index;
+    let t = OpamState.load_state "repository-3" in
+    update_repo_index t;
+  ) else
+    OpamGlobals.error_and_exit
+      "%s is not a a valid remote name"
+      (OpamRepositoryName.to_string name)
+
+let repository_add name kind address priority =
+  log "repository-add";
+  let t = OpamState.load_state "repository-add" in
+  let repo = {
+    repo_name     = name;
+    repo_kind     = kind;
+    repo_address  = address;
+    repo_priority = min_int; (* we initially put it as low-priority *)
+  } in
+  if OpamState.mem_repository_name t name then
+    OpamGlobals.error_and_exit
+      "%s is already a remote repository"
+      (OpamRepositoryName.to_string name)
+  else (
+    try OpamRepository.init repo with
+    | OpamRepository.Unknown_backend ->
+      OpamGlobals.error_and_exit
+        "\"%s\" is not a supported backend"
+        (string_of_repository_kind repo.repo_kind)
+    | e ->
+      repository_cleanup t name;
+      raise e
+  );
+  log "Adding %s" (OpamRepository.to_string repo);
+  update_repository_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
+  try
+    update [name];
+    let priority = match priority with
+      | None   -> 10 * (OpamRepositoryName.Map.cardinal t.repositories);
+      | Some p -> p in
+    repository_priority name priority
+  with e ->
+    repository_cleanup t name;
+    raise e
+
+let repository_remove name =
+  log "repository-remove";
+  let t = OpamState.load_state "repository-remove" in
+  if OpamState.mem_repository_name t name then
+    repository_cleanup t name
+  else
+    OpamGlobals.error_and_exit "%s is not a a valid remote name"
+      (OpamRepositoryName.to_string name)
+
+let repository_list ~short =
+  log "repository-list";
+  let t = OpamState.load_state "repository-list" in
+  if short then (
+    let repos =
+      List.map
+        (fun r -> OpamRepositoryName.to_string r.repo_name)
+        (OpamState.sorted_repositories t) in
+    let pinned = List.map OpamPackage.Name.to_string (OpamPackage.Name.Map.keys t.pinned) in
+    let all = repos @ pinned in
+    OpamGlobals.msg "%s\n" (String.concat " " all)
+  ) else (
+    let pretty_print r =
+      OpamGlobals.msg "%4d %-7s %10s     %s\n"
+        r.repo_priority
+        (Printf.sprintf "[%s]" (string_of_repository_kind r.repo_kind))
+        (OpamRepositoryName.to_string r.repo_name)
+        (OpamFilename.Dir.to_string r.repo_address) in
+    let repos = OpamState.sorted_repositories t in
+    List.iter pretty_print repos
+  )
+
 let () =
   OpamState.upgrade_system_compiler := upgrade_system_compiler
 
@@ -1155,8 +1167,17 @@ let update repos =
 let upload u r =
   OpamState.check (Global_lock (fun () -> upload u r))
 
-let repository action =
-  OpamState.check (Global_lock (fun () -> repository action))
+let repository_list ~short =
+  OpamState.check (Global_lock (fun () -> repository_list ~short))
+
+let repository_add name kind address priority =
+  OpamState.check (Global_lock (fun () -> repository_add name kind address priority))
+
+let repository_remove name =
+  OpamState.check (Global_lock (fun () -> repository_remove name))
+
+let repository_priority name priority =
+  OpamState.check (Global_lock (fun () -> repository_priority name priority))
 
 let switch_install quiet switch ocaml_version =
   OpamState.check (Global_lock (fun () -> OpamSwitchCommand.install ~quiet switch ocaml_version))

@@ -459,7 +459,7 @@ let config =
       if env="nv" then
         OpamConfigCommand.env ~csh
       else
-        OpamGlobals.error_and_exit "Missing subcommand"
+        OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
     | Some `env      -> OpamClient.config_env ~csh
     | Some `list     -> OpamClient.config_list (List.map OpamPackage.Name.of_string params)
     | Some `var      ->
@@ -646,22 +646,50 @@ let repository name =
       "INT" "Set the repository priority (bigger is better)"
       Arg.(some int) None in
 
+  let error number usage =
+    let msg = match number with
+      | `missing -> "Missing parameter(s)"
+      | `toomany -> "Too many parameters" in
+    OpamGlobals.error_and_exit "%s. Usage: '%s'" msg usage in
+
+  let usage_add = "opam repository add <NAME> <ADDRESS>" in
+  let usage_list = "opam repository list" in
+  let usage_priority = "opam repository priority <NAME> <INT>" in
+  let usage_remove = "opam repository remove <NANE>" in
+
   let repository global_options command kind priority short params =
     set_global_options global_options;
-    let add name address =
-      let name = OpamRepositoryName.of_string name in
-      let address = OpamRepository.repository_address address in
-      let kind = guess_repository_kind kind address in
-      RAdd (name, kind, address, priority) in
-    let cmd = match command, params with
-      | None          , []
-      | Some `list    , []              -> RList short
-      | Some `priority, [name; p] ->
-        RPriority (OpamRepositoryName.of_string name, int_of_string p)
-       | Some `remove , [name]          -> RRm (OpamRepositoryName.of_string name)
-      | Some `add     , [name; address] -> add name address
-      | _ -> OpamGlobals.error_and_exit "Too many parameters" in
-    OpamClient.repository cmd in
+    let add = function
+      | [] | [_] -> error `missing usage_add
+      | [name;address] ->
+        let name = OpamRepositoryName.of_string name in
+        let address = OpamRepository.repository_address address in
+        let kind = guess_repository_kind kind address in
+        OpamClient.repository_add name kind address priority
+      | _ -> error `toomany usage_add in
+    let list = function
+      | [] -> OpamClient.repository_list ~short
+      | _  -> error `toomany usage_list in
+    let priority = function
+      | [] | [_]  -> error `missing usage_priority
+      | [name; p] ->
+        let name = OpamRepositoryName.of_string name in
+        let priority =
+          try int_of_string p
+          with _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
+        OpamClient.repository_priority name priority
+      | _ -> error `toomany usage_priority in
+    let remove = function
+      | [name] ->
+        let name = OpamRepositoryName.of_string name in
+        OpamClient.repository_remove name
+      | [] -> error `missing usage_remove
+      | _  -> error `toomany usage_remove in
+    match command with
+    | Some `add         -> add params
+    | None | Some `list -> list params
+    | Some `priority    -> priority params
+    | Some   `remove    -> remove params in
 
   Term.(pure repository $global_options $command $repo_kind_flag $priority $print_short_flag $params),
   term_info name  ~doc ~man
