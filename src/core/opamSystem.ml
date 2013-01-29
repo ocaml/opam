@@ -478,23 +478,29 @@ let download ~overwrite ~filename:src ~dirname:dst =
   ) else
     really_download ~overwrite ~src ~dst
 
-let patch =
+let patch p =
   let max_trying = 20 in
-  fun p ->
-    if not (Sys.file_exists p) then
-      internal_error "Cannot find %s." p;
-    let patch ~dryrun n =
-      let opts = if dryrun then ["-o"; "/dev/null"] else [] in
-      let verbose = if dryrun then Some false else None in
-      command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
-    let rec aux n =
-      if n = max_trying then
-        internal_error "Application of %s failed: can not determine the correct patch level." p
-      else if None = try Some (patch ~dryrun:true n) with _ -> None then
-        aux (succ n)
-      else
-        patch ~dryrun:false n in
-    aux 0
+  if not (Sys.file_exists p) then
+    internal_error "Cannot find %s." p;
+  let patch ~dryrun n =
+    let opts = if dryrun then
+        let open OpamGlobals in
+        match Lazy.force OpamGlobals.os with
+        | FreeBSD | OpenBSD     -> [ "-t"; "-C" ]
+        | Unix | Linux | Darwin -> [ "-dry-run" ]
+        | Win32 | Cygwin (* this is probably broken *)
+        | Other _               -> [ "-dry-run" ]
+      else [] in
+    let verbose = if dryrun then Some false else None in
+    command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
+  let rec aux n =
+    if n = max_trying then
+      internal_error "Application of %s failed: can not determine the correct patch level." p
+    else if None = try Some (patch ~dryrun:true n) with _ -> None then
+      aux (succ n)
+    else
+      patch ~dryrun:false n in
+  aux 0
 
 let () =
   Printexc.register_printer (function
