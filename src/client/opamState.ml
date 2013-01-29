@@ -780,6 +780,7 @@ let install_conf_ocaml_config root switch =
 
     map OpamFilename.Dir.to_string
       [
+        ("root", root);
         ("prefix", OpamPath.Switch.root root switch);
         ("lib", OpamPath.Switch.lib_dir root switch);
         ("bin", OpamPath.Switch.bin root switch);
