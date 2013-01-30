@@ -167,28 +167,6 @@ let update_repo_index t =
     ) repo_s
   ) repo_index
 
-(* Add the given packages to the set of package to reinstall. If [all]
-   is set, this is done for ALL the switches (useful when a package
-   change upstream for instance). If not, only the reinstall state of the
-   current switch is changed. *)
-let add_to_reinstall t ~all packages =
-  let aux switch =
-    let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
-    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) in
-    let reinstall =
-      OpamPackage.Set.fold (fun nv reinstall ->
-        if OpamPackage.Set.mem nv installed then
-          OpamPackage.Set.add nv reinstall
-        else
-          reinstall
-      ) packages reinstall in
-    if not (OpamPackage.Set.is_empty reinstall) then
-      OpamFile.Reinstall.write (OpamPath.Switch.reinstall t.root switch) reinstall
-  in
-  if all
-  then OpamSwitch.Map.iter (fun switch _ -> aux switch) t.aliases
-  else aux t.switch
-
 (* sync the repositories, display the new compilers, and create
    compiler description file links *)
 (* XXX: the compiler things should splitted out, but the handling of
@@ -304,7 +282,7 @@ let update_packages t ~show_packages repositories =
 
   let updated = OpamPackage.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall for all installed switches *)
-  add_to_reinstall ~all:true t updated;
+  OpamState.add_to_reinstall ~all:true t updated;
 
   (* Check all the dependencies exist *)
   let t = OpamState.load_state "update-packages-2" in
@@ -931,7 +909,7 @@ let pin ~force action =
       OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
       OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv));
     ) packages;
-    if force then add_to_reinstall t ~all:false packages;
+    if force then OpamState.add_to_reinstall t ~all:false packages;
     OpamFile.Pinned.write pin_f pins in
 
   match action.pin_option with
