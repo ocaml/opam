@@ -487,9 +487,9 @@ let patch p =
         let open OpamGlobals in
         match Lazy.force OpamGlobals.os with
         | FreeBSD | OpenBSD     -> [ "-t"; "-C" ]
-        | Unix | Linux | Darwin -> [ "-dry-run" ]
+        | Unix | Linux | Darwin -> [ "--dry-run" ]
         | Win32 | Cygwin (* this is probably broken *)
-        | Other _               -> [ "-dry-run" ]
+        | Other _               -> [ "--dry-run" ]
       else [] in
     let verbose = if dryrun then Some false else None in
     command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
