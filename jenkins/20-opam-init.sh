@@ -5,3 +5,4 @@ cd src_ext && make distclean
 ./configure --prefix=$HOME/opam-bin/$PREFIX
 make
 make install
+make tests
