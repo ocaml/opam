@@ -1,4 +1,4 @@
-include ../Makefile.config
+-include ../Makefile.config
 
 CUDF     = cudf-0.6.3
 EXTLIB   = extlib-1.5.3
