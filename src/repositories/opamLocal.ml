@@ -20,19 +20,19 @@ let log fmt = OpamGlobals.log "RSYNC" fmt
 
 let rsync ?(delete=true) src dst =
   log "rsync: delete:%b src:%s dst:%s" delete src dst;
-  if src <> dst then (
-    OpamSystem.mkdir src;
-    OpamSystem.mkdir dst;
-    let delete = if delete then ["--delete"] else [] in
-    try
+  if Sys.file_exists src then (
+    if src <> dst then (
+      OpamSystem.mkdir src;
+      OpamSystem.mkdir dst;
+      let delete = if delete then ["--delete"] else [] in
       let lines = OpamSystem.read_command_output (["rsync" ; "-arv"; "--exclude"; ".git/*"; "--exclude"; "_darcs/*"; src; dst] @ delete) in
       match OpamMisc.rsync_trim lines with
       | []    -> Up_to_date []
       | lines -> Result lines
-    with _ ->
-      Not_available
+    ) else
+      Up_to_date []
   ) else
-    Up_to_date []
+    Not_available
 
 let rsync_dirs ?delete src dst =
   let src_s = Filename.concat (OpamFilename.Dir.to_string src) "" in
@@ -44,7 +44,7 @@ let rsync_dirs ?delete src dst =
 
 let rsync_file src dst =
   log "rsync_file src=%s dst=%s" (OpamFilename.to_string src) (OpamFilename.to_string dst);
-  try
+  if OpamFilename.exists src then (
     let lines = OpamSystem.read_command_output [
       "rsync"; "-av"; OpamFilename.to_string src; OpamFilename.to_string dst;
     ] in
@@ -55,7 +55,7 @@ let rsync_file src dst =
         OpamSystem.internal_error
           "unknown rsync output: {%s}"
           (String.concat ", " l)
-  with _ ->
+  ) else
     Not_available
 
 module B = struct
@@ -151,4 +151,3 @@ end
 
 let register () =
   OpamRepository.register_backend `local (module B: OpamRepository.BACKEND)
-

@@ -326,7 +326,11 @@ let proceed_to_delete ~rm_build t nv =
   (* Remove .config and .install *)
   log "Removing config and install files";
   OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
-  OpamFilename.remove (OpamPath.Switch.config t.root t.switch name)
+  OpamFilename.remove (OpamPath.Switch.config t.root t.switch name);
+
+  (* Remove the pinned cache *)
+  log "Removing the pinned cache";
+  OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch name)
 
 let proceed_to_delete ~rm_build t nv =
   if not !OpamGlobals.fake then
@@ -350,50 +354,54 @@ let proceed_to_change t nv_old nv =
 
   (* Prepare the package for the build. *)
 
-  extract_package t nv;
-
-  let p_build = OpamPath.Switch.build t.root t.switch nv in
-
-  if not (OpamFilename.exists_dir p_build) then
-    OpamFilename.mkdir p_build;
-
-  (* Substitute the patched files.*)
-  let patches = OpamFile.OPAM.patches opam in
-  OpamFilename.in_dir p_build (fun () ->
-    let all = OpamFile.OPAM.substs opam in
-    let patches =
-      OpamMisc.filter_map (fun (f,_) ->
-        if List.mem f all then Some f else None
-      ) patches in
-    List.iter (OpamState.substitute_file t) patches
-  );
-
-  (* Apply the patches *)
-  List.iter (fun (base, filter) ->
-    let root = OpamPath.Switch.build t.root t.switch nv in
-    let patch = root // OpamFilename.Base.to_string base in
-    if OpamState.eval_filter t filter then (
-      OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
-      OpamFilename.patch patch p_build)
-  ) patches;
-
-  (* Substitute the configuration files. We should be in the right
-     directory to get the correct absolute path for the
-     substitution files (see [substitute_file] and
-     [OpamFilename.of_basename]. *)
-  OpamFilename.in_dir p_build (fun () ->
-    List.iter (OpamState.substitute_file t) (OpamFile.OPAM.substs opam)
-  );
-
-  (* Exec the given commands. *)
-  let exec name f =
-    match OpamState.filter_commands t (f opam) with
-    | []       -> ()
-    | commands ->
-      OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-      let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
-      OpamFilename.exec ~env ~name p_build commands in
   try
+
+    (* This one can raises an exception (for insance an user's CTRL-C
+       when the sync takes too long. *)
+    extract_package t nv;
+
+    let p_build = OpamPath.Switch.build t.root t.switch nv in
+
+    if not (OpamFilename.exists_dir p_build) then
+      OpamFilename.mkdir p_build;
+
+    (* Substitute the patched files.*)
+    let patches = OpamFile.OPAM.patches opam in
+    OpamFilename.in_dir p_build (fun () ->
+      let all = OpamFile.OPAM.substs opam in
+      let patches =
+        OpamMisc.filter_map (fun (f,_) ->
+          if List.mem f all then Some f else None
+        ) patches in
+      List.iter (OpamState.substitute_file t) patches
+    );
+
+    (* Apply the patches *)
+    List.iter (fun (base, filter) ->
+      let root = OpamPath.Switch.build t.root t.switch nv in
+      let patch = root // OpamFilename.Base.to_string base in
+      if OpamState.eval_filter t filter then (
+        OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
+        OpamFilename.patch patch p_build)
+    ) patches;
+
+    (* Substitute the configuration files. We should be in the right
+       directory to get the correct absolute path for the
+       substitution files (see [substitute_file] and
+       [OpamFilename.of_basename]. *)
+    OpamFilename.in_dir p_build (fun () ->
+      List.iter (OpamState.substitute_file t) (OpamFile.OPAM.substs opam)
+    );
+
+    (* Exec the given commands. *)
+    let exec name f =
+      match OpamState.filter_commands t (f opam) with
+      | []       -> ()
+      | commands ->
+        OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
+        let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+        OpamFilename.exec ~env ~name p_build commands in
+
     (* First, we build the package. *)
     exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
 
@@ -407,17 +415,23 @@ let proceed_to_change t nv_old nv =
 
     (* If everyting went fine, finally install the package. *)
     proceed_to_install t nv;
+
   with e ->
+
+    let cause = match e with
+      | Sys.Break -> "was aborted"
+      | _         -> "failed" in
+
     (* We keep the build dir to help debugging *)
     begin match nv_old with
     | None        ->
       OpamGlobals.error
-        "The compilation of %s failed."
-        (OpamPackage.to_string nv)
+        "The compilation of %s %s."
+        (OpamPackage.to_string nv) cause
     | Some nv_old ->
       OpamGlobals.error
-        "The recompilation of %s failed."
-        (OpamPackage.to_string nv_old)
+        "The recompilation of %s %s."
+        (OpamPackage.to_string nv_old) cause
     end;
     proceed_to_delete ~rm_build:false t nv;
     raise e

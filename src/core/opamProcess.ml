@@ -155,49 +155,41 @@ let read_lines f =
   with _ -> []
 
 let wait p =
-  try
-    let rec iter () =
-      let _, status = Unix.waitpid [] p.p_pid in
-      match status with
-        | Unix.WEXITED code ->
-          let duration = Unix.gettimeofday () -. p.p_time in
-          let stdout = option_default [] (option_map read_lines p.p_stdout) in
-          let stderr = option_default [] (option_map read_lines p.p_stderr) in
-          let cleanup =
-            OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ] in
-          let info =
-            make_info ~code ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd
-              ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
-          {
-            r_code     = code;
-            r_duration = duration;
-            r_info     = info;
-            r_stdout   = stdout;
-            r_stderr   = stderr;
-            r_cleanup  = cleanup;
-          }
-        | _ -> iter () in
-    iter ()
-  with e ->
-    OpamGlobals.error "Exception %s in waitpid" (Printexc.to_string e);
-    OpamGlobals.exit 2
+  let rec iter () =
+    let _, status = Unix.waitpid [] p.p_pid in
+    match status with
+    | Unix.WEXITED code ->
+      let duration = Unix.gettimeofday () -. p.p_time in
+      let stdout = option_default [] (option_map read_lines p.p_stdout) in
+      let stderr = option_default [] (option_map read_lines p.p_stderr) in
+      let cleanup =
+        OpamMisc.filter_map (fun x -> x) [ p.p_info; p.p_env; p.p_stderr; p.p_stdout ] in
+      let info =
+        make_info ~code ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd
+          ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
+      {
+        r_code     = code;
+        r_duration = duration;
+        r_info     = info;
+        r_stdout   = stdout;
+        r_stderr   = stderr;
+        r_cleanup  = cleanup;
+      }
+    | _ -> iter () in
+  iter ()
 
 let run ?env ?(verbose=false) ?name cmd args =
-  try
-    let file f = match name with
-      | None   -> None
-      | Some n -> Some (f n) in
-    let stdout_file = file (Printf.sprintf "%s.out") in
-    let stderr_file = file (Printf.sprintf "%s.err") in
-    let env_file    = file (Printf.sprintf "%s.env") in
-    let info_file   = file (Printf.sprintf "%s.info") in
-    let env = match env with Some e -> e | None -> Unix.environment () in
+  let file f = match name with
+    | None   -> None
+    | Some n -> Some (f n) in
+  let stdout_file = file (Printf.sprintf "%s.out") in
+  let stderr_file = file (Printf.sprintf "%s.err") in
+  let env_file    = file (Printf.sprintf "%s.env") in
+  let info_file   = file (Printf.sprintf "%s.info") in
+  let env = match env with Some e -> e | None -> Unix.environment () in
 
-    let p = create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose cmd args in
-    wait p
-  with e ->
-    OpamGlobals.error "Exception %s in run" (Printexc.to_string e);
-    OpamGlobals.exit 4
+  let p = create ~env ?info_file ?env_file ?stdout_file ?stderr_file ~verbose cmd args in
+  wait p
 
 let is_success r = r.r_code = 0
 

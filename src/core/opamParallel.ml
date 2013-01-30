@@ -130,7 +130,12 @@ module Make (G : G) = struct
           (string_of_pids pids);
         aux ()
       ) in
-    aux ()
+
+    try aux ()
+    with Sys.Break as e ->
+      OpamGlobals.msg " Interrupted!\n";
+      ignore (aux ());
+      raise e
 
   exception Errors of (G.V.t * error) list * G.V.t list
 
@@ -228,6 +233,7 @@ module Make (G : G) = struct
         | 0   ->
             log "Spawning a new process";
             Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
+            Sys.catch_break true;
             let return p =
               let to_parent = open_out_bin error_file in
               write_error to_parent p;
