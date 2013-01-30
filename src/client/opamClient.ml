@@ -47,43 +47,30 @@ let print_updated t updated pinned_updated =
     ) updated_packages
   )
 
-let print_compilers t compilers repo =
-  let repo_str = OpamRepositoryName.to_string repo.repo_name in
-  let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-  let repo_compilers = OpamRepository.compilers repo_p in
+let print_compilers ~old_compilers ~new_compilers =
+  let print comp = OpamGlobals.msg " - %s\n" (OpamCompiler.to_string comp) in
   let (--) = OpamCompiler.Set.diff in
-  let new_compilers = repo_compilers -- compilers in
-  if not (OpamCompiler.Set.is_empty new_compilers) then
-    OpamGlobals.msg "New compiler descriptions available in %s:\n" repo_str;
-  OpamCompiler.Set.iter (fun v ->
-    OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
-  ) new_compilers;
-  let all_compilers =
-    OpamRepositoryName.Map.fold (fun repo _ set ->
-      let repo_p = OpamPath.Repository.create t.root repo in
-      let repo_compilers = OpamRepository.compilers repo_p in
-      OpamCompiler.Set.union repo_compilers set;
-    ) t.repositories OpamCompiler.Set.empty in
-  let del_compilers = compilers -- all_compilers -- (OpamCompiler.Set.singleton OpamCompiler.default) in
-  if not (OpamCompiler.Set.is_empty del_compilers) then
-    OpamGlobals.msg "Some compilers are not available anymore in %s:\n" repo_str;
-  OpamCompiler.Set.iter (fun v ->
-    OpamGlobals.msg " - %s\n" (OpamCompiler.to_string v)
-  ) del_compilers
+  let default = OpamCompiler.Set.singleton OpamCompiler.default in
+  let added_compilers = new_compilers -- old_compilers -- default in
+  let deleted_compilers = old_compilers -- new_compilers -- default in
+  if not (OpamCompiler.Set.is_empty added_compilers) then (
+    OpamGlobals.msg "New compiler descriptions available:\n";
+    OpamCompiler.Set.iter print added_compilers;
+  );
+  if not (OpamCompiler.Set.is_empty deleted_compilers) then (
+    OpamGlobals.msg "Some compilers are not available anymore:\n";
+    OpamCompiler.Set.iter print deleted_compilers
+  )
 
 let compare_repo t r1 r2 =
   OpamRepository.compare
     (OpamRepositoryName.Map.find r1 t.repositories)
     (OpamRepositoryName.Map.find r2 t.repositories)
 
-let sorted_repositories  t =
-  let repos = OpamRepositoryName.Map.values t.repositories in
-  List.sort OpamRepository.compare repos
-
 let update_repo_index t =
 
   (* Update repo_index *)
-  let repositories = sorted_repositories t in
+  let repositories = OpamState.sorted_repositories t in
 
   (* Add new repositories *)
   let repo_index =
@@ -118,54 +105,33 @@ let update_repo_index t =
 
   (* Write ~/.opam/repo/index *)
   OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index;
+  let t = { t with repo_index } in
 
   (* suppress previous links, but keep metadata of installed packages
      (because you need them to uninstall the package) *)
   let all_installed = OpamState.all_installed t in
   OpamPackage.Set.iter (fun nv ->
     if not (OpamPackage.Set.mem nv all_installed) then (
-      let opam_g = OpamPath.opam t.root nv in
-      let descr_g = OpamPath.descr t.root nv in
-      let archive_g = OpamPath.archive t.root nv in
-      OpamFilename.remove opam_g;
-      OpamFilename.remove descr_g;
-      OpamFilename.remove archive_g;
-    );
+      List.iter
+        (fun f -> OpamFilename.remove (f t.root nv))
+        [ OpamPath.opam; OpamPath.descr; OpamPath.archive ]
+    )
   ) t.packages;
 
   (* Create symbolic links from $repo dirs to main dir *)
-  OpamPackage.Name.Map.iter (fun n repo_s ->
-    let all_versions = ref OpamPackage.Version.Set.empty in
-    List.iter (fun r ->
-      let repo = OpamState.find_repository_name t r in
+  let map = OpamState.package_repository_map t in
+  OpamPackage.Map.iter (fun nv repo ->
       let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-      let available_versions = OpamRepository.versions repo_p n in
-      OpamPackage.Version.Set.iter (fun v ->
-        if not (OpamPackage.Version.Set.mem v !all_versions) then (
-          all_versions := OpamPackage.Version.Set.add v !all_versions;
-          let nv = OpamPackage.create n v in
-          let opam_g = OpamPath.opam t.root nv in
-          let descr_g = OpamPath.descr t.root nv in
-          let archive_g = OpamPath.archive t.root nv in
-          let opam_r = OpamPath.Repository.opam repo_p nv in
-          let descr_r = OpamPath.Repository.descr repo_p nv in
-          let archive_r = OpamPath.Repository.archive repo_p nv in
-          (* clean-up previous versions *)
-          OpamFilename.remove opam_g;
-          OpamFilename.remove descr_g;
-          OpamFilename.remove archive_g;
-          (* update global files *)
-          if OpamFilename.exists opam_r then (
-            OpamFilename.link opam_r opam_g;
-            if OpamFilename.exists descr_r then
-              OpamFilename.link descr_r descr_g;
-            if OpamFilename.exists archive_r then
-              OpamFilename.link archive_r archive_g;
-          )
-        )
-      ) available_versions
-    ) repo_s
-  ) repo_index
+      List.iter (fun (g, r) ->
+        let global_file = g t.root nv in
+        let repo_file = r repo_p nv in
+        OpamFilename.remove global_file;
+        if OpamFilename.exists repo_file then
+          OpamFilename.link ~src:repo_file ~dst:global_file
+      ) OpamPath.([ (opam   , Repository.opam);
+                    (descr  , Repository.descr);
+                    (archive, Repository.archive) ])
+  ) map
 
 (* sync the repositories, display the new compilers, and create
    compiler description file links *)
@@ -180,18 +146,15 @@ let update_repositories t ~show_compilers repositories =
     OpamRepository.update repo
   ) repositories;
 
-  (* Display the new compilers available *)
-  OpamRepositoryName.Map.iter (fun _ repo ->
-    if show_compilers then
-      print_compilers t old_compilers repo
-  ) repositories;
-
-  let current = OpamState.compilers t in
-  let deleted = OpamCompiler.Set.diff old_compilers current in
+  let new_compilers =
+    (* We get all the compiler description new available *)
+    let map = OpamState.compiler_repository_map t in
+    OpamCompiler.Set.of_list (OpamCompiler.Map.keys map) in
 
   (* Delete compiler descritions, but keep the ones who disapeared and
      are still installed *)
   (* keep if: =system || (deleted && used) *)
+  let deleted = OpamCompiler.Set.diff old_compilers new_compilers in
   OpamCompiler.Set.iter (fun comp ->
     if comp <> OpamCompiler.default
     && not (OpamCompiler.Set.mem comp deleted
@@ -201,25 +164,26 @@ let update_repositories t ~show_compilers repositories =
         OpamFilename.remove comp_f;
         OpamFilename.remove descr_f;
       )
-  ) current;
+  ) (OpamState.compilers t);
 
   (* Link existing compiler description files, following the
      repository priorities *)
-  List.iter (fun repo ->
+  let map = OpamState.compiler_repository_map t in
+  OpamCompiler.Map.iter (fun comp repo ->
     let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-    let comps = OpamRepository.compilers repo_p in
-    let comp_dir = OpamPath.compilers_dir t.root in
-    OpamCompiler.Set.iter (fun o ->
-      let comp_g = OpamPath.compiler t.root o in
-      let comp_r = OpamPath.Repository.compiler repo_p o in
-      if not (OpamFilename.exists comp_g) && OpamFilename.exists comp_r then
-        OpamFilename.link_in comp_r comp_dir;
-      let descr_g = OpamPath.compiler_descr t.root o in
-      let descr_r = OpamPath.Repository.compiler_descr repo_p o in
-      if not (OpamFilename.exists descr_g) && OpamFilename.exists descr_r then
-        OpamFilename.link_in descr_r comp_dir;
-    ) comps
-  ) (sorted_repositories t)
+    List.iter (fun (g, r) ->
+      let global_file = g t.root comp in
+      let repo_file = r repo_p comp in
+      OpamFilename.remove global_file;
+      if OpamFilename.exists repo_file then
+        OpamFilename.link ~src:repo_file ~dst:global_file
+    ) OpamPath.([ (compiler      , Repository.compiler);
+                  (compiler_descr, Repository.compiler_descr) ])
+  ) map;
+
+  (* Display the new compilers available *)
+  if show_compilers then
+    print_compilers ~old_compilers ~new_compilers
 
 (* Update the package contents, display the new packages and update reinstall *)
 let update_packages t ~show_packages repositories =
@@ -890,9 +854,9 @@ let upload upload repo =
   let upload_opam = OpamPath.Repository.opam upload_repo nv in
   let upload_descr = OpamPath.Repository.descr upload_repo nv in
   let upload_archives = OpamPath.Repository.archive upload_repo nv in
-  OpamFilename.copy upload.upl_opam upload_opam;
-  OpamFilename.copy upload.upl_descr upload_descr;
-  OpamFilename.copy upload.upl_archive upload_archives;
+  OpamFilename.copy ~src:upload.upl_opam ~dst:upload_opam;
+  OpamFilename.copy ~src:upload.upl_descr ~dst:upload_descr;
+  OpamFilename.copy ~src:upload.upl_archive ~dst:upload_archives;
   OpamRepository.upload repo;
   OpamFilename.rmdir (OpamPath.Repository.package upload_repo nv);
   OpamFilename.remove (OpamPath.Repository.archive upload_repo nv)

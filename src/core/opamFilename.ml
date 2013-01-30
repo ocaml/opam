@@ -67,20 +67,20 @@ let exec dirname ?env ?name cmds =
   in_dir dirname
     (fun () -> OpamSystem.commands ?env ?name cmds)
 
-let move_dir src dst =
+let move_dir ~src ~dst =
   OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]
 
-let copy_dir src dst =
+let copy_dir ~src ~dst =
   with_tmp_dir (fun tmp ->
     OpamSystem.command [ "rsync"; "-a"; Filename.concat (Dir.to_string src) "/"; Dir.to_string tmp ];
     match list_dirs tmp with
     | [f] ->
       rmdir dst;
-      move_dir f dst
+      move_dir ~src:f ~dst
     | _ -> OpamGlobals.error_and_exit "Error while copying %s to %s" (Dir.to_string src) (Dir.to_string dst)
   )
 
-let link_dir src dst =
+let link_dir ~src ~dst =
   rmdir dst;
   let tmp_dst = Filename.concat (Filename.basename src) (Filename.basename dst) in
   let base = Filename.dirname dst in
@@ -181,13 +181,13 @@ let list_files d =
   let fs = OpamSystem.rec_files (Dir.to_string d) in
   List.map of_string fs
 
-let copy src dst =
+let copy ~src ~dst =
   OpamSystem.copy (to_string src) (to_string dst)
 
-let move src dst =
+let move ~src ~dst =
   OpamSystem.command [ "mv"; to_string src; to_string dst ]
 
-let link src dst =
+let link ~src ~dst =
 (*  if Lazy.force OpamGlobals.os = OpamGlobals.Win32 then
     copy src dst
   else *)
@@ -196,7 +196,7 @@ let link src dst =
 let process_in fn src dst =
   let src_s = to_string src in
   let dst = Filename.concat (Dir.to_string dst) (Filename.basename src_s) in
-  fn src (of_string dst)
+  fn ~src ~dst:(of_string dst)
 
 let copy_in = process_in copy
 

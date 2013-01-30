@@ -49,14 +49,14 @@ let make_state ~download_index remote_dir =
     let index =
       if download_index then (
         if OpamFilename.exists local_index_file then
-          OpamFilename.move local_index_file local_index_file_save;
+          OpamFilename.move ~src:local_index_file ~dst:local_index_file_save;
         try
           let file = OpamFilename.download ~overwrite:false remote_index_file local_dir in
           OpamFilename.remove local_index_file_save;
           file;
         with e ->
           if OpamFilename.exists local_index_file_save then
-            OpamFilename.move local_index_file_save local_index_file;
+            OpamFilename.move ~src:local_index_file_save ~dst:local_index_file;
           raise e
       ) else
         local_index_file in

@@ -491,7 +491,7 @@ let print_stats () =
   List.iter (Printf.printf "load-state: %.2fs\n") !loads
 
 let load_state call_site =
-  log "LOAD-STATE(%s)\n" call_site;
+  log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
   log "load_state root=%s" (OpamFilename.Dir.to_string root);
@@ -918,7 +918,7 @@ let install_compiler t ~quiet switch compiler =
       let build_dir = OpamPath.Switch.build_ocaml t.root switch in
       let comp_src_raw = OpamFilename.to_string comp_src in
       if Sys.file_exists comp_src_raw && Sys.is_directory comp_src_raw then
-        OpamFilename.link_dir (OpamFilename.Dir.of_string comp_src_raw) build_dir
+        OpamFilename.link_dir ~src:(OpamFilename.Dir.of_string comp_src_raw) ~dst:build_dir
       else if Sys.file_exists comp_src_raw then
         OpamFilename.extract comp_src build_dir
       else OpamFilename.with_tmp_dir (fun download_dir ->

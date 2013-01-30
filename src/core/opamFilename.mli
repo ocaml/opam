@@ -40,13 +40,13 @@ val in_dir: Dir.t -> (unit -> 'a) -> 'a
 val exec: Dir.t -> ?env:(string * string) list -> ?name:string -> string list list -> unit
 
 (** Move a directory *)
-val move_dir: Dir.t -> Dir.t -> unit
+val move_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Copy a directory *)
-val copy_dir: Dir.t -> Dir.t -> unit
+val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Link a directory *)
-val link_dir: Dir.t -> Dir.t -> unit
+val link_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Does the directory existsb ? *)
 val exists_dir: Dir.t -> bool
@@ -112,16 +112,16 @@ val with_contents: (string -> 'a) -> t -> 'a
 val copy_in: t -> Dir.t -> unit
 
 (** Move a file *)
-val move: t -> t -> unit
+val move: src:t -> dst:t -> unit
 
 (** Symlink a file in a directory *)
 val link_in: t -> Dir.t -> unit
 
 (** Copy a file *)
-val copy: t -> t -> unit
+val copy: src:t -> dst:t -> unit
 
 (** Symlink a file. If symlink is not possible on the system, use copy instead. *)
-val link: t -> t -> unit
+val link: src:t -> dst:t -> unit
 
 (** Extract an archive in a given directory (it rewrites the root to
     match [Dir.t] dir if needed) *)

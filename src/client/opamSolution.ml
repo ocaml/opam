@@ -128,18 +128,18 @@ let proceed_to_install t nv =
       let dst = OpamPath.Switch.bin t.root t.switch // OpamFilename.Base.to_string dst in
       (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
       if check src  (OpamPath.Switch.bin t.root t.switch) then
-        OpamFilename.copy src.c dst;
+        OpamFilename.copy ~src:src.c ~dst;
     ) (OpamFile.Dot_install.bin install);
 
     (* misc *)
     List.iter
       (fun (src, dst) ->
         if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
-          OpamFilename.copy src.c dst
+          OpamFilename.copy ~src:src.c ~dst
         else begin
           OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.to_string src.c) (OpamFilename.to_string dst);
           if OpamState.confirm "Continue ?" then
-            OpamFilename.copy src.c dst
+            OpamFilename.copy ~src:src.c ~dst
         end
       ) (OpamFile.Dot_install.misc install);
 
@@ -150,7 +150,7 @@ let proceed_to_install t nv =
       (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
       if not (OpamFilename.exists_dir share) then
         OpamFilename.mkdir share;
-      OpamFilename.copy src.c dst;
+      OpamFilename.copy ~src:src.c ~dst;
     ) (OpamFile.Dot_install.share install);
 
     if !warnings <> [] then (
@@ -181,7 +181,7 @@ let get_archive t nv =
     let src = OpamPath.Repository.archive repo_p nv in
     let dst = OpamPath.archive t.root nv in
     if OpamFilename.exists src then (
-      OpamFilename.link src dst;
+      OpamFilename.link ~src ~dst;
       Some dst
     ) else
       None in
@@ -208,7 +208,7 @@ let extract_package t nv =
     let _files = OpamState.with_repository t nv (fun repo _ ->
       OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
     ) in
-    OpamFilename.link_dir pinned_dir build_dir
+    OpamFilename.link_dir ~src:pinned_dir ~dst:build_dir
   | _ ->
     match get_archive t nv with
     | None         -> ()
