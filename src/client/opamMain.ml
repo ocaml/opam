@@ -965,8 +965,12 @@ let () =
     begin match e with
     | OpamGlobals.Exit i -> exit_code := i
     | OpamSystem.Internal_error _
-    | OpamSystem.Process_error _ -> Printf.eprintf "%s\n" (Printexc.to_string e);
-    | _ -> Printf.fprintf stderr "Fatal error: exception %s\n" (Printexc.to_string e)
+    | OpamSystem.Process_error _ ->
+      Printf.eprintf "%s\n" (Printexc.to_string e);
+      Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
+    | Sys.Break -> exit_code := 1
+    | _ ->
+      Printf.fprintf stderr "Fatal error: exception %s\n" (Printexc.to_string e);
+      Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
     end;
-    Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
     exit !exit_code
