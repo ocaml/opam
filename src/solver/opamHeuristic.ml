@@ -58,11 +58,12 @@ let minimize_actions interesting_packages actions =
    components is equal to n.  For instance: init [1;2;1] 3 is
    [0;2;1] *)
 let init ~bounds n =
-  let rec zero n =
+  let rec zero acc n =
     if n > 0 then
-      0 :: zero (n-1)
+      zero (0 :: acc) (n-1)
     else
-      [] in
+      acc in
+  let zero = zero [] in
   let rec aux = function
     | 0, []   -> Some []
     | 0, l    -> Some (zero (List.length l))
@@ -128,7 +129,7 @@ let exploration_timeout = 5.
    package have the maximum version, then on all the states where at
    all the package have their maximum version but one which has the
    second version, etc... *)
-let explore f upgrade_tbl =
+let explore resolve upgrade_tbl =
   let default_conflict = Conflicts (fun _ -> assert false)  in
   let upgrades =
     Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
@@ -139,7 +140,8 @@ let explore f upgrade_tbl =
   let count = ref 0 in
   let interval = 500 in
   let flush_output () =
-    if !count >= interval then OpamGlobals.msg "[%d]\n" !count in
+    if !count >= interval then
+      OpamGlobals.msg " an optimal solution has been found after exploring %d states.\n" !count in
   let rec aux = function
     | None   ->
       log "no better solution found";
@@ -157,11 +159,16 @@ let explore f upgrade_tbl =
       if !count mod interval = interval - 1 then
         OpamGlobals.msg ".";
       if t1 -. t0 > exploration_timeout then (
-        if !count >= interval - 1 then OpamGlobals.msg "T";
+        if !count >= interval - 1 then
+          OpamGlobals.msg
+            " brute-force exploration timed-out [%d states, %.2gs].\n\
+             You might need to add explicit version constraints to your request to get a better answer.\n"
+            !count exploration_timeout;
         default_conflict
-      ) else match f constrs with
-      | Success _ as s -> flush_output (); s
-      | _              -> aux (succ ~bounds t) in
+      ) else
+        match resolve constrs with
+        | Success _ as s -> flush_output (); s
+        | Conflicts _    -> aux (succ ~bounds t) in
   aux (init ~bounds 0)
 
 let filter_dependencies universe constrs =
@@ -207,9 +214,10 @@ let resolve universe request =
 
        - if the package has no version constraints in the request, or
        if the package does not appear in the initial request, then we
-       consider only the versions greater or equals to the one
-       proposed by the solver.
-
+       consider only the versions:
+         + greater or equals to the one proposed by the solver;
+         + lesser or equals to the max versions installable in the
+           intersection of transitive dependencies.
     *)
     let upgrade_tbl = Hashtbl.create 1024 in
     let version_constraint =
@@ -217,6 +225,45 @@ let resolve universe request =
       function name ->
         try List.assoc name l
         with Not_found -> None in
+    let package_versions =
+      let tbl = Hashtbl.create 1024 in
+      List.iter (fun pkg ->
+        let pkgs =
+          try Hashtbl.find tbl pkg.Cudf.package
+          with Not_found -> [] in
+        Hashtbl.add tbl pkg.Cudf.package (pkg :: pkgs)
+      ) (Cudf.get_packages universe);
+      tbl in
+    (* We keep only the packages which do not block the installation
+       of other packages. *)
+    let interesting_packages = filter_dependencies universe request.wish_upgrade in
+    let keep_consistent_packages = function
+      | [] -> []
+      | pkg::_ as pkgs ->
+        let name = pkg.Cudf.package in
+        let module S = OpamMisc.StringSet in
+        let module H = Common.CudfAdd.Cudf_hashtbl in
+        let names = ref S.empty in
+        let get_names pkg =
+          let deps = Algo.Depsolver.reverse_dependency_closure universe [pkg] in
+          List.fold_left (fun set p ->
+            let name = p.Cudf.package in
+            if name <> pkg.Cudf.package &&
+               S.mem name interesting_packages then (
+              S.add name set
+            ) else
+              set
+          ) S.empty deps in
+        List.iter (fun pkg ->
+          assert (pkg.Cudf.package = name);
+          let ns = get_names pkg in
+          names := S.union !names ns;
+        ) pkgs;
+        List.filter (fun pkg ->
+          let ns = get_names pkg in
+          let diff = S.diff !names ns in
+          diff = S.empty
+          ) pkgs in
     let add_to_upgrade name =
       if not (Hashtbl.mem upgrade_tbl name) then
         match version_constraint name with
@@ -225,13 +272,14 @@ let resolve universe request =
           match initial_version name with
           | None             -> ()
           | Some min_version ->
-            let packages =
-              Cudf.get_packages
-                ~filter:(fun p -> p.Cudf.package = name && p.Cudf.version >= min_version)
-                universe in
+            let packages = Hashtbl.find package_versions name in
+            let packages = List.filter (fun pkg -> pkg.Cudf.version >= min_version) packages in
             let packages = List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
-            let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
-            Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
+            match keep_consistent_packages packages with
+            | []       -> ()
+            | packages ->
+              let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
+              Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
 
     (* Compute the set of minimizable packages, eg. the ones which are
        maybe not necessary to get a correct solution (ie. we will
@@ -251,7 +299,6 @@ let resolve universe request =
     ) diff;
 
     (* Register the interesting packages (eg. the ones we want to optimize) *)
-    let interesting_packages = filter_dependencies universe request.wish_upgrade in
     log "resolve: interesting_packages=%s" (OpamMisc.StringSet.to_string interesting_packages);
     OpamMisc.StringSet.iter (fun n -> add_to_upgrade n) interesting_packages;
 
@@ -271,17 +318,31 @@ let resolve universe request =
         p.Cudf.package, constr
       ) installed in
 
+    let packages = Cudf.get_packages universe in
+    let packages_of_request request =
+      List.filter (fun pkg ->
+        if pkg.Cudf.installed then
+          true
+        else if List.mem_assoc pkg.Cudf.package request then
+          match List.assoc pkg.Cudf.package request with
+          | Some (`Eq, v) -> pkg.Cudf.version = v
+          | _ -> false
+        else
+          false
+      ) packages in
+
     let resolve wish_upgrade =
       let request = { request with wish_install; wish_upgrade } in
+      let packages = packages_of_request wish_upgrade in
+      let universe = Cudf.load_universe packages in
       (* log "explore: request=%s" (OpamCudf.string_of_request request); *)
-      OpamCudf.get_final_universe universe request in
+      OpamCudf.get_final_universe ~explain:false universe request in
 
     match explore resolve upgrade_tbl with
     | Conflicts _ ->
       log "no optimized solution found";
       OpamCudf.resolve universe request
     | Success u   ->
-      log "succes=%s" (OpamCudf.string_of_universe u);
       try
         let diff = OpamCudf.Diff.diff universe (minimize_universe !minimizable u) in
         let actions = OpamCudf.actions_of_diff diff in

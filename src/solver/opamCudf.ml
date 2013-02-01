@@ -255,13 +255,13 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-let call_external_solver univ req =
+let call_external_solver ~explain univ req =
   let cudf_request = to_cudf univ req in
   dump_cudf_request cudf_request;
   match Lazy.force aspcud_path with
   | None ->
     (* No external solver is available, use the default one *)
-    Algo.Depsolver.check_request ~explain:true cudf_request
+    Algo.Depsolver.check_request ~explain cudf_request
   | Some path ->
   if Cudf.universe_size univ > 0 then begin
     let cmd = aspcud_command path in
@@ -271,10 +271,9 @@ let call_external_solver univ req =
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
 (* Return the universe in which the system has to go *)
-let get_final_universe univ req =
-  log "get_final_universe req=%s" (string_of_request req);
+let get_final_universe ?(explain=true) univ req =
   let open Algo.Depsolver in
-  match call_external_solver univ req with
+  match call_external_solver ~explain univ req with
   | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
   | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->
@@ -341,7 +340,6 @@ let resolve universe request =
   match get_final_universe universe request with
   | Conflicts e -> Conflicts e
   | Success u   ->
-    log "resolve success=%s" (string_of_universe u);
     try
       let diff = Diff.diff universe u in
       Success (actions_of_diff diff)

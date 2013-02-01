@@ -65,8 +65,11 @@ val backward_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package li
     sorted in topological order *)
 val forward_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
 
-(** Compute the final universe state *)
+(** Compute the final universe state. If [explain] is set, a nice
+   explanation is given in case of conflicts, which makes the function
+   call is bit slower (by default [explain] is set to [true]). *)
 val get_final_universe:
+  ?explain:bool ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.universe, Algo.Diagnostic.reason list) result
