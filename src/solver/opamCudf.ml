@@ -271,9 +271,9 @@ let call_external_solver ~explain univ req =
     Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
 (* Return the universe in which the system has to go *)
-let get_final_universe ?(explain=true) univ req =
+let get_final_universe univ req =
   let open Algo.Depsolver in
-  match call_external_solver ~explain univ req with
+  match call_external_solver ~explain:true univ req with
   | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
   | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->

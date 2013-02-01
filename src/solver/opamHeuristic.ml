@@ -336,7 +336,7 @@ let resolve universe request =
       let packages = packages_of_request wish_upgrade in
       let universe = Cudf.load_universe packages in
       (* log "explore: request=%s" (OpamCudf.string_of_request request); *)
-      OpamCudf.get_final_universe ~explain:false universe request in
+      OpamCudf.get_final_universe universe request in
 
     match explore resolve upgrade_tbl with
     | Conflicts _ ->
