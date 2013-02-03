@@ -19,7 +19,7 @@ open OpamMisc.OP
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 
-let print_updated t updated pinned_updated =
+let print_updated_packages t updated pinned_updated =
   let new_packages =
     OpamPackage.Set.filter (fun nv -> not (OpamPackage.Set.mem nv t.installed)) updated in
   let updated_packages =
@@ -47,7 +47,7 @@ let print_updated t updated pinned_updated =
     ) updated_packages
   )
 
-let print_compilers ~old_compilers ~new_compilers =
+let print_updated_compilers ~old_compilers ~new_compilers =
   let print comp = OpamGlobals.msg " - %s\n" (OpamCompiler.to_string comp) in
   let (--) = OpamCompiler.Set.diff in
   let default = OpamCompiler.Set.singleton OpamCompiler.default in
@@ -183,7 +183,7 @@ let update_repositories t ~show_compilers repositories =
 
   (* Display the new compilers available *)
   if show_compilers then
-    print_compilers ~old_compilers ~new_compilers
+    print_updated_compilers ~old_compilers ~new_compilers
 
 (* Update the package contents, display the new packages and update reinstall *)
 let update_packages t ~show_packages repositories =
@@ -242,7 +242,7 @@ let update_packages t ~show_packages repositories =
       )
     ) t.repo_index OpamPackage.Set.empty in
   if show_packages then
-    print_updated t updated pinned_updated;
+    print_updated_packages t updated pinned_updated;
 
   let updated = OpamPackage.Set.union pinned_updated updated in
   (* update $opam/$oversion/reinstall for all installed switches *)
@@ -499,7 +499,7 @@ let dry_upgrade () =
   log "dry-upgrade";
   let t = OpamState.load_state "dry-upgrade" in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
-  let solution = OpamSolution.resolve t (Upgrade reinstall)
+  let solution = OpamSolution.resolve ~verbose:false t (Upgrade reinstall)
     { wish_install = [];
       wish_remove  = [];
       wish_upgrade = OpamSolution.atoms_of_packages t.installed } in

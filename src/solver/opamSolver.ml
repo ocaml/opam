@@ -184,7 +184,7 @@ let cleanup_request req =
   let wish_install = List.filter (fun (n,_) -> not (List.mem n update_packages)) req.wish_install in
   { req with wish_install }
 
-let resolve universe request =
+let resolve ?(verbose=true) universe request =
   log "resolve universe=%s" (OpamPackage.Set.to_string universe.u_available);
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
@@ -193,7 +193,7 @@ let resolve universe request =
   let resolve =
     if OpamCudf.external_solver_available ()
     then OpamCudf.resolve
-    else OpamHeuristic.resolve in
+    else OpamHeuristic.resolve ~verbose in
   match resolve simple_universe cudf_request with
   | Conflicts c     -> Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam (c ()))
   | Success actions ->

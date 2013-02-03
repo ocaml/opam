@@ -44,7 +44,9 @@ val print_solution: solution -> unit
     Every element in the solution [list] satisfies the problem given.
     For the ordering, the first element in the list
     is obtained by upgrading from its next element. *)
-val resolve : universe -> atom request -> (solution, string) result
+val resolve :
+  ?verbose:bool ->
+  universe -> atom request -> (solution, string) result
 
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)

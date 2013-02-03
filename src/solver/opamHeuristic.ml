@@ -129,7 +129,7 @@ let exploration_timeout = 5.
    package have the maximum version, then on all the states where at
    all the package have their maximum version but one which has the
    second version, etc... *)
-let explore resolve upgrade_tbl =
+let explore ?(verbose=true) resolve upgrade_tbl =
   let default_conflict = Conflicts (fun _ -> assert false)  in
   let upgrades =
     Hashtbl.fold (fun pkg constrs acc -> (pkg, constrs) :: acc) upgrade_tbl [] in
@@ -140,7 +140,7 @@ let explore resolve upgrade_tbl =
   let count = ref 0 in
   let interval = 500 in
   let flush_output () =
-    if !count >= interval then
+    if verbose && !count >= interval then
       OpamGlobals.msg " an optimal solution has been found after exploring %d states.\n" !count in
   let rec aux = function
     | None   ->
@@ -156,10 +156,10 @@ let explore resolve upgrade_tbl =
         (OpamFormula.string_of_conjunction OpamCudf.string_of_atom constrs); *)
       incr count;
       let t1 = Unix.time () in
-      if !count mod interval = interval - 1 then
+      if verbose && !count mod interval = interval - 1 then
         OpamGlobals.msg ".";
       if t1 -. t0 > exploration_timeout then (
-        if !count >= interval - 1 then
+        if verbose && !count >= interval - 1 then
           OpamGlobals.msg
             " brute-force exploration timed-out [%d states, %.2gs].\n\
              You might need to add explicit version constraints to your request to get a better answer.\n"
@@ -185,7 +185,7 @@ let filter_dependencies universe constrs =
   OpamMisc.StringSet.of_list (List.map (fun p -> p.Cudf.package) packages)
 
 (* Try to play all the possible upgrade scenarios ... *)
-let resolve universe request =
+let resolve ?(verbose=true) universe request =
   match OpamCudf.get_final_universe universe request with
 
   | Conflicts e ->
@@ -338,7 +338,7 @@ let resolve universe request =
       (* log "explore: request=%s" (OpamCudf.string_of_request request); *)
       OpamCudf.get_final_universe universe request in
 
-    match explore resolve upgrade_tbl with
+    match explore ~verbose resolve upgrade_tbl with
     | Conflicts _ ->
       log "no optimized solution found";
       OpamCudf.resolve universe request

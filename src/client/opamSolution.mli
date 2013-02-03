@@ -19,6 +19,7 @@ open OpamTypes
 
 (** Resolve an user request *)
 val resolve:
+  ?verbose:bool ->
   OpamState.state ->
   user_action ->
   atom request ->

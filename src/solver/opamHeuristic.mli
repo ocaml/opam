@@ -19,6 +19,7 @@ open OpamTypes
 
 (** Optimized resolution *)
 val resolve:
+  ?verbose:bool ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
   (Cudf.package action list, Algo.Diagnostic.reason list) result

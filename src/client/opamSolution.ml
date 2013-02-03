@@ -729,8 +729,8 @@ let print_variable_warnings () =
     variable_warnings := true;
   )
 
-let resolve t action request =
-  OpamSolver.resolve (OpamState.universe t action) request
+let resolve ?(verbose=true) t action request =
+  OpamSolver.resolve ~verbose (OpamState.universe t action) request
 
 let resolve_and_apply ?(force=false) t action request =
   match resolve t action request with

@@ -854,17 +854,19 @@ let print_env_warning ?(add_profile = false) t =
 let add_to_reinstall t ~all packages =
   let aux switch =
     let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
-    let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch) in
     let reinstall =
-      OpamPackage.Set.fold (fun nv reinstall ->
-        if OpamPackage.Set.mem nv installed then
-          OpamPackage.Set.add nv reinstall
-        else
-          reinstall
-      ) packages reinstall in
+      OpamPackage.Set.union
+        (OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall t.root switch))
+        packages in
+    let reinstall =
+      OpamPackage.Set.filter (fun nv ->
+        OpamPackage.Set.mem nv installed
+      ) reinstall in
+    let file = OpamPath.Switch.reinstall t.root switch in
     if not (OpamPackage.Set.is_empty reinstall) then
-      OpamFile.Reinstall.write (OpamPath.Switch.reinstall t.root switch) reinstall
-  in
+      OpamFile.Reinstall.write file reinstall
+    else
+      OpamFilename.remove file in
   if all
   then OpamSwitch.Map.iter (fun switch _ -> aux switch) t.aliases
   else aux t.switch
