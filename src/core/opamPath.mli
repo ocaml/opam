@@ -28,6 +28,9 @@ val default: unit -> t
 (** Root dir: {i $opam/} *)
 val root: t -> dirname
 
+(** State cache *)
+val state_cache: t -> filename
+
 (** lock file *)
 val lock: t -> filename
 

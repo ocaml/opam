@@ -25,6 +25,8 @@ let root t = t
 
 let config t = t // "config"
 
+let state_cache t = t // "state.cache"
+
 let opam_dir t = t / "opam"
 
 let lock t = t // "lock"

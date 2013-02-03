@@ -140,7 +140,7 @@ let update_repo_index t =
 let update_repositories t ~show_compilers repositories =
   log "update_repositories %s" (OpamState.string_of_repositories repositories);
 
-  let old_compilers = OpamState.compilers t in
+  let old_compilers = OpamState.compilers ~root:t.root in
 
   OpamRepositoryName.Map.iter (fun _ repo ->
     OpamRepository.update repo
@@ -164,7 +164,7 @@ let update_repositories t ~show_compilers repositories =
         OpamFilename.remove comp_f;
         OpamFilename.remove descr_f;
       )
-  ) (OpamState.compilers t);
+  ) (OpamState.compilers ~root:t.root);
 
   (* Link existing compiler description files, following the
      repository priorities *)
@@ -319,7 +319,7 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
           let nv = OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
           None, nv
         ) in
-      let descr_f = OpamFile.Descr.safe_read (OpamPath.descr t.root nv) in
+      let descr_f = OpamPackage.Map.find nv t.descrs in
       let synopsis = OpamFile.Descr.synopsis descr_f in
       let descr = OpamFile.Descr.full descr_f in
       OpamPackage.Name.Map.add name (version, synopsis, descr) map
@@ -464,7 +464,8 @@ let info ~fields regexps =
       | Some d -> ["doc",d] in
 
     let descr =
-      let d = OpamFile.Descr.full (OpamFile.Descr.safe_read (OpamPath.descr t.root nv)) in
+      let d = OpamPackage.Map.find nv t.descrs in
+      let d = OpamFile.Descr.full d in
       let short, long = match OpamMisc.cut_at d '\n' with
         | None       -> OpamMisc.strip d, ""
         | Some (s,l) -> s, OpamMisc.strip l in
@@ -588,6 +589,8 @@ let update repos =
   || pinned_packages_need_update then
     update_packages t ~show_packages:true repositories;
 
+  OpamState.reset_state_cache t.root;
+
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
   | Some stats ->
@@ -639,6 +642,8 @@ let init repo compiler cores =
     let t = OpamState.load_repository_state "init" in
     update_repositories t ~show_compilers:false t.repositories;
 
+    OpamState.reset_state_cache t.root;
+
     (* Load the partial state, and update the packages state *)
     log "updating package state";
     let t = OpamState.load_state "init-1" in
@@ -646,6 +651,8 @@ let init repo compiler cores =
     let quiet = (compiler = OpamCompiler.default) in
     OpamState.install_compiler t ~quiet switch compiler;
     update_packages t ~show_packages:false t.repositories;
+
+    OpamState.reset_state_cache t.root;
 
     (* Finally, load the complete state and install the compiler packages *)
     log "installing compiler packages";

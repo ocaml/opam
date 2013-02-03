@@ -23,7 +23,7 @@ open OpamState.Types
 let list ~print_short ~installed_only =
   log "list";
   let t = OpamState.load_state "switch-list" in
-  let descrs = OpamState.compilers t in
+  let descrs = OpamState.compilers ~root:t.root in
   let descr c =
     if c = OpamCompiler.default then
       Printf.sprintf "System compiler (%s)" (OpamCompiler.Version.to_string t.compiler_version)

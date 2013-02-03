@@ -19,6 +19,11 @@ open OpamTypes
 
 (** Client state *)
 type state = {
+
+  (** Is the state partial ?
+  TODO: split-up global vs. repository state *)
+  partial: bool;
+
   (** The global OPAM root path *)
   root: OpamPath.t;
 
@@ -33,6 +38,9 @@ type state = {
 
   (** The list of OPAM files *)
   opams: OpamFile.OPAM.t package_map;
+
+  (** The list of description files *)
+  descrs: OpamFile.Descr.t package_map;
 
   (** The list of repositories *)
   repositories: OpamFile.Repo_config.t repository_name_map;
@@ -70,6 +78,9 @@ type state = {
 (** Load the client state. The string argument is to identify to call
    site. *)
 val load_state: string -> state
+
+(** Reset the state cache. *)
+val reset_state_cache: dirname -> unit
 
 (** Display stats *)
 val print_stats: unit -> unit
@@ -161,7 +172,7 @@ val sorted_repositories: state -> repository list
 (** {2 Compilers} *)
 
 (** Return the list of available compilers *)
-val compilers: state -> compiler_set
+val compilers: root:dirname -> compiler_set
 
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
@@ -256,11 +267,13 @@ val check_base_packages: state -> unit
 (** To be able to open [OpamState.Types] *)
 module Types: sig
   type t = state = {
+    partial: bool;
     root: OpamPath.t;
     switch: switch;
     compiler: compiler;
     compiler_version: compiler_version;
     opams: OpamFile.OPAM.t package_map;
+    descrs: OpamFile.Descr.t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     packages: package_set;
     available_packages: package_set Lazy.t;

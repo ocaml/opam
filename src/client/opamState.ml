@@ -61,11 +61,13 @@ let unknown_compiler compiler =
     (OpamCompiler.to_string compiler)
 
 type state = {
+  partial: bool;
   root: OpamPath.t;
   switch: switch;
   compiler: compiler;
   compiler_version: compiler_version;
   opams: OpamFile.OPAM.t package_map;
+  descrs: OpamFile.Descr.t package_map;
   repositories: OpamFile.Repo_config.t repository_name_map;
   packages: package_set;
   available_packages: package_set Lazy.t;
@@ -103,8 +105,8 @@ let print_state t =
   log "ROOTS     : %s" (OpamPackage.Set.to_string t.installed_roots);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
-let compilers t =
-  OpamCompiler.list (OpamPath.compilers_dir t.root)
+let compilers ~root =
+  OpamCompiler.list (OpamPath.compilers_dir root)
 
 let opam t nv =
   try OpamPackage.Map.find nv t.opams
@@ -315,12 +317,14 @@ let load_repository_state call_site =
   let switch = match !OpamGlobals.switch with
     | None   -> OpamFile.Config.switch config
     | Some a -> OpamSwitch.of_string a in
+  let partial = true in
 
   (* evertything else is empty *)
   let aliases = OpamSwitch.Map.empty in
   let compiler = OpamCompiler.of_string "none" in
   let compiler_version = OpamCompiler.Version.of_string "none" in
   let opams = OpamPackage.Map.empty in
+  let descrs = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
   let available_packages = lazy OpamPackage.Set.empty in
   let installed = OpamPackage.Set.empty in
@@ -329,7 +333,7 @@ let load_repository_state call_site =
   let repo_index = OpamPackage.Name.Map.empty in
   let pinned = OpamPackage.Name.Map.empty in
   {
-    root; switch; compiler; compiler_version; repositories; opams;
+    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
     packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   }
@@ -350,11 +354,13 @@ let load_env_state call_site =
       OpamGlobals.error_and_exit
         "The current switch (%s) is an unknown compiler switch."
         (OpamSwitch.to_string switch) in
+  let partial = true in
 
   (* evertything else is empty *)
   let repositories = OpamRepositoryName.Map.empty in
   let compiler_version = OpamCompiler.Version.of_string "none" in
   let opams = OpamPackage.Map.empty in
+  let descrs = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
   let available_packages = lazy OpamPackage.Set.empty in
   let installed = OpamPackage.Set.empty in
@@ -363,7 +369,7 @@ let load_env_state call_site =
   let repo_index = OpamPackage.Name.Map.empty in
   let pinned = OpamPackage.Name.Map.empty in
   {
-    root; switch; compiler; compiler_version; repositories; opams;
+    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
     packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   }
@@ -490,11 +496,47 @@ let loads = ref []
 let print_stats () =
   List.iter (Printf.printf "load-state: %.2fs\n") !loads
 
+type cache = OpamFile.OPAM.t package_map * OpamFile.Descr.t package_map
+
+let save_state t =
+  let file = OpamPath.state_cache t.root in
+  if OpamFilename.exists file then (
+    OpamGlobals.msg
+      "Updating the cache of metadata (%s)\n."
+      (OpamFilename.to_string file);
+    OpamFilename.remove file;
+  ) else
+    OpamGlobals.msg
+      "Creating a cache of metadata in %s\n"
+      (OpamFilename.to_string file);
+  let oc = open_out_bin (OpamFilename.to_string file) in
+  Marshal.to_channel oc (t.opams, t.descrs) [];
+  close_out oc
+
+let reset_state_cache root =
+  let file = OpamPath.state_cache root in
+  OpamFilename.remove file
+
 let load_state call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
-  log "load_state root=%s" (OpamFilename.Dir.to_string root);
+  let opams, descrs =
+    let file = OpamPath.state_cache root in
+    if OpamFilename.exists file then
+      try
+        let ic = open_in_bin (OpamFilename.to_string file) in
+        let (opams, descrs: cache) = Marshal.from_channel ic in
+        close_in ic;
+        Some opams, Some descrs
+      with _ ->
+        None, None
+    else
+      None, None in
+  let cached = opams <> None in
+  let partial = false in
+
+  log "load_state root=%s cached=%b" (OpamFilename.Dir.to_string root) cached;
 
   let config_p = OpamPath.config root in
   let config =
@@ -535,14 +577,20 @@ let load_state call_site =
     if not (OpamFilename.exists comp_f) then
       unknown_compiler compiler;
     OpamFile.Comp.version (OpamFile.Comp.read comp_f) in
-  let opams =
+  let package_files fn =
     OpamPackage.Set.fold (fun nv map ->
       try
-        let opam = OpamFile.OPAM.read (OpamPath.opam root nv) in
-        OpamPackage.Map.add nv opam map
+        let file = fn root nv in
+        OpamPackage.Map.add nv file map
       with _ ->
         map
     ) (OpamPackage.list (OpamPath.opam_dir root)) OpamPackage.Map.empty in
+  let opams = match opams with
+    | None   -> package_files (fun root nv -> OpamFile.OPAM.read (OpamPath.opam root nv))
+    | Some o -> o in
+  let descrs = match descrs with
+    | None   -> package_files (fun root nv -> OpamFile.Descr.safe_read (OpamPath.descr root nv))
+    | Some d -> d in
   let repositories =
     List.fold_left (fun map repo ->
       let repo_p = OpamPath.Repository.create root repo in
@@ -562,11 +610,12 @@ let load_state call_site =
   let available_packages =
     lazy (available_packages root opams installed repositories repo_index compiler_version pinned packages) in
   let t = {
-    root; switch; compiler; compiler_version; repositories; opams;
+    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
     packages; available_packages; installed; installed_roots; reinstall;
     repo_index; config; aliases; pinned;
   } in
   print_state t;
+  if not cached then save_state t;
   let t1 = Unix.gettimeofday () in
   loads :=  (t1 -. t0) :: !loads;
   (* Check whether the system compiler has been updated *)
@@ -1024,11 +1073,13 @@ let check f =
 
 module Types = struct
   type t = state = {
+    partial: bool;
     root: OpamPath.t;
     switch: switch;
     compiler: compiler;
     compiler_version: compiler_version;
     opams: OpamFile.OPAM.t package_map;
+    descrs: OpamFile.Descr.t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     packages: package_set;
     available_packages: package_set Lazy.t;
