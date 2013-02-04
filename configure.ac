@@ -8,6 +8,10 @@ AC_PROG_OCAML
 if test "$OCAMLC" = "no"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
+AC_PROG_CAMLP4
+if test "$CAMLP4" = "no"; then
+   AC_MSG_ERROR([You must install the Camlp4 pre-processor])
+fi
 
 AC_ARG_ENABLE(version-check,
  [  --disable-version-check            do not check OCaml version],
