@@ -245,7 +245,8 @@ let resolve ?(verbose=true) universe request =
         let module H = Common.CudfAdd.Cudf_hashtbl in
         let names = ref S.empty in
         let get_names pkg =
-          let deps = Algo.Depsolver.reverse_dependency_closure universe [pkg] in
+          let rdeps = Algo.Depsolver.reverse_dependency_closure universe [pkg] in
+          let deps = Algo.Depsolver.dependency_closure universe [pkg] in
           List.fold_left (fun set p ->
             let name = p.Cudf.package in
             if name <> pkg.Cudf.package &&
@@ -253,7 +254,7 @@ let resolve ?(verbose=true) universe request =
               S.add name set
             ) else
               set
-          ) S.empty deps in
+          ) S.empty (deps @ rdeps) in
         List.iter (fun pkg ->
           assert (pkg.Cudf.package = name);
           let ns = get_names pkg in
@@ -263,7 +264,7 @@ let resolve ?(verbose=true) universe request =
           let ns = get_names pkg in
           let diff = S.diff !names ns in
           diff = S.empty
-          ) pkgs in
+        ) pkgs in
     let add_to_upgrade name =
       if not (Hashtbl.mem upgrade_tbl name) then
         match version_constraint name with
@@ -334,8 +335,12 @@ let resolve ?(verbose=true) universe request =
     let resolve wish_upgrade =
       let request = { request with wish_install; wish_upgrade } in
       let packages = packages_of_request wish_upgrade in
+      let packages = Algo.Depsolver.dependency_closure universe packages in
+      let pkgs = List.filter (fun pkg ->
+          try Array.length (Hashtbl.find upgrade_tbl pkg.Cudf.package) > 1
+          with _ -> false
+        ) packages in
       let universe = Cudf.load_universe packages in
-      (* log "explore: request=%s" (OpamCudf.string_of_request request); *)
       OpamCudf.get_final_universe universe request in
 
     match explore ~verbose resolve upgrade_tbl with
