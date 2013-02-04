@@ -336,10 +336,6 @@ let resolve ?(verbose=true) universe request =
       let request = { request with wish_install; wish_upgrade } in
       let packages = packages_of_request wish_upgrade in
       let packages = Algo.Depsolver.dependency_closure universe packages in
-      let pkgs = List.filter (fun pkg ->
-          try Array.length (Hashtbl.find upgrade_tbl pkg.Cudf.package) > 1
-          with _ -> false
-        ) packages in
       let universe = Cudf.load_universe packages in
       OpamCudf.get_final_universe universe request in
 
