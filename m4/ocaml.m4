@@ -35,7 +35,7 @@ AC_DEFUN([AC_PROG_OCAML],
      else
 	TMPVERSION=`$OCAMLOPT -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 	if test "$TMPVERSION" != "$OCAMLVERSION" ; then
-	    AC_MSG_RESULT([versions differs from ocamlc; ocamlopt discarded.])
+	    AC_MSG_RESULT([versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlopt discarded.])
 	    OCAMLOPT=no
 	else
 	    OCAMLBEST=opt
@@ -49,7 +49,7 @@ AC_DEFUN([AC_PROG_OCAML],
      if test "$OCAMLCDOTOPT" != "no"; then
 	TMPVERSION=`$OCAMLCDOTOPT -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 	if test "$TMPVERSION" != "$OCAMLVERSION" ; then
-	    AC_MSG_RESULT([versions differs from ocamlc; ocamlc.opt discarded.])
+	    AC_MSG_RESULT([versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlc.opt discarded.])
 	else
 	    OCAMLC=$OCAMLCDOTOPT
 	fi
@@ -61,7 +61,7 @@ AC_DEFUN([AC_PROG_OCAML],
 	if test "$OCAMLOPTDOTOPT" != "no"; then
 	   TMPVERSION=`$OCAMLOPTDOTOPT -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 	   if test "$TMPVERSION" != "$OCAMLVERSION" ; then
-	      AC_MSG_RESULT([version differs from ocamlc; ocamlopt.opt discarded.])
+	      AC_MSG_RESULT([versions differs from ocamlc $TMPVERSION != $OCAMLVERSION; ocamlopt.opt discarded.])
 	   else
 	      OCAMLOPT=$OCAMLOPTDOTOPT
 	   fi
@@ -122,14 +122,13 @@ AC_DEFUN([AC_PROG_CAMLP4],
   if test "$CAMLP4" != "no"; then
      TMPVERSION=`$CAMLP4 -v 2>&1| sed -n -e 's|.*version *\(.*\)$|\1|p'`
      if test "$TMPVERSION" != "$OCAMLVERSION" ; then
-	AC_MSG_RESULT([versions differs from ocamlc])
+	AC_MSG_RESULT([versions differs from ocamlc $TMPVERSION != $OCAMLVERSION.])
         CAMLP4=no
      fi
   fi
   AC_SUBST([CAMLP4])
 
   # checking for companion tools
-  AC_CHECK_TOOL([CAMLP4BOOT],[camlp4boot],[no])
   AC_CHECK_TOOL([CAMLP4O],[camlp4o],[no])
   AC_CHECK_TOOL([CAMLP4OF],[camlp4of],[no])
   AC_CHECK_TOOL([CAMLP4OOF],[camlp4oof],[no])
@@ -137,7 +136,6 @@ AC_DEFUN([AC_PROG_CAMLP4],
   AC_CHECK_TOOL([CAMLP4PROF],[camlp4prof],[no])
   AC_CHECK_TOOL([CAMLP4R],[camlp4r],[no])
   AC_CHECK_TOOL([CAMLP4RF],[camlp4rf],[no])
-  AC_SUBST([CAMLP4BOOT])
   AC_SUBST([CAMLP4O])
   AC_SUBST([CAMLP4OF])
   AC_SUBST([CAMLP4OOF])
