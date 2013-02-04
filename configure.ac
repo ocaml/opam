@@ -10,7 +10,7 @@ if test "$OCAMLC" = "no"; then
 fi
 AC_PROG_CAMLP4
 if test "$CAMLP4" = "no"; then
-   AC_MSG_ERROR([You must install the Camlp4 pre-processor])
+   AC_MSG_ERROR([You must install the Camlp4 pre-processor. On some operating systems, these are separate packages from the main OCaml compiler, such as camlp4-extra on Debian.])
 fi
 
 AC_ARG_ENABLE(version-check,
