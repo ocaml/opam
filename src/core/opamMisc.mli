@@ -196,3 +196,7 @@ module OP: sig
   val finally: (unit -> 'a) -> (unit -> unit) -> 'a
 
 end
+
+(** When [stdout] refers to a terminal, query the number of columns.
+    Otherwise return [max_int]. *)
+val terminal_columns : unit -> int
