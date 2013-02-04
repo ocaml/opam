@@ -352,17 +352,20 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
     ) names (0,0) in
   OpamPackage.Name.Map.iter (
     if print_short then
-      fun name _ -> OpamGlobals.msg "%s " (OpamPackage.Name.to_string name)
+      fun name _ -> Printf.printf "%s " (OpamPackage.Name.to_string name)
     else
+      let synop_len =
+        let col = OpamMisc.terminal_columns () in
+        max 0 (col - max_n - max_v - 4) in
       fun name (version, synopsis, _) ->
         let name = OpamPackage.Name.to_string name in
         let version = match version with
           | None   -> s_not_installed
           | Some v -> OpamPackage.Version.to_string v in
-        OpamGlobals.msg "%s  %s  %s\n"
+        Printf.printf "%s  %s  %s\n"
           (OpamMisc.indent_left name max_n)
           (OpamMisc.indent_right version max_v)
-          (OpamMisc.sub_at 100 synopsis)
+          (OpamMisc.sub_at synop_len synopsis)
   ) names
 
 let info ~fields regexps =

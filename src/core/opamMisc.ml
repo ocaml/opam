@@ -293,3 +293,36 @@ let pretty_backtrace () =
   | b  ->
     let b = String.concat "\n  " (split b '\n') in
     Printf.sprintf "Backtrace:\n  %s\n" b
+
+
+let default_columns = 100
+
+let with_process_in cmd f =
+  let ic = Unix.open_process_in cmd in
+  try
+    let r = f ic in
+    ignore (Unix.close_process_in ic) ; r
+  with exn ->
+    ignore (Unix.close_process_in ic) ; raise exn
+
+let get_terminal_columns () =
+  try           (* terminfo *)
+    with_process_in "tput cols"
+      (fun ic -> int_of_string (input_line ic))
+  with _ -> try (* GNU stty *)
+    with_process_in "stty size"
+      (fun ic ->
+        match split (input_line ic) ' ' with
+        | [_ ; v] -> int_of_string v
+        | _ -> failwith "stty")
+  with _ -> try (* shell envvar *)
+    int_of_string (getenv "COLUMNS")
+  with _ ->
+    default_columns
+
+let terminal_columns =
+  let v = Lazy.lazy_from_fun get_terminal_columns in
+  fun () ->
+    if Unix.isatty Unix.stdout
+    then Lazy.force v
+    else max_int
