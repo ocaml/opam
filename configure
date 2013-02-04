@@ -635,6 +635,15 @@ OCAMLMKTOP
 OCAMLMKLIB
 OCAMLDOC
 OCAMLBUILD
+CAMLP4
+CAMLP4BOOT
+CAMLP4O
+CAMLP4OF
+CAMLP4OOF
+CAMLP4ORF
+CAMLP4PROF
+CAMLP4R
+CAMLP4RF
 AWK
 FETCH
 fetch
@@ -3629,6 +3638,897 @@ echo "$as_me: error: You must install the OCaml compiler" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
+  # checking for camlp4
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4"; then
+  ac_cv_prog_CAMLP4="$CAMLP4" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4="${ac_tool_prefix}camlp4"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4=$ac_cv_prog_CAMLP4
+if test -n "$CAMLP4"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4" >&5
+echo "${ECHO_T}$CAMLP4" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4"; then
+  ac_ct_CAMLP4=$CAMLP4
+  # Extract the first word of "camlp4", so it can be a program name with args.
+set dummy camlp4; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4"; then
+  ac_cv_prog_ac_ct_CAMLP4="$ac_ct_CAMLP4" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4="camlp4"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4=$ac_cv_prog_ac_ct_CAMLP4
+if test -n "$ac_ct_CAMLP4"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4" = x; then
+    CAMLP4="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4=$ac_ct_CAMLP4
+  fi
+else
+  CAMLP4="$ac_cv_prog_CAMLP4"
+fi
+
+  if test "$CAMLP4" != "no"; then
+     TMPVERSION=`$CAMLP4 -v 2>&1| sed -n -e 's|.*version *\(.*\)$|\1|p'`
+     if test "$TMPVERSION" != "$OCAMLVERSION" ; then
+	{ echo "$as_me:$LINENO: result: versions differs from ocamlc" >&5
+echo "${ECHO_T}versions differs from ocamlc" >&6; }
+        CAMLP4=no
+     fi
+  fi
+
+
+  # checking for companion tools
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4boot", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4boot; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4BOOT+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4BOOT"; then
+  ac_cv_prog_CAMLP4BOOT="$CAMLP4BOOT" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4BOOT="${ac_tool_prefix}camlp4boot"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4BOOT=$ac_cv_prog_CAMLP4BOOT
+if test -n "$CAMLP4BOOT"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4BOOT" >&5
+echo "${ECHO_T}$CAMLP4BOOT" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4BOOT"; then
+  ac_ct_CAMLP4BOOT=$CAMLP4BOOT
+  # Extract the first word of "camlp4boot", so it can be a program name with args.
+set dummy camlp4boot; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4BOOT+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4BOOT"; then
+  ac_cv_prog_ac_ct_CAMLP4BOOT="$ac_ct_CAMLP4BOOT" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4BOOT="camlp4boot"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4BOOT=$ac_cv_prog_ac_ct_CAMLP4BOOT
+if test -n "$ac_ct_CAMLP4BOOT"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4BOOT" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4BOOT" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4BOOT" = x; then
+    CAMLP4BOOT="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4BOOT=$ac_ct_CAMLP4BOOT
+  fi
+else
+  CAMLP4BOOT="$ac_cv_prog_CAMLP4BOOT"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4o", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4o; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4O+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4O"; then
+  ac_cv_prog_CAMLP4O="$CAMLP4O" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4O="${ac_tool_prefix}camlp4o"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4O=$ac_cv_prog_CAMLP4O
+if test -n "$CAMLP4O"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4O" >&5
+echo "${ECHO_T}$CAMLP4O" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4O"; then
+  ac_ct_CAMLP4O=$CAMLP4O
+  # Extract the first word of "camlp4o", so it can be a program name with args.
+set dummy camlp4o; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4O+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4O"; then
+  ac_cv_prog_ac_ct_CAMLP4O="$ac_ct_CAMLP4O" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4O="camlp4o"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4O=$ac_cv_prog_ac_ct_CAMLP4O
+if test -n "$ac_ct_CAMLP4O"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4O" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4O" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4O" = x; then
+    CAMLP4O="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4O=$ac_ct_CAMLP4O
+  fi
+else
+  CAMLP4O="$ac_cv_prog_CAMLP4O"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4of", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4of; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4OF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4OF"; then
+  ac_cv_prog_CAMLP4OF="$CAMLP4OF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4OF="${ac_tool_prefix}camlp4of"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4OF=$ac_cv_prog_CAMLP4OF
+if test -n "$CAMLP4OF"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4OF" >&5
+echo "${ECHO_T}$CAMLP4OF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4OF"; then
+  ac_ct_CAMLP4OF=$CAMLP4OF
+  # Extract the first word of "camlp4of", so it can be a program name with args.
+set dummy camlp4of; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4OF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4OF"; then
+  ac_cv_prog_ac_ct_CAMLP4OF="$ac_ct_CAMLP4OF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4OF="camlp4of"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4OF=$ac_cv_prog_ac_ct_CAMLP4OF
+if test -n "$ac_ct_CAMLP4OF"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4OF" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4OF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4OF" = x; then
+    CAMLP4OF="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4OF=$ac_ct_CAMLP4OF
+  fi
+else
+  CAMLP4OF="$ac_cv_prog_CAMLP4OF"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4oof", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4oof; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4OOF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4OOF"; then
+  ac_cv_prog_CAMLP4OOF="$CAMLP4OOF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4OOF="${ac_tool_prefix}camlp4oof"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4OOF=$ac_cv_prog_CAMLP4OOF
+if test -n "$CAMLP4OOF"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4OOF" >&5
+echo "${ECHO_T}$CAMLP4OOF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4OOF"; then
+  ac_ct_CAMLP4OOF=$CAMLP4OOF
+  # Extract the first word of "camlp4oof", so it can be a program name with args.
+set dummy camlp4oof; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4OOF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4OOF"; then
+  ac_cv_prog_ac_ct_CAMLP4OOF="$ac_ct_CAMLP4OOF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4OOF="camlp4oof"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4OOF=$ac_cv_prog_ac_ct_CAMLP4OOF
+if test -n "$ac_ct_CAMLP4OOF"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4OOF" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4OOF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4OOF" = x; then
+    CAMLP4OOF="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4OOF=$ac_ct_CAMLP4OOF
+  fi
+else
+  CAMLP4OOF="$ac_cv_prog_CAMLP4OOF"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4orf", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4orf; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4ORF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4ORF"; then
+  ac_cv_prog_CAMLP4ORF="$CAMLP4ORF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4ORF="${ac_tool_prefix}camlp4orf"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4ORF=$ac_cv_prog_CAMLP4ORF
+if test -n "$CAMLP4ORF"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4ORF" >&5
+echo "${ECHO_T}$CAMLP4ORF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4ORF"; then
+  ac_ct_CAMLP4ORF=$CAMLP4ORF
+  # Extract the first word of "camlp4orf", so it can be a program name with args.
+set dummy camlp4orf; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4ORF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4ORF"; then
+  ac_cv_prog_ac_ct_CAMLP4ORF="$ac_ct_CAMLP4ORF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4ORF="camlp4orf"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4ORF=$ac_cv_prog_ac_ct_CAMLP4ORF
+if test -n "$ac_ct_CAMLP4ORF"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4ORF" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4ORF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4ORF" = x; then
+    CAMLP4ORF="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4ORF=$ac_ct_CAMLP4ORF
+  fi
+else
+  CAMLP4ORF="$ac_cv_prog_CAMLP4ORF"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4prof", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4prof; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4PROF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4PROF"; then
+  ac_cv_prog_CAMLP4PROF="$CAMLP4PROF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4PROF="${ac_tool_prefix}camlp4prof"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4PROF=$ac_cv_prog_CAMLP4PROF
+if test -n "$CAMLP4PROF"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4PROF" >&5
+echo "${ECHO_T}$CAMLP4PROF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4PROF"; then
+  ac_ct_CAMLP4PROF=$CAMLP4PROF
+  # Extract the first word of "camlp4prof", so it can be a program name with args.
+set dummy camlp4prof; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4PROF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4PROF"; then
+  ac_cv_prog_ac_ct_CAMLP4PROF="$ac_ct_CAMLP4PROF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4PROF="camlp4prof"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4PROF=$ac_cv_prog_ac_ct_CAMLP4PROF
+if test -n "$ac_ct_CAMLP4PROF"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4PROF" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4PROF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4PROF" = x; then
+    CAMLP4PROF="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4PROF=$ac_ct_CAMLP4PROF
+  fi
+else
+  CAMLP4PROF="$ac_cv_prog_CAMLP4PROF"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4r", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4r; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4R+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4R"; then
+  ac_cv_prog_CAMLP4R="$CAMLP4R" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4R="${ac_tool_prefix}camlp4r"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4R=$ac_cv_prog_CAMLP4R
+if test -n "$CAMLP4R"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4R" >&5
+echo "${ECHO_T}$CAMLP4R" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4R"; then
+  ac_ct_CAMLP4R=$CAMLP4R
+  # Extract the first word of "camlp4r", so it can be a program name with args.
+set dummy camlp4r; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4R+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4R"; then
+  ac_cv_prog_ac_ct_CAMLP4R="$ac_ct_CAMLP4R" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4R="camlp4r"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4R=$ac_cv_prog_ac_ct_CAMLP4R
+if test -n "$ac_ct_CAMLP4R"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4R" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4R" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4R" = x; then
+    CAMLP4R="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4R=$ac_ct_CAMLP4R
+  fi
+else
+  CAMLP4R="$ac_cv_prog_CAMLP4R"
+fi
+
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}camlp4rf", so it can be a program name with args.
+set dummy ${ac_tool_prefix}camlp4rf; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CAMLP4RF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CAMLP4RF"; then
+  ac_cv_prog_CAMLP4RF="$CAMLP4RF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CAMLP4RF="${ac_tool_prefix}camlp4rf"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CAMLP4RF=$ac_cv_prog_CAMLP4RF
+if test -n "$CAMLP4RF"; then
+  { echo "$as_me:$LINENO: result: $CAMLP4RF" >&5
+echo "${ECHO_T}$CAMLP4RF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CAMLP4RF"; then
+  ac_ct_CAMLP4RF=$CAMLP4RF
+  # Extract the first word of "camlp4rf", so it can be a program name with args.
+set dummy camlp4rf; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CAMLP4RF+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CAMLP4RF"; then
+  ac_cv_prog_ac_ct_CAMLP4RF="$ac_ct_CAMLP4RF" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CAMLP4RF="camlp4rf"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CAMLP4RF=$ac_cv_prog_ac_ct_CAMLP4RF
+if test -n "$ac_ct_CAMLP4RF"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CAMLP4RF" >&5
+echo "${ECHO_T}$ac_ct_CAMLP4RF" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CAMLP4RF" = x; then
+    CAMLP4RF="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CAMLP4RF=$ac_ct_CAMLP4RF
+  fi
+else
+  CAMLP4RF="$ac_cv_prog_CAMLP4RF"
+fi
+
+
+
+
+
+
+
+
+
+
+if test "$CAMLP4" = "no"; then
+   { { echo "$as_me:$LINENO: error: You must install the Camlp4 pre-processor" >&5
+echo "$as_me: error: You must install the Camlp4 pre-processor" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
 # Check whether --enable-version-check was given.
 if test "${enable_version_check+set}" = set; then
   enableval=$enable_version_check; VERSION_CHECK="$enableval"
@@ -4464,6 +5364,15 @@ OCAMLMKTOP!$OCAMLMKTOP$ac_delim
 OCAMLMKLIB!$OCAMLMKLIB$ac_delim
 OCAMLDOC!$OCAMLDOC$ac_delim
 OCAMLBUILD!$OCAMLBUILD$ac_delim
+CAMLP4!$CAMLP4$ac_delim
+CAMLP4BOOT!$CAMLP4BOOT$ac_delim
+CAMLP4O!$CAMLP4O$ac_delim
+CAMLP4OF!$CAMLP4OF$ac_delim
+CAMLP4OOF!$CAMLP4OOF$ac_delim
+CAMLP4ORF!$CAMLP4ORF$ac_delim
+CAMLP4PROF!$CAMLP4PROF$ac_delim
+CAMLP4R!$CAMLP4R$ac_delim
+CAMLP4RF!$CAMLP4RF$ac_delim
 AWK!$AWK$ac_delim
 FETCH!$FETCH$ac_delim
 fetch!$fetch$ac_delim
@@ -4471,7 +5380,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 62; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 71; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
