@@ -243,8 +243,8 @@ let address_of_string address =
   else raw_dir address
 
 let with_flock file f x =
+  OpamSystem.flock (to_string file);
   try
-    OpamSystem.flock (to_string file);
     let r = f x in
     OpamSystem.funlock (to_string file);
     r
