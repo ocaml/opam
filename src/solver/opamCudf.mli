@@ -121,5 +121,8 @@ val string_of_request: Cudf_types.vpkg request -> string
 (** Pretty-print the universe *)
 val string_of_universe: Cudf.universe -> string
 
+(** Pretty-print of packages *)
+val string_of_packages: Cudf.package list -> string
+
 (** {2 External solver} *)
 val external_solver_available: unit -> bool
