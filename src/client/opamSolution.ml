@@ -661,7 +661,15 @@ let apply_solution ?(force = false) t action sol =
         if !OpamGlobals.fake then
           OpamGlobals.msg "Simulation complete.\n";
         OK
-      with PackageActionGraph.Parallel.Errors (errors, remaining) ->
+      with
+      | PackageActionGraph.Parallel.Cyclic actions ->
+        let packages = List.map action_contents actions in
+        let strings = List.map OpamPackage.to_string packages in
+        OpamGlobals.error
+          "Aborting, as the following packages have a cyclic dependency: %s"
+          (String.concat ", " strings);
+        Aborted
+      | PackageActionGraph.Parallel.Errors (errors, remaining) ->
         OpamGlobals.msg "\n";
         if remaining <> [] then (
           OpamGlobals.error

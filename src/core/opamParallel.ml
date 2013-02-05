@@ -40,7 +40,7 @@ module type SIG = sig
     unit
 
   exception Errors of (G.V.t * error) list * G.V.t list
-
+  exception Cyclic of G.V.t list
 end
 
 module Make (G : G) = struct
@@ -105,7 +105,6 @@ module Make (G : G) = struct
      by [Unix.fork]. [wait pids] waits until a process in [pids]
      terminates. *)
   (* XXX: this will not work under windows *)
-
   let string_of_pids pids =
     Printf.sprintf "{%s}"
       (String.concat ","
@@ -138,6 +137,7 @@ module Make (G : G) = struct
       raise e
 
   exception Errors of (G.V.t * error) list * G.V.t list
+  exception Cyclic of G.V.t list
 
   let (--) = S.diff
   let (++) = S.union
@@ -158,6 +158,9 @@ module Make (G : G) = struct
       with _ -> Internal_error "Cannot read the error file" in
     close_in ic;
     r
+
+  let is_cyclic t =
+    S.is_empty t.roots && G.nb_vertex t.graph <> 0
 
   let parallel_iter n g ~pre ~child ~post =
     let t = ref (init g) in
@@ -183,6 +186,9 @@ module Make (G : G) = struct
 
     (* nslots is the number of free slots *)
     let rec loop nslots =
+
+      if is_cyclic !t then
+        raise (Cyclic (G.fold_vertex (fun v l -> v::l) !t.graph []));
 
       if OpamMisc.IntMap.is_empty !pids
       && (S.is_empty !t.roots || not (M.is_empty !errors) && !t.roots =|= error_nodes ()) then

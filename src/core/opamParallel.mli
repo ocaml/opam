@@ -44,6 +44,9 @@ module type SIG = sig
   (** Errors ([errors], [remaining]) *)
   exception Errors of (G.V.t * error) list * G.V.t list
 
+  (** The graph is cyclic. *)
+  exception Cyclic of G.V.t list
+
 end
 
 (** Functor *)
