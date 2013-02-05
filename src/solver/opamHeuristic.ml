@@ -247,12 +247,7 @@ let resolve ?(verbose=true) universe request =
         let get_names pkg =
           let rdeps = Algo.Depsolver.reverse_dependency_closure universe [pkg] in
           let rdeps = S.of_list (List.map (fun p -> p.Cudf.package) rdeps) in
-          let deps = Algo.Depsolver.dependency_closure universe [pkg] in
-          let deps = S.of_list (List.map (fun p -> p.Cudf.package) deps) in
-          if not (S.is_empty (S.inter rdeps deps)) then
-            S.empty
-          else
-            S.inter (S.union rdeps deps) interesting_packages in
+          S.inter rdeps interesting_packages in
         List.iter (fun pkg ->
           assert (pkg.Cudf.package = name);
           let ns = get_names pkg in
