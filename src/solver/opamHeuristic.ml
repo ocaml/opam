@@ -245,9 +245,18 @@ let resolve ?(verbose=true) universe request =
         let module H = Common.CudfAdd.Cudf_hashtbl in
         let names = ref S.empty in
         let get_names pkg =
-          let rdeps = Algo.Depsolver.reverse_dependency_closure universe [pkg] in
-          let rdeps = S.of_list (List.map (fun p -> p.Cudf.package) rdeps) in
-          S.inter rdeps interesting_packages in
+          let set l =
+            let p = S.singleton pkg.Cudf.package in
+            let s = S.of_list (List.map (fun p -> p.Cudf.package) l) in
+            S.diff s p in
+          let rdeps = set (Algo.Depsolver.reverse_dependency_closure universe [pkg]) in
+          let deps = set (Algo.Depsolver.reverse_dependency_closure universe [pkg]) in
+          if not (S.is_empty (S.inter deps rdeps)) then
+            (* cyclic dependencies *)
+            S.empty
+          else
+            (* in normal cases only consider reverse deps *)
+            S.inter rdeps interesting_packages in
         List.iter (fun pkg ->
           assert (pkg.Cudf.package = name);
           let ns = get_names pkg in
