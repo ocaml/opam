@@ -327,7 +327,7 @@ let check_version repo =
       ) repo
     with _ ->
       OpamVersion.of_string "0.7.5" in
-  if OpamVersion.compare repo_version OpamVersion.current >= 0 then
+  if OpamVersion.compare repo_version OpamVersion.current > 0 then
     OpamSystem.internal_error
       "\nThe current version of OPAM cannot read the repository. \
        You should upgrade to at least the version %s.\n" (OpamVersion.to_string repo_version)
