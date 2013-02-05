@@ -514,10 +514,11 @@ let save_state t =
   close_out oc
 
 let reset_state_cache root =
+  OpamGlobals.msg "Reseting the cache of metadata.\n";
   let file = OpamPath.state_cache root in
   OpamFilename.remove file
 
-let load_state call_site =
+let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
@@ -615,7 +616,8 @@ let load_state call_site =
     repo_index; config; aliases; pinned;
   } in
   print_state t;
-  if not cached then save_state t;
+  if save_cache && not cached then
+    save_state t;
   let t1 = Unix.gettimeofday () in
   loads :=  (t1 -. t0) :: !loads;
   (* Check whether the system compiler has been updated *)

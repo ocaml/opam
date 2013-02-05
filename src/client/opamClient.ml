@@ -645,17 +645,13 @@ let init repo compiler cores =
     let t = OpamState.load_repository_state "init" in
     update_repositories t ~show_compilers:false t.repositories;
 
-    OpamState.reset_state_cache t.root;
-
     (* Load the partial state, and update the packages state *)
     log "updating package state";
-    let t = OpamState.load_state "init-1" in
+    let t = OpamState.load_state ~save_cache:false "init-1" in
     let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
     let quiet = (compiler = OpamCompiler.default) in
     OpamState.install_compiler t ~quiet switch compiler;
     update_packages t ~show_packages:false t.repositories;
-
-    OpamState.reset_state_cache t.root;
 
     (* Finally, load the complete state and install the compiler packages *)
     log "installing compiler packages";

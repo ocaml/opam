@@ -77,7 +77,7 @@ type state = {
 
 (** Load the client state. The string argument is to identify to call
    site. *)
-val load_state: string -> state
+val load_state: ?save_cache:bool -> string -> state
 
 (** Reset the state cache. *)
 val reset_state_cache: dirname -> unit
