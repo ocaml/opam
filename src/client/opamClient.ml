@@ -211,6 +211,7 @@ let update_packages t ~show_packages repositories =
   update_repo_index t;
   let t = OpamState.load_state "update-packages-1" in
   let updated =
+    let updated = ref [] in
     OpamPackage.Name.Map.fold (fun n repo_s accu ->
       (* we do not try to update pinned packages *)
       if OpamPackage.Name.Map.mem n t.pinned then
@@ -227,7 +228,14 @@ let update_packages t ~show_packages repositories =
             (OpamPackage.Version.Set.to_string new_versions);
           if not (OpamPackage.Version.Set.is_empty new_versions) then (
             all_versions := OpamPackage.Version.Set.union !all_versions new_versions;
-            let all_updated = OpamFile.Updated.safe_read (OpamPath.Repository.updated repo_p) in
+            let all_updated =
+              if List.mem_assoc repo_p !updated then
+                List.assoc repo_p !updated
+              else (
+                let u = OpamFile.Updated.safe_read (OpamPath.Repository.updated repo_p) in
+                updated := (repo_p, u) :: !updated;
+                u
+              ) in
             let updated =
               OpamPackage.Set.filter (fun nv ->
                 OpamPackage.name nv = n && OpamPackage.Version.Set.mem (OpamPackage.version nv) new_versions
