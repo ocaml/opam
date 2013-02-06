@@ -663,11 +663,12 @@ let apply_solution ?(force = false) t action sol =
         OK
       with
       | PackageActionGraph.Parallel.Cyclic actions ->
-        let packages = List.map action_contents actions in
-        let strings = List.map OpamPackage.to_string packages in
+        let packages = List.map (List.map action_contents) actions in
+        let strings = List.map (List.map OpamPackage.to_string) packages in
+        let mk l = Printf.sprintf " - %s" (String.concat ", " l) in
         OpamGlobals.error
-          "Aborting, as the following packages have a cyclic dependency: %s"
-          (String.concat ", " strings);
+          "Aborting, as the following packages have a cyclic dependency:\n%s"
+          (String.concat "\n" (List.map mk strings));
         Aborted
       | PackageActionGraph.Parallel.Errors (errors, remaining) ->
         OpamGlobals.msg "\n";

@@ -365,11 +365,15 @@ module MakeActionGraph (Pkg: PKG) = struct
   end
   module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
   module Topological = Graph.Topological.Make (PG)
+  module Traverse = Graph.Traverse.Dfs(PG)
+  module Components = Graph.Components.Make(PG)
   module O = Graph.Oper.I (PG)
   module Parallel = OpamParallel.Make(struct
-    include PG
-    include Topological
-  end)
+      include PG
+      include Topological
+      include Traverse
+      include Components
+    end)
   include PG
   include O
   type solution = {

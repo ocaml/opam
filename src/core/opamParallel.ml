@@ -18,6 +18,8 @@ let log fmt = OpamGlobals.log "PARALLEL" fmt
 module type G = sig
   include Graph.Sig.G
   include Graph.Topological.G with type t := t and module V := V
+  val has_cycle: t -> bool
+  val scc_list: t -> V.t list list
 end
 
 type error =
@@ -40,7 +42,7 @@ module type SIG = sig
     unit
 
   exception Errors of (G.V.t * error) list * G.V.t list
-  exception Cyclic of G.V.t list
+  exception Cyclic of G.V.t list list
 end
 
 module Make (G : G) = struct
@@ -137,7 +139,7 @@ module Make (G : G) = struct
       raise e
 
   exception Errors of (G.V.t * error) list * G.V.t list
-  exception Cyclic of G.V.t list
+  exception Cyclic of G.V.t list list
 
   let (--) = S.diff
   let (++) = S.union
@@ -158,9 +160,6 @@ module Make (G : G) = struct
       with _ -> Internal_error "Cannot read the error file" in
     close_in ic;
     r
-
-  let is_cyclic t =
-    S.is_empty t.roots && G.nb_vertex t.graph <> 0
 
   let parallel_iter n g ~pre ~child ~post =
     let t = ref (init g) in
@@ -184,11 +183,14 @@ module Make (G : G) = struct
 
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
+    if G.has_cycle !t.graph then (
+      let sccs = G.scc_list !t.graph in
+      let sccs = List.filter (fun l -> List.length l > 1) sccs in
+      raise (Cyclic sccs)
+    );
+
     (* nslots is the number of free slots *)
     let rec loop nslots =
-
-      if is_cyclic !t then
-        raise (Cyclic (G.fold_vertex (fun v l -> v::l) !t.graph []));
 
       if OpamMisc.IntMap.is_empty !pids
       && (S.is_empty !t.roots || not (M.is_empty !errors) && !t.roots =|= error_nodes ()) then
