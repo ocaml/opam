@@ -498,13 +498,22 @@ let print_stats () =
 
 type cache = OpamFile.OPAM.t package_map * OpamFile.Descr.t package_map
 
-let save_state t =
+let marshal_from_file file =
+  try
+    let ic = open_in_bin (OpamFilename.to_string file) in
+    let (opams, descrs: cache) = Marshal.from_channel ic in
+    close_in ic;
+    Some opams, Some descrs
+  with _ ->
+    None, None
+
+let save_state ~update t =
   let file = OpamPath.state_cache t.root in
-  if OpamFilename.exists file then (
+  OpamFilename.remove file;
+  if update then (
     OpamGlobals.msg
       "Updating the cache of metadata (%s).\n"
       (OpamFilename.to_string file);
-    OpamFilename.remove file;
   ) else
     OpamGlobals.msg
       "Creating a cache of metadata in %s.\n"
@@ -513,9 +522,6 @@ let save_state t =
   Marshal.to_channel oc (t.opams, t.descrs) [];
   close_out oc
 
-let rebuild_state_cache t =
-  save_state t
-
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
@@ -523,13 +529,7 @@ let load_state ?(save_cache=true) call_site =
   let opams, descrs =
     let file = OpamPath.state_cache root in
     if OpamFilename.exists file then
-      try
-        let ic = open_in_bin (OpamFilename.to_string file) in
-        let (opams, descrs: cache) = Marshal.from_channel ic in
-        close_in ic;
-        Some opams, Some descrs
-      with _ ->
-        None, None
+      marshal_from_file file
     else
       None, None in
   let cached = opams <> None in
@@ -605,7 +605,7 @@ let load_state ?(save_cache=true) call_site =
     then installed (* compat-mode with older versions of OPAM *)
     else installed_roots in
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
-  let packages = OpamPackage.list (OpamPath.opam_dir root) in
+  let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let available_packages =
     lazy (available_packages root opams installed repositories repo_index compiler_version pinned packages) in
   let t = {
@@ -615,7 +615,7 @@ let load_state ?(save_cache=true) call_site =
   } in
   print_state t;
   if save_cache && not cached then
-    save_state t;
+    save_state ~update:false t;
   let t1 = Unix.gettimeofday () in
   loads :=  (t1 -. t0) :: !loads;
   (* Check whether the system compiler has been updated *)
@@ -624,6 +624,13 @@ let load_state ?(save_cache=true) call_site =
     OpamGlobals.exit 0
   ) else
     t
+
+let rebuild_state_cache () =
+  let root = OpamPath.default () in
+  let file = OpamPath.state_cache root in
+  OpamFilename.remove file;
+  let t = load_state "rebuild-cache" in
+  save_state ~update:true t
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =

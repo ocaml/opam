@@ -600,7 +600,7 @@ let update repos =
   || pinned_packages_need_update then
     update_packages t ~show_packages:true repositories;
 
-  OpamState.rebuild_state_cache t;
+  OpamState.rebuild_state_cache ();
 
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Everything is up-to-date.\n"

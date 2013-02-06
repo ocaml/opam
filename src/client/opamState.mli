@@ -80,7 +80,7 @@ type state = {
 val load_state: ?save_cache:bool -> string -> state
 
 (** Rebuild the state cache. *)
-val rebuild_state_cache: state -> unit
+val rebuild_state_cache: unit -> unit
 
 (** Display stats *)
 val print_stats: unit -> unit
