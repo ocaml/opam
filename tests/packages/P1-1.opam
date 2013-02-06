@@ -17,6 +17,8 @@ build: [
  [ "this as well" { "%{os}%" = "myOS" } ]
 ]
 
+os: [ !"NO" | ( !"NO" & !"YES") ]
+
 (* List of files to substitute env variables *)
 substs: [ "P1.config" ]
 
