@@ -208,7 +208,7 @@ let extract_package t nv =
     let _files = OpamState.with_repository t nv (fun repo _ ->
       OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
     ) in
-    OpamFilename.link_dir ~src:pinned_dir ~dst:build_dir
+    OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
   | _ ->
     match get_archive t nv with
     | None         -> ()
