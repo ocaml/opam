@@ -546,7 +546,7 @@ let upgrade names =
     let universe = OpamState.universe t Depends in
     let partial_reinstall =
       OpamPackage.Set.of_list
-        (OpamSolver.reverse_dependencies ~depopts:false ~installed:true universe partial_reinstall) in
+        (OpamSolver.dependencies ~depopts:false ~installed:true universe partial_reinstall) in
     let installed_roots = OpamPackage.Set.diff t.installed_roots partial_reinstall in
     let solution = OpamSolution.resolve_and_apply t (Upgrade partial_reinstall)
       { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
