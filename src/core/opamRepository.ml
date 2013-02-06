@@ -271,7 +271,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
             (OpamFilename.Dir.to_string dir)
             (OpamFilename.Dir.to_string extract_dir);
           if dir <> extract_dir then
-          OpamFilename.copy_dir ~src:download_dir ~dst:extract_dir
+          OpamFilename.copy_unique_dir ~src:download_dir ~dst:extract_dir
     );
 
     let extract_dir = match local_path with

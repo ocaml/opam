@@ -45,6 +45,9 @@ val move_dir: src:Dir.t -> dst:Dir.t -> unit
 (** Copy a directory *)
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
+(** Copy the unique directory in [src] to [dst] *)
+val copy_unique_dir: src:Dir.t -> dst:Dir.t -> unit
+
 (** Link a directory *)
 val link_dir: src:Dir.t -> dst:Dir.t -> unit
 

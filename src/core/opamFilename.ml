@@ -70,14 +70,30 @@ let exec dirname ?env ?name cmds =
 let move_dir ~src ~dst =
   OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]
 
+let exists_dir dirname =
+  Sys.file_exists (Dir.to_string dirname)
+
 let copy_dir ~src ~dst =
+  if exists_dir dst then
+    OpamSystem.internal_error "Cannot create %s as the directory already exists." (Dir.to_string dst);
+  OpamSystem.command [ "cp"; "-a"; Dir.to_string src; Dir.to_string dst ]
+
+let copy_unique_dir ~src ~dst =
   with_tmp_dir (fun tmp ->
     OpamSystem.command [ "rsync"; "-a"; Filename.concat (Dir.to_string src) "/"; Dir.to_string tmp ];
     match list_dirs tmp with
     | [f] ->
       rmdir dst;
       move_dir ~src:f ~dst
-    | _ -> OpamGlobals.error_and_exit "Error while copying %s to %s" (Dir.to_string src) (Dir.to_string dst)
+    | [] ->
+      OpamSystem.internal_error
+        "Error while copying %s to %s: empty directory."
+        (Dir.to_string src) (Dir.to_string dst)
+    | l ->
+      let l = List.map Filename.basename l in
+      OpamSystem.internal_error
+        "Error while copying %s to %s: too many subdirectories (%s)"
+        (Dir.to_string src) (Dir.to_string dst) (String.concat ", " l)
   )
 
 let link_dir ~src ~dst =
@@ -99,9 +115,6 @@ let basename_dir dirname =
 
 let dirname_dir dirname =
   Dir.to_string (Filename.dirname (Dir.of_string dirname))
-
-let exists_dir dirname =
-  Sys.file_exists (Dir.to_string dirname)
 
 let (/) d1 s2 =
   let s1 = Dir.to_string d1 in
