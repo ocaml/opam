@@ -502,21 +502,19 @@ let save_state t =
   let file = OpamPath.state_cache t.root in
   if OpamFilename.exists file then (
     OpamGlobals.msg
-      "Updating the cache of metadata (%s)\n."
+      "Updating the cache of metadata (%s).\n"
       (OpamFilename.to_string file);
     OpamFilename.remove file;
   ) else
     OpamGlobals.msg
-      "Creating a cache of metadata in %s\n"
+      "Creating a cache of metadata in %s.\n"
       (OpamFilename.to_string file);
   let oc = open_out_bin (OpamFilename.to_string file) in
   Marshal.to_channel oc (t.opams, t.descrs) [];
   close_out oc
 
-let reset_state_cache root =
-  OpamGlobals.msg "Reseting the cache of metadata.\n";
-  let file = OpamPath.state_cache root in
-  OpamFilename.remove file
+let rebuild_state_cache t =
+  save_state t
 
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;

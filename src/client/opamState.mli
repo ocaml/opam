@@ -79,8 +79,8 @@ type state = {
    site. *)
 val load_state: ?save_cache:bool -> string -> state
 
-(** Reset the state cache. *)
-val reset_state_cache: dirname -> unit
+(** Rebuild the state cache. *)
+val rebuild_state_cache: state -> unit
 
 (** Display stats *)
 val print_stats: unit -> unit
