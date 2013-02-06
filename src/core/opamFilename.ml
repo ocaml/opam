@@ -58,7 +58,7 @@ let in_dir dirname fn =
   if Sys.file_exists dirname then
     OpamSystem.in_dir dirname fn
   else
-    OpamGlobals.error_and_exit "%s does not exist!" dirname
+    OpamSystem.internal_error "Cannot CD to %s: the directory does not exist!" dirname
 
 let exec dirname ?env ?name cmds =
   let env = match env with
@@ -217,7 +217,7 @@ let remove_prefix ~prefix filename =
     if str = "" then "" else Filename.concat str "" in
   let dirname = to_string filename in
   match OpamMisc.remove_prefix ~prefix dirname with
-  | None   -> OpamGlobals.error_and_exit "%s is not a prefix of %s" prefix dirname
+  | None   -> OpamSystem.internal_error "%s is not a prefix of %s" prefix dirname
   | Some s -> s
 
 let download ~overwrite filename dirname =
@@ -228,7 +228,7 @@ let download ~overwrite filename dirname =
 let download_iter ~overwrite filenames dirname =
   let rec aux = function
     | []   ->
-      OpamSystem.internal_error "Cannot download %s" (String.concat ", " (List.map to_string filenames))
+      OpamSystem.internal_error "Cannot download %s." (String.concat ", " (List.map to_string filenames))
     | h::t ->
       try download ~overwrite h dirname
       with _ -> aux t in
@@ -303,7 +303,7 @@ module Attribute = struct
     match OpamMisc.split s ' ' with
     | [base; md5]      -> { base=Base.of_string base; md5; perm=None }
     | [base;md5; perm] -> { base=Base.of_string base; md5; perm=Some (int_of_string perm) }
-    | k                -> OpamGlobals.error_and_exit "Remote_file: %s" (String.concat " " k)
+    | k                -> OpamSystem.internal_error "remote_file: '%s' is not a valid line." (String.concat " " k)
 
   module O = struct
     type tmp = t
