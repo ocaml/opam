@@ -629,7 +629,7 @@ let rebuild_state_cache () =
   let root = OpamPath.default () in
   let file = OpamPath.state_cache root in
   OpamFilename.remove file;
-  let t = load_state "rebuild-cache" in
+  let t = load_state ~save_cache:false "rebuild-cache" in
   save_state ~update:true t
 
 (* Return the contents of a fully qualified variable *)
