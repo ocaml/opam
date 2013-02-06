@@ -1,5 +1,7 @@
 0.9.3 (trunk)
+* after an upgrade, propose to reinstall a pinned package only if there were some changes
 * improvements to the solver heuristics
+* better error messages on cyclic dependencies
 
 0.9.2 [Jan 2012]
 * Install all the API files
