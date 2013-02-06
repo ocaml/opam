@@ -106,7 +106,7 @@ let get_transitive_dependencies t ?(depopts = false) names =
   let universe = OpamState.universe t Depends in
   (* Compute the transitive closure of dependencies *)
   let packages = OpamPackage.Set.of_list (List.map (OpamState.find_installed_package_by_name t) names) in
-  OpamSolver.backward_dependencies ~depopts universe packages
+  OpamSolver.dependencies ~depopts universe packages
 
 let includes ~is_rec names =
   log "config-includes";

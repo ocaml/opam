@@ -59,11 +59,11 @@ module ActionGraph: ACTION_GRAPH with type package = Cudf.package
 
 (** Return the transitive closure of dependencies of [set],
     sorted in topological order *)
-val backward_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
+val dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
 
 (** Return the transitive closure of dependencies of [set],
     sorted in topological order *)
-val forward_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
+val reverse_dependencies: Cudf.universe -> Cudf.package list -> Cudf.package list
 
 (** Compute the final universe state. *)
 val get_final_universe:

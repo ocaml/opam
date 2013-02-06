@@ -216,9 +216,9 @@ let filter_dependencies f_direction ~depopts ~installed universe packages =
     (OpamMisc.string_of_list OpamPackage.to_string result);
   result
 
-let backward_dependencies = filter_dependencies OpamCudf.backward_dependencies
+let dependencies = filter_dependencies OpamCudf.dependencies
 
-let forward_dependencies = filter_dependencies OpamCudf.forward_dependencies
+let reverse_dependencies = filter_dependencies OpamCudf.reverse_dependencies
 
 let delete_or_update t =
   t.PackageActionGraph.to_remove <> [] ||

@@ -546,10 +546,10 @@ let upgrade names =
     let universe = OpamState.universe t Depends in
     let partial_reinstall =
       OpamPackage.Set.of_list
-        (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe partial_reinstall) in
+        (OpamSolver.reverse_dependencies ~depopts:false ~installed:true universe partial_reinstall) in
     let installed_roots = OpamPackage.Set.diff t.installed_roots partial_reinstall in
     let solution = OpamSolution.resolve_and_apply t (Upgrade partial_reinstall)
-      { wish_install = OpamSolution.atoms_of_packages installed_roots;
+      { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
         wish_remove  = [];
         wish_upgrade = OpamSolution.atoms_of_packages partial_reinstall } in
     solution_found := solution;
@@ -806,11 +806,11 @@ let remove names =
     let universe = OpamState.universe t Depends in
     let to_remove =
       OpamPackage.Set.of_list
-        (OpamSolver.forward_dependencies ~depopts:false ~installed:true universe packages) in
+        (OpamSolver.reverse_dependencies ~depopts:false ~installed:true universe packages) in
     let installed_roots = OpamPackage.Set.diff t.installed_roots to_remove in
     let installed =
       OpamPackage.Set.of_list
-        (OpamSolver.backward_dependencies ~depopts:true ~installed:true universe installed_roots) in
+        (OpamSolver.dependencies ~depopts:true ~installed:true universe installed_roots) in
     let solution = OpamSolution.resolve_and_apply t Remove
       { wish_install = OpamSolution.eq_atoms_of_packages installed;
         wish_remove  = OpamSolution.atoms_of_packages to_remove;
@@ -852,7 +852,7 @@ let reinstall names =
   let reinstall = OpamPackage.Set.of_list reinstall in
   let depends =
     let universe = OpamState.universe t Depends in
-    OpamSolver.forward_dependencies ~depopts:true ~installed:true universe reinstall in
+    OpamSolver.reverse_dependencies ~depopts:true ~installed:true universe reinstall in
   let to_process =
     List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
   let solution = OpamSolution.apply_solution t Reinstall (OpamSolver.sequential_solution to_process) in

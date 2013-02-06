@@ -102,9 +102,9 @@ let filter_dependencies f_direction universe packages =
   let packages = Set.of_list packages in
   Graph.closure graph packages
 
-let backward_dependencies = filter_dependencies (fun x -> x)
+let dependencies = filter_dependencies (fun x -> x)
 
-let forward_dependencies = filter_dependencies Graph.mirror
+let reverse_dependencies = filter_dependencies Graph.mirror
 
 let string_of_atom (p, c) =
   let const = function

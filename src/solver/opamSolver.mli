@@ -50,15 +50,15 @@ val resolve :
 
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)
-val backward_dependencies :
+val dependencies :
   depopts:bool ->
   installed:bool ->
   universe ->
   package_set ->
   package list
 
-(** Same as [backward_dependencies] but for forward dependencies *)
-val forward_dependencies :
+(** Same as [bdependencies] but for reverse dependencies *)
+val reverse_dependencies :
   depopts:bool ->
   installed:bool ->
   universe ->
