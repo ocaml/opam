@@ -110,7 +110,7 @@ let rec eval atom = function
   | Atom x   -> atom x
   | Block x  -> eval atom x
   | And(x,y) -> eval atom x && eval atom y
-  | Or(x,y)  -> eval atom x && eval atom y
+  | Or(x,y)  -> eval atom x || eval atom y
 
 let to_string t =
   let string_of_constraint (relop, version) =
