@@ -193,10 +193,10 @@ let update_packages t ~show_packages repositories =
     OpamPackage.Set.of_list (
       OpamMisc.filter_map
         (function
-          | n, (Local p | Git p | Darcs p as pin) ->
+          | n, (Local p | Git p | Darcs p) ->
             if OpamState.mem_installed_package_by_name t n then
               let nv = OpamState.find_installed_package_by_name t n in
-              match OpamState.update_pinned_package t nv pin with
+              match OpamState.update_pinned_package t n with
               | Up_to_date _  -> None
               | Result _      -> Some nv
               | Not_available ->
@@ -830,7 +830,16 @@ let reinstall names =
           OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
           None
         ) else
-          Some (OpamState.find_installed_package_by_name t n)
+          let nv = OpamState.find_installed_package_by_name t n in
+          if OpamState.is_pinned t n then (
+            (* [opam reinstall <pkg>] when pkg is pinned means we want
+               to sync the pkg with the pinned source. *)
+            match OpamState.update_pinned_package t n with
+            | Up_to_date _  -> None
+            | Result _      -> Some nv
+            | Not_available -> None
+          ) else
+            Some nv
       | Some (_,v) ->
         let nv = OpamPackage.create n v in
         if OpamPackage.Set.mem nv t.installed then
@@ -895,10 +904,10 @@ let pin ~force action =
     if not (OpamPackage.Name.Map.mem name pins) then
       OpamGlobals.error_and_exit "%s is not pinned." (OpamPackage.Name.to_string name);
     begin match OpamPackage.Name.Map.find name pins with
-      | Version _ -> ()
-      | _         ->
-        if not force && OpamState.mem_installed_package_by_name t name then
-          OpamGlobals.error_and_exit "You must uninstall the package before unpinning it (or use --force).";
+    | Version _ -> ()
+    | _         ->
+      if not force && OpamState.mem_installed_package_by_name t name then
+        OpamGlobals.error_and_exit "You must uninstall the package before unpinning it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
   | _     ->

@@ -236,7 +236,7 @@ val is_pinned: state -> name -> bool
 val get_pinned_package: state -> name -> package
 
 (** Update pinned package *)
-val update_pinned_package: state -> package -> pin_option -> dirname download
+val update_pinned_package: state -> name -> dirname download
 
 (** Add the given packages to the set of package to reinstall. If [all]
     is set, this is done for ALL the switches (useful when a package

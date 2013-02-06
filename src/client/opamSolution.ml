@@ -196,10 +196,10 @@ let extract_package t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
   match pinned_path t nv with
-  | Some (Git p | Darcs p | Local p as pin) ->
+  | Some (Git p | Darcs p | Local p) ->
     let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
     if not (OpamFilename.exists_dir pinned_dir) then (
-      match OpamState.update_pinned_package t nv pin with
+      match OpamState.update_pinned_package t (OpamPackage.name nv) with
       | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
       | Result _
       | Up_to_date _  -> ()
