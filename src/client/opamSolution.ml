@@ -538,6 +538,9 @@ let apply_solution ?(force = false) t action sol =
         | Install i
         | Import i
         | Switch i -> i
+        | Upgrade _ ->
+          OpamPackage.Name.Set.of_list
+            (List.map OpamPackage.name (OpamPackage.Set.elements t.installed_roots))
         | _ -> OpamPackage.Name.Set.empty in
 
       (* This function should be called by the parent process only, as it modifies
@@ -601,10 +604,10 @@ let apply_solution ?(force = false) t action sol =
       let deleted = ref OpamPackage.Set.empty in
       let remove_the_packages_using nv =
         let universe = OpamState.universe t Depends in
-        let depends =
+        let depends_on =
           let set = OpamPackage.Set.singleton nv in
           OpamPackage.Set.of_list
-            (OpamSolver.forward_dependencies ~depopts:true ~installed:true universe set) in
+            (OpamSolver.reverse_dependencies ~depopts:true ~installed:true universe set) in
         OpamPackage.Set.iter (fun nv ->
           finally
             (fun () -> proceed_to_delete ~rm_build:false t nv)
@@ -612,7 +615,7 @@ let apply_solution ?(force = false) t action sol =
               deleted := OpamPackage.Set.add nv !deleted;
               rm_from_install nv;
               flush ())
-        ) depends in
+        ) depends_on in
 
       let recover_from_error (n, _) = match n with
         | To_change (Some o, _) ->
