@@ -388,10 +388,10 @@ let parse_os_constraint l =
     | [Group g]                                  -> Block (aux g)
     | [String os]                                -> pos os
     | [Symbol "!"; String os]                    -> neg os
-    | String os :: String "&" :: l               -> And (pos os, aux l)
-    | Symbol "!" :: String os :: String "&" :: l -> And (neg os, aux l)
-    | String os :: String "|" :: l               -> Or (pos os, aux l)
-    | Symbol "!" :: String os :: String "|" :: l -> Or (neg os, aux l)
+    | String os :: Symbol "&" :: l               -> And (pos os, aux l)
+    | Symbol "!" :: String os :: Symbol "&" :: l -> And (neg os, aux l)
+    | String os :: Symbol "|" :: l               -> Or (pos os, aux l)
+    | Symbol "!" :: String os :: Symbol "|" :: l -> Or (neg os, aux l)
     | l -> bad_format "Expecting an OS constraint, got %s" (kinds l) in
   match l with
   | List l -> aux l
