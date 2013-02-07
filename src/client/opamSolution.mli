@@ -25,7 +25,15 @@ val resolve:
   atom request ->
   (solution, string) result
 
-(** Resolve a request and apply the solution *)
+(** Apply a solution returned by the solver. *)
+val apply:
+  ?force:bool ->
+  OpamState.state ->
+  user_action ->
+  solution ->
+  solver_result
+
+(** Call the solver to get a solution and then call [apply]. *)
 val resolve_and_apply:
   ?force:bool ->
   OpamState.state ->
@@ -57,11 +65,3 @@ val atoms_of_names: OpamState.state -> name_set -> atom list
 
 (** {2 Stats} *)
 val sum: stats -> int
-
-(** {2 Actions} *)
-
-(** Apply a solution return by the solver *)
-val apply_solution: ?force:bool -> OpamState.state -> user_action -> solution -> solver_result
-
-(** Remove a package *)
-val proceed_to_delete: rm_build:bool -> OpamState.state -> package -> unit

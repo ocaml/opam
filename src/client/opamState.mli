@@ -233,7 +233,12 @@ val is_pinned: state -> name -> bool
 (** Get the corresponding pinned package. If the package is pinned to
     a path (locally or via git/darcs), it returns the latest package as we
     assume that the most up-to-date build descriptions. *)
-val get_pinned_package: state -> name -> package
+val pinned_package: state -> name -> package
+
+(** Get the path associated to the given pinned package. Return [None]
+   if the package is not pinned or if it is pinned to a version
+   number. *)
+val pinned_path: state -> name -> dirname option
 
 (** Update pinned package *)
 val update_pinned_package: state -> name -> dirname download

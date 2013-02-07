@@ -222,7 +222,7 @@ let compiler_repository_map t =
 let is_pinned_aux pinned n =
   OpamPackage.Name.Map.mem n pinned
 
-let get_pinned_package_aux pinned packages n =
+let pinned_package_aux pinned packages n =
   match OpamPackage.Name.Map.find n pinned with
   | Version v -> OpamPackage.create n v
   | _         ->
@@ -235,8 +235,18 @@ let get_pinned_package_aux pinned packages n =
 
 let is_pinned t n = is_pinned_aux t.pinned n
 
-let get_pinned_package t n =
-  get_pinned_package_aux t.pinned t.packages n
+let pinned_package t n =
+  pinned_package_aux t.pinned t.packages n
+
+let pinned_path t name =
+  if OpamPackage.Name.Map.mem name t.pinned then
+    match OpamPackage.Name.Map.find name t.pinned with
+    | Local d
+    | Darcs d
+    | Git d -> Some d
+    | _     -> None
+  else
+    None
 
 (* List the packages which does fullfil the compiler constraints *)
 let available_packages root opams installed repositories repo_index compiler_version pinned packages =
@@ -244,8 +254,8 @@ let available_packages root opams installed repositories repo_index compiler_ver
     if OpamPackage.Map.mem nv opams then (
       let opam = OpamPackage.Map.find nv opams in
       let available () =
-        OpamPackage.Set.mem nv installed ||
-        find_repository_aux repositories root repo_index nv <> None in
+        OpamPackage.Set.mem nv installed
+        || find_repository_aux repositories root repo_index nv <> None in
       let consistent_ocaml_version () =
         let atom (r,v) = OpamCompiler.Version.compare compiler_version r v in
         match OpamFile.OPAM.ocaml_version opam with
@@ -262,7 +272,7 @@ let available_packages root opams installed repositories repo_index compiler_ver
       let consistent_pinned_version () =
         let name = OpamPackage.name nv in
         not (is_pinned_aux pinned name)
-        || get_pinned_package_aux pinned packages name = nv
+        || pinned_package_aux pinned packages name = nv
       in
       available ()
       && consistent_ocaml_version ()
@@ -1019,7 +1029,7 @@ let install_compiler t ~quiet switch compiler =
 let update_pinned_package t n =
   if OpamPackage.Name.Map.mem n t.pinned then
     let pin = OpamPackage.Name.Map.find n t.pinned in
-    let nv = get_pinned_package t n in
+    let nv = pinned_package t n in
     match kind_of_pin_option pin with
     | (`git|`darcs|`local as k) ->
       let path = OpamFilename.raw_dir (path_of_pin_option pin) in

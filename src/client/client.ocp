@@ -4,6 +4,7 @@ begin library "opam-client"
 
   files   = [
     "opamState.ml"
+    "opamAction.ml"
     "opamSolution.ml"
     "opamConfigCommand.ml"
     "opamSwitchCommand.ml"

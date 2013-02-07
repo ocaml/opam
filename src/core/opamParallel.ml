@@ -177,9 +177,6 @@ module Make (G : G) = struct
     let error_nodes () =
       M.fold (fun n _ accu -> S.add n accu) !errors S.empty in
     (* All the node not successfully proceeded. This include error worker and error nodes. *)
-    let all_nodes = G.fold_vertex S.add !t.graph S.empty in
-    let remaining_nodes () =
-      all_nodes -- !t.visited in
 
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
@@ -199,8 +196,17 @@ module Make (G : G) = struct
         if M.is_empty !errors then
           log "loop completed (without errors)"
         else
-          let remaining = remaining_nodes () -- error_nodes () in
-          raise (Errors (M.bindings !errors, S.elements remaining))
+          (* Generate the remaining nodes in topological order *)
+          let error_nodes = error_nodes () in
+          let remaining =
+            G.fold_vertex (fun v l ->
+              if S.mem v !t.visited
+              || S.mem v error_nodes then
+                l
+              else
+                v::l) !t.graph [] in
+          let remaining = List.rev remaining in
+          raise (Errors (M.bindings !errors, remaining))
 
       else if nslots <= 0 || (worker_nodes () ++ error_nodes ()) =|= !t.roots then (
 

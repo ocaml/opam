@@ -782,7 +782,7 @@ let remove names =
       atoms in
 
   if does_not_exist <> [] then (
-    List.iter (OpamSolution.proceed_to_delete ~rm_build:true t) does_not_exist;
+    List.iter (OpamAction.remove_package ~rm_build:true t) does_not_exist;
     let installed_f = OpamPath.Switch.installed t.root t.switch in
     let installed = OpamFile.Installed.read installed_f in
     let installed = OpamPackage.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in
@@ -855,7 +855,7 @@ let reinstall names =
     OpamSolver.reverse_dependencies ~depopts:true ~installed:true universe reinstall in
   let to_process =
     List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
-  let solution = OpamSolution.apply_solution t Reinstall (OpamSolver.sequential_solution to_process) in
+  let solution = OpamSolution.apply t Reinstall (OpamSolver.sequential_solution to_process) in
   OpamSolution.check_solution solution
 
 let upload upload repo =
