@@ -5,10 +5,10 @@
 
 0.9.2 [Jan 2012]
 * Install all the API files
-* Fix `opam repo remove <repo>`
+* Fix `opam repo remove repo-name`
 * speed-up `opam config env`
 * support for `opam-foo` scripts (which can be called using `opam foo`)
-* 'opam update <pinned-package>' works
+* 'opam update pinned-package' works
 * Fix 'opam-mk-repo -a'
 * Fix 'opam-mk-repo -i'
 * clean-up pinned cache dir when a pinned package fails to install
@@ -40,7 +40,7 @@
 * Improve (but break) the command-line interface by using cmdliner
 
 0.8.2 [Dec 2012]
-* Fix an issue with `opam reinstall <packages>` where packages were reinstalled in reverse order
+* Fix an issue with `opam reinstall` where packages were reinstalled in reverse order
 
 0.8.1 [Nov 2012]
 * Simplify string substitution in OPAM files
@@ -73,7 +73,7 @@
 0.7.4 [Oct 2012]
 * improve `opam pin`: the code is more robust and it is now possible to pin a package to a git repository
 * add support for patches per package
-* add `opam swith -import <file>` and `opam switch -export <file>`
+* add `opam switch -import file` and `opam switch -export file`
 
 0.7.3 [Sep 2012]
 * Better user-message when no solution is found
