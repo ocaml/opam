@@ -30,22 +30,36 @@ let git_fetch local_path remote_address commit =
   )
 
 let git_merge local_path commit =
+  let merge commit =
+    try OpamSystem.command [ "git" ; "merge" ; commit ]; true
+    with _ -> false in
   let commit = match commit with
     | None   -> "origin/master"
     | Some c -> c in
   OpamFilename.in_dir local_path (fun () ->
-    OpamSystem.command [ "git" ; "merge" ; commit ]
+    if not (merge commit) then
+      if not (merge ("origin/"^commit)) then
+        OpamSystem.internal_error "Unknown revision: %s." commit
   )
 
 (* Return the list of modified files of the git repository located
    at [dirname] *)
 let git_diff local_path commit =
+  let diff commit =
+    try Some (OpamSystem.read_command_output [ "git" ; "diff" ; commit ; "--name-only" ])
+    with _ -> None in
   let commit = match commit with
-    | None   -> "remotes/origin/master"
+    | None   -> "origin/master"
     | Some c -> c in
   OpamFilename.in_dir local_path (fun () ->
-    let lines = OpamSystem.read_command_output
-      [ "git" ; "diff" ; commit ; "--name-only" ] in
+    let lines =
+      match diff commit with
+      | Some lines -> lines
+      | None       ->
+        match diff ("origin/"^commit) with
+        | Some lines -> lines
+        | None       -> OpamSystem.internal_error "Unknown revision: %s." commit
+    in
     OpamFilename.Set.of_list (List.map OpamFilename.of_string lines)
   )
 
