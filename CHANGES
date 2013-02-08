@@ -32,7 +32,7 @@
 * Git pinning now works with commits/tags/branches
 * `opam init` works without preinstalled compiler
 * Support for DARCS backends
-* Each global command-line flag `xxx` as can be set using the `$OPAMxxx` instead
+* Each global command-line flag `xxx` as can be set using the `OPAMxxx` environment variable instead
 * Better display of compiler switch (+ read compiler descriptions)
 * Clearer error message when trying to pin a non-existing package
 * Fix issue with pinning to version number
