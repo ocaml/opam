@@ -19,12 +19,12 @@ open OpamTypes
 open OpamState.Types
 
 (** Build and install a package. *)
-val build_and_install_package: t -> package -> unit
+val build_and_install_package: t -> update_metadata:bool -> package -> unit
 
 (** Remove a package. *)
-val remove_package: rm_build:bool -> t -> package -> unit
+val remove_package: t -> update_metadata:bool -> rm_build:bool -> package -> unit
 
 (** Remove all the packages from a solution. This includes the package
    to delete, to upgrade and to recompile. Return the set of all deleted
    packages. *)
-val remove_all_packages: t -> solution -> package_set
+val remove_all_packages: t -> update_metadata:bool -> solution -> package_set

@@ -782,7 +782,7 @@ let remove names =
       atoms in
 
   if does_not_exist <> [] then (
-    List.iter (OpamAction.remove_package ~rm_build:true t) does_not_exist;
+    List.iter (OpamAction.remove_package ~rm_build:true ~update_metadata:false t) does_not_exist;
     let installed_f = OpamPath.Switch.installed t.root t.switch in
     let installed = OpamFile.Installed.read installed_f in
     let installed = OpamPackage.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in

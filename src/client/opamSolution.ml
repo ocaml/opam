@@ -173,16 +173,14 @@ let can_try_to_recover_from_error l =
 (* Try to recover from errors by installing either the old packages or
    by reinstalling the current ones. This can also fail but if it
    succeeds OPAM should remains in a consistent state. *)
-let recover_from_error t add_to_install = function
+let recover_from_error = function
   | To_delete _          -> ()
   | To_recompile nv
   | To_change (Some nv, _)
   | To_change (None, nv) ->
-    try
-      OpamAction.build_and_install_package t nv;
-      add_to_install nv
-    with _ ->
-      ()
+    let t = OpamState.load_state "recover-from-error" in
+    try OpamAction.build_and_install_package t ~update_metadata:true nv
+    with _ -> ()
 
 (* Mean function for applying solver solutions. One main process is
    deleting the packages and updating the global state of
@@ -209,18 +207,19 @@ let parallel_apply t action solution =
      OPAM consistent (as the user is free to kill OPAM at every
      moment). We are not guaranteed to always be consistent, but we
      try hard to be.*)
-  let flush () =
-    OpamFile.Installed.write (OpamPath.Switch.installed t.root t.switch) !installed;
-    OpamFile.Installed_roots.write (OpamPath.Switch.installed_roots t.root t.switch) !installed_roots in
-
   let add_to_install nv =
     installed := OpamPackage.Set.add nv !installed;
-    if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
-      installed_roots := OpamPackage.Set.add nv !installed_roots in
+    let installed_f = OpamPath.Switch.installed t.root t.switch in
+    OpamFile.Installed.write installed_f !installed;
+    if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then (
+      installed_roots := OpamPackage.Set.add nv !installed_roots;
+      let installed_roots_f = OpamPath.Switch.installed_roots t.root t.switch in
+      OpamFile.Installed_roots.write installed_roots_f !installed_roots;
+    ) in
 
-  let rm_from_install nv =
-    installed := OpamPackage.Set.remove nv !installed;
-    installed_roots := OpamPackage.Set.remove nv !installed_roots in
+  let remove_from_install deleted =
+    installed := OpamPackage.Set.diff !installed deleted;
+    installed_roots := OpamPackage.Set.diff !installed_roots deleted in
 
   (* Installation and recompilation are done by child the processes *)
   let child n =
@@ -231,7 +230,7 @@ let parallel_apply t action solution =
     let t = OpamState.load_state "child" in
     match n with
     | To_change (_, nv)
-    | To_recompile nv   -> OpamAction.build_and_install_package t nv
+    | To_recompile nv   -> OpamAction.build_and_install_package ~update_metadata:false t nv
     | To_delete _       -> assert false in
 
   (* Not pre-condition (yet ?) *)
@@ -242,21 +241,20 @@ let parallel_apply t action solution =
   let post = function
     | To_delete _       -> assert false
     | To_recompile nv
-    | To_change (_, nv) -> add_to_install nv; flush () in
+    | To_change (_, nv) -> add_to_install nv in
 
   try
-
     let jobs = OpamFile.Config.jobs t.config in
     (* 1/ We remove all installed packages appearing in the solution. *)
-    let deleted = OpamAction.remove_all_packages t solution in
-    OpamPackage.Set.iter rm_from_install deleted;
-    flush ();
+    let deleted = OpamAction.remove_all_packages t ~update_metadata:true solution in
+    remove_from_install deleted;
+
     (* 2/ We install the new packages *)
     PackageActionGraph.Parallel.parallel_iter jobs solution.to_process ~pre ~child ~post;
     if !OpamGlobals.fake then
       OpamGlobals.msg "Simulation complete.\n";
-    OK
 
+    OK
   with
   | PackageActionGraph.Parallel.Cyclic actions ->
     let packages = List.map (List.map action_contents) actions in
@@ -277,11 +275,8 @@ let parallel_apply t action solution =
     if can_try_to_recover_from_error errors then (
       let pkgs = List.map (fst |> action_contents |> OpamPackage.to_string) errors in
       OpamGlobals.msg "==== ERROR RECOVERY [%s] ====\n" (String.concat ", " pkgs);
-      let recover nv =
-        recover_from_error t add_to_install nv;
-        flush () in
-      List.iter recover (List.map fst errors);
-      List.iter recover remaining;
+      List.iter recover_from_error (List.map fst errors);
+      List.iter recover_from_error remaining;
     );
     List.iter display_error errors;
     Error (List.map fst errors @ remaining)

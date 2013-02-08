@@ -226,12 +226,20 @@ let compilation_env t opam =
   ] @ env0 in
   OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
+let flush_metadata t ~installed ~installed_roots =
+  OpamFile.Installed.write
+    (OpamPath.Switch.installed t.root t.switch)
+    installed;
+  OpamFile.Installed_roots.write
+    (OpamPath.Switch.installed_roots t.root t.switch)
+    installed_roots
+
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
    consistency reasons, this is done in the main function only. *)
-let remove_package_aux ~rm_build t nv =
-  log "deleting %s" (OpamPackage.to_string nv);
+let remove_package_aux t ~update_metadata ~rm_build nv =
+  log "Removing %s (%b)" (OpamPackage.to_string nv) update_metadata;
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -240,7 +248,8 @@ let remove_package_aux ~rm_build t nv =
     let opam = OpamState.opam t nv in
     let env = compilation_env t opam in
     match OpamState.filter_commands t (OpamFile.OPAM.remove opam) with
-    | []     -> ()
+    | []     ->
+      OpamGlobals.msg "Uninstalling %s.\n" (OpamPackage.to_string nv);
     | remove ->
       OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
       let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -328,19 +337,28 @@ let remove_package_aux ~rm_build t nv =
 
   (* Remove the pinned cache *)
   log "Removing the pinned cache";
-  OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch name)
+  OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch name);
 
-let remove_package ~rm_build t nv =
+  (* Update the metadata *)
+  if update_metadata then (
+    let installed = OpamPackage.Set.remove nv t.installed in
+    let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
+    flush_metadata t ~installed ~installed_roots
+  )
+
+let remove_package t ~update_metadata ~rm_build nv =
   if not !OpamGlobals.fake then
-    remove_package_aux ~rm_build t nv
+    remove_package_aux t ~update_metadata ~rm_build nv
 
 (* Uninstall all the current packages in a solution  *)
-let remove_all_packages t sol =
+let remove_all_packages t ~update_metadata sol =
   let open PackageActionGraph in
   let deleted = ref [] in
   let delete nv =
+    if !deleted = [] then
+      OpamGlobals.msg "\n=-=-= Removing Packages =-=-=\n";
     deleted := nv :: !deleted;
-    try remove_package ~rm_build:true t nv;
+    try remove_package t ~rm_build:true ~update_metadata:false nv;
     with _ -> () in
   let action n =
     match n with
@@ -348,16 +366,21 @@ let remove_all_packages t sol =
     | To_recompile nv
     | To_delete nv        -> delete nv
     | To_change (None, _) -> () in
-
   List.iter delete sol.to_remove;
   PackageActionGraph.iter_vertex action sol.to_process;
-  OpamPackage.Set.of_list !deleted
+  let deleted = OpamPackage.Set.of_list !deleted in
+  if update_metadata then (
+    let installed = OpamPackage.Set.diff t.installed deleted in
+    let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
+    flush_metadata t ~installed ~installed_roots
+  );
+  deleted
 
 (* Build and install a package. In case of error, simply return the
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
-let build_and_install_package_aux t nv =
-  OpamGlobals.msg "\n=-=-= %s =-=-=\n" (OpamPackage.to_string nv);
+let build_and_install_package_aux t ~update_metadata nv =
+  OpamGlobals.msg "\n=-=-= Installing %s =-=-=\n" (OpamPackage.to_string nv);
 
   let opam = OpamState.opam t nv in
 
@@ -428,6 +451,13 @@ let build_and_install_package_aux t nv =
     (* If everyting went fine, finally install the package. *)
     install_package t nv;
 
+    (* update the metadata *)
+    if update_metadata then (
+      let installed = OpamPackage.Set.add nv t.installed in
+      let installed_roots = OpamPackage.Set.add nv t.installed_roots in
+      flush_metadata t ~installed ~installed_roots
+    )
+
   with e ->
     let cause = match e with
       | Sys.Break -> "was aborted"
@@ -436,9 +466,9 @@ let build_and_install_package_aux t nv =
     OpamGlobals.error
       "The compilation of %s %s."
       (OpamPackage.to_string nv) cause;
-    remove_package ~rm_build:false t nv;
+    remove_package ~rm_build:false ~update_metadata:false t nv;
     raise e
 
-let build_and_install_package t nv =
+let build_and_install_package t ~update_metadata nv =
   if not !OpamGlobals.fake then
-    build_and_install_package_aux t nv
+    build_and_install_package_aux t ~update_metadata nv
