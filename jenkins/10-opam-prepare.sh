@@ -3,6 +3,12 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# magic
+add libmagic-dev
+# mpi
+add mpi-default-dev
+# snappy
+add libsnappy-dev
 # alt-ergo
 add autoconf
 # yajl
