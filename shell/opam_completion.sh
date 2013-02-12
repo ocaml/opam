@@ -6,14 +6,14 @@ _opam_add()
 _opam_global_options()
 {
   local res
-  res="$( opam --help 2>/dev/null | grep '^  -' | sed 's/ *//;s/ .*//' )"
+  res="$( opam --help=plain 2>/dev/null | grep '^       -' | sed 's/ *//;s/[ ,\[\=].*//' )"
   _opam_add "$res"
 }
 
 _opam_commands()
 {
   local res
-  res="$( opam --help 2>/dev/null | grep '^  [^ ]' | sed 's/ *//;s/ .*//' | grep -v '^-' )"
+  res="$( opam help topics )"
   _opam_add "$res"
 }
 
@@ -21,30 +21,58 @@ _opam_flags()
 {
   local res cmd
   cmd="$1"
-  res="$( opam $cmd --help 2>/dev/null | grep '^  -' | sed 's/ *//;s/ .*//' | grep -v '^--' )"
+  res="$( opam $cmd --help=plain 2>/dev/null | grep '^       -' | sed 's/ *//;s/[ ,\[\=].*//' )"
   _opam_add "$res"
 }
 
 _opam_packages()
 {
   local res
-  res="$( opam list -short )"
+  res="$( opam list -s )"
+  _opam_add "$res"
+}
+
+_opam_installed_packages()
+{
+  local res
+  res="$( opam list -i -s )"
   _opam_add "$res"
 }
 
 _opam_compilers()
 {
-  local res count
-  count="$( opam switch -list 2>/dev/null | grep -n '\--- Compilers available' | sed 's/\([:digit:]*\)\:.*/\1/' )"
-  res="$( opam switch -list 2>/dev/null | tail -n $(($count+1)) | sed 's/^[ ~] *//' )"
+  local res
+  res="$( opam switch -s )"
   _opam_add "$res"
+}
+
+_opam_config_subcommands()
+{
+  _opam_add "env var list subst includes bytecomp asmcomp bytelink asmlink"
 }
 
 _opam_config_vars()
 {
   local res
-  res="$( opam config -list-vars 2>/dev/null | sed 's/ *//;s/ .*//' )"
+  res="$( opam config list 2>/dev/null | sed 's/ *//;s/ .*//' )"
   _opam_reply="$res"
+}
+
+_opam_repository_subcommands()
+{
+  _opam_add "add remove list priority"
+}
+
+_opam_repositories()
+{
+  local res
+  res="$( opam remote -s )"
+  _opam_add "$res"
+}
+
+_opam_repositories_only()
+{
+  _opam_reply="$( opam remote -s )"
 }
 
 _opam()
@@ -53,6 +81,7 @@ _opam()
 
   COMPREPLY=()
   cmd=${COMP_WORDS[1]}
+  subcmd=${COMP_WORDS[2]}
   cur=${COMP_WORDS[COMP_CWORD]}
   prev=${COMP_WORDS[COMP_CWORD-1]}
   reprev=${COMP_WORDS[COMP_CWORD-2]}
@@ -68,15 +97,26 @@ _opam()
           install|info)
               _opam_packages
               ;;
+          reinstall|remove)
+              _opam_installed_packages
+              ;;
           switch)
               _opam_compilers
               ;;
           config)
-              if [ "$prev" = "-var" ]; then _opam_config_vars; fi
+              _opam_config_subcommands
+              if [ "$prev" = "var" ]; then _opam_config_vars; fi
               ;;
-          remote)
-              if [ "$prev" = "-add" ]; then return 0; fi
-              if [ "$reprev" = "-add" ]; then _filedir -d; return 0; fi
+          repository)
+              _opam_repository_subcommands
+              case "$subcmd" in
+                  remove)
+                      _opam_repositories_only
+                      ;;
+              esac
+              ;;
+          update)
+              _opam_repositories
               ;;
       esac
 
