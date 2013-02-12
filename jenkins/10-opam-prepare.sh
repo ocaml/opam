@@ -45,6 +45,7 @@ add liblo-dev
 # lablgtk2
 add libgtk2.0-dev
 add libgtksourceview2.0-dev
+add libglade2-dev
 # oqamldebug
 add qt4-qmake
 # lwt-zmq
