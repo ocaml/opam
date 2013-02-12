@@ -3,6 +3,8 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# lzo
+add liblzo2-dev
 # magic
 add libmagic-dev
 # mpi
