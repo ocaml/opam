@@ -3,6 +3,8 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# milter
+libmilter-dev
 # lzo
 add liblzo2-dev
 # magic
