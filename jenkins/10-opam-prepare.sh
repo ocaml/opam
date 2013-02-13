@@ -3,6 +3,16 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# milter
+libmilter-dev
+# lzo
+add liblzo2-dev
+# magic
+add libmagic-dev
+# mpi
+add mpi-default-dev
+# snappy
+add libsnappy-dev
 # alt-ergo
 add autoconf
 # yajl
@@ -39,6 +49,7 @@ add liblo-dev
 # lablgtk2
 add libgtk2.0-dev
 add libgtksourceview2.0-dev
+add libglade2-dev
 # oqamldebug
 add qt4-qmake
 # lwt-zmq
