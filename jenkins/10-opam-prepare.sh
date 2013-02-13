@@ -3,8 +3,12 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# spf
+add libspf2-dev
+# oqamldebug
+add libqt4-dev
 # milter
-libmilter-dev
+add libmilter-dev
 # lzo
 add liblzo2-dev
 # magic
