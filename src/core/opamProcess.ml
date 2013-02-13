@@ -51,7 +51,14 @@ let make_info ?code ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file () =
   let print_opt name = function
     | None   -> ()
     | Some s -> print name s in
+  let git_version = match OpamVersion.git with
+    | None   -> ""
+    | Some v -> Printf.sprintf " (%s)" (OpamVersion.to_string v) in
+  let opam_version =
+    Printf.sprintf "%s%s" (OpamVersion.to_string OpamVersion.current) git_version in
 
+  print     "opam-version" opam_version;
+  print     "os" (Lazy.force OpamGlobals.os_string);
   print     "command" (String.concat " " (cmd :: args));
   print     "path"   cwd;
   print_opt "exit-code" (option_map string_of_int code);

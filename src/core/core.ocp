@@ -4,6 +4,7 @@ begin library "opam-core"
   files   = [
     "opamMisc.ml"
     "opamGlobals.ml"
+    "opamGitVersion.ml"
     "opamVersion.ml"
     "opamProcess.ml"
     "opamSystem.ml"

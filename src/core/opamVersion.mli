@@ -20,6 +20,9 @@ include OpamMisc.ABSTRACT
 (** The current OPAM version *)
 val current: t
 
+(** The 'git' version of OPAM *)
+val git: t option
+
 (** Display the version message *)
 val message: unit -> unit
 

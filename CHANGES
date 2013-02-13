@@ -1,4 +1,8 @@
 0.9.3 (trunk)
+* Better error messages in case of conflicts
+* Cleaner API to install/uninstall packages
+* On upgrade, OPAM now perform all the remove action first
+* Use a cache for main storing OPAM metadata: this greatly speed-up OPAM invocations
 * after an upgrade, propose to reinstall a pinned package only if there were some changes
 * improvements to the solver heuristics
 * better error messages on cyclic dependencies

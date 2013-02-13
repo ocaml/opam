@@ -7,7 +7,7 @@ TARGETS = opam opam-mk-repo
 
 .PHONY: all
 
-all: $(LOCAL_OCPBUILD) META
+all: $(LOCAL_OCPBUILD) META src/core/opamGitVersion.ml
 	$(MAKE) clone
 	$(MAKE) compile
 
@@ -66,6 +66,16 @@ tests-git:
 
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
+
+ISGIT = $(shell git status > /dev/null && if [ $$? -eq 0 ]; then echo "1"; else echo "0"; fi)
+
+ifeq ($(ISGIT), 1)
+src/core/opamGitVersion.ml: .git/logs/HEAD
+	@echo 'let version = Some "$(shell git describe)"' > $@
+else
+src/core/opamGitVersion.ml:
+	@echo "let version = None" > $@
+endif
 
 .PHONY: uninstall install
 install:
