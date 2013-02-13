@@ -389,21 +389,24 @@ let check_opam_version t =
   match find_packages_by_name t n with
   | None   -> ()
   | Some _ ->
-    let max_version =
-      let versions = OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
-      let max_version = OpamPackage.Version.Set.max_elt versions in
-      OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
-    if OpamVersion.compare max_version OpamVersion.current > 0 then (
-      OpamGlobals.msg "Your version of OPAM is not up-to-date!\n\
-                      \        opam-path: %s\n\
-                      \  current-version: %s\n\
-                      \   latest-version: %s\n\
-                      It is *highly* recommended to install the latest version of OPAM.\n"
-        (try List.hd (OpamSystem.read_command_output ~verbose:false ["which"; "opam"]) with _ -> "...")
-        (OpamVersion.to_string OpamVersion.current)
-        (OpamVersion.to_string max_version);
-      OpamGlobals.exit 42
-    )
+    try
+      let max_version =
+        let versions = OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
+        let max_version = OpamPackage.Version.Set.max_elt versions in
+        OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
+      if OpamVersion.compare max_version OpamVersion.current > 0 then (
+        OpamGlobals.msg "Your version of OPAM is not up-to-date!\n\
+                        \        opam-path: %s\n\
+                        \  current-version: %s\n\
+                        \   latest-version: %s\n\
+                         It is *highly* recommended to install the latest version of OPAM.\n"
+          (try List.hd (OpamSystem.read_command_output ~verbose:false ["which"; "opam"]) with _ -> "...")
+          (OpamVersion.to_string OpamVersion.current)
+          (OpamVersion.to_string max_version);
+        OpamGlobals.exit 42
+      )
+    with _ ->
+      ()
 
 let get_compiler_packages t comp =
   let comp = compiler t comp in
