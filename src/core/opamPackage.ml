@@ -210,3 +210,26 @@ let versions_of_name packages n =
        (fun nv -> name nv = n)
        packages)
 
+let unknown name version =
+  match version with
+  | None   ->
+    OpamGlobals.error_and_exit
+      "%S is not a valid package."
+      (Name.to_string name)
+  | Some v ->
+    OpamGlobals.error_and_exit
+      "The package %S has no version %s."
+      (Name.to_string name)
+      (Version.to_string v)
+
+let unavailable name version =
+  match version with
+  | None   ->
+    OpamGlobals.error_and_exit
+      "%S is not available for your compiler or your OS."
+      (Name.to_string name)
+  | Some v ->
+    OpamGlobals.error_and_exit
+      "Version %s of %S is incompatible with your compiler or your OS."
+      (Version.to_string v)
+      (Name.to_string name)

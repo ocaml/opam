@@ -23,7 +23,7 @@ let opt_repair = ref false
 let () =
   let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
   let specs = [
-    ("--version", Arg.Unit OpamVersion.message, " Display version information");
+    ("--version"  , Arg.Unit OpamVersion.message, " Display version information");
     ("--normalize", Arg.Set opt_normalize         , " Normalize all files in the repository");
     ("--repair"   , Arg.Set opt_repair            , " Try to repair most of warnings");
   ] in

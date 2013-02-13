@@ -102,23 +102,29 @@ let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
 
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?(depopts=false) universe =
-  (* Some installed packages might not be available anymore, so we
-     should add them here *)
-  let all_packages = OpamPackage.Set.union universe.u_available universe.u_installed in
-  let opam2debian =
-    OpamPackage.Set.fold
-      (fun pkg map -> OpamPackage.Map.add pkg (opam2debian universe depopts pkg) map)
-      all_packages
-      OpamPackage.Map.empty in
-  let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
-  let opam2cudf = OpamPackage.Map.map (debian2cudf tables) opam2debian in
-  let cudf2opam = Hashtbl.create 1024 in
-  OpamPackage.Map.iter (fun opam cudf -> Hashtbl.add cudf2opam (cudf.Cudf.package,cudf.Cudf.version) opam) opam2cudf;
+  let opam2cudf =
+    let opam2debian =
+      OpamPackage.Set.fold
+        (fun pkg map -> OpamPackage.Map.add pkg (opam2debian universe depopts pkg) map)
+        universe.u_packages
+        OpamPackage.Map.empty in
+    let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
+    OpamPackage.Map.map (debian2cudf tables) opam2debian in
+  let cudf2opam =
+    let h = Hashtbl.create 1024 in
+    OpamPackage.Map.iter (fun opam cudf ->
+      Hashtbl.add h (cudf.Cudf.package,cudf.Cudf.version) opam
+    ) opam2cudf;
+    h in
   let universe =
-    try Cudf.load_universe (OpamPackage.Map.values opam2cudf)
+    let available = OpamPackage.Set.elements universe.u_available in
+    let universe = List.map (fun nv -> OpamPackage.Map.find nv opam2cudf) available in
+    try Cudf.load_universe universe
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
-  let universe = Algo.Depsolver.trim universe in
+  (* We can trim the universe here to get faster results, but we
+     choose to keep it bigger to get more precise conflict messages. *)
+  (* let universe = Algo.Depsolver.trim universe in *)
   (fun opam ->
     try OpamPackage.Map.find opam opam2cudf
     with Not_found ->
@@ -126,8 +132,14 @@ let load_cudf_universe ?(depopts=false) universe =
   (fun cudf ->
     try Hashtbl.find cudf2opam (cudf.Cudf.package,cudf.Cudf.version)
     with Not_found ->
-      OpamGlobals.error "cudf2opam: Cannot find %s.%d" cudf.Cudf.package cudf.Cudf.version;
-      OpamPackage.create (OpamPackage.Name.of_string "xxx") (OpamPackage.Version.of_string "yyy")),
+      (* This can happen if a dependency is not available *)
+      try
+        let lookup n = Cudf.lookup_package_property cudf n in
+        let name = OpamPackage.Name.of_string (lookup "source") in
+        let version = OpamPackage.Version.of_string (lookup "sourcenumber") in
+        OpamPackage.unknown name (Some version)
+      with Not_found ->
+        OpamSystem.internal_error "cud2opam(%s,%d)" cudf.Cudf.package cudf.Cudf.version),
   universe
 
 let string_of_request r =

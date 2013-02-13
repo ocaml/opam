@@ -65,3 +65,8 @@ let list t =
     Set.empty
 
 let default = of_string OpamGlobals.default_switch
+
+let unknown compiler =
+  OpamGlobals.error_and_exit
+    "%S is not a valid compiler."
+    (to_string compiler)

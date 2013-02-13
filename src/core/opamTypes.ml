@@ -456,6 +456,7 @@ type user_action =
   | Import of name_set
 
 type universe = {
+  u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;
   u_depends  : formula package_map;

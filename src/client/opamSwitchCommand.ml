@@ -204,7 +204,7 @@ let switch ~quiet switch =
   let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
   let comp_f = OpamPath.compiler t.root compiler in
   if not (OpamFilename.exists_dir comp_dir) && not (OpamFilename.exists comp_f) then
-    OpamState.unknown_compiler compiler;
+    OpamCompiler.unknown compiler;
   if not (OpamSwitch.Map.mem switch t.aliases) then
     install ~quiet switch compiler
   else

@@ -46,3 +46,5 @@ val list: OpamFilename.Dir.t -> Set.t
 (** Default compiler *)
 val default: t
 
+(** Errors *)
+val unknown: t -> 'a

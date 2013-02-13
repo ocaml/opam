@@ -420,8 +420,6 @@ let info ~fields regexps =
 
     (* All the version of the package *)
     let versions = OpamPackage.versions_of_name t.packages name in
-    if OpamPackage.Version.Set.is_empty versions then
-      OpamState.unknown_package name None;
     let versions =
       OpamPackage.Version.Set.filter (fun v ->
         OpamPackage.Map.for_all (fun nv _ -> OpamPackage.version nv <> v) installed

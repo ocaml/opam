@@ -286,6 +286,7 @@ type user_action =
 
 (** Solver universe *)
 type universe = {
+  u_packages : package_set;
   u_installed: package_set;
   u_available: package_set;
   u_depends  : formula package_map;

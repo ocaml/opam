@@ -38,28 +38,6 @@ let confirm fmt =
       true
   ) fmt
 
-let unknown_package name version =
-  match version with
-  | None   -> OpamGlobals.error_and_exit "%S is not a valid package." (OpamPackage.Name.to_string name)
-  | Some v -> OpamGlobals.error_and_exit "The package %S has no version %s." (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string v)
-
-let unavailable_package name version =
-  match version with
-  | None   ->
-    OpamGlobals.error_and_exit
-      "%S is not available for your compiler or your OS.\n"
-      (OpamPackage.Name.to_string name)
-  | Some v ->
-    OpamGlobals.error_and_exit
-      "Version %s of %S is incompatible with your compiler or your OS."
-      (OpamPackage.Version.to_string v)
-      (OpamPackage.Name.to_string name)
-
-let unknown_compiler compiler =
-  OpamGlobals.error_and_exit
-    "%S is not a valid compiler."
-    (OpamCompiler.to_string compiler)
-
 type state = {
   partial: bool;
   root: OpamPath.t;
@@ -81,6 +59,7 @@ type state = {
 }
 
 let universe t action = {
+  u_packages  = t.packages;
   u_action    = action;
   u_installed = t.installed;
   u_available = Lazy.force t.available_packages;
@@ -110,7 +89,7 @@ let compilers ~root =
 
 let opam t nv =
   try OpamPackage.Map.find nv t.opams
-  with Not_found -> unknown_package (OpamPackage.name nv) (Some (OpamPackage.version nv))
+  with Not_found -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
 
 let compiler t c =
   OpamFile.Comp.safe_read (OpamPath.compiler t.root c)
@@ -587,7 +566,7 @@ let load_state ?(save_cache=true) call_site =
   let compiler_version =
     let comp_f = OpamPath.compiler root compiler in
     if not (OpamFilename.exists comp_f) then
-      unknown_compiler compiler;
+      OpamCompiler.unknown compiler;
     OpamFile.Comp.version (OpamFile.Comp.read comp_f) in
   let package_files fn =
     OpamPackage.Set.fold (fun nv map ->
@@ -674,7 +653,7 @@ let contents_of_variable t v =
       let exists = find_packages_by_name t name <> None in
       let name_str = OpamPackage.Name.to_string name in
       if not exists then
-        unknown_package name None;
+        OpamPackage.unknown name None;
       try Some (S (OpamMisc.getenv (name_str ^"_"^ var_str)))
       with Not_found ->
         let installed = mem_installed_package_by_name t name in

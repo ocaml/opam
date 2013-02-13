@@ -86,3 +86,13 @@ val hash: t -> int
 (** List all the .opam files and the package directories in a given
     path *)
 val list: OpamFilename.Dir.t -> Set.t
+
+(** {2 Errors} *)
+
+(** Unknown package: either the name is unknown, or the version does
+   not exist. *)
+val unknown: Name.t -> Version.t option -> 'a
+
+(** Unavailable package: the package exists in the database, but it is
+   not available due to compiler/OS constraints. *)
+val unavailable: Name.t -> Version.t option -> 'a

@@ -107,7 +107,7 @@ val s_installed_root: string
 (** {2 Pretty-printing} *)
 
 (** Convert a reason to something readable by the user *)
-val string_of_reason: (Cudf.package -> package) -> Algo.Diagnostic.reason -> string
+val string_of_reason: (Cudf.package -> package) -> Algo.Diagnostic.reason -> string option
 
 (** Convert a list of reasons to something readable by the user *)
 val string_of_reasons: (Cudf.package -> package) -> Algo.Diagnostic.reason list -> string

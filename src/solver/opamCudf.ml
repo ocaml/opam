@@ -122,18 +122,67 @@ let string_of_request r =
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
 
+let vpkg2opamstr cudf2opam (name, constr) =
+  match constr with
+  | None         -> Common.CudfAdd.decode name
+  | Some (r,v) ->
+    let c = Cudf.({
+        package       = name;
+        version       = v;
+        depends       = [];
+        conflicts     = [];
+        provides      = [];
+        installed     = false;
+        was_installed = false;
+        keep          = `Keep_none;
+        pkg_extra     = [];
+      }) in
+    try
+      let nv = cudf2opam c in
+      let str r =
+        let name = OpamPackage.name nv in
+        let version = OpamPackage.version nv in
+        Printf.sprintf "%s%s%s"
+          (OpamPackage.Name.to_string name) r
+          (OpamPackage.Version.to_string version) in
+      match r with
+      | `Eq  -> OpamPackage.to_string nv
+      | `Neq -> str "!="
+      | `Geq -> str ">="
+      | `Gt  -> str ">"
+      | `Leq -> str "<="
+      | `Lt  -> str "<"
+    with _ ->
+      Common.CudfAdd.decode name
+
+
 let string_of_reason cudf2opam r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
     let nvi = cudf2opam i in
     let nvj = cudf2opam j in
-    Printf.sprintf "Conflict between %s and %s."
-      (OpamPackage.to_string nvi) (OpamPackage.to_string nvj)
-  | Missing (i,_) ->
-    let nv = cudf2opam i in
-    Printf.sprintf "Missing %s." (OpamPackage.to_string nv)
-  | Dependency _ -> ""
+    let str = Printf.sprintf
+        "The package %s is in conflict with %s."
+        (OpamPackage.to_string nvi)
+        (OpamPackage.to_string nvj) in
+    Some str
+  | Missing (p,m) ->
+    let of_package =
+      if p.Cudf.package = "dose-dummy-request" then ""
+      else
+        let nv = cudf2opam p in
+        Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
+    let dependencies =
+      if List.length m > 1 then "dependencies" else "dependency" in
+    let deps = List.map (vpkg2opamstr cudf2opam) m in
+    let str = Printf.sprintf
+        "The %s %s%s is not available for your compiler or your OS."
+        dependencies
+        (String.concat ", " deps)
+        of_package in
+    Some str
+  | Dependency _  -> None
 
 let make_chains depends =
   let open Algo.Diagnostic in
@@ -174,12 +223,20 @@ let string_of_reasons cudf2opam reasons =
     | p::t -> Printf.sprintf "%s <- %s" (OpamPackage.to_string (cudf2opam p)) (string_of_chain t) in
   let string_of_chain c = string_of_chain (List.rev c) in
   let b = Buffer.create 1024 in
-  List.iter (fun r ->
-    Printf.bprintf b " - %s\n" (string_of_reason cudf2opam r)
-  ) reasons;
-  List.iter (fun c ->
-    Printf.bprintf b " + %s\n" (string_of_chain c)
-  ) chains;
+  let reasons = OpamMisc.filter_map (string_of_reason cudf2opam) reasons in
+  begin match reasons with
+    | []  -> ()
+    | [r] -> Buffer.add_string b r
+    | _   ->
+      let reasons = String.concat "\n  -" reasons in
+      Printf.bprintf b "Your request cannot be satisfied:\n  - %s" reasons;
+      match chains with
+      | [] -> ()
+      | _  ->
+        let chains = List.map string_of_chain chains in
+        let chains = String.concat "\n  -" chains in
+        Printf.bprintf b "This is due to the following dependency chain(s):\n  - %s" chains
+  end;
   Buffer.contents b
 
 let s_reinstall = "reinstall"

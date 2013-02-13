@@ -49,39 +49,48 @@ let atom_of_name name =
    - <$n,$v> package when name = $n.$v *)
 let atoms_of_names t names =
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
-  let installed = OpamState.installed_map t in
   let packages = OpamPackage.to_map t.packages in
+  let exists name version =
+    OpamPackage.Name.Map.mem name packages
+    &&
+    match version with
+    | None   -> true
+    | Some v ->
+      let versions = OpamPackage.Name.Map.find name packages in
+      OpamPackage.Version.Set.mem v versions in
+  let available name version =
+    OpamPackage.Name.Map.mem name available
+    &&
+    match version with
+    | None  -> true
+    | Some v ->
+      let versions = OpamPackage.Name.Map.find name available in
+      OpamPackage.Version.Set.mem v versions in
   List.map
     (fun name ->
-      if OpamPackage.Name.Map.mem name packages then (
-        if OpamPackage.Name.Map.mem name installed
-        || OpamPackage.Name.Map.mem name available then
+      if exists name None then
+        if available name None then
           atom_of_name name
         else
-        (* perhaps the package is unavailable for this compiler *)
-          let versions = OpamPackage.Name.Map.find name packages in
-          if not (OpamPackage.Version.Set.is_empty versions) then
-            OpamState.unavailable_package name None
-          else
-            OpamState.unknown_package name None
-      ) else (
+          OpamPackage.unavailable name None
+      else (
         (* consider 'name' to be 'name.version' *)
         let nv =
           try OpamPackage.of_string (OpamPackage.Name.to_string name)
-          with Not_found -> OpamState.unknown_package name None in
+          with Not_found -> OpamPackage.unknown name None in
         let sname = OpamPackage.name nv in
         let sversion = OpamPackage.version nv in
         log "The raw name %S not found, looking for package %s version %s"
           (OpamPackage.Name.to_string name)
           (OpamPackage.Name.to_string sname)
           (OpamPackage.Version.to_string sversion);
-        if OpamPackage.Name.Map.mem sname available
-        && OpamPackage.Version.Set.mem sversion (OpamPackage.Name.Map.find sname available) then
-          eq_atom sname sversion
-        else if OpamPackage.Name.Map.mem sname packages then
-          OpamState.unavailable_package sname (Some sversion)
+        if exists sname (Some sversion) then
+          if available sname (Some sversion) then
+            eq_atom sname sversion
+          else
+            OpamPackage.unavailable sname (Some sversion)
         else
-          OpamState.unknown_package sname (Some sversion)
+          OpamPackage.unknown sname (Some sversion)
       ))
     (OpamPackage.Name.Set.elements names)
 
@@ -318,6 +327,6 @@ let resolve ?(verbose=true) t action request =
 let resolve_and_apply ?(force=false) t action request =
   match resolve t action request with
   | Conflicts cs ->
-    OpamGlobals.msg "No solution has been found:\n%s\n" (cs ());
+    OpamGlobals.msg "%s\n" (cs ());
     No_solution
   | Success solution -> apply ~force t action solution
