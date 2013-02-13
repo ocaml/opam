@@ -635,10 +635,13 @@ let load_state ?(save_cache=true) call_site =
   ) else
     t
 
-let rebuild_state_cache () =
+let remove_state_cache () =
   let root = OpamPath.default () in
   let file = OpamPath.state_cache root in
-  OpamFilename.remove file;
+  OpamFilename.remove file
+
+let rebuild_state_cache () =
+  remove_state_cache ();
   let t = load_state ~save_cache:false "rebuild-cache" in
   save_state ~update:true t
 

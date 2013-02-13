@@ -209,7 +209,7 @@ let update_packages t ~show_packages repositories =
 
   (* then update $opam/repo/index *)
   update_repo_index t;
-  let t = OpamState.load_state "update-packages-1" in
+  let t = OpamState.load_state ~save_cache:false "update-packages-1" in
   let updated =
     let updated = ref [] in
     OpamPackage.Name.Map.fold (fun n repo_s accu ->
@@ -257,7 +257,7 @@ let update_packages t ~show_packages repositories =
   OpamState.add_to_reinstall ~all:true t updated;
 
   (* Check all the dependencies exist *)
-  let t = OpamState.load_state "update-packages-2" in
+  let t = OpamState.load_state ~save_cache:false "update-packages-2" in
   let has_error = ref false in
   OpamPackage.Set.iter (fun nv ->
     let opam = OpamState.opam t nv in
@@ -508,7 +508,7 @@ let info ~fields regexps =
 
 let dry_upgrade () =
   log "dry-upgrade";
-  let t = OpamState.load_state "dry-upgrade" in
+  let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
   let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
   let solution = OpamSolution.resolve ~verbose:false t (Upgrade reinstall)
     { wish_install = [];
@@ -572,9 +572,9 @@ let upgrade names =
     OpamFile.Reinstall.write reinstall_f reinstall;
   OpamSolution.check_solution !solution_found
 
-let update repos =
+let update ?(save_cache=true) repos =
   log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
-  let t = OpamState.load_state "update" in
+  let t = OpamState.load_state ~save_cache "update" in
   let repositories =
     if repos = [] then
       t.repositories
@@ -600,7 +600,8 @@ let update repos =
   || pinned_packages_need_update then
     update_packages t ~show_packages:true repositories;
 
-  OpamState.rebuild_state_cache ();
+  if save_cache then
+    OpamState.rebuild_state_cache ();
 
   match dry_upgrade () with
   | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
@@ -998,11 +999,12 @@ let repository_cleanup t repo =
   update_repository_config t (List.filter ((<>) repo) repos);
   let t = OpamState.load_state "repository-cleanup-repo" in
   update_repo_index t;
-  OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo))
+  OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo));
+  OpamState.rebuild_state_cache ()
 
 let repository_priority name priority =
   log "repository-priority";
-  let t = OpamState.load_state "repository-priority" in
+  let t = OpamState.load_state ~save_cache:false "repository-priority" in
   if OpamState.mem_repository_name t name then (
     let config_f = OpamPath.Repository.config (OpamPath.Repository.create t.root name) in
     let config = OpamFile.Repo_config.read config_f in
@@ -1011,8 +1013,9 @@ let repository_priority name priority =
     let repo_index_f = OpamPath.repo_index t.root in
     let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) t.repo_index in
     OpamFile.Repo_index.write repo_index_f repo_index;
-    let t = OpamState.load_state "repository-3" in
+    let t = OpamState.load_state ~save_cache:false "repository-3" in
     update_repo_index t;
+    OpamState.rebuild_state_cache ()
   ) else
     OpamGlobals.error_and_exit
       "%s is not a a valid remote name"
@@ -1044,11 +1047,12 @@ let repository_add name kind address priority =
   log "Adding %s" (OpamRepository.to_string repo);
   update_repository_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
   try
-    update [name];
     let priority = match priority with
       | None   -> 10 * (OpamRepositoryName.Map.cardinal t.repositories);
       | Some p -> p in
-    repository_priority name priority
+    OpamState.remove_state_cache ();
+    update ~save_cache:false [name];
+    repository_priority name priority;
   with e ->
     repository_cleanup t name;
     raise e
