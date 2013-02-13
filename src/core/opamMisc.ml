@@ -326,3 +326,10 @@ let terminal_columns =
     if Unix.isatty Unix.stdout
     then Lazy.force v
     else max_int
+
+let uname_s () =
+  try
+    with_process_in "uname -s"
+      (fun ic -> Some (strip (input_line ic)))
+  with _ ->
+    None

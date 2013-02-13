@@ -63,7 +63,7 @@ let set_build_options b =
   OpamGlobals.fake           := b.fake;
   match b.make with
   | None   -> ()
-  | Some s -> OpamGlobals.makecmd := lazy s
+  | Some s -> OpamGlobals.makecmd := (fun () -> s)
 
 (* Help sections common to all commands *)
 let global_option_section = "COMMON OPTIONS"

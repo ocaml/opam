@@ -237,9 +237,11 @@ let run_process ?verbose ?(env=default_env) ?name = function
       OpamGlobals.warning "Command %S contains 1 space" cmd;
 
     if command_exists ~env cmd then (
+
       let verbose = match verbose with
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
+
       let r = OpamProcess.run ~env ~name ~verbose cmd args in
       if OpamProcess.is_success r && not !OpamGlobals.debug then
         OpamProcess.clean_files r;
@@ -262,12 +264,6 @@ let read_command_output ?verbose ?env cmd =
     r.OpamProcess.r_stdout
   else
     process_error r
-
-let () =
-  OpamGlobals.uname_s := function () ->
-    match read_command_output ~verbose:false [ "uname"; "-s"] with
-    | h::_ -> OpamMisc.strip h
-    | []   -> failwith "uname -s"
 
 let copy src dst =
   if Sys.is_directory src then
@@ -417,7 +413,8 @@ let ocaml_version = lazy (
 (* Reset the path to get the system compiler *)
 let system command = lazy (
   try
-    match read_command_output ~verbose:false ~env:(Lazy.force reset_env) command with
+    let env = Lazy.force reset_env in
+    match read_command_output ~verbose:false ~env command with
     | h::_ -> Some (OpamMisc.strip h)
     | []   -> internal_error "Cannot find %s." (try List.hd command with _ -> "<none>")
   with _ ->
@@ -485,7 +482,7 @@ let patch p =
   let patch ~dryrun n =
     let opts = if dryrun then
         let open OpamGlobals in
-        match Lazy.force OpamGlobals.os with
+        match OpamGlobals.os () with
         | FreeBSD | OpenBSD     -> [ "-t"; "-C" ]
         | Unix | Linux | Darwin -> [ "--dry-run" ]
         | Win32 | Cygwin (* this is probably broken *)

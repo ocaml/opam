@@ -26,7 +26,10 @@ let list ~print_short ~installed_only =
   let descrs = OpamState.compilers ~root:t.root in
   let descr c =
     if c = OpamCompiler.default then
-      Printf.sprintf "System compiler (%s)" (OpamCompiler.Version.to_string t.compiler_version)
+      let system_version = match OpamCompiler.Version.system () with
+        | None   -> assert false
+        | Some v -> OpamCompiler.Version.to_string v in
+      Printf.sprintf "System compiler (%s)" system_version
     else
       OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
 

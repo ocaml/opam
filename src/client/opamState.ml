@@ -246,7 +246,7 @@ let available_packages root opams installed repositories repo_index compiler_ver
         | f ->
           let atom (b, os) =
             let ($) = if b then (=) else (<>) in
-            os $ Lazy.force OpamGlobals.os_string in
+            os $ OpamGlobals.os_string () in
           OpamFormula.eval atom f in
       let consistent_pinned_version () =
         let name = OpamPackage.name nv in
@@ -904,8 +904,8 @@ let install_conf_ocaml_config root switch =
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
       ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
-      ("make" , Lazy.force !OpamGlobals.makecmd);
-      ("os"   , Lazy.force OpamGlobals.os_string);
+      ("make" , !OpamGlobals.makecmd ());
+      ("os"   , OpamGlobals.os_string ());
     ] in
 
   let config = OpamFile.Dot_config.create vars in
@@ -989,8 +989,8 @@ let install_compiler t ~quiet switch compiler =
           (* NOTE In case it exists 2 '-prefix', in general the script
              ./configure will only consider the last one, others will be
              discarded. *)
-          ; ( Lazy.force !OpamGlobals.makecmd :: OpamFile.Comp.make comp )
-          ; [ Lazy.force !OpamGlobals.makecmd ; "install" ]
+          ; ( !OpamGlobals.makecmd () :: OpamFile.Comp.make comp )
+          ; [ !OpamGlobals.makecmd () ; "install" ]
           ]
       end else begin
         let t = { t with switch } in

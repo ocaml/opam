@@ -110,23 +110,26 @@ type os =
   | Unix
   | Other of string
 
-let uname_s =
-  ref (fun () -> assert false)
+let osref = ref None
 
-let os = lazy (
-  match Sys.os_type with
-  | "Unix" -> begin
-    match !uname_s () with
-    | "Darwin"  -> Darwin
-    | "Linux"   -> Linux
-    | "FreeBSD" -> FreeBSD
-    | "OpenBSD" -> OpenBSD
-    | _         -> Unix
-  end
-  | "Win32"  -> Win32
-  | "Cygwin" -> Cygwin
-  | s        -> Other s
-)
+let os () =
+  match !osref with
+  | None ->
+    let os = match Sys.os_type with
+      | "Unix" -> begin
+          match OpamMisc.uname_s () with
+          | Some "Darwin"  -> Darwin
+          | Some "Linux"   -> Linux
+          | Some "FreeBSD" -> FreeBSD
+          | Some "OpenBSD" -> OpenBSD
+          | _              -> Unix
+        end
+      | "Win32"  -> Win32
+      | "Cygwin" -> Cygwin
+      | s        -> Other s in
+    osref := Some os;
+    os
+  | Some os -> os
 
 let string_of_os = function
   | Darwin  -> "darwin"
@@ -138,18 +141,15 @@ let string_of_os = function
   | Unix    -> "unix"
   | Other x -> x
 
-let os_string =
-  lazy (string_of_os (Lazy.force os))
+let os_string () =
+  string_of_os (os ())
 
-let makecmd = ref (lazy (
-  match Lazy.force os with
+let makecmd = ref (fun () ->
+  match os () with
   | FreeBSD
   | OpenBSD -> "gmake"
   | _ -> "make"
 )
-)
-
-let ulimit_pipe = 65536
 
 let log_limit = 10
 let log_line_limit = 5 * 80

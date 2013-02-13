@@ -200,3 +200,6 @@ end
 (** When [stdout] refers to a terminal, query the number of columns.
     Otherwise return [max_int]. *)
 val terminal_columns : unit -> int
+
+(** Get the output of [uname -s] *)
+val uname_s: unit -> string option
