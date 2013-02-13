@@ -228,7 +228,7 @@ let pinned_path t name =
     None
 
 (* List the packages which does fullfil the compiler constraints *)
-let available_packages root opams installed repositories repo_index compiler_version pinned packages =
+let available_packages root system opams installed repositories repo_index compiler_version pinned packages =
   let filter nv =
     if OpamPackage.Map.mem nv opams then (
       let opam = OpamPackage.Map.find nv opams in
@@ -236,7 +236,19 @@ let available_packages root opams installed repositories repo_index compiler_ver
         OpamPackage.Set.mem nv installed
         || find_repository_aux repositories root repo_index nv <> None in
       let consistent_ocaml_version () =
-        let atom (r,v) = OpamCompiler.Version.compare compiler_version r v in
+        let atom (r,v) =
+          match OpamCompiler.Version.to_string v with
+          | "system" ->
+            begin match r with
+              | `Eq  -> system
+              | `Neq -> not system
+              | _    -> OpamSystem.internal_error
+                          "%s is not a valid constraint for the system compiler \
+                           (only '=' and '!' are valid)."
+                          (OpamFormula.string_of_relop r)
+            end
+          | _ ->
+            OpamCompiler.Version.compare compiler_version r v in
         match OpamFile.OPAM.ocaml_version opam with
         | None   -> true
         | Some c -> OpamFormula.eval atom c in
@@ -598,8 +610,9 @@ let load_state ?(save_cache=true) call_site =
     else installed_roots in
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
+  let system = (compiler = OpamCompiler.system) in
   let available_packages =
-    lazy (available_packages root opams installed repositories repo_index compiler_version pinned packages) in
+    lazy (available_packages root system opams installed repositories repo_index compiler_version pinned packages) in
   let t = {
     partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
     packages; available_packages; installed; installed_roots; reinstall;

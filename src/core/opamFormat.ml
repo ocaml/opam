@@ -347,6 +347,7 @@ let parse_relop = function
   | ">"  -> `Gt
   | "<=" -> `Leq
   | "<"  -> `Lt
+  | "!"  -> `Neq
   | _    -> invalid_arg "parse_relop"
 
 let string_of_relop = function
@@ -355,12 +356,17 @@ let string_of_relop = function
   | `Gt  -> ">"
   | `Leq -> "<="
   | `Lt  -> "<"
+  | `Neq -> "!"
   | _    -> invalid_arg "parse_relop"
 
 let parse_compiler_constraint t =
   let rec aux = function
     | []                         -> Empty
-    | [Symbol r; String v ]      ->
+    | [Symbol r; Ident v] when
+        v = OpamCompiler.to_string OpamCompiler.system ->
+      let version = OpamCompiler.Version.of_string v in
+      Atom (parse_relop r, version)
+    | [Symbol r; String v]       ->
       (try Atom (parse_relop r, OpamCompiler.Version.of_string v)
        with _ -> bad_format "Expecting a relop, got %s" r)
     | [Group g]                  -> Block (aux g)
@@ -374,7 +380,13 @@ let parse_compiler_constraint t =
 let make_compiler_constraint t =
   let rec aux = function
     | Empty       -> []
-    | Atom (r, v) -> [Symbol (string_of_relop r); String (OpamCompiler.Version.to_string  v)]
+    | Atom (r, v) ->
+      let mk version = [ Symbol (string_of_relop r); version ] in
+      let system = OpamCompiler.to_string OpamCompiler.system in
+      if OpamCompiler.Version.to_string v = system then
+        mk (Ident system)
+      else
+        mk (String (OpamCompiler.Version.to_string v))
     | Block f     -> [Group (aux f)]
     | And(e,f)    -> aux e @ [Symbol "&"] @ aux f
     | Or(e,f)     -> aux e @ [Symbol "|"] @ aux f in
