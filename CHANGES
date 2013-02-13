@@ -1,4 +1,5 @@
-0.9.3 (trunk)
+0.9.3 [Feb 2013]
+* Add system compiler constraints in OPAM files
 * Better error messages in case of conflicts
 * Cleaner API to install/uninstall packages
 * On upgrade, OPAM now perform all the remove action first
@@ -7,7 +8,7 @@
 * improvements to the solver heuristics
 * better error messages on cyclic dependencies
 
-0.9.2 [Jan 2012]
+0.9.2 [Jan 2013]
 * Install all the API files
 * Fix `opam repo remove repo-name`
 * speed-up `opam config env`
@@ -17,10 +18,10 @@
 * Fix 'opam-mk-repo -i'
 * clean-up pinned cache dir when a pinned package fails to install
 
-0.9.1 [Jan 2012]
+0.9.1 [Jan 2013]
 * Use ocaml-re 1.2.0
 
-0.9.0 [Jan 2012]
+0.9.0 [Jan 2013]
 * add a new `--fake` option to simulate build and installation of packages. Use this option this care, it can easily corrupt the state of OPAM.
 * Better messages in case of error
 * OPAM proposes better solutions to the user
