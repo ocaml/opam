@@ -25,7 +25,7 @@ let list ~print_short ~installed_only =
   let t = OpamState.load_state "switch-list" in
   let descrs = OpamState.compilers ~root:t.root in
   let descr c =
-    if c = OpamCompiler.default then
+    if c = OpamCompiler.system then
       let system_version = match OpamCompiler.Version.system () with
         | None   -> assert false
         | Some v -> OpamCompiler.Version.to_string v in

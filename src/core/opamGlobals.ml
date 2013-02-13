@@ -53,7 +53,7 @@ let default_build_command = [ [ "./build.sh" ] ]
 
 let default_package = "conf-ocaml"
 
-let default_switch = "system"
+let system = "system"
 
 let switch : string option ref = ref None
 

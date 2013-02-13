@@ -267,11 +267,11 @@ let base_packages =
 let create_system_compiler_description root = function
   | None         -> ()
   | Some version ->
-    let comp = OpamPath.compiler root OpamCompiler.default in
+    let comp = OpamPath.compiler root OpamCompiler.system in
     OpamFilename.remove comp;
     let f =
       OpamFile.Comp.create_preinstalled
-        OpamCompiler.default version
+        OpamCompiler.system version
         (if not !OpamGlobals.no_base_packages then base_packages else [])
         [ ("CAML_LD_LIBRARY_PATH", "=",
            "%{lib}%/stublibs"
@@ -283,7 +283,7 @@ let create_system_compiler_description root = function
     OpamFile.Comp.write comp f
 
 let system_needs_upgrade t =
-  t.compiler = OpamCompiler.default
+  t.compiler = OpamCompiler.system
   && match OpamCompiler.Version.system () with
   | None   -> OpamGlobals.error_and_exit "No OCaml compiler found in path"
   | Some v -> t.compiler_version <> v

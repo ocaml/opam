@@ -1255,7 +1255,7 @@ module Comp = struct
     let version =
       OpamFormat.assoc_default version_d s s_version
         (OpamFormat.parse_string |> OpamCompiler.Version.of_string) in
-    if name <> OpamCompiler.default && version_d <> version then
+    if name <> OpamCompiler.system && version_d <> version then
       OpamGlobals.warning "The file %s contains a bad 'version' field: %s instead of %s"
         (OpamFilename.to_string filename)
         (OpamCompiler.Version.to_string version)

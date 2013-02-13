@@ -15,4 +15,4 @@
 
 include OpamMisc.Base
 
-let default = of_string OpamGlobals.default_switch
+let default = of_string OpamGlobals.system

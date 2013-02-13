@@ -64,7 +64,7 @@ let list t =
   ) else
     Set.empty
 
-let default = of_string OpamGlobals.default_switch
+let system = of_string OpamGlobals.system
 
 let unknown compiler =
   OpamGlobals.error_and_exit

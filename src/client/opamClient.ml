@@ -50,9 +50,9 @@ let print_updated_packages t updated pinned_updated =
 let print_updated_compilers ~old_compilers ~new_compilers =
   let print comp = OpamGlobals.msg " - %s\n" (OpamCompiler.to_string comp) in
   let (--) = OpamCompiler.Set.diff in
-  let default = OpamCompiler.Set.singleton OpamCompiler.default in
-  let added_compilers = new_compilers -- old_compilers -- default in
-  let deleted_compilers = old_compilers -- new_compilers -- default in
+  let system = OpamCompiler.Set.singleton OpamCompiler.system in
+  let added_compilers = new_compilers -- old_compilers -- system in
+  let deleted_compilers = old_compilers -- new_compilers -- system in
   if not (OpamCompiler.Set.is_empty added_compilers) then (
     OpamGlobals.msg "New compiler descriptions available:\n";
     OpamCompiler.Set.iter print added_compilers;
@@ -156,7 +156,7 @@ let update_repositories t ~show_compilers repositories =
   (* keep if: =system || (deleted && used) *)
   let deleted = OpamCompiler.Set.diff old_compilers new_compilers in
   OpamCompiler.Set.iter (fun comp ->
-    if comp <> OpamCompiler.default
+    if comp <> OpamCompiler.system
     && not (OpamCompiler.Set.mem comp deleted
             && OpamSwitch.Map.exists (fun _ c -> comp = c) t.aliases) then (
         let comp_f = OpamPath.compiler t.root comp in
@@ -620,7 +620,7 @@ let init repo compiler cores =
     let repo_p = OpamPath.Repository.create root repo.repo_name in
     (* Create (possibly empty) configuration files *)
     let switch =
-      if compiler = OpamCompiler.default then
+      if compiler = OpamCompiler.system then
         OpamSwitch.default
       else
         OpamSwitch.of_string (OpamCompiler.to_string compiler) in
@@ -656,7 +656,7 @@ let init repo compiler cores =
     log "updating package state";
     let t = OpamState.load_state ~save_cache:false "init-1" in
     let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
-    let quiet = (compiler = OpamCompiler.default) in
+    let quiet = (compiler = OpamCompiler.system) in
     OpamState.install_compiler t ~quiet switch compiler;
     update_packages t ~show_packages:false t.repositories;
 
@@ -977,7 +977,7 @@ let upgrade_system_compiler t =
 
   (* Reinstall all system compiler switches *)
     OpamSwitch.Map.iter (fun s a ->
-      if a = OpamCompiler.default then (
+      if a = OpamCompiler.system then (
         OpamGlobals.msg "\n=o=o=o= Upgrading %s =o=o=o=\n" (OpamSwitch.to_string s);
         OpamSwitchCommand.reinstall s
       )

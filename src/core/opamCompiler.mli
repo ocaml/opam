@@ -43,8 +43,8 @@ val of_filename: OpamFilename.t -> t
 (** List the compiler available in a directory *)
 val list: OpamFilename.Dir.t -> Set.t
 
-(** Default compiler *)
-val default: t
+(** System compiler *)
+val system: t
 
 (** Errors *)
 val unknown: t -> 'a
