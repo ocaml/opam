@@ -46,3 +46,8 @@ let message () =
     Sys.argv.(0) current_raw;
   exit 0
 
+let git =
+  match OpamGitVersion.version with
+  | None   -> None
+  | Some v -> Some (of_string v)
+
