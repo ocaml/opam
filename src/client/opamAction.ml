@@ -380,7 +380,11 @@ let remove_all_packages t ~update_metadata sol =
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
 let build_and_install_package_aux t ~update_metadata nv =
-  OpamGlobals.msg "\n=-=-= Installing %s =-=-=\n" (OpamPackage.to_string nv);
+  let left, right = match !OpamGlobals.utf8_msgs with
+  | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
+  | false -> "=-=-=", "=-=-="
+  in
+  OpamGlobals.msg "\n%s Installing %s %s\n" left (OpamPackage.to_string nv) right;
 
   let opam = OpamState.opam t nv in
 
