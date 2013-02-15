@@ -79,10 +79,13 @@ let () =
     );
 
     (** Dot_install *)
-    let dot_install = OpamPath.Repository.files t package // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install") in
-    if OpamFilename.exists dot_install then (
-      write OpamFile.Dot_install.Raw.write dot_install (OpamFile.Dot_install.Raw.read dot_install);
-    );
+    let dot_install =
+      OpamPath.Repository.files t package
+      // (OpamPackage.Name.to_string
+          (OpamPackage.name package) ^ ".install") in
+    if OpamFilename.exists dot_install then
+      write OpamFile.Dot_install.write dot_install (OpamFile.Dot_install.read dot_install);
+
   ) (OpamRepository.packages t);
 
   (** compilers *)

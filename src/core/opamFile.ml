@@ -514,35 +514,7 @@ module Config = struct
         OpamFormat.assoc s.file_contents s_opam_version (OpamFormat.parse_string |> OpamVersion.of_string) in
       let repositories =
         OpamFormat.assoc_list s.file_contents s_repositories
-          (OpamFormat.parse_or [
-            ("new-version", OpamFormat.parse_list (OpamFormat.parse_string |> OpamRepositoryName.of_string));
-            ("old-version",
-             (* We try to keep backward compatibilty here. The following code is not very beautiful, but it works *)
-             fun x ->
-               let list =
-                 OpamFormat.parse_list (OpamFormat.parse_string_option OpamFormat.parse_string_pair_of_list) x in
-               let _ = List.fold_left (fun i (name, option) ->
-                 match option with
-                 | None                 -> i+1
-                 | Some (address, kind) ->
-                   let repo_name = OpamRepositoryName.of_string name in
-                   let repo = {
-                     repo_name;
-                     repo_kind     = repository_kind_of_string kind;
-                     repo_address  = OpamFilename.address_of_string address;
-                     repo_priority = 10 * i;
-                   } in
-                   let repo_p = OpamPath.Repository.create (OpamPath.default ()) repo_name in
-                   let config_f = OpamPath.Repository.config repo_p in
-                   if not (OpamFilename.exists config_f) then (
-                     OpamGlobals.log internal "write %s" (OpamFilename.to_string config_f);
-                     OpamFilename.write config_f (Repo_config.to_string filename repo)
-                   );
-                   i+1)
-                 0 list in
-               List.map (fst |> OpamRepositoryName.of_string) list)
-          ]) in
-
+          (OpamFormat.parse_list (OpamFormat.parse_string |> OpamRepositoryName.of_string)) in
       let mk_switch str =
         OpamFormat.assoc_option s.file_contents str (OpamFormat.parse_string |> OpamSwitch.of_string) in
       let switch  = mk_switch s_switch in
@@ -837,31 +809,41 @@ module OPAM = struct
     }
 end
 
-module Dot_install_raw = struct
+module Dot_install = struct
 
-  let internal = ".install(raw)"
+  let internal = ".install"
 
   type t =  {
-    lib : string optional list;
-    bin : (string optional * string option) list;
-    toplevel: string optional list;
-    misc: (string optional * string option) list;
-    share: (string optional * string option) list;
+    bin     : (basename optional * basename option) list;
+    lib     : basename optional list;
+    toplevel: basename optional list;
+    share   : basename optional list;
+    doc     : basename optional list;
+    misc    : (basename optional * filename) list;
   }
 
   let empty = {
-    lib  = [] ;
-    bin  = [] ;
-    toplevel = [] ;
-    misc = [] ;
-    share = [];
+    lib      = [];
+    bin      = [];
+    toplevel = [];
+    misc     = [];
+    share    = [];
+    doc      = [];
   }
 
-  let s_lib = "lib"
-  let s_bin = "bin"
-  let s_misc = "misc"
+  let bin t = t.bin
+  let lib t = t.lib
+  let toplevel t = t.toplevel
+  let misc t = t.misc
+  let share t = t.share
+  let doc t = t.doc
+
+  let s_lib      = "lib"
+  let s_bin      = "bin"
+  let s_misc     = "misc"
   let s_toplevel = "toplevel"
-  let s_share = "share"
+  let s_share    = "share"
+  let s_doc      = "doc"
 
   let valid_fields = [
     s_opam_version;
@@ -870,33 +852,48 @@ module Dot_install_raw = struct
     s_toplevel;
     s_misc;
     s_share;
+    s_doc;
   ]
 
   (* Filenames starting by ? are not always present. *)
   let optional_of_string str =
+    let mk = OpamFilename.Base.of_string in
     if String.length str > 0 && str.[0] = '?' then
-      { optional=true; c=String.sub str 1 (String.length str - 1) }
+      { optional = true;
+        c        = mk (String.sub str 1 (String.length str - 1)) }
     else
-      { optional=false; c=str }
+      { optional = false;
+        c        = mk str }
 
   let string_of_optional t =
     let o = if t.optional then "?" else "" in
-    Printf.sprintf "%s%s" o t.c
+    Printf.sprintf "%s%s" o (OpamFilename.Base.to_string t.c)
 
   let to_string filename t =
-    let make_option (src, option) =
-      let src = String (string_of_optional src) in
-      match option with
-      | None     -> src
-      | Some dst -> Option (src, [String dst]) in
+    let mk_bin =
+      let aux (src, opt) =
+        let src = String (string_of_optional src) in
+        match opt with
+        | None     -> src
+        | Some dst -> Option (src, [String (OpamFilename.Base.to_string dst)]) in
+      OpamFormat.make_list aux in
+    let mk_misc =
+      let aux (src, dst) =
+        let src = String (string_of_optional src) in
+        let dst = String (OpamFilename.to_string dst) in
+        Option (src, [dst]) in
+      OpamFormat.make_list aux in
+    let mk =
+      OpamFormat.make_list (string_of_optional |> OpamFormat.make_string) in
     let s = {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
-        Variable (s_lib     , OpamFormat.make_list (string_of_optional |> OpamFormat.make_string) t.lib);
-        Variable (s_bin     , OpamFormat.make_list make_option t.bin);
-        Variable (s_toplevel, OpamFormat.make_list (string_of_optional |> OpamFormat.make_string) t.toplevel);
-        Variable (s_misc    , OpamFormat.make_list make_option t.misc);
-        Variable (s_share   , OpamFormat.make_list make_option t.share);
+        Variable (s_bin     , mk_bin  t.bin);
+        Variable (s_lib     , mk      t.lib);
+        Variable (s_toplevel, mk      t.toplevel);
+        Variable (s_share   , mk      t.share);
+        Variable (s_doc     , mk      t.doc);
+        Variable (s_misc    , mk_misc t.misc);
       ]
     } in
     Syntax.to_string ~indent_variable:(fun _ -> true) s
@@ -904,83 +901,28 @@ module Dot_install_raw = struct
   let of_string filename str =
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
-    let parse_option = OpamFormat.parse_or [
-      ("string", fun v -> optional_of_string (OpamFormat.parse_string v), None);
-      ("option", function
-        | Option (String src, [String dst]) -> optional_of_string src, Some dst
-        | _ -> failwith "option");
-    ] in
-    let lib =
-      OpamFormat.assoc_list s.file_contents s_lib
-        (OpamFormat.parse_list (OpamFormat.parse_string |> optional_of_string)) in
-    let bin = OpamFormat.assoc_list s.file_contents s_bin (OpamFormat.parse_list parse_option) in
-    let toplevel =
-      OpamFormat.assoc_list s.file_contents s_toplevel
-        (OpamFormat.parse_list (OpamFormat.parse_string |> optional_of_string)) in
-    let misc = OpamFormat.assoc_list s.file_contents s_misc (OpamFormat.parse_list parse_option) in
-    let share = OpamFormat.assoc_list s.file_contents s_share (OpamFormat.parse_list parse_option) in
-    { lib; bin; misc; toplevel; share }
-
-end
-
-module Dot_install = struct
-
-  let internal = ".install"
-
-  type t =  {
-    lib : filename optional list ;
-    bin : (filename optional * basename) list ;
-    toplevel : filename optional list;
-    misc: (filename optional * filename) list ;
-    share: (filename optional * basename) list;
-  }
-
-  let lib t = t.lib
-  let bin t = t.bin
-  let misc t = t.misc
-  let toplevel t = t.toplevel
-  let share t = t.share
-
-  module R = Dot_install_raw
-
-  let empty = {
-    lib  = [] ;
-    bin  = [] ;
-    toplevel = [];
-    misc = [];
-    share = [];
-  }
-
-  let map_o fn x =
-    { optional = x.optional; c = fn x.c }
-
-  let to_string filename t =
-    let to_bin (src, dst) =
-      map_o OpamFilename.to_string src,
-      if OpamFilename.basename src.c = dst then None else Some (OpamFilename.Base.to_string dst) in
-    let to_misc (src, dst) =
-      map_o OpamFilename.to_string src,
-      Some (OpamFilename.to_string dst) in
-    R.to_string filename
-      { lib = List.map (map_o OpamFilename.to_string) t.lib
-      ; bin = List.map to_bin t.bin
-      ; toplevel = List.map (map_o OpamFilename.to_string) t.toplevel
-      ; share = List.map to_bin t.share
-      ; R.misc = List.map to_misc t.misc }
-
-  let of_string filename str =
-    let t = R.of_string filename str in
-    let of_bin = function
-      | s  , None     -> let f = map_o OpamFilename.of_string s in (f, OpamFilename.basename f.c)
-      | src, Some dst -> (map_o OpamFilename.of_string src, OpamFilename.Base.of_string dst) in
-    let of_misc = function
-      | s  , None     -> let f = map_o OpamFilename.of_string s in (f, f.c)
-      | src, Some dst -> (map_o OpamFilename.of_string src, OpamFilename.of_string dst) in
-    { lib = List.map (map_o OpamFilename.of_string) t.R.lib
-    ; bin = List.map of_bin t.R.bin
-    ; toplevel = List.map (map_o OpamFilename.of_string) t.R.toplevel
-    ; share = List.map of_bin t.R.share
-    ; misc = List.map of_misc t.R.misc }
+    let src = OpamFormat.parse_string |> optional_of_string in
+    let mk field fn =
+      OpamFormat.assoc_list s.file_contents field (OpamFormat.parse_list fn) in
+    let bin =
+      let dst = OpamFormat.parse_string |> OpamFilename.Base.of_string in
+      let fn = OpamFormat.parse_single_option src dst in
+      mk s_bin fn in
+    let misc =
+      let absolute_filename s =
+        if not (Filename.is_relative s) then
+          OpamFilename.of_string s
+        else
+          OpamSystem.internal_error "%s is not an absolute filename." str in
+      let dst = OpamFormat.parse_string |> absolute_filename in
+      let fn = OpamFormat.parse_pair src dst in
+      mk s_misc fn in
+    let fn = OpamFormat.parse_string |> optional_of_string in
+    let lib      = mk s_lib      fn in
+    let toplevel = mk s_toplevel fn in
+    let share    = mk s_share    fn in
+    let doc      = mk s_doc      fn in
+    { lib; bin; misc; toplevel; share; doc }
 
 end
 
@@ -1512,10 +1454,6 @@ end
 module Dot_install = struct
   include Dot_install
   include Make (Dot_install)
-  module Raw = struct
-    include Dot_install_raw
-    include Make (Dot_install_raw)
-  end
 end
 
 module Dot_config = struct

@@ -107,59 +107,72 @@ let install_package t nv =
       (* .config *)
       OpamFile.Dot_config.write (OpamPath.Switch.config t.root t.switch name) config;
 
-      (* lib *)
       let warnings = ref [] in
-      let check f dst =
-        if not f.optional && not (OpamFilename.exists f.c) then (
-          warnings := (f.c, dst) :: !warnings
+      let check ~src ~dst base =
+        let src_file = OpamFilename.create src base.c in
+        if not base.optional && not (OpamFilename.exists src_file) then (
+          warnings := (dst, base.c) :: !warnings
         );
-        OpamFilename.exists f.c in
-      let lib = OpamPath.Switch.lib t.root t.switch name in
-      List.iter (fun f ->
-        if check f lib then
-          OpamFilename.copy_in f.c lib
-      ) (OpamFile.Dot_install.lib install);
+        OpamFilename.exists src_file in
+
+      (* Install a list of files *)
+      let install_files dst_fn files_fn =
+        let dst = dst_fn t.root t.switch name in
+        let files = files_fn install in
+        if not (OpamFilename.exists_dir dst) then (
+          log "creating %s" (OpamFilename.Dir.to_string dst);
+          OpamFilename.mkdir dst;
+        );
+        let src = OpamFilename.cwd () in
+        List.iter (fun b ->
+          if check ~src ~dst b then
+            let file = OpamFilename.create src b.c in
+            OpamFilename.copy_in file dst
+        ) files in
+
+      (* lib *)
+      install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
 
       (* toplevel *)
-      let toplevel = OpamPath.Switch.toplevel t.root t.switch in
-      List.iter (fun f ->
-        if check f toplevel then
-          OpamFilename.copy_in f.c toplevel
-      ) (OpamFile.Dot_install.toplevel install);
+      install_files (fun r s _ -> OpamPath.Switch.toplevel r s) OpamFile.Dot_install.toplevel;
+
+      (* Shared files *)
+      install_files OpamPath.Switch.share OpamFile.Dot_install.share;
+
+      (* Documentation files *)
+      install_files OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
       (* bin *)
-      List.iter (fun (src, dst) ->
-        let dst = OpamPath.Switch.bin t.root t.switch // OpamFilename.Base.to_string dst in
-        (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
-        if check src  (OpamPath.Switch.bin t.root t.switch) then
-          OpamFilename.copy ~src:src.c ~dst;
+      List.iter (fun (base, dst) ->
+        let src_dir = OpamFilename.cwd () in
+        let dst_dir = OpamPath.Switch.bin t.root t.switch in
+        let src_file = OpamFilename.create src_dir base.c in
+        let dst_file = match dst with
+          | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
+          | Some d -> OpamFilename.create dst_dir d in
+        if check ~src:src_dir ~dst:dst_dir base then
+          OpamFilename.copy ~src:src_file ~dst:dst_file;
       ) (OpamFile.Dot_install.bin install);
 
       (* misc *)
       List.iter
         (fun (src, dst) ->
+          let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
           if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
-            OpamFilename.copy ~src:src.c ~dst
+            OpamFilename.copy ~src:src_file ~dst
           else begin
-            OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.to_string src.c) (OpamFilename.to_string dst);
+            OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
             if OpamState.confirm "Continue ?" then
-              OpamFilename.copy ~src:src.c ~dst
+              OpamFilename.copy ~src:src_file ~dst
           end
         ) (OpamFile.Dot_install.misc install);
 
-      (* Shared files *)
-      List.iter (fun (src, dst) ->
-        let share = OpamPath.Switch.share t.root t.switch name in
-        let dst = share // OpamFilename.Base.to_string dst in
-        (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
-        if not (OpamFilename.exists_dir share) then
-          OpamFilename.mkdir share;
-        OpamFilename.copy ~src:src.c ~dst;
-      ) (OpamFile.Dot_install.share install);
-
       if !warnings <> [] then (
-        let print (f, dst) = Printf.sprintf " - %s in %s" (OpamFilename.to_string f) (OpamFilename.Dir.to_string dst) in
-        OpamGlobals.error_and_exit
+        let print (dir, base) =
+          Printf.sprintf " - %s in %s"
+            (OpamFilename.Base.to_string base)
+            (OpamFilename.Dir.to_string dir) in
+        OpamSystem.internal_error
           "Error while installing the following files:\n%s"
           (String.concat "\n" (List.map print !warnings));
       )
@@ -305,8 +318,12 @@ let remove_package_aux t ~update_metadata ~rm_build nv =
   (* Remove the binaries *)
   log "Removing the binaries";
   let install = OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
-  List.iter (fun (_,dst) ->
-    let dst = OpamPath.Switch.bin t.root t.switch // (OpamFilename.Base.to_string dst) in
+  List.iter (fun (base, dst) ->
+    let dir = OpamPath.Switch.bin t.root t.switch in
+    let dummy_src = OpamFilename.create dir base.c in
+    let dst = match dst with
+      | None   -> OpamFilename.create dir (OpamFilename.basename dummy_src)
+      | Some b -> OpamFilename.create dir b in
     OpamFilename.remove dst
   ) (OpamFile.Dot_install.bin install);
 
