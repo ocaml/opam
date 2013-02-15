@@ -40,6 +40,7 @@ let build_doc        = check "BUILDDOC"
 let dryrun           = check "DRYRUN"
 let fake             = check "FAKE"
 let print_stats      = check "STATS"
+let utf8_msgs        = check "UTF8MSGS"
 
 let cudf_file = ref (None: string option)
 let aspcud_criteria =
