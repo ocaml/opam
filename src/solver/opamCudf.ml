@@ -224,11 +224,12 @@ let string_of_reasons cudf2opam reasons =
   let string_of_chain c = string_of_chain (List.rev c) in
   let b = Buffer.create 1024 in
   let reasons = OpamMisc.filter_map (string_of_reason cudf2opam) reasons in
+  let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
   begin match reasons with
     | []  -> ()
     | [r] -> Buffer.add_string b r
     | _   ->
-      let reasons = String.concat "\n  -" reasons in
+      let reasons = String.concat "\n  - " reasons in
       Printf.bprintf b "Your request cannot be satisfied:\n  - %s" reasons;
       match chains with
       | [] -> ()
