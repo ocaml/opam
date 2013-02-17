@@ -48,6 +48,9 @@ val resolve :
   ?verbose:bool ->
   universe -> atom request -> (solution, string) result
 
+(** Keep only the packages that are installable. *)
+val installable: universe -> package_set
+
 (** Return the topological sort of the transitive dependency closures
     of a collection of packages.*)
 val dependencies :

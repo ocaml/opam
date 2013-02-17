@@ -213,6 +213,15 @@ let resolve ?(verbose=true) universe request =
     let cudf_solution = OpamCudf.solution_of_actions ~simple_universe ~complete_universe actions in
     Success (solution cudf2opam cudf_solution)
 
+let installable universe =
+  log "trim";
+  let _, cudf2opam, simple_universe = load_cudf_universe universe in
+  let trimed_universe = Algo.Depsolver.trim simple_universe in
+  Cudf.fold_packages
+    (fun universe pkg -> OpamPackage.Set.add (cudf2opam pkg) universe)
+    OpamPackage.Set.empty
+    trimed_universe
+
 let filter_dependencies f_direction ~depopts ~installed universe packages =
   let opam2cudf, cudf2opam, cudf_universe = load_cudf_universe ~depopts universe in
   let cudf_universe =
