@@ -294,6 +294,7 @@ let s_not_installed = "--"
 
 let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
   log "packages_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
+  let universe = OpamState.universe t Depends in
   let regexps =
     OpamMisc.filter_map (fun re ->
       try Some (Re.compile (let re = Re_glob.globx re in
@@ -310,7 +311,7 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
     if all then
       t.packages
     else
-      Lazy.force t.available_packages in
+      OpamSolver.installable universe in
   let names =
     OpamPackage.Set.fold
       (fun nv set -> OpamPackage.Name.Set.add (OpamPackage.name nv) set)
