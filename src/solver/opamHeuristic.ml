@@ -195,6 +195,12 @@ let resolve ?(verbose=true) universe request =
   | Success u   ->
     log "resolve: sucess! final-universe=%s" (OpamCudf.string_of_universe u);
 
+    (* First, trim the universe *)
+    let universe = Algo.Depsolver.trim universe in
+    let u = match OpamCudf.get_final_universe universe request with
+      | Conflicts _ -> u
+      | Success u   -> u in
+
     (* Return the version of a given package in the initial
        solution *)
     let initial_version =
