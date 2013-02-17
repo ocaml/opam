@@ -292,15 +292,37 @@ let update_packages t ~show_packages repositories =
 
 let s_not_installed = "--"
 
+type item = {
+  name: name;
+  current_version: version;
+  installed_version: version option;
+  synopsis: string;
+  descr: string;
+}
+
 let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
-  log "packages_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
+  log "names_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
   let universe = OpamState.universe t Depends in
+  (* the regexp can also simply be a package. *)
+  let fix_versions =
+    let packages = OpamMisc.filter_map OpamPackage.of_string_opt regexps in
+    List.fold_left
+      (fun map nv -> OpamPackage.Name.Map.add (OpamPackage.name nv) nv map)
+      OpamPackage.Name.Map.empty
+      packages in
   let regexps =
-    OpamMisc.filter_map (fun re ->
-      try Some (Re.compile (let re = Re_glob.globx re in
-                            if case_sensitive then re else Re.no_case re))
+    OpamMisc.filter_map (fun str ->
+      let re =
+        match OpamPackage.of_string_opt str with
+        | Some nv ->
+          let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+          Re_glob.globx name
+        | None   ->
+          let re = Re_glob.globx str in
+          if case_sensitive then re else Re.no_case re in
+      try Some (Re.compile re)
       with Re_glob.Parse_error ->
-        OpamGlobals.error "%S is not a valid package descriptor." re;
+        OpamGlobals.error "%S is not a valid package descriptor." str;
         None
     ) regexps in
   let exact_match str =
@@ -320,23 +342,31 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
   let names =
     OpamPackage.Name.Set.fold (fun name map ->
       let has_name nv = OpamPackage.name nv = name in
-      let version, nv =
+      let installed_version =
         if OpamPackage.Set.exists has_name t.installed then
           let nv = OpamPackage.Set.find has_name t.installed in
-          Some (OpamPackage.version nv), nv
-        else (
-          let nv = OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
-          None, nv
-        ) in
+          Some (OpamPackage.version nv)
+        else
+          None in
+      let current_version =
+        if OpamPackage.Name.Map.mem name fix_versions then
+          let nv = OpamPackage.Name.Map.find name fix_versions in
+          OpamPackage.version nv
+        else match installed_version with
+          | Some v -> v
+          | None   ->
+            let nv = OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
+            OpamPackage.version nv in
+      let nv = OpamPackage.create name current_version in
       let descr_f = OpamPackage.Map.find nv t.descrs in
       let synopsis = OpamFile.Descr.synopsis descr_f in
       let descr = OpamFile.Descr.full descr_f in
-      OpamPackage.Name.Map.add name (version, synopsis, descr) map
+      OpamPackage.Name.Map.add name { name; current_version; installed_version; synopsis; descr }map
     ) names OpamPackage.Name.Map.empty in
 
   (* Filter the list of packages, depending on user predicates *)
-  OpamPackage.Name.Map.filter (fun name (version, synopsis, descr) ->
-      (* installp *) (not installed_only || version <> None)
+  OpamPackage.Name.Map.filter (fun name { installed_version; synopsis; descr } ->
+      (* installp *) (not installed_only || installed_version <> None)
       (* allp     *) && (regexps = []
       (* namep    *)  || name_only && exact_match (OpamPackage.Name.to_string name)
       (* descrp   *)  || not name_only
@@ -351,9 +381,9 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
     OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
   );
   let max_n, max_v =
-    OpamPackage.Name.Map.fold (fun name (version, _, _) (max_n, max_v) ->
+    OpamPackage.Name.Map.fold (fun name { installed_version } (max_n, max_v) ->
       let max_n = max max_n (String.length (OpamPackage.Name.to_string name)) in
-      let v_str = match version with
+      let v_str = match installed_version with
         | None   -> s_not_installed
         | Some v -> OpamPackage.Version.to_string v in
       let max_v = max max_v (String.length v_str) in
@@ -366,9 +396,9 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
       let synop_len =
         let col = OpamMisc.terminal_columns () in
         max 0 (col - max_n - max_v - 4) in
-      fun name (version, synopsis, _) ->
+      fun name { installed_version; synopsis } ->
         let name = OpamPackage.Name.to_string name in
-        let version = match version with
+        let version = match installed_version with
           | None   -> s_not_installed
           | Some v -> OpamPackage.Version.to_string v in
         Printf.printf "%s  %s  %s\n"
@@ -379,11 +409,17 @@ let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = fal
 
 let info ~fields regexps =
   let t = OpamState.load_state "info" in
-  let names = names_of_regexp t ~installed_only:false ~name_only:true ~case_sensitive:false ~all:true regexps in
+  let names =
+    names_of_regexp t
+      ~installed_only:false
+      ~name_only:true
+      ~case_sensitive:false
+      ~all:true
+      regexps in
 
   let show_fields = List.length fields <> 1 in
 
-  let print_one name _ =
+  let print_one name  { current_version } =
 
     (* Compute the installed versions, for each switch *)
     let installed =
@@ -486,6 +522,7 @@ let info ~fields regexps =
 
     let all_fields =
       [ "package", OpamPackage.Name.to_string name ]
+      @ [ "version", OpamPackage.Version.to_string current_version ]
       @ homepage
       @ authors
       @ license
