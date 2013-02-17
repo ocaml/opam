@@ -137,6 +137,10 @@ let parse_single_string = function
   | [String x] -> x
   | x          -> bad_format "Expecting a single string, got %s" (kinds x)
 
+let parse_pair fa fb = function
+  | List [a; b] -> (fa a, fb b)
+  | x           -> bad_format "Expecting a pair, got %s" (kind x)
+
 let parse_or fns v =
   let dbg = List.map fst fns in
   let rec aux = function
@@ -180,9 +184,9 @@ let make_option f g = function
   | (v, None)   -> f v
   | (v, Some o) -> Option (f v, g o)
 
-let make_pair f (k,v) = List [f k; f v]
+let make_pair fa fb (k,v) = List [fa k; fb v]
 
-let make_string_pair = make_pair make_string
+let make_string_pair = make_pair make_string make_string
 
 (* Printing *)
 

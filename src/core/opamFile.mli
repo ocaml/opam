@@ -284,24 +284,25 @@ module Comp_descr: IO_FILE with type t = string
 (** .install files *)
 module Dot_install: sig
 
-  module Raw : IO_FILE
-
   include IO_FILE
 
-  (** List of files to install in $lib/ *)
-  val lib:  t -> filename optional list
-
   (** List of files to install in $bin/ *)
-  val bin:  t -> (filename optional * basename) list
+  val bin:  t -> (basename optional * basename option) list
+
+  (** List of files to install in $lib/ *)
+  val lib:  t -> basename optional list
 
   (** List of toplevel files *)
-  val toplevel: t -> filename optional list
-
-  (** List of other files to install *)
-  val misc: t -> (filename optional * filename) list
+  val toplevel: t -> basename optional list
 
   (** List of shared files *)
-  val share: t -> (filename optional * basename) list
+  val share: t -> basename optional list
+
+  (** List of doc files *)
+  val doc: t -> basename optional list
+
+  (** List of other files to install *)
+  val misc: t -> (basename optional * filename) list
 
 end
 

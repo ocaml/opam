@@ -39,131 +39,144 @@ let install_package t nv =
 
       (* check that libraries and syntax extensions specified in .opam and
          .config are in sync *)
-    let check kind config_sections opam_sections =
-      List.iter (fun cs ->
-        if not (List.mem cs opam_sections) then
-          OpamGlobals.error_and_exit "The %s %s does not appear in %s"
-            kind (OpamVariable.Section.to_string cs) (OpamFilename.to_string opam_f)
-      ) config_sections;
-      List.iter (fun os ->
-        if not (List.mem os config_sections) then
-          OpamGlobals.error_and_exit "The %s %s does not appear in %s"
-            kind (OpamVariable.Section.to_string os) (OpamFilename.to_string config_f)
-      ) opam_sections in
-    if not (OpamFilename.exists config_f)
-    && (OpamFile.OPAM.libraries opam_ <> [] || OpamFile.OPAM.syntax opam_ <> []) then
-      OpamGlobals.error_and_exit
-        "%s does not exist but %s defines some libraries and syntax extensions"
-        (OpamFilename.to_string config_f)
-        (OpamFilename.to_string opam_f);
-    check "library"
-      (OpamFile.Dot_config.Library.available config)
-      (OpamFile.OPAM.libraries opam_);
-    check "syntax"
-      (OpamFile.Dot_config.Syntax.available config)
-      (OpamFile.OPAM.syntax opam_);
-
-    (* check that depends (in .opam) and requires (in .config) fields
-       are in almost in sync *)
-    (* NOTES: the check is partial as we don't know which clause is valid
-       in depends (XXX there is surely a way to get it from the solver) *)
-    let local_sections = OpamFile.Dot_config.Section.available config in
-    let libraries_in_opam =
-      OpamFormula.fold_left (fun accu (n,_) ->
-        if OpamState.mem_installed_package_by_name t n then (
-          let nv = OpamState.find_installed_package_by_name t n in
-          let opam = OpamState.opam t nv in
-          let libs = OpamFile.OPAM.libraries opam in
-          let syntax = OpamFile.OPAM.syntax opam in
-          List.fold_right OpamVariable.Section.Set.add (libs @ syntax) accu
-        ) else
-          accu
-      ) OpamVariable.Section.Set.empty (OpamFile.OPAM.depends opam_) in
-    let libraries_in_config =
-      List.fold_left (fun accu s ->
-        List.fold_left (fun accu r ->
-          OpamVariable.Section.Set.add r accu
-        ) accu (OpamFile.Dot_config.Section.requires config s)
-      ) OpamVariable.Section.Set.empty local_sections in
-    OpamVariable.Section.Set.iter (fun s ->
-      if not (List.mem s local_sections)
-      && not (OpamVariable.Section.Set.mem s libraries_in_opam) then
-        let config_f = OpamFilename.to_string (OpamPath.Switch.build_config t.root t.switch nv) in
-        let opam_f = OpamFilename.to_string (OpamPath.opam t.root nv) in
-        let local_sections = List.map OpamVariable.Section.to_string local_sections in
-        let opam_sections = List.map OpamVariable.Section.to_string (OpamVariable.Section.Set.elements libraries_in_opam) in
+      let check kind config_sections opam_sections =
+        List.iter (fun cs ->
+          if not (List.mem cs opam_sections) then
+            OpamGlobals.error_and_exit "The %s %s does not appear in %s"
+              kind (OpamVariable.Section.to_string cs) (OpamFilename.to_string opam_f)
+        ) config_sections;
+        List.iter (fun os ->
+          if not (List.mem os config_sections) then
+            OpamGlobals.error_and_exit "The %s %s does not appear in %s"
+              kind (OpamVariable.Section.to_string os) (OpamFilename.to_string config_f)
+        ) opam_sections in
+      if not (OpamFilename.exists config_f)
+      && (OpamFile.OPAM.libraries opam_ <> [] || OpamFile.OPAM.syntax opam_ <> []) then
         OpamGlobals.error_and_exit
-          "%s appears as a library dependency in %s, but:\n\
+          "%s does not exist but %s defines some libraries and syntax extensions"
+          (OpamFilename.to_string config_f)
+          (OpamFilename.to_string opam_f);
+      check "library"
+        (OpamFile.Dot_config.Library.available config)
+        (OpamFile.OPAM.libraries opam_);
+      check "syntax"
+        (OpamFile.Dot_config.Syntax.available config)
+        (OpamFile.OPAM.syntax opam_);
+
+      (* check that depends (in .opam) and requires (in .config) fields
+         are in almost in sync *)
+      (* NOTES: the check is partial as we don't know which clause is valid
+         in depends (XXX there is surely a way to get it from the solver) *)
+      let local_sections = OpamFile.Dot_config.Section.available config in
+      let libraries_in_opam =
+        OpamFormula.fold_left (fun accu (n,_) ->
+          if OpamState.mem_installed_package_by_name t n then (
+            let nv = OpamState.find_installed_package_by_name t n in
+            let opam = OpamState.opam t nv in
+            let libs = OpamFile.OPAM.libraries opam in
+            let syntax = OpamFile.OPAM.syntax opam in
+            List.fold_right OpamVariable.Section.Set.add (libs @ syntax) accu
+          ) else
+            accu
+        ) OpamVariable.Section.Set.empty (OpamFile.OPAM.depends opam_) in
+      let libraries_in_config =
+        List.fold_left (fun accu s ->
+          List.fold_left (fun accu r ->
+            OpamVariable.Section.Set.add r accu
+          ) accu (OpamFile.Dot_config.Section.requires config s)
+        ) OpamVariable.Section.Set.empty local_sections in
+      OpamVariable.Section.Set.iter (fun s ->
+        if not (List.mem s local_sections)
+        && not (OpamVariable.Section.Set.mem s libraries_in_opam) then
+          let config_f = OpamFilename.to_string (OpamPath.Switch.build_config t.root t.switch nv) in
+          let opam_f = OpamFilename.to_string (OpamPath.opam t.root nv) in
+          let local_sections = List.map OpamVariable.Section.to_string local_sections in
+          let opam_sections = List.map OpamVariable.Section.to_string (OpamVariable.Section.Set.elements libraries_in_opam) in
+          OpamGlobals.error_and_exit
+            "%s appears as a library dependency in %s, but:\n\
              - %s defines the libraries {%s}\n\
              - Packages in %s defines the libraries {%s}"
-          (OpamVariable.Section.to_string s) config_f
-          config_f (String.concat ", " local_sections)
-          opam_f (String.concat ", " opam_sections)
-    ) libraries_in_config;
+            (OpamVariable.Section.to_string s) config_f
+            config_f (String.concat ", " local_sections)
+            opam_f (String.concat ", " opam_sections)
+      ) libraries_in_config;
 
-    (* .install *)
-    OpamFile.Dot_install.write (OpamPath.Switch.install t.root t.switch name) install;
+      (* .install *)
+      OpamFile.Dot_install.write (OpamPath.Switch.install t.root t.switch name) install;
 
-    (* .config *)
-    OpamFile.Dot_config.write (OpamPath.Switch.config t.root t.switch name) config;
+      (* .config *)
+      OpamFile.Dot_config.write (OpamPath.Switch.config t.root t.switch name) config;
 
-    (* lib *)
-    let warnings = ref [] in
-    let check f dst =
-      if not f.optional && not (OpamFilename.exists f.c) then (
-        warnings := (f.c, dst) :: !warnings
-      );
-      OpamFilename.exists f.c in
-    let lib = OpamPath.Switch.lib t.root t.switch name in
-    List.iter (fun f ->
-      if check f lib then
-        OpamFilename.copy_in f.c lib
-    ) (OpamFile.Dot_install.lib install);
+      let warnings = ref [] in
+      let check ~src ~dst base =
+        let src_file = OpamFilename.create src base.c in
+        if not base.optional && not (OpamFilename.exists src_file) then (
+          warnings := (dst, base.c) :: !warnings
+        );
+        OpamFilename.exists src_file in
 
-    (* toplevel *)
-    let toplevel = OpamPath.Switch.toplevel t.root t.switch in
-    List.iter (fun f ->
-      if check f toplevel then
-        OpamFilename.copy_in f.c toplevel
-    ) (OpamFile.Dot_install.toplevel install);
+      (* Install a list of files *)
+      let install_files dst_fn files_fn =
+        let dst = dst_fn t.root t.switch name in
+        let files = files_fn install in
+        if not (OpamFilename.exists_dir dst) then (
+          log "creating %s" (OpamFilename.Dir.to_string dst);
+          OpamFilename.mkdir dst;
+        );
+        let src = OpamFilename.cwd () in
+        List.iter (fun b ->
+          if check ~src ~dst b then
+            let file = OpamFilename.create src b.c in
+            OpamFilename.copy_in file dst
+        ) files in
 
-    (* bin *)
-    List.iter (fun (src, dst) ->
-      let dst = OpamPath.Switch.bin t.root t.switch // OpamFilename.Base.to_string dst in
-      (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
-      if check src  (OpamPath.Switch.bin t.root t.switch) then
-        OpamFilename.copy ~src:src.c ~dst;
-    ) (OpamFile.Dot_install.bin install);
+      (* lib *)
+      install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
 
-    (* misc *)
-    List.iter
-      (fun (src, dst) ->
-        if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
-          OpamFilename.copy ~src:src.c ~dst
-        else begin
-          OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.to_string src.c) (OpamFilename.to_string dst);
-          if OpamState.confirm "Continue ?" then
-            OpamFilename.copy ~src:src.c ~dst
-        end
-      ) (OpamFile.Dot_install.misc install);
+      (* toplevel *)
+      install_files (fun r s _ -> OpamPath.Switch.toplevel r s) OpamFile.Dot_install.toplevel;
 
-    (* Shared files *)
-    List.iter (fun (src, dst) ->
-      let share = OpamPath.Switch.share t.root t.switch name in
-      let dst = share // OpamFilename.Base.to_string dst in
-      (* WARNING [dst] could be a symbolic link (in this case, it will be removed). *)
-      if not (OpamFilename.exists_dir share) then
-        OpamFilename.mkdir share;
-      OpamFilename.copy ~src:src.c ~dst;
-    ) (OpamFile.Dot_install.share install);
+      (* Shared files *)
+      install_files OpamPath.Switch.share OpamFile.Dot_install.share;
 
-    if !warnings <> [] then (
-      let print (f, dst) = Printf.sprintf " - %s in %s" (OpamFilename.to_string f) (OpamFilename.Dir.to_string dst) in
-      OpamGlobals.error_and_exit
-        "Error while installing the following files:\n%s"
-        (String.concat "\n" (List.map print !warnings));
-    )
-  );
+      (* Documentation files *)
+      install_files OpamPath.Switch.doc OpamFile.Dot_install.doc;
+
+      (* bin *)
+      List.iter (fun (base, dst) ->
+        let src_dir = OpamFilename.cwd () in
+        let dst_dir = OpamPath.Switch.bin t.root t.switch in
+        let src_file = OpamFilename.create src_dir base.c in
+        let dst_file = match dst with
+          | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
+          | Some d -> OpamFilename.create dst_dir d in
+        if check ~src:src_dir ~dst:dst_dir base then
+          OpamFilename.copy ~src:src_file ~dst:dst_file;
+      ) (OpamFile.Dot_install.bin install);
+
+      (* misc *)
+      List.iter
+        (fun (src, dst) ->
+          let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
+          if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+            OpamFilename.copy ~src:src_file ~dst
+          else begin
+            OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
+            if OpamState.confirm "Continue ?" then
+              OpamFilename.copy ~src:src_file ~dst
+          end
+        ) (OpamFile.Dot_install.misc install);
+
+      if !warnings <> [] then (
+        let print (dir, base) =
+          Printf.sprintf " - %s in %s"
+            (OpamFilename.Base.to_string base)
+            (OpamFilename.Dir.to_string dir) in
+        OpamSystem.internal_error
+          "Error while installing the following files:\n%s"
+          (String.concat "\n" (List.map print !warnings));
+      )
+    );
   if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
     OpamFilename.rmdir build_dir
 
@@ -305,8 +318,12 @@ let remove_package_aux t ~update_metadata ~rm_build nv =
   (* Remove the binaries *)
   log "Removing the binaries";
   let install = OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
-  List.iter (fun (_,dst) ->
-    let dst = OpamPath.Switch.bin t.root t.switch // (OpamFilename.Base.to_string dst) in
+  List.iter (fun (base, dst) ->
+    let dir = OpamPath.Switch.bin t.root t.switch in
+    let dummy_src = OpamFilename.create dir base.c in
+    let dst = match dst with
+      | None   -> OpamFilename.create dir (OpamFilename.basename dummy_src)
+      | Some b -> OpamFilename.create dir b in
     OpamFilename.remove dst
   ) (OpamFile.Dot_install.bin install);
 
@@ -380,7 +397,11 @@ let remove_all_packages t ~update_metadata sol =
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
 let build_and_install_package_aux t ~update_metadata nv =
-  OpamGlobals.msg "\n=-=-= Installing %s =-=-=\n" (OpamPackage.to_string nv);
+  let left, right = match !OpamGlobals.utf8_msgs with
+  | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
+  | false -> "=-=-=", "=-=-="
+  in
+  OpamGlobals.msg "\n%s Installing %s %s\n" left (OpamPackage.to_string nv) right;
 
   let opam = OpamState.opam t nv in
 

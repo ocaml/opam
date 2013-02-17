@@ -5,4 +5,4 @@ lib: [
   "_build/p1.a"
   "?_build/this_file_will_not_exits_but_that's_ok"
 ]
-share: [ "build.sh" { "foo/bar" } ]
+share: [ "build.sh" ]

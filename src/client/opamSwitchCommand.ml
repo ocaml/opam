@@ -27,7 +27,7 @@ let list ~print_short ~installed_only =
   let descr c =
     if c = OpamCompiler.system then
       let system_version = match OpamCompiler.Version.system () with
-        | None   -> assert false
+        | None   -> "<none>"
         | Some v -> OpamCompiler.Version.to_string v in
       Printf.sprintf "System compiler (%s)" system_version
     else
