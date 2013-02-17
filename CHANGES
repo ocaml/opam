@@ -1,3 +1,8 @@
+0.9.4 (trunk)
+* `opam info pkg.version` shows the metadata for this given package version
+* Add missing `doc` fields in `.install` files
+* `opam list` now only shows installable packages
+
 0.9.3 [Feb 2013]
 * Add system compiler constraints in OPAM files
 * Better error messages in case of conflicts
