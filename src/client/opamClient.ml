@@ -565,56 +565,42 @@ let dry_upgrade () =
 
 let upgrade names =
   log "UPGRADE %s" (OpamPackage.Name.Set.to_string names);
-  let t = OpamState.load_state "upgrade-1" in
-  let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
-  let to_not_reinstall_yet = ref OpamPackage.Set.empty in
+  let t = OpamState.load_state "upgrade" in
   let solution_found = ref No_solution in
+  let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
   if OpamPackage.Name.Set.is_empty names then (
-    let solution = OpamSolution.resolve_and_apply t (Upgrade reinstall)
+    let solution = OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
       { wish_install = [];
         wish_remove  = [];
         wish_upgrade = OpamSolution.atoms_of_packages t.installed } in
     solution_found := solution;
   ) else (
     let names = OpamSolution.atoms_of_names t names in
-    let partial_reinstall =
-      OpamMisc.filter_map (fun (n,_) ->
-        if OpamState.mem_installed_package_by_name t n then
-          Some (OpamState.find_installed_package_by_name t n)
-        else (
-          OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
-          None
-        )
-      ) names in
-    let partial_reinstall = OpamPackage.Set.of_list partial_reinstall in
-    to_not_reinstall_yet := OpamPackage.Set.diff reinstall partial_reinstall;
-    let universe = OpamState.universe t Depends in
-    let partial_reinstall =
-      OpamPackage.Set.of_list
-        (OpamSolver.dependencies ~depopts:false ~installed:true universe partial_reinstall) in
-    let installed_roots = OpamPackage.Set.diff t.installed_roots partial_reinstall in
-    let solution = OpamSolution.resolve_and_apply t (Upgrade partial_reinstall)
+    let to_reinstall =
+      let packages =
+        OpamMisc.filter_map (fun (n,_) ->
+          if OpamState.mem_installed_package_by_name t n then
+            Some (OpamState.find_installed_package_by_name t n)
+          else (
+            OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
+            None
+          )
+        ) names in
+      OpamPackage.Set.inter t.reinstall (OpamPackage.Set.of_list packages) in
+    let installed_roots = OpamPackage.Set.diff t.installed_roots to_reinstall in
+    let solution = OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
       { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
         wish_remove  = [];
-        wish_upgrade = OpamSolution.atoms_of_packages partial_reinstall } in
+        wish_upgrade = OpamSolution.atoms_of_packages to_reinstall } in
     solution_found := solution;
   );
-  let t = OpamState.load_state "upgrade-2" in
   begin match !solution_found with
+    | Aborted
+    | No_solution
+    | Error _
     | OK            -> ()
     | Nothing_to_do -> OpamGlobals.msg "Already up-to-date.\n"
-    | Aborted
-    | No_solution   -> to_not_reinstall_yet := reinstall
-    | Error l       ->
-      let pkgs = OpamPackage.Set.of_list (List.map action_contents l) in
-      to_not_reinstall_yet := pkgs
   end;
-  let reinstall = OpamPackage.Set.inter t.installed !to_not_reinstall_yet in
-  let reinstall_f = OpamPath.Switch.reinstall t.root t.switch in
-  if OpamPackage.Set.is_empty reinstall then
-    OpamFilename.remove reinstall_f
-  else
-    OpamFile.Reinstall.write reinstall_f reinstall;
   OpamSolution.check_solution !solution_found
 
 let update ?(save_cache=true) repos =
@@ -828,7 +814,7 @@ let remove names =
       atoms in
 
   if does_not_exist <> [] then (
-    List.iter (OpamAction.remove_package ~rm_build:true ~update_metadata:false t) does_not_exist;
+    List.iter (OpamAction.remove_package ~rm_build:true ~metadata:false t) does_not_exist;
     let installed_f = OpamPath.Switch.installed t.root t.switch in
     let installed = OpamFile.Installed.read installed_f in
     let installed = OpamPackage.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in

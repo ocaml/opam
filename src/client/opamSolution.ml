@@ -193,8 +193,15 @@ let recover_from_error = function
   | To_change (Some nv, _)
   | To_change (None, nv) ->
     let t = OpamState.load_state "recover-from-error" in
-    try OpamAction.build_and_install_package t ~update_metadata:true nv
+    try OpamAction.build_and_install_package t ~metadata:true nv
     with _ -> ()
+
+(* Transient state (not flushed to disk) *)
+type state = {
+  mutable s_installed      : package_set;
+  mutable s_installed_roots: package_set;
+  mutable s_reinstall      : package_set;
+}
 
 (* Mean function for applying solver solutions. One main process is
    deleting the packages and updating the global state of
@@ -202,8 +209,17 @@ let recover_from_error = function
    and installations. *)
 let parallel_apply t action solution =
   let open PackageActionGraph in
-  let installed = ref t.installed in
-  let installed_roots = ref t.installed_roots in
+  let state = {
+    s_installed       = t.installed;
+    s_installed_roots = t.installed_roots;
+    s_reinstall       = t.reinstall;
+  } in
+  let update_state () =
+    let installed       = state.s_installed in
+    let installed_roots = state.s_installed_roots in
+    let reinstall       = state.s_reinstall in
+    OpamAction.update_metadata t ~installed ~installed_roots ~reinstall in
+
   let root_installs =
     let names =
       List.map OpamPackage.name (OpamPackage.Set.elements t.installed_roots) in
@@ -222,18 +238,16 @@ let parallel_apply t action solution =
      moment). We are not guaranteed to always be consistent, but we
      try hard to be.*)
   let add_to_install nv =
-    installed := OpamPackage.Set.add nv !installed;
-    let installed_f = OpamPath.Switch.installed t.root t.switch in
-    OpamFile.Installed.write installed_f !installed;
-    if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then (
-      installed_roots := OpamPackage.Set.add nv !installed_roots;
-      let installed_roots_f = OpamPath.Switch.installed_roots t.root t.switch in
-      OpamFile.Installed_roots.write installed_roots_f !installed_roots;
-    ) in
+    state.s_installed <- OpamPackage.Set.add nv state.s_installed;
+    state.s_reinstall <- OpamPackage.Set.remove nv state.s_reinstall;
+    if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
+      state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
+    update_state () in
 
   let remove_from_install deleted =
-    installed := OpamPackage.Set.diff !installed deleted;
-    installed_roots := OpamPackage.Set.diff !installed_roots deleted in
+    state.s_installed       <- OpamPackage.Set.diff state.s_installed deleted;
+    state.s_installed_roots <- OpamPackage.Set.diff state.s_installed_roots deleted;
+    state.s_reinstall       <- OpamPackage.Set.diff state.s_reinstall deleted in
 
   (* Installation and recompilation are done by child the processes *)
   let child n =
@@ -244,7 +258,7 @@ let parallel_apply t action solution =
     let t = OpamState.load_state "child" in
     match n with
     | To_change (_, nv)
-    | To_recompile nv   -> OpamAction.build_and_install_package ~update_metadata:false t nv
+    | To_recompile nv   -> OpamAction.build_and_install_package ~metadata:false t nv
     | To_delete _       -> assert false in
 
   (* Not pre-condition (yet ?) *)
@@ -260,7 +274,7 @@ let parallel_apply t action solution =
   try
     let jobs = OpamFile.Config.jobs t.config in
     (* 1/ We remove all installed packages appearing in the solution. *)
-    let deleted = OpamAction.remove_all_packages t ~update_metadata:true solution in
+    let deleted = OpamAction.remove_all_packages t ~metadata:true solution in
     remove_from_install deleted;
 
     (* 2/ We install the new packages *)

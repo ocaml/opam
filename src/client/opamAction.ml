@@ -239,20 +239,23 @@ let compilation_env t opam =
   ] @ env0 in
   OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
-let flush_metadata t ~installed ~installed_roots =
+let update_metadata t ~installed ~installed_roots ~reinstall =
   OpamFile.Installed.write
     (OpamPath.Switch.installed t.root t.switch)
     installed;
   OpamFile.Installed_roots.write
     (OpamPath.Switch.installed_roots t.root t.switch)
-    installed_roots
+    installed_roots;
+  OpamFile.Reinstall.write
+    (OpamPath.Switch.reinstall t.root t.switch)
+    reinstall
 
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
    consistency reasons, this is done in the main function only. *)
-let remove_package_aux t ~update_metadata ~rm_build nv =
-  log "Removing %s (%b)" (OpamPackage.to_string nv) update_metadata;
+let remove_package_aux t ~metadata ~rm_build nv =
+  log "Removing %s (%b)" (OpamPackage.to_string nv) metadata;
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
@@ -357,25 +360,26 @@ let remove_package_aux t ~update_metadata ~rm_build nv =
   OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch name);
 
   (* Update the metadata *)
-  if update_metadata then (
+  if metadata then (
     let installed = OpamPackage.Set.remove nv t.installed in
     let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
-    flush_metadata t ~installed ~installed_roots
+    let reinstall = OpamPackage.Set.remove nv t.reinstall in
+    update_metadata t ~installed ~installed_roots ~reinstall
   )
 
-let remove_package t ~update_metadata ~rm_build nv =
+let remove_package t ~metadata ~rm_build nv =
   if not !OpamGlobals.fake then
-    remove_package_aux t ~update_metadata ~rm_build nv
+    remove_package_aux t ~metadata ~rm_build nv
 
 (* Uninstall all the current packages in a solution  *)
-let remove_all_packages t ~update_metadata sol =
+let remove_all_packages t ~metadata sol =
   let open PackageActionGraph in
   let deleted = ref [] in
   let delete nv =
     if !deleted = [] then
       OpamGlobals.msg "\n=-=-= Removing Packages =-=-=\n";
     deleted := nv :: !deleted;
-    try remove_package t ~rm_build:true ~update_metadata:false nv;
+    try remove_package t ~rm_build:true ~metadata:false nv;
     with _ -> () in
   let action n =
     match n with
@@ -386,17 +390,18 @@ let remove_all_packages t ~update_metadata sol =
   List.iter delete sol.to_remove;
   PackageActionGraph.iter_vertex action sol.to_process;
   let deleted = OpamPackage.Set.of_list !deleted in
-  if update_metadata then (
+  if metadata then (
     let installed = OpamPackage.Set.diff t.installed deleted in
     let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
-    flush_metadata t ~installed ~installed_roots
+    let reinstall = OpamPackage.Set.diff t.reinstall deleted in
+    update_metadata t ~installed ~installed_roots ~reinstall
   );
   deleted
 
 (* Build and install a package. In case of error, simply return the
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
-let build_and_install_package_aux t ~update_metadata nv =
+let build_and_install_package_aux t ~metadata nv =
   let left, right = match !OpamGlobals.utf8_msgs with
   | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
   | false -> "=-=-=", "=-=-="
@@ -473,10 +478,11 @@ let build_and_install_package_aux t ~update_metadata nv =
     install_package t nv;
 
     (* update the metadata *)
-    if update_metadata then (
+    if metadata then (
       let installed = OpamPackage.Set.add nv t.installed in
       let installed_roots = OpamPackage.Set.add nv t.installed_roots in
-      flush_metadata t ~installed ~installed_roots
+      let reinstall = OpamPackage.Set.remove nv t.reinstall in
+      update_metadata t ~installed ~installed_roots ~reinstall
     )
 
   with e ->
@@ -487,9 +493,9 @@ let build_and_install_package_aux t ~update_metadata nv =
     OpamGlobals.error
       "The compilation of %s %s."
       (OpamPackage.to_string nv) cause;
-    remove_package ~rm_build:false ~update_metadata:false t nv;
+    remove_package ~rm_build:false ~metadata:false t nv;
     raise e
 
-let build_and_install_package t ~update_metadata nv =
+let build_and_install_package t ~metadata nv =
   if not !OpamGlobals.fake then
-    build_and_install_package_aux t ~update_metadata nv
+    build_and_install_package_aux t ~metadata nv
