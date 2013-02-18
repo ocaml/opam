@@ -66,13 +66,18 @@ let atoms_of_names t names =
     | Some v ->
       let versions = OpamPackage.Name.Map.find name available in
       OpamPackage.Version.Set.mem v versions in
+  let unavailable name version =
+    if OpamPackage.Name.Map.mem name t.pinned then
+      OpamPackage.unavailable_because_pinned name version
+    else
+      OpamPackage.unavailable name version in
   List.map
     (fun name ->
       if exists name None then
         if available name None then
           atom_of_name name
         else
-          OpamPackage.unavailable name None
+          unavailable name None
       else (
         (* consider 'name' to be 'name.version' *)
         let nv =
@@ -88,7 +93,7 @@ let atoms_of_names t names =
           if available sname (Some sversion) then
             eq_atom sname sversion
           else
-            OpamPackage.unavailable sname (Some sversion)
+            unavailable sname (Some sversion)
         else
           OpamPackage.unknown sname (Some sversion)
       ))
