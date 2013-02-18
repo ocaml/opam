@@ -249,6 +249,11 @@ let delete_or_update t =
     t.PackageActionGraph.to_process
     false
 
+let new_packages sol =
+  PackageActionGraph.fold_vertex (fun action packages ->
+    OpamPackage.Set.add (action_contents action) packages
+  ) sol.PackageActionGraph.to_process OpamPackage.Set.empty
+
 let stats sol =
   let s_install, s_reinstall, s_upgrade, s_downgrade =
     PackageActionGraph.fold_vertex (fun action (i,r,u,d) ->

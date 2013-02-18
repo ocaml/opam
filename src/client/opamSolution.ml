@@ -317,26 +317,52 @@ let apply ?(force = false) t action solution =
   else (
     (* Otherwise, compute the actions to perform *)
     let stats = OpamSolver.stats solution in
-    OpamGlobals.msg
-      "The following actions will be %s:\n"
-      (if !OpamGlobals.fake then "simulated" else "performed");
-    OpamSolver.print_solution solution;
-    OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
+    let show_solution = (!OpamGlobals.external_tags = []) in
+    if show_solution then (
+      OpamGlobals.msg
+        "The following actions will be %s:\n"
+        (if !OpamGlobals.fake then "simulated" else "performed");
+      OpamSolver.print_solution solution;
+      OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats)
+    );
 
     let continue =
       if !OpamGlobals.dryrun then (
         OpamGlobals.msg "Dry run: exiting now.\n";
+        false
+      ) else if !OpamGlobals.external_tags <> [] then (
+        let packages = OpamSolver.new_packages solution in
+        let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
+        let values =
+          OpamPackage.Set.fold (fun nv accu ->
+            let opam = OpamPackage.Map.find nv t.opams in
+            match OpamFile.OPAM.depexts opam with
+            | None         -> accu
+            | Some alltags ->
+              OpamMisc.StringSetMap.fold (fun tags values accu ->
+                if OpamMisc.StringSet.(
+                    (* A \subseteq B <=> (A U B) / B = 0 *)
+                    is_empty (diff (union external_tags tags) tags)
+                  )
+                then
+                  OpamMisc.StringSet.union values accu
+                else
+                  accu
+              ) alltags accu
+          ) packages OpamMisc.StringSet.empty in
+        let values = OpamMisc.StringSet.elements values in
+        if values <> [] then
+          OpamGlobals.msg "%s\n" (String.concat " " values);
         false
       ) else if force || !OpamGlobals.fake || !OpamGlobals.yes || sum stats <= 1 then
         true
       else
         OpamState.confirm "Do you want to continue ?" in
 
-    print_variable_warnings t;
-
-    if continue then
+    if continue then (
+      print_variable_warnings t;
       parallel_apply t action solution
-    else
+    ) else
       Aborted
   )
 
