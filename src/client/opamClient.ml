@@ -464,7 +464,8 @@ let info ~fields regexps =
 
     let installed_version = match OpamPackage.Map.cardinal installed with
       | 0 -> []
-      | _ -> [ "installed-version", installed_str ] in
+      | 1 -> [ "installed-version" , installed_str ]
+      | _ -> [ "installed-versions", installed_str ] in
 
     let available_versions =
       match List.map OpamPackage.Version.to_string (OpamPackage.Version.Set.elements versions) with
