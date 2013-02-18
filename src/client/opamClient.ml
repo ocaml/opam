@@ -444,15 +444,7 @@ let info ~fields regexps =
           (String.concat " " (List.map OpamSwitch.to_string aliases)) in
       String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
-    let nv =
-      match OpamPackage.Map.cardinal installed with
-      | 0 ->
-        begin match OpamState.find_packages_by_name t name with
-        | None   -> assert false
-        | Some s -> OpamPackage.Set.choose s
-        end
-      | _ -> fst (OpamPackage.Map.max_binding installed) in
-
+    let nv = OpamPackage.create name current_version in
     let opam = OpamState.opam t nv in
 
     (* All the version of the package *)
@@ -494,21 +486,35 @@ let info ~fields regexps =
         libraries, syntax in
 *)
 
-    let authors = match OpamFile.OPAM.authors opam with
-      | [] -> []
-      | l  -> ["authors", String.concat ", " l] in
+    let mk (empty, get, to_string) name field =
+      let v = field opam in
+      if empty = v then
+        []
+      else
+        [name, to_string (get v)] in
 
-    let homepage = match OpamFile.OPAM.homepage opam with
-      | None   -> []
-      | Some h -> ["homepage", h] in
+    let string = mk (
+        None,
+        (function Some x -> x | None -> assert false),
+        (fun x -> x)
+      ) in
+    let list = mk (
+        [],
+        (fun l -> l),
+        (String.concat ", ")
+      ) in
+    let formula = mk (
+        Empty,
+        (fun f -> f),
+        OpamFormula.to_string
+      ) in
 
-    let license = match OpamFile.OPAM.license opam with
-      | None   -> []
-      | Some l -> ["license", l] in
-
-    let doc = match OpamFile.OPAM.doc opam with
-      | None   -> []
-      | Some d -> ["doc",d] in
+    let authors  = list    "authors"  OpamFile.OPAM.authors in
+    let homepage = string  "homepage" OpamFile.OPAM.homepage in
+    let license  = string  "license"  OpamFile.OPAM.license in
+    let doc      = string  "doc"      OpamFile.OPAM.doc in
+    let depends  = formula "depends"  OpamFile.OPAM.depends in
+    let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
     let descr =
       let d = OpamPackage.Map.find nv t.descrs in
@@ -528,6 +534,8 @@ let info ~fields regexps =
       @ authors
       @ license
       @ doc
+      @ depends
+      @ depopts
       @ installed_version
       @ available_versions
       @ descr in
