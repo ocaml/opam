@@ -1,4 +1,6 @@
 0.9.4 (trunk)
+* Better error messages when trying to upgrade pinned packages
+* Display `depends` and `depopts` fields in `opam info`
 * `opam info pkg.version` shows the metadata for this given package version
 * Add missing `doc` fields in `.install` files
 * `opam list` now only shows installable packages
