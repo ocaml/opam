@@ -124,6 +124,12 @@ module StringMap: MAP with type key = string
 (** Set of strings *)
 module StringSet: SET with type elt = string
 
+(** Set of string sets *)
+module StringSetSet: SET with type elt = StringSet.t
+
+(** Map of string sets *)
+module StringSetMap: MAP with type key = StringSet.t
+
 (** Strip a string *)
 val strip: string -> string
 

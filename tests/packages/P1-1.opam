@@ -25,3 +25,8 @@ substs: [ "P1.config" ]
 (* Libraries *)
 libraries: [ "p1" ]
 
+(* External dependencies *(
+ext-deps: [
+  [ ["debian" "amd64"] ["foo" "bar"] ]
+  [ ["osx" ]           ["foobar"]    ]
+]

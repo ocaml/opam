@@ -470,3 +470,4 @@ type lock =
   | Read_lock of (unit -> unit)
   | Global_lock of (unit -> unit)
   | Switch_lock of (unit -> unit)
+

@@ -149,6 +149,9 @@ end
 module StringSet = Set.Make(OString)
 module StringMap = Map.Make(OString)
 
+module StringSetSet = Set.Make(StringSet)
+module StringSetMap = Map.Make(StringSet)
+
 module OP = struct
 
   let (|>) f g x = g (f x)

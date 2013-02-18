@@ -578,6 +578,7 @@ module OPAM = struct
     doc        : string option;
     build_test : command list;
     build_doc  : command list;
+    ext_deps   : string list OpamMisc.StringSetMap.t;
   }
 
   let empty = {
@@ -603,6 +604,7 @@ module OPAM = struct
     doc        = None;
     build_test = [];
     build_doc  = [];
+    ext_deps   = OpamMisc.StringSetMap.empty;
   }
 
   let create nv =
@@ -632,6 +634,7 @@ module OPAM = struct
   let s_doc         = "doc"
   let s_build_test  = "build-test"
   let s_build_doc   = "build-doc"
+  let s_ext_deps    = "ext-deps"
 
   let useful_fields = [
     s_opam_version;
@@ -654,6 +657,7 @@ module OPAM = struct
     s_doc;
     s_build_test;
     s_build_doc;
+    s_ext_deps;
   ]
 
   let valid_fields =
@@ -684,6 +688,7 @@ module OPAM = struct
   let doc t = t.doc
   let build_doc t = t.build_doc
   let build_test t = t.build_test
+  let ext_deps t = t.ext_deps
 
   let with_depends t depends = { t with depends }
   let with_depopts t depopts = { t with depopts }
@@ -709,6 +714,16 @@ module OPAM = struct
     let formula c s f = match c with
       | Empty -> []
       | x     -> [ Variable (s, f x) ] in
+    let tags m s =
+      if OpamMisc.StringSetMap.is_empty m then
+        []
+      else
+        let l = OpamMisc.StringSetMap.bindings m in
+        let l = List.map (fun (t,l) -> (OpamMisc.StringSet.elements t, l)) l in
+        let list = OpamFormat.make_list OpamFormat.make_string in
+        let tag = OpamFormat.make_pair list list in
+        let tags = OpamFormat.make_list tag l in
+        [ Variable (s, tags) ] in
     let s = {
       file_name     = OpamFilename.to_string filename;
       file_contents = [
@@ -732,6 +747,7 @@ module OPAM = struct
         @ formula t.os            s_os            OpamFormat.make_os_constraint
         @ listm   t.build_test    s_build_test    OpamFormat.make_command
         @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
+        @ tags    t.ext_deps      s_ext_deps
         @ List.map (fun (s, v) -> Variable (s, v)) t.others;
     } in
     Syntax.to_string
@@ -796,6 +812,13 @@ module OPAM = struct
     let doc = OpamFormat.assoc_option s s_doc OpamFormat.parse_string in
     let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
     let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
+    let ext_deps =
+      let parse_tags = OpamFormat.(parse_list (parse_pair parse_string_list parse_string_list)) in
+      let l = OpamFormat.assoc_list s s_ext_deps parse_tags in
+      List.fold_left (fun map (k,v) ->
+        let tag = OpamMisc.StringSet.of_list k in
+        OpamMisc.StringSetMap.add tag v map
+      ) OpamMisc.StringSetMap.empty l in
     let others     =
       OpamMisc.filter_map (function
         | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
@@ -805,7 +828,7 @@ module OPAM = struct
       depends; depopts; conflicts; libraries; syntax; others;
       patches; ocaml_version; os; build_env;
       homepage; authors; license; doc;
-      build_test; build_doc;
+      build_test; build_doc; ext_deps;
     }
 end
 
