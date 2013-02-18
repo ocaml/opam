@@ -240,6 +240,8 @@ let compilation_env t opam =
   OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
 let update_metadata t ~installed ~installed_roots ~reinstall =
+  let installed_roots = OpamPackage.Set.inter installed_roots installed in
+  let reinstall = OpamPackage.Set.inter installed_roots reinstall in
   OpamFile.Installed.write
     (OpamPath.Switch.installed t.root t.switch)
     installed;
