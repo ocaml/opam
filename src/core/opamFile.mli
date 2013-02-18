@@ -120,6 +120,9 @@ module OPAM: sig
   (** Optional dependencies *)
   val depopts: t -> formula
 
+  (** External dependencies *)
+  val depexts: t -> tags option
+
   (** Package conflicts *)
   val conflicts: t -> formula
 

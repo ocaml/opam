@@ -123,7 +123,8 @@ let parse_string_option f = function
   | Option (k,l) -> parse_string k, Some (f l)
   | k            -> parse_string k, None
 
-let parse_string_list = parse_list parse_string
+let parse_string_list =
+  parse_list parse_string
 
 let parse_string_pair_of_list = function
   | [String x; String y] -> (x,y)
@@ -516,7 +517,43 @@ let parse_arg =
 let parse_command =
   parse_option (parse_list parse_arg) parse_filter
 
-let parse_commands = parse_or [
-  "command"     , (fun x -> [parse_command x]);
-  "command-list", parse_list parse_command;
-]
+let parse_commands =
+  parse_or [
+    "command"     , (fun x -> [parse_command x]);
+    "command-list", parse_list parse_command;
+  ]
+
+
+(* TAGS *)
+
+let parse_string_set =
+  parse_or [
+    "string"     , (parse_string |> OpamMisc.StringSet.singleton);
+    "string-list", (parse_string_list |> OpamMisc.StringSet.of_list);
+  ]
+
+let make_string_set s =
+  if OpamMisc.StringSet.cardinal s = 1 then
+    make_string (OpamMisc.StringSet.choose s)
+  else
+    make_list make_string (OpamMisc.StringSet.elements s)
+
+let parse_tag_line =
+  let fn = parse_string_set in
+  parse_pair fn fn
+
+let make_tag_line =
+  let fn = make_string_set in
+  make_pair fn fn
+
+let parse_tags v =
+  let l =
+    parse_or [
+      "tagline"     , (fun x -> [parse_tag_line x]);
+      "tagline-list", (parse_list parse_tag_line);
+    ] v in
+  OpamMisc.StringSetMap.of_list l
+
+let make_tags t =
+  let l = OpamMisc.StringSetMap.bindings t in
+  make_list make_tag_line l

@@ -228,3 +228,11 @@ val parse_commands: value -> command list
 
 (** Create a list of commands *)
 val make_commands: command list -> value
+
+(** {2 Tags} *)
+
+(** Parse tags *)
+val parse_tags: value -> tags
+
+(** Make tags *)
+val make_tags: tags -> value

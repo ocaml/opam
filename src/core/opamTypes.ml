@@ -471,3 +471,4 @@ type lock =
   | Global_lock of (unit -> unit)
   | Switch_lock of (unit -> unit)
 
+type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t

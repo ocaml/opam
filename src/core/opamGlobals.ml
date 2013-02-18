@@ -60,6 +60,8 @@ let switch : string option ref = ref None
 
 let opam_version = "1"
 
+let external_tags = ref ([] : string list)
+
 let home =
   try OpamMisc.getenv "HOME"
   with _ -> Sys.getcwd ()

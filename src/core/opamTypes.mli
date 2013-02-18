@@ -464,3 +464,6 @@ type env = (string * string) list
 
 (** Environment updates *)
 type env_updates = (string * string * string) list
+
+(** Tags *)
+type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t
