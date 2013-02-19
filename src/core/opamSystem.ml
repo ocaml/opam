@@ -483,7 +483,7 @@ let patch p =
     let opts = if dryrun then
         let open OpamGlobals in
         match OpamGlobals.os () with
-        | FreeBSD | OpenBSD     -> [ "-t"; "-C" ]
+        | FreeBSD | OpenBSD | NetBSD | DragonFly -> [ "-t"; "-C" ]
         | Unix | Linux | Darwin -> [ "--dry-run" ]
         | Win32 | Cygwin (* this is probably broken *)
         | Other _               -> [ "--dry-run" ]
