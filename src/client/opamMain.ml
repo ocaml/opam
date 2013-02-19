@@ -437,6 +437,10 @@ let config =
     ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are \
                               replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";
+    ["symlink"] , `symlink , "prints the symlink command that allow the use of the current switch with \
+                              environment as set per $(b,opam config profile).";
+    ["profile"] , `profile , "prints a symlink friendly environment setting. Cat it at the end of your \
+                              .profile to make your whole setup symlink friendly.";
     ["includes"], `includes, "returns include options.";
     ["bytecomp"], `bytecomp, "returns bytecode compile options.";
     ["asmcomp"] , `asmcomp , "returns assembly compile options.";
@@ -481,6 +485,8 @@ let config =
       else
         OpamClient.config_variable (OpamVariable.Full.of_string (List.hd params))
     | Some `subst    -> OpamClient.config_subst (List.map OpamFilename.Base.of_string params)
+    | Some `symlink  -> OpamClient.config_symlink ()
+    | Some `profile  -> OpamClient.config_profile ()
     | Some `includes -> OpamClient.config_includes ~is_rec (List.map OpamPackage.Name.of_string params)
     | Some `bytecomp -> OpamClient.config (mk ~is_byte:true  ~is_link:false)
     | Some `bytelink -> OpamClient.config (mk ~is_byte:true  ~is_link:true)

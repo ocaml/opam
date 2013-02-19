@@ -1143,6 +1143,12 @@ let config_variable var =
 let config_subst files =
   OpamState.check (Read_lock (fun () -> OpamConfigCommand.subst files))
 
+let config_symlink files =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.symlink ()))
+
+let config_profile files =
+  OpamState.check (Read_lock (fun () -> OpamConfigCommand.profile ()))
+
 let config_includes ~is_rec names =
   OpamState.check (Read_lock (fun () -> OpamConfigCommand.includes ~is_rec names))
 

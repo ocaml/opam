@@ -34,3 +34,9 @@ val config: config -> unit
 
 (** Substitute files *)
 val subst: basename list -> unit
+
+(** Print symlink command *)
+val symlink: unit -> unit
+
+(** Print profile *)
+val profile: unit -> unit

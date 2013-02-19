@@ -265,3 +265,18 @@ let variable v =
   let t = OpamState.load_state "config-variable" in
   let contents = OpamState.contents_of_variable t v in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+
+let symlink () =
+  log "config-symlink";
+  let t = OpamState.load_state "config-symlink" in
+  let switch = t.OpamState.switch in
+  let switch_name = OpamSwitch.to_string switch in
+  OpamGlobals.msg "ln -sf $HOME/.opam/currentswitch $HOME/.opam/%s\n" switch_name
+
+let profile () =
+  OpamGlobals.msg "\
+    export PATH=$PATH:$HOME/.opam/bin:$HOME/.opam/currentswitch/bin\n\
+    export MANPATH=$MANPATH:$HOME/.opam/currentswitch/man\n\
+    export OCAML_TOPLEVEL_PATH=$HOME/.opam/currentswitch/lib/toplevel\n\
+    export CAML_LD_LIBRARY_PATH=$HOME/.opam/currentswitch/lib/stublibs:/usr/lib/ocaml/stublibs\n\
+    "
