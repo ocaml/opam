@@ -216,7 +216,7 @@ let reset_env = lazy (
 )
 
 let command_exists ?(env=default_env) name =
-  let r = OpamProcess.run ~env ~name:(temp_file "which") ~verbose:false "which" [name] in
+  let r = OpamProcess.run ~env ~name:(temp_file "type") ~verbose:false "type" [name] in
   OpamProcess.clean_files r;
   OpamProcess.is_success r
 
