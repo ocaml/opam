@@ -242,14 +242,9 @@ val add_to_reinstall: state -> all:bool -> package_set -> unit
 
 (** {2 System compilers} *)
 
-(** Upgrade all the compiler switches associated with the system
-    compiler *)
-val upgrade_system_compiler: (state -> unit) ref
-
 (** Create {i $opam/compilers/system.com}. Take the global root and
     the new system compiler version as arguments. *)
-val create_system_compiler_description:
-  dirname -> compiler_version option -> unit
+val create_system_compiler_description: dirname -> compiler_version option -> unit
 
 (** {2 Misc} *)
 
@@ -282,3 +277,12 @@ module Types: sig
     repo_index: OpamFile.Repo_index.t;
   }
 end
+
+
+(** / **)
+
+(** Update hook. *)
+val update_hook: (save_cache:bool -> repository_name list -> unit) ref
+
+(** Switch reinstall hook. *)
+val switch_reinstall_hook: (switch -> unit) ref

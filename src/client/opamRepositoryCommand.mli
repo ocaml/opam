@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*    Copyright 2012 OCamlPro                                          *)
+(*    Copyright 2012-2013 OCamlPro                                     *)
 (*    Copyright 2012 INRIA                                             *)
 (*                                                                     *)
 (*  All rights reserved.  This file is distributed under the terms of  *)
@@ -13,31 +13,22 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Switch commands. *)
+(** Repository sub-command functions. *)
 
+open OpamState.Types
 open OpamTypes
 
-(** Install a new switch. *)
-val install: quiet:bool -> switch -> compiler -> unit
+(** Update the repository index. *)
+val update_index: t -> unit
 
-(** Import a file which contains the packages to install. *)
-val import: filename option -> unit
+(** List the available repositories. *)
+val list: short:bool -> unit
 
-(** Export a file which contains the installed packages. *)
-val export: filename option -> unit
+(** Add a new repository. *)
+val add: repository_name -> repository_kind -> address -> priority:int option -> unit
 
-(** Remove the given compiler switch. *)
-val remove: switch -> unit
+(** Remove a repository. *)
+val remove: repository_name -> unit
 
-(** Switch to the given compiler switch. *)
-val switch: quiet:bool -> switch -> unit
-
-(** Reinstall the given compiler switch. *)
-val reinstall: switch -> unit
-
-(** Display the current compiler switch. *)
-val show: unit -> unit
-
-(** List all the available compiler switches. *)
-val list: print_short:bool -> installed_only:bool -> unit
-
+(** Set a repository priority. *)
+val priority: repository_name -> priority:int -> unit

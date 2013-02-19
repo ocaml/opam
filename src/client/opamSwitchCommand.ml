@@ -13,10 +13,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-let log fmt = OpamGlobals.log "SWITCH" fmt
-
 open OpamTypes
 open OpamState.Types
+
+let log fmt = OpamGlobals.log "SWITCH" fmt
 
 (* name + state + compiler + description *)
 (* TODO: add repo *)
@@ -263,8 +263,8 @@ let export filename =
   | None   -> OpamFile.Export.write_to_channel stdout export
   | Some f -> OpamFile.Export.write f export
 
-let current () =
-  let t = OpamState.load_state "switch-current" in
+let show () =
+  let t = OpamState.load_state "switch-show" in
   OpamGlobals.msg "%s\n" (OpamSwitch.to_string t.switch)
 
 let reinstall switch =

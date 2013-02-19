@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*    Copyright 2012 OCamlPro                                          *)
+(*    Copyright 2012-2013 OCamlPro                                     *)
 (*    Copyright 2012 INRIA                                             *)
 (*                                                                     *)
 (*  All rights reserved.  This file is distributed under the terms of  *)
@@ -13,31 +13,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Switch commands. *)
+(** Pin subcommand. *)
 
 open OpamTypes
 
-(** Install a new switch. *)
-val install: quiet:bool -> switch -> compiler -> unit
+(** Manage pinned packages. *)
+val pin: force:bool -> pin -> unit
 
-(** Import a file which contains the packages to install. *)
-val import: filename option -> unit
-
-(** Export a file which contains the installed packages. *)
-val export: filename option -> unit
-
-(** Remove the given compiler switch. *)
-val remove: switch -> unit
-
-(** Switch to the given compiler switch. *)
-val switch: quiet:bool -> switch -> unit
-
-(** Reinstall the given compiler switch. *)
-val reinstall: switch -> unit
-
-(** Display the current compiler switch. *)
-val show: unit -> unit
-
-(** List all the available compiler switches. *)
-val list: print_short:bool -> installed_only:bool -> unit
-
+(** List the pinned packages. *)
+val list: unit -> unit

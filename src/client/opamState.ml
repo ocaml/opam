@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*    Copyright 2012 OCamlPro                                          *)
+(*    Copyright 2012-2013 OCamlPro                                     *)
 (*    Copyright 2012 INRIA                                             *)
 (*                                                                     *)
 (*  All rights reserved.  This file is distributed under the terms of  *)
@@ -37,6 +37,9 @@ let confirm fmt =
     else
       true
   ) fmt
+
+let update_hook = ref (fun ~save_cache _ -> let _ = save_cache in assert false)
+let switch_reinstall_hook = ref (fun _ -> assert false)
 
 type state = {
   partial: bool;
@@ -300,9 +303,6 @@ let system_needs_upgrade t =
   | None   -> OpamGlobals.error_and_exit "No OCaml compiler found in path"
   | Some v -> t.compiler_version <> v
 
-let upgrade_system_compiler =
-  ref (fun _ -> assert false)
-
 (* Only used during init: load only repository-related information *)
 let load_repository_state call_site =
   log "LOAD-REPO-STATE(%s)" call_site;
@@ -526,6 +526,27 @@ let save_state ~update t =
   Marshal.to_channel oc (t.opams, t.descrs) [];
   close_out oc
 
+let reinstall_system_compiler t =
+  let continue =
+    confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
+
+  if continue then (
+
+    (* Update system.comp *)
+    create_system_compiler_description t.root (OpamCompiler.Version.system ());
+
+    (* Reinstall all system compiler switches *)
+    OpamSwitch.Map.iter (fun s a ->
+      if a = OpamCompiler.system then (
+        OpamGlobals.msg "\n=o=o=o= Upgrading %s =o=o=o=\n" (OpamSwitch.to_string s);
+        !switch_reinstall_hook s
+      )
+    ) t.aliases
+
+  ) else
+    OpamGlobals.exit 1
+
+
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
@@ -625,7 +646,7 @@ let load_state ?(save_cache=true) call_site =
   loads :=  (t1 -. t0) :: !loads;
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
-    !upgrade_system_compiler t;
+    reinstall_system_compiler t;
     OpamGlobals.exit 0
   ) else
     t
@@ -1114,3 +1135,4 @@ module Types = struct
     repo_index: OpamFile.Repo_index.t;
   }
 end
+

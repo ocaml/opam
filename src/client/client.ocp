@@ -6,8 +6,10 @@ begin library "opam-client"
     "opamState.ml"
     "opamAction.ml"
     "opamSolution.ml"
-    "opamConfigCommand.ml"
     "opamSwitchCommand.ml"
+    "opamConfigCommand.ml"
+    "opamRepositoryCommand.ml"
+    "opamPinCommand.ml"
     "opamClient.ml"
   ]
 

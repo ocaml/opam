@@ -309,6 +309,8 @@ let guess_repository_kind kind address =
       `http
   | Some k -> k
 
+module Client = OpamClient.SafeAPI
+
 (* INIT *)
 let init_doc = "Initialize OPAM state."
 let init =
@@ -320,7 +322,7 @@ let init =
     `P "Additional repositories can be added later by using the $(b,opam repository) command.";
     `P "The local cache of a repository state can be updated by using $(b,opam update).";
   ] in
-  let cores = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamGlobals.default_jobs in
+  let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamGlobals.default_jobs in
   let compiler =
     mk_opt ["comp"] "VERSION" "Which compiler version to use." compiler OpamCompiler.system in
   let repo_name =
@@ -329,14 +331,14 @@ let init =
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
-  let init global_options build_options repo_kind repo_name repo_address compiler cores =
+  let init global_options build_options repo_kind repo_name repo_address compiler jobs =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
-    OpamClient.init repository compiler cores in
-  Term.(pure init $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $cores),
+    Client.init repository compiler ~jobs in
+  Term.(pure init $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -356,7 +358,7 @@ let list =
   ] in
   let list global_options print_short installed_only packages =
     set_global_options global_options;
-    OpamClient.list ~print_short ~installed_only packages in
+    Client.list ~print_short ~installed_only packages in
   Term.(pure list $global_options $print_short_flag $installed_only_flag $pattern_list),
   term_info "list" ~doc ~man
 
@@ -377,7 +379,7 @@ let search =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
   let search global_options print_short installed_only case_sensitive packages =
     set_global_options global_options;
-    OpamClient.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
+    Client.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
   Term.(pure search $global_options $print_short_flag $installed_only_flag $case_sensitive $pattern_list),
   term_info "search" ~doc ~man
 
@@ -406,7 +408,7 @@ let info =
 
   let pkg_info global_options fields packages =
     set_global_options global_options;
-    OpamClient.info ~fields packages in
+    Client.info ~fields packages in
   Term.(pure pkg_info $global_options $fields $pattern_list),
   term_info "info" ~doc ~man
 
@@ -473,19 +475,19 @@ let config =
         OpamConfigCommand.env ~csh
       else
         OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
-    | Some `env      -> OpamClient.config_env ~csh
-    | Some `list     -> OpamClient.config_list (List.map OpamPackage.Name.of_string params)
+    | Some `env      -> Client.CONFIG.env ~csh
+    | Some `list     -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
     | Some `var      ->
       if params = [] then
         OpamGlobals.error_and_exit "Missing paramater. Usage: 'opam config var <VARIABLE>'"
       else
-        OpamClient.config_variable (OpamVariable.Full.of_string (List.hd params))
-    | Some `subst    -> OpamClient.config_subst (List.map OpamFilename.Base.of_string params)
-    | Some `includes -> OpamClient.config_includes ~is_rec (List.map OpamPackage.Name.of_string params)
-    | Some `bytecomp -> OpamClient.config (mk ~is_byte:true  ~is_link:false)
-    | Some `bytelink -> OpamClient.config (mk ~is_byte:true  ~is_link:true)
-    | Some `asmcomp  -> OpamClient.config (mk ~is_byte:false ~is_link:false)
-    | Some `asmlink  -> OpamClient.config (mk ~is_byte:false ~is_link:true) in
+        Client.CONFIG.variable (OpamVariable.Full.of_string (List.hd params))
+    | Some `subst    -> Client.CONFIG.subst (List.map OpamFilename.Base.of_string params)
+    | Some `includes -> Client.CONFIG.includes ~is_rec (List.map OpamPackage.Name.of_string params)
+    | Some `bytecomp -> Client.CONFIG.config (mk ~is_byte:true  ~is_link:false)
+    | Some `bytelink -> Client.CONFIG.config (mk ~is_byte:true  ~is_link:true)
+    | Some `asmcomp  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:false)
+    | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
 
   Term.(pure config $global_options $command $env $is_rec $csh $params),
   term_info "config" ~doc ~man
@@ -512,7 +514,7 @@ let install =
     set_global_options global_options;
     set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    OpamClient.install packages in
+    Client.install packages in
   Term.(pure install $global_options $build_options $package_list),
   term_info "install" ~doc ~man
 
@@ -532,7 +534,7 @@ let remove =
     set_global_options global_options;
     set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    OpamClient.remove packages in
+    Client.remove packages in
   Term.(pure remove $global_options $build_options $package_list),
   term_info "remove" ~doc ~man
 
@@ -548,7 +550,7 @@ let reinstall =
     set_global_options global_options;
     set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    OpamClient.reinstall packages in
+    Client.reinstall packages in
   Term.(pure reinstall $global_options $build_options $package_list),
   term_info "reinstall" ~doc ~man
 
@@ -565,7 +567,7 @@ let update =
   ] in
   let update global_options repositories =
     set_global_options global_options;
-    OpamClient.update repositories in
+    Client.update repositories in
   Term.(pure update $global_options $repository_list),
   term_info "update" ~doc ~man
 
@@ -583,8 +585,10 @@ let upgrade =
   let upgrade global_options build_options names =
     set_global_options global_options;
     set_build_options build_options;
-    let packages = OpamPackage.Name.Set.of_list names in
-    OpamClient.upgrade packages in
+    let packages = match names with
+      | [] -> None
+      | _  -> Some (OpamPackage.Name.Set.of_list names) in
+    Client.upgrade packages in
   Term.(pure upgrade $global_options $build_options $package_list),
   term_info "upgrade" ~doc ~man
 
@@ -622,7 +626,7 @@ let upload =
     let upl_archive = match archive with
       | None   -> OpamGlobals.error_and_exit "missing archive file"
       | Some s -> s in
-    OpamClient.upload { upl_opam; upl_descr; upl_archive } repo in
+    Client.upload { upl_opam; upl_descr; upl_archive } repo in
   Term.(pure upload $global_options $opam $descr $archive $repo),
   term_info "upload" ~doc ~man
 
@@ -678,10 +682,10 @@ let repository name =
         let name = OpamRepositoryName.of_string name in
         let address = OpamRepository.repository_address address in
         let kind = guess_repository_kind kind address in
-        OpamClient.repository_add name kind address priority
+        Client.REPOSITORY.add name kind address ~priority
       | _ -> error `toomany usage_add in
     let list = function
-      | [] -> OpamClient.repository_list ~short
+      | [] -> Client.REPOSITORY.list ~short
       | _  -> error `toomany usage_list in
     let priority = function
       | [] | [_]  -> error `missing usage_priority
@@ -690,12 +694,12 @@ let repository name =
         let priority =
           try int_of_string p
           with _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
-        OpamClient.repository_priority name priority
+        Client.REPOSITORY.priority name ~priority
       | _ -> error `toomany usage_priority in
     let remove = function
       | [name] ->
         let name = OpamRepositoryName.of_string name in
-        OpamClient.repository_remove name
+        Client.REPOSITORY.remove name
       | [] -> error `missing usage_remove
       | _  -> error `toomany usage_remove in
     match command with
@@ -773,33 +777,36 @@ let switch =
     | None      , []
     | Some `list, [] ->
         no_alias_of ();
-        OpamClient.switch_list ~print_short ~installed_only
+        Client.SWITCH.list ~print_short ~installed_only
     | Some `install, [switch] ->
-        OpamClient.switch_install global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
+        Client.SWITCH.install ~quiet:global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
     | Some `export, [] ->
         no_alias_of ();
-        OpamClient.switch_export filename
+        Client.SWITCH.export filename
     | Some `import, [] ->
         no_alias_of ();
-        OpamClient.switch_import filename
+        Client.SWITCH.import filename
     | Some `remove, switches ->
         no_alias_of ();
-        List.iter (fun switch -> OpamClient.switch_remove (OpamSwitch.of_string switch)) switches
+        List.iter (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch)) switches
     | Some `reinstall, [switch] ->
         no_alias_of ();
-        OpamClient.switch_reinstall (OpamSwitch.of_string switch)
+        Client.SWITCH.reinstall (OpamSwitch.of_string switch)
     | Some `current, [] ->
         no_alias_of ();
-        OpamClient.switch_current ()
+        Client.SWITCH.show ()
     | Some `default switch, [] ->
         (match alias_of with
-        | None -> OpamClient.switch global_options.quiet (OpamSwitch.of_string switch)
+        | None -> Client.SWITCH.switch ~quiet:global_options.quiet (OpamSwitch.of_string switch)
         | _    ->
-          OpamClient.switch_install global_options.quiet
+          Client.SWITCH.install ~quiet:global_options.quiet
             (OpamSwitch.of_string switch) (mk_comp switch))
     | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
-  Term.(pure switch $global_options $build_options $command $alias_of $filename $print_short_flag $installed_only_flag $params),
+  Term.(pure switch
+    $global_options $build_options $command
+    $alias_of $filename $print_short_flag
+    $installed_only_flag $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)
@@ -843,15 +850,15 @@ let pin =
   let pin global_options force kind list package pin =
     set_global_options global_options;
     if list then
-      OpamClient.pin_list ()
+      Client.PIN.list ()
     else match package, pin with
-    | None  , None   -> OpamClient.pin_list ()
+    | None  , None   -> Client.PIN.list ()
     | Some n, Some p ->
       let pin = {
         pin_package = OpamPackage.Name.of_string n;
         pin_option  = pin_option_of_string ?kind:kind p
       } in
-      OpamClient.pin ~force pin
+      Client.PIN.pin ~force pin
     | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
 
   Term.(pure pin $global_options $force $kind $list $package $pin_option),
