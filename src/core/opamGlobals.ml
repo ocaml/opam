@@ -108,6 +108,8 @@ type os =
   | Linux
   | FreeBSD
   | OpenBSD
+  | NetBSD
+  | DragonFly
   | Cygwin
   | Win32
   | Unix
@@ -125,6 +127,8 @@ let os () =
           | Some "Linux"   -> Linux
           | Some "FreeBSD" -> FreeBSD
           | Some "OpenBSD" -> OpenBSD
+          | Some "NetBSD" -> NetBSD
+          | Some "DragonFly" -> DragonFly
           | _              -> Unix
         end
       | "Win32"  -> Win32
@@ -138,7 +142,9 @@ let string_of_os = function
   | Darwin  -> "darwin"
   | Linux   -> "linux"
   | FreeBSD
-  | OpenBSD -> "bsd"
+  | OpenBSD
+  | NetBSD
+  | DragonFly -> "bsd"
   | Cygwin  -> "cygwin"
   | Win32   -> "win32"
   | Unix    -> "unix"
@@ -150,7 +156,9 @@ let os_string () =
 let makecmd = ref (fun () ->
   match os () with
   | FreeBSD
-  | OpenBSD -> "gmake"
+  | OpenBSD
+  | NetBSD
+  | DragonFly -> "gmake"
   | _ -> "make"
 )
 
