@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -64,7 +68,10 @@ Convert a filename into a compiler name<br>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
 List the compiler available in a directory<br>
 </div>
-<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type">t</code></pre><div class="info">
-Default compiler<br>
+<pre><span id="VALsystem"><span class="keyword">val</span> system</span> : <code class="type">t</code></pre><div class="info">
+System compiler<br>
+</div>
+<pre><span id="VALunknown"><span class="keyword">val</span> unknown</span> : <code class="type">t -> 'a</code></pre><div class="info">
+Errors<br>
 </div>
 </body></html>

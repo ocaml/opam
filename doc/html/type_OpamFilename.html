@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -29,6 +32,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -48,9 +52,10 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;exec&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?env:(string&nbsp;*&nbsp;string)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?name:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;move_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;copy_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;link_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;move_dir&nbsp;:&nbsp;src:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;copy_dir&nbsp;:&nbsp;src:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;copy_unique_dir&nbsp;:&nbsp;src:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;link_dir&nbsp;:&nbsp;src:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;exists_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dirname_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;basename_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Base</span>.t<br>
@@ -143,10 +148,10 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;list_files&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;with_contents&nbsp;:&nbsp;(string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;copy_in&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;move&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;move&nbsp;:&nbsp;src:t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;link_in&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;copy&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;link&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;copy&nbsp;:&nbsp;src:t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;link&nbsp;:&nbsp;src:t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;dst:t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;extract&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;extract_in&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;starts_with&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>

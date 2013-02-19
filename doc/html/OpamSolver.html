@@ -11,8 +11,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -33,6 +36,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -58,6 +62,9 @@ Convert a request to a string<br>
 <pre><span id="VALstats"><span class="keyword">val</span> stats</span> : <code class="type"><a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEstats">OpamTypes.stats</a></code></pre><div class="info">
 Compute statistics about a solution<br>
 </div>
+<pre><span id="VALnew_packages"><span class="keyword">val</span> new_packages</span> : <code class="type"><a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+Return the new packages in the solution<br>
+</div>
 <pre><span id="VALstring_of_stats"><span class="keyword">val</span> string_of_stats</span> : <code class="type"><a href="OpamTypes.html#TYPEstats">OpamTypes.stats</a> -> string</code></pre><div class="info">
 Pretty-printing of statistics<br>
 </div>
@@ -70,7 +77,7 @@ Does the solution implies deleting or updating a package<br>
 <pre><span id="VALprint_solution"><span class="keyword">val</span> print_solution</span> : <code class="type"><a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> unit</code></pre><div class="info">
 Display a solution<br>
 </div>
-<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type">?verbose:bool -><br>       <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
 Given a description of packages, return a solution preserving the
     consistency of the initial description.  An empty <code class="code">list</code> : No solution
     found. The last argument is the set of installed packages.
@@ -80,12 +87,15 @@ Given a description of packages, return a solution preserving the
     For the ordering, the first element in the list
     is obtained by upgrading from its next element.<br>
 </div>
-<pre><span id="VALbackward_dependencies"><span class="keyword">val</span> backward_dependencies</span> : <code class="type">depopts:bool -><br>       installed:bool -><br>       <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> list</code></pre><div class="info">
+<pre><span id="VALinstallable"><span class="keyword">val</span> installable</span> : <code class="type"><a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+Keep only the packages that are installable.<br>
+</div>
+<pre><span id="VALdependencies"><span class="keyword">val</span> dependencies</span> : <code class="type">depopts:bool -><br>       installed:bool -><br>       <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> list</code></pre><div class="info">
 Return the topological sort of the transitive dependency closures
     of a collection of packages.<br>
 </div>
-<pre><span id="VALforward_dependencies"><span class="keyword">val</span> forward_dependencies</span> : <code class="type">depopts:bool -><br>       installed:bool -><br>       <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> list</code></pre><div class="info">
-Same as <code class="code">backward_dependencies</code> but for forward dependencies<br>
+<pre><span id="VALreverse_dependencies"><span class="keyword">val</span> reverse_dependencies</span> : <code class="type">depopts:bool -><br>       installed:bool -><br>       <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> list</code></pre><div class="info">
+Same as <code class="code">bdependencies</code> but for reverse dependencies<br>
 </div>
 <pre><span id="VALsequential_solution"><span class="keyword">val</span> sequential_solution</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a></code></pre><div class="info">
 Create a sequential solution from a list of actions<br>

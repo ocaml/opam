@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -75,13 +79,16 @@ Evaluate a function in a given directory<br>
 <pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?env:(string * string) list -> ?name:string -> string list list -> unit</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
-<pre><span id="VALmove_dir"><span class="keyword">val</span> move_dir</span> : <code class="type">Dir.t -> Dir.t -> unit</code></pre><div class="info">
+<pre><span id="VALmove_dir"><span class="keyword">val</span> move_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
 Move a directory<br>
 </div>
-<pre><span id="VALcopy_dir"><span class="keyword">val</span> copy_dir</span> : <code class="type">Dir.t -> Dir.t -> unit</code></pre><div class="info">
+<pre><span id="VALcopy_dir"><span class="keyword">val</span> copy_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
 Copy a directory<br>
 </div>
-<pre><span id="VALlink_dir"><span class="keyword">val</span> link_dir</span> : <code class="type">Dir.t -> Dir.t -> unit</code></pre><div class="info">
+<pre><span id="VALcopy_unique_dir"><span class="keyword">val</span> copy_unique_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
+Copy the unique directory in <code class="code">src</code> to <code class="code">dst</code><br>
+</div>
+<pre><span id="VALlink_dir"><span class="keyword">val</span> link_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
 Link a directory<br>
 </div>
 <pre><span id="VALexists_dir"><span class="keyword">val</span> exists_dir</span> : <code class="type">Dir.t -> bool</code></pre><div class="info">
@@ -146,16 +153,16 @@ Apply a function on the contents of a file<br>
 <pre><span id="VALcopy_in"><span class="keyword">val</span> copy_in</span> : <code class="type">t -> Dir.t -> unit</code></pre><div class="info">
 Copy a file in a directory<br>
 </div>
-<pre><span id="VALmove"><span class="keyword">val</span> move</span> : <code class="type">t -> t -> unit</code></pre><div class="info">
+<pre><span id="VALmove"><span class="keyword">val</span> move</span> : <code class="type">src:t -> dst:t -> unit</code></pre><div class="info">
 Move a file<br>
 </div>
 <pre><span id="VALlink_in"><span class="keyword">val</span> link_in</span> : <code class="type">t -> Dir.t -> unit</code></pre><div class="info">
 Symlink a file in a directory<br>
 </div>
-<pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">t -> t -> unit</code></pre><div class="info">
+<pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">src:t -> dst:t -> unit</code></pre><div class="info">
 Copy a file<br>
 </div>
-<pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">t -> t -> unit</code></pre><div class="info">
+<pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">src:t -> dst:t -> unit</code></pre><div class="info">
 Symlink a file. If symlink is not possible on the system, use copy instead.<br>
 </div>
 <pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">t -> Dir.t -> unit</code></pre><div class="info">

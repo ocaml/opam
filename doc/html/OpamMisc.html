@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -97,6 +101,12 @@ Map of strings
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringSet.html">StringSet</a>: <code class="type"><a href="OpamMisc.SET.html">SET</a></code><code class="type">  with type elt = string</code></pre><div class="info">
 Set of strings
 </div>
+<pre><span class="keyword">module</span> <a href="OpamMisc.StringSetSet.html">StringSetSet</a>: <code class="type"><a href="OpamMisc.SET.html">SET</a></code><code class="type">  with type elt = StringSet.t</code></pre><div class="info">
+Set of string sets
+</div>
+<pre><span class="keyword">module</span> <a href="OpamMisc.StringSetMap.html">StringSetMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = StringSet.t</code></pre><div class="info">
+Map of string sets
+</div>
 <pre><span id="VALstrip"><span class="keyword">val</span> strip</span> : <code class="type">string -> string</code></pre><div class="info">
 Strip a string<br>
 </div>
@@ -159,4 +169,11 @@ Lazy environment<br>
 <pre><span id="VALpretty_backtrace"><span class="keyword">val</span> pretty_backtrace</span> : <code class="type">unit -> string</code></pre><div class="info">
 Return a pretty-printed backtrace<br>
 </div>
-<pre><span class="keyword">module</span> <a href="OpamMisc.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamMisc.OP.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><span class="keyword">module</span> <a href="OpamMisc.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamMisc.OP.html">..</a> <code class="code">end</code></pre><pre><span id="VALterminal_columns"><span class="keyword">val</span> terminal_columns</span> : <code class="type">unit -> int</code></pre><div class="info">
+When <code class="code">stdout</code> refers to a terminal, query the number of columns.
+    Otherwise return <code class="code">max_int</code>.<br>
+</div>
+<pre><span id="VALuname_s"><span class="keyword">val</span> uname_s</span> : <code class="type">unit -> string option</code></pre><div class="info">
+Get the output of <code class="code">uname -s</code><br>
+</div>
+</body></html>

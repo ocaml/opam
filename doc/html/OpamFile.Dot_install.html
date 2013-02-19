@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -51,20 +55,23 @@
 .install files<br>
 </div>
 <hr width="100%">
-<pre><span class="keyword">module</span> <a href="OpamFile.Dot_install.Raw.html">Raw</a>: <code class="type"><a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></code><code class="type"> </code></pre><pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
-List of files to install in $lib/<br>
-</div>
-<pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a>) list</code></pre><div class="info">
+<pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
+<pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of files to install in $bin/<br>
 </div>
-<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
+<pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
+List of files to install in $lib/<br>
+</div>
+<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
 List of toplevel files<br>
 </div>
-<pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a>) list</code></pre><div class="info">
-List of other files to install<br>
-</div>
-<pre><span id="VALshare"><span class="keyword">val</span> share</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a>) list</code></pre><div class="info">
+<pre><span id="VALshare"><span class="keyword">val</span> share</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
 List of shared files<br>
+</div>
+<pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> list</code></pre><div class="info">
+List of doc files<br>
+</div>
+<pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a>) list</code></pre><div class="info">
+List of other files to install<br>
 </div>
 </body></html>

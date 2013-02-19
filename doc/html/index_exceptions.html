@@ -8,8 +8,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -30,6 +33,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -49,6 +53,12 @@ All the following parsing function raise <code class="code">Bad_format</code> in
     input does not have the right format.
 </div>
 </td></tr>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="OpamParallel.SIG.html#EXCEPTIONCyclic">Cyclic</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
+<td><div class="info">
+The graph is cyclic.
+</div>
+</td></tr>
 <tr><td align="left"><br>E</td></tr>
 <tr><td><a href="OpamParallel.SIG.html#EXCEPTIONErrors">Errors</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
 <td><div class="info">
@@ -60,6 +70,12 @@ Errors (<code class="code">errors</code>, <code class="code">remaining</code>)
 <td><div class="info">
 Exception raised when a computation in the current process
     fails.
+</div>
+</td></tr>
+<tr><td align="left"><br>L</td></tr>
+<tr><td><a href="OpamTypes.html#EXCEPTIONLexer_error">Lexer_error</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Exceptions
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>

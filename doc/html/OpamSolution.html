@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamConfigCommand.html">
+<link rel="previous" href="OpamRepositoryCommand.html">
 <link rel="next" href="OpamState.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,17 +37,17 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Atoms" rel="Section" href="#2_Atoms">
-<link title="Actions" rel="Section" href="#2_Actions">
 <title>OpamSolution</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="OpamConfigCommand.html" title="OpamConfigCommand">Previous</a>
+<div class="navbar"><a class="pre" href="OpamRepositoryCommand.html" title="OpamRepositoryCommand">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="OpamState.html" title="OpamState">Next</a>
 </div>
@@ -53,11 +56,14 @@
 Applying solver solutions<br>
 </div>
 <hr width="100%">
-<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
+<pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type">?verbose:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
 Resolve an user request<br>
 </div>
+<pre><span id="VALapply"><span class="keyword">val</span> apply</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
+Apply a solution returned by the solver.<br>
+</div>
 <pre><span id="VALresolve_and_apply"><span class="keyword">val</span> resolve_and_apply</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
-Resolve a request and apply the solution<br>
+Call the solver to get a solution and then call <code class="code">apply</code>.<br>
 </div>
 <pre><span id="VALcheck_solution"><span class="keyword">val</span> check_solution</span> : <code class="type"><a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a> -> unit</code></pre><div class="info">
 Raise an error if no solution is found or in case of error.<br>
@@ -83,13 +89,5 @@ Return a list of atoms from a list of names (wich can eventually
 </div>
 <pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type"><a href="OpamTypes.html#TYPEstats">OpamTypes.stats</a> -> int</code></pre><div class="info">
 <h2 id="2_Stats">Stats</h2><br>
-</div>
-<br>
-<h2 id="2_Actions">Actions</h2><br>
-<pre><span id="VALapply_solution"><span class="keyword">val</span> apply_solution</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
-Apply a solution return by the solver<br>
-</div>
-<pre><span id="VALproceed_to_delete"><span class="keyword">val</span> proceed_to_delete</span> : <code class="type">rm_build:bool -> <a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
-Remove a package<br>
 </div>
 </body></html>

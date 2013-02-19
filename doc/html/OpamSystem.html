@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -80,6 +84,9 @@ Raise <code class="code">Internal_error</code><br>
 <pre><span id="VALreal_path"><span class="keyword">val</span> real_path</span> : <code class="type">string -> string</code></pre><div class="info">
 <code class="code">real_path p</code> returns the real path associated to <code class="code">p</code>: <code class="code">..</code> are
     expanded and relative paths become absolute.<br>
+</div>
+<pre><span id="VALstring_of_channel"><span class="keyword">val</span> string_of_channel</span> : <code class="type">Pervasives.in_channel -> string</code></pre><div class="info">
+Return the contents of a channel.<br>
 </div>
 <pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">string -> string</code></pre><div class="info">
 <code class="code">read filename</code> returns the contents of <code class="code">filename</code><br>
@@ -133,6 +140,9 @@ Return the version of the system compiler<br>
 a command is a list of words<br>
 </div>
 
+<pre><span id="VALcommand_exists"><span class="keyword">val</span> command_exists</span> : <code class="type">?env:string array -> string -> bool</code></pre><div class="info">
+Test wether a command exists in the environement.<br>
+</div>
 <pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?env:string array -> ?name:string -> <a href="OpamSystem.html#TYPEcommand">command</a> -> unit</code></pre><div class="info">
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code> in the correct OPAM
     environment.<br>

@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -29,6 +32,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -40,19 +44,22 @@
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_request&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.atom&nbsp;<span class="constructor">OpamTypes</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;stats&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.stats<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;new_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_stats&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.stats&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;solution_is_empty&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;delete_or_update&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;print_solution&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?verbose:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.atom&nbsp;<span class="constructor">OpamTypes</span>.request&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.solution,&nbsp;string)&nbsp;<span class="constructor">OpamTypes</span>.result<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;backward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;installable&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dependencies&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;depopts:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;installed:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;list<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;forward_dependencies&nbsp;:<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;reverse_dependencies&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;depopts:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;installed:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;list<br>

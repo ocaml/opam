@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -48,31 +52,31 @@
 </div>
 <h1>Module <a href="type_OpamSwitchCommand.html">OpamSwitchCommand</a></h1>
 <pre><span class="keyword">module</span> OpamSwitchCommand: <code class="code">sig</code> <a href="OpamSwitchCommand.html">..</a> <code class="code">end</code></pre><div class="info">
-Switch commands<br>
+Switch commands.<br>
 </div>
 <hr width="100%">
 <pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
-Install a new switch<br>
+Install a new switch.<br>
 </div>
 <pre><span id="VALimport"><span class="keyword">val</span> import</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option -> unit</code></pre><div class="info">
-Import a file which contains the packages to install<br>
+Import a file which contains the packages to install.<br>
 </div>
 <pre><span id="VALexport"><span class="keyword">val</span> export</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option -> unit</code></pre><div class="info">
-Export a file which contains the installed packages<br>
+Export a file which contains the installed packages.<br>
 </div>
 <pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
-Remove the given compiler switch<br>
+Remove the given compiler switch.<br>
 </div>
 <pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type">quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
-Switch to the given compiler switch<br>
+Switch to the given compiler switch.<br>
 </div>
 <pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
-Reinstall the given compiler switch<br>
+Reinstall the given compiler switch.<br>
 </div>
-<pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> unit</code></pre><div class="info">
-Display the current compiler switch<br>
+<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type">unit -> unit</code></pre><div class="info">
+Display the current compiler switch.<br>
 </div>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -> installed_only:bool -> unit</code></pre><div class="info">
-List all the available compiler switches<br>
+List all the available compiler switches.<br>
 </div>
 </body></html>

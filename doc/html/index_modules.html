@@ -8,8 +8,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -30,6 +33,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -43,6 +47,11 @@
 <h1>Index of modules</h1>
 <table>
 <tr><td align="left"><br>A</td></tr>
+<tr><td><a href="OpamClient.API.html">API</a> [<a href="OpamClient.html">OpamClient</a>]</td>
+<td><div class="info">
+OPAM API.
+</div>
+</td></tr>
 <tr><td><a href="OpamCudf.ActionGraph.html">ActionGraph</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
 <td><div class="info">
 Cudf action graph
@@ -70,6 +79,11 @@ Basenames
 </div>
 </td></tr>
 <tr><td align="left"><br>C</td></tr>
+<tr><td><a href="OpamClient.API.CONFIG.html">CONFIG</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
+<td><div class="info">
+Config API.
+</div>
+</td></tr>
 <tr><td><a href="OpamFile.Comp.html">Comp</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 Compiler version <code class="code">$opam/compilers/</code>
@@ -219,6 +233,11 @@ Names
 OPAM files
 </div>
 </td></tr>
+<tr><td><a href="OpamAction.html">OpamAction</a> </td>
+<td><div class="info">
+OPAM actions
+</div>
+</td></tr>
 <tr><td><a href="OpamClient.html">OpamClient</a> </td>
 <td><div class="info">
 Client entry-point.
@@ -237,6 +256,11 @@ Configuration commands
 <tr><td><a href="OpamCudf.html">OpamCudf</a> </td>
 <td><div class="info">
 Cudf interface
+</div>
+</td></tr>
+<tr><td><a href="OpamDarcs.html">OpamDarcs</a> </td>
+<td><div class="info">
+Darcs repository backend
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.html">OpamFile</a> </td>
@@ -299,6 +323,11 @@ Concurrent process execution
 The various paths where OPAM configuration files are stored.
 </div>
 </td></tr>
+<tr><td><a href="OpamPinCommand.html">OpamPinCommand</a> </td>
+<td><div class="info">
+Pin subcommand.
+</div>
+</td></tr>
 <tr><td><a href="OpamProcess.html">OpamProcess</a> </td>
 <td><div class="info">
 Process handling
@@ -307,6 +336,11 @@ Process handling
 <tr><td><a href="OpamRepository.html">OpamRepository</a> </td>
 <td><div class="info">
 Mangagement of OPAM repositories.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepositoryCommand.html">OpamRepositoryCommand</a> </td>
+<td><div class="info">
+Repository sub-command functions.
 </div>
 </td></tr>
 <tr><td><a href="OpamRepositoryName.html">OpamRepositoryName</a> </td>
@@ -336,7 +370,7 @@ Compiler switches
 </td></tr>
 <tr><td><a href="OpamSwitchCommand.html">OpamSwitchCommand</a> </td>
 <td><div class="info">
-Switch commands
+Switch commands.
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html">OpamSystem</a> </td>
@@ -360,6 +394,11 @@ OPAM versions
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>
+<tr><td><a href="OpamClient.API.PIN.html">PIN</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
+<td><div class="info">
+Pin API
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.PackageAction.html">PackageAction</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Package actions
@@ -381,8 +420,11 @@ Pinned package files
 </div>
 </td></tr>
 <tr><td align="left"><br>R</td></tr>
-<tr><td><a href="OpamFile.Dot_install.Raw.html">Raw</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
-<td></td></tr>
+<tr><td><a href="OpamClient.API.REPOSITORY.html">REPOSITORY</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
+<td><div class="info">
+Repository API
+</div>
+</td></tr>
 <tr><td><a href="OpamFile.Reinstall.html">Reinstall</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code>
@@ -404,6 +446,16 @@ Repository paths
 </div>
 </td></tr>
 <tr><td align="left"><br>S</td></tr>
+<tr><td><a href="OpamClient.API.SWITCH.html">SWITCH</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
+<td><div class="info">
+Switch API
+</div>
+</td></tr>
+<tr><td><a href="OpamClient.SafeAPI.html">SafeAPI</a> [<a href="OpamClient.html">OpamClient</a>]</td>
+<td><div class="info">
+This version of the API can be used concurrently.
+</div>
+</td></tr>
 <tr><td><a href="OpamVariable.Section.html">Section</a> [<a href="OpamVariable.html">OpamVariable</a>]</td>
 <td><div class="info">
 Section names
@@ -436,6 +488,16 @@ Map of strings
 <tr><td><a href="OpamMisc.StringSet.html">StringSet</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
 <td><div class="info">
 Set of strings
+</div>
+</td></tr>
+<tr><td><a href="OpamMisc.StringSetMap.html">StringSetMap</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
+<td><div class="info">
+Map of string sets
+</div>
+</td></tr>
+<tr><td><a href="OpamMisc.StringSetSet.html">StringSetSet</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
+<td><div class="info">
+Set of string sets
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Subst.html">Subst</a> [<a href="OpamFile.html">OpamFile</a>]</td>

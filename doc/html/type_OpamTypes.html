@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -29,6 +32,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -38,6 +42,7 @@
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Lexer_error</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;basename&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Base</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;dirname&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Dir</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filename&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.t<br>
@@ -55,6 +60,7 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;version_set&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Version</span>.<span class="constructor">Set</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler&nbsp;=&nbsp;<span class="constructor">OpamCompiler</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_set&nbsp;=&nbsp;<span class="constructor">OpamCompiler</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;compiler_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamCompiler</span>.<span class="constructor">Map</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_version&nbsp;=&nbsp;<span class="constructor">OpamCompiler</span>.<span class="constructor">Version</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;opam_version&nbsp;=&nbsp;<span class="constructor">OpamVersion</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_constraint&nbsp;=&nbsp;<span class="constructor">OpamCompiler</span>.<span class="constructor">Version</span>.constr<br>
@@ -235,6 +241,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_vertex&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_succ&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;in_degree&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;has_cycle&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;scc_list&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;list&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parallel_iter&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
@@ -242,6 +250,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">OpamParallel</span>.error)&nbsp;list&nbsp;*&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Cyclic</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Topological</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -408,6 +417,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_vertex&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_succ&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;in_degree&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;has_cycle&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;scc_list&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;list&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parallel_iter&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
@@ -416,6 +427,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">OpamParallel</span>.error)&nbsp;list&nbsp;*<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Cyclic</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Topological</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -569,6 +581,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_vertex&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_succ&nbsp;:&nbsp;(<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;in_degree&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;has_cycle&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;scc_list&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">V</span>.t&nbsp;list&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parallel_iter&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
@@ -576,6 +590,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">OpamParallel</span>.error)&nbsp;list&nbsp;*&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Cyclic</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Topological</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -611,6 +626,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Switch</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.name_set<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Import</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.name_set<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;universe&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;u_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;u_installed&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;u_available&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;u_depends&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.formula&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
@@ -625,13 +641,6 @@
 &nbsp;&nbsp;&nbsp;&nbsp;upl_archive&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_upload&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.upload&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;remote&nbsp;=<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">RList</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">RAdd</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.repository_kind&nbsp;*<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;*&nbsp;int&nbsp;option<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">RRm</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_name<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">RPriority</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;*&nbsp;int<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_remote&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.remote&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pin_option&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Version</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.version<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Local</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
@@ -650,19 +659,12 @@
 &nbsp;&nbsp;&nbsp;&nbsp;?kind:<span class="constructor">OpamTypes</span>.pin_kind&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;path_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;kind_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_kind<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config_option&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_is_rec&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_is_byte&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_is_link&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_options&nbsp;:&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Section</span>.<span class="constructor">Full</span>.t&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config&nbsp;=<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">CEnv</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CList</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CVariable</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.full_variable<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CIncludes</span>&nbsp;<span class="keyword">of</span>&nbsp;bool&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CCompil</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.config_option<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">CSubst</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;symbol&nbsp;=&nbsp;<span class="constructor">Eq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Neq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Le</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ge</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Lt</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Gt</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filter&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">FBool</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
@@ -714,4 +716,5 @@
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;env&nbsp;=&nbsp;(string&nbsp;*&nbsp;string)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;env_updates&nbsp;=&nbsp;(string&nbsp;*&nbsp;string&nbsp;*&nbsp;string)&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;tags&nbsp;=&nbsp;<span class="constructor">OpamMisc</span>.<span class="constructor">StringSet</span>.t&nbsp;<span class="constructor">OpamMisc</span>.<span class="constructor">StringSetMap</span>.t<br>
 <span class="keyword">end</span></code></body></html>

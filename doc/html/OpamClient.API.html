@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="OpamClient.SafeAPI.html">
+<link rel="Up" href="OpamClient.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamClient.API</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="OpamClient.html" title="OpamClient">Up</a>
+&nbsp;<a class="post" href="OpamClient.SafeAPI.html" title="OpamClient.SafeAPI">Next</a>
+</div>
+<h1>Module <a href="type_OpamClient.API.html">OpamClient.API</a></h1>
+<pre><span class="keyword">module</span> API: <code class="code">sig</code> <a href="OpamClient.API.html">..</a> <code class="code">end</code></pre><div class="info">
+OPAM API.<br>
+</div>
+<hr width="100%">
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> jobs:int -> unit</code></pre><div class="info">
+Initialize the client a consistent state.<br>
+</div>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -><br>       installed_only:bool -><br>       ?name_only:bool -> ?case_sensitive:bool -> string list -> unit</code></pre><div class="info">
+Display all available packages that matches any of the
+     regexps.<br>
+</div>
+<pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">fields:string list -> string list -> unit</code></pre><div class="info">
+Display a general summary of a collection of packages.<br>
+</div>
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
+Install the given set of packages.<br>
+</div>
+<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
+Reinstall the given set of packages.<br>
+</div>
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> unit</code></pre><div class="info">
+Refresh the available packages.<br>
+</div>
+<pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> option -> unit</code></pre><div class="info">
+Find a consistent state where most of the installed packages are
+      upgraded to their latest version. <code class="code">None</code> means all the installed
+      packages.<br>
+</div>
+<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="OpamTypes.html#TYPEupload">OpamTypes.upload</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> unit</code></pre><div class="info">
+Upload a package to a remote repository.<br>
+</div>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
+Remove the given set of packages.<br>
+</div>
+<pre><span class="keyword">module</span> <a href="OpamClient.API.CONFIG.html">CONFIG</a>: <code class="code">sig</code> <a href="OpamClient.API.CONFIG.html">..</a> <code class="code">end</code></pre><div class="info">
+Config API.
+</div>
+<pre><span class="keyword">module</span> <a href="OpamClient.API.REPOSITORY.html">REPOSITORY</a>: <code class="code">sig</code> <a href="OpamClient.API.REPOSITORY.html">..</a> <code class="code">end</code></pre><div class="info">
+Repository API
+</div>
+<pre><span class="keyword">module</span> <a href="OpamClient.API.SWITCH.html">SWITCH</a>: <code class="code">sig</code> <a href="OpamClient.API.SWITCH.html">..</a> <code class="code">end</code></pre><div class="info">
+Switch API
+</div>
+<pre><span class="keyword">module</span> <a href="OpamClient.API.PIN.html">PIN</a>: <code class="code">sig</code> <a href="OpamClient.API.PIN.html">..</a> <code class="code">end</code></pre><div class="info">
+Pin API
+</div>
+</body></html>

@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -29,6 +32,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -39,10 +43,15 @@
 <body>
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?verbose:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.user_action&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.atom&nbsp;<span class="constructor">OpamTypes</span>.request&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.solution,&nbsp;string)&nbsp;<span class="constructor">OpamTypes</span>.result<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;apply&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?force:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.user_action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.solver_result<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;resolve_and_apply&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?force:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
@@ -56,10 +65,4 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;atoms_of_names&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.atom&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sum&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.stats&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;apply_solution&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?force:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.user_action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.solver_result<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;proceed_to_delete&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;rm_build:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 <span class="keyword">end</span></code></body></html>

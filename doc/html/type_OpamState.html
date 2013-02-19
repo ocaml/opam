@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -29,6 +32,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -39,11 +43,13 @@
 <body>
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;state&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;partial&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;root&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.switch;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;compiler&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;compiler_version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_version;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;opams&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">OPAM</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;descrs&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Descr</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;repositories&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_config</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;available_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="constructor">Lazy</span>.t;<br>
@@ -55,14 +61,14 @@
 &nbsp;&nbsp;&nbsp;&nbsp;config&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Config</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;repo_index&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_index</span>.t;<br>
 &nbsp;&nbsp;}<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;load_state&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.state<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;load_state&nbsp;:&nbsp;?save_cache:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.state<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rebuild_state_cache&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove_state_cache&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;print_stats&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;load_repository_state&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.state<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;load_repository_state&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.state<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;load_env_state&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.state<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;universe&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.user_action&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.universe<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unknown_package&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.version&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unavailable_package&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.version&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unknown_compiler&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_full_env&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.env<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_opam_env&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.env<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_to_env&nbsp;:<br>
@@ -87,7 +93,12 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_repositories&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_config</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_set<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;package_repository_map&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="constructor">OpamTypes</span>.package_map<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_repository_map&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="constructor">OpamTypes</span>.compiler_map<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sorted_repositories&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:&nbsp;root:<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_set<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;install_compiler&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;quiet:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
@@ -105,15 +116,19 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;installed_map&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.version&nbsp;<span class="constructor">OpamTypes</span>.name_map<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;base_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;all_installed&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dot_config&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Dot_config</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;opam&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">OPAM</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Comp</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;check&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.lock&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_pinned&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pinned_package&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pinned_path&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_pinned_package&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="constructor">OpamTypes</span>.download<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upgrade_system_compiler&nbsp;:&nbsp;(<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="constructor">Pervasives</span>.ref<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="constructor">OpamTypes</span>.download<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_to_reinstall&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;all:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create_system_compiler_description&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_version&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;confirm&nbsp;:&nbsp;(<span class="keywordsign">'</span>a,&nbsp;unit,&nbsp;string,&nbsp;bool)&nbsp;<span class="constructor">Pervasives</span>.format4&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
@@ -122,11 +137,13 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;partial&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.switch;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;compiler&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;compiler_version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_version;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opams&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">OPAM</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;descrs&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Descr</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;repositories&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_config</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;available_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="constructor">Lazy</span>.t;<br>
@@ -139,4 +156,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;repo_index&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_index</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_hook&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(save_cache:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Pervasives</span>.ref<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;switch_reinstall_hook&nbsp;:&nbsp;(<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="constructor">Pervasives</span>.ref<br>
 <span class="keyword">end</span></code></body></html>

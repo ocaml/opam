@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,13 +37,13 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Errors" rel="Section" href="#2_Errors">
-<link title="Environment" rel="Section" href="#2_Environment">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Environment" rel="Section" href="#2_Environment">
 <link title="Substitutions" rel="Section" href="#2_Substitutions">
 <link title="Filters" rel="Section" href="#2_Filters">
 <link title="Repositories" rel="Section" href="#2_Repositories">
@@ -64,6 +67,13 @@ OPAM client state<br>
 </div>
 <hr width="100%">
 <pre><code><span id="TYPEstate"><span class="keyword">type</span> <code class="type"></code>state</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.partial">partial</span>&nbsp;:<code class="type">bool</code>;</code></td>
+
+</tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -97,6 +107,13 @@ OPAM client state<br>
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTstate.opams">opams</span>&nbsp;:<code class="type">OpamFile.OPAM.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTstate.descrs">descrs</span>&nbsp;:<code class="type">OpamFile.Descr.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
 
 </tr>
 <tr>
@@ -175,29 +192,27 @@ OPAM client state<br>
 Client state<br>
 </div>
 
-<pre><span id="VALload_state"><span class="keyword">val</span> load_state</span> : <code class="type">unit -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
-Load the client state<br>
+<pre><span id="VALload_state"><span class="keyword">val</span> load_state</span> : <code class="type">?save_cache:bool -> string -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
+Load the client state. The string argument is to identify to call
+   site.<br>
+</div>
+<pre><span id="VALrebuild_state_cache"><span class="keyword">val</span> rebuild_state_cache</span> : <code class="type">unit -> unit</code></pre><div class="info">
+Rebuild the state cache.<br>
+</div>
+<pre><span id="VALremove_state_cache"><span class="keyword">val</span> remove_state_cache</span> : <code class="type">unit -> unit</code></pre><div class="info">
+Remove the state cache<br>
 </div>
 <pre><span id="VALprint_stats"><span class="keyword">val</span> print_stats</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Display stats<br>
 </div>
-<pre><span id="VALload_repository_state"><span class="keyword">val</span> load_repository_state</span> : <code class="type">unit -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
-Load repository related states only. All the other fields are let empty.<br>
+<pre><span id="VALload_repository_state"><span class="keyword">val</span> load_repository_state</span> : <code class="type">string -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
+Load repository related states only. All the other fields are left empty.<br>
+</div>
+<pre><span id="VALload_env_state"><span class="keyword">val</span> load_env_state</span> : <code class="type">string -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
+Load state associated to env variables. All other fields are left empty.<br>
 </div>
 <pre><span id="VALuniverse"><span class="keyword">val</span> universe</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -> <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a></code></pre><div class="info">
 Create a universe from the current state<br>
-</div>
-<br>
-<h2 id="2_Errors">Errors</h2><br>
-<pre><span id="VALunknown_package"><span class="keyword">val</span> unknown_package</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option -> 'a</code></pre><div class="info">
-Unknown package.<br>
-</div>
-<pre><span id="VALunavailable_package"><span class="keyword">val</span> unavailable_package</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option -> 'a</code></pre><div class="info">
-Unavailable package: the package is in the list of package but it
-    is not available for the current OS or compiler.<br>
-</div>
-<pre><span id="VALunknown_compiler"><span class="keyword">val</span> unknown_compiler</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> 'a</code></pre><div class="info">
-Unknown compiler.<br>
 </div>
 <br>
 <h2 id="2_Environment">Environment</h2><br>
@@ -253,9 +268,20 @@ Find a repository state, given its name<br>
 <pre><span id="VALstring_of_repositories"><span class="keyword">val</span> string_of_repositories</span> : <code class="type">OpamFile.Repo_config.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a> -> string</code></pre><div class="info">
 Pretty print a map of repositories<br>
 </div>
+<pre><span id="VALpackage_repository_map"><span class="keyword">val</span> package_repository_map</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code></pre><div class="info">
+Build a map which says in which repository the latest metadata for
+    a given package is.<br>
+</div>
+<pre><span id="VALcompiler_repository_map"><span class="keyword">val</span> compiler_repository_map</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code></pre><div class="info">
+Build a map which says in which repository the latest metadata for
+    a given compiler is.<br>
+</div>
+<pre><span id="VALsorted_repositories"><span class="keyword">val</span> sorted_repositories</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> list</code></pre><div class="info">
+Sort repositories by priority<br>
+</div>
 <br>
 <h2 id="2_Compilers">Compilers</h2><br>
-<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a></code></pre><div class="info">
+<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type">root:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a></code></pre><div class="info">
 Return the list of available compilers<br>
 </div>
 <pre><span id="VALinstall_compiler"><span class="keyword">val</span> install_compiler</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
@@ -289,6 +315,10 @@ Return a map from package names to package installed version<br>
 <pre><span id="VALbase_packages"><span class="keyword">val</span> base_packages</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list</code></pre><div class="info">
 Return the base packages<br>
 </div>
+<pre><span id="VALall_installed"><span class="keyword">val</span> all_installed</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+Return all the collection of installed packages, for all the
+   available packages<br>
+</div>
 <br>
 <h2 id="2_Configurationfiles">Configuration files</h2><br>
 <pre><span id="VALdot_config"><span class="keyword">val</span> dot_config</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> OpamFile.Dot_config.t</code></pre><div class="info">
@@ -307,15 +337,30 @@ Apply a function while taking the right locks<br>
 </div>
 <br>
 <h2 id="2_Pinnedpackages">Pinned packages</h2><br>
-<pre><span id="VALupdate_pinned_package"><span class="keyword">val</span> update_pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       <a href="OpamTypes.html#TYPEpin_option">OpamTypes.pin_option</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
+<pre><span id="VALis_pinned"><span class="keyword">val</span> is_pinned</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> bool</code></pre><div class="info">
+Is a package pinned ?<br>
+</div>
+<pre><span id="VALpinned_package"><span class="keyword">val</span> pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a></code></pre><div class="info">
+Get the corresponding pinned package. If the package is pinned to
+    a path (locally or via git/darcs), it returns the latest package as we
+    assume that the most up-to-date build descriptions.<br>
+</div>
+<pre><span id="VALpinned_path"><span class="keyword">val</span> pinned_path</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> option</code></pre><div class="info">
+Get the path associated to the given pinned package. Return <code class="code">None</code>
+   if the package is not pinned or if it is pinned to a version
+   number.<br>
+</div>
+<pre><span id="VALupdate_pinned_package"><span class="keyword">val</span> update_pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
 Update pinned package<br>
+</div>
+<pre><span id="VALadd_to_reinstall"><span class="keyword">val</span> add_to_reinstall</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> all:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> unit</code></pre><div class="info">
+Add the given packages to the set of package to reinstall. If <code class="code">all</code>
+    is set, this is done for ALL the switches (useful when a package
+    change upstream for instance). If not, only the reinstall state of the
+    current switch is changed.<br>
 </div>
 <br>
 <h2 id="2_Systemcompilers">System compilers</h2><br>
-<pre><span id="VALupgrade_system_compiler"><span class="keyword">val</span> upgrade_system_compiler</span> : <code class="type">(<a href="OpamState.html#TYPEstate">state</a> -> unit) Pervasives.ref</code></pre><div class="info">
-Upgrade all the compiler switches associated with the system
-    compiler<br>
-</div>
 <pre><span id="VALcreate_system_compiler_description"><span class="keyword">val</span> create_system_compiler_description</span> : <code class="type"><a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> option -> unit</code></pre><div class="info">
 Create <i>$opam/compilers/system.com</i>. Take the global root and
     the new system compiler version as arguments.<br>
@@ -331,5 +376,13 @@ Consistency checks: do the base package for the current compiler
 </div>
 <pre><span class="keyword">module</span> <a href="OpamState.Types.html">Types</a>: <code class="code">sig</code> <a href="OpamState.Types.html">..</a> <code class="code">end</code></pre><div class="info">
 To be able to open <code class="code">OpamState.Types</code>
+</div>
+<br>
+/ *<br>
+<pre><span id="VALupdate_hook"><span class="keyword">val</span> update_hook</span> : <code class="type">(save_cache:bool -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> unit) Pervasives.ref</code></pre><div class="info">
+Update hook.<br>
+</div>
+<pre><span id="VALswitch_reinstall_hook"><span class="keyword">val</span> switch_reinstall_hook</span> : <code class="type">(<a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit) Pervasives.ref</code></pre><div class="info">
+Switch reinstall hook.<br>
 </div>
 </body></html>

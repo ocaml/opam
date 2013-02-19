@@ -10,8 +10,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -32,6 +35,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -48,6 +52,13 @@ To be able to open <code class="code">OpamState.Types</code><br>
 </div>
 <hr width="100%">
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a></code> = {</pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.partial">partial</span>&nbsp;:<code class="type">bool</code>;</code></td>
+
+</tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -81,6 +92,13 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTt.opams">opams</span>&nbsp;:<code class="type">OpamFile.OPAM.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.descrs">descrs</span>&nbsp;:<code class="type">OpamFile.Descr.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
 
 </tr>
 <tr>

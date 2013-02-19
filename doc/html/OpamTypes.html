@@ -12,8 +12,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -34,6 +37,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -63,6 +67,10 @@
 Common types used by other modules<br>
 </div>
 <hr width="100%">
+<pre><span id="EXCEPTIONLexer_error"><span class="keyword">exception</span> Lexer_error</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+<h2 id="2_Exceptions">Exceptions</h2><br>
+</div>
 <br>
 <h2 id="2_Filenames">Filenames</h2><br>
 <pre><span id="TYPEbasename"><span class="keyword">type</span> <code class="type"></code>basename</span> = <code class="type">OpamFilename.Base.t</code> </pre>
@@ -189,6 +197,11 @@ Compiler names<br>
 <pre><span id="TYPEcompiler_set"><span class="keyword">type</span> <code class="type"></code>compiler_set</span> = <code class="type">OpamCompiler.Set.t</code> </pre>
 <div class="info">
 Set of compiler names<br>
+</div>
+
+<pre><span id="TYPEcompiler_map"><span class="keyword">type</span> <code class="type">'a</code> compiler_map</span> = <code class="type">'a OpamCompiler.Map.t</code> </pre>
+<div class="info">
+Maps of compiler names<br>
 </div>
 
 <pre><span id="TYPEcompiler_version"><span class="keyword">type</span> <code class="type"></code>compiler_version</span> = <code class="type">OpamCompiler.Version.t</code> </pre>
@@ -642,6 +655,13 @@ user request action<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTuniverse.u_packages">u_packages</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTuniverse.u_installed">u_installed</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">package_set</a></code>;</code></td>
 
 </tr>
@@ -726,43 +746,6 @@ Upload arguments<br>
 <pre><span id="VALstring_of_upload"><span class="keyword">val</span> string_of_upload</span> : <code class="type"><a href="OpamTypes.html#TYPEupload">upload</a> -> string</code></pre><div class="info">
 Pretty-print<br>
 </div>
-<pre><code><span id="TYPEremote"><span class="keyword">type</span> <code class="type"></code>remote</span> = </code></pre><table class="typetable">
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTremote.RList"><span class="constructor">RList</span></span></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTremote.RAdd"><span class="constructor">RAdd</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a> * <a href="OpamTypes.html#TYPErepository_kind">repository_kind</a> * <a href="OpamTypes.html#TYPEdirname">dirname</a><br>        * int option</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTremote.RRm"><span class="constructor">RRm</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a></code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTremote.RPriority"><span class="constructor">RPriority</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPErepository_name">repository_name</a> * int</code></code></td>
-
-</tr></table>
-
-<div class="info">
-Remote arguments<br>
-</div>
-
-<pre><span id="VALstring_of_remote"><span class="keyword">val</span> string_of_remote</span> : <code class="type"><a href="OpamTypes.html#TYPEremote">remote</a> -> string</code></pre><div class="info">
-Pretty-print or remote args<br>
-</div>
 <pre><code><span id="TYPEpin_option"><span class="keyword">type</span> <code class="type"></code>pin_option</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -842,33 +825,33 @@ Parsing of pin kinds. Raise an error if it is not a valid value.<br>
 <pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">?kind:<a href="OpamTypes.html#TYPEpin_kind">pin_kind</a> -> string -> <a href="OpamTypes.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
 Read pin options args<br>
 </div>
-<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a></code></pre><pre><code><span id="TYPEconfig_option"><span class="keyword">type</span> <code class="type"></code>config_option</span> = {</code></pre><table class="typetable">
+<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a></code></pre><pre><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTconfig_option.conf_is_rec">conf_is_rec</span>&nbsp;:<code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig.conf_is_rec">conf_is_rec</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTconfig_option.conf_is_byte">conf_is_byte</span>&nbsp;:<code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig.conf_is_byte">conf_is_byte</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTconfig_option.conf_is_link">conf_is_link</span>&nbsp;:<code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTconfig.conf_is_link">conf_is_link</span>&nbsp;:<code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTconfig_option.conf_options">conf_options</span>&nbsp;:<code class="type">OpamVariable.Section.Full.t list</code>;</code></td>
+<code><span id="TYPEELTconfig.conf_options">conf_options</span>&nbsp;:<code class="type">OpamVariable.Section.Full.t list</code>;</code></td>
 
 </tr></table>
 }
@@ -876,51 +859,6 @@ Read pin options args<br>
 <div class="info">
 Configuration requests<br>
 </div>
-
-<pre><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = </code></pre><table class="typetable">
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CEnv"><span class="constructor">CEnv</span></span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CList"><span class="constructor">CList</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEname">name</a> list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CVariable"><span class="constructor">CVariable</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfull_variable">full_variable</a></code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CIncludes"><span class="constructor">CIncludes</span></span> <span class="keyword">of</span> <code class="type">bool * <a href="OpamTypes.html#TYPEname">name</a> list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CCompil"><span class="constructor">CCompil</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEconfig_option">config_option</a></code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTconfig.CSubst"><span class="constructor">CSubst</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEbasename">basename</a> list</code></code></td>
-
-</tr></table>
-
 
 <br>
 <h2 id="2_Filteredcommands">Filtered commands</h2><br>
@@ -1310,6 +1248,11 @@ Environement variables<br>
 <pre><span id="TYPEenv_updates"><span class="keyword">type</span> <code class="type"></code>env_updates</span> = <code class="type">(string * string * string) list</code> </pre>
 <div class="info">
 Environment updates<br>
+</div>
+
+<pre><span id="TYPEtags"><span class="keyword">type</span> <code class="type"></code>tags</span> = <code class="type">OpamMisc.StringSet.t OpamMisc.StringSetMap.t</code> </pre>
+<div class="info">
+Tags<br>
 </div>
 
 </body></html>

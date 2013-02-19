@@ -11,8 +11,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -33,6 +36,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -59,5 +63,9 @@ Functor signature<br>
 <pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">(G.V.t * <a href="OpamParallel.html#TYPEerror">OpamParallel.error</a>) list * G.V.t list</code></pre>
 <div class="info">
 Errors (<code class="code">errors</code>, <code class="code">remaining</code>)<br>
+</div>
+<pre><span id="EXCEPTIONCyclic"><span class="keyword">exception</span> Cyclic</span> <span class="keyword">of</span> <code class="type">G.V.t list list</code></pre>
+<div class="info">
+The graph is cyclic.<br>
 </div>
 </body></html>

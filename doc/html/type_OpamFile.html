@@ -7,8 +7,11 @@
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
 <link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
 <link title="OpamState" rel="Chapter" href="OpamState.html">
 <link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
@@ -29,6 +32,7 @@
 <link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
 <link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
@@ -90,6 +94,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.command&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;depends&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.formula<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;depopts&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.formula<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;depexts&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.tags&nbsp;option<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;conflicts&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.formula<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;libraries&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.section&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;syntax&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.section&nbsp;list<br>
@@ -225,7 +230,6 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Dot_install</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Raw</span>&nbsp;:&nbsp;<span class="constructor">IO_FILE</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;empty&nbsp;:&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;write&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
@@ -233,17 +237,17 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;safe_read&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;read_from_channel&nbsp;:&nbsp;in_channel&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;write_to_channel&nbsp;:&nbsp;out_channel&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lib&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;bin&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename)&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;toplevel&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lib&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;toplevel&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;share&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;doc&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;misc&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filename)&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;share&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename)&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filename)&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Dot_config</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
