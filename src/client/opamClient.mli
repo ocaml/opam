@@ -49,6 +49,12 @@ val config_variable: full_variable -> unit
 (** Substitute files. *)
 val config_subst: basename list -> unit
 
+(** Symlink command *)
+val config_symlink: unit -> unit
+
+(** Profile command *)
+val config_profile: unit -> unit
+
 (** Install the given set of packages. Take the global file lock. *)
 val install: name_set -> unit
 
