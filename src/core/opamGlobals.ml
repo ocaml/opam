@@ -123,13 +123,13 @@ let os () =
     let os = match Sys.os_type with
       | "Unix" -> begin
           match OpamMisc.uname_s () with
-          | Some "Darwin"  -> Darwin
-          | Some "Linux"   -> Linux
-          | Some "FreeBSD" -> FreeBSD
-          | Some "OpenBSD" -> OpenBSD
-          | Some "NetBSD" -> NetBSD
+          | Some "Darwin"    -> Darwin
+          | Some "Linux"     -> Linux
+          | Some "FreeBSD"   -> FreeBSD
+          | Some "OpenBSD"   -> OpenBSD
+          | Some "NetBSD"    -> NetBSD
           | Some "DragonFly" -> DragonFly
-          | _              -> Unix
+          | _                -> Unix
         end
       | "Win32"  -> Win32
       | "Cygwin" -> Cygwin
@@ -139,16 +139,16 @@ let os () =
   | Some os -> os
 
 let string_of_os = function
-  | Darwin  -> "darwin"
-  | Linux   -> "linux"
+  | Darwin    -> "darwin"
+  | Linux     -> "linux"
   | FreeBSD
   | OpenBSD
   | NetBSD
   | DragonFly -> "bsd"
-  | Cygwin  -> "cygwin"
-  | Win32   -> "win32"
-  | Unix    -> "unix"
-  | Other x -> x
+  | Cygwin    -> "cygwin"
+  | Win32     -> "win32"
+  | Unix      -> "unix"
+  | Other x   -> x
 
 let os_string () =
   string_of_os (os ())

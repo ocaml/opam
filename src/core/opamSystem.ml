@@ -216,7 +216,14 @@ let reset_env = lazy (
 )
 
 let command_exists ?(env=default_env) name =
-  let r = OpamProcess.run ~env ~name:(temp_file "which") ~verbose:false "which" [name] in
+  let open OpamGlobals in
+  let cmd, args = match OpamGlobals.os () with
+    | NetBSD
+    | DragonFly ->
+      "sh", ["-c"; Printf.sprintf "type %s 1>/dev/null 2/dev/null" name]
+    | _         ->
+      "which", [name] in
+  let r = OpamProcess.run ~env ~name:(temp_file "which") ~verbose:false cmd args in
   OpamProcess.clean_files r;
   OpamProcess.is_success r
 

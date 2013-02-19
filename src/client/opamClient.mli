@@ -40,7 +40,7 @@ module API: sig
   val install: name_set -> unit
 
   (** Reinstall the given set of packages. *)
-  val reinstall: OpamPackage.Name.Set.t -> unit
+  val reinstall: name_set -> unit
 
   (** Refresh the available packages. *)
   val update: repository_name list -> unit
@@ -48,13 +48,13 @@ module API: sig
   (** Find a consistent state where most of the installed packages are
       upgraded to their latest version. [None] means all the installed
       packages. *)
-  val upgrade: OpamPackage.Name.Set.t option -> unit
+  val upgrade: name_set option -> unit
 
   (** Upload a package to a remote repository. *)
   val upload: upload -> repository_name -> unit
 
   (** Remove the given set of packages. *)
-  val remove: OpamPackage.Name.Set.t -> unit
+  val remove: name_set -> unit
 
   (** Config API. *)
   module CONFIG: sig
