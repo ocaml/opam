@@ -271,12 +271,16 @@ let symlink () =
   let t = OpamState.load_state "config-symlink" in
   let switch = t.OpamState.switch in
   let switch_name = OpamSwitch.to_string switch in
-  OpamGlobals.msg "ln -sf $HOME/.opam/currentswitch $HOME/.opam/%s\n" switch_name
+  OpamGlobals.msg "ln -sf $HOME/.opam/%s $HOME/.opam/currentswitch\n" switch_name;
+(* The following does not work because: ln cannot overwrite directory
+  if switch_name = "system" then
+    OpamGlobals.msg "ln -sf /usr/lib/ocaml/stublibs $HOME/.opam/currentswitch/lib/\n"
+*)
 
 let profile () =
   OpamGlobals.msg "\
-    export PATH=$PATH:$HOME/.opam/bin:$HOME/.opam/currentswitch/bin\n\
-    export MANPATH=$MANPATH:$HOME/.opam/currentswitch/man\n\
+    export PATH=$HOME/.opam/bin:$HOME/.opam/currentswitch/bin:$PATH\n\
+    export MANPATH=$HOME/.opam/currentswitch/man:$MANPATH\n\
     export OCAML_TOPLEVEL_PATH=$HOME/.opam/currentswitch/lib/toplevel\n\
     export CAML_LD_LIBRARY_PATH=$HOME/.opam/currentswitch/lib/stublibs\n\
     "
