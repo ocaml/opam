@@ -278,5 +278,5 @@ let profile () =
     export PATH=$PATH:$HOME/.opam/bin:$HOME/.opam/currentswitch/bin\n\
     export MANPATH=$MANPATH:$HOME/.opam/currentswitch/man\n\
     export OCAML_TOPLEVEL_PATH=$HOME/.opam/currentswitch/lib/toplevel\n\
-    export CAML_LD_LIBRARY_PATH=$HOME/.opam/currentswitch/lib/stublibs:/usr/lib/ocaml/stublibs\n\
+    export CAML_LD_LIBRARY_PATH=$HOME/.opam/currentswitch/lib/stublibs\n\
     "
