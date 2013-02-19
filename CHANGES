@@ -1,4 +1,5 @@
 0.9.4 (trunk)
+* Fix BSD support (use `type` instead of `which` to detect existing commands)
 * Add a way to tag external dependencies in OPAM files
 * Better error messages when trying to upgrade pinned packages
 * Display `depends` and `depopts` fields in `opam info`
