@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-REPOSITORY" 1 "" "Opam 0.9.2" "Opam Manual"
+.TH "OPAM-REPOSITORY" 1 "" "Opam 0.9.3" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -24,6 +24,9 @@ Specify the kind of the repository to be set (the main ones are 'http', 'local',
 .TP 4
 \fB\-p\fR \fIINT\fR, \fB\-\-priority\fR=\fIINT\fR
 Set the repository priority (bigger is better)
+.TP 4
+\fB\-s\fR, \fB\-\-short\fR
+Output the names separated by one whitespace instead of using the usual formatting.
 .SH COMMANDS
 .TP 4
 \fBadd\fR
@@ -56,7 +59,7 @@ Be quiet when installing a new compiler.
 \fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
-\fB\-s\fR \fISWITCH\fR, \fB\-\-switch\fR=\fISWITCH\fR
+\fB\-\-switch\fR=\fISWITCH\fR
 Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
