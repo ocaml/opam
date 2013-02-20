@@ -576,6 +576,7 @@ module OPAM = struct
     authors    : string list;
     license    : string option;
     doc        : string option;
+    tags       : string list;
     build_test : command list;
     build_doc  : command list;
     depexts    : tags option;
@@ -602,6 +603,7 @@ module OPAM = struct
     authors    = [];
     license    = None;
     doc        = None;
+    tags       = [];
     build_test = [];
     build_doc  = [];
     depexts    = None;
@@ -632,6 +634,7 @@ module OPAM = struct
   let s_authors     = "authors"
   let s_license     = "license"
   let s_doc         = "doc"
+  let s_tags        = "tags"
   let s_build_test  = "build-test"
   let s_build_doc   = "build-doc"
   let s_depexts     = "depexts"
@@ -658,6 +661,7 @@ module OPAM = struct
     s_build_test;
     s_build_doc;
     s_depexts;
+    s_tags;
   ]
 
   let valid_fields =
@@ -686,6 +690,7 @@ module OPAM = struct
   let authors t = t.authors
   let license t = t.license
   let doc t = t.doc
+  let tags t = t.tags
   let build_doc t = t.build_doc
   let build_test t = t.build_test
   let depexts t = t.depexts
@@ -723,6 +728,7 @@ module OPAM = struct
         @ list    t.authors       s_authors       (String.concat ", " |> OpamFormat.make_string)
         @ option  t.license       s_license       OpamFormat.make_string
         @ option  t.doc           s_doc           OpamFormat.make_string
+        @ list    t.tags          s_tags          OpamFormat.make_string_list
         @ listm   t.substs        s_substs        (OpamFilename.Base.to_string |> OpamFormat.make_string)
         @ listm   t.build_env     s_build_env     OpamFormat.make_env_variable
         @ listm   t.build         s_build         OpamFormat.make_command
@@ -800,6 +806,7 @@ module OPAM = struct
     let authors = OpamFormat.assoc_list s s_authors OpamFormat.parse_string_list in
     let license = OpamFormat.assoc_option s s_license OpamFormat.parse_string in
     let doc = OpamFormat.assoc_option s s_doc OpamFormat.parse_string in
+    let tags = OpamFormat.assoc_list s s_tags OpamFormat.parse_string_list in
     let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
     let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
     let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
@@ -811,7 +818,7 @@ module OPAM = struct
     { name; version; maintainer; substs; build; remove;
       depends; depopts; conflicts; libraries; syntax; others;
       patches; ocaml_version; os; build_env;
-      homepage; authors; license; doc;
+      homepage; authors; license; doc; tags;
       build_test; build_doc; depexts;
     }
 end

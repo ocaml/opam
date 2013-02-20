@@ -147,6 +147,9 @@ module OPAM: sig
   (** API documentation *)
   val doc: t -> string option
 
+  (** Classification tags *)
+  val tags: t -> string list
+
   (** Commands to build and run the tests *)
   val build_test: t -> command list
 

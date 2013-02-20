@@ -430,7 +430,7 @@ module API = struct
           (function Some x -> x | None -> assert false),
           (fun x -> x)
         ) in
-      let list = mk (
+      let strings = mk (
           [],
           (fun l -> l),
           (String.concat ", ")
@@ -441,10 +441,11 @@ module API = struct
           OpamFormula.to_string
         ) in
 
-      let authors  = list    "authors"  OpamFile.OPAM.authors in
+      let authors  = strings "authors"  OpamFile.OPAM.authors in
       let homepage = string  "homepage" OpamFile.OPAM.homepage in
       let license  = string  "license"  OpamFile.OPAM.license in
       let doc      = string  "doc"      OpamFile.OPAM.doc in
+      let tags     = strings "tags"     OpamFile.OPAM.tags in
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
@@ -466,6 +467,7 @@ module API = struct
         @ authors
         @ license
         @ doc
+        @ tags
         @ depends
         @ depopts
         @ installed_version
