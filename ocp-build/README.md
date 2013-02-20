@@ -19,15 +19,4 @@ for development programs (/usr/local/bin/, for example).
 
 ## Sources
 
-We have not yet released the sources of this version (although the
-sources of an old version are available in TypeRex version 1), because
-it depends on many of our internal libraries, and we need to clean the
-code of these libraries before releasing them.
-
-## The Project Description Language
-
-### A simple example of library
-
-### A simple example of program
-
-## ocp-build options
+The sources of ocp-build can be found in https://github.com/OCamlPro/typerex

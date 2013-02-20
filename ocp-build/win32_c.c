@@ -1,4 +1,17 @@
-#ifdef __CYGWIN__
+/******************************************************************************/
+/*                                                                            */
+/*                          TypeRex OCaml Tools                               */
+/*                                                                            */
+/*                               OCamlPro                                     */
+/*                                                                            */
+/*    Copyright 2011-2012 OCamlPro                                            */
+/*    All rights reserved.  See accompanying files for the terms under        */
+/*    which this file is distributed. In doubt, contact us at                 */
+/*    contact@ocamlpro.com (http://www.ocamlpro.com/)                         */
+/*                                                                            */
+/******************************************************************************/
+
+#ifdef ALSO__CYGWIN__
 #define _WIN32
 #endif
 
@@ -7,14 +20,17 @@
 #include <windows.h>
 #include <sys/types.h>
 
-
 #endif
 
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
-#include <caml/unixsupport.h>
 #include <caml/memory.h>
 #include <caml/signals.h>
+
+#ifndef CAML_UNIXSUPPORT_H
+#include <caml/unixsupport.h>
+#define CAML_UNIXSUPPORT_H
+#endif
 
 #ifdef _WIN32
 static value alloc_process_status(HANDLE pid, int status)
@@ -78,7 +94,37 @@ CAMLprim value win32_waitpids_ml(value ncount_v, value pid_reqs_v){
 }
 
 #endif
-#ifdef __CYGWIN__
+
+#ifdef _WIN32
+extern value win_waitpid(value vflags, value vpid_req);
+#else
+extern value unix_waitpid(value vflags, value vpid_req);
+#endif
+
+
+value win32_waitpid_ml(value vflags, value vpid_req)
+{
+#ifdef _WIN32
+  return win_waitpid(vflags, vpid_req);
+#else
+  return unix_waitpid(vflags, vpid_req);
+#endif
+}
+
+/******************************************************************************/
+/*                                                                            */
+/*                          TypeRex OCaml Tools                               */
+/*                                                                            */
+/*                               OCamlPro                                     */
+/*                                                                            */
+/*    Copyright 2011-2012 OCamlPro                                            */
+/*    All rights reserved.  See accompanying files for the terms under        */
+/*    which this file is distributed. In doubt, contact us at                 */
+/*    contact@ocamlpro.com (http://www.ocamlpro.com/)                         */
+/*                                                                            */
+/******************************************************************************/
+
+#ifdef ALSO__CYGWIN__
 #define _WIN32
 #endif
 
@@ -88,14 +134,17 @@ CAMLprim value win32_waitpids_ml(value ncount_v, value pid_reqs_v){
 #include <windows.h>
 #include <sys/types.h>
 
-
 #endif
 
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
-#include <caml/unixsupport.h>
 #include <caml/memory.h>
 #include <caml/signals.h>
+
+#ifndef CAML_UNIXSUPPORT_H
+#include <caml/unixsupport.h>
+#define CAML_UNIXSUPPORT_H
+#endif
 
 #ifdef _WIN32
 
