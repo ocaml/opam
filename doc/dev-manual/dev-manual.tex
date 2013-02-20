@@ -296,17 +296,33 @@ use when trying to build the packages.
     maintainer:     STRING
     ?homepage:      STRING
     ?authors:       [ STRING+ ]
+    ?doc:           STRING
+    ?license:       STRING
+    ?tags:          [ STRING+ ]
     ?subst:         [ STRING+ ]
-    ?patches:       [ STRING+ ]
-    ?build:         [ [STRING+]+ ]
-    ?remove:        [ [STRING+]+ ]
+    ?patches:       [ (STRING ?<filter>)+ ]
+    ?build:         commands
+    ?build-doc:     commands
+    ?build-test:    commands
+    ?remove:        commands
     ?depends:       [ <and-formula(package)>+ ]
-    ?optdeps:       [ <or-formula(package)>+ ]
+    ?depopts:       [ <or-formula(package)>+ ]
+    ?depexts:       [ [STRING+] [STRING+ ]+
     ?conflicts:     [ <package>+ ]
     ?os:            [ <formula(os)>+ ]
     ?ocaml-version: [ <and-formula(constraint)>+ ]
     ?libraries:     [ STRING+ ]
     ?syntax:        [ STRING+ ]
+
+<argument>       := STRING
+                  | IDENT
+
+<command>        := [ (<argument> ?<filter>)+ ] ?<filter>
+
+<commands>       := <command>
+                  | [ <command>+ ]
+
+<filter>         := { and-formula(<argument> <comp> <argument>) }
 
 <formula(x)>     := <formula(x)> '&' <formula(x)>
                   | <formula(x)> '|' <formula(x)>
@@ -341,7 +357,12 @@ use when trying to build the packages.
 \item The content of {\tt maintainer} is the contact address of the
   package maintainer.
 
-\item The {\tt homepage} and {\tt authors} fields are optional.
+\item The {\tt license}, {\tt homepage} {\tt doc} and {\tt authors}
+  fields are optional. {\tt doc} should be the address of the online
+  documentation for the package.
+
+\item The {\tt tags} field is optional contains a list of tags to
+  classify the package.
 
 \item The content of {\tt subst} is the list of files to substitute
   variable (see \S\ref{file:subst} for the file format and
@@ -357,6 +378,28 @@ use when trying to build the packages.
   it should produce the platform-specific configuration and install
   files (e.g. \verb+$NAME.config+ and \verb+$NAME.install+, see
   \S\ref{file:config} and \S\ref{file:install}).
+
+   Each command and command argument is substituted (see
+   \S\ref{file:subst} and \S\ref{section:config}, with the identifier
+   {\tt X} being equivalent to the string {\tt "\%\{X\}\%"})
+   and can be followed by an optional filter, whose evaluation will
+   result in the command (or the command argument) being executed
+   or not. A typical example is OS-related filters, where we can choose
+   to execute commands depending on the current OS:
+
+  \begin{Verbatim}
+    build: [
+     ["mv" "Makefile.unix" "Makefile"]  {os != "win32"}
+     ["mv" "Makefile.win32" "Makefile"] {os  = "win32"}
+     [make]
+    ]
+  \end{Verbatim}
+
+\item {\tt build-doc} is optional and describes how the documentation
+  is built.
+
+\item {\tt build-test} is optional and describes how the documentation
+  is built.
 
 \item The content of {\tt remove} is the command to run before deleting
   the installed file.
@@ -385,6 +428,9 @@ The {\tt optdeps} field contains a {\em OR} formula over
   package it will check if it is an optional dependency of already
   installed packages. If it is the case, it will re-install the
   packages (and their transitive forward-dependency closure).
+
+\item The {\tt depexts} field is optional and contains tags describing
+  the external dependencies.
 
 \item The {\tt os} and {\tt ocaml-version} fields are optional
   constraints over the supported OS and compiler version for this
