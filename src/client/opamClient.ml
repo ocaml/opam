@@ -399,91 +399,89 @@ module API = struct
         | [v] -> [ "available-version" , v ]
         | l   -> [ "available-versions", String.concat ", " l ] in
 
-    (*
-    let libraries, syntax = match OpamPackage.Map.cardinal installed with
-      | 0 -> [], []
-      | _ ->
-        let fold f =
-          let m =
-            OpamPackage.Map.fold (fun nv _ set ->
-              let opam = OpamState.opam t nv in
-              let incr = OpamVariable.Section.Set.of_list (f opam) in
-              OpamVariable.Section.Set.union set incr
-            ) installed OpamVariable.Section.Set.empty in
-          OpamVariable.Section.Set.elements m in
-        let libraries = match fold OpamFile.OPAM.libraries with
-          | [] -> []
-          | l  -> [ "libraries", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
-        let syntax = match fold OpamFile.OPAM.syntax with
-          | [] -> []
-          | l  -> [ "syntax", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
-        libraries, syntax in
-*)
+      (*let libraries, syntax = match OpamPackage.Map.cardinal installed with
+         | 0 -> [], []
+         | _ ->
+          let fold f =
+            let m =
+              OpamPackage.Map.fold (fun nv _ set ->
+                let opam = OpamState.opam t nv in
+                let incr = OpamVariable.Section.Set.of_list (f opam) in
+                OpamVariable.Section.Set.union set incr
+              ) installed OpamVariable.Section.Set.empty in
+            OpamVariable.Section.Set.elements m in
+          let libraries = match fold OpamFile.OPAM.libraries with
+            | [] -> []
+            | l  -> [ "libraries", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
+          let syntax = match fold OpamFile.OPAM.syntax with
+            | [] -> []
+            | l  -> [ "syntax", String.concat ", " (List.map OpamVariable.Section.to_string l) ] in
+          libraries, syntax in*)
 
-    let mk (empty, get, to_string) name field =
-      let v = field opam in
-      if empty = v then
-        []
-      else
-        [name, to_string (get v)] in
+      let mk (empty, get, to_string) name field =
+        let v = field opam in
+        if empty = v then
+          []
+        else
+          [name, to_string (get v)] in
 
-    let string = mk (
-        None,
-        (function Some x -> x | None -> assert false),
-        (fun x -> x)
-      ) in
-    let list = mk (
-        [],
-        (fun l -> l),
-        (String.concat ", ")
-      ) in
-    let formula = mk (
-        Empty,
-        (fun f -> f),
-        OpamFormula.to_string
-      ) in
+      let string = mk (
+          None,
+          (function Some x -> x | None -> assert false),
+          (fun x -> x)
+        ) in
+      let list = mk (
+          [],
+          (fun l -> l),
+          (String.concat ", ")
+        ) in
+      let formula = mk (
+          Empty,
+          (fun f -> f),
+          OpamFormula.to_string
+        ) in
 
-    let authors  = list    "authors"  OpamFile.OPAM.authors in
-    let homepage = string  "homepage" OpamFile.OPAM.homepage in
-    let license  = string  "license"  OpamFile.OPAM.license in
-    let doc      = string  "doc"      OpamFile.OPAM.doc in
-    let depends  = formula "depends"  OpamFile.OPAM.depends in
-    let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
+      let authors  = list    "authors"  OpamFile.OPAM.authors in
+      let homepage = string  "homepage" OpamFile.OPAM.homepage in
+      let license  = string  "license"  OpamFile.OPAM.license in
+      let doc      = string  "doc"      OpamFile.OPAM.doc in
+      let depends  = formula "depends"  OpamFile.OPAM.depends in
+      let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
-    let descr =
-      let d = OpamPackage.Map.find nv t.descrs in
-      let d = OpamFile.Descr.full d in
-      let short, long = match OpamMisc.cut_at d '\n' with
-        | None       -> OpamMisc.strip d, ""
-        | Some (s,l) -> s, OpamMisc.strip l in
-      let long = match long with
-        | "" -> ""
-        | _  -> Printf.sprintf "\n\n%s" long in
-      ["description", short ^ long] in
+      let descr =
+        let d = OpamPackage.Map.find nv t.descrs in
+        let d = OpamFile.Descr.full d in
+        let short, long = match OpamMisc.cut_at d '\n' with
+          | None       -> OpamMisc.strip d, ""
+          | Some (s,l) -> s, OpamMisc.strip l in
+        let long = match long with
+          | "" -> ""
+          | _  -> Printf.sprintf "\n\n%s" long in
+        ["description", short ^ long] in
 
-    let all_fields =
-      [ "package", OpamPackage.Name.to_string name ]
-      @ [ "version", OpamPackage.Version.to_string current_version ]
-      @ homepage
-      @ authors
-      @ license
-      @ doc
-      @ depends
-      @ depopts
-      @ installed_version
-      @ available_versions
-      @ descr in
+      let all_fields =
+        [ "package", OpamPackage.Name.to_string name ]
+        @ [ "version", OpamPackage.Version.to_string current_version ]
+        @ homepage
+        @ authors
+        @ license
+        @ doc
+        @ depends
+        @ depopts
+        @ installed_version
+        @ available_versions
+        @ descr in
 
-    let all_fields = match fields with
-      | [] -> all_fields
-      | f  -> List.filter (fun (d,_) -> List.mem d f) all_fields in
+      let all_fields = match fields with
+        | [] -> all_fields
+        | f  -> List.filter (fun (d,_) -> List.mem d f) all_fields in
 
-    List.iter (fun (f, desc) ->
-      if show_fields then OpamGlobals.msg "%20s: " f;
-      OpamGlobals.msg "%s\n" desc
-    ) all_fields in
+      List.iter (fun (f, desc) ->
+        if show_fields then OpamGlobals.msg "%20s: " f;
+        OpamGlobals.msg "%s\n" desc
+      ) all_fields in
 
-  OpamPackage.Name.Map.iter print_one names
+    OpamPackage.Name.Map.iter print_one names
 
   let dry_upgrade () =
     log "dry-upgrade";
