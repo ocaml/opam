@@ -105,6 +105,9 @@ val make_string : string -> value
 (** Create a list of 'things' *)
 val make_list : ('a -> value) -> 'a list -> value
 
+(** Create a list of strings *)
+val make_string_list: string list -> value
+
 (** Create a group of 'things' *)
 val make_group : ('a -> value) -> 'a list -> value
 

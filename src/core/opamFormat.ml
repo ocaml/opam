@@ -179,6 +179,8 @@ let make_int i = Int i
 
 let make_list fn l = List (List.map fn l)
 
+let make_string_list = make_list make_string
+
 let make_group fn g = Group (List.map fn g)
 
 let make_option f g = function

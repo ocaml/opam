@@ -797,7 +797,7 @@ module OPAM = struct
     let parse_file = OpamFormat.parse_option (OpamFormat.parse_string |> OpamFilename.Base.of_string) OpamFormat.parse_filter in
     let patches = OpamFormat.assoc_list s s_patches (OpamFormat.parse_list parse_file) in
     let homepage = OpamFormat.assoc_option s s_homepage OpamFormat.parse_string in
-    let authors = OpamFormat.assoc_list s s_authors (OpamFormat.parse_list OpamFormat.parse_string) in
+    let authors = OpamFormat.assoc_list s s_authors OpamFormat.parse_string_list in
     let license = OpamFormat.assoc_option s s_license OpamFormat.parse_string in
     let doc = OpamFormat.assoc_option s s_doc OpamFormat.parse_string in
     let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
@@ -1016,10 +1016,10 @@ module Dot_config = struct
         { section_name  = OpamVariable.Section.to_string s.name;
           section_kind  = s.kind;
           section_items = [
-            Variable (s_bytecomp, OpamFormat.make_list OpamFormat.make_string s.bytecomp);
-            Variable (s_asmcomp , OpamFormat.make_list OpamFormat.make_string s.asmcomp);
-            Variable (s_bytelink, OpamFormat.make_list OpamFormat.make_string s.bytelink);
-            Variable (s_asmlink , OpamFormat.make_list OpamFormat.make_string s.asmlink);
+            Variable (s_bytecomp, OpamFormat.make_string_list s.bytecomp);
+            Variable (s_asmcomp , OpamFormat.make_string_list s.asmcomp);
+            Variable (s_bytelink, OpamFormat.make_string_list s.bytelink);
+            Variable (s_asmlink , OpamFormat.make_string_list s.asmlink);
             Variable (s_requires, OpamFormat.make_list make_require s.requires);
           ] @ of_variables s.lvariables
         } in
@@ -1244,7 +1244,7 @@ module Comp = struct
 
   let to_string filename s =
     let make_ppflag = function
-      | Cmd l    -> OpamFormat.make_list OpamFormat.make_string l
+      | Cmd l    -> OpamFormat.make_string_list l
       | Camlp4 l -> List (Symbol "CAMLP4" :: List.map OpamFormat.make_string l) in
     Syntax.to_string {
       file_name     = OpamFilename.to_string filename;
@@ -1257,13 +1257,13 @@ module Comp = struct
           | Some s -> [Variable (s_src, OpamFormat.make_string (OpamFilename.to_string s))]
       ) @ [
         Variable (s_patches     , OpamFormat.make_list (OpamFilename.to_string |> OpamFormat.make_string) s.patches);
-        Variable (s_configure   , OpamFormat.make_list OpamFormat.make_string s.configure);
-        Variable (s_make        , OpamFormat.make_list OpamFormat.make_string s.make);
-        Variable (s_build       , OpamFormat.make_list (OpamFormat.make_list OpamFormat.make_string) s.build);
-        Variable (s_bytecomp    , OpamFormat.make_list OpamFormat.make_string s.bytecomp);
-        Variable (s_asmcomp     , OpamFormat.make_list OpamFormat.make_string s.asmcomp);
-        Variable (s_bytelink    , OpamFormat.make_list OpamFormat.make_string s.bytelink);
-        Variable (s_asmlink     , OpamFormat.make_list OpamFormat.make_string s.asmlink);
+        Variable (s_configure   , OpamFormat.make_string_list s.configure);
+        Variable (s_make        , OpamFormat.make_string_list s.make);
+        Variable (s_build       , OpamFormat.make_list OpamFormat.make_string_list s.build);
+        Variable (s_bytecomp    , OpamFormat.make_string_list s.bytecomp);
+        Variable (s_asmcomp     , OpamFormat.make_string_list s.asmcomp);
+        Variable (s_bytelink    , OpamFormat.make_string_list s.bytelink);
+        Variable (s_asmlink     , OpamFormat.make_string_list s.asmlink);
         Variable (s_packages    , OpamFormat.make_formula s.packages);
         Variable (s_requires    , OpamFormat.make_list (OpamVariable.Section.to_string |> OpamFormat.make_string) s.requires);
         Variable (s_env         , OpamFormat.make_list OpamFormat.make_env_variable s.env);
