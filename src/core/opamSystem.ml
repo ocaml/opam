@@ -439,17 +439,27 @@ let system_ocamlc_where = system [ "ocamlc"; "-where" ]
 let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
 let download_command =
+  let retry = string_of_int OpamGlobals.download_retry in
   let wget src =
-    command [ "wget"; "--content-disposition"; "--no-check-certificate"; src ] in
+    let wget = [
+      "wget";
+      "--content-disposition"; "--no-check-certificate";
+      "-t"; retry;
+      src
+    ] in
+    command wget in
   let curl src =
-    match
-      read_command_output
-        [ "curl"; "--write-out"; "%{http_code}"; "--insecure" ; "-OL"; src ]
-    with
+    let curl = [
+      "curl";
+      "--write-out"; "%{http_code}"; "--insecure";
+      "--retry"; retry; "--retry-delay"; "2";
+      "-OL"; src
+    ] in
+    match read_command_output curl with
     | [] -> internal_error "curl: empty response."
     | l  ->
       let code = List.hd (List.rev l) in
-      try if int_of_string code >= 400 then internal_error "curl: error %s" code else Printf.printf "XXX CODE %d\n%!" (int_of_string code)
+      try if int_of_string code >= 400 then internal_error "curl: error %s" code
       with _ -> internal_error "curl: %s is not a valid return code" code in
   lazy (
     if command_exists "curl" then
