@@ -1,4 +1,4 @@
-include Makefile.config
+-include Makefile.config
 
 LOCAL_OCPBUILD=./ocp-build/ocp-build
 OCPBUILD ?= $(LOCAL_OCPBUILD)
