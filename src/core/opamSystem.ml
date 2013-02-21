@@ -430,23 +430,32 @@ let system_ocamlc_where = system [ "ocamlc"; "-where" ]
 
 let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
-let download_command = lazy (
-  try
-    command ~verbose:false ["which"; "curl"];
-    (fun src -> [ "curl"; "--insecure" ; "-OL"; src ])
-  with Process_error _ ->
-    try
-      command ~verbose:false ["which"; "wget"];
-      (fun src -> [ "wget"; "--content-disposition";
-                  "--no-check-certificate"; src ])
-    with Process_error _ ->
+let download_command =
+  let wget src =
+    command [ "wget"; "--content-disposition"; "--no-check-certificate"; src ] in
+  let curl src =
+    match
+      read_command_output
+        [ "curl"; "--write-out"; "%{http_code}"; "--insecure" ; "-OL"; src ]
+    with
+    | [] -> internal_error "curl: empty response."
+    | l  ->
+      let code = List.hd (List.rev l) in
+      try if int_of_string code >= 400 then internal_error "curl: error %s" code else Printf.printf "XXX CODE %d\n%!" (int_of_string code)
+      with _ -> internal_error "curl: %s is not a valid return code" code in
+  lazy (
+    if command_exists "curl" then
+      curl
+    else if command_exists "wget" then
+      wget
+    else
       internal_error "Cannot find curl nor wget."
-)
+  )
 
 let really_download ~overwrite ~src ~dst =
-  let cmd = (Lazy.force download_command) src in
+  let download = (Lazy.force download_command) in
   let aux () =
-    command cmd;
+    download src;
     match list (fun _ -> true) "." with
       ( [] | _::_::_ ) ->
         internal_error "Too many downloaded files."
