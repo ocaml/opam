@@ -305,11 +305,13 @@ let guess_repository_kind kind address =
     let address = OpamFilename.Dir.to_string address in
     if Sys.file_exists address then
       `local
-    else if OpamMisc.starts_with ~prefix:"git" address
-        || OpamMisc.ends_with ~suffix:"git" address then
-      `git
     else
-      `http
+      let address, _ = OpamMisc.git_of_string address in
+      if OpamMisc.starts_with ~prefix:"git" address
+      || OpamMisc.ends_with ~suffix:"git" address then
+        `git
+      else
+        `http
   | Some k -> k
 
 module Client = OpamClient.SafeAPI
