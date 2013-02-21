@@ -680,6 +680,8 @@ let contents_of_variable t v =
         S (OpamCompiler.Version.to_string t.compiler_version)
       else if var_str = "preinstalled" then
         B (OpamFile.Comp.preinstalled (compiler t t.compiler))
+      else if var_str = "switch" then
+        S (OpamSwitch.to_string t.switch)
       else
         read_var name
   ) else (
