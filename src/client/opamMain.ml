@@ -535,12 +535,18 @@ let remove =
         $(b,opam switch) or use the $(b,--switch) flag. This command is the \
         inverse of $(b,opam-install).";
   ] in
-  let remove global_options build_options packages =
+  let autoremove =
+    mk_flag ["a";"auto-remove"]
+      "Remove all the packages which have not been explicitely installed and \
+       which are not necessary anymore. It is possible to enforce keeping an \
+       already installed package by running $(b,opam install <pkg>). This flag \
+      can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
+  let remove global_options build_options autoremove packages =
     set_global_options global_options;
     set_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    Client.remove packages in
-  Term.(pure remove $global_options $build_options $package_list),
+    Client.remove ~autoremove packages in
+  Term.(pure remove $global_options $build_options $autoremove $package_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)

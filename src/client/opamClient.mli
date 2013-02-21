@@ -55,7 +55,7 @@ module API: sig
   val upload: upload -> repository_name -> unit
 
   (** Remove the given set of packages. *)
-  val remove: name_set -> unit
+  val remove: autoremove:bool -> name_set -> unit
 
   (** Config API. *)
   module CONFIG: sig

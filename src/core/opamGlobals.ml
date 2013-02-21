@@ -41,6 +41,7 @@ let dryrun           = check "DRYRUN"
 let fake             = check "FAKE"
 let print_stats      = check "STATS"
 let utf8_msgs        = check "UTF8MSGS"
+let autoremove       = check "AUTOREMOVE"
 
 let download_retry =
   try max 1 (int_of_string (OpamMisc.getenv "OPAMRETRY"))

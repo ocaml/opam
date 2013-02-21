@@ -745,8 +745,8 @@ module API = struct
       OpamSolution.check_solution solution
     )
 
-  let remove names =
-    log "REMOVE %s" (OpamPackage.Name.Set.to_string names);
+  let remove ~autoremove names =
+    log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "remove" in
     let atoms = OpamSolution.atoms_of_names t names in
     let atoms =
@@ -800,22 +800,32 @@ module API = struct
         OpamGlobals.msg "%s are not installed.\n" (OpamMisc.string_of_list to_string not_installed)
     );
 
-    if atoms <> [] then (
+    if autoremove || atoms <> [] then (
       let packages = OpamPackage.Set.of_list (List.map (fun (n,_) -> OpamState.find_installed_package_by_name t n) atoms) in
       let universe = OpamState.universe t Depends in
       let to_remove =
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies ~depopts:false ~installed:true universe packages) in
-      let installed_roots = OpamPackage.Set.diff t.installed_roots to_remove in
+      let installed_roots =
+        if autoremove then
+          OpamPackage.Set.diff t.installed_roots to_remove
+        else
+          OpamPackage.Set.diff t.installed to_remove in
       let installed =
         OpamPackage.Set.of_list
           (OpamSolver.dependencies ~depopts:true ~installed:true universe installed_roots) in
+      let to_remove =
+        if atoms = [] then
+          OpamPackage.Set.diff t.installed installed
+        else
+          to_remove in
       let solution = OpamSolution.resolve_and_apply t Remove
           { wish_install = OpamSolution.eq_atoms_of_packages installed;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [] } in
       OpamSolution.check_solution solution
-    )
+    ) else
+      OpamGlobals.msg "Nothing to do.\n"
 
   let reinstall names =
     log "reinstall %s" (OpamPackage.Name.Set.to_string names);
@@ -928,8 +938,8 @@ module SafeAPI = struct
   let upgrade names =
     switch_lock (fun () -> API.upgrade names)
 
-  let remove names =
-    switch_lock (fun () -> API.remove names)
+  let remove ~autoremove names =
+    switch_lock (fun () -> API.remove ~autoremove names)
 
   let update repos =
     global_lock (fun () -> API.update repos)

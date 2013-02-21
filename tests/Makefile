@@ -143,15 +143,19 @@ install-opt:
 	$(OPAM) install P5
 	$(CHECK) -l install-opt-2 P1.1 P5.1
 	$(OPAM) remove P5
-	$(CHECK) -l install-opt-3
+	$(CHECK) -l install-opt-3 P1.1
 	$(OPAM) install P5
 	$(CHECK) -l install-opt-4 P1.1 P5.1
+	$(OPAM) remove P5 -a
+	$(CHECK) -l install-opt-5
+	$(OPAM) install P5
+	$(CHECK) -l install-opt-6 P1.1 P5.1
 	$(OPAM) install P2
-	$(CHECK) -l install-opt-5 P1.1 P2.1 P5.1
-	$(OPAM) remove P5
-	$(CHECK) -l install-opt-6 P1.1 P2.1
-	$(OPAM) remove P2
-	$(CHECK) -l install-opt-7
+	$(CHECK) -l install-opt-7 P1.1 P2.1 P5.1
+	$(OPAM) remove P5 -a
+	$(CHECK) -l install-opt-8 P1.1 P2.1
+	$(OPAM) remove P2 -a
+	$(CHECK) -l install-opt-9
 
 install:
 	$(CHECK) -l install-1

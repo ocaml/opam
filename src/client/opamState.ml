@@ -624,11 +624,7 @@ let load_state ?(save_cache=true) call_site =
   let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
   let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
   let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) in
-  let installed_roots =
-    let installed_roots = OpamFile.Installed_roots.safe_read (OpamPath.Switch.installed_roots root switch) in
-    if OpamPackage.Set.is_empty installed_roots && not (OpamPackage.Set.is_empty installed)
-    then installed (* compat-mode with older versions of OPAM *)
-    else installed_roots in
+  let installed_roots = OpamFile.Installed_roots.safe_read (OpamPath.Switch.installed_roots root switch) in
   let reinstall = OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let system = (compiler = OpamCompiler.system) in
