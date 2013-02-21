@@ -103,6 +103,7 @@ module B = struct
   let init ~address =
     log "init %s" (OpamFilename.Dir.to_string address);
     let local_repo = OpamRepository.local_repo () in
+    let address, _ = git_of_string address in
     git_init address;
     OpamFile.Filenames.write (updates local_repo) (OpamFilename.Set.empty)
 
