@@ -16,8 +16,13 @@
 exception Process_error of OpamProcess.result
 exception Internal_error of string
 
+let log fmt = OpamGlobals.log "SYSTEM" fmt
+
 let internal_error fmt =
-  Printf.ksprintf (fun str -> raise (Internal_error str)) fmt
+  Printf.ksprintf (fun str ->
+    log "error: %s" str;
+    raise (Internal_error str)
+  ) fmt
 
 let process_error r =
   raise (Process_error r)
@@ -29,8 +34,6 @@ module Sys2 = struct
   let is_directory file =
     (lstat file).st_kind = S_DIR
 end
-
-let log fmt = OpamGlobals.log "SYSTEM" fmt
 
 let (/) = Filename.concat
 
@@ -409,7 +412,10 @@ let funlock file =
 let ocaml_version = lazy (
   try
     match read_command_output ~verbose:false [ "ocamlc" ; "-version" ] with
-    | h::_ -> Some (OpamMisc.strip h)
+    | h::_ ->
+      let version = OpamMisc.strip h in
+      log "ocamlc version: %s" version;
+      Some version
     | []   -> internal_error "Cannot find ocamlc."
   with _ ->
     None
@@ -421,7 +427,9 @@ let system command = lazy (
     let env = Lazy.force reset_env in
     match read_command_output ~verbose:false ~env command with
     | h::_ -> Some (OpamMisc.strip h)
-    | []   -> internal_error "Cannot find %s." (try List.hd command with _ -> "<none>")
+    | []   ->
+      let cmd = try List.hd command with _ -> "<none>" in
+      internal_error "Cannot find %s." cmd
   with _ ->
     None
 )
