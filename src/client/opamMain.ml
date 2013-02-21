@@ -187,6 +187,9 @@ let print_short_flag =
 let installed_only_flag =
   mk_flag ["i";"installed"] "List installed packages only."
 
+let installed_roots_flag =
+  mk_flag ["installed-roots"] "Display only the installed roots."
+
 let repo_kind_flag =
   let kinds = [
     (* main kinds *)
@@ -356,10 +359,10 @@ let list =
     `P " The full description can be obtained by doing $(b,opam info <package>). \
          You can search through the package descriptions using the $(b,opam search) command."
   ] in
-  let list global_options print_short installed_only packages =
+  let list global_options print_short installed_only installed_roots packages =
     set_global_options global_options;
-    Client.list ~print_short ~installed_only packages in
-  Term.(pure list $global_options $print_short_flag $installed_only_flag $pattern_list),
+    Client.list ~print_short ~installed_only ~installed_roots packages in
+  Term.(pure list $global_options $print_short_flag $installed_only_flag $installed_roots_flag $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
@@ -377,10 +380,10 @@ let search =
   ] in
   let case_sensitive =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
-  let search global_options print_short installed_only case_sensitive packages =
+  let search global_options print_short installed_only installed_roots case_sensitive packages =
     set_global_options global_options;
-    Client.list ~print_short ~installed_only ~name_only:false ~case_sensitive packages in
-  Term.(pure search $global_options $print_short_flag $installed_only_flag $case_sensitive $pattern_list),
+    Client.list ~print_short ~installed_only ~installed_roots ~name_only:false ~case_sensitive packages in
+  Term.(pure search $global_options $print_short_flag $installed_only_flag $installed_roots_flag $case_sensitive $pattern_list),
   term_info "search" ~doc ~man
 
 (* INFO *)

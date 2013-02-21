@@ -46,6 +46,12 @@ let string_of_list f = function
   | [] -> "{}"
   | l  -> Printf.sprintf "{ %s }" (String.concat ", " (List.map f l))
 
+let rec pretty_list = function
+  | []    -> ""
+  | [a]   -> a
+  | [a;b] -> Printf.sprintf "%s and %s" a b
+  | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
+
 module Set = struct
 
   module Make (O : OrderedType) = struct

@@ -116,6 +116,9 @@ module IntSet: SET with type elt = int
 (** Display a list of strings *)
 val string_of_list: ('a -> string) -> 'a list -> string
 
+(** Display a pretty list: ["x";"y";"z"] -> "x, y and z" *)
+val pretty_list: string list -> string
+
 (** {2 String manipulation} *)
 
 (** Map of strings *)

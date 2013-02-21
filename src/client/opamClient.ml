@@ -307,9 +307,17 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
 
 module API = struct
 
-  let list ~print_short ~installed_only ?(name_only = true) ?(case_sensitive = false) regexp =
+  let list ~print_short ~installed_only ~installed_roots ?(name_only = true) ?(case_sensitive = false) regexp =
     let t = OpamState.load_state "list" in
     let names = names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all:false regexp in
+    let names =
+      if installed_roots then
+        OpamPackage.Name.Map.filter (fun name { current_version } ->
+          let nv = OpamPackage.create name current_version in
+          OpamPackage.Set.mem nv t.installed_roots
+        ) names
+      else
+        names in
     if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
       let kind = if installed_only then "Installed" else "Available" in
       OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
@@ -668,15 +676,34 @@ module API = struct
             false
       ) atoms in
 
-    (* Display a message if at least one package is already installed *)
-    List.iter
-      (fun (n,_) ->
+
+    (* Add the packages to the list of package roots and display a
+       warning for already installed package roots. *)
+    let current_roots = t.installed_roots in
+    let t =
+      List.fold_left (fun t (n,_) ->
         let nv = OpamState.find_installed_package_by_name t n in
-        OpamGlobals.msg
-          "Package %s is already installed (current version is %s)\n"
-          (OpamPackage.Name.to_string (OpamPackage.name nv))
-          (OpamPackage.Version.to_string (OpamPackage.version nv)))
-      pkg_skip;
+        if OpamPackage.Set.mem nv t.installed_roots then (
+          OpamGlobals.msg
+            "Package %s is already installed (current version is %s)\n"
+            (OpamPackage.Name.to_string (OpamPackage.name nv))
+            (OpamPackage.Version.to_string (OpamPackage.version nv));
+          t;
+        ) else (
+          let installed_roots = OpamPackage.Set.add nv t.installed_roots in
+          { t with installed_roots }
+        )
+      )  t pkg_skip in
+    if t.installed_roots <> current_roots then (
+      let diff = OpamPackage.Set.diff t.installed_roots current_roots in
+      let diff = OpamPackage.Set.elements diff in
+      let diff = List.map OpamPackage.to_string diff in
+      OpamGlobals.msg
+        "Adding %s to the list of installed roots.\n"
+        (OpamMisc.pretty_list diff);
+      let file = OpamPath.Switch.installed_roots t.root t.switch in
+      OpamFile.Installed_roots.write file t.installed_roots;
+    );
 
     if pkg_new <> [] then (
 
@@ -881,11 +908,11 @@ module SafeAPI = struct
   let init = API.init
 
   let list
-      ~print_short ~installed_only
+      ~print_short ~installed_only ~installed_roots
       ?name_only ?case_sensitive pkg_str =
     read_lock (fun () ->
       API.list
-        ~print_short ~installed_only
+        ~print_short ~installed_only ~installed_roots
         ?name_only ?case_sensitive pkg_str
     )
 

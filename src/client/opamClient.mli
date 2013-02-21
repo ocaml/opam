@@ -28,6 +28,7 @@ module API: sig
   val list:
     print_short:bool ->
     installed_only:bool ->
+    installed_roots:bool ->
     ?name_only:bool ->
     ?case_sensitive:bool ->
     string list ->
