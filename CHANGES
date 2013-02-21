@@ -1,4 +1,5 @@
 0.9.4 (trunk)
+* Disable auto-removal of unused dependencies. This can now be enabled on-demand using `-a`
 * Fix compilation and basic usage on Cygwin
 * Fix BSD support (use `type` instead of `which` to detect existing commands)
 * Add a way to tag external dependencies in OPAM files
