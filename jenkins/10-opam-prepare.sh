@@ -32,6 +32,14 @@ add libsdl-dev
 add libgdbm-dev
 # ocamlfuse
 add libfuse-dev
+# ffmpeg
+add libavutil-dev
+# ladspa
+add ladspa-sdk
+# gstreamer
+add libgstreamer0.10-dev
+# opus
+add libavutil-dev
 # liquidsoap
 add libao-dev
 add portaudio19-dev 
