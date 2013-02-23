@@ -643,7 +643,7 @@ let upload =
 
 (* REPOSITORY *)
 let repository_doc = "Manage OPAM repositories."
-let repository =
+let repository name =
   let doc = repository_doc in
   let commands = [
     ["add"]        , `add     , "Add the repository $(b,name) available at address \
@@ -720,7 +720,11 @@ let repository =
     | Some   `remove    -> remove params in
 
   Term.(pure repository $global_options $command $repo_kind_flag $priority $print_short_flag $params),
-  term_info "repository" ~doc ~man
+  term_info name  ~doc ~man
+
+(* THOMAS: we keep 'opam remote' for backward compatibity *)
+let remote = repository "remote"
+let repository = repository "repository"
 
 (* SWITCH *)
 let switch_doc = "Manage multiple installation of compilers."
@@ -946,7 +950,7 @@ let commands = [
   install; remove; reinstall;
   update; upgrade;
   config;
-  repository;
+  remote; repository;
   switch;
   pin;
   upload;

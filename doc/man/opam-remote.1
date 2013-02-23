@@ -1,71 +1,45 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM" 1 "" "Opam 0.9.3" "Opam Manual"
+.TH "OPAM-REMOTE" 1 "" "Opam 0.9.3" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam \- source\-based OCaml package management
+opam\-remote \- Manage OPAM repositories.
 .SH SYNOPSIS
 .P
-\fBopam\fR \fICOMMAND\fR ...
+\fBopam remote\fR [\fIOPTION\fR]... [\fICOMMAND\fR] [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-OPAM is a package manager for OCaml. It uses the powerful mancoosi tools to handle dependencies, including support for version constraints, optional dependencies, and conflict management.
-.P
-It has support for different remote repositories such as HTTP, rsync, git and darcs. It handles multiple OCaml versions concurrently, and is flexible enough to allow you to use your own repositories and packages in addition to the central ones it provides.
-.P
-Use either \fBopam <command> \-\-help\fR or \fBopam help <command>\fR for more information on a specific command.
+This command is used to manage OPAM repositories. To synchronize OPAM with the last versions of the packages available in remote repositories, \fBopam update\fR should be used.
+.SH ARGUMENTS
+.TP 4
+\fICOMMAND\fR
+Name of the sub\-command. See the \fBCOMMANDS\fR section for more info.
+.SH OPTIONS
+.TP 4
+\fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
+Specify the kind of the repository to be set (the main ones are 'http', 'local', 'git' or 'darcs').
+.TP 4
+\fB\-p\fR \fIINT\fR, \fB\-\-priority\fR=\fIINT\fR
+Set the repository priority (bigger is better)
+.TP 4
+\fB\-s\fR, \fB\-\-short\fR
+Output the names separated by one whitespace instead of using the usual formatting.
 .SH COMMANDS
 .TP 4
-\fBconfig\fR
-Display configuration options for packages.
-.TP 4
-\fBhelp\fR
-Display help about OPAM and OPAM commands.
-.TP 4
-\fBinfo\fR
-Display information about specific packages.
-.TP 4
-\fBinit\fR
-Initialize OPAM state.
-.TP 4
-\fBinstall\fR
-Install a list of packages.
-.TP 4
-\fBlist\fR
-Display the list of available packages.
-.TP 4
-\fBpin\fR
-Pin a given package to a specific version.
-.TP 4
-\fBreinstall\fR
-Reinstall a list of packages.
-.TP 4
-\fBremote\fR
-Manage OPAM repositories.
+\fBadd\fR
+Add the repository \fBname\fR available at address \fBaddress\fR to the list of repositories used by OPAM, with priority \fBpriority\fR. The repository priority can be optionally specified with \fB\-\-priority\fR, otherwise the new repository has a higher priority then any other existing repositories. The kind of the repository can be specified with the \fB\-\-kind\fR option, otherwise it will be determined automatically.
 .TP 4
 \fBremove\fR
-Remove a list of packages.
+Remove the repository named \fBname\fR from the list of repositories used by OPAM.
 .TP 4
-\fBrepository\fR
-Manage OPAM repositories.
+\fBlist\fR
+List all repositories used by OPAM.
 .TP 4
-\fBsearch\fR
-Search into the package list.
-.TP 4
-\fBswitch\fR
-Manage multiple installation of compilers.
-.TP 4
-\fBupdate\fR
-Update the list of available packages.
-.TP 4
-\fBupgrade\fR
-Upgrade the installed package to latest version.
-.TP 4
-\fBupload\fR
-Upload a package to an OPAM repository.
+\fBpriority\fR
+Change the priority of repository named \fBname\fR to \fBpriority\fR.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
