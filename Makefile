@@ -7,7 +7,7 @@ TARGETS = opam opam-mk-repo
 
 .PHONY: all
 
-all: $(LOCAL_OCPBUILD) META src/core/opamGitVersion.ml
+all: $(LOCAL_OCPBUILD) META
 	$(MAKE) clone
 	$(MAKE) compile
 
@@ -27,7 +27,7 @@ OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
 prepare: depends.ocp.in
 	sed "s|%{lib}%|$(OCAMLFIND_DIR)|g" depends.ocp.in > depends.ocp
 
-compile: $(LOCAL_OCPBUILD)
+compile: $(LOCAL_OCPBUILD) src/core/opamGitVersion.ml
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
 clone:
