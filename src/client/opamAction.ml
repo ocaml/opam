@@ -390,7 +390,7 @@ let remove_all_packages t ~metadata sol =
     | To_delete nv        -> delete nv
     | To_change (None, _) -> () in
   List.iter delete sol.to_remove;
-  PackageActionGraph.iter_vertex action sol.to_process;
+  PackageActionGraph.iter_vertex action (PackageActionGraph.mirror sol.to_process);
   let deleted = OpamPackage.Set.of_list !deleted in
   if metadata then (
     let installed = OpamPackage.Set.diff t.installed deleted in

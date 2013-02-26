@@ -461,7 +461,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
        some of its optional dependencies disapear, however we must
        recompile it (see below). *)
     let graph = create_graph (fun p -> Set.mem p remove_roots) simple_universe in
-    let to_remove = Graph.closure graph remove_roots in
+    let to_remove = List.rev (Graph.closure graph remove_roots) in
     let root_causes =
       let graph = Graph.PO.O.add_transitive_closure graph in
       let cause pkg =
