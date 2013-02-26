@@ -1,4 +1,4 @@
-0.9.4 (trunk)
+0.9.4 [Feb 2013]
 * Disable auto-removal of unused dependencies. This can now be enabled on-demand using `-a`
 * Fix compilation and basic usage on Cygwin
 * Fix BSD support (use `type` instead of `which` to detect existing commands)
