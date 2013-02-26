@@ -67,7 +67,7 @@ tests-git:
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
 
-ISGIT = $(shell git status > /dev/null && if [ $$? -eq 0 ]; then echo "1"; else echo "0"; fi)
+ISGIT = $(shell git status &> /dev/null && if [ $$? -eq 0 ]; then echo "1"; else echo "0"; fi)
 
 ifeq ($(ISGIT), 1)
 src/core/opamGitVersion.ml: .git/logs/HEAD
