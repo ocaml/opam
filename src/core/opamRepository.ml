@@ -105,11 +105,12 @@ let init r =
   OpamFilename.mkdir (upload_dir repo);
   OpamFilename.in_dir (root repo) (fun () -> B.init ~address:r.repo_address)
 
-let nv_set_of_files files =
+let nv_set_of_files ~all files =
   OpamPackage.Set.of_list
     (OpamMisc.filter_map
-       OpamPackage.of_filename
-       (OpamFilename.Set.elements files))
+       (OpamPackage.of_filename ~all)
+       (OpamFilename.Set.elements files)
+    )
 
 let read_tmp dir =
   let dirs =
@@ -129,7 +130,7 @@ let upload r =
   let address = r.repo_address in
   let module B = (val find_backend r: BACKEND) in
   let files = OpamFilename.in_dir local_dir (fun () -> B.upload_dir ~address upload_dir) in
-  let packages = nv_set_of_files files in
+  let packages = nv_set_of_files ~all:true files in
   OpamGlobals.msg "The following packages have been uploaded:\n";
   OpamPackage.Set.iter (fun nv ->
     OpamGlobals.msg "  - %s\n" (OpamPackage.to_string nv)
@@ -342,7 +343,7 @@ let update r =
 
   check_version repo;
 
-  let updated_packages = nv_set_of_files updated_files in
+  let updated_packages = nv_set_of_files ~all:false updated_files in
 
   (* Clean-up archives and tmp files on URL changes *)
   OpamPackage.Set.iter (fun nv ->

@@ -48,9 +48,10 @@ val version: t -> Version.t
 val create: Name.t -> Version.t -> t
 
 (** Create a new pair from a filename. This function extracts {i
-    $name} and {i $version} from {i /path/to/$name.$version.XXX}
-    with various heuristics.*)
-val of_filename: OpamFilename.t -> t option
+    $name} and {i $version} from {i /path/to/$name.$version.XXX} with
+    various heuristics. If [all] is unset, discard "opam" and "url"
+    files. *)
+val of_filename: all:bool -> OpamFilename.t -> t option
 
 (** Create a new pair from a directory name. This function extracts {i
     $name} and {i $version} from {i /path/to/$name.$version/} *)
@@ -70,9 +71,6 @@ val names_of_packages: Set.t -> Name.Set.t
 
 (** Return all the packages with the given names *)
 val packages_of_name: Set.t -> Name.t -> Set.t
-
-(** Look for all .opam files in directory *)
-val opam_files: OpamFilename.Dir.t -> Set.t
 
 (** Compare two packages *)
 val compare: t -> t -> int

@@ -751,7 +751,7 @@ module OPAM = struct
       s
 
   let of_string filename str =
-    let nv = OpamPackage.of_filename filename in
+    let nv = OpamPackage.of_filename ~all:true filename in
     let s = Syntax.of_string filename str in
     Syntax.check s valid_fields;
     let s = s.file_contents in

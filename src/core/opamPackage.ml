@@ -92,13 +92,15 @@ let of_string s = match of_string_opt s with
 
 (* XXX: this function is quite hackish, as it mainly depends on the shape the paths
    built in path.ml *)
-let of_filename f =
+let of_filename ~all f =
   let f = OpamMisc.strip (OpamFilename.to_string f) in
   let base = Filename.basename f in
   let parent = Filename.basename (Filename.dirname f) in
   match base with
-  | "opam" | "url" -> of_string_opt parent
-  | _ ->
+  | "descr"
+  | "opam" -> if all then of_string_opt parent else None
+  | "url"  -> of_string_opt parent
+  | _      ->
     if Filename.check_suffix base ".opam" then
       of_string_opt (Filename.chop_suffix base ".opam")
     else if Filename.check_suffix base "+opam.tar.gz" then
@@ -149,18 +151,6 @@ let to_map nv =
     Name.Map.add name (Version.Set.add version versions) (Name.Map.remove name map)
   ) nv Name.Map.empty
 
-let opam_files dir =
-  if OpamFilename.exists_dir dir then (
-    let files = OpamFilename.list_files dir in
-    let files = List.filter (fun f -> OpamFilename.check_suffix f ".opam") files in
-    List.fold_left (fun set file ->
-      match of_filename file with
-      | None    -> set
-      | Some nv -> Set.add nv set
-    ) Set.empty files
-  ) else
-    Set.empty
-
 let list dir =
   log "list %s" (OpamFilename.Dir.to_string dir);
   if OpamFilename.exists_dir dir then (
@@ -168,7 +158,7 @@ let list dir =
       let files = OpamFilename.list_files dir in
       let files = List.filter (fun f -> OpamFilename.check_suffix f ".opam") files in
       List.fold_left (fun set file ->
-        match of_filename file with
+        match of_filename ~all:true file with
         | None    ->
           log "%s is not a valid package filename!" (OpamFilename.to_string file);
           set

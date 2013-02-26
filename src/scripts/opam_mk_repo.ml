@@ -135,7 +135,7 @@ let process () =
   let nv_set_of_remotes remotes =
     let aux r = OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
     let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
-    OpamPackage.Set.of_list (OpamMisc.filter_map OpamPackage.of_filename list) in
+    OpamPackage.Set.of_list (OpamMisc.filter_map (OpamPackage.of_filename ~all:true) list) in
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
