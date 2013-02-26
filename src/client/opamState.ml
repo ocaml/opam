@@ -297,10 +297,22 @@ let create_system_compiler_description root = function
         ] in
     OpamFile.Comp.write comp f
 
+let system_needs_upgrade_displayed = ref false
 let system_needs_upgrade t =
   t.compiler = OpamCompiler.system
   && match OpamCompiler.Version.system () with
-  | None   -> OpamGlobals.error_and_exit "No OCaml compiler found in path"
+  | None   ->
+    if not !system_needs_upgrade_displayed then (
+      system_needs_upgrade_displayed := true;
+      OpamGlobals.error
+        "You current switch use the system compiler, but no OCaml compiler \
+         has been found in the current path.\n\
+         You should either:\n\
+        \  (i)  reinstall OCaml version %s on your system; or\n\
+        \  (ii) use a working compiler switch."
+        (OpamCompiler.Version.to_string t.compiler_version)
+    );
+    false
   | Some v -> t.compiler_version <> v
 
 (* Only used during init: load only repository-related information *)
