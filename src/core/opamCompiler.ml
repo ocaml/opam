@@ -67,6 +67,18 @@ let list t =
 let system = of_string OpamGlobals.system
 
 let unknown compiler =
-  OpamGlobals.error_and_exit
-    "%S is not a valid compiler."
-    (to_string compiler)
+  if compiler = system then (
+    let root =
+      if !OpamGlobals.root_dir = OpamGlobals.default_opam_dir then
+        ""
+      else
+        Printf.sprintf " --root=%s" !OpamGlobals.root_dir in
+    OpamGlobals.error_and_exit
+      "No OCaml compiler found in path. You should use:\n\
+       \n\
+      \    opam init%s --comp=VERSION\n"
+      root
+  ) else
+    OpamGlobals.error_and_exit
+      "%S is not a valid compiler."
+      (to_string compiler)
