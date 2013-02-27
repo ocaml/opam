@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/sh
 
 TEST_DIR=/tmp
 OPAM_ROOT=$TEST_DIR/OPAM.ROOT

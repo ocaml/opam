@@ -1,3 +1,3 @@
-#!/bin/bash -eu
+#! /bin/sh -eu
 
 ocamlbuild p1.cma p1.cmxa
