@@ -651,6 +651,7 @@ module API = struct
             wish_remove  = [];
             wish_upgrade = compiler_packages } in
 
+      OpamState.update_ocamlinit ();
       OpamState.print_env_warning ~add_profile:true t
 
     with e ->

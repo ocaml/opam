@@ -111,6 +111,11 @@ val add_to_env: state -> env -> (string * string * string) list -> env
 (** Print a warning if the environment is not set-up properly. *)
 val print_env_warning: ?add_profile:bool -> state -> unit
 
+(** {2 Initialisation} *)
+
+(** Update ~/.ocamlinit if necessary. *)
+val update_ocamlinit: unit -> unit
+
 (** {2 Substitutions} *)
 
 (** Compute the value of a variable *)

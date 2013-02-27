@@ -892,6 +892,44 @@ let print_env_warning ?(add_profile = false) t =
         opam_root
         add_profile
 
+let update_ocamlinit () =
+  let header =
+    "(* Added by OPAM. *)\n\
+     let () =\n\
+    \  try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
+    \  with Not_found -> ()\n\
+     ;;\n\n" in
+  let ocamlinit =
+    try Some (Filename.concat (OpamMisc.getenv "HOME") ".ocamlinit")
+    with _ -> None in
+  match ocamlinit with
+  | None      -> ()
+  | Some file ->
+    let body =
+      if Sys.file_exists file then (
+        try
+          let ic = open_in_bin file in
+          let str = OpamSystem.string_of_channel ic in
+          close_in ic;
+          str
+        with _ ->
+          OpamSystem.internal_error "Cannot read %s." file
+      ) else
+        "" in
+    try
+      let pattern = "OCAML_TOPLEVEL_PATH" in
+      let pattern = Re.compile (Re.str pattern) in
+      if not (Re.execp pattern body) then (
+        if body = "" then
+          OpamGlobals.msg "\nGenerating %s.\n" file
+        else
+          OpamGlobals.msg "\nUpdating %s.\n" file;
+        let oc = open_out_bin file in
+        output_string oc (header ^ body);
+        close_out oc;
+      )
+    with _ ->
+      OpamSystem.internal_error "Cannot write %s." file
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package
