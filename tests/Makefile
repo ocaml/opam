@@ -233,8 +233,8 @@ else
 endif
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10/build/P4.3/P4*.env) "1"
 
-packages/%.tar.gz: packages/% packages/%/*
-	cd packages && tar cz $* > $*.tar.gz
+packages/%.tar.gz: packages/% 
+	cd packages && tar czf $*.tar.gz $* 
 
 clean:
 	rm -f $(ARCHIVES)
