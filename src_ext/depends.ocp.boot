@@ -40,12 +40,31 @@ begin library "re"
 end
 
 begin library "re_perl"
-  sort = true
   files = [
      "ocaml-re/lib/re_perl.ml"
-     "ocaml-re/lib/re_pcre.ml"
   ]
   requires = [ "re" ]
+end
+
+begin library "re_pcre"
+  files = [
+     "ocaml-re/lib/re_pcre.ml"
+  ]
+  requires = [ "re" "re_perl" ]
+end
+
+begin library "re_emacs"
+  files = [
+     "ocaml-re/lib/re_emacs.ml"
+  ]
+  requires = [ "re"  ]
+end
+
+begin library "re_str"
+  files = [
+     "ocaml-re/lib/re_str.ml"
+  ]
+  requires = [ "re" "re_emacs"  ]
 end
 
 begin library "re_glob"
@@ -180,6 +199,7 @@ begin library "dose"
 
    requires = [
      "re_perl"
+     "re_pcre"
      "extlib"
      "cudf"
      "graph"
