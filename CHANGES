@@ -1,3 +1,8 @@
+0.9.5 [trunk]
+* Update or generate `~/.ocamlinit` when running `opam init`.
+* Fix tests on *BSD (thx Arnaud Degroote)
+* Fix compilation for the source archive
+
 0.9.4 [Feb 2013]
 * Disable auto-removal of unused dependencies. This can now be enabled on-demand using `-a`
 * Fix compilation and basic usage on Cygwin
