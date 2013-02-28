@@ -1,5 +1,6 @@
 0.9.5 [trunk]
-* Update or generate `~/.ocamlinit` when running `opam init`.
+* Stop yelling when OPAM is not up-to-date
+* Update or generate `~/.ocamlinit` when running `opam init`
 * Fix tests on *BSD (thx Arnaud Degroote)
 * Fix compilation for the source archive
 
