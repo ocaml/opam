@@ -387,30 +387,6 @@ let load_env_state call_site =
     repo_index; config; aliases; pinned;
   }
 
-let check_opam_version t =
-  let n = OpamPackage.Name.of_string "opam-lib" in
-  match find_packages_by_name t n with
-  | None   -> ()
-  | Some _ ->
-    try
-      let max_version =
-        let versions = OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
-        let max_version = OpamPackage.Version.Set.max_elt versions in
-        OpamVersion.of_string (OpamPackage.Version.to_string max_version) in
-      if OpamVersion.compare max_version OpamVersion.current > 0 then (
-        OpamGlobals.msg "Your version of OPAM is not up-to-date!\n\
-                        \        opam-path: %s\n\
-                        \  current-version: %s\n\
-                        \   latest-version: %s\n\
-                         It is *highly* recommended to install the latest version of OPAM.\n"
-          (try List.hd (OpamSystem.read_command_output ~verbose:false ["which"; "opam"]) with _ -> "...")
-          (OpamVersion.to_string OpamVersion.current)
-          (OpamVersion.to_string max_version);
-        OpamGlobals.exit 42
-      )
-    with _ ->
-      ()
-
 let get_compiler_packages t comp =
   let comp = compiler t comp in
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
@@ -472,7 +448,6 @@ let clean dir name =
   )
 
 let global_consistency_checks t =
-  check_opam_version t;
   let clean_repo repo_root nv =
     let tmp_dir = OpamPath.Repository.tmp_dir repo_root nv in
     clean tmp_dir (OpamPackage.to_string nv) in
@@ -489,7 +464,6 @@ let global_consistency_checks t =
   ) t.repositories
 
 let switch_consistency_checks t =
-  check_opam_version t;
   let pin_cache = OpamPath.Switch.pinned_cache t.root t.switch in
   let clean_pin name =
     let name = OpamPackage.Name.to_string name in
