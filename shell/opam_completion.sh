@@ -84,7 +84,6 @@ _opam()
   subcmd=${COMP_WORDS[2]}
   cur=${COMP_WORDS[COMP_CWORD]}
   prev=${COMP_WORDS[COMP_CWORD-1]}
-  reprev=${COMP_WORDS[COMP_CWORD-2]}
   _opam_reply=""
 
   _opam_global_options
