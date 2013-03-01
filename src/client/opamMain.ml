@@ -427,6 +427,7 @@ let config =
                               and CAML_LD_LIBRARY_PATH according to the current selected \
                               compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
+    ["install"] , `install , "Modify the system configuration to setup OPAM.";
     ["var"]     , `var     , "returns the value associated with the given variable. If the variable \
                               contains a colon such as $(i,pkg:var), then the left element will be \
                               understood as the package in which the variable is defined. \
@@ -462,11 +463,21 @@ let config =
 
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
   let is_rec = mk_flag  ["R";"rec"] "Recursive query." in
-  let csh    = mk_flag  ["c";"csh"] "Use csh-compatible output mode." in
+  let csh    = mk_flag  ["c";"csh"] "Use csh mode." in
+  let zsh    = mk_flag  ["z";"zsh"] "Use zsh mode." in
+  let complete    = mk_flag ["complete"]  "Add completion scripts." in
+  let ocamlinit   = mk_flag ["ocamlinit"] "Update ~/.ocamlinit." in
+  let switch_eval = mk_flag ["switch-eval"] "Add `opam-switch-eval` scripts." in
+  let all         = mk_flag ["all"] "Fully configure OPAM." in
+  let dot_profile =
+    let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
+    mk_opt ["dot-profile"]
+      "FILENAME" "Name of the configuration file to update"
+      Arg.string dot_profile in
   let env    =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
-  let config global_options command env is_rec csh params =
+  let config global_options command env is_rec csh zsh dot_profile all ocamlinit complete switch_eval params =
     set_global_options global_options;
     let mk ~is_byte ~is_link = {
       conf_is_rec  = is_rec;
@@ -481,6 +492,25 @@ let config =
       else
         OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
     | Some `env      -> Client.CONFIG.env ~csh
+    | Some `install  ->
+      let complete    = all || complete in
+      let ocamlinit   = all || ocamlinit in
+      let switch_eval = all || switch_eval in
+      let complete = match complete, zsh with
+        | true, false -> Some `sh
+        | true, true  -> Some `zsh
+        | _           -> None in
+      let dot_profile = OpamFilename.of_string dot_profile in
+      if all || ocamlinit || complete <> None || switch_eval then
+        Client.CONFIG.install dot_profile ~ocamlinit ~complete ~switch_eval
+      else
+        OpamGlobals.msg
+          "Available options:\n\
+          \    --all               Setup all the configuration options.\n\
+          \    --complete          Load the auto-completion scripts on startup\n\
+          \    --ocamlinit         Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel\n\
+          \    --switch-eval       Install `opam-switch-eval` to switch & eval using a single command\n\
+          \    --dot-profile FILE  The configuration file to update (default is ~/.profile)\n"
     | Some `list     -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
     | Some `var      ->
       if params = [] then
@@ -494,7 +524,9 @@ let config =
     | Some `asmcomp  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:false)
     | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
 
-  Term.(pure config $global_options $command $env $is_rec $csh $params),
+  Term.(pure config
+    $global_options $command $env $is_rec $csh $zsh
+    $dot_profile $all $ocamlinit $complete $switch_eval $params),
   term_info "config" ~doc ~man
 
 (* INSTALL *)
@@ -775,7 +807,9 @@ let switch =
     mk_opt ["f";"filename"]
       "FILENAME" "The name of the file to export to/import from."
       Arg.(some filename) None in
-  let switch global_options build_options command alias_of filename print_short installed_only params =
+  let no_warning =
+    mk_flag ["no-warning"] "Do not display any warning related to environment variables." in
+  let switch global_options build_options command alias_of filename print_short installed_only no_warning params =
     set_global_options global_options;
     set_build_options build_options;
     let no_alias_of () =
@@ -784,13 +818,14 @@ let switch =
     let mk_comp alias = match alias_of with
       | None      -> OpamCompiler.of_string alias
       | Some comp -> OpamCompiler.of_string comp in
+    let warning = not no_warning in
     match command, params with
     | None      , []
     | Some `list, [] ->
         no_alias_of ();
         Client.SWITCH.list ~print_short ~installed_only
     | Some `install, [switch] ->
-        Client.SWITCH.install ~quiet:global_options.quiet (OpamSwitch.of_string switch) (mk_comp switch)
+        Client.SWITCH.install ~quiet:global_options.quiet ~warning (OpamSwitch.of_string switch) (mk_comp switch)
     | Some `export, [] ->
         no_alias_of ();
         Client.SWITCH.export filename
@@ -808,16 +843,16 @@ let switch =
         Client.SWITCH.show ()
     | Some `default switch, [] ->
         (match alias_of with
-        | None -> Client.SWITCH.switch ~quiet:global_options.quiet (OpamSwitch.of_string switch)
+        | None -> Client.SWITCH.switch ~quiet:global_options.quiet ~warning (OpamSwitch.of_string switch)
         | _    ->
-          Client.SWITCH.install ~quiet:global_options.quiet
+          Client.SWITCH.install ~quiet:global_options.quiet ~warning
             (OpamSwitch.of_string switch) (mk_comp switch))
     | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
   Term.(pure switch
     $global_options $build_options $command
     $alias_of $filename $print_short_flag
-    $installed_only_flag $params),
+    $installed_only_flag $no_warning $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)

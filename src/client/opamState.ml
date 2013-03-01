@@ -38,6 +38,17 @@ let confirm fmt =
       true
   ) fmt
 
+let read fmt =
+  Printf.ksprintf (fun msg ->
+    OpamGlobals.msg "%s %!" msg;
+    if not !OpamGlobals.yes then
+      match read_line () with
+      | "" -> None
+      | s  -> Some s
+    else
+      None
+  ) fmt
+
 let update_hook = ref (fun ~save_cache _ -> let _ = save_cache in assert false)
 let switch_reinstall_hook = ref (fun _ -> assert false)
 
@@ -532,7 +543,6 @@ let reinstall_system_compiler t =
   ) else
     OpamGlobals.exit 1
 
-
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
@@ -642,6 +652,15 @@ let rebuild_state_cache () =
   remove_state_cache ();
   let t = load_state ~save_cache:false "rebuild-cache" in
   save_state ~update:true t
+
+let switch_eval_sh = "switch_eval.sh"
+let complete_sh    = "complete.sh"
+let complete_zsh   = "complete.zsh"
+let variables_sh   = "variables.sh"
+let init_sh        = "init.sh"
+let source t f =
+  let file f = OpamFilename.to_string (OpamPath.init_scripts t.root // f) in
+  Printf.sprintf ". %s\n" (file f)
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -835,7 +854,7 @@ let get_full_env t =
   let env0 = OpamMisc.env () in
   add_to_env t env0 (env_updates t)
 
-let print_env_warning ?(add_profile = false) t =
+let print_env_warning t ~eval =
   match
     List.filter
       (fun (s, v) ->
@@ -843,28 +862,20 @@ let print_env_warning ?(add_profile = false) t =
       (get_opam_env t)
   with
     | [] -> () (* every variables are correctly set *)
-    | l ->
-      let which_opam =
-        if add_profile then
-          "which opam && "
-        else
-          "" in
-      let add_profile =
-        if add_profile then
-          "\nand add this in your ~/.profile"
-        else
-          "" in
-      let opam_root =
-        if !OpamGlobals.root_dir = OpamGlobals.default_opam_dir then
-          ""
-        else
-          Printf.sprintf " --root %s" !OpamGlobals.root_dir in
-      let variables = String.concat ", " (List.map (fun (s, _) -> "$" ^ s) l) in
-      OpamGlobals.msg "\nTo update %s; you can now run:\n\n    $ %seval `opam config env%s`\n%s\n"
-        variables
-        which_opam
-        opam_root
-        add_profile
+    | _  ->
+      if eval then
+        OpamGlobals.msg
+          "To complete the configuration of OPAM, you need to run:\n\
+          \    eval `opam config env`\n"
+      else
+        OpamGlobals.msg
+          "To complete the configuration of OPAM, you need to run:\n\
+          \    %s\n"
+          (source t init_sh)
+
+let mem_pattern_in_string ~pattern ~string =
+  let pattern = Re.compile (Re.str pattern) in
+  Re.execp pattern string
 
 let update_ocamlinit () =
   let header =
@@ -879,31 +890,145 @@ let update_ocamlinit () =
   match ocamlinit with
   | None      -> ()
   | Some file ->
-    let body =
-      if Sys.file_exists file then (
-        try
-          let ic = open_in_bin file in
-          let str = OpamSystem.string_of_channel ic in
-          close_in ic;
-          str
-        with _ ->
-          OpamSystem.internal_error "Cannot read %s." file
-      ) else
-        "" in
+    let body = OpamFilename.read (OpamFilename.of_string file) in
     try
       let pattern = "OCAML_TOPLEVEL_PATH" in
-      let pattern = Re.compile (Re.str pattern) in
-      if not (Re.execp pattern body) then (
+      if not (mem_pattern_in_string ~pattern ~string:body) then (
         if body = "" then
-          OpamGlobals.msg "\nGenerating %s.\n" file
+          OpamGlobals.msg "Generating %s.\n" file
         else
-          OpamGlobals.msg "\nUpdating %s.\n" file;
+          OpamGlobals.msg "Updating %s.\n" file;
         let oc = open_out_bin file in
         output_string oc (header ^ body);
         close_out oc;
-      )
+      ) else
+        OpamGlobals.msg "~/.ocamlinit is already up-to-date.\n"
     with _ ->
       OpamSystem.internal_error "Cannot write %s." file
+
+let string_of_env_update t updates =
+  let aux (ident, symbol, string) =
+    let string = substitute_string t string in
+    let key, value = match symbol with
+      | "="  -> (ident, string)
+      | "+="
+      | ":=" -> (ident, Printf.sprintf "%s:$%s" string ident)
+      | "=:"
+      | "=+" -> (ident, Printf.sprintf "$%s:%s" ident string)
+      | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
+    Printf.sprintf "%s=%s\n" key value in
+  String.concat "" (List.map aux updates)
+
+let init_script t ~switch_eval ~complete =
+  let variables = source t variables_sh in
+  let switch_eval = if switch_eval then source t switch_eval_sh else "" in
+  let complete = match complete with
+    | None      -> ""
+    | Some `sh  -> source t complete_sh
+    | Some `zsh -> source t complete_zsh in
+  Printf.sprintf "%s%s%s" variables complete switch_eval
+
+let create_init_scripts t ~switch_eval ~complete =
+  let scripts = [
+    (complete_sh   , OpamScript.complete);
+    (complete_zsh  , OpamScript.complete_zsh);
+    (switch_eval_sh, OpamScript.switch_eval);
+    (variables_sh  , string_of_env_update t (env_updates t));
+    (init_sh       , init_script t ~switch_eval ~complete);
+  ] in
+  let always_overwrite = [
+    variables_sh;
+    init_sh;
+  ] in
+  let updated = ref false in
+  let write (name, body) =
+    let file = OpamPath.init_scripts t.root // name in
+    let needs_update =
+      if OpamFilename.exists file
+      && List.mem name always_overwrite then
+        let current = OpamFilename.read file in
+        body <> current
+      else
+        not (OpamFilename.exists file) in
+    if needs_update then (
+      updated := true;
+      try OpamFilename.write file body
+      with _ -> ()
+    ) in
+  List.iter write scripts;
+  let pretty_init_sh =
+    if OpamFilename.Dir.to_string t.root = OpamGlobals.default_opam_dir then
+      "~/.opam/init-scripts/init.sh"
+    else
+      OpamFilename.to_string ( OpamPath.init_scripts t.root // init_sh) in
+  if !updated then
+    OpamGlobals.msg
+      "Updating %s: [auto-completion: %b, opam-switch-eval: %b].\n"
+      pretty_init_sh
+      (complete <> None)
+      switch_eval
+  else
+    OpamGlobals.msg "%s is already up-to-date.\n" pretty_init_sh
+
+let update_env_variables t =
+  create_init_scripts t ~switch_eval:false ~complete:None
+
+let update_dot_profile t ~file =
+  let body = OpamFilename.read file in
+  let pattern1 = "opam config" in
+  let pattern2 = source t init_sh in
+  let already_updated =
+    mem_pattern_in_string ~pattern:pattern1 ~string:body
+    || mem_pattern_in_string ~pattern:pattern2 ~string:body in
+  let pretty_dot_profile =
+    let file = OpamFilename.to_string file in
+    let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
+    if file = dot_profile then
+        "~/.profile"
+    else
+      file in
+  if not already_updated then (
+    OpamGlobals.msg "Updating %s.\n" pretty_dot_profile;
+    let body =
+      Printf.sprintf
+        "%s\n\
+         # OPAM configuration\n\
+         %s\n"
+        body (source t init_sh) in
+    OpamFilename.write file body
+  ) else (
+    OpamGlobals.msg "%s is already up-to-date.\n" pretty_dot_profile
+  )
+
+let update_user_config t dot_profile ~ocamlinit ~complete ~switch_eval =
+  if ocamlinit then update_ocamlinit ();
+  create_init_scripts t ~switch_eval ~complete;
+  update_dot_profile t ~file:dot_profile
+
+let update_user_config_interactive t =
+  if confirm "Do you want to update your system configuration to use OPAM ?" then (
+    let stop () = OpamGlobals.exit 1 in
+    let dot_profile =
+      let file =
+        match read "Configuration file [default: ~/.profile]" with
+        | None   -> Filename.concat (OpamMisc.getenv "HOME") ".profile"
+        | Some s -> s in
+      if not (Sys.file_exists file) then (
+        if not (confirm "%s does not exists, do you want to create it ?" file) then
+          stop ()
+      );
+      OpamFilename.of_string file in
+    let ocamlinit = confirm "Do you want to update your ~/.ocamlinit ?" in
+    let complete =
+      if confirm "Do you want to install the auto-complete scripts ?" then
+        match Filename.basename (OpamMisc.getenv "SHELL") with
+        | "zsh" -> Some `zsh
+        | _     -> Some `sh
+      else
+        None in
+    let switch_eval = confirm "Do you want to install the `opam-switch-eval` script ?" in
+    update_user_config t dot_profile ~ocamlinit ~complete ~switch_eval
+  )
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package

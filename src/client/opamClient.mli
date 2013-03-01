@@ -66,6 +66,12 @@ module API: sig
     (** Display environment. *)
     val env: csh:bool -> unit
 
+    (** Setup OPAM. *)
+    val install:
+      filename ->
+      ocamlinit:bool -> complete:[`sh|`zsh] option -> switch_eval:bool ->
+      unit
+
     (** Display includes files. *)
     val includes: is_rec:bool -> name list -> unit
 
@@ -101,10 +107,10 @@ module API: sig
   module SWITCH: sig
 
     (** Switch to the given compiler. Take the global file lock. *)
-    val switch: quiet:bool -> switch -> unit
+    val switch: quiet:bool -> warning:bool -> switch -> unit
 
     (** Install the given compiler. *)
-    val install: quiet:bool -> switch -> compiler -> unit
+    val install: quiet:bool -> warning:bool -> switch -> compiler -> unit
 
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)

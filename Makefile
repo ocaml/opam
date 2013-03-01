@@ -27,7 +27,9 @@ OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
 prepare: depends.ocp.in
 	sed "s|%{lib}%|$(OCAMLFIND_DIR)|g" depends.ocp.in > depends.ocp
 
-compile: $(LOCAL_OCPBUILD) src/core/opamGitVersion.ml
+autogen: src/core/opamGitVersion.ml src/core/opamScript.ml
+
+compile: $(LOCAL_OCPBUILD) autogen
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
 clone:
@@ -76,6 +78,11 @@ else
 src/core/opamGitVersion.ml:
 	@echo "let version = None" > $@
 endif
+
+src/core/opamScript.ml: shell/
+	ocaml crunch.ml "complete"     < shell/opam_completion.sh > $@
+	ocaml crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
+	ocaml crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
 
 .PHONY: uninstall install
 install:
@@ -128,11 +135,6 @@ doc: compile
 	  -I _obuild/arg -I _obuild/graph \
 	  src/**/*.mli -html -d doc/html/
 	$(MAKE) -C doc
-
-trailing:
-	find src -name "*.ml*" -exec \
-	  sed -i xxx -e :a -e "/^\n*$$/{$$d;N;ba" -e '}' {} \;
-	find src -name "*xxx" -exec rm {} \;
 
 OPAM_FULL  = opam-full-$(version)
 OPAM_FILES = $(wildcard src_ext/*.tar.gz)\

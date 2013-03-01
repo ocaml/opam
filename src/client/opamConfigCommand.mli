@@ -34,3 +34,9 @@ val config: config -> unit
 
 (** Substitute files *)
 val subst: basename list -> unit
+
+(** Update the user configuration to use OPAM *)
+val install:
+  filename ->
+  ocamlinit:bool -> complete:[`sh|`zsh] option -> switch_eval:bool ->
+  unit

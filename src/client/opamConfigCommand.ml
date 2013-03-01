@@ -265,3 +265,8 @@ let variable v =
   let t = OpamState.load_state "config-variable" in
   let contents = OpamState.contents_of_variable t v in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
+
+let install dot_profile ~ocamlinit ~complete ~switch_eval =
+  log "config-install";
+  let t = OpamState.load_state "config-install" in
+  OpamState.update_user_config t dot_profile ~ocamlinit ~complete ~switch_eval

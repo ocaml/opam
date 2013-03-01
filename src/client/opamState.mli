@@ -109,12 +109,21 @@ val get_opam_env: state -> env
 val add_to_env: state -> env -> (string * string * string) list -> env
 
 (** Print a warning if the environment is not set-up properly. *)
-val print_env_warning: ?add_profile:bool -> state -> unit
+val print_env_warning: state -> eval:bool -> unit
 
 (** {2 Initialisation} *)
 
-(** Update ~/.ocamlinit if necessary. *)
-val update_ocamlinit: unit -> unit
+(** Update the user configuration by asking some questions. *)
+val update_user_config_interactive: state -> unit
+
+(** Update the user configuration. *)
+val update_user_config:
+  state -> filename ->
+  ocamlinit:bool -> complete:[`sh|`zsh] option -> switch_eval:bool ->
+  unit
+
+(** Update the global environment variables. *)
+val update_env_variables: state -> unit
 
 (** {2 Substitutions} *)
 

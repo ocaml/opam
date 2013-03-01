@@ -70,6 +70,9 @@ val archives_dir: t -> dirname
 (** Return the repository index: {i $opam/repo/index} *)
 val repo_index: t -> filename
 
+(** Init scripts *)
+val init_scripts: t -> dirname
+
 (** Switch related paths *)
 module Switch: sig
 

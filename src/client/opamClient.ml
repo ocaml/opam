@@ -651,8 +651,8 @@ module API = struct
             wish_remove  = [];
             wish_upgrade = compiler_packages } in
 
-      OpamState.update_ocamlinit ();
-      OpamState.print_env_warning ~add_profile:true t
+      OpamState.update_user_config_interactive t;
+      OpamState.print_env_warning ~eval:false t
 
     with e ->
       if not !OpamGlobals.debug then
@@ -956,6 +956,9 @@ module SafeAPI = struct
     let env ~csh =
       read_lock (fun () -> API.CONFIG.env ~csh)
 
+    let install dot_profile ~ocamlinit ~complete ~switch_eval =
+      global_lock (fun () -> API.CONFIG.install dot_profile ~ocamlinit ~complete ~switch_eval)
+
     let list names =
       read_lock (fun () -> API.CONFIG.list names)
 
@@ -988,11 +991,11 @@ module SafeAPI = struct
 
   module SWITCH = struct
 
-    let switch ~quiet name =
-      global_lock (fun () -> API.SWITCH.switch ~quiet name)
+    let switch ~quiet ~warning name =
+      global_lock (fun () -> API.SWITCH.switch ~quiet ~warning name)
 
-    let install ~quiet switch ocaml_version =
-      global_lock (fun () -> API.SWITCH.install ~quiet switch ocaml_version)
+    let install ~quiet ~warning switch ocaml_version =
+      global_lock (fun () -> API.SWITCH.install ~quiet ~warning switch ocaml_version)
 
     let import filename =
       switch_lock (fun () -> API.SWITCH.import filename)
