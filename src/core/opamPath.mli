@@ -71,7 +71,7 @@ val archives_dir: t -> dirname
 val repo_index: t -> filename
 
 (** Init scripts *)
-val init_scripts: t -> dirname
+val init: t -> dirname
 
 (** Switch related paths *)
 module Switch: sig

@@ -78,6 +78,15 @@ val of_basename: Base.t -> t
 (** Creation from a raw string (as {i http://<path>}) *)
 val raw_file: string -> t
 
+(** Prettify a filename:
+    - replace /path/to/opam/foo by <opam>/foo
+    - replace /path/to/home/foo by ~/foo *)
+val prettify: t -> string
+
+(** Prettify a dirname. *)
+val prettify_dir: Dir.t -> string
+
+
 (** Return the directory name *)
 val dirname: t -> Dir.t
 

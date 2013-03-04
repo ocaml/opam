@@ -116,9 +116,12 @@ val print_env_warning: state -> eval:bool -> unit
 (** Update the user configuration by asking some questions. *)
 val update_user_config_interactive: state -> unit
 
+(** Display the global user configuration for OPAM. *)
+val display_user_config: state -> dot_profile:filename -> unit
+
 (** Update the user configuration. *)
 val update_user_config:
-  state -> filename ->
+  state -> dot_profile:filename ->
   ocamlinit:bool -> complete:[`sh|`zsh] option -> switch_eval:bool ->
   unit
 

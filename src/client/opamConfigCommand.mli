@@ -36,7 +36,10 @@ val config: config -> unit
 val subst: basename list -> unit
 
 (** Update the user configuration to use OPAM *)
-val install:
+val global:
   filename ->
   ocamlinit:bool -> complete:[`sh|`zsh] option -> switch_eval:bool ->
   unit
+
+(** Display global configuration for OPAM. *)
+val global_info: filename -> unit

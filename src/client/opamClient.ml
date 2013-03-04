@@ -591,12 +591,12 @@ module API = struct
     end;
     OpamSolution.check_solution solution_found
 
-  let init repo compiler ~jobs =
+  let init repo compiler ~jobs ~update_config =
     log "INIT %s" (OpamRepository.to_string repo);
     let root = OpamPath.default () in
     let config_f = OpamPath.config root in
     if OpamFilename.exists config_f then
-      OpamGlobals.error_and_exit "%s already exist" (OpamFilename.to_string config_f)
+      OpamGlobals.error_and_exit "OPAM has already been initialized."
     else try
       let repo_p = OpamPath.Repository.create root repo.repo_name in
       (* Create (possibly empty) configuration files *)
@@ -651,7 +651,7 @@ module API = struct
             wish_remove  = [];
             wish_upgrade = compiler_packages } in
 
-      OpamState.update_user_config_interactive t;
+      if update_config then OpamState.update_user_config_interactive t;
       OpamState.print_env_warning ~eval:false t
 
     with e ->
@@ -956,8 +956,11 @@ module SafeAPI = struct
     let env ~csh =
       read_lock (fun () -> API.CONFIG.env ~csh)
 
-    let install dot_profile ~ocamlinit ~complete ~switch_eval =
-      global_lock (fun () -> API.CONFIG.install dot_profile ~ocamlinit ~complete ~switch_eval)
+    let global dot_profile ~ocamlinit ~complete ~switch_eval =
+      global_lock (fun () -> API.CONFIG.global dot_profile ~ocamlinit ~complete ~switch_eval)
+
+    let global_info dot_profile =
+      read_lock (fun () -> API.CONFIG.global_info dot_profile)
 
     let list names =
       read_lock (fun () -> API.CONFIG.list names)

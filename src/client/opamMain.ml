@@ -336,14 +336,16 @@ let init =
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
-  let init global_options build_options repo_kind repo_name repo_address compiler jobs =
+  let no_config   = mk_flag ["no-config"] "Do no try to update the system configuration." in
+  let init global_options build_options repo_kind repo_name repo_address compiler jobs no_config =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
-    Client.init repository compiler ~jobs in
-  Term.(pure init $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs),
+    let update_config = not no_config in
+    Client.init repository compiler ~jobs ~update_config in
+  Term.(pure init $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs $no_config),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -418,7 +420,7 @@ let info =
   term_info "info" ~doc ~man
 
 
-(* CONIG *)
+(* CONFIG *)
 let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
@@ -427,7 +429,7 @@ let config =
                               and CAML_LD_LIBRARY_PATH according to the current selected \
                               compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
-    ["install"] , `install , "Modify the system configuration to setup OPAM.";
+    ["global"]  , `global  , "Modify the global system configuration to setup OPAM.";
     ["var"]     , `var     , "returns the value associated with the given variable. If the variable \
                               contains a colon such as $(i,pkg:var), then the left element will be \
                               understood as the package in which the variable is defined. \
@@ -465,10 +467,11 @@ let config =
   let is_rec = mk_flag  ["R";"rec"] "Recursive query." in
   let csh    = mk_flag  ["c";"csh"] "Use csh mode." in
   let zsh    = mk_flag  ["z";"zsh"] "Use zsh mode." in
-  let complete    = mk_flag ["complete"]  "Add completion scripts." in
-  let ocamlinit   = mk_flag ["ocamlinit"] "Update ~/.ocamlinit." in
+  let complete    = mk_flag ["complete"]    "Add completion scripts." in
+  let ocamlinit   = mk_flag ["ocamlinit"]   "Update ~/.ocamlinit." in
   let switch_eval = mk_flag ["switch-eval"] "Add `opam-switch-eval` scripts." in
-  let all         = mk_flag ["all"] "Fully configure OPAM." in
+  let all         = mk_flag ["all"]         "Fully configure OPAM." in
+  let info_f      = mk_flag ["info"]        "Display the global configration options." in
   let dot_profile =
     let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
     mk_opt ["dot-profile"]
@@ -477,7 +480,10 @@ let config =
   let env    =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
-  let config global_options command env is_rec csh zsh dot_profile all ocamlinit complete switch_eval params =
+  let config global_options
+      command env is_rec csh zsh
+      dot_profile info all ocamlinit complete switch_eval
+      params =
     set_global_options global_options;
     let mk ~is_byte ~is_link = {
       conf_is_rec  = is_rec;
@@ -492,7 +498,7 @@ let config =
       else
         OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
     | Some `env      -> Client.CONFIG.env ~csh
-    | Some `install  ->
+    | Some `global   ->
       let complete    = all || complete in
       let ocamlinit   = all || ocamlinit in
       let switch_eval = all || switch_eval in
@@ -501,8 +507,10 @@ let config =
         | true, true  -> Some `zsh
         | _           -> None in
       let dot_profile = OpamFilename.of_string dot_profile in
-      if all || ocamlinit || complete <> None || switch_eval then
-        Client.CONFIG.install dot_profile ~ocamlinit ~complete ~switch_eval
+      if info then
+        Client.CONFIG.global_info dot_profile
+      else if all || ocamlinit || complete <> None || switch_eval then
+        Client.CONFIG.global dot_profile ~ocamlinit ~complete ~switch_eval
       else
         OpamGlobals.msg
           "Available options:\n\
@@ -526,7 +534,8 @@ let config =
 
   Term.(pure config
     $global_options $command $env $is_rec $csh $zsh
-    $dot_profile $all $ocamlinit $complete $switch_eval $params),
+    $dot_profile $info_f $all $ocamlinit $complete $switch_eval
+    $params),
   term_info "config" ~doc ~man
 
 (* INSTALL *)

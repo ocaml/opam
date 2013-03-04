@@ -265,6 +265,25 @@ let with_flock file f x =
     OpamSystem.funlock (to_string file);
     raise e
 
+let prettify_string s =
+  let aux ~short ~prefix =
+    let prefix = Filename.concat prefix "" in
+    match OpamMisc.remove_prefix ~prefix s with
+    | None        -> None
+    | Some suffix -> Some (Filename.concat short suffix) in
+  match aux ~short:"<opam>" ~prefix:!OpamGlobals.root_dir with
+  | Some p -> p
+  | None   ->
+    match aux ~short:"~" ~prefix:(OpamMisc.getenv "HOME") with
+    | Some p -> p
+    | None   -> s
+
+let prettify_dir d =
+  prettify_string (Dir.to_string d)
+
+let prettify s =
+  prettify_string (to_string s)
+
 module O = struct
   type tmp = t
   type t = tmp
