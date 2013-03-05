@@ -44,7 +44,8 @@ clean:
 
 distclean: clean
 	$(MAKE) -C $(SRC_EXT) distclean
-	rm -f META Makefile.config src/core/opamVersion.ml config.log config.status
+	rm -f META Makefile.config config.log config.status
+	rm -f src/core/opamVersion.ml src/core/opamGitVersion.ml src/core/opamScript.ml
 
 .PHONY: tests
 
@@ -69,20 +70,13 @@ tests-git:
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
 
-ISGIT = $(shell if [ -e .git ]; then echo "1"; else echo "0"; fi)
-
-ifeq ($(ISGIT), 1)
-src/core/opamGitVersion.ml: .git/logs/HEAD
-	@echo 'let version = Some "$(shell git describe)"' > $@
-else
 src/core/opamGitVersion.ml:
-	@echo "let version = None" > $@
-endif
+	./shell/get-git-id.sh > $@
 
 src/core/opamScript.ml: shell/
-	ocaml crunch.ml "complete"     < shell/opam_completion.sh > $@
-	ocaml crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
-	ocaml crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
+	ocaml shell/crunch.ml "complete"     < shell/opam_completion.sh > $@
+	ocaml shell/crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
+	ocaml shell/crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
 
 .PHONY: uninstall install
 install:
