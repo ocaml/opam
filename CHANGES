@@ -1,4 +1,5 @@
 0.9.5 [trunk]
+* Add support for global and user configuration for OPAM
 * Stop yelling when OPAM is not up-to-date
 * Update or generate `~/.ocamlinit` when running `opam init`
 * Fix tests on *BSD (thx Arnaud Degroote)
