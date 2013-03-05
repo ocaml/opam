@@ -76,7 +76,7 @@ the developer manual is in the `doc/dev-manual/` directory.
 
 ## Copyright and license
 
-Copyright 2012-2013 OCamlPro
+Copyright 2012-2013 OCamlPro  
 Copyright 2012 INRIA
 
 All rights reserved. OPAM is distributed under the terms of
