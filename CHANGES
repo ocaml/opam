@@ -1,4 +1,6 @@
 0.9.5 [trunk]
+* Improve the behaviour of `opam update` wrt. pinned packages
+* Change the default external solver criteria (only useful if you have aspcud installed on your machine)
 * Add support for global and user configuration for OPAM
 * Stop yelling when OPAM is not up-to-date
 * Update or generate `~/.ocamlinit` when running `opam init`
