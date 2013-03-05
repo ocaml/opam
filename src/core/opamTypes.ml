@@ -134,6 +134,11 @@ type ppflag =
   | Camlp4 of string list
   | Cmd of string list
 
+type global_option = {
+  complete   : [`sh|`zsh] option;
+  switch_eval: bool;
+}
+
 (* Command line arguments *)
 
 (* Upload arguments *)

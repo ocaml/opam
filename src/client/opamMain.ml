@@ -190,6 +190,9 @@ let installed_only_flag =
 let installed_roots_flag =
   mk_flag ["installed-roots"] "Display only the installed roots."
 
+let zsh_flag =
+  mk_flag  ["z";"zsh"] "Use zsh-compatible mode for configuring OPAM."
+
 let repo_kind_flag =
   let kinds = [
     (* main kinds *)
@@ -336,16 +339,27 @@ let init =
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
-  let no_config   = mk_flag ["no-config"] "Do no try to update the system configuration." in
-  let init global_options build_options repo_kind repo_name repo_address compiler jobs no_config =
+  let no_config   = mk_flag ["n";"no-config"]     "Do not update the global configuration of OPAM." in
+  let with_config = mk_flag ["u";"update-config"] "Update the global configuration of OPAM." in
+  let init global_options
+      build_options repo_kind repo_name repo_address compiler jobs
+      no_config with_config zsh =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
-    let update_config = not no_config in
+    let update_config =
+      if not no_config then
+        None
+      else if with_config then
+        Some (if zsh then `zsh else `sh)
+      else
+        Some `ask in
     Client.init repository compiler ~jobs ~update_config in
-  Term.(pure init $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs $no_config),
+  Term.(pure init
+    $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
+    $no_config $with_config $zsh_flag),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -429,7 +443,9 @@ let config =
                               and CAML_LD_LIBRARY_PATH according to the current selected \
                               compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
-    ["global"]  , `global  , "Modify the global system configuration to setup OPAM.";
+    ["setup"]   , `setup   , "Configure global and user parameters for OPAM. Use without options (e.g. \
+                              $(b, opam config setup) to display more options. Use $(b,--list) to get \
+                              the current configuration.";
     ["var"]     , `var     , "returns the value associated with the given variable. If the variable \
                               contains a colon such as $(i,pkg:var), then the left element will be \
                               understood as the package in which the variable is defined. \
@@ -464,14 +480,25 @@ let config =
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
-  let is_rec = mk_flag  ["R";"rec"] "Recursive query." in
-  let csh    = mk_flag  ["c";"csh"] "Use csh mode." in
-  let zsh    = mk_flag  ["z";"zsh"] "Use zsh mode." in
-  let complete    = mk_flag ["complete"]    "Add completion scripts." in
-  let ocamlinit   = mk_flag ["ocamlinit"]   "Update ~/.ocamlinit." in
-  let switch_eval = mk_flag ["switch-eval"] "Add `opam-switch-eval` scripts." in
-  let all         = mk_flag ["all"]         "Fully configure OPAM." in
-  let info_f      = mk_flag ["info"]        "Display the global configration options." in
+  let is_rec      = mk_flag ["R";"rec"]     "Recursive query." in
+  let csh         = mk_flag ["c";"csh"]     "Use csh mode." in
+  let all_doc         = "Enable all the global and user configuration options." in
+  let global_doc      = "Enbale all the global configuration options." in
+  let user_doc        = "Enable all the user configuration options." in
+  let ocamlinit_doc   = "Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel." in
+  let profile_doc     = "Modify ~/.profile to setup an OPAM-friendly environment when starting a new shell." in
+  let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
+  let no_eval_doc     = "Do not install `opam-switch-eval` to switch & eval using a single command." in
+  let dot_profile_doc = "The configuration file to update (default is ~/.profile)." in
+  let list_doc        = "List the current configuration." in
+  let profile         = mk_flag ["profile"]        profile_doc in
+  let ocamlinit       = mk_flag ["ocamlinit"]      ocamlinit_doc in
+  let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
+  let no_switch_eval  = mk_flag ["no-switch-eval"] no_eval_doc in
+  let all             = mk_flag ["a";"all"]        all_doc in
+  let user            = mk_flag ["u";"user"]       user_doc in
+  let global          = mk_flag ["g";"global"]     global_doc in
+  let list            = mk_flag ["l";"list"]       list_doc in
   let dot_profile =
     let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
     mk_opt ["dot-profile"]
@@ -482,7 +509,8 @@ let config =
 
   let config global_options
       command env is_rec csh zsh
-      dot_profile info all ocamlinit complete switch_eval
+      dot_profile list all global user
+      profile ocamlinit no_complete no_switch_eval
       params =
     set_global_options global_options;
     let mk ~is_byte ~is_link = {
@@ -497,28 +525,42 @@ let config =
         OpamConfigCommand.env ~csh
       else
         OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
-    | Some `env      -> Client.CONFIG.env ~csh
-    | Some `global   ->
-      let complete    = all || complete in
-      let ocamlinit   = all || ocamlinit in
-      let switch_eval = all || switch_eval in
+    | Some `env   -> Client.CONFIG.env ~csh
+    | Some `setup ->
+      let user        = all || user in
+      let global      = all || global in
+      let profile     = user  || profile in
+      let ocamlinit   = user  || ocamlinit in
+      let complete    = global && not no_complete in
+      let switch_eval = global && not no_switch_eval in
       let complete = match complete, zsh with
         | true, false -> Some `sh
         | true, true  -> Some `zsh
         | _           -> None in
       let dot_profile = OpamFilename.of_string dot_profile in
-      if info then
-        Client.CONFIG.global_info dot_profile
-      else if all || ocamlinit || complete <> None || switch_eval then
-        Client.CONFIG.global dot_profile ~ocamlinit ~complete ~switch_eval
+      if list then
+        Client.CONFIG.setup_list dot_profile
+      else if profile || ocamlinit || complete <> None || switch_eval then
+        let dot_profile = if profile then Some dot_profile else None in
+        let global = if global then Some { complete; switch_eval } else None in
+        Client.CONFIG.setup ~dot_profile ~ocamlinit ~global
       else
         OpamGlobals.msg
           "Available options:\n\
-          \    --all               Setup all the configuration options.\n\
-          \    --complete          Load the auto-completion scripts on startup\n\
-          \    --ocamlinit         Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel\n\
-          \    --switch-eval       Install `opam-switch-eval` to switch & eval using a single command\n\
-          \    --dot-profile FILE  The configuration file to update (default is ~/.profile)\n"
+          \  -l,--list            %s\n\
+          \  -a,--all             %s\n\
+           User configuration:\n\
+          \  -u,--user            %s\n\
+          \  --ocamlinit          %s\n\
+          \  --profile            %s\n\
+          \  --dot-profile FILE   %s\n\n\
+           Global configuration:\n\
+          \  -g,--global          %s\n\
+          \  --no-complete        %s\n\
+          \  --no-switch-eval     %s"
+          list_doc all_doc
+          user_doc ocamlinit_doc profile_doc dot_profile_doc
+          global_doc no_complete_doc no_eval_doc
     | Some `list     -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
     | Some `var      ->
       if params = [] then
@@ -533,8 +575,9 @@ let config =
     | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
 
   Term.(pure config
-    $global_options $command $env $is_rec $csh $zsh
-    $dot_profile $info_f $all $ocamlinit $complete $switch_eval
+    $global_options $command $env $is_rec $csh $zsh_flag
+    $dot_profile $list $all $global $user
+    $profile $ocamlinit $no_complete $no_switch_eval
     $params),
   term_info "config" ~doc ~man
 

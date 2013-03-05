@@ -651,7 +651,16 @@ module API = struct
             wish_remove  = [];
             wish_upgrade = compiler_packages } in
 
-      if update_config then OpamState.update_user_config_interactive t;
+      begin match update_config with
+        | Some `ask  -> OpamState.update_setup_interactive t ~global:true
+        | Some (`sh|`zsh as shell) ->
+          let dot_profile =
+            Some (OpamFilename.of_string (Filename.concat (OpamMisc.getenv "HOME") ".profile")) in
+          let complete = Some shell in
+          let global = Some { complete; switch_eval = true } in
+          OpamState.update_setup t ~dot_profile ~ocamlinit:true ~global
+        | None       -> ()
+      end;
       OpamState.print_env_warning ~eval:false t
 
     with e ->
@@ -956,11 +965,11 @@ module SafeAPI = struct
     let env ~csh =
       read_lock (fun () -> API.CONFIG.env ~csh)
 
-    let global dot_profile ~ocamlinit ~complete ~switch_eval =
-      global_lock (fun () -> API.CONFIG.global dot_profile ~ocamlinit ~complete ~switch_eval)
+    let setup ~dot_profile ~ocamlinit ~global =
+      global_lock (fun () -> API.CONFIG.setup ~dot_profile ~ocamlinit ~global)
 
-    let global_info dot_profile =
-      read_lock (fun () -> API.CONFIG.global_info dot_profile)
+    let setup_list dot_profile =
+      read_lock (fun () -> API.CONFIG.setup_list dot_profile)
 
     let list names =
       read_lock (fun () -> API.CONFIG.list names)

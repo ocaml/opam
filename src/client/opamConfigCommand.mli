@@ -35,11 +35,11 @@ val config: config -> unit
 (** Substitute files *)
 val subst: basename list -> unit
 
-(** Update the user configuration to use OPAM *)
-val global:
-  filename ->
-  ocamlinit:bool -> complete:[`sh|`zsh] option -> switch_eval:bool ->
+(** Update the global and user configuration to use OPAM. *)
+val setup:
+  dot_profile:filename option -> ocamlinit:bool ->
+  global:global_option option ->
   unit
 
-(** Display global configuration for OPAM. *)
-val global_info: filename -> unit
+(** Display the global and user configuration for OPAM. *)
+val setup_list: filename -> unit

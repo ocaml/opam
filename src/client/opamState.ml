@@ -902,9 +902,9 @@ let update_ocamlinit () =
     | Some file ->
       let body = OpamFilename.read file in
       if body = "" then
-        OpamGlobals.msg "  - Generating ~/.ocamlinit.\n"
+        OpamGlobals.msg "  Generating ~/.ocamlinit.\n"
       else
-        OpamGlobals.msg "  - Updating ~/.ocamlinit.\n";
+        OpamGlobals.msg "  Updating ~/.ocamlinit.\n";
       try
         let header =
           "(* Added by OPAM. *)\n\
@@ -918,7 +918,7 @@ let update_ocamlinit () =
       with _ ->
         OpamSystem.internal_error "Cannot write ~/.ocamlinit."
   ) else
-    OpamGlobals.msg "  - ~/.ocamlinit is already up-to-date.\n"
+    OpamGlobals.msg "  ~/.ocamlinit is already up-to-date.\n"
 
 let string_of_env_update t updates =
   let aux (ident, symbol, string) =
@@ -986,12 +986,12 @@ let create_init_scripts t ~switch_eval ~complete =
   let pretty_init_sh = OpamFilename.prettify (OpamPath.init t.root // init_sh) in
   if !updated then
     OpamGlobals.msg
-      "  - Updating %s: auto-completion[%b] opam-switch-eval[%b].\n"
+      "  Updating %s: [auto-completion: %b] [opam-switch-eval: %b].\n"
       pretty_init_sh
       (complete <> None)
       switch_eval
   else
-    OpamGlobals.msg "  - %s is already up-to-date.\n" pretty_init_sh
+    OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_sh
 
 let status_of_init_sh t =
   let init_sh = OpamPath.init t.root // init_sh in
@@ -1020,99 +1020,108 @@ let dot_profile_needs_update t ~dot_profile =
     true
 
 let update_dot_profile t ~dot_profile =
-  let pretty_dot_profile = OpamFilename.prettify dot_profile in
-  if dot_profile_needs_update t ~dot_profile then (
-    let body =
-      if OpamFilename.exists dot_profile then
-        OpamFilename.read dot_profile
-      else
-        "" in
-    OpamGlobals.msg "  - Updating %s.\n" pretty_dot_profile;
-    let body =
-      Printf.sprintf
-        "%s\n\
-         # OPAM configuration\n\
-         %s\n"
-        body (source t init_sh) in
-    OpamFilename.write dot_profile body
-  ) else (
-    OpamGlobals.msg "  - %s is already up-to-date.\n" pretty_dot_profile
-  )
+  match dot_profile with
+  | None             -> ()
+  | Some dot_profile ->
+    let pretty_dot_profile = OpamFilename.prettify dot_profile in
+    if dot_profile_needs_update t ~dot_profile then (
+      let body =
+        if OpamFilename.exists dot_profile then
+          OpamFilename.read dot_profile
+        else
+          "" in
+      OpamGlobals.msg "  Updating %s.\n" pretty_dot_profile;
+      let body =
+        Printf.sprintf
+          "%s\n\
+           # OPAM configuration\n\
+           %s\n"
+          body (source t init_sh) in
+      OpamFilename.write dot_profile body
+    ) else (
+      OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
+    )
 
-let update_user_config t ~dot_profile ~ocamlinit ~complete ~switch_eval =
-  OpamGlobals.msg "\nUPDATES:\n";
-  if ocamlinit then update_ocamlinit ();
-  create_init_scripts t ~switch_eval ~complete;
-  update_dot_profile t ~dot_profile
+let update_setup t ~dot_profile ~ocamlinit ~global =
+  if ocamlinit || dot_profile <> None then (
+    OpamGlobals.msg "User configuration:\n";
+    if ocamlinit then update_ocamlinit ();
+    update_dot_profile t ~dot_profile;
+  );
+  match global with
+  | None -> ()
+  | Some { complete; switch_eval } ->
+    OpamGlobals.msg "Gloabal configuration:\n";
+    create_init_scripts t ~switch_eval ~complete
 
-let display_user_config t ~dot_profile =
-  let not_configured = "<not configured>" in
-  let up_to_date     = "<up-to-date>" in
-  let ocamlinit_status =
-    if ocamlinit_needs_update () then not_configured else up_to_date in
-  let dot_profile_status =
-    if dot_profile_needs_update t ~dot_profile then not_configured else up_to_date in
-  let init_scripts_status =
+let display_setup t ~dot_profile =
+  let print (k,v) = OpamGlobals.msg "  %-25s %20s\n" k v in
+  let not_set = "[NOT SET]" in
+  let ok      = "[OK]" in
+  let user_setup =
+    let ocamlinit_status =
+      if ocamlinit_needs_update () then not_set else ok in
+    let dot_profile_status =
+      if dot_profile_needs_update t ~dot_profile then not_set else ok in
+    [ ("~/.ocamlinit"                   , ocamlinit_status);
+      (OpamFilename.prettify dot_profile, dot_profile_status); ]
+  in
+  let global_setup =
     match status_of_init_sh t with
-    | None -> "<none>"
+    | None -> [ OpamFilename.prettify (OpamPath.init t.root // init_sh), not_set ]
     | Some(complete_sh, complete_zsh, switch_eval_sh) ->
       let completion =
-        if not complete_sh
-        && not complete_zsh then
-          "disabled"
-        else if complete_sh then
-          "enabled (sh)"
-        else
-          "enabled (zsh)" in
-      let switch_eval =
-        if switch_eval_sh then
-          "enabled"
-        else
-          "disabled" in
-      Printf.sprintf "\n    - %-16s: %s\n    - %-16s: %s"
-        "auto-completion"  completion
-        "opam-switch-eval" switch_eval in
-
+          if not complete_sh
+          && not complete_zsh then
+            not_set
+          else ok in
+        let switch_eval =
+          if switch_eval_sh then
+            ok
+          else
+            not_set in
+        [ ("auto-completion" , completion);
+          ("opam-switch-eval", switch_eval);
+        ]
+  in
+  OpamGlobals.msg "User configuration:\n";
+  List.iter print user_setup;
   OpamGlobals.msg "Global configuration:\n";
-  List.iter
-    (fun (k,s,v) -> OpamGlobals.msg "  %-20s%s %s\n" k s v)
-    [
-      ("~/.ocamlinit"                                         , ":", ocamlinit_status);
-      (OpamFilename.prettify dot_profile                      , ":", dot_profile_status);
-      (OpamFilename.prettify (OpamPath.init t.root // init_sh), "" , init_scripts_status);
-    ]
+  List.iter print global_setup
 
-
-let update_user_config_interactive t =
-  let max = 5 in
+let update_setup_interactive t ~global =
+  let max = if not global then 2 else 4 in
   let current = ref 1 in
   let stats () =
     let c = !current in
     incr current;
     Printf.sprintf "[%d/%d] " c max in
   OpamGlobals.msg "\n=-=-=-= Configuring OPAM =-=-=-=\n";
-  if confirm "%sDo you want to update your system configuration to use OPAM ?" (stats ()) then (
-    let stop () = OpamGlobals.exit 1 in
+  if confirm "Do you want to update your configuration to use OPAM ?" then (
     let dot_profile =
       let file =
-        match read "%sWhat configuration file do you want to update ? [default: ~/.profile]" (stats ()) with
+        match read "%sDo you want to update your shell configuration file ? [default: ~/.profile]" (stats ()) with
         | None   -> Filename.concat (OpamMisc.getenv "HOME") ".profile"
         | Some s -> s in
-      if not (Sys.file_exists file) then (
-        if not (confirm " - %s does not exist, do you want to create it ?" file) then
-          stop ()
-      );
-      OpamFilename.of_string file in
-    let ocamlinit = confirm "%sDo you want to update your ~/.ocamlinit ?" (stats ()) in
+      if not (Sys.file_exists file)
+      && not (confirm "  %s does not exist, do you want to create it ?" file) then
+        None
+      else
+        Some (OpamFilename.of_string file) in
+    let ocamlinit =
+      confirm "%sDo you want to update your ~/.ocamlinit ?" (stats ()) in
     let complete =
-      if confirm "%sDo you want to install the auto-complete scripts ?" (stats ()) then
+      if global && confirm "%sDo you want to install the auto-complete scripts ?" (stats ()) then
         match Filename.basename (OpamMisc.getenv "SHELL") with
         | "zsh" -> Some `zsh
         | _     -> Some `sh
       else
         None in
-    let switch_eval = confirm "%sDo you want to install the `opam-switch-eval` script ?" (stats ()) in
-    update_user_config t ~dot_profile ~ocamlinit ~complete ~switch_eval
+    let switch_eval =
+      global && confirm "%sDo you want to install the `opam-switch-eval` script ?" (stats ()) in
+    let global =
+      if global then Some { complete; switch_eval } else None in
+    update_setup t ~dot_profile ~ocamlinit ~global
   )
 
 (* Add the given packages to the set of package to reinstall. If [all]

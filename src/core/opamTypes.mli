@@ -349,6 +349,12 @@ type config = {
   conf_options: OpamVariable.Section.Full.t list;
 }
 
+(** Global configuration option *)
+type global_option = {
+  complete   : [`sh|`zsh] option;
+  switch_eval: bool;
+}
+
 (** {2 Filtered commands} *)
 
 (** Symbols *)
