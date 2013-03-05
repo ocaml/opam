@@ -4,8 +4,7 @@ OPAM is a source-based package manager for OCaml. It supports multiple simultane
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
 
-OPAM is created and maintained by [Thomas Gazagnaire](https://github.com/samoht) from 
-[OCamlPro](http://www.ocamlpro.com).
+OPAM is created and maintained by [OCamlPro](http://www.ocamlpro.com).
 
 To get started, checkout the [Quick
 Install](http://opam.ocamlpro.com/doc/Quick_Install.html) guide.
