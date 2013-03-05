@@ -499,13 +499,26 @@ let print_stats () =
 
 type cache = OpamFile.OPAM.t package_map * OpamFile.Descr.t package_map
 
+let check_marshaled_file file =
+  let ic = open_in_bin (OpamFilename.to_string file) in
+  let header = String.create Marshal.header_size in
+  really_input ic header 0 Marshal.header_size;
+  let expected_size = Marshal.total_size header 0 in
+  let current_size = in_channel_length ic in
+  if not (expected_size = current_size) then (
+    OpamGlobals.error "The local-state cache is corrupted, removing it.";
+    OpamSystem.internal_error "Corrupted cache";
+  )
+
 let marshal_from_file file =
   try
+    check_marshaled_file file;
     let ic = open_in_bin (OpamFilename.to_string file) in
     let (opams, descrs: cache) = Marshal.from_channel ic in
     close_in ic;
     Some opams, Some descrs
   with _ ->
+    OpamFilename.remove file;
     None, None
 
 let save_state ~update t =
