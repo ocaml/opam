@@ -114,7 +114,7 @@ val print_env_warning: state -> eval:bool -> dot_profile:filename option -> unit
 (** {2 Initialisation} *)
 
 (** Update the global and user configuration by asking some questions. *)
-val update_setup_interactive: state -> global:bool -> unit
+val update_setup_interactive: state -> global:bool -> dot_profile:filename -> unit
 
 (** Display the global and user configuration for OPAM. *)
 val display_setup: state -> dot_profile:filename -> unit

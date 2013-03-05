@@ -1083,7 +1083,7 @@ let display_setup t ~dot_profile =
   OpamGlobals.msg "Global configuration:\n";
   List.iter print global_setup
 
-let update_setup_interactive t ~global =
+let update_setup_interactive t ~global ~dot_profile =
   let max = if not global then 2 else 4 in
   let current = ref 1 in
   let stats () =
@@ -1094,16 +1094,20 @@ let update_setup_interactive t ~global =
   if confirm "Do you want to update your configuration to use OPAM ?" then (
     let dot_profile =
       let file =
-        match read "%sDo you want to update your shell configuration file ? [default: ~/.profile]" (stats ()) with
+        match
+          read "%sDo you want to update your shell configuration file ? [default: %s]"
+            (OpamFilename.prettify dot_profile)
+            (stats ())
+        with
         | Some "y"
         | Some "Y"
-        | None   -> Filename.concat (OpamMisc.getenv "HOME") ".profile"
-        | Some s -> s in
-      if not (Sys.file_exists file)
-      && not (confirm "  %S does not exist, do you want to create it ?" file) then
+        | None   -> dot_profile
+        | Some s -> OpamFilename.of_string s in
+      if not (OpamFilename.exists file)
+      && not (confirm "  %S does not exist, do you want to create it ?" (OpamFilename.to_string file)) then
         None
       else
-        Some (OpamFilename.of_string file) in
+        Some file in
     let ocamlinit =
       confirm "%sDo you want to update your ~/.ocamlinit ?" (stats ()) in
     let complete =

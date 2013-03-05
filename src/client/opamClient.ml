@@ -651,16 +651,16 @@ module API = struct
             wish_remove  = [];
             wish_upgrade = compiler_packages } in
 
-      let dot_profile = Some dot_profile in
+      let dot_profile_o = Some dot_profile in
       begin match update_config with
-        | Some `ask  -> OpamState.update_setup_interactive t ~global:true
+        | Some `ask  -> OpamState.update_setup_interactive t ~global:true ~dot_profile
         | Some (`sh|`zsh as shell) ->
           let complete = Some shell in
           let global = Some { complete; switch_eval = true } in
-          OpamState.update_setup t ~dot_profile ~ocamlinit:true ~global
+          OpamState.update_setup t ~dot_profile:dot_profile_o ~ocamlinit:true ~global
         | None       -> ()
       end;
-      OpamState.print_env_warning t ~eval:false ~dot_profile
+      OpamState.print_env_warning t ~eval:false ~dot_profile:dot_profile_o
 
     with e ->
       if not !OpamGlobals.debug then
