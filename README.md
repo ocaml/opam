@@ -7,7 +7,7 @@ workflow.
 ## Installation
 
 The recommanded way of installing OPAM is via your OS package manager.
-See [http://opam.ocamlpro.com/doc/Quick_Install.html](the Quick Install) wiki page.
+See the [Quick Install](http://opam.ocamlpro.com/doc/Quick_Install.html) webpage.
 
 ## Upgrade from an older version of OPAM
 
@@ -26,15 +26,15 @@ available using `opam --help`. To get help for a specific command, use
 
 ### Tutorials
 
-A collection of tutorials are available online at [http://opam.ocamlpro.com].
+A collection of tutorials are available online at http://opam.ocamlpro.com.
 These tutorials are automatically generated from the [OPAM wiki](https://github.com/OCamlPro/opam/wiki/_pages) and
-are also available in PDF format in the `doc/tutorials` local directory.
+are also available in PDF format in the `doc/tutorials` directory.
 
 ### API, Code Documentation and Developpper Manual
 
-The API documentation is available under the `doc/html/` local
+The API documentation is available under the `doc/html/`
 directory: all the modules have an associated (and properly
 documentated) `.mli`.
 
-The developer manual is available in the `doc/dev-manual/` local directory.
+The developer manual is available in the `doc/dev-manual/` directory.
 
