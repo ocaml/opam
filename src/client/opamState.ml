@@ -1096,8 +1096,8 @@ let update_setup_interactive t ~global ~dot_profile =
       let file =
         match
           read "%sDo you want to update your shell configuration file ? [default: %s]"
-            (OpamFilename.prettify dot_profile)
             (stats ())
+            (OpamFilename.prettify dot_profile)
         with
         | Some "y"
         | Some "Y"
