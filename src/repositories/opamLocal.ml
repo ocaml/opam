@@ -83,8 +83,8 @@ module B = struct
         tmp_dir / basename
       | Some d -> d in
     OpamGlobals.msg "Synchronizing %s with %s.\n"
-      (OpamFilename.Dir.to_string local_dir)
-      (OpamFilename.Dir.to_string remote_dir);
+      (OpamFilename.prettify_dir local_dir)
+      (OpamFilename.prettify_dir remote_dir);
     match rsync_dirs ~delete:true remote_dir local_dir with
     | Up_to_date _  -> Up_to_date local_dir
     | Result _      -> Result local_dir
@@ -99,8 +99,8 @@ module B = struct
   let update ~address =
     let local_repo = OpamRepository.local_repo () in
     OpamGlobals.msg "Synchronizing %s with %s.\n"
-      (OpamFilename.Dir.to_string (OpamPath.Repository.root local_repo))
-      (OpamFilename.Dir.to_string address);
+      (OpamFilename.prettify_dir (OpamPath.Repository.root local_repo))
+      (OpamFilename.prettify_dir address);
     let sync_dir fn =
       match rsync_dirs ~delete:true (fn address) (fn local_repo) with
       | Not_available

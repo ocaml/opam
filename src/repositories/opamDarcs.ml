@@ -22,8 +22,8 @@ let log fmt = OpamGlobals.log "Darcs" fmt
 
 let darcs_fetch local_path remote_address =
   OpamGlobals.msg "Synchronizing %s with %s.\n"
-    (OpamFilename.Dir.to_string local_path)
-    (OpamFilename.Dir.to_string remote_address);
+    (OpamFilename.prettify_dir local_path)
+    (OpamFilename.prettify_dir remote_address);
   OpamFilename.in_dir local_path (fun () ->
     (* Fetch the changes and save them to a temporary patch bundle *)
     OpamSystem.command [ "darcs" ; "fetch"; "--all"; "--output=opam_update.bundle"]

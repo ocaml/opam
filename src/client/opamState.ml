@@ -514,11 +514,11 @@ let save_state ~update t =
   if update then (
     OpamGlobals.msg
       "Updating the cache of metadata (%s).\n"
-      (OpamFilename.to_string file);
+      (OpamFilename.prettify file);
   ) else
     OpamGlobals.msg
       "Creating a cache of metadata in %s.\n"
-      (OpamFilename.to_string file);
+      (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
   Marshal.to_channel oc (t.opams, t.descrs) [];
   close_out oc

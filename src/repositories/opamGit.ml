@@ -20,8 +20,8 @@ let log fmt = OpamGlobals.log "GIT" fmt
 
 let git_fetch local_path remote_address commit =
   OpamGlobals.msg "Synchronizing %s with %s%s.\n"
-    (OpamFilename.Dir.to_string local_path)
-    (OpamFilename.Dir.to_string remote_address)
+    (OpamFilename.prettify_dir local_path)
+    (OpamFilename.prettify_dir remote_address)
     (match commit with
     | None   -> ""
     | Some c -> Printf.sprintf " [%s]" c);

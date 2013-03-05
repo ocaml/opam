@@ -122,8 +122,8 @@ module B = struct
   let update ~address =
     let state = make_state ~download_index:true address in
     OpamGlobals.msg "Synchronizing %s with %s.\n"
-      (OpamFilename.Dir.to_string state.local_dir)
-      (OpamFilename.Dir.to_string address);
+      (OpamFilename.prettify_dir state.local_dir)
+      (OpamFilename.prettify_dir address);
     if state.local_dir <> state.remote_dir then begin
       let (--) = OpamFilename.Set.diff in
       let indexes =
@@ -176,7 +176,7 @@ module B = struct
         log "dowloading %s" (OpamFilename.to_string remote_file);
         let local_dir = OpamFilename.dirname local_file in
         OpamFilename.mkdir local_dir;
-        OpamGlobals.msg "Downloading %s.\n" (OpamFilename.to_string remote_file);
+        OpamGlobals.msg "Downloading %s.\n" (OpamFilename.prettify remote_file);
         let local_file = OpamFilename.download ~overwrite:true remote_file local_dir in
         if not (OpamFilename.exists local_file) then
           (* This may happen with empty files *)
@@ -204,7 +204,7 @@ module B = struct
     if up_to_date then
       Up_to_date local_file
     else (
-      OpamGlobals.msg "Downloading %s.\n" (OpamFilename.to_string remote_file);
+      OpamGlobals.msg "Downloading %s.\n" (OpamFilename.prettify remote_file);
       try
         let file = OpamFilename.download ~overwrite:true remote_file dest_dir in
         Result file
