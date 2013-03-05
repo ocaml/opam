@@ -334,8 +334,14 @@ let init =
     `S "DESCRIPTION";
     `P "The $(b,init) command creates a fresh client state.  This initializes OPAM \
         configuration in $(i,~/.opam) and configures a default package repository.";
+    `P "Once the fresh client has been created, OPAM will ask the user if he wants \
+        $(i,~/.profile) and $(i,~/.ocamlinit) to be updated. \
+        If $(b,--auto-setup) is used, OPAM will modify the configuration files automatically, \
+        without asking the user. If $(b,--no-setup) is used, OPAM will *NOT* modify \
+        anything outside of $(i,~/.opam).";
     `P "Additional repositories can be added later by using the $(b,opam repository) command.";
-    `P "The local cache of a repository state can be updated by using $(b,opam update).";
+    `P "The state of repositories can be synchronized by using $(b,opam update).";
+    `P "The user and global configuration files can be setup later by using $(b,opam config setup).";
   ] in
   let jobs = mk_opt ["j";"jobs"] "JOBS" "Number of jobs to use when building packages." Arg.int OpamGlobals.default_jobs in
   let compiler =
@@ -450,9 +456,15 @@ let config =
                               and CAML_LD_LIBRARY_PATH according to the current selected \
                               compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
-    ["setup"]   , `setup   , "Configure global and user parameters for OPAM. Use without options (e.g. \
-                              $(b, opam config setup) to display more options. Use $(b,--list) to get \
-                              the current configuration.";
+    ["setup"]   , `setup   , "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
+                              to display more options. Use $(b,--list) to display the current configuration \
+                              options. You can use this command to automatically update: (i) user-configuration \
+                              files such as ~/.profile and ~/.ocamlinit; and (ii) global-configaration files \
+                              controlling which shell scripts are loaded on startup, such as auto-completion. \
+                              These configuration options can be updated using: $(b,opam config setup --global) \
+                              to setup the global configuration and $(b,opam config setup --user) to setup the \
+                              user one. To modify both the global and user configuration, use $(b,opam config \
+                              setup --all).";
     ["var"]     , `var     , "returns the value associated with the given variable. If the variable \
                               contains a colon such as $(i,pkg:var), then the left element will be \
                               understood as the package in which the variable is defined. \
