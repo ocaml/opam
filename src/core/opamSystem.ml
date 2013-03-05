@@ -153,7 +153,8 @@ let rec remove_dir dir =
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);
     List.iter remove_dir (directories_strict dir);
-    Unix.rmdir dir;
+    try Unix.rmdir dir
+    with _ -> internal_error "Cannot remove %s." dir
   end
 
 let with_tmp_dir fn =
