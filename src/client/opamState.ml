@@ -482,7 +482,7 @@ let switch_consistency_checks t =
     clean pin_dir name in
   let available =
       let dirs = OpamFilename.list_dirs pin_cache in
-      let pkgs = List.map (
+      let pkgs = List.rev_map (
           OpamFilename.basename_dir
           |> OpamFilename.Base.to_string
           |> OpamPackage.Name.of_string
@@ -731,9 +731,9 @@ let contents_of_variable t v =
       let names = OpamMisc.split name_str '+' in
       if List.length names = 1 then
         OpamGlobals.error_and_exit "Package %s is not installed" name_str;
-      let names = List.map OpamPackage.Name.of_string names in
+      let names = List.rev_map OpamPackage.Name.of_string names in
       let results =
-        List.map (fun name ->
+        List.rev_map (fun name ->
           match process_one name with
           | None   -> OpamGlobals.error_and_exit "Package %s is not installed" (OpamPackage.Name.to_string name)
           | Some r -> r
@@ -823,7 +823,7 @@ let filter_commands t l =
   OpamMisc.filter_map (filter_command t) l
 
 let expand_env t (env: env_updates) : env =
-  List.map (fun (ident, symbol, string) ->
+  List.rev_map (fun (ident, symbol, string) ->
     let string = substitute_string t string in
     let read_env () =
       let prefix = OpamFilename.Dir.to_string t.root in
@@ -922,7 +922,7 @@ let string_of_env_update t updates =
       | "=+" -> (ident, Printf.sprintf "$%s:%s" ident string)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     Printf.sprintf "%s=%s\n" key value in
-  String.concat "" (List.map aux updates)
+  String.concat "" (List.rev_map aux updates)
 
 let init_script t ~switch_eval ~complete =
   let variables =
@@ -1220,7 +1220,7 @@ let install_conf_ocaml_config root switch =
   log "install_conf_ocaml_config switch=%s" (OpamSwitch.to_string switch);
   (* .config *)
   let vars =
-    let map f l = List.map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
+    let map f l = List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
     let id x = x in
 
     map OpamFilename.Dir.to_string

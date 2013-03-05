@@ -39,7 +39,7 @@ let opam2debian universe depopts package =
       with Not_found -> Empty in
     let opts = OpamFormula.to_dnf opts in
     if depopts then
-      let opts = List.map OpamFormula.of_conjunction opts in
+      let opts = List.rev_map OpamFormula.of_conjunction opts in
       And (depends, Or(depends,OpamFormula.ors opts))
     else
       let mem_installed conj =
@@ -47,7 +47,7 @@ let opam2debian universe depopts package =
           OpamPackage.Set.exists (fun pkg -> OpamPackage.name pkg = name) universe.u_installed in
         List.exists is_installed conj in
       let opts = List.filter mem_installed opts in
-      let opts = List.map OpamFormula.of_conjunction opts in
+      let opts = List.rev_map OpamFormula.of_conjunction opts in
       And (depends, OpamFormula.ands opts) in
 
   let conflicts =
@@ -62,8 +62,8 @@ let opam2debian universe depopts package =
   { Debian.Packages.default_package with
     name      = OpamPackage.Name.to_string (OpamPackage.name package) ;
     version   = OpamPackage.Version.to_string (OpamPackage.version package);
-    depends   = List.map (List.map atom2debian) (OpamFormula.to_cnf depends);
-    conflicts = List.map atom2debian (OpamFormula.to_conjunction conflicts);
+    depends   = List.rev_map (List.rev_map atom2debian) (OpamFormula.to_cnf depends);
+    conflicts = List.rev_map atom2debian (OpamFormula.to_conjunction conflicts);
     extras    =
       (if installed && reinstall
        then [OpamCudf.s_reinstall, "true"]
@@ -118,7 +118,7 @@ let load_cudf_universe ?(depopts=false) universe =
     h in
   let universe =
     let available = OpamPackage.Set.elements universe.u_available in
-    let universe = List.map (fun nv -> OpamPackage.Map.find nv opam2cudf) available in
+    let universe = List.rev_map (fun nv -> OpamPackage.Map.find nv opam2cudf) available in
     try Cudf.load_universe universe
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
@@ -157,8 +157,8 @@ let map_action f = function
 
 let map_cause f = function
   | Upstream_changes -> Upstream_changes
-  | Use l            -> Use (List.map f l)
-  | Required_by l    -> Required_by (List.map f l)
+  | Use l            -> Use (List.rev_map f l)
+  | Required_by l    -> Required_by (List.rev_map f l)
   | Unknown          -> Unknown
 
 let graph cudf2opam cudf_graph =
@@ -176,23 +176,23 @@ let graph cudf2opam cudf_graph =
   opam_graph
 
 let solution cudf2opam cudf_solution =
-  let to_remove = List.map cudf2opam cudf_solution.OpamCudf.ActionGraph.to_remove in
+  let to_remove = List.rev (List.rev_map cudf2opam cudf_solution.OpamCudf.ActionGraph.to_remove) in
   let to_process = graph cudf2opam cudf_solution.OpamCudf.ActionGraph.to_process in
   let root_causes =
-    List.map
+    List.rev_map
       (fun (p, c) -> cudf2opam p, map_cause cudf2opam c)
       cudf_solution.OpamCudf.ActionGraph.root_causes in
   { PackageActionGraph.to_remove ; to_process; root_causes }
 
 let map_request f r =
-  let f = List.map f in
+  let f = List.rev_map f in
   { wish_install = f r.wish_install;
     wish_remove  = f r.wish_remove ;
     wish_upgrade = f r.wish_upgrade }
 
 (* Remove duplicate packages *)
 let cleanup_request req =
-  let update_packages = List.map (fun (n,_) -> n) req.wish_upgrade in
+  let update_packages = List.rev_map (fun (n,_) -> n) req.wish_upgrade in
   let wish_install = List.filter (fun (n,_) -> not (List.mem n update_packages)) req.wish_install in
   { req with wish_install }
 
@@ -229,9 +229,9 @@ let filter_dependencies f_direction ~depopts ~installed universe packages =
       Cudf.load_universe (List.filter (fun pkg -> pkg.Cudf.installed) (Cudf.get_packages cudf_universe))
     else
       cudf_universe in
-  let cudf_packages = List.map opam2cudf (OpamPackage.Set.elements packages) in
+  let cudf_packages = List.rev_map opam2cudf (OpamPackage.Set.elements packages) in
   let topo_packages = f_direction cudf_universe cudf_packages in
-  let result = List.map cudf2opam topo_packages in
+  let result = List.rev_map cudf2opam topo_packages in
   log "filter_dependencies packages=%s result=%s"
     (OpamPackage.Set.to_string packages)
     (OpamMisc.string_of_list OpamPackage.to_string result);

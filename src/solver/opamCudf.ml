@@ -175,7 +175,7 @@ let string_of_reason cudf2opam r =
         Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
     let dependencies =
       if List.length m > 1 then "dependencies" else "dependency" in
-    let deps = List.map (vpkg2opamstr cudf2opam) m in
+    let deps = List.rev_map (vpkg2opamstr cudf2opam) m in
     let str = Printf.sprintf
         "The %s %s%s is not available for your compiler or your OS."
         dependencies
@@ -354,7 +354,8 @@ module Diff = struct
   (* for each pkgname I've the list of all versions that were installed or removed *)
   let diff univ sol =
     let pkgnames =
-      OpamMisc.StringSet.of_list (List.map (fun p -> p.Cudf.package) (Cudf.get_packages univ)) in
+      OpamMisc.StringSet.of_list
+        (List.rev_map (fun p -> p.Cudf.package) (Cudf.get_packages univ)) in
     let h = Hashtbl.create (OpamMisc.StringSet.cardinal pkgnames) in
     let needed_reinstall = Set.of_list (Cudf.get_packages ~filter:need_reinstall univ) in
     OpamMisc.StringSet.iter (fun pkgname ->
@@ -473,7 +474,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
         | [], [] -> Unknown
         | [], _  -> Use sinks
         | _      -> Required_by roots in
-      List.map (fun pkg -> pkg, cause pkg) to_remove in
+      List.rev_map (fun pkg -> pkg, cause pkg) to_remove in
     to_remove, root_causes in
 
   (* the packages to recompile *)
@@ -536,7 +537,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
         let succ = ActionGraph.succ to_process_complete action in
         let causes = List.filter (fun a -> ActionGraph.out_degree to_process a = 0) succ in
         let causes = List.filter (function To_change _ -> true | _ -> false) causes in
-        let causes = List.map action_contents causes in
+        let causes = List.rev_map action_contents causes in
         let cause = match causes with
           | []  -> Unknown
           | _   -> Required_by causes in
@@ -544,7 +545,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
       | _, To_recompile pkg ->
         let pred = ActionGraph.pred to_process_complete action in
         let causes = List.filter (fun a -> ActionGraph.in_degree to_process a = 0) pred in
-        let causes = List.map action_contents causes in
+        let causes = List.rev_map action_contents causes in
         let cause = match causes with
           | [] -> Upstream_changes
           | _  -> Use causes in

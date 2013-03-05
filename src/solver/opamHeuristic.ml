@@ -182,7 +182,7 @@ let filter_dependencies universe constrs =
   let packages = Cudf.get_packages ~filter universe in
   let graph = OpamCudf.Graph.of_universe universe in
   let packages = OpamCudf.Graph.closure graph (OpamCudf.Set.of_list packages) in
-  OpamMisc.StringSet.of_list (List.map (fun p -> p.Cudf.package) packages)
+  OpamMisc.StringSet.of_list (List.rev_map (fun p -> p.Cudf.package) packages)
 
 (* Try to play all the possible upgrade scenarios ... *)
 let resolve ?(verbose=true) universe request =
@@ -253,7 +253,7 @@ let resolve ?(verbose=true) universe request =
         let get_names pkg =
           let set l =
             let p = S.singleton pkg.Cudf.package in
-            let s = S.of_list (List.map (fun p -> p.Cudf.package) l) in
+            let s = S.of_list (List.rev_map (fun p -> p.Cudf.package) l) in
             S.diff s p in
           let rdeps = set (Algo.Depsolver.reverse_dependency_closure universe [pkg]) in
           let deps = set (Algo.Depsolver.reverse_dependency_closure universe [pkg]) in
@@ -287,7 +287,8 @@ let resolve ?(verbose=true) universe request =
             match keep_consistent_packages packages with
             | []       -> ()
             | packages ->
-              let atoms = List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
+              let rev_atoms = List.rev_map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
+              let atoms = List.rev rev_atoms in
               Hashtbl.add upgrade_tbl name (Array.of_list atoms) in
 
     (* Compute the set of minimizable packages, eg. the ones which are
@@ -317,7 +318,7 @@ let resolve ?(verbose=true) universe request =
     let wish_install =
       let installed = Cudf.get_packages ~filter:(fun p -> p.Cudf.installed) universe in
       let installed = List.filter (fun p -> not (Hashtbl.mem upgrade_tbl p.Cudf.package)) installed in
-      List.map (fun p ->
+      List.rev_map (fun p ->
         let constr =
           try List.assoc p.Cudf.package request.wish_install
           with Not_found -> None in

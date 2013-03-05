@@ -87,7 +87,9 @@ module Filenames = struct
 
   let to_string _ s =
     let lines =
-      List.map (fun f -> [OpamFilename.to_string f]) (OpamFilename.Set.elements s) in
+      List.rev_map
+        (fun f -> [OpamFilename.to_string f])
+        (OpamFilename.Set.elements s) in
     Lines.to_string lines
 
 end
@@ -110,7 +112,9 @@ module Urls_txt = struct
 
   let to_string _ t =
     let lines =
-      List.map (fun r -> [OpamFilename.Attribute.to_string r]) (OpamFilename.Attribute.Set.elements t) in
+      List.rev_map
+        (fun r -> [OpamFilename.Attribute.to_string r])
+        (OpamFilename.Attribute.Set.elements t) in
     Lines.to_string lines
 
 end
@@ -744,7 +748,7 @@ module OPAM = struct
         @ listm   t.build_test    s_build_test    OpamFormat.make_command
         @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
         @ option  t.depexts       s_depexts       OpamFormat.make_tags
-        @ List.map (fun (s, v) -> Variable (s, v)) t.others;
+        @ List.rev (List.rev_map (fun (s, v) -> Variable (s, v)) t.others);
     } in
     Syntax.to_string
       ~indent_variable:(fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts])
@@ -994,7 +998,7 @@ module Dot_config = struct
     ] in
     let parse_variables items =
       let l = List.filter (fun (x,_) -> not (List.mem x valid_fields)) (OpamFormat.variables items) in
-      List.map (fun (k,v) -> OpamVariable.of_string k, parse_value v) l in
+      List.rev_map (fun (k,v) -> OpamVariable.of_string k, parse_value v) l in
     let parse_requires = OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string) in
     let parse_section kind s =
       let name =  OpamVariable.Section.of_string s.section_name in
@@ -1016,7 +1020,7 @@ module Dot_config = struct
       | B b -> Bool b
       | S s -> String s in
     let of_variables l =
-      List.map (fun (k,v) -> Variable (OpamVariable.to_string k, of_value v)) l in
+      List.rev_map (fun (k,v) -> Variable (OpamVariable.to_string k, of_value v)) l in
     let make_require = OpamVariable.Section.to_string |> OpamFormat.make_string in
     let of_section s =
       Section
@@ -1034,10 +1038,10 @@ module Dot_config = struct
       file_name     = OpamFilename.to_string filename;
       file_contents =
         of_variables t.variables
-        @ List.map of_section t.sections
+        @ List.rev (List.rev_map of_section t.sections)
     }
 
-  let variables t = List.map fst t.variables
+  let variables t = List.rev_map fst t.variables
 
   let variable t s = List.assoc s t.variables
 
@@ -1058,7 +1062,7 @@ module Dot_config = struct
     let find t name =
       List.find (fun s -> s.name = name) (M.get t)
 
-    let available t = List.map (fun s -> s.name) (M.get t)
+    let available t = List.rev_map (fun s -> s.name) (M.get t)
     let kind t s = (find t s).kind
     let bytecomp t s = (find t s).bytecomp
     let asmcomp  t s = (find t s).asmcomp
@@ -1066,7 +1070,7 @@ module Dot_config = struct
     let asmlink  t s = (find t s).asmlink
     let requires t s = (find t s).requires
     let variable t n s = List.assoc s (find t n).lvariables
-    let variables t n = List.map fst (find t n).lvariables
+    let variables t n = List.rev_map fst (find t n).lvariables
   end
 
   let filter t n = List.filter (fun s -> s.kind = n) t.sections
@@ -1252,7 +1256,7 @@ module Comp = struct
   let to_string filename s =
     let make_ppflag = function
       | Cmd l    -> OpamFormat.make_string_list l
-      | Camlp4 l -> List (Symbol "CAMLP4" :: List.map OpamFormat.make_string l) in
+      | Camlp4 l -> List (Symbol "CAMLP4" :: List.rev (List.rev_map OpamFormat.make_string l)) in
     Syntax.to_string {
       file_name     = OpamFilename.to_string filename;
       file_contents = [

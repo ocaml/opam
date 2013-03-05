@@ -80,7 +80,7 @@ let rec kind = function
   | Option(o,l) -> Printf.sprintf "option(%s,%s)" (kind o) (kinds l)
 
 and kinds l =
-  Printf.sprintf "{%s}" (String.concat " " (List.map kind l))
+  Printf.sprintf "{%s}" (String.concat " " (List.rev_map kind l))
 
 (* Base parsing functions *)
 let parse_bool = function
@@ -104,11 +104,11 @@ let parse_string = function
   | x        -> bad_format "Expecting a string, got %s" (kind x)
 
 let parse_list fn = function
-  | List s -> List.map fn s
+  | List s -> List.rev (List.rev_map fn s)
   | x      -> bad_format "Expecting a list, got %s" (kind x)
 
 let parse_group fn = function
-  | Group g -> List.map fn g
+  | Group g -> List.rev (List.rev_map fn g)
   | x        -> bad_format "Expecting a group, got %s" (kind x)
 
 let parse_option f g = function
@@ -177,11 +177,11 @@ let make_bool b = Bool b
 
 let make_int i = Int i
 
-let make_list fn l = List (List.map fn l)
+let make_list fn l = List (List.rev (List.rev_map fn l))
 
 let make_string_list = make_list make_string
 
-let make_group fn g = Group (List.map fn g)
+let make_group fn g = Group (List.rev (List.rev_map fn g))
 
 let make_option f g = function
   | (v, None)   -> f v
@@ -220,7 +220,7 @@ let rec pretty_string_of_value ?(indent_hint = []) = function
         (pretty_string_of_values ~indent_hint " " l)
 
 and pretty_string_of_values ?(indent_hint = []) sep l =
-  String.concat sep (List.map (pretty_string_of_value ~indent_hint) l)
+  String.concat sep (List.rev (List.rev_map (pretty_string_of_value ~indent_hint) l))
 
 let rec string_of_value = function
   | Symbol s
@@ -233,7 +233,7 @@ let rec string_of_value = function
   | Option(v,l) -> Printf.sprintf "%s {%s}" (string_of_value v) (string_of_values l)
 
 and string_of_values l =
-  String.concat " " (List.map string_of_value l)
+  String.concat " " (List.rev (List.rev_map string_of_value l))
 
 let incr tab = "  " ^ tab
 
@@ -262,7 +262,7 @@ let assoc items n parse =
   with Not_found -> bad_format "Field %S is missing" n
 
 let get_all_section_by_kind items kind =
-  try List.map snd (List.find_all (fun (k,_) -> k=kind) (sections items))
+  try List.rev_map snd (List.find_all (fun (k,_) -> k=kind) (sections items))
   with Not_found -> bad_format "Section kind %S is missing" kind
 
 let get_section_by_kind items kind =
@@ -270,7 +270,7 @@ let get_section_by_kind items kind =
   with Not_found -> bad_format "Section kind %S is missing" kind
 
 let assoc_sections items kind parse =
-  List.map parse (get_all_section_by_kind items kind)
+  List.rev_map parse (get_all_section_by_kind items kind)
 
 let assoc_option items n parse =
   try Some (parse (List.assoc n (variables items)))

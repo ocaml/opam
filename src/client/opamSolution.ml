@@ -33,13 +33,13 @@ let eq_atom name version =
   name, Some (`Eq, version)
 
 let eq_atoms_of_packages set =
-  List.map (fun nv -> eq_atom (OpamPackage.name nv) (OpamPackage.version nv)) (OpamPackage.Set.elements set)
+  List.rev_map (fun nv -> eq_atom (OpamPackage.name nv) (OpamPackage.version nv)) (OpamPackage.Set.elements set)
 
 let atom_of_package nv =
   OpamPackage.name nv, None
 
 let atoms_of_packages set =
-  List.map atom_of_package (OpamPackage.Set.elements set)
+  List.rev_map atom_of_package (OpamPackage.Set.elements set)
 
 let atom_of_name name =
   name, None
@@ -71,7 +71,7 @@ let atoms_of_names t names =
       OpamPackage.unavailable_because_pinned name version
     else
       OpamPackage.unavailable name version in
-  List.map
+  List.rev_map
     (fun name ->
       if exists name None then
         if available name None then
@@ -118,8 +118,8 @@ let display_error (n, error) =
 
 (* Prettify errors *)
 let string_of_errors errors =
-  let actions = List.map fst errors in
-  let packages = List.map action_contents actions in
+  let actions = List.rev_map fst errors in
+  let packages = List.rev_map action_contents actions in
   match packages with
   | []  -> assert false
   | [h] -> OpamPackage.to_string h
@@ -128,7 +128,7 @@ let string_of_errors errors =
 
 let new_variables e =
   let e = List.filter (fun (_,s,_) -> s="=") e in
-  let e = List.map (fun (v,_,_) -> v) e in
+  let e = List.rev_map (fun (v,_,_) -> v) e in
   OpamMisc.StringSet.of_list e
 
 let variable_warnings = ref false
@@ -222,7 +222,7 @@ let parallel_apply t action solution =
 
   let root_installs =
     let names =
-      List.map OpamPackage.name (OpamPackage.Set.elements t.installed_roots) in
+      List.rev_map OpamPackage.name (OpamPackage.Set.elements t.installed_roots) in
     OpamPackage.Name.Set.of_list names in
   let root_installs = match action with
     | Init r

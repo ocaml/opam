@@ -45,26 +45,26 @@ let string_of_atom = function
 type 'a conjunction = 'a list
 
 let string_of_conjunction string_of_atom c =
-  Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_atom c))
+  Printf.sprintf "(%s)" (String.concat " & " (List.rev_map string_of_atom c))
 
 type 'a disjunction = 'a list
 
 let string_of_disjunction string_of_atom c =
-  Printf.sprintf "(%s)" (String.concat " | " (List.map string_of_atom c))
+  Printf.sprintf "(%s)" (String.concat " | " (List.rev_map string_of_atom c))
 
 type 'a cnf = 'a list list
 
 let string_of_cnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (String.concat " | " (List.map string_of_atom c)) in
-  Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_clause cnf))
+    Printf.sprintf "(%s)" (String.concat " | " (List.rev_map string_of_atom c)) in
+  Printf.sprintf "(%s)" (String.concat " & " (List.rev_map string_of_clause cnf))
 
 type 'a dnf = 'a list list
 
 let string_of_dnf string_of_atom cnf =
   let string_of_clause c =
-    Printf.sprintf "(%s)" (String.concat " & " (List.map string_of_atom c)) in
-  Printf.sprintf "(%s)" (String.concat " | " (List.map string_of_clause cnf))
+    Printf.sprintf "(%s)" (String.concat " & " (List.rev_map string_of_atom c)) in
+  Printf.sprintf "(%s)" (String.concat " | " (List.rev_map string_of_clause cnf))
 
 type 'a formula =
   | Empty
@@ -223,7 +223,7 @@ let ands = function
   | h::t -> List.fold_left (fun acc elt -> And(acc, elt)) h t
 
 let of_conjunction c =
-  of_atom_formula (ands (List.map (fun x -> Atom x) c))
+  of_atom_formula (ands (List.rev_map (fun x -> Atom x) c))
 
 let to_disjunction t =
   match to_cnf t with
@@ -236,7 +236,7 @@ let ors = function
   | h::t -> List.fold_left (fun acc elt -> Or(acc, elt)) h t
 
 let of_disjunction d =
-  of_atom_formula (ors (List.map (fun x -> Atom x) d))
+  of_atom_formula (ors (List.rev_map (fun x -> Atom x) d))
 
 let atoms t =
   fold_left (fun accu x -> x::accu) [] (to_atom_formula t)

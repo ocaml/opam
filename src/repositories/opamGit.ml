@@ -60,7 +60,7 @@ let git_diff local_path commit =
         | Some lines -> lines
         | None       -> OpamSystem.internal_error "Unknown revision: %s." commit
     in
-    OpamFilename.Set.of_list (List.map OpamFilename.of_string lines)
+    OpamFilename.Set.of_list (List.rev_map OpamFilename.of_string lines)
   )
 
 let git_init address =

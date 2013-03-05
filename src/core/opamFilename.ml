@@ -52,7 +52,7 @@ let mkdir dirname =
 
 let list_dirs d =
   let fs = OpamSystem.directories_with_links (Dir.to_string d) in
-  List.map Dir.of_string fs
+  List.rev (List.rev_map Dir.of_string fs)
 
 let in_dir dirname fn =
   if Sys.file_exists dirname then
@@ -63,7 +63,7 @@ let in_dir dirname fn =
 let exec dirname ?env ?name cmds =
   let env = match env with
     | None   -> None
-    | Some l -> Some (Array.of_list (List.map (fun (k,v) -> k^"="^v) l)) in
+    | Some l -> Some (Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)) in
   in_dir dirname
     (fun () -> OpamSystem.commands ?env ?name cmds)
 
@@ -192,7 +192,7 @@ let chop_extension filename =
 
 let list_files d =
   let fs = OpamSystem.rec_files (Dir.to_string d) in
-  List.map of_string fs
+  List.rev (List.rev_map of_string fs)
 
 let copy ~src ~dst =
   OpamSystem.copy (to_string src) (to_string dst)
@@ -241,7 +241,8 @@ let download ~overwrite filename dirname =
 let download_iter ~overwrite filenames dirname =
   let rec aux = function
     | []   ->
-      OpamSystem.internal_error "Cannot download %s." (String.concat ", " (List.map to_string filenames))
+      let filenames = List.map to_string filenames in
+      OpamSystem.internal_error "Cannot download %s." (OpamMisc.pretty_list filenames)
     | h::t ->
       try download ~overwrite h dirname
       with _ -> aux t in

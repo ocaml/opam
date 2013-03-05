@@ -106,7 +106,7 @@ module B = struct
       | Not_available
       | Up_to_date _ -> OpamFilename.Set.empty
       | Result lines ->
-          let files = List.map OpamFilename.of_string lines in
+          let files = List.rev_map OpamFilename.of_string lines in
           OpamFilename.Set.of_list files in
     let archives =
       let available_packages = OpamRepository.packages local_repo in
@@ -121,7 +121,7 @@ module B = struct
         | Up_to_date _  -> false
         | Result _      -> true
       ) available_packages in
-      List.map (OpamPath.Repository.archive local_repo) (OpamPackage.Set.elements updates) in
+      List.rev_map (OpamPath.Repository.archive local_repo) (OpamPackage.Set.elements updates) in
     let (++) = OpamFilename.Set.union in
     let updates = OpamFilename.Set.of_list archives
     ++ sync_dir OpamPath.Repository.packages_dir

@@ -125,7 +125,8 @@ let list kind dir =
       let d = Sys.readdir (Sys.getcwd ()) in
       let d = Array.to_list d in
       let l = List.filter kind d in
-      List.sort compare (List.map (Filename.concat dir) l))
+      let l = List.sort compare (List.rev_map (Filename.concat dir) l) in
+      List.rev l)
   else
     []
 
@@ -210,12 +211,12 @@ let default_env =
 let reset_env = lazy (
   let env = OpamMisc.env () in
   let env =
-    List.map (fun (k,v as c) ->
+    List.rev_map (fun (k,v as c) ->
       match k with
       | "PATH" -> k, String.concat ":" (OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir v)
       | _      -> c
     ) env in
-  let env = List.map (fun (k,v) -> k^"="^v) env in
+  let env = List.rev_map (fun (k,v) -> k^"="^v) env in
   Array.of_list env
 )
 
@@ -307,7 +308,7 @@ module Tar = struct
   let is_archive f =
     List.exists
       (fun suff -> Filename.check_suffix f suff)
-      (List.concat (List.map fst extensions))
+      (List.concat (List.rev_map fst extensions))
 
   let extract_function file =
     let command c dir =

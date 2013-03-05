@@ -532,28 +532,28 @@ module API = struct
         OpamPackage.Name.Set.of_list (OpamPackage.Name.Map.keys t.pinned)
       else
         let names =
-          List.map (OpamRepositoryName.to_string |> OpamPackage.Name.of_string) repos in
+          List.rev_map (OpamRepositoryName.to_string |> OpamPackage.Name.of_string) repos in
         OpamPackage.Name.Set.of_list (List.filter (OpamState.is_pinned t) names) in
     let pinned_packages_need_update =
       not (OpamPackage.Name.Set.is_empty pinned_packages) in
 
     let valid_repositories =
       OpamMisc.StringSet.of_list
-        (List.map OpamRepositoryName.to_string
+        (List.rev_map OpamRepositoryName.to_string
            (OpamRepositoryName.Map.keys repositories)) in
     let valid_pinned_packages =
       OpamMisc.StringSet.of_list
-        (List.map OpamPackage.Name.to_string
+        (List.rev_map OpamPackage.Name.to_string
            (OpamPackage.Name.Map.keys t.pinned)) in
     let unknown_names, not_pinned =
       if repos = [] then
         [], []
       else
         let all =
-          OpamMisc.StringSet.of_list (List.map OpamRepositoryName.to_string repos) in
+          OpamMisc.StringSet.of_list (List.rev_map OpamRepositoryName.to_string repos) in
         let valid_names =
           OpamMisc.StringSet.of_list
-            (List.map
+            (List.rev_map
                (OpamPackage.name |> OpamPackage.Name.to_string)
                (OpamPackage.Set.elements t.packages)) in
         let (--) = OpamMisc.StringSet.diff in
@@ -724,7 +724,7 @@ module API = struct
       log "installing compiler packages";
       let t = OpamState.load_state "init-2" in
       let compiler_packages = OpamState.get_compiler_packages t compiler in
-      let compiler_names = OpamPackage.Name.Set.of_list (List.map fst compiler_packages) in
+      let compiler_names = OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
       let _solution = OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
           { wish_install = [];
             wish_remove  = [];
@@ -750,7 +750,7 @@ module API = struct
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "install" in
     let atoms = OpamSolution.atoms_of_names t names in
-    let names = OpamPackage.Name.Set.of_list (List.map fst atoms) in
+    let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let pkg_skip, pkg_new =
       List.partition (fun (n,v) ->
@@ -785,7 +785,7 @@ module API = struct
     if t.installed_roots <> current_roots then (
       let diff = OpamPackage.Set.diff t.installed_roots current_roots in
       let diff = OpamPackage.Set.elements diff in
-      let diff = List.map OpamPackage.to_string diff in
+      let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
       OpamGlobals.msg
         "Adding %s to the list of installed roots.\n"
         (OpamMisc.pretty_list diff);
@@ -889,7 +889,9 @@ module API = struct
     );
 
     if autoremove || atoms <> [] then (
-      let packages = OpamPackage.Set.of_list (List.map (fun (n,_) -> OpamState.find_installed_package_by_name t n) atoms) in
+      let packages =
+        OpamPackage.Set.of_list
+          (List.rev_map (fun (n,_) -> OpamState.find_installed_package_by_name t n) atoms) in
       let universe = OpamState.universe t Depends in
       let to_remove =
         OpamPackage.Set.of_list
@@ -950,8 +952,7 @@ module API = struct
     let depends =
       let universe = OpamState.universe t Depends in
       OpamSolver.reverse_dependencies ~depopts:true ~installed:true universe reinstall in
-    let to_process =
-      List.map (fun pkg -> To_recompile pkg) (List.rev depends) in
+    let to_process = List.rev_map (fun pkg -> To_recompile pkg) depends in
     let solution = OpamSolution.apply t Reinstall (OpamSolver.sequential_solution to_process) in
     OpamSolution.check_solution solution
 

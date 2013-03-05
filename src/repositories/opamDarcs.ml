@@ -71,7 +71,7 @@ let darcs_diff local_path =
       [ "darcs" ; "changes" ; "--xml-output" ; "--summary" ; "--from-tag=opam_update" ] in
     let files = files_of_xmlchanges xml_changes in
     OpamSystem.command [ "darcs" ; "obliterate" ; "--all" ; "--from-tag=opam_update" ];
-    OpamFilename.Set.of_list (List.map OpamFilename.of_string files)
+    OpamFilename.Set.of_list (List.rev_map OpamFilename.of_string files)
   )
 
 let darcs_init address =
