@@ -933,24 +933,29 @@ let init_script t ~switch_eval ~complete =
   append "Load the opam-switch-eval script" switch_eval;
   Buffer.contents buf
 
-let create_init_scripts t ~switch_eval ~complete =
+let update_init_scripts t ~global =
+  let init_script =
+    match global with
+    | None   -> []
+    | Some o -> [init_sh,
+                 init_script t ~switch_eval:o.switch_eval ~complete:o.complete] in
   let scripts = [
     (complete_sh   , OpamScript.complete);
     (complete_zsh  , OpamScript.complete_zsh);
     (switch_eval_sh, OpamScript.switch_eval);
     (variables_sh  , string_of_env_update t (env_updates t));
-    (init_sh       , init_script t ~switch_eval ~complete);
-  ] in
-  let always_overwrite = [
-    variables_sh;
+  ] @ init_script
+  in
+  let overwrite = [
     init_sh;
+    variables_sh;
   ] in
   let updated = ref false in
   let write (name, body) =
     let file = OpamPath.init t.root // name in
     let needs_update =
       if OpamFilename.exists file
-      && List.mem name always_overwrite then
+      && List.mem name overwrite then
         let current = OpamFilename.read file in
         body <> current
       else
@@ -962,14 +967,17 @@ let create_init_scripts t ~switch_eval ~complete =
     ) in
   List.iter write scripts;
   let pretty_init_sh = OpamFilename.prettify (OpamPath.init t.root // init_sh) in
-  if !updated then
-    OpamGlobals.msg
-      "  Updating %s: [auto-completion: %b] [opam-switch-eval: %b].\n"
-      pretty_init_sh
-      (complete <> None)
-      switch_eval
-  else
-    OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_sh
+  match global with
+  | None   -> ()
+  | Some o ->
+    if !updated then
+      OpamGlobals.msg
+        "  Updating %s: [auto-completion: %b] [opam-switch-eval: %b].\n"
+        pretty_init_sh
+        (o.complete <> None)
+        o.switch_eval
+    else
+      OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_sh
 
 let status_of_init_sh t =
   let init_sh = OpamPath.init t.root // init_sh in
@@ -984,7 +992,7 @@ let status_of_init_sh t =
     None
 
 let update_env_variables t =
-  create_init_scripts t ~switch_eval:false ~complete:None
+  update_init_scripts t ~global:None
 
 let dot_profile_needs_update t ~dot_profile =
   if OpamFilename.exists dot_profile then (
@@ -999,9 +1007,9 @@ let dot_profile_needs_update t ~dot_profile =
       `no
     else if mem_pattern_in_string ~pattern:pattern2 ~string:body then
       `no
-    else if mem_pattern_in_string ~pattern:pattern3 ~string:body then (
+    else if mem_pattern_in_string ~pattern:pattern3 ~string:body then
       `otherroot
-    ) else
+    else
       `yes
   ) else
     `no
@@ -1039,10 +1047,10 @@ let update_setup t ~dot_profile ~ocamlinit ~global =
     update_dot_profile t ~dot_profile;
   );
   match global with
-  | None -> ()
-  | Some { complete; switch_eval } ->
+  | None   -> ()
+  | Some _ ->
     OpamGlobals.msg "Gloabal configuration:\n";
-    create_init_scripts t ~switch_eval ~complete
+    update_init_scripts t ~global
 
 let display_setup t ~dot_profile =
   let print (k,v) = OpamGlobals.msg "  %-25s %20s\n" k v in
@@ -1054,8 +1062,8 @@ let display_setup t ~dot_profile =
       if ocamlinit_needs_update () then not_set else ok in
     let dot_profile_status =
       match dot_profile_needs_update t ~dot_profile with
-      | `no        -> not_set
-      | `yes       -> ok
+      | `no        -> ok
+      | `yes       -> not_set
       | `otherroot -> error in
     [ ("~/.ocamlinit"                   , ocamlinit_status);
       (OpamFilename.prettify dot_profile, dot_profile_status); ]
