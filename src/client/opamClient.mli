@@ -21,7 +21,9 @@ open OpamTypes
 module API: sig
 
   (** Initialize the client a consistent state. *)
-  val init: repository -> compiler -> jobs:int -> update_config:[`sh|`zsh|`ask] option -> unit
+  val init: repository -> compiler -> jobs:int ->
+    update_config:[`sh|`zsh|`ask] option -> dot_profile:filename ->
+    unit
 
   (** Display all available packages that matches any of the
      regexps. *)

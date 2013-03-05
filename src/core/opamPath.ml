@@ -51,7 +51,7 @@ let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 let repo_index t = t / "repo" // "index"
 
-let init  t = t / "init"
+let init  t = t / "opam-init"
 
 module Switch = struct
 

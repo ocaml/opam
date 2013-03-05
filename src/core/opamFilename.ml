@@ -271,7 +271,7 @@ let prettify_string s =
     match OpamMisc.remove_prefix ~prefix s with
     | None        -> None
     | Some suffix -> Some (Filename.concat short suffix) in
-  match aux ~short:"<opam>" ~prefix:!OpamGlobals.root_dir with
+  match aux ~short:"<root>" ~prefix:!OpamGlobals.root_dir with
   | Some p -> p
   | None   ->
     match aux ~short:"~" ~prefix:(OpamMisc.getenv "HOME") with

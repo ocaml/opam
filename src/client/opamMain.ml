@@ -193,6 +193,13 @@ let installed_roots_flag =
 let zsh_flag =
   mk_flag  ["z";"zsh"] "Use zsh-compatible mode for configuring OPAM."
 
+let dot_profile_flag =
+  let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
+  let dot_profile = OpamFilename.of_string dot_profile in
+  mk_opt ["dot-profile"]
+    "FILENAME" "Name of the configuration file to update (if necessary)."
+    filename dot_profile
+
 let repo_kind_flag =
   let kinds = [
     (* main kinds *)
@@ -339,27 +346,27 @@ let init =
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
     Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
-  let no_config   = mk_flag ["n";"no-config"]     "Do not update the global configuration of OPAM." in
-  let with_config = mk_flag ["u";"update-config"] "Update the global configuration of OPAM." in
+  let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
+  let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
-      no_config with_config zsh =
+      no_setup auto_setup zsh dot_profile =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
-      if not no_config then
+      if no_setup then
         None
-      else if with_config then
+      else if auto_setup then
         Some (if zsh then `zsh else `sh)
       else
         Some `ask in
-    Client.init repository compiler ~jobs ~update_config in
+    Client.init repository compiler ~jobs ~update_config ~dot_profile in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
-    $no_config $with_config $zsh_flag),
+    $no_setup $auto_setup $zsh_flag $dot_profile_flag),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -489,7 +496,7 @@ let config =
   let profile_doc     = "Modify ~/.profile to setup an OPAM-friendly environment when starting a new shell." in
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
   let no_eval_doc     = "Do not install `opam-switch-eval` to switch & eval using a single command." in
-  let dot_profile_doc = "The configuration file to update (default is ~/.profile)." in
+  let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
   let list_doc        = "List the current configuration." in
   let profile         = mk_flag ["profile"]        profile_doc in
   let ocamlinit       = mk_flag ["ocamlinit"]      ocamlinit_doc in
@@ -499,11 +506,6 @@ let config =
   let user            = mk_flag ["u";"user"]       user_doc in
   let global          = mk_flag ["g";"global"]     global_doc in
   let list            = mk_flag ["l";"list"]       list_doc in
-  let dot_profile =
-    let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
-    mk_opt ["dot-profile"]
-      "FILENAME" "Name of the configuration file to update"
-      Arg.string dot_profile in
   let env    =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
@@ -537,7 +539,6 @@ let config =
         | true, false -> Some `sh
         | true, true  -> Some `zsh
         | _           -> None in
-      let dot_profile = OpamFilename.of_string dot_profile in
       if list then
         Client.CONFIG.setup_list dot_profile
       else if profile || ocamlinit || complete <> None || switch_eval then
@@ -546,18 +547,22 @@ let config =
         Client.CONFIG.setup ~dot_profile ~ocamlinit ~global
       else
         OpamGlobals.msg
-          "Available options:\n\
-          \  -l,--list            %s\n\
-          \  -a,--all             %s\n\
-           User configuration:\n\
-          \  -u,--user            %s\n\
-          \  --ocamlinit          %s\n\
-          \  --profile            %s\n\
-          \  --dot-profile FILE   %s\n\n\
-           Global configuration:\n\
-          \  -g,--global          %s\n\
-          \  --no-complete        %s\n\
-          \  --no-switch-eval     %s"
+          "usage: opam config setup [options]\n\
+           \n\
+           Main options\n\
+          \    -l, --list           %s\n\
+          \    -a, --all            %s\n\
+           \n\
+           User configuration\n\
+          \    -u, --user           %s\n\
+          \    --ocamlinit          %s\n\
+          \    --profile            %s\n\
+          \    --dot-profile FILE   %s\n\
+           \n\
+           Global configuration\n\
+          \    -g,--global          %s\n\
+          \    --no-complete        %s\n\
+          \    --no-switch-eval     %s\n\n"
           list_doc all_doc
           user_doc ocamlinit_doc profile_doc dot_profile_doc
           global_doc no_complete_doc no_eval_doc
@@ -576,7 +581,7 @@ let config =
 
   Term.(pure config
     $global_options $command $env $is_rec $csh $zsh_flag
-    $dot_profile $list $all $global $user
+    $dot_profile_flag $list $all $global $user
     $profile $ocamlinit $no_complete $no_switch_eval
     $params),
   term_info "config" ~doc ~man

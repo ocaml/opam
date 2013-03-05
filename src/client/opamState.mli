@@ -109,7 +109,7 @@ val get_opam_env: state -> env
 val add_to_env: state -> env -> (string * string * string) list -> env
 
 (** Print a warning if the environment is not set-up properly. *)
-val print_env_warning: state -> eval:bool -> unit
+val print_env_warning: state -> eval:bool -> dot_profile:filename option -> unit
 
 (** {2 Initialisation} *)
 

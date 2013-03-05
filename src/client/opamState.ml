@@ -854,28 +854,6 @@ let get_full_env t =
   let env0 = OpamMisc.env () in
   add_to_env t env0 (env_updates t)
 
-let print_env_warning t ~eval =
-  match
-    List.filter
-      (fun (s, v) ->
-        Some v <> try Some (OpamMisc.getenv s) with _ -> None)
-      (get_opam_env t)
-  with
-    | [] -> () (* every variables are correctly set *)
-    | _  ->
-      if eval then
-        OpamGlobals.msg
-          "To complete the configuration of OPAM, you need to run:\n\
-          \n\
-          \    eval `opam config env`\n"
-      else
-        OpamGlobals.msg
-          "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\
-           To complete the configuration of OPAM, you need to run:\n\
-          \n\
-          \    %s\n"
-          (source t init_sh)
-
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in
   Re.execp pattern string
@@ -1012,19 +990,34 @@ let dot_profile_needs_update t ~dot_profile =
   if OpamFilename.exists dot_profile then (
     let body = OpamFilename.read dot_profile in
     let pattern1 = "opam config" in
-    let pattern2 = source t init_sh in
-    not (mem_pattern_in_string ~pattern:pattern1 ~string:body)
-    &&
-    not (mem_pattern_in_string ~pattern:pattern2 ~string:body)
+    let pattern2 = OpamFilename.to_string (OpamPath.init t.root // init_sh) in
+    let pattern3 =
+      match OpamMisc.remove_prefix ~prefix:!OpamGlobals.root_dir pattern2 with
+      | None   -> assert false
+      | Some s -> s in
+    if mem_pattern_in_string ~pattern:pattern1 ~string:body then
+      `no
+    else if mem_pattern_in_string ~pattern:pattern2 ~string:body then
+      `no
+    else if mem_pattern_in_string ~pattern:pattern3 ~string:body then (
+      `otherroot
+    ) else
+      `yes
   ) else
-    true
+    `no
 
 let update_dot_profile t ~dot_profile =
   match dot_profile with
   | None             -> ()
   | Some dot_profile ->
     let pretty_dot_profile = OpamFilename.prettify dot_profile in
-    if dot_profile_needs_update t ~dot_profile then (
+    match dot_profile_needs_update t ~dot_profile with
+    | `no        -> OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
+    | `otherroot ->
+      OpamGlobals.msg
+        "  %s is already configured for an other OPAM root.\n"
+        pretty_dot_profile
+    | `yes       ->
       let body =
         if OpamFilename.exists dot_profile then
           OpamFilename.read dot_profile
@@ -1033,14 +1026,11 @@ let update_dot_profile t ~dot_profile =
       OpamGlobals.msg "  Updating %s.\n" pretty_dot_profile;
       let body =
         Printf.sprintf
-          "%s\n\
+          "%s\n\n\
            # OPAM configuration\n\
            %s\n"
-          body (source t init_sh) in
+          (OpamMisc.strip body) (source t init_sh) in
       OpamFilename.write dot_profile body
-    ) else (
-      OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
-    )
 
 let update_setup t ~dot_profile ~ocamlinit ~global =
   if ocamlinit || dot_profile <> None then (
@@ -1058,11 +1048,15 @@ let display_setup t ~dot_profile =
   let print (k,v) = OpamGlobals.msg "  %-25s %20s\n" k v in
   let not_set = "[NOT SET]" in
   let ok      = "[OK]" in
+  let error   = "[ERROR]" in
   let user_setup =
     let ocamlinit_status =
       if ocamlinit_needs_update () then not_set else ok in
     let dot_profile_status =
-      if dot_profile_needs_update t ~dot_profile then not_set else ok in
+      match dot_profile_needs_update t ~dot_profile with
+      | `no        -> not_set
+      | `yes       -> ok
+      | `otherroot -> error in
     [ ("~/.ocamlinit"                   , ocamlinit_status);
       (OpamFilename.prettify dot_profile, dot_profile_status); ]
   in
@@ -1101,10 +1095,12 @@ let update_setup_interactive t ~global =
     let dot_profile =
       let file =
         match read "%sDo you want to update your shell configuration file ? [default: ~/.profile]" (stats ()) with
+        | Some "y"
+        | Some "Y"
         | None   -> Filename.concat (OpamMisc.getenv "HOME") ".profile"
         | Some s -> s in
       if not (Sys.file_exists file)
-      && not (confirm "  %s does not exist, do you want to create it ?" file) then
+      && not (confirm "  %S does not exist, do you want to create it ?" file) then
         None
       else
         Some (OpamFilename.of_string file) in
@@ -1123,6 +1119,44 @@ let update_setup_interactive t ~global =
       if global then Some { complete; switch_eval } else None in
     update_setup t ~dot_profile ~ocamlinit ~global
   )
+
+let print_env_warning t ~eval ~dot_profile =
+  match
+    List.filter
+      (fun (s, v) ->
+        Some v <> try Some (OpamMisc.getenv s) with _ -> None)
+      (get_opam_env t)
+  with
+    | [] -> () (* every variables are correctly set *)
+    | _  ->
+      let init = OpamPath.init t.root // init_sh in
+      let eval_string =
+        if eval || not (OpamFilename.exists init) then
+          let root =
+            if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
+              Printf.sprintf " --root=%s" OpamGlobals.default_opam_dir
+            else
+              "" in
+          Printf.sprintf "eval `opam config env%s`\n" root
+        else
+          source t init_sh in
+      let profile_string =
+        match dot_profile with
+        | None             -> ""
+        | Some dot_profile ->
+          if dot_profile_needs_update t ~dot_profile = `yes then
+            Printf.sprintf "And add it to your %s.\n\n" (OpamFilename.prettify dot_profile)
+          else
+            "" in
+      let line = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
+      OpamGlobals.msg
+        "\n%s\n\
+         \n\
+         To complete the configuration of OPAM, you need to run:\n\
+         \n\
+        \    %s\n\
+         %s%s\n\n"
+        line eval_string profile_string line
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package

@@ -591,7 +591,7 @@ module API = struct
     end;
     OpamSolution.check_solution solution_found
 
-  let init repo compiler ~jobs ~update_config =
+  let init repo compiler ~jobs ~update_config ~dot_profile =
     log "INIT %s" (OpamRepository.to_string repo);
     let root = OpamPath.default () in
     let config_f = OpamPath.config root in
@@ -651,17 +651,16 @@ module API = struct
             wish_remove  = [];
             wish_upgrade = compiler_packages } in
 
+      let dot_profile = Some dot_profile in
       begin match update_config with
         | Some `ask  -> OpamState.update_setup_interactive t ~global:true
         | Some (`sh|`zsh as shell) ->
-          let dot_profile =
-            Some (OpamFilename.of_string (Filename.concat (OpamMisc.getenv "HOME") ".profile")) in
           let complete = Some shell in
           let global = Some { complete; switch_eval = true } in
           OpamState.update_setup t ~dot_profile ~ocamlinit:true ~global
         | None       -> ()
       end;
-      OpamState.print_env_warning ~eval:false t
+      OpamState.print_env_warning t ~eval:false ~dot_profile
 
     with e ->
       if not !OpamGlobals.debug then
