@@ -1,4 +1,5 @@
 0.9.5 [trunk]
+* Add `opam config exec "CMD ARG1 ... ARGn" --switch=SWITCH` to execute a command in a subshell
 * Improve the behaviour of `opam update` wrt. pinned packages
 * Change the default external solver criteria (only useful if you have aspcud installed on your machine)
 * Add support for global and user configuration for OPAM
