@@ -452,7 +452,7 @@ let config_doc = "Display configuration options for packages."
 let config =
   let doc = config_doc in
   let commands = [
-    ["env"]     , `env     , "returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
+    ["env"]     , `env     , "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
                               and CAML_LD_LIBRARY_PATH according to the current selected \
                               compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
@@ -476,10 +476,10 @@ let config =
                               which is either $(b,\"true\") or $(b,\"false\"), and $(i,pkg:enable) which is \
                               either $(b,\"enable\") or $(b,\"disable\"). Finally, OPAM will look into \
                               its global and package config files to find whether these variables exist.";
-    ["list"]    , `list    , "returns the list of all variables defined in the listed packages. It is possible \
+    ["list"]    , `list    , "Return the list of all variables defined in the listed packages. It is possible \
                               to filter the list of variables by giving package names (use $(b,globals) to get \
                               the list of global variables). No parameter means displaying all the variables.";
-    ["subst"]   , `subst   , "substitutes variables in the given files. The strings $(i,%{var}%) are \
+    ["subst"]   , `subst   , "Substitute variables in the given files. The strings $(i,%{var}%) are \
                               replaced by the value of the variable $(i,var) (see the documentation associated \
                               to $(b,opam config var)).";
     ["includes"], `includes, "returns include options.";
