@@ -43,3 +43,6 @@ val setup:
 
 (** Display the global and user configuration for OPAM. *)
 val setup_list: filename -> unit
+
+(** Execute a command in a subshell *)
+val exec: string -> unit

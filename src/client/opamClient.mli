@@ -77,6 +77,9 @@ module API: sig
     (** Display global and user informations about OPAM setup. *)
     val setup_list: filename -> unit
 
+    (** Execute a command in a subshell with the right environment variables. *)
+    val exec: string -> unit
+
     (** Display includes files. *)
     val includes: is_rec:bool -> name list -> unit
 

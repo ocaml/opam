@@ -1050,6 +1050,9 @@ module SafeAPI = struct
     let setup_list dot_profile =
       read_lock (fun () -> API.CONFIG.setup_list dot_profile)
 
+    let exec command =
+      read_lock (fun () -> API.CONFIG.exec command)
+
     let list names =
       read_lock (fun () -> API.CONFIG.list names)
 

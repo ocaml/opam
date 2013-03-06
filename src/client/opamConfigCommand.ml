@@ -275,3 +275,16 @@ let setup_list dot_profile =
   log "config-setup-list";
   let t = OpamState.load_state "config-setup-list" in
   OpamState.display_setup t ~dot_profile
+
+let exec command =
+  log "config-exex command=%s" command;
+  let t = OpamState.load_state "config-exec" in
+  let cmd, args =
+    match OpamMisc.split command ' ' with
+    | []        -> OpamSystem.internal_error "Empty command"
+    | h::_ as l -> h, Array.of_list l in
+  let env =
+    let env = OpamState.get_full_env t in
+    let env = List.rev_map (fun (k,v) -> k^"="^v) env in
+    Array.of_list env in
+  Unix.execvpe cmd args env

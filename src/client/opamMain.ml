@@ -465,7 +465,10 @@ let config =
                               to setup the global configuration and $(b,opam config setup --user) to setup the \
                               user one. To modify both the global and user configuration, use $(b,opam config \
                               setup --all).";
-    ["var"]     , `var     , "returns the value associated with the given variable. If the variable \
+    ["exec"]    , `exec    , "Execute the shell script given in parameter with the correct environment variables. \
+                              This option can be used to cross-compile between switches using \
+                              $(b,opam config exec \"CMD ARG1 ... ARGn\" --switch=SWITCH)";
+    ["var"]     , `var     , "Return the value associated with the given variable. If the variable \
                               contains a colon such as $(i,pkg:var), then the left element will be \
                               understood as the package in which the variable is defined. \
                               The variable resolution is done as follows: first, OPAM will check whether \
@@ -578,8 +581,15 @@ let config =
           list_doc all_doc
           user_doc ocamlinit_doc profile_doc dot_profile_doc
           global_doc no_complete_doc no_eval_doc
-    | Some `list     -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
-    | Some `var      ->
+    | Some `exec ->
+      let usage = "Usage: 'opam config exec \"<CMD> <ARG1> ... <ARGn>\"'" in
+      begin match params with
+        | []  -> OpamGlobals.error_and_exit "Missing paramater. %s" usage
+        | [c] -> Client.CONFIG.exec c
+        | _   -> OpamGlobals.error_and_exit "Too many paramaters. %s" usage
+      end;
+    | Some `list -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
+    | Some `var  ->
       if params = [] then
         OpamGlobals.error_and_exit "Missing paramater. Usage: 'opam config var <VARIABLE>'"
       else
