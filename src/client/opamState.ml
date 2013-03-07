@@ -505,6 +505,7 @@ let check_marshaled_file file =
   really_input ic header 0 Marshal.header_size;
   let expected_size = Marshal.total_size header 0 in
   let current_size = in_channel_length ic in
+  close_in ic;
   if not (expected_size = current_size) then (
     OpamGlobals.error "The local-state cache is corrupted, removing it.";
     OpamSystem.internal_error "Corrupted cache";
