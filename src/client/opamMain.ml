@@ -191,7 +191,13 @@ let installed_roots_flag =
   mk_flag ["installed-roots"] "Display only the installed roots."
 
 let zsh_flag =
-  mk_flag  ["z";"zsh"] "Use zsh-compatible mode for configuring OPAM."
+  mk_flag ["zsh"] "Use zsh-compatible mode for configuring OPAM."
+
+let csh_flag =
+  mk_flag ["csh"] "Use csh-compatible mode for configuring OPAM."
+
+let sh_flag =
+  mk_flag ["csh"] "Use sh-compatible mode for configuring OPAM."
 
 let dot_profile_flag =
   let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
@@ -356,23 +362,25 @@ let init =
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
-      no_setup auto_setup zsh dot_profile =
+      no_setup auto_setup sh csh zsh dot_profile =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = { repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
-      if no_setup then
-        None
-      else if auto_setup then
-        Some (if zsh then `zsh else `sh)
-      else
-        Some `ask in
-    Client.init repository compiler ~jobs ~update_config ~dot_profile in
+      if no_setup then `no
+      else if auto_setup then `yes
+      else `ask in
+    let shell =
+      if sh then `sh
+      else if csh then `csh
+      else if zsh then `zsh
+      else OpamMisc.guess_shell_compat () in
+    Client.init repository compiler ~jobs shell ~dot_profile ~update_config in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
-    $no_setup $auto_setup $zsh_flag $dot_profile_flag),
+    $no_setup $auto_setup $sh_flag $csh_flag $zsh_flag $dot_profile_flag),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -503,7 +511,6 @@ let config =
 
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
   let is_rec      = mk_flag ["R";"rec"]     "Recursive query." in
-  let csh         = mk_flag ["c";"csh"]     "Use csh mode." in
   let all_doc         = "Enable all the global and user configuration options." in
   let global_doc      = "Enbale all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
@@ -525,7 +532,7 @@ let config =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
   let config global_options
-      command env is_rec csh zsh
+      command env is_rec sh csh zsh
       dot_profile list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
@@ -550,16 +557,18 @@ let config =
       let ocamlinit   = user  || ocamlinit in
       let complete    = global && not no_complete in
       let switch_eval = global && not no_switch_eval in
-      let complete = match complete, zsh with
-        | true, false -> Some `sh
-        | true, true  -> Some `zsh
-        | _           -> None in
+      let shell =
+        if sh then `sh
+        else if csh then `csh
+        else if zsh then `zsh
+        else OpamMisc.guess_shell_compat () in
       if list then
         Client.CONFIG.setup_list dot_profile
-      else if profile || ocamlinit || complete <> None || switch_eval then
+      else if profile || ocamlinit || complete || switch_eval then
         let dot_profile = if profile then Some dot_profile else None in
+        let user   = if user then Some { shell; ocamlinit; dot_profile } else None in
         let global = if global then Some { complete; switch_eval } else None in
-        Client.CONFIG.setup ~dot_profile ~ocamlinit ~global
+        Client.CONFIG.setup user global
       else
         OpamGlobals.msg
           "usage: opam config setup [options]\n\
@@ -567,6 +576,7 @@ let config =
            Main options\n\
           \    -l, --list           %s\n\
           \    -a, --all            %s\n\
+          \    --sh,--csh,--zsh     Force the configuration mode to a given shell.\n\
            \n\
            User configuration\n\
           \    -u, --user           %s\n\
@@ -602,7 +612,7 @@ let config =
     | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
 
   Term.(pure config
-    $global_options $command $env $is_rec $csh $zsh_flag
+    $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag
     $dot_profile_flag $list $all $global $user
     $profile $ocamlinit $no_complete $no_switch_eval
     $params),

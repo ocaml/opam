@@ -212,3 +212,6 @@ val terminal_columns : unit -> int
 
 (** Get the output of [uname -s] *)
 val uname_s: unit -> string option
+
+(** Guess the shell compat-mode *)
+val guess_shell_compat: unit -> [`sh|`csh|`zsh]

@@ -21,8 +21,9 @@ open OpamTypes
 module API: sig
 
   (** Initialize the client a consistent state. *)
-  val init: repository -> compiler -> jobs:int ->
-    update_config:[`sh|`zsh|`ask] option -> dot_profile:filename ->
+  val init:
+    repository -> compiler -> jobs:int ->
+    shell -> dot_profile:filename -> update_config:[`ask|`yes|`no] ->
     unit
 
   (** Display all available packages that matches any of the
@@ -69,10 +70,7 @@ module API: sig
     val env: csh:bool -> unit
 
     (** Global and user setup of OPAM. *)
-    val setup:
-      dot_profile:filename option -> ocamlinit:bool ->
-      global:global_option option ->
-      unit
+    val setup: user_config option -> global_config option -> unit
 
     (** Display global and user informations about OPAM setup. *)
     val setup_list: filename -> unit

@@ -349,10 +349,21 @@ type config = {
   conf_options: OpamVariable.Section.Full.t list;
 }
 
+
+(** Shell compatibility modes *)
+type shell = [`csh|`zsh|`sh]
+
 (** Global configuration option *)
-type global_option = {
-  complete   : [`sh|`zsh] option;
+type global_config = {
+  complete   : bool;
   switch_eval: bool;
+}
+
+(** User configuration option *)
+type user_config = {
+  shell      : shell;
+  ocamlinit  : bool;
+  dot_profile: filename option;
 }
 
 (** {2 Filtered commands} *)

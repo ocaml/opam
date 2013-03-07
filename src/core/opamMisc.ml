@@ -355,3 +355,13 @@ let uname_s () =
       (fun ic -> Some (strip (input_line ic)))
   with _ ->
     None
+
+let guess_shell_compat () =
+  try
+    match Filename.basename (getenv "SHELL") with
+    | "tcsh"
+    | "csh" -> `csh
+    | "zsh" -> `zsh
+    | _     -> `sh
+  with _ ->
+    `sh

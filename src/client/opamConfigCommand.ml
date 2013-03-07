@@ -266,10 +266,10 @@ let variable v =
   let contents = OpamState.contents_of_variable t v in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
-let setup ~dot_profile ~ocamlinit ~global =
+let setup user global =
   log "config-setup";
   let t = OpamState.load_state "config-setup" in
-  OpamState.update_setup t ~dot_profile ~ocamlinit ~global
+  OpamState.update_setup t user global
 
 let setup_list dot_profile =
   log "config-setup-list";

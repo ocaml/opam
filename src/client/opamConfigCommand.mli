@@ -36,10 +36,7 @@ val config: config -> unit
 val subst: basename list -> unit
 
 (** Update the global and user configuration to use OPAM. *)
-val setup:
-  dot_profile:filename option -> ocamlinit:bool ->
-  global:global_option option ->
-  unit
+val setup: user_config option -> global_config option -> unit
 
 (** Display the global and user configuration for OPAM. *)
 val setup_list: filename -> unit
