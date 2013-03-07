@@ -345,7 +345,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   (* Removing the shared dir if it is empty, overwise keep files for
      future installation. TODO: is it the expected semantics ? *)
   let share = OpamPath.Switch.share t.root t.switch name in
-  (match OpamFilename.list_files share, OpamFilename.list_dirs share with
+  (match OpamFilename.rec_files share, OpamFilename.rec_dirs share with
   | [], [] -> OpamFilename.rmdir share
   | _      ->
     OpamGlobals.msg

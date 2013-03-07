@@ -18,8 +18,9 @@
 open OpamState.Types
 open OpamTypes
 
-(** Update the repository index. *)
-val update_index: t -> unit
+(** Update the repository index. Return the new (package -> repo)
+   map. *)
+val update_index: t -> repository package_map
 
 (** List the available repositories. *)
 val list: short:bool -> unit

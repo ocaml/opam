@@ -147,47 +147,32 @@ let update_packages t ~show_packages repositories pinned_packages =
   let pinned_updated = update_pinned_packages t pinned_packages in
 
   (* then update $opam/repo/index *)
-  OpamRepositoryCommand.update_index t;
+  let map = OpamRepositoryCommand.update_index t in
   let t = OpamState.load_state ~save_cache:false "update-packages-1" in
   let updated =
-    let updated = ref [] in
-    OpamPackage.Name.Map.fold (fun n repo_s accu ->
-      (* we do not try to update pinned packages *)
-      if OpamPackage.Name.Map.mem n t.pinned then
-        accu
+    let all_updated_files = ref [] in
+    let read_updated_files repo =
+      let r = OpamPath.Repository.create t.root repo.repo_name in
+      if List.mem_assoc r !all_updated_files then
+        List.assoc r !all_updated_files
       else (
-        let all_versions = ref OpamPackage.Version.Set.empty in
-        List.fold_left (fun accu r ->
-          let repo_p = OpamPath.Repository.create t.root r in
-          let available_versions = OpamRepository.versions repo_p n in
-          let new_versions = OpamPackage.Version.Set.diff available_versions !all_versions in
-          log "repo=%s n=%s new_versions= %s"
-            (OpamRepositoryName.to_string r)
-            (OpamPackage.Name.to_string n)
-            (OpamPackage.Version.Set.to_string new_versions);
-          if not (OpamPackage.Version.Set.is_empty new_versions) then (
-            all_versions := OpamPackage.Version.Set.union !all_versions new_versions;
-            let all_updated =
-              if List.mem_assoc repo_p !updated then
-                List.assoc repo_p !updated
-              else (
-                let u = OpamFile.Updated.safe_read (OpamPath.Repository.updated repo_p) in
-                updated := (repo_p, u) :: !updated;
-                u
-              ) in
-            let updated =
-              OpamPackage.Set.filter (fun nv ->
-                OpamPackage.name nv = n && OpamPackage.Version.Set.mem (OpamPackage.version nv) new_versions
-              ) all_updated in
-            if OpamRepositoryName.Map.exists (fun n _ -> n = r) repositories then
-              OpamPackage.Set.union updated accu
-            else
-              accu
-          ) else
-            accu
-        ) accu repo_s
+        let u = OpamFile.Updated.safe_read (OpamPath.Repository.updated r) in
+        all_updated_files := (r, u) :: !all_updated_files;
+        u
+      ) in
+    OpamPackage.Map.fold (fun nv r updated ->
+      let name = OpamPackage.name nv in
+      if OpamPackage.Name.Map.mem name t.pinned then
+        (* we will check for updates of pinned packages below. *)
+        updated
+      else (
+        let updated_files = read_updated_files r in
+        if OpamPackage.Set.mem nv updated_files then
+          OpamPackage.Set.add nv updated
+        else
+          updated
       )
-    ) t.repo_index OpamPackage.Set.empty in
+    ) map OpamPackage.Set.empty in
 
   if show_packages then
     print_updated_packages t updated pinned_updated;
@@ -972,14 +957,14 @@ module API = struct
           (OpamState.string_of_repositories t.repositories) in
     let repo_p = OpamPath.Repository.create t.root repo.repo_name in
     let upload_repo = OpamPath.Repository.upload_dir repo_p in
-    let upload_opam = OpamPath.Repository.opam upload_repo nv in
-    let upload_descr = OpamPath.Repository.descr upload_repo nv in
+    let upload_opam = OpamPath.Repository.opam upload_repo None nv in
+    let upload_descr = OpamPath.Repository.descr upload_repo None nv in
     let upload_archives = OpamPath.Repository.archive upload_repo nv in
     OpamFilename.copy ~src:upload.upl_opam ~dst:upload_opam;
     OpamFilename.copy ~src:upload.upl_descr ~dst:upload_descr;
     OpamFilename.copy ~src:upload.upl_archive ~dst:upload_archives;
     OpamRepository.upload repo;
-    OpamFilename.rmdir (OpamPath.Repository.package upload_repo nv);
+    OpamFilename.rmdir (OpamPath.Repository.package upload_repo None nv);
     OpamFilename.remove (OpamPath.Repository.archive upload_repo nv)
 
 

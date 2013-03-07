@@ -100,13 +100,16 @@ val copy_files: repository_root -> package -> OpamFilename.Set.t
 val make_archive: ?gener_digest:bool -> ?local_path:dirname -> package -> unit
 
 (** Get the list of packages *)
-val packages: repository_root -> package_set
+val packages: repository_root -> string name_map * package_set
 
 (** Get the list of compilers *)
 val compilers: repository_root -> compiler_set
 
-(** Get the available versions for a given compiler *)
-val versions: repository_root -> name -> version_set
-
 (** Get the external files associated to a package *)
 val files: repository_root -> package -> filename_set
+
+(** Check if a package has a given prefix in the repository *)
+val prefix: repository_root -> package -> string option
+
+(** Find an eventual prefix in a map *)
+val find_prefix: string name_map -> package -> string option

@@ -67,6 +67,34 @@ end
 
 module X = struct
 
+module Prefix = struct
+
+  let internal = "prefix"
+
+  type t = string name_map
+
+  let empty = OpamPackage.Name.Map.empty
+
+  let of_string _ s =
+    let lines = Lines.of_string s in
+    List.fold_left (fun map -> function
+      | []          -> map
+      | [nv;prefix] -> OpamPackage.Name.Map.add (OpamPackage.Name.of_string nv) prefix map
+      | s ->
+        OpamGlobals.error_and_exit
+          "%S is not a valid prefix line"
+          (String.concat " " s)
+    ) OpamPackage.Name.Map.empty lines
+
+  let to_string _ s =
+    let lines =
+      OpamPackage.Name.Map.fold (fun nv prefix l ->
+        [OpamPackage.Name.to_string nv; prefix] :: l
+      ) s [] in
+    Lines.to_string lines
+
+end
+
 module Filenames = struct
 
   let internal = "filenames"
@@ -1524,3 +1552,7 @@ module Filenames = struct
   include Make(Filenames)
 end
 
+module Prefix = struct
+  include Prefix
+  include Make(Prefix)
+end

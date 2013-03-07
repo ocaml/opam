@@ -30,8 +30,11 @@ val rmdir: Dir.t -> unit
 (** Create a directory *)
 val mkdir: Dir.t -> unit
 
+(** List the sub-directory recursively *)
+val rec_dirs: Dir.t -> Dir.t list
+
 (** List the sub-directory *)
-val list_dirs: Dir.t -> Dir.t list
+val sub_dirs: Dir.t -> Dir.t list
 
 (** Evaluate a function in a given directory *)
 val in_dir: Dir.t -> (unit -> 'a) -> 'a
@@ -115,7 +118,7 @@ val add_extension: t -> string -> t
 val chop_extension: t -> t
 
 (** List all the filenames, recursively *)
-val list_files: Dir.t -> t list
+val rec_files: Dir.t -> t list
 
 (** Apply a function on the contents of a file *)
 val with_contents: (string -> 'a) -> t -> 'a

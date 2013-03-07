@@ -57,7 +57,7 @@ let of_filename =
 let list t =
   log "list dir=%s" (OpamFilename.Dir.to_string t);
   if OpamFilename.exists_dir t then (
-    let files = OpamFilename.list_files t in
+    let files = OpamFilename.rec_files t in
     let files = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in
     let l = List.map of_filename files in
     Set.of_list l

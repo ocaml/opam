@@ -419,5 +419,8 @@ module Urls_txt: IO_FILE with type t = file_attribute_set
 (** List of filenames *)
 module Filenames: IO_FILE with type t = filename_set
 
+(** Prefix of package directories *)
+module Prefix: IO_FILE with type t = string name_map
+
 (** Display statistics about file access. *)
 val print_stats: unit -> unit

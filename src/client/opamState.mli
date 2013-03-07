@@ -164,7 +164,8 @@ val find_repository_name: state -> repository_name -> repository
 val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
 (** Build a map which says in which repository the latest metadata for
-    a given package is. *)
+    a given package is. This function is *very* costly (need to scan all the
+   files in the repositories, so don't abuse). *)
 val package_repository_map: state -> repository package_map
 
 (** Build a map which says in which repository the latest metadata for

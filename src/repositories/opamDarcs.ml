@@ -160,7 +160,7 @@ module B = struct
 
   let upload_dir ~address:_ dirname =
     log "upload_dir";
-    let files = OpamFilename.list_files dirname in
+    let files = OpamFilename.rec_files dirname in
     try
       OpamSystem.commands [
         [ "darcs"; "add"; OpamFilename.Dir.to_string dirname; ];

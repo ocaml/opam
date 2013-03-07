@@ -50,7 +50,11 @@ let cwd () =
 let mkdir dirname =
   OpamSystem.mkdir (Dir.to_string dirname)
 
-let list_dirs d =
+let rec_dirs d =
+  let fs = OpamSystem.rec_dirs (Dir.to_string d) in
+  List.rev (List.rev_map Dir.of_string fs)
+
+let sub_dirs d =
   let fs = OpamSystem.directories_with_links (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)
 
@@ -81,7 +85,7 @@ let copy_dir ~src ~dst =
 let copy_unique_dir ~src ~dst =
   with_tmp_dir (fun tmp ->
     OpamSystem.command [ "rsync"; "-a"; Filename.concat (Dir.to_string src) "/"; Dir.to_string tmp ];
-    match list_dirs tmp with
+    match sub_dirs tmp with
     | [f] ->
       rmdir dst;
       move_dir ~src:f ~dst
@@ -190,7 +194,7 @@ let add_extension filename suffix =
 let chop_extension filename =
   of_string (Filename.chop_extension (to_string filename))
 
-let list_files d =
+let rec_files d =
   let fs = OpamSystem.rec_files (Dir.to_string d) in
   List.rev (List.rev_map of_string fs)
 
@@ -229,9 +233,7 @@ let remove_prefix ~prefix filename =
     let str = Dir.to_string prefix in
     if str = "" then "" else Filename.concat str "" in
   let dirname = to_string filename in
-  match OpamMisc.remove_prefix ~prefix dirname with
-  | None   -> OpamSystem.internal_error "%s is not a prefix of %s" prefix dirname
-  | Some s -> s
+  OpamMisc.remove_prefix ~prefix dirname
 
 let download ~overwrite filename dirname =
   mkdir dirname;
@@ -269,9 +271,11 @@ let with_flock file f x =
 let prettify_string s =
   let aux ~short ~prefix =
     let prefix = Filename.concat prefix "" in
-    match OpamMisc.remove_prefix ~prefix s with
-    | None        -> None
-    | Some suffix -> Some (Filename.concat short suffix) in
+    if OpamMisc.starts_with ~prefix s then
+      let suffix = OpamMisc.remove_prefix ~prefix s in
+      Some (Filename.concat short suffix)
+    else
+      None in
   match aux ~short:"<root>" ~prefix:!OpamGlobals.root_dir with
   | Some p -> p
   | None   ->

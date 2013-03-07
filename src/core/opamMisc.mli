@@ -143,7 +143,10 @@ val starts_with: prefix:string -> string -> bool
 val ends_with: suffix:string -> string -> bool
 
 (** Remove a prefix *)
-val remove_prefix: prefix:string -> string -> string option
+val remove_prefix: prefix:string -> string -> string
+
+(** Remove a suffix *)
+val remove_suffix: suffix:string -> string -> string
 
 (** Cut a string at the first occurence of the given char *)
 val cut_at: string -> char -> (string * string) option

@@ -118,21 +118,28 @@ module Repository = struct
 
   let root x = x
 
-  let lock t = t // "lock"
-
   let create t r = t / "repo" / OpamRepositoryName.to_string r
 
   let version t = t // "version"
 
   let config t = t // "config"
 
+  let prefix t = t // "prefix"
+
   let packages_dir t = t / "packages"
 
-  let package t nv = packages_dir t / OpamPackage.to_string nv
+  let package t prefix nv =
+    match prefix with
+    | None   -> packages_dir t / OpamPackage.to_string nv
+    | Some p -> packages_dir t / p / OpamPackage.to_string nv
 
-  let opam t nv = package t nv // "opam"
+  let opam t prefix nv = package t prefix nv // "opam"
 
-  let descr t nv = package t nv // "descr"
+  let descr t prefix nv = package t prefix nv // "descr"
+
+  let url t prefix nv = package t prefix nv // "url"
+
+  let files t prefix nv = package t prefix nv / "files"
 
   let archives_dir t = t / "archives"
 
@@ -147,10 +154,6 @@ module Repository = struct
   let compiler t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".comp")
 
   let compiler_descr t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".descr")
-
-  let url t nv = package t nv // "url"
-
-  let files t nv = package t nv / "files"
 
   let tmp t = t / "tmp"
 

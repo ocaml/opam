@@ -126,8 +126,8 @@ let list kind dir =
       let d = Sys.readdir (Sys.getcwd ()) in
       let d = Array.to_list d in
       let l = List.filter kind d in
-      let l = List.sort compare (List.rev_map (Filename.concat dir) l) in
-      List.rev l)
+      List.sort compare (List.rev_map (Filename.concat dir) l)
+    )
   else
     []
 
@@ -150,13 +150,19 @@ let rec_files dir =
     List.fold_left aux (f @ accu) d in
   aux [] dir
 
+let rec_dirs dir =
+  let rec aux accu dir =
+    let d = directories_with_links dir in
+    List.fold_left aux (d @ accu) d in
+  aux [] dir
+
 (* WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
 let rec remove_dir dir =
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);
     List.iter remove_dir (directories_strict dir);
     try Unix.rmdir dir
-    with _ -> internal_error "Cannot remove %s." dir
+    with e -> internal_error "Cannot remove %s (%s)." dir (Printexc.to_string e)
   end
 
 let with_tmp_dir fn =

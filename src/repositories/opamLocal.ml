@@ -109,7 +109,7 @@ module B = struct
           let files = List.rev_map OpamFilename.of_string lines in
           OpamFilename.Set.of_list files in
     let archives =
-      let available_packages = OpamRepository.packages local_repo in
+      let _, packages = OpamRepository.packages local_repo in
       let updates = OpamPackage.Set.filter (fun nv ->
         let archive = OpamPath.Repository.archive local_repo nv in
         if not (OpamFilename.exists archive) then
@@ -120,7 +120,7 @@ module B = struct
             false
         | Up_to_date _  -> false
         | Result _      -> true
-      ) available_packages in
+      ) packages in
       List.rev_map (OpamPath.Repository.archive local_repo) (OpamPackage.Set.elements updates) in
     let (++) = OpamFilename.Set.union in
     let updates = OpamFilename.Set.of_list archives
@@ -142,7 +142,7 @@ module B = struct
             (OpamFilename.Dir.to_string address)
       | Up_to_date _ -> OpamFilename.Set.empty
       | Result _     ->
-          let files = OpamFilename.list_files local_dir in
+          let files = OpamFilename.rec_files local_dir in
           OpamFilename.Set.of_list files
     else
       OpamFilename.Set.empty

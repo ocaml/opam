@@ -206,18 +206,32 @@ let strip str =
   String.sub str p (!l - p + 1)
 
 let starts_with ~prefix s =
-  String.length s >= String.length prefix
-  && String.sub s 0 (String.length prefix) = prefix
+  let x = String.length prefix in
+  let n = String.length s in
+  n >= x
+  && String.sub s 0 x = prefix
 
 let ends_with ~suffix s =
-  String.length s >= String.length suffix
-  && String.sub s (String.length s - String.length suffix) (String.length suffix) = suffix
+  let x = String.length suffix in
+  let n = String.length s in
+  n >= x
+  && String.sub s (n - x) x = suffix
 
 let remove_prefix ~prefix s =
   if starts_with ~prefix s then
-    Some (String.sub s (String.length prefix) (String.length s - String.length prefix))
+    let x = String.length prefix in
+    let n = String.length s in
+    String.sub s x (n - x)
   else
-    None
+    s
+
+let remove_suffix ~suffix s =
+  if ends_with ~suffix s then
+    let x = String.length suffix in
+    let n = String.length s in
+    String.sub s 0 (n - x)
+  else
+    s
 
 let cut_at_aux fn s sep =
   try

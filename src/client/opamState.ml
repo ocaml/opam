@@ -151,7 +151,8 @@ let find_repository_aux repositories root repo_index nv =
       if OpamRepositoryName.Map.mem r repositories then (
         let repo = OpamRepositoryName.Map.find r repositories in
         let repo_p = OpamPath.Repository.create root r in
-        let opam_f = OpamPath.Repository.opam repo_p nv in
+        let prefix = OpamRepository.prefix repo_p nv in
+        let opam_f = OpamPath.Repository.opam repo_p prefix nv in
         if OpamFilename.exists opam_f then (
           Some (repo_p, repo)
         ) else
@@ -178,12 +179,22 @@ let with_repository t nv fn =
   | Some (repo_p, repo) -> fn repo_p repo
 
 let package_repository_map t =
+  let package_maps = ref [] in
+  let get_packages repo =
+    if List.mem_assq repo !package_maps then
+      List.assoc repo !package_maps
+    else (
+      let repo_p = OpamPath.Repository.create t.root repo.repo_name in
+      let _, packages = OpamRepository.packages repo_p in
+      package_maps := (repo, packages) :: !package_maps;
+      packages
+    ) in
   OpamPackage.Name.Map.fold (fun n repo_s map ->
     let all_versions = ref OpamPackage.Version.Set.empty in
     List.fold_left (fun map r ->
       let repo = find_repository_name t r in
-      let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-      let available_versions = OpamRepository.versions repo_p n in
+      let packages = get_packages repo in
+      let available_versions = OpamPackage.versions_of_name packages n in
       OpamPackage.Version.Set.fold (fun v map ->
         if not (OpamPackage.Version.Set.mem v !all_versions) then (
           all_versions := OpamPackage.Version.Set.add v !all_versions;
@@ -467,7 +478,7 @@ let global_consistency_checks t =
     let repo_root = OpamPath.Repository.create t.root repo in
     let tmp_dir = OpamPath.Repository.tmp repo_root in
     let available =
-      let dirs = OpamFilename.list_dirs tmp_dir in
+      let dirs = OpamFilename.sub_dirs tmp_dir in
       let pkgs = OpamMisc.filter_map OpamPackage.of_dirname dirs in
       OpamPackage.Set.of_list pkgs in
     let not_installed = OpamPackage.Set.diff available all_installed in
@@ -481,7 +492,7 @@ let switch_consistency_checks t =
     let pin_dir = pin_cache / name in
     clean pin_dir name in
   let available =
-      let dirs = OpamFilename.list_dirs pin_cache in
+      let dirs = OpamFilename.rec_dirs pin_cache in
       let pkgs = List.rev_map (
           OpamFilename.basename_dir
           |> OpamFilename.Base.to_string
@@ -1045,10 +1056,7 @@ let dot_profile_needs_update t ~dot_profile =
     let body = OpamFilename.read dot_profile in
     let pattern1 = "opam config" in
     let pattern2 = OpamFilename.to_string (OpamPath.init t.root // "init") in
-    let pattern3 =
-      match OpamMisc.remove_prefix ~prefix:!OpamGlobals.root_dir pattern2 with
-      | None   -> assert false
-      | Some s -> s in
+    let pattern3 = OpamMisc.remove_prefix ~prefix:!OpamGlobals.root_dir pattern2 in
     if mem_pattern_in_string ~pattern:pattern1 ~string:body then
       `no
     else if mem_pattern_in_string ~pattern:pattern2 ~string:body then

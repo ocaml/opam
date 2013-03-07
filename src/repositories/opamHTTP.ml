@@ -130,7 +130,7 @@ module B = struct
         OpamFilename.Set.add
           (index_file state.local_dir)
           (OpamFilename.Set.singleton (index_archive state.local_dir)) in
-      let current = OpamFilename.Set.of_list (OpamFilename.list_files state.local_dir) in
+      let current = OpamFilename.Set.of_list (OpamFilename.rec_files state.local_dir) in
       let to_keep = OpamFilename.Set.filter (is_up_to_date state) state.local_files in
       let config = OpamFilename.Set.singleton (OpamPath.Repository.config state.local_dir) in
       let to_delete = current -- to_keep -- indexes -- config in
@@ -144,14 +144,16 @@ module B = struct
       log "to_delete: %s" (OpamFilename.Set.to_string to_delete);
       log "new_files: %s" (OpamFilename.Set.to_string new_files);
       OpamFilename.Set.iter OpamFilename.remove to_delete;
+      let prefix, packages = OpamRepository.packages local_repo in
       OpamPackage.Set.iter (fun nv ->
-        let opam_f = OpamPath.Repository.opam local_repo nv in
+        let prefix = OpamRepository.find_prefix prefix nv in
+        let opam_f = OpamPath.Repository.opam local_repo prefix nv in
         if not (OpamFilename.exists opam_f) then (
-          OpamFilename.rmdir (OpamPath.Repository.package local_repo nv);
+          OpamFilename.rmdir (OpamPath.Repository.package local_repo prefix nv);
           OpamFilename.rmdir (OpamPath.Repository.tmp_dir local_repo nv);
           OpamFilename.remove (OpamPath.Repository.archive local_repo nv);
         )
-      ) (OpamRepository.packages local_repo);
+      ) packages;
       if OpamFilename.Set.cardinal new_files > 4 then
         init ~address
       else
@@ -233,9 +235,9 @@ let make_urls_txt local_repo =
       s.Unix.st_perm in
     let digest = OpamFilename.digest f in
     OpamFilename.Attribute.create basename digest perm
-  ) (OpamFilename.list_files (OpamPath.Repository.packages_dir local_repo)
-   @ OpamFilename.list_files (OpamPath.Repository.archives_dir local_repo)
-   @ OpamFilename.list_files (OpamPath.Repository.compilers_dir local_repo)
+  ) (OpamFilename.rec_files (OpamPath.Repository.packages_dir local_repo)
+   @ OpamFilename.rec_files (OpamPath.Repository.archives_dir local_repo)
+   @ OpamFilename.rec_files (OpamPath.Repository.compilers_dir local_repo)
   )) in
   if not (OpamFilename.Attribute.Set.is_empty index) then
     OpamFile.Urls_txt.write local_index_file index;

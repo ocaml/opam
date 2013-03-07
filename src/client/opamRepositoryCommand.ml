@@ -35,7 +35,9 @@ let update_index t =
   let repo_index =
     List.fold_left (fun repo_index r ->
       let p = OpamPath.Repository.create t.root r.repo_name in
-      let available = OpamRepository.packages p in
+      let prefix, available = OpamRepository.packages p in
+      if not (OpamPackage.Name.Map.is_empty prefix) then
+        OpamFile.Prefix.write (OpamPath.Repository.prefix p) prefix;
       packages := OpamPackage.Set.union available !packages;
       OpamPackage.Set.fold (fun nv repo_index ->
         let name = OpamPackage.name nv in
@@ -80,15 +82,17 @@ let update_index t =
   let map = OpamState.package_repository_map t in
   OpamPackage.Map.iter (fun nv repo ->
     let repo_p = OpamPath.Repository.create t.root repo.repo_name in
+    let prefix = OpamRepository.prefix repo_p nv in
     List.iter (fun (g, r) ->
       let global_file = g t.root nv in
       let repo_file = r repo_p nv in
       if OpamFilename.exists repo_file then
         OpamFilename.link ~src:repo_file ~dst:global_file
-    ) ([ (OpamPath.opam   , OpamPath.Repository.opam);
-         (OpamPath.descr  , OpamPath.Repository.descr);
+    ) ([ (OpamPath.opam   , fun r -> OpamPath.Repository.opam r prefix);
+         (OpamPath.descr  , fun r -> OpamPath.Repository.descr r prefix);
          (OpamPath.archive, OpamPath.Repository.archive) ])
-  ) map
+  ) map;
+  map
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
@@ -101,7 +105,7 @@ let cleanup t repo =
   let repos = OpamRepositoryName.Map.keys t.repositories in
   update_config t (List.filter ((<>) repo) repos);
   let t = OpamState.load_state "repository-cleanup-repo" in
-  update_index t;
+  let _ = update_index t in
   OpamFilename.rmdir (OpamPath.Repository.root (OpamPath.Repository.create t.root repo));
   OpamState.rebuild_state_cache ()
 
@@ -117,7 +121,7 @@ let priority name ~priority =
     let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) t.repo_index in
     OpamFile.Repo_index.write repo_index_f repo_index;
     let t = OpamState.load_state ~save_cache:false "repository-3" in
-    update_index t;
+    let _ = update_index t in
     OpamState.rebuild_state_cache ()
   ) else
     OpamGlobals.error_and_exit
