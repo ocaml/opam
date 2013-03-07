@@ -135,7 +135,7 @@ let update_config t ~warning switch =
   OpamFile.Config.write (OpamPath.config t.root) config;
   if warning then (
     let t = OpamState.load_state "switch-update-config" in
-    OpamState.print_env_warning t ~eval:true ~dot_profile:None
+    OpamState.print_env_warning t ~eval:true None
   )
 
 let install_with_packages ~quiet ~warning ~packages switch compiler =
@@ -191,7 +191,7 @@ let install_with_packages ~quiet ~warning ~packages switch compiler =
         wish_upgrade = to_install } in
     begin try
       OpamSolution.check_solution solution;
-      if warning then OpamState.print_env_warning t ~eval:true ~dot_profile:None
+      if warning then OpamState.print_env_warning t ~eval:true None
     with e ->
       uninstall_compiler ();
       raise e

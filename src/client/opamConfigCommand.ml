@@ -271,10 +271,10 @@ let setup user global =
   let t = OpamState.load_state "config-setup" in
   OpamState.update_setup t user global
 
-let setup_list dot_profile =
+let setup_list shell dot_profile =
   log "config-setup-list";
   let t = OpamState.load_state "config-setup-list" in
-  OpamState.display_setup t ~dot_profile
+  OpamState.display_setup t shell dot_profile
 
 let exec command =
   log "config-exex command=%s" command;

@@ -1028,7 +1028,7 @@ let update_init_scripts t ~global =
         let pretty_init_file = OpamFilename.prettify (OpamPath.init t.root // init_file) in
         if !updated then
           OpamGlobals.msg
-            "  Updating %s: [auto-completion: %b] [opam-switch-eval: %b].\n"
+            "  Updating %s\n    auto-completion : [%b]\n    opam-switch-eval: [%b]\n"
             pretty_init_file
             o.complete
             o.switch_eval
@@ -1036,22 +1036,25 @@ let update_init_scripts t ~global =
           OpamGlobals.msg "  %s is already up-to-date.\n" pretty_init_file)
       [ init_sh; init_zsh; init_csh ]
 
-let status_of_init_sh t =
+let status_of_init_file t init_sh =
   let init_sh = OpamPath.init t.root // init_sh in
-  let string = OpamFilename.read init_sh in
-  let aux pattern = mem_pattern_in_string ~pattern ~string in
-  if OpamFilename.exists init_sh then
-    let complete_sh = aux complete_sh in
-    let complete_zsh = aux complete_zsh in
-    let switch_eval_sh = aux switch_eval_sh in
-    Some (complete_sh, complete_zsh, switch_eval_sh)
-  else
+  if OpamFilename.exists init_sh then (
+    let string = OpamFilename.read init_sh in
+    let aux pattern = mem_pattern_in_string ~pattern ~string in
+    if OpamFilename.exists init_sh then
+      let complete_sh = aux complete_sh in
+      let complete_zsh = aux complete_zsh in
+      let switch_eval_sh = aux switch_eval_sh in
+      Some (complete_sh, complete_zsh, switch_eval_sh)
+    else
+      None
+  ) else
     None
 
 let update_env_variables t =
   update_init_scripts t ~global:None
 
-let dot_profile_needs_update t ~dot_profile =
+let dot_profile_needs_update t dot_profile =
   if OpamFilename.exists dot_profile then (
     let body = OpamFilename.read dot_profile in
     let pattern1 = "opam config" in
@@ -1070,7 +1073,7 @@ let dot_profile_needs_update t ~dot_profile =
 
 let update_dot_profile t dot_profile =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
-  match dot_profile_needs_update t ~dot_profile with
+  match dot_profile_needs_update t dot_profile with
   | `no        -> OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
   | `otherroot ->
     OpamGlobals.msg
@@ -1109,8 +1112,8 @@ let update_setup t user global =
       update_init_scripts t ~global
   end
 
-let display_setup t ~dot_profile =
-  let print (k,v) = OpamGlobals.msg "  %-25s %20s\n" k v in
+let display_setup t shell dot_profile =
+  let print (k,v) = OpamGlobals.msg "  %-25s %35s\n" k v in
   let not_set = "[NOT SET]" in
   let ok      = "[OK]" in
   let error   = "[ERROR]" in
@@ -1118,16 +1121,21 @@ let display_setup t ~dot_profile =
     let ocamlinit_status =
       if ocamlinit_needs_update () then not_set else ok in
     let dot_profile_status =
-      match dot_profile_needs_update t ~dot_profile with
+      match dot_profile_needs_update t dot_profile with
       | `no        -> ok
       | `yes       -> not_set
       | `otherroot -> error in
     [ ("~/.ocamlinit"                   , ocamlinit_status);
       (OpamFilename.prettify dot_profile, dot_profile_status); ]
   in
+  let init_file = match shell with
+    | `sh  -> init_sh
+    | `csh -> init_csh
+    | `zsh -> init_zsh in
+  let pretty_init_file = OpamFilename.prettify (OpamPath.init t.root // init_file) in
   let global_setup =
-    match status_of_init_sh t with
-    | None -> [ OpamFilename.prettify (OpamPath.init t.root // init_sh), not_set ]
+    match status_of_init_file t init_file with
+    | None -> [pretty_init_file, not_set ]
     | Some(complete_sh, complete_zsh, switch_eval_sh) ->
       let completion =
           if not complete_sh
@@ -1139,7 +1147,8 @@ let display_setup t ~dot_profile =
             ok
           else
             not_set in
-        [ ("auto-completion" , completion);
+        [ ("init-script"     , Printf.sprintf "[%s]" pretty_init_file);
+          ("auto-completion" , completion);
           ("opam-switch-eval", switch_eval);
         ]
   in
@@ -1148,7 +1157,7 @@ let display_setup t ~dot_profile =
   OpamGlobals.msg "Global configuration:\n";
   List.iter print global_setup
 
-let update_setup_interactive t shell ~dot_profile =
+let update_setup_interactive t shell dot_profile =
   let max = 4 in
   let current = ref 1 in
   let stats () =
@@ -1182,7 +1191,7 @@ let update_setup_interactive t shell ~dot_profile =
     update_setup t user global
   )
 
-let print_env_warning t ~eval ~dot_profile =
+let print_env_warning t ~eval dot_profile =
   match
     List.filter
       (fun (s, v) ->
@@ -1206,7 +1215,7 @@ let print_env_warning t ~eval ~dot_profile =
         match dot_profile with
         | None             -> ""
         | Some dot_profile ->
-          if dot_profile_needs_update t ~dot_profile = `yes then
+          if dot_profile_needs_update t dot_profile = `yes then
             Printf.sprintf "And add it to your %s.\n\n" (OpamFilename.prettify dot_profile)
           else
             "" in

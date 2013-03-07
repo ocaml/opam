@@ -23,7 +23,7 @@ module API: sig
   (** Initialize the client a consistent state. *)
   val init:
     repository -> compiler -> jobs:int ->
-    shell -> dot_profile:filename -> update_config:[`ask|`yes|`no] ->
+    shell -> filename -> [`ask|`yes|`no] ->
     unit
 
   (** Display all available packages that matches any of the
@@ -73,7 +73,7 @@ module API: sig
     val setup: user_config option -> global_config option -> unit
 
     (** Display global and user informations about OPAM setup. *)
-    val setup_list: filename -> unit
+    val setup_list: shell -> filename -> unit
 
     (** Execute a command in a subshell with the right environment variables. *)
     val exec: string -> unit

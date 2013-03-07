@@ -39,7 +39,7 @@ val subst: basename list -> unit
 val setup: user_config option -> global_config option -> unit
 
 (** Display the global and user configuration for OPAM. *)
-val setup_list: filename -> unit
+val setup_list: shell -> filename -> unit
 
 (** Execute a command in a subshell *)
 val exec: string -> unit

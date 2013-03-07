@@ -377,7 +377,7 @@ let init =
       else if csh then `csh
       else if zsh then `zsh
       else OpamMisc.guess_shell_compat () in
-    Client.init repository compiler ~jobs shell ~dot_profile ~update_config in
+    Client.init repository compiler ~jobs shell dot_profile update_config in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
     $no_setup $auto_setup $sh_flag $csh_flag $zsh_flag $dot_profile_flag),
@@ -563,7 +563,7 @@ let config =
         else if zsh then `zsh
         else OpamMisc.guess_shell_compat () in
       if list then
-        Client.CONFIG.setup_list dot_profile
+        Client.CONFIG.setup_list shell dot_profile
       else if profile || ocamlinit || complete || switch_eval then
         let dot_profile = if profile then Some dot_profile else None in
         let user   = if user then Some { shell; ocamlinit; dot_profile } else None in

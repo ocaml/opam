@@ -655,7 +655,7 @@ module API = struct
     end;
     OpamSolution.check_solution solution_found
 
-  let init repo compiler ~jobs shell ~dot_profile ~update_config =
+  let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %s" (OpamRepository.to_string repo);
     let root = OpamPath.default () in
     let config_f = OpamPath.config root in
@@ -717,14 +717,14 @@ module API = struct
 
       let dot_profile_o = Some dot_profile in
       begin match update_config with
-        | `ask -> OpamState.update_setup_interactive t shell ~dot_profile
+        | `ask -> OpamState.update_setup_interactive t shell dot_profile
         | `no  -> ()
         | `yes ->
           let user   = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
           let global = Some { complete = true; switch_eval = true } in
           OpamState.update_setup t user global
       end;
-      OpamState.print_env_warning t ~eval:false ~dot_profile:dot_profile_o
+      OpamState.print_env_warning t ~eval:false dot_profile_o
 
     with e ->
       if not !OpamGlobals.debug then
@@ -1032,8 +1032,8 @@ module SafeAPI = struct
     let setup local global =
       global_lock (fun () -> API.CONFIG.setup local global)
 
-    let setup_list dot_profile =
-      read_lock (fun () -> API.CONFIG.setup_list dot_profile)
+    let setup_list shell dot_profile =
+      read_lock (fun () -> API.CONFIG.setup_list shell dot_profile)
 
     let exec command =
       read_lock (fun () -> API.CONFIG.exec command)

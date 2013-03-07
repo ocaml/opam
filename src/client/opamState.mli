@@ -109,15 +109,15 @@ val get_opam_env: state -> env
 val add_to_env: state -> env -> (string * string * string) list -> env
 
 (** Print a warning if the environment is not set-up properly. *)
-val print_env_warning: state -> eval:bool -> dot_profile:filename option -> unit
+val print_env_warning: state -> eval:bool -> filename option -> unit
 
 (** {2 Initialisation} *)
 
 (** Update the global and user configuration by asking some questions. *)
-val update_setup_interactive: state -> shell -> dot_profile:filename -> unit
+val update_setup_interactive: state -> shell -> filename -> unit
 
 (** Display the global and user configuration for OPAM. *)
-val display_setup: state -> dot_profile:filename -> unit
+val display_setup: state -> shell -> filename -> unit
 
 (** Update the user configuration. *)
 val update_setup: state -> user_config option -> global_config option -> unit
