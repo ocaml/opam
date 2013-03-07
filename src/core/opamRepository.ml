@@ -418,23 +418,27 @@ let packages r =
   let dir = OpamPath.Repository.packages_dir r in
   let empty = OpamPackage.Name.Map.empty, OpamPackage.Set.empty in
   if OpamFilename.exists_dir dir then (
-    let dirs = OpamFilename.rec_dirs dir in
-    List.fold_left (fun (prefix, packages) dir ->
-      let base = OpamFilename.basename_dir dir in
-      let base = OpamFilename.Base.to_string base in
-      match OpamPackage.of_string_opt base with
-      | None    -> prefix, packages
-      | Some nv ->
-        let packages = OpamPackage.Set.add nv packages in
-        let prefix =
-          if dir = OpamPath.Repository.package r None nv then prefix
-          else
-            OpamPackage.Name.Map.add
-              (OpamPackage.name nv)
-              (extract_prefix r dir nv)
-              prefix in
-        prefix, packages
-    ) empty dirs
+    let files = OpamFilename.rec_files dir in
+    List.fold_left (fun (prefix, packages as acc) file ->
+      if OpamFilename.basename file = OpamFilename.Base.of_string "opam" then (
+        let dir  = OpamFilename.dirname file in
+        let base = OpamFilename.basename_dir dir in
+        let base = OpamFilename.Base.to_string base in
+        match OpamPackage.of_string_opt base with
+        | None    -> acc
+        | Some nv ->
+          let packages = OpamPackage.Set.add nv packages in
+          let prefix =
+            if dir = OpamPath.Repository.package r None nv then prefix
+            else
+              OpamPackage.Name.Map.add
+                (OpamPackage.name nv)
+                (extract_prefix r dir nv)
+                prefix in
+          prefix, packages
+      ) else
+        acc
+    ) empty files
   ) else
     empty
 
