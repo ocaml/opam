@@ -28,14 +28,15 @@ let update_index t =
   (* Update repo_index *)
   let repositories = OpamState.sorted_repositories t in
 
+  (* All the packages in the repositories *)
+  let packages = ref OpamPackage.Set.empty in
+
   (* Add new repositories *)
   let repo_index =
     List.fold_left (fun repo_index r ->
       let p = OpamPath.Repository.create t.root r.repo_name in
       let available = OpamRepository.packages p in
-      log "repo=%s packages=%s"
-        (OpamRepositoryName.to_string r.repo_name)
-        (OpamPackage.Set.to_string available);
+      packages := OpamPackage.Set.union available !packages;
       OpamPackage.Set.fold (fun nv repo_index ->
         let name = OpamPackage.name nv in
         if not (OpamPackage.Name.Map.mem name repo_index) then
@@ -64,10 +65,11 @@ let update_index t =
   let t = { t with repo_index } in
 
   (* suppress previous links, but keep metadata of installed packages
-     (because you need them to uninstall the package) *)
-  let all_installed = OpamState.all_installed t in
+     but deleted from the repository (to be still be able to uninstall
+     the package) *)
+  let lonely = OpamPackage.Set.diff  (OpamState.all_installed t) !packages in
   OpamPackage.Set.iter (fun nv ->
-    if not (OpamPackage.Set.mem nv all_installed) then (
+    if not (OpamPackage.Set.mem nv lonely) then (
       List.iter
         (fun f -> OpamFilename.remove (f t.root nv))
         [ OpamPath.opam; OpamPath.descr; OpamPath.archive ]
@@ -81,12 +83,11 @@ let update_index t =
     List.iter (fun (g, r) ->
       let global_file = g t.root nv in
       let repo_file = r repo_p nv in
-      OpamFilename.remove global_file;
       if OpamFilename.exists repo_file then
         OpamFilename.link ~src:repo_file ~dst:global_file
-    ) OpamPath.([ (opam   , Repository.opam);
-                  (descr  , Repository.descr);
-                  (archive, Repository.archive) ])
+    ) ([ (OpamPath.opam   , OpamPath.Repository.opam);
+         (OpamPath.descr  , OpamPath.Repository.descr);
+         (OpamPath.archive, OpamPath.Repository.archive) ])
   ) map
 
 (* update the repository config file:

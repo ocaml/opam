@@ -348,11 +348,14 @@ let update r =
   (* Clean-up archives and tmp files on URL changes *)
   OpamPackage.Set.iter (fun nv ->
     let url_f = OpamPath.Repository.url repo nv in
-    if OpamFilename.Set.mem url_f updated_files then begin
+    let files = OpamPath.Repository.files repo nv in
+    if OpamFilename.Set.mem url_f updated_files
+    || OpamFilename.Set.exists (OpamFilename.starts_with files) updated_files
+    then (
       let tmp_dir = OpamPath.Repository.tmp_dir repo nv in
       OpamFilename.rmdir tmp_dir;
       OpamFilename.remove (OpamPath.Repository.archive repo nv);
-    end
+    )
   ) updated_packages;
 
   (* For each package in the cache, look at what changed upstream *)
@@ -383,6 +386,7 @@ let update r =
 
 let find_backend = find_backend_by_kind
 
+(* Used on upgrade to get the list of available packages in the repository *)
 let packages r =
   let dir = OpamPath.Repository.packages_dir r in
   if OpamFilename.exists_dir dir then (

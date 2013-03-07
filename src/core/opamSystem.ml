@@ -60,7 +60,6 @@ let mkdir dir =
     end in
   aux dir
 
-
 let temp_file ?dir prefix =
   let temp_dir = match dir with
     | None   -> !OpamGlobals.root_dir / "log"
@@ -69,9 +68,11 @@ let temp_file ?dir prefix =
   temp_dir / Printf.sprintf "%s-%06x" prefix (Random.int 0xFFFFFF)
 
 let remove_file file =
-  try Unix.unlink file
-  with Unix.Unix_error _ -> ()
-
+  if Sys.file_exists file then (
+    try Unix.unlink file
+    with Unix.Unix_error _ as e ->
+      OpamGlobals.error "Cannot remove %s: %s\n" file (Printexc.to_string e)
+  )
 
 let string_of_channel ic =
   let n = 32768 in
@@ -357,14 +358,16 @@ let extract_in file dst =
   | Some f -> f dst
 
 let link src dst =
-  mkdir (Filename.dirname dst);
-  if Sys.file_exists dst then
-    remove_file dst;
-  try
-    Unix.link src dst
-  with Unix.Unix_error (Unix.EXDEV, _, _) ->
-    (* Fall back to copy if hard links are not supported *)
-    copy src dst
+  if Sys.file_exists src then (
+    mkdir (Filename.dirname dst);
+    if Sys.file_exists dst then
+      remove_file dst;
+    try Unix.link src dst
+    with Unix.Unix_error (Unix.EXDEV, _, _) ->
+      (* Fall back to copy if hard links are not supported *)
+      copy src dst
+  ) else
+    internal_error "link: %s does not exist." src
 
 let flock file =
   let l = ref 0 in
