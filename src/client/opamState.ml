@@ -887,16 +887,21 @@ let ocamlinit_needs_update () =
   match ocamlinit () with
   | None      -> true
   | Some file ->
-    let body = OpamFilename.read file in
-    let pattern = "OCAML_TOPLEVEL_PATH" in
-    not (mem_pattern_in_string ~pattern ~string:body)
+    if OpamFilename.exists file then (
+      let body = OpamFilename.read file in
+      let pattern = "OCAML_TOPLEVEL_PATH" in
+      not (mem_pattern_in_string ~pattern ~string:body)
+    ) else
+      true
 
 let update_ocamlinit () =
   if ocamlinit_needs_update () then (
     match ocamlinit () with
     | None      -> ()
     | Some file ->
-      let body = OpamFilename.read file in
+      let body =
+        if not (OpamFilename.exists file) then ""
+        else OpamFilename.read file in
       if body = "" then
         OpamGlobals.msg "  Generating ~/.ocamlinit.\n"
       else
