@@ -1129,6 +1129,7 @@ module Comp = struct
     requires     : section list;
     pp           : ppflag option;
     env          : (string * string * string) list;
+    tags         : string list;
   }
 
   let empty = {
@@ -1149,6 +1150,7 @@ module Comp = struct
     requires  = [];
     pp        = None;
     env       = [];
+    tags      = [];
   }
 
   let create_preinstalled name version packages env =
@@ -1175,6 +1177,7 @@ module Comp = struct
   let s_pp        = "pp"
   let s_env       = "env"
   let s_preinstalled = "preinstalled"
+  let s_tags      = "tags"
 
   let valid_fields = [
     s_opam_version;
@@ -1194,6 +1197,7 @@ module Comp = struct
     s_pp;
     s_env;
     s_preinstalled;
+    s_tags;
   ]
 
   let name t = t.name
@@ -1212,6 +1216,7 @@ module Comp = struct
   let pp t = t.pp
   let preinstalled t = t.preinstalled
   let env t = t.env
+  let tags t = t.tags
 
   let of_string filename str =
     let file = Syntax.of_string filename str in
@@ -1266,6 +1271,7 @@ module Comp = struct
         (OpamFormat.parse_list (OpamFormat.parse_string |> OpamVariable.Section.of_string)) in
     let pp = OpamFormat.assoc_default None s s_pp parse_ppflags in
     let preinstalled = OpamFormat.assoc_default false  s s_preinstalled OpamFormat.parse_bool in
+    let tags = OpamFormat.assoc_string_list s s_tags in
 
     if build <> [] && (configure @ make) <> [] then
       OpamGlobals.error_and_exit "You cannot use 'build' and 'make'/'configure' \
@@ -1279,6 +1285,7 @@ module Comp = struct
       bytecomp; asmcomp; bytelink; asmlink; packages;
       requires; pp;
       preinstalled; env;
+      tags;
     }
 
   let to_string filename s =
@@ -1306,6 +1313,7 @@ module Comp = struct
         Variable (s_packages    , OpamFormat.make_formula s.packages);
         Variable (s_requires    , OpamFormat.make_list (OpamVariable.Section.to_string |> OpamFormat.make_string) s.requires);
         Variable (s_env         , OpamFormat.make_list OpamFormat.make_env_variable s.env);
+        Variable (s_tags        , OpamFormat.make_string_list s.tags);
       ] @ (match s.pp with
         | None    -> []
         | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
