@@ -228,12 +228,18 @@ let extract_in filename dirname =
 let starts_with dirname filename =
   OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
-let remove_prefix ~prefix filename =
+let remove_prefix prefix filename =
   let prefix =
     let str = Dir.to_string prefix in
     if str = "" then "" else Filename.concat str "" in
-  let dirname = to_string filename in
-  OpamMisc.remove_prefix ~prefix dirname
+  let filename = to_string filename in
+  OpamMisc.remove_prefix ~prefix filename
+
+let remove_suffix suffix filename =
+  let suffix = Base.to_string suffix in
+  let filename = to_string filename in
+  OpamMisc.remove_suffix ~suffix filename
+
 
 let download ~overwrite filename dirname =
   mkdir dirname;

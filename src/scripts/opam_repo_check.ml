@@ -92,15 +92,11 @@ let () =
   ) packages;
 
   (** compilers *)
-  OpamCompiler.Set.iter (fun compiler ->
+  OpamCompiler.Map.iter (fun compiler (comp, descr) ->
     OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string compiler);
-
-    (** Comp *)
-    let comp = OpamPath.Repository.compiler t compiler in
     write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
-
-    (** Comp_descr *)
-    let comp_descr = OpamPath.Repository.compiler_descr t compiler in
-    write OpamFile.Comp_descr.write comp_descr (OpamFile.Comp_descr.read comp_descr);
+    match descr with
+    | None   -> ()
+    | Some d -> write OpamFile.Comp_descr.write d (OpamFile.Comp_descr.read d);
 
   ) (OpamRepository.compilers t);

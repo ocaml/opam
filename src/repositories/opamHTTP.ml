@@ -229,7 +229,7 @@ let make_urls_txt local_repo =
   let local_index_file = OpamFilename.of_string "urls.txt" in
   let index = OpamFilename.Attribute.Set.of_list (List.rev_map (fun f ->
     let basename =
-      OpamFilename.Base.of_string (OpamFilename.remove_prefix ~prefix:(OpamFilename.cwd()) f) in
+      OpamFilename.Base.of_string (OpamFilename.remove_prefix (OpamFilename.cwd()) f) in
     let perm =
       let s = Unix.stat (OpamFilename.to_string f) in
       s.Unix.st_perm in

@@ -102,8 +102,8 @@ val make_archive: ?gener_digest:bool -> ?local_path:dirname -> package -> unit
 (** Get the list of packages *)
 val packages: repository_root -> string name_map * package_set
 
-(** Get the list of compilers *)
-val compilers: repository_root -> compiler_set
+(** Get the list of compilers (and their eventual description file) *)
+val compilers: repository_root -> (filename * filename option) compiler_map
 
 (** Get the external files associated to a package *)
 val files: repository_root -> package -> filename_set

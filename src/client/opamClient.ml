@@ -98,16 +98,18 @@ let update_repositories t ~show_compilers repositories =
   (* Link existing compiler description files, following the
      repository priorities *)
   let map = OpamState.compiler_repository_map t in
-  OpamCompiler.Map.iter (fun comp repo ->
-    let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-    List.iter (fun (g, r) ->
-      let global_file = g t.root comp in
-      let repo_file = r repo_p comp in
-      OpamFilename.remove global_file;
-      if OpamFilename.exists repo_file then
-        OpamFilename.link ~src:repo_file ~dst:global_file
-    ) OpamPath.([ (compiler      , Repository.compiler);
-                  (compiler_descr, Repository.compiler_descr) ])
+  OpamCompiler.Map.iter (fun comp (repo_comp, repo_descr) ->
+    let global_comp  = OpamPath.compiler t.root comp in
+    let global_descr = OpamPath.compiler_descr t.root comp in
+    OpamFilename.remove global_comp;
+    OpamFilename.remove global_descr;
+    if OpamFilename.exists repo_comp then
+      OpamFilename.link ~src:repo_comp ~dst:global_comp;
+    match repo_descr with
+    | None   -> ()
+    | Some d ->
+      if OpamFilename.exists d then
+        OpamFilename.link ~src:d ~dst:global_descr
   ) map;
 
   (* Display the new compilers available *)

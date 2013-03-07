@@ -58,11 +58,24 @@ let list t =
   log "list dir=%s" (OpamFilename.Dir.to_string t);
   if OpamFilename.exists_dir t then (
     let files = OpamFilename.rec_files t in
-    let files = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in
-    let l = List.map of_filename files in
-    Set.of_list l
+    let comps  = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in
+    let descrs = List.filter (fun f -> OpamFilename.check_suffix f ".descr") files in
+    let same =
+      let comp  = OpamFilename.Base.of_string ".comp"  in
+      let descr = OpamFilename.Base.of_string ".descr" in
+      fun c d ->
+        OpamFilename.remove_suffix comp c = OpamFilename.remove_suffix descr d in
+    (* XXX: dummy pairing *)
+    let pairs = List.map (fun c ->
+        if List.exists (same c) descrs then
+          (c, Some (List.find (same c) descrs))
+        else
+          (c, None)
+      ) comps in
+    let l = List.map (fun (c,d) -> of_filename c, (c, d)) pairs in
+    Map.of_list l
   ) else
-    Set.empty
+    Map.empty
 
 let system = of_string OpamGlobals.system
 

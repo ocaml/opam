@@ -149,7 +149,10 @@ val extract_in: t -> Dir.t -> unit
 val starts_with: Dir.t -> t -> bool
 
 (** Remove a prefix from a file name *)
-val remove_prefix: prefix:Dir.t -> t -> string
+val remove_prefix: Dir.t -> t -> string
+
+(** Remove a suffix from a filename *)
+val remove_suffix: Base.t -> t -> string
 
 (** download a remote file in a given directory. Return the location
     of the downloaded file if the download is successful.  *)

@@ -99,7 +99,8 @@ let print_state t =
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
 let compilers ~root =
-  OpamCompiler.list (OpamPath.compilers_dir root)
+  let compilers = OpamCompiler.list (OpamPath.compilers_dir root) in
+  OpamCompiler.Set.of_list (OpamCompiler.Map.keys compilers)
 
 let opam t nv =
   try OpamPackage.Map.find nv t.opams
@@ -215,11 +216,11 @@ let compiler_repository_map t =
   List.fold_left (fun map repo ->
     let repo_p = OpamPath.Repository.create t.root repo.repo_name in
     let comps = OpamRepository.compilers repo_p in
-    OpamCompiler.Set.fold (fun c map ->
-      if OpamCompiler.Map.mem c map then
+    OpamCompiler.Map.fold (fun comp files map ->
+      if OpamCompiler.Map.mem comp map then
         map
       else
-        OpamCompiler.Map.add c repo map
+        OpamCompiler.Map.add comp files map
     ) comps map
   ) OpamCompiler.Map.empty (sorted_repositories t)
 

@@ -170,7 +170,7 @@ val package_repository_map: state -> repository package_map
 
 (** Build a map which says in which repository the latest metadata for
     a given compiler is. *)
-val compiler_repository_map: state -> repository compiler_map
+val compiler_repository_map: state -> (filename * filename option) compiler_map
 
 (** Sort repositories by priority *)
 val sorted_repositories: state -> repository list
