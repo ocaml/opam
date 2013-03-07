@@ -536,6 +536,11 @@ let save_state ~update t =
   Marshal.to_channel oc (t.opams, t.descrs) [];
   close_out oc
 
+let remove_state_cache () =
+  let root = OpamPath.default () in
+  let file = OpamPath.state_cache root in
+  OpamFilename.remove file
+
 let reinstall_system_compiler t =
   let continue =
     confirm "Your system compiler has been upgraded. Do you want to upgrade your OPAM installation?" in
@@ -560,6 +565,19 @@ let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
+
+  let config_p = OpamPath.config root in
+  let config =
+    let config = OpamFile.Config.read config_p in
+    if OpamFile.Config.opam_version config <> OpamVersion.current then (
+      (* opam has been updated, so refresh the configuration file and clean-up the cache. *)
+      let config = OpamFile.Config.with_current_opam_version config in
+      OpamFile.Config.write config_p config;
+      remove_state_cache ();
+      config
+    ) else
+      config in
+
   let opams, descrs =
     let file = OpamPath.state_cache root in
     if OpamFilename.exists file then
@@ -568,19 +586,6 @@ let load_state ?(save_cache=true) call_site =
       None, None in
   let cached = opams <> None in
   let partial = false in
-
-  log "load_state root=%s cached=%b" (OpamFilename.Dir.to_string root) cached;
-
-  let config_p = OpamPath.config root in
-  let config =
-    let config = OpamFile.Config.read config_p in
-    if OpamFile.Config.opam_version config <> OpamVersion.current then
-      (* opam has been updated, so refresh the configuration file *)
-      let config = OpamFile.Config.with_current_opam_version config in
-      OpamFile.Config.write config_p config;
-      config
-    else
-      config in
 
   let switch = match !OpamGlobals.switch with
     | None   -> OpamFile.Config.switch config
@@ -655,11 +660,6 @@ let load_state ?(save_cache=true) call_site =
     OpamGlobals.exit 0
   ) else
     t
-
-let remove_state_cache () =
-  let root = OpamPath.default () in
-  let file = OpamPath.state_cache root in
-  OpamFilename.remove file
 
 let rebuild_state_cache () =
   remove_state_cache ();
