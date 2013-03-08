@@ -25,12 +25,20 @@ type global_options = {
   yes    : bool;
   root   : string;
   no_base_packages: bool;
+  git_version     : bool;
 }
 
-let create_global_options debug verbose quiet switch yes root no_base_packages =
-  { debug; verbose; quiet; switch; yes; root; no_base_packages }
+let create_global_options git_version debug verbose quiet switch yes root no_base_packages =
+  { git_version; debug; verbose; quiet; switch; yes; root; no_base_packages }
 
 let set_global_options o =
+  if o.git_version then (
+    begin match OpamGitVersion.version with
+      | None   -> ()
+      | Some v -> OpamGlobals.msg "%s\n%!" v
+    end;
+    exit 0
+  );
   OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   OpamGlobals.switch   := o.switch;
@@ -239,6 +247,9 @@ let param_list =
 (* Options common to all commands *)
 let global_options =
   let section = global_option_section in
+  let git_version =
+    mk_flag ~section ["git-version"]
+      "Print the git version if it exists and exit." in
   let debug =
     mk_flag ~section ["debug"]
       "Print debug message on stdout. \
@@ -270,7 +281,8 @@ let global_options =
     mk_flag ~section ["no-base-packages"]
       "Do not install base packages (useful for testing purposes). \
        This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty string." in
-  Term.(pure create_global_options $debug $verbose $quiet $switch $yes $root $no_base_packages)
+  Term.(pure create_global_options
+    $git_version $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
 (* Options common to all build commands *)
 let build_options =
@@ -1039,7 +1051,8 @@ let default =
         for more information on a specific command.";
   ] @  help_sections
   in
-  let usage _ =
+  let usage global_options =
+    set_global_options global_options;
     OpamGlobals.msg
       "usage: opam [--version]\n\
       \            [--help]\n\
