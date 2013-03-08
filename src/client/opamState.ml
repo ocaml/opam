@@ -1416,10 +1416,11 @@ let check f =
     OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
   let error () =
     OpamGlobals.error_and_exit
-      "Cannot find %s. Have you run 'opam init' first ?"
+      "Please run 'opam init' first to initialize the state of OPAM."
       (OpamFilename.Dir.to_string root) in
 
-  if not (OpamFilename.exists_dir root) then
+  if not (OpamFilename.exists_dir root)
+  || not (OpamFilename.exists (OpamPath.config root)) then
     error ()
 
   else match f with
