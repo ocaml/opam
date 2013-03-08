@@ -46,12 +46,12 @@ OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
 prepare: depends.ocp.in
 	sed "s|%{lib}%|$(OCAMLFIND_DIR)|g" depends.ocp.in > depends.ocp
 
-autogen: src/core/opamGitVersion.ml src/core/opamScript.ml
+autogen: src/core/opamGitVersion.ml src/core/opamScript.ml src/core/opamVersion.ml
 
 compile: $(LOCAL_OCPBUILD) autogen
 	$(OCPBUILD) -init -scan -sanitize $(TARGET)
 
-clone:
+clone: src/core/opamVersion.ml
 	$(MAKE) -C $(SRC_EXT)
 
 clean:
@@ -95,10 +95,16 @@ tests-git:
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
 
-src/core/opamGitVersion.ml:
+src/core/opamVersion.ml:
+	@echo
+	@echo "    ERROR: you need to run ./configure."
+	@echo
+	@exit 1
+
+src/core/opamGitVersion.ml: src/core/opamVersion.ml
 	./shell/get-git-id.sh > $@
 
-src/core/opamScript.ml: shell/
+src/core/opamScript.ml: shell/ src/core/opamVersion.ml
 	ocaml shell/crunch.ml "complete"     < shell/opam_completion.sh > $@
 	ocaml shell/crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
 	ocaml shell/crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
