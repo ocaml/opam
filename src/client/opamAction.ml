@@ -193,6 +193,44 @@ let get_archive t nv =
       None in
   OpamState.with_repository t nv aux
 
+(* Prepare the package build:
+   * apply the patches
+   * substitute the files *)
+let prepare_package_build t nv =
+  let p_build = OpamPath.Switch.build t.root t.switch nv in
+  let opam = OpamState.opam t nv in
+
+  if not (OpamFilename.exists_dir p_build) then
+    OpamFilename.mkdir p_build;
+
+  (* Substitute the patched files.*)
+  let patches = OpamFile.OPAM.patches opam in
+  OpamFilename.in_dir p_build (fun () ->
+    let all = OpamFile.OPAM.substs opam in
+    let patches =
+      OpamMisc.filter_map (fun (f,_) ->
+        if List.mem f all then Some f else None
+      ) patches in
+    List.iter (OpamState.substitute_file t) patches
+  );
+
+  (* Apply the patches *)
+  List.iter (fun (base, filter) ->
+    let root = OpamPath.Switch.build t.root t.switch nv in
+    let patch = root // OpamFilename.Base.to_string base in
+    if OpamState.eval_filter t filter then (
+      OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
+      OpamFilename.patch patch p_build)
+  ) patches;
+
+  (* Substitute the configuration files. We should be in the right
+     directory to get the correct absolute path for the
+     substitution files (see [substitute_file] and
+     [OpamFilename.of_basename]. *)
+  OpamFilename.in_dir p_build (fun () ->
+    List.iter (OpamState.substitute_file t) (OpamFile.OPAM.substs opam)
+  )
+
 (* For pinned packages, we keep the build cache in
    ~/.opam/<switch>/pinned.cache/<name> as:
    i) it's quite important to build and sync-up in different places
@@ -201,7 +239,7 @@ let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
-  match OpamState.pinned_path t (OpamPackage.name nv) with
+  begin match OpamState.pinned_path t (OpamPackage.name nv) with
   | Some p ->
     let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
     if not (OpamFilename.exists_dir pinned_dir) then (
@@ -212,8 +250,8 @@ let extract_package t nv =
     ) else
       OpamGlobals.msg "Synchronization: nothing to do as the pinned package has already been initialized.\n";
     let _files = OpamState.with_repository t nv (fun repo _ ->
-      OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
-    ) in
+        OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
+      ) in
     OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
   | _ ->
     match get_archive t nv with
@@ -221,15 +259,17 @@ let extract_package t nv =
     | Some archive ->
       OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
       OpamFilename.extract archive build_dir
-
+  end;
+  prepare_package_build t nv;
+  build_dir
 
 let string_of_commands commands =
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
-  "  " ^
-  if commands_s <> [] then
-    String.concat "\n  " commands_s
-  else
-    "Nothing to do."
+  "  "
+  ^ if commands_s <> [] then
+      String.concat "\n  " commands_s
+    else
+      "Nothing to do."
 
 let compilation_env t opam =
   let env0 = OpamState.get_full_env t in
@@ -283,7 +323,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
       if not (OpamFilename.exists_dir p_build)
       && OpamState.mem_repository t nv
       && not (List.for_all use_ocamlfind remove) then (
-        try extract_package t nv
+        try let _ = extract_package t nv in ()
         with _ -> ()
       );
       let name = OpamPackage.Name.to_string name in
@@ -306,7 +346,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   (* XXX: remove the man pages *)
 
   (* Remove build/<package> if requested *)
-  if rm_build then
+  if not !OpamGlobals.keep_build_dir && rm_build then
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
   (* Clean-up the repositories *)
@@ -415,46 +455,11 @@ let build_and_install_package_aux t ~metadata nv =
   (* Get the env variables set up in the compiler description file *)
   let env = compilation_env t opam in
 
-  (* Prepare the package for the build. *)
-
   try
 
     (* This one can raises an exception (for insance an user's CTRL-C
        when the sync takes too long. *)
-    extract_package t nv;
-
-    let p_build = OpamPath.Switch.build t.root t.switch nv in
-
-    if not (OpamFilename.exists_dir p_build) then
-      OpamFilename.mkdir p_build;
-
-    (* Substitute the patched files.*)
-    let patches = OpamFile.OPAM.patches opam in
-    OpamFilename.in_dir p_build (fun () ->
-      let all = OpamFile.OPAM.substs opam in
-      let patches =
-        OpamMisc.filter_map (fun (f,_) ->
-          if List.mem f all then Some f else None
-        ) patches in
-      List.iter (OpamState.substitute_file t) patches
-    );
-
-    (* Apply the patches *)
-    List.iter (fun (base, filter) ->
-      let root = OpamPath.Switch.build t.root t.switch nv in
-      let patch = root // OpamFilename.Base.to_string base in
-      if OpamState.eval_filter t filter then (
-        OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
-        OpamFilename.patch patch p_build)
-    ) patches;
-
-    (* Substitute the configuration files. We should be in the right
-       directory to get the correct absolute path for the
-       substitution files (see [substitute_file] and
-       [OpamFilename.of_basename]. *)
-    OpamFilename.in_dir p_build (fun () ->
-      List.iter (OpamState.substitute_file t) (OpamFile.OPAM.substs opam)
-    );
+    let p_build = extract_package t nv in
 
     (* Exec the given commands. *)
     let exec name f =
