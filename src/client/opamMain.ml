@@ -1098,8 +1098,10 @@ let is_external_command () =
   Array.length Sys.argv > 1 &&
   let opam = Sys.argv.(0) in
   let name = Sys.argv.(1) in
-  List.for_all (fun (_,info) -> Term.name info <> name) commands &&
-  OpamSystem.command_exists (opam ^ "-" ^ name)
+  String.length name > 1
+  && name.[0] <> '-'
+  && List.for_all (fun (_,info) -> Term.name info <> name) commands
+  && OpamSystem.command_exists (opam ^ "-" ^ name)
 
 let run_external_command () =
   let n = Array.length Sys.argv in
