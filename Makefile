@@ -21,7 +21,7 @@ opt: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -asm
 
 OCAMLBUILD_FLAGS=\
-	-Is src/core,src/client,src/repositories,src/solver \
+	-Is src/core,src/client,src/repositories,src/solver,src/scripts \
 	-use-ocamlfind -pkgs re.glob,ocamlgraph,cmdliner,cudf,dose \
 	-classic-display
 with-ocamlbuild: autogen
@@ -30,12 +30,14 @@ with-ocamlbuild: autogen
 	  ls src/$$i/*.{ml,mll,mly} 2> /dev/null\
 	    | xargs basename\
 	    | awk -F. "{ print (toupper(substr(\$$1,0,1)) substr(\$$1,2)) }"\
-	    > src/$$i/opam-$$i.mllib;\
-	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa;\
+	    > src/$$i/opam-$$i.mllib &&\
+	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa &&\
 	  rm -f src/$$i/opam-$$i.mllib;\
 	done;\
-	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native;\
-	ln -sf _build/src/client/opamMain.native opam
+	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native opam_mk_repo.native opam_repo_check.native &&\
+	ln -sf _build/src/client/opamMain.native opam &&\
+	ln -sf _build/src/scripts/opam_mk_repo.native opam-mk-repo &&\
+	ln -sf _build/src/scripts/opam_repo_check.native opam-repo-check
 
 $(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
 	$(MAKE) -C ocp-build
@@ -85,6 +87,11 @@ tests-git:
 	  cp _obuild/$*/$*.byte $(DESTDIR)$(prefix)/bin/$*; \
 	fi
 
+%-install-with-ocamlbuild:
+	@if [ -e $* ]; then\
+	  echo "install $*" && cp $* $(DESTDIR)$(prefix)/bin/$*;\
+	fi
+
 META: META.in
 	sed 's/@VERSION@/$(version)/g' < $< > $@
 
@@ -96,12 +103,15 @@ src/core/opamScript.ml: shell/
 	ocaml shell/crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
 	ocaml shell/crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
 
-.PHONY: uninstall install
+.PHONY: uninstall install install-with-ocamlbuild
 install:
 	mkdir -p $(DESTDIR)$(prefix)/bin
 	$(MAKE) $(TARGETS:%=%-install)
 	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
-
+install-with-ocamlbuild:
+	mkdir -p $(DESTDIR)$(prefix)/bin
+	$(MAKE) $(TARGETS:%=%-install-with-ocamlbuild)
+	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
 uninstall:
 	rm -f $(prefix)/bin/opam*
 	rm -f $(mandir)/man1/opam*
@@ -137,7 +147,7 @@ OCAMLBUILD_FILES =\
 	$(SOLVER_FILES:%=_build/src/solver/%)\
 	$(CLIENT_FILES:%=_build/src/client/%)
 
-.PHONY: libuninstall libinstall
+.PHONY: libuninstall libinstall libinstall-with-ocamlbuild
 libinstall: META
 	ocamlfind install opam META $(FILES)
 libinstall-with-ocamlbuild: META
