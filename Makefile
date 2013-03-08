@@ -20,6 +20,20 @@ byte: $(LOCAL_OCPBUILD)
 opt: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -asm
 
+OCAMLBUILD_FLAGS=\
+	-Is src/core,src/client,src/repositories,src/solver \
+	-use-ocamlfind -pkgs re.glob,ocamlgraph,cmdliner,cudf,dose \
+	-classic-display
+with-ocamlbuild: autogen
+	@for i in core repositories solver client; do\
+	  echo Compiling opam-$$i;\
+	  ocamldep -sort src/$$i/*.ml | xargs basename | awk -F. "{ print (toupper(substr(\$$1,0,1)) substr(\$$1,2)) }" > src/$$i/opam-$$i.mllib;\
+	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa;\
+	  rm -f src/$$i/opam-$$i.mllib;\
+	done;\
+	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native;\
+	ln -sf _build/src/client/opamMain.native opam
+
 $(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
 	$(MAKE) -C ocp-build
 
@@ -39,6 +53,7 @@ clean:
 	rm -rf _obuild
 	rm -f *.annot src/*.annot
 	rm -f ocp-build.*
+	rm -f _build
 	$(MAKE) -C $(SRC_EXT) clean
 	$(MAKE) -C ocp-build clean
 
@@ -113,9 +128,17 @@ FILES = $(CORE_FILES:%=_obuild/opam-core/%)\
 	$(SOLVER_FILES:%=_obuild/opam-solver/%)\
 	$(CLIENT_FILES:%=_obuild/opam-client/%)
 
+OCAMLBUILD_FILES =\
+	$(CORE_FILES:%=_build/src/core/%)\
+	$(REPO_FILES:%=_build/src/repositories/%)\
+	$(SOLVER_FILES:%=_build/src/solver/%)\
+	$(CLIENT_FILES:%=_build/src/client/%)
+
 .PHONY: libuninstall libinstall
 libinstall: META
 	ocamlfind install opam META $(FILES)
+libinstall-with-ocamlbuild: META
+	ocamlfind install opam META $(OCAMLBUILD_FILES)
 libuninstall:
 	ocamlfind remove opam
 
