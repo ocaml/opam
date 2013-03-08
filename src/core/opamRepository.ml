@@ -159,7 +159,13 @@ let download_file ~gener_digest kind nv remote_file checksum =
       | Some c -> OpamFilename.digest file = c in
     if not gener_digest && not !OpamGlobals.no_checksums && not (digest ()) then (
       OpamGlobals.error "Error: invalid checksum.";
-      OpamSystem.internal_error "Wrong checksum for %s:\n  - %s [expecting result]\n  - %s [actual result]"
+      OpamSystem.internal_error
+        "Wrong checksum for %s:\n\
+        \  - %s [expecting result]\n\
+        \  - %s [actual result]\n\
+         This is surely due to outdated package descriptions and should be fixed by \
+         running `opam update`. In case an update does not fix that problem, you can \
+         use the `--no-checksums` command-line option to bypass any checksum checks."
         (OpamFilename.to_string remote_file)
         (match checksum with Some c -> c | None -> "<none>")
         (OpamFilename.digest file)
