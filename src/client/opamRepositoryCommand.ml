@@ -36,8 +36,11 @@ let update_index t =
     List.fold_left (fun repo_index r ->
       let p = OpamPath.Repository.create t.root r.repo_name in
       let prefix, available = OpamRepository.packages p in
+      let prefix_f = OpamPath.Repository.prefix p in
       if not (OpamPackage.Name.Map.is_empty prefix) then
-        OpamFile.Prefix.write (OpamPath.Repository.prefix p) prefix;
+        OpamFile.Prefix.write prefix_f prefix
+      else if OpamFilename.exists prefix_f then
+        OpamFilename.remove prefix_f;
       packages := OpamPackage.Set.union available !packages;
       OpamPackage.Set.fold (fun nv repo_index ->
         let name = OpamPackage.name nv in
