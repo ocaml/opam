@@ -1,4 +1,4 @@
-0.9.5 [trunk]
+0.9.5 [Mar 2013]
 * If necessary, apply patches and substitute files before removing a package
 * Fix `opam remove <pkg> --keep-build-dir` keeps the folder if a source archive is extracted
 * Add build and install rules using ocamlbuild to help distro packagers
