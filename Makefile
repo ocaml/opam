@@ -58,7 +58,7 @@ clean:
 	rm -rf _obuild
 	rm -f *.annot src/*.annot
 	rm -f ocp-build.*
-	rm -f _build
+	rm -rf _build
 	$(MAKE) -C $(SRC_EXT) clean
 	$(MAKE) -C ocp-build clean
 
