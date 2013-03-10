@@ -68,10 +68,12 @@ let temp_file ?dir prefix =
   temp_dir / Printf.sprintf "%s-%06x" prefix (Random.int 0xFFFFFF)
 
 let remove_file file =
-  if Sys.file_exists file then (
+  if Sys.file_exists file
+  || (try let _ = Unix.lstat file in true with _ -> false)
+  then (
     try Unix.unlink file
-    with Unix.Unix_error _ as e ->
-      OpamGlobals.error "Cannot remove %s: %s\n" file (Printexc.to_string e)
+    with e ->
+      internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
   )
 
 let string_of_channel ic =
