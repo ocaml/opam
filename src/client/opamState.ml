@@ -687,6 +687,10 @@ let variables_csh  = "variables.csh"
 let init_sh        = "init.sh"
 let init_zsh       = "init.zsh"
 let init_csh       = "init.csh"
+let init_file = function
+  | `sh  -> init_sh
+  | `csh -> init_csh
+  | `zsh -> init_zsh
 
 let source t f =
   let file f = OpamFilename.to_string (OpamPath.init t.root // f) in
@@ -1081,10 +1085,7 @@ let update_dot_profile t dot_profile shell =
       "  %s is already configured for an other OPAM root.\n"
       pretty_dot_profile
   | `yes       ->
-    let init_file = match shell with
-      | `sh  -> init_sh
-      | `csh -> init_csh
-      | `zsh -> init_zsh in
+    let init_file = init_file shell in
     let body =
       if OpamFilename.exists dot_profile then
         OpamFilename.read dot_profile
@@ -1133,10 +1134,7 @@ let display_setup t shell dot_profile =
     [ ("~/.ocamlinit"                   , ocamlinit_status);
       (OpamFilename.prettify dot_profile, dot_profile_status); ]
   in
-  let init_file = match shell with
-    | `sh  -> init_sh
-    | `csh -> init_csh
-    | `zsh -> init_zsh in
+  let init_file = init_file shell in
   let pretty_init_file = OpamFilename.prettify (OpamPath.init t.root // init_file) in
   let global_setup =
     match status_of_init_file t init_file with
@@ -1196,7 +1194,7 @@ let update_setup_interactive t shell dot_profile =
     update_setup t user global
   )
 
-let print_env_warning t ~eval dot_profile =
+let print_env_warning t user =
   match
     List.filter
       (fun (s, v) ->
@@ -1205,25 +1203,32 @@ let print_env_warning t ~eval dot_profile =
   with
     | [] -> () (* every variables are correctly set *)
     | _  ->
-      let init = OpamPath.init t.root // init_sh in
-      let eval_string =
-        if eval || not (OpamFilename.exists init) then
-          let root =
-            if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
-              Printf.sprintf " --root=%s" OpamGlobals.default_opam_dir
-            else
-              "" in
-          Printf.sprintf "eval `opam config env%s`\n" root
-        else
-          source t init_sh in
-      let profile_string =
-        match dot_profile with
-        | None             -> ""
-        | Some dot_profile ->
-          if dot_profile_needs_update t dot_profile = `yes then
-            Printf.sprintf "And add it to your %s.\n\n" (OpamFilename.prettify dot_profile)
+      let eval () =
+        let root =
+          if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
+            Printf.sprintf " --root=%s" OpamGlobals.default_opam_dir
           else
             "" in
+        Printf.sprintf "eval `opam config env%s`\n" root in
+      let eval_string =
+        match user with
+        | None   -> eval ()
+        | Some u ->
+          let file = OpamPath.init t.root // init_file u.shell in
+          if not (OpamFilename.exists file) then
+            eval ()
+          else
+            source t (init_file u.shell) in
+      let profile_string = match user with
+        | None   -> ""
+        | Some u ->
+          match u.dot_profile with
+          | None             -> ""
+          | Some dot_profile ->
+            if dot_profile_needs_update t dot_profile = `yes then
+              Printf.sprintf "And add it to your %s.\n\n" (OpamFilename.prettify dot_profile)
+            else
+              "" in
       let line = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
       OpamGlobals.msg
         "\n%s\n\

@@ -718,15 +718,15 @@ module API = struct
             wish_upgrade = compiler_packages } in
 
       let dot_profile_o = Some dot_profile in
+      let user = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
       begin match update_config with
         | `ask -> OpamState.update_setup_interactive t shell dot_profile
         | `no  -> ()
         | `yes ->
-          let user   = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
           let global = Some { complete = true; switch_eval = true } in
           OpamState.update_setup t user global
       end;
-      OpamState.print_env_warning t ~eval:false dot_profile_o
+      OpamState.print_env_warning t user
 
     with e ->
       if not !OpamGlobals.debug then
