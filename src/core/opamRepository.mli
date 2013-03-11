@@ -113,3 +113,6 @@ val prefix: repository_root -> package -> string option
 
 (** Find an eventual prefix in a map *)
 val find_prefix: string name_map -> package -> string option
+
+(** Raise an error when a checksum is invalid. *)
+val invalid_checksum: filename -> actual:string -> expected:string -> 'a

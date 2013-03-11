@@ -195,7 +195,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_list&nbsp;:&nbsp;(key&nbsp;*&nbsp;<span class="keywordsign">'</span>a)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_filename&nbsp;:&nbsp;<span class="constructor">OpamFilename</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;list&nbsp;:&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;list&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">OpamFilename</span>.t&nbsp;*&nbsp;<span class="constructor">OpamFilename</span>.t&nbsp;option)&nbsp;<span class="constructor">Map</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;system&nbsp;:&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unknown&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 <span class="keyword">end</span></code></body></html>

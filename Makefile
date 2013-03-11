@@ -172,7 +172,9 @@ doc: compile
 	  src/**/*.mli -html -d doc/html/
 	$(MAKE) -C doc
 
-OPAM_FULL  = opam-full-$(version)
+OPAM_FULL       = opam-full-$(version)
+OPAM_FULL_TARGZ = $(OPAM_FULL).tar.gz
+
 OPAM_FILES = $(wildcard src_ext/*.tar.gz)\
 	     $(wildcard src_ext/*.tbz)\
 	     $(shell git ls-tree --name-only -r HEAD)
@@ -185,13 +187,15 @@ archive:
 	tar cz $(addprefix $(OPAM_FULL)/,$(OPAM_FILES)) > $(OPAM_FULL).tar.gz
 	rm -f $(OPAM_FULL)
 
-upload: archive
-	read -p "Upload $(OPAM_FULL_TARGZ) [Y/n]?" choice;\
-	case x"$$choice" in \
-	  x|xy|xY ) scp $(OPAM_FULL).tar.gz webmaster@ocamlpro.com:pub/;;\
-	  * ) echo "Cancelled.";;\
-	esac
+upload: $(OPAM_FULL_TARGZ)
+	scp $(OPAM_FULL_TARGZ) webmaster@ocamlpro.com:pub/
 
 configure: configure.ac m4/*.m4
 	aclocal -I m4
 	autoconf
+
+release:
+	git tag -d latest || true
+	git tag -a latest -m "Latest release"
+	git tag -a $(version) -m "Release $(version)"
+	$(MAKE) upload

@@ -78,9 +78,10 @@ Return the version name<br>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Name.t -> Version.t -> t</code></pre><div class="info">
 Create a new pair (name x version)<br>
 </div>
-<pre><span id="VALof_filename"><span class="keyword">val</span> of_filename</span> : <code class="type">OpamFilename.t -> t option</code></pre><div class="info">
-Create a new pair from a filename. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version.XXX</i>
-    with various heuristics.<br>
+<pre><span id="VALof_filename"><span class="keyword">val</span> of_filename</span> : <code class="type">all:bool -> OpamFilename.t -> t option</code></pre><div class="info">
+Create a new pair from a filename. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version.XXX</i> with
+    various heuristics. If <code class="code">all</code> is unset, discard "opam" and "url"
+    files.<br>
 </div>
 <pre><span id="VALof_dirname"><span class="keyword">val</span> of_dirname</span> : <code class="type">OpamFilename.Dir.t -> t option</code></pre><div class="info">
 Create a new pair from a directory name. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version/</i><br>
@@ -99,9 +100,6 @@ Extract the naes from a collection of packages<br>
 </div>
 <pre><span id="VALpackages_of_name"><span class="keyword">val</span> packages_of_name</span> : <code class="type">Set.t -> Name.t -> Set.t</code></pre><div class="info">
 Return all the packages with the given names<br>
-</div>
-<pre><span id="VALopam_files"><span class="keyword">val</span> opam_files</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
-Look for all .opam files in directory<br>
 </div>
 <pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> t -> int</code></pre><div class="info">
 Compare two packages<br>

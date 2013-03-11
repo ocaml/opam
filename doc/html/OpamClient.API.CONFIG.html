@@ -59,6 +59,15 @@ Display configuration options.<br>
 <pre><span id="VALenv"><span class="keyword">val</span> env</span> : <code class="type">csh:bool -> unit</code></pre><div class="info">
 Display environment.<br>
 </div>
+<pre><span id="VALsetup"><span class="keyword">val</span> setup</span> : <code class="type"><a href="OpamTypes.html#TYPEuser_config">OpamTypes.user_config</a> option -> <a href="OpamTypes.html#TYPEglobal_config">OpamTypes.global_config</a> option -> unit</code></pre><div class="info">
+Global and user setup of OPAM.<br>
+</div>
+<pre><span id="VALsetup_list"><span class="keyword">val</span> setup_list</span> : <code class="type"><a href="OpamTypes.html#TYPEshell">OpamTypes.shell</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> unit</code></pre><div class="info">
+Display global and user informations about OPAM setup.<br>
+</div>
+<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">string -> unit</code></pre><div class="info">
+Execute a command in a subshell with the right environment variables.<br>
+</div>
 <pre><span id="VALincludes"><span class="keyword">val</span> includes</span> : <code class="type">is_rec:bool -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list -> unit</code></pre><div class="info">
 Display includes files.<br>
 </div>

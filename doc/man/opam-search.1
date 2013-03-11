@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-SEARCH" 1 "" "Opam 0.9.3" "Opam Manual"
+.TH "OPAM-SEARCH" 1 "" "Opam 0.9.5" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -29,6 +29,9 @@ Force the search in case sensitive mode.
 \fB\-i\fR, \fB\-\-installed\fR
 List installed packages only.
 .TP 4
+\fB\-\-installed\-roots\fR
+Display only the installed roots.
+.TP 4
 \fB\-s\fR, \fB\-\-short\fR
 Output the names separated by one whitespace instead of using the usual formatting.
 .SH COMMON OPTIONS
@@ -37,6 +40,9 @@ These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+.TP 4
+\fB\-\-git\-version\fR
+Print the git version if it exists and exit.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).

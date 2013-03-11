@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-CONFIG" 1 "" "Opam 0.9.3" "Opam Manual"
+.TH "OPAM-CONFIG" 1 "" "Opam 0.9.5" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -21,27 +21,66 @@ Apart from \fBopam config env\fR, most of these commands are used by opam intern
 Name of the sub\-command. See the \fBDOMAINS\fR section for more info.
 .SH OPTIONS
 .TP 4
-\fB\-c\fR, \fB\-\-csh\fR
-Use csh\-compatible output mode.
+\fB\-a\fR, \fB\-\-all\fR
+Enable all the global and user configuration options.
+.TP 4
+\fB\-\-csh\fR
+Use sh\-compatible mode for configuring OPAM.
+.TP 4
+\fB\-\-csh\fR
+Use csh\-compatible mode for configuring OPAM.
+.TP 4
+\fB\-\-dot\-profile\fR=\fIFILENAME\fR (absent=/Users/tgazagna/.profile)
+Name of the configuration file to update (if necessary).
 .TP 4
 \fB\-e\fR \fIVAL\fR
 Backward\-compatible option, equivalent to \fBopam config env\fR.
 .TP 4
+\fB\-g\fR, \fB\-\-global\fR
+Enbale all the global configuration options.
+.TP 4
+\fB\-l\fR, \fB\-\-list\fR
+List the current configuration.
+.TP 4
+\fB\-\-no\-complete\fR
+Do not load the auto\-completion scripts in the environment.
+.TP 4
+\fB\-\-no\-switch\-eval\fR
+Do not install `opam\-switch\-eval` to switch & eval using a single command.
+.TP 4
+\fB\-\-ocamlinit\fR
+Modify ~/.ocamlinit to make `#use "topfind"` works in the toplevel.
+.TP 4
+\fB\-\-profile\fR
+Modify ~/.profile to setup an OPAM\-friendly environment when starting a new shell.
+.TP 4
 \fB\-R\fR, \fB\-\-rec\fR
 Recursive query.
+.TP 4
+\fB\-u\fR, \fB\-\-user\fR
+Enable all the user configuration options.
+.TP 4
+\fB\-\-zsh\fR
+Use zsh\-compatible mode for configuring OPAM.
 .SH DOMAINS
 .TP 4
 \fBenv\fR
-returns the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH according to the current selected compiler. The output of this command is meant to be evaluated by a shell, for example by doing \fBeval `opam config env`\fR.
+Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH according to the current selected compiler. The output of this command is meant to be evaluated by a shell, for example by doing \fBeval `opam config env`\fR.
+.TP 4
+\fBsetup\fR
+Configure global and user parameters for OPAM. Use \fB opam config setup\fR to display more options. Use \fB\-\-list\fR to display the current configuration options. You can use this command to automatically update: (i) user\-configuration files such as ~/.profile and ~/.ocamlinit; and (ii) global\-configaration files controlling which shell scripts are loaded on startup, such as auto\-completion. These configuration options can be updated using: \fBopam config setup \-\-global\fR to setup the global configuration files stored in \fB~/.opam/opam\-init/\fR and \fBopam config setup \-\-user\fR to setup the user ones. To modify both the global and user configuration, use \fBopam config setup \-\-all\fR.
+.TP 4
+\fBexec\fR
+Execute the shell script given in parameter with the correct environment variables. This option can be used to cross\-compile between switches using \fBopam config exec "CMD ARG1 ... ARGn" \-\-switch=SWITCH\fR
 .TP 4
 \fBvar\fR
-returns the value associated with the given variable. If the variable contains a colon such as \fIpkg:var\fR, then the left element will be understood as the package in which the variable is defined. The variable resolution is done as follows: first, OPAM will check whether \fB$var\fR exists; for package variables, it will look for \fB$pkg_var\fR. If the variable is not found, OPAM will then check whether the variable is implicit. There are two global implicit variables: \fIocaml\-version\fR and \fIpreinstalled\fR and two implicit variables per package: \fIpkg:installed\fR which is either \fB"true"\fR or \fB"false"\fR, and \fIpkg:enable\fR which is either \fB"enable"\fR or \fB"disable"\fR. Finally, OPAM will look into its global and package config files to find whether these variables exist.
+Return the value associated with the given variable. If the variable contains a colon such as \fIpkg:var\fR, then the left element will be understood as the package in which the variable is defined. The variable resolution is done as follows: first, OPAM will check whether \fB$var\fR exists; for package variables, it will look for \fB$pkg_var\fR. If the variable is not found, OPAM will then check whether the variable is implicit. There are two global implicit variables: \fIocaml\-version\fR and \fIpreinstalled\fR and two implicit variables per package: \fIpkg:installed\fR which is either \fB"true"\fR or \fB"false"\fR, and \fIpkg:enable\fR which is either \fB"enable"\fR or \fB"disable"\fR. Finally, OPAM will look into its global and package config files to find whether these variables exist.
 .TP 4
 \fBlist\fR
-returns the list of all variables defined in the listed packages. It is possible to filter the list of variables by giving package names (use \fBglobals\fR to get the list of global variables). No parameter means displaying all the variables.
+Return the list of all variables defined in the listed packages. It is possible to filter the list of variables by giving package names (use \fBglobals\fR to get the list of global variables). No parameter means displaying all the variables.
 .TP 4
 \fBsubst\fR
-substitutes variables in the given files. The strings \fI%{var}%\fR are replaced by the value of the variable \fIvar\fR (see the documentation associated to \fBopam config var\fR).
+Substitute variables in the given files. The strings \fI%{var}%\fR are replaced by the value of the variable \fIvar\fR (see the documentation associated to \fBopam config var\fR).
 .TP 4
 \fBincludes\fR
 returns include options.
@@ -63,6 +102,9 @@ These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+.TP 4
+\fB\-\-git\-version\fR
+Print the git version if it exists and exit.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).

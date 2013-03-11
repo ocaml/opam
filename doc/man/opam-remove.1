@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-REMOVE" 1 "" "Opam 0.9.3" "Opam Manual"
+.TH "OPAM-REMOVE" 1 "" "Opam 0.9.5" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -18,6 +18,9 @@ This command removes (i.e. uninstall) one or more packages currently installed i
 \fIPACKAGES\fR
 List of package names.
 .SH OPTIONS
+.TP 4
+\fB\-a\fR, \fB\-\-auto\-remove\fR
+Remove all the packages which have not been explicitely installed and which are not necessary anymore. It is possible to enforce keeping an already installed package by running \fBopam install <pkg>\fR. This flag can also be set using the \fB$OPAMAUTOREMOVE\fR configuration variable.
 .TP 4
 \fB\-b\fR, \fB\-\-keep\-build\-dir\fR
 Keep the build directory. This is equivalent to setting \fB$OPAMKEEPBUILDIR\fR to a non\-empty string.
@@ -51,6 +54,9 @@ These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+.TP 4
+\fB\-\-git\-version\fR
+Print the git version if it exists and exit.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).

@@ -80,10 +80,18 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;make_archive&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?gener_digest:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?local_path:<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_set<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;versions&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.version_set<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;packages&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="constructor">OpamTypes</span>.name_map&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.filename&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option)&nbsp;<span class="constructor">OpamTypes</span>.compiler_map<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;files&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename_set<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;prefix&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_prefix&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="constructor">OpamTypes</span>.name_map&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invalid_checksum&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;actual:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;expected:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 <span class="keyword">end</span></code></body></html>

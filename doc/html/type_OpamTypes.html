@@ -665,6 +665,13 @@
 &nbsp;&nbsp;&nbsp;&nbsp;conf_is_link&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_options&nbsp;:&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Section</span>.<span class="constructor">Full</span>.t&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;shell&nbsp;=&nbsp;[&nbsp;<span class="keywordsign">`</span>csh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>sh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>zsh&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;global_config&nbsp;=&nbsp;{&nbsp;complete&nbsp;:&nbsp;bool;&nbsp;switch_eval&nbsp;:&nbsp;bool;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;user_config&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;shell&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.shell;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ocamlinit&nbsp;:&nbsp;bool;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;dot_profile&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option;<br>
+&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;symbol&nbsp;=&nbsp;<span class="constructor">Eq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Neq</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Le</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Ge</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Lt</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Gt</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filter&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">FBool</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>

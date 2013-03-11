@@ -70,7 +70,10 @@ Remove a directory<br>
 <pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">Dir.t -> unit</code></pre><div class="info">
 Create a directory<br>
 </div>
-<pre><span id="VALlist_dirs"><span class="keyword">val</span> list_dirs</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info">
+<pre><span id="VALrec_dirs"><span class="keyword">val</span> rec_dirs</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info">
+List the sub-directory recursively<br>
+</div>
+<pre><span id="VALsub_dirs"><span class="keyword">val</span> sub_dirs</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info">
 List the sub-directory<br>
 </div>
 <pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">Dir.t -> (unit -> 'a) -> 'a</code></pre><div class="info">
@@ -117,6 +120,16 @@ Create a file from a basename and the current working directory
 <pre><span id="VALraw_file"><span class="keyword">val</span> raw_file</span> : <code class="type">string -> t</code></pre><div class="info">
 Creation from a raw string (as <i>http://&lt;path&gt;</i>)<br>
 </div>
+<pre><span id="VALprettify"><span class="keyword">val</span> prettify</span> : <code class="type">t -> string</code></pre><div class="info">
+Prettify a filename:<ul>
+<li>replace /path/to/opam/foo by &lt;opam&gt;/foo</li>
+<li>replace /path/to/home/foo by ~/foo</li>
+</ul>
+<br>
+</div>
+<pre><span id="VALprettify_dir"><span class="keyword">val</span> prettify_dir</span> : <code class="type">Dir.t -> string</code></pre><div class="info">
+Prettify a dirname.<br>
+</div>
 <pre><span id="VALdirname"><span class="keyword">val</span> dirname</span> : <code class="type">t -> Dir.t</code></pre><div class="info">
 Return the directory name<br>
 </div>
@@ -144,7 +157,7 @@ Add a file extension<br>
 <pre><span id="VALchop_extension"><span class="keyword">val</span> chop_extension</span> : <code class="type">t -> t</code></pre><div class="info">
 Remove the file extension<br>
 </div>
-<pre><span id="VALlist_files"><span class="keyword">val</span> list_files</span> : <code class="type">Dir.t -> t list</code></pre><div class="info">
+<pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">Dir.t -> t list</code></pre><div class="info">
 List all the filenames, recursively<br>
 </div>
 <pre><span id="VALwith_contents"><span class="keyword">val</span> with_contents</span> : <code class="type">(string -> 'a) -> t -> 'a</code></pre><div class="info">
@@ -175,8 +188,11 @@ Extract an archive in a given directory (which should already exists)<br>
 <pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type">Dir.t -> t -> bool</code></pre><div class="info">
 Check wether a filename starts by a given Dir.t<br>
 </div>
-<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:Dir.t -> t -> string</code></pre><div class="info">
+<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">Dir.t -> t -> string</code></pre><div class="info">
 Remove a prefix from a file name<br>
+</div>
+<pre><span id="VALremove_suffix"><span class="keyword">val</span> remove_suffix</span> : <code class="type">Base.t -> t -> string</code></pre><div class="info">
+Remove a suffix from a filename<br>
 </div>
 <pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">overwrite:bool -> t -> Dir.t -> t</code></pre><div class="info">
 download a remote file in a given directory. Return the location
