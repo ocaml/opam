@@ -1072,7 +1072,7 @@ let dot_profile_needs_update t dot_profile =
   ) else
     `yes
 
-let update_dot_profile t dot_profile =
+let update_dot_profile t dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
   match dot_profile_needs_update t dot_profile with
   | `no        -> OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
@@ -1081,6 +1081,10 @@ let update_dot_profile t dot_profile =
       "  %s is already configured for an other OPAM root.\n"
       pretty_dot_profile
   | `yes       ->
+    let init_file = match shell with
+      | `sh  -> init_sh
+      | `csh -> init_csh
+      | `zsh -> init_zsh in
     let body =
       if OpamFilename.exists dot_profile then
         OpamFilename.read dot_profile
@@ -1092,7 +1096,7 @@ let update_dot_profile t dot_profile =
         "%s\n\n\
          # OPAM configuration\n\
          %s\n"
-        (OpamMisc.strip body) (source t init_sh) in
+        (OpamMisc.strip body) (source t init_file) in
     OpamFilename.write dot_profile body
 
 let update_setup t user global =
@@ -1104,7 +1108,7 @@ let update_setup t user global =
       if l.ocamlinit then update_ocamlinit ();
       match l.dot_profile with
       | None   -> ()
-      | Some f -> update_dot_profile t f;
+      | Some f -> update_dot_profile t f l.shell;
   end;
   begin match global with
     | None   -> ()
