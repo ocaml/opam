@@ -690,7 +690,7 @@ let init_csh       = "init.csh"
 
 let source t f =
   let file f = OpamFilename.to_string (OpamPath.init t.root // f) in
-  Printf.sprintf ". %s\n" (file f)
+  Printf.sprintf ". %s || true\n" (file f)
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
