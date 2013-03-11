@@ -1070,7 +1070,7 @@ let dot_profile_needs_update t dot_profile =
     else
       `yes
   ) else
-    `no
+    `yes
 
 let update_dot_profile t dot_profile =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
