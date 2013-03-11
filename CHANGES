@@ -1,3 +1,7 @@
+0.9.6 (trunk)
+* Fix loading of `~/.profile` when using dash
+* Fix installation of packages with symbolic links (regression introduced in 0.9.5)
+
 0.9.5 [Mar 2013]
 * If necessary, apply patches and substitute files before removing a package
 * Fix `opam remove <pkg> --keep-build-dir` keeps the folder if a source archive is extracted
