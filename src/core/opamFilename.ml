@@ -30,7 +30,7 @@ module Dir = struct
         let prefix = Filename.concat "~" "" in
         let suffix = OpamMisc.remove_prefix ~prefix dirname in
         Filename.concat home suffix
-    else if not (Filename.is_relative dirname) then
+    else if Filename.is_relative dirname then
       OpamSystem.real_path dirname
     else
       dirname
