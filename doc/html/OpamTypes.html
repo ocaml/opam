@@ -860,6 +860,60 @@ Read pin options args<br>
 Configuration requests<br>
 </div>
 
+<pre><span id="TYPEshell"><span class="keyword">type</span> <code class="type"></code>shell</span> = <code class="type">[ `csh | `sh | `zsh ]</code> </pre>
+<div class="info">
+Shell compatibility modes<br>
+</div>
+
+<pre><code><span id="TYPEglobal_config"><span class="keyword">type</span> <code class="type"></code>global_config</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTglobal_config.complete">complete</span>&nbsp;:<code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTglobal_config.switch_eval">switch_eval</span>&nbsp;:<code class="type">bool</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Global configuration option<br>
+</div>
+
+<pre><code><span id="TYPEuser_config"><span class="keyword">type</span> <code class="type"></code>user_config</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_config.shell">shell</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEshell">shell</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_config.ocamlinit">ocamlinit</span>&nbsp;:<code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTuser_config.dot_profile">dot_profile</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a> option</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+User configuration option<br>
+</div>
+
 <br>
 <h2 id="2_Filteredcommands">Filtered commands</h2><br>
 <pre><code><span id="TYPEsymbol"><span class="keyword">type</span> <code class="type"></code>symbol</span> = </code></pre><table class="typetable">

@@ -93,6 +93,9 @@ Set of ints
 <pre><span id="VALstring_of_list"><span class="keyword">val</span> string_of_list</span> : <code class="type">('a -> string) -> 'a list -> string</code></pre><div class="info">
 Display a list of strings<br>
 </div>
+<pre><span id="VALpretty_list"><span class="keyword">val</span> pretty_list</span> : <code class="type">string list -> string</code></pre><div class="info">
+Display a pretty list: <code class="code">"x";"y";"z"</code> -&gt; "x, y and z"<br>
+</div>
 <br>
 <h2 id="2_Stringmanipulation">String manipulation</h2><br>
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringMap.html">StringMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = string</code></pre><div class="info">
@@ -116,8 +119,11 @@ Does a string starts with the given prefix ?<br>
 <pre><span id="VALends_with"><span class="keyword">val</span> ends_with</span> : <code class="type">suffix:string -> string -> bool</code></pre><div class="info">
 Does a string ends with the given suffix ?<br>
 </div>
-<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:string -> string -> string option</code></pre><div class="info">
+<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:string -> string -> string</code></pre><div class="info">
 Remove a prefix<br>
+</div>
+<pre><span id="VALremove_suffix"><span class="keyword">val</span> remove_suffix</span> : <code class="type">suffix:string -> string -> string</code></pre><div class="info">
+Remove a suffix<br>
 </div>
 <pre><span id="VALcut_at"><span class="keyword">val</span> cut_at</span> : <code class="type">string -> char -> (string * string) option</code></pre><div class="info">
 Cut a string at the first occurence of the given char<br>
@@ -175,5 +181,8 @@ When <code class="code">stdout</code> refers to a terminal, query the number of 
 </div>
 <pre><span id="VALuname_s"><span class="keyword">val</span> uname_s</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Get the output of <code class="code">uname -s</code><br>
+</div>
+<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `csh | `sh | `zsh ]</code></pre><div class="info">
+Guess the shell compat-mode<br>
 </div>
 </body></html>
