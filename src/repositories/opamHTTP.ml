@@ -94,6 +94,16 @@ let is_up_to_date state local_file =
   && not (Sys.is_directory (OpamFilename.to_string local_file))
   && List.assoc local_file state.file_digests = OpamFilename.digest local_file
 
+let get_checksum state local_file =
+  if List.mem_assoc local_file state.file_digests
+  && OpamFilename.exists local_file
+  && not (Sys.is_directory (OpamFilename.to_string local_file))
+  then
+    let expected = List.assoc local_file state.file_digests in
+    let actual = OpamFilename.digest local_file in
+    Some (actual, expected)
+  else None
+
 module B = struct
 
   let init ~address =
@@ -190,9 +200,12 @@ module B = struct
           with Not_found ->
             ()
         end;
-        if not !OpamGlobals.no_checksums && not (is_up_to_date state local_file) then
-          OpamSystem.internal_error "Wrong checksum for %s" (OpamFilename.to_string remote_file);
-        Result local_file
+        if not !OpamGlobals.no_checksums && not (is_up_to_date state local_file) then (
+          match get_checksum state local_file with
+          | None -> OpamSystem.internal_error "%s is not up-to-date" (OpamFilename.to_string remote_file)
+          | Some (actual, expected) -> OpamRepository.invalid_checksum remote_file ~actual ~expected
+        ) else
+          Result local_file
       end
     end
 
