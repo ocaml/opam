@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-INIT" 1 "" "Opam 0.9.3" "Opam Manual"
+.TH "OPAM-INIT" 1 "" "Opam 0.9.5" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -14,9 +14,13 @@ opam\-init \- Initialize OPAM state.
 .P
 The \fBinit\fR command creates a fresh client state. This initializes OPAM configuration in \fI~/.opam\fR and configures a default package repository.
 .P
+Once the fresh client has been created, OPAM will ask the user if he wants \fI~/.profile\fR and \fI~/.ocamlinit\fR to be updated. If \fB\-\-auto\-setup\fR is used, OPAM will modify the configuration files automatically, without asking the user. If \fB\-\-no\-setup\fR is used, OPAM will *NOT* modify anything outside of \fI~/.opam\fR.
+.P
 Additional repositories can be added later by using the \fBopam repository\fR command.
 .P
-The local cache of a repository state can be updated by using \fBopam update\fR.
+The state of repositories can be synchronized by using \fBopam update\fR.
+.P
+The user and global configuration files can be setup later by using \fBopam config setup\fR.
 .SH ARGUMENTS
 .TP 4
 \fIADDRESS\fR (absent=http://opam.ocamlpro.com)
@@ -26,17 +30,29 @@ Address of the repository.
 Name of the repository.
 .SH OPTIONS
 .TP 4
+\fB\-a\fR, \fB\-\-auto\-setup\fR
+Automatically setup all the global and user configuration options for OPAM.
+.TP 4
 \fB\-b\fR, \fB\-\-keep\-build\-dir\fR
 Keep the build directory. This is equivalent to setting \fB$OPAMKEEPBUILDIR\fR to a non\-empty string.
 .TP 4
 \fB\-\-comp\fR=\fIVERSION\fR (absent=system)
 Which compiler version to use.
 .TP 4
+\fB\-\-csh\fR
+Use csh\-compatible mode for configuring OPAM.
+.TP 4
+\fB\-\-csh\fR
+Use sh\-compatible mode for configuring OPAM.
+.TP 4
 \fB\-\-cudf\fR=\fIFILENAME\fR
 Save the CUDF request sent to the solver to \fIFILENAME\fR\-<n>.cudf.
 .TP 4
 \fB\-d\fR, \fB\-\-build\-doc\fR
 Build the package documentation. This is equivalent to setting \fB$OPAMBUILDDOC\fR to a non\-empty string.
+.TP 4
+\fB\-\-dot\-profile\fR=\fIFILENAME\fR (absent=/Users/tgazagna/.profile)
+Name of the configuration file to update (if necessary).
 .TP 4
 \fB\-\-dry\-run\fR
 Simply call the solver without actually performing any build/install operations.
@@ -59,14 +75,23 @@ Use \fIMAKE\fR as the default 'make' command.
 \fB\-n\fR, \fB\-\-no\-checksums\fR
 Do not verify the checksum of downloaded archives.This is equivalent to setting \fB$OPAMNOCHECKSUMS\fR to a non\-empty string.
 .TP 4
+\fB\-n\fR, \fB\-\-no\-setup\fR
+Do not update the global and user configuration options to setup OPAM.
+.TP 4
 \fB\-t\fR, \fB\-\-build\-test\fR
 Build and \fBrun\fR the package unit\-tests. This is equivalent to setting \fB$OPAMBUILDTEST\fR to a non\-empty string.
+.TP 4
+\fB\-\-zsh\fR
+Use zsh\-compatible mode for configuring OPAM.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+.TP 4
+\fB\-\-git\-version\fR
+Print the git version if it exists and exit.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).
