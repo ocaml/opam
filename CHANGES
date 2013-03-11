@@ -1,5 +1,5 @@
-0.9.6 (trunk)
-* Fix loading of `~/.profile` when using dash
+0.9.6 [Mar 2013]
+* Fix loading of `~/.profile` when using dash (eg. in Debian/Ubuntu)
 * Fix installation of packages with symbolic links (regression introduced in 0.9.5)
 
 0.9.5 [Mar 2013]
