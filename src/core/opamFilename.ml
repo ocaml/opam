@@ -22,10 +22,18 @@ module Dir = struct
   include OpamMisc.Base
 
   let of_string dirname =
-    if not (Filename.is_relative dirname) then
-      dirname
-    else
+    if (String.length dirname > 1 && dirname.[0] = '~') then
+      let home = OpamMisc.getenv "HOME" in
+      match dirname with
+      | "~" -> home
+      | _   ->
+        let prefix = Filename.concat "~" "" in
+        let suffix = OpamMisc.remove_prefix ~prefix dirname in
+        Filename.concat home suffix
+    else if not (Filename.is_relative dirname) then
       OpamSystem.real_path dirname
+    else
+      dirname
 
   let to_string dirname =
     if dirname.[String.length dirname - 1] = Filename.dir_sep.[0] then
