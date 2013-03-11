@@ -197,7 +197,7 @@ configure: configure.ac m4/*.m4
 	autoconf
 
 release:
-	git tag -d latest
+	git tag -d latest || true
 	git tag -a latest -m "Latest release"
 	git tag -a $(version) -m "Release $(version)"
 	$(MAKE) upload
