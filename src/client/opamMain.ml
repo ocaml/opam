@@ -482,9 +482,9 @@ let config =
                               files such as ~/.profile and ~/.ocamlinit; and (ii) global-configaration files \
                               controlling which shell scripts are loaded on startup, such as auto-completion. \
                               These configuration options can be updated using: $(b,opam config setup --global) \
-                              to setup the global configuration and $(b,opam config setup --user) to setup the \
-                              user one. To modify both the global and user configuration, use $(b,opam config \
-                              setup --all).";
+                              to setup the global configuration files stored in $(b,~/.opam/opam-init/) and \
+                              $(b,opam config setup --user) to setup the user ones. \
+                              To modify both the global and user configuration, use $(b,opam config setup --all).";
     ["exec"]    , `exec    , "Execute the shell script given in parameter with the correct environment variables. \
                               This option can be used to cross-compile between switches using \
                               $(b,opam config exec \"CMD ARG1 ... ARGn\" --switch=SWITCH)";
