@@ -61,6 +61,7 @@ clean:
 	rm -rf _build
 	$(MAKE) -C $(SRC_EXT) clean
 	$(MAKE) -C ocp-build clean
+	rm -f $(OPAM_FULL_TARGZ)
 
 distclean: clean
 	$(MAKE) -C $(SRC_EXT) distclean
@@ -179,14 +180,23 @@ OPAM_FILES = $(wildcard src_ext/*.tar.gz)\
 	     $(wildcard src_ext/*.tbz)\
 	     $(shell git ls-tree --name-only -r HEAD)
 
-$(OPAM_FULL_TARGZ):
+prepare-archive:
 	$(MAKE) -C src_ext distclean
 	$(MAKE) clone
 	rm -f $(OPAM_FULL) $(OPAM_FULL).tar.gz
 	ln -s . $(OPAM_FULL)
+
+# we want OPAM_FILES to be up-to-date here
+complete-archive:
 	tar cz $(addprefix $(OPAM_FULL)/,$(OPAM_FILES)) > $(OPAM_FULL).tar.gz
 	rm -f $(OPAM_FULL)
 
+$(OPAM_FULL_TARGZ):
+	$(MAKE) prepare-archive
+	$(MAKE) complete-archive
+
+archive: $(OPAM_FULL_TARGZ)
+	@
 upload: $(OPAM_FULL_TARGZ)
 	scp $(OPAM_FULL_TARGZ) webmaster@ocamlpro.com:pub/
 
