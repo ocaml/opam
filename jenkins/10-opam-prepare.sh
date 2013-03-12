@@ -3,6 +3,10 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# ffmpeg
+add libswscale-dev
+# dssi
+add dssi-dev
 # spf
 add libspf2-dev
 # oqamldebug
@@ -40,12 +44,17 @@ add ladspa-sdk
 add libgstreamer0.10-dev
 # opus
 add libavutil-dev
+# frei0r
+add frei0r-plugins-dev
 # liquidsoap
 add libao-dev
 add portaudio19-dev 
 add libsamplerate-dev 
 add libgstreamer0.10-dev 
 add libgstreamer-plugins-base0.10-dev 
+add libgstreamer0.10-dev 
+add libgstreamer-plugins-base0.10-dev 
+add libgstreamer1.0-dev
 add libmp3lame-dev 
 add libogg-dev 
 add libvorbis-dev
@@ -62,6 +71,7 @@ add liblo-dev
 add libgtk2.0-dev
 add libgtksourceview2.0-dev
 add libglade2-dev
+add libgnomecanvas2-dev
 # oqamldebug
 add qt4-qmake
 # lwt-zmq
