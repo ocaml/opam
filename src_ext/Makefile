@@ -16,7 +16,7 @@ clone: cudf.stamp extlib.stamp ocaml-re.stamp ocamlgraph.stamp dose.stamp cmdlin
 
 
 $(CUDF).tar.gz:
-	$(FETCH) -k https://gforge.inria.fr/frs/download.php/31910/$(CUDF).tar.gz
+	$(FETCH) https://gforge.inria.fr/frs/download.php/31910/$(CUDF).tar.gz
 
 cudf.stamp: $(CUDF).tar.gz
 	tar xfz $(CUDF).tar.gz
