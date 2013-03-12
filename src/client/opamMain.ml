@@ -208,11 +208,10 @@ let sh_flag =
   mk_flag ["csh"] "Use sh-compatible mode for configuring OPAM."
 
 let dot_profile_flag =
-  let dot_profile = Filename.concat (OpamMisc.getenv "HOME") ".profile" in
-  let dot_profile = OpamFilename.of_string dot_profile in
   mk_opt ["dot-profile"]
-    "FILENAME" "Name of the configuration file to update (if necessary)."
-    filename dot_profile
+    "FILENAME" "Name of the configuration file to update instead of \
+                $(i,~/.profile) or $(i,~/.zshrc) based on shell detection."
+    (Arg.some filename) None
 
 let repo_kind_flag =
   let kinds = [
@@ -342,6 +341,17 @@ let guess_repository_kind kind address =
         `http
   | Some k -> k
 
+let init_dot_profile shell dot_profile =
+  match dot_profile with
+  | Some n -> n
+  | None ->
+    let f = match shell with
+      | `zsh -> ".zshrc"
+      | _ -> ".profile"
+    in
+    let f = Filename.concat (OpamMisc.getenv "HOME") f in
+    OpamFilename.of_string f
+
 module Client = OpamClient.SafeAPI
 
 (* INIT *)
@@ -353,7 +363,8 @@ let init =
     `P "The $(b,init) command creates a fresh client state.  This initializes OPAM \
         configuration in $(i,~/.opam) and configures a default package repository.";
     `P "Once the fresh client has been created, OPAM will ask the user if he wants \
-        $(i,~/.profile) and $(i,~/.ocamlinit) to be updated. \
+        $(i,~/.profile) (or $i,~/.zshrc, depending on his shell) and $(i,~/.ocamlinit) \
+        to be updated. \
         If $(b,--auto-setup) is used, OPAM will modify the configuration files automatically, \
         without asking the user. If $(b,--no-setup) is used, OPAM will *NOT* modify \
         anything outside of $(i,~/.opam).";
@@ -374,7 +385,7 @@ let init =
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
-      no_setup auto_setup sh csh zsh dot_profile =
+      no_setup auto_setup sh csh zsh dot_profile_o =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
@@ -389,6 +400,7 @@ let init =
       else if csh then `csh
       else if zsh then `zsh
       else OpamMisc.guess_shell_compat () in
+    let dot_profile = init_dot_profile shell dot_profile_o in
     Client.init repository compiler ~jobs shell dot_profile update_config in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
@@ -527,7 +539,8 @@ let config =
   let global_doc      = "Enbale all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
   let ocamlinit_doc   = "Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel." in
-  let profile_doc     = "Modify ~/.profile to setup an OPAM-friendly environment when starting a new shell." in
+  let profile_doc     = "Modify ~/.profile (or ~/.zshrc if running zsh) to \
+                         setup an OPAM-friendly environment when starting a new shell." in
   let no_complete_doc = "Do not load the auto-completion scripts in the environment." in
   let no_eval_doc     = "Do not install `opam-switch-eval` to switch & eval using a single command." in
   let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
@@ -545,7 +558,7 @@ let config =
 
   let config global_options
       command env is_rec sh csh zsh
-      dot_profile list all global user
+      dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
     set_global_options global_options;
@@ -569,11 +582,12 @@ let config =
       let ocamlinit   = user  || ocamlinit in
       let complete    = global && not no_complete in
       let switch_eval = global && not no_switch_eval in
-      let shell =
+      let shell       =
         if sh then `sh
         else if csh then `csh
         else if zsh then `zsh
         else OpamMisc.guess_shell_compat () in
+      let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
         Client.CONFIG.setup_list shell dot_profile
       else if profile || ocamlinit || complete || switch_eval then
