@@ -179,7 +179,7 @@ OPAM_FILES = $(wildcard src_ext/*.tar.gz)\
 	     $(wildcard src_ext/*.tbz)\
 	     $(shell git ls-tree --name-only -r HEAD)
 
-archive:
+$(OPAM_FULL_TARGZ):
 	$(MAKE) -C src_ext distclean
 	$(MAKE) clone
 	rm -f $(OPAM_FULL) $(OPAM_FULL).tar.gz
