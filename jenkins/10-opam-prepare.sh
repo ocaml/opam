@@ -3,6 +3,8 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# libvirt
+add libvirt-dev
 # ffmpeg
 add libswscale-dev
 # dssi
