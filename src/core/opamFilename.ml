@@ -88,7 +88,7 @@ let exists_dir dirname =
 let copy_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error "Cannot create %s as the directory already exists." (Dir.to_string dst);
-  OpamSystem.command [ "cp"; "-a"; Dir.to_string src; Dir.to_string dst ]
+  OpamSystem.command [ "cp"; "-pPR"; Dir.to_string src; Dir.to_string dst ]
 
 let copy_unique_dir ~src ~dst =
   with_tmp_dir (fun tmp ->
