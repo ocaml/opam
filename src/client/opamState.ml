@@ -692,9 +692,14 @@ let init_file = function
   | `csh -> init_csh
   | `zsh -> init_zsh
 
-let source t f =
+let source t ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init t.root // f) in
-  Printf.sprintf ". %s > /dev/null 2> /dev/null || true\n" (file f)
+  let s =
+    Printf.sprintf ". %s > /dev/null 2> /dev/null || true\n" (file f)
+  in
+  if interactive_only then
+    Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
+  else s
 
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
@@ -961,12 +966,12 @@ let init_script t ~switch_eval ~complete (variables_sh, switch_eval_sh, complete
     Some (source t variables_sh) in
   let switch_eval =
     if switch_eval then
-      Some (source t switch_eval_sh)
+      Some (source t ~interactive_only:true switch_eval_sh)
     else
       None in
   let complete =
     if complete then
-      Some (source t complete_sh)
+      Some (source t ~interactive_only:true complete_sh)
     else
       None in
   let buf = Buffer.create 128 in
@@ -1096,7 +1101,7 @@ let update_dot_profile t dot_profile shell =
       Printf.sprintf
         "%s\n\n\
          # OPAM configuration\n\
-         %s\n"
+         %s"
         (OpamMisc.strip body) (source t init_file) in
     OpamFilename.write dot_profile body
 
