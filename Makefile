@@ -22,13 +22,13 @@ opt: $(LOCAL_OCPBUILD)
 
 OCAMLBUILD_FLAGS=\
 	-Is src/core,src/client,src/repositories,src/solver,src/scripts \
-	-use-ocamlfind -pkgs re.glob,ocamlgraph,cmdliner,cudf,dose \
+	-use-ocamlfind -pkgs re.glob,re.pcre,re.perl,ocamlgraph,cmdliner,cudf,dose3 \
 	-classic-display
 with-ocamlbuild: autogen
 	@for i in core repositories solver client; do\
 	  echo Compiling opam-$$i;\
-	  ls src/$$i/*.{ml,mll,mly} 2> /dev/null\
-	    | xargs basename\
+	  find src/$$i -type f -name \*.ml -or -name \*.mll -or -name \*.mly\
+	    | xargs -n 1 basename\
 	    | awk -F. "{ print (toupper(substr(\$$1,0,1)) substr(\$$1,2)) }"\
 	    > src/$$i/opam-$$i.mllib &&\
 	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa &&\
