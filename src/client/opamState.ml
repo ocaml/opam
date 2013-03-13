@@ -1119,7 +1119,7 @@ let update_setup t user global =
   begin match global with
     | None   -> ()
     | Some _ ->
-      OpamGlobals.msg "Gloabal configuration:\n";
+      OpamGlobals.msg "Global configuration:\n";
       update_init_scripts t ~global
   end
 
