@@ -1,5 +1,11 @@
+1.0.0 [Mar 2013]
+* Improve the lexer performance (thx to @oandrieu)
+* Fix various typos (thx to @chaudhuri)
+* Fix build issue (thx to @avsm)
+
 0.9.6 [Mar 2013]
-* Fix configuration for zsh users
+* Fix installation of pinned packages on BSD (thx to @smondet)
+* Fix configuration for zsh users (thx to @AltGr)
 * Fix loading of `~/.profile` when using dash (eg. in Debian/Ubuntu)
 * Fix installation of packages with symbolic links (regression introduced in 0.9.5)
 
