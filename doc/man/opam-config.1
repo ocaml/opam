@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-CONFIG" 1 "" "Opam 0.9.5" "Opam Manual"
+.TH "OPAM-CONFIG" 1 "" "Opam 1.0.0" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -30,14 +30,14 @@ Use sh\-compatible mode for configuring OPAM.
 \fB\-\-csh\fR
 Use csh\-compatible mode for configuring OPAM.
 .TP 4
-\fB\-\-dot\-profile\fR=\fIFILENAME\fR (absent=/Users/tgazagna/.profile)
-Name of the configuration file to update (if necessary).
+\fB\-\-dot\-profile\fR=\fIFILENAME\fR
+Name of the configuration file to update instead of \fI~/.profile\fR or \fI~/.zshrc\fR based on shell detection.
 .TP 4
 \fB\-e\fR \fIVAL\fR
 Backward\-compatible option, equivalent to \fBopam config env\fR.
 .TP 4
 \fB\-g\fR, \fB\-\-global\fR
-Enbale all the global configuration options.
+Enable all the global configuration options.
 .TP 4
 \fB\-l\fR, \fB\-\-list\fR
 List the current configuration.
@@ -52,7 +52,7 @@ Do not install `opam\-switch\-eval` to switch & eval using a single command.
 Modify ~/.ocamlinit to make `#use "topfind"` works in the toplevel.
 .TP 4
 \fB\-\-profile\fR
-Modify ~/.profile to setup an OPAM\-friendly environment when starting a new shell.
+Modify ~/.profile (or ~/.zshrc if running zsh) to setup an OPAM\-friendly environment when starting a new shell.
 .TP 4
 \fB\-R\fR, \fB\-\-rec\fR
 Recursive query.

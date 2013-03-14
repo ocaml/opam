@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-INIT" 1 "" "Opam 0.9.5" "Opam Manual"
+.TH "OPAM-INIT" 1 "" "Opam 1.0.0" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -14,7 +14,7 @@ opam\-init \- Initialize OPAM state.
 .P
 The \fBinit\fR command creates a fresh client state. This initializes OPAM configuration in \fI~/.opam\fR and configures a default package repository.
 .P
-Once the fresh client has been created, OPAM will ask the user if he wants \fI~/.profile\fR and \fI~/.ocamlinit\fR to be updated. If \fB\-\-auto\-setup\fR is used, OPAM will modify the configuration files automatically, without asking the user. If \fB\-\-no\-setup\fR is used, OPAM will *NOT* modify anything outside of \fI~/.opam\fR.
+Once the fresh client has been created, OPAM will ask the user if he wants \fI~/.profile\fR (or i,~/.zshrc, depending on his shell) and \fI~/.ocamlinit\fR to be updated. If \fB\-\-auto\-setup\fR is used, OPAM will modify the configuration files automatically, without asking the user. If \fB\-\-no\-setup\fR is used, OPAM will *NOT* modify anything outside of \fI~/.opam\fR.
 .P
 Additional repositories can be added later by using the \fBopam repository\fR command.
 .P
@@ -51,8 +51,8 @@ Save the CUDF request sent to the solver to \fIFILENAME\fR\-<n>.cudf.
 \fB\-d\fR, \fB\-\-build\-doc\fR
 Build the package documentation. This is equivalent to setting \fB$OPAMBUILDDOC\fR to a non\-empty string.
 .TP 4
-\fB\-\-dot\-profile\fR=\fIFILENAME\fR (absent=/Users/tgazagna/.profile)
-Name of the configuration file to update (if necessary).
+\fB\-\-dot\-profile\fR=\fIFILENAME\fR
+Name of the configuration file to update instead of \fI~/.profile\fR or \fI~/.zshrc\fR based on shell detection.
 .TP 4
 \fB\-\-dry\-run\fR
 Simply call the solver without actually performing any build/install operations.
