@@ -389,7 +389,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   | [], [] -> OpamFilename.rmdir share
   | _      ->
     OpamGlobals.msg
-      "WARNING: %s is not empty. We keep its contents for futur installations.\n"
+      "WARNING: %s is not empty. We keep its contents for future installations.\n"
       (OpamFilename.Dir.to_string share));
 
   (* Remove .config and .install *)

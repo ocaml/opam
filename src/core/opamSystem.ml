@@ -355,7 +355,7 @@ let extract file dst =
         | [x] ->
             mkdir (Filename.dirname dst);
             command [ "mv"; x; dst]
-        | _   -> internal_error "The archive contains mutliple root directories."
+        | _   -> internal_error "The archive contains multiple root directories."
   )
 
 let extract_in file dst =

@@ -53,7 +53,7 @@ module Syntax = struct
       let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
       if too_many <> [] then
         OpamGlobals.error
-          "%s appear too many times in %s"
+          "%s appears too many times in %s"
           f.file_name
           (OpamMisc.string_of_list (fun x -> x) too_many);
       if invalids <> [] then
@@ -799,7 +799,7 @@ module OPAM = struct
       | Some n, Some nv ->
           if OpamPackage.name nv <> n then
             OpamGlobals.error_and_exit
-              "Inconsistant naming scheme in %s"
+              "Inconsistent naming scheme in %s"
               (OpamFilename.to_string filename)
           else
             n in
@@ -812,7 +812,7 @@ module OPAM = struct
       | Some v, Some nv ->
           if OpamPackage.version nv <> v then
             OpamGlobals.error_and_exit
-              "Inconsistant versioning scheme in %s"
+              "Inconsistent versioning scheme in %s"
               (OpamFilename.to_string filename)
           else
             v in

@@ -536,7 +536,7 @@ let config =
   let command, params = mk_subcommands ~name:"DOMAIN" commands in
   let is_rec      = mk_flag ["R";"rec"]     "Recursive query." in
   let all_doc         = "Enable all the global and user configuration options." in
-  let global_doc      = "Enbale all the global configuration options." in
+  let global_doc      = "Enable all the global configuration options." in
   let user_doc        = "Enable all the user configuration options." in
   let ocamlinit_doc   = "Modify ~/.ocamlinit to make `#use \"topfind\"` works in the toplevel." in
   let profile_doc     = "Modify ~/.profile (or ~/.zshrc if running zsh) to \
@@ -620,14 +620,14 @@ let config =
     | Some `exec ->
       let usage = "Usage: 'opam config exec \"<CMD> <ARG1> ... <ARGn>\"'" in
       begin match params with
-        | []  -> OpamGlobals.error_and_exit "Missing paramater. %s" usage
+        | []  -> OpamGlobals.error_and_exit "Missing parameter. %s" usage
         | [c] -> Client.CONFIG.exec c
-        | _   -> OpamGlobals.error_and_exit "Too many paramaters. %s" usage
+        | _   -> OpamGlobals.error_and_exit "Too many parameters. %s" usage
       end;
     | Some `list -> Client.CONFIG.list (List.map OpamPackage.Name.of_string params)
     | Some `var  ->
       if params = [] then
-        OpamGlobals.error_and_exit "Missing paramater. Usage: 'opam config var <VARIABLE>'"
+        OpamGlobals.error_and_exit "Missing parameter. Usage: 'opam config var <VARIABLE>'"
       else
         Client.CONFIG.variable (OpamVariable.Full.of_string (List.hd params))
     | Some `subst    -> Client.CONFIG.subst (List.map OpamFilename.Base.of_string params)
