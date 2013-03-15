@@ -1321,12 +1321,15 @@ let install_compiler t ~quiet switch compiler =
       (OpamCompiler.to_string compiler);
     OpamGlobals.exit 0;
   );
+  let comp = OpamFile.Comp.read comp_f in
 
   let switch_dir = OpamPath.Switch.root t.root switch in
 
   (* Do some clean-up if necessary *)
-  if not (OpamSwitch.Map.mem switch t.aliases) && OpamFilename.exists_dir switch_dir then
-    OpamFilename.rmdir switch_dir;
+  if not OpamSwitch.Map.mem switch t.aliases
+  && not (OpamFile.Comp.preinstalled comp)
+  && OpamFilename.exists_dir switch_dir
+  then OpamFilename.rmdir switch_dir;
 
   if OpamFilename.exists_dir switch_dir then (
     OpamGlobals.msg "The compiler %s is already installed.\n" (OpamSwitch.to_string switch);
@@ -1350,7 +1353,6 @@ let install_compiler t ~quiet switch compiler =
 
   install_conf_ocaml_config t.root switch;
 
-  let comp = OpamFile.Comp.read comp_f in
   begin try
     if not (OpamFile.Comp.preinstalled comp) then begin
 
