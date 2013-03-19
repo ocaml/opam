@@ -27,12 +27,12 @@ OCAMLBUILD_FLAGS=\
 with-ocamlbuild: autogen
 	@for i in core repositories solver client; do\
 	  echo Compiling opam-$$i;\
-	  find src/$$i -type f -name \*.ml -or -name \*.mll -or -name \*.mly\
+	  find src/$$i -type f \( -not -name opamMain.ml \) \
+	                       \( -name \*.ml -or -name \*.mly -or -name \*.mll \)\
 	    | xargs -n 1 basename\
 	    | awk -F. "{ print (toupper(substr(\$$1,0,1)) substr(\$$1,2)) }"\
 	    > src/$$i/opam-$$i.mllib &&\
-	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa &&\
-	  rm -f src/$$i/opam-$$i.mllib;\
+	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa;\
 	done;\
 	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native opam_mk_repo.native opam_repo_check.native &&\
 	ln -sf _build/src/client/opamMain.native opam &&\
