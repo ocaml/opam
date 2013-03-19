@@ -1215,7 +1215,7 @@ let print_env_warning t user =
       let eval () =
         let root =
           if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
-            Printf.sprintf " --root=%s" OpamGlobals.default_opam_dir
+            Printf.sprintf " --root=%s" !OpamGlobals.root_dir
           else
             "" in
         Printf.sprintf "eval `opam config env%s`\n" root in
