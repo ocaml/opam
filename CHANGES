@@ -1,3 +1,6 @@
+1.0.1 [Mar 2013]
+* Fix installation of local compilers with local paths endings with `.../ocaml/`
+
 1.0.0 [Mar 2013]
 * Improve the lexer performance (thx to @oandrieu)
 * Fix various typos (thx to @chaudhuri)
