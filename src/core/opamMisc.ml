@@ -374,8 +374,24 @@ let guess_shell_compat () =
   try
     match Filename.basename (getenv "SHELL") with
     | "tcsh"
-    | "csh" -> `csh
-    | "zsh" -> `zsh
-    | _     -> `sh
+    | "csh"  -> `csh
+    | "zsh"  -> `zsh
+    | "bash" -> `bash
+    | _      -> `sh
   with _ ->
     `sh
+
+let guess_dot_profile shell =
+  let home f =
+    try Filename.concat (getenv "HOME") f
+    with _ -> f in
+  match shell with
+  | `zsh  -> home ".zshrc"
+  | `bash ->
+    let bash_profile = home ".bash_profile" in
+    let bashrc = home ".bashrc" in
+    if Sys.file_exists bash_profile then
+      bash_profile
+    else
+      bashrc
+  | _     -> home ".profile"

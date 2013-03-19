@@ -134,7 +134,7 @@ type ppflag =
   | Camlp4 of string list
   | Cmd of string list
 
-type shell = [`csh|`zsh|`sh]
+type shell = [`csh|`zsh|`sh|`bash]
 
 type global_config = {
   complete   : bool;

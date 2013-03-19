@@ -351,7 +351,7 @@ type config = {
 
 
 (** Shell compatibility modes *)
-type shell = [`csh|`zsh|`sh]
+type shell = [`csh|`zsh|`sh|`bash]
 
 (** Global configuration option *)
 type global_config = {

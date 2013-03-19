@@ -691,9 +691,10 @@ let init_sh        = "init.sh"
 let init_zsh       = "init.zsh"
 let init_csh       = "init.csh"
 let init_file = function
-  | `sh  -> init_sh
-  | `csh -> init_csh
-  | `zsh -> init_zsh
+  | `sh   -> init_sh
+  | `csh  -> init_csh
+  | `zsh  -> init_zsh
+  | `bash -> init_sh
 
 let source t ?(interactive_only=false) f =
   let file f = OpamFilename.to_string (OpamPath.init t.root // f) in

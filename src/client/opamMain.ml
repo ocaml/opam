@@ -344,13 +344,7 @@ let guess_repository_kind kind address =
 let init_dot_profile shell dot_profile =
   match dot_profile with
   | Some n -> n
-  | None ->
-    let f = match shell with
-      | `zsh -> ".zshrc"
-      | _ -> ".profile"
-    in
-    let f = Filename.concat (OpamMisc.getenv "HOME") f in
-    OpamFilename.of_string f
+  | None   -> OpamFilename.of_string (OpamMisc.guess_dot_profile shell)
 
 module Client = OpamClient.SafeAPI
 
