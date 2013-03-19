@@ -1,4 +1,5 @@
 1.0.1 [Mar 2013]
+* `opam-client` can now be used in a toplevel
 * `-n` now means `--no-setup` and not `--no-checksums` anymore
 * Fix stupid typo in detection of FreeBSD archs
 * Fix installation of local compilers with local paths endings with `.../ocaml/`
