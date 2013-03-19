@@ -61,7 +61,10 @@ let default_package = "conf-ocaml"
 
 let system = "system"
 
-let switch : string option ref = ref None
+let switch = ref (
+    try Some (OpamMisc.getenv "OPAMSWITCH")
+    with _ -> None
+  )
 
 let opam_version = "1"
 

@@ -130,28 +130,27 @@ let remove switch =
   OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
   OpamFilename.rmdir comp_dir
 
-let update_config t ~warning switch =
-  let config = OpamFile.Config.with_switch t.config switch in
-  OpamFile.Config.write (OpamPath.config t.root) config;
-  if warning then (
-    let t = OpamState.load_state "switch-update-config" in
+let update_global_config t ~warning switch =
+  OpamState.update_switch_config t switch;
+  let t = OpamState.load_state "switch-update-config" in
+  if warning then
     OpamState.print_env_warning t None
-  )
 
-let install_with_packages ~quiet ~warning ~packages switch compiler =
+let install_with_packages ~quiet ~packages switch compiler =
   log "install %b %s %s" quiet
     (OpamSwitch.to_string switch)
     (OpamCompiler.to_string compiler);
 
   (* Remember the current switch to be able to roll-back *)
   let t = OpamState.load_state "switch-install-with-packages-1" in
-  let old_switch = t.switch in
 
   (* install the new OCaml version *)
   OpamState.install_compiler t ~quiet switch compiler;
 
   (* install the compiler packages *)
+  OpamGlobals.switch := Some (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-install-with-packages-2" in
+
   let to_install, roots = match packages with
     | Some (p, r)  -> (OpamSolution.eq_atoms_of_packages p, OpamPackage.names_of_packages r)
     | None         ->
@@ -180,7 +179,6 @@ let install_with_packages ~quiet ~warning ~packages switch compiler =
         (OpamPackage.Version.to_string v) in
 
   let uninstall_compiler () =
-    update_config t ~warning old_switch;
     remove switch in
 
   match bad_packages with
@@ -191,7 +189,6 @@ let install_with_packages ~quiet ~warning ~packages switch compiler =
         wish_upgrade = to_install } in
     begin try
       OpamSolution.check_solution solution;
-      if warning then OpamState.print_env_warning t None
     with e ->
       uninstall_compiler ();
       raise e
@@ -200,25 +197,35 @@ let install_with_packages ~quiet ~warning ~packages switch compiler =
     uninstall_compiler ();
     package_error p
 
-let install ~quiet ~warning switch compiler =
-  install_with_packages ~quiet ~warning ~packages:None switch compiler
+let install ~quiet ~warning ~update_config switch compiler =
+  let t = OpamState.load_state "install" in
+  let comp_dir = OpamPath.Switch.root t.root switch in
+  let comp_f = OpamPath.compiler t.root compiler in
+  if not (OpamFilename.exists_dir comp_dir)
+  && not (OpamFilename.exists comp_f) then
+    OpamCompiler.unknown compiler;
+  if not (OpamSwitch.Map.mem switch t.aliases) then
+    install_with_packages ~quiet ~packages:None switch compiler
+  else (
+    let a = OpamSwitch.Map.find switch t.aliases in
+    if a <> compiler then
+      OpamGlobals.error_and_exit
+        "The compiler switch %s is already installed as an alias for %s."
+        (OpamSwitch.to_string switch)
+        (OpamCompiler.to_string a)
+  );
+  if update_config then
+    update_global_config ~warning t switch
 
 let switch ~quiet ~warning switch =
   log "switch switch=%s" (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-1" in
-  let comp_dir = OpamPath.Switch.root t.root switch in
-  let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
-  let comp_f = OpamPath.compiler t.root compiler in
-  if not (OpamFilename.exists_dir comp_dir) && not (OpamFilename.exists comp_f) then
-    OpamCompiler.unknown compiler;
-  if not (OpamSwitch.Map.mem switch t.aliases) then
-    install ~quiet ~warning switch compiler
-  else
-    update_config t ~warning switch;
-  (* Check the consistency of the new switch *)
-  let new_state = OpamState.load_state "switch-2" in
-  OpamState.update_env_variables t;
-  OpamState.check_base_packages new_state
+  if not (OpamSwitch.Map.mem switch t.aliases) then (
+    let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
+    install ~quiet ~warning ~update_config:true switch compiler
+  ) else
+    update_global_config ~warning t switch;
+  OpamState.check_base_packages t
 
 (* Remove from [set] all the packages whose names appear in
    [filter]. *)
@@ -285,4 +292,4 @@ let reinstall switch =
   OpamFilename.rmdir (OpamPath.Switch.root t.root switch);
 
   (* Install the compiler *)
-  install_with_packages ~quiet:false ~packages ~warning:false switch ocaml_version
+  install_with_packages ~quiet:false ~packages switch ocaml_version

@@ -122,9 +122,6 @@ val display_setup: state -> shell -> filename -> unit
 (** Update the user configuration. *)
 val update_setup: state -> user_config option -> global_config option -> unit
 
-(** Update the global environment variables. *)
-val update_env_variables: state -> unit
-
 (** {2 Substitutions} *)
 
 (** Compute the value of a variable *)
@@ -182,6 +179,9 @@ val compilers: root:dirname -> compiler_set
 
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
+
+(** Write the right compiler switch in ~/.opam/config *)
+val update_switch_config: state -> switch -> unit
 
 (** Get the packages associated with the given compiler *)
 val get_compiler_packages: state -> compiler -> atom list

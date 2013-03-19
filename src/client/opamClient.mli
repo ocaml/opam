@@ -116,7 +116,7 @@ module API: sig
     val switch: quiet:bool -> warning:bool -> switch -> unit
 
     (** Install the given compiler. *)
-    val install: quiet:bool -> warning:bool -> switch -> compiler -> unit
+    val install: quiet:bool -> warning:bool -> update_config:bool -> switch -> compiler -> unit
 
     (** Import the packages from a file. If no filename is specified,
         read stdin. *)

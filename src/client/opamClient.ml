@@ -705,6 +705,7 @@ module API = struct
       let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
       let quiet = (compiler = OpamCompiler.system) in
       OpamState.install_compiler t ~quiet switch compiler;
+      OpamState.update_switch_config t switch;
       update_packages t ~show_packages:false t.repositories OpamPackage.Name.Set.empty;
 
       (* Finally, load the complete state and install the compiler packages *)
@@ -1075,8 +1076,8 @@ module SafeAPI = struct
     let switch ~quiet ~warning name =
       global_lock (fun () -> API.SWITCH.switch ~quiet ~warning name)
 
-    let install ~quiet ~warning switch ocaml_version =
-      global_lock (fun () -> API.SWITCH.install ~quiet ~warning switch ocaml_version)
+    let install ~quiet ~warning ~update_config switch ocaml_version =
+      global_lock (fun () -> API.SWITCH.install ~quiet ~warning ~update_config switch ocaml_version)
 
     let import filename =
       switch_lock (fun () -> API.SWITCH.import filename)

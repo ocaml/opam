@@ -881,13 +881,17 @@ let env_updates t =
   let man_path =
     "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let comp_env = OpamFile.Comp.env comp in
+  let switch =
+    match !OpamGlobals.switch with
+    | None   -> []
+    | Some s -> [ "OPAMSWITCH", "=", s ] in
   let root =
     if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
       [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
     else
       [] in
 
-  new_path :: man_path :: toplevel_dir :: (root @ comp_env)
+  new_path :: man_path :: toplevel_dir :: (switch @ root @ comp_env)
 
 let get_opam_env t =
   add_to_env t [] (env_updates t)
@@ -1063,9 +1067,6 @@ let status_of_init_file t init_sh =
       None
   ) else
     None
-
-let update_env_variables t =
-  update_init_scripts t ~global:None
 
 let dot_profile_needs_update t dot_profile =
   if OpamFilename.exists dot_profile then (
@@ -1397,9 +1398,7 @@ let install_compiler t ~quiet switch compiler =
       end;
     end;
 
-    (* write the new version in the configuration file *)
-    let config = OpamFile.Config.with_switch t.config switch in
-    OpamFile.Config.write (OpamPath.config t.root) config;
+    (* Update ~/.opam/aliases *)
     add_switch t.root switch compiler
 
   with e ->
@@ -1407,6 +1406,12 @@ let install_compiler t ~quiet switch compiler =
       OpamFilename.rmdir switch_dir;
     raise e
   end
+
+(* write the new version in the configuration file *)
+let update_switch_config t switch =
+  let config = OpamFile.Config.with_switch t.config switch in
+  OpamFile.Config.write (OpamPath.config t.root) config;
+  update_init_scripts t ~global:None
 
 let update_pinned_package t n =
   if OpamPackage.Name.Map.mem n t.pinned then

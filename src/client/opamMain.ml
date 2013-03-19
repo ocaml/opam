@@ -911,9 +911,9 @@ let switch =
   ] @ mk_subdoc commands in
 
   let command, params = mk_subcommands_with_default commands
-    "If a compiler switch is given instead of an usual command, this command will switch to \
-     the given compiler. You will then need to run $(b,eval `opam config env`) to update your \
-     environment variables." in
+      "If a compiler switch is given instead of an usual command, this command will switch to \
+       the given compiler. You will then need to run $(b,eval `opam config env`) to update your \
+       environment variables." in
   let alias_of =
     mk_opt ["a";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
@@ -924,7 +924,12 @@ let switch =
       Arg.(some filename) None in
   let no_warning =
     mk_flag ["no-warning"] "Do not display any warning related to environment variables." in
-  let switch global_options build_options command alias_of filename print_short installed_only no_warning params =
+  let no_switch =
+    mk_flag ["no-switch"]
+      "Only install the compiler switch, without switching to it. If the compiler switch \
+       is already installed, then do nothing." in
+
+  let switch global_options build_options command alias_of filename print_short installed_only no_warning no_switch params =
     set_global_options global_options;
     set_build_options build_options;
     let no_alias_of () =
@@ -937,37 +942,46 @@ let switch =
     match command, params with
     | None      , []
     | Some `list, [] ->
-        no_alias_of ();
-        Client.SWITCH.list ~print_short ~installed_only
+      no_alias_of ();
+      Client.SWITCH.list ~print_short ~installed_only
     | Some `install, [switch] ->
-        Client.SWITCH.install ~quiet:global_options.quiet ~warning (OpamSwitch.of_string switch) (mk_comp switch)
+      Client.SWITCH.install
+        ~quiet:global_options.quiet
+        ~warning
+        ~update_config:(not no_switch)
+        (OpamSwitch.of_string switch)
+        (mk_comp switch)
     | Some `export, [] ->
-        no_alias_of ();
-        Client.SWITCH.export filename
+      no_alias_of ();
+      Client.SWITCH.export filename
     | Some `import, [] ->
-        no_alias_of ();
-        Client.SWITCH.import filename
+      no_alias_of ();
+      Client.SWITCH.import filename
     | Some `remove, switches ->
-        no_alias_of ();
-        List.iter (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch)) switches
+      no_alias_of ();
+      List.iter (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch)) switches
     | Some `reinstall, [switch] ->
-        no_alias_of ();
-        Client.SWITCH.reinstall (OpamSwitch.of_string switch)
+      no_alias_of ();
+      Client.SWITCH.reinstall (OpamSwitch.of_string switch)
     | Some `current, [] ->
-        no_alias_of ();
-        Client.SWITCH.show ()
+      no_alias_of ();
+      Client.SWITCH.show ()
     | Some `default switch, [] ->
-        (match alias_of with
-        | None -> Client.SWITCH.switch ~quiet:global_options.quiet ~warning (OpamSwitch.of_string switch)
-        | _    ->
-          Client.SWITCH.install ~quiet:global_options.quiet ~warning
-            (OpamSwitch.of_string switch) (mk_comp switch))
+      (match alias_of with
+       | None -> Client.SWITCH.switch ~quiet:global_options.quiet ~warning (OpamSwitch.of_string switch)
+       | _    ->
+         Client.SWITCH.install
+           ~quiet:global_options.quiet
+           ~warning
+           ~update_config:(not no_switch)
+           (OpamSwitch.of_string switch)
+           (mk_comp switch))
     | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
 
   Term.(pure switch
     $global_options $build_options $command
     $alias_of $filename $print_short_flag
-    $installed_only_flag $no_warning $params),
+    $installed_only_flag $no_warning $no_switch $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)

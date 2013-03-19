@@ -18,7 +18,7 @@
 open OpamTypes
 
 (** Install a new switch. *)
-val install: quiet:bool -> warning:bool -> switch -> compiler -> unit
+val install: quiet:bool -> warning:bool -> update_config:bool -> switch -> compiler -> unit
 
 (** Import a file which contains the packages to install. *)
 val import: filename option -> unit
