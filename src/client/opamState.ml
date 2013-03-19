@@ -610,18 +610,21 @@ let load_state ?(save_cache=true) call_site =
       log "%S does not contain the compiler name associated to the switch %s"
         (OpamFilename.to_string (OpamPath.aliases root))
         (OpamSwitch.to_string switch);
-      if OpamSwitch.Map.cardinal aliases > 0 then (
-        let new_switch, new_compiler = OpamSwitch.Map.choose aliases in
-        OpamGlobals.error "The current switch (%s) is an unknown compiler switch. Switching back to %s ..."
-          (OpamSwitch.to_string switch)
-          (OpamSwitch.to_string new_switch);
-        let config = OpamFile.Config.with_switch config new_switch in
-        OpamFile.Config.write config_p config;
-        new_switch, new_compiler;
-      ) else
-        OpamGlobals.error_and_exit
-          "The current switch (%s) is an unknown compiler switch."
-          (OpamSwitch.to_string switch) in
+      match !OpamGlobals.switch with
+      | Some s -> OpamSwitch.not_installed (OpamSwitch.of_string s)
+      | None   ->
+        if OpamSwitch.Map.cardinal aliases > 0 then (
+          let new_switch, new_compiler = OpamSwitch.Map.choose aliases in
+          OpamGlobals.error "The current switch (%s) is an unknown compiler switch. Switching back to %s ..."
+            (OpamSwitch.to_string switch)
+            (OpamSwitch.to_string new_switch);
+          let config = OpamFile.Config.with_switch config new_switch in
+          OpamFile.Config.write config_p config;
+          new_switch, new_compiler;
+        ) else
+          OpamGlobals.error_and_exit
+            "The current switch (%s) is an unknown compiler switch."
+            (OpamSwitch.to_string switch) in
 
   let compiler_version =
     let comp_f = OpamPath.compiler root compiler in

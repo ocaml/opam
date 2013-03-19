@@ -19,3 +19,6 @@ include OpamMisc.ABSTRACT
 
 (** Default switch *)
 val default: t
+
+(** Display a nice error message when a switch is not installed. *)
+val not_installed: t -> 'a
