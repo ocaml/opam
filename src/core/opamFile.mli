@@ -250,7 +250,7 @@ module Comp: sig
 
   (** Options to give to build the package. If this one is provided,
       nothing should be specified for [configure] and [make]. *)
-  val build: t -> string list list
+  val build: t -> command list
 
   (** Packages to install immediately after the creation of OCaml *)
   val packages: t -> formula

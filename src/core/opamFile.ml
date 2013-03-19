@@ -1120,7 +1120,7 @@ module Comp = struct
     patches      : filename list ;
     configure    : string list ;
     make         : string list ;
-    build        : string list list ;
+    build        : command list ;
     bytecomp     : string list ;
     asmcomp      : string list ;
     bytelink     : string list ;
@@ -1259,7 +1259,7 @@ module Comp = struct
         (OpamFormat.parse_list (OpamFormat.parse_string |> OpamFilename.raw_file)) in
     let configure = OpamFormat.assoc_string_list s s_configure in
     let make = OpamFormat.assoc_string_list s s_make      in
-    let build = OpamFormat.assoc_list s s_build (OpamFormat.parse_list OpamFormat.parse_string_list) in
+    let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
     let env = OpamFormat.assoc_list s s_env (OpamFormat.parse_list OpamFormat.parse_env_variable) in
     let bytecomp = OpamFormat.assoc_string_list s s_bytecomp  in
     let asmcomp = OpamFormat.assoc_string_list s s_asmcomp   in
@@ -1305,7 +1305,7 @@ module Comp = struct
         Variable (s_patches     , OpamFormat.make_list (OpamFilename.to_string |> OpamFormat.make_string) s.patches);
         Variable (s_configure   , OpamFormat.make_string_list s.configure);
         Variable (s_make        , OpamFormat.make_string_list s.make);
-        Variable (s_build       , OpamFormat.make_list OpamFormat.make_string_list s.build);
+        Variable (s_build       , OpamFormat.make_commands s.build);
         Variable (s_bytecomp    , OpamFormat.make_string_list s.bytecomp);
         Variable (s_asmcomp     , OpamFormat.make_string_list s.asmcomp);
         Variable (s_bytelink    , OpamFormat.make_string_list s.bytelink);

@@ -1389,8 +1389,7 @@ let install_compiler t ~quiet switch compiler =
           ]
       end else begin
         let t = { t with switch } in
-        let builds =
-          List.map (List.map (substitute_string t)) (OpamFile.Comp.build comp) in
+        let builds = filter_commands t (OpamFile.Comp.build comp) in
         OpamFilename.exec build_dir builds
       end;
     end;

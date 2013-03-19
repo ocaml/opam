@@ -109,18 +109,12 @@ let copy_unique_dir ~src ~dst =
   )
 
 let link_dir ~src ~dst =
-  rmdir dst;
-  let tmp_dst = Filename.concat (Filename.basename src) (Filename.basename dst) in
-  let base = Filename.dirname dst in
-  mkdir base;
-  if dst = tmp_dst then
-    in_dir base (fun () -> OpamSystem.command [ "ln"; "-s"; src])
-  else
-    in_dir base (fun () ->
-      OpamSystem.commands [
-        ["ln"; "-s"; src];
-        ["mv"; (Filename.basename src); (Filename.basename dst) ];
-      ])
+  if exists_dir dst then
+    OpamSystem.internal_error "Cannot link: %s already exists." (Dir.to_string dst)
+  else (
+    mkdir (Filename.dirname dst);
+    OpamSystem.link (Dir.to_string src) (Dir.to_string dst)
+  )
 
 let basename_dir dirname =
   Base.of_string (Filename.basename (Dir.to_string dirname))
