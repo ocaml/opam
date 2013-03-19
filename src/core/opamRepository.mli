@@ -109,7 +109,7 @@ val compilers: repository_root -> (filename * filename option) compiler_map
 val files: repository_root -> package -> filename_set
 
 (** Check if a package has a given prefix in the repository *)
-val prefix: repository_root -> package -> string option
+val read_prefix: repository_root -> string name_map
 
 (** Find an eventual prefix in a map *)
 val find_prefix: string name_map -> package -> string option

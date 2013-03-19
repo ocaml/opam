@@ -32,8 +32,8 @@ let update_index t =
   let packages = ref OpamPackage.Set.empty in
 
   (* Add new repositories *)
-  let repo_index =
-    List.fold_left (fun repo_index r ->
+  let repo_index, prefixes =
+    List.fold_left (fun (repo_index, prefixes) r ->
       let p = OpamPath.Repository.create t.root r.repo_name in
       let prefix, available = OpamRepository.packages p in
       let prefix_f = OpamPath.Repository.prefix p in
@@ -42,20 +42,23 @@ let update_index t =
       else if OpamFilename.exists prefix_f then
         OpamFilename.remove prefix_f;
       packages := OpamPackage.Set.union available !packages;
-      OpamPackage.Set.fold (fun nv repo_index ->
-        let name = OpamPackage.name nv in
-        if not (OpamPackage.Name.Map.mem name repo_index) then
-          OpamPackage.Name.Map.add name [r.repo_name] repo_index
-        else
-          let repo_s = OpamPackage.Name.Map.find name repo_index in
-          if not (List.mem r.repo_name repo_s) then
-            let repo_index = OpamPackage.Name.Map.remove name repo_index in
-            let repo_s = OpamMisc.insert (compare_repo t) r.repo_name repo_s in
-            OpamPackage.Name.Map.add name repo_s repo_index
+      let repo_index =
+        OpamPackage.Set.fold (fun nv repo_index ->
+          let name = OpamPackage.name nv in
+          if not (OpamPackage.Name.Map.mem name repo_index) then
+            OpamPackage.Name.Map.add name [r.repo_name] repo_index
           else
-            repo_index
-      ) available repo_index
-    ) t.repo_index repositories in
+            let repo_s = OpamPackage.Name.Map.find name repo_index in
+            if not (List.mem r.repo_name repo_s) then
+              let repo_index = OpamPackage.Name.Map.remove name repo_index in
+              let repo_s = OpamMisc.insert (compare_repo t) r.repo_name repo_s in
+              OpamPackage.Name.Map.add name repo_s repo_index
+            else
+              repo_index
+        ) available repo_index in
+      let prefixes = OpamRepositoryName.Map.add r.repo_name prefix prefixes in
+      (repo_index, prefixes)
+    ) (t.repo_index, OpamRepositoryName.Map.empty) repositories in
 
   (* Remove package without any valid repository *)
   let repo_index =
@@ -67,7 +70,7 @@ let update_index t =
 
   (* Write ~/.opam/repo/index *)
   OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index;
-  let t = { t with repo_index } in
+  let t = { t with repo_index; prefixes } in
 
   (* suppress previous links, but keep metadata of installed packages
      but deleted from the repository (to be still be able to uninstall
@@ -85,7 +88,8 @@ let update_index t =
   let map = OpamState.package_repository_map t in
   OpamPackage.Map.iter (fun nv repo ->
     let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-    let prefix = OpamRepository.prefix repo_p nv in
+    let prefix = OpamRepositoryName.Map.find repo.repo_name t.prefixes in
+    let prefix = OpamRepository.find_prefix prefix nv in
     List.iter (fun (g, r) ->
       let global_file = g t.root nv in
       let repo_file = r repo_p nv in

@@ -45,6 +45,9 @@ type state = {
   (** The list of repositories *)
   repositories: OpamFile.Repo_config.t repository_name_map;
 
+  (** The eventual prefix files *)
+  prefixes: OpamFile.Prefix.t repository_name_map;
+
   (** The list of packages *)
   packages: package_set;
 
@@ -281,6 +284,7 @@ module Types: sig
     opams: OpamFile.OPAM.t package_map;
     descrs: OpamFile.Descr.t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
+    prefixes: OpamFile.Prefix.t repository_name_map;
     packages: package_set;
     available_packages: package_set Lazy.t;
     aliases: OpamFile.Aliases.t;

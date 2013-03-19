@@ -211,13 +211,8 @@ let download_archive r nv =
   let module B = (val find_backend r: BACKEND) in
   B.download_archive ~address:r.repo_address nv
 
-let prefix local_repo nv =
-  let map = OpamFile.Prefix.safe_read (OpamPath.Repository.prefix local_repo) in
-  let name = OpamPackage.name nv in
-  if OpamPackage.Name.Map.mem name map then
-    Some (OpamPackage.Name.Map.find name map)
-  else
-    None
+let read_prefix local_repo =
+  OpamFile.Prefix.safe_read (OpamPath.Repository.prefix local_repo)
 
 let find_prefix prefix nv =
   let name = OpamPackage.name nv in
@@ -227,7 +222,7 @@ let find_prefix prefix nv =
 (* Copy the file in local_repo in current dir *)
 let copy_files local_repo nv =
   let local_dir = OpamFilename.cwd () in
-  let prefix = prefix local_repo nv in
+  let prefix = find_prefix (read_prefix local_repo) nv in
   (* Eventually add the <package>/files/* to the extracted dir *)
   log "Adding the files to the archive";
   let files = OpamFilename.rec_files (OpamPath.Repository.files local_repo prefix nv) in
@@ -254,7 +249,7 @@ let make_archive ?(gener_digest=false) ?local_path nv =
      specified *)
   let local_repo = local_repo () in
   let local_dir = OpamPath.Repository.root local_repo in
-  let prefix = prefix local_repo nv in
+  let prefix = find_prefix (read_prefix local_repo) nv in
   let url_f = OpamPath.Repository.url local_repo prefix nv in
 
   let download_dir = OpamPath.Repository.tmp_dir local_repo nv in
@@ -371,10 +366,12 @@ let update r =
 
   check_version repo;
 
+  let prefix = read_prefix repo in
   let updated_packages = nv_set_of_files ~all:false updated_files in
+
   (* Clean-up archives and tmp files on URL changes *)
   OpamPackage.Set.iter (fun nv ->
-    let prefix = prefix repo nv in
+    let prefix = find_prefix prefix nv in
     let url_f = OpamPath.Repository.url repo prefix nv in
     let files = OpamPath.Repository.files repo prefix nv in
     if OpamFilename.Set.mem url_f updated_files
@@ -390,7 +387,7 @@ let update r =
   let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
   log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
   let updated_cached_packages = OpamPackage.Set.filter (fun nv ->
-    let prefix = prefix repo nv in
+    let prefix = find_prefix prefix nv in
     let url_f = OpamPath.Repository.url repo prefix nv in
     if OpamFilename.exists url_f then (
       let url = OpamFile.URL.read url_f in
@@ -459,7 +456,7 @@ let compilers r =
   OpamCompiler.list (OpamPath.Repository.compilers_dir r)
 
 let files r nv =
-  let prefix = prefix r nv in
+  let prefix = find_prefix (read_prefix r) nv in
   let l =
     if OpamFilename.exists_dir (OpamPath.Repository.files r prefix nv) then
       OpamFilename.rec_files (OpamPath.Repository.files r prefix nv)
