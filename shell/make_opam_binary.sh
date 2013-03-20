@@ -38,6 +38,7 @@ UNAME_MACHINE=`(uname -m) 2>/dev/null` || UNAME_MACHINE=unknown
 UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
 UNAME_SYSTEM=`(uname -s) 2>/dev/null`  || UNAME_SYSTEM=unknown
 UNAME_VERSION=`(uname -v) 2>/dev/null` || UNAME_VERSION=unknown
+file="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
 
 if which wget >/dev/null; then
     WGETOPTS="--passive-ftp -q -O"
@@ -55,6 +56,7 @@ download() {
     mkdir -p $BUILDDIR
     cd $BUILDDIR
     file=opam-full-$VERSION.tar.gz
+    echo "Downloading ${url}/${file} ..."
     wget $WGETOPTS $file "$url/$file" ||
 	error "Couldn't download $url/$file"
 }
@@ -67,7 +69,7 @@ extract() {
 
 # Build the binary
 build() {
-    file="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
+
     ./configure
     pwd
     make
@@ -75,7 +77,9 @@ build() {
     ln -sf $BUILDDIR/opam-full-$VERSION/_obuild/opam/opam.asm $file
 }
 
-echo Downloading OPAM...
+{
 download "http://www.ocamlpro.com/pub"
 extract
 build
+} 1>&2
+echo $file
