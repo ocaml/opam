@@ -4,7 +4,7 @@ set -e
 
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 
-VERSION='0.9.1'
+VERSION='1.0.0'
 
 default_ocaml=4.00.1
 
@@ -75,6 +75,9 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
     file="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
   ;;
   x86_64:Darwin:*:*)
+    file="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
+  ;;
+  i686:Linux:*:*)
     file="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
   ;;
   *)
