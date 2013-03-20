@@ -12,7 +12,7 @@ Usage:
     ./make_opam_binary VERSION
 
     Script to create a binary version of opam.
-    VERSION is the version of OPAM you want to build.directory where you want to install OPAM.
+    VERSION is the version of OPAM you want to build.
 EOF
     exit 1
 }
