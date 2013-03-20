@@ -1430,7 +1430,7 @@ let install_compiler t ~quiet switch compiler =
 let update_switch_config t switch =
   let config = OpamFile.Config.with_switch t.config switch in
   OpamFile.Config.write (OpamPath.config t.root) config;
-  update_init_scripts t ~global:None
+  update_init_scripts { t with switch }  ~global:None
 
 let update_pinned_package t n =
   if OpamPackage.Name.Map.mem n t.pinned then
