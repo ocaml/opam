@@ -940,7 +940,7 @@ module API = struct
     let depends =
       let universe = OpamState.universe t Depends in
       OpamSolver.reverse_dependencies ~depopts:true ~installed:true universe reinstall in
-    let to_process = List.rev_map (fun pkg -> To_recompile pkg) depends in
+    let to_process = List.map (fun pkg -> To_recompile pkg) depends in
     let solution = OpamSolution.apply t Reinstall (OpamSolver.sequential_solution to_process) in
     OpamSolution.check_solution solution
 
