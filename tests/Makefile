@@ -42,6 +42,8 @@ run:
 	$(MAKE) list && \
 	$(MAKE) install && \
 	$(MAKE) list && \
+	$(MAKE) reinstall && \
+	$(MAKE) list && \
 	$(MAKE) upload-new && \
 	$(MAKE) list && \
 	$(MAKE) upgrade && \
@@ -167,6 +169,11 @@ install:
 	$(CHECK) -l install-4 P1.1 P2.1 P3.1~weird-version.test
 	$(OPAM) install P4
 	$(CHECK) -l install-5 P1.1 P2.1 P3.1~weird-version.test P4.1
+
+reinstall:
+	$(CHECK) -l reinstall-1 P1.1 P2.1 P3.1~weird-version.test P4.1
+	$(OPAM) reinstall P1
+	$(CHECK) -l reinstall-2 P1.1 P2.1 P3.1~weird-version.test P4.1
 
 upload-new:
 ifeq ($(REPOKIND), git)
