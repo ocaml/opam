@@ -3,6 +3,12 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# voaacenc
+add camlidl
+# svm
+add libsvm-dev
+# buddy
+add libbdd-dev
 # libvirt
 add libvirt-dev
 # ffmpeg
