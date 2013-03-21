@@ -1,4 +1,5 @@
 1.0.1 [Mar 2013]
+* Fix `opam reinstall` when reinstalling a package wich is a dependency of installed packages (regression introduced in 0.9.5)
 * Export and read `OPAMSWITCH` to be able to call OPAM in different switches
 * `opam-client` can now be used in a toplevel
 * `-n` now means `--no-setup` and not `--no-checksums` anymore
