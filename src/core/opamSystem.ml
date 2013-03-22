@@ -545,12 +545,26 @@ let patch p =
   aux 0
 
 let () =
+  let with_opam_info m =
+    let git_version = match OpamVersion.git with
+      | None   -> ""
+      | Some v -> Printf.sprintf " (%s)" (OpamVersion.to_string v) in
+    let opam_version =
+      Printf.sprintf "%s%s" (OpamVersion.to_string OpamVersion.current) git_version in
+    let os = OpamGlobals.os_string () in
+    Printf.sprintf
+      "# %-15s %s\n\
+       # %-15s %s\n\
+       %s"
+      "opam-version" opam_version
+      "os" os
+      m in
   Printexc.register_printer (function
     | Process_error r  -> Some (OpamProcess.string_of_result r)
-    | Internal_error m -> Some m
-    | Unix.Unix_error (e,fn, msg) ->
+    | Internal_error m -> Some (with_opam_info m)
+    | Unix.Unix_error (e, fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
       let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in
-      Some error
+      Some (with_opam_info error)
     | _ -> None
   )
