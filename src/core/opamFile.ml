@@ -184,7 +184,7 @@ module URL = struct
     let checksum = OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
     let url, kind = match archive, git, darcs with
       | None  , None  , None   -> OpamGlobals.error_and_exit "Missing URL"
-      | Some x, None  , None   -> x, None
+      | Some x, None  , None   -> x, Some `http
       | None  , Some x, None   -> x, Some `git
       | None  , None  , Some x -> x, Some `darcs
       | _ -> OpamGlobals.error_and_exit "Too many URLS" in

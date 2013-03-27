@@ -414,14 +414,53 @@ module API = struct
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
+      let repo =
+        try Some (OpamState.with_repository t nv (fun p r -> (p,r)))
+        with _ -> None in
+
       let repository =
         if is_locally_pinned t.pinned then
           ["repository", "(pinned)"]
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
-        else
-          let repo = OpamState.with_repository t nv (fun _ r -> r.repo_name) in
-          ["repository", OpamRepositoryName.to_string repo] in
+        else match repo with
+          | None       -> []
+          | Some (_,r) -> [ "repository", OpamRepositoryName.to_string r.repo_name ] in
+
+      let url = match repo with
+        | None       -> []
+        | Some (p,r) ->
+          if not !OpamGlobals.verbose then []
+          else if is_locally_pinned t.pinned then
+            match OpamState.pinned_path t name with
+            | Some p -> [ "pinned-path", OpamFilename.Dir.to_string p ]
+            | None   -> OpamGlobals.error_and_exit "invalid pinned package"
+          else
+            let mirror =
+              let m = OpamPath.Repository.archive r.repo_address nv in
+              [ "mirror-url", OpamFilename.to_string m ] in
+            let file =
+              let prefix = OpamRepository.read_prefix p in
+              let prefix = OpamRepository.find_prefix prefix nv in
+              OpamPath.Repository.url p prefix nv in
+            let url =
+              if not (OpamFilename.exists file) then
+                [ "upstream-url", "<none>" ]
+              else (
+                let url = OpamFile.URL.read file in
+                let archive = OpamFile.URL.url url in
+                let kind =
+                  match OpamFile.URL.kind url with
+                  | None   -> "http"
+                  | Some k -> string_of_repository_kind k in
+                let checksum = OpamFile.URL.checksum url in
+                [ "upstream-url"  , Printf.sprintf "%s" archive;
+                  "upstream-kind" , kind ]
+                @ match checksum with
+                | None   -> []
+                | Some c -> [ "upstream-checksum", c ]
+              ) in
+            mirror @ url in
 
       (* All the version of the package *)
       let versions = OpamPackage.versions_of_name t.packages name in
@@ -506,6 +545,7 @@ module API = struct
         [ "package", OpamPackage.Name.to_string name ]
         @ [ "version", OpamPackage.Version.to_string current_version ]
         @ repository
+        @ url
         @ homepage
         @ authors
         @ license
