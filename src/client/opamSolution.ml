@@ -94,8 +94,10 @@ let atoms_of_names t names =
             eq_atom sname sversion
           else
             unavailable sname (Some sversion)
-        else
+        else if exists sname None then
           OpamPackage.unknown sname (Some sversion)
+        else
+          OpamPackage.unknown sname None
       ))
     (OpamPackage.Name.Set.elements names)
 
