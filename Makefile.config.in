@@ -3,3 +3,4 @@ prefix=@prefix@
 mandir=@mandir@
 version=@PACKAGE_VERSION@
 FETCH=@fetch@
+MD5SUM=@MD5SUM@

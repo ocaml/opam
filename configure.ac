@@ -35,6 +35,8 @@ AS_IF([test "x${enable_certificate-check}" = "xno"], [
   wget_certificate_check=--no-check-certificate
 ])
 
+AC_CHECK_PROGS(MD5SUM,[md5sum md5],no)
+
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
 if test x"$FETCH" = x"curl" ; then
