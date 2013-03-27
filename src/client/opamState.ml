@@ -368,8 +368,10 @@ let load_repository_state call_site =
     let fn repo_p = OpamRepository.read_prefix repo_p in
     make_repository_name_map fn root config in
   let switch = match !OpamGlobals.switch with
-    | None   -> OpamFile.Config.switch config
-    | Some a -> OpamSwitch.of_string a in
+    | `Command_line s
+    | `Env s   -> OpamSwitch.of_string s
+    | `Not_set -> OpamFile.Config.switch config in
+
   let partial = true in
 
   (* evertything else is empty *)
@@ -398,8 +400,9 @@ let load_env_state call_site =
   let config_p = OpamPath.config root in
   let config = OpamFile.Config.read config_p in
   let switch = match !OpamGlobals.switch with
-    | None   -> OpamFile.Config.switch config
-    | Some a -> OpamSwitch.of_string a in
+    | `Command_line s
+    | `Env s   -> OpamSwitch.of_string s
+    | `Not_set -> OpamFile.Config.switch config in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compiler =
     try OpamSwitch.Map.find switch aliases
@@ -619,8 +622,9 @@ let load_state ?(save_cache=true) call_site =
   let partial = false in
 
   let switch = match !OpamGlobals.switch with
-    | None   -> OpamFile.Config.switch config
-    | Some a -> OpamSwitch.of_string a in
+    | `Command_line s
+    | `Env s   -> OpamSwitch.of_string s
+    | `Not_set -> OpamFile.Config.switch config in
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let switch, compiler =
     try switch, OpamSwitch.Map.find switch aliases
@@ -629,8 +633,9 @@ let load_state ?(save_cache=true) call_site =
         (OpamFilename.to_string (OpamPath.aliases root))
         (OpamSwitch.to_string switch);
       match !OpamGlobals.switch with
-      | Some s -> OpamSwitch.not_installed (OpamSwitch.of_string s)
-      | None   ->
+      | `Command_line s
+      | `Env s   -> OpamSwitch.not_installed (OpamSwitch.of_string s)
+      | `Not_set ->
         if OpamSwitch.Map.cardinal aliases > 0 then (
           let new_switch, new_compiler = OpamSwitch.Map.choose aliases in
           OpamGlobals.error "The current switch (%s) is an unknown compiler switch. Switching back to %s ..."
@@ -917,9 +922,15 @@ let env_updates t =
    display the environment variables. We have to make sure that
    OPAMSWITCH is always the one being reported in '~/.opa/config'
    otherwise we can have very weird results (as the inability to switch
-   between compilers). *)
+   between compilers).
+
+   Note: when we do the later command with --switch=SWITCH, this mean
+   we really want to get the environment for this switch. *)
 let get_opam_env t =
-  let t = { t with switch = OpamFile.Config.switch t.config } in
+  let t = match !OpamGlobals.switch with
+    | `Command_line _
+    | `Not_set -> t
+    | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
   add_to_env t [] (env_updates t)
 
 let get_full_env t =
@@ -1501,8 +1512,9 @@ let check f =
         OpamFilename.with_flock
           (OpamPath.lock root)
           (fun () -> match !OpamGlobals.switch with
-          | None   -> OpamFile.Config.switch (OpamFile.Config.read (OpamPath.config root))
-          | Some a -> OpamSwitch.of_string a)
+            | `Command_line s
+            | `Env s   -> OpamSwitch.of_string s
+            | `Not_set -> OpamFile.Config.switch (OpamFile.Config.read (OpamPath.config root)))
           () in
       (* XXX: We can have a small race just here ... *)
       let t = load_state "switch-lock" in

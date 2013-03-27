@@ -41,7 +41,10 @@ let set_global_options o =
   );
   OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
-  OpamGlobals.switch   := o.switch;
+  begin match o.switch with
+    | None   -> ()
+    | Some s -> OpamGlobals.switch := `Command_line s
+  end;
   OpamGlobals.root_dir := OpamSystem.real_path o.root;
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages
@@ -264,7 +267,7 @@ let global_options =
     mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
                 This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
-      Arg.(some string) !OpamGlobals.switch in
+      Arg.(some string) None in
   let yes =
     mk_flag ~section ["y";"yes"]
       "Disable interactive mode and answer yes \

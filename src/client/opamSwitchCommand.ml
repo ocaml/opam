@@ -148,7 +148,7 @@ let install_with_packages ~quiet ~packages switch compiler =
   OpamState.install_compiler t ~quiet switch compiler;
 
   (* install the compiler packages *)
-  OpamGlobals.switch := Some (OpamSwitch.to_string switch);
+  OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-install-with-packages-2" in
 
   let to_install, roots = match packages with
