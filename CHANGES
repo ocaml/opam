@@ -1,4 +1,7 @@
 1.0.1 [Mar 2013]
+* By default, turn-on checking of certificates for downloaded dependency archives: use `./configure --disable-certificate-check` to go back to the previous behavior
+* Check the md5sum of downloaded archives when compiling OPAM
+* Improved `opam info` command (more information, non-zero error code when no patterns match)
 * Display OS and OPAM version on internal errors to ease error reporting
 * Fix `opam reinstall` when reinstalling a package wich is a dependency of installed packages (regression introduced in 0.9.5)
 * Export and read `OPAMSWITCH` to be able to call OPAM in different switches
