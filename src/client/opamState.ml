@@ -900,10 +900,7 @@ let env_updates t =
   let man_path =
     "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let comp_env = OpamFile.Comp.env comp in
-  let switch =
-    match !OpamGlobals.switch with
-    | None   -> []
-    | Some s -> [ "OPAMSWITCH", "=", s ] in
+  let switch = [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ] in
   let root =
     if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
       [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
@@ -912,7 +909,13 @@ let env_updates t =
 
   new_path :: man_path :: toplevel_dir :: (switch @ root @ comp_env)
 
+(* This function is used by 'opam config env' and 'opam switch' to
+   display the environment variables. We have to make sure that
+   OPAMSWITCH is always the one being reported in '~/.opa/config'
+   otherwise we can have very weird results (as the inability to switch
+   between compilers). *)
 let get_opam_env t =
+  let t = { t with switch = OpamFile.Config.switch t.config } in
   add_to_env t [] (env_updates t)
 
 let get_full_env t =
