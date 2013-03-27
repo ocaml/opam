@@ -234,7 +234,11 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
   let fix_versions =
     let packages = OpamMisc.filter_map OpamPackage.of_string_opt regexps in
     List.fold_left
-      (fun map nv -> OpamPackage.Name.Map.add (OpamPackage.name nv) nv map)
+      (fun map nv ->
+        if OpamPackage.Set.mem nv t.packages then
+          OpamPackage.Name.Map.add (OpamPackage.name nv) nv map
+        else
+          map)
       OpamPackage.Name.Map.empty
       packages in
   let regexps =
@@ -242,11 +246,14 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
       let re =
         match OpamPackage.of_string_opt str with
         | Some nv ->
-          let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
-          Re_glob.globx name
-        | None   ->
-          let re = Re_glob.globx str in
-          if case_sensitive then re else Re.no_case re in
+          if OpamPackage.Set.mem nv t.packages then
+            let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+            Re_glob.globx name
+          else
+            Re_glob.globx str
+        | None   -> Re_glob.globx str in
+      let re =
+        if case_sensitive then re else Re.no_case re in
       try Some (Re.compile re)
       with Re_glob.Parse_error ->
         OpamGlobals.error "%S is not a valid package descriptor." str;
