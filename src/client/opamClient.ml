@@ -373,6 +373,15 @@ module API = struct
 
     let print_one name  { current_version } =
 
+      (* is the current package locally pinned *)
+      let is_locally_pinned pinned =
+        if OpamPackage.Name.Map.mem name pinned then
+          match OpamPackage.Name.Map.find name pinned with
+          | Local _ | Darcs _ | Git _ -> true
+          | _ -> false
+        else
+          false in
+
       (* Compute the installed versions, for each switch *)
       let installed =
         OpamSwitch.Map.fold (fun switch _ map ->
@@ -380,7 +389,7 @@ module API = struct
           let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root switch) in
           if OpamState.mem_installed_package_by_name_aux installed name then
             let nv =
-              if OpamPackage.Name.Map.mem name pinned then
+              if is_locally_pinned pinned then
                 OpamPackage.create name (OpamPackage.Version.of_string "(pinned)")
               else
                 OpamState.find_installed_package_by_name_aux installed name in
@@ -406,7 +415,9 @@ module API = struct
 
       (* where does it come from (eg. which repository) *)
       let repository =
-        if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
+        if is_locally_pinned t.pinned then
+          ["repository", "(pinned)"]
+        else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
         else
           let repo = OpamState.with_repository t nv (fun _ r -> r.repo_name) in
@@ -494,8 +505,8 @@ module API = struct
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
         @ [ "version", OpamPackage.Version.to_string current_version ]
-        @ homepage
         @ repository
+        @ homepage
         @ authors
         @ license
         @ doc
