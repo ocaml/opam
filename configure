@@ -4586,6 +4586,14 @@ fi
 done
 test -n "$MD5SUM" || MD5SUM="no"
 
+if test "x$MD5SUM" = "xno"; then
+
+  { { echo "$as_me:$LINENO: error: You must have either md5 or md5sum installed." >&5
+echo "$as_me: error: You must have either md5 or md5sum installed." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
 
 for ac_prog in curl wget
 do

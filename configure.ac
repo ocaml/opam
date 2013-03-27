@@ -36,6 +36,9 @@ AS_IF([test "x${enable_certificate-check}" = "xno"], [
 ])
 
 AC_CHECK_PROGS(MD5SUM,[md5sum md5],no)
+AS_IF([test "x$MD5SUM" = "xno"], [
+  AC_MSG_ERROR([You must have either md5 or md5sum installed.])
+])
 
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
