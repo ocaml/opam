@@ -472,8 +472,8 @@ let download_command =
     | [] -> internal_error "curl: empty response."
     | l  ->
       let code = List.hd (List.rev l) in
-      try if int_of_string code >= 400 then internal_error "curl: error %s" code
-      with _ -> internal_error "curl: %s is not a valid return code" code in
+      try if int_of_string code >= 400 then internal_error "curl: error %s." code
+      with _ -> internal_error "curl: %s is not a valid return code." code in
   lazy (
     if command_exists "curl" then
       curl
