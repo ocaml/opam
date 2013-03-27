@@ -1227,7 +1227,12 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --disable-version-check            do not check OCaml version
+  --disable-version-check Do not check OCaml version
+
+  --disable-certificate-check
+                          Do not check the certificate of OPAM's dependency
+                          archives
+
 
 Some influential environment variables:
   CC          C compiler command
@@ -4433,15 +4438,12 @@ fi
 
 # Check whether --enable-version-check was given.
 if test "${enable_version_check+set}" = set; then
-  enableval=$enable_version_check; VERSION_CHECK="$enableval"
-else
-  VERSION_CHECK="yes"
+  enableval=$enable_version_check;
 fi
 
 
 # Check that OCaml version is greater or equal to 3.12.1
-if test "$VERSION_CHECK" = "yes" ; then
-   for ac_prog in gawk mawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -4483,6 +4485,8 @@ fi
   test -n "$AWK" && break
 done
 
+if test "x${enable_version-check}" != "xno"; then
+
 
 
 
@@ -4520,7 +4524,23 @@ echo "$as_me: error: Your version of OCaml: $OCAMLVERSION is not supported" >&2;
    { (exit 1); exit 1; }; }
       fi
 
+
 fi
+
+
+# Check whether --enable-certificate-check was given.
+if test "${enable_certificate_check+set}" = set; then
+  enableval=$enable_certificate_check;
+fi
+
+
+if test "x${enable_certificate-check}" = "xno"; then
+
+  curl_certificate_check=--insecure
+  wget_certificate_check=--no-check-certificate
+
+fi
+
 
 for ac_prog in curl wget
 do
@@ -4567,10 +4587,10 @@ test -n "$FETCH" || FETCH="no"
 
 
 if test x"$FETCH" = x"curl" ; then
-  fetch="curl --insecure -OL"
+  fetch="curl $curl_certificate_check -OL"
 
 elif test x"$FETCH" = x"wget" ; then
-  fetch="wget --no-check-certificate"
+  fetch="wget $wget_certificate_check"
 
 else
   { { echo "$as_me:$LINENO: error: You must have either curl or wget installed." >&5
