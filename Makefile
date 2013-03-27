@@ -1,6 +1,6 @@
 -include Makefile.config
 
-LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind
+LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind -no-color
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
 TARGETS = opam opam-mk-repo
@@ -14,7 +14,7 @@ all: $(LOCAL_OCPBUILD) META
 scan: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -scan
 sanitize: $(LOCAL_OCPBUILD)
-	$(OCPBUILD) -sanitize
+	$(OCPBUILD)
 byte: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -byte
 opt: $(LOCAL_OCPBUILD)
@@ -49,7 +49,7 @@ prepare: depends.ocp.in
 autogen: src/core/opamGitVersion.ml src/core/opamScript.ml src/core/opamVersion.ml
 
 compile: $(LOCAL_OCPBUILD) autogen
-	$(OCPBUILD) -init -scan -sanitize $(TARGET)
+	$(OCPBUILD) -init -scan $(TARGET)
 
 clone: src/core/opamVersion.ml
 	$(MAKE) -C $(SRC_EXT)
