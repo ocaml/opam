@@ -3,6 +3,10 @@ BASE="ocaml ocaml-compiler-libs"
 
 add () { BASE="${BASE} $1"; }
 
+# riakc
+add protobuf-compiler
+# frei0r
+add frei0r-plugins-dev
 # voaacenc
 add camlidl
 # svm
