@@ -299,15 +299,21 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
     ) names OpamPackage.Name.Map.empty in
 
   (* Filter the list of packages, depending on user predicates *)
-  OpamPackage.Name.Map.filter (fun name { installed_version; synopsis; descr } ->
-    (not installed_only || installed_version <> None)                 (* installp *)
-    && (regexps = []                                                  (* allp     *)
-        || name_only && exact_match (OpamPackage.Name.to_string name) (* namep    *)
-        || not name_only                                              (* descrp   *)
-           && (partial_match (OpamPackage.Name.to_string name)
-               || partial_match synopsis
-               || partial_match descr))
-  ) names
+  let names =
+    OpamPackage.Name.Map.filter (fun name { installed_version; synopsis; descr } ->
+      (not installed_only || installed_version <> None)                 (* installp *)
+      && (regexps = []                                                  (* allp     *)
+          || name_only && exact_match (OpamPackage.Name.to_string name) (* namep    *)
+          || not name_only                                              (* descrp   *)
+             && (partial_match (OpamPackage.Name.to_string name)
+                 || partial_match synopsis
+                 || partial_match descr))
+    ) names in
+
+    if OpamPackage.Name.Map.is_empty names then
+      OpamGlobals.error_and_exit "No packages found."
+    else
+      names
 
 module API = struct
 
