@@ -19,7 +19,7 @@ RE       = ocaml-re-1.2.0
 REMD5    = 5cbfc137683ef2b0e91f931577f2e673
 
 # Portable md5check
-MD5CHECK = ocaml ../shell/md5check.ml $(MD5SUM)
+MD5CHECK = ocaml ../shell/md5check.ml
 
 all: clone depends.ocp
 
