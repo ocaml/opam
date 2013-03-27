@@ -404,6 +404,14 @@ module API = struct
       let nv = OpamPackage.create name current_version in
       let opam = OpamState.opam t nv in
 
+      (* where does it come from (eg. which repository) *)
+      let repository =
+        if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
+          []
+        else
+          let repo = OpamState.with_repository t nv (fun _ r -> r.repo_name) in
+          ["repository", OpamRepositoryName.to_string repo] in
+
       (* All the version of the package *)
       let versions = OpamPackage.versions_of_name t.packages name in
       let versions =
@@ -487,6 +495,7 @@ module API = struct
         [ "package", OpamPackage.Name.to_string name ]
         @ [ "version", OpamPackage.Version.to_string current_version ]
         @ homepage
+        @ repository
         @ authors
         @ license
         @ doc
