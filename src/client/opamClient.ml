@@ -364,8 +364,13 @@ module API = struct
       let installed =
         OpamSwitch.Map.fold (fun switch _ map ->
           let installed = OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
+          let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root switch) in
           if OpamState.mem_installed_package_by_name_aux installed name then
-            let nv = OpamState.find_installed_package_by_name_aux installed name in
+            let nv =
+              if OpamPackage.Name.Map.mem name pinned then
+                OpamPackage.create name (OpamPackage.Version.of_string "(pinned)")
+              else
+                OpamState.find_installed_package_by_name_aux installed name in
             if OpamPackage.Map.mem nv map then
               let aliases = OpamPackage.Map.find nv map in
               let map = OpamPackage.Map.remove nv map in
