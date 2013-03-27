@@ -229,21 +229,25 @@ let compiler_repository_map t =
 let is_pinned_aux pinned n =
   OpamPackage.Name.Map.mem n pinned
 
-let pinned_package_aux pinned packages n =
+let pinned_package_aux installed pinned packages n =
   match OpamPackage.Name.Map.find n pinned with
   | Version v -> OpamPackage.create n v
   | _         ->
-    (* We arbitrary select only the latest version; the solver
-       will see this package only, which means that it will use
-       the correspondng build instructions, but the location
-       will be the one pointed out by the pinned path. *)
-    let versions = OpamPackage.versions_of_name packages n in
-    OpamPackage.create n (OpamPackage.Version.Set.max_elt versions)
-
-let is_pinned t n = is_pinned_aux t.pinned n
+    if mem_installed_package_by_name_aux installed n then
+      find_installed_package_by_name_aux installed n
+    else (
+      (* We arbitrary select only the latest version; the solver will
+         see this package only, which means that it will use the
+         correspondng build instructions, but the location will be the
+         one pointed out by the pinned path. *)
+      let versions = OpamPackage.versions_of_name packages n in
+      OpamPackage.create n (OpamPackage.Version.Set.max_elt versions)
+    )
 
 let pinned_package t n =
-  pinned_package_aux t.pinned t.packages n
+  pinned_package_aux t.installed t.pinned t.packages n
+
+let is_pinned t n = is_pinned_aux t.pinned n
 
 let pinned_path t name =
   if OpamPackage.Name.Map.mem name t.pinned then
@@ -293,7 +297,7 @@ let available_packages
       let consistent_pinned_version () =
         let name = OpamPackage.name nv in
         not (is_pinned_aux pinned name)
-        || pinned_package_aux pinned packages name = nv
+        || pinned_package_aux installed pinned packages name = nv
       in
       available ()
       && consistent_ocaml_version ()
