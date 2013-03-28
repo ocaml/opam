@@ -31,9 +31,12 @@ module Graph: sig
   (** Build a graph from a CUDF universe *)
   val of_universe: Cudf.universe -> t
 
+  (** Return the transitive closure of [g] *)
+  val transitive_closure: t -> t
+
   (** Return the transitive closure of dependencies of [set],
-      sorted in topological order *)
-  val closure: t -> Set.t -> Cudf.package list
+      sorted in topological order. *)
+  val close_and_linearize: t -> Set.t -> Cudf.package list
 end
 
 (** Difference between universes *)
@@ -96,7 +99,14 @@ val resolve:
   (Cudf.package action list, Algo.Diagnostic.reason list) result
 
 (** Remove a package from an universe *)
-val uninstall: string -> Cudf.universe -> Cudf.universe
+val uninstall: Cudf.universe -> Cudf_types.pkgname -> Cudf.universe
+
+(** Install a package in the universe. Keep the invariant than only
+    one version of a package can be installed. *)
+val install: Cudf.universe -> Cudf.package -> Cudf.universe
+
+(** Remove all the versions of a given package, but the one given as argument. *)
+val remove_all_uninstalled_versions_but: string -> Cudf_types.constr -> Cudf.universe -> Cudf.universe
 
 (** The "reinstall" string *)
 val s_reinstall: string
@@ -105,6 +115,9 @@ val s_reinstall: string
 val s_installed_root: string
 
 (** {2 Pretty-printing} *)
+
+(** Convert a package constraint to something readable. *)
+val string_of_vpkgs: Cudf_types.vpkg list -> string
 
 (** Convert a reason to something readable by the user *)
 val string_of_reason: (Cudf.package -> package) -> Algo.Diagnostic.reason -> string option

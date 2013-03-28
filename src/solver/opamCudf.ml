@@ -77,9 +77,10 @@ module Graph = struct
     Algo.Defaultgraphs.PackageGraph.DotPrinter.output_graph fd g;
     close_out fd
 
-  (* Return the transitive closure of [pkgs] in [g], sorted in topological order *)
-  let closure g pkgs =
-    let g = PO.O.add_transitive_closure g in
+  let transitive_closure g =
+    PO.O.add_transitive_closure g
+
+  let close_and_linearize g pkgs =
     let _, l =
       Topo.fold
         (fun pkg (closure, topo) ->
@@ -100,7 +101,7 @@ end
 let filter_dependencies f_direction universe packages =
   let graph = f_direction (Graph.of_universe universe) in
   let packages = Set.of_list packages in
-  Graph.closure graph packages
+  Graph.close_and_linearize graph packages
 
 let dependencies = filter_dependencies (fun x -> x)
 
@@ -112,12 +113,15 @@ let string_of_atom (p, c) =
     | Some (r,v) -> Printf.sprintf " (%s %d)" (OpamFormula.string_of_relop r) v in
   Printf.sprintf "%s%s" p (const c)
 
+let string_of_vpkgs constr =
+  let constr = List.sort (fun (a,_) (b,_) -> String.compare a b) constr in
+  OpamFormula.string_of_conjunction string_of_atom constr
+
 let string_of_request r =
-  let to_string = OpamFormula.string_of_conjunction string_of_atom in
   Printf.sprintf "install:%s remove:%s upgrade:%s"
-    (to_string r.wish_install)
-    (to_string r.wish_remove)
-    (to_string r.wish_upgrade)
+    (string_of_vpkgs r.wish_install)
+    (string_of_vpkgs r.wish_remove)
+    (string_of_vpkgs r.wish_upgrade)
 
 let string_of_universe u =
   string_of_packages (List.sort compare (Cudf.get_packages u))
@@ -298,9 +302,30 @@ let default_preamble =
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
-let uninstall name universe =
+let uninstall universe name =
   let packages = Cudf.get_packages universe in
   let packages = List.filter (fun p -> p.Cudf.package <> name) packages in
+  Cudf.load_universe packages
+
+let install universe package =
+  let versions = Cudf.lookup_packages universe package.Cudf.package in
+  let versions = List.map (fun p ->
+      if p.Cudf.version = package.Cudf.version then
+        { p with Cudf.installed = true }
+      else
+        { p with Cudf.installed = false }
+    ) versions in
+  let packages =
+    let filter p = p.Cudf.package <> package.Cudf.package in
+    Cudf.get_packages ~filter universe in
+  Cudf.load_universe (versions @ packages)
+
+let remove_all_uninstalled_versions_but name constr universe =
+  let filter p =
+    p.Cudf.installed
+    || p.Cudf.package <> name
+    || Cudf.version_matches p.Cudf.version constr in
+  let packages = Cudf.get_packages ~filter universe in
   Cudf.load_universe packages
 
 let to_cudf univ req = (
@@ -332,7 +357,7 @@ let call_external_solver ~explain univ req =
 let get_final_universe univ req =
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success (uninstall "dose-dummy-request" u)
+  | Sat (_,u) -> Success (uninstall u "dose-dummy-request")
   | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->
     let open Algo.Diagnostic in
@@ -462,7 +487,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
        some of its optional dependencies disapear, however we must
        recompile it (see below). *)
     let graph = create_graph (fun p -> Set.mem p remove_roots) simple_universe in
-    let to_remove = List.rev (Graph.closure graph remove_roots) in
+    let to_remove = List.rev (Graph.close_and_linearize graph remove_roots) in
     let root_causes =
       let graph = Graph.PO.O.add_transitive_closure graph in
       let cause pkg =
