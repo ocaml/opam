@@ -20,29 +20,6 @@ let log fmt = OpamGlobals.log "HEURISTIC" fmt
 type 'a state = 'a list
 type 'a state_space = 'a array list
 
-(* Try to remove a subset of the installed packages from the universe
-   and check whether the the resulting universe stays consistent. *)
-let rec minimize_universe minimizable universe =
-  log "minimize minimizable=%s" (OpamMisc.StringSet.to_string minimizable);
-  if OpamMisc.StringSet.is_empty minimizable then
-    universe
-  else
-    let is_removable universe name =
-      let b, r = Cudf_checker.is_consistent (OpamCudf.uninstall universe name) in
-      (match r with
-      | None   -> log "%s is not necessary" name
-      | Some r ->
-        log "cannot remove %s: %s" name
-          (Cudf_checker.explain_reason (r:>Cudf_checker.bad_solution_reason)));
-      b in
-    let to_remove = OpamMisc.StringSet.filter (is_removable universe) minimizable in
-    let minimizable = OpamMisc.StringSet.diff minimizable to_remove in
-    if OpamMisc.StringSet.is_empty to_remove then
-      universe
-    else
-      let universe = OpamMisc.StringSet.fold (fun p u -> OpamCudf.uninstall u p) to_remove universe in
-      minimize_universe minimizable universe
-
 (* Forget about the changes which are not related to the packages we
    are interested in. We don't have yet computed the transitive
    closure of dependencies: we are processing 'raw' actions which come
