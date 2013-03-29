@@ -98,15 +98,20 @@ val resolve:
   Cudf_types.vpkg request ->
   (Cudf.package action list, Algo.Diagnostic.reason list) result
 
-(** Remove a package from an universe *)
-val uninstall: Cudf.universe -> Cudf_types.pkgname -> Cudf.universe
+(** Remove all the packages having a given universe *)
+val remove: Cudf.universe -> Cudf_types.pkgname -> Cudf.universe
 
-(** Install a package in the universe. Keep the invariant than only
-    one version of a package can be installed. *)
+(** Uninstall all the package in the universe. *)
+val uninstall_all: Cudf.universe -> Cudf.universe
+
+(** Install a package in the universe. We don't care about any
+    invariant here (eg. the resulting universe can have mutliple
+    versions of the same package installed). *)
 val install: Cudf.universe -> Cudf.package -> Cudf.universe
 
 (** Remove all the versions of a given package, but the one given as argument. *)
-val remove_all_uninstalled_versions_but: string -> Cudf_types.constr -> Cudf.universe -> Cudf.universe
+val remove_all_uninstalled_versions_but:
+  string -> Cudf_types.constr -> Cudf.universe -> Cudf.universe
 
 (** The "reinstall" string *)
 val s_reinstall: string

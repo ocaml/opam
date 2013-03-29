@@ -302,23 +302,25 @@ let default_preamble =
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
-let uninstall universe name =
+let remove universe name =
   let packages = Cudf.get_packages universe in
   let packages = List.filter (fun p -> p.Cudf.package <> name) packages in
   Cudf.load_universe packages
 
+let uninstall_all universe =
+  let packages = Cudf.get_packages universe in
+  let packages = List.rev_map (fun p -> { p with Cudf.installed = false }) packages in
+  Cudf.load_universe packages
+
 let install universe package =
-  let versions = Cudf.lookup_packages universe package.Cudf.package in
-  let versions = List.map (fun p ->
-      if p.Cudf.version = package.Cudf.version then
-        { p with Cudf.installed = true }
-      else
-        { p with Cudf.installed = false }
-    ) versions in
+  let p = Cudf.lookup_package universe (package.Cudf.package, package.Cudf.version) in
+  let p = { p with Cudf.installed = true } in
   let packages =
-    let filter p = p.Cudf.package <> package.Cudf.package in
+    let filter p =
+      p.Cudf.package <> package.Cudf.package
+      && p.Cudf.version <> package.Cudf.version in
     Cudf.get_packages ~filter universe in
-  Cudf.load_universe (versions @ packages)
+  Cudf.load_universe (p :: packages)
 
 let remove_all_uninstalled_versions_but name constr universe =
   let filter p =
@@ -357,7 +359,7 @@ let call_external_solver ~explain univ req =
 let get_final_universe univ req =
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success (uninstall u "dose-dummy-request")
+  | Sat (_,u) -> Success (remove u "dose-dummy-request")
   | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->
     let open Algo.Diagnostic in
