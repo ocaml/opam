@@ -909,7 +909,10 @@ let env_updates t =
   let man_path =
     "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let comp_env = OpamFile.Comp.env comp in
-  let switch = [ "OPAMSWITCH", "=", OpamSwitch.to_string t.switch ] in
+  let switch = match !OpamGlobals.switch with
+    | `Command_line s -> [ "OPAMSWITCH", "=", s ]
+    | `Env _
+    | `Not_set -> [] in
   let root =
     if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
       [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
