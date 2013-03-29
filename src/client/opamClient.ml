@@ -310,7 +310,8 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
                  || partial_match descr))
     ) names in
 
-    if OpamPackage.Name.Map.is_empty names then
+    if not (OpamPackage.Set.is_empty t.packages)
+    && OpamPackage.Name.Map.is_empty names then
       OpamGlobals.error_and_exit "No packages found."
     else
       names
