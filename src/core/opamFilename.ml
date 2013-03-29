@@ -284,12 +284,9 @@ let prettify_string s =
       Some (Filename.concat short suffix)
     else
       None in
-  match aux ~short:"<root>" ~prefix:!OpamGlobals.root_dir with
+  match aux ~short:"~" ~prefix:(OpamMisc.getenv "HOME") with
   | Some p -> p
-  | None   ->
-    match aux ~short:"~" ~prefix:(OpamMisc.getenv "HOME") with
-    | Some p -> p
-    | None   -> s
+  | None   -> s
 
 let prettify_dir d =
   prettify_string (Dir.to_string d)
