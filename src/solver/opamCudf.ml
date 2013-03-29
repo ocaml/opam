@@ -318,7 +318,7 @@ let install universe package =
   let packages =
     let filter p =
       p.Cudf.package <> package.Cudf.package
-      && p.Cudf.version <> package.Cudf.version in
+      || p.Cudf.version <> package.Cudf.version in
     Cudf.get_packages ~filter universe in
   Cudf.load_universe (p :: packages)
 
