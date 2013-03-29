@@ -32,7 +32,8 @@ let minimize_actions interesting_names actions =
   List.filter (function
     | To_change (_, p)
     | To_recompile p -> OpamMisc.StringSet.mem p.Cudf.package interesting_names
-    | To_delete p    -> OpamGlobals.error_and_exit "delete %s(%d)\n" p.Cudf.package p.Cudf.version
+    | To_delete p    -> OpamGlobals.error_and_exit "delete %s(%d)\n"
+                          p.Cudf.package p.Cudf.version
   ) actions
 
 (* Given a list of bounds, create the least tuple such that the sum of
@@ -118,7 +119,9 @@ let brute_force ?(verbose=true) is_consistent state_space =
   let interval = 500 in
   let flush_output () =
     if verbose && !count >= interval then
-      OpamGlobals.msg " an optimal solution has been found after exploring %d states.\n" !count in
+      OpamGlobals.msg
+        " an optimal solution has been found after exploring %d states.\n"
+        !count in
 
   (* XXX: need to ensure this is properly transformed into a
      while-loop. *)
