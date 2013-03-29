@@ -18,14 +18,14 @@
    using OPAM<variable> *)
 
 let check var = ref (
-  try OpamMisc.getenv ("OPAM"^var) <> ""
-  with Not_found -> false
-)
+    try OpamMisc.getenv ("OPAM"^var) <> ""
+    with Not_found -> false
+  )
 
 let debug = ref (
-  try int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 2
-  with _ -> false
-)
+    try int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 2
+    with _ -> false
+  )
 
 let verbose =
   try ref (int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 1)
@@ -81,9 +81,9 @@ let default_opam_dir =
   Filename.concat home ".opam"
 
 let root_dir = ref (
-  try OpamMisc.getenv "OPAMROOT"
-  with _ -> default_opam_dir
-)
+    try OpamMisc.getenv "OPAMROOT"
+    with _ -> default_opam_dir
+  )
 
 let log section fmt =
   Printf.ksprintf (fun str ->
@@ -165,13 +165,13 @@ let os_string () =
   string_of_os (os ())
 
 let makecmd = ref (fun () ->
-  match os () with
-  | FreeBSD
-  | OpenBSD
-  | NetBSD
-  | DragonFly -> "gmake"
-  | _ -> "make"
-)
+    match os () with
+    | FreeBSD
+    | OpenBSD
+    | NetBSD
+    | DragonFly -> "gmake"
+    | _ -> "make"
+  )
 
 let log_limit = 10
 let log_line_limit = 5 * 80

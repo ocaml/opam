@@ -184,7 +184,7 @@ let can_try_to_recover_from_error l =
     | To_recompile _
     | To_change _
     | To_delete _         -> false
-    ) l
+  ) l
 
 (* Try to recover from errors by installing either the old packages or
    by reinstalling the current ones. This can also fail but if it

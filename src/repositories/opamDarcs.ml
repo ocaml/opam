@@ -34,7 +34,7 @@ let darcs_merge local_path =
     let patches_bundle = OpamFilename.of_string "opam_update.bundle" in
     if OpamFilename.exists patches_bundle then
       OpamSystem.command [ "darcs" ; "apply"; "opam_update.bundle" ];
-      OpamFilename.remove patches_bundle
+    OpamFilename.remove patches_bundle
   )
 
 (* Look for file pathes {packages,compilers}/* in a set of XML lines. *)
@@ -68,7 +68,7 @@ let darcs_diff local_path =
       [ "darcs" ; "pull"; "--all" ]
     ];
     let xml_changes = OpamSystem.read_command_output
-      [ "darcs" ; "changes" ; "--xml-output" ; "--summary" ; "--from-tag=opam_update" ] in
+        [ "darcs" ; "changes" ; "--xml-output" ; "--summary" ; "--from-tag=opam_update" ] in
     let files = files_of_xmlchanges xml_changes in
     OpamSystem.command [ "darcs" ; "obliterate" ; "--all" ; "--from-tag=opam_update" ];
     OpamFilename.Set.of_list (List.rev_map OpamFilename.of_string files)
@@ -138,14 +138,14 @@ module B = struct
       | Some d -> d in
     match check_updates dir remote_address with
     | None ->
-        OpamFilename.mkdir dir;
-        OpamFilename.in_dir dir (fun () -> darcs_init remote_address);
-        download_dir nv ?dst remote_address
+      OpamFilename.mkdir dir;
+      OpamFilename.in_dir dir (fun () -> darcs_init remote_address);
+      download_dir nv ?dst remote_address
     | Some f ->
-        if OpamFilename.Set.empty = f then
-          Up_to_date dir
-        else
-          Result dir
+      if OpamFilename.Set.empty = f then
+        Up_to_date dir
+      else
+        Result dir
 
   let update ~address =
     log "update";
@@ -154,9 +154,9 @@ module B = struct
     match check_updates local_dir address with
     | Some f -> OpamFile.Filenames.write (updates local_repo) f; f
     | None   ->
-        OpamGlobals.error_and_exit
-          "The repository %s is not initialized correctly"
-          (OpamFilename.Dir.to_string local_dir)
+      OpamGlobals.error_and_exit
+        "The repository %s is not initialized correctly"
+        (OpamFilename.Dir.to_string local_dir)
 
   let upload_dir ~address:_ dirname =
     log "upload_dir";

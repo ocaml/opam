@@ -25,8 +25,8 @@ val build_and_install_package: t -> metadata:bool -> package -> unit
 val remove_package: t -> metadata:bool -> rm_build:bool -> package -> unit
 
 (** Remove all the packages from a solution. This includes the package
-   to delete, to upgrade and to recompile. Return the set of all deleted
-   packages. *)
+    to delete, to upgrade and to recompile. Return the set of all deleted
+    packages. *)
 val remove_all_packages: t -> metadata:bool -> solution -> package_set
 
 (** Update package metadata *)

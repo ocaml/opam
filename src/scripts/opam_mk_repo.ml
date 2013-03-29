@@ -45,24 +45,24 @@ let all, index, names, gener_digest, dryrun, recurse =
   let dryrun = ref false in
   let recurse = ref false in
   let specs = Arg.align [
-    ("-v"       , Arg.Unit OpamVersion.message, " Display version information");
-    ("--version", Arg.Unit OpamVersion.message, " Display version information");
+      ("-v"       , Arg.Unit OpamVersion.message, " Display version information");
+      ("--version", Arg.Unit OpamVersion.message, " Display version information");
 
-    ("-a"   , Arg.Set all, "");
-    ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
+      ("-a"   , Arg.Set all, "");
+      ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
 
-    ("-i"     , Arg.Set index, "");
-    ("--index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
+      ("-i"     , Arg.Set index, "");
+      ("--index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
 
-    ("-g"                  , Arg.Set gener_digest, "");
-    ("--generate-checksums", Arg.Set gener_digest,
-     Printf.sprintf " Automatically correct the wrong archive checksums (default is %b)" !gener_digest);
+      ("-g"                  , Arg.Set gener_digest, "");
+      ("--generate-checksums", Arg.Set gener_digest,
+       Printf.sprintf " Automatically correct the wrong archive checksums (default is %b)" !gener_digest);
 
-    ("-d"      , Arg.Set dryrun, "");
-    ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them");
+      ("-d"      , Arg.Set dryrun, "");
+      ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them");
 
-    ("-r", Arg.Set recurse, " Recurse among the transitive dependencies");
-  ] in
+      ("-r", Arg.Set recurse, " Recurse among the transitive dependencies");
+    ] in
   let ano p = names := p :: !names in
   Arg.parse specs ano usage;
   !all, !index, !names, !gener_digest, !dryrun, !recurse

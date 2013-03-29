@@ -19,10 +19,10 @@ let usage = "opam-check [--root root] [-l label] <package>+"
 
 let label = ref ""
 let spec = Arg.align [
-  ("--root", Arg.Set_string OpamGlobals.root_dir, " Set opam path");
-  ("-l"    , Arg.Set_string label            , " Set a test label");
-  ("--version", Arg.Unit OpamVersion.message , " Display version information");
-]
+    ("--root", Arg.Set_string OpamGlobals.root_dir, " Set opam path");
+    ("-l"    , Arg.Set_string label            , " Set a test label");
+    ("--version", Arg.Unit OpamVersion.message , " Display version information");
+  ]
 
 let packages = ref []
 let ano x = packages := x :: !packages

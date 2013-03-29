@@ -81,14 +81,14 @@ module Make (G : G) = struct
       invalid_arg "This node has already been visited.";
     if not (S.mem x t.roots) then
       invalid_arg "This node is not a root node";
-      (* Add the node to the list of visited nodes *)
+    (* Add the node to the list of visited nodes *)
     let t = { t with visited = S.add x t.visited } in
-      (* Remove the node from the list of root nodes *)
+    (* Remove the node from the list of root nodes *)
     let roots = S.remove x t.roots in
     let degree = ref t.degree in
     let remove_degree x = degree := M.remove x !degree in
     let replace_degree x d = degree := M.add x d (M.remove x !degree) in
-      (* Update the children of the node by decreasing by 1 their in-degree *)
+    (* Update the children of the node by decreasing by 1 their in-degree *)
     let roots =
       G.fold_succ
         (fun x l ->
@@ -218,12 +218,12 @@ module Make (G : G) = struct
         pids := OpamMisc.IntMap.remove pid !pids;
         begin match status with
           | Unix.WEXITED 0 ->
-              t := visit !t n;
-              post n
+            t := visit !t n;
+            post n
           | _ ->
-              let from_child = from_child () in
-              let error = read_error from_child in
-              errors := M.add n error !errors
+            let from_child = from_child () in
+            let error = read_error from_child in
+            errors := M.add n error !errors
         end;
         loop (nslots + 1)
       ) else (
@@ -245,33 +245,33 @@ module Make (G : G) = struct
         match Unix.fork () with
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
-            log "Spawning a new process";
-            Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
-            Sys.catch_break true;
-            let return p =
-              let to_parent = open_out_bin error_file in
-              write_error to_parent p;
-              exit 1 in
-            begin
-              try child n; log "OK"; exit 0
-              with
-              | OpamSystem.Process_error p  -> return (Process_error p)
-              | OpamSystem.Internal_error s -> return (Internal_error s)
-              | e ->
-                  let b = OpamMisc.pretty_backtrace () in
-                  let e = Printexc.to_string e in
-                  let error =
-                    if b = ""
-                    then e
-                    else e ^ "\n" ^ b in
-                  return (Internal_error error)
-            end
+          log "Spawning a new process";
+          Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
+          Sys.catch_break true;
+          let return p =
+            let to_parent = open_out_bin error_file in
+            write_error to_parent p;
+            exit 1 in
+          begin
+            try child n; log "OK"; exit 0
+            with
+            | OpamSystem.Process_error p  -> return (Process_error p)
+            | OpamSystem.Internal_error s -> return (Internal_error s)
+            | e ->
+              let b = OpamMisc.pretty_backtrace () in
+              let e = Printexc.to_string e in
+              let error =
+                if b = ""
+                then e
+                else e ^ "\n" ^ b in
+              return (Internal_error error)
+          end
         | pid ->
-            log "Creating process %d" pid;
-            let from_child () = open_in_bin error_file in
-            pids := OpamMisc.IntMap.add pid (n, from_child) !pids;
-            pre n;
-            loop (nslots - 1)
+          log "Creating process %d" pid;
+          let from_child () = open_in_bin error_file in
+          pids := OpamMisc.IntMap.add pid (n, from_child) !pids;
+          pre n;
+          loop (nslots - 1)
       ) in
     loop n
 

@@ -21,7 +21,7 @@ open OpamTypes
 type state = {
 
   (** Is the state partial ?
-  TODO: split-up global vs. repository state *)
+      TODO: split-up global vs. repository state *)
   partial: bool;
 
   (** The global OPAM root path *)
@@ -79,7 +79,7 @@ type state = {
 }
 
 (** Load the client state. The string argument is to identify to call
-   site. *)
+    site. *)
 val load_state: ?save_cache:bool -> string -> state
 
 (** Rebuild the state cache. *)
@@ -215,7 +215,7 @@ val installed_map: state -> version name_map
 val base_packages: name list
 
 (** Return all the collection of installed packages, for all the
-   available packages *)
+    available packages *)
 val all_installed: state -> package_set
 
 (** {2 Configuration files} *)
@@ -245,8 +245,8 @@ val is_pinned: state -> name -> bool
 val pinned_package: state -> name -> package
 
 (** Get the path associated to the given pinned package. Return [None]
-   if the package is not pinned or if it is pinned to a version
-   number. *)
+    if the package is not pinned or if it is pinned to a version
+    number. *)
 val pinned_path: state -> name -> dirname option
 
 (** Update pinned package *)

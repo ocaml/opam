@@ -227,8 +227,8 @@ let rec truncate = function
     else if List.length l = OpamGlobals.log_limit then
       truncate_str :: l
     else match l with
-    | []     -> []
-    | _ :: t -> truncate t
+      | []     -> []
+      | _ :: t -> truncate t
 
 let string_of_result r =
   let b = Buffer.create 2048 in

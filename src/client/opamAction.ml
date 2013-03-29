@@ -240,25 +240,25 @@ let extract_package t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
   begin match OpamState.pinned_path t (OpamPackage.name nv) with
-  | Some p ->
-    let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
-    if not (OpamFilename.exists_dir pinned_dir) then (
-      match OpamState.update_pinned_package t (OpamPackage.name nv) with
-      | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
-      | Result _
-      | Up_to_date _  -> ()
-    ) else
-      OpamGlobals.msg "Synchronization: nothing to do as the pinned package has already been initialized.\n";
-    let _files = OpamState.with_repository t nv (fun repo _ ->
-        OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
-      ) in
-    OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
-  | _ ->
-    match get_archive t nv with
-    | None         -> ()
-    | Some archive ->
-      OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
-      OpamFilename.extract archive build_dir
+    | Some p ->
+      let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
+      if not (OpamFilename.exists_dir pinned_dir) then (
+        match OpamState.update_pinned_package t (OpamPackage.name nv) with
+        | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
+        | Result _
+        | Up_to_date _  -> ()
+      ) else
+        OpamGlobals.msg "Synchronization: nothing to do as the pinned package has already been initialized.\n";
+      let _files = OpamState.with_repository t nv (fun repo _ ->
+          OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
+        ) in
+      OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
+    | _ ->
+      match get_archive t nv with
+      | None         -> ()
+      | Some archive ->
+        OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
+        OpamFilename.extract archive build_dir
   end;
   prepare_package_build t nv;
   build_dir
@@ -267,9 +267,9 @@ let string_of_commands commands =
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
   "  "
   ^ if commands_s <> [] then
-      String.concat "\n  " commands_s
-    else
-      "Nothing to do."
+    String.concat "\n  " commands_s
+  else
+    "Nothing to do."
 
 let compilation_env t opam =
   let env0 = OpamState.get_full_env t in
@@ -386,11 +386,11 @@ let remove_package_aux t ~metadata ~rm_build nv =
      future installation. TODO: is it the expected semantics ? *)
   let share = OpamPath.Switch.share t.root t.switch name in
   (match OpamFilename.rec_files share, OpamFilename.rec_dirs share with
-  | [], [] -> OpamFilename.rmdir share
-  | _      ->
-    OpamGlobals.msg
-      "WARNING: %s is not empty. We keep its contents for future installations.\n"
-      (OpamFilename.Dir.to_string share));
+   | [], [] -> OpamFilename.rmdir share
+   | _      ->
+     OpamGlobals.msg
+       "WARNING: %s is not empty. We keep its contents for future installations.\n"
+       (OpamFilename.Dir.to_string share));
 
   (* Remove .config and .install *)
   log "Removing config and install files";
@@ -445,8 +445,8 @@ let remove_all_packages t ~metadata sol =
    explore.  Do not try to recover yet. *)
 let build_and_install_package_aux t ~metadata nv =
   let left, right = match !OpamGlobals.utf8_msgs with
-  | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
-  | false -> "=-=-=", "=-=-="
+    | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
+    | false -> "=-=-=", "=-=-="
   in
   OpamGlobals.msg "\n%s Installing %s %s\n" left (OpamPackage.to_string nv) right;
 

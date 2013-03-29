@@ -25,16 +25,16 @@ let empty = {
 
 let variables items =
   let l = List.fold_left (fun accu -> function
-    | Variable (k,v) -> (k,v) :: accu
-    | _              -> accu
-  ) [] items in
+      | Variable (k,v) -> (k,v) :: accu
+      | _              -> accu
+    ) [] items in
   List.rev l
 
 let sections items =
   let l = List.fold_left (fun accu -> function
-    | Section s -> (s.section_kind, s) :: accu
-    | _          -> accu
-  ) [] items in
+      | Section s -> (s.section_kind, s) :: accu
+      | _          -> accu
+    ) [] items in
   List.rev l
 
 exception Bad_format of string
@@ -56,7 +56,7 @@ let names items =
     List.iter (function
       | Variable (f, _) -> add f
       | Section s       -> aux s.section_items
-  ) items in
+    ) items in
   aux items;
   !tbl
 
@@ -146,24 +146,24 @@ let parse_or fns v =
   let dbg = List.map fst fns in
   let rec aux = function
     | []   ->
-        bad_format "Expecting %s, got %s" (String.concat " or " dbg) (kind v)
+      bad_format "Expecting %s, got %s" (String.concat " or " dbg) (kind v)
     | (_,h)::t ->
-        try h v
-        with Bad_format _ -> aux t in
+      try h v
+      with Bad_format _ -> aux t in
   aux fns
 
 let parse_sequence fns v =
   match v with
   | List l ->
-      let rec aux = function
-        | (_,f) :: fns, h :: t -> f h :: aux (fns, t)
-        | [], [] -> []
-        | _ ->
-            bad_format
-              "Expecting %s, got %d values"
-              (String.concat ", " (List.map fst fns))
-              (List.length l) in
-      aux (fns, l)
+    let rec aux = function
+      | (_,f) :: fns, h :: t -> f h :: aux (fns, t)
+      | [], [] -> []
+      | _ ->
+        bad_format
+          "Expecting %s, got %d values"
+          (String.concat ", " (List.map fst fns))
+          (List.length l) in
+    aux (fns, l)
   | x      -> bad_format "Expecting a list, got %s" (kind x)
 
 
@@ -205,19 +205,19 @@ let rec pretty_string_of_value ?(indent_hint = []) = function
   | String s    -> Printf.sprintf "%S" s
   | List[List[]]-> Printf.sprintf "[[]]"
   | List l      ->
-      let force_indent, indent_hint =
-        match indent_hint with
-          | [] -> false, []
-          | b :: indent_hint -> b, indent_hint in
-      if force_indent || List.for_all is_list l then
-        Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~indent_hint "\n  " l)
-      else
-        Printf.sprintf "[%s]" (pretty_string_of_values ~indent_hint " " l)
+    let force_indent, indent_hint =
+      match indent_hint with
+      | [] -> false, []
+      | b :: indent_hint -> b, indent_hint in
+    if force_indent || List.for_all is_list l then
+      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~indent_hint "\n  " l)
+    else
+      Printf.sprintf "[%s]" (pretty_string_of_values ~indent_hint " " l)
   | Group g     -> Printf.sprintf "(%s)" (pretty_string_of_values ~indent_hint " " g)
   | Option(v,l) ->
-      Printf.sprintf "%s {%s}"
-        (pretty_string_of_value ~indent_hint v)
-        (pretty_string_of_values ~indent_hint " " l)
+    Printf.sprintf "%s {%s}"
+      (pretty_string_of_value ~indent_hint v)
+      (pretty_string_of_values ~indent_hint " " l)
 
 and pretty_string_of_values ?(indent_hint = []) sep l =
   String.concat sep (List.rev (List.rev_map (pretty_string_of_value ~indent_hint) l))
@@ -242,7 +242,7 @@ let rec string_of_item_aux tab ?(indent_variable = fun _ -> false) = function
   | Variable (_, List[List[]]) -> None
   | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value ~indent_hint:[indent_variable i] v))
   | Section s ->
-      Some (Printf.sprintf "%s%s %S {\n%s\n}"
+    Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.section_kind s.section_name
         (string_of_items_aux (incr tab) ~indent_variable s.section_items))
 
@@ -428,10 +428,10 @@ let make_os_constraint l =
 
 let parse_env_variable v =
   let l = parse_sequence [
-    ("ident" , parse_ident);
-    ("symbol", parse_symbol);
-    ("string", parse_string);
-  ] v in
+      ("ident" , parse_ident);
+      ("symbol", parse_symbol);
+      ("string", parse_string);
+    ] v in
   match l with
   | [ident; symbol; string] -> (ident, symbol, string)
   | _ -> assert false
@@ -481,7 +481,7 @@ let rec make_filter = function
       | Le  -> Symbol "<="
       | Gt  -> Symbol ">"
       | Lt  -> Symbol "<"
-      end in
+    end in
     let e = lift (make_filter e) in
     let f = lift (make_filter f) in
     [ e; s; f]

@@ -207,10 +207,10 @@ let move ~src ~dst =
   OpamSystem.command [ "mv"; to_string src; to_string dst ]
 
 let link ~src ~dst =
-(*  if Lazy.force OpamGlobals.os = OpamGlobals.Win32 then
-    copy src dst
-  else *)
-    OpamSystem.link (to_string src) (to_string dst)
+  (*  if Lazy.force OpamGlobals.os = OpamGlobals.Win32 then
+      copy src dst
+      else *)
+  OpamSystem.link (to_string src) (to_string dst)
 
 let process_in fn src dst =
   let src_s = to_string src in
@@ -316,7 +316,7 @@ module OP = struct
     let b = Filename.basename s2 in
     if d <> "." then
       create (d1 / d) (Base.of_string b)
-  else
+    else
       create d1 (Base.of_string s2)
 
 end

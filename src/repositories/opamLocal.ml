@@ -46,15 +46,15 @@ let rsync_file src dst =
   log "rsync_file src=%s dst=%s" (OpamFilename.to_string src) (OpamFilename.to_string dst);
   if OpamFilename.exists src then (
     let lines = OpamSystem.read_command_output [
-      "rsync"; "-av"; OpamFilename.to_string src; OpamFilename.to_string dst;
-    ] in
+        "rsync"; "-av"; OpamFilename.to_string src; OpamFilename.to_string dst;
+      ] in
     match OpamMisc.rsync_trim lines with
     | []  -> Up_to_date dst
     | [_] -> Result dst
     | l   ->
-        OpamSystem.internal_error
-          "unknown rsync output: {%s}"
-          (String.concat ", " l)
+      OpamSystem.internal_error
+        "unknown rsync output: {%s}"
+        (String.concat ", " l)
   ) else
     Not_available
 
@@ -106,26 +106,26 @@ module B = struct
       | Not_available
       | Up_to_date _ -> OpamFilename.Set.empty
       | Result lines ->
-          let files = List.rev_map OpamFilename.of_string lines in
-          OpamFilename.Set.of_list files in
+        let files = List.rev_map OpamFilename.of_string lines in
+        OpamFilename.Set.of_list files in
     let archives =
       let _, packages = OpamRepository.packages local_repo in
       let updates = OpamPackage.Set.filter (fun nv ->
-        let archive = OpamPath.Repository.archive local_repo nv in
-        if not (OpamFilename.exists archive) then
-          false
-        else match download_archive ~address nv with
-        | Not_available ->
-            OpamFilename.remove archive;
+          let archive = OpamPath.Repository.archive local_repo nv in
+          if not (OpamFilename.exists archive) then
             false
-        | Up_to_date _  -> false
-        | Result _      -> true
-      ) packages in
+          else match download_archive ~address nv with
+            | Not_available ->
+              OpamFilename.remove archive;
+              false
+            | Up_to_date _  -> false
+            | Result _      -> true
+        ) packages in
       List.rev_map (OpamPath.Repository.archive local_repo) (OpamPackage.Set.elements updates) in
     let (++) = OpamFilename.Set.union in
     let updates = OpamFilename.Set.of_list archives
-    ++ sync_dir OpamPath.Repository.packages_dir
-    ++ sync_dir OpamPath.Repository.compilers_dir in
+      ++ sync_dir OpamPath.Repository.packages_dir
+      ++ sync_dir OpamPath.Repository.compilers_dir in
     ignore (rsync_file (OpamPath.Repository.version address) (OpamPath.Repository.version local_repo));
     updates
 
@@ -137,13 +137,13 @@ module B = struct
     if OpamFilename.exists_dir local_dir then
       match rsync_dirs ~delete:false local_dir address with
       | Not_available ->
-          OpamGlobals.error_and_exit "Cannot upload %s to %s"
-            (OpamFilename.Dir.to_string local_dir)
-            (OpamFilename.Dir.to_string address)
+        OpamGlobals.error_and_exit "Cannot upload %s to %s"
+          (OpamFilename.Dir.to_string local_dir)
+          (OpamFilename.Dir.to_string address)
       | Up_to_date _ -> OpamFilename.Set.empty
       | Result _     ->
-          let files = OpamFilename.rec_files local_dir in
-          OpamFilename.Set.of_list files
+        let files = OpamFilename.rec_files local_dir in
+        OpamFilename.Set.of_list files
     else
       OpamFilename.Set.empty
 

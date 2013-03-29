@@ -34,27 +34,27 @@ let () =
 let write f_write fic st = if !opt_normalize then f_write fic st
 
 module Check = struct
-(*   let descr x = x *)
-   let opam t =
-     List.fold_left
-       (fun t (s, f_cons, f_make) ->
-         f_make t (List.map
-                     (function
-                       | (CString "make", f0) :: l, f1 as x ->
-                           if !opt_repair then
-                             (CIdent "make", f0) :: l, f1
-                           else
-                             let _ = OpamGlobals.warning "unescaped 'make' in %s" s in
-                             x
-                       | x -> x)
-                     (f_cons t)))
-       t
-       [ "build", OpamFile.OPAM.build, OpamFile.OPAM.with_build
-       ; "remove", OpamFile.OPAM.remove, OpamFile.OPAM.with_remove ]
-(*   let url x = x *)
-(*   let dot_install x = x *)
-(*   let comp x = x *)
-(*   let comp_descr x = x *)
+  (*   let descr x = x *)
+  let opam t =
+    List.fold_left
+      (fun t (s, f_cons, f_make) ->
+        f_make t (List.map
+            (function
+             | (CString "make", f0) :: l, f1 as x ->
+               if !opt_repair then
+                 (CIdent "make", f0) :: l, f1
+               else
+                 let _ = OpamGlobals.warning "unescaped 'make' in %s" s in
+                 x
+             | x -> x)
+            (f_cons t)))
+      t
+      [ "build", OpamFile.OPAM.build, OpamFile.OPAM.with_build
+      ; "remove", OpamFile.OPAM.remove, OpamFile.OPAM.with_remove ]
+      (*   let url x = x *)
+      (*   let dot_install x = x *)
+      (*   let comp x = x *)
+      (*   let comp_descr x = x *)
 end
 
 let () =

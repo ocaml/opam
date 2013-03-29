@@ -12,8 +12,8 @@ let () =
   if md5 <> md5_of_file then (
     Printf.eprintf
       "MD5 for %s differ:\n\
-       \  expected: %s\n\
-       \    actual: %s\n"
+      \  expected: %s\n\
+      \    actual: %s\n"
       file md5 md5_of_file;
     Sys.remove file
   ) else

@@ -54,14 +54,14 @@ let init ~bounds n =
       if n <= b then
         Some (n :: zero (List.length t))
       else match aux (n-b, t) with
-      | None   -> None
-      | Some l -> Some (b::l) in
+        | None   -> None
+        | Some l -> Some (b::l) in
   match aux (n, List.rev bounds) with
   | None   -> None
   | Some l -> Some (List.rev l)
 
-  (* Given a list of bounds and a tuple, return the next tuple while
-     keeping the sum of components of the tuple constant *)
+(* Given a list of bounds and a tuple, return the next tuple while
+   keeping the sum of components of the tuple constant *)
 let rec cst_succ ~bounds k l =
   match l, bounds with
   | [] , []  -> None

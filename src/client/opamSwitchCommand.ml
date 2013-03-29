@@ -184,14 +184,14 @@ let install_with_packages ~quiet ~packages switch compiler =
   match bad_packages with
   | [] ->
     let solution = OpamSolution.resolve_and_apply ~force:true t (Switch roots)
-      { wish_install = [];
-        wish_remove  = [];
-        wish_upgrade = to_install } in
+        { wish_install = [];
+          wish_remove  = [];
+          wish_upgrade = to_install } in
     begin try
-      OpamSolution.check_solution solution;
-    with e ->
-      uninstall_compiler ();
-      raise e
+        OpamSolution.check_solution solution;
+      with e ->
+        uninstall_compiler ();
+        raise e
     end
   | p::_ ->
     uninstall_compiler ();
@@ -261,11 +261,11 @@ let import filename =
     let to_keep = filter_names ~filter:import_roots t.installed_roots in
     OpamPackage.names_of_packages (OpamPackage.Set.union import_roots to_keep) in
 
-    let solution = OpamSolution.resolve_and_apply t (Import roots)
+  let solution = OpamSolution.resolve_and_apply t (Import roots)
       { wish_install = to_keep;
         wish_remove  = [];
         wish_upgrade = to_import } in
-    OpamSolution.check_solution solution
+  OpamSolution.check_solution solution
 
 let export filename =
   let t = OpamState.load_state "switch-export" in

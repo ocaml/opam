@@ -40,7 +40,7 @@ let (/) = Filename.concat
 let rec mk_temp_dir () =
   let s =
     Filename.temp_dir_name /
-    Printf.sprintf "opam-%d-%06x" (Unix.getpid ()) (Random.int 100_000) in
+      Printf.sprintf "opam-%d-%06x" (Unix.getpid ()) (Random.int 100_000) in
   if Sys.file_exists s then
     mk_temp_dir ()
   else
@@ -326,11 +326,11 @@ module Tar = struct
     let ext =
       List.fold_left
         (fun acc (ext, c) -> match acc with
-        | Some f -> Some f
-        | None   ->
-          if match_ext file ext
-          then Some (command c)
-          else None)
+          | Some f -> Some f
+          | None   ->
+            if match_ext file ext
+            then Some (command c)
+            else None)
         None
         extensions in
     match ext with
@@ -349,13 +349,13 @@ let extract file dst =
     match Tar.extract_function file with
     | None   -> internal_error "%s is not a valid tar archive." file
     | Some f ->
-        f tmp_dir;
-        if Sys.file_exists dst then internal_error "Extracting the archive will overwrite %s." dst;
-        match directories_strict tmp_dir with
-        | [x] ->
-            mkdir (Filename.dirname dst);
-            command [ "mv"; x; dst]
-        | _   -> internal_error "The archive contains multiple root directories."
+      f tmp_dir;
+      if Sys.file_exists dst then internal_error "Extracting the archive will overwrite %s." dst;
+      match directories_strict tmp_dir with
+      | [x] ->
+        mkdir (Filename.dirname dst);
+        command [ "mv"; x; dst]
+      | _   -> internal_error "The archive contains multiple root directories."
   )
 
 let extract_in file dst =
@@ -417,7 +417,7 @@ let funlock file =
         internal_error "Cannot unlock %s (%s)." file s
     with _ ->
       OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
-        close_in ic;
+      close_in ic;
       Unix.unlink file;
   ) else
     log "Cannot find %s, but continuing anyway..." file
@@ -489,16 +489,16 @@ let really_download ~overwrite ~src ~dst =
     download src;
     match list (fun _ -> true) "." with
       ( [] | _::_::_ ) ->
-        internal_error "Too many downloaded files."
+      internal_error "Too many downloaded files."
     | [filename] ->
-        let dst_file = dst / Filename.basename filename in
-        if not overwrite && Sys.file_exists dst_file then
-          internal_error "The downloaded file will overwrite %s." dst_file;
-        commands [
-          [ "rm"; "-f"; dst_file ];
-          [ "mv"; filename; dst_file ];
-        ];
-        dst_file
+      let dst_file = dst / Filename.basename filename in
+      if not overwrite && Sys.file_exists dst_file then
+        internal_error "The downloaded file will overwrite %s." dst_file;
+      commands [
+        [ "rm"; "-f"; dst_file ];
+        [ "mv"; filename; dst_file ];
+      ];
+      dst_file
   in
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
   with

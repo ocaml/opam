@@ -23,8 +23,8 @@ let git_fetch local_path remote_address commit =
     (OpamFilename.prettify_dir local_path)
     (OpamFilename.prettify_dir remote_address)
     (match commit with
-    | None   -> ""
-    | Some c -> Printf.sprintf " [%s]" c);
+     | None   -> ""
+     | Some c -> Printf.sprintf " [%s]" c);
   OpamFilename.in_dir local_path (fun () ->
     OpamSystem.command [ "git" ; "fetch" ; "origin" ]
   )
@@ -129,14 +129,14 @@ module B = struct
       | Some d -> d in
     match check_updates dir address commit with
     | None ->
-        OpamFilename.mkdir dir;
-        OpamFilename.in_dir dir (fun () -> git_init address);
-        download_dir nv ?dst remote_address
+      OpamFilename.mkdir dir;
+      OpamFilename.in_dir dir (fun () -> git_init address);
+      download_dir nv ?dst remote_address
     | Some f ->
-        if OpamFilename.Set.empty = f then
-          Up_to_date dir
-        else
-          Result dir
+      if OpamFilename.Set.empty = f then
+        Up_to_date dir
+      else
+        Result dir
 
   let update ~address =
     log "update";
@@ -146,9 +146,9 @@ module B = struct
     match check_updates local_dir address commit with
     | Some f -> OpamFile.Filenames.write (updates local_repo) f; f
     | None   ->
-        OpamGlobals.error_and_exit
-          "The repository %s is not initialized correctly"
-          (OpamFilename.Dir.to_string local_dir)
+      OpamGlobals.error_and_exit
+        "The repository %s is not initialized correctly"
+        (OpamFilename.Dir.to_string local_dir)
 
   let upload_dir ~address:_ dirname =
     log "upload_dir";

@@ -27,7 +27,7 @@ module API: sig
     unit
 
   (** Display all available packages that matches any of the
-     regexps. *)
+      regexps. *)
   val list:
     print_short:bool ->
     installed_only:bool ->

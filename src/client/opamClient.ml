@@ -310,11 +310,11 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
                  || partial_match descr))
     ) names in
 
-    if not (OpamPackage.Set.is_empty t.packages)
-    && OpamPackage.Name.Map.is_empty names then
-      OpamGlobals.error_and_exit "No packages found."
-    else
-      names
+  if not (OpamPackage.Set.is_empty t.packages)
+  && OpamPackage.Name.Map.is_empty names then
+    OpamGlobals.error_and_exit "No packages found."
+  else
+    names
 
 module API = struct
 
@@ -743,75 +743,75 @@ module API = struct
     if OpamFilename.exists config_f then
       OpamGlobals.error_and_exit "OPAM has already been initialized."
     else try
-      let repo_p = OpamPath.Repository.create root repo.repo_name in
-      (* Create (possibly empty) configuration files *)
-      let switch =
-        if compiler = OpamCompiler.system then
-          OpamSwitch.default
-        else
-          OpamSwitch.of_string (OpamCompiler.to_string compiler) in
+        let repo_p = OpamPath.Repository.create root repo.repo_name in
+        (* Create (possibly empty) configuration files *)
+        let switch =
+          if compiler = OpamCompiler.system then
+            OpamSwitch.default
+          else
+            OpamSwitch.of_string (OpamCompiler.to_string compiler) in
 
-      (* Create ~/.opam/compilers/system.comp *)
-      let system_version = OpamCompiler.Version.current () in
-      OpamState.create_system_compiler_description root system_version;
+        (* Create ~/.opam/compilers/system.comp *)
+        let system_version = OpamCompiler.Version.current () in
+        OpamState.create_system_compiler_description root system_version;
 
-      (* Create ~/.opam/config *)
-      let config = OpamFile.Config.create OpamVersion.current switch [repo.repo_name] jobs in
-      OpamFile.Config.write config_f config;
+        (* Create ~/.opam/config *)
+        let config = OpamFile.Config.create OpamVersion.current switch [repo.repo_name] jobs in
+        OpamFile.Config.write config_f config;
 
-      (* Create ~/.opam/aliases *)
-      OpamFile.Aliases.write (OpamPath.aliases root) (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
+        (* Create ~/.opam/aliases *)
+        OpamFile.Aliases.write (OpamPath.aliases root) (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
 
-      (* Init repository *)
-      OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
-      OpamFile.Repo_config.write (OpamPath.Repository.config repo_p) repo;
-      OpamRepository.init repo;
+        (* Init repository *)
+        OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
+        OpamFile.Repo_config.write (OpamPath.Repository.config repo_p) repo;
+        OpamRepository.init repo;
 
-      (* Init global dirs *)
-      OpamFilename.mkdir (OpamPath.opam_dir root);
-      OpamFilename.mkdir (OpamPath.descr_dir root);
-      OpamFilename.mkdir (OpamPath.archives_dir root);
-      OpamFilename.mkdir (OpamPath.compilers_dir root);
+        (* Init global dirs *)
+        OpamFilename.mkdir (OpamPath.opam_dir root);
+        OpamFilename.mkdir (OpamPath.descr_dir root);
+        OpamFilename.mkdir (OpamPath.archives_dir root);
+        OpamFilename.mkdir (OpamPath.compilers_dir root);
 
-      (* Load the partial state, and update the repository state *)
-      log "updating repository state";
-      let t = OpamState.load_repository_state "init" in
-      update_repositories t ~show_compilers:false t.repositories;
+        (* Load the partial state, and update the repository state *)
+        log "updating repository state";
+        let t = OpamState.load_repository_state "init" in
+        update_repositories t ~show_compilers:false t.repositories;
 
-      (* Load the partial state, and update the packages state *)
-      log "updating package state";
-      let t = OpamState.load_state ~save_cache:false "init-1" in
-      let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
-      let quiet = (compiler = OpamCompiler.system) in
-      OpamState.install_compiler t ~quiet switch compiler;
-      OpamState.update_switch_config t switch;
-      update_packages t ~show_packages:false t.repositories OpamPackage.Name.Set.empty;
+        (* Load the partial state, and update the packages state *)
+        log "updating package state";
+        let t = OpamState.load_state ~save_cache:false "init-1" in
+        let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
+        let quiet = (compiler = OpamCompiler.system) in
+        OpamState.install_compiler t ~quiet switch compiler;
+        OpamState.update_switch_config t switch;
+        update_packages t ~show_packages:false t.repositories OpamPackage.Name.Set.empty;
 
-      (* Finally, load the complete state and install the compiler packages *)
-      log "installing compiler packages";
-      let t = OpamState.load_state "init-2" in
-      let compiler_packages = OpamState.get_compiler_packages t compiler in
-      let compiler_names = OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
-      let _solution = OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
-          { wish_install = [];
-            wish_remove  = [];
-            wish_upgrade = compiler_packages } in
+        (* Finally, load the complete state and install the compiler packages *)
+        log "installing compiler packages";
+        let t = OpamState.load_state "init-2" in
+        let compiler_packages = OpamState.get_compiler_packages t compiler in
+        let compiler_names = OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
+        let _solution = OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
+            { wish_install = [];
+              wish_remove  = [];
+              wish_upgrade = compiler_packages } in
 
-      let dot_profile_o = Some dot_profile in
-      let user = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
-      begin match update_config with
-        | `ask -> OpamState.update_setup_interactive t shell dot_profile
-        | `no  -> ()
-        | `yes ->
-          let global = Some { complete = true; switch_eval = true } in
-          OpamState.update_setup t user global
-      end;
-      OpamState.print_env_warning t user
+        let dot_profile_o = Some dot_profile in
+        let user = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
+        begin match update_config with
+          | `ask -> OpamState.update_setup_interactive t shell dot_profile
+          | `no  -> ()
+          | `yes ->
+            let global = Some { complete = true; switch_eval = true } in
+            OpamState.update_setup t user global
+        end;
+        OpamState.print_env_warning t user
 
-    with e ->
-      if not !OpamGlobals.debug then
-        OpamFilename.rmdir (OpamPath.root root);
-      raise e
+      with e ->
+        if not !OpamGlobals.debug then
+          OpamFilename.rmdir (OpamPath.root root);
+        raise e
 
   let install names =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);

@@ -241,17 +241,17 @@ end
 let make_urls_txt local_repo =
   let local_index_file = OpamFilename.of_string "urls.txt" in
   let index = OpamFilename.Attribute.Set.of_list (List.rev_map (fun f ->
-    let basename =
-      OpamFilename.Base.of_string (OpamFilename.remove_prefix (OpamFilename.cwd()) f) in
-    let perm =
-      let s = Unix.stat (OpamFilename.to_string f) in
-      s.Unix.st_perm in
-    let digest = OpamFilename.digest f in
-    OpamFilename.Attribute.create basename digest perm
-  ) (OpamFilename.rec_files (OpamPath.Repository.packages_dir local_repo)
-   @ OpamFilename.rec_files (OpamPath.Repository.archives_dir local_repo)
-   @ OpamFilename.rec_files (OpamPath.Repository.compilers_dir local_repo)
-  )) in
+        let basename =
+          OpamFilename.Base.of_string (OpamFilename.remove_prefix (OpamFilename.cwd()) f) in
+        let perm =
+          let s = Unix.stat (OpamFilename.to_string f) in
+          s.Unix.st_perm in
+        let digest = OpamFilename.digest f in
+        OpamFilename.Attribute.create basename digest perm
+      ) (OpamFilename.rec_files (OpamPath.Repository.packages_dir local_repo)
+         @ OpamFilename.rec_files (OpamPath.Repository.archives_dir local_repo)
+         @ OpamFilename.rec_files (OpamPath.Repository.compilers_dir local_repo)
+      )) in
   if not (OpamFilename.Attribute.Set.is_empty index) then
     OpamFile.Urls_txt.write local_index_file index;
   index

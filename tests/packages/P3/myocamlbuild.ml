@@ -13,8 +13,8 @@ let add_dep p =
   flag ["ocaml"; "compile"] & S[Sh (ocp_get p)]
 
 let _ = dispatch & function
-  | After_rules -> List.iter add_dep deps
-  | _ -> ()
+        | After_rules -> List.iter add_dep deps
+        | _ -> ()
 
 
 

@@ -41,7 +41,7 @@ include OpamMisc.ABSTRACT
 val of_filename: OpamFilename.t -> t
 
 (** List the compiler available in a directory (and their eventual
-   descrition file) *)
+    descrition file) *)
 val list: OpamFilename.Dir.t -> (OpamFilename.t * OpamFilename.t option) Map.t
 
 (** System compiler *)

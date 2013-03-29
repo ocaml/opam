@@ -190,7 +190,7 @@ type 'a action =
   | To_recompile of 'a
 
 (** The possible causes of an action. *)
- type 'a cause =
+type 'a cause =
   | Use of 'a list
   | Required_by of 'a list
   | Upstream_changes

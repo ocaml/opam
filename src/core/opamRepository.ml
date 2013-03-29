@@ -262,8 +262,8 @@ let make_archive ?(gener_digest=false) ?local_path nv =
       let url_file = OpamFile.URL.read url_f in
       let checksum = OpamFile.URL.checksum url_file in
       let kind = match OpamFile.URL.kind url_file with
-      | None   -> kind_of_url (OpamFile.URL.url url_file)
-      | Some k -> k in
+        | None   -> kind_of_url (OpamFile.URL.url url_file)
+        | Some k -> k in
       let url = OpamFile.URL.url url_file in
       log "downloading %s:%s" url (string_of_repository_kind kind);
 
@@ -271,30 +271,30 @@ let make_archive ?(gener_digest=false) ?local_path nv =
       | Not_available -> OpamSystem.internal_error "%s is not available." url
       | Up_to_date (F local_archive)
       | Result (F local_archive) ->
-          if gener_digest then (
-            let digest = OpamFilename.digest local_archive in
-            begin match checksum with
+        if gener_digest then (
+          let digest = OpamFilename.digest local_archive in
+          begin match checksum with
             | Some c when c <> digest ->
               OpamGlobals.msg
                 "Fixing wrong checksum for %s: current value is %s, setting it to %s.\n"
                 (OpamPackage.to_string nv) c digest;
             | _ -> ();
-            end;
-            OpamFile.URL.write url_f (OpamFile.URL.with_checksum url_file digest);
-          );
-          log "extracting %s to %s"
-            (OpamFilename.to_string local_archive)
-            (OpamFilename.Dir.to_string extract_dir);
-          OpamFilename.extract local_archive extract_dir;
-          (* Remove the upstream archive *)
-          OpamFilename.rmdir (OpamFilename.dirname local_archive)
+          end;
+          OpamFile.URL.write url_f (OpamFile.URL.with_checksum url_file digest);
+        );
+        log "extracting %s to %s"
+          (OpamFilename.to_string local_archive)
+          (OpamFilename.Dir.to_string extract_dir);
+        OpamFilename.extract local_archive extract_dir;
+        (* Remove the upstream archive *)
+        OpamFilename.rmdir (OpamFilename.dirname local_archive)
 
       | Up_to_date (D dir)
       | Result (D dir) ->
-          log "copying %s to %s"
-            (OpamFilename.Dir.to_string dir)
-            (OpamFilename.Dir.to_string extract_dir);
-          if dir <> extract_dir then
+        log "copying %s to %s"
+          (OpamFilename.Dir.to_string dir)
+          (OpamFilename.Dir.to_string extract_dir);
+        if dir <> extract_dir then
           OpamFilename.copy_unique_dir ~src:download_dir ~dst:extract_dir
     );
 
@@ -331,15 +331,15 @@ let download r nv =
   (* If the archive is on the server, download it directly *)
   match OpamFilename.in_dir dir (fun () -> download_archive r nv) with
   | Up_to_date _ ->
-      OpamGlobals.msg "The archive for %s is in the local cache.\n" (OpamPackage.to_string nv);
-      log "The archive for %s is already downloaded and up-to-date"
-        (OpamPackage.to_string nv)
+    OpamGlobals.msg "The archive for %s is in the local cache.\n" (OpamPackage.to_string nv);
+    log "The archive for %s is already downloaded and up-to-date"
+      (OpamPackage.to_string nv)
   | Result local_file ->
-      log "Downloaded %s successfully" (OpamFilename.to_string local_file)
+    log "Downloaded %s successfully" (OpamFilename.to_string local_file)
   | Not_available ->
-      log "The archive for %s is not available, need to build it"
-        (OpamPackage.to_string nv);
-      OpamFilename.in_dir dir (fun () -> make_archive nv)
+    log "The archive for %s is not available, need to build it"
+      (OpamPackage.to_string nv);
+    OpamFilename.in_dir dir (fun () -> make_archive nv)
 
 let check_version repo =
   let repo_version =
@@ -387,25 +387,25 @@ let update r =
   let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
   log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
   let updated_cached_packages = OpamPackage.Set.filter (fun nv ->
-    let prefix = find_prefix prefix nv in
-    let url_f = OpamPath.Repository.url repo prefix nv in
-    if OpamFilename.exists url_f then (
-      let url = OpamFile.URL.read url_f in
-      let kind = match OpamFile.URL.kind url with
-        | None   -> kind_of_url (OpamFile.URL.url url)
-        | Some k -> k in
-      let checksum = OpamFile.URL.checksum url in
-      let url = OpamFile.URL.url url in
-      log "updating %s:%s:%s" url
-        (string_of_repository_kind kind)
-        (match checksum with None -> "*" | Some c -> c);
-      match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
-      | Not_available -> OpamSystem.internal_error "%s is not available." url
-      | Up_to_date _  -> false
-      | Result _      -> true
-    ) else
-      false
-  ) cached_packages in
+      let prefix = find_prefix prefix nv in
+      let url_f = OpamPath.Repository.url repo prefix nv in
+      if OpamFilename.exists url_f then (
+        let url = OpamFile.URL.read url_f in
+        let kind = match OpamFile.URL.kind url with
+          | None   -> kind_of_url (OpamFile.URL.url url)
+          | Some k -> k in
+        let checksum = OpamFile.URL.checksum url in
+        let url = OpamFile.URL.url url in
+        log "updating %s:%s:%s" url
+          (string_of_repository_kind kind)
+          (match checksum with None -> "*" | Some c -> c);
+        match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
+        | Not_available -> OpamSystem.internal_error "%s is not available." url
+        | Up_to_date _  -> false
+        | Result _      -> true
+      ) else
+        false
+    ) cached_packages in
 
   let updated = OpamPackage.Set.union updated_packages updated_cached_packages in
   OpamFile.Updated.write (OpamPath.Repository.updated repo) updated

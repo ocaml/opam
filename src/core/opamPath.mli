@@ -182,7 +182,7 @@ module Repository: sig
   (** Prefix file {i $opam/repo/prefix} *)
   val prefix: repository_root -> filename
 
-   (** Return the repository folder: {i $opam/repo/$repo} *)
+  (** Return the repository folder: {i $opam/repo/$repo} *)
   val create: repository_root -> repository_name -> repository_root
 
   (** Return the version file *)

@@ -149,11 +149,11 @@ let mk_opt ?section flags value doc conv default =
 
 let mk_subdoc ?(names="COMMANDS") commands =
   `S names ::
-  List.map (fun (cs,_,d) ->
-    let bold s = Printf.sprintf "$(b,%s)" s in
-    let cmds = String.concat ", " (List.map bold cs) in
-    `I (cmds, d)
-  ) commands
+    List.map (fun (cs,_,d) ->
+      let bold s = Printf.sprintf "$(b,%s)" s in
+      let cmds = String.concat ", " (List.map bold cs) in
+      `I (cmds, d)
+    ) commands
 
 let mk_subcommands_aux ?(name="COMMAND") my_enum commands default =
   let command =
@@ -163,8 +163,8 @@ let mk_subcommands_aux ?(name="COMMAND") my_enum commands default =
            "Name of the sub-command. See the $(b,%sS) section for more info.%s"
            name
            (match default with
-           | None   -> ""
-           | Some d -> " " ^ d))
+            | None   -> ""
+            | Some d -> " " ^ d))
         [] in
     let commands =
       List.fold_left
@@ -411,13 +411,13 @@ let list =
   let man = [
     `S "DESCRIPTION";
     `P "This command displays the list of available packages, or the list of \
-         installed packages if the $(b,--installed) switch is used.";
+        installed packages if the $(b,--installed) switch is used.";
     `P "Unless the $(b,--short) switch is used, the output format displays one \
         package per line, and each line contains the name of the package, the \
         installed version or -- if the package is not installed, and a short \
         description.";
     `P " The full description can be obtained by doing $(b,opam info <package>). \
-         You can search through the package descriptions using the $(b,opam search) command."
+        You can search through the package descriptions using the $(b,opam search) command."
   ] in
   let list global_options print_short installed_only installed_roots packages =
     set_global_options global_options;
@@ -684,7 +684,7 @@ let remove =
       "Remove all the packages which have not been explicitely installed and \
        which are not necessary anymore. It is possible to enforce keeping an \
        already installed package by running $(b,opam install <pkg>). This flag \
-      can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
+       can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
   let remove global_options build_options autoremove packages =
     set_global_options global_options;
     set_build_options build_options;
@@ -758,7 +758,7 @@ let upload =
   let opam =
     mk_opt ["opam"]
       "FILE" "Specify the .opam file that will be uploaded to repo://packages/name.version/opam"
-       Arg.(some filename) None in
+      Arg.(some filename) None in
   let descr =
     mk_opt ["descr"]
       "FILE" "Specify the .descr file that will be uploaded to repo://packages/name.version/descr"
@@ -803,7 +803,7 @@ let repository name =
                                  repositories used by OPAM.";
     ["list"]       , `list    , "List all repositories used by OPAM.";
     ["priority"]   , `priority, "Change the priority of repository named $(b,name) to \
-                                $(b,priority).";
+                                 $(b,priority).";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1024,14 +1024,14 @@ let pin =
     if list then
       Client.PIN.list ()
     else match package, pin with
-    | None  , None   -> Client.PIN.list ()
-    | Some n, Some p ->
-      let pin = {
-        pin_package = OpamPackage.Name.of_string n;
-        pin_option  = pin_option_of_string ?kind:kind p
-      } in
-      Client.PIN.pin ~force pin
-    | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
+      | None  , None   -> Client.PIN.list ()
+      | Some n, Some p ->
+        let pin = {
+          pin_package = OpamPackage.Name.of_string n;
+          pin_option  = pin_option_of_string ?kind:kind p
+        } in
+        Client.PIN.pin ~force pin
+      | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
 
   Term.(pure pin $global_options $force $kind $list $package $pin_option),
   term_info "pin" ~doc ~man
@@ -1041,8 +1041,8 @@ let help =
   let doc = "Display help about OPAM and OPAM commands." in
   let man = [
     `S "DESCRIPTION";
-     `P "Prints help about OPAM commands.";
-     `P "Use `$(mname) help topics' to get the full list of help topics.";
+    `P "Prints help about OPAM commands.";
+    `P "Use `$(mname) help topics' to get the full list of help topics.";
   ] in
   let topic =
     let doc = Arg.info [] ~docv:"TOPIC" ~doc:"The topic to get help on." in
@@ -1082,8 +1082,8 @@ let default =
       "usage: opam [--version]\n\
       \            [--help]\n\
       \            <command> [<args>]\n\
-      \n\
-      The most commonly used opam commands are:\n\
+       \n\
+       The most commonly used opam commands are:\n\
       \    init         %s\n\
       \    list         %s\n\
       \    info         %s\n\
@@ -1095,8 +1095,8 @@ let default =
       \    repository   %s\n\
       \    switch       %s\n\
       \    pin          %s\n\
-      \n\
-      See 'opam help <command>' for more information on a specific command.\n"
+       \n\
+       See 'opam help <command>' for more information on a specific command.\n"
       init_doc list_doc info_doc install_doc remove_doc update_doc
       upgrade_doc config_doc repository_doc switch_doc pin_doc in
   Term.(pure usage $global_options),
@@ -1158,14 +1158,14 @@ let () =
     OpamGlobals.error "'%s' failed." (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
     begin match e with
-    | OpamGlobals.Exit i -> exit_code := i
-    | OpamSystem.Internal_error _
-    | OpamSystem.Process_error _ ->
-      Printf.eprintf "%s\n" (Printexc.to_string e);
-      Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
-    | Sys.Break -> exit_code := 1
-    | _ ->
-      Printf.fprintf stderr "Fatal error: exception %s\n" (Printexc.to_string e);
-      Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
+      | OpamGlobals.Exit i -> exit_code := i
+      | OpamSystem.Internal_error _
+      | OpamSystem.Process_error _ ->
+        Printf.eprintf "%s\n" (Printexc.to_string e);
+        Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
+      | Sys.Break -> exit_code := 1
+      | _ ->
+        Printf.fprintf stderr "Fatal error: exception %s\n" (Printexc.to_string e);
+        Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
     end;
     exit !exit_code

@@ -73,9 +73,9 @@ module Set = struct
 
     let choose_one s =
       match elements s with
-        | [x] -> x
-        | [] -> raise Not_found
-        | _  -> invalid_arg "choose_one"
+      | [x] -> x
+      | [] -> raise Not_found
+      | _  -> invalid_arg "choose_one"
 
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l
@@ -145,9 +145,9 @@ let filter_map f l =
   let rec loop accu = function
     | []     -> List.rev accu
     | h :: t ->
-        match f h with
-        | None   -> loop accu t
-        | Some x -> loop (x::accu) t in
+      match f h with
+      | None   -> loop accu t
+      | Some x -> loop (x::accu) t in
   loop [] l
 
 module OInt = struct
@@ -262,9 +262,9 @@ let reset_env_value ~prefix v =
 let rsync_trim = function
   | [] -> []
   | _ :: t ->
-      match List.rev t with
-      | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
-      | _ -> []
+    match List.rev t with
+    | _ :: _ :: _ :: l -> List.filter ((<>) "./") l
+    | _ -> []
 
 let exact_match re s =
   try
@@ -346,15 +346,15 @@ let get_terminal_columns () =
     with_process_in "tput cols"
       (fun ic -> int_of_string (input_line ic))
   with _ -> try (* GNU stty *)
-    with_process_in "stty size"
-      (fun ic ->
-        match split (input_line ic) ' ' with
-        | [_ ; v] -> int_of_string v
-        | _ -> failwith "stty")
-  with _ -> try (* shell envvar *)
-    int_of_string (getenv "COLUMNS")
-  with _ ->
-    default_columns
+      with_process_in "stty size"
+        (fun ic ->
+          match split (input_line ic) ' ' with
+          | [_ ; v] -> int_of_string v
+          | _ -> failwith "stty")
+    with _ -> try (* shell envvar *)
+        int_of_string (getenv "COLUMNS")
+      with _ ->
+        default_columns
 
 let terminal_columns =
   let v = Lazy.lazy_from_fun get_terminal_columns in

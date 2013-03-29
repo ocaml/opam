@@ -51,8 +51,8 @@ module Name = struct
 
   let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with
-      | 0 -> compare n1 n2
-      | i -> i
+    | 0 -> compare n1 n2
+    | i -> i
 
   module O = struct
     type t = string
@@ -83,8 +83,8 @@ let of_string_opt s =
   if OpamMisc.contains s ' ' || OpamMisc.contains s '\n' then
     None
   else match OpamMisc.cut_at s sep with
-  | None        -> None
-  | Some (n, v) -> Some { name = Name.of_string n; version = Version.of_string v }
+    | None        -> None
+    | Some (n, v) -> Some { name = Name.of_string n; version = Version.of_string v }
 
 let of_string s = match of_string_opt s with
   | Some x -> x

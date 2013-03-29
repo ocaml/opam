@@ -78,13 +78,13 @@ let opam2debian universe depopts package =
 
 (* Convert an debian package to a CUDF package *)
 let debian2cudf tables package =
-    let options = {
-      Debian.Debcudf.default_options with
-        Debian.Debcudf.extras_opt = [
-          OpamCudf.s_reinstall, (OpamCudf.s_reinstall, `Bool (Some false));
-          OpamCudf.s_installed_root, (OpamCudf.s_installed_root, `Bool (Some false));
-        ]
-    } in
+  let options = {
+    Debian.Debcudf.default_options with
+    Debian.Debcudf.extras_opt = [
+      OpamCudf.s_reinstall, (OpamCudf.s_reinstall, `Bool (Some false));
+      OpamCudf.s_installed_root, (OpamCudf.s_installed_root, `Bool (Some false));
+    ]
+  } in
   Debian.Debcudf.tocudf ~options tables package
 
 let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
@@ -286,8 +286,8 @@ let solution_is_empty t =
 let print_solution t =
   if solution_is_empty t then
     ()
-  (*Globals.msg
-    "No actions will be performed, the current state satisfies the request.\n"*)
+    (*Globals.msg
+      "No actions will be performed, the current state satisfies the request.\n"*)
   else
     let causes pkg =
       try List.assoc pkg t.PackageActionGraph.root_causes

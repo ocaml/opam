@@ -79,11 +79,11 @@ val files_with_links: string -> string list
 val rec_files: string -> string list
 
 (** [rec_dirs dir] return the list list of all directories recursively
-   (going through symbolink links). *)
+    (going through symbolink links). *)
 val rec_dirs: string -> string list
 
-  (** Return the version of the current OCaml compiler. If no OCaml
-      compiler is present in the path, then it returns [None]. *)
+(** Return the version of the current OCaml compiler. If no OCaml
+    compiler is present in the path, then it returns [None]. *)
 val ocaml_version: string option Lazy.t
 
 (** Return the path where the system ocamlc library is installed *)
