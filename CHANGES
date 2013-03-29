@@ -1,4 +1,5 @@
 1.0.1 [Mar 2013]
+* Various improvments in the solver heuristics
 * By default, turn-on checking of certificates for downloaded dependency archives: use `./configure --disable-certificate-check` to go back to the previous behavior
 * Check the md5sum of downloaded archives when compiling OPAM
 * Improved `opam info` command (more information, non-zero error code when no patterns match)
