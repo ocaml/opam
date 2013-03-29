@@ -1,6 +1,6 @@
 -include Makefile.config
 
-LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind -no-color
+LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
 TARGETS = opam opam-mk-repo
