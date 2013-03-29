@@ -315,61 +315,64 @@ let state_space ?(filters = fun _ -> None) universe interesting_names =
    solver. *)
 let resolve ?(verbose=true) current_universe request =
 
-  match OpamCudf.get_final_universe current_universe request with
+  if request.wish_remove <> [] then
+    OpamCudf.resolve current_universe request
 
-  | Conflicts e ->
-    log "resolve: conflict!";
-    Conflicts e
+  else match OpamCudf.get_final_universe current_universe request with
+    | Conflicts e ->
+      log "resolve: conflict!";
+      Conflicts e
 
-  | Success result_universe ->
-    log "resolve: result-universe=%s"
-      (OpamCudf.string_of_universe result_universe);
+    | Success result_universe ->
+      log "resolve: result-universe=%s"
+        (OpamCudf.string_of_universe result_universe);
 
-    (* This first [result_universe] is a consistent solution which
-       contains only installed packages fulfilling the initial
-       constraints. It is thus not a complete universe and it is not
-       guaranteed to be optimal. So we extend the result with all the
-       existing packages. *)
-    let result_universe =
-      let installed = Cudf.get_packages result_universe in
-      List.fold_left OpamCudf.install current_universe installed in
+      (* This first [result_universe] is a consistent solution which
+         contains only installed packages fulfilling the initial
+         constraints. It is thus not a complete universe and it is not
+         guaranteed to be optimal. So we extend the result with all the
+         existing packages. *)
+      let result_universe =
+        let installed = Cudf.get_packages result_universe in
+        let current_universe = OpamCudf.uninstall_all current_universe in
+        List.fold_left OpamCudf.install current_universe installed in
 
-    let all_wishes = request.wish_install @ request.wish_upgrade in
+      let all_wishes = request.wish_install @ request.wish_upgrade in
 
-    (* We remove from the universe all the package versions which are
-       not specified on the command-line. For instance:
+      (* We remove from the universe all the package versions which are
+         not specified on the command-line. For instance:
 
-       $ opam install core.109.13.00
+         $ opam install core.109.13.00
 
-       will cause all versions of core != 109.13.00 to disapear from
-       the universe. This is causing [Universe.trim] to remove *a lot*
-       of uninstallable packages and will improve the brute-force
-       state exploration results.
+         will cause all versions of core != 109.13.00 to disapear from
+         the universe. This is causing [Universe.trim] to remove *a lot*
+         of uninstallable packages and will improve the brute-force
+         state exploration results.
 
-       Note: We don't want to trim the universe too early because we
-       want to keep good error messages in case the solver does not
-       find a solution. *)
-    let trimed_universe =
-      let universe = List.fold_left (fun universe (name, constr) ->
-          OpamCudf.remove_all_uninstalled_versions_but name constr universe
-        ) result_universe all_wishes in
-      let universe = Algo.Depsolver.trim universe in
-      dependencies universe all_wishes in
-    log "trimed-universe: %s" (OpamCudf.string_of_universe trimed_universe);
+         Note: We don't want to trim the universe too early because we
+         want to keep good error messages in case the solver does not
+         find a solution. *)
+      let trimed_universe =
+        let universe = List.fold_left (fun universe (name, constr) ->
+            OpamCudf.remove_all_uninstalled_versions_but name constr universe
+          ) result_universe all_wishes in
+        let universe = Algo.Depsolver.trim universe in
+        dependencies universe all_wishes in
+      log "trimed-universe: %s" (OpamCudf.string_of_universe trimed_universe);
 
-    let interesting_names =
-      find_interesting_names current_universe request.wish_upgrade in
-    log "resolve: interesting-name=%s" (OpamMisc.pretty_list interesting_names);
+      let interesting_names =
+        find_interesting_names current_universe request.wish_upgrade in
+      log "resolve: interesting-name=%s" (OpamMisc.pretty_list interesting_names);
 
-    let filters name =
-      try List.assoc name all_wishes
-      with Not_found -> None in
+      let filters name =
+        try List.assoc name all_wishes
+        with Not_found -> None in
 
-    let state_space = state_space ~filters trimed_universe interesting_names in
+      let state_space = state_space ~filters trimed_universe interesting_names in
 
-    match explore ~verbose current_universe state_space with
-    | Some state -> Success (actions_of_state current_universe state)
-    | None       ->
-      log "no optimized solution found with the current state-space";
-      (* XXX: we could try with a different state-space *)
-      OpamCudf.resolve current_universe request
+      match explore ~verbose current_universe state_space with
+      | Some state -> Success (actions_of_state current_universe state)
+      | None       ->
+        log "no optimized solution found with the current state-space";
+        (* XXX: we could try with a different state-space *)
+        OpamCudf.resolve current_universe request
