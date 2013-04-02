@@ -1,4 +1,5 @@
 1.0.1 [Mar 2013]
+* Add a `--jobs` command line option and add `%{jobs}%` to be used in OPAM files
 * Various improvments in the solver heuristics
 * By default, turn-on checking of certificates for downloaded dependency archives: use `./configure --disable-certificate-check` to go back to the previous behavior
 * Check the md5sum of downloaded archives when compiling OPAM
