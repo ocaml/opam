@@ -60,14 +60,16 @@ type build_options = {
   cudf_file     : string option;
   fake          : bool;
   external_tags : string list;
+  jobs          : int option;
 }
 
 let create_build_options
     keep_build_dir make no_checksums build_test
-    build_doc dryrun external_tags cudf_file fake = {
+    build_doc dryrun external_tags cudf_file fake
+    jobs = {
   keep_build_dir; make; no_checksums;
   build_test; build_doc; dryrun; external_tags;
-  cudf_file; fake
+  cudf_file; fake; jobs
 }
 
 let set_build_options b =
@@ -79,6 +81,11 @@ let set_build_options b =
   OpamGlobals.external_tags  := b.external_tags;
   OpamGlobals.cudf_file      := b.cudf_file;
   OpamGlobals.fake           := b.fake;
+  OpamGlobals.jobs           :=
+    begin match b.jobs with
+      | None   -> !OpamGlobals.jobs
+      | Some j -> Some j
+    end;
   match b.make with
   | None   -> ()
   | Some s -> OpamGlobals.makecmd := (fun () -> s)
@@ -321,13 +328,20 @@ let build_options =
       Arg.(some string) None in
   let fake =
     mk_flag ["fake"]
-      "WARNING: This option is fo testing purposes only! Using this option without care is \
-       the best way to corrupt your current compiler environement. When using this option \
-       OPAM will run a dry-run of the solver and then fake the build and install commands" in
+      "WARNING: This option is fo testing purposes only! Using this option without    \
+       care is the best way to corrupt your current compiler environement. When using \
+       this option OPAM will run a dry-run of the solver and then fake the build and  \
+       install commands." in
+  let jobs =
+    mk_opt ["j";"jobs"] "JOBS"
+      "Set the maximal number of concurrent jobs to use. You can also set it using \
+       the OPAMJOBS environment variable."
+      Arg.(some int) None in
 
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
-    $build_doc $dryrun $external_tags $cudf_file $fake)
+    $build_doc $dryrun $external_tags $cudf_file $fake
+    $jobs)
 
 let guess_repository_kind kind address =
   match kind with

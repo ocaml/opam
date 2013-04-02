@@ -43,6 +43,11 @@ let print_stats      = check "STATS"
 let utf8_msgs        = check "UTF8MSGS"
 let autoremove       = check "AUTOREMOVE"
 
+let jobs = ref (
+    try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
+    with _ -> None
+  )
+
 let download_retry =
   try max 1 (int_of_string (OpamMisc.getenv "OPAMRETRY"))
   with _ -> 10

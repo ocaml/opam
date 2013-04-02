@@ -259,6 +259,11 @@ let pinned_path t name =
   else
     None
 
+let jobs t =
+  match !OpamGlobals.jobs with
+  | None   -> OpamFile.Config.jobs t.config
+  | Some j -> j
+
 (* List the packages which does fullfil the compiler constraints *)
 let available_packages
     root system opams installed prefixes repositories
@@ -353,7 +358,6 @@ let make_repository_name_map fn root config =
       OpamRepositoryName.Map.add repo (fn repo_p) map)
     OpamRepositoryName.Map.empty
     (OpamFile.Config.repositories config)
-
 
 (* Only used during init: load only repository-related information *)
 let load_repository_state call_site =
@@ -604,7 +608,8 @@ let load_state ?(save_cache=true) call_site =
   let config =
     let config = OpamFile.Config.read config_p in
     if OpamFile.Config.opam_version config <> OpamVersion.current then (
-      (* opam has been updated, so refresh the configuration file and clean-up the cache. *)
+      (* opam has been updated, so refresh the configuration file and
+         clean-up the cache. *)
       let config = OpamFile.Config.with_current_opam_version config in
       OpamFile.Config.write config_p config;
       remove_state_cache ();
@@ -753,6 +758,8 @@ let contents_of_variable t v =
         B (OpamFile.Comp.preinstalled (compiler t t.compiler))
       else if var_str = "switch" then
         S (OpamSwitch.to_string t.switch)
+      else if var_str = "jobs" then
+        S (string_of_int (jobs t))
       else
         read_var name
   ) else (
@@ -1323,6 +1330,7 @@ let add_switch root switch compiler =
 (* install ~/.opam/<switch>/config/conf-ocaml.config *)
 let install_conf_ocaml_config root switch =
   log "install_conf_ocaml_config switch=%s" (OpamSwitch.to_string switch);
+
   (* .config *)
   let vars =
     let map f l = List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
@@ -1348,7 +1356,9 @@ let install_conf_ocaml_config root switch =
     ] in
 
   let config = OpamFile.Dot_config.create vars in
-  OpamFile.Dot_config.write (OpamPath.Switch.config root switch OpamPackage.Name.default) config
+  OpamFile.Dot_config.write
+    (OpamPath.Switch.config root switch OpamPackage.Name.default)
+    config
 
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[switch]
    - update $opam/switch
@@ -1546,4 +1556,3 @@ module Types = struct
     repo_index: OpamFile.Repo_index.t;
   }
 end
-

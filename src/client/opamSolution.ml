@@ -274,13 +274,13 @@ let parallel_apply t action solution =
     | To_change (_, nv) -> add_to_install nv in
 
   try
-    let jobs = OpamFile.Config.jobs t.config in
     (* 1/ We remove all installed packages appearing in the solution. *)
     let deleted = OpamAction.remove_all_packages t ~metadata:true solution in
     remove_from_install deleted;
 
     (* 2/ We install the new packages *)
-    PackageActionGraph.Parallel.parallel_iter jobs solution.to_process ~pre ~child ~post;
+    PackageActionGraph.Parallel.parallel_iter
+      (OpamState.jobs t) solution.to_process ~pre ~child ~post;
     if !OpamGlobals.fake then
       OpamGlobals.msg "Simulation complete.\n";
 

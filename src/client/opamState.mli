@@ -264,6 +264,9 @@ val add_to_reinstall: state -> all:bool -> package_set -> unit
     the new system compiler version as arguments. *)
 val create_system_compiler_description: dirname -> compiler_version option -> unit
 
+(** {2 Jobs} *)
+val jobs: state -> int
+
 (** {2 Misc} *)
 
 (** Ask the user to press Y/y/N/n to continue *)
