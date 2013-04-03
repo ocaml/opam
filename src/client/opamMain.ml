@@ -328,7 +328,7 @@ let build_options =
       Arg.(some string) None in
   let fake =
     mk_flag ["fake"]
-      "WARNING: This option is fo testing purposes only! Using this option without    \
+      "WARNING: This option is for testing purposes only! Using this option without    \
        care is the best way to corrupt your current compiler environement. When using \
        this option OPAM will run a dry-run of the solver and then fake the build and  \
        install commands." in
