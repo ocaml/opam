@@ -961,9 +961,7 @@ Does the directory existsb ?
 </td></tr>
 <tr><td><a href="OpamHeuristic.html#VALexplore">explore</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
 <td><div class="info">
-Explore the given package state-space, in the given universe,
-    under the assumption that the packages indeed belong to that
-    universe.
+Explore the given package state-space using the <code class="code">brute_force</code> strategy.
 </div>
 </td></tr>
 <tr><td><a href="OpamSwitchCommand.html#VALexport">export</a> [<a href="OpamSwitchCommand.html">OpamSwitchCommand</a>]</td>
@@ -2622,6 +2620,11 @@ Check wether a filename starts by a given Dir.t
 State cache
 </div>
 </td></tr>
+<tr><td><a href="OpamHeuristic.html#VALstate_of_request">state_of_request</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
+<td><div class="info">
+Find a possible good state which satisfies a request.
+</div>
+</td></tr>
 <tr><td><a href="OpamHeuristic.html#VALstate_space">state_space</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
 <td><div class="info">
 Build a state space from a list of package names.
@@ -2830,6 +2833,13 @@ Substitute a string
 <tr><td><a href="OpamFile.OPAM.html#VALsubsts">substs</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 File substitutions
+</div>
+</td></tr>
+<tr><td><a href="OpamHeuristic.html#VALsucc">succ</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
+<td><div class="info">
+Given a list of bounds and a tuple, return the next tuple which
+    satisfies the bounds (each component will be stricly lesser than
+    the bounds).
 </div>
 </td></tr>
 <tr><td><a href="OpamSolution.html#VALsum">sum</a> [<a href="OpamSolution.html">OpamSolution</a>]</td>
@@ -3332,6 +3342,13 @@ Write some contents to a file
 <tr><td><a href="OpamFile.IO_FILE.html#VALwrite_to_channel">write_to_channel</a> [<a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a>]</td>
 <td><div class="info">
 Write to channel.
+</div>
+</td></tr>
+<tr><td align="left"><br>Z</td></tr>
+<tr><td><a href="OpamHeuristic.html#VALzero">zero</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
+<td><div class="info">
+<code class="code">zero n</code> returns the tuple with <code class="code">n</code> zeros, which is the first
+    state to explore.
 </div>
 </td></tr>
 </table>

@@ -43,7 +43,11 @@
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Internal functions" rel="Section" href="#2_Internalfunctions">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="High-level API" rel="Section" href="#2_HighlevelAPI">
+<link title="Internal API" rel="Section" href="#2_InternalAPI">
+<link title="Integer space" rel="Subsection" href="#4_Integerspace">
+<link title="Polymorphic space" rel="Subsection" href="#4_Polymorphicspace">
+<link title="Package space" rel="Subsection" href="#4_Packagespace">
 <title>OpamHeuristic</title>
 </head>
 <body>
@@ -53,46 +57,117 @@
 </div>
 <h1>Module <a href="type_OpamHeuristic.html">OpamHeuristic</a></h1>
 <pre><span class="keyword">module</span> OpamHeuristic: <code class="code">sig</code> <a href="OpamHeuristic.html">..</a> <code class="code">end</code></pre><div class="info">
-Solver heuristics<br>
+Solver heuristics.<br>
 </div>
 <hr width="100%">
+<br>
+This module tries to turn an efficient solution checker (such as
+    the one provided by the dose3 library) into a relatively good
+    solution finder. This works quite well when you don't have many
+    choices, which seems to be the case in the OCaml universe.
+<p>
+
+    The method we are using is the following:
+<p>
+<ul>
+<li>We ultimately rely on a brute-force exploration loop, where we iterate over the state-space implicitely.</li>
+</ul>
+<br>
+<br>
+<h2 id="2_HighlevelAPI">High-level API</h2><br>
 <pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type">?verbose:bool -><br>       Cudf.universe -><br>       Cudf_types.vpkg <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list, Algo.Diagnostic.reason list)<br>       <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
 Optimized resolution<br>
 </div>
 <br>
-<h2 id="2_Internalfunctions">Internal functions</h2><br>
+<h2 id="2_InternalAPI">Internal API</h2><br>
 <br>
 These functions can be used independently of OPAM, so we document
     them here. It is not expected than any other file in OPAM use them,
     though.<br>
 <pre><span id="TYPEstate"><span class="keyword">type</span> <code class="type">'a</code> state</span> = <code class="type">'a list</code> </pre>
 <div class="info">
-A state.<br>
+A state. In our case, it is a list package we would like to see
+    installed.<br>
 </div>
 
 <pre><span id="TYPEstate_space"><span class="keyword">type</span> <code class="type">'a</code> state_space</span> = <code class="type">'a array list</code> </pre>
 <div class="info">
-A state space.<br>
+A state space. In our case, it is a collection of available
+    packages: each cell contains all the versions available for one
+    package, ordered by version.<br>
 </div>
 
+<br>
+<h4 id="4_Integerspace">Integer space</h4><br>
+<br>
+The hearth of the brute-force algorithm lies here. Wwe want to
+    iterate on the state-space (which can be hudge) and stop the
+    first time we hit a consistant state. This means two things:
+    (i) we don't want to build the full universe before iterating
+    on it; (ii) we need to enumerate the states in a meaningful
+    order, eg. an order which should reflect the optimization
+    criteria we are intersted in.<br>
+<br>
+To overcome this difficulties, we use a monotonous successor
+    function to compute the next state to test from a given valid
+    non-consistent state, see <code class="code">succ</code> for more details.<br>
+<pre><span id="VALzero"><span class="keyword">val</span> zero</span> : <code class="type">int -> int <a href="OpamHeuristic.html#TYPEstate">state</a></code></pre><div class="info">
+<code class="code">zero n</code> returns the tuple with <code class="code">n</code> zeros, which is the first
+    state to explore.<br>
+</div>
+<pre><span id="VALsucc"><span class="keyword">val</span> succ</span> : <code class="type">bounds:int list -> int <a href="OpamHeuristic.html#TYPEstate">state</a> -> int <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
+Given a list of bounds and a tuple, return the next tuple which
+    satisfies the bounds (each component will be stricly lesser than
+    the bounds). The enumeration respect the following invariant:
+<p>
+<ul>
+<li>it is complete, eg. all the state are enumerated until <code class="code">None</code> is
+      returned.</li>
+</ul>
+<ul>
+<li>it it monotonous: the sum of components always increase, eg.
+      <code class="code">|succ x| &gt;= |x|</code>, where <code class="code">|None|</code> is <code class="code">max_int</code>, <code class="code">|Some x| = |x|</code>
+      and <code class="code">|(x_1,...,x_n) = x_1 + ... + x_n|</code>.</li>
+</ul>
+
+    That enumeration encodes the heuristic we are trying to implement,
+    which is: we first try to install the 'ideal' state, where all
+    packages are installed with their most recent versions; if this
+    does not work, we try to minimize the distance between the ideal
+    state and the solution we are proposing.<br>
+</div>
+<br>
+<h4 id="4_Polymorphicspace">Polymorphic space</h4><br>
 <pre><span id="VALbrute_force"><span class="keyword">val</span> brute_force</span> : <code class="type">?verbose:bool -><br>       ('a <a href="OpamHeuristic.html#TYPEstate">state</a> -> bool) -><br>       'a <a href="OpamHeuristic.html#TYPEstate_space">state_space</a> -> 'a <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
 <code class="code">explore is_constent state_space</code> explore a state space by
     implicitely enumerating all the state in a sensitive order.<br>
 </div>
-<pre><span id="VALexplore"><span class="keyword">val</span> explore</span> : <code class="type">?verbose:bool -><br>       Cudf.universe -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate_space">state_space</a> -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
-Explore the given package state-space, in the given universe,
-    under the assumption that the packages indeed belong to that
-    universe.<br>
-</div>
+<br>
+<h4 id="4_Packagespace">Package space</h4><br>
 <pre><span id="VALstate_space"><span class="keyword">val</span> state_space</span> : <code class="type">?filters:(Cudf_types.pkgname -> Cudf_types.constr) -><br>       Cudf.universe -><br>       Cudf_types.pkgname list -> Cudf.package <a href="OpamHeuristic.html#TYPEstate_space">state_space</a></code></pre><div class="info">
 Build a state space from a list of package names. The <code class="code">filter</code>
     option helps to reduce the size of the state-space, which is
-    useful to deal with user-defined constraints (added on the command
-    line for instance).<br>
+    useful to deal with both user-defined constraints (added on the
+    command line for instance) and refined requests (see below).<br>
+</div>
+<pre><span id="VALexplore"><span class="keyword">val</span> explore</span> : <code class="type">?verbose:bool -><br>       Cudf.universe -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate_space">state_space</a> -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
+Explore the given package state-space using the <code class="code">brute_force</code> strategy.
+    We assume that all the packages belong to the given universe.<br>
+</div>
+<pre><span id="VALstate_of_request"><span class="keyword">val</span> state_of_request</span> : <code class="type">?verbose:bool -><br>       Cudf.universe -><br>       Cudf_types.vpkg <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -> Cudf.package <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
+Find a possible good state which satisfies a request. The idea is
+    call iteratively this function while refining the constraints in
+    the request until reaching a fix-point. This function tries to
+    minimize the state to explore, based on the request constraints:
+    the more constrained request you have, the smaller the state-space
+    to explore is. Once the state-space is computed using
+    <code class="code">state_space</code>, it calls <code class="code">explore</code> (which will use <code class="code">brute_force</code>)
+    to get an approximate solution to the request.<br>
 </div>
 <pre><span id="VALactions_of_state"><span class="keyword">val</span> actions_of_state</span> : <code class="type">Cudf.universe -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate">state</a> -> Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list</code></pre><div class="info">
 Convert a state into a series of action (withour the full closure
     of reinstallations). Raise <code class="code">Not_reachable</code> is the state is not
-    reachable.<br>
+    reachable. This function is called once we get a consistent state
+    to build a solution than we can propose to the user.<br>
 </div>
 </body></html>

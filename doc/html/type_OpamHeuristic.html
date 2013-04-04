@@ -50,19 +50,28 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.result<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;state&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;state_space&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;array&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;zero&nbsp;:&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="constructor">OpamHeuristic</span>.state<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;succ&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bounds:int&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;brute_force&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?verbose:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamHeuristic</span>.state_space&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;state_space&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?filters:(<span class="constructor">Cudf_types</span>.pkgname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf_types</span>.constr)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf_types</span>.pkgname&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamHeuristic</span>.state_space<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;explore&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?verbose:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamHeuristic</span>.state_space&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;state_space&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?filters:(<span class="constructor">Cudf_types</span>.pkgname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf_types</span>.constr)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;state_of_request&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?verbose:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf_types</span>.pkgname&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamHeuristic</span>.state_space<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf_types</span>.vpkg&nbsp;<span class="constructor">OpamTypes</span>.request&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;actions_of_state&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamHeuristic</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list<br>
