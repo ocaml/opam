@@ -368,11 +368,14 @@ let resolve ?(verbose=true) universe orig_request =
         Success (actions_of_state universe new_state)
       else (
         let constr (name, constr) =
-          try
-            let p = List.find (fun p -> p.Cudf.package = name) new_state in
-            (name, Some (`Geq, p.Cudf.version))
-          with Not_found ->
-            (name, constr) in
+          match constr with
+          | Some _ -> (name, constr)
+          | None   ->
+            try
+              let p = List.find (fun p -> p.Cudf.package = name) new_state in
+              (name, Some (`Geq, p.Cudf.version))
+            with Not_found ->
+              (name, constr) in
         assert (request.wish_remove = []);
         let new_request = {
           wish_install = List.map constr orig_request.wish_install;
