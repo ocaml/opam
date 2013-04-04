@@ -530,9 +530,11 @@ let switch_consistency_checks t =
   OpamPackage.Name.Set.iter clean_pin not_installed
 
 let loads = ref []
+let saves = ref []
 
 let print_stats () =
-  List.iter (Printf.printf "load-state: %.2fs\n") !loads
+  List.iter (Printf.printf "load-state: %.2fs\n") !loads;
+  List.iter (Printf.printf "save-state: %.2fs\n") !saves
 
 type cache = OpamFile.OPAM.t package_map * OpamFile.Descr.t package_map
 
@@ -560,6 +562,7 @@ let marshal_from_file file =
     None, None
 
 let save_state ~update t =
+  let t0 = Unix.gettimeofday () in
   let file = OpamPath.state_cache t.root in
   OpamFilename.remove file;
   if update then (
@@ -572,7 +575,9 @@ let save_state ~update t =
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
   Marshal.to_channel oc (t.opams, t.descrs) [];
-  close_out oc
+  close_out oc;
+  let t1 = Unix.gettimeofday () in
+  saves := (t1 -. t0) :: !saves
 
 let remove_state_cache () =
   let root = OpamPath.default () in
