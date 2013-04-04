@@ -16,13 +16,39 @@
 (** Solver heuristics. *)
 
 (** This module tries to turn an efficient solution checker (such as
-    the one provided by the dose3 library) into a relatively good
-    solution finder. This works quite well when you don't have many
-    choices, which seems to be the case in the OCaml universe.
+    the one provided by the dose3 library, writen by J. Vouillon) into
+    a relatively good solution finder.
 
     The method we are using is the following:
 
-    - We ultimately rely on a brute-force exploration loop, where we iterate over the state-space implicitely.
+    - We ultimately rely on a brute-force exploration loop, where we
+      iterate over the state-space implicitely, using a monotonous
+      successor function which encodes the optimization criteria we
+      are interested in;
+
+    - As brute-force exploration is costly, the goal is to provide the
+      exploration function a state-space as small as possible. To do
+      so, we use different kind of constraints present that we deduce
+      from the request and trim from the state-space every packages
+      and versions that are not needed;
+
+    - To trim the universe efficiently, we are only considering the
+      packages appearing in the request, which usually only means (i)
+      the installed root packages (with no specific version
+      constraint); (ii) the new packages that the user is asking (with
+      some eventual version constraints); and (iii) the transitive
+      closure of (i) and (ii) (with the corresponding usually version
+      constraints);
+
+    - The solution checker (which is used to check state-consistency)
+      can aslo gives us some useful hints on the shape of a
+      solution. Hence we run it once at the beginning, to get some
+      rough constraints on the request, and we remove all the packages
+      which either do not appear in the solution, or which appear but
+      with an inconsistent version.
+
+    Finally, we run all this in a loop, until we reach a fix point. We
+    use a timeout to interrupt too long explorations.
 *)
 
 open OpamTypes
