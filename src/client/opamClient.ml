@@ -709,7 +709,7 @@ module API = struct
             wish_upgrade = OpamSolution.atoms_of_packages t.installed }
       | Some names ->
         let names = OpamSolution.atoms_of_names t names in
-        let to_reinstall =
+        let to_upgrade =
           let packages =
             OpamMisc.filter_map (fun (n,_) ->
               if OpamState.mem_installed_package_by_name t n then
@@ -720,12 +720,12 @@ module API = struct
                 None
               )
             ) names in
-          OpamPackage.Set.inter t.reinstall (OpamPackage.Set.of_list packages) in
+          (OpamPackage.Set.of_list packages) in
         let installed_roots = OpamPackage.Set.diff t.installed_roots to_reinstall in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
             wish_remove  = [];
-            wish_upgrade = OpamSolution.atoms_of_packages to_reinstall }
+            wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
     in
     begin match solution_found with
       | Aborted
