@@ -210,7 +210,7 @@ let actions_of_state universe state =
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "constraint violations: %s" s
 
-(* Find both dependent and reversely dependent packages. *)
+(* Find dependencies and installed & reverse dependencies. *)
 let find_interesting_names universe constrs =
   let filter pkg =
     List.exists (fun (n,v) ->
@@ -291,68 +291,96 @@ let state_space ?(filters = fun _ -> None) universe interesting_names =
   List.iter add_state interesting_names;
   Hashtbl.fold (fun _ states acc -> states :: acc) state_space []
 
+(* Find a possible good state which satisfies a request. The idea is
+   call iteratively this function while refining the constraints of
+   the request until reaching a fix-point. *)
+let state_of_request ?(verbose=true) current_universe request =
+  match OpamCudf.get_final_universe current_universe request with
+  | Conflicts _             -> None
+  | Success result_universe ->
+
+    (* This first [result_universe] is a consistent solution which
+       contains only installed packages fulfilling the initial
+       constraints. It is thus not a complete universe and it is not
+       guaranteed to be optimal. So we extend the result with all the
+       existing packages. *)
+    let result_universe =
+      let installed = Cudf.get_packages result_universe in
+      let current_universe = OpamCudf.uninstall_all current_universe in
+      List.fold_left OpamCudf.install current_universe installed in
+
+    let all_wishes = request.wish_install @ request.wish_upgrade in
+
+    (* We remove from the universe all the package versions which are
+       not specified on the command-line. For instance:
+
+       $ opam install core.109.13.00
+
+       will cause all versions of core != 109.13.00 to disapear from
+       the universe. This is causing [Universe.trim] to remove *a lot*
+       of uninstallable packages and will improve the brute-force
+       state exploration results.
+
+       Note: We don't want to trim the universe too early because we
+       want to keep good error messages in case the solver does not
+       find a solution. *)
+    let trimed_universe =
+      let universe = List.fold_left (fun universe (name, constr) ->
+          OpamCudf.remove_all_uninstalled_versions_but name constr universe
+        ) result_universe all_wishes in
+      let universe = Algo.Depsolver.trim universe in
+      dependencies universe all_wishes in
+
+    let filters name =
+      try List.assoc name all_wishes
+      with Not_found -> None in
+
+    let state_space =
+      let names = find_interesting_names current_universe request.wish_upgrade in
+      state_space ~filters trimed_universe names in
+    explore ~verbose current_universe state_space
+
+let same_state s1 s2 =
+  let sort l =
+    let name p = p.Cudf.package, p.Cudf.version in
+    let cmp p1 p2 = compare (name p1) (name p2) in
+    List.sort cmp l in
+  match s1 with
+  | None    -> false
+  | Some s1 ->
+    List.length s1 = List.length s2
+    && sort s1 = sort s2
+
 (* Various heuristic to transform a solution checker into an optimized
    solver. *)
-let resolve ?(verbose=true) current_universe request =
+let resolve ?(verbose=true) universe orig_request =
+  let rec loop state request =
+    log "resolve-loop: request=%s" (OpamCudf.string_of_request request);
+    match state_of_request ~verbose universe request with
+    | None ->
+      begin match state with
+        | Some state -> Success (actions_of_state universe state)
+        | None       -> OpamCudf.resolve universe request
+      end
+    | Some new_state ->
+      log "resolve-loop: new-state=%s" (OpamCudf.string_of_packages new_state);
+      if same_state state new_state then
+        Success (actions_of_state universe new_state)
+      else (
+        let constr (name, constr) =
+          try
+            let p = List.find (fun p -> p.Cudf.package = name) new_state in
+            (name, Some (`Geq, p.Cudf.version))
+          with Not_found ->
+            (name, constr) in
+        assert (request.wish_remove = []);
+        let new_request = {
+          wish_install = List.map constr orig_request.wish_install;
+          wish_upgrade = List.map constr orig_request.wish_upgrade;
+          wish_remove  = [];
+        } in
+        loop (Some new_state) new_request
+      ) in
 
-  if request.wish_remove <> [] then
-    OpamCudf.resolve current_universe request
-
-  else match OpamCudf.get_final_universe current_universe request with
-    | Conflicts e ->
-      log "resolve: conflict!";
-      Conflicts e
-
-    | Success result_universe ->
-      log "resolve: result-universe=%s"
-        (OpamCudf.string_of_universe result_universe);
-
-      (* This first [result_universe] is a consistent solution which
-         contains only installed packages fulfilling the initial
-         constraints. It is thus not a complete universe and it is not
-         guaranteed to be optimal. So we extend the result with all the
-         existing packages. *)
-      let result_universe =
-        let installed = Cudf.get_packages result_universe in
-        let current_universe = OpamCudf.uninstall_all current_universe in
-        List.fold_left OpamCudf.install current_universe installed in
-
-      let all_wishes = request.wish_install @ request.wish_upgrade in
-
-      (* We remove from the universe all the package versions which are
-         not specified on the command-line. For instance:
-
-         $ opam install core.109.13.00
-
-         will cause all versions of core != 109.13.00 to disapear from
-         the universe. This is causing [Universe.trim] to remove *a lot*
-         of uninstallable packages and will improve the brute-force
-         state exploration results.
-
-         Note: We don't want to trim the universe too early because we
-         want to keep good error messages in case the solver does not
-         find a solution. *)
-      let trimed_universe =
-        let universe = List.fold_left (fun universe (name, constr) ->
-            OpamCudf.remove_all_uninstalled_versions_but name constr universe
-          ) result_universe all_wishes in
-        let universe = Algo.Depsolver.trim universe in
-        dependencies universe all_wishes in
-      log "trimed-universe: %s" (OpamCudf.string_of_universe trimed_universe);
-
-      let interesting_names =
-        find_interesting_names current_universe request.wish_upgrade in
-      log "resolve: interesting-name=%s" (OpamMisc.pretty_list interesting_names);
-
-      let filters name =
-        try List.assoc name all_wishes
-        with Not_found -> None in
-
-      let state_space = state_space ~filters trimed_universe interesting_names in
-
-      match explore ~verbose current_universe state_space with
-      | Some state -> Success (actions_of_state current_universe state)
-      | None       ->
-        log "no optimized solution found with the current state-space";
-        (* XXX: we could try with a different state-space *)
-        OpamCudf.resolve current_universe request
+  if orig_request.wish_remove = [] then loop None orig_request
+  else OpamCudf.resolve universe orig_request
