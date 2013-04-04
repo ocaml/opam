@@ -215,7 +215,7 @@ let csh_flag =
   mk_flag ["csh"] "Use csh-compatible mode for configuring OPAM."
 
 let sh_flag =
-  mk_flag ["csh"] "Use sh-compatible mode for configuring OPAM."
+  mk_flag ["sh"] "Use sh-compatible mode for configuring OPAM."
 
 let dot_profile_flag =
   mk_opt ["dot-profile"]
