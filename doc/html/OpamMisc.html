@@ -182,7 +182,10 @@ When <code class="code">stdout</code> refers to a terminal, query the number of 
 <pre><span id="VALuname_s"><span class="keyword">val</span> uname_s</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Get the output of <code class="code">uname -s</code><br>
 </div>
-<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `csh | `sh | `zsh ]</code></pre><div class="info">
+<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `bash | `csh | `sh | `zsh ]</code></pre><div class="info">
 Guess the shell compat-mode<br>
+</div>
+<pre><span id="VALguess_dot_profile"><span class="keyword">val</span> guess_dot_profile</span> : <code class="type">[ `bash | `csh | `sh | `zsh ] -> string</code></pre><div class="info">
+Guess the location of .profile<br>
 </div>
 </body></html>

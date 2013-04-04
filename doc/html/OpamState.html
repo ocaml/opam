@@ -128,6 +128,13 @@ OPAM client state<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTstate.prefixes">prefixes</span>&nbsp;:<code class="type">OpamFile.Prefix.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTstate.packages">packages</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code>;</code></td>
 
 </tr>
@@ -195,7 +202,7 @@ Client state<br>
 
 <pre><span id="VALload_state"><span class="keyword">val</span> load_state</span> : <code class="type">?save_cache:bool -> string -> <a href="OpamState.html#TYPEstate">state</a></code></pre><div class="info">
 Load the client state. The string argument is to identify to call
-   site.<br>
+    site.<br>
 </div>
 <pre><span id="VALrebuild_state_cache"><span class="keyword">val</span> rebuild_state_cache</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Rebuild the state cache.<br>
@@ -240,9 +247,6 @@ Display the global and user configuration for OPAM.<br>
 <pre><span id="VALupdate_setup"><span class="keyword">val</span> update_setup</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPEuser_config">OpamTypes.user_config</a> option -> <a href="OpamTypes.html#TYPEglobal_config">OpamTypes.global_config</a> option -> unit</code></pre><div class="info">
 Update the user configuration.<br>
 </div>
-<pre><span id="VALupdate_env_variables"><span class="keyword">val</span> update_env_variables</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> unit</code></pre><div class="info">
-Update the global environment variables.<br>
-</div>
 <br>
 <h2 id="2_Substitutions">Substitutions</h2><br>
 <pre><span id="VALcontents_of_variable"><span class="keyword">val</span> contents_of_variable</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEfull_variable">OpamTypes.full_variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a></code></pre><div class="info">
@@ -286,7 +290,7 @@ Pretty print a map of repositories<br>
 <pre><span id="VALpackage_repository_map"><span class="keyword">val</span> package_repository_map</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code></pre><div class="info">
 Build a map which says in which repository the latest metadata for
     a given package is. This function is *very* costly (need to scan all the
-   files in the repositories, so don't abuse).<br>
+    files in the repositories, so don't abuse).<br>
 </div>
 <pre><span id="VALcompiler_repository_map"><span class="keyword">val</span> compiler_repository_map</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option) <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code></pre><div class="info">
 Build a map which says in which repository the latest metadata for
@@ -302,6 +306,9 @@ Return the list of available compilers<br>
 </div>
 <pre><span id="VALinstall_compiler"><span class="keyword">val</span> install_compiler</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       quiet:bool -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> unit</code></pre><div class="info">
 Install the given compiler<br>
+</div>
+<pre><span id="VALupdate_switch_config"><span class="keyword">val</span> update_switch_config</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> unit</code></pre><div class="info">
+Write the right compiler switch in ~/.opam/config<br>
 </div>
 <pre><span id="VALget_compiler_packages"><span class="keyword">val</span> get_compiler_packages</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> list</code></pre><div class="info">
 Get the packages associated with the given compiler<br>
@@ -333,7 +340,7 @@ Return the base packages<br>
 </div>
 <pre><span id="VALall_installed"><span class="keyword">val</span> all_installed</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
 Return all the collection of installed packages, for all the
-   available packages<br>
+    available packages<br>
 </div>
 <br>
 <h2 id="2_Configurationfiles">Configuration files</h2><br>
@@ -363,8 +370,8 @@ Get the corresponding pinned package. If the package is pinned to
 </div>
 <pre><span id="VALpinned_path"><span class="keyword">val</span> pinned_path</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> option</code></pre><div class="info">
 Get the path associated to the given pinned package. Return <code class="code">None</code>
-   if the package is not pinned or if it is pinned to a version
-   number.<br>
+    if the package is not pinned or if it is pinned to a version
+    number.<br>
 </div>
 <pre><span id="VALupdate_pinned_package"><span class="keyword">val</span> update_pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
 Update pinned package<br>
@@ -380,6 +387,9 @@ Add the given packages to the set of package to reinstall. If <code class="code"
 <pre><span id="VALcreate_system_compiler_description"><span class="keyword">val</span> create_system_compiler_description</span> : <code class="type"><a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> option -> unit</code></pre><div class="info">
 Create <i>$opam/compilers/system.com</i>. Take the global root and
     the new system compiler version as arguments.<br>
+</div>
+<pre><span id="VALjobs"><span class="keyword">val</span> jobs</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> int</code></pre><div class="info">
+<h2 id="2_Jobs">Jobs</h2><br>
 </div>
 <br>
 <h2 id="2_Misc">Misc</h2><br>

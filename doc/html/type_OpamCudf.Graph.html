@@ -44,5 +44,7 @@
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_universe&nbsp;:&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;closure&nbsp;:&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;transitive_closure&nbsp;:&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;close_and_linearize&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;list<br>
 <span class="keyword">end</span></code></body></html>

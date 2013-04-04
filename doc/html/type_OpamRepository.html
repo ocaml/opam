@@ -88,8 +88,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.filename&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option)&nbsp;<span class="constructor">OpamTypes</span>.compiler_map<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;files&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename_set<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;prefix&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;read_prefix&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_root&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="constructor">OpamTypes</span>.name_map<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_prefix&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="constructor">OpamTypes</span>.name_map&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invalid_checksum&nbsp;:<br>

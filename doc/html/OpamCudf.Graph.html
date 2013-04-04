@@ -63,8 +63,11 @@ Graph of cudf packages<br>
 <pre><span id="VALof_universe"><span class="keyword">val</span> of_universe</span> : <code class="type">Cudf.universe -> <a href="OpamCudf.Graph.html#TYPEt">t</a></code></pre><div class="info">
 Build a graph from a CUDF universe<br>
 </div>
-<pre><span id="VALclosure"><span class="keyword">val</span> closure</span> : <code class="type"><a href="OpamCudf.Graph.html#TYPEt">t</a> -> OpamCudf.Set.t -> Cudf.package list</code></pre><div class="info">
+<pre><span id="VALtransitive_closure"><span class="keyword">val</span> transitive_closure</span> : <code class="type"><a href="OpamCudf.Graph.html#TYPEt">t</a> -> <a href="OpamCudf.Graph.html#TYPEt">t</a></code></pre><div class="info">
+Return the transitive closure of <code class="code">g</code><br>
+</div>
+<pre><span id="VALclose_and_linearize"><span class="keyword">val</span> close_and_linearize</span> : <code class="type"><a href="OpamCudf.Graph.html#TYPEt">t</a> -> OpamCudf.Set.t -> Cudf.package list</code></pre><div class="info">
 Return the transitive closure of dependencies of <code class="code">set</code>,
-      sorted in topological order<br>
+      sorted in topological order.<br>
 </div>
 </body></html>

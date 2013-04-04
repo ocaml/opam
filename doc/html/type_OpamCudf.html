@@ -115,7 +115,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_universe&nbsp;:&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;closure&nbsp;:&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;transitive_closure&nbsp;:&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;close_and_linearize&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Graph</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamCudf</span>.<span class="constructor">Set</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Diff</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -299,9 +301,14 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Cudf_types</span>.vpkg&nbsp;<span class="constructor">OpamTypes</span>.request&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Cudf</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list,&nbsp;<span class="constructor">Algo</span>.<span class="constructor">Diagnostic</span>.reason&nbsp;list)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.result<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;uninstall&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove&nbsp;:&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf_types</span>.pkgname&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;uninstall_all&nbsp;:&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;install&nbsp;:&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove_all_uninstalled_versions_but&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf_types</span>.constr&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Cudf</span>.universe<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;s_reinstall&nbsp;:&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;s_installed_root&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_vpkgs&nbsp;:&nbsp;<span class="constructor">Cudf_types</span>.vpkg&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_reason&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Cudf</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Algo</span>.<span class="constructor">Diagnostic</span>.reason&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>

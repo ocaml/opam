@@ -43,7 +43,8 @@
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamHeuristic</title>
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Internal functions" rel="Section" href="#2_Internalfunctions">
+<title>OpamHeuristic</title>
 </head>
 <body>
 <div class="navbar"><a class="pre" href="OpamCudf.html" title="OpamCudf">Previous</a>
@@ -57,5 +58,41 @@ Solver heuristics<br>
 <hr width="100%">
 <pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type">?verbose:bool -><br>       Cudf.universe -><br>       Cudf_types.vpkg <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list, Algo.Diagnostic.reason list)<br>       <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">
 Optimized resolution<br>
+</div>
+<br>
+<h2 id="2_Internalfunctions">Internal functions</h2><br>
+<br>
+These functions can be used independently of OPAM, so we document
+    them here. It is not expected than any other file in OPAM use them,
+    though.<br>
+<pre><span id="TYPEstate"><span class="keyword">type</span> <code class="type">'a</code> state</span> = <code class="type">'a list</code> </pre>
+<div class="info">
+A state.<br>
+</div>
+
+<pre><span id="TYPEstate_space"><span class="keyword">type</span> <code class="type">'a</code> state_space</span> = <code class="type">'a array list</code> </pre>
+<div class="info">
+A state space.<br>
+</div>
+
+<pre><span id="VALbrute_force"><span class="keyword">val</span> brute_force</span> : <code class="type">?verbose:bool -><br>       ('a <a href="OpamHeuristic.html#TYPEstate">state</a> -> bool) -><br>       'a <a href="OpamHeuristic.html#TYPEstate_space">state_space</a> -> 'a <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
+<code class="code">explore is_constent state_space</code> explore a state space by
+    implicitely enumerating all the state in a sensitive order.<br>
+</div>
+<pre><span id="VALexplore"><span class="keyword">val</span> explore</span> : <code class="type">?verbose:bool -><br>       Cudf.universe -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate_space">state_space</a> -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate">state</a> option</code></pre><div class="info">
+Explore the given package state-space, in the given universe,
+    under the assumption that the packages indeed belong to that
+    universe.<br>
+</div>
+<pre><span id="VALstate_space"><span class="keyword">val</span> state_space</span> : <code class="type">?filters:(Cudf_types.pkgname -> Cudf_types.constr) -><br>       Cudf.universe -><br>       Cudf_types.pkgname list -> Cudf.package <a href="OpamHeuristic.html#TYPEstate_space">state_space</a></code></pre><div class="info">
+Build a state space from a list of package names. The <code class="code">filter</code>
+    option helps to reduce the size of the state-space, which is
+    useful to deal with user-defined constraints (added on the command
+    line for instance).<br>
+</div>
+<pre><span id="VALactions_of_state"><span class="keyword">val</span> actions_of_state</span> : <code class="type">Cudf.universe -><br>       Cudf.package <a href="OpamHeuristic.html#TYPEstate">state</a> -> Cudf.package <a href="OpamTypes.html#TYPEaction">OpamTypes.action</a> list</code></pre><div class="info">
+Convert a state into a series of action (withour the full closure
+    of reinstallations). Raise <code class="code">Not_reachable</code> is the state is not
+    reachable.<br>
 </div>
 </body></html>

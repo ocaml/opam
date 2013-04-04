@@ -99,8 +99,19 @@ Resolve a CUDF request. The result is either a conflict explaining
     the dependency graph in considering the optional dependencies --
     which is something that dose/cudf obviously does not handle.<br>
 </div>
-<pre><span id="VALuninstall"><span class="keyword">val</span> uninstall</span> : <code class="type">string -> Cudf.universe -> Cudf.universe</code></pre><div class="info">
-Remove a package from an universe<br>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">Cudf.universe -> Cudf_types.pkgname -> Cudf.universe</code></pre><div class="info">
+Remove all the packages having a given universe<br>
+</div>
+<pre><span id="VALuninstall_all"><span class="keyword">val</span> uninstall_all</span> : <code class="type">Cudf.universe -> Cudf.universe</code></pre><div class="info">
+Uninstall all the package in the universe.<br>
+</div>
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type">Cudf.universe -> Cudf.package -> Cudf.universe</code></pre><div class="info">
+Install a package in the universe. We don't care about any
+    invariant here (eg. the resulting universe can have mutliple
+    versions of the same package installed).<br>
+</div>
+<pre><span id="VALremove_all_uninstalled_versions_but"><span class="keyword">val</span> remove_all_uninstalled_versions_but</span> : <code class="type">string -> Cudf_types.constr -> Cudf.universe -> Cudf.universe</code></pre><div class="info">
+Remove all the versions of a given package, but the one given as argument.<br>
 </div>
 <pre><span id="VALs_reinstall"><span class="keyword">val</span> s_reinstall</span> : <code class="type">string</code></pre><div class="info">
 The "reinstall" string<br>
@@ -110,6 +121,9 @@ The "installed-root" string<br>
 </div>
 <br>
 <h2 id="2_Prettyprinting">Pretty-printing</h2><br>
+<pre><span id="VALstring_of_vpkgs"><span class="keyword">val</span> string_of_vpkgs</span> : <code class="type">Cudf_types.vpkg list -> string</code></pre><div class="info">
+Convert a package constraint to something readable.<br>
+</div>
 <pre><span id="VALstring_of_reason"><span class="keyword">val</span> string_of_reason</span> : <code class="type">(Cudf.package -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a>) -><br>       Algo.Diagnostic.reason -> string option</code></pre><div class="info">
 Convert a reason to something readable by the user<br>
 </div>
