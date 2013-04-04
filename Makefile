@@ -67,6 +67,7 @@ distclean: clean
 	$(MAKE) -C $(SRC_EXT) distclean
 	rm -f META Makefile.config config.log config.status
 	rm -f src/core/opamVersion.ml src/core/opamGitVersion.ml src/core/opamScript.ml
+	rm -f doc/man-ext/opam-mk-repo.md doc/man-ext/opam-check.md
 
 .PHONY: tests
 

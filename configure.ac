@@ -48,6 +48,8 @@ fi
 AC_CONFIG_FILES(
   Makefile.config
   src/core/opamVersion.ml
+  doc/man-ext/opam-mk-repo.md
+  doc/man-ext/opam-check.md
 )
 AC_OUTPUT
 
