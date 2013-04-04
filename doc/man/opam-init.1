@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-INIT" 1 "" "Opam 1.0.0" "Opam Manual"
+.TH "OPAM-INIT" 1 "" "Opam 1.0.1" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -42,9 +42,6 @@ Which compiler version to use.
 \fB\-\-csh\fR
 Use csh\-compatible mode for configuring OPAM.
 .TP 4
-\fB\-\-csh\fR
-Use sh\-compatible mode for configuring OPAM.
-.TP 4
 \fB\-\-cudf\fR=\fIFILENAME\fR
 Save the CUDF request sent to the solver to \fIFILENAME\fR\-<n>.cudf.
 .TP 4
@@ -61,10 +58,13 @@ Simply call the solver without actually performing any build/install operations.
 Display the external packages associated to the given tags.
 .TP 4
 \fB\-\-fake\fR
-WARNING: This option is fo testing purposes only! Using this option without care is the best way to corrupt your current compiler environement. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands
+WARNING: This option is for testing purposes only! Using this option without care is the best way to corrupt your current compiler environement. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands.
 .TP 4
 \fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR (absent=1)
 Number of jobs to use when building packages.
+.TP 4
+\fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR
+Set the maximal number of concurrent jobs to use. You can also set it using the OPAMJOBS environment variable.
 .TP 4
 \fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
 Specify the kind of the repository to be set (the main ones are 'http', 'local', 'git' or 'darcs').
@@ -72,11 +72,14 @@ Specify the kind of the repository to be set (the main ones are 'http', 'local',
 \fB\-m\fR \fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
 Use \fIMAKE\fR as the default 'make' command.
 .TP 4
-\fB\-n\fR, \fB\-\-no\-checksums\fR
-Do not verify the checksum of downloaded archives.This is equivalent to setting \fB$OPAMNOCHECKSUMS\fR to a non\-empty string.
-.TP 4
 \fB\-n\fR, \fB\-\-no\-setup\fR
 Do not update the global and user configuration options to setup OPAM.
+.TP 4
+\fB\-\-no\-checksums\fR
+Do not verify the checksum of downloaded archives.This is equivalent to setting \fB$OPAMNOCHECKSUMS\fR to a non\-empty string.
+.TP 4
+\fB\-\-sh\fR
+Use sh\-compatible mode for configuring OPAM.
 .TP 4
 \fB\-t\fR, \fB\-\-build\-test\fR
 Build and \fBrun\fR the package unit\-tests. This is equivalent to setting \fB$OPAMBUILDTEST\fR to a non\-empty string.
@@ -102,7 +105,7 @@ Do not install base packages (useful for testing purposes). This is equivalent t
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet when installing a new compiler.
 .TP 4
-\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/home/thomas/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
