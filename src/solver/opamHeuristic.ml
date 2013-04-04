@@ -36,16 +36,19 @@ let minimize_actions interesting_names actions =
                           p.Cudf.package p.Cudf.version
   ) actions
 
+(* A list of [n] zero. *)
+let zero n =
+  let rec aux acc n =
+    if n > 0 then
+      aux (0 :: acc) (n-1)
+    else
+      acc in
+  aux [] n
+
 (* Given a list of bounds, create the least tuple such that the sum of
    components is equal to n.  For instance: init [1;2;1] 3 is
    [0;2;1] *)
 let init ~bounds n =
-  let rec zero acc n =
-    if n > 0 then
-      zero (0 :: acc) (n-1)
-    else
-      acc in
-  let zero = zero [] in
   let rec aux = function
     | 0, []   -> Some []
     | 0, l    -> Some (zero (List.length l))
