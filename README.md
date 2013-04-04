@@ -70,8 +70,10 @@ are also available in PDF format in the `doc/tutorials` directory.
 
 #### API, Code Documentation and Developpper Manual
 
-The API documentation is available under the `doc/html/` directory and
-the developer manual is in the `doc/dev-manual/` directory.
+The API documentation is available
+ [online](http://htmlpreview.github.com/?https://github.com/OCamlPro/opam/blob/master/doc/html/index.html)
+ and under the `doc/html/` directory; the developer manual is in
+ the `doc/dev-manual/` directory.
 
 ## Copyright and license
 
