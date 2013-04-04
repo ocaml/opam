@@ -1,15 +1,14 @@
-% OPAM(1) opam 0.9.3 | OPAM Manual
+% OPAM(1) OPAM @PACKAGE_VERSION@ | OPAM Manual
 % OCamlPro
 % 20/02/2013
 
 # NAME
 
-opam-check - a Tool check that OPAM repositories are consistent
+opam-mk-repo - a Tool to Build OPAM Repositories
 
 # DESCRIPTION
 
-See *opam-check --help* for me information.
-
+See *opam-mk-repo --help* for more information.
 # SEE ALSO
 
 **opam**(1)
