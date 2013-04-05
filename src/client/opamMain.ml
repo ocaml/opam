@@ -229,12 +229,14 @@ let repo_kind_flag =
     "http" , `http;
     "local", `local;
     "git"  , `git;
+    "bzr"  , `bazaar;
     "darcs"  , `darcs;
 
     (* aliases *)
     "wget" , `http;
     "curl" , `http;
     "rsync", `local;
+    "bazaar", `bazaar;
   ] in
   mk_opt ["k";"kind"]
     "KIND" "Specify the kind of the repository to be set (the main ones \
@@ -1025,6 +1027,7 @@ let pin =
     let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
     let kinds = [
       "git"    , `git;
+      "bzr"    , `bazaar;
       "darcs"  , `darcs;
       "version", `version;
       "local"  , `local;

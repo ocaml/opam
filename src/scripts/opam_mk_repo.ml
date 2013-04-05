@@ -18,6 +18,7 @@ open OpamFilename.OP
 let () =
   OpamHTTP.register ();
   OpamGit.register ();
+  OpamBazaar.register ();
   OpamDarcs.register ();
   OpamLocal.register ()
 
