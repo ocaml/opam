@@ -1,10 +1,13 @@
 _obuild/
 src_ext/cudf/
 src_ext/dose/
+src_ext/cmdliner/
 src_ext/extlib/
 src_ext/ocaml-re/
 src_ext/ocamlgraph/
 src_ext/ocaml-arg/
+src_ext/*.stamp
+src_ext/*.tbz
 src/lexer.ml
 src/linelexer.ml
 src/parser.ml
@@ -18,3 +21,15 @@ ocp-build.root.old
 ocp-get
 ocp-get-server
 ocp-build.root.old.old
+# Generated files:
+META
+Makefile.config
+config.log
+config.status
+doc/man-ext/opam-check.md
+doc/man-ext/opam-mk-repo.md
+src/core/opamGitVersion.ml
+src/core/opamScript.ml
+src/core/opamVersion.ml
+src/globals.ml
+src_ext/depends.ocp
