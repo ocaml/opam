@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* Note: this module is heavily inspired by (and tries to stay close to) OpamGit *)
+(* Note: this module is heavily inspired by (and tries to stay close to) OpamDarcs *)
 
 open OpamTypes
 open OpamFilename.OP
@@ -27,15 +27,35 @@ let bazaar_init address =
    *)
   OpamSystem.commands [ [ "bzr" ; "branch" ; repo ] ]
 
+let get_revno () =
+  let xs = OpamSystem.read_command_output ["bzr"; "revno"] in
+  assert (List.length xs = 1);
+  int_of_string (List.hd xs) (* TODO: Handle exception Invalid_string there *)
+
 let check_updates local_path remote_address =
   if OpamFilename.exists_dir (local_path / ".bzr") then begin
     (* pull command automatically changes to the last revision *)
     log "pulling changes";
-    OpamFilename.in_dir local_path (fun () -> OpamSystem.commands [ [ "bzr"; "pull" ] ] );
-    Some  OpamFilename.Set.empty
-  end else begin
+    Some (OpamFilename.in_dir local_path begin fun () ->
+      let cur_revno = get_revno () in
+      OpamSystem.commands [ [ "bzr"; "pull" ] ];
+      let last_revno = get_revno () in
+      if cur_revno = last_revno then OpamFilename.Set.empty
+      else begin
+        let lines = OpamSystem.read_command_output
+          [ "bzr"; "status"; "-r"; Printf.sprintf "%d..%d" cur_revno last_revno; "-S" ] in
+        (* This lines are of that format
+         *  M  debian/libyaml-syck-ocaml-dev.dirs
+         * -D  debian/svn-deblayout
+         * That's why I remove leading 4 spaces
+         * *)
+        let lines = List.map (fun s -> String.sub s 4 (String.length s -4)) lines in
+        log "changed files are: [%s]" (String.concat "," lines);
+        OpamFilename.(Set.of_list (List.map of_string lines))
+      end
+    end)
+  end else
     None
-  end
 
 module B = struct
 
