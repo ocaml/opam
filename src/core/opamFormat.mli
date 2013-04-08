@@ -232,6 +232,9 @@ val parse_commands: value -> command list
 (** Create a list of commands *)
 val make_commands: command list -> value
 
+(** Parse a list of commands *)
+val parse_messages: value -> (string * filter option) list
+
 (** {2 Tags} *)
 
 (** Parse tags *)

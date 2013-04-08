@@ -311,6 +311,22 @@ let parallel_apply t action solution =
     List.iter display_error errors;
     Error (List.map fst errors @ remaining)
 
+let simulate_new_state state t =
+  let installed = List.fold_left
+      (fun installed p -> OpamPackage.Set.remove p installed)
+      state.installed t.PackageActionGraph.to_remove in
+  let installed =
+    PackageActionGraph.Topological.fold
+      (fun action installed ->
+        match action with
+        | To_change(_,p) | To_recompile p ->
+          OpamPackage.Set.add p installed
+        | To_delete p ->
+          OpamPackage.Set.remove p installed
+      )
+      t.PackageActionGraph.to_process installed in
+  { state with installed }
+
 (* Apply a solution *)
 let apply ?(force = false) t action solution =
   if OpamSolver.solution_is_empty solution then
@@ -324,7 +340,15 @@ let apply ?(force = false) t action solution =
       OpamGlobals.msg
         "The following actions will be %s:\n"
         (if !OpamGlobals.fake then "simulated" else "performed");
-      OpamSolver.print_solution solution;
+      let new_state = simulate_new_state t solution in
+      let messages p =
+        let opam = OpamState.opam new_state p in
+        let messages = OpamFile.OPAM.messages opam in
+        OpamMisc.filter_map (fun (s,f) ->
+          if OpamState.eval_filter new_state f then Some s
+          else None
+        )  messages in
+      OpamSolver.print_solution ~messages solution;
       OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats)
     );
 

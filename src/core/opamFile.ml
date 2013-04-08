@@ -612,6 +612,7 @@ module X = struct
       build_test : command list;
       build_doc  : command list;
       depexts    : tags option;
+      messages   : (string * filter option) list;
     }
 
     let empty = {
@@ -639,6 +640,7 @@ module X = struct
       build_test = [];
       build_doc  = [];
       depexts    = None;
+      messages   = [];
     }
 
     let create nv =
@@ -670,6 +672,7 @@ module X = struct
     let s_build_test  = "build-test"
     let s_build_doc   = "build-doc"
     let s_depexts     = "depexts"
+    let s_messages    = "messages"
 
     let useful_fields = [
       s_opam_version;
@@ -693,6 +696,7 @@ module X = struct
       s_build_test;
       s_build_doc;
       s_depexts;
+      s_messages;
       s_tags;
     ]
 
@@ -726,6 +730,7 @@ module X = struct
     let build_doc t = t.build_doc
     let build_test t = t.build_test
     let depexts t = t.depexts
+    let messages t = t.messages
 
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
@@ -842,6 +847,7 @@ module X = struct
       let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
       let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
       let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
+      let messages = OpamFormat.assoc_list s s_messages OpamFormat.parse_messages in
       let others     =
         OpamMisc.filter_map (function
           | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
@@ -851,7 +857,7 @@ module X = struct
         depends; depopts; conflicts; libraries; syntax; others;
         patches; ocaml_version; os; build_env;
         homepage; authors; license; doc; tags;
-        build_test; build_doc; depexts;
+        build_test; build_doc; depexts; messages
       }
   end
 

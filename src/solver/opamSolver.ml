@@ -283,21 +283,21 @@ let string_of_stats stats =
 let solution_is_empty t =
   t.PackageActionGraph.to_remove = [] && PackageActionGraph.is_empty t.PackageActionGraph.to_process
 
-let print_solution t =
-  if solution_is_empty t then
-    ()
-    (*Globals.msg
-      "No actions will be performed, the current state satisfies the request.\n"*)
-  else
+let print_solution ~messages t =
+  if not (solution_is_empty t) then
     let causes pkg =
       try List.assoc pkg t.PackageActionGraph.root_causes
       with Not_found -> Unknown in
-    List.iter
-      (fun p -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes (To_delete p)))
-      t.PackageActionGraph.to_remove;
-    PackageActionGraph.Topological.iter
-      (function action -> OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes action))
-      t.PackageActionGraph.to_process
+    List.iter (fun p -> OpamGlobals.msg "%s\n"
+        (PackageAction.string_of_action ~causes (To_delete p))
+    ) t.PackageActionGraph.to_remove;
+    PackageActionGraph.Topological.iter (function action ->
+      OpamGlobals.msg "%s\n" (PackageAction.string_of_action ~causes action);
+      match action with
+      | To_change(_,p)
+      | To_recompile p -> List.iter (OpamGlobals.msg "     %s.\n")  (messages p)
+      | To_delete _    -> ()
+    ) t.PackageActionGraph.to_process
 
 let sequential_solution l =
   let g = PackageActionGraph.create () in
@@ -313,4 +313,3 @@ let sequential_solution l =
     to_process = g;
     root_causes = []
   }
-

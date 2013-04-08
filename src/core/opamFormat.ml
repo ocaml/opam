@@ -525,6 +525,11 @@ let parse_commands =
     "command-list", parse_list parse_command;
   ]
 
+let parse_message =
+  parse_option parse_string parse_filter
+
+let parse_messages =
+  parse_list parse_message
 
 (* TAGS *)
 
