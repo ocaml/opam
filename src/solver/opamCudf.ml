@@ -166,10 +166,11 @@ let string_of_reason cudf2opam r =
   | Conflict (i,j,_) ->
     let nvi = cudf2opam i in
     let nvj = cudf2opam j in
-    let str = Printf.sprintf
-        "The package %s is in conflict with %s."
-        (OpamPackage.to_string nvi)
-        (OpamPackage.to_string nvj) in
+    let nva = min nvi nvj in
+    let nvb = max nvi nvj in
+    let str = Printf.sprintf "%s is in conflict with %s."
+        (OpamPackage.to_string nva)
+        (OpamPackage.to_string nvb) in
     Some str
   | Missing (p,m) ->
     let of_package =
@@ -224,7 +225,10 @@ let string_of_reasons cudf2opam reasons =
   let rec string_of_chain = function
     | []   -> ""
     | [p]  -> OpamPackage.to_string (cudf2opam p)
-    | p::t -> Printf.sprintf "%s <- %s" (OpamPackage.to_string (cudf2opam p)) (string_of_chain t) in
+    | p::t -> Printf.sprintf
+                "%s needed by %s."
+                (OpamPackage.to_string (cudf2opam p))
+                (string_of_chain t) in
   let string_of_chain c = string_of_chain (List.rev c) in
   let b = Buffer.create 1024 in
   let reasons = OpamMisc.filter_map (string_of_reason cudf2opam) reasons in
@@ -233,14 +237,20 @@ let string_of_reasons cudf2opam reasons =
     | []  -> ()
     | [r] -> Buffer.add_string b r
     | _   ->
-      let reasons = String.concat "\n  - " reasons in
-      Printf.bprintf b "Your request cannot be satisfied:\n  - %s" reasons;
+      let reasons = String.concat "\n (and) " reasons in
+      Printf.bprintf b
+        "Your request cannot be satisfied. The reasons are:\n\
+        \       %s"
+        reasons;
       match chains with
       | [] -> ()
       | _  ->
         let chains = List.map string_of_chain chains in
-        let chains = String.concat "\n  -" chains in
-        Printf.bprintf b "This is due to the following dependency chain(s):\n  - %s" chains
+        let chains = String.concat "\n  (or) " chains in
+        Printf.bprintf b
+          "\nThis is due to the following unmet dependencies(s):\n\
+          \       %s"
+          chains
   end;
   Buffer.contents b
 
@@ -303,8 +313,8 @@ let default_preamble =
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
 let remove universe name =
-  let packages = Cudf.get_packages universe in
-  let packages = List.filter (fun p -> p.Cudf.package <> name) packages in
+  let filter p = p.Cudf.package <> name in
+  let packages = Cudf.get_packages ~filter universe in
   Cudf.load_universe packages
 
 let uninstall_all universe =

@@ -39,14 +39,6 @@
       transitive closure of (i) and (ii) (with the corresponding
       version constraints);
 
-    - The solution checker (which is used to check the
-      state-consistency in the brute-force exploration) can aslo gives
-      us some useful hints on the shape of a solution. Hence we run it
-      once at the beginning, to get some rough constraints on the
-      request, and we remove all the packages which either do not
-      appear in the solution, or which appear but with an inconsistent
-      version.
-
     Finally, we run all this in a loop, until we reach a fix point. We
     use a timeout to interrupt too long explorations.
 *)
