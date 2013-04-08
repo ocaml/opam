@@ -80,7 +80,7 @@ let rec kind = function
   | Option(o,l) -> Printf.sprintf "option(%s,%s)" (kind o) (kinds l)
 
 and kinds l =
-  Printf.sprintf "{%s}" (String.concat " " (List.rev_map kind l))
+  Printf.sprintf "{%s}" (String.concat " " (List.map kind l))
 
 (* Base parsing functions *)
 let parse_bool = function
@@ -109,7 +109,7 @@ let parse_list fn = function
 
 let parse_group fn = function
   | Group g -> List.rev (List.rev_map fn g)
-  | x        -> bad_format "Expecting a group, got %s" (kind x)
+  | x       -> bad_format "Expecting a group, got %s" (kind x)
 
 let parse_option f g = function
   | Option (k,l) -> f k, Some (g l)
@@ -442,10 +442,11 @@ let make_env_variable (ident, symbol, string) =
 (* Filters *)
 
 let rec parse_filter = function
-  | [Bool b]   -> FBool b
-  | [String s] -> FString s
-  | [Ident s]  -> FIdent s
-  | [Group g]  -> parse_filter g
+  | [Bool b]         -> FBool b
+  | [String s]       -> FString s
+  | [Ident s]        -> FIdent s
+  | [Group g]        -> parse_filter g
+  | [Symbol "!"; f]  -> FNot (parse_filter [f])
   | [e; Symbol s; f] ->
     let open OpamTypes in
     let e = parse_filter [e] in
@@ -493,6 +494,7 @@ let rec make_filter = function
     let e = lift (make_filter e) in
     let f = lift (make_filter f) in
     [ e; Symbol "&"; f ]
+  | FNot f -> [Symbol "!"; lift (make_filter f)]
 
 let make_simple_arg = function
   | CString s -> make_string s

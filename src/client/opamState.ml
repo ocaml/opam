@@ -846,7 +846,7 @@ let substitute_string t s =
 let rec eval_filter t = function
   | FBool b    -> string_of_bool b
   | FString s  -> substitute_string t s
-  | FIdent s   -> substitute_string t s
+  | FIdent s   -> substitute_ident t s
   | FOp(e,s,f) ->
     (* We are supposed to compare version strings *)
     let s = match s with
@@ -867,6 +867,8 @@ let rec eval_filter t = function
     if eval_filter t e = "true"
     && eval_filter t f = "true"
     then "true" else "false"
+  | FNot e ->
+    if eval_filter t e = "false" then "true" else "false"
 
 let eval_filter t = function
   | None   -> true

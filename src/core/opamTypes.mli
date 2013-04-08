@@ -380,6 +380,7 @@ type filter =
   | FOp of filter * symbol * filter
   | FAnd of filter * filter
   | FOr of filter * filter
+  | FNot of filter
 
 (** A command argument *)
 type simple_arg =

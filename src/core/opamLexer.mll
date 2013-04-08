@@ -52,13 +52,14 @@ let buffer_rule r lb =
   Buffer.contents b
 }
 
-let space = [' ' '\t' '\r']
-let alpha = ['a'-'z' 'A'-'Z' '_']
-let digit = ['0'-'9']
-let char  = ['-' '_']
-let ident = alpha (alpha | digit | char)*
+let space  = [' ' '\t' '\r']
+let alpha  = ['a'-'z' 'A'-'Z' '_']
+let digit  = ['0'-'9']
+let char   = ['-' '_']
+let achar  = alpha | digit | char
+let ident  = alpha achar* (':' achar+)?
 let symbol = ['=' '<' '>' '!' '+' '|' '&']+
-let int = '-'? ['0'-'9']+
+let int    = '-'? ['0'-'9']+
 
 rule token = parse
 | space  { token lexbuf }

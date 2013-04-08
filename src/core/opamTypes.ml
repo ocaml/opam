@@ -267,6 +267,7 @@ type filter =
   | FOp of filter * symbol * filter
   | FAnd of filter * filter
   | FOr of filter * filter
+  | FNot of filter
 
 type simple_arg =
   | CString of string
