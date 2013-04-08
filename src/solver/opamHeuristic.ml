@@ -189,6 +189,7 @@ let explore ?(verbose=true) universe state_space =
 exception Not_reachable of (unit -> Algo.Diagnostic.reason list)
 
 let actions_of_state universe state =
+  log "actions_of_state %s" (OpamCudf.string_of_packages state);
   let installed =
     let filter p =
       p.Cudf.installed
@@ -201,7 +202,6 @@ let actions_of_state universe state =
       || List.exists (fun s -> s.Cudf.package = p.Cudf.package) state in
     let packages = Cudf.get_packages ~filter universe in
     Cudf.load_universe packages in
-  log "(ACTIONS) state: %s" (OpamCudf.string_of_packages state);
   let state =
     List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) state in
   let request = {
@@ -209,7 +209,6 @@ let actions_of_state universe state =
     wish_remove  = [];
     wish_upgrade = state @ installed
   } in
-  log "(ACTIONS) request: %s" (OpamCudf.string_of_request request);
   match OpamCudf.get_final_universe small_universe request with
   | Conflicts c -> raise (Not_reachable c)
   | Success u   ->
