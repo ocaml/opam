@@ -13,6 +13,7 @@
 * `-n` now means `--no-setup` and not `--no-checksums` anymore
 * Fix stupid typo in detection of FreeBSD archs
 * Fix installation of local compilers with local paths endings with `.../ocaml/`
+* Fix the contents of `~/.opam/opam-init/variable.sh` after a switch
 
 1.0.0 [Mar 2013]
 * Improve the lexer performance (thx to @oandrieu)
