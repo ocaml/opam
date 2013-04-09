@@ -808,15 +808,16 @@ module API = struct
         OpamGlobals.display_messages := true;
 
         let dot_profile_o = Some dot_profile in
-        let user = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
-        begin match update_config with
+        let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
+        let updated = match update_config with
           | `ask -> OpamState.update_setup_interactive t shell dot_profile
-          | `no  -> ()
+          | `no  -> false
           | `yes ->
-            let global = Some { complete = true; switch_eval = true } in
-            OpamState.update_setup t user global
-        end;
-        OpamState.print_env_warning t user
+            let global = { complete = true; switch_eval = true } in
+            OpamState.update_setup t (Some user) (Some global);
+            true
+        in
+        OpamState.print_env_warning t (if updated then None else Some user)
 
       with e ->
         if not !OpamGlobals.debug then

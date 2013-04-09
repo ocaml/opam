@@ -111,13 +111,16 @@ val get_opam_env: state -> env
 (** Update an environment. *)
 val add_to_env: state -> env -> (string * string * string) list -> env
 
-(** Print a warning if the environment is not set-up properly. *)
+(** Print a warning if the environment is not set-up properly.
+    [user_config] is [None] if we just ask the user to run an `eval`
+    command (typically after a switch), otherwise we also tell her to
+    add a line to her shell profile file. *)
 val print_env_warning: state -> user_config option -> unit
 
 (** {2 Initialisation} *)
 
 (** Update the global and user configuration by asking some questions. *)
-val update_setup_interactive: state -> shell -> filename -> unit
+val update_setup_interactive: state -> shell -> filename -> bool
 
 (** Display the global and user configuration for OPAM. *)
 val display_setup: state -> shell -> filename -> unit

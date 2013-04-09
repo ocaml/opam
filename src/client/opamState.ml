@@ -1256,40 +1256,6 @@ let display_setup t shell dot_profile =
   OpamGlobals.msg "Global configuration:\n";
   List.iter print global_setup
 
-let update_setup_interactive t shell dot_profile =
-  let max = 4 in
-  let current = ref 1 in
-  let stats () =
-    let c = !current in
-    incr current;
-    Printf.sprintf "[%d/%d] " c max in
-  OpamGlobals.msg "\n=-=-=-= Configuring OPAM =-=-=-=\n";
-  if confirm "Do you want to update your configuration to use OPAM ?" then (
-    let dot_profile =
-      let file =
-        match
-          read "%sDo you want to update your shell configuration file ? [default: %s]"
-            (stats ())
-            (OpamFilename.prettify dot_profile)
-        with
-        | Some "y"
-        | Some "Y"
-        | None   -> dot_profile
-        | Some s -> OpamFilename.of_string s in
-      if not (OpamFilename.exists file)
-      && not (confirm "  %S does not exist, do you want to create it ?" (OpamFilename.to_string file)) then
-        None
-      else
-        Some file in
-    let ocamlinit = confirm "%sDo you want to update your ~/.ocamlinit ?" (stats ()) in
-    let complete = confirm "%sDo you want to install the auto-complete scripts ?" (stats ()) in
-    let switch_eval = confirm "%sDo you want to install the `opam-switch-eval` script ?" (stats ()) in
-
-    let user = Some { shell; ocamlinit; dot_profile } in
-    let global = Some { complete; switch_eval } in
-    update_setup t user global
-  )
-
 let print_env_warning t user =
   match
     List.filter
@@ -1299,41 +1265,80 @@ let print_env_warning t user =
   with
   | [] -> () (* every variables are correctly set *)
   | _  ->
-    let eval () =
+    let eval_string =
       let root =
         if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
           Printf.sprintf " --root=%s" !OpamGlobals.root_dir
         else
           "" in
       Printf.sprintf "eval `opam config env%s`\n" root in
-    let eval_string =
-      match user with
-      | None   -> eval ()
-      | Some u ->
-        let file = OpamPath.init t.root // init_file u.shell in
-        if not (OpamFilename.exists file) then
-          eval ()
-        else
-          source t (init_file u.shell) in
     let profile_string = match user with
       | None   -> ""
-      | Some u ->
-        match u.dot_profile with
-        | None             -> ""
-        | Some dot_profile ->
-          if dot_profile_needs_update t dot_profile = `yes then
-            Printf.sprintf "And add it to your %s.\n\n" (OpamFilename.prettify dot_profile)
-          else
-            "" in
-    let line = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" in
+      | Some u -> match u.dot_profile with
+        | None -> ""
+        | Some f ->
+          let dot_profile =
+            Printf.sprintf " (for instance %s)" (OpamFilename.prettify f) in
+          Printf.sprintf
+            "2. To manually configure OPAM for subsequent usages, add the following \n\
+            \   line to your profile file%s:\n\
+             \n\
+            \      %s\n"
+            dot_profile
+            (source t (init_file u.shell)) in
+    let line =
+      "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
+    in
     OpamGlobals.msg
       "\n%s\n\
+       1. To configure OPAM in the current shell session, you need to run:\n\
        \n\
-       To complete the configuration of OPAM, you need to run:\n\
-       \n\
-      \    %s\n\
-       %s%s\n\n"
+      \      %s\n\
+       %s%s\n"
       line eval_string profile_string line
+
+let update_setup_interactive t shell dot_profile =
+  let update dot_profile =
+    let user = Some { shell; ocamlinit = true; dot_profile = Some dot_profile } in
+    let global = Some { complete = true ; switch_eval = true } in
+    OpamGlobals.msg "\n";
+    update_setup t user global;
+    true in
+
+  OpamGlobals.msg "\n";
+
+  match read
+      "OPAM can configure your computer for optimal use.\n\
+      \n\
+       In order to do so, it will modify: \n\
+      \  - %s to set the right environment variables and to load the \n\
+      \    auto-completion scripts for your shell (%s) on startup.\n\
+      \  - ~/.ocamlinit to make non-root installations of `ocamlfind` (such as the \n\
+      \    ones done by OPAM) work when running the OCaml toplevel (eg. by adding \n\
+      \    $OCAML_TOPLEVEL_PATH to the list of include directories).\n\
+       \n\
+       If you choose to not configure your system now, you can either configure \n\
+       OPAM manually (more instructions on this later) or launch the automatic setup \n\
+       later by running:\n\
+       \n\
+      \    `opam config setup -a`.\n\
+       \n\
+       Do you want OPAM to modify your %s? (default is 'no', use 'f' to \n\
+       modify another file instead)\n\
+      \    [N/y/f]"
+      (OpamFilename.prettify dot_profile)
+      (string_of_shell shell)
+      (OpamFilename.prettify dot_profile)
+  with
+  | Some ("y" | "Y" | "yes"  | "YES" ) -> update dot_profile
+  | Some ("f" | "F" | "file" | "FILE") ->
+    begin match read "  Enter the name of the file to update:" with
+      | None   ->
+        OpamGlobals.msg "-- No filename: skipping the auto-configuration step --\n";
+        false
+      | Some f -> update (OpamFilename.of_string f)
+    end
+  | _ -> false
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package
