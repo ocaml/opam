@@ -41,11 +41,14 @@ let confirm fmt =
 let read fmt =
   Printf.ksprintf (fun msg ->
     OpamGlobals.msg "%s %!" msg;
-    if not !OpamGlobals.yes then
-      match read_line () with
-      | "" -> None
-      | s  -> Some s
-    else
+    if not !OpamGlobals.yes then (
+      try match read_line () with
+        | "" -> None
+        | s  -> Some s
+      with _ ->
+        OpamGlobals.msg "\n";
+        None
+    ) else
       None
   ) fmt
 
