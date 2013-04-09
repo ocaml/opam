@@ -353,6 +353,9 @@ type config = {
 (** Shell compatibility modes *)
 type shell = [`csh|`zsh|`sh|`bash]
 
+(** Pretty-print *)
+val string_of_shell: shell -> string
+
 (** Global configuration option *)
 type global_config = {
   complete   : bool;

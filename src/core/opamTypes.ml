@@ -136,6 +136,12 @@ type ppflag =
 
 type shell = [`csh|`zsh|`sh|`bash]
 
+let string_of_shell = function
+  | `csh  -> "csh"
+  | `zsh  -> "zsh"
+  | `sh   -> "sh"
+  | `bash -> "bash"
+
 type global_config = {
   complete   : bool;
   switch_eval: bool;

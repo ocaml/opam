@@ -370,16 +370,16 @@ let uname_s () =
   with _ ->
     None
 
+let shell_of_string = function
+  | "tcsh"
+  | "csh"  -> `csh
+  | "zsh"  -> `zsh
+  | "bash" -> `bash
+  | _      -> `sh
+
 let guess_shell_compat () =
-  try
-    match Filename.basename (getenv "SHELL") with
-    | "tcsh"
-    | "csh"  -> `csh
-    | "zsh"  -> `zsh
-    | "bash" -> `bash
-    | _      -> `sh
-  with _ ->
-    `sh
+  try shell_of_string (Filename.basename (getenv "SHELL"))
+  with _ -> `sh
 
 let guess_dot_profile shell =
   let home f =
