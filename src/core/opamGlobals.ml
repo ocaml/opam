@@ -114,9 +114,11 @@ let error_and_exit fmt =
     raise (Exit 66)
   ) fmt
 
+let display_messages = ref true
+
 let msg fmt =
   Printf.ksprintf (fun str ->
-    Printf.printf "%s%!" str
+    if !display_messages then Printf.printf "%s%!" str
   ) fmt
 
 type os =

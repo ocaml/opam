@@ -798,11 +798,14 @@ module API = struct
         let compiler_packages = OpamState.get_compiler_packages t compiler in
         let compiler_names =
           OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
+        (* Ugly hack to quiet OPAM on base packages *)
+        OpamGlobals.display_messages := false;
         let _solution =
           OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
             { wish_install = [];
               wish_remove  = [];
               wish_upgrade = compiler_packages } in
+        OpamGlobals.display_messages := true;
 
         let dot_profile_o = Some dot_profile in
         let user = Some { shell; ocamlinit = true; dot_profile = dot_profile_o } in
