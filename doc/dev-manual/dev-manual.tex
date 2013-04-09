@@ -300,7 +300,7 @@ use when trying to build the packages.
     ?license:       STRING
     ?tags:          [ STRING+ ]
     ?subst:         [ STRING+ ]
-    ?patches:       [ (STRING ?<filter>)+ ]
+    ?patches:       [ (STRING ?{ <filter> } )+ ]
     ?build:         commands
     ?build-doc:     commands
     ?build-test:    commands
@@ -309,6 +309,7 @@ use when trying to build the packages.
     ?depopts:       [ <or-formula(package)>+ ]
     ?depexts:       [ [STRING+] [STRING+ ]+
     ?conflicts:     [ <package>+ ]
+    ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?os:            [ <formula(os)>+ ]
     ?ocaml-version: [ <and-formula(constraint)>+ ]
     ?libraries:     [ STRING+ ]
@@ -317,12 +318,15 @@ use when trying to build the packages.
 <argument>       := STRING
                   | IDENT
 
-<command>        := [ (<argument> ?<filter>)+ ] ?<filter>
+<command>        := [ (<argument> ?{ <filter> })+ ] ?{ <filter> }
 
 <commands>       := <command>
                   | [ <command>+ ]
 
-<filter>         := { and-formula(<argument> <comp> <argument>) }
+<filter>         := <argument>
+                  | !<argument>
+                  | <argument> <comp> <argument>
+                  | formula(<filter>)
 
 <formula(x)>     := <formula(x)> '&' <formula(x)>
                   | <formula(x)> '|' <formula(x)>
@@ -333,7 +337,7 @@ use when trying to build the packages.
                   | STRING { <and-formula(constraint)> }
 
 <constraint>     := <comp> STRING
-<comp>           := '=' | '<' | '>' | '>=' | '<='
+<comp>           := '=' | '<' | '>' | '>=' | '<=' | '!='
 
 <and-formula(x)> := <x> <and-formula(x)>
                   | <formula(x)>
@@ -384,7 +388,10 @@ use when trying to build the packages.
    {\tt X} being equivalent to the string {\tt "\%\{X\}\%"})
    and can be followed by an optional filter, whose evaluation will
    result in the command (or the command argument) being executed
-   or not. A typical example is OS-related filters, where we can choose
+   or not. Filter expressions are typed and must evaluate to a
+   boolean and binary operations apply to version strings.
+
+   A typical example is OS-related filters, where we can choose
    to execute commands depending on the current OS:
 
   \begin{Verbatim}
@@ -431,6 +438,12 @@ The {\tt optdeps} field contains a {\em OR} formula over
 
 \item The {\tt depexts} field is optional and contains tags describing
   the external dependencies.
+
+\item The {\tt message} field (since version $1.0.1$) is used to
+  display an alternative message when prompting a solution implying
+  the given package. The typical use-case is to tell the user that
+  some functionality will not be available as some optional
+  dependencies are not installed.
 
 \item The {\tt os} and {\tt ocaml-version} fields are optional
   constraints over the supported OS and compiler version for this
