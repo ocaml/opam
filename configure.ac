@@ -13,24 +13,24 @@ if test "$CAMLP4" = "no"; then
    AC_MSG_ERROR([You must install the Camlp4 pre-processor. On some operating systems, these are separate packages from the main OCaml compiler, such as camlp4-extra on Debian.])
 fi
 
-AC_ARG_ENABLE([version-check],
+AC_ARG_ENABLE([version_check],
   AS_HELP_STRING([--disable-version-check],
                  [Do not check OCaml version])
 )
 
 # Check that OCaml version is greater or equal to 3.12.1
-AS_IF([test "x${enable_version-check}" != "xno"], [
+AS_IF([test "x${enable_version_check}" != "xno"], [
   AX_COMPARE_VERSION(
     [$OCAMLVERSION], [lt], [3.12.1],
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 
-AC_ARG_ENABLE([certificate-check],
+AC_ARG_ENABLE([certificate_check],
   AS_HELP_STRING([--disable-certificate-check],
                  [Do not check the certificate of OPAM's dependency archives])
 )
 
-AS_IF([test "x${enable_certificate-check}" = "xno"], [
+AS_IF([test "x${enable_certificate_check}" = "xno"], [
   curl_certificate_check=--insecure
   wget_certificate_check=--no-check-certificate
 ])
