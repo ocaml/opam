@@ -372,6 +372,9 @@ type user_config = {
 type symbol =
   | Eq | Neq | Le | Ge | Lt | Gt
 
+(** Pretty print *)
+val string_of_symbol: symbol -> string
+
 (** Filter *)
 type filter =
   | FBool of bool
@@ -381,6 +384,9 @@ type filter =
   | FAnd of filter * filter
   | FOr of filter * filter
   | FNot of filter
+
+(** Pretty print *)
+val string_of_filter: filter -> string
 
 (** A command argument *)
 type simple_arg =

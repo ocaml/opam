@@ -260,6 +260,14 @@ type variable_contents = OpamVariable.variable_contents =
 type symbol =
   | Eq | Neq | Le | Ge | Lt | Gt
 
+let string_of_symbol = function
+  | Eq  -> "="
+  | Neq -> "!="
+  | Ge  -> ">="
+  | Le  -> "<="
+  | Gt  -> ">"
+  | Lt  -> "<"
+
 type filter =
   | FBool of bool
   | FString of string
@@ -268,6 +276,17 @@ type filter =
   | FAnd of filter * filter
   | FOr of filter * filter
   | FNot of filter
+
+let rec string_of_filter = function
+  | FBool b    -> string_of_bool b
+  | FString s  -> Printf.sprintf "%S" s
+  | FIdent i   -> i
+  | FOp(e,s,f) ->
+    Printf.sprintf "%s %s %s"
+      (string_of_filter e) (string_of_symbol s) (string_of_filter f)
+  | FAnd (e,f) -> Printf.sprintf "%s & %s" (string_of_filter e) (string_of_filter f)
+  | FOr (e,f)  -> Printf.sprintf "%s | %s" (string_of_filter e) (string_of_filter f)
+  | FNot e     -> Printf.sprintf "!%s" (string_of_filter e)
 
 type simple_arg =
   | CString of string

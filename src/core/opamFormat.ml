@@ -471,18 +471,11 @@ let lift = function
   | l   -> Group l
 
 let rec make_filter = function
-  | FString s -> [String s]
-  | FIdent s  -> [Ident s]
-  | FBool b   -> [Bool b]
+  | FString s  -> [String s]
+  | FIdent s   -> [Ident s]
+  | FBool b    -> [Bool b]
   | FOp(e,s,f) ->
-    let s = begin match s with
-      | Eq  -> Symbol "="
-      | Neq -> Symbol "!="
-      | Ge  -> Symbol ">="
-      | Le  -> Symbol "<="
-      | Gt  -> Symbol ">"
-      | Lt  -> Symbol "<"
-    end in
+    let s = Symbol (string_of_symbol s) in
     let e = lift (make_filter e) in
     let f = lift (make_filter f) in
     [ e; s; f]

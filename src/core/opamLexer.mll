@@ -55,7 +55,7 @@ let buffer_rule r lb =
 let space  = [' ' '\t' '\r']
 let alpha  = ['a'-'z' 'A'-'Z' '_']
 let digit  = ['0'-'9']
-let char   = ['-' '_']
+let char   = ['-' '_' '+']
 let achar  = alpha | digit | char
 let ident  = alpha achar* (':' achar+)?
 let symbol = ['=' '<' '>' '!' '+' '|' '&']+
