@@ -1,4 +1,5 @@
 1.0.1 [Mar 2013]
+* `opam search` now also searches through the tags
 * minor API chanages for `API.list` and `API.SWITCH.list`
 * Improve the syntax of filters
 * Add a `messages` field
