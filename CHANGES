@@ -1,4 +1,5 @@
 1.0.1 [Mar 2013]
+* minor API chanages for `API.list` and `API.SWITCH.list`
 * Improve the syntax of filters
 * Add a `messages` field
 * Add a `--jobs` command line option and add `%{jobs}%` to be used in OPAM files
