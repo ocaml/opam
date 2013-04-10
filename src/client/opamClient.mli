@@ -30,10 +30,9 @@ module API: sig
       regexps. *)
   val list:
     print_short:bool ->
-    installed_only:bool ->
-    installed_roots:bool ->
-    ?name_only:bool ->
-    ?case_sensitive:bool ->
+    filter:[`all|`installed|`roots|`installable] ->
+    exact_name:bool ->
+    case_sensitive:bool ->
     string list ->
     unit
 

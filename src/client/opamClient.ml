@@ -230,7 +230,7 @@ type item = {
   descr: string;
 }
 
-let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
+let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
   log "names_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
   let universe = OpamState.universe t Depends in
   (* the regexp can also simply be a package. *)
@@ -266,11 +266,9 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
     List.exists (fun re -> OpamMisc.exact_match re str) regexps in
   let partial_match str =
     List.exists (fun re -> Re.execp re str) regexps in
-  let packages =
-    if all then
-      t.packages
-    else
-      OpamSolver.installable universe in
+  let packages = match filter with
+    | `all -> t.packages
+    | _    -> OpamSolver.installable universe in
   let names =
     OpamPackage.Set.fold
       (fun nv set -> OpamPackage.Name.Set.add (OpamPackage.name nv) set)
@@ -307,13 +305,21 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
   (* Filter the list of packages, depending on user predicates *)
   let names =
     OpamPackage.Name.Map.filter (fun name { installed_version; synopsis; descr } ->
-      (not installed_only || installed_version <> None)                 (* installp *)
-      && (regexps = []                                                  (* allp     *)
-          || name_only && exact_match (OpamPackage.Name.to_string name) (* namep    *)
-          || not name_only                                              (* descrp   *)
-             && (partial_match (OpamPackage.Name.to_string name)
-                 || partial_match synopsis
-                 || partial_match descr))
+      (match filter with
+        | `installed -> installed_version <> None
+        | `roots     ->
+          begin match installed_version with
+            | None   -> false
+            | Some v -> OpamPackage.Set.mem (OpamPackage.create name v) t.installed_roots
+          end
+        | _  -> true)
+      &&
+      (regexps = []
+       || exact_match (OpamPackage.Name.to_string name)
+       || not exact_name &&
+          (partial_match (OpamPackage.Name.to_string name)
+           || partial_match synopsis
+           || partial_match descr))
     ) names in
 
   if not (OpamPackage.Set.is_empty t.packages)
@@ -324,23 +330,14 @@ let names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all regexps =
 
 module API = struct
 
-  let list
-      ~print_short ~installed_only ~installed_roots
-      ?(name_only = true) ?(case_sensitive = false)
-      regexp =
+  let list ~print_short ~filter ~exact_name ~case_sensitive regexp =
     let t = OpamState.load_state "list" in
-    let names =
-      names_of_regexp t ~installed_only ~name_only ~case_sensitive ~all:false regexp in
-    let names =
-      if installed_roots then
-        OpamPackage.Name.Map.filter (fun name { current_version } ->
-          let nv = OpamPackage.create name current_version in
-          OpamPackage.Set.mem nv t.installed_roots
-        ) names
-      else
-        names in
+    let names =names_of_regexp t ~filter ~exact_name ~case_sensitive regexp in
     if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
-      let kind = if installed_only then "Installed" else "Available" in
+      let kind = match filter with
+        | `roots
+        | `installed -> "Installed"
+        | _          -> "Available" in
       OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
     );
     let max_n, max_v =
@@ -373,12 +370,7 @@ module API = struct
   let info ~fields regexps =
     let t = OpamState.load_state "info" in
     let names =
-      names_of_regexp t
-        ~installed_only:false
-        ~name_only:true
-        ~case_sensitive:false
-        ~all:true
-        regexps in
+      names_of_regexp t ~filter:`all ~exact_name:true ~case_sensitive:false regexps in
 
     let show_fields = List.length fields <> 1 in
 
@@ -1093,13 +1085,9 @@ module SafeAPI = struct
 
   let init = API.init
 
-  let list
-      ~print_short ~installed_only ~installed_roots
-      ?name_only ?case_sensitive pkg_str =
+  let list ~print_short ~filter ~exact_name ~case_sensitive pkg_str =
     read_lock (fun () ->
-      API.list
-        ~print_short ~installed_only ~installed_roots
-        ?name_only ?case_sensitive pkg_str
+      API.list ~print_short ~filter ~exact_name ~case_sensitive pkg_str
     )
 
   let info ~fields regexps =
@@ -1191,8 +1179,8 @@ module SafeAPI = struct
     let reinstall switch =
       global_lock (fun () -> API.SWITCH.reinstall switch)
 
-    let list ~print_short ~installed_only =
-      read_lock (fun () -> API.SWITCH.list ~print_short ~installed_only)
+    let list ~print_short ~installed =
+      read_lock (fun () -> API.SWITCH.list ~print_short ~installed)
 
     let show () =
       read_lock API.SWITCH.show

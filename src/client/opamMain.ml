@@ -202,7 +202,7 @@ let print_short_flag =
   mk_flag ["s";"short"]
     "Output the names separated by one whitespace instead of using the usual formatting."
 
-let installed_only_flag =
+let installed_flag =
   mk_flag ["i";"installed"] "List installed packages only."
 
 let installed_roots_flag =
@@ -433,10 +433,17 @@ let list =
     `P " The full description can be obtained by doing $(b,opam info <package>). \
         You can search through the package descriptions using the $(b,opam search) command."
   ] in
-  let list global_options print_short installed_only installed_roots packages =
+  let list global_options print_short installed installed_roots packages =
     set_global_options global_options;
-    Client.list ~print_short ~installed_only ~installed_roots packages in
-  Term.(pure list $global_options $print_short_flag $installed_only_flag $installed_roots_flag $pattern_list),
+    let filter = match installed, installed_roots with
+      | _, true -> `roots
+      | true, _ -> `installed
+      | _       -> `installable in
+    Client.list ~print_short ~filter ~exact_name:true ~case_sensitive:false
+      packages in
+  Term.(pure list $global_options
+    $print_short_flag $installed_flag $installed_roots_flag
+    $pattern_list),
   term_info "list" ~doc ~man
 
 (* SEARCH *)
@@ -454,10 +461,16 @@ let search =
   ] in
   let case_sensitive =
     mk_flag ["c";"case-sensitive"] "Force the search in case sensitive mode." in
-  let search global_options print_short installed_only installed_roots case_sensitive packages =
+  let search global_options print_short installed installed_roots case_sensitive pkgs =
     set_global_options global_options;
-    Client.list ~print_short ~installed_only ~installed_roots ~name_only:false ~case_sensitive packages in
-  Term.(pure search $global_options $print_short_flag $installed_only_flag $installed_roots_flag $case_sensitive $pattern_list),
+    let filter = match installed, installed_roots with
+      | _, true -> `roots
+      | true, _ -> `installed
+      | _       -> `all in
+    Client.list ~print_short ~filter ~exact_name:false ~case_sensitive pkgs in
+  Term.(pure search $global_options
+    $print_short_flag $installed_flag $installed_roots_flag $case_sensitive
+    $pattern_list),
   term_info "search" ~doc ~man
 
 (* INFO *)
@@ -940,7 +953,9 @@ let switch =
       "Only install the compiler switch, without switching to it. If the compiler switch \
        is already installed, then do nothing." in
 
-  let switch global_options build_options command alias_of filename print_short installed_only no_warning no_switch params =
+  let switch global_options
+      build_options command alias_of filename print_short installed no_warning no_switch
+      params =
     set_global_options global_options;
     set_build_options build_options;
     let no_alias_of () =
@@ -992,7 +1007,7 @@ let switch =
   Term.(pure switch
     $global_options $build_options $command
     $alias_of $filename $print_short_flag
-    $installed_only_flag $no_warning $no_switch $params),
+    $installed_flag $no_warning $no_switch $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)
