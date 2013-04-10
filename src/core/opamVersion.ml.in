@@ -59,4 +59,4 @@ let full =
 
 let magic =
   let hash = Hashtbl.hash full in
-  Printf.sprintf "%08X" (hash mad Int32.to_int Int32.max_int)
+  Printf.sprintf "%08X" (hash mod (Int32.to_int Int32.max_int))
