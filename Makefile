@@ -103,9 +103,9 @@ src/core/opamVersion.ml:
 	@echo
 	@exit 1
 
-.git/HEAD:
-	mkdir -p .git
-	touch .git/HEAD
+.git/refs/heads/master:
+	mkdir -p .git/refs/heads/
+	touch $<
 
 src/core/opamGitVersion.ml: .git/HEAD
 	./shell/get-git-id.sh > $@
