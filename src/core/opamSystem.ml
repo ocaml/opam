@@ -223,7 +223,8 @@ let reset_env = lazy (
   let env =
     List.rev_map (fun (k,v as c) ->
       match k with
-      | "PATH" -> k, String.concat ":" (OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir v)
+      | "PATH" ->
+        k, String.concat ":" (OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir v)
       | _      -> c
     ) env in
   let env = List.rev_map (fun (k,v) -> k^"="^v) env in
@@ -351,7 +352,8 @@ let extract file dst =
     | None   -> internal_error "%s is not a valid tar archive." file
     | Some f ->
       f tmp_dir;
-      if Sys.file_exists dst then internal_error "Extracting the archive will overwrite %s." dst;
+      if Sys.file_exists dst then
+        internal_error "Extracting the archive will overwrite %s." dst;
       match directories_strict tmp_dir with
       | [x] ->
         mkdir (Filename.dirname dst);
@@ -565,7 +567,8 @@ let () =
     | Internal_error m -> Some (with_opam_info m)
     | Unix.Unix_error (e, fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
-      let error = Printf.sprintf "%s: %S failed%s: %s" Sys.argv.(0) fn msg (Unix.error_message e) in
+      let error = Printf.sprintf "%s: %S failed%s: %s"
+          Sys.argv.(0) fn msg (Unix.error_message e) in
       Some (with_opam_info error)
     | _ -> None
   )
