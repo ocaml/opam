@@ -37,10 +37,11 @@ end
 
 let (/) = Filename.concat
 
+let temp_basename prefix =
+  Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
+
 let rec mk_temp_dir () =
-  let s =
-    Filename.temp_dir_name /
-      Printf.sprintf "opam-%d-%06x" (Unix.getpid ()) (Random.int 100_000) in
+  let s = Filename.temp_dir_name / temp_basename "opam" in
   if Sys.file_exists s then
     mk_temp_dir ()
   else
@@ -65,7 +66,7 @@ let temp_file ?dir prefix =
     | None   -> !OpamGlobals.root_dir / "log"
     | Some d -> d in
   mkdir temp_dir;
-  temp_dir / Printf.sprintf "%s-%06x" prefix (Random.int 0xFFFFFF)
+  temp_dir / temp_basename prefix
 
 let remove_file file =
   if Sys.file_exists file

@@ -25,7 +25,7 @@ type t = {
   p_info   : string option;
 }
 
-let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC]
+let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC; Unix.O_EXCL]
 
 let output_lines oc lines =
   List.iter (fun line ->
