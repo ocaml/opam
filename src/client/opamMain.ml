@@ -954,7 +954,7 @@ let switch =
     | None      , []
     | Some `list, [] ->
       no_alias_of ();
-      Client.SWITCH.list ~print_short ~installed_only
+      Client.SWITCH.list ~print_short ~installed
     | Some `install, [switch] ->
       Client.SWITCH.install
         ~quiet:global_options.quiet

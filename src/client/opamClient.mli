@@ -133,7 +133,7 @@ module API: sig
     val reinstall: switch -> unit
 
     (** List the available compiler descriptions. *)
-    val list: print_short:bool -> installed_only:bool -> unit
+    val list: print_short:bool -> installed:bool -> unit
 
     (** Display the name of the current compiler. *)
     val show: unit -> unit

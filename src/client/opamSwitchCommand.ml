@@ -20,7 +20,7 @@ let log fmt = OpamGlobals.log "SWITCH" fmt
 
 (* name + state + compiler + description *)
 (* TODO: add repo *)
-let list ~print_short ~installed_only =
+let list ~print_short ~installed =
   log "list";
   let t = OpamState.load_state "switch-list" in
   let descrs = OpamState.compilers ~root:t.root in
@@ -33,16 +33,16 @@ let list ~print_short ~installed_only =
     else
       OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
 
-  let installed = "I" in
-  let current = "C" in
-  let not_installed = "--" in
+  let installed_str     = "I" in
+  let current_str       = "C" in
+  let not_installed_str = "--" in
 
-  let installed =
+  let installed_s =
     OpamSwitch.Map.fold (fun name comp acc ->
       let s =
         if name = t.switch
-        then current
-        else installed in
+        then current_str
+        else installed_str in
       let n = OpamSwitch.to_string name in
       let c = OpamCompiler.to_string comp in
       let d = descr comp in
@@ -75,14 +75,14 @@ let list ~print_short ~installed_only =
       let d =
         let d = descr comp in
         match OpamMisc.cut_at d '\n' with None -> d | Some (d,_) -> d in
-      (not_installed, not_installed, c, d) :: acc
+      (not_installed_str, not_installed_str, c, d) :: acc
     ) [] l in
 
   let all =
-    if installed_only then
-      installed
+    if installed then
+      installed_s
     else
-      installed @ mk officials @ mk patches in
+      installed_s @ mk officials @ mk patches in
 
   let max_name, max_state, max_compiler =
     List.fold_left (fun (n,s,c) (name, state, compiler, _) ->
@@ -97,7 +97,7 @@ let list ~print_short ~installed_only =
     decr count;
     if print_short then (
       let name =
-        if name = not_installed
+        if name = not_installed_str
         then compiler
         else name in
       let sep =

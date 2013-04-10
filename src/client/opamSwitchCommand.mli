@@ -39,5 +39,4 @@ val reinstall: switch -> unit
 val show: unit -> unit
 
 (** List all the available compiler switches. *)
-val list: print_short:bool -> installed_only:bool -> unit
-
+val list: print_short:bool -> installed:bool -> unit
