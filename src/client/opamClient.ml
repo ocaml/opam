@@ -228,6 +228,7 @@ type item = {
   installed_version: version option;
   synopsis: string;
   descr: string;
+  tags: string list;
 }
 
 let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
@@ -266,6 +267,8 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
     List.exists (fun re -> OpamMisc.exact_match re str) regexps in
   let partial_match str =
     List.exists (fun re -> Re.execp re str) regexps in
+  let partial_matchs strs =
+    List.exists partial_match strs in
   let packages = match filter with
     | `all -> t.packages
     | _    -> OpamSolver.installable universe in
@@ -297,20 +300,23 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
       let descr_f = OpamPackage.Map.find nv t.descrs in
       let synopsis = OpamFile.Descr.synopsis descr_f in
       let descr = OpamFile.Descr.full descr_f in
+      let tags = OpamFile.OPAM.tags (OpamState.opam t nv) in
       OpamPackage.Name.Map.add
-        name { name; current_version; installed_version; synopsis; descr }
+        name { name; current_version; installed_version; synopsis; descr; tags }
         map
     ) names OpamPackage.Name.Map.empty in
 
   (* Filter the list of packages, depending on user predicates *)
   let names =
-    OpamPackage.Name.Map.filter (fun name { installed_version; synopsis; descr } ->
+    OpamPackage.Name.Map.filter (fun name
+      { installed_version; synopsis; descr; tags } ->
       (match filter with
         | `installed -> installed_version <> None
         | `roots     ->
           begin match installed_version with
             | None   -> false
-            | Some v -> OpamPackage.Set.mem (OpamPackage.create name v) t.installed_roots
+            | Some v -> OpamPackage.Set.mem (OpamPackage.create name v)
+                          t.installed_roots
           end
         | _  -> true)
       &&
@@ -319,7 +325,8 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
        || not exact_name &&
           (partial_match (OpamPackage.Name.to_string name)
            || partial_match synopsis
-           || partial_match descr))
+           || partial_match descr
+           || partial_matchs tags))
     ) names in
 
   if not (OpamPackage.Set.is_empty t.packages)
