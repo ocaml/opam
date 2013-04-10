@@ -103,7 +103,11 @@ src/core/opamVersion.ml:
 	@echo
 	@exit 1
 
-src/core/opamGitVersion.ml: src/core/opamVersion.ml
+.git/HEAD:
+	mkdir -p .git
+	touch .git/HEAD
+
+src/core/opamGitVersion.ml: .git/HEAD
 	./shell/get-git-id.sh > $@
 
 src/core/opamScript.ml: shell/ src/core/opamVersion.ml
