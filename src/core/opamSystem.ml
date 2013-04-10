@@ -15,6 +15,7 @@
 
 exception Process_error of OpamProcess.result
 exception Internal_error of string
+exception Command_not_found of string
 
 let log fmt = OpamGlobals.log "SYSTEM" fmt
 
@@ -26,6 +27,9 @@ let internal_error fmt =
 
 let process_error r =
   raise (Process_error r)
+
+let command_not_found cmd =
+  raise (Command_not_found cmd)
 
 module Sys2 = struct
   open Unix
@@ -269,7 +273,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
       r
     ) else
       (* Display a user-friendly message if the command does not exists *)
-      internal_error "%S: command not found." cmd
+      command_not_found cmd
 
 let command ?verbose ?env ?name cmd =
   let r = run_process ?verbose ?env ?name cmd in
@@ -285,6 +289,11 @@ let read_command_output ?verbose ?env cmd =
     r.OpamProcess.r_stdout
   else
     process_error r
+
+(* Return [None] if the command does not exist *)
+let read_command_output_opt ?verbose ?env cmd =
+  try Some (read_command_output ?verbose ?env cmd)
+  with Command_not_found _ -> None
 
 let copy src dst =
   if Sys.is_directory src then
@@ -426,28 +435,22 @@ let funlock file =
     log "Cannot find %s, but continuing anyway..." file
 
 let ocaml_version = lazy (
-  try
-    match read_command_output ~verbose:false [ "ocamlc" ; "-version" ] with
-    | h::_ ->
-      let version = OpamMisc.strip h in
-      log "ocamlc version: %s" version;
-      Some version
-    | []   -> internal_error "Cannot find ocamlc."
-  with _ ->
-    None
+  match read_command_output_opt ~verbose:false [ "ocamlc" ; "-version" ] with
+  | Some (h::_) ->
+    let version = OpamMisc.strip h in
+    log "ocamlc version: %s" version;
+    Some version
+  | Some [] -> internal_error "`ocamlc -version` is empty."
+  | None    -> None
 )
 
 (* Reset the path to get the system compiler *)
 let system command = lazy (
-  try
-    let env = Lazy.force reset_env in
-    match read_command_output ~verbose:false ~env command with
-    | h::_ -> Some (OpamMisc.strip h)
-    | []   ->
-      let cmd = try List.hd command with _ -> "<none>" in
-      internal_error "Cannot find %s." cmd
-  with _ ->
-    None
+  let env = Lazy.force reset_env in
+  match read_command_output_opt ~verbose:false ~env command with
+  | None        -> None
+  | Some (h::_) -> Some (OpamMisc.strip h)
+  | Some ([])   -> internal_error "%S is empty." (String.concat " " command)
 )
 
 let system_ocamlc_where = system [ "ocamlc"; "-where" ]
@@ -563,8 +566,9 @@ let () =
       "os" os
       m in
   Printexc.register_printer (function
-    | Process_error r  -> Some (OpamProcess.string_of_result r)
-    | Internal_error m -> Some (with_opam_info m)
+    | Process_error r     -> Some (OpamProcess.string_of_result r)
+    | Internal_error m    -> Some (with_opam_info m)
+    | Command_not_found c -> Some (Printf.sprintf "%S: command not found." c)
     | Unix.Unix_error (e, fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
       let error = Printf.sprintf "%s: %S failed%s: %s"
