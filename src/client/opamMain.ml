@@ -1194,7 +1194,7 @@ let () =
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
       | Sys.Break -> exit_code := 1
       | _ ->
-        Printf.fprintf stderr "Fatal error: exception %s\n" (Printexc.to_string e);
+        Printf.fprintf stderr "Fatal error:\n%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
     end;
     exit !exit_code
