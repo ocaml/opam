@@ -25,7 +25,12 @@ let rsync ?(delete=true) src dst =
       OpamSystem.mkdir src;
       OpamSystem.mkdir dst;
       let delete = if delete then ["--delete"] else [] in
-      let lines = OpamSystem.read_command_output (["rsync" ; "-arv"; "--exclude"; ".git/*"; "--exclude"; "_darcs/*"; src; dst] @ delete) in
+      let lines = OpamSystem.read_command_output ([
+          "rsync" ; "-arv";
+          "--exclude"; ".git/*";
+          "--exclude"; "_darcs/*";
+          src; dst
+        ] @ delete) in
       match OpamMisc.rsync_trim lines with
       | []    -> Up_to_date []
       | lines -> Result lines
