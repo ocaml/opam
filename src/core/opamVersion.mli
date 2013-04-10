@@ -23,6 +23,12 @@ val current: t
 (** The 'git' version of OPAM *)
 val git: t option
 
+(** The full version (current + git) *)
+val full: t
+
+(** Magic string *)
+val magic: string
+
 (** Display the version message *)
 val message: unit -> unit
 

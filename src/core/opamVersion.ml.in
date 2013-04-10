@@ -51,3 +51,12 @@ let git =
   | None   -> None
   | Some v -> Some (of_string v)
 
+let full =
+  let git_version = match git with
+    | None   -> ""
+    | Some v -> Printf.sprintf " (%s)" (to_string v) in
+  Printf.sprintf "%s%s" (to_string current) git_version
+
+let magic =
+  let hash = Hashtbl.hash full in
+  Printf.sprintf "%08X" (hash mad Int32.to_int Int32.max_int)

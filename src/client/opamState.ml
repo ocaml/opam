@@ -543,9 +543,18 @@ type cache = OpamFile.OPAM.t package_map * OpamFile.Descr.t package_map
 
 let check_marshaled_file file =
   let ic = open_in_bin (OpamFilename.to_string file) in
+  let magic_len = String.length OpamVersion.magic in
+  let magic = String.create magic_len in
+  really_input ic magic 0 magic_len;
+  if magic <> OpamVersion.magic then (
+    close_in ic;
+    OpamSystem.internal_error
+      "Wrong magic string in the cache (actual:%s expected:%s)."
+      magic OpamVersion.magic;
+  );
   let header = String.create Marshal.header_size in
   really_input ic header 0 Marshal.header_size;
-  let expected_size = Marshal.total_size header 0 in
+  let expected_size = magic_len + Marshal.total_size header 0 in
   let current_size = in_channel_length ic in
   close_in ic;
   if not (expected_size = current_size) then (
@@ -557,6 +566,9 @@ let marshal_from_file file =
   try
     check_marshaled_file file;
     let ic = open_in_bin (OpamFilename.to_string file) in
+    let () =
+      let magic_len = String.length OpamVersion.magic in
+      really_input ic (String.create magic_len) 0 magic_len in
     let (opams, descrs: cache) = Marshal.from_channel ic in
     close_in ic;
     Some opams, Some descrs
@@ -577,6 +589,7 @@ let save_state ~update t =
       "Creating a cache of metadata in %s.\n"
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
+  output_string oc OpamVersion.magic;
   Marshal.to_channel oc (t.opams, t.descrs) [];
   close_out oc;
   let t1 = Unix.gettimeofday () in
