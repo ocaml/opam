@@ -49,17 +49,21 @@ let all, index, names, gener_digest, dryrun, recurse =
       ("--version", Arg.Unit OpamVersion.message, " Display version information");
 
       ("-a"   , Arg.Set all, "");
-      ("--all", Arg.Set all  , Printf.sprintf " Build all package archives (default is %b)" !all);
+      ("--all", Arg.Set all  ,
+       Printf.sprintf " Build all package archives (default is %b)" !all);
 
       ("-i"     , Arg.Set index, "");
-      ("--index", Arg.Set index, Printf.sprintf " Build indexes only (default is %b)" !index);
+      ("--index", Arg.Set index,
+       Printf.sprintf " Build indexes only (default is %b)" !index);
 
       ("-g"                  , Arg.Set gener_digest, "");
       ("--generate-checksums", Arg.Set gener_digest,
-       Printf.sprintf " Automatically correct the wrong archive checksums (default is %b)" !gener_digest);
+       Printf.sprintf " Automatically correct the wrong archive checksums (default \
+                       is %b)" !gener_digest);
 
       ("-d"      , Arg.Set dryrun, "");
-      ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of executing them");
+      ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of \
+                                    executing them");
 
       ("-r", Arg.Set recurse, " Recurse among the transitive dependencies");
     ] in
@@ -80,7 +84,9 @@ let process () =
     | Some nv -> OpamPackage.Set.singleton nv
     | None    ->
       let n = OpamPackage.Name.of_string str in
-      match OpamPackage.Version.Set.elements (OpamPackage.versions_of_name packages n) with
+      match OpamPackage.Version.Set.elements
+          (OpamPackage.versions_of_name packages n)
+      with
       | []       ->
         OpamGlobals.msg "Skipping unknown package %s.\n" str;
         OpamPackage.Set.empty
@@ -134,9 +140,11 @@ let process () =
       new_packages in
 
   let nv_set_of_remotes remotes =
-    let aux r = OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
+    let aux r =
+      OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
     let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
-    OpamPackage.Set.of_list (OpamMisc.filter_map (OpamPackage.of_filename ~all:true) list) in
+    OpamPackage.Set.of_list
+      (OpamMisc.filter_map (OpamPackage.of_filename ~all:true) list) in
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
@@ -204,7 +212,8 @@ let process () =
       let display_error (nv, error) =
         OpamGlobals.error "==== ERROR [%s] ====\n" (OpamPackage.to_string nv);
         match error with
-        | OpamSystem.Process_error r  -> OpamGlobals.error "%s" (OpamProcess.string_of_result r)
+        | OpamSystem.Process_error r  ->
+          OpamGlobals.error "%s" (OpamProcess.string_of_result r)
         | OpamSystem.Internal_error s -> OpamGlobals.error "  %s" s
         | _ -> OpamGlobals.error "%s" (Printexc.to_string error) in
       let all_errors = List.map fst !errors in

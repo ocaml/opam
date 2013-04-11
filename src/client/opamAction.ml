@@ -88,10 +88,14 @@ let install_package t nv =
       OpamVariable.Section.Set.iter (fun s ->
         if not (List.mem s local_sections)
         && not (OpamVariable.Section.Set.mem s libraries_in_opam) then
-          let config_f = OpamFilename.to_string (OpamPath.Switch.build_config t.root t.switch nv) in
+          let config_f =
+            OpamFilename.to_string (OpamPath.Switch.build_config t.root t.switch nv) in
           let opam_f = OpamFilename.to_string (OpamPath.opam t.root nv) in
-          let local_sections = List.map OpamVariable.Section.to_string local_sections in
-          let opam_sections = List.map OpamVariable.Section.to_string (OpamVariable.Section.Set.elements libraries_in_opam) in
+          let local_sections =
+            List.map OpamVariable.Section.to_string local_sections in
+          let opam_sections =
+            List.map OpamVariable.Section.to_string
+              (OpamVariable.Section.Set.elements libraries_in_opam) in
           OpamGlobals.error_and_exit
             "%s appears as a library dependency in %s, but:\n\
              - %s defines the libraries {%s}\n\
@@ -134,7 +138,8 @@ let install_package t nv =
       install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
 
       (* toplevel *)
-      install_files (fun r s _ -> OpamPath.Switch.toplevel r s) OpamFile.Dot_install.toplevel;
+      install_files (fun r s _ -> OpamPath.Switch.toplevel r s)
+        OpamFile.Dot_install.toplevel;
 
       (* Shared files *)
       install_files OpamPath.Switch.share OpamFile.Dot_install.share;
@@ -158,10 +163,12 @@ let install_package t nv =
       List.iter
         (fun (src, dst) ->
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
-          if OpamFilename.exists dst && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+          if OpamFilename.exists dst
+          && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
             OpamFilename.copy ~src:src_file ~dst
           else begin
-            OpamGlobals.msg "Installing %s to %s.\n" (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
+            OpamGlobals.msg "Installing %s to %s.\n"
+              (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
             if OpamState.confirm "Continue ?" then
               OpamFilename.copy ~src:src_file ~dst
           end
@@ -241,14 +248,18 @@ let extract_package t nv =
   OpamFilename.rmdir build_dir;
   begin match OpamState.pinned_path t (OpamPackage.name nv) with
     | Some p ->
-      let pinned_dir = OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
+      let pinned_dir =
+        OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
       if not (OpamFilename.exists_dir pinned_dir) then (
         match OpamState.update_pinned_package t (OpamPackage.name nv) with
-        | Not_available -> OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p)
+        | Not_available -> OpamGlobals.error "%s is not available"
+                             (OpamFilename.Dir.to_string p)
         | Result _
         | Up_to_date _  -> ()
       ) else
-        OpamGlobals.msg "Synchronization: nothing to do as the pinned package has already been initialized.\n";
+        OpamGlobals.msg
+          "Synchronization: nothing to do as the pinned package has already \
+           been initialized.\n";
       let _files = OpamState.with_repository t nv (fun repo _ ->
           OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
         ) in
@@ -362,7 +373,8 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Remove the binaries *)
   log "Removing the binaries";
-  let install = OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
+  let install =
+    OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
   List.iter (fun (base, dst) ->
     let dir = OpamPath.Switch.bin t.root t.switch in
     let dummy_src = OpamFilename.create dir base.c in

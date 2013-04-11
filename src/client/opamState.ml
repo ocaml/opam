@@ -956,7 +956,8 @@ let expand_env t (env: env_updates) : env =
   ) env
 
 let add_to_env t (env: env) (updates: env_updates) =
-  let env = List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
+  let env =
+    List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
   env @ expand_env t updates
 
 let env_updates t =
@@ -965,9 +966,11 @@ let env_updates t =
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
   let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
   let toplevel_dir =
-    "OCAML_TOPLEVEL_PATH", "=", OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
+    "OCAML_TOPLEVEL_PATH", "=",
+    OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
-    "MANPATH", ":=", OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
+    "MANPATH", ":=",
+    OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let comp_env = OpamFile.Comp.env comp in
   let switch = match !OpamGlobals.switch with
     | `Command_line s -> [ "OPAMSWITCH", "=", s ]
@@ -1478,7 +1481,8 @@ let install_compiler t ~quiet switch compiler =
         let build_dir = OpamPath.Switch.build_ocaml t.root switch in
         let comp_src_raw = OpamFilename.to_string comp_src in
         if Sys.file_exists comp_src_raw && Sys.is_directory comp_src_raw then
-          OpamFilename.link_dir ~src:(OpamFilename.Dir.of_string comp_src_raw) ~dst:build_dir
+          OpamFilename.link_dir
+            ~src:(OpamFilename.Dir.of_string comp_src_raw) ~dst:build_dir
         else if Sys.file_exists comp_src_raw then
           OpamFilename.extract comp_src build_dir
         else OpamFilename.with_tmp_dir (fun download_dir ->
@@ -1486,7 +1490,9 @@ let install_compiler t ~quiet switch compiler =
             OpamFilename.extract file build_dir;
           );
         let patches = OpamFile.Comp.patches comp in
-        let patches = List.map (fun f -> OpamFilename.download ~overwrite:true f build_dir) patches in
+        let patches = List.map (fun f ->
+            OpamFilename.download ~overwrite:true f build_dir
+          ) patches in
         List.iter (fun f -> OpamFilename.patch f build_dir) patches;
         if OpamFile.Comp.configure comp @ OpamFile.Comp.make comp <> [] then begin
           OpamFilename.exec build_dir

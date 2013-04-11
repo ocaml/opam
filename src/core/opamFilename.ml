@@ -87,12 +87,17 @@ let exists_dir dirname =
 
 let copy_dir ~src ~dst =
   if exists_dir dst then
-    OpamSystem.internal_error "Cannot create %s as the directory already exists." (Dir.to_string dst);
+    OpamSystem.internal_error
+      "Cannot create %s as the directory already exists." (Dir.to_string dst);
   OpamSystem.command [ "cp"; "-pPR"; Dir.to_string src; Dir.to_string dst ]
 
 let copy_unique_dir ~src ~dst =
   with_tmp_dir (fun tmp ->
-    OpamSystem.command [ "rsync"; "-a"; Filename.concat (Dir.to_string src) "/"; Dir.to_string tmp ];
+    OpamSystem.command [
+      "rsync"; "-a";
+      Filename.concat (Dir.to_string src) "/";
+      Dir.to_string tmp
+    ];
     match sub_dirs tmp with
     | [f] ->
       rmdir dst;
@@ -242,10 +247,10 @@ let remove_suffix suffix filename =
   let filename = to_string filename in
   OpamMisc.remove_suffix ~suffix filename
 
-
 let download ~overwrite filename dirname =
   mkdir dirname;
-  let file = OpamSystem.download ~overwrite ~filename:(to_string filename) ~dirname:(Dir.to_string dirname) in
+  let file = OpamSystem.download ~overwrite
+      ~filename:(to_string filename) ~dirname:(Dir.to_string dirname) in
   of_string file
 
 let download_iter ~overwrite filenames dirname =
@@ -344,8 +349,11 @@ module Attribute = struct
   let of_string s =
     match OpamMisc.split s ' ' with
     | [base; md5]      -> { base=Base.of_string base; md5; perm=None }
-    | [base;md5; perm] -> { base=Base.of_string base; md5; perm=Some (int_of_string perm) }
-    | k                -> OpamSystem.internal_error "remote_file: '%s' is not a valid line." (String.concat " " k)
+    | [base;md5; perm] -> { base=Base.of_string base; md5;
+                            perm=Some (int_of_string perm) }
+    | k                -> OpamSystem.internal_error
+                            "remote_file: '%s' is not a valid line."
+                            (String.concat " " k)
 
   module O = struct
     type tmp = t

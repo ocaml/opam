@@ -176,7 +176,8 @@ module Make (G : G) = struct
     (* All the error nodes. *)
     let error_nodes () =
       M.fold (fun n _ accu -> S.add n accu) !errors S.empty in
-    (* All the node not successfully proceeded. This include error worker and error nodes. *)
+    (* All the node not successfully proceeded. This include error
+       worker and error nodes. *)
 
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
@@ -190,7 +191,8 @@ module Make (G : G) = struct
     let rec loop nslots =
 
       if OpamMisc.IntMap.is_empty !pids
-      && (S.is_empty !t.roots || not (M.is_empty !errors) && !t.roots =|= error_nodes ()) then
+      && (S.is_empty !t.roots || not (M.is_empty !errors)
+                                 && !t.roots =|= error_nodes ()) then
 
         (* Nothing more to do *)
         if M.is_empty !errors then
@@ -246,7 +248,10 @@ module Make (G : G) = struct
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
           log "Spawning a new process";
-          Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
+          Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
+            OpamGlobals.error "Interrupted";
+            exit 1)
+          );
           Sys.catch_break true;
           let return p =
             let to_parent = open_out_bin error_file in

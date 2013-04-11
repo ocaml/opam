@@ -126,12 +126,14 @@ module B = struct
             | Up_to_date _  -> false
             | Result _      -> true
         ) packages in
-      List.rev_map (OpamPath.Repository.archive local_repo) (OpamPackage.Set.elements updates) in
+      List.rev_map (OpamPath.Repository.archive local_repo)
+        (OpamPackage.Set.elements updates) in
     let (++) = OpamFilename.Set.union in
     let updates = OpamFilename.Set.of_list archives
       ++ sync_dir OpamPath.Repository.packages_dir
       ++ sync_dir OpamPath.Repository.compilers_dir in
-    ignore (rsync_file (OpamPath.Repository.version address) (OpamPath.Repository.version local_repo));
+    ignore (rsync_file (OpamPath.Repository.version address)
+              (OpamPath.Repository.version local_repo));
     updates
 
   let upload_dir ~address local_dir =

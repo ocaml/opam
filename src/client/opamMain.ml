@@ -262,11 +262,13 @@ let global_options =
   let debug =
     mk_flag ~section ["debug"]
       "Print debug message on stdout. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or equal to 2."  in
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or \
+       equal to 2."  in
   let verbose =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. \
-       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater or equal to 1 \
+       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater \
+       or equal to 1 \
        or $(b,\\$OPAMVERBOSE) to a non-empty string." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
@@ -289,7 +291,8 @@ let global_options =
   let no_base_packages =
     mk_flag ~section ["no-base-packages"]
       "Do not install base packages (useful for testing purposes). \
-       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
+       string." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
@@ -817,20 +820,23 @@ let repository_doc = "Manage OPAM repositories."
 let repository name =
   let doc = repository_doc in
   let commands = [
-    ["add"]        , `add     , "Add the repository $(b,name) available at address \
-                                 $(b,address) to the list of repositories used by OPAM, \
-                                 with priority $(b,priority). \
-                                 The repository priority can be optionally specified with \
-                                 $(b,--priority), otherwise the new repository has a higher \
-                                 priority then any other existing repositories. \
-                                 The kind of the repository can be specified with the \
-                                 $(b,--kind) option, otherwise it will be determined \
-                                 automatically.";
-    ["remove"]     , `remove  , "Remove the repository named $(b,name) from the list of \
-                                 repositories used by OPAM.";
-    ["list"]       , `list    , "List all repositories used by OPAM.";
-    ["priority"]   , `priority, "Change the priority of repository named $(b,name) to \
-                                 $(b,priority).";
+    ["add"]        , `add     ,
+    "Add the repository $(b,name) available at address \
+     $(b,address) to the list of repositories used by OPAM, \
+     with priority $(b,priority). \
+     The repository priority can be optionally specified with \
+     $(b,--priority), otherwise the new repository has a higher \
+     priority then any other existing repositories. \
+     The kind of the repository can be specified with the \
+     $(b,--kind) option, otherwise it will be determined \
+     automatically.";
+    ["remove"]     , `remove  ,
+    "Remove the repository named $(b,name) from the list of \
+     repositories used by OPAM.";
+    ["list"]       , `list    ,
+    "List all repositories used by OPAM.";
+    ["priority"]   , `priority,
+    "Change the priority of repository named $(b,name) to $(b,priority).";
   ] in
   let man = [
     `S "DESCRIPTION";

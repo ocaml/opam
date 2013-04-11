@@ -267,7 +267,9 @@ let make_archive ?(gener_digest=false) ?local_path nv =
       let url = OpamFile.URL.url url_file in
       log "downloading %s:%s" url (string_of_repository_kind kind);
 
-      match OpamFilename.in_dir local_dir (fun () -> download_one ~gener_digest kind nv url checksum) with
+      match OpamFilename.in_dir local_dir (fun () ->
+        download_one ~gener_digest kind nv url checksum
+      ) with
       | Not_available -> OpamSystem.internal_error "%s is not available." url
       | Up_to_date (F local_archive)
       | Result (F local_archive) ->
@@ -309,12 +311,15 @@ let make_archive ?(gener_digest=false) ?local_path nv =
       OpamFilename.in_dir extract_dir (fun () -> copy_files local_repo nv) in
 
     (* Finally create the final archive *)
-    if local_path <> None || not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_f then (
+    if local_path <> None
+    || not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_f then (
       OpamFilename.mkdir (OpamPath.Repository.archives_dir local_repo);
       let local_archive = OpamPath.Repository.archive local_repo nv in
       OpamGlobals.msg "Creating %s.\n" (OpamFilename.to_string local_archive);
       OpamFilename.exec extract_root [
-        [ "tar" ; "czf" ; OpamFilename.to_string local_archive ; OpamPackage.to_string nv ]
+        [ "tar" ; "czf" ;
+          OpamFilename.to_string local_archive ;
+          OpamPackage.to_string nv ]
       ]
     );
   )
@@ -331,7 +336,8 @@ let download r nv =
   (* If the archive is on the server, download it directly *)
   match OpamFilename.in_dir dir (fun () -> download_archive r nv) with
   | Up_to_date _ ->
-    OpamGlobals.msg "The archive for %s is in the local cache.\n" (OpamPackage.to_string nv);
+    OpamGlobals.msg "The archive for %s is in the local cache.\n"
+      (OpamPackage.to_string nv);
     log "The archive for %s is already downloaded and up-to-date"
       (OpamPackage.to_string nv)
   | Result local_file ->
