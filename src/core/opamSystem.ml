@@ -479,7 +479,7 @@ let download_command =
   let curl src =
     let curl = [
       "curl";
-      "--write-out"; "%{http_code}"; "--insecure";
+      "--write-out"; "%{http_code}\\n"; "--insecure";
       "--retry"; retry; "--retry-delay"; "2";
       "-OL"; src
     ] in
