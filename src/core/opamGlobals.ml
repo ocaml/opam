@@ -90,10 +90,20 @@ let root_dir = ref (
     with _ -> default_opam_dir
   )
 
+let timestamp () =
+  let time = Sys.time () in
+  let tm = Unix.gmtime time in
+  let msec = time -. (floor time) in
+  Printf.sprintf "%.2d:%.2d.%.3d"
+    (tm.Unix.tm_hour * 60 + tm.Unix.tm_min)
+    tm.Unix.tm_sec
+    (int_of_float (1000.0 *. msec))
+
 let log section fmt =
   Printf.ksprintf (fun str ->
     if !debug then
-      Printf.eprintf "[%d] %-20s %s\n%!" (Unix.getpid ()) section str
+      Printf.eprintf "%s  %06d  %-25s  %s\n"
+        (timestamp ()) (Unix.getpid ()) section str
   ) fmt
 
 let error fmt =
@@ -118,7 +128,10 @@ let display_messages = ref true
 
 let msg fmt =
   Printf.ksprintf (fun str ->
-    if !display_messages then Printf.printf "%s%!" str
+    flush stderr;
+    if !display_messages then (
+      Printf.printf "%s%!" str
+    )
   ) fmt
 
 type os =
