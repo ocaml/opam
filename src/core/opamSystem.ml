@@ -32,11 +32,9 @@ let command_not_found cmd =
   raise (Command_not_found cmd)
 
 module Sys2 = struct
-  open Unix
-
-  (** behaves as [Sys.is_directory] except for symlinks, which returns always [false]. *)
+  (* same as [Sys.is_directory] except for symlinks, which returns always [false]. *)
   let is_directory file =
-    (lstat file).st_kind = S_DIR
+    Unix.( (lstat file).st_kind = S_DIR )
 end
 
 let (/) = Filename.concat
