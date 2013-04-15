@@ -235,6 +235,9 @@ let extract_in filename dirname =
 let starts_with dirname filename =
   OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
+let ends_with suffix filename =
+  OpamMisc.ends_with ~suffix (to_string filename)
+
 let remove_prefix prefix filename =
   let prefix =
     let str = Dir.to_string prefix in

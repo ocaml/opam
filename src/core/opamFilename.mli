@@ -146,8 +146,11 @@ val extract: t -> Dir.t -> unit
 (** Extract an archive in a given directory (which should already exists) *)
 val extract_in: t -> Dir.t -> unit
 
-(** Check wether a filename starts by a given Dir.t *)
+(** Check whether a filename starts by a given Dir.t *)
 val starts_with: Dir.t -> t -> bool
+
+(** Check whether a filename ends with a given suffix *)
+val ends_with: string -> t -> bool
 
 (** Remove a prefix from a file name *)
 val remove_prefix: Dir.t -> t -> string
