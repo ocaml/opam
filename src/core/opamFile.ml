@@ -362,6 +362,71 @@ module X = struct
 
   end
 
+  module Package_index = struct
+
+    let internal = "package-index"
+
+    type t = repository_name package_map
+
+    let empty = OpamPackage.Map.empty
+
+    let of_string _ str =
+      let lines = Lines.of_string str in
+      List.fold_left (fun map -> function
+        | [nv; r] ->
+          let nv = OpamPackage.of_string nv in
+          let r  = OpamRepositoryName.of_string r in
+          OpamPackage.Map.add nv r map
+        | []      -> map
+        | l       ->
+          OpamGlobals.error_and_exit "%s: invalid package index line"
+            (String.concat " " l)
+      ) empty lines
+
+    let to_string _ map =
+      let lines = OpamPackage.Map.fold (fun nv r lines ->
+          let nv = OpamPackage.to_string nv in
+          let r  = OpamRepositoryName.to_string r in
+          [nv; r] :: lines
+        ) map [] in
+      Lines.to_string (
+        ["# File generated from 'repo/index'. Do not edit!"]
+        (* XXX: add a checksum of repo/index to re-generate the file when it changes *)
+        :: List.rev lines)
+
+  end
+
+  module Compiler_index = struct
+
+    let internal = "compiler-index"
+
+    type t = repository_name compiler_map
+
+    let empty = OpamCompiler.Map.empty
+
+    let of_string _ str =
+      let lines = Lines.of_string str in
+      List.fold_left (fun map -> function
+        | [c; r] ->
+          let c = OpamCompiler.of_string c in
+          let r = OpamRepositoryName.of_string r in
+          OpamCompiler.Map.add c r map
+        | []      -> map
+        | l       ->
+          OpamGlobals.error_and_exit "%s: invalid compiler index line"
+            (String.concat " " l)
+      ) empty lines
+
+    let to_string _ map =
+      let lines = OpamCompiler.Map.fold (fun nv r lines ->
+          let nv = OpamCompiler.to_string nv in
+          let r  = OpamRepositoryName.to_string r in
+          [nv; r] :: lines
+        ) map [] in
+      Lines.to_string (List.rev lines)
+
+  end
+
   module Pinned = struct
 
     let internal = "pinned"
@@ -1548,6 +1613,16 @@ end
 module Repo_index = struct
   include Repo_index
   include Make (Repo_index)
+end
+
+module Package_index = struct
+  include Package_index
+  include Make (Package_index)
+end
+
+module Compiler_index = struct
+  include Compiler_index
+  include Make (Compiler_index)
 end
 
 module Pinned = struct
