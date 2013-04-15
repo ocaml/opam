@@ -52,10 +52,12 @@ let rec mk_temp_dir () =
     s
 
 let safe_mkdir dir =
-  let open Unix in
   if not (Sys.file_exists dir) then
-    try mkdir dir 0o755
-    with Unix_error(EEXIST,_,_) -> ()
+    try
+      log "mkdir %s" dir;
+      Unix.mkdir dir 0o755
+    with
+      Unix.Unix_error(Unix.EEXIST,_,_) -> ()
 
 let mkdir dir =
   let rec aux dir =
@@ -76,7 +78,9 @@ let remove_file file =
   if Sys.file_exists file
   || (try let _ = Unix.lstat file in true with _ -> false)
   then (
-    try Unix.unlink file
+    try
+      log "rm %s" file;
+      Unix.unlink file
     with e ->
       internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
   )
@@ -168,8 +172,11 @@ let rec remove_dir dir =
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);
     List.iter remove_dir (directories_strict dir);
-    try Unix.rmdir dir
-    with e -> internal_error "Cannot remove %s (%s)." dir (Printexc.to_string e)
+    try
+      log "rmdir %s" dir;
+      Unix.rmdir dir
+    with e ->
+      internal_error "Cannot remove %s (%s)." dir (Printexc.to_string e)
   end
 
 let with_tmp_dir fn =
@@ -382,7 +389,9 @@ let link src dst =
     mkdir (Filename.dirname dst);
     if Sys.file_exists dst then
       remove_file dst;
-    try Unix.link src dst
+    try
+      log "ln -s %s %s" src dst;
+      Unix.symlink src dst
     with Unix.Unix_error (Unix.EXDEV, _, _) ->
       (* Fall back to copy if hard links are not supported *)
       copy src dst
@@ -424,12 +433,14 @@ let funlock file =
       close_in ic;
       if s = id then (
         OpamGlobals.log id "unlocking %s" file;
+        log "rm %s" file;
         Unix.unlink file;
       ) else
         internal_error "Cannot unlock %s (%s)." file s
     with _ ->
       OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
       close_in ic;
+      log "rm %s" file;
       Unix.unlink file;
   ) else
     log "Cannot find %s, but continuing anyway..." file
