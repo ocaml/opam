@@ -112,6 +112,12 @@ let nv_set_of_files ~all files =
        (OpamFilename.Set.elements files)
     )
 
+let compiler_set_of_files files =
+  let files = OpamFilename.Set.filter (OpamFilename.ends_with ".comp") files in
+  OpamFilename.Set.fold (fun f set ->
+    OpamCompiler.Set.add (OpamCompiler.of_filename f) set
+  ) files OpamCompiler.Set.empty
+
 let read_tmp dir =
   let dirs =
     if OpamFilename.exists_dir dir then
@@ -368,12 +374,19 @@ let update r =
   let repo = repo r in
   let dir = OpamPath.Repository.root repo in
   let module B = (val find_backend r: BACKEND) in
-  let updated_files = OpamFilename.in_dir dir (fun () -> B.update ~address:r.repo_address) in
+  let updated_files = OpamFilename.in_dir dir (fun () ->
+    B.update ~address:r.repo_address
+  ) in
 
   check_version repo;
 
   let prefix = read_prefix repo in
   let updated_packages = nv_set_of_files ~all:false updated_files in
+  let updated_compilers = compiler_set_of_files updated_files in
+
+  (* Maintin the list of updated compilers *)
+  OpamFile.Updated_compilers.write
+    (OpamPath.Repository.updated_compilers repo) updated_compilers;
 
   (* Clean-up archives and tmp files on URL changes *)
   OpamPackage.Set.iter (fun nv ->
@@ -413,8 +426,10 @@ let update r =
         false
     ) cached_packages in
 
-  let updated = OpamPackage.Set.union updated_packages updated_cached_packages in
-  OpamFile.Updated.write (OpamPath.Repository.updated repo) updated
+  let updated_packages =
+    OpamPackage.Set.union updated_packages updated_cached_packages in
+  OpamFile.Updated_packages.write
+    (OpamPath.Repository.updated_packages repo) updated_packages
 
 let find_backend = find_backend_by_kind
 
