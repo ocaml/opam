@@ -272,7 +272,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
         OpamProcess.clean_files r;
       r
     ) else
-      (* Display a user-friendly message if the command does not exists *)
+      (* Display a user-friendly message if the command does not exist *)
       command_not_found cmd
 
 let command ?verbose ?env ?name cmd =
@@ -300,7 +300,7 @@ let copy src dst =
     internal_error "Cannot copy %s: it is a directory." src;
   if Sys.file_exists dst && Sys.is_directory dst then
     internal_error "Cannot copy to %s: it is a directory." dst;
-  if  Sys.file_exists dst then
+  if Sys.file_exists dst then
     remove_file dst;
   mkdir (Filename.dirname dst);
   if src <> dst then
