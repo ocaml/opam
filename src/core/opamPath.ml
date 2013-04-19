@@ -120,17 +120,24 @@ end
 
 module Repository = struct
 
-  let root x = x
+  let root t = t.repo_root
 
-  let create t r = t / "repo" / OpamRepositoryName.to_string r
+  let create name = default () / "repo" / OpamRepositoryName.to_string name
 
-  let version t = t // "version"
+  let version t = root t // "version"
 
-  let config t = t // "config"
+  let remote_version t = t.repo_address // "version"
 
-  let prefix t = t // "prefix"
+  let raw_config root name =
+    root / "repo" / OpamRepositoryName.to_string name // "config"
 
-  let packages_dir t = t / "packages"
+  let config t = root t // "config"
+
+  let prefix t = root t // "prefix"
+
+  let packages_dir t = root t / "packages"
+
+  let remote_packages_dir t = t.repo_address / "packages"
 
   let package t prefix nv =
     match prefix with
@@ -145,19 +152,24 @@ module Repository = struct
 
   let files t prefix nv = package t prefix nv / "files"
 
-  let archives_dir t = t / "archives"
+  let archives_dir t = root t / "archives"
 
   let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
-  let upload_dir t = t / "upload"
+  let remote_archive t nv =
+    t.repo_address / "archives" // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
-  let compilers_dir t = t / "compilers"
+  let upload_dir t = root t / "upload"
+
+  let compilers_dir t = root t / "compilers"
+
+  let remote_compilers_dir t = t.repo_address / "compilers"
 
   let compiler t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".comp")
 
   let compiler_descr t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".descr")
 
-  let tmp t = t / "tmp"
+  let tmp t = root t / "tmp"
 
   let tmp_dir t nv = tmp t / OpamPackage.to_string nv
 
