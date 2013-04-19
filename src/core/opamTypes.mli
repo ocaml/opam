@@ -164,6 +164,7 @@ type repository_root = dirname
 
 (** Repositories *)
 type repository = {
+  repo_root    : repository_root;
   repo_name    : repository_name;
   repo_kind    : repository_kind;
   repo_address : address;

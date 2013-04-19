@@ -26,7 +26,10 @@ val to_string: repository -> string
 val compare: repository -> repository -> int
 
 (** Default repository *)
-val default: repository
+val default: unit -> repository
+
+(** Create a local repository on a given path *)
+val local: dirname -> repository
 
 (** Default repository address *)
 val default_address: address
@@ -34,34 +37,43 @@ val default_address: address
 (** Constructor *)
 val repository_address: string -> address
 
-(** Create a dummy local repository *)
-val local_repo: unit -> repository_root
+(** [get_upstream_update repo packages] checks for upstream changes
+    for packages in the [packages] map. Return the packages whose
+    contents have changed upstream (ie. either the 'url' file has
+    changed, the archive file has changed, or the contents of the
+    'files/' sub-directory, or, git and rsync-ed packages, upstream
+    contents have changed. *)
+val get_upstream_updates:
+  repository -> package_repository_state package_map -> package_set
 
-(** Initialize {i $opam/repo/$repo} *)
-val init: repository -> unit
+(** [cleanup repo _packages] cleans the tempory files in the given
+    repository. [packages] contains all the 'active' package states,
+    ie. whose current repository is [repo]. *)
+val clean: repository -> package_repository_state package_map -> unit
 
-(** Update {i $opam/repo/$repo} *)
-val update: repository -> unit
+(** Copy the additional package files in the current dir *)
+val copy_files: repository -> package -> dirname -> OpamFilename.Set.t
 
-(** Download {i $opam/repo/$repo/archive/$nv.tar.gz} *)
-val download: repository -> package -> unit
+(** [make_archive ?gener_digest repo package] builds the archive for
+    the given [package]. It reads the metada in [repo.repo_root]. By
+    default, the digest that appears in {i $NAME.$VERSION/url} is not
+    modified, unless [gener_digest] is set. *)
+val make_archive: ?gener_digest:bool -> repository -> package -> unit
 
-(** Upload the content of {i $opam/repo/$repo/upload} to the remote
-    repository.*)
-val upload: repository -> unit
+(** Get the list of packages *)
+val packages: repository -> string name_map * package_set
 
-(** {2 Repository backends} *)
+(** Get the list of compilers (and their eventual description file) *)
+val compilers: repository -> (filename * filename option) compiler_map
 
-(** Backend signature *)
-module type BACKEND = sig
+(** Get the external files associated to a package *)
+val files: repository -> package -> filename_set
 
-  (** Initialize an OPAM repository in the current directory. The
-      argument is the remote repository address. *)
-  val init: address:address -> unit
+(** Check if a package has a given prefix in the repository *)
+val read_prefix: repository -> string name_map
 
-  (** Update the OPAM repository in the current directory. Return the
-      list of locally updated files. *)
-  val update: address:address -> OpamFilename.Set.t
+(** Find an eventual prefix in a map *)
+val find_prefix: string name_map -> package -> string option
 
   (** Download a (remote) archive file, stored on the (remote) OPAM
       repository, in the current repository. Return the local path to
@@ -83,11 +95,13 @@ module type BACKEND = sig
 
 end
 
-(** Register a repository backend *)
-val register_backend: repository_kind -> (module BACKEND) -> unit
+(** Update {i $opam/repo/$repo}. *)
+val update: repository -> unit
 
-(** Find a backend *)
-val find_backend: repository_kind -> (module BACKEND)
+(** Download {i $remote/archives/$nv.tar.gz}. If is not there, then
+    download the upstream archive, add the eventual files in it, and
+    create {i $nv.tar.gz}. *)
+val download: repository -> package -> unit
 
 (** Copy the additional package files in the current dir *)
 val copy_files: repository_root -> package -> OpamFilename.Set.t
@@ -105,14 +119,13 @@ val packages: repository_root -> string name_map * package_set
 (** Get the list of compilers (and their eventual description file) *)
 val compilers: repository_root -> (filename * filename option) compiler_map
 
-(** Get the external files associated to a package *)
-val files: repository_root -> package -> filename_set
+(** Register a repository backend *)
+val register_backend: repository_kind -> (module BACKEND) -> unit
 
-(** Check if a package has a given prefix in the repository *)
-val read_prefix: repository_root -> string name_map
+(** Find a backend *)
+val find_backend: repository_kind -> (module BACKEND)
 
-(** Find an eventual prefix in a map *)
-val find_prefix: string name_map -> package -> string option
+(** {2 Misc} *)
 
 (** Map-reduce on repositories. *)
 val map_reduce: int -> (repository -> 'a) -> ('a -> 'a -> 'a) -> 'a ->

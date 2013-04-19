@@ -480,6 +480,7 @@ module X = struct
     let empty = {
       repo_name     = OpamRepositoryName.of_string "<none>";
       repo_address  = OpamFilename.address_of_string "<none>";
+      repo_root     = OpamFilename.Dir.of_string "<none>";
       repo_kind     = `local;
       repo_priority = 0;
     }
@@ -502,7 +503,8 @@ module X = struct
           (OpamFormat.parse_string |> repository_kind_of_string) in
       let repo_priority =
         OpamFormat.assoc_default 0 s.file_contents s_priority OpamFormat.parse_int in
-      { repo_name; repo_address; repo_kind; repo_priority }
+      let repo_root = OpamPath.Repository.create repo_name in
+      { repo_name; repo_address; repo_kind; repo_priority; repo_root }
 
     let to_string filename t =
       let s = {

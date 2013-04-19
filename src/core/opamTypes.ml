@@ -63,6 +63,7 @@ type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 type repository_kind = [`http|`local|`git|`darcs]
 
 type repository = {
+  repo_root    : repository_root;
   repo_name    : repository_name;
   repo_kind    : repository_kind;
   repo_address : address;

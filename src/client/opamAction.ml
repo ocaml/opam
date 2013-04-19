@@ -199,8 +199,7 @@ let get_archive t nv =
         | None   -> OpamRepository.download s.pkg_repo nv
         | Some _ -> ()
       end;
-      let repo_p = OpamPath.Repository.create t.root s.pkg_repo.repo_name in
-      let src = OpamPath.Repository.archive repo_p nv in
+      let src = OpamPath.Repository.archive s.pkg_repo nv in
       OpamFilename.link ~src ~dst;
       Some dst
 
@@ -268,12 +267,13 @@ let extract_package t nv =
 
       begin (* Copy eventual files *)
         try
-          let repo = OpamPackage.Map.find nv t.package_index in
-          let repo_p = OpamPath.Repository.create t.root repo in
+          let repo_name = OpamPackage.Map.find nv t.package_index in
+          let repo = OpamRepositoryName.Map.find repo_name t.repositories in
           let _files = OpamFilename.in_dir pinned_dir (fun () ->
-            OpamRepository.copy_files repo_p nv
+            OpamRepository.copy_files repo nv
           ) in ()
-        with Not_found -> ()
+        with Not_found ->
+          ()
       end;
 
       (* Copy the resulting dir *)
@@ -381,9 +381,9 @@ let remove_package_aux t ~metadata ~rm_build nv =
   log "Cleaning-up the active repository";
   begin
     try
-      let repo = OpamPackage.Map.find nv t.package_index in
-      let repo_p = OpamPath.Repository.create t.root repo in
-      let tmp_dir = OpamPath.Repository.tmp_dir repo_p nv in
+      let repo_name = OpamPackage.Map.find nv t.package_index in
+      let repo = OpamRepositoryName.Map.find repo_name t.repositories in
+      let tmp_dir = OpamPath.Repository.tmp_dir repo nv in
       OpamFilename.rmdir tmp_dir
     with Not_found ->
       ()
