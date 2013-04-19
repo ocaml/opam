@@ -80,7 +80,8 @@ val find_prefix: string name_map -> package -> string option
 (** Compute a compiler state *)
 val compiler_state: repository -> compiler -> compiler_repository_state
 
-(** Compute a package state. *)
+(** Compute a package state. Raise [Not_found] if no such package
+    exists in the repository. *)
 val package_state: repository -> string option -> package -> package_repository_state
 
 (** {2 Repository backends} *)

@@ -391,6 +391,8 @@ let compiler_state repo comp =
 let package_state repo_p prefix nv =
   let pkg_repo = repo_p in
   let pkg_opam = OpamPath.Repository.opam repo_p prefix nv in
+  if not (OpamFilename.exists pkg_opam) then
+    raise Not_found;
 
   (* files *)
   let aux exists fn =
