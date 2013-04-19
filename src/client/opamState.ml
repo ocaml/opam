@@ -202,6 +202,7 @@ let package_index repositories repo_index =
   ) repo_index OpamPackage.Map.empty
 
 let package_state_index t =
+  log "package-state-index";
   OpamPackage.Map.fold (fun nv _ map ->
     match package_repository_state t nv with
     | None   -> map
@@ -229,6 +230,7 @@ let compiler_index repositories =
   ) OpamCompiler.Map.empty repositories
 
 let compiler_state_index t =
+  log "compiler-state-index";
   OpamCompiler.Map.fold (fun comp _ map ->
     match compiler_repository_state t comp with
     | None   -> map
