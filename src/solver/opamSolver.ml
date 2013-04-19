@@ -44,7 +44,8 @@ let opam2debian universe depopts package =
     else
       let mem_installed conj =
         let is_installed (name,_) =
-          OpamPackage.Set.exists (fun pkg -> OpamPackage.name pkg = name) universe.u_installed in
+          OpamPackage.Set.exists
+            (fun pkg -> OpamPackage.name pkg = name) universe.u_installed in
         List.exists is_installed conj in
       let opts = List.filter mem_installed opts in
       let opts = List.rev_map OpamFormula.of_conjunction opts in
@@ -128,7 +129,8 @@ let load_cudf_universe ?(depopts=false) universe =
   (fun opam ->
     try OpamPackage.Map.find opam opam2cudf
     with Not_found ->
-      OpamGlobals.error_and_exit "opam2cudf: Cannot find %s" (OpamPackage.to_string opam)),
+      OpamGlobals.error_and_exit
+        "opam2cudf: Cannot find %s" (OpamPackage.to_string opam)),
   (fun cudf ->
     try Hashtbl.find cudf2opam (cudf.Cudf.package,cudf.Cudf.version)
     with Not_found ->
@@ -139,7 +141,8 @@ let load_cudf_universe ?(depopts=false) universe =
         let version = OpamPackage.Version.of_string (lookup "sourcenumber") in
         OpamPackage.unknown name (Some version)
       with Not_found ->
-        OpamSystem.internal_error "cud2opam(%s,%d)" cudf.Cudf.package cudf.Cudf.version),
+        OpamSystem.internal_error "cud2opam(%s,%d)"
+          cudf.Cudf.package cudf.Cudf.version),
   universe
 
 let string_of_request r =
@@ -176,7 +179,8 @@ let graph cudf2opam cudf_graph =
   opam_graph
 
 let solution cudf2opam cudf_solution =
-  let to_remove = List.rev (List.rev_map cudf2opam cudf_solution.OpamCudf.ActionGraph.to_remove) in
+  let to_remove =
+    List.rev (List.rev_map cudf2opam cudf_solution.OpamCudf.ActionGraph.to_remove) in
   let to_process = graph cudf2opam cudf_solution.OpamCudf.ActionGraph.to_process in
   let root_causes =
     List.rev_map
@@ -193,11 +197,11 @@ let map_request f r =
 (* Remove duplicate packages *)
 let cleanup_request req =
   let update_packages = List.rev_map (fun (n,_) -> n) req.wish_upgrade in
-  let wish_install = List.filter (fun (n,_) -> not (List.mem n update_packages)) req.wish_install in
+  let wish_install =
+    List.filter (fun (n,_) -> not (List.mem n update_packages)) req.wish_install in
   { req with wish_install }
 
 let resolve ?(verbose=true) universe request =
-  log "resolve universe=%s" (OpamPackage.Set.to_string universe.u_available);
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let request = cleanup_request request in
@@ -210,7 +214,8 @@ let resolve ?(verbose=true) universe request =
   | Conflicts c     -> Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam (c ()))
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
-    let cudf_solution = OpamCudf.solution_of_actions ~simple_universe ~complete_universe actions in
+    let cudf_solution =
+      OpamCudf.solution_of_actions ~simple_universe ~complete_universe actions in
     Success (solution cudf2opam cudf_solution)
 
 let installable universe =
@@ -226,7 +231,8 @@ let filter_dependencies f_direction ~depopts ~installed universe packages =
   let opam2cudf, cudf2opam, cudf_universe = load_cudf_universe ~depopts universe in
   let cudf_universe =
     if installed then
-      Cudf.load_universe (List.filter (fun pkg -> pkg.Cudf.installed) (Cudf.get_packages cudf_universe))
+      Cudf.load_universe
+        (List.filter (fun pkg -> pkg.Cudf.installed) (Cudf.get_packages cudf_universe))
     else
       cudf_universe in
   let cudf_packages = List.rev_map opam2cudf (OpamPackage.Set.elements packages) in
@@ -260,7 +266,8 @@ let stats sol =
       match action with
       | To_change (None, _)             -> i+1, r, u, d
       | To_change (Some x, y) when x<>y ->
-        if OpamPackage.Version.compare (OpamPackage.version x) (OpamPackage.version y) < 0 then
+        if OpamPackage.Version.compare
+            (OpamPackage.version x) (OpamPackage.version y) < 0 then
           i, r, u+1, d
         else
           i, r, u, d+1
@@ -273,7 +280,8 @@ let stats sol =
   { s_install; s_reinstall; s_upgrade; s_downgrade; s_remove }
 
 let string_of_stats stats =
-  Printf.sprintf "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove"
+  Printf.sprintf
+    "%d to install | %d to reinstall | %d to upgrade | %d to downgrade | %d to remove"
     stats.s_install
     stats.s_reinstall
     stats.s_upgrade
@@ -281,7 +289,8 @@ let string_of_stats stats =
     stats.s_remove
 
 let solution_is_empty t =
-  t.PackageActionGraph.to_remove = [] && PackageActionGraph.is_empty t.PackageActionGraph.to_process
+  t.PackageActionGraph.to_remove = []
+  && PackageActionGraph.is_empty t.PackageActionGraph.to_process
 
 let print_solution ~messages t =
   if not (solution_is_empty t) then

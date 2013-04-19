@@ -32,11 +32,9 @@ let command_not_found cmd =
   raise (Command_not_found cmd)
 
 module Sys2 = struct
-  open Unix
-
-  (** behaves as [Sys.is_directory] except for symlinks, which returns always [false]. *)
+  (* same as [Sys.is_directory] except for symlinks, which returns always [false]. *)
   let is_directory file =
-    (lstat file).st_kind = S_DIR
+    Unix.( (lstat file).st_kind = S_DIR )
 end
 
 let (/) = Filename.concat
@@ -52,10 +50,12 @@ let rec mk_temp_dir () =
     s
 
 let safe_mkdir dir =
-  let open Unix in
   if not (Sys.file_exists dir) then
-    try mkdir dir 0o755
-    with Unix_error(EEXIST,_,_) -> ()
+    try
+      log "mkdir %s" dir;
+      Unix.mkdir dir 0o755
+    with
+      Unix.Unix_error(Unix.EEXIST,_,_) -> ()
 
 let mkdir dir =
   let rec aux dir =
@@ -76,7 +76,9 @@ let remove_file file =
   if Sys.file_exists file
   || (try let _ = Unix.lstat file in true with _ -> false)
   then (
-    try Unix.unlink file
+    try
+      log "rm %s" file;
+      Unix.unlink file
     with e ->
       internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
   )
@@ -168,8 +170,11 @@ let rec remove_dir dir =
   if Sys.file_exists dir then begin
     List.iter remove_file (files_all_not_dir dir);
     List.iter remove_dir (directories_strict dir);
-    try Unix.rmdir dir
-    with e -> internal_error "Cannot remove %s (%s)." dir (Printexc.to_string e)
+    try
+      log "rmdir %s" dir;
+      Unix.rmdir dir
+    with e ->
+      internal_error "Cannot remove %s (%s)." dir (Printexc.to_string e)
   end
 
 let with_tmp_dir fn =
@@ -272,7 +277,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
         OpamProcess.clean_files r;
       r
     ) else
-      (* Display a user-friendly message if the command does not exists *)
+      (* Display a user-friendly message if the command does not exist *)
       command_not_found cmd
 
 let command ?verbose ?env ?name cmd =
@@ -300,7 +305,7 @@ let copy src dst =
     internal_error "Cannot copy %s: it is a directory." src;
   if Sys.file_exists dst && Sys.is_directory dst then
     internal_error "Cannot copy to %s: it is a directory." dst;
-  if  Sys.file_exists dst then
+  if Sys.file_exists dst then
     remove_file dst;
   mkdir (Filename.dirname dst);
   if src <> dst then
@@ -382,7 +387,9 @@ let link src dst =
     mkdir (Filename.dirname dst);
     if Sys.file_exists dst then
       remove_file dst;
-    try Unix.link src dst
+    try
+      log "ln -s %s %s" src dst;
+      Unix.symlink src dst
     with Unix.Unix_error (Unix.EXDEV, _, _) ->
       (* Fall back to copy if hard links are not supported *)
       copy src dst
@@ -424,12 +431,14 @@ let funlock file =
       close_in ic;
       if s = id then (
         OpamGlobals.log id "unlocking %s" file;
+        log "rm %s" file;
         Unix.unlink file;
       ) else
         internal_error "Cannot unlock %s (%s)." file s
     with _ ->
       OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
       close_in ic;
+      log "rm %s" file;
       Unix.unlink file;
   ) else
     log "Cannot find %s, but continuing anyway..." file
@@ -470,7 +479,7 @@ let download_command =
   let curl src =
     let curl = [
       "curl";
-      "--write-out"; "%{http_code}"; "--insecure";
+      "--write-out"; "%{http_code}\\n"; "--insecure";
       "--retry"; retry; "--retry-delay"; "2";
       "-OL"; src
     ] in

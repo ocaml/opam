@@ -241,6 +241,12 @@ let repo_kind_flag =
             are 'http', 'local', 'git' or 'darcs')."
     Arg.(some (enum kinds)) None
 
+let jobs_flag =
+  mk_opt ["j";"jobs"] "JOBS"
+    "Set the maximal number of concurrent jobs to use. You can also set it using \
+     the OPAMJOBS environment variable."
+    Arg.(some int) None
+
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
 
@@ -262,11 +268,13 @@ let global_options =
   let debug =
     mk_flag ~section ["debug"]
       "Print debug message on stdout. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or equal to 2."  in
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or \
+       equal to 2."  in
   let verbose =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. \
-       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater or equal to 1 \
+       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater \
+       or equal to 1 \
        or $(b,\\$OPAMVERBOSE) to a non-empty string." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
@@ -289,7 +297,8 @@ let global_options =
   let no_base_packages =
     mk_flag ~section ["no-base-packages"]
       "Do not install base packages (useful for testing purposes). \
-       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
+       string." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
@@ -332,16 +341,11 @@ let build_options =
        care is the best way to corrupt your current compiler environement. When using \
        this option OPAM will run a dry-run of the solver and then fake the build and  \
        install commands." in
-  let jobs =
-    mk_opt ["j";"jobs"] "JOBS"
-      "Set the maximal number of concurrent jobs to use. You can also set it using \
-       the OPAMJOBS environment variable."
-      Arg.(some int) None in
 
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
     $build_doc $dryrun $external_tags $cudf_file $fake
-    $jobs)
+    $jobs_flag)
 
 let guess_repository_kind kind address =
   match kind with
@@ -401,7 +405,9 @@ let init =
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
-    let repository = { repo_name; repo_kind; repo_address; repo_priority } in
+    let repository = {
+      repo_root = OpamPath.Repository.create repo_name;
+      repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
       if no_setup then `no
       else if auto_setup then `yes
@@ -747,10 +753,11 @@ let update =
         that can be upgraded will be printed out, and the user can use \
         $(b,opam upgrade) to upgrade those.";
   ] in
-  let update global_options repositories =
+  let update global_options jobs repositories =
     set_global_options global_options;
+    OpamGlobals.jobs := jobs;
     Client.update repositories in
-  Term.(pure update $global_options $repository_list),
+  Term.(pure update $global_options $jobs_flag $repository_list),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
@@ -774,63 +781,28 @@ let upgrade =
   Term.(pure upgrade $global_options $build_options $package_list),
   term_info "upgrade" ~doc ~man
 
-(* UPLOAD *)
-let upload =
-  let doc = "Upload a package to an OPAM repository." in
-  let man = [
-    `S "DESCRIPTION";
-    `P "This command uploads an already built package to a remote repository, \
-        if the remote repository is not read-only.";
-  ] in
-  let opam =
-    mk_opt ["opam"]
-      "FILE" "Specify the .opam file that will be uploaded to repo://packages/name.version/opam"
-      Arg.(some filename) None in
-  let descr =
-    mk_opt ["descr"]
-      "FILE" "Specify the .descr file that will be uploaded to repo://packages/name.version/descr"
-      Arg.(some filename) None in
-  let archive =
-    mk_opt ["archive"]
-      "FILE" "Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz"
-      Arg.(some filename) None in
-  let repo =
-    let doc = Arg.info ~docv:"REPO" ~doc:"Specify the repository to upload to." [] in
-    Arg.(required & pos 0 (some repository_name) None & doc) in
-  let upload global_options opam descr archive repo =
-    set_global_options global_options;
-    let upl_opam = match opam with
-      | None   -> OpamGlobals.error_and_exit "missing OPAM file"
-      | Some s -> s in
-    let upl_descr = match descr with
-      | None   -> OpamGlobals.error_and_exit "missing description file"
-      | Some s -> s in
-    let upl_archive = match archive with
-      | None   -> OpamGlobals.error_and_exit "missing archive file"
-      | Some s -> s in
-    Client.upload { upl_opam; upl_descr; upl_archive } repo in
-  Term.(pure upload $global_options $opam $descr $archive $repo),
-  term_info "upload" ~doc ~man
-
 (* REPOSITORY *)
 let repository_doc = "Manage OPAM repositories."
 let repository name =
   let doc = repository_doc in
   let commands = [
-    ["add"]        , `add     , "Add the repository $(b,name) available at address \
-                                 $(b,address) to the list of repositories used by OPAM, \
-                                 with priority $(b,priority). \
-                                 The repository priority can be optionally specified with \
-                                 $(b,--priority), otherwise the new repository has a higher \
-                                 priority then any other existing repositories. \
-                                 The kind of the repository can be specified with the \
-                                 $(b,--kind) option, otherwise it will be determined \
-                                 automatically.";
-    ["remove"]     , `remove  , "Remove the repository named $(b,name) from the list of \
-                                 repositories used by OPAM.";
-    ["list"]       , `list    , "List all repositories used by OPAM.";
-    ["priority"]   , `priority, "Change the priority of repository named $(b,name) to \
-                                 $(b,priority).";
+    ["add"]        , `add     ,
+    "Add the repository $(b,name) available at address \
+     $(b,address) to the list of repositories used by OPAM, \
+     with priority $(b,priority). \
+     The repository priority can be optionally specified with \
+     $(b,--priority), otherwise the new repository has a higher \
+     priority then any other existing repositories. \
+     The kind of the repository can be specified with the \
+     $(b,--kind) option, otherwise it will be determined \
+     automatically.";
+    ["remove"]     , `remove  ,
+    "Remove the repository named $(b,name) from the list of \
+     repositories used by OPAM.";
+    ["list"]       , `list    ,
+    "List all repositories used by OPAM.";
+    ["priority"]   , `priority,
+    "Change the priority of repository named $(b,name) to $(b,priority).";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -1144,7 +1116,6 @@ let commands = [
   remote; repository;
   switch;
   pin;
-  upload;
   help;
 ]
 

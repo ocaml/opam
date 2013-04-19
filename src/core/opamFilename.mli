@@ -40,16 +40,14 @@ val sub_dirs: Dir.t -> Dir.t list
 val in_dir: Dir.t -> (unit -> 'a) -> 'a
 
 (** Execute a list of commands in a given directory *)
-val exec: Dir.t -> ?env:(string * string) list -> ?name:string -> string list list -> unit
+val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
+  string list list -> unit
 
 (** Move a directory *)
 val move_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Copy a directory *)
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
-
-(** Copy the unique directory in [src] to [dst] *)
-val copy_unique_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Link a directory *)
 val link_dir: src:Dir.t -> dst:Dir.t -> unit
@@ -145,8 +143,11 @@ val extract: t -> Dir.t -> unit
 (** Extract an archive in a given directory (which should already exists) *)
 val extract_in: t -> Dir.t -> unit
 
-(** Check wether a filename starts by a given Dir.t *)
+(** Check whether a filename starts by a given Dir.t *)
 val starts_with: Dir.t -> t -> bool
+
+(** Check whether a filename ends with a given suffix *)
+val ends_with: string -> t -> bool
 
 (** Remove a prefix from a file name *)
 val remove_prefix: Dir.t -> t -> string

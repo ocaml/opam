@@ -227,13 +227,12 @@ let find_interesting_names universe constrs =
       n = pkg.Cudf.package
       && Cudf.version_matches pkg.Cudf.version v
     ) constrs in
-  let depends =
-    let packages = Cudf.get_packages ~filter universe in
-    OpamCudf.dependencies universe packages in
+  let packages = Cudf.get_packages ~filter universe in
+  let depends = OpamCudf.dependencies universe packages in
   let revdepends =
+    let revdepends = OpamCudf.reverse_dependencies universe packages in
     let filter pkg = pkg.Cudf.installed && filter pkg in
-    let packages = Cudf.get_packages ~filter universe in
-    OpamCudf.reverse_dependencies universe packages in
+    List.filter filter revdepends in
   let set = ref OpamMisc.StringSet.empty in
   let add p = set := OpamMisc.StringSet.add p.Cudf.package !set in
   List.iter add depends;

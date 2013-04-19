@@ -63,6 +63,7 @@ type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 type repository_kind = [`http|`local|`git|`darcs]
 
 type repository = {
+  repo_root    : repository_root;
   repo_name    : repository_name;
   repo_kind    : repository_kind;
   repo_address : address;
@@ -408,10 +409,11 @@ module MakeActionGraph (Pkg: PKG) = struct
   module Components = Graph.Components.Make(PG)
   module O = Graph.Oper.I (PG)
   module Parallel = OpamParallel.Make(struct
-      include PG
-      include Topological
-      include Traverse
-      include Components
+    let string_of_vertex v = Pkg.to_string (action_contents v)
+    include PG
+    include Topological
+    include Traverse
+    include Components
     end)
   include PG
   include O
@@ -511,3 +513,21 @@ type lock =
   | Switch_lock of (unit -> unit)
 
 type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t
+
+type compiler_repository_state = {
+  comp_repo     : repository;
+  comp_file     : filename;
+  comp_descr    : filename option;
+  comp_checksums: string list;
+}
+
+type package_repository_state = {
+  pkg_repo     : repository;
+  pkg_opam     : filename;
+  pkg_descr    : filename option;
+  pkg_archive  : filename option;
+  pkg_url      : filename option;
+  pkg_files    : dirname option;
+  pkg_metadata : string list;
+  pkg_contents : string list;
+}

@@ -164,6 +164,7 @@ type repository_root = dirname
 
 (** Repositories *)
 type repository = {
+  repo_root    : repository_root;
   repo_name    : repository_name;
   repo_kind    : repository_kind;
   repo_address : address;
@@ -494,3 +495,25 @@ type env_updates = (string * string * string) list
 
 (** Tags *)
 type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t
+
+(** {2 Repository state} *)
+
+(** Compiler repository state *)
+type compiler_repository_state = {
+  comp_repo     : repository;
+  comp_file     : filename;
+  comp_descr    : filename option;
+  comp_checksums: string list;
+}
+
+(** Package repository state *)
+type package_repository_state = {
+  pkg_repo     : repository;
+  pkg_opam     : filename;
+  pkg_descr    : filename option;
+  pkg_archive  : filename option;
+  pkg_url      : filename option;
+  pkg_files    : dirname option;
+  pkg_metadata : string list;       (** Checksum of metadata *)
+  pkg_contents : string list;       (** Checksum of contents *)
+}

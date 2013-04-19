@@ -16,10 +16,11 @@
 let log fmt = OpamGlobals.log "PARALLEL" fmt
 
 module type G = sig
-  include Graph.Sig.G
+  include Graph.Sig.I
   include Graph.Topological.G with type t := t and module V := V
   val has_cycle: t -> bool
   val scc_list: t -> V.t list list
+  val string_of_vertex: V.t -> string
 end
 
 type error =
@@ -30,16 +31,19 @@ module type SIG = sig
 
   module G : G
 
-  (** [iter n t pre child paren] parallel iteration on [n]
-      cores. [child] is evaluated in a remote process and when it as
-      finished, whereas [pre] and [post] are evaluated on the current
-      process (respectively before and after the child process has
-      been created). *)
-  val parallel_iter: int -> G.t ->
+  val iter: int -> G.t ->
     pre:(G.V.t -> unit) ->
     child:(G.V.t -> unit) ->
     post:(G.V.t -> unit) ->
     unit
+
+  val map_reduce: int -> G.t ->
+    map:(G.V.t -> 'a) ->
+    merge:('a -> 'a -> 'a) ->
+    init:'a ->
+    'a
+
+  val create: G.V.t list -> G.t
 
   exception Errors of (G.V.t * error) list * G.V.t list
   exception Cyclic of G.V.t list list
@@ -161,7 +165,7 @@ module Make (G : G) = struct
     close_in ic;
     r
 
-  let parallel_iter n g ~pre ~child ~post =
+  let iter n g ~pre ~child ~post =
     let t = ref (init g) in
     (* pid -> node * (fd to read the error code) *)
     let pids = ref OpamMisc.IntMap.empty in
@@ -176,7 +180,8 @@ module Make (G : G) = struct
     (* All the error nodes. *)
     let error_nodes () =
       M.fold (fun n _ accu -> S.add n accu) !errors S.empty in
-    (* All the node not successfully proceeded. This include error worker and error nodes. *)
+    (* All the node not successfully proceeded. This include error
+       worker and error nodes. *)
 
     log "Iterate over %d task(s) with %d process(es)" (G.nb_vertex g) n;
 
@@ -190,7 +195,8 @@ module Make (G : G) = struct
     let rec loop nslots =
 
       if OpamMisc.IntMap.is_empty !pids
-      && (S.is_empty !t.roots || not (M.is_empty !errors) && !t.roots =|= error_nodes ()) then
+      && (S.is_empty !t.roots || not (M.is_empty !errors)
+                                 && !t.roots =|= error_nodes ()) then
 
         (* Nothing more to do *)
         if M.is_empty !errors then
@@ -246,7 +252,10 @@ module Make (G : G) = struct
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
           log "Spawning a new process";
-          Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> OpamGlobals.error "Interrupted"; exit 1));
+          Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
+            OpamGlobals.error "Interrupted";
+            exit 1)
+          );
           Sys.catch_break true;
           let return p =
             let to_parent = open_out_bin error_file in
@@ -274,5 +283,52 @@ module Make (G : G) = struct
           loop (nslots - 1)
       ) in
     loop n
+
+  let map_reduce jobs g ~map ~merge ~init =
+    let files = ref [] in
+    let file repo = List.assoc repo !files in
+
+    let pre repo =
+      files := (repo, OpamSystem.temp_file "map-reduce") :: !files
+    in
+
+    let child repo =
+      let result = map repo in
+      let oc = open_out (file repo) in
+      Marshal.to_channel oc result []
+    in
+
+    let acc = ref init in
+    let post repo =
+      let file = file repo in
+      let ic = open_in_bin file in
+      let result =
+        try Marshal.from_channel ic
+        with _ -> OpamSystem.internal_error "Cannot read the result file" in
+      close_in ic;
+      Unix.unlink file;
+      files := List.filter (fun (_,f) -> f<>file) !files;
+      acc := merge result !acc
+    in
+
+    try
+      iter jobs g ~pre ~child ~post;
+      !acc
+    with
+    | Errors (errors,_) ->
+      let string_of_error = function
+        | Process_error r  -> OpamProcess.string_of_result r
+        | Internal_error s -> s in
+      List.iter (fun (v, e) ->
+        OpamGlobals.error "Error while processing %s\n%s"
+          (G.string_of_vertex v)
+          (string_of_error e);
+      ) errors;
+      OpamGlobals.exit 2
+
+  let create l =
+    let g = G.create () in
+    List.iter (G.add_vertex g) l;
+    g
 
 end

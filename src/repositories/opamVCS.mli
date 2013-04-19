@@ -13,39 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(** Compiler names and versions *)
+open OpamTypes
 
-(** OCaml compiler versions *)
-module Version: sig
-
-  include OpamMisc.ABSTRACT
-
-  (** Compiler constraint *)
-  type constr = (OpamFormula.relop * t) OpamFormula.formula
-
-  (** Return the version of the compiler currently installed *)
-  val current: unit -> t option
-
-  (** Returm the version of the system compiler *)
-  val system: unit -> t option
-
-  (** Compare OCaml versions *)
-  val compare: t -> OpamFormula.relop -> t -> bool
-
+module type VCS = sig
+  val exists: repository -> bool
+  val init: repository -> unit
+  val fetch: repository -> unit
+  val merge: repository -> unit
+  val diff: repository -> bool
 end
 
-(** Compiler names *)
-include OpamMisc.ABSTRACT
-
-(** Convert a filename into a compiler name *)
-val of_filename: OpamFilename.t -> t option
-
-(** List the compiler available in a directory (and their eventual
-    descrition file) *)
-val list: OpamFilename.Dir.t -> (OpamFilename.t * OpamFilename.t option) Map.t
-
-(** System compiler *)
-val system: t
-
-(** Errors *)
-val unknown: t -> 'a
+module Make(VCS: VCS): OpamRepository.BACKEND

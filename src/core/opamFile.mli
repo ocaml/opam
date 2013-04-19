@@ -218,9 +218,6 @@ module Installed_roots: IO_FILE with type t = package_set
 (** List of packages to reinstall: [$opam/$oversion/reinstall] *)
 module Reinstall: IO_FILE with type t = package_set
 
-(** List of updated packages: [$opam/$repo/$repo/updated] *)
-module Updated: IO_FILE with type t = package_set
-
 (** Compiler version [$opam/compilers/] *)
 module Comp: sig
 
@@ -373,8 +370,16 @@ end
 
 (** {2 Repository files} *)
 
-(** Association between package names and repository: [$opam/repo/index] *)
+(** Association between package names and repositories: [$opam/repo/index] *)
 module Repo_index: IO_FILE with type t = repository_name list name_map
+
+(** Association between packages and repositories:
+    [$opam/repo/index.packages] *)
+module Package_index: IO_FILE with type t = repository_name package_map option
+
+(** Association between compiler and repositories:
+    [$opam/repo/index.packages] *)
+module Compiler_index: IO_FILE with type t = repository_name compiler_map
 
 (** Repository config: [$opam/repo/$repo/config] *)
 module Repo_config: IO_FILE with type t = repository
