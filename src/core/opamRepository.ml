@@ -111,7 +111,9 @@ let nv_set_of_files ~all files =
 let compiler_set_of_files files =
   let files = OpamFilename.Set.filter (OpamFilename.ends_with ".comp") files in
   OpamFilename.Set.fold (fun f set ->
-    OpamCompiler.Set.add (OpamCompiler.of_filename f) set
+      match OpamCompiler.of_filename f with
+      | None   -> set
+      | Some f -> OpamCompiler.Set.add f set
   ) files OpamCompiler.Set.empty
 
 let read_tmp dir =

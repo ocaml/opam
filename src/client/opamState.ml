@@ -711,7 +711,7 @@ let load_state ?(save_cache=true) call_site =
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compilers =
     let files = OpamFilename.rec_files (OpamPath.compilers_dir root) in
-    let comp = List.map OpamCompiler.of_filename files in
+    let comp = OpamMisc.filter_map OpamCompiler.of_filename files in
     OpamCompiler.Set.of_list comp in
   let switch, compiler =
     try switch, OpamSwitch.Map.find switch aliases

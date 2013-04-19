@@ -1363,13 +1363,16 @@ module X = struct
       let opam_version =
         OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string |> OpamVersion.of_string) in
-      let name_d, version_d =
-        let base = OpamCompiler.to_string
-            (OpamCompiler.of_filename filename) in
-        OpamCompiler.of_string base,
-        match OpamMisc.cut_at base '+' with
-        | None       -> OpamCompiler.Version.of_string base
-        | Some (n,_) -> OpamCompiler.Version.of_string n in
+      let name_d, version_d = match OpamCompiler.of_filename filename with
+        | None   -> OpamSystem.internal_error
+                      "%s is not a valid compiler description file."
+                      (OpamFilename.to_string filename)
+        | Some c ->
+          let base = OpamCompiler.to_string c in
+          OpamCompiler.of_string base,
+          match OpamMisc.cut_at base '+' with
+          | None       -> OpamCompiler.Version.of_string base
+          | Some (n,_) -> OpamCompiler.Version.of_string n in
       let name =
         OpamFormat.assoc_default name_d s s_name
           (OpamFormat.parse_string |> OpamCompiler.of_string) in
