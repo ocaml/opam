@@ -194,24 +194,6 @@ let update_pinned_packages t ~verbose packages =
   (* update $opam/$oversion/reinstall for all installed switches *)
   OpamState.add_to_reinstall ~all:true t updates
 
-(* let check_package_updates t ~verbose =
-  log "check-package-updates";
-*)
-
-
-(*
-  (* Look at all the 'updated' files in the different backends, and
-     keep only the updates which will concern 'active' packages
-     (eg. the one which will be picked on next 'opam upgrade') *)
-  let updates =
-    OpamPackage.Map.fold (fun nv repo set ->
-      let updates = updated_packages repo in
-      if not (OpamPackage.Set.mem nv updates) then set
-      else OpamPackage.Set.add nv set
-    ) t.package_index OpamPackage.Set.empty in
-
-*)
-
 (* Update the package contents, display the new packages and update
    reinstall *)
 let relink_packages t ~verbose old_index =
@@ -315,7 +297,6 @@ let relink_packages t ~verbose old_index =
   (* update $opam/$oversion/reinstall for all installed switches *)
   let updates = OpamPackage.Set.of_list (OpamPackage.Map.keys updated_packages) in
   OpamState.add_to_reinstall ~all:true t updates
-
 
 let compare_repo t r1 r2 =
   OpamRepository.compare
