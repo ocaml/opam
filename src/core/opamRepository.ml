@@ -67,12 +67,8 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val init: address:dirname -> unit
-  val update: address:dirname -> OpamFilename.Set.t
-  val download_archive: address:dirname -> package -> filename download
-  val download_file: ?checksum:string -> package -> filename -> filename download
-  val download_dir: package -> ?dst:dirname -> dirname -> dirname download
-  val upload_dir: address:dirname -> dirname -> OpamFilename.Set.t
+  val pull_file: dirname -> filename -> filename download
+  val pull_dir: dirname -> dirname -> dirname download
 end
 
 exception Unknown_backend

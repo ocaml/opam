@@ -96,21 +96,18 @@ val update: repository -> unit
     create {i $nv.tar.gz}. *)
 val download: repository -> package -> unit
 
-(** Copy the additional package files in the current dir *)
-val copy_files: repository_root -> package -> OpamFilename.Set.t
+(** Backend signature *)
+module type BACKEND = sig
 
-(** [make_archive repo_kind nv] build ./$nv.tar.gz, assuming the
-    repository kind is [repo_kind].
-    By default, the digest that appear in
-    {i $NAME.$VERSION/url} is not modified,
-    unless [gener_digest = true] is given. *)
-val make_archive: ?gener_digest:bool -> ?local_path:dirname -> package -> unit
+  (** [pull_file local_dir remote_file] pull the contents of
+      [remote_file] into [local_dir]. *)
+  val pull_file: dirname -> filename -> filename download
 
-(** Get the list of packages *)
-val packages: repository_root -> string name_map * package_set
+    (** [pull_dir local_dir remote_dir] pull the contents of
+        [remote_dir] into [local_dir]. *)
+  val pull_dir: dirname -> dirname -> dirname download
 
-(** Get the list of compilers (and their eventual description file) *)
-val compilers: repository_root -> (filename * filename option) compiler_map
+end
 
 (** Register a repository backend *)
 val register_backend: repository_kind -> (module BACKEND) -> unit
