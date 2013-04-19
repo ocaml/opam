@@ -91,28 +91,6 @@ let copy_dir ~src ~dst =
       "Cannot create %s as the directory already exists." (Dir.to_string dst);
   OpamSystem.command [ "cp"; "-pPR"; Dir.to_string src; Dir.to_string dst ]
 
-let copy_unique_dir ~src ~dst =
-  with_tmp_dir (fun tmp ->
-    OpamSystem.command [
-      "rsync"; "-a";
-      Filename.concat (Dir.to_string src) "/";
-      Dir.to_string tmp
-    ];
-    match sub_dirs tmp with
-    | [f] ->
-      rmdir dst;
-      move_dir ~src:f ~dst
-    | [] ->
-      OpamSystem.internal_error
-        "Error while copying %s to %s: empty directory."
-        (Dir.to_string src) (Dir.to_string dst)
-    | l ->
-      let l = List.map Filename.basename l in
-      OpamSystem.internal_error
-        "Error while copying %s to %s: too many subdirectories (%s)"
-        (Dir.to_string src) (Dir.to_string dst) (String.concat ", " l)
-  )
-
 let link_dir ~src ~dst =
   if exists_dir dst then
     OpamSystem.internal_error "Cannot link: %s already exists." (Dir.to_string dst)
