@@ -15,7 +15,7 @@
 
 open OpamTypes
 
-let log fmt = OpamGlobals.log "SOLVER" fmt
+let log fmt = OpamGlobals.log "CUDF" fmt
 
 let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
