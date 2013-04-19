@@ -499,15 +499,17 @@ type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t
 
 (** Compiler repository state *)
 type compiler_repository_state = {
-  comp_repo : repository;
-  comp_file : filename;
-  comp_descr: filename option;
+  comp_repo     : repository;
+  comp_file     : filename;
+  comp_descr    : filename option;
+  comp_checksums: string list;
 }
 
 (** Package repository state *)
 type package_repository_state = {
-  pkg_repo   : repository;
-  pkg_opam   : filename;
-  pkg_descr  : filename option;
-  pkg_archive: filename option;
+  pkg_repo     : repository;
+  pkg_opam     : filename;
+  pkg_descr    : filename option;
+  pkg_archive  : filename option;
+  pkg_checksums: string list;
 }
