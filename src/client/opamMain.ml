@@ -779,44 +779,6 @@ let upgrade =
   Term.(pure upgrade $global_options $build_options $package_list),
   term_info "upgrade" ~doc ~man
 
-(* UPLOAD *)
-let upload =
-  let doc = "Upload a package to an OPAM repository." in
-  let man = [
-    `S "DESCRIPTION";
-    `P "This command uploads an already built package to a remote repository, \
-        if the remote repository is not read-only.";
-  ] in
-  let opam =
-    mk_opt ["opam"]
-      "FILE" "Specify the .opam file that will be uploaded to repo://packages/name.version/opam"
-      Arg.(some filename) None in
-  let descr =
-    mk_opt ["descr"]
-      "FILE" "Specify the .descr file that will be uploaded to repo://packages/name.version/descr"
-      Arg.(some filename) None in
-  let archive =
-    mk_opt ["archive"]
-      "FILE" "Specify the archive that will be uploaded to repo://archives/name.version+opam.tar.gz"
-      Arg.(some filename) None in
-  let repo =
-    let doc = Arg.info ~docv:"REPO" ~doc:"Specify the repository to upload to." [] in
-    Arg.(required & pos 0 (some repository_name) None & doc) in
-  let upload global_options opam descr archive repo =
-    set_global_options global_options;
-    let upl_opam = match opam with
-      | None   -> OpamGlobals.error_and_exit "missing OPAM file"
-      | Some s -> s in
-    let upl_descr = match descr with
-      | None   -> OpamGlobals.error_and_exit "missing description file"
-      | Some s -> s in
-    let upl_archive = match archive with
-      | None   -> OpamGlobals.error_and_exit "missing archive file"
-      | Some s -> s in
-    Client.upload { upl_opam; upl_descr; upl_archive } repo in
-  Term.(pure upload $global_options $opam $descr $archive $repo),
-  term_info "upload" ~doc ~man
-
 (* REPOSITORY *)
 let repository_doc = "Manage OPAM repositories."
 let repository name =
@@ -1152,7 +1114,6 @@ let commands = [
   remote; repository;
   switch;
   pin;
-  upload;
   help;
 ]
 

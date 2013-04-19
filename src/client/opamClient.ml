@@ -819,33 +819,6 @@ module API = struct
       OpamSolution.apply t Reinstall (OpamSolver.sequential_solution to_process) in
     OpamSolution.check_solution solution
 
-  let upload upload repo =
-    log "upload %s %s" (string_of_upload upload) (OpamRepositoryName.to_string repo);
-    let t = OpamState.load_state "upload" in
-    let opam = OpamFile.OPAM.read upload.upl_opam in
-    let name = OpamFile.OPAM.name opam in
-    let version = OpamFile.OPAM.version opam in
-    let nv = OpamPackage.create name version in
-    let repo =
-      if OpamState.mem_repository t repo then
-        OpamState.find_repository t repo
-      else
-        OpamGlobals.error_and_exit "Unbound repository %S (available = %s)"
-          (OpamRepositoryName.to_string repo)
-          (OpamState.string_of_repositories t.repositories) in
-    let repo_p = OpamPath.Repository.create t.root repo.repo_name in
-    let upload_repo = OpamPath.Repository.upload_dir repo_p in
-    let upload_opam = OpamPath.Repository.opam upload_repo None nv in
-    let upload_descr = OpamPath.Repository.descr upload_repo None nv in
-    let upload_archives = OpamPath.Repository.archive upload_repo nv in
-    OpamFilename.copy ~src:upload.upl_opam ~dst:upload_opam;
-    OpamFilename.copy ~src:upload.upl_descr ~dst:upload_descr;
-    OpamFilename.copy ~src:upload.upl_archive ~dst:upload_archives;
-    OpamRepository.upload repo;
-    OpamFilename.rmdir (OpamPath.Repository.package upload_repo None nv);
-    OpamFilename.remove (OpamPath.Repository.archive upload_repo nv)
-
-
   module PIN        = OpamPinCommand
   module REPOSITORY = OpamRepositoryCommand
   module CONFIG     = OpamConfigCommand
@@ -891,9 +864,6 @@ module SafeAPI = struct
 
   let update repos =
     global_lock (fun () -> API.update repos)
-
-  let upload u r =
-    global_lock (fun () -> API.upload u r)
 
   module CONFIG = struct
 
