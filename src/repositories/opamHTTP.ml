@@ -117,6 +117,13 @@ let get_checksum state local_file =
 
 module B = struct
 
+  let repo repo_root repo_address = {
+    repo_name     = OpamRepositoryName.of_string "http";
+    repo_priority = 0;
+    repo_kind     = `http;
+    repo_root; repo_address;
+  }
+
   let init repo =
     try
       (* Download urls.txt *)
@@ -142,19 +149,17 @@ module B = struct
     OpamFilename.mkdir local_dir;
     OpamFilename.download ~overwrite:true remote_file local_dir
 
-  let pull_dir dirname filename =
-    let repo = OpamRepository.default () in
-    let repo = { repo with
-                 repo_root    = dirname;
-                 repo_address = filename;
-               } in
+  let pull_files ~all repo =
+    let local_files =
+      if all then OpamFilename.rec_files repo.repo_root
+      else local_files repo in
     let state = make_state ~download_index:true repo.repo_address in
     OpamGlobals.msg "Synchronizing %s with %s.\n"
       (OpamFilename.prettify_dir state.local_dir)
       (OpamFilename.prettify_dir repo.repo_address);
     if state.local_dir <> state.remote_dir then (
       let (--) = OpamFilename.Set.diff in
-      let current = OpamFilename.Set.of_list (local_files repo) in
+      let current = OpamFilename.Set.of_list local_files in
       let to_keep = OpamFilename.Set.filter (is_up_to_date state) state.local_files in
       let to_delete = current -- to_keep in
       let new_files =
@@ -193,6 +198,13 @@ module B = struct
     ) else
       Up_to_date repo.repo_root
 
+  let pull_dir dirname address =
+    let repo = repo dirname address in
+    pull_files ~all:true repo
+
+  let pull_repo repo =
+    ignore (pull_files ~all:false repo)
+
   (* XXX: add a proxy *)
   let pull_file dirname filename =
     OpamGlobals.msg "Downloading %s.\n" (OpamFilename.prettify filename);
@@ -205,8 +217,7 @@ module B = struct
 end
 
 let make_urls_txt repo_root =
-  let repo = OpamRepository.default () in
-  let repo = { repo with repo_root } in
+  let repo = OpamRepository.local repo_root in
   let local_index_file = OpamFilename.of_string "urls.txt" in
   let index =
     List.fold_left (fun set f ->

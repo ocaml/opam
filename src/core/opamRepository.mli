@@ -103,9 +103,13 @@ module type BACKEND = sig
       [remote_file] into [local_dir]. *)
   val pull_file: dirname -> filename -> filename download
 
-    (** [pull_dir local_dir remote_dir] pull the contents of
-        [remote_dir] into [local_dir]. *)
+  (** [pull_dir local_dir remote_dir] pull the contents of
+      [remote_dir] into [local_dir]. *)
   val pull_dir: dirname -> dirname -> dirname download
+
+  (** Pull a repository. Usually very similar to [pull_dir] but some
+      backends have special need. *)
+  val pull_repo: repository -> unit
 
 end
 

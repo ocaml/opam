@@ -76,6 +76,15 @@ module B = struct
       (OpamFilename.prettify_dir remote_dirname);
     rsync_dirs remote_dirname local_dirname
 
+  let pull_repo repo =
+    ignore (pull_file repo.repo_root (OpamPath.Repository.version repo));
+    List.iter
+      (fun (local, remote) -> ignore (pull_dir (local repo) (remote repo)))
+      [
+        (OpamPath.Repository.packages_dir , OpamPath.Repository.remote_packages_dir);
+        (OpamPath.Repository.compilers_dir, OpamPath.Repository.remote_compilers_dir);
+      ]
+
 end
 
 let register () =

@@ -69,6 +69,7 @@ module Map = OpamMisc.Map.Make(O)
 module type BACKEND = sig
   val pull_file: dirname -> filename -> filename download
   val pull_dir: dirname -> dirname -> dirname download
+  val pull_repo: repository -> unit
 end
 
 exception Unknown_backend
@@ -98,7 +99,7 @@ let init repo =
   OpamFilename.mkdir (OpamPath.Repository.packages_dir repo);
   OpamFilename.mkdir (OpamPath.Repository.archives_dir repo);
   OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
-  ignore (B.pull_dir repo.repo_root repo.repo_address)
+  ignore (B.pull_repo repo)
 
 let nv_set_of_files ~all files =
   OpamPackage.Set.of_list
@@ -272,7 +273,7 @@ let make_archive ?(gener_digest=false) repo nv =
           log "copying %s to %s"
             (OpamFilename.Dir.to_string d)
             (OpamFilename.Dir.to_string extract_dir);
-          OpamFilename.copy_unique_dir ~src:d ~dst:extract_dir
+          OpamFilename.copy_dir ~src:d ~dst:extract_dir
         )
     );
 
@@ -441,7 +442,7 @@ let clean repo active_packages =
 let update repo =
   log "update %s" (to_string repo);
   let module B = (val find_backend repo: BACKEND) in
-  let _result = B.pull_dir repo.repo_root repo.repo_address in
+  B.pull_repo repo;
   check_version repo
 
 let get_upstream_updates repo packages =

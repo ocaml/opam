@@ -50,19 +50,26 @@ module Make (VCS: VCS) = struct
     end else
       None
 
-  let rec pull_dir local_dirname remote_dirname =
-    let repo = OpamRepository.default () in
-    let repo = { repo with
-                 repo_root    = local_dirname;
-                 repo_address = remote_dirname;
-               } in
+  let rec pull_repo repo =
     match check_updates repo with
     | None ->
       OpamFilename.mkdir repo.repo_root;
       OpamFilename.in_dir repo.repo_root (fun () -> VCS.init repo);
-      pull_dir local_dirname remote_dirname
+      pull_repo repo
     | Some updated ->
       if updated then Result repo.repo_root
       else Up_to_date repo.repo_root
+
+  let pull_dir dirname address =
+    let repo = OpamRepository.default () in
+    let repo = {
+      repo with
+      repo_root    = dirname;
+      repo_address = address;
+    } in
+    pull_repo repo
+
+  let pull_repo repo =
+    ignore (pull_repo repo)
 
 end
