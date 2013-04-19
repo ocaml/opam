@@ -241,6 +241,12 @@ let repo_kind_flag =
             are 'http', 'local', 'git' or 'darcs')."
     Arg.(some (enum kinds)) None
 
+let jobs_flag =
+  mk_opt ["j";"jobs"] "JOBS"
+    "Set the maximal number of concurrent jobs to use. You can also set it using \
+     the OPAMJOBS environment variable."
+    Arg.(some int) None
+
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
 
@@ -335,16 +341,11 @@ let build_options =
        care is the best way to corrupt your current compiler environement. When using \
        this option OPAM will run a dry-run of the solver and then fake the build and  \
        install commands." in
-  let jobs =
-    mk_opt ["j";"jobs"] "JOBS"
-      "Set the maximal number of concurrent jobs to use. You can also set it using \
-       the OPAMJOBS environment variable."
-      Arg.(some int) None in
 
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
     $build_doc $dryrun $external_tags $cudf_file $fake
-    $jobs)
+    $jobs_flag)
 
 let guess_repository_kind kind address =
   match kind with
@@ -750,10 +751,11 @@ let update =
         that can be upgraded will be printed out, and the user can use \
         $(b,opam upgrade) to upgrade those.";
   ] in
-  let update global_options repositories =
+  let update global_options jobs repositories =
     set_global_options global_options;
+    OpamGlobals.jobs := jobs;
     Client.update repositories in
-  Term.(pure update $global_options $repository_list),
+  Term.(pure update $global_options $jobs_flag $repository_list),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
