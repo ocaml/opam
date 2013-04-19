@@ -70,6 +70,12 @@ val archives_dir: t -> dirname
 (** Return the repository index: {i $opam/repo/index} *)
 val repo_index: t -> filename
 
+(** Return the packages index: {i $opam/repo/index.packages} *)
+val package_index: t -> filename
+
+(** Return the compiler index: {i $opam/repo/index.compilers} *)
+val compiler_index: t -> filename
+
 (** Init scripts *)
 val init: t -> dirname
 
@@ -217,10 +223,6 @@ module Repository: sig
 
   (** Return the archive folder: {i $opam/repo/$repo/archives/} *)
   val archives_dir: repository_root -> dirname
-
-  (** Return the list of updated packages:
-      {i $opam/repo/$repo/updated} *)
-  val updated: repository_root -> filename
 
   (** Return the upload folder for a given version:
       {i $opam/repo/$repo/upload/} *)

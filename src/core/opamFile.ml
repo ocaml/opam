@@ -264,13 +264,21 @@ module X = struct
 
   end
 
-  module Updated = struct
+  module Installed = struct
 
-    let internal = "updated"
+    let internal = "installed"
 
     type t = package_set
 
     let empty = OpamPackage.Set.empty
+
+    let check t =
+      let map = OpamPackage.to_map t in
+      OpamPackage.Name.Map.iter (fun n vs ->
+        if OpamPackage.Version.Set.cardinal vs <> 1 then
+          OpamGlobals.error_and_exit "Multiple versions installed for package %s: %s"
+            (OpamPackage.Name.to_string n) (OpamPackage.Version.Set.to_string vs)
+      ) map
 
     let of_string _ s =
       let lines = Lines.of_string s in
@@ -285,6 +293,7 @@ module X = struct
       !map
 
     let to_string _ t =
+      check t;
       let buf = Buffer.create 1024 in
       OpamPackage.Set.iter
         (fun nv ->
@@ -293,26 +302,6 @@ module X = struct
             (OpamPackage.Version.to_string (OpamPackage.version nv)))
         t;
       Buffer.contents buf
-
-  end
-
-  module Installed = struct
-
-    include Updated
-
-    let internal = "installed"
-
-    let check t =
-      let map = OpamPackage.to_map t in
-      OpamPackage.Name.Map.iter (fun n vs ->
-        if OpamPackage.Version.Set.cardinal vs <> 1 then
-          OpamGlobals.error_and_exit "Multiple versions installed for package %s: %s"
-            (OpamPackage.Name.to_string n) (OpamPackage.Version.Set.to_string vs)
-      ) map
-
-    let to_string f t =
-      check t;
-      Updated.to_string f t
 
   end
 
@@ -366,13 +355,17 @@ module X = struct
 
     let internal = "package-index"
 
-    type t = repository_name package_map
+    type t = repository_name package_map option
 
-    let empty = OpamPackage.Map.empty
+    let empty = None
 
     let of_string _ str =
       let lines = Lines.of_string str in
-      List.fold_left (fun map -> function
+      let checksum = ref None in
+      let map = List.fold_left (fun map -> function
+        | [c] when !checksum = None ->
+          checksum := Some c;
+          map
         | [nv; r] ->
           let nv = OpamPackage.of_string nv in
           let r  = OpamRepositoryName.of_string r in
@@ -381,18 +374,31 @@ module X = struct
         | l       ->
           OpamGlobals.error_and_exit "%s: invalid package index line"
             (String.concat " " l)
-      ) empty lines
+      ) OpamPackage.Map.empty lines in
+      match !checksum with
+      | None          -> None
+      | Some expected ->
+        let actual =
+          let root = OpamFilename.Dir.of_string !OpamGlobals.root_dir in
+          OpamFilename.digest (OpamPath.repo_index root) in
+        if actual <> expected then
+          None
+        else
+          Some map
 
-    let to_string _ map =
-      let lines = OpamPackage.Map.fold (fun nv r lines ->
+    let to_string _ = function
+      | None     -> ""
+      | Some map ->
+        let lines = OpamPackage.Map.fold (fun nv r lines ->
           let nv = OpamPackage.to_string nv in
           let r  = OpamRepositoryName.to_string r in
           [nv; r] :: lines
         ) map [] in
-      Lines.to_string (
-        ["# File generated from 'repo/index'. Do not edit!"]
-        (* XXX: add a checksum of repo/index to re-generate the file when it changes *)
-        :: List.rev lines)
+        let repo_index =
+          let root = OpamFilename.Dir.of_string !OpamGlobals.root_dir  in
+          OpamPath.repo_index root in
+        let checksum = OpamFilename.digest repo_index in
+        Lines.to_string ([ checksum ] :: List.rev lines)
 
   end
 
@@ -1683,11 +1689,6 @@ end
 module Installed_roots = struct
   include Installed_roots
   include Make (Installed_roots)
-end
-
-module Updated = struct
-  include Updated
-  include Make (Updated)
 end
 
 module Subst = struct
