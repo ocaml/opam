@@ -382,11 +382,6 @@ let update r =
 
   let prefix = read_prefix repo in
   let updated_packages = nv_set_of_files ~all:false updated_files in
-  let updated_compilers = compiler_set_of_files updated_files in
-
-  (* Maintin the list of updated compilers *)
-  OpamFile.Updated_compilers.write
-    (OpamPath.Repository.updated_compilers repo) updated_compilers;
 
   (* Clean-up archives and tmp files on URL changes *)
   OpamPackage.Set.iter (fun nv ->
@@ -405,31 +400,25 @@ let update r =
   (* For each package in the cache, look at what changed upstream *)
   let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
   log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
-  let updated_cached_packages = OpamPackage.Set.filter (fun nv ->
-      let prefix = find_prefix prefix nv in
-      let url_f = OpamPath.Repository.url repo prefix nv in
-      if OpamFilename.exists url_f then (
-        let url = OpamFile.URL.read url_f in
-        let kind = match OpamFile.URL.kind url with
-          | None   -> kind_of_url (OpamFile.URL.url url)
-          | Some k -> k in
-        let checksum = OpamFile.URL.checksum url in
-        let url = OpamFile.URL.url url in
-        log "updating %s:%s:%s" url
-          (string_of_repository_kind kind)
-          (match checksum with None -> "*" | Some c -> c);
-        match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
-        | Not_available -> OpamSystem.internal_error "%s is not available." url
-        | Up_to_date _  -> false
-        | Result _      -> true
-      ) else
-        false
-    ) cached_packages in
-
-  let updated_packages =
-    OpamPackage.Set.union updated_packages updated_cached_packages in
-  OpamFile.Updated_packages.write
-    (OpamPath.Repository.updated_packages repo) updated_packages
+  OpamPackage.Set.iter (fun nv ->
+    let prefix = find_prefix prefix nv in
+    let url_f = OpamPath.Repository.url repo prefix nv in
+    if OpamFilename.exists url_f then (
+      let url = OpamFile.URL.read url_f in
+      let kind = match OpamFile.URL.kind url with
+        | None   -> kind_of_url (OpamFile.URL.url url)
+        | Some k -> k in
+      let checksum = OpamFile.URL.checksum url in
+      let url = OpamFile.URL.url url in
+      log "updating %s:%s:%s" url
+        (string_of_repository_kind kind)
+        (match checksum with None -> "*" | Some c -> c);
+      match OpamFilename.in_dir dir (fun () -> download_one kind nv url checksum) with
+      | Not_available -> OpamSystem.internal_error "%s is not available." url
+      | Up_to_date _  -> ()
+      | Result _      -> ()
+    )
+  ) cached_packages
 
 let find_backend = find_backend_by_kind
 
