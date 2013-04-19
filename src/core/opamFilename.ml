@@ -206,16 +206,13 @@ let rec_files d =
   List.rev (List.rev_map of_string fs)
 
 let copy ~src ~dst =
-  OpamSystem.copy (to_string src) (to_string dst)
+  if src <> dst then OpamSystem.copy (to_string src) (to_string dst)
 
 let move ~src ~dst =
-  OpamSystem.command [ "mv"; to_string src; to_string dst ]
+  if src <> dst then OpamSystem.command [ "mv"; to_string src; to_string dst ]
 
 let link ~src ~dst =
-  (*  if Lazy.force OpamGlobals.os = OpamGlobals.Win32 then
-      copy src dst
-      else *)
-  OpamSystem.link (to_string src) (to_string dst)
+  if src <> dst then OpamSystem.link (to_string src) (to_string dst)
 
 let process_in fn src dst =
   let src_s = to_string src in
