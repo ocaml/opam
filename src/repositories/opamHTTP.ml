@@ -42,23 +42,22 @@ let local_files repo =
   OpamFilename.rec_files (OpamPath.Repository.archives_dir repo) @
   OpamFilename.rec_files (OpamPath.Repository.compilers_dir repo)
 
-let make_state ~download_index remote_dir =
-  if List.mem_assoc remote_dir !state_cache then
-    List.assoc remote_dir !state_cache
+let make_state ~download_index repo =
+  if List.mem_assoc repo.repo_address !state_cache then
+    List.assoc repo.repo_address !state_cache
   else (
-    let local_dir = OpamFilename.cwd () in
-    let remote_index_file = remote_dir // "urls.txt" in
-    let local_index_file = index_file local_dir in
-    let local_index_file_save = index_file_save local_dir in
-    let remote_index_archive = remote_dir // "index.tar.gz" in
-    let local_index_archive = local_dir // "index.tar.gz" in
+    let remote_index_file = repo.repo_address // "urls.txt" in
+    let local_index_file = index_file repo.repo_root in
+    let local_index_file_save = index_file_save repo.repo_root in
+    let remote_index_archive = repo.repo_address // "index.tar.gz" in
+    let local_index_archive = repo.repo_root // "index.tar.gz" in
     let index =
       if download_index then (
         if OpamFilename.exists local_index_file then
           OpamFilename.move ~src:local_index_file ~dst:local_index_file_save;
         try
           let file =
-            OpamFilename.download ~overwrite:false remote_index_file local_dir in
+            OpamFilename.download ~overwrite:false remote_index_file repo.repo_root  in
           OpamFilename.remove local_index_file_save;
           file;
         with e ->
@@ -76,8 +75,8 @@ let make_state ~download_index remote_dir =
             | None  ->  0o640
             | Some p -> p in
           let digest = OpamFilename.Attribute.md5 r in
-          let remote = OpamFilename.create remote_dir base in
-          let local = OpamFilename.create local_dir base in
+          let remote = OpamFilename.create repo.repo_address base in
+          let local = OpamFilename.create repo.repo_root base in
           OpamFilename.Map.add remote local rl,
           OpamFilename.Map.add local remote lr,
           OpamFilename.Set.add local locals,
@@ -90,12 +89,13 @@ let make_state ~download_index remote_dir =
            [], []) in
       remote_local, local_remote, locals, perms, digests in
     let state = {
-      remote_dir; local_dir;
+      remote_dir = repo.repo_address;
+      local_dir  = repo.repo_root;
       remote_index_archive; local_index_archive;
       local_files; remote_local; local_remote;
       file_permissions; file_digests;
     } in
-    state_cache := (remote_dir, state) :: !state_cache;
+    state_cache := (repo.repo_address, state) :: !state_cache;
     state
   )
 
@@ -127,7 +127,7 @@ module B = struct
   let init repo =
     try
       (* Download urls.txt *)
-      let state = make_state ~download_index:true repo.repo_address in
+      let state = make_state ~download_index:true repo in
       try
         (* Download index.tar.gz *)
         let file =
@@ -153,7 +153,7 @@ module B = struct
     let local_files =
       if all then OpamFilename.rec_files repo.repo_root
       else local_files repo in
-    let state = make_state ~download_index:true repo.repo_address in
+    let state = make_state ~download_index:true repo in
     OpamGlobals.msg "Synchronizing %s with %s.\n"
       (OpamFilename.prettify_dir state.local_dir)
       (OpamFilename.prettify_dir repo.repo_address);
@@ -224,8 +224,7 @@ let make_urls_txt repo_root =
       if not (OpamFilename.exists f) then set
       else (
         let basename =
-          OpamFilename.Base.of_string
-            (OpamFilename.remove_prefix (OpamFilename.cwd()) f) in
+          OpamFilename.Base.of_string (OpamFilename.remove_prefix repo_root f) in
         let perm =
           let s = Unix.stat (OpamFilename.to_string f) in
           s.Unix.st_perm in

@@ -127,10 +127,9 @@ let install_package t nv =
           log "creating %s" (OpamFilename.Dir.to_string dst);
           OpamFilename.mkdir dst;
         );
-        let src = OpamFilename.cwd () in
         List.iter (fun b ->
-          if check ~src ~dst b then
-            let file = OpamFilename.create src b.c in
+          if check ~src:build_dir ~dst b then
+            let file = OpamFilename.create build_dir b.c in
             OpamFilename.copy_in file dst
         ) files in
 
@@ -149,13 +148,12 @@ let install_package t nv =
 
       (* bin *)
       List.iter (fun (base, dst) ->
-        let src_dir = OpamFilename.cwd () in
         let dst_dir = OpamPath.Switch.bin t.root t.switch in
-        let src_file = OpamFilename.create src_dir base.c in
+        let src_file = OpamFilename.create build_dir base.c in
         let dst_file = match dst with
           | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
           | Some d -> OpamFilename.create dst_dir d in
-        if check ~src:src_dir ~dst:dst_dir base then
+        if check ~src:build_dir ~dst:dst_dir base then
           OpamFilename.copy ~src:src_file ~dst:dst_file;
       ) (OpamFile.Dot_install.bin install);
 
