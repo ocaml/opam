@@ -189,16 +189,20 @@ let install_package t nv =
 
 let get_archive t nv =
   log "get_archive %s" (OpamPackage.to_string nv);
-  let aux repo_p repo =
-    OpamRepository.download repo nv;
-    let src = OpamPath.Repository.archive repo_p nv in
-    let dst = OpamPath.archive t.root nv in
-    if OpamFilename.exists src then (
+  let dst = OpamPath.archive t.root nv in
+  if OpamFilename.exists dst then Some dst
+  else
+    match OpamState.package_repository_state t nv with
+    | None   -> None
+    | Some s ->
+      begin match s.pkg_archive with
+        | None   -> OpamRepository.download s.pkg_repo nv
+        | Some _ -> ()
+      end;
+      let repo_p = OpamPath.Repository.create t.root s.pkg_repo.repo_name in
+      let src = OpamPath.Repository.archive repo_p nv in
       OpamFilename.link ~src ~dst;
       Some dst
-    ) else
-      None in
-  OpamState.with_repository t nv aux
 
 (* Prepare the package build:
    * apply the patches
@@ -248,6 +252,7 @@ let extract_package t nv =
   OpamFilename.rmdir build_dir;
   begin match OpamState.pinned_path t (OpamPackage.name nv) with
     | Some p ->
+
       let pinned_dir =
         OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
       if not (OpamFilename.exists_dir pinned_dir) then (
@@ -260,17 +265,28 @@ let extract_package t nv =
         OpamGlobals.msg
           "Synchronization: nothing to do as the pinned package has already \
            been initialized.\n";
-      let _files = OpamState.with_repository t nv (fun repo _ ->
-          OpamFilename.in_dir pinned_dir (fun () -> OpamRepository.copy_files repo nv)
-        ) in
+
+      begin (* Copy eventual files *)
+        try
+          let repo = OpamPackage.Map.find nv t.package_index in
+          let repo_p = OpamPath.Repository.create t.root repo in
+          let _files = OpamFilename.in_dir pinned_dir (fun () ->
+            OpamRepository.copy_files repo_p nv
+          ) in ()
+        with Not_found -> ()
+      end;
+
+      (* Copy the resulting dir *)
       OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
-    | _ ->
+
+    | None ->
       match get_archive t nv with
       | None         -> ()
       | Some archive ->
         OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
         OpamFilename.extract archive build_dir
   end;
+
   prepare_package_build t nv;
   build_dir
 
@@ -322,17 +338,18 @@ let remove_package_aux t ~metadata ~rm_build nv =
     | remove ->
       OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
       let p_build = OpamPath.Switch.build t.root t.switch nv in
-      (* We try to run the remove scripts in the folder where it was extracted
-         If it does not exist, we try to download and extract the archive again,
-         if that fails, we don't really care. *)
-      (* We also use a small hack: if the remove command is simply 'ocamlfind remove xxx'
-         then, no need to extract the archive again. *)
+      (* We try to run the remove scripts in the folder where it was
+         extracted If it does not exist, we try to download and
+         extract the archive again, if that fails, we don't really
+         care. *)
+      (* We also use a small hack: if the remove command is simply
+         'ocamlfind remove xxx' then, no need to extract the archive
+         again. *)
       let use_ocamlfind = function
         | [] -> true
         | "ocamlfind" :: _ -> true
         | _ -> false in
       if not (OpamFilename.exists_dir p_build)
-      && OpamState.mem_repository t nv
       && not (List.for_all use_ocamlfind remove) then (
         try let _ = extract_package t nv in ()
         with _ -> ()
@@ -360,16 +377,17 @@ let remove_package_aux t ~metadata ~rm_build nv =
   if not !OpamGlobals.keep_build_dir && rm_build then
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
-  (* Clean-up the repositories *)
-  log "Cleaning-up the repositories";
-  let repos =
-    try OpamPackage.Name.Map.find (OpamPackage.name nv) t.repo_index
-    with _ -> [] in
-  List.iter (fun r ->
-    let repo_p = OpamPath.Repository.create t.root r in
-    let tmp_dir = OpamPath.Repository.tmp_dir repo_p nv in
-    OpamFilename.rmdir tmp_dir
-  ) repos;
+  (* Clean-up the active repository *)
+  log "Cleaning-up the active repository";
+  begin
+    try
+      let repo = OpamPackage.Map.find nv t.package_index in
+      let repo_p = OpamPath.Repository.create t.root repo in
+      let tmp_dir = OpamPath.Repository.tmp_dir repo_p nv in
+      OpamFilename.rmdir tmp_dir
+    with Not_found ->
+      ()
+  end;
 
   (* Remove the binaries *)
   log "Removing the binaries";
