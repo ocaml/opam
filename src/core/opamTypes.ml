@@ -408,10 +408,11 @@ module MakeActionGraph (Pkg: PKG) = struct
   module Components = Graph.Components.Make(PG)
   module O = Graph.Oper.I (PG)
   module Parallel = OpamParallel.Make(struct
-      include PG
-      include Topological
-      include Traverse
-      include Components
+    let string_of_vertex v = Pkg.to_string (action_contents v)
+    include PG
+    include Topological
+    include Traverse
+    include Components
     end)
   include PG
   include O

@@ -486,6 +486,7 @@ module Graph = struct
   module Traverse = Graph.Traverse.Dfs(PG)
   module Components = Graph.Components.Make(PG)
   module Parallel = OpamParallel.Make(struct
+    let string_of_vertex = to_string
     include PG
     include Topological
     include Traverse
@@ -493,26 +494,26 @@ module Graph = struct
   end)
 end
 
+let map_reduce jobs map merge init = function
+  | []           -> init
+  | [repository] -> merge (map repository) init
+  | repositories ->
+    if jobs = 1 then
+      List.fold_left (fun acc repo -> merge (map repo) acc) init repositories
+    else
+      let g = Graph.Parallel.create repositories in
+      Graph.Parallel.map_reduce jobs g ~map ~merge ~init
+
 let parallel_iter jobs fn = function
   | []           -> ()
   | [repository] -> fn repository
   | repositories ->
     if jobs = 1 then List.iter fn repositories
     else
-      let g = Graph.PG.create () in
-      List.iter (Graph.PG.add_vertex g) repositories;
+      let g = Graph.Parallel.create repositories in
       let pre _ = () in
-      let child = fn in
       let post _ = () in
-      try Graph.Parallel.parallel_iter jobs g ~pre ~child ~post
-      with
-      | Graph.Parallel.Errors (errors,_) ->
-        let string_of_error = function
-          | OpamParallel.Process_error r  -> OpamProcess.string_of_result r
-          | OpamParallel.Internal_error s -> s in
-        List.iter (fun ({repo_name}, e) ->
-          OpamGlobals.error "Error while processing %s\n%s"
-            (OpamRepositoryName.to_string repo_name)
-            (string_of_error e);
-        ) errors;
-        OpamGlobals.exit 2
+      let child = fn in
+      Graph.Parallel.iter jobs g ~pre ~post ~child
+
+let find_backend = find_backend_by_kind

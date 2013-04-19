@@ -283,7 +283,7 @@ let parallel_apply t action solution =
     remove_from_install deleted;
 
     (* 2/ We install the new packages *)
-    PackageActionGraph.Parallel.parallel_iter
+    PackageActionGraph.Parallel.iter
       (OpamState.jobs t) solution.to_process ~pre ~child ~post;
     if !OpamGlobals.fake then
       OpamGlobals.msg "Simulation complete.\n";
