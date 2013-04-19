@@ -469,3 +469,46 @@ let files r nv =
     else
       [] in
   OpamFilename.Set.of_list l
+
+module Graph = struct
+  module Vertex =  struct
+    type t = repository
+    let compare = compare
+    let hash = Hashtbl.hash
+    let equal r1 r2 = compare r1 r2 = 0
+  end
+  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
+  module Topological = Graph.Topological.Make (PG)
+  module Traverse = Graph.Traverse.Dfs(PG)
+  module Components = Graph.Components.Make(PG)
+  module Parallel = OpamParallel.Make(struct
+    include PG
+    include Topological
+    include Traverse
+    include Components
+  end)
+end
+
+let parallel_iter jobs fn = function
+  | []           -> ()
+  | [repository] -> fn repository
+  | repositories ->
+    if jobs = 1 then List.iter fn repositories
+    else
+      let g = Graph.PG.create () in
+      List.iter (Graph.PG.add_vertex g) repositories;
+      let pre _ = () in
+      let child = fn in
+      let post _ = () in
+      try Graph.Parallel.parallel_iter jobs g ~pre ~child ~post
+      with
+      | Graph.Parallel.Errors (errors,_) ->
+        let string_of_error = function
+          | OpamParallel.Process_error r  -> OpamProcess.string_of_result r
+          | OpamParallel.Internal_error s -> s in
+        List.iter (fun ({repo_name}, e) ->
+          OpamGlobals.error "Error while processing %s\n%s"
+            (OpamRepositoryName.to_string repo_name)
+            (string_of_error e);
+        ) errors;
+        OpamGlobals.exit 2
