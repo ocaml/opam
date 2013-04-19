@@ -1576,9 +1576,9 @@ module Make (F : F) = struct
       if OpamFilename.exists f then
         try F.of_string f (OpamFilename.read f)
         with OpamFormat.Bad_format msg ->
-          OpamGlobals.error_and_exit "File %s: %s" (OpamFilename.to_string f) msg
+          OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
       else
-        OpamGlobals.error_and_exit "File %s does not exist" (OpamFilename.to_string f)
+        OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
     )
 
   let safe_read f =
@@ -1594,7 +1594,7 @@ module Make (F : F) = struct
   let read_from_channel ic =
     try F.of_string dummy_file (OpamSystem.string_of_channel ic)
     with OpamFormat.Bad_format msg ->
-      OpamGlobals.error_and_exit "%s" msg
+      OpamSystem.internal_error "%s" msg
 
   let write_to_channel oc str =
     output_string oc (F.to_string dummy_file str)

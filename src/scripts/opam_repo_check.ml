@@ -58,8 +58,10 @@ module Check = struct
 end
 
 let () =
-  let t = OpamFilename.cwd () in
-  let prefix, packages = OpamRepository.packages t in
+
+  let repo = OpamRepository.local (OpamFilename.cwd ()) in
+
+  let prefix, packages = OpamRepository.packages repo in
 
   (** packages *)
   OpamPackage.Set.iter (fun package ->
@@ -68,15 +70,15 @@ let () =
     let prefix = OpamRepository.find_prefix prefix package in
 
     (** Descr *)
-    let descr = OpamPath.Repository.descr t prefix package in
+    let descr = OpamPath.Repository.descr repo prefix package in
     write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (** OPAM *)
-    let opam = OpamPath.Repository.opam t prefix package in
+    let opam = OpamPath.Repository.opam repo prefix package in
     write OpamFile.OPAM.write opam (Check.opam (OpamFile.OPAM.read opam));
 
     (** URL *)
-    let url = OpamPath.Repository.url t prefix package in
+    let url = OpamPath.Repository.url repo prefix package in
     if OpamFilename.exists url then (
       write OpamFile.URL.write url (OpamFile.URL.read url);
     );
@@ -100,4 +102,4 @@ let () =
     | None   -> ()
     | Some d -> write OpamFile.Comp_descr.write d (OpamFile.Comp_descr.read d);
 
-  ) (OpamRepository.compilers t);
+  ) (OpamRepository.compilers repo);
