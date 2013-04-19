@@ -526,5 +526,8 @@ type package_repository_state = {
   pkg_opam     : filename;
   pkg_descr    : filename option;
   pkg_archive  : filename option;
-  pkg_checksums: string list;
+  pkg_url      : filename option;
+  pkg_files    : dirname option;
+  pkg_metadata : string list;
+  pkg_contents : string list;
 }

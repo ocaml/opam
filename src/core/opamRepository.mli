@@ -75,25 +75,18 @@ val read_prefix: repository -> string name_map
 (** Find an eventual prefix in a map *)
 val find_prefix: string name_map -> package -> string option
 
-  (** Download a (remote) archive file, stored on the (remote) OPAM
-      repository, in the current repository. Return the local path to
-      the downloaded archive.*)
-  val download_archive: address:address -> package -> filename download
+(** {2 State} *)
 
-  (** Download a (remote) file and return the local path to the
-      downloaded file: {i $repo/tmp/$package/$filename}. *)
-  val download_file: ?checksum:string -> package -> filename -> filename download
+(** Compute a compiler state *)
+val compiler_state: repository -> compiler -> compiler_repository_state
 
-  (** Download a (remote) directory and return the local path to the
-      downloaded directory: {i $repo/tmp/$package/$dirname}. *)
-  val download_dir: package -> ?dst:dirname -> address -> dirname download
+(** Compute a package state. *)
+val package_state: repository -> string option -> package -> package_repository_state
 
-  (** Upload the content of the current directory to the directory
-      given as argument. Return the local paths corresponding to the
-      uploaded local files. *)
-  val upload_dir: address:dirname -> address -> OpamFilename.Set.t
+(** {2 Repository backends} *)
 
-end
+(** Initialize {i $opam/repo/$repo} *)
+val init: repository -> unit
 
 (** Update {i $opam/repo/$repo}. *)
 val update: repository -> unit
