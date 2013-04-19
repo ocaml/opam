@@ -53,6 +53,9 @@ let relink_compilers t ~verbose old_index =
       not (OpamCompiler.Map.mem comp comps2)
       || OpamCompiler.Map.find comp comps2 <> state
     ) comps1 in
+  let old_index = OpamCompiler.Map.filter (fun comp _ ->
+      OpamFilename.exists (OpamPath.compiler t.root comp)
+    ) old_index in
   let compiler_index = OpamState.compiler_state_index t in
   log "old-index: %s" (OpamMisc.string_of_list OpamCompiler.to_string
                          (OpamCompiler.Map.keys old_index));
@@ -204,6 +207,9 @@ let relink_packages t ~verbose old_index =
       || OpamPackage.Map.find nv ps2 <> state
     ) ps1 in
 
+  let old_index = OpamPackage.Map.filter (fun nv _ ->
+      OpamFilename.exists (OpamPath.opam t.root nv)
+    ) old_index in
   let package_index = OpamState.package_state_index t in
   log "old-index: %s"
     (OpamMisc.string_of_list OpamPackage.to_string (OpamPackage.Map.keys old_index));
