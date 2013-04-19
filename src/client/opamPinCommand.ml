@@ -71,7 +71,7 @@ let pin ~force action =
               (OpamPackage.Name.to_string name)
               (OpamPackage.Version.to_string (OpamPackage.version nv))
               (OpamPackage.Version.to_string version);
-      | Git _ | Darcs _ | Local _ ->
+      | Git _ | Darcs _ | Bazaar _ | Local _ ->
         if not force && OpamState.mem_installed_package_by_name t name then
           OpamGlobals.error_and_exit
             "Cannot pin %s to a dev version as it is already installed. You must uninstall it first (or use --force)."

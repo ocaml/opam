@@ -148,13 +148,13 @@ type repository_name = OpamRepositoryName.t
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
 (** Repository kind *)
-type repository_kind = [`http|`local|`git|`darcs]
+type repository_kind = [`http|`local|`git|`darcs|`bazaar]
 
 (** Pretty-print repository kinds. *)
-val string_of_repository_kind: [`http|`local|`git|`darcs] -> string
+val string_of_repository_kind: [`http|`local|`git|`darcs|`bazaar] -> string
 
 (** Parser of repository kinds. Raise an error if the kind is not valid. *)
-val repository_kind_of_string: string -> [`http|`local|`git|`darcs]
+val repository_kind_of_string: string -> [`http|`local|`git|`darcs|`bazaar]
 
 (** Repository address *)
 type address = dirname
@@ -314,6 +314,7 @@ type pin_option =
   | Local of dirname
   | Git of address
   | Darcs of address
+  | Bazaar of address
   | Unpin
 
 (** Pinned packages *)
@@ -326,7 +327,7 @@ type pin = {
 val string_of_pin: pin -> string
 
 (** Pin kind *)
-type pin_kind = [`version|`git|`darcs|`local|`unpin]
+type pin_kind = [`version|`git|`bazaar|`darcs|`local|`unpin]
 
 (** Pretty-printing of pin kinds. *)
 val pin_kind_of_string: string -> pin_kind

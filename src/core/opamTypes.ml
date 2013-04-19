@@ -60,7 +60,7 @@ type repository_root = dirname
 
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
-type repository_kind = [`http|`local|`git|`darcs]
+type repository_kind = [`http|`local|`git|`darcs|`bazaar]
 
 type repository = {
   repo_name    : repository_name;
@@ -74,6 +74,7 @@ let string_of_repository_kind = function
   | `local -> "local"
   | `git   -> "git"
   | `darcs -> "darcs"
+  | `bazaar-> "bazaar"
 
 let repository_kind_of_string = function
   | "wget"
@@ -82,6 +83,7 @@ let repository_kind_of_string = function
   | "rsync"
   | "local" -> `local
   | "git"   -> `git
+  | "bazaar"-> `bazaar
   | "darcs" -> `darcs
   | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
 
@@ -180,9 +182,10 @@ type pin_option =
   | Local of dirname
   | Git of address
   | Darcs of address
+  | Bazaar of address
   | Unpin
 
-type pin_kind = [`version|`git|`darcs|`local|`unpin]
+type pin_kind = [`version|`git|`bazaar|`darcs|`local|`unpin]
 
 let mk_git str =
   let path, commit = OpamMisc.git_of_string str in
@@ -205,6 +208,11 @@ let pin_option_of_string ?kind s =
       Darcs (OpamFilename.Dir.of_string s)
     else
       Darcs (OpamFilename.raw_dir s)
+  | Some `bazaar  ->
+    if Sys.file_exists s then
+      Bazaar (OpamFilename.Dir.of_string s)
+    else
+      Bazaar (OpamFilename.raw_dir s)
   | Some `local   -> Local (OpamFilename.Dir.of_string s)
   | Some `unpin   -> Unpin
   | None          ->
@@ -221,6 +229,7 @@ let string_of_pin_kind = function
   | `version -> "version"
   | `git     -> "git"
   | `darcs   -> "darcs"
+  | `bazaar  -> "bazaar"
   | `local   -> "local"
   | `unpin   -> "unpin"
 
@@ -242,6 +251,7 @@ let path_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
   | Git p
   | Darcs p
+  | Bazaar p
   | Local p   -> OpamFilename.Dir.to_string p
   | Unpin     -> "none"
 
@@ -249,6 +259,7 @@ let kind_of_pin_option = function
   | Version _ -> `version
   | Git _     -> `git
   | Darcs _   -> `darcs
+  | Bazaar _  -> `bazaar
   | Local _   -> `local
   | Unpin     -> `unpin
 

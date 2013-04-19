@@ -23,7 +23,8 @@ let log fmt =
 let () =
   OpamHTTP.register ();
   OpamGit.register ();
-  OpamDarcs.register();
+  OpamDarcs.register ();
+  OpamBazaar.register ();
   OpamLocal.register ()
 
 let confirm fmt =
