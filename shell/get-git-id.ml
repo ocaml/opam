@@ -30,8 +30,11 @@ let () =
   if Sys.file_exists (git "HEAD") then (
     let reference =
       let s = read (git "HEAD") in
-      let c = String.rindex s ' ' in
-      String.sub s (c+1) (String.length s -c-1) in
+      try
+        let c = String.rindex s ' ' in
+        String.sub s (c+1) (String.length s -c-1)
+      with Not_found ->
+        s in
     let sha1 = read (git reference) in
     write opamGitVersion (Printf.sprintf "let version = Some %S" sha1)
   ) else
