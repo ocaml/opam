@@ -161,7 +161,7 @@ val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
 (** Build a map which says in which repository the latest metadata for
     a given package is. Use the repository index order. *)
-val package_index: dirname ->
+val package_index: repository repository_name_map ->
   repository_name list name_map -> repository_name package_map
 
 (** Build a map between package and package repository states. *)
@@ -169,7 +169,7 @@ val package_state_index: state -> package_repository_state package_map
 
 (** Build a map which says in which repository the latest metadata for
     a given compiler is. *)
-val compiler_index: dirname -> repository list -> repository_name compiler_map
+val compiler_index: repository list -> repository_name compiler_map
 
 (** Build a map between compiler and compiler repository states. *)
 val compiler_state_index: state -> compiler_repository_state compiler_map

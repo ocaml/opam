@@ -405,7 +405,9 @@ let init =
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
-    let repository = { repo_name; repo_kind; repo_address; repo_priority } in
+    let repository = {
+      repo_root = OpamPath.Repository.create repo_name;
+      repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
       if no_setup then `no
       else if auto_setup then `yes

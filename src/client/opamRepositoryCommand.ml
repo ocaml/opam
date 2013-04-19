@@ -113,6 +113,19 @@ let print_updated_packages t ~new_packages ~updated_packages ~deleted_packages =
       ) map
     ) in
 
+  let installed_switches nv =
+    let installed = OpamState.installed_versions t (OpamPackage.name nv) in
+    let installed =
+      try OpamPackage.Map.find nv installed
+      with Not_found -> [] in (* XXX: should never happen *)
+    match installed with
+    | [] -> None
+    | _  -> Some (
+        Printf.sprintf "%s [%s]"
+          (OpamPackage.Version.to_string (OpamPackage.version nv))
+          (OpamMisc.pretty_list (List.map OpamSwitch.to_string installed))
+      ) in
+
   let none _ = None in
 
   print
@@ -122,22 +135,10 @@ let print_updated_packages t ~new_packages ~updated_packages ~deleted_packages =
     none;
 
   print
-    "The following package needs to be UPGRADED"
+    "The following package has been needs to be UPGRADED"
     "The following packages need to be UPGRADED"
     updated_packages
-    begin function nv ->
-      let installed = OpamState.installed_versions t (OpamPackage.name nv) in
-      let installed =
-        try OpamPackage.Map.find nv installed
-        with Not_found -> [] in (* XXX: should never happen *)
-      match installed with
-      | [] -> None
-      | _  -> Some (
-          Printf.sprintf "%s [%s]"
-            (OpamPackage.Version.to_string (OpamPackage.version nv))
-            (OpamMisc.pretty_list (List.map OpamSwitch.to_string installed))
-        )
-    end;
+    installed_switches;
 
   print
     "The following package has been DELETED"
@@ -222,10 +223,12 @@ let relink_packages t ~verbose old_index =
     ) ps1 in
 
   let package_index = OpamState.package_state_index t in
-  log "old-index: %s" (OpamMisc.string_of_list OpamPackage.to_string
-                         (OpamPackage.Map.keys old_index));
-  log "new-index: %s" (OpamMisc.string_of_list OpamPackage.to_string
-                         (OpamPackage.Map.keys package_index));
+  log "old-index: %s"
+    (OpamMisc.string_of_list OpamPackage.to_string (OpamPackage.Map.keys old_index));
+  log "new-index: %s"
+    (OpamMisc.string_of_list
+       OpamPackage.to_string
+       (OpamPackage.Map.keys package_index));
   let updated_packages = diff package_index old_index in
   let deleted_packages = diff old_index package_index in
 
@@ -316,13 +319,12 @@ let relink_packages t ~verbose old_index =
 
 let compare_repo t r1 r2 =
   OpamRepository.compare
-    (OpamRepositoryName.Map.find r1 t.repositories)
-    (OpamRepositoryName.Map.find r2 t.repositories)
+    (OpamState.find_repository t r1)
+    (OpamState.find_repository t r2)
 
 let update_index t =
   log "update-index";
   let repositories = OpamState.sorted_repositories t in
-  let repository_names = List.map (fun r -> r.repo_name) repositories in
   let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
 
   (* All the existing packages *)
@@ -330,13 +332,13 @@ let update_index t =
 
   (* Cache of packages per repository *)
   let packages_repo = ref [] in
-  let get_packages repo =
-    if List.mem_assoc repo !packages_repo then
-      List.assoc repo !packages_repo
+  let get_packages repo_name =
+    if List.mem_assoc repo_name !packages_repo then
+      List.assoc repo_name !packages_repo
     else
-      let repo_p = OpamPath.Repository.create t.root repo in
-      let pkgs = OpamRepository.packages repo_p in
-      packages_repo := (repo, pkgs) :: !packages_repo;
+      let repo = OpamState.find_repository t repo_name in
+      let pkgs = OpamRepository.packages repo in
+      packages_repo := (repo_name, pkgs) :: !packages_repo;
       pkgs in
 
   (* Remove package without any valid repository *)
@@ -354,9 +356,8 @@ let update_index t =
   (* Add new repositories *)
   let repo_index, prefixes =
     List.fold_left (fun (repo_index, prefixes) repo ->
-      let prefix, available = get_packages repo in
-      let repo_p = OpamPath.Repository.create t.root repo in
-      let prefix_f = OpamPath.Repository.prefix repo_p in
+      let prefix, available = get_packages repo.repo_name in
+      let prefix_f = OpamPath.Repository.prefix repo in
       if not (OpamPackage.Name.Map.is_empty prefix) then
         OpamFile.Prefix.write prefix_f prefix
       else if OpamFilename.exists prefix_f then
@@ -366,31 +367,30 @@ let update_index t =
         OpamPackage.Set.fold (fun nv repo_index ->
           let name = OpamPackage.name nv in
           if not (OpamPackage.Name.Map.mem name repo_index) then
-            OpamPackage.Name.Map.add name [repo] repo_index
+            OpamPackage.Name.Map.add name [repo.repo_name] repo_index
           else
-            let repo_s = OpamPackage.Name.Map.find name repo_index in
-            if not (List.mem repo repo_s) then
+            let repos = OpamPackage.Name.Map.find name repo_index in
+            if not (List.mem repo.repo_name repos) then
               let repo_index = OpamPackage.Name.Map.remove name repo_index in
-              let repo_s = OpamMisc.insert (compare_repo t) repo repo_s in
-              OpamPackage.Name.Map.add name repo_s repo_index
+              let repos = OpamMisc.insert (compare_repo t) repo.repo_name repos in
+              OpamPackage.Name.Map.add name repos repo_index
             else
               repo_index
         ) available repo_index in
-      let prefixes = OpamRepositoryName.Map.add repo prefix prefixes in
+      let prefixes = OpamRepositoryName.Map.add repo.repo_name prefix prefixes in
       (repo_index, prefixes)
-    ) (repo_index, OpamRepositoryName.Map.empty) repository_names in
+    ) (repo_index, OpamRepositoryName.Map.empty) repositories in
 
   (* Write ~/.opam/repo/index *)
   OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index;
 
-  let t = { t with prefixes } in
-  let package_index = OpamState.package_index t.root repo_index in
+  let package_index = OpamState.package_index t.repositories repo_index in
   OpamFile.Package_index.write (OpamPath.package_index t.root) (Some package_index);
 
-  let compiler_index = OpamState.compiler_index t.root repositories in
+  let compiler_index = OpamState.compiler_index repositories in
   OpamFile.Compiler_index.write (OpamPath.compiler_index t.root) compiler_index;
 
-  { t with package_index; compiler_index }
+  { t with prefixes; package_index; compiler_index }
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
@@ -401,34 +401,29 @@ let update_config t repos =
 (* Remove any remaining of [repo] from OPAM state *)
 let cleanup t repo =
   let repos = OpamRepositoryName.Map.keys t.repositories in
-  update_config t (List.filter ((<>) repo) repos);
+  update_config t (List.filter ((<>) repo.repo_name) repos);
   let t = OpamState.load_state "repository-cleanup-repo" in
   let _ = update_index t in
-  OpamFilename.rmdir
-    (OpamPath.Repository.root (OpamPath.Repository.create t.root repo));
+  OpamFilename.rmdir repo.repo_root;
   OpamState.rebuild_state_cache ()
 
-let priority name ~priority =
+let priority repo_name ~priority =
   log "repository-priority";
   let t = OpamState.load_state ~save_cache:false "repository-priority" in
-  if OpamState.mem_repository t name then (
-    let config_f =
-      OpamPath.Repository.config (OpamPath.Repository.create t.root name) in
-    let config = OpamFile.Repo_config.read config_f in
-    let config = { config with repo_priority = priority } in
-    OpamFile.Repo_config.write config_f config;
-    let repo_index_f = OpamPath.repo_index t.root in
-    let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
-    let repo_index = OpamPackage.Name.Map.map (List.filter ((<>)name)) repo_index in
-    let repo_index = OpamPackage.Name.Map.filter (fun _ rs -> rs<>[]) repo_index in
-    OpamFile.Repo_index.write repo_index_f repo_index;
-    let t = OpamState.load_state ~save_cache:false "repository-3" in
-    let _ = update_index t in
-    OpamState.rebuild_state_cache ()
-  ) else
-    OpamGlobals.error_and_exit
-      "%s is not a a valid remote name"
-      (OpamRepositoryName.to_string name)
+  let repo = OpamState.find_repository t repo_name in
+  let config_f = OpamPath.Repository.config repo in
+  let config = OpamFile.Repo_config.read config_f in
+  let config = { config with repo_priority = priority } in
+  OpamFile.Repo_config.write config_f config;
+  let repo_index_f = OpamPath.repo_index t.root in
+  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
+  let repo_index =
+    OpamPackage.Name.Map.map (List.filter ((<>)repo_name)) repo_index in
+  let repo_index = OpamPackage.Name.Map.filter (fun _ rs -> rs<>[]) repo_index in
+  OpamFile.Repo_index.write repo_index_f repo_index;
+  let t = OpamState.load_state ~save_cache:false "repository-3" in
+  let _ = update_index t in
+  OpamState.rebuild_state_cache ()
 
 let add name kind address ~priority:prio =
   log "repository-add";
@@ -438,6 +433,7 @@ let add name kind address ~priority:prio =
     repo_kind     = kind;
     repo_address  = address;
     repo_priority = min_int; (* we initially put it as low-priority *)
+    repo_root     = OpamPath.Repository.create name;
   } in
   if OpamState.mem_repository t name then
     OpamGlobals.error_and_exit
@@ -450,7 +446,7 @@ let add name kind address ~priority:prio =
         "\"%s\" is not a supported backend"
         (string_of_repository_kind repo.repo_kind)
     | e ->
-      cleanup t name;
+      cleanup t repo;
       raise e
   );
   log "Adding %s" (OpamRepository.to_string repo);
@@ -466,17 +462,14 @@ let add name kind address ~priority:prio =
     OpamState.remove_state_cache ();
     priority name ~priority:prio;
   with e ->
-    cleanup t name;
+    cleanup t repo;
     raise e
 
 let remove name =
   log "repository-remove";
   let t = OpamState.load_state "repository-remove" in
-  if OpamState.mem_repository t name then
-    cleanup t name
-  else
-    OpamGlobals.error_and_exit "%s is not a a valid remote name"
-      (OpamRepositoryName.to_string name)
+  let repo = OpamState.find_repository t name in
+  cleanup t repo
 
 let list ~short =
   log "repository-list";

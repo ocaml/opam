@@ -196,7 +196,7 @@ module API = struct
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
-      let repo =
+      let repo_name =
         try Some (OpamPackage.Map.find nv t.package_index)
         with Not_found -> None in
 
@@ -205,28 +205,27 @@ module API = struct
           ["repository", "(pinned)"]
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
-        else match repo with
+        else match repo_name with
           | None   -> []
           | Some r -> [ "repository", OpamRepositoryName.to_string r ] in
 
-      let url = match repo with
-        | None      -> []
-        | Some repo ->
+      let url = match repo_name with
+        | None           -> []
+        | Some repo_name ->
           if not !OpamGlobals.verbose then []
           else if OpamState.is_locally_pinned t name then
             match OpamState.pinned_path t name with
             | Some p -> [ "pinned-path", OpamFilename.Dir.to_string p ]
             | None   -> OpamGlobals.error_and_exit "invalid pinned package"
-          else if OpamState.mem_repository t repo then
-            let repo_p = OpamPath.Repository.create t.root repo in
-            let repo = OpamState.find_repository t repo in
+          else if OpamState.mem_repository t repo_name then
+            let repo = OpamState.find_repository t repo_name in
             let mirror =
-              let m = OpamPath.Repository.archive repo.repo_address nv in
+              let m = OpamPath.Repository.archive repo nv in
               [ "mirror-url", OpamFilename.to_string m ] in
             let file =
-              let prefix = OpamRepository.read_prefix repo_p in
+              let prefix = OpamRepository.read_prefix repo in
               let prefix = OpamRepository.find_prefix prefix nv in
-              OpamPath.Repository.url repo_p prefix nv in
+              OpamPath.Repository.url repo prefix nv in
             let url =
               if not (OpamFilename.exists file) then
                 [ "upstream-url", "<none>" ]
@@ -520,7 +519,6 @@ module API = struct
     if OpamFilename.exists config_f then
       OpamGlobals.error_and_exit "OPAM has already been initialized."
     else try
-        let repo_p = OpamPath.Repository.create root repo.repo_name in
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
@@ -545,7 +543,7 @@ module API = struct
         (* Init repository *)
         OpamFile.Repo_index.write
           (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
-        OpamFile.Repo_config.write (OpamPath.Repository.config repo_p) repo;
+        OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
         OpamRepository.init repo;
 
         (* Init global dirs *)
