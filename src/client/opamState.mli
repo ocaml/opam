@@ -183,6 +183,9 @@ val sorted_repositories: state -> repository list
 (** Return the list of available compilers *)
 val compilers: root:dirname -> compiler_set
 
+(** (Re-)install the configuration for a given root and switch *)
+val install_conf_ocaml_config: dirname -> switch -> unit
+
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
 
