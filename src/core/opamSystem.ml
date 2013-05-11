@@ -310,7 +310,10 @@ module Tar = struct
 
   let extensions =
     [ [ "tar.gz" ; "tgz" ], 'z'
-    ; [ "tar.bz2" ; "tbz" ], 'j' ]
+    ; [ "tar.bz2" ; "tbz" ], 'j'
+    ; [ "tar.xz" ; "txz" ], 'J'
+    ; [ "tar.lzma" ; "tlz" ], 'Y'
+    ]
 
   let guess_type f =
     let ic = open_in f in
@@ -320,6 +323,8 @@ module Tar = struct
     match c1, c2 with
     | '\031', '\139' -> Some 'z'
     | 'B'   , 'Z'    -> Some 'j'
+    | '\xfd', '\x37' -> Some 'J'
+    | '\x5d', '\x00' -> Some 'Y'
     | _              -> None
 
   let match_ext file ext =
