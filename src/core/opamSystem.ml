@@ -1,17 +1,18 @@
-(***********************************************************************)
-(*                                                                     *)
-(*    Copyright 2012 OCamlPro                                          *)
-(*    Copyright 2012 INRIA                                             *)
-(*                                                                     *)
-(*  All rights reserved.  This file is distributed under the terms of  *)
-(*  the GNU Public License version 3.0.                                *)
-(*                                                                     *)
-(*  OPAM is distributed in the hope that it will be useful,            *)
-(*  but WITHOUT ANY WARRANTY; without even the implied warranty of     *)
-(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      *)
-(*  GNU General Public License for more details.                       *)
-(*                                                                     *)
-(***********************************************************************)
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2012-2013 OCamlPro                                        *)
+(*    Copyright 2012 INRIA                                                *)
+(*                                                                        *)
+(*  All rights reserved.This file is distributed under the terms of the   *)
+(*  GNU Lesser General Public License version 3.0 with linking            *)
+(*  exception.                                                            *)
+(*                                                                        *)
+(*  OPAM is distributed in the hope that it will be useful, but WITHOUT   *)
+(*  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY    *)
+(*  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public        *)
+(*  License for more details.                                             *)
+(*                                                                        *)
+(**************************************************************************)
 
 exception Process_error of OpamProcess.result
 exception Internal_error of string
@@ -315,7 +316,10 @@ module Tar = struct
 
   let extensions =
     [ [ "tar.gz" ; "tgz" ], 'z'
-    ; [ "tar.bz2" ; "tbz" ], 'j' ]
+    ; [ "tar.bz2" ; "tbz" ], 'j'
+    ; [ "tar.xz" ; "txz" ], 'J'
+    ; [ "tar.lzma" ; "tlz" ], 'Y'
+    ]
 
   let guess_type f =
     let ic = open_in f in
@@ -325,6 +329,8 @@ module Tar = struct
     match c1, c2 with
     | '\031', '\139' -> Some 'z'
     | 'B'   , 'Z'    -> Some 'j'
+    | '\xfd', '\x37' -> Some 'J'
+    | '\x5d', '\x00' -> Some 'Y'
     | _              -> None
 
   let match_ext file ext =
