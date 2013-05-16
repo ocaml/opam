@@ -445,7 +445,8 @@ module API = struct
     let old_package_index = OpamState.package_state_index t in
 
     if repositories_need_update then (
-      OpamRepository.parallel_iter (OpamState.jobs t)
+      (* update is IO-bounded, so it's OK to spawn a lot of jobs *)
+      OpamRepository.parallel_iter (OpamRepositoryName.Map.cardinal repositories)
         OpamRepository.update
         (OpamRepositoryName.Map.values repositories);
       let t = OpamRepositoryCommand.update_index t in
