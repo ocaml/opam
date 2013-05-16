@@ -107,17 +107,20 @@ val command_exists: ?env:string array -> string -> bool
 
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
-val command: ?verbose:bool -> ?env:string array -> ?name:string -> command -> unit
+val command: ?verbose:bool -> ?env:string array -> ?name:string ->
+  ?metadata:(string * string) list -> command -> unit
 
 (** [commands cmds] executes the commands [cmds] in the correct
     OPAM environment.  It stops whenever one command fails. *)
-val commands: ?verbose:bool -> ?env:string array -> ?name:string -> command list -> unit
+val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
+  ?metadata:(string * string) list -> command list -> unit
 
 (** [read_command_output cmd] executes the command [cmd] in the
     correct OPAM environment and return the lines from stdout if the command
     exists normally. If the command does not exist or if the command exited
     with a non-empty exit-code, throw an error. *)
-val read_command_output: ?verbose:bool -> ?env:string array -> command -> string list
+val read_command_output: ?verbose:bool -> ?env:string array ->
+  ?metadata:(string * string) list -> command -> string list
 
 (** Test whether the file is an archive, by looking as its extension *)
 val is_tar_archive: string -> bool

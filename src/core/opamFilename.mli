@@ -42,7 +42,7 @@ val in_dir: Dir.t -> (unit -> 'a) -> 'a
 
 (** Execute a list of commands in a given directory *)
 val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
-  string list list -> unit
+  ?metadata:(string * string) list -> string list list -> unit
 
 (** Move a directory *)
 val move_dir: src:Dir.t -> dst:Dir.t -> unit

@@ -251,7 +251,7 @@ let command_exists ?(env=default_env) name =
   OpamProcess.clean_files r;
   OpamProcess.is_success r
 
-let run_process ?verbose ?(env=default_env) ?name = function
+let run_process ?verbose ?(env=default_env) ?name ?metadata = function
   | []           -> invalid_arg "run_process"
   | cmd :: args ->
 
@@ -273,7 +273,7 @@ let run_process ?verbose ?(env=default_env) ?name = function
         | None   -> !OpamGlobals.debug || !OpamGlobals.verbose
         | Some b -> b in
 
-      let r = OpamProcess.run ~env ~name ~verbose cmd args in
+      let r = OpamProcess.run ~env ~name ~verbose ?metadata cmd args in
       if OpamProcess.is_success r && not !OpamGlobals.debug then
         OpamProcess.clean_files r;
       r
@@ -281,16 +281,16 @@ let run_process ?verbose ?(env=default_env) ?name = function
       (* Display a user-friendly message if the command does not exist *)
       command_not_found cmd
 
-let command ?verbose ?env ?name cmd =
-  let r = run_process ?verbose ?env ?name cmd in
+let command ?verbose ?env ?name ?metadata cmd =
+  let r = run_process ?verbose ?env ?name ?metadata cmd in
   if not (OpamProcess.is_success r) then
     process_error r
 
-let commands ?verbose ?env ?name commands =
-  List.iter (command ?verbose ?env ?name) commands
+let commands ?verbose ?env ?name ?metadata commands =
+  List.iter (command ?verbose ?env ?name ?metadata) commands
 
-let read_command_output ?verbose ?env cmd =
-  let r = run_process ?verbose ?env cmd in
+let read_command_output ?verbose ?env ?metadata cmd =
+  let r = run_process ?verbose ?env ?metadata cmd in
   if OpamProcess.is_success r then
     r.OpamProcess.r_stdout
   else

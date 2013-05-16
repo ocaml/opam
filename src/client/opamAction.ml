@@ -305,6 +305,10 @@ let compilation_env t opam =
   ] @ env0 in
   OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
+let get_metadata t = [
+  ("compiler", OpamCompiler.to_string t.compiler);
+]
+
 let update_metadata t ~installed ~installed_roots ~reinstall =
   let installed_roots = OpamPackage.Set.inter installed_roots installed in
   let reinstall = OpamPackage.Set.inter installed_roots reinstall in
@@ -360,7 +364,8 @@ let remove_package_aux t ~metadata ~rm_build nv =
         else t.root , None in
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
-        OpamFilename.exec ~env ?name exec_dir remove
+        let metadata = get_metadata t in
+        OpamFilename.exec ~env ?name exec_dir ~metadata remove
       with _ ->
         ();
   );
@@ -497,7 +502,8 @@ let build_and_install_package_aux t ~metadata nv =
       | commands ->
         OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
         let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
-        OpamFilename.exec ~env ~name p_build commands in
+        let metadata = get_metadata t in
+        OpamFilename.exec ~env ~name ~metadata p_build commands in
 
     (* First, we build the package. *)
     exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
