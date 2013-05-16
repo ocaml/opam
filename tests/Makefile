@@ -52,7 +52,9 @@ run:
 	$(MAKE) list && \
 	$(MAKE) switch-alias && \
 	$(MAKE) list && \
-	$(MAKE) switch-env-packages
+	$(MAKE) switch-env-packages && \
+	$(MAKE) repo && \
+	$(MAKE) list && \
 	@echo "SUCCESS!"
 
 local:
@@ -236,6 +238,11 @@ else
 	$(CHECK) -l switch-env-packages-2 P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
 	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10/build/P4.3/P4*.env) "1"
+
+repo:
+	$(OPAM) repo add $(REPO)2 $(OPAM_REPO) -k $(REPOKIND)
+	$(OPAM) repo remove $(REPO)2
+	$(OPAM) repo remove $(REPO)
 
 packages/%.tar.gz: packages/% 
 	cd packages && tar czf $*.tar.gz $* 
