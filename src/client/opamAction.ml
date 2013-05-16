@@ -199,7 +199,7 @@ let get_archive t nv =
         | Some _ -> ()
       end;
       let src = OpamPath.Repository.archive s.pkg_repo nv in
-      OpamFilename.link ~src ~dst;
+      OpamFilename.move ~src ~dst;
       Some dst
 
 (* Prepare the package build:
