@@ -49,11 +49,6 @@ let print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers
 
 let relink_compilers t ~verbose old_index =
   log "relink-compilers";
-  let diff comps1 comps2 =
-    OpamCompiler.Map.filter (fun comp state ->
-      not (OpamCompiler.Map.mem comp comps2)
-      || OpamCompiler.Map.find comp comps2 <> state
-    ) comps1 in
   let old_index = OpamCompiler.Map.filter (fun comp _ ->
       OpamFilename.exists (OpamPath.compiler t.root comp)
     ) old_index in
@@ -62,8 +57,15 @@ let relink_compilers t ~verbose old_index =
                          (OpamCompiler.Map.keys old_index));
   log "new-index: %s" (OpamMisc.string_of_list OpamCompiler.to_string
                          (OpamCompiler.Map.keys compiler_index));
-  let updated_compilers = diff compiler_index old_index in
-  let deleted_compilers = diff old_index compiler_index in
+  let updated_compilers =
+    OpamCompiler.Map.filter (fun comp state ->
+        not (OpamCompiler.Map.mem comp old_index)
+        || OpamCompiler.Map.find comp old_index <> state
+      ) compiler_index in
+  let deleted_compilers =
+    OpamCompiler.Map.filter (fun comp _ ->
+        not (OpamCompiler.Map.mem comp compiler_index)
+      ) old_index in
 
   (* Delete compiler descritions, but keep the ones who disapeared and
      are still installed *)
@@ -102,7 +104,8 @@ let relink_compilers t ~verbose old_index =
         updated_compilers in
     print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers
 
-let print_updated_packages t ~new_packages ~updated_packages ~deleted_packages =
+let print_updated_packages t
+    ~new_packages ~updated_packages ~packages_to_upgrade ~deleted_packages =
 
   let print singular plural map fn =
     if not (OpamPackage.Map.is_empty map) then (
@@ -125,7 +128,7 @@ let print_updated_packages t ~new_packages ~updated_packages ~deleted_packages =
     match installed with
     | [] -> None
     | _  -> Some (
-        Printf.sprintf "%s [%s]"
+        Printf.sprintf "%s (%s)"
           (OpamPackage.Version.to_string (OpamPackage.version nv))
           (OpamMisc.pretty_list (List.map OpamSwitch.to_string installed))
       ) in
@@ -139,10 +142,16 @@ let print_updated_packages t ~new_packages ~updated_packages ~deleted_packages =
     none;
 
   print
-    "The following package has been needs to be UPGRADED"
-    "The following packages need to be UPGRADED"
-    updated_packages
+    "The following package has been updated upstream and needs to be UPGRADED"
+    "The following packages have been updated upstream and need to be UPGRADED"
+    packages_to_upgrade
     installed_switches;
+
+  print
+    "The following package has been UPDATED upstream"
+    "The following packages have been UPDATED upstream"
+    updated_packages
+    none;
 
   print
     "The following package has been DELETED"
@@ -202,11 +211,6 @@ let update_pinned_packages t ~verbose packages =
    reinstall *)
 let relink_packages t ~verbose old_index =
   log "relink-packages";
-  let diff ps1 ps2 =
-    OpamPackage.Map.filter (fun nv state ->
-      not (OpamPackage.Map.mem nv ps2)
-      || OpamPackage.Map.find nv ps2 <> state
-    ) ps1 in
 
   let old_index = OpamPackage.Map.filter (fun nv _ ->
       OpamFilename.exists (OpamPath.opam t.root nv)
@@ -218,8 +222,15 @@ let relink_packages t ~verbose old_index =
     (OpamMisc.string_of_list
        OpamPackage.to_string
        (OpamPackage.Map.keys package_index));
-  let updated_packages = diff package_index old_index in
-  let deleted_packages = diff old_index package_index in
+  let updated_packages =
+    OpamPackage.Map.filter (fun nv state ->
+        not (OpamPackage.Map.mem nv old_index)
+        || OpamPackage.Map.find nv old_index <> state
+      ) package_index in
+  let deleted_packages =
+    OpamPackage.Map.filter (fun nv _ ->
+        not (OpamPackage.Map.mem nv package_index)
+      ) old_index in
 
   (* Check all the dependencies exist *)
   let all_packages =
@@ -296,9 +307,13 @@ let relink_packages t ~verbose old_index =
 
   if verbose then (
     let updated_packages, new_packages = OpamPackage.Map.partition (fun nv _ ->
-      OpamPackage.Set.mem nv all_installed
-    ) updated_packages in
-    print_updated_packages t ~new_packages ~updated_packages ~deleted_packages;
+        OpamPackage.Map.mem nv old_index
+      ) updated_packages in
+    let packages_to_upgrade, updated_packages = OpamPackage.Map.partition (fun nv _ ->
+        OpamPackage.Set.mem nv all_installed
+      ) updated_packages in
+    print_updated_packages t
+      ~new_packages ~updated_packages ~packages_to_upgrade ~deleted_packages;
   );
 
   (* update $opam/$oversion/reinstall for all installed switches *)
