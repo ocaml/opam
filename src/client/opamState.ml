@@ -62,7 +62,7 @@ type state = {
   compiler: compiler;
   compiler_version: compiler_version;
   opams: OpamFile.OPAM.t package_map;
-  descrs: OpamFile.Descr.t package_map;
+  descrs: OpamFile.Descr.t lazy_t package_map;
   repositories: OpamFile.Repo_config.t repository_name_map;
   prefixes: OpamFile.Prefix.t repository_name_map;
   packages: package_set;
@@ -596,7 +596,9 @@ let print_stats () =
   List.iter (Printf.printf "load-state: %.2fs\n") !loads;
   List.iter (Printf.printf "save-state: %.2fs\n") !saves
 
-type cache = OpamFile.OPAM.t package_map * OpamFile.Descr.t package_map
+type cache = {
+  cached_opams: (package * OpamFile.OPAM.t) list;
+}
 
 let check_marshaled_file file =
   let ic = open_in_bin (OpamFilename.to_string file) in
@@ -626,12 +628,13 @@ let marshal_from_file file =
     let () =
       let magic_len = String.length OpamVersion.magic in
       really_input ic (String.create magic_len) 0 magic_len in
-    let (opams, descrs: cache) = Marshal.from_channel ic in
+    let (cache: cache) = Marshal.from_channel ic in
     close_in ic;
-    Some opams, Some descrs
+    let opams = OpamPackage.Map.of_list cache.cached_opams in
+    Some opams
   with _ ->
     OpamFilename.remove file;
-    None, None
+    None
 
 let save_state ~update t =
   let t0 = Unix.gettimeofday () in
@@ -647,7 +650,8 @@ let save_state ~update t =
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
   output_string oc OpamVersion.magic;
-  Marshal.to_channel oc (t.opams, t.descrs) [];
+  let cached_opams = OpamPackage.Map.bindings t.opams in
+  Marshal.to_channel oc { cached_opams } [];
   close_out oc;
   let t1 = Unix.gettimeofday () in
   saves := (t1 -. t0) :: !saves
@@ -696,12 +700,12 @@ let load_state ?(save_cache=true) call_site =
     ) else
       config in
 
-  let opams, descrs =
+  let opams =
     let file = OpamPath.state_cache root in
     if OpamFilename.exists file then
       marshal_from_file file
     else
-      None, None in
+      None in
   let cached = opams <> None in
   let partial = false in
 
@@ -755,10 +759,10 @@ let load_state ?(save_cache=true) call_site =
     | None   ->
       package_files (fun root nv -> OpamFile.OPAM.read (OpamPath.opam root nv))
     | Some o -> o in
-  let descrs = match descrs with
-    | None   ->
-      package_files (fun root nv -> OpamFile.Descr.safe_read (OpamPath.descr root nv))
-    | Some d -> d in
+  let descrs =
+    package_files (fun root nv ->
+        lazy (OpamFile.Descr.safe_read (OpamPath.descr root nv))
+      ) in
   let repositories = read_repositories root config in
   let prefixes = read_prefixes repositories in
   let package_index =
@@ -1698,7 +1702,7 @@ module Types = struct
     compiler: compiler;
     compiler_version: compiler_version;
     opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t package_map;
+    descrs: OpamFile.Descr.t lazy_t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     prefixes: OpamFile.Prefix.t repository_name_map;
     packages: package_set;

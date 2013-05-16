@@ -97,7 +97,7 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
               OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
             OpamPackage.version nv in
       let nv = OpamPackage.create name current_version in
-      let descr_f = OpamPackage.Map.find nv t.descrs in
+      let descr_f = Lazy.force (OpamPackage.Map.find nv t.descrs) in
       let synopsis = OpamFile.Descr.synopsis descr_f in
       let descr = OpamFile.Descr.full descr_f in
       let tags = OpamFile.OPAM.tags (OpamState.opam t nv) in
@@ -301,7 +301,7 @@ module API = struct
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
       let descr =
-        let d = OpamPackage.Map.find nv t.descrs in
+        let d = Lazy.force (OpamPackage.Map.find nv t.descrs) in
         let d = OpamFile.Descr.full d in
         let short, long = match OpamMisc.cut_at d '\n' with
           | None       -> OpamMisc.strip d, ""

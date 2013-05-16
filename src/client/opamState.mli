@@ -41,7 +41,7 @@ type state = {
   opams: OpamFile.OPAM.t package_map;
 
   (** The list of description files *)
-  descrs: OpamFile.Descr.t package_map;
+  descrs: OpamFile.Descr.t lazy_t package_map;
 
   (** The list of repositories *)
   repositories: OpamFile.Repo_config.t repository_name_map;
@@ -312,7 +312,7 @@ module Types: sig
     compiler: compiler;
     compiler_version: compiler_version;
     opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t package_map;
+    descrs: OpamFile.Descr.t lazy_t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     prefixes: OpamFile.Prefix.t repository_name_map;
     packages: package_set;
