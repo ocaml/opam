@@ -305,9 +305,18 @@ let compilation_env t opam =
   ] @ env0 in
   OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
 
-let get_metadata t = [
-  ("compiler", OpamCompiler.to_string t.compiler);
-]
+let get_metadata t =
+  let compiler =
+    if t.compiler = OpamCompiler.system then
+      let system_version = match OpamCompiler.Version.system () with
+        | None   -> "<none>"
+        | Some v -> OpamCompiler.Version.to_string v in
+      Printf.sprintf "system (%s)" system_version
+    else
+      OpamCompiler.to_string t.compiler in
+  [
+    ("compiler", compiler);
+  ]
 
 let update_metadata t ~installed ~installed_roots ~reinstall =
   let installed_roots = OpamPackage.Set.inter installed_roots installed in
