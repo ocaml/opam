@@ -41,7 +41,7 @@ type state = {
   opams: OpamFile.OPAM.t package_map;
 
   (** The list of description files *)
-  descrs: OpamFile.Descr.t package_map;
+  descrs: OpamFile.Descr.t lazy_t package_map;
 
   (** The list of repositories *)
   repositories: OpamFile.Repo_config.t repository_name_map;
@@ -59,6 +59,9 @@ type state = {
   (** The association list between switch and compiler *)
   aliases: OpamFile.Aliases.t;
 
+  (** The list of compiler available to install *)
+  compilers: compiler_set;
+
   (** The list of pinned packages *)
   pinned: OpamFile.Pinned.t;
 
@@ -74,9 +77,11 @@ type state = {
   (** The main configuration file *)
   config: OpamFile.Config.t;
 
-  (** The main configuration files for the repositories *)
-  repo_index: OpamFile.Repo_index.t;
+  (** The package index *)
+  package_index: repository_name package_map;
 
+  (** The compiler index *)
+  compiler_index: repository_name compiler_map;
 }
 
 (** Load the client state. The string argument is to identify to call
@@ -152,37 +157,43 @@ val filter_commands: state -> command list -> string list list
 
 (** {2 Repositories} *)
 
-(** Check if a package belongs to a repository *)
-val mem_repository: state -> package -> bool
-
-(** Apply a function on the repository which contains a given package *)
-val with_repository: state -> package -> (repository_root -> repository -> 'a) -> 'a
-
-(** Check whether a repository name is valid *)
-val mem_repository_name: state -> repository_name -> bool
-
-(** Find a repository state, given its name *)
-val find_repository_name: state -> repository_name -> repository
-
 (** Pretty print a map of repositories *)
 val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
 (** Build a map which says in which repository the latest metadata for
-    a given package is. This function is *very* costly (need to scan all the
-    files in the repositories, so don't abuse). *)
-val package_repository_map: state -> repository package_map
+    a given package is. Use the repository index order. *)
+val package_index: repository repository_name_map ->
+  repository_name list name_map -> repository_name package_map
+
+(** Build a map between package and package repository states. *)
+val package_state_index: state -> package_repository_state package_map
 
 (** Build a map which says in which repository the latest metadata for
     a given compiler is. *)
-val compiler_repository_map: state -> (filename * filename option) compiler_map
+val compiler_index: repository list -> repository_name compiler_map
 
-(** Sort repositories by priority *)
+(** Build a map between compiler and compiler repository states. *)
+val compiler_state_index: state -> compiler_repository_state compiler_map
+
+(** Get a package repository state. *)
+val package_repository_state: state -> package -> package_repository_state option
+
+(** Get a compiler repository state. *)
+val compiler_repository_state: state -> compiler -> compiler_repository_state option
+
+(** Sort repositories by priority. *)
 val sorted_repositories: state -> repository list
 
-(** {2 Compilers} *)
+(** Check whether a repository exists. *)
+val mem_repository: state -> repository_name -> bool
 
-(** Return the list of available compilers *)
-val compilers: root:dirname -> compiler_set
+(** Find a given repostiory. Exit the program if no such repository name exists. *)
+val find_repository: state -> repository_name -> repository
+
+(** Find a given repostiory. *)
+val find_repository_opt: state -> repository_name -> repository option
+
+(** {2 Compilers} *)
 
 (** (Re-)install the configuration for a given root and switch *)
 val install_conf_ocaml_config: dirname -> switch -> unit
@@ -195,6 +206,12 @@ val update_switch_config: state -> switch -> unit
 
 (** Get the packages associated with the given compiler *)
 val get_compiler_packages: state -> compiler -> atom list
+
+(** Is a compiler installed ? *)
+val compiler_installed: state -> compiler -> bool
+
+(** Is a switch installed ? *)
+val switch_installed: state -> switch -> bool
 
 (** {2 Packages} *)
 
@@ -225,6 +242,9 @@ val base_packages: name list
     available packages *)
 val all_installed: state -> package_set
 
+(** Return a map containing the switch where a given package is installed. *)
+val installed_versions: state -> name -> switch list package_map
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)
@@ -245,6 +265,9 @@ val check: lock -> unit
 
 (** Is a package pinned ? *)
 val is_pinned: state -> name -> bool
+
+(** Is the package locally pinned ? (ie. not a version pinning) *)
+val is_locally_pinned: state -> name -> bool
 
 (** Get the corresponding pinned package. If the package is pinned to
     a path (locally or via git/darcs), it returns the latest package as we
@@ -292,26 +315,24 @@ module Types: sig
     compiler: compiler;
     compiler_version: compiler_version;
     opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t package_map;
+    descrs: OpamFile.Descr.t lazy_t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     prefixes: OpamFile.Prefix.t repository_name_map;
     packages: package_set;
     available_packages: package_set Lazy.t;
     aliases: OpamFile.Aliases.t;
+    compilers: compiler_set;
     pinned: OpamFile.Pinned.t;
     installed: OpamFile.Installed.t;
     installed_roots: OpamFile.Installed_roots.t;
     reinstall: OpamFile.Reinstall.t;
     config: OpamFile.Config.t;
-    repo_index: OpamFile.Repo_index.t;
+    package_index: repository_name package_map;
+    compiler_index: repository_name compiler_map;
   }
 end
 
-
 (** / **)
-
-(** Update hook. *)
-val update_hook: (save_cache:bool -> repository_name list -> unit) ref
 
 (** Switch reinstall hook. *)
 val switch_reinstall_hook: (switch -> unit) ref

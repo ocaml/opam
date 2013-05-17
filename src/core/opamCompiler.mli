@@ -39,7 +39,7 @@ end
 include OpamMisc.ABSTRACT
 
 (** Convert a filename into a compiler name *)
-val of_filename: OpamFilename.t -> t
+val of_filename: OpamFilename.t -> t option
 
 (** List the compiler available in a directory (and their eventual
     descrition file) *)

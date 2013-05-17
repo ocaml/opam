@@ -27,6 +27,7 @@ type t = {
   p_stderr : string option; (** stderr dump file *)
   p_env    : string option; (** dump environement variables *)
   p_info   : string option; (** dump process info *)
+  p_metadata: (string * string) list (** Metadata associated to the process *)
 }
 
 (** [create cmd args] create a new process to execute the command
@@ -38,7 +39,7 @@ type t = {
     set). *)
 val create :
   ?info_file:string -> ?env_file:string -> ?stdout_file:string -> ?stderr_file:string ->
-  ?env:string array ->
+  ?env:string array -> ?metadata:(string*string) list ->
   verbose:bool -> string -> string list -> t
 
 (** Process results *)
@@ -59,7 +60,8 @@ val wait: t -> result
     [name.info], [name.env], [name.out] and [name.err] and are
     created, and contains the process main description, the environment
     variables, the standard output and the standard error. *)
-val run : ?env:string array -> ?verbose:bool -> ?name:string -> string -> string list -> result
+val run : ?env:string array -> ?verbose:bool -> ?name:string ->
+  ?metadata:(string*string) list -> string -> string list -> result
 
 (** Is the process result a success ? *)
 val is_success : result -> bool

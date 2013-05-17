@@ -71,6 +71,12 @@ val archives_dir: t -> dirname
 (** Return the repository index: {i $opam/repo/index} *)
 val repo_index: t -> filename
 
+(** Return the packages index: {i $opam/repo/index.packages} *)
+val package_index: t -> filename
+
+(** Return the compiler index: {i $opam/repo/index.compilers} *)
+val compiler_index: t -> filename
+
 (** Init scripts *)
 val init: t -> dirname
 
@@ -177,69 +183,77 @@ end
 (** Repository paths *)
 module Repository: sig
 
-  (** Get the directory root *)
-  val root: repository_root -> dirname
+  (** Repository local path: {i $opam/repo/<name>} *)
+  val create: repository_name -> dirname
 
   (** Prefix file {i $opam/repo/prefix} *)
-  val prefix: repository_root -> filename
-
-  (** Return the repository folder: {i $opam/repo/$repo} *)
-  val create: repository_root -> repository_name -> repository_root
+  val prefix: repository -> filename
 
   (** Return the version file *)
-  val version: repository_root -> filename
+  val version: repository -> filename
+
+  (** Remote version file *)
+  val remote_version: repository -> filename
 
   (** Return the repository config: {i $opam/repo/$repo/config} *)
-  val config: repository_root -> filename
+  val raw_config: dirname -> repository_name -> filename
+
+  (** Return the repository config: {i $opam/repo/$repo/config} *)
+  val config: repository -> filename
 
   (** Packages folder: {i $opam/repo/$repo/packages} *)
-  val packages_dir: repository_root -> dirname
+  val packages_dir: repository -> dirname
+
+  (** Remote package files: {i $remote/packages} *)
+  val remote_packages_dir: repository -> dirname
 
   (** Package folder: {i $opam/repo/$repo/packages/XXX/$NAME.$VERSION} *)
-  val package: repository_root -> string option -> package -> dirname
+  val package: repository -> string option -> package -> dirname
 
   (** Return the OPAM file for a given package:
       {i $opam/repo/$repo/packages/XXX/$NAME.$VERSION/opam} *)
-  val opam: repository_root -> string option -> package -> filename
+  val opam: repository -> string option -> package -> filename
 
   (** Return the description file for a given package:
       {i $opam/repo/$repo/packages/XXX/$NAME.VERSION/descr} *)
-  val descr: repository_root -> string option -> package -> filename
+  val descr: repository -> string option -> package -> filename
 
   (** urls {i $opma/repo/$repo/package/XXX/$NAME.$VERSION/url} *)
-  val url: repository_root -> string option -> package -> filename
+  val url: repository -> string option -> package -> filename
 
   (** files {i $opam/repo/$repo/packages/XXX/$NAME.$VERSION/files} *)
-  val files: repository_root -> string option -> package -> dirname
+  val files: repository -> string option -> package -> dirname
 
   (** Return the archive for a given package:
       {i $opam/repo/$repo/archives/$NAME.$VERSION.tar.gz} *)
-  val archive: repository_root -> package -> filename
+  val archive: repository -> package -> filename
+
+  (** Remote archive {i $remote/archives/$NAME.$VERSION.tar.gz} *)
+  val remote_archive: repository -> package -> filename
 
   (** Return the archive folder: {i $opam/repo/$repo/archives/} *)
-  val archives_dir: repository_root -> dirname
-
-  (** Return the list of updated packages:
-      {i $opam/repo/$repo/updated} *)
-  val updated: repository_root -> filename
+  val archives_dir: repository -> dirname
 
   (** Return the upload folder for a given version:
       {i $opam/repo/$repo/upload/} *)
-  val upload_dir: repository_root -> dirname
+  val upload_dir: repository -> dirname
 
   (** Compiler files: {i $opam/repo/$repo/compilers/$OVERSION.comp} *)
-  val compiler: repository_root -> compiler -> filename
+  val compiler: repository -> compiler -> filename
 
   (** Compiler description files: {i $opam/repo/$repo/compilers/$OVERSION.descr} *)
-  val compiler_descr: repository_root -> compiler -> filename
+  val compiler_descr: repository -> compiler -> filename
 
   (** Compiler files: {i $opam/repo/$repo/compilers/} *)
-  val compilers_dir: repository_root -> dirname
+  val compilers_dir: repository -> dirname
+
+  (** Remote compiler files: {i $remote/compilers} *)
+  val remote_compilers_dir: repository -> dirname
 
   (** Tempory folder {i $opam/repo/$repo/tmp} *)
-  val tmp: repository_root -> dirname
+  val tmp: repository -> dirname
 
   (** Tempory folder {i $opam/repo/$repo/tmp/$NAME.$VERSION/} *)
-  val tmp_dir: repository_root -> package -> dirname
+  val tmp_dir: repository -> package -> dirname
 
 end

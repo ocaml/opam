@@ -54,9 +54,6 @@ module API: sig
       packages. *)
   val upgrade: name_set option -> unit
 
-  (** Upload a package to a remote repository. *)
-  val upload: upload -> repository_name -> unit
-
   (** Remove the given set of packages. *)
   val remove: autoremove:bool -> name_set -> unit
 

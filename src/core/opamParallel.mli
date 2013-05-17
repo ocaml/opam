@@ -18,10 +18,11 @@
 
 (** Functor argument *)
 module type G = sig
-  include Graph.Sig.G
+  include Graph.Sig.I
   include Graph.Topological.G with type t := t and module V := V
   val has_cycle: t -> bool
   val scc_list: t -> V.t list list
+  val string_of_vertex: V.t -> string
 end
 
 type error =
@@ -38,11 +39,21 @@ module type SIG = sig
       finished, whereas [pre] and [post] are evaluated on the current
       process (respectively before and after the child process has
       been created). *)
-  val parallel_iter: int -> G.t ->
+  val iter: int -> G.t ->
     pre:(G.V.t -> unit) ->
     child:(G.V.t -> unit) ->
     post:(G.V.t -> unit) ->
     unit
+
+  (** Map-reduce on a taks graph *)
+  val map_reduce: int -> G.t ->
+    map:(G.V.t -> 'a) ->
+    merge:('a -> 'a -> 'a) ->
+    init:'a ->
+    'a
+
+  (** Build a graph on concurrent tasks from a list of tasks. *)
+  val create: G.V.t list -> G.t
 
   (** Errors ([errors], [remaining]) *)
   exception Errors of (G.V.t * error) list * G.V.t list
