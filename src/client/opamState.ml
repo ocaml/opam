@@ -165,14 +165,17 @@ let find_repository_aux repo_name repositories =
 let find_repository t repo_name =
   find_repository_aux repo_name t.repositories
 
+let find_repository_exn t repo_name =
+  OpamRepositoryName.Map.find repo_name t.repositories
+
 let find_repository_opt t repo_name =
-  try Some (OpamRepositoryName.Map.find repo_name t.repositories)
+  try Some (find_repository_exn t repo_name)
   with Not_found -> None
 
 let package_repository_state t nv =
   try
     let repo_name = OpamPackage.Map.find nv t.package_index in
-    let repo = find_repository t repo_name in
+    let repo = find_repository_exn t repo_name in
     let prefix = OpamRepositoryName.Map.find repo_name t.prefixes in
     let prefix = OpamRepository.find_prefix prefix nv in
     let state = OpamRepository.package_state repo prefix nv in
