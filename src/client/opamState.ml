@@ -1698,18 +1698,20 @@ let check f =
     | Global_lock f ->
       (* Take the global lock *)
       OpamFilename.with_flock (OpamPath.lock root) (fun () ->
-        (* Take all the switch locks *)
-        let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
-        let f =
-          OpamSwitch.Map.fold (fun a _ f ->
-            if OpamFilename.exists_dir (OpamPath.Switch.root root a)
-            then with_switch_lock a (fun () -> f ())
-            else f
-          ) aliases f in
-        let t = load_state "global-lock" in
-        global_consistency_checks t;
-        f ()
-      ) ()
+          (* clean the log directory *)
+          OpamFilename.cleandir (OpamPath.log root);
+          (* Take all the switch locks *)
+          let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+          let f =
+            OpamSwitch.Map.fold (fun a _ f ->
+                if OpamFilename.exists_dir (OpamPath.Switch.root root a)
+                then with_switch_lock a (fun () -> f ())
+                else f
+              ) aliases f in
+          let t = load_state "global-lock" in
+          global_consistency_checks t;
+          f ()
+        ) ()
 
     | Read_lock f ->
       (* Simply check that OPAM is correctly initialized *)

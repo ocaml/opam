@@ -59,6 +59,11 @@ let cwd () =
 let mkdir dirname =
   OpamSystem.mkdir (Dir.to_string dirname)
 
+let cleandir dirname =
+  log "cleandir %s" (Dir.to_string dirname);
+  OpamSystem.remove (Dir.to_string dirname);
+  mkdir dirname
+
 let rec_dirs d =
   let fs = OpamSystem.rec_dirs (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)

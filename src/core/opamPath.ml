@@ -58,6 +58,8 @@ let compiler_index t = t / "repo" // "index.compilers"
 
 let init  t = t / "opam-init"
 
+let log t = t / "log"
+
 module Switch = struct
 
   let root t a = t / OpamSwitch.to_string a

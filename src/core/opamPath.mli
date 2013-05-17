@@ -80,6 +80,9 @@ val compiler_index: t -> filename
 (** Init scripts *)
 val init: t -> dirname
 
+(** Log dir {i $opam/log} *)
+val log: t -> dirname
+
 (** Switch related paths *)
 module Switch: sig
 

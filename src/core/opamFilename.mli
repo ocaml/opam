@@ -28,6 +28,9 @@ val cwd: unit -> Dir.t
 (** Remove a directory *)
 val rmdir: Dir.t -> unit
 
+(** Clean the contents of a directory. *)
+val cleandir: Dir.t -> unit
+
 (** Create a directory *)
 val mkdir: Dir.t -> unit
 
