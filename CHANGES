@@ -1,4 +1,5 @@
 1.0.1 (trunk)
+* Purge `~/.opam/log` on each invocation of OPAM
 * System compiler with versions such as `version+patches` are now handled as if this was simply `version`
 * New `OpamVCS` functor to generate OPAM backends
 * More efficient `opam update`
