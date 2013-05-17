@@ -310,7 +310,7 @@ let available_packages
               | `Neq -> not system
               | _    -> OpamSystem.internal_error
                           "%s is not a valid constraint for the system compiler \
-                           (only '=' and '!' are valid)."
+                           (only '=' and '!=' are valid)."
                           (OpamFormula.string_of_relop r)
             end
           | _ ->
