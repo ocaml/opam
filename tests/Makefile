@@ -54,7 +54,7 @@ run:
 	$(MAKE) list && \
 	$(MAKE) switch-env-packages && \
 	$(MAKE) repo && \
-	$(MAKE) list && \
+	$(MAKE) list
 	@echo "SUCCESS!"
 
 local:
