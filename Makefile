@@ -22,7 +22,7 @@ opt: $(LOCAL_OCPBUILD)
 
 OCAMLBUILD_FLAGS=\
 	-Is src/core,src/client,src/repositories,src/solver,src/scripts \
-	-use-ocamlfind -pkgs re.glob,re.pcre,re.perl,ocamlgraph,cmdliner,cudf,dose3 \
+	-use-ocamlfind -pkgs re.glob,re.pcre,re.str,re.perl,ocamlgraph,cmdliner,cudf,dose3 \
 	-classic-display
 with-ocamlbuild: autogen
 	@for i in core repositories solver client; do\
