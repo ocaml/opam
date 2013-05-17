@@ -1,4 +1,5 @@
 1.0.1 (trunk)
+* System compiler with versions such as `version+patches` are now handled as if this was simply `version`
 * New `OpamVCS` functor to generate OPAM backends
 * More efficient `opam update`
 * Swtich license to LGPL with linkink exception
