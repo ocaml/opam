@@ -231,13 +231,13 @@ switch-alias:
 
 switch-env-packages:
 	$(CHECK) -l switch-env-packages-1 P1.1 P2.1
-	$(OPAM) switch 10
+	$(OPAM) switch 10+a+b
 ifeq ($(REPOKIND), git)
 	$(CHECK) -l switch-env-packages-2 P1.1 P2.1 P3.1~weird-version.test P4.3
 else
 	$(CHECK) -l switch-env-packages-2 P1.2 P2.1 P3.1~weird-version.test P4.3
 endif
-	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10/build/P4.3/P4*.env) "1"
+	./test-TEST.sh $(wildcard $(OPAM_ROOT)/10+a+b/build/P4.3/P4*.env) "1"
 
 repo:
 	$(OPAM) repo add $(REPO)2 $(OPAM_REPO) -k $(REPOKIND)
