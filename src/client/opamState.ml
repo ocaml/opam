@@ -1046,12 +1046,21 @@ let expand_env t (env: env_updates) : env =
       let prefix = OpamFilename.Dir.to_string t.root in
       try OpamMisc.reset_env_value ~prefix (OpamMisc.getenv ident)
       with _ -> [] in
+    let cons ~head a b =
+      let c = List.filter ((<>)"") b in
+      match b with
+      | []      -> if head then [ ""; a ] else [ a; "" ]
+      | "" :: _ -> "" :: a :: c
+      | _       ->
+        match List.rev b with
+        | "" :: _ -> (a :: c) @ [""]
+        | _       -> a :: c in
     match symbol with
     | "="  -> (ident, string)
     | "+=" -> (ident, String.concat ":" (string :: read_env ()))
     | "=+" -> (ident, String.concat ":" (read_env () @ [string]))
-    | ":=" -> (ident, string ^":"^ (String.concat ":" (read_env())))
-    | "=:" -> (ident, (String.concat ":" (read_env())) ^":"^ string)
+    | ":=" -> (ident, String.concat ":" (cons ~head:true string (read_env())))
+    | "=:" -> (ident, String.concat ":" (cons ~head:false string (read_env())))
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
@@ -1069,7 +1078,7 @@ let env_updates t =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
   let man_path =
-    "MANPATH", ":=",
+    "MANPATH", "=:",
     OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let comp_env = OpamFile.Comp.env comp in
   let switch = match !OpamGlobals.switch with

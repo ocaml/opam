@@ -252,11 +252,14 @@ let contains s c =
   with Not_found -> false
 
 let split s c =
-  Re_pcre.split ~rex:(Re_perl.compile (Re.char c)) s
+  Re_str.split (Re_str.regexp (String.make 1 c)) s
+
+let split_delim s c =
+  Re_str.split_delim (Re_str.regexp (String.make 1 c)) s
 
 (* Remove from a ':' separated list of string the one with the given prefix *)
 let reset_env_value ~prefix v =
-  let v = split v ':' in
+  let v = split_delim v ':' in
   List.filter (fun v -> not (starts_with ~prefix v)) v
 
 (* if rsync -arv return 4 lines, this means that no files have changed *)

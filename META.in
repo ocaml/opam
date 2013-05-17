@@ -1,6 +1,6 @@
 version = "@VERSION@"
 description = "OCaml Package Manager base API"
-requires = "dose, cudf, ocamlgraph, unix, re, re.glob"
+requires = "dose, cudf, ocamlgraph, unix, re, re.str, re.glob"
 archive(byte) = "opam-core.cma"
 archive(native) = "opam-core.cmxa"
 
