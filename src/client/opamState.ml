@@ -165,6 +165,10 @@ let find_repository_aux repo_name repositories =
 let find_repository t repo_name =
   find_repository_aux repo_name t.repositories
 
+let find_repository_opt t repo_name =
+  try Some (OpamRepositoryName.Map.find repo_name t.repositories)
+  with Not_found -> None
+
 let package_repository_state t nv =
   try
     let repo_name = OpamPackage.Map.find nv t.package_index in
@@ -338,6 +342,8 @@ let base_packages =
 let create_system_compiler_description root = function
   | None         -> ()
   | Some version ->
+    log "create-system-compiler-description %s"
+      (OpamCompiler.Version.to_string version);
     let comp = OpamPath.compiler root OpamCompiler.system in
     OpamFilename.remove comp;
     let f =
@@ -662,6 +668,7 @@ let remove_state_cache () =
   OpamFilename.remove file
 
 let reinstall_system_compiler t =
+  log "reinstall-system-compiler";
   let continue =
     confirm "Your system compiler has been upgraded. Do you want to upgrade \
              your OPAM installation?" in
@@ -741,7 +748,6 @@ let load_state ?(save_cache=true) call_site =
           OpamGlobals.error_and_exit
             "The current switch (%s) is an unknown compiler switch."
             (OpamSwitch.to_string switch) in
-
   let compiler_version =
     let comp_f = OpamPath.compiler root compiler in
     if not (OpamFilename.exists comp_f) then

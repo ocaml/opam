@@ -131,6 +131,9 @@ val move: src:t -> dst:t -> unit
 (** Symlink a file in a directory *)
 val link_in: t -> Dir.t -> unit
 
+(** Read a symlinked file *)
+val readlink: t -> t
+
 (** Copy a file *)
 val copy: src:t -> dst:t -> unit
 

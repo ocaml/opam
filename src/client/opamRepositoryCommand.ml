@@ -339,10 +339,12 @@ let update_index t =
     if List.mem_assoc repo_name !packages_repo then
       List.assoc repo_name !packages_repo
     else
-      let repo = OpamState.find_repository t repo_name in
-      let pkgs = OpamRepository.packages repo in
-      packages_repo := (repo_name, pkgs) :: !packages_repo;
-      pkgs in
+      match OpamState.find_repository_opt t repo_name with
+      | Some repo ->
+        let pkgs = OpamRepository.packages repo in
+        packages_repo := (repo_name, pkgs) :: !packages_repo;
+        pkgs
+      | None -> OpamPackage.Name.Map.empty, OpamPackage.Set.empty in
 
   (* Remove package without any valid repository *)
   let repo_index =
@@ -398,15 +400,41 @@ let update_index t =
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
 let update_config t repos =
+  log "update-config %s"
+    (OpamMisc.pretty_list (List.map OpamRepositoryName.to_string repos));
   let new_config = OpamFile.Config.with_repositories t.config repos in
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
 (* Remove any remaining of [repo] from OPAM state *)
 let cleanup t repo =
+  log "cleanup %s" (OpamRepositoryName.to_string repo.repo_name);
   let repos = OpamRepositoryName.Map.keys t.repositories in
   update_config t (List.filter ((<>) repo.repo_name) repos);
   let t = OpamState.load_state "repository-cleanup-repo" in
   let _ = update_index t in
+  let prefix, packages = OpamRepository.packages repo in
+  OpamPackage.Set.iter (fun nv ->
+      let prefix = OpamRepository.find_prefix prefix nv in
+      let relink r g =
+        let r = r repo prefix nv in
+        let g = g t.root nv in
+        if OpamFilename.exists g && OpamFilename.readlink g = r then
+          OpamFilename.move ~src:r ~dst:g in
+      relink OpamPath.Repository.opam OpamPath.opam;
+      relink OpamPath.Repository.descr OpamPath.descr;
+      relink (fun r _ -> OpamPath.Repository.archive r) OpamPath.archive;
+    ) packages;
+  let compilers = OpamRepository.compilers repo in
+  OpamCompiler.Map.iter (fun comp (comp_f, descr_f) ->
+      let relink r g =
+        if OpamFilename.exists g && OpamFilename.readlink g = r then
+          OpamFilename.move ~src:r ~dst:g in
+      relink comp_f (OpamPath.compiler t.root comp);
+      match descr_f with
+      | Some descr_f -> relink descr_f (OpamPath.compiler_descr t.root comp)
+      | None         -> ()
+    ) compilers;
+
   OpamFilename.rmdir repo.repo_root;
   OpamState.rebuild_state_cache ()
 

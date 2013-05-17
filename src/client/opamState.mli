@@ -187,8 +187,11 @@ val sorted_repositories: state -> repository list
 (** Check whether a repository exists. *)
 val mem_repository: state -> repository_name -> bool
 
-(** Find a given repostiory. *)
+(** Find a given repostiory. Exit the program if no such repository name exists. *)
 val find_repository: state -> repository_name -> repository
+
+(** Find a given repostiory. *)
+val find_repository_opt: state -> repository_name -> repository option
 
 (** {2 Compilers} *)
 

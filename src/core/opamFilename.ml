@@ -193,6 +193,13 @@ let move ~src ~dst =
 let link ~src ~dst =
   if src <> dst then OpamSystem.link (to_string src) (to_string dst)
 
+let readlink src =
+  if exists src then
+    try of_string (Unix.readlink (to_string src))
+    with _ -> src
+  else
+    OpamSystem.internal_error "%s does not exit." (to_string src)
+
 let process_in fn src dst =
   let src_s = to_string src in
   let dst = Filename.concat (Dir.to_string dst) (Filename.basename src_s) in
