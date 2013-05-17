@@ -1341,10 +1341,10 @@ let update_setup t user global =
   end
 
 let display_setup t shell dot_profile =
-  let print (k,v) = OpamGlobals.msg "  %-25s %35s\n" k v in
-  let not_set = "[NOT SET]" in
-  let ok      = "[OK]" in
-  let error   = "[ERROR]" in
+  let print (k,v) = OpamGlobals.msg "  %-25s - %s\n" k v in
+  let not_set = "not set" in
+  let ok      = "string is already present so file unchanged" in
+  let error   = "error" in
   let user_setup =
     let ocamlinit_status =
       if ocamlinit_needs_update () then not_set else ok in
@@ -1372,7 +1372,7 @@ let display_setup t shell dot_profile =
           ok
         else
           not_set in
-      [ ("init-script"     , Printf.sprintf "[%s]" pretty_init_file);
+      [ ("init-script"     , Printf.sprintf "%s" pretty_init_file);
         ("auto-completion" , completion);
         ("opam-switch-eval", switch_eval);
       ]
@@ -1406,12 +1406,23 @@ let print_env_warning t user =
           let dot_profile =
             Printf.sprintf " (for instance %s)" (OpamFilename.prettify f) in
           Printf.sprintf
-            "2. To manually configure OPAM for subsequent usages, add the following \n\
-            \   line to your profile file%s:\n\
+            "2. To correctly configure OPAM for subsequent use, add the following\n\
+                line to your profile file (for instance %s):\n\
              \n\
             \      %s\n"
             dot_profile
             (source t (init_file u.shell)) in
+    let ocamlinit_string = match user with
+      | None   -> ""
+      | Some u -> if not u.ocamlinit then "" else
+          "3. To avoid issues related to non-system installations of `ocamlfind`\n\
+          \  add the following lines to ~/.ocamlinit (create it if necessary):\n\
+           \n\
+          \      let () =\n\
+          \        try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
+          \        with Not_found -> ()\n\
+          \      ;;\n"
+    in
     let line =
       "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
     in
@@ -1420,8 +1431,8 @@ let print_env_warning t user =
        1. To configure OPAM in the current shell session, you need to run:\n\
        \n\
       \      %s\n\
-       %s%s\n"
-      line eval_string profile_string line
+       %s%s%s\n"
+      line eval_string profile_string ocamlinit_string line
 
 let update_setup_interactive t shell dot_profile =
   let update dot_profile =
@@ -1434,26 +1445,37 @@ let update_setup_interactive t shell dot_profile =
   OpamGlobals.msg "\n";
 
   match read
-      "OPAM can configure your computer for optimal use.\n\
+      "In normal operation, OPAM only alters files within ~/.opam.\n\
+       \n\
+       During this initialisation, you can allow OPAM to add information to two\n\
+       other files for best results. You can also make these additions manually\n\
+       if you wish.\n\
+       \n\
+       If you agree, OPAM will modify:\n\
+      \  - %s (or a file you specify) to set the right environment\n\
+      \    variables and to load the auto-completion scripts for your shell (%s)\n\
+      \    on startup. Specifically, it checks for and appends the following line:\n\
       \n\
-       In order to do so, it will modify: \n\
-      \  - %s to set the right environment variables and to load the \n\
-      \    auto-completion scripts for your shell (%s) on startup.\n\
-      \  - ~/.ocamlinit to make non-root installations of `ocamlfind` (such as the \n\
-      \    ones done by OPAM) work when running the OCaml toplevel (eg. by adding \n\
-      \    $OCAML_TOPLEVEL_PATH to the list of include directories).\n\
+      \    . /Users/amir/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true\n\
        \n\
-       If you choose to not configure your system now, you can either configure \n\
-       OPAM manually (more instructions on this later) or launch the automatic setup \n\
+      \  - ~/.ocamlinit to ensure that non-system installations of `ocamlfind`\n\
+      \    (i.e. those installed by OPAM) will work correctly when running the\n\
+      \    OCaml toplevel. It does this by adding $OCAML_TOPLEVEL_PATH to the list\n\
+      \    of include directories.\n\
+      \n\
+       If you choose to not configure your system now, you can either configure\n\
+       OPAM manually (instructions will be displayed) or launch the automatic setup\n\
        later by running:\n\
+      \n\
+       \   `opam config setup -a`.\n\
        \n\
-      \    `opam config setup -a`.\n\
-       \n\
-       Do you want OPAM to modify your %s? (default is 'no', use 'f' to \n\
-       modify another file instead)\n\
+      \n\
+       Do you want OPAM to modify %s and ~/.ocamlinit?\n\
+       (default is 'no', use 'f' to name a file other than %s)\n\
       \    [N/y/f]"
       (OpamFilename.prettify dot_profile)
       (string_of_shell shell)
+      (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)
   with
   | Some ("y" | "Y" | "yes"  | "YES" ) -> update dot_profile

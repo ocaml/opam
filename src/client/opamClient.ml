@@ -518,9 +518,23 @@ module API = struct
     log "INIT %s" (OpamRepository.to_string repo);
     let root = OpamPath.default () in
     let config_f = OpamPath.config root in
-    if OpamFilename.exists config_f then
-      OpamGlobals.error_and_exit "OPAM has already been initialized."
-    else try
+    let dot_profile_o = Some dot_profile in
+    let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
+    let update_setup t =
+      let updated = match update_config with
+        | `ask -> OpamState.update_setup_interactive t shell dot_profile
+        | `no  -> false
+        | `yes ->
+          let global = { complete = true; switch_eval = true } in
+          OpamState.update_setup t (Some user) (Some global);
+          true in
+      OpamState.print_env_warning t (if updated then None else Some user) in
+
+    if OpamFilename.exists config_f then (
+      OpamGlobals.msg "OPAM has already been initialized.";
+      let t = OpamState.load_state "init" in
+      update_setup t
+    ) else try
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
@@ -582,18 +596,7 @@ module API = struct
               wish_remove  = [];
               wish_upgrade = compiler_packages } in
         OpamGlobals.display_messages := true;
-
-        let dot_profile_o = Some dot_profile in
-        let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
-        let updated = match update_config with
-          | `ask -> OpamState.update_setup_interactive t shell dot_profile
-          | `no  -> false
-          | `yes ->
-            let global = { complete = true; switch_eval = true } in
-            OpamState.update_setup t (Some user) (Some global);
-            true
-        in
-        OpamState.print_env_warning t (if updated then None else Some user)
+        update_setup t
 
       with e ->
         if not !OpamGlobals.debug then
