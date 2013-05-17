@@ -22,6 +22,11 @@ module Version = struct
 
   include OpamMisc.Base
 
+  let of_string str =
+    match OpamMisc.cut_at str '+' with
+    | None       -> of_string str
+    | Some (s,_) -> of_string s
+
   type constr = (OpamFormula.relop * t) OpamFormula.formula
 
   let current () =
