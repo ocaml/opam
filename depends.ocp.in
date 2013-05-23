@@ -21,6 +21,18 @@ begin library "re_pcre"
   requires  = [ "re_perl" ]
 end
 
+begin library "re_emacs"
+  dirname  = "%{lib}%/re"
+  generated = true
+  requires  = [ "re" ]
+end
+
+begin library "re_str"
+  dirname  = "%{lib}%/re"
+  generated = true
+  requires  = [ "re_emacs" ]
+end
+
 begin library "graph"
   dirname  = "%{lib}%/ocamlgraph"
   generated = true
