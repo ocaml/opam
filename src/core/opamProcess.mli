@@ -46,7 +46,7 @@ val create :
 type result = {
   r_code     : int;         (** Process exit code *)
   r_duration : float;       (** Process duration *)
-  r_info     : string;      (** Process info *)
+  r_info     : (string * string) list; (** Process info *)
   r_stdout   : string list; (** Content of stdout dump file *)
   r_stderr   : string list; (** Content of stderr dump file *)
   r_cleanup  : string list; (** List of files to clean-up *)

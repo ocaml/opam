@@ -47,9 +47,8 @@ let option_default d = function
   | Some v -> v
 
 let make_info ?code ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () =
-  let b = Buffer.create 2048 in
-  let print name str =
-    Printf.bprintf b "# %-15s %s\n" name str in
+  let b = ref [] in
+  let print name str = b := (name, str) :: !b in
   let print_opt name = function
     | None   -> ()
     | Some s -> print name s in
@@ -64,6 +63,11 @@ let make_info ?code ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadat
   print_opt "stdout-file"  stdout_file;
   print_opt "stderr-file"  stderr_file;
 
+  List.rev !b
+
+let string_of_info info =
+  let b = Buffer.create 1024 in
+  List.iter (fun (k,v) -> Printf.bprintf b "# %-15s %s\n" k v) info;
   Buffer.contents b
 
 let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
@@ -113,7 +117,7 @@ let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
       let chan = open_out f in
       let info =
         make_info ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () in
-      output_string chan info;
+      output_string chan (string_of_info info);
       close_out chan in
 
   let pid =
@@ -140,7 +144,7 @@ let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
 type result = {
   r_code     : int;
   r_duration : float;
-  r_info     : string;
+  r_info     : (string * string) list;
   r_stdout   : string list;
   r_stderr   : string list;
   r_cleanup  : string list;
@@ -241,7 +245,7 @@ let string_of_result r =
     print str;
     Buffer.add_char b '\n' in
 
-  print r.r_info;
+  print (string_of_info r.r_info);
 
   if r.r_stdout <> [] then
     print "### stdout ###\n";
