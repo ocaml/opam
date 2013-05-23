@@ -1456,7 +1456,7 @@ let update_setup_interactive t shell dot_profile =
       \    variables and to load the auto-completion scripts for your shell (%s)\n\
       \    on startup. Specifically, it checks for and appends the following line:\n\
       \n\
-      \    . /Users/amir/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true\n\
+      \    . ~/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true\n\
        \n\
       \  - ~/.ocamlinit to ensure that non-system installations of `ocamlfind`\n\
       \    (i.e. those installed by OPAM) will work correctly when running the\n\
