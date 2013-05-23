@@ -62,15 +62,16 @@ type build_options = {
   fake          : bool;
   external_tags : string list;
   jobs          : int option;
+  json_output   : string option;
 }
 
 let create_build_options
     keep_build_dir make no_checksums build_test
     build_doc dryrun external_tags cudf_file fake
-    jobs = {
+    jobs json_output = {
   keep_build_dir; make; no_checksums;
   build_test; build_doc; dryrun; external_tags;
-  cudf_file; fake; jobs
+  cudf_file; fake; jobs; json_output
 }
 
 let set_build_options b =
@@ -82,6 +83,7 @@ let set_build_options b =
   OpamGlobals.external_tags  := b.external_tags;
   OpamGlobals.cudf_file      := b.cudf_file;
   OpamGlobals.fake           := b.fake;
+  OpamGlobals.json_output    := b.json_output;
   OpamGlobals.jobs           :=
     begin match b.jobs with
       | None   -> !OpamGlobals.jobs
@@ -342,11 +344,14 @@ let build_options =
        care is the best way to corrupt your current compiler environement. When using \
        this option OPAM will run a dry-run of the solver and then fake the build and  \
        install commands." in
-
+  let output_json =
+    mk_opt ["output-json"] "FILENAME"
+      "Save the result output of an OPAM run in a computer-readable file"
+      Arg.(some string) None in
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
     $build_doc $dryrun $external_tags $cudf_file $fake
-    $jobs_flag)
+    $jobs_flag $output_json)
 
 let guess_repository_kind kind address =
   match kind with

@@ -67,6 +67,8 @@ let default_package = "conf-ocaml"
 
 let system = "system"
 
+let json_output: string option ref = ref None
+
 let switch: [`Env of string
             | `Command_line of string
             | `Not_set ] ref

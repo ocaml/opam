@@ -210,6 +210,28 @@ type state = {
   mutable s_reinstall      : package_set;
 }
 
+let output_json action_errors = match !OpamGlobals.json_output with
+  | None      -> ()
+  | Some file ->
+    let open OpamParallel in
+    let open OpamProcess in
+    let json_error = function
+      | Process_error r ->
+        `O [ ("process-error",
+              `O [ ("code", `String (string_of_int r.r_code));
+                   ("duration", `Float r.r_duration);
+                   ("info", `O (List.map (fun (k,v) -> (k, `String v)) r.r_info));
+                   ("stdout", `A (List.map (fun s -> `String s) r.r_stdout));
+                   ("stderr", `A (List.map (fun s -> `String s) r.r_stderr));
+                 ])]
+      | Internal_error s ->
+        `O [ ("internal-error", `String s) ] in
+    let json_action (a, e) =
+      `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
+           ("error"  ,  json_error e) ] in
+    let json = `A (List.map json_action action_errors) in
+    OpamFilename.write (OpamFilename.of_string file) (OpamJson.to_string json)
+
 (* Mean function for applying solver solutions. One main process is
    deleting the packages and updating the global state of
    OPAM. Children processes are spawned to deal with parallele builds
@@ -289,6 +311,7 @@ let parallel_apply t action solution =
     if !OpamGlobals.fake then
       OpamGlobals.msg "Simulation complete.\n";
 
+    output_json [];
     OK
   with
   | PackageActionGraph.Parallel.Cyclic actions ->
@@ -317,6 +340,8 @@ let parallel_apply t action solution =
       List.iter recover_from_error remaining;
     );
     List.iter display_error errors;
+
+    output_json errors;
     Error (List.map fst errors @ remaining)
 
 let simulate_new_state state t =
