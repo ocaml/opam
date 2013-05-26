@@ -61,7 +61,7 @@ type repository_root = dirname
 
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
-type repository_kind = [`http|`local|`git|`darcs]
+type repository_kind = [`http|`local|`git|`darcs|`hg]
 
 type repository = {
   repo_root    : repository_root;
@@ -76,6 +76,7 @@ let string_of_repository_kind = function
   | `local -> "local"
   | `git   -> "git"
   | `darcs -> "darcs"
+  | `hg -> "hg"
 
 let repository_kind_of_string = function
   | "wget"
@@ -85,6 +86,7 @@ let repository_kind_of_string = function
   | "local" -> `local
   | "git"   -> `git
   | "darcs" -> `darcs
+  | "hg" -> `hg
   | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
 
 type variable = OpamVariable.t
@@ -182,26 +184,32 @@ type pin_option =
   | Local of dirname
   | Git of address
   | Darcs of address
+  | Hg of address
   | Unpin
 
-type pin_kind = [`version|`git|`darcs|`local|`unpin]
+type pin_kind = [`version|`git|`darcs|`hg|`local|`unpin]
 
-let mk_git str =
-  let path, commit = OpamMisc.git_of_string str in
+let mk_hashsep_vcs split construct str =
+  let path, commit = split str in
   if Sys.file_exists path then
     let real_path = OpamFilename.Dir.of_string path in
     match commit with
-    | None   -> Git real_path
+    | None   -> construct real_path
     | Some c ->
       let path = Printf.sprintf "%s#%s" (OpamFilename.Dir.to_string real_path) c in
-      Git (OpamFilename.Dir.of_string path)
+      construct (OpamFilename.Dir.of_string path)
   else
-    Git (OpamFilename.raw_dir str)
+    construct (OpamFilename.raw_dir str)
+
+let mk_git str = mk_hashsep_vcs OpamMisc.git_of_string (fun x -> Git x) str
+
+let mk_hg str = mk_hashsep_vcs OpamMisc.hg_of_string (fun x -> Hg x) str
 
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
   | Some `git     -> mk_git s
+  | Some `hg      -> mk_hg s
   | Some `darcs   ->
     if Sys.file_exists s then
       Darcs (OpamFilename.Dir.of_string s)
@@ -223,6 +231,7 @@ let string_of_pin_kind = function
   | `version -> "version"
   | `git     -> "git"
   | `darcs   -> "darcs"
+  | `hg      -> "hg"
   | `local   -> "local"
   | `unpin   -> "unpin"
 
@@ -230,6 +239,7 @@ let pin_kind_of_string = function
   | "version" -> `version
   | "git"     -> `git
   | "darcs"   -> `darcs
+  | "hg"      -> `hg
   | "rsync"
   | "local"   -> `local
   | "unpin"   -> `unpin
@@ -244,6 +254,7 @@ let path_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
   | Git p
   | Darcs p
+  | Hg p
   | Local p   -> OpamFilename.Dir.to_string p
   | Unpin     -> "none"
 
@@ -251,6 +262,7 @@ let kind_of_pin_option = function
   | Version _ -> `version
   | Git _     -> `git
   | Darcs _   -> `darcs
+  | Hg _      -> `hg
   | Local _   -> `local
   | Unpin     -> `unpin
 
