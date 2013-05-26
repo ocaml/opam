@@ -170,12 +170,14 @@ module X = struct
     let s_checksum = "checksum"
     let s_git = "git"
     let s_darcs = "darcs"
+    let s_hg = "hg"
 
     let valid_fields = [
       s_archive;
       s_checksum;
       s_git;
       s_darcs;
+      s_hg
     ]
 
     let of_string filename str =
@@ -187,20 +189,30 @@ module X = struct
         OpamFormat.assoc_option s.file_contents s_git OpamFormat.parse_string in
       let darcs =
         OpamFormat.assoc_option s.file_contents s_darcs OpamFormat.parse_string in
+      let hg =
+        OpamFormat.assoc_option s.file_contents s_hg OpamFormat.parse_string in
       let checksum =
         OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
-      let url, kind = match archive, git, darcs with
-        | None  , None  , None   -> OpamGlobals.error_and_exit "Missing URL"
-        | Some x, None  , None   -> x, Some `http
-        | None  , Some x, None   -> x, Some `git
-        | None  , None  , Some x -> x, Some `darcs
-        | _ -> OpamGlobals.error_and_exit "Too many URLS" in
+      let url, kind = match archive, git, darcs, hg with
+        | None  , None  , None  , None ->
+            OpamGlobals.error_and_exit "Missing URL"
+        | Some x, None  , None  , None   ->
+            x, Some `http
+        | None  , Some x, None  , None   ->
+            x, Some `git
+        | None  , None  , Some x, None   ->
+            x, Some `darcs
+        | None  , None  , None  , Some x ->
+            x, Some `hg
+        | _ ->
+            OpamGlobals.error_and_exit "Too many URLS" in
       { url; kind; checksum }
 
     let to_string filename t =
       let url_name = match t.kind with
         | Some `git   -> "git"
         | Some `darcs -> "darcs"
+        | Some `hg    -> "hg"
         | None
         | Some `http  -> "archive"
         | Some `local -> OpamGlobals.error_and_exit

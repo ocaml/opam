@@ -327,6 +327,10 @@ let git_of_string a =
   | None       -> a, None
   | Some (a,c) -> a, Some c
 
+(* maybe paths processing will become different for git and hg, so here is
+   a separate function. *)
+let hg_of_string = git_of_string
+
 let pretty_backtrace () =
   match Printexc.get_backtrace () with
   | "" -> ""
