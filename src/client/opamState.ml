@@ -25,7 +25,8 @@ let () =
   OpamHTTP.register ();
   OpamGit.register ();
   OpamDarcs.register();
-  OpamLocal.register ()
+  OpamLocal.register ();
+  OpamHg.register ()
 
 let confirm fmt =
   Printf.ksprintf (fun msg ->
@@ -273,7 +274,8 @@ let pinned_path t name =
     match OpamPackage.Name.Map.find name t.pinned with
     | Local d
     | Darcs d
-    | Git d -> Some d
+    | Git d
+    | Hg d -> Some d
     | _     -> None
   else
     None
@@ -282,7 +284,7 @@ let pinned_path t name =
 let is_locally_pinned t name =
   if OpamPackage.Name.Map.mem name t.pinned then
     match OpamPackage.Name.Map.find name t.pinned with
-    | Local _ | Darcs _ | Git _ -> true
+    | Local _ | Darcs _ | Git _ | Hg _ -> true
     | _ -> false
   else
     false
@@ -1667,7 +1669,7 @@ let update_pinned_package t n =
   if OpamPackage.Name.Map.mem n t.pinned then
     let pin = OpamPackage.Name.Map.find n t.pinned in
     match kind_of_pin_option pin with
-    | (`git|`darcs|`local as k) ->
+    | (`git|`darcs|`local|`hg as k) ->
       let path = OpamFilename.raw_dir (path_of_pin_option pin) in
       let dst = OpamPath.Switch.pinned_dir t.root t.switch n in
       let module B = (val OpamRepository.find_backend k: OpamRepository.BACKEND) in

@@ -233,6 +233,7 @@ let repo_kind_flag =
     "local", `local;
     "git"  , `git;
     "darcs"  , `darcs;
+    "hg"   , `hg;
 
     (* aliases *)
     "wget" , `http;
@@ -241,7 +242,7 @@ let repo_kind_flag =
   ] in
   mk_opt ["k";"kind"]
     "KIND" "Specify the kind of the repository to be set (the main ones \
-            are 'http', 'local', 'git' or 'darcs')."
+            are 'http', 'local', 'git', 'darcs' or 'hg')."
     Arg.(some (enum kinds)) None
 
 let jobs_flag =
@@ -364,6 +365,8 @@ let guess_repository_kind kind address =
       if OpamMisc.starts_with ~prefix:"git" address
       || OpamMisc.ends_with ~suffix:"git" address then
         `git
+      else if OpamMisc.starts_with ~prefix:"hg" address then
+        `hg
       else
         `http
   | Some k -> k
@@ -1022,6 +1025,7 @@ let pin =
       "version", `version;
       "local"  , `local;
       "rsync"  , `local;
+      "hg"     , `hg
     ] in
     Arg.(value & opt (some & enum kinds) None & doc) in
   let force = mk_flag ["f";"force"] "Disable consistency checks." in
@@ -1075,8 +1079,8 @@ let default =
     `P "OPAM is a package manager for OCaml. It uses the powerful mancoosi \
         tools to handle dependencies, including support for version \
         constraints, optional dependencies, and conflict management.";
-    `P "It has support for different remote repositories such as HTTP, rsync, git \
-        and darcs. It handles multiple OCaml versions concurrently, and is \
+    `P "It has support for different remote repositories such as HTTP, rsync, git, \
+        darcs and mercurial. It handles multiple OCaml versions concurrently, and is \
         flexible enough to allow you to use your own repositories and packages \
         in addition to the central ones it provides.";
     `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
