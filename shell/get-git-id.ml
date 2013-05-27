@@ -6,8 +6,11 @@ let file =
     Sys.argv.(1)
 
 let read file =
-  let ic = open_in_bin file in
-  input_line ic
+  if Sys.file_exists file then
+    let ic = open_in_bin file in
+    Some (input_line ic)
+  else
+    None
 
 let write file contents =
   let write () =
@@ -15,11 +18,9 @@ let write file contents =
     output_string oc contents;
     output_char oc '\n';
     close_out oc in
-  if Sys.file_exists file then (
-    let actual = read file in
-    if actual <> contents then write ()
-  ) else
-    write ()
+  match read file with
+  | None        -> write ()
+  | Some actual -> if actual <> contents then write ()
 
 let (/) = Filename.concat
 
@@ -27,15 +28,17 @@ let git file = ".git" / file
 
 let () =
   let opamGitVersion = "src" / "core" / "opamGitVersion.ml" in
-  if Sys.file_exists (git "HEAD") then (
+  let version_none () =
+    write opamGitVersion "let version = None" in
+  match read (git "HEAD") with
+  | None   -> version_none ()
+  | Some s ->
     let reference =
-      let s = read (git "HEAD") in
       try
         let c = String.rindex s ' ' in
         String.sub s (c+1) (String.length s -c-1)
       with Not_found ->
         s in
-    let sha1 = read (git reference) in
-    write opamGitVersion (Printf.sprintf "let version = Some %S" sha1)
-  ) else
-    write opamGitVersion "let version = None"
+    match read (git reference) with
+    | None      -> version_none ()
+    | Some sha1 -> write opamGitVersion (Printf.sprintf "let version = Some %S" sha1)
