@@ -63,9 +63,18 @@ let relink_compilers t ~verbose old_index =
         || OpamCompiler.Map.find comp old_index <> state
       ) compiler_index in
   let deleted_compilers =
-    OpamCompiler.Map.filter (fun comp _ ->
-        not (OpamCompiler.Map.mem comp compiler_index)
-      ) old_index in
+    let compilers =
+      OpamCompiler.Set.union
+        (OpamCompiler.Set.of_list (OpamCompiler.Map.keys old_index))
+        t.compilers in
+    OpamCompiler.Set.fold (fun comp map ->
+        if comp = OpamCompiler.system
+        || OpamCompiler.Map.mem comp compiler_index
+        || OpamState.compiler_installed t comp then
+          map
+        else
+          OpamCompiler.Map.add comp true map
+      ) compilers OpamCompiler.Map.empty in
 
   (* Delete compiler descritions, but keep the ones who disapeared and
      are still installed *)
@@ -227,10 +236,21 @@ let relink_packages t ~verbose old_index =
         not (OpamPackage.Map.mem nv old_index)
         || OpamPackage.Map.find nv old_index <> state
       ) package_index in
+  let all_installed = OpamState.all_installed t in
   let deleted_packages =
-    OpamPackage.Map.filter (fun nv _ ->
-        not (OpamPackage.Map.mem nv package_index)
-      ) old_index in
+    let packages =
+      OpamPackage.Set.union
+        (OpamPackage.Set.of_list (OpamPackage.Map.keys old_index))
+        t.packages in
+    OpamPackage.Set.fold (fun nv map ->
+        if OpamPackage.Map.mem nv package_index
+        || OpamPackage.Set.mem nv all_installed then
+          map
+        else
+          OpamPackage.Map.add nv true map
+      ) packages OpamPackage.Map.empty in
+  log "XXX: deleted_packages: %s"
+    (OpamPackage.Map.to_string (fun _ -> "") deleted_packages);
 
   (* Check all the dependencies exist *)
   let all_packages =
@@ -274,16 +294,14 @@ let relink_packages t ~verbose old_index =
     | Some f -> fn f in
 
   (* Remove the deleted packages (which are not yet unininstalled) *)
-  let all_installed = OpamState.all_installed t in
   OpamPackage.Map.iter (fun nv _ ->
-    if not (OpamPackage.Set.mem nv all_installed) then
-      match OpamState.package_repository_state t nv with
-      | None   -> ()
-      | Some s ->
-        OpamFilename.remove s.pkg_opam;
-        apply OpamFilename.remove s.pkg_descr;
-        apply OpamFilename.remove s.pkg_archive;
-  ) deleted_packages;
+      let remove fn =
+        let file = fn t.root nv in
+        if OpamFilename.exists file then OpamFilename.remove file in
+      remove OpamPath.opam;
+      remove OpamPath.descr;
+      remove OpamPath.archive;
+    ) deleted_packages;
 
   (* Create symbolic links from $repo dirs to main dir *)
   OpamPackage.Map.iter (fun nv _ ->
