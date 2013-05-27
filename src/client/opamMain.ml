@@ -1151,6 +1151,7 @@ let run_external_command () =
 
 let () =
   Sys.catch_break true;
+  let _ = Sys.signal Sys.sigpipe Sys.Signal_ignore in
   try
     if is_external_command () then
       run_external_command ();

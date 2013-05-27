@@ -362,7 +362,10 @@ let call_external_solver ~explain univ req =
     if Cudf.universe_size univ > 0 then begin
       let cmd = aspcud_command path in
       let criteria = OpamGlobals.aspcud_criteria in
-      Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
+      try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
+      with e ->
+        OpamGlobals.msg "WARNING: '%s' failed with %s\n" cmd (Printexc.to_string e);
+        Algo.Depsolver.check_request ~explain cudf_request
     end else
       Algo.Depsolver.Sat(None,Cudf.load_universe [])
 
