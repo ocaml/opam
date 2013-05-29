@@ -226,6 +226,7 @@ module Make (G : G) = struct
         begin match status with
           | Unix.WEXITED 0 ->
             t := visit !t n;
+            (* we execute the 'post' function of the parent process *)
             post n
           | _ ->
             let from_child = from_child () in
@@ -249,6 +250,9 @@ module Make (G : G) = struct
         (* Set-up a channel from the child to the parent *)
         let error_file = OpamSystem.temp_file "error" in
 
+        (* We execute the 'pre' function before the fork *)
+        pre n;
+
         match Unix.fork () with
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
@@ -263,6 +267,7 @@ module Make (G : G) = struct
             write_error to_parent p;
             exit 1 in
           begin
+            (* the 'child' function is executed on the child *)
             try child n; log "OK"; exit 0
             with
             | OpamSystem.Process_error p  -> return (Process_error p)
@@ -280,7 +285,6 @@ module Make (G : G) = struct
           log "Creating process %d" pid;
           let from_child () = open_in_bin error_file in
           pids := OpamMisc.IntMap.add pid (n, from_child) !pids;
-          pre n;
           loop (nslots - 1)
       ) in
     loop n
@@ -290,17 +294,22 @@ module Make (G : G) = struct
     let file repo = List.assoc repo !files in
 
     let pre repo =
-      files := (repo, OpamSystem.temp_file "map-reduce") :: !files
+      let tmpfile = OpamSystem.temp_file "map-reduce" in
+      log "pre %S (%s)"(G.string_of_vertex repo) tmpfile;
+      files := (repo, tmpfile) :: !files
     in
 
     let child repo =
+      log "child %S" (G.string_of_vertex repo);
+      let file = file repo in
       let result = map repo in
-      let oc = open_out (file repo) in
+      let oc = open_out file in
       Marshal.to_channel oc result []
     in
 
     let acc = ref init in
     let post repo =
+      log "post %S" (G.string_of_vertex repo);
       let file = file repo in
       let ic = open_in_bin file in
       let result =
