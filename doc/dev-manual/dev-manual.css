@@ -1,0 +1,109 @@
+/* ==== general presentation ==== */
+body {
+  padding: 0.4em 16% 3em 8%;
+}
+h1, h1 a,
+h2, h2 a,
+h3, h3 a {
+  padding: 0 0 0 0.4em;
+}
+.titlemain,
+.titlerest {
+  padding: 0.2em 3.8em;
+}
+pre {
+  padding: 0.2em 0.4em;
+  margin: 0.4em 0.6em;
+}
+p {
+  padding: 0 0 0 0.8em;
+}
+dt {
+  padding: 0 0 0 0.6em;
+}
+h1 { font-size: 1.6em; }
+h2 { font-size: 1.4em; }
+h3 { font-size: 1.2em; }
+h1 a { font-size: 1.0em; }
+h2 a { font-size: 1.0em; }
+h3 a { font-size: 1.0em; }
+a {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ==== morning colors ==== */
+body {
+  color: #333;
+  background-color: #F0F0F0;
+}
+pre {
+  color: #224;
+  background: #DDE;
+  border: 1px solid #8AC;
+}
+h1, h1 a,
+h2, h2 a,
+h3, h3 a {
+  color: #228;
+  background: #CDF;
+}
+a {
+  color: #08C;
+}
+a:hover {
+  color: #06E;
+  background: #DEF;
+}
+
+/* ==== evening colors ==== *\
+body {
+  color: #CCC;
+  background-color: #226;
+}
+pre {
+  color: #BDF;
+  background: #447;
+  border: 1px solid #46A;
+}
+h1, h1 a,
+h2, h2 a,
+h3, h3 a {
+  color: #CCC;
+  background: #359;
+}
+a {
+  color: #6CF;
+}
+a:hover {
+  color: #9EF;
+  background: #448;
+}
+*/
+
+/* ==== sunny colors ==== *\
+body {
+  color: #333;
+  background-color: #ffcd95;
+}
+pre {
+  color: #422;
+  background: #fdb50b;
+  border: 1px solid #832809;
+}
+h1, h1 a,
+h2, h2 a,
+h3, h3 a {
+  color: #672910;
+  background: #ff9a0a;
+}
+a {
+  color: #b94a48;
+}
+a:hover {
+  color: #91310b;
+  background: #fccb0d;
+}
+*/
