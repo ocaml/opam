@@ -873,8 +873,8 @@ module SafeAPI = struct
     let config option =
       read_lock (fun () -> API.CONFIG.config option)
 
-    let env ~csh =
-      read_lock (fun () -> API.CONFIG.env ~csh)
+    let env ~csh ~sexp =
+      read_lock (fun () -> API.CONFIG.env ~csh ~sexp)
 
     let setup local global =
       global_lock (fun () -> API.CONFIG.setup local global)
