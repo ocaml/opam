@@ -837,7 +837,7 @@ let repository name =
   let usage_add = "opam repository add <NAME> <ADDRESS>" in
   let usage_list = "opam repository list" in
   let usage_priority = "opam repository priority <NAME> <INT>" in
-  let usage_remove = "opam repository remove <NANE>" in
+  let usage_remove = "opam repository remove <NAME>" in
 
   let repository global_options command kind priority short params =
     set_global_options global_options;
