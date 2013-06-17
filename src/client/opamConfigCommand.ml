@@ -247,11 +247,20 @@ let print_csh_env env =
     OpamGlobals.msg "setenv %s %S;\n" k v;
   ) env
 
-let env ~csh =
+let print_sexp_env env =
+  OpamGlobals.msg "(\n";
+  List.iter (fun (k,v) ->
+    OpamGlobals.msg "  (%S %S)\n" k v;
+  ) env;
+  OpamGlobals.msg ")\n"
+
+let env ~csh ~sexp =
   log "config-env";
   let t = OpamState.load_env_state "config-env" in
   let env = OpamState.get_opam_env t in
-  if csh then
+  if sexp then
+    print_sexp_env env
+  else if csh then
     print_csh_env env
   else
     print_env env

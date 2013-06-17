@@ -64,7 +64,7 @@ module API: sig
     val config: config -> unit
 
     (** Display environment. *)
-    val env: csh:bool -> unit
+    val env: csh:bool -> sexp:bool -> unit
 
     (** Global and user setup of OPAM. *)
     val setup: user_config option -> global_config option -> unit

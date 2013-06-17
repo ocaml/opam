@@ -584,6 +584,7 @@ let config =
   let no_eval_doc     = "Do not install `opam-switch-eval` to switch & eval using a single command." in
   let dot_profile_doc = "Select which configuration file to update (default is ~/.profile)." in
   let list_doc        = "List the current configuration." in
+  let sexp_doc        = "Display environment variables as an s-expression" in
   let profile         = mk_flag ["profile"]        profile_doc in
   let ocamlinit       = mk_flag ["ocamlinit"]      ocamlinit_doc in
   let no_complete     = mk_flag ["no-complete"]    no_complete_doc in
@@ -592,11 +593,12 @@ let config =
   let user            = mk_flag ["u";"user"]       user_doc in
   let global          = mk_flag ["g";"global"]     global_doc in
   let list            = mk_flag ["l";"list"]       list_doc in
+  let sexp            = mk_flag ["sexp"]           sexp_doc in
   let env    =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
   let config global_options
-      command env is_rec sh csh zsh
+      command env is_rec sh csh zsh sexp
       dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
@@ -610,10 +612,10 @@ let config =
     match command with
     | None           ->
       if env="nv" then
-        OpamConfigCommand.env ~csh
+        OpamConfigCommand.env ~csh ~sexp
       else
         OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
-    | Some `env   -> Client.CONFIG.env ~csh
+    | Some `env   -> Client.CONFIG.env ~csh ~sexp
     | Some `setup ->
       let user        = all || user in
       let global      = all || global in
@@ -677,7 +679,7 @@ let config =
     | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
 
   Term.(pure config
-    $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag
+    $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag $sexp
     $dot_profile_flag $list $all $global $user
     $profile $ocamlinit $no_complete $no_switch_eval
     $params),
@@ -835,7 +837,7 @@ let repository name =
   let usage_add = "opam repository add <NAME> <ADDRESS>" in
   let usage_list = "opam repository list" in
   let usage_priority = "opam repository priority <NAME> <INT>" in
-  let usage_remove = "opam repository remove <NANE>" in
+  let usage_remove = "opam repository remove <NAME>" in
 
   let repository global_options command kind priority short params =
     set_global_options global_options;

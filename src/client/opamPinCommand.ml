@@ -42,7 +42,7 @@ let pin ~force action =
       | Version _ -> ()
       | _         ->
         if not force && OpamState.mem_installed_package_by_name t name then
-          OpamGlobals.error_and_exit "You must uninstall the package before unpinning it (or use --force).";
+          OpamGlobals.error_and_exit "You must remove the package before unpinning it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
   | _     ->
@@ -75,7 +75,7 @@ let pin ~force action =
       | Git _ | Darcs _ | Local _ | Hg _ ->
         if not force && OpamState.mem_installed_package_by_name t name then
           OpamGlobals.error_and_exit
-            "Cannot pin %s to a dev version as it is already installed. You must uninstall it first (or use --force)."
+            "Cannot pin %s to a dev version as it is already installed. You must remove it first (or use --force)."
             (OpamPackage.Name.to_string name);
     end;
 
