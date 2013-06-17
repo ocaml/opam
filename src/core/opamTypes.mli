@@ -354,7 +354,7 @@ type config = {
 
 
 (** Shell compatibility modes *)
-type shell = [`csh|`zsh|`sh|`bash]
+type shell = [`fish|`csh|`zsh|`sh|`bash]
 
 (** Pretty-print *)
 val string_of_shell: shell -> string
