@@ -12,7 +12,7 @@ opam\-switch \- Manage multiple installation of compilers.
 \fBopam switch\fR [\fIOPTION\fR]... [\fICOMMAND\fR] [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-This command allows to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independant from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each.
+This command allows one to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independant from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each.
 .P
 See the documentation of \fBopam switch list\fR to see the compilers which are available, and how to switch or to install a new one.
 .SH ARGUMENTS
@@ -43,7 +43,7 @@ Display the external packages associated to the given tags.
 The name of the file to export to/import from.
 .TP 4
 \fB\-\-fake\fR
-WARNING: This option is for testing purposes only! Using this option without care is the best way to corrupt your current compiler environement. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands.
+WARNING: This option is for testing purposes only! Using this option without care is the best way to corrupt your current compiler environment. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands.
 .TP 4
 \fB\-i\fR, \fB\-\-installed\fR
 List installed packages only.

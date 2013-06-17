@@ -212,7 +212,7 @@ module Export: IO_FILE with type t = package_set * package_set
 (** List of installed packages: [$opam/$oversion/installed] *)
 module Installed: IO_FILE with type t = package_set
 
-(** List of packages explicitely installed by the user:
+(** List of packages explicitly installed by the user:
     [$opam/$switch/installed.user] *)
 module Installed_roots: IO_FILE with type t = package_set
 

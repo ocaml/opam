@@ -1306,7 +1306,7 @@ let update_dot_profile t dot_profile shell =
   | `no        -> OpamGlobals.msg "  %s is already up-to-date.\n" pretty_dot_profile
   | `otherroot ->
     OpamGlobals.msg
-      "  %s is already configured for an other OPAM root.\n"
+      "  %s is already configured for another OPAM root.\n"
       pretty_dot_profile
   | `yes       ->
     let init_file = init_file shell in

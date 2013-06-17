@@ -342,7 +342,7 @@ let build_options =
   let fake =
     mk_flag ["fake"]
       "WARNING: This option is for testing purposes only! Using this option without    \
-       care is the best way to corrupt your current compiler environement. When using \
+       care is the best way to corrupt your current compiler environment. When using \
        this option OPAM will run a dry-run of the solver and then fake the build and  \
        install commands." in
   let output_json =
@@ -723,7 +723,7 @@ let remove =
   ] in
   let autoremove =
     mk_flag ["a";"auto-remove"]
-      "Remove all the packages which have not been explicitely installed and \
+      "Remove all the packages which have not been explicitly installed and \
        which are not necessary anymore. It is possible to enforce keeping an \
        already installed package by running $(b,opam install <pkg>). This flag \
        can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
@@ -898,7 +898,7 @@ let switch =
                                     description. To switch to an already installed compiler alias (with \
                                     state = I), use $(b,opam switch <name>). If you want to use a new \
                                     compiler <comp>, use $(b,opam switch <comp>): this will download, \
-                                    compile and create a fresh and independant environment where new packages can be installed. \
+                                    compile and create a fresh and independent environment where new packages can be installed. \
                                     If you want to create a new compiler alias (for instance because you already have \
                                     this compiler version installed), use $(b,opam switch <name> --alias-of <comp>). In case \
                                     <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
@@ -906,10 +906,10 @@ let switch =
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command allows to switch between different compiler versions, \
+    `P "This command allows one to switch between different compiler versions, \
         installing the compiler if $(b,opam switch) is used to switch to that \
         compiler for the first time. The different compiler versions are \
-        totally independant from each other, meaning that OPAM maintains a \
+        totally independent from each other, meaning that OPAM maintains a \
         separate state (e.g. list of installed packages...) for each.";
     `P "See the documentation of $(b,opam switch list) to see the compilers which \
         are available, and how to switch or to install a new one."

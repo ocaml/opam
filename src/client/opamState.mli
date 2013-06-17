@@ -68,7 +68,7 @@ type state = {
   (** The list of installed packages *)
   installed: OpamFile.Installed.t;
 
-  (** The list of packages explicitely installed by the user *)
+  (** The list of packages explicitly installed by the user *)
   installed_roots: OpamFile.Installed_roots.t;
 
   (** The list of packages which needs to be reinsalled *)
