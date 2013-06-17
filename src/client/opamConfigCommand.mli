@@ -19,7 +19,7 @@
 open OpamTypes
 
 (** Display the current environment *)
-val env: csh:bool -> sexp:bool -> unit
+val env: csh:bool -> sexp:bool -> fish:bool -> unit
 
 (** Display the content of all available variables *)
 val list: name list -> unit

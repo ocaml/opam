@@ -254,7 +254,12 @@ let print_sexp_env env =
   ) env;
   OpamGlobals.msg ")\n"
 
-let env ~csh ~sexp =
+let print_fish_env env =
+  List.iter (fun (k,v) ->
+    OpamGlobals.msg "set -x %s %s;\n" k (String.concat " " (OpamMisc.split v ':'));
+  ) env
+
+let env ~csh ~sexp ~fish=
   log "config-env";
   let t = OpamState.load_env_state "config-env" in
   let env = OpamState.get_opam_env t in
@@ -262,6 +267,8 @@ let env ~csh ~sexp =
     print_sexp_env env
   else if csh then
     print_csh_env env
+  else if fish then
+    print_fish_env env
   else
     print_env env
 
