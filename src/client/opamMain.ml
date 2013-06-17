@@ -211,6 +211,9 @@ let installed_flag =
 let installed_roots_flag =
   mk_flag ["installed-roots"] "Display only the installed roots."
 
+let fish_flag =
+  mk_flag ["fish"] "Use fish-compatible mode for configuring OPAM."
+
 let zsh_flag =
   mk_flag ["zsh"] "Use zsh-compatible mode for configuring OPAM."
 
@@ -409,7 +412,7 @@ let init =
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
-      no_setup auto_setup sh csh zsh dot_profile_o =
+      no_setup auto_setup sh csh zsh fish dot_profile_o =
     set_global_options global_options;
     set_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
@@ -425,12 +428,13 @@ let init =
       if sh then `sh
       else if csh then `csh
       else if zsh then `zsh
+      else if fish then `fish
       else OpamMisc.guess_shell_compat () in
     let dot_profile = init_dot_profile shell dot_profile_o in
     Client.init repository compiler ~jobs shell dot_profile update_config in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
-    $no_setup $auto_setup $sh_flag $csh_flag $zsh_flag $dot_profile_flag),
+    $no_setup $auto_setup $sh_flag $fish_flag $csh_flag $zsh_flag $dot_profile_flag),
   term_info "init" ~doc ~man
 
 (* LIST *)
@@ -598,7 +602,7 @@ let config =
     mk_opt ["e"] "" "Backward-compatible option, equivalent to $(b,opam config env)." Arg.string "" in
 
   let config global_options
-      command env is_rec sh csh zsh sexp
+      command env is_rec sh csh zsh fish sexp
       dot_profile_o list all global user
       profile ocamlinit no_complete no_switch_eval
       params =
@@ -612,10 +616,10 @@ let config =
     match command with
     | None           ->
       if env="nv" then
-        OpamConfigCommand.env ~csh ~sexp
+        OpamConfigCommand.env ~csh ~sexp ~fish
       else
         OpamGlobals.error_and_exit "Missing subcommand. Usage: 'opam config <SUBCOMMAND>'"
-    | Some `env   -> Client.CONFIG.env ~csh ~sexp
+    | Some `env   -> Client.CONFIG.env ~csh ~sexp ~fish
     | Some `setup ->
       let user        = all || user in
       let global      = all || global in
@@ -627,6 +631,7 @@ let config =
         if sh then `sh
         else if csh then `csh
         else if zsh then `zsh
+        else if fish then `fish
         else OpamMisc.guess_shell_compat () in
       let dot_profile = init_dot_profile shell dot_profile_o in
       if list then
@@ -643,7 +648,7 @@ let config =
            Main options\n\
           \    -l, --list           %s\n\
           \    -a, --all            %s\n\
-          \    --sh,--csh,--zsh     Force the configuration mode to a given shell.\n\
+          \    --sh,--csh,--zsh,--fish     Force the configuration mode to a given shell.\n\
            \n\
            User configuration\n\
           \    -u, --user           %s\n\
@@ -679,7 +684,7 @@ let config =
     | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
 
   Term.(pure config
-    $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag $sexp
+    $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
     $dot_profile_flag $list $all $global $user
     $profile $ocamlinit $no_complete $no_switch_eval
     $params),

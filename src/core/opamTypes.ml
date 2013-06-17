@@ -138,9 +138,10 @@ type ppflag =
   | Camlp4 of string list
   | Cmd of string list
 
-type shell = [`csh|`zsh|`sh|`bash]
+type shell = [`fish|`csh|`zsh|`sh|`bash]
 
 let string_of_shell = function
+  | `fish -> "fish"
   | `csh  -> "csh"
   | `zsh  -> "zsh"
   | `sh   -> "sh"

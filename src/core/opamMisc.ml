@@ -383,6 +383,7 @@ let shell_of_string = function
   | "csh"  -> `csh
   | "zsh"  -> `zsh
   | "bash" -> `bash
+  | "fish" -> `fish
   | _      -> `sh
 
 let guess_shell_compat () =
@@ -394,6 +395,7 @@ let guess_dot_profile shell =
     try Filename.concat (getenv "HOME") f
     with _ -> f in
   match shell with
+  | `fish -> List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
   | `zsh  -> home ".zshrc"
   | `bash ->
     let bash_profile = home ".bash_profile" in

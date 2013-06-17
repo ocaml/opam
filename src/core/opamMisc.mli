@@ -221,7 +221,7 @@ val terminal_columns : unit -> int
 val uname_s: unit -> string option
 
 (** Guess the shell compat-mode *)
-val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash]
+val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash|`fish]
 
 (** Guess the location of .profile *)
-val guess_dot_profile: [`csh|`zsh|`sh|`bash] -> string
+val guess_dot_profile: [`csh|`zsh|`sh|`bash|`fish] -> string
