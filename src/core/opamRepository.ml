@@ -71,6 +71,7 @@ module type BACKEND = sig
   val pull_file: dirname -> filename -> filename download
   val pull_dir: dirname -> dirname -> dirname download
   val pull_repo: repository -> unit
+  val pull_archive: repository -> filename -> filename download
 end
 
 exception Unknown_backend
@@ -182,10 +183,10 @@ let kind_of_url url =
   then `local
   else `http
 
-let download_archive repo nv =
+let pull_archive repo nv =
+  let module B = (val find_backend_by_kind repo.repo_kind: BACKEND) in
   let filename = OpamPath.Repository.remote_archive repo nv in
-  let dirname = OpamPath.Repository.archives_dir repo in
-  pull_file repo.repo_kind dirname filename
+  B.pull_archive repo filename
 
 let read_prefix local_repo =
   OpamFile.Prefix.safe_read (OpamPath.Repository.prefix local_repo)
@@ -307,7 +308,7 @@ let make_archive ?(gener_digest=false) repo nv =
 let download repo nv =
   log "download %s %s" (to_string repo) (OpamPackage.to_string nv);
   (* If the archive is on the server, download it directly *)
-  match download_archive repo nv with
+  match pull_archive repo nv with
   | Up_to_date _ ->
     OpamGlobals.msg "The archive for %s is in the local cache.\n"
       (OpamPackage.to_string nv);

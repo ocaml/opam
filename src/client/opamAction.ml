@@ -199,8 +199,11 @@ let get_archive t nv =
         | Some _ -> ()
       end;
       let src = OpamPath.Repository.archive s.pkg_repo nv in
-      OpamFilename.move ~src ~dst;
-      Some dst
+      if OpamFilename.exists src then (
+        OpamFilename.move ~src ~dst;
+        Some dst;
+      ) else
+        None
 
 (* Prepare the package build:
    * apply the patches

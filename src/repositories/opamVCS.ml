@@ -51,6 +51,7 @@ module Make (VCS: VCS) = struct
       None
 
   let rec pull_repo repo =
+    log "pull-repo";
     match check_updates repo with
     | None ->
       OpamFilename.mkdir repo.repo_root;
@@ -61,6 +62,7 @@ module Make (VCS: VCS) = struct
       else Up_to_date repo.repo_root
 
   let pull_dir dirname address =
+    log "pull-dir";
     let repo = OpamRepository.default () in
     let repo = {
       repo with
@@ -70,6 +72,11 @@ module Make (VCS: VCS) = struct
     pull_repo repo
 
   let pull_repo repo =
+    log "pull-repo";
     ignore (pull_repo repo)
+
+  let pull_archive repo filename =
+    log "pull-archive";
+    pull_file (OpamPath.Repository.archives_dir repo) filename
 
 end

@@ -110,8 +110,12 @@ module type BACKEND = sig
   val pull_dir: dirname -> dirname -> dirname download
 
   (** Pull a repository. Usually very similar to [pull_dir] but some
-      backends have special need. *)
+      backends have special needs. *)
   val pull_repo: repository -> unit
+
+  (** Pull an archive in a repository. Usually very similar to
+      [pull_file] but some backends have special needs. *)
+  val pull_archive: repository -> filename -> filename download
 
 end
 

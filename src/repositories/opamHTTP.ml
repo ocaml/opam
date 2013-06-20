@@ -126,6 +126,7 @@ module B = struct
   }
 
   let init repo =
+    log "init";
     try
       (* Download urls.txt *)
       let state = make_state ~download_index:true repo in
@@ -145,12 +146,14 @@ module B = struct
         (OpamFilename.Dir.to_string repo.repo_address)
 
   let curl ~remote_file ~local_file =
+    log "curl";
     log "dowloading %s" (OpamFilename.to_string remote_file);
     let local_dir = OpamFilename.dirname local_file in
     OpamFilename.mkdir local_dir;
     OpamFilename.download ~overwrite:true remote_file local_dir
 
   let pull_files ~all repo =
+    log "pull-files";
     let local_files =
       if all then OpamFilename.rec_files repo.repo_root
       else local_files repo in
@@ -200,19 +203,35 @@ module B = struct
       Up_to_date repo.repo_root
 
   let pull_dir dirname address =
+    log "pull-dir";
     let repo = repo dirname address in
     pull_files ~all:true repo
 
   let pull_repo repo =
+    log "pull-repo";
     ignore (pull_files ~all:false repo)
 
   (* XXX: add a proxy *)
   let pull_file dirname filename =
+    log "pull-file";
     OpamGlobals.msg "Downloading %s.\n" (OpamFilename.prettify filename);
     try
       let local_file = OpamFilename.download ~overwrite:true filename dirname in
       Result local_file
     with _ ->
+      Not_available
+
+  let pull_archive repo filename =
+    log "pull-archive";
+    let state = make_state ~download_index:true repo in
+    if OpamFilename.Map.mem filename state.remote_local then (
+      OpamGlobals.msg "Downloading %s\n" (OpamFilename.prettify filename);
+      let local_file = OpamFilename.Map.find filename state.remote_local in
+      if is_up_to_date state local_file then
+        Up_to_date local_file
+      else
+        Result (curl ~remote_file:filename ~local_file)
+    ) else
       Not_available
 
 end
