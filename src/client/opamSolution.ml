@@ -401,7 +401,7 @@ let apply ?(force = false) t action solution =
               OpamMisc.StringSetMap.fold (fun tags values accu ->
                 if OpamMisc.StringSet.(
                     (* A \subseteq B <=> (A U B) / B = 0 *)
-                    is_empty (diff (union external_tags tags) tags)
+                    is_empty (diff (union external_tags tags) external_tags)
                   )
                 then
                   OpamMisc.StringSet.union values accu
