@@ -1,4 +1,5 @@
 1.0.1 (trunk)
+* Inverse the depext tag selection (useful for `ocamlot`)
 * Add a `--sexp` option to `opam config env` to load the configuration under emacs
 * Purge `~/.opam/log` on each invocation of OPAM
 * System compiler with versions such as `version+patches` are now handled as if this was simply `version`
