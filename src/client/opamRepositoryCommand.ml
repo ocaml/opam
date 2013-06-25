@@ -48,7 +48,8 @@ let print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers
     deleted_compilers
 
 let relink_compilers t ~verbose old_index =
-  log "relink-compilers";
+  OpamGlobals.msg "Updating %s\n"
+    (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
   let old_index = OpamCompiler.Map.filter (fun comp _ ->
       OpamFilename.exists (OpamPath.compiler t.root comp)
     ) old_index in
@@ -215,8 +216,9 @@ let update_pinned_packages t ~verbose packages =
 (* Update the package contents, display the new packages and update
    reinstall *)
 let relink_packages t ~verbose old_index =
-  log "relink-packages";
-
+  OpamGlobals.msg "Updating %s and %s\n"
+    (OpamFilename.prettify_dir (OpamPath.opam_dir t.root))
+    (OpamFilename.prettify_dir (OpamPath.descr_dir t.root));
   let old_index = OpamPackage.Map.filter (fun nv _ ->
       OpamFilename.exists (OpamPath.opam t.root nv)
     ) old_index in
@@ -334,9 +336,11 @@ let compare_repo t r1 r2 =
     (OpamState.find_repository t r2)
 
 let update_index t =
-  log "update-index";
+  let file = OpamPath.repo_index t.root in
+  OpamGlobals.msg "Updating %s\n" (OpamFilename.prettify file);
+
   let repositories = OpamState.sorted_repositories t in
-  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
+  let repo_index = OpamFile.Repo_index.safe_read file in
 
   (* All the existing packages *)
   let packages = ref OpamPackage.Set.empty in
