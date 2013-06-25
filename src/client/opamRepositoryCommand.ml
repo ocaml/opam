@@ -95,11 +95,11 @@ let relink_compilers t ~verbose old_index =
       let comp_descr = OpamPath.compiler_descr t.root comp in
       OpamFilename.remove comp_file;
       OpamFilename.remove comp_descr;
-      OpamFilename.link ~src:s.comp_file ~dst:comp_file;
+      OpamFilename.copy ~src:s.comp_file ~dst:comp_file;
       match s.comp_descr with
       | None   -> ()
       | Some d ->
-        if OpamFilename.exists d then OpamFilename.link ~src:d ~dst:comp_descr
+        if OpamFilename.exists d then OpamFilename.copy ~src:d ~dst:comp_descr
   ) updated_compilers;
 
   if verbose then
@@ -305,11 +305,11 @@ let relink_packages t ~verbose old_index =
         OpamFilename.remove pkg_opam;
         OpamFilename.remove pkg_descr;
         OpamFilename.remove pkg_archive;
-        let link src ~dst =
-          if OpamFilename.exists src then OpamFilename.link ~src ~dst in
-        link state.pkg_opam ~dst:pkg_opam;
-        apply (link ~dst:pkg_descr)   state.pkg_descr ;
-        apply (link ~dst:pkg_archive) state.pkg_archive;
+        let copy src ~dst =
+          if OpamFilename.exists src then OpamFilename.copy ~src ~dst in
+        copy state.pkg_opam ~dst:pkg_opam;
+        apply (copy ~dst:pkg_descr)   state.pkg_descr ;
+        apply (copy ~dst:pkg_archive) state.pkg_archive;
       );
   ) updated_packages;
 
