@@ -137,6 +137,9 @@ val link_in: t -> Dir.t -> unit
 (** Read a symlinked file *)
 val readlink: t -> t
 
+(** Is a symlink ? *)
+val is_symlink: t -> bool
+
 (** Copy a file *)
 val copy: src:t -> dst:t -> unit
 
