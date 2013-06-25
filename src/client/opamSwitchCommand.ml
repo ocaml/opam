@@ -298,3 +298,6 @@ let reinstall switch =
 
   (* Install the compiler *)
   install_with_packages ~quiet:false ~packages switch ocaml_version
+
+let () =
+  OpamState.switch_reinstall_hook := reinstall
