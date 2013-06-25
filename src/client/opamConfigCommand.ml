@@ -277,10 +277,36 @@ let subst fs =
   let t = OpamState.load_state "config-substitute" in
   List.iter (OpamState.substitute_file t) fs
 
+let quick_lookup v =
+  let name = OpamVariable.Full.package v in
+  let var = OpamVariable.Full.variable v in
+  if name = OpamPackage.Name.default then (
+    let root = OpamPath.default () in
+    let switch = match !OpamGlobals.switch with
+      | `Command_line s
+      | `Env s   -> OpamSwitch.of_string s
+      | `Not_set ->
+	let config = OpamPath.config root in
+	OpamFile.Config.switch (OpamFile.Config.read config) in
+    let config = OpamPath.Switch.config root switch OpamPackage.Name.default in
+    let config = OpamFile.Dot_config.read config in
+
+    if OpamVariable.to_string var = "switch" then
+      Some (S (OpamSwitch.to_string switch))
+    else match OpamVariable.Full.section v with
+    | None   -> Some (OpamFile.Dot_config.variable config var)
+    | Some s -> Some (OpamFile.Dot_config.Section.variable config s var)
+  ) else
+    None
+
 let variable v =
   log "config-variable";
-  let t = OpamState.load_state "config-variable" in
-  let contents = OpamState.contents_of_variable t v in
+  let contents =
+    match quick_lookup v with
+    | Some c -> c
+    | None   ->
+      let t = OpamState.load_state "config-variable" in
+      OpamState.contents_of_variable t v in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =
