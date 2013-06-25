@@ -350,7 +350,8 @@ module API = struct
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
 
-  let update_aux t ~verbose repos =
+  let update repos =
+    let t = OpamState.load_state ~save_cache:true "update" in
     log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
     let repositories =
       if repos = [] then
@@ -450,12 +451,12 @@ module API = struct
         OpamRepository.update
         (OpamRepositoryName.Map.values repositories);
       let t = OpamRepositoryCommand.update_index t in
-      OpamRepositoryCommand.relink_compilers t ~verbose old_compiler_index;
-      OpamRepositoryCommand.relink_packages t ~verbose old_package_index;
+      OpamRepositoryCommand.relink_compilers t ~verbose:true old_compiler_index;
+      OpamRepositoryCommand.relink_packages t ~verbose:true old_package_index;
     );
 
     if pinned_packages_need_update then
-      OpamRepositoryCommand.update_pinned_packages ~verbose t pinned_packages;
+      OpamRepositoryCommand.update_pinned_packages ~verbose:true t pinned_packages;
 
     OpamState.rebuild_state_cache ();
 
@@ -467,10 +468,6 @@ module API = struct
         OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
       ) else
         OpamGlobals.msg "Everything is up-to-date.\n"
-
-  let update repositories =
-    let t = OpamState.load_state ~save_cache:true "update" in
-    update_aux t ~verbose:true repositories
 
   let upgrade names =
     log "UPGRADE %s"
@@ -568,19 +565,20 @@ module API = struct
         OpamFilename.mkdir (OpamPath.archives_dir root);
         OpamFilename.mkdir (OpamPath.compilers_dir root);
 
-        (* Load the partial state, and update the repository state *)
+        (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_repository_state "init-1" in
-        update_aux t ~verbose:false [];
+        let t = OpamRepositoryCommand.update_index t in
+	OpamRepositoryCommand.relink_compilers t ~verbose:false OpamCompiler.Map.empty;
+	OpamRepositoryCommand.relink_packages t ~verbose:false OpamPackage.Map.empty;
 
-        (* Load the partial state, and update the packages state *)
-        log "updating package state";
+        (* Load the partial state, and install the new compiler if needed *)
+	log "updating package state";
         let t = OpamState.load_state ~save_cache:false "init-2" in
         let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
         OpamState.install_compiler t ~quiet switch compiler;
         OpamState.update_switch_config t switch;
-        update_aux t ~verbose:false [];
 
         (* Finally, load the complete state and install the compiler packages *)
         log "installing compiler packages";
