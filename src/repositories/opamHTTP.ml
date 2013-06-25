@@ -38,10 +38,12 @@ let index_file_save local_path = local_path // "urls.txt.0"
 let index_archive local_path = local_path // "index.tar.gz"
 
 let local_files repo =
-  OpamPath.Repository.version repo ::
-  OpamFilename.rec_files (OpamPath.Repository.packages_dir repo) @
-  OpamFilename.rec_files (OpamPath.Repository.archives_dir repo) @
-  OpamFilename.rec_files (OpamPath.Repository.compilers_dir repo)
+  let all =
+    OpamPath.Repository.version repo ::
+      OpamFilename.rec_files (OpamPath.Repository.packages_dir repo) @
+      OpamFilename.rec_files (OpamPath.Repository.archives_dir repo) @
+      OpamFilename.rec_files (OpamPath.Repository.compilers_dir repo) in
+  List.filter OpamFilename.exists all
 
 let make_state ~download_index repo =
   if List.mem_assoc repo.repo_address !state_cache then
@@ -260,7 +262,7 @@ let make_urls_txt repo_root =
 
 let make_index_tar_gz repo_root =
   OpamFilename.in_dir repo_root (fun () ->
-    let dirs = [ "compilers"; "packages" ] in
+    let dirs = [ "version"; "compilers"; "packages" ] in
     match List.filter Sys.file_exists dirs with
     | [] -> ()
     | d  -> OpamSystem.command ("tar" :: "czf" :: "index.tar.gz" :: d)
