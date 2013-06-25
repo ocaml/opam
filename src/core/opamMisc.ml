@@ -64,6 +64,8 @@ let rec pretty_list = function
   | [a;b] -> Printf.sprintf "%s and %s" a b
   | h::t  -> Printf.sprintf "%s, %s" h (pretty_list t)
 
+let max_print = 100
+
 module Set = struct
 
   module Make (O : OrderedType) = struct
@@ -82,8 +84,11 @@ module Set = struct
       List.fold_left (fun set e -> add e set) empty l
 
     let to_string s =
-      let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
-      string_of_list (fun x -> x) (List.rev l)
+      if S.cardinal s > max_print then
+	Printf.sprintf "%d elements" (S.cardinal s)
+      else
+	let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
+	string_of_list (fun x -> x) (List.rev l)
 
     let map f t =
       S.fold (fun e set -> S.add (f e) set) t S.empty
@@ -118,9 +123,12 @@ module Map = struct
       ) m1 m2
 
     let to_string string_of_value m =
-      let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
-      let l = fold (fun k v l -> s (k,v)::l) m [] in
-      string_of_list (fun x -> x) l
+      if M.cardinal m > 100 then
+	Printf.sprintf "%d elements" (M.cardinal m)
+      else
+	let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
+	let l = fold (fun k v l -> s (k,v)::l) m [] in
+	string_of_list (fun x -> x) l
 
     let of_list l =
       List.fold_left (fun map (k,v) -> add k v map) empty l
