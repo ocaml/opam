@@ -45,12 +45,12 @@ module Git = struct
 
   let fetch repo =
     let address = address repo in
-    OpamGlobals.msg "Synchronizing %s with %s%s.\n"
-      (OpamFilename.prettify_dir repo.repo_root)
+    OpamGlobals.msg "%-10s Fetching %s%s\n"
+      (OpamRepositoryName.to_string repo.repo_name)
       (OpamFilename.prettify_dir address.address)
       (match address.commit with
-       | None   -> ""
-       | Some c -> Printf.sprintf " [%s]" c);
+      | None   -> ""
+      | Some c -> Printf.sprintf " [%s]" c);
     OpamFilename.in_dir repo.repo_root (fun () ->
       OpamSystem.command [ "git" ; "fetch" ; "origin" ]
     )

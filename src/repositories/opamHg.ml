@@ -45,8 +45,8 @@ module Hg = struct
 
   let fetch repo =
     let address = address repo in
-    OpamGlobals.msg "Synchronizing %s with %s%s.\n"
-      (OpamFilename.prettify_dir repo.repo_root)
+    OpamGlobals.msg "%-10s Synchronizing with %s%s\n"
+      (OpamRepositoryName.to_string repo.repo_name)
       (OpamFilename.prettify_dir address.address)
       (match address.commit with
        | None   -> ""

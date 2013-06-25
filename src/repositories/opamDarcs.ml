@@ -37,8 +37,8 @@ module Darcs = struct
     ]
 
   let fetch repo =
-    OpamGlobals.msg "Synchronizing %s with %s.\n"
-      (OpamFilename.prettify_dir repo.repo_root)
+    OpamGlobals.msg "%-10s Fetching %s\n"
+      (OpamRepositoryName.to_string repo.repo_name)
       (OpamFilename.prettify_dir repo.repo_address);
     OpamFilename.in_dir repo.repo_root (fun () ->
       (* Fetch the changes and save them to a temporary patch bundle *)

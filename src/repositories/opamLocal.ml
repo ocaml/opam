@@ -74,13 +74,13 @@ module B = struct
 
   let pull_dir local_dirname remote_dirname =
     log "pull-dir";
-    OpamGlobals.msg "Synchronizing %s with %s.\n"
-      (OpamFilename.prettify_dir local_dirname)
-      (OpamFilename.prettify_dir remote_dirname);
     rsync_dirs remote_dirname local_dirname
 
   let pull_repo repo =
     log "pull-repo";
+    OpamGlobals.msg "%-10s Synchronizing with %s\n"
+      (OpamRepositoryName.to_string repo.repo_name)
+      (OpamFilename.prettify_dir repo.repo_address);
     ignore (pull_file repo.repo_root (OpamPath.Repository.version repo));
     List.iter
       (fun (local, remote) -> ignore (pull_dir (local repo) (remote repo)))
