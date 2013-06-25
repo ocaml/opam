@@ -1432,14 +1432,12 @@ let print_env_warning t user =
       | Some u -> match u.dot_profile with
         | None -> ""
         | Some f ->
-          let dot_profile =
-            Printf.sprintf " (for instance %s)" (OpamFilename.prettify f) in
           Printf.sprintf
             "2. To correctly configure OPAM for subsequent use, add the following\n\
                 line to your profile file (for instance %s):\n\
              \n\
             \      %s\n"
-            dot_profile
+            (OpamFilename.prettify f)
             (source t (init_file u.shell)) in
     let ocamlinit_string = match user with
       | None   -> ""
@@ -1450,7 +1448,7 @@ let print_env_warning t user =
           \      let () =\n\
           \        try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
           \        with Not_found -> ()\n\
-          \      ;;\n"
+          \      ;;\n\n"
     in
     let line =
       "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
@@ -1480,7 +1478,7 @@ let update_setup_interactive t shell dot_profile =
        other files for best results. You can also make these additions manually\n\
        if you wish.\n\
        \n\
-       If you agree, OPAM will modify:\n\
+       If you agree, OPAM will modify:\n\n\
       \  - %s (or a file you specify) to set the right environment\n\
       \    variables and to load the auto-completion scripts for your shell (%s)\n\
       \    on startup. Specifically, it checks for and appends the following line:\n\
