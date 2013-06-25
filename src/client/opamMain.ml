@@ -450,18 +450,23 @@ let list =
         installed version or -- if the package is not installed, and a short \
         description.";
     `P " The full description can be obtained by doing $(b,opam info <package>). \
-        You can search through the package descriptions using the $(b,opam search) command."
+        You can search through the package descriptions using the $(b,opam search) \
+        command."
   ] in
-  let list global_options print_short installed installed_roots packages =
+  let all =
+    mk_flag ["a";"all"]
+      "List all the packages which can be installed on the system." in
+  let list global_options print_short all installed installed_roots packages =
     set_global_options global_options;
-    let filter = match installed, installed_roots with
-      | _, true -> `roots
-      | true, _ -> `installed
-      | _       -> `installable in
+    let filter = match all, installed, installed_roots with
+      | true, _, _ -> `installable
+      | _, _, true -> `roots
+      | _, true, _ -> `installed
+      | _          -> `installable in
     Client.list ~print_short ~filter ~exact_name:true ~case_sensitive:false
       packages in
   Term.(pure list $global_options
-    $print_short_flag $installed_flag $installed_roots_flag
+    $print_short_flag $all $installed_flag $installed_roots_flag
     $pattern_list),
   term_info "list" ~doc ~man
 
@@ -940,6 +945,8 @@ let switch =
     mk_flag ["no-switch"]
       "Only install the compiler switch, without switching to it. If the compiler switch \
        is already installed, then do nothing." in
+  let installed =
+    mk_flag ["i";"installed"] "List installed compiler switches only." in
 
   let switch global_options
       build_options command alias_of filename print_short installed no_warning no_switch
@@ -995,7 +1002,7 @@ let switch =
   Term.(pure switch
     $global_options $build_options $command
     $alias_of $filename $print_short_flag
-    $installed_flag $no_warning $no_switch $params),
+    $installed $no_warning $no_switch $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)
