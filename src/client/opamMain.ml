@@ -462,7 +462,7 @@ let list =
       | true, _, _ -> `installable
       | _, _, true -> `roots
       | _, true, _ -> `installed
-      | _          -> `installable in
+      | _          -> `installed in
     Client.list ~print_short ~filter ~exact_name:true ~case_sensitive:false
       packages in
   Term.(pure list $global_options
