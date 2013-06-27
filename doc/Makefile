@@ -17,3 +17,4 @@ man:
 
 pdf:
 	$(MAKE) -C tutorials
+	$(MAKE) -C dev-manual
