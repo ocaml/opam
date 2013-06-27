@@ -230,7 +230,7 @@ let dir = map (fun d -> D d)
 let file = map (fun f -> F f)
 
 let pull kind download address =
-  match pull_file kind download (OpamFilename.raw_file address) with
+  match pull_file kind download (OpamFilename.raw address) with
   | Not_available -> dir (pull_dir kind download (OpamFilename.raw_dir address))
   | x             -> file x
 
@@ -258,7 +258,7 @@ let make_archive ?(gener_digest=false) repo nv =
           match checksum with
           | None   -> pull kind download_dir address
           | Some c ->
-            let filename = OpamFilename.raw_file address in
+            let filename = OpamFilename.raw address in
             if gener_digest then
               file (pull_file_and_fix_digest ~url_file nv kind download_dir filename c)
             else

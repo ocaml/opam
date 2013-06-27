@@ -81,7 +81,7 @@ val create: Dir.t -> Base.t -> t
 val of_basename: Base.t -> t
 
 (** Creation from a raw string (as {i http://<path>}) *)
-val raw_file: string -> t
+val raw: string -> t
 
 (** Prettify a filename:
     - replace /path/to/opam/foo by <opam>/foo

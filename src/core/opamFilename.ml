@@ -132,7 +132,7 @@ let of_basename basename =
   let dirname = Dir.of_string "." in
   { dirname; basename }
 
-let raw_file str =
+let raw str =
   let dirname = raw_dir (Filename.dirname str) in
   let basename = Base.of_string (Filename.basename str) in
   create dirname basename

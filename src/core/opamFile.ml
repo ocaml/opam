@@ -1404,10 +1404,10 @@ module X = struct
           (OpamCompiler.Version.to_string version)
           (OpamCompiler.Version.to_string version_d);
       let src = OpamFormat.assoc_option s s_src
-          (OpamFormat.parse_string |> OpamFilename.raw_file) in
+          (OpamFormat.parse_string |> OpamFilename.raw) in
       let patches =
         OpamFormat.assoc_list s s_patches
-          (OpamFormat.parse_list (OpamFormat.parse_string |> OpamFilename.raw_file)) in
+          (OpamFormat.parse_list (OpamFormat.parse_string |> OpamFilename.raw)) in
       let configure = OpamFormat.assoc_string_list s s_configure in
       let make = OpamFormat.assoc_string_list s s_make      in
       let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
