@@ -127,7 +127,7 @@ endif
 	$(OPAM) update
 
 list:
-	$(OPAM) list
+	$(OPAM) list -a
 
 install-remove:
 	$(CHECK) -l install-remove-1
