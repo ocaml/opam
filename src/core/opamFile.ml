@@ -492,8 +492,8 @@ module X = struct
 
     let empty = {
       repo_name     = OpamRepositoryName.of_string "<none>";
-      repo_address  = OpamFilename.address_of_string "<none>";
-      repo_root     = OpamFilename.Dir.of_string "<none>";
+      repo_address  = OpamFilename.raw_dir "<none>";
+      repo_root     = OpamFilename.raw_dir "<none>";
       repo_kind     = `local;
       repo_priority = 0;
     }
@@ -1605,7 +1605,7 @@ module Make (F : F) = struct
       F.empty
     )
 
-  let dummy_file = OpamFilename.of_string "<dummy>"
+  let dummy_file = OpamFilename.raw "<dummy>"
 
   let read_from_channel ic =
     try F.of_string dummy_file (OpamSystem.string_of_channel ic)
