@@ -1,4 +1,5 @@
 1.0.1 (trunk)
+* OPAM works even when the current directory has been deleted
 * speed-up invocation of `opam config var VARIABLE` when variable is simple (eg. `prefix`, `lib`, ...)
 * `opam list` now display only the installed packages. Use `opam list -a` to get the previous behavior.
 * Inverse the depext tag selection (useful for `ocamlot`)
