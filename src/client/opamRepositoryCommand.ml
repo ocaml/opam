@@ -48,7 +48,7 @@ let print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers
     deleted_compilers
 
 let relink_compilers t ~verbose old_index =
-  OpamGlobals.msg "Updating %s\n"
+  OpamGlobals.msg "Updating %s/\n"
     (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
   let old_index = OpamCompiler.Map.filter (fun comp _ ->
       OpamFilename.exists (OpamPath.compiler t.root comp)
@@ -216,7 +216,7 @@ let update_pinned_packages t ~verbose packages =
 (* Update the package contents, display the new packages and update
    reinstall *)
 let relink_packages t ~verbose old_index =
-  OpamGlobals.msg "Updating %s and %s\n"
+  OpamGlobals.msg "Updating %s/ and %s/\n"
     (OpamFilename.prettify_dir (OpamPath.opam_dir t.root))
     (OpamFilename.prettify_dir (OpamPath.descr_dir t.root));
   let old_index = OpamPackage.Map.filter (fun nv _ ->
