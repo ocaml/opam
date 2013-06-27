@@ -46,7 +46,7 @@ This document describes the design of OPAM to answer both of these needs.
 
 \subsection*{Conventions}
 
-In this document, \verb+$home+, \verb+$opam+, \verb+$package+ and 
+In this document, \verb+$home+, \verb+$opam+, \verb+$package+ and
 \verb+$path+ are assumed to be defined as follows:
 
 \begin{itemize}
@@ -64,7 +64,7 @@ In this document, \verb+$home+, \verb+$opam+, \verb+$package+ and
   lives the collection of libraries and programs he wants to package.
 
 \item {\tt \$path} refers to a list of paths in the packager filesystem, where
-  lives the collection of programs ({\tt ocamlc}, {\tt ocamldep}, {\tt ocamlopt}, 
+  lives the collection of programs ({\tt ocamlc}, {\tt ocamldep}, {\tt ocamlopt},
   {\tt ocamlbuild}, ...).
 
 \end{itemize}
@@ -80,14 +80,14 @@ packages. Section~\ref{section:repositories} describes how
 repositories are handled, Section~\ref{section:switches} focus on
 compiler switches and finally Section~\ref{section:config} explain how
 packages can define configuration variables (which can be later used
-by the build system).  
+by the build system).
 
 \section{Managing Packages}
 \label{section:packages}
 
 \subsection{State}
 
-The client state is stored on the filesystem, under {\tt \$opam}. 
+The client state is stored on the filesystem, under {\tt \$opam}.
 All the configurations files, libraries and binaries related to a
 specific instance of the OCaml compiler in \verb+$opam/$SWITCH+, where
 \verb+$SWITCH+ is the name of that specific compiler instance. See
@@ -196,7 +196,7 @@ syntax defined in this section.
   \verb+[+ \verb+]+ \verb+{+ \verb+}+ \verb+:+''.
 \item {\tt IDENT} starts by a letter and is followed by any number of
   letters, digit and symbols, for instance: {\tt foo}, {\tt foo-bar},
-  $\ldots$. 
+  $\ldots$.
 \end{itemize}
 
 
@@ -360,7 +360,7 @@ use when trying to build the packages.
 
 \item The content of {\tt name} is \verb+$NAME+, the content of {\tt
   version} is \verb+$VERSION+. Both fields are optional are they can
-  be inferred from the filename.  
+  be inferred from the filename.
 
 \item The content of {\tt maintainer} is the contact address of the
   package maintainer.
@@ -551,7 +551,7 @@ This command will:
 \item Create an empty \verb+$opam/$SWITCH/installed+ file,
   \verb+$SWITCH+ %being the result of ``{\tt ocamlc -version}''.
   is the version from the OCaml used to compile \verb+$opam+.
-  In particular, we will not fail now 
+  In particular, we will not fail now
   if there is no \verb+ocamlc+ in \verb+$path+.
 
 \item Initialize \verb+$opam/repo/$REPO+ by running the
@@ -699,7 +699,7 @@ This command will follow the following steps:
 \begin{itemize}
 
 \item Update each repositories in \verb+$opam/config+.
-  
+
 \item For each repositories in \verb+$opam/config+, process
   \verb+$opam/repo/$REPO/updated+ and update \verb+$opam/repo/index+,
   \verb+$opam/opam/+ and \verb+$opam/desc+ accordingly (ie. add the
@@ -938,7 +938,7 @@ This milestone focus on the support of multiple compiler versions.
 The state of OPAM repositories is extended with the directory
 \verb+$opam/repo/$repo/compiler+ containing the compiler description
 files. When a repository is updated, this directory is updated as
-well. 
+well.
 
 \subsection{Files}
 
@@ -991,12 +991,12 @@ The syntax of {\tt .comp} files follows the one described in
   or locally on the filesystem.
 
 \item {\tt configure} are the optional flags to pass to the configure
-  script. The order is relevant: {\tt --prefix=\$opam/SWITCH/} will be automatically 
+  script. The order is relevant: {\tt --prefix=\$opam/SWITCH/} will be automatically
   added at the end to these options.
-  Remark that if these flags contain {\tt --bindir}, {\tt --libdir}, 
+  Remark that if these flags contain {\tt --bindir}, {\tt --libdir},
   and {\tt --mandir}, then every {\tt --prefix} will be ignored by {\tt configure}.
 
-\item {\tt make} are the flags to pass to {\tt make}. 
+\item {\tt make} are the flags to pass to {\tt make}.
   It must at least contain some target like {\tt world} or {\tt world.opt}.
 
 \item {\tt bytecomp}, {\tt asmcomp}, {\tt bytelink} and {\tt asmlink}
@@ -1032,7 +1032,7 @@ version $3.12.1$ with the memory profiling patch enabled:
 
 \begin{verbatim}
 opam-version: "1"
-name:         "3.12.1" 
+name:         "3.12.1"
 src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 make:         [ "world" "world.opt" ]
 patches:      [ "http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch" ]
@@ -1068,7 +1068,7 @@ This command will:
 
 \item If \verb+$ALIAS+ is not set, set it to \verb+$SWITCH+
 
-\item Look for an existing \verb+$opam/$ALIAS+ directory. 
+\item Look for an existing \verb+$opam/$ALIAS+ directory.
 
 \begin{itemize}
 \item If it
@@ -1081,7 +1081,7 @@ This command will:
 
 \item If the file exist, then build the new compiler with the right
   options (and pass \verb+--prefix $opam/$ALIAS+ to
-  \verb+./configure+) and initialize everything in \verb+$opam/+ 
+  \verb+./configure+) and initialize everything in \verb+$opam/+
   in a consistent state as if ``\verb+opam init+'' has just been called.
 
 \item Update the file \verb+$opam/aliases+ with the line
@@ -1090,14 +1090,14 @@ This command will:
 \end{itemize}
 
 \item If the \verb+-clone+ option is set, the command will try to install
-  the packages that were installed before switching 
+  the packages that were installed before switching
   (that are not currently installed).
-  In case the new version contains installed packages 
+  In case the new version contains installed packages
   that were not installed before switching, it will try to keep them.
 
-  In short, the heuristic is to install the maximum of previous packages 
+  In short, the heuristic is to install the maximum of previous packages
   and remove the minimum.
-  The success depends on the compatibility of the existing packages 
+  The success depends on the compatibility of the existing packages
   with respect to this new \verb+$SWITCH+.
 
 \end{itemize}
@@ -1134,7 +1134,7 @@ syntax of templates is the following:
 %% \item the ident {\tt true}
 %% \item or a (global or local) variable whose value is the ident {\tt
 %%   true}
-%% \item or an expression \verb+$var1 = $var2+ or \verb+$var = STRING+ 
+%% \item or an expression \verb+$var1 = $var2+ or \verb+$var = STRING+
 %%   where the contents of both sides of {\tt =} evaluates to the same
 %%   value.
 %% \end{itemize}
@@ -1213,7 +1213,7 @@ The available options are:
   compiler (when using the {\tt -c} option)
 \item {\tt bytecomp} are compilation options to give to the bytecode
   compiler (when using the {\tt -c} option)
-\item {\tt asmlink} are linking options to give to the native compiler 
+\item {\tt asmlink} are linking options to give to the native compiler
 \item {\tt bytlink} are linking options to give to the bytecode
   compiler
 \item {\tt requires} is the list of libraries and syntax extensions
