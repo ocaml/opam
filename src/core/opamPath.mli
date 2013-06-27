@@ -32,6 +32,9 @@ val root: t -> dirname
 (** State cache *)
 val state_cache: t -> filename
 
+(** Update cache *)
+val update_cache: t -> filename
+
 (** lock file *)
 val lock: t -> filename
 
@@ -188,6 +191,9 @@ module Repository: sig
 
   (** Repository local path: {i $opam/repo/<name>} *)
   val create: repository_name -> dirname
+
+  (** Update cache *)
+  val update_cache: repository -> filename
 
   (** Prefix file {i $opam/repo/prefix} *)
   val prefix: repository -> filename

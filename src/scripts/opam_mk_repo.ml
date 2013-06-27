@@ -106,7 +106,7 @@ let process () =
   (* Read urls.txt *)
   log "Reading urls.txt";
   let local_index_file = OpamFilename.of_string "urls.txt" in
-  let old_index = OpamFile.Urls_txt.safe_read local_index_file in
+  let old_index = OpamFile.File_attributes.safe_read local_index_file in
   let new_index = OpamHTTP.make_urls_txt repo.repo_root in
 
   let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in

@@ -28,6 +28,8 @@ let config t = t // "config"
 
 let state_cache t = t // "state.cache"
 
+let update_cache t = t // "update.cache"
+
 let opam_dir t = t / "opam"
 
 let lock t = t // "lock"
@@ -124,6 +126,8 @@ end
 module Repository = struct
 
   let root t = t.repo_root
+
+  let update_cache t = root t // "update.cache"
 
   let create name = default () / "repo" / OpamRepositoryName.to_string name
 

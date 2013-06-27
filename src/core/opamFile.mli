@@ -423,7 +423,7 @@ module URL: sig
 end
 
 (** {2 urls.txt file *} *)
-module Urls_txt: IO_FILE with type t = file_attribute_set
+module File_attributes: IO_FILE with type t = file_attribute_set
 
 (** List of filenames *)
 module Filenames: IO_FILE with type t = filename_set

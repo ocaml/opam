@@ -73,7 +73,7 @@ let make_state ~download_index repo =
       ) else
         local_index_file in
     let remote_local, local_remote, local_files, file_permissions, file_digests =
-      let urls = OpamFile.Urls_txt.read index in
+      let urls = OpamFile.File_attributes.read index in
       let remote_local, local_remote, locals, perms, digests =
         OpamFilename.Attribute.Set.fold (fun r (rl, lr, locals, perms, digests) ->
           let base = OpamFilename.Attribute.base r in
@@ -266,7 +266,7 @@ let make_urls_txt repo_root =
     ) OpamFilename.Attribute.Set.empty (local_files repo)
   in
   if not (OpamFilename.Attribute.Set.is_empty index) then
-    OpamFile.Urls_txt.write local_index_file index;
+    OpamFile.File_attributes.write local_index_file index;
   index
 
 let make_index_tar_gz repo_root =

@@ -125,9 +125,9 @@ module X = struct
 
   end
 
-  module Urls_txt = struct
+  module File_attributes = struct
 
-    let internal = "urls-txt"
+    let internal = "file_attributes"
 
     type t = file_attribute_set
 
@@ -1724,9 +1724,9 @@ module URL = struct
   include Make (URL)
 end
 
-module Urls_txt = struct
-  include Urls_txt
-  include Make(Urls_txt)
+module File_attributes = struct
+  include File_attributes
+  include Make(File_attributes)
 end
 
 module Filenames = struct
