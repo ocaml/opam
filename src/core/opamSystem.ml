@@ -119,8 +119,13 @@ let chdir dir =
 
 let in_dir dir fn =
   let reset_cwd =
-    let cwd = Sys.getcwd () in
-    fun () -> chdir cwd in
+    let cwd =
+      try Some (Sys.getcwd ())
+      with _ -> None in
+    fun () ->
+      match cwd with
+      | None     -> ()
+      | Some cwd -> try chdir cwd with _ -> () in
   chdir dir;
   try
     let r = fn () in
