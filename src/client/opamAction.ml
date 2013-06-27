@@ -344,14 +344,16 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Run the remove script *)
   let opam_f = OpamPath.opam t.root nv in
-  if OpamFilename.exists opam_f then (
+  OpamGlobals.msg "Uninstalling %s.\n" (OpamPackage.to_string nv);
+
+  if not (OpamFilename.exists opam_f) then
+    OpamGlobals.msg "  No OPAM file has been found!\n"
+  else (
     let opam = OpamState.opam t nv in
     let env = compilation_env t opam in
     match OpamState.filter_commands t (OpamFile.OPAM.remove opam) with
-    | []     ->
-      OpamGlobals.msg "Uninstalling %s.\n" (OpamPackage.to_string nv);
+    | []     -> ()
     | remove ->
-      OpamGlobals.msg "Uninstalling %s:\n" (OpamPackage.to_string nv);
       let p_build = OpamPath.Switch.build t.root t.switch nv in
       (* We try to run the remove scripts in the folder where it was
          extracted If it does not exist, we try to download and
