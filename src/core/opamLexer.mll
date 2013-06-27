@@ -75,6 +75,7 @@ rule token = parse
 | ")"    { RPAR }
 | '\"'   { STRING (buffer_rule string lexbuf) }
 | "(*"   { comment 1 lexbuf; token lexbuf }
+| "#"    { comment_line lexbuf; token lexbuf }
 | "true" { BOOL true }
 | "false"{ BOOL false }
 | int    { INT (int_of_string (Lexing.lexeme lexbuf)) }
@@ -107,3 +108,7 @@ and comment n = parse
 | eof  { error "unterminated comment" }
 | '\n' { newline lexbuf; comment n lexbuf }
 | _    { comment n lexbuf }
+
+and comment_line = parse
+| [^'\n']* '\n' { newline lexbuf }
+| [^'\n']       { () }
