@@ -228,6 +228,7 @@ let switch ~quiet ~warning switch =
     install ~quiet ~warning ~update_config:true switch compiler
   ) else
     update_global_config ~warning t switch;
+  let t = OpamState.load_state "switch-2" in
   OpamState.check_base_packages t
 
 (* Remove from [set] all the packages whose names appear in
