@@ -458,6 +458,8 @@ let remove_package_aux t ~metadata ~rm_build nv =
 let remove_package t ~metadata ~rm_build nv =
   if not !OpamGlobals.fake then
     remove_package_aux t ~metadata ~rm_build nv
+  else
+    OpamGlobals.msg "(simulation) Removing %s.\n" (OpamPackage.to_string nv)
 
 (* Uninstall all the current packages in a solution  *)
 let remove_all_packages t ~metadata sol =
@@ -553,3 +555,6 @@ let build_and_install_package_aux t ~metadata nv =
 let build_and_install_package t ~metadata nv =
   if not !OpamGlobals.fake then
     build_and_install_package_aux t ~metadata nv
+  else
+    OpamGlobals.msg "(simulation) Building and installing %s.\n"
+      (OpamPackage.to_string nv)
