@@ -136,7 +136,7 @@ let update_global_config t ~warning switch =
   OpamState.update_switch_config t switch;
   let t = OpamState.load_state "switch-update-config" in
   if warning then
-    OpamState.print_env_warning t None
+    OpamState.print_env_warning_at_switch t
 
 let install_with_packages ~quiet ~packages switch compiler =
   log "install %b %s %s" quiet

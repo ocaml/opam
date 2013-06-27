@@ -525,7 +525,8 @@ module API = struct
           let global = { complete = true; switch_eval = true } in
           OpamState.update_setup t (Some user) (Some global);
           true in
-      OpamState.print_env_warning t (if updated then None else Some user) in
+      if updated then OpamState.print_env_warning_at_switch t
+      else OpamState.print_env_warning_at_init t user in
 
     if OpamFilename.exists config_f then (
       OpamGlobals.msg "OPAM has already been initialized.";

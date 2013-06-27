@@ -1411,44 +1411,44 @@ let display_setup t shell dot_profile =
   OpamGlobals.msg "Global configuration:\n";
   List.iter print global_setup
 
-let print_env_warning t user =
-  match
+let eval_string () =
+  let root =
+    if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
+      Printf.sprintf " --root=%s" !OpamGlobals.root_dir
+    else
+      "" in
+  Printf.sprintf "eval `opam config env%s`\n" root
+
+let up_to_date_env t =
+  let changes =
     List.filter
-      (fun (s, v) ->
-        Some v <> try Some (OpamMisc.getenv s) with _ -> None)
-      (get_opam_env t)
-  with
-  | [] -> () (* every variables are correctly set *)
-  | _  ->
-    let eval_string =
-      let root =
-        if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
-          Printf.sprintf " --root=%s" !OpamGlobals.root_dir
-        else
-          "" in
-      Printf.sprintf "eval `opam config env%s`\n" root in
-    let profile_string = match user with
-      | None   -> ""
-      | Some u -> match u.dot_profile with
-        | None -> ""
-        | Some f ->
-          Printf.sprintf
-            "2. To correctly configure OPAM for subsequent use, add the following\n\
-                line to your profile file (for instance %s):\n\
-             \n\
-            \      %s\n"
-            (OpamFilename.prettify f)
-            (source t (init_file u.shell)) in
-    let ocamlinit_string = match user with
-      | None   -> ""
-      | Some u -> if not u.ocamlinit then "" else
-          "3. To avoid issues related to non-system installations of `ocamlfind`\n\
-          \  add the following lines to ~/.ocamlinit (create it if necessary):\n\
+      (fun (s, v) -> Some v <> try Some (OpamMisc.getenv s) with _ -> None)
+      (get_opam_env t) in
+  changes = []
+
+let print_env_warning_at_init t user =
+  if up_to_date_env t then ()
+  else
+    let profile_string = match user.dot_profile with
+      | None -> ""
+      | Some f ->
+        Printf.sprintf
+          "2. To correctly configure OPAM for subsequent use, add the following\n\
+           line to your profile file (for instance %s):\n\
            \n\
-          \      let () =\n\
-          \        try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
-          \        with Not_found -> ()\n\
-          \      ;;\n\n"
+          \      %s\n"
+          (OpamFilename.prettify f)
+          (source t (init_file user.shell))
+    in
+    let ocamlinit_string =
+      if not user.ocamlinit then "" else
+        "3. To avoid issues related to non-system installations of `ocamlfind`\n\
+        \  add the following lines to ~/.ocamlinit (create it if necessary):\n\
+         \n\
+        \      let () =\n\
+        \        try Topdirs.dir_directory (Sys.getenv \"OCAML_TOPLEVEL_PATH\")\n\
+        \        with Not_found -> ()\n\
+        \      ;;\n\n"
     in
     let line =
       "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"
@@ -1459,7 +1459,14 @@ let print_env_warning t user =
        \n\
       \      %s\n\
        %s%s%s\n"
-      line eval_string profile_string ocamlinit_string line
+      line (eval_string ()) profile_string ocamlinit_string line
+
+let print_env_warning_at_switch t =
+  if up_to_date_env t then ()
+  else
+    OpamGlobals.msg
+      "# To complete the configuration of OPAM, you need to run:\n%s"
+      (eval_string ())
 
 let update_setup_interactive t shell dot_profile =
   let update dot_profile =
