@@ -181,7 +181,7 @@ let install_with_packages ~quiet ~packages switch compiler =
         (OpamPackage.Name.to_string n)
         (OpamPackage.Version.to_string v) in
 
-  let uninstall_compiler () =
+  let remove_compiler () =
     remove switch in
 
   match bad_packages with
@@ -193,11 +193,11 @@ let install_with_packages ~quiet ~packages switch compiler =
     begin try
         OpamSolution.check_solution solution;
       with e ->
-        uninstall_compiler ();
+        remove_compiler ();
         raise e
     end
   | p::_ ->
-    uninstall_compiler ();
+    remove_compiler ();
     package_error p
 
 let install ~quiet ~warning ~update_config switch compiler =

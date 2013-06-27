@@ -344,7 +344,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Run the remove script *)
   let opam_f = OpamPath.opam t.root nv in
-  OpamGlobals.msg "Uninstalling %s.\n" (OpamPackage.to_string nv);
+  OpamGlobals.msg "Removing %s.\n" (OpamPackage.to_string nv);
 
   if not (OpamFilename.exists opam_f) then
     OpamGlobals.msg "  No OPAM file has been found!\n"
@@ -463,7 +463,9 @@ let remove_package t ~metadata ~rm_build nv =
   else
     OpamGlobals.msg "(simulation) Removing %s.\n" (OpamPackage.to_string nv)
 
-(* Uninstall all the current packages in a solution  *)
+(* Remove all the packages appearing in a solution (and which need to
+   be removed, eg. because of a direct uninstall action or because of
+   recompilation.  *)
 let remove_all_packages t ~metadata sol =
   let open PackageActionGraph in
   let deleted = ref [] in
