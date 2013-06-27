@@ -102,6 +102,10 @@ let succ ~bounds l =
 (* Maximum duration of the state-space exploration. *)
 let exploration_timeout = 5.
 
+let fallback_msg =
+  "You might need to add explicit version constraints to your \
+   request to get a better answer.\n"
+
 (* Brute-force exploration of a given space-state:
 
    [is_consistent] is applied on each possible state of the system,
@@ -113,6 +117,7 @@ let exploration_timeout = 5.
    where all packages have their maximum version but one which has its
    second maximal version, etc... *)
 let brute_force ?(verbose=true) is_consistent state_space =
+  log "brute-force";
 
   let bounds = List.map (fun v -> Array.length v - 1) state_space in
   List.iter (fun v -> assert (v >= 0)) bounds;
@@ -141,12 +146,9 @@ let brute_force ?(verbose=true) is_consistent state_space =
       if verbose && !count mod interval = interval - 1 then
         OpamGlobals.msg ".";
       if t1 -. t0 > exploration_timeout then (
-        if verbose && !count >= interval - 1 then
-          OpamGlobals.msg
-            " brute-force exploration timed-out [%d states, %.2gs].\n\
-             You might need to add explicit version constraints to your \
-             request to get a better answer.\n"
-            !count exploration_timeout;
+        OpamGlobals.msg
+          "The brute-force exploration algorithm timed-out [%d states, %.2gs].\n%s\n"
+          !count exploration_timeout fallback_msg;
         None
       ) else
       if is_consistent state then
@@ -168,6 +170,7 @@ let consistent_packages universe packages =
    the state space should be as small as possible, eg. we rely on
    previous heuristics to reduce its size. *)
 let explore ?(verbose=true) universe state_space =
+  log "explore";
   let packages_of_state state =
     let filter p =
       List.exists (fun s ->
@@ -305,8 +308,11 @@ let state_space ?(filters = fun _ -> None) universe interesting_names =
    call iteratively this function while refining the constraints of
    the request until reaching a fix-point. *)
 let state_of_request ?(verbose=true) current_universe request =
+  log "state_of_request";
   match OpamCudf.get_final_universe current_universe request with
-  | Conflicts _             -> None
+  | Conflicts _             ->
+    log "state-of-request: %s CONFLICT!" (OpamCudf.string_of_request request);
+    None
   | Success result_universe ->
 
     (* This first [result_universe] is a consistent solution which
@@ -343,7 +349,9 @@ let state_of_request ?(verbose=true) current_universe request =
 
     let filters name =
       try List.assoc name all_wishes
-      with Not_found -> None in
+      with Not_found ->
+        log "state-of-request: %s NOT FOUND!" name;
+        None in
 
     let state_space =
       let names = List.map (fun (n,_) -> n) request.wish_upgrade in
@@ -391,8 +399,15 @@ let optimize ?(verbose=true) universe request =
     { request with wish_upgrade = (name, None) :: request.wish_upgrade } in
 
   let interesting_names = find_interesting_names universe request.wish_upgrade in
-  let installed, not_installed =
-    let interesting =
+
+  (* Compute the 'implicit' packages, ie. the ones which do not appear
+     in the request but which are in the transitive closure of
+     dependencies, and split them in two categories: already installed
+     (which will be kept as much as possible with the same version)
+     and not installed (which will be installed to the most recent
+     valid version) *)
+  let implicit_installed, implicit_not_installed =
+    let implicit =
       let request_names =
         OpamMisc.StringSet.of_list (List.map fst request.wish_upgrade) in
       let all_names = OpamMisc.StringSet.of_list interesting_names in
@@ -400,12 +415,12 @@ let optimize ?(verbose=true) universe request =
     let installed =
       let filter p =
         p.Cudf.installed
-        && OpamMisc.StringSet.mem p.Cudf.package interesting in
+        && OpamMisc.StringSet.mem p.Cudf.package implicit in
       Cudf.get_packages ~filter universe in
     let not_installed =
       let filter n =
         List.for_all (fun p -> p.Cudf.package <> n) installed in
-      let set = OpamMisc.StringSet.filter filter interesting in
+      let set = OpamMisc.StringSet.filter filter implicit in
       let list = OpamMisc.StringSet.elements set in
       (* Favor packages with higher version number to discard
          deprecated packages. *)
@@ -419,8 +434,8 @@ let optimize ?(verbose=true) universe request =
 
     installed, not_installed in
 
-  log "installed: %s" (OpamCudf.string_of_packages installed);
-  log "not_installed: %s" (OpamMisc.pretty_list not_installed);
+  log "implicit-installed: %s" (OpamCudf.string_of_packages implicit_installed);
+  log "implicit-not-installed: %s" (OpamMisc.pretty_list implicit_not_installed);
 
   (* Upgrade the explicit packages first *)
   match state_of_request ~verbose universe request with
@@ -450,7 +465,7 @@ let optimize ?(verbose=true) universe request =
       ) in
 
     (* Try to keep the installed packages in the dependency cone *)
-    let state = List.fold_left installed_first state installed in
+    let state = List.fold_left installed_first state implicit_installed in
 
     (* Minimize the number of new packages to install *)
     (* XXX: if we want to add an interactive mode, we need to do something here *)
@@ -469,7 +484,7 @@ let optimize ?(verbose=true) universe request =
           | None       -> (universe, state)
           | Some state -> (universe, state)
         )
-      ) (universe, state) not_installed in
+      ) (universe, state) implicit_not_installed in
 
     (* Finally we check that the already installed packages can still
        be installed in he new universe. *)
