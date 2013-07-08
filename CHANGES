@@ -1,4 +1,6 @@
 1.0.1 (trunk)
+* Support hierarchical installation in `.install` files
+* Add a new `stublibs` field in `.install` files
 * OPAM works even when the current directory has been deleted
 * speed-up invocation of `opam config var VARIABLE` when variable is simple (eg. `prefix`, `lib`, ...)
 * `opam list` now display only the installed packages. Use `opam list -a` to get the previous behavior.
