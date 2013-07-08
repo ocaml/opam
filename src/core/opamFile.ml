@@ -1003,6 +1003,7 @@ module X = struct
       stublibs: (basename optional * basename option) list;
       share   : (basename optional * basename option) list;
       doc     : (basename optional * basename option) list;
+      man     : (basename optional * basename option) list;
       misc    : (basename optional * filename) list;
     }
 
@@ -1013,6 +1014,7 @@ module X = struct
       stublibs = [];
       misc     = [];
       share    = [];
+      man      = [];
       doc      = [];
     }
 
@@ -1023,6 +1025,15 @@ module X = struct
     let misc t = t.misc
     let share t = t.share
     let doc t = t.doc
+    let man t =
+      List.map (fun (src, dst) ->
+          src,
+          match dst with
+          | None ->
+            let base = Filename.basename (OpamFilename.Base.to_string src.c) in
+            Some (OpamFilename.Base.of_string (Filename.concat "man3" base))
+          | _    -> dst
+        ) t.man
 
     let s_lib      = "lib"
     let s_bin      = "bin"
@@ -1031,6 +1042,7 @@ module X = struct
     let s_stublibs = "stublibs"
     let s_share    = "share"
     let s_doc      = "doc"
+    let s_man      = "man"
 
     let valid_fields = [
       s_opam_version;
@@ -1041,6 +1053,7 @@ module X = struct
       s_misc;
       s_share;
       s_doc;
+      s_man;
     ]
 
     (* Filenames starting by ? are not always present. *)
@@ -1108,7 +1121,8 @@ module X = struct
       let stublibs = mk s_stublibs in
       let share    = mk s_share    in
       let doc      = mk s_doc      in
-      { lib; bin; misc; toplevel; stublibs; share; doc }
+      let man      = mk s_man      in
+      { lib; bin; misc; toplevel; stublibs; share; doc; man }
 
   end
 

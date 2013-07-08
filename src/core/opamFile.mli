@@ -311,6 +311,9 @@ module Dot_install: sig
   (** List of doc files *)
   val doc: t -> (basename optional * basename option) list
 
+  (** Man pages *)
+  val man: t -> (basename optional * basename option) list
+
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
 

@@ -150,6 +150,9 @@ let install_package t nv =
       install_files (fun r s _ -> OpamPath.Switch.stublibs r s)
         OpamFile.Dot_install.stublibs;
 
+      (* Man pages *)
+      install_files (fun r s _ -> OpamPath.Switch.man_dir r s) OpamFile.Dot_install.man;
+
       (* Shared files *)
       install_files OpamPath.Switch.share OpamFile.Dot_install.share;
 
@@ -409,6 +412,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
     OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
 
   let remove_files dst_fn files =
+    let files = files install in
     List.iter (fun (base, dst) ->
         let dst_dir = dst_fn t.root t.switch in
         let dst_file = match dst with
@@ -419,10 +423,13 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Remove the binaries *)
   log "Removing the binaries";
-  remove_files OpamPath.Switch.bin (OpamFile.Dot_install.bin install);
+  remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
 
   (* Remove the C bindings *)
-  remove_files OpamPath.Switch.stublibs (OpamFile.Dot_install.stublibs install);
+  remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
+
+  (* Remove man pages *)
+  remove_files OpamPath.Switch.man_dir OpamFile.Dot_install.man;
 
   (* Remove the misc files *)
   log "Removing the misc files";
