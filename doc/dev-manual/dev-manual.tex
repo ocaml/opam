@@ -475,6 +475,7 @@ in \S\ref{file:general} with the following restrictions:
     ?share:    [ <mv>+ ]
     ?doc:      [ <mv>+ ]
     ?misc:     [ <mv>+ ]
+    ?stublibs: [ <mv>+ ]
 
 <mv> := STRING
       | STRING { STRING }
@@ -486,6 +487,7 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt bin} are copied to \verb+$bin/+.
 \item Files listed under {\tt doc} are copied to \verb+$doc/$NAME/+.
 \item Files listed under {\tt toplevel} are copied to \verb+$prefix/toplevel+.
+\item Files lister under {\tt stulibs} are copied to \verb+$lib/stublibs/+
 \item Files listed under {\tt misc} are processed as follows:
   for each pair \verb+$SRC { $DST }+, the tool asks the user if
   he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
