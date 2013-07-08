@@ -998,10 +998,10 @@ module X = struct
 
     type t =  {
       bin     : (basename optional * basename option) list;
-      lib     : basename optional list;
-      toplevel: basename optional list;
-      share   : basename optional list;
-      doc     : basename optional list;
+      lib     : (basename optional * basename option) list;
+      toplevel: (basename optional * basename option) list;
+      share   : (basename optional * basename option) list;
+      doc     : (basename optional * basename option) list;
       misc    : (basename optional * filename) list;
     }
 
@@ -1053,7 +1053,7 @@ module X = struct
       Printf.sprintf "%s%s" o (OpamFilename.Base.to_string t.c)
 
     let to_string filename t =
-      let mk_bin =
+      let mk =
         let aux (src, opt) =
           let src = String (string_of_optional src) in
           match opt with
@@ -1066,12 +1066,10 @@ module X = struct
           let dst = String (OpamFilename.to_string dst) in
           Option (src, [dst]) in
         OpamFormat.make_list aux in
-      let mk =
-        OpamFormat.make_list (string_of_optional |> OpamFormat.make_string) in
       let s = {
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_bin     , mk_bin  t.bin);
+          Variable (s_bin     , mk      t.bin);
           Variable (s_lib     , mk      t.lib);
           Variable (s_toplevel, mk      t.toplevel);
           Variable (s_share   , mk      t.share);
@@ -1085,12 +1083,10 @@ module X = struct
       let s = Syntax.of_string filename str in
       Syntax.check s valid_fields;
       let src = OpamFormat.parse_string |> optional_of_string in
-      let mk field fn =
-        OpamFormat.assoc_list s.file_contents field (OpamFormat.parse_list fn) in
-      let bin =
+      let mk field =
         let dst = OpamFormat.parse_string |> OpamFilename.Base.of_string in
         let fn = OpamFormat.parse_single_option src dst in
-        mk s_bin fn in
+        OpamFormat.assoc_list s.file_contents field (OpamFormat.parse_list fn) in
       let misc =
         let absolute_filename s =
           if not (Filename.is_relative s) then
@@ -1099,12 +1095,12 @@ module X = struct
             OpamSystem.internal_error "%s is not an absolute filename." str in
         let dst = OpamFormat.parse_string |> absolute_filename in
         let fn = OpamFormat.parse_pair src dst in
-        mk s_misc fn in
-      let fn = OpamFormat.parse_string |> optional_of_string in
-      let lib      = mk s_lib      fn in
-      let toplevel = mk s_toplevel fn in
-      let share    = mk s_share    fn in
-      let doc      = mk s_doc      fn in
+        OpamFormat.assoc_list s.file_contents s_misc (OpamFormat.parse_list fn) in
+      let bin      = mk s_bin      in
+      let lib      = mk s_lib      in
+      let toplevel = mk s_toplevel in
+      let share    = mk s_share    in
+      let doc      = mk s_doc      in
       { lib; bin; misc; toplevel; share; doc }
 
   end

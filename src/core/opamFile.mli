@@ -297,16 +297,16 @@ module Dot_install: sig
   val bin:  t -> (basename optional * basename option) list
 
   (** List of files to install in $lib/ *)
-  val lib:  t -> basename optional list
+  val lib:  t -> (basename optional * basename option) list
 
   (** List of toplevel files *)
-  val toplevel: t -> basename optional list
+  val toplevel: t -> (basename optional * basename option) list
 
   (** List of shared files *)
-  val share: t -> basename optional list
+  val share: t -> (basename optional * basename option) list
 
   (** List of doc files *)
-  val doc: t -> basename optional list
+  val doc: t -> (basename optional * basename option) list
 
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list

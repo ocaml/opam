@@ -122,17 +122,23 @@ let install_package t nv =
 
       (* Install a list of files *)
       let install_files dst_fn files_fn =
-        let dst = dst_fn t.root t.switch name in
+        let dst_dir = dst_fn t.root t.switch name in
         let files = files_fn install in
-        if not (OpamFilename.exists_dir dst) then (
-          log "creating %s" (OpamFilename.Dir.to_string dst);
-          OpamFilename.mkdir dst;
+        if not (OpamFilename.exists_dir dst_dir) then (
+          log "creating %s" (OpamFilename.Dir.to_string dst_dir);
+          OpamFilename.mkdir dst_dir;
         );
-        List.iter (fun b ->
-          if check ~src:build_dir ~dst b then
-            let file = OpamFilename.create build_dir b.c in
-            OpamFilename.copy_in file dst
-        ) files in
+        List.iter (fun (base, dst) ->
+            let src_file = OpamFilename.create build_dir base.c in
+            let dst_file = match dst with
+              | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
+              | Some d -> OpamFilename.create dst_dir d in
+            if check ~src:build_dir ~dst:dst_dir base then
+              OpamFilename.copy ~src:src_file ~dst:dst_file;
+          ) files in
+
+      (* bin *)
+      install_files (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.lib;
 
       (* lib *)
       install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
@@ -148,15 +154,6 @@ let install_package t nv =
       install_files OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
       (* bin *)
-      List.iter (fun (base, dst) ->
-        let dst_dir = OpamPath.Switch.bin t.root t.switch in
-        let src_file = OpamFilename.create build_dir base.c in
-        let dst_file = match dst with
-          | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
-          | Some d -> OpamFilename.create dst_dir d in
-        if check ~src:build_dir ~dst:dst_dir base then
-          OpamFilename.copy ~src:src_file ~dst:dst_file;
-      ) (OpamFile.Dot_install.bin install);
 
       (* misc *)
       List.iter
