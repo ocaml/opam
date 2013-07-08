@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamProcess</title>
@@ -110,7 +113,7 @@ Process handling<br>
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTt.p_env">p_env</span>&nbsp;:<code class="type">string option</code>;</code></td>
-<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >dump environement variables</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >dump environment variables</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
@@ -118,6 +121,13 @@ Process handling<br>
 <td align="left" valign="top" >
 <code><span id="TYPEELTt.p_info">p_info</span>&nbsp;:<code class="type">string option</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >dump process info</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.p_metadata">p_metadata</span>&nbsp;:<code class="type">(string * string) list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Metadata associated to the process</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 }
 
@@ -125,7 +135,7 @@ Process handling<br>
 The type for processes<br>
 </div>
 
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?info_file:string -><br>       ?env_file:string -><br>       ?stdout_file:string -><br>       ?stderr_file:string -><br>       ?env:string array -> verbose:bool -> string -> string list -> <a href="OpamProcess.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?info_file:string -><br>       ?env_file:string -><br>       ?stdout_file:string -><br>       ?stderr_file:string -><br>       ?env:string array -><br>       ?metadata:(string * string) list -><br>       verbose:bool -> string -> string list -> <a href="OpamProcess.html#TYPEt">t</a></code></pre><div class="info">
 <code class="code">create cmd args</code> create a new process to execute the command
     <code class="code">cmd</code> with arguments <code class="code">args</code>. If <code class="code">stdout_file</code> or <code class="code">stderr_file</code> are
     set, the channels are redirected to the corresponding files.  The
@@ -153,7 +163,7 @@ The type for processes<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTresult.r_info">r_info</span>&nbsp;:<code class="type">string</code>;</code></td>
+<code><span id="TYPEELTresult.r_info">r_info</span>&nbsp;:<code class="type">(string * string) list</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Process info</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
@@ -186,7 +196,7 @@ Process results<br>
 <pre><span id="VALwait"><span class="keyword">val</span> wait</span> : <code class="type"><a href="OpamProcess.html#TYPEt">t</a> -> <a href="OpamProcess.html#TYPEresult">result</a></code></pre><div class="info">
 <code class="code">wait p</code> waits for the processus <code class="code">p</code> to end and returns its results.<br>
 </div>
-<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?env:string array -><br>       ?verbose:bool -> ?name:string -> string -> string list -> <a href="OpamProcess.html#TYPEresult">result</a></code></pre><div class="info">
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?env:string array -><br>       ?verbose:bool -><br>       ?name:string -><br>       ?metadata:(string * string) list -><br>       string -> string list -> <a href="OpamProcess.html#TYPEresult">result</a></code></pre><div class="info">
 <code class="code">run ~name cmd args</code> synchronously call the command <code class="code">cmd</code> with
     arguments <code class="code">args</code>. It waits until the process is finished. The file
     <code class="code">name.info</code>, <code class="code">name.env</code>, <code class="code">name.out</code> and <code class="code">name.err</code> and are

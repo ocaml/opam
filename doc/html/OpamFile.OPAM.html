@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.OPAM</title>
@@ -126,6 +129,9 @@ Classification tags<br>
 Commands to build and run the tests<br>
 </div>
 <pre><span id="VALbuild_doc"><span class="keyword">val</span> build_doc</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
+Commands to build the documentation<br>
+</div>
+<pre><span id="VALmessages"><span class="keyword">val</span> messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info">
 Commands to build the documentation<br>
 </div>
 <pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> t</code></pre><div class="info">

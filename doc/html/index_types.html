@@ -21,6 +21,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -36,7 +37,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>Index of types</title>
@@ -114,6 +117,11 @@ Compiler constraints
 Maps of compiler names
 </div>
 </td></tr>
+<tr><td><a href="OpamTypes.html#TYPEcompiler_repository_state">compiler_repository_state</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Compiler repository state
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEcompiler_set">compiler_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Set of compiler names
@@ -145,6 +153,11 @@ Compiler constraint
 </div>
 </td></tr>
 <tr><td align="left"><br>D</td></tr>
+<tr><td><a href="OpamJson.html#TYPEdecoder">decoder</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+The type for JSON decoders.
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEdirname">dirname</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Directory names
@@ -170,7 +183,22 @@ DNF formulas (Disjunctive Normal Form)
 Download result
 </div>
 </td></tr>
+<tr><td><a href="OpamJson.html#TYPEdst">dst</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+The type for output destinations.
+</div>
+</td></tr>
 <tr><td align="left"><br>E</td></tr>
+<tr><td><a href="OpamJson.html#TYPEencoder">encoder</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+The type for JSON encoders.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#TYPEencoding">encoding</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+The type for Unicode encoding schemes.
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEenv">env</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Environement variables
@@ -182,6 +210,8 @@ Environment updates
 </div>
 </td></tr>
 <tr><td><a href="OpamParallel.html#TYPEerror">error</a> [<a href="OpamParallel.html">OpamParallel</a>]</td>
+<td></td></tr>
+<tr><td><a href="OpamJson.html#TYPEerror">error</a> [<a href="OpamJson.html">OpamJson</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>F</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEfile">file</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -273,7 +303,15 @@ When folding recursively a value <code class="code">Variable (s, v)</code> for p
     (i.e.
 </div>
 </td></tr>
+<tr><td align="left"><br>J</td></tr>
+<tr><td><a href="OpamJson.html#TYPEjson">json</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>L</td></tr>
+<tr><td><a href="OpamJson.html#TYPElexeme">lexeme</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+The type for JSON lexemes.
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.html#TYPElock">lock</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 The different kinds of locks
@@ -322,6 +360,11 @@ Packages are (<code class="code">name</code> * <code class="code">version</code>
 <tr><td><a href="OpamTypes.html#TYPEpackage_map">package_map</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Map of packages
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEpackage_repository_state">package_repository_state</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Package repository state
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEpackage_set">package_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -429,6 +472,11 @@ The type for solutions
 <tr><td><a href="OpamTypes.html#TYPEsolver_result">solver_result</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Solver result
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#TYPEsrc">src</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+The type for input sources.
 </div>
 </td></tr>
 <tr><td><a href="OpamHeuristic.html#TYPEstate">state</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>

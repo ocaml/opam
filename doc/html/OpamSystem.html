@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="File locking function" rel="Section" href="#2_Filelockingfunction">
@@ -76,10 +79,12 @@ Raise <code class="code">Internal_error</code><br>
 <code class="code">with_tmp_dir fn</code> executes <code class="code">fn</code> in a tempory directory<br>
 </div>
 <pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
-<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> before the copy if it is a link.<br>
+<code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> before the copy
+    if it is a link.<br>
 </div>
 <pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
-<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> if it is a file, not a directory.<br>
+<code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> if it is a file,
+    not a directory.<br>
 </div>
 <pre><span id="VALreal_path"><span class="keyword">val</span> real_path</span> : <code class="type">string -> string</code></pre><div class="info">
 <code class="code">real_path p</code> returns the real path associated to <code class="code">p</code>: <code class="code">..</code> are
@@ -145,19 +150,21 @@ a command is a list of words<br>
 </div>
 
 <pre><span id="VALcommand_exists"><span class="keyword">val</span> command_exists</span> : <code class="type">?env:string array -> string -> bool</code></pre><div class="info">
-Test wether a command exists in the environement.<br>
+Test wether a command exists in the environment.<br>
 </div>
-<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?env:string array -> ?name:string -> <a href="OpamSystem.html#TYPEcommand">command</a> -> unit</code></pre><div class="info">
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> unit</code></pre><div class="info">
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code> in the correct OPAM
     environment.<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?env:string array -> ?name:string -> <a href="OpamSystem.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
 <code class="code">commands cmds</code> executes the commands <code class="code">cmds</code> in the correct
     OPAM environment.  It stops whenever one command fails.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?verbose:bool -> ?env:string array -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> in the
-    correct OPAM environment and return the lines from stdout<br>
+    correct OPAM environment and return the lines from stdout if the command
+    exists normally. If the command does not exist or if the command exited
+    with a non-empty exit-code, throw an error.<br>
 </div>
 <pre><span id="VALis_tar_archive"><span class="keyword">val</span> is_tar_archive</span> : <code class="type">string -> bool</code></pre><div class="info">
 Test whether the file is an archive, by looking as its extension<br>

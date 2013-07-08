@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamJson.Manual.html">
+<link rel="Up" href="OpamJson.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Uncut data model" rel="Section" href="#uncutdatamodel">
+<link title="Decode" rel="Section" href="#1_Decode">
+<link title="Encode" rel="Section" href="#1_Encode">
+<title>OpamJson.Uncut</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OpamJson.Manual.html" title="OpamJson.Manual">Previous</a>
+&nbsp;<a class="up" href="OpamJson.html" title="OpamJson">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_OpamJson.Uncut.html">OpamJson.Uncut</a></h1>
+<pre><span class="keyword">module</span> Uncut: <code class="code">sig</code> <a href="OpamJson.Uncut.html">..</a> <code class="code">end</code></pre><div class="info">
+Codec with comments and whitespace.
+<p>
+
+    The uncut codec also processes whitespace and JavaScript
+    comments. The latter is non-standard JSON, fail on <code class="code">`Comment</code>
+    decoding if you want to process whitespace but stick to the standard.
+<p>
+
+    The uncut codec preserves as much of the original input as
+    possible. Perfect round-trip with <code class="code">Jsonm</code> is however impossible for
+    the following reasons:
+    <ul>
+<li>Escapes unescaped by the decoder may not be escaped or escaped
+       differently by the encoder.</li>
+<li>The encoder automatically inserts name separator <code class="code">':'</code> and
+       value separators <code class="code">","</code>. If you just reencode the sequence of
+       decodes, whitespace and comments may (harmlessly, but significantly)
+       commute with these separators.</li>
+<li>Internally the encoder uses <code class="code">U+000A</code> (<code class="code">'\n'</code>) for newlines.</li>
+<li><code class="code">`Float</code> lexemes may be rewritten differently by the encoder.</li>
+</ul>
+<br>
+</div>
+<hr width="100%">
+<br>
+<h1 id="uncutdatamodel">Uncut data model</h1>
+<p>
+
+      The uncut data model is the same as the regular
+      <a href="OpamJson.html#datamodel">data model</a>, except that before or after any lexeme
+      you may decode/encode one or more:
+      <ul>
+<li><code class="code">`White w</code>, representing JSON whitespace <code class="code">w</code>. On input
+         the sequence CR (<code class="code">U+000D</code>) and CRLF (&lt;<code class="code">U+000A</code>, <code class="code">U+000A</code>&gt;)
+         are normalized to <code class="code">U+000A</code>. The string <code class="code">w</code> must be
+         a sequence of <code class="code">U+0020</code>, <code class="code">U+0009</code>, <code class="code">U+000A</code> or <code class="code">U+000D</code>
+         characters (<code class="code">' '</code>, <code class="code">'\t'</code>, <code class="code">'\n'</code>, <code class="code">'\r'</code>).</li>
+<li><code class="code">`Comment (`S, c)</code>, representing a JavaScript single line
+      comment <code class="code">c</code>. <code class="code">c</code> is the comment's content without the starting
+      <code class="code">//</code> and the ending newline. The string <code class="code">c</code> must not contain any newline.
+      </li>
+<li><code class="code">`Comment (`M, c)</code>, representing a JavaScript multi-line
+      comment <code class="code">c</code>. <code class="code">c</code> is the comment's content without the starting
+      <code class="code">/*</code> and the ending <code class="code">*/</code>. The string <code class="code">c</code> must not contain the
+      sequence <code class="code">*/</code>. </li>
+</ul>
+
+<p>
+
+      <b>Warning.</b> <a href="OpamJson.Uncut.html#VALencode"><code class="code">OpamJson.Uncut.encode</code></a> does not check the above constraints on
+      <code class="code">w</code> and <code class="code">c</code>.<br>
+<br>
+<h1 id="1_Decode">Decode</h1><br>
+<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">OpamJson.decoder</a> -><br>       [ `Await<br>       | `Comment of [ `M | `S ] * string<br>       | `End<br>       | `Error of <a href="OpamJson.html#TYPEerror">OpamJson.error</a><br>       | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>       | `White of string ]</code></pre><div class="info">
+<code class="code">decode d</code> is like <code class="code">Jsonm.decode</code> but for the
+      <a href="OpamJson.Uncut.html#uncutdatamodel">uncut data model</a>.<br>
+</div>
+<pre><span id="VALpp_decode"><span class="keyword">val</span> pp_decode</span> : <code class="type">Format.formatter -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Error of <a href="OpamJson.html#TYPEerror">OpamJson.error</a><br>        | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>        | `White of string ] -><br>       unit</code></pre><div class="info">
+<code class="code">pp_decode ppf v</code> prints an unspecified representation of <code class="code">v</code>
+      on <code class="code">ppf</code>.<br>
+</div>
+<br>
+<h1 id="1_Encode">Encode</h1><br>
+<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>        | `White of string ] -><br>       [ `Ok | `Partial ]</code></pre><div class="info">
+<code class="code">encode</code> is like <code class="code">Jsonm.encode</code> but for the <a href="OpamJson.Uncut.html#uncutdatamodel">
+      uncut data model</a>.
+<p>
+
+      <b>IMPORTANT.</b> Never encode <code class="code">`Comment</code> for the web, it is
+      non-standard and breaks interoperability.<br>
+</div>
+</body></html>

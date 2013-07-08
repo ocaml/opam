@@ -20,6 +20,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -35,7 +36,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamState.Types</title>
@@ -50,17 +53,19 @@
 &nbsp;&nbsp;&nbsp;&nbsp;compiler&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;compiler_version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_version;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;opams&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">OPAM</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;descrs&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Descr</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;descrs&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Descr</span>.t&nbsp;lazy_t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;repositories&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_config</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;prefixes&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Prefix</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;available_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="constructor">Lazy</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;aliases&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Aliases</span>.t;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compilers&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;pinned&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Pinned</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;installed&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Installed</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;installed_roots&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Installed_roots</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;reinstall&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Reinstall</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;config&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Config</span>.t;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;repo_index&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_index</span>.t;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;package_index&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compiler_index&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="constructor">OpamTypes</span>.compiler_map;<br>
 &nbsp;&nbsp;}<br>
 <span class="keyword">end</span></code></body></html>

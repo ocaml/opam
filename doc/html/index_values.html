@@ -21,6 +21,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -36,7 +37,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>Index of values</title>
@@ -403,9 +406,20 @@ Return one element.
 Remove the file extension
 </div>
 </td></tr>
+<tr><td><a href="OpamRepository.html#VALclean">clean</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+<code class="code">cleanup repo _packages</code> cleans the tempory files in the given
+    repository.
+</div>
+</td></tr>
 <tr><td><a href="OpamProcess.html#VALclean_files">clean_files</a> [<a href="OpamProcess.html">OpamProcess</a>]</td>
 <td><div class="info">
 Clean-up process result files
+</div>
+</td></tr>
+<tr><td><a href="OpamFilename.html#VALcleandir">cleandir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<td><div class="info">
+Clean the contents of a directory.
 </div>
 </td></tr>
 <tr><td><a href="OpamCudf.Graph.html#VALclose_and_linearize">close_and_linearize</a> [<a href="OpamCudf.Graph.html">OpamCudf.Graph</a>]</td>
@@ -427,7 +441,7 @@ Convert a formula to CNF
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALcommand_exists">command_exists</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
 <td><div class="info">
-Test wether a command exists in the environement.
+Test wether a command exists in the environment.
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALcommands">commands</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
@@ -486,20 +500,40 @@ Compiler description files: <i>$opam/repo/$repo/compilers/$OVERSION.descr</i>
 Compiler description files: <i>$opam/compilers/$OVERSION.descr</i>
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALcompiler_repository_map">compiler_repository_map</a> [<a href="OpamState.html">OpamState</a>]</td>
+<tr><td><a href="OpamPath.html#VALcompiler_index">compiler_index</a> [<a href="OpamPath.html">OpamPath</a>]</td>
+<td><div class="info">
+Return the compiler index: <i>$opam/repo/index.compilers</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALcompiler_index">compiler_index</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Build a map which says in which repository the latest metadata for
     a given compiler is.
 </div>
 </td></tr>
+<tr><td><a href="OpamState.html#VALcompiler_installed">compiler_installed</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Is a compiler installed ?
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALcompiler_repository_state">compiler_repository_state</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Get a compiler repository state.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepository.html#VALcompiler_state">compiler_state</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+Compute a compiler state
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALcompiler_state_index">compiler_state_index</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Build a map between compiler and compiler repository states.
+</div>
+</td></tr>
 <tr><td><a href="OpamRepository.html#VALcompilers">compilers</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
 Get the list of compilers (and their eventual description file)
-</div>
-</td></tr>
-<tr><td><a href="OpamState.html#VALcompilers">compilers</a> [<a href="OpamState.html">OpamState</a>]</td>
-<td><div class="info">
-Return the list of available compilers
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALcompilers_dir">compilers_dir</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
@@ -593,11 +627,6 @@ Copy the additional package files in the current dir
 Copy a file in a directory
 </div>
 </td></tr>
-<tr><td><a href="OpamFilename.html#VALcopy_unique_dir">copy_unique_dir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
-<td><div class="info">
-Copy the unique directory in <code class="code">src</code> to <code class="code">dst</code>
-</div>
-</td></tr>
 <tr><td><a href="OpamVariable.Section.Full.html#VALcreate">create</a> [<a href="OpamVariable.Section.Full.html">OpamVariable.Section.Full</a>]</td>
 <td><div class="info">
 Create a fully qualified section
@@ -611,7 +640,12 @@ Create a fully qualified section
 </td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALcreate">create</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
-Return the repository folder: <i>$opam/repo/$repo</i>
+Repository local path: <i>$opam/repo/&lt;name&gt;</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamParallel.SIG.html#VALcreate">create</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
+<td><div class="info">
+Build a graph on concurrent tasks from a list of tasks.
 </div>
 </td></tr>
 <tr><td><a href="OpamPackage.html#VALcreate">create</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
@@ -685,6 +719,44 @@ Return the current working directory
 </div>
 </td></tr>
 <tr><td align="left"><br>D</td></tr>
+<tr><td><a href="OpamJson.Uncut.html#VALdecode">decode</a> [<a href="OpamJson.Uncut.html">OpamJson.Uncut</a>]</td>
+<td><div class="info">
+<code class="code">decode d</code> is like <code class="code">Jsonm.decode</code> but for the
+      <a href="OpamJson.Uncut.html#uncutdatamodel">uncut data model</a>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALdecode">decode</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">decode d</code> is:
+     <code class="code">`Await</code> if <code class="code">d</code> has a <code class="code">`Manual</code> source and awaits for more input.
+       The client must use <a href="OpamJson.Manual.html#VALsrc"><code class="code">OpamJson.Manual.src</code></a> to provide it., <code class="code">`Lexeme l</code> if a lexeme <code class="code">l</code> was decoded., <code class="code">`End</code> if the end of input was reached., <code class="code">`Error e</code> if a decoding error occured. If the client is interested
+       in a best-effort decoding it can still continue to decode
+       after an error (see <a href="OpamJson.html#errorrecovery"><i>Error recovery</i></a>) although the resulting sequence
+       of <code class="code">`Lexeme</code>s is undefined and may not be well-formed.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALdecoded_range">decoded_range</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">decoded_range d</code> is the range of characters spanning the last
+    <code class="code">`Lexeme</code> or <code class="code">`Error</code> (or <code class="code">`White</code> or <code class="code">`Comment</code> for an
+    <a href="OpamJson.Uncut.html#VALdecode"><code class="code">OpamJson.Uncut.decode</code></a>) decoded by <code class="code">d</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALdecoder">decoder</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">decoder encoding src</code> is a JSON decoder that inputs from <code class="code">src</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALdecoder_encoding">decoder_encoding</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">decoder_encoding d</code> is <code class="code">d</code>'s encoding.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALdecoder_src">decoder_src</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">decoder_src d</code> is <code class="code">d</code>'s input source.
+</div>
+</td></tr>
 <tr><td><a href="OpamSwitch.html#VALdefault">default</a> [<a href="OpamSwitch.html">OpamSwitch</a>]</td>
 <td><div class="info">
 Default switch
@@ -768,6 +840,11 @@ Description files folder: <i>$opam/descr/</i>
 Computation of differences between universe
 </div>
 </td></tr>
+<tr><td><a href="OpamVCS.VCS.html#VALdiff">diff</a> [<a href="OpamVCS.VCS.html">OpamVCS.VCS</a>]</td>
+<td><div class="info">
+Check whether the staging area is empty.
+</div>
+</td></tr>
 <tr><td><a href="OpamFilename.html#VALdigest">digest</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Compute the MD5 digest of a file
@@ -831,7 +908,7 @@ download compiler sources
 </td></tr>
 <tr><td><a href="OpamRepository.html#VALdownload">download</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
-Download <i>$opam/repo/$repo/archive/$nv.tar.gz</i>
+Download <i>$remote/archives/$nv.tar.gz</i>.
 </div>
 </td></tr>
 <tr><td><a href="OpamFilename.html#VALdownload">download</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
@@ -839,27 +916,21 @@ Download <i>$opam/repo/$repo/archive/$nv.tar.gz</i>
 download a remote file in a given directory.
 </div>
 </td></tr>
-<tr><td><a href="OpamRepository.BACKEND.html#VALdownload_archive">download_archive</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
-<td><div class="info">
-Download a (remote) archive file, stored on the (remote) OPAM
-      repository, in the current repository.
-</div>
-</td></tr>
-<tr><td><a href="OpamRepository.BACKEND.html#VALdownload_dir">download_dir</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
-<td><div class="info">
-Download a (remote) directory and return the local path to the
-      downloaded directory: <i>$repo/tmp/$package/$dirname</i>.
-</div>
-</td></tr>
-<tr><td><a href="OpamRepository.BACKEND.html#VALdownload_file">download_file</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
-<td><div class="info">
-Download a (remote) file and return the local path to the
-      downloaded file: <i>$repo/tmp/$package/$filename</i>.
-</div>
-</td></tr>
 <tr><td><a href="OpamFilename.html#VALdownload_iter">download_iter</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 iterate downloads until one is sucessful
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.Manual.html#VALdst">dst</a> [<a href="OpamJson.Manual.html">OpamJson.Manual</a>]</td>
+<td><div class="info">
+<code class="code">dst e s j l</code> provides <code class="code">e</code> with <code class="code">l</code> bytes to write, starting
+      at <code class="code">j</code> in <code class="code">s</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.Manual.html#VALdst_rem">dst_rem</a> [<a href="OpamJson.Manual.html">OpamJson.Manual</a>]</td>
+<td><div class="info">
+<code class="code">dst_rem e</code> is the remaining number of non-written, free bytes
+      in the last buffer provided with <a href="OpamJson.Manual.html#VALdst"><code class="code">OpamJson.Manual.dst</code></a>.
 </div>
 </td></tr>
 <tr><td align="left"><br>E</td></tr>
@@ -878,9 +949,49 @@ Empty file
 the variable <code class="code">enable</code>
 </div>
 </td></tr>
+<tr><td><a href="OpamJson.Uncut.html#VALencode">encode</a> [<a href="OpamJson.Uncut.html">OpamJson.Uncut</a>]</td>
+<td><div class="info">
+<code class="code">encode</code> is like <code class="code">Jsonm.encode</code> but for the <a href="OpamJson.Uncut.html#uncutdatamodel">
+      uncut data model</a>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALencode">encode</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">encode e v</code> is:
+     <code class="code">`Partial</code> iff <code class="code">e</code> has a <code class="code">`Manual</code> destination and needs more
+       output storage. The client must use <a href="OpamJson.Manual.html#VALdst"><code class="code">OpamJson.Manual.dst</code></a> to provide
+       a new buffer and then call <a href="OpamJson.html#VALencode"><code class="code">OpamJson.encode</code></a> with <code class="code">`Await</code> until <code class="code">`Ok</code>
+       is returned., <code class="code">`Ok</code> when the encoder is ready to encode a new <code class="code">`Lexeme</code>
+       or <code class="code">`End</code>.
+    For <code class="code">`Manual</code> destinations, encoding <code class="code">`End</code> always returns <code class="code">`Partial</code>,
+    the client should as usual use <a href="OpamJson.Manual.html#VALdst"><code class="code">OpamJson.Manual.dst</code></a> and continue with <code class="code">`Await</code>
+    until <code class="code">`Ok</code> is returned at which point <a href="OpamJson.Manual.html#VALdst_rem"><code class="code">OpamJson.Manual.dst_rem</code></a> <code class="code">e</code> is guaranteed
+    to be the size of the last provided buffer (i.e.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALencoder">encoder</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">encoder minify dst</code> is an encoder that outputs to <code class="code">dst</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALencoder_dst">encoder_dst</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">encoder_dst e</code> is <code class="code">e</code>'s output destination.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALencoder_minify">encoder_minify</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">encoder_minify e</code> is <code class="code">true</code> if <code class="code">e</code>'s output is minified.
+</div>
+</td></tr>
 <tr><td><a href="OpamMisc.html#VALends_with">ends_with</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
 <td><div class="info">
 Does a string ends with the given suffix ?
+</div>
+</td></tr>
+<tr><td><a href="OpamFilename.html#VALends_with">ends_with</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<td><div class="info">
+Check whether a filename ends with a given suffix
 </div>
 </td></tr>
 <tr><td><a href="OpamMisc.html#VALenv">env</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
@@ -949,6 +1060,11 @@ Execute a command in a subshell
 Execute a command in a subshell with the right environment variables.
 </div>
 </td></tr>
+<tr><td><a href="OpamVCS.VCS.html#VALexists">exists</a> [<a href="OpamVCS.VCS.html">OpamVCS.VCS</a>]</td>
+<td><div class="info">
+Test whether the given repository is correctly initialized.
+</div>
+</td></tr>
 <tr><td><a href="OpamFilename.html#VALexists">exists</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 see <code class="code">Sys.file_exists</code>
@@ -1003,6 +1119,11 @@ Extract an archive in a given directory (which should already exists)
 </div>
 </td></tr>
 <tr><td align="left"><br>F</td></tr>
+<tr><td><a href="OpamVCS.VCS.html#VALfetch">fetch</a> [<a href="OpamVCS.VCS.html">OpamVCS.VCS</a>]</td>
+<td><div class="info">
+Fetch changes from upstream.
+</div>
+</td></tr>
 <tr><td><a href="OpamRepository.html#VALfiles">files</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
 Get the external files associated to a package
@@ -1065,9 +1186,14 @@ Return all the packages with the given name
 Find an eventual prefix in a map
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALfind_repository_name">find_repository_name</a> [<a href="OpamState.html">OpamState</a>]</td>
+<tr><td><a href="OpamState.html#VALfind_repository">find_repository</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
-Find a repository state, given its name
+Find a given repostiory.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALfind_repository_opt">find_repository_opt</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Find a given repostiory.
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALflock">flock</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
@@ -1080,6 +1206,11 @@ Find a repository state, given its name
 <tr><td><a href="OpamFormula.html#VALfold_left">fold_left</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Fold function
+</div>
+</td></tr>
+<tr><td><a href="OpamVersion.html#VALfull">full</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
+<td><div class="info">
+The full version (current + git)
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Descr.html#VALfull">full</a> [<a href="OpamFile.Descr.html">OpamFile.Descr</a>]</td>
@@ -1123,6 +1254,12 @@ Get only environment modified by OPAM.
 Get one section of a certain kind
 </div>
 </td></tr>
+<tr><td><a href="OpamRepository.html#VALget_upstream_updates">get_upstream_updates</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+<code class="code">get_upstream_update repo packages</code> checks for upstream changes
+    for packages in the <code class="code">packages</code> map.
+</div>
+</td></tr>
 <tr><td><a href="OpamMisc.html#VALgetenv">getenv</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
 <td><div class="info">
 Lazy environment variable
@@ -1164,6 +1301,11 @@ Guess the shell compat-mode
 <tr><td><a href="OpamPackage.html#VALhash">hash</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
 <td><div class="info">
 Hash a package
+</div>
+</td></tr>
+<tr><td><a href="OpamMisc.html#VALhg_of_string">hg_of_string</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
+<td><div class="info">
+same as <code class="code">git_of_string</code> but for mercurial paths
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALhomepage">homepage</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
@@ -1217,9 +1359,9 @@ right indenting
 Display a general summary of a collection of packages.
 </div>
 </td></tr>
-<tr><td><a href="OpamRepository.BACKEND.html#VALinit">init</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
+<tr><td><a href="OpamVCS.VCS.html#VALinit">init</a> [<a href="OpamVCS.VCS.html">OpamVCS.VCS</a>]</td>
 <td><div class="info">
-Initialize an OPAM repository in the current directory.
+Init a repository.
 </div>
 </td></tr>
 <tr><td><a href="OpamRepository.html#VALinit">init</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
@@ -1273,6 +1415,11 @@ Install the given set of packages.
 Install the given compiler
 </div>
 </td></tr>
+<tr><td><a href="OpamState.html#VALinstall_conf_ocaml_config">install_conf_ocaml_config</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+(Re-)install the configuration for a given root and switch
+</div>
+</td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALinstall_dir">install_dir</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Installed files: <i>$opam/$OVERSION/install/</i>
@@ -1304,14 +1451,14 @@ Return a map from package names to package installed version
 List of packages expliciterly installed by the user: <i>      $opam/$switch/installed.roots</i>
 </div>
 </td></tr>
+<tr><td><a href="OpamState.html#VALinstalled_versions">installed_versions</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Return a map containing the switch where a given package is installed.
+</div>
+</td></tr>
 <tr><td><a href="OpamSystem.html#VALinternal_error">internal_error</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
 <td><div class="info">
 Raise <code class="code">Internal_error</code>
-</div>
-</td></tr>
-<tr><td><a href="OpamRepository.html#VALinvalid_checksum">invalid_checksum</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
-<td><div class="info">
-Raise an error when a checksum is invalid.
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALinvalid_fields">invalid_fields</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1324,6 +1471,11 @@ Find all the invalid fields
 Is the process result a failure ?
 </div>
 </td></tr>
+<tr><td><a href="OpamState.html#VALis_locally_pinned">is_locally_pinned</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Is the package locally pinned ? (ie.
+</div>
+</td></tr>
 <tr><td><a href="OpamState.html#VALis_pinned">is_pinned</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Is a package pinned ?
@@ -1332,6 +1484,11 @@ Is a package pinned ?
 <tr><td><a href="OpamProcess.html#VALis_success">is_success</a> [<a href="OpamProcess.html">OpamProcess</a>]</td>
 <td><div class="info">
 Is the process result a success ?
+</div>
+</td></tr>
+<tr><td><a href="OpamFilename.html#VALis_symlink">is_symlink</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<td><div class="info">
+Is a symlink ?
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALis_tar_archive">is_tar_archive</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
@@ -1346,6 +1503,12 @@ Check whether a list of items contains only valid variable definitions
 </td></tr>
 <tr><td><a href="OpamTypes.ACTION_GRAPH.Topological.html#VALiter">iter</a> [<a href="OpamTypes.ACTION_GRAPH.Topological.html">OpamTypes.ACTION_GRAPH.Topological</a>]</td>
 <td></td></tr>
+<tr><td><a href="OpamParallel.SIG.html#VALiter">iter</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
+<td><div class="info">
+<code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
+      cores.
+</div>
+</td></tr>
 <tr><td><a href="OpamFormula.html#VALiter">iter</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Iter function
@@ -1370,7 +1533,7 @@ Return the keys in the map.
 </td></tr>
 <tr><td><a href="OpamFile.URL.html#VALkind">kind</a> [<a href="OpamFile.URL.html">OpamFile.URL</a>]</td>
 <td><div class="info">
-Backend kind (could be curl/rsync/git/darcs at the moment)
+Backend kind (could be curl/rsync/git/darcs/hg at the moment)
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_config.SECTION.html#VALkind">kind</a> [<a href="OpamFile.Dot_config.SECTION.html">OpamFile.Dot_config.SECTION</a>]</td>
@@ -1500,9 +1663,9 @@ Load repository related states only.
 Load the client state.
 </div>
 </td></tr>
-<tr><td><a href="OpamRepository.html#VALlocal_repo">local_repo</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<tr><td><a href="OpamRepository.html#VALlocal">local</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
-Create a dummy local repository
+Create a local repository on a given path
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALlock">lock</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
@@ -1515,7 +1678,17 @@ lock file
 lock file
 </div>
 </td></tr>
+<tr><td><a href="OpamPath.html#VALlog">log</a> [<a href="OpamPath.html">OpamPath</a>]</td>
+<td><div class="info">
+Log dir <i>$opam/log</i>
+</div>
+</td></tr>
 <tr><td align="left"><br>M</td></tr>
+<tr><td><a href="OpamVersion.html#VALmagic">magic</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
+<td><div class="info">
+Magic string
+</div>
+</td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALmaintainer">maintainer</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Package maintainer
@@ -1528,8 +1701,8 @@ Options to give to the "make" command
 </td></tr>
 <tr><td><a href="OpamRepository.html#VALmake_archive">make_archive</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
-<code class="code">make_archive repo_kind nv</code> build ./$nv.tar.gz, assuming the
-    repository kind is <code class="code">repo_kind</code>.
+<code class="code">make_archive ?gener_digest repo package</code> builds the archive for
+    the given <code class="code">package</code>.
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALmake_bool">make_bool</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1651,6 +1824,16 @@ Map function
 auto-map
 </div>
 </td></tr>
+<tr><td><a href="OpamRepository.html#VALmap_reduce">map_reduce</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+Map-reduce on repositories.
+</div>
+</td></tr>
+<tr><td><a href="OpamParallel.SIG.html#VALmap_reduce">map_reduce</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
+<td><div class="info">
+Map-reduce on a taks graph
+</div>
+</td></tr>
 <tr><td><a href="OpamFilename.Attribute.html#VALmd5">md5</a> [<a href="OpamFilename.Attribute.html">OpamFilename.Attribute</a>]</td>
 <td><div class="info">
 MD5 digest of the remote file
@@ -1669,17 +1852,23 @@ Check whether a package name is installed, but this time
 </td></tr>
 <tr><td><a href="OpamState.html#VALmem_repository">mem_repository</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
-Check if a package belongs to a repository
+Check whether a repository exists.
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALmem_repository_name">mem_repository_name</a> [<a href="OpamState.html">OpamState</a>]</td>
+<tr><td><a href="OpamVCS.VCS.html#VALmerge">merge</a> [<a href="OpamVCS.VCS.html">OpamVCS.VCS</a>]</td>
 <td><div class="info">
-Check whether a repository name is valid
+Merge the staging area into the master branch of the
+      repository.
 </div>
 </td></tr>
 <tr><td><a href="OpamVersion.html#VALmessage">message</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
 <td><div class="info">
 Display the version message
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.OPAM.html#VALmessages">messages</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
+<td><div class="info">
+Commands to build the documentation
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Dot_install.html#VALmisc">misc</a> [<a href="OpamFile.Dot_install.html">OpamFile.Dot_install</a>]</td>
@@ -1864,10 +2053,30 @@ Return the package name in which the section is
 Package folder: <i>$opam/repo/$repo/packages/XXX/$NAME.$VERSION</i>
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALpackage_repository_map">package_repository_map</a> [<a href="OpamState.html">OpamState</a>]</td>
+<tr><td><a href="OpamPath.html#VALpackage_index">package_index</a> [<a href="OpamPath.html">OpamPath</a>]</td>
+<td><div class="info">
+Return the packages index: <i>$opam/repo/index.packages</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALpackage_index">package_index</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Build a map which says in which repository the latest metadata for
     a given package is.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALpackage_repository_state">package_repository_state</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Get a package repository state.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepository.html#VALpackage_state">package_state</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+Compute a package state.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALpackage_state_index">package_state_index</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Build a map between package and package repository states.
 </div>
 </td></tr>
 <tr><td><a href="OpamRepository.html#VALpackages">packages</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
@@ -1890,10 +2099,9 @@ Packages folder: <i>$opam/repo/$repo/packages</i>
 Return all the packages with the given names
 </div>
 </td></tr>
-<tr><td><a href="OpamParallel.SIG.html#VALparallel_iter">parallel_iter</a> [<a href="OpamParallel.SIG.html">OpamParallel.SIG</a>]</td>
+<tr><td><a href="OpamRepository.html#VALparallel_iter">parallel_iter</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
-<code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
-      cores.
+Parallel iteration.
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALparse_bool">parse_bool</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -1949,6 +2157,11 @@ Parse an integer
 <tr><td><a href="OpamFormat.html#VALparse_list">parse_list</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Parse a list of 'things'
+</div>
+</td></tr>
+<tr><td><a href="OpamFormat.html#VALparse_messages">parse_messages</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
+<td><div class="info">
+Parse a list of commands
 </div>
 </td></tr>
 <tr><td><a href="OpamFormat.html#VALparse_opt_formula">parse_opt_formula</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
@@ -2093,6 +2306,23 @@ Get the path associated to the given pinned package.
 Preprocessing options
 </div>
 </td></tr>
+<tr><td><a href="OpamJson.Uncut.html#VALpp_decode">pp_decode</a> [<a href="OpamJson.Uncut.html">OpamJson.Uncut</a>]</td>
+<td><div class="info">
+<code class="code">pp_decode ppf v</code> prints an unspecified representation of <code class="code">v</code>
+      on <code class="code">ppf</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALpp_error">pp_error</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">pp_error e</code> prints an unspecified UTF-8 representation of <code class="code">e</code> on <code class="code">ppf</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.html#VALpp_lexeme">pp_lexeme</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td><div class="info">
+<code class="code">pp_lexeme ppf l</code> prints a unspecified non-JSON representation of <code class="code">l</code>
+    on <code class="code">ppf</code>.
+</div>
+</td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALprefix">prefix</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
 Prefix file <i>$opam/repo/prefix</i>
@@ -2123,9 +2353,14 @@ Return a pretty-printed backtrace
 Display a pretty list: <code class="code">"x";"y";"z"</code> -&gt; "x, y and z"
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALprint_env_warning">print_env_warning</a> [<a href="OpamState.html">OpamState</a>]</td>
+<tr><td><a href="OpamState.html#VALprint_env_warning_at_init">print_env_warning_at_init</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
-Print a warning if the environment is not set-up properly.
+Print a warning if the environment is not set-up properly on init.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALprint_env_warning_at_switch">print_env_warning_at_switch</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Print a warning if the environment is not set-up properly on switch.
 </div>
 </td></tr>
 <tr><td><a href="OpamSolver.html#VALprint_solution">print_solution</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
@@ -2158,13 +2393,40 @@ Set-up repository priority.
 raise <code class="code">Process_error</code>
 </div>
 </td></tr>
+<tr><td><a href="OpamRepository.BACKEND.html#VALpull_archive">pull_archive</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
+<td><div class="info">
+Pull an archive in a repository.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepository.BACKEND.html#VALpull_dir">pull_dir</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
+<td><div class="info">
+<code class="code">pull_dir local_dir remote_dir</code> pull the contents of
+      <code class="code">remote_dir</code> into <code class="code">local_dir</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepository.BACKEND.html#VALpull_file">pull_file</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
+<td><div class="info">
+<code class="code">pull_file local_dir remote_file</code> pull the contents of
+      <code class="code">remote_file</code> into <code class="code">local_dir</code>.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepository.BACKEND.html#VALpull_repo">pull_repo</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
+<td><div class="info">
+Pull a repository.
+</div>
+</td></tr>
 <tr><td align="left"><br>R</td></tr>
-<tr><td><a href="OpamFilename.html#VALraw_dir">raw_dir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<tr><td><a href="OpamFilename.html#VALraw">raw</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 </div>
 </td></tr>
-<tr><td><a href="OpamFilename.html#VALraw_file">raw_file</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<tr><td><a href="OpamPath.Repository.html#VALraw_config">raw_config</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Return the repository config: <i>$opam/repo/$repo/config</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamFilename.html#VALraw_dir">raw_dir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
 Creation from a raw string (as <i>http://&lt;path&gt;</i>)
 </div>
@@ -2192,7 +2454,8 @@ Read file contents.
 <tr><td><a href="OpamSystem.html#VALread_command_output">read_command_output</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
 <td><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> in the
-    correct OPAM environment and return the lines from stdout
+    correct OPAM environment and return the lines from stdout if the command
+    exists normally.
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.IO_FILE.html#VALread_from_channel">read_from_channel</a> [<a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a>]</td>
@@ -2213,6 +2476,11 @@ Call an unsafe function while checking that no lock is already held.
 <tr><td><a href="OpamRepository.html#VALread_prefix">read_prefix</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
 Check if a package has a given prefix in the repository
+</div>
+</td></tr>
+<tr><td><a href="OpamFilename.html#VALreadlink">readlink</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<td><div class="info">
+Read a symlinked file
 </div>
 </td></tr>
 <tr><td><a href="OpamSystem.html#VALreal_path">real_path</a> [<a href="OpamSystem.html">OpamSystem</a>]</td>
@@ -2250,6 +2518,8 @@ List all the filenames, recursively
 </td></tr>
 <tr><td><a href="OpamLocal.html#VALregister">register</a> [<a href="OpamLocal.html">OpamLocal</a>]</td>
 <td></td></tr>
+<tr><td><a href="OpamHg.html#VALregister">register</a> [<a href="OpamHg.html">OpamHg</a>]</td>
+<td></td></tr>
 <tr><td><a href="OpamHTTP.html#VALregister">register</a> [<a href="OpamHTTP.html">OpamHTTP</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamGit.html#VALregister">register</a> [<a href="OpamGit.html">OpamGit</a>]</td>
@@ -2282,9 +2552,40 @@ Reinstall the given compiler.
 Reinstall the given set of packages.
 </div>
 </td></tr>
+<tr><td><a href="OpamRepositoryCommand.html#VALrelink_compilers">relink_compilers</a> [<a href="OpamRepositoryCommand.html">OpamRepositoryCommand</a>]</td>
+<td><div class="info">
+<code class="code">relink_compilers old_index</code> relinks the compiler files.
+</div>
+</td></tr>
+<tr><td><a href="OpamRepositoryCommand.html#VALrelink_packages">relink_packages</a> [<a href="OpamRepositoryCommand.html">OpamRepositoryCommand</a>]</td>
+<td><div class="info">
+<code class="code">relink_package old_index upstream_changes</code> relinks the package
+    files and display the changes (if <code class="code">verbose is set</code>).
+</div>
+</td></tr>
 <tr><td><a href="OpamFormula.html#VALrelop_of_string">relop_of_string</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Parsing relops
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Repository.html#VALremote_archive">remote_archive</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Remote archive <i>$remote/archives/$NAME.$VERSION.tar.gz</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Repository.html#VALremote_compilers_dir">remote_compilers_dir</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Remote compiler files: <i>$remote/compilers</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Repository.html#VALremote_packages_dir">remote_packages_dir</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Remote package files: <i>$remote/packages</i>
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Repository.html#VALremote_version">remote_version</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Remote version file
 </div>
 </td></tr>
 <tr><td><a href="OpamCudf.html#VALremove">remove</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
@@ -2469,11 +2770,6 @@ Return the transitive closure of dependencies of <code class="code">set</code>,
 Remove a directory
 </div>
 </td></tr>
-<tr><td><a href="OpamPath.Repository.html#VALroot">root</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
-<td><div class="info">
-Get the directory root
-</div>
-</td></tr>
 <tr><td><a href="OpamPath.Switch.html#VALroot">root</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
 <td><div class="info">
 Root dir: <i>$opam/$OVERSION</i>
@@ -2592,12 +2888,18 @@ Compution the actions to process from a solution
 </td></tr>
 <tr><td><a href="OpamState.html#VALsorted_repositories">sorted_repositories</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
-Sort repositories by priority
+Sort repositories by priority.
 </div>
 </td></tr>
 <tr><td><a href="OpamMisc.html#VALsplit">split</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
 <td><div class="info">
 Split a string
+</div>
+</td></tr>
+<tr><td><a href="OpamJson.Manual.html#VALsrc">src</a> [<a href="OpamJson.Manual.html">OpamJson.Manual</a>]</td>
+<td><div class="info">
+<code class="code">src d s j l</code> provides <code class="code">d</code> with <code class="code">l</code> bytes to read, starting
+      at <code class="code">j</code> in <code class="code">s</code>.
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Comp.html#VALsrc">src</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
@@ -2612,7 +2914,7 @@ Does a string starts with the given prefix ?
 </td></tr>
 <tr><td><a href="OpamFilename.html#VALstarts_with">starts_with</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
 <td><div class="info">
-Check wether a filename starts by a given Dir.t
+Check whether a filename starts by a given Dir.t
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.html#VALstate_cache">state_cache</a> [<a href="OpamPath.html">OpamPath</a>]</td>
@@ -2678,6 +2980,11 @@ Pretty print DNF formulas
 <tr><td><a href="OpamFormat.html#VALstring_of_file">string_of_file</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
 <td><div class="info">
 Print a file
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#VALstring_of_filter">string_of_filter</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Pretty print
 </div>
 </td></tr>
 <tr><td><a href="OpamFormula.html#VALstring_of_formula">string_of_formula</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
@@ -2755,9 +3062,19 @@ Pretty-print requests
 Pretty printing of process.
 </div>
 </td></tr>
+<tr><td><a href="OpamTypes.html#VALstring_of_shell">string_of_shell</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Pretty-print
+</div>
+</td></tr>
 <tr><td><a href="OpamSolver.html#VALstring_of_stats">string_of_stats</a> [<a href="OpamSolver.html">OpamSolver</a>]</td>
 <td><div class="info">
 Pretty-printing of statistics
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#VALstring_of_symbol">string_of_symbol</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Pretty print
 </div>
 </td></tr>
 <tr><td><a href="OpamCudf.html#VALstring_of_universe">string_of_universe</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
@@ -2785,6 +3102,8 @@ Print a list of values
 Pretty print of variable contents
 </div>
 </td></tr>
+<tr><td><a href="OpamParallel.G.html#VALstring_of_vertex">string_of_vertex</a> [<a href="OpamParallel.G.html">OpamParallel.G</a>]</td>
+<td></td></tr>
 <tr><td><a href="OpamCudf.html#VALstring_of_vpkgs">string_of_vpkgs</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
 <td><div class="info">
 Convert a package constraint to something readable.
@@ -2860,6 +3179,11 @@ Switch to the given compiler switch.
 <tr><td><a href="OpamClient.API.SWITCH.html#VALswitch">switch</a> [<a href="OpamClient.API.SWITCH.html">OpamClient.API.SWITCH</a>]</td>
 <td><div class="info">
 Switch to the given compiler.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALswitch_installed">switch_installed</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Is a switch installed ?
 </div>
 </td></tr>
 <tr><td><a href="OpamClient.html#VALswitch_lock">switch_lock</a> [<a href="OpamClient.html">OpamClient</a>]</td>
@@ -2973,6 +3297,8 @@ Pretty-print
 <td></td></tr>
 <tr><td><a href="OpamMisc.Base.html#VALto_string">to_string</a> [<a href="OpamMisc.Base.html">OpamMisc.Base</a>]</td>
 <td></td></tr>
+<tr><td><a href="OpamJson.html#VALto_string">to_string</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td></td></tr>
 <tr><td><a href="OpamFormula.html#VALto_string">to_string</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Pretty print the formula
@@ -3057,14 +3383,9 @@ Unknown package: either the name is unknown, or the version does
 Errors
 </div>
 </td></tr>
-<tr><td><a href="OpamRepository.BACKEND.html#VALupdate">update</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
-<td><div class="info">
-Update the OPAM repository in the current directory.
-</div>
-</td></tr>
 <tr><td><a href="OpamRepository.html#VALupdate">update</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
 <td><div class="info">
-Update <i>$opam/repo/$repo</i>
+Update <i>$opam/repo/$repo</i>.
 </div>
 </td></tr>
 <tr><td><a href="OpamClient.API.html#VALupdate">update</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
@@ -3072,14 +3393,20 @@ Update <i>$opam/repo/$repo</i>
 Refresh the available packages.
 </div>
 </td></tr>
-<tr><td><a href="OpamState.html#VALupdate_hook">update_hook</a> [<a href="OpamState.html">OpamState</a>]</td>
+<tr><td><a href="OpamPath.Repository.html#VALupdate_cache">update_cache</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
-Update hook.
+Update cache
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.html#VALupdate_cache">update_cache</a> [<a href="OpamPath.html">OpamPath</a>]</td>
+<td><div class="info">
+Update cache
 </div>
 </td></tr>
 <tr><td><a href="OpamRepositoryCommand.html#VALupdate_index">update_index</a> [<a href="OpamRepositoryCommand.html">OpamRepositoryCommand</a>]</td>
 <td><div class="info">
-Update the repository index.
+Update the repositories indexes (<code class="code">repo/index</code>, <code class="code">repo/index.packages</code> and
+    <code class="code">repo/index.compilers</code>).
 </div>
 </td></tr>
 <tr><td><a href="OpamAction.html#VALupdate_metadata">update_metadata</a> [<a href="OpamAction.html">OpamAction</a>]</td>
@@ -3090,6 +3417,11 @@ Update package metadata
 <tr><td><a href="OpamState.html#VALupdate_pinned_package">update_pinned_package</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Update pinned package
+</div>
+</td></tr>
+<tr><td><a href="OpamRepositoryCommand.html#VALupdate_pinned_packages">update_pinned_packages</a> [<a href="OpamRepositoryCommand.html">OpamRepositoryCommand</a>]</td>
+<td><div class="info">
+Update the given pinned package.
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALupdate_setup">update_setup</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -3107,33 +3439,10 @@ Update the global and user configuration by asking some questions.
 Write the right compiler switch in ~/.opam/config
 </div>
 </td></tr>
-<tr><td><a href="OpamPath.Repository.html#VALupdated">updated</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
-<td><div class="info">
-Return the list of updated packages:
-      <i>$opam/repo/$repo/updated</i>
-</div>
-</td></tr>
 <tr><td><a href="OpamClient.API.html#VALupgrade">upgrade</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
 <td><div class="info">
 Find a consistent state where most of the installed packages are
       upgraded to their latest version.
-</div>
-</td></tr>
-<tr><td><a href="OpamRepository.html#VALupload">upload</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
-<td><div class="info">
-Upload the content of <i>$opam/repo/$repo/upload</i> to the remote
-    repository.
-</div>
-</td></tr>
-<tr><td><a href="OpamClient.API.html#VALupload">upload</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
-<td><div class="info">
-Upload a package to a remote repository.
-</div>
-</td></tr>
-<tr><td><a href="OpamRepository.BACKEND.html#VALupload_dir">upload_dir</a> [<a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a>]</td>
-<td><div class="info">
-Upload the content of the current directory to the directory
-      given as argument.
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALupload_dir">upload_dir</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
@@ -3297,11 +3606,6 @@ Construct as <code class="code">remove</code>
 <tr><td><a href="OpamFile.Config.html#VALwith_repositories">with_repositories</a> [<a href="OpamFile.Config.html">OpamFile.Config</a>]</td>
 <td><div class="info">
 Repository updates
-</div>
-</td></tr>
-<tr><td><a href="OpamState.html#VALwith_repository">with_repository</a> [<a href="OpamState.html">OpamState</a>]</td>
-<td><div class="info">
-Apply a function on the repository which contains a given package
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_substs">with_substs</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>

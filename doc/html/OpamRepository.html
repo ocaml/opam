@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,10 +41,14 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Repository backends" rel="Section" href="#2_Repositorybackends">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="State" rel="Section" href="#2_State">
+<link title="Repository backends" rel="Section" href="#2_Repositorybackends">
+<link title="Misc" rel="Section" href="#2_Misc">
 <title>OpamRepository</title>
 </head>
 <body>
@@ -63,8 +68,11 @@ Pretty-print<br>
 <pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> int</code></pre><div class="info">
 Compare repositories<br>
 </div>
-<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
+<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type">unit -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
 Default repository<br>
+</div>
+<pre><span id="VALlocal"><span class="keyword">val</span> local</span> : <code class="type"><a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
+Create a local repository on a given path<br>
 </div>
 <pre><span id="VALdefault_address"><span class="keyword">val</span> default_address</span> : <code class="type"><a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a></code></pre><div class="info">
 Default repository address<br>
@@ -72,24 +80,65 @@ Default repository address<br>
 <pre><span id="VALrepository_address"><span class="keyword">val</span> repository_address</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a></code></pre><div class="info">
 Constructor<br>
 </div>
-<pre><span id="VALlocal_repo"><span class="keyword">val</span> local_repo</span> : <code class="type">unit -> <a href="OpamTypes.html#TYPErepository_root">OpamTypes.repository_root</a></code></pre><div class="info">
-Create a dummy local repository<br>
+<pre><span id="VALget_upstream_updates"><span class="keyword">val</span> get_upstream_updates</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEpackage_repository_state">OpamTypes.package_repository_state</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a> -><br>       <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+<code class="code">get_upstream_update repo packages</code> checks for upstream changes
+    for packages in the <code class="code">packages</code> map. Return the packages whose
+    contents have changed upstream (ie. either the 'url' file has
+    changed, the archive file has changed, or the contents of the
+    'files/' sub-directory, or, git and rsync-ed packages, upstream
+    contents have changed.<br>
 </div>
+<pre><span id="VALclean"><span class="keyword">val</span> clean</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEpackage_repository_state">OpamTypes.package_repository_state</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a> -> unit</code></pre><div class="info">
+<code class="code">cleanup repo _packages</code> cleans the tempory files in the given
+    repository. <code class="code">packages</code> contains all the 'active' package states,
+    ie. whose current repository is <code class="code">repo</code>.<br>
+</div>
+<pre><span id="VALcopy_files"><span class="keyword">val</span> copy_files</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> OpamFilename.Set.t</code></pre><div class="info">
+Copy the additional package files in the current dir<br>
+</div>
+<pre><span id="VALmake_archive"><span class="keyword">val</span> make_archive</span> : <code class="type">?gener_digest:bool -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
+<code class="code">make_archive ?gener_digest repo package</code> builds the archive for
+    the given <code class="code">package</code>. It reads the metada in <code class="code">repo.repo_root</code>. By
+    default, the digest that appears in <i>$NAME.$VERSION/url</i> is not
+    modified, unless <code class="code">gener_digest</code> is set.<br>
+</div>
+<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> string <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a> * <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+Get the list of packages<br>
+</div>
+<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option) <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code></pre><div class="info">
+Get the list of compilers (and their eventual description file)<br>
+</div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename_set">OpamTypes.filename_set</a></code></pre><div class="info">
+Get the external files associated to a package<br>
+</div>
+<pre><span id="VALread_prefix"><span class="keyword">val</span> read_prefix</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> string <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a></code></pre><div class="info">
+Check if a package has a given prefix in the repository<br>
+</div>
+<pre><span id="VALfind_prefix"><span class="keyword">val</span> find_prefix</span> : <code class="type">string <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> string option</code></pre><div class="info">
+Find an eventual prefix in a map<br>
+</div>
+<br>
+<h2 id="2_State">State</h2><br>
+<pre><span id="VALcompiler_state"><span class="keyword">val</span> compiler_state</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEcompiler_repository_state">OpamTypes.compiler_repository_state</a></code></pre><div class="info">
+Compute a compiler state<br>
+</div>
+<pre><span id="VALpackage_state"><span class="keyword">val</span> package_state</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       string option -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEpackage_repository_state">OpamTypes.package_repository_state</a></code></pre><div class="info">
+Compute a package state. Raise <code class="code">Not_found</code> if no such package
+    exists in the repository.<br>
+</div>
+<br>
+<h2 id="2_Repositorybackends">Repository backends</h2><br>
 <pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit</code></pre><div class="info">
 Initialize <i>$opam/repo/$repo</i><br>
 </div>
 <pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit</code></pre><div class="info">
-Update <i>$opam/repo/$repo</i><br>
+Update <i>$opam/repo/$repo</i>.<br>
 </div>
 <pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
-Download <i>$opam/repo/$repo/archive/$nv.tar.gz</i><br>
+Download <i>$remote/archives/$nv.tar.gz</i>. If is not there, then
+    download the upstream archive, add the eventual files in it, and
+    create <i>$nv.tar.gz</i>.<br>
 </div>
-<pre><span id="VALupload"><span class="keyword">val</span> upload</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit</code></pre><div class="info">
-Upload the content of <i>$opam/repo/$repo/upload</i> to the remote
-    repository.<br>
-</div>
-<br>
-<h2 id="2_Repositorybackends">Repository backends</h2><br>
 <pre><span class="keyword">module type</span> <a href="OpamRepository.BACKEND.html">BACKEND</a> = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre><div class="info">
 Backend signature
 </div>
@@ -99,32 +148,12 @@ Register a repository backend<br>
 <pre><span id="VALfind_backend"><span class="keyword">val</span> find_backend</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> -> (module OpamRepository.BACKEND)</code></pre><div class="info">
 Find a backend<br>
 </div>
-<pre><span id="VALcopy_files"><span class="keyword">val</span> copy_files</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_root">OpamTypes.repository_root</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> OpamFilename.Set.t</code></pre><div class="info">
-Copy the additional package files in the current dir<br>
+<br>
+<h2 id="2_Misc">Misc</h2><br>
+<pre><span id="VALmap_reduce"><span class="keyword">val</span> map_reduce</span> : <code class="type">int -><br>       (<a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> 'a) -><br>       ('a -> 'a -> 'a) -> 'a -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> list -> 'a</code></pre><div class="info">
+Map-reduce on repositories.<br>
 </div>
-<pre><span id="VALmake_archive"><span class="keyword">val</span> make_archive</span> : <code class="type">?gener_digest:bool -><br>       ?local_path:<a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
-<code class="code">make_archive repo_kind nv</code> build ./$nv.tar.gz, assuming the
-    repository kind is <code class="code">repo_kind</code>.
-    By default, the digest that appear in
-    <i>$NAME.$VERSION/url</i> is not modified,
-    unless <code class="code">gener_digest = true</code> is given.<br>
-</div>
-<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_root">OpamTypes.repository_root</a> -><br>       string <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a> * <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
-Get the list of packages<br>
-</div>
-<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_root">OpamTypes.repository_root</a> -><br>       (<a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option) <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code></pre><div class="info">
-Get the list of compilers (and their eventual description file)<br>
-</div>
-<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_root">OpamTypes.repository_root</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename_set">OpamTypes.filename_set</a></code></pre><div class="info">
-Get the external files associated to a package<br>
-</div>
-<pre><span id="VALread_prefix"><span class="keyword">val</span> read_prefix</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_root">OpamTypes.repository_root</a> -> string <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a></code></pre><div class="info">
-Check if a package has a given prefix in the repository<br>
-</div>
-<pre><span id="VALfind_prefix"><span class="keyword">val</span> find_prefix</span> : <code class="type">string <a href="OpamTypes.html#TYPEname_map">OpamTypes.name_map</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> string option</code></pre><div class="info">
-Find an eventual prefix in a map<br>
-</div>
-<pre><span id="VALinvalid_checksum"><span class="keyword">val</span> invalid_checksum</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> actual:string -> expected:string -> 'a</code></pre><div class="info">
-Raise an error when a checksum is invalid.<br>
+<pre><span id="VALparallel_iter"><span class="keyword">val</span> parallel_iter</span> : <code class="type">int -> (<a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit) -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> list -> unit</code></pre><div class="info">
+Parallel iteration.<br>
 </div>
 </body></html>

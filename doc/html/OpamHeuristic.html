@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="High-level API" rel="Section" href="#2_HighlevelAPI">
@@ -88,15 +91,6 @@ This module tries to turn an efficient solution checker (such as
       (with some eventual version constraints); and (iii) the
       transitive closure of (i) and (ii) (with the corresponding
       version constraints);</li>
-</ul>
-<ul>
-<li>The solution checker (which is used to check the
-      state-consistency in the brute-force exploration) can aslo gives
-      us some useful hints on the shape of a solution. Hence we run it
-      once at the beginning, to get some rough constraints on the
-      request, and we remove all the packages which either do not
-      appear in the solution, or which appear but with an inconsistent
-      version.</li>
 </ul>
 
     Finally, we run all this in a loop, until we reach a fix point. We

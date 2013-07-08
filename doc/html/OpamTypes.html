@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Filenames" rel="Section" href="#2_Filenames">
@@ -55,6 +58,7 @@
 <link title="Untyped generic file format" rel="Section" href="#2_Untypedgenericfileformat">
 <link title="Switches" rel="Section" href="#2_Switches">
 <link title="Misc" rel="Section" href="#2_Misc">
+<link title="Repository state" rel="Section" href="#2_Repositorystate">
 <title>OpamTypes</title>
 </head>
 <body>
@@ -357,15 +361,15 @@ Repository names<br>
 Maps of repository names<br>
 </div>
 
-<pre><span id="TYPErepository_kind"><span class="keyword">type</span> <code class="type"></code>repository_kind</span> = <code class="type">[ `darcs | `git | `http | `local ]</code> </pre>
+<pre><span id="TYPErepository_kind"><span class="keyword">type</span> <code class="type"></code>repository_kind</span> = <code class="type">[ `darcs | `git | `hg | `http | `local ]</code> </pre>
 <div class="info">
 Repository kind<br>
 </div>
 
-<pre><span id="VALstring_of_repository_kind"><span class="keyword">val</span> string_of_repository_kind</span> : <code class="type">[ `darcs | `git | `http | `local ] -> string</code></pre><div class="info">
+<pre><span id="VALstring_of_repository_kind"><span class="keyword">val</span> string_of_repository_kind</span> : <code class="type">[ `darcs | `git | `hg | `http | `local ] -> string</code></pre><div class="info">
 Pretty-print repository kinds.<br>
 </div>
-<pre><span id="VALrepository_kind_of_string"><span class="keyword">val</span> repository_kind_of_string</span> : <code class="type">string -> [ `darcs | `git | `http | `local ]</code></pre><div class="info">
+<pre><span id="VALrepository_kind_of_string"><span class="keyword">val</span> repository_kind_of_string</span> : <code class="type">string -> [ `darcs | `git | `hg | `http | `local ]</code></pre><div class="info">
 Parser of repository kinds. Raise an error if the kind is not valid.<br>
 </div>
 <pre><span id="TYPEaddress"><span class="keyword">type</span> <code class="type"></code>address</span> = <code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a></code> </pre>
@@ -379,6 +383,13 @@ Repository root<br>
 </div>
 
 <pre><code><span id="TYPErepository"><span class="keyword">type</span> <code class="type"></code>repository</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrepository.repo_root">repo_root</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_root">repository_root</a></code>;</code></td>
+
+</tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -779,6 +790,13 @@ Pretty-print<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTpin_option.Hg"><span class="constructor">Hg</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEaddress">address</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTpin_option.Unpin"><span class="constructor">Unpin</span></span></code></td>
 
 </tr></table>
@@ -811,7 +829,7 @@ Pinned packages<br>
 <pre><span id="VALstring_of_pin"><span class="keyword">val</span> string_of_pin</span> : <code class="type"><a href="OpamTypes.html#TYPEpin">pin</a> -> string</code></pre><div class="info">
 Pretty-printing of pinned packages<br>
 </div>
-<pre><span id="TYPEpin_kind"><span class="keyword">type</span> <code class="type"></code>pin_kind</span> = <code class="type">[ `darcs | `git | `local | `unpin | `version ]</code> </pre>
+<pre><span id="TYPEpin_kind"><span class="keyword">type</span> <code class="type"></code>pin_kind</span> = <code class="type">[ `darcs | `git | `hg | `local | `unpin | `version ]</code> </pre>
 <div class="info">
 Pin kind<br>
 </div>
@@ -860,11 +878,14 @@ Read pin options args<br>
 Configuration requests<br>
 </div>
 
-<pre><span id="TYPEshell"><span class="keyword">type</span> <code class="type"></code>shell</span> = <code class="type">[ `bash | `csh | `sh | `zsh ]</code> </pre>
+<pre><span id="TYPEshell"><span class="keyword">type</span> <code class="type"></code>shell</span> = <code class="type">[ `bash | `csh | `fish | `sh | `zsh ]</code> </pre>
 <div class="info">
 Shell compatibility modes<br>
 </div>
 
+<pre><span id="VALstring_of_shell"><span class="keyword">val</span> string_of_shell</span> : <code class="type"><a href="OpamTypes.html#TYPEshell">shell</a> -> string</code></pre><div class="info">
+Pretty-print<br>
+</div>
 <pre><code><span id="TYPEglobal_config"><span class="keyword">type</span> <code class="type"></code>global_config</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -964,6 +985,9 @@ User configuration option<br>
 Symbols<br>
 </div>
 
+<pre><span id="VALstring_of_symbol"><span class="keyword">val</span> string_of_symbol</span> : <code class="type"><a href="OpamTypes.html#TYPEsymbol">symbol</a> -> string</code></pre><div class="info">
+Pretty print<br>
+</div>
 <pre><code><span id="TYPEfilter"><span class="keyword">type</span> <code class="type"></code>filter</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -1006,12 +1030,22 @@ Symbols<br>
 <td align="left" valign="top" >
 <code><span id="TYPEELTfilter.FOr"><span class="constructor">FOr</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> * <a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
 
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTfilter.FNot"><span class="constructor">FNot</span></span> <span class="keyword">of</span> <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a></code></code></td>
+
 </tr></table>
 
 <div class="info">
 Filter<br>
 </div>
 
+<pre><span id="VALstring_of_filter"><span class="keyword">val</span> string_of_filter</span> : <code class="type"><a href="OpamTypes.html#TYPEfilter">filter</a> -> string</code></pre><div class="info">
+Pretty print<br>
+</div>
 <pre><code><span id="TYPEsimple_arg"><span class="keyword">type</span> <code class="type"></code>simple_arg</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -1307,6 +1341,106 @@ Environment updates<br>
 <pre><span id="TYPEtags"><span class="keyword">type</span> <code class="type"></code>tags</span> = <code class="type">OpamMisc.StringSet.t OpamMisc.StringSetMap.t</code> </pre>
 <div class="info">
 Tags<br>
+</div>
+
+<br>
+<h2 id="2_Repositorystate">Repository state</h2><br>
+<pre><code><span id="TYPEcompiler_repository_state"><span class="keyword">type</span> <code class="type"></code>compiler_repository_state</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcompiler_repository_state.comp_repo">comp_repo</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository">repository</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcompiler_repository_state.comp_file">comp_file</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcompiler_repository_state.comp_descr">comp_descr</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcompiler_repository_state.comp_checksums">comp_checksums</span>&nbsp;:<code class="type">string list</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+Compiler repository state<br>
+</div>
+
+<pre><code><span id="TYPEpackage_repository_state"><span class="keyword">type</span> <code class="type"></code>package_repository_state</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_repo">pkg_repo</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository">repository</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_opam">pkg_opam</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_descr">pkg_descr</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_archive">pkg_archive</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_url">pkg_url</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEfilename">filename</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_files">pkg_files</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEdirname">dirname</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_metadata">pkg_metadata</span>&nbsp;:<code class="type">string list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Checksum of metadata</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpackage_repository_state.pkg_contents">pkg_contents</span>&nbsp;:<code class="type">string list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" >Checksum of contents</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+<div class="info">
+Package repository state<br>
 </div>
 
 </body></html>

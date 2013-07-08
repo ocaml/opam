@@ -23,6 +23,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -38,7 +39,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamState.Types</title>
@@ -98,7 +101,7 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.descrs">descrs</span>&nbsp;:<code class="type">OpamFile.Descr.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+<code><span id="TYPEELTt.descrs">descrs</span>&nbsp;:<code class="type">OpamFile.Descr.t lazy_t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
 
 </tr>
 <tr>
@@ -140,6 +143,13 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
+<code><span id="TYPEELTt.compilers">compilers</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
 <code><span id="TYPEELTt.pinned">pinned</span>&nbsp;:<code class="type">OpamFile.Pinned.t</code>;</code></td>
 
 </tr>
@@ -175,7 +185,14 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.repo_index">repo_index</span>&nbsp;:<code class="type">OpamFile.Repo_index.t</code>;</code></td>
+<code><span id="TYPEELTt.package_index">package_index</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.compiler_index">compiler_index</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code>;</code></td>
 
 </tr></table>
 }

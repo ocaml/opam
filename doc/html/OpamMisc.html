@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamFormula.html">
+<link rel="previous" href="OpamJson.html">
 <link rel="next" href="OpamPackage.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Abstract types" rel="Section" href="#2_Abstracttypes">
@@ -50,7 +53,7 @@
 <title>OpamMisc</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="OpamFormula.html" title="OpamFormula">Previous</a>
+<div class="navbar"><a class="pre" href="OpamJson.html" title="OpamJson">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="OpamPackage.html" title="OpamPackage">Next</a>
 </div>
@@ -149,6 +152,9 @@ Cut a string<br>
 <pre><span id="VALgit_of_string"><span class="keyword">val</span> git_of_string</span> : <code class="type">string -> string * string option</code></pre><div class="info">
 Cut a git string of the form /git/address<code class="code">#SHA</code> into (address * commit)<br>
 </div>
+<pre><span id="VALhg_of_string"><span class="keyword">val</span> hg_of_string</span> : <code class="type">string -> string * string option</code></pre><div class="info">
+same as <code class="code">git_of_string</code> but for mercurial paths<br>
+</div>
 <br>
 <h2 id="2_Misc">Misc</h2><br>
 <pre><span id="VALreset_env_value"><span class="keyword">val</span> reset_env_value</span> : <code class="type">prefix:string -> string -> string list</code></pre><div class="info">
@@ -182,10 +188,10 @@ When <code class="code">stdout</code> refers to a terminal, query the number of 
 <pre><span id="VALuname_s"><span class="keyword">val</span> uname_s</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Get the output of <code class="code">uname -s</code><br>
 </div>
-<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `bash | `csh | `sh | `zsh ]</code></pre><div class="info">
+<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `bash | `csh | `fish | `sh | `zsh ]</code></pre><div class="info">
 Guess the shell compat-mode<br>
 </div>
-<pre><span id="VALguess_dot_profile"><span class="keyword">val</span> guess_dot_profile</span> : <code class="type">[ `bash | `csh | `sh | `zsh ] -> string</code></pre><div class="info">
+<pre><span id="VALguess_dot_profile"><span class="keyword">val</span> guess_dot_profile</span> : <code class="type">[ `bash | `csh | `fish | `sh | `zsh ] -> string</code></pre><div class="info">
 Guess the location of .profile<br>
 </div>
 </body></html>

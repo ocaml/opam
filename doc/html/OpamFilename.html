@@ -25,6 +25,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -40,7 +41,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFilename</title>
@@ -67,6 +70,9 @@ Return the current working directory<br>
 <pre><span id="VALrmdir"><span class="keyword">val</span> rmdir</span> : <code class="type">Dir.t -> unit</code></pre><div class="info">
 Remove a directory<br>
 </div>
+<pre><span id="VALcleandir"><span class="keyword">val</span> cleandir</span> : <code class="type">Dir.t -> unit</code></pre><div class="info">
+Clean the contents of a directory.<br>
+</div>
 <pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">Dir.t -> unit</code></pre><div class="info">
 Create a directory<br>
 </div>
@@ -79,7 +85,7 @@ List the sub-directory<br>
 <pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">Dir.t -> (unit -> 'a) -> 'a</code></pre><div class="info">
 Evaluate a function in a given directory<br>
 </div>
-<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?env:(string * string) list -> ?name:string -> string list list -> unit</code></pre><div class="info">
+<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?env:(string * string) list -><br>       ?name:string -> ?metadata:(string * string) list -> string list list -> unit</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
 <pre><span id="VALmove_dir"><span class="keyword">val</span> move_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
@@ -87,9 +93,6 @@ Move a directory<br>
 </div>
 <pre><span id="VALcopy_dir"><span class="keyword">val</span> copy_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
 Copy a directory<br>
-</div>
-<pre><span id="VALcopy_unique_dir"><span class="keyword">val</span> copy_unique_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
-Copy the unique directory in <code class="code">src</code> to <code class="code">dst</code><br>
 </div>
 <pre><span id="VALlink_dir"><span class="keyword">val</span> link_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
 Link a directory<br>
@@ -117,7 +120,7 @@ Create a filename from a Dir.t and a basename<br>
 Create a file from a basename and the current working directory
     as dirname<br>
 </div>
-<pre><span id="VALraw_file"><span class="keyword">val</span> raw_file</span> : <code class="type">string -> t</code></pre><div class="info">
+<pre><span id="VALraw"><span class="keyword">val</span> raw</span> : <code class="type">string -> t</code></pre><div class="info">
 Creation from a raw string (as <i>http://&lt;path&gt;</i>)<br>
 </div>
 <pre><span id="VALprettify"><span class="keyword">val</span> prettify</span> : <code class="type">t -> string</code></pre><div class="info">
@@ -172,6 +175,12 @@ Move a file<br>
 <pre><span id="VALlink_in"><span class="keyword">val</span> link_in</span> : <code class="type">t -> Dir.t -> unit</code></pre><div class="info">
 Symlink a file in a directory<br>
 </div>
+<pre><span id="VALreadlink"><span class="keyword">val</span> readlink</span> : <code class="type">t -> t</code></pre><div class="info">
+Read a symlinked file<br>
+</div>
+<pre><span id="VALis_symlink"><span class="keyword">val</span> is_symlink</span> : <code class="type">t -> bool</code></pre><div class="info">
+Is a symlink ?<br>
+</div>
 <pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">src:t -> dst:t -> unit</code></pre><div class="info">
 Copy a file<br>
 </div>
@@ -186,7 +195,10 @@ Extract an archive in a given directory (it rewrites the root to
 Extract an archive in a given directory (which should already exists)<br>
 </div>
 <pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type">Dir.t -> t -> bool</code></pre><div class="info">
-Check wether a filename starts by a given Dir.t<br>
+Check whether a filename starts by a given Dir.t<br>
+</div>
+<pre><span id="VALends_with"><span class="keyword">val</span> ends_with</span> : <code class="type">string -> t -> bool</code></pre><div class="info">
+Check whether a filename ends with a given suffix<br>
 </div>
 <pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">Dir.t -> t -> string</code></pre><div class="info">
 Remove a prefix from a file name<br>

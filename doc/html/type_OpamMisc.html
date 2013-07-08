@@ -20,6 +20,7 @@
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
 <link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
 <link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
 <link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
@@ -35,7 +36,9 @@
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamMisc</title>
@@ -565,6 +568,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;indent_right&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sub_at&nbsp;:&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;git_of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;*&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;hg_of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;*&nbsp;string&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;reset_env_value&nbsp;:&nbsp;prefix:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rsync_trim&nbsp;:&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;exact_match&nbsp;:&nbsp;<span class="constructor">Re</span>.re&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
@@ -580,6 +584,6 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;terminal_columns&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;uname_s&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guess_shell_compat&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;[&nbsp;<span class="keywordsign">`</span>bash&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>csh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>sh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>zsh&nbsp;]<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guess_dot_profile&nbsp;:&nbsp;[&nbsp;<span class="keywordsign">`</span>bash&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>csh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>sh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>zsh&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guess_shell_compat&nbsp;:&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;[&nbsp;<span class="keywordsign">`</span>bash&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>csh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>fish&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>sh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>zsh&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guess_dot_profile&nbsp;:&nbsp;[&nbsp;<span class="keywordsign">`</span>bash&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>csh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>fish&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>sh&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>zsh&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 <span class="keyword">end</span></code></body></html>
