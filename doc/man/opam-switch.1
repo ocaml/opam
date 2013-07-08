@@ -12,7 +12,7 @@ opam\-switch \- Manage multiple installation of compilers.
 \fBopam switch\fR [\fIOPTION\fR]... [\fICOMMAND\fR] [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-This command allows one to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independant from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each.
+This command allows one to switch between different compiler versions, installing the compiler if \fBopam switch\fR is used to switch to that compiler for the first time. The different compiler versions are totally independent from each other, meaning that OPAM maintains a separate state (e.g. list of installed packages...) for each.
 .P
 See the documentation of \fBopam switch list\fR to see the compilers which are available, and how to switch or to install a new one.
 .SH ARGUMENTS
@@ -46,7 +46,7 @@ The name of the file to export to/import from.
 WARNING: This option is for testing purposes only! Using this option without care is the best way to corrupt your current compiler environment. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands.
 .TP 4
 \fB\-i\fR, \fB\-\-installed\fR
-List installed packages only.
+List installed compiler switches only.
 .TP 4
 \fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR
 Set the maximal number of concurrent jobs to use. You can also set it using the OPAMJOBS environment variable.
@@ -62,6 +62,9 @@ Only install the compiler switch, without switching to it. If the compiler switc
 .TP 4
 \fB\-\-no\-warning\fR
 Do not display any warning related to environment variables.
+.TP 4
+\fB\-\-output\-json\fR=\fIFILENAME\fR
+Save the result output of an OPAM run in a computer\-readable file
 .TP 4
 \fB\-s\fR, \fB\-\-short\fR
 Output the names separated by one whitespace instead of using the usual formatting.
@@ -86,7 +89,7 @@ Install the packages from a file.
 Reinstall the given compiler switch. This will also try reinstall the installed packages.
 .TP 4
 \fBlist\fR
-List the available compilers. The first column displays the switch name (if any), the second one the switch state (C = current, I = installed, \-\- = not installed), the third one the compiler name and the last one the compiler description. To switch to an already installed compiler alias (with state = I), use \fBopam switch <name>\fR. If you want to use a new compiler <comp>, use \fBopam switch <comp>\fR: this will download, compile and create a fresh and independant environment where new packages can be installed. If you want to create a new compiler alias (for instance because you already have this compiler version installed), use \fBopam switch <name> \-\-alias\-of <comp>\fR. In case <name> and <comp> are the same, this is equivalent to \fBopam switch <comp>\fR.
+List the available compilers. The first column displays the switch name (if any), the second one the switch state (C = current, I = installed, \-\- = not installed), the third one the compiler name and the last one the compiler description. To switch to an already installed compiler alias (with state = I), use \fBopam switch <name>\fR. If you want to use a new compiler <comp>, use \fBopam switch <comp>\fR: this will download, compile and create a fresh and independent environment where new packages can be installed. If you want to create a new compiler alias (for instance because you already have this compiler version installed), use \fBopam switch <name> \-\-alias\-of <comp>\fR. In case <name> and <comp> are the same, this is equivalent to \fBopam switch <comp>\fR.
 .TP 4
 \fBshow\fR
 Show the current compiler.

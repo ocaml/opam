@@ -60,14 +60,17 @@ Display the external packages associated to the given tags.
 \fB\-\-fake\fR
 WARNING: This option is for testing purposes only! Using this option without care is the best way to corrupt your current compiler environment. When using this option OPAM will run a dry\-run of the solver and then fake the build and install commands.
 .TP 4
-\fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR (absent=1)
-Number of jobs to use when building packages.
+\fB\-\-fish\fR
+Use fish\-compatible mode for configuring OPAM.
 .TP 4
 \fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR
 Set the maximal number of concurrent jobs to use. You can also set it using the OPAMJOBS environment variable.
 .TP 4
+\fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR (absent=1)
+Number of jobs to use when building packages.
+.TP 4
 \fB\-k\fR \fIKIND\fR, \fB\-\-kind\fR=\fIKIND\fR
-Specify the kind of the repository to be set (the main ones are 'http', 'local', 'git' or 'darcs').
+Specify the kind of the repository to be set (the main ones are 'http', 'local', 'git', 'darcs' or 'hg').
 .TP 4
 \fB\-m\fR \fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
 Use \fIMAKE\fR as the default 'make' command.
@@ -77,6 +80,9 @@ Do not update the global and user configuration options to setup OPAM.
 .TP 4
 \fB\-\-no\-checksums\fR
 Do not verify the checksum of downloaded archives.This is equivalent to setting \fB$OPAMNOCHECKSUMS\fR to a non\-empty string.
+.TP 4
+\fB\-\-output\-json\fR=\fIFILENAME\fR
+Save the result output of an OPAM run in a computer\-readable file
 .TP 4
 \fB\-\-sh\fR
 Use sh\-compatible mode for configuring OPAM.
