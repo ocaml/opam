@@ -469,10 +469,12 @@ in \S\ref{file:general} with the following restrictions:
 \begin{Verbatim}[frame=single]
 <file> :=
     opam-version: "1"
-    ?lib:  [ STRING+ ]
-    ?bin:  [ <mv>+ ]
-    ?doc:  [ STRING+ ]
-    ?misc: [ <mv>+ ]
+    ?lib:      [ <mv>+ ]
+    ?bin:      [ <mv>+ ]
+    ?toplevel: [ <mv>+ ]
+    ?share:    [ <mv>+ ]
+    ?doc:      [ <mv>+ ]
+    ?misc:     [ <mv>+ ]
 
 <mv> := STRING
       | STRING { STRING }
@@ -481,21 +483,31 @@ in \S\ref{file:general} with the following restrictions:
 
 \begin{itemize}
 \item Files listed under {\tt lib} are copied to \verb+$lib/$NAME/+.
-\item Files listed under {\tt bin} are copied to \verb+$bin/+ (they
-  can be renamed using \verb+$SRC { $DST }+; in this case \verb+$SRC+
-  should be a simple filename, ie. it should not start with a
-  directory name).
+\item Files listed under {\tt bin} are copied to \verb+$bin/+.
 \item Files listed under {\tt doc} are copied to \verb+$doc/$NAME/+.
-\item Files listed under {\tt misc} should be processed as follows:
-  for each pair \verb+$SRC { $DST }+, the tool should ask the user if
+\item Files listed under {\tt toplevel} are copied to \verb+$prefix/toplevel+.
+\item Files listed under {\tt misc} are processed as follows:
+  for each pair \verb+$SRC { $DST }+, the tool asks the user if
   he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
+\end{itemize}
+
+General remarks:
+\begin{itemize}
+
+\item You control where the file are copied under the given prefix by
+  using the optional argument. For instance:
+  \verb+doc: [ "_build/foo.html" {"foo/index.html"} ]+ will copy the
+  given HTML page under \verb+$doc/$NAME/foo/index.html+.
+
 \item OPAM will try to install all the file in sequence, and it will
   fail in case a source filename is not available. To tell OPAM a
   source filename might not be generated (because of byte/native
   constraints or because of optional dependencies) the source filename
-  should start by \verb+?+. {\rm Remark:} it is much cleaner if the
-  underlying build-system can generate the right {\tt .install} files,
-  containing the existing files only.
+  should start by \verb+?+.
+
+\item It is much cleaner if the underlying build-system can generate
+  the right \verb+$NAME.install+ files, containing the existing files only.
+
 \end{itemize}
 
 \subsubsection{Pinned Packages: {\tt pinned}}
