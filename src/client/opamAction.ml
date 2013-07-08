@@ -147,13 +147,14 @@ let install_package t nv =
       install_files (fun r s _ -> OpamPath.Switch.toplevel r s)
         OpamFile.Dot_install.toplevel;
 
+      install_files (fun r s _ -> OpamPath.Switch.stublibs r s)
+        OpamFile.Dot_install.stublibs;
+
       (* Shared files *)
       install_files OpamPath.Switch.share OpamFile.Dot_install.share;
 
       (* Documentation files *)
       install_files OpamPath.Switch.doc OpamFile.Dot_install.doc;
-
-      (* bin *)
 
       (* misc *)
       List.iter
@@ -404,18 +405,24 @@ let remove_package_aux t ~metadata ~rm_build nv =
       ()
   end;
 
-  (* Remove the binaries *)
-  log "Removing the binaries";
   let install =
     OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in
-  List.iter (fun (base, dst) ->
-    let dir = OpamPath.Switch.bin t.root t.switch in
-    let dummy_src = OpamFilename.create dir base.c in
-    let dst = match dst with
-      | None   -> OpamFilename.create dir (OpamFilename.basename dummy_src)
-      | Some b -> OpamFilename.create dir b in
-    OpamFilename.remove dst
-  ) (OpamFile.Dot_install.bin install);
+
+  let remove_files dst_fn files =
+    List.iter (fun (base, dst) ->
+        let dst_dir = dst_fn t.root t.switch in
+        let dst_file = match dst with
+          | None   -> OpamFilename.create dst_dir base.c
+          | Some b -> OpamFilename.create dst_dir b in
+        OpamFilename.remove dst_file
+      ) files in
+
+  (* Remove the binaries *)
+  log "Removing the binaries";
+  remove_files OpamPath.Switch.bin (OpamFile.Dot_install.bin install);
+
+  (* Remove the C bindings *)
+  remove_files OpamPath.Switch.stublibs (OpamFile.Dot_install.stublibs install);
 
   (* Remove the misc files *)
   log "Removing the misc files";

@@ -302,6 +302,9 @@ module Dot_install: sig
   (** List of toplevel files *)
   val toplevel: t -> (basename optional * basename option) list
 
+  (** C bindings *)
+  val stublibs: t -> (basename optional * basename option) list
+
   (** List of shared files *)
   val share: t -> (basename optional * basename option) list
 

@@ -1000,6 +1000,7 @@ module X = struct
       bin     : (basename optional * basename option) list;
       lib     : (basename optional * basename option) list;
       toplevel: (basename optional * basename option) list;
+      stublibs: (basename optional * basename option) list;
       share   : (basename optional * basename option) list;
       doc     : (basename optional * basename option) list;
       misc    : (basename optional * filename) list;
@@ -1009,6 +1010,7 @@ module X = struct
       lib      = [];
       bin      = [];
       toplevel = [];
+      stublibs = [];
       misc     = [];
       share    = [];
       doc      = [];
@@ -1017,6 +1019,7 @@ module X = struct
     let bin t = t.bin
     let lib t = t.lib
     let toplevel t = t.toplevel
+    let stublibs t = t.stublibs
     let misc t = t.misc
     let share t = t.share
     let doc t = t.doc
@@ -1025,6 +1028,7 @@ module X = struct
     let s_bin      = "bin"
     let s_misc     = "misc"
     let s_toplevel = "toplevel"
+    let s_stublibs = "stublibs"
     let s_share    = "share"
     let s_doc      = "doc"
 
@@ -1033,6 +1037,7 @@ module X = struct
       s_lib;
       s_bin;
       s_toplevel;
+      s_stublibs;
       s_misc;
       s_share;
       s_doc;
@@ -1072,6 +1077,7 @@ module X = struct
           Variable (s_bin     , mk      t.bin);
           Variable (s_lib     , mk      t.lib);
           Variable (s_toplevel, mk      t.toplevel);
+          Variable (s_stublibs, mk      t.stublibs);
           Variable (s_share   , mk      t.share);
           Variable (s_doc     , mk      t.doc);
           Variable (s_misc    , mk_misc t.misc);
@@ -1099,9 +1105,10 @@ module X = struct
       let bin      = mk s_bin      in
       let lib      = mk s_lib      in
       let toplevel = mk s_toplevel in
+      let stublibs = mk s_stublibs in
       let share    = mk s_share    in
       let doc      = mk s_doc      in
-      { lib; bin; misc; toplevel; share; doc }
+      { lib; bin; misc; toplevel; stublibs; share; doc }
 
   end
 
