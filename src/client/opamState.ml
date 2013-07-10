@@ -919,14 +919,17 @@ let contents_of_variable t v =
     let process_one name =
       let exists = find_packages_by_name t name <> None in
       let name_str = OpamPackage.Name.to_string name in
+      let string str = Some (S str) in
+      let bool b = Some (B b) in
+      let dirname dir = string (OpamFilename.Dir.to_string dir) in
       if not exists then None
       else
         try
           let var_hook = Printf.sprintf "OPAM_%s_%s" name_str var_str in
           match OpamMisc.getenv var_hook with
-          | "true"  -> Some (B true)
-          | "false" -> Some (B false)
-          | s       -> Some (S s)
+          | "true"  | "1" -> bool true
+          | "false" | "0" -> bool false
+          | s             -> string s
         with Not_found ->
           let installed = mem_installed_package_by_name t name in
           let no_section = OpamVariable.Full.section v = None in
