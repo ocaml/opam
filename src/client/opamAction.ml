@@ -138,7 +138,7 @@ let install_package t nv =
           ) files in
 
       (* bin *)
-      install_files (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.lib;
+      install_files (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
 
       (* lib *)
       install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
