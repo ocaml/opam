@@ -887,13 +887,15 @@ let source t ?(interactive_only=false) f =
     Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
 
-exception Variable_not_defined
-
 (* Return the contents of a fully qualified variable *)
 let contents_of_variable t v =
   let name = OpamVariable.Full.package v in
   let var = OpamVariable.Full.variable v in
   let var_str = OpamVariable.to_string var in
+  let string str = Some (S str) in
+  let bool b = Some (B b) in
+  let int i = string (string_of_int i) in
+  let dirname dir = string (OpamFilename.Dir.to_string dir) in
   let read_var name =
     let c = dot_config t name in
     try match OpamVariable.Full.section v with
@@ -901,27 +903,24 @@ let contents_of_variable t v =
       | Some s -> OpamFile.Dot_config.Section.variable c s var
     with Not_found ->
       OpamGlobals.error "%s is not defined" (OpamVariable.Full.to_string v);
-      raise Variable_not_defined in
+      None in
   if name = OpamPackage.Name.default then (
-    try S (OpamMisc.getenv var_str)
+    try string (OpamMisc.getenv var_str)
     with Not_found ->
       if var_str = "ocaml-version" then
-        S (OpamCompiler.Version.to_string t.compiler_version)
+        string (OpamCompiler.Version.to_string t.compiler_version)
       else if var_str = "preinstalled" then
-        B (OpamFile.Comp.preinstalled (compiler t t.compiler))
+        bool (OpamFile.Comp.preinstalled (compiler t t.compiler))
       else if var_str = "switch" then
-        S (OpamSwitch.to_string t.switch)
+        string (OpamSwitch.to_string t.switch)
       else if var_str = "jobs" then
-        S (string_of_int (jobs t))
+        int (jobs t)
       else
         read_var name
   ) else (
     let process_one name =
       let exists = find_packages_by_name t name <> None in
       let name_str = OpamPackage.Name.to_string name in
-      let string str = Some (S str) in
-      let bool b = Some (B b) in
-      let dirname dir = string (OpamFilename.Dir.to_string dir) in
       if not exists then None
       else
         try
@@ -945,7 +944,7 @@ let contents_of_variable t v =
               (OpamVariable.Full.to_string v)
               name_str
               (OpamVariable.to_string var);
-            raise Variable_not_defined
+            None
           ) else if installed then (
             match OpamVariable.to_string var with
             | "bin"     -> dirname (OpamPath.Switch.bin t.root t.switch)
@@ -957,29 +956,26 @@ let contents_of_variable t v =
             | "version" ->
               let nv = find_installed_package_by_name t name in
               string (OpamPackage.Version.to_string (OpamPackage.version nv))
-            | _         -> Some (read_var name)
+            | _         -> read_var name
           ) else
             None in
     match process_one name with
-    | Some r -> r
+    | Some r -> Some r
     | None   ->
       let name_str = OpamPackage.Name.to_string name in
-      let names = OpamMisc.split name_str '+' in
-      begin match names with
-        | [name] -> OpamPackage.unknown (OpamPackage.Name.of_string name) None
-        | _      -> ()
-      end;
+      let names =
+        try OpamMisc.split name_str '+'
+        with _ -> [name_str] in
       let names = List.rev_map OpamPackage.Name.of_string names in
       let results =
         List.rev_map (fun name ->
-          match process_one name with
-          | None   ->
-            OpamGlobals.error
-              "Package %s is not installed"
-              (OpamPackage.Name.to_string name);
-            raise Variable_not_defined
-          | Some r -> r
-        ) names in
+            match process_one name with
+            | None   ->
+              OpamGlobals.error_and_exit
+                "%s does not define the variable %s."
+                (OpamPackage.Name.to_string name) (OpamVariable.to_string var)
+            | Some r -> r
+          ) names in
       let rec compose x y = match x,y with
         | S "enable" , S "enable"  -> S "enable"
         | S "disable", S "enable"
@@ -996,24 +992,31 @@ let contents_of_variable t v =
               (OpamVariable.string_of_variable_contents y) in
       match results with
       | [] | [_] -> assert false
-      | h::t     -> List.fold_left compose h t
+      | h::t     -> Some (List.fold_left compose h t)
   )
+
+let contents_of_variable_exn t var =
+  match contents_of_variable t var with
+  | None  ->
+    OpamGlobals.error_and_exit "%s is not a valid variable."
+      (OpamVariable.Full.to_string var)
+  | Some c -> c
 
 let substitute_ident t i =
   let v = OpamVariable.Full.of_string i in
-  contents_of_variable t v
+  contents_of_variable_exn t v
 
 (* Substitute the file contents *)
 let substitute_file t f =
   let f = OpamFilename.of_basename f in
   let src = OpamFilename.add_extension f "in" in
   let contents = OpamFile.Subst.read src in
-  let newcontents = OpamFile.Subst.replace contents (contents_of_variable t) in
+  let newcontents = OpamFile.Subst.replace contents (contents_of_variable_exn t) in
   OpamFile.Subst.write f newcontents
 
 (* Substitue the string contents *)
 let substitute_string t s =
-  OpamFile.Subst.replace_string s (contents_of_variable t)
+  OpamFile.Subst.replace_string s (contents_of_variable_exn t)
 
 exception Filter_type_error
 

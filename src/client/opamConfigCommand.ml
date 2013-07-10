@@ -94,7 +94,7 @@ let list ns =
     ) [] configs in
   let contents =
     List.map
-      (fun v -> v, OpamState.contents_of_variable t v)
+      (fun v -> v, OpamState.contents_of_variable_exn t v)
       variables in
   List.iter (fun (variable, contents) ->
     OpamGlobals.msg "%-40s %s\n"
@@ -294,8 +294,8 @@ let quick_lookup v =
     if OpamVariable.to_string var = "switch" then
       Some (S (OpamSwitch.to_string switch))
     else match OpamVariable.Full.section v with
-    | None   -> Some (OpamFile.Dot_config.variable config var)
-    | Some s -> Some (OpamFile.Dot_config.Section.variable config s var)
+    | None   -> OpamFile.Dot_config.variable config var
+    | Some s -> OpamFile.Dot_config.Section.variable config s var
   ) else
     None
 
@@ -306,7 +306,7 @@ let variable v =
     | Some c -> c
     | None   ->
       let t = OpamState.load_state "config-variable" in
-      OpamState.contents_of_variable t v in
+      OpamState.contents_of_variable_exn t v in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =

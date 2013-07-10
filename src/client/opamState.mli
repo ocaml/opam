@@ -137,7 +137,11 @@ val update_setup: state -> user_config option -> global_config option -> unit
 (** {2 Substitutions} *)
 
 (** Compute the value of a variable *)
-val contents_of_variable: state -> full_variable -> variable_contents
+val contents_of_variable: state -> full_variable -> variable_contents option
+
+(** Compute the value of a variable. Raise [Exit] if the variable is
+    not valid. *)
+val contents_of_variable_exn: state -> full_variable -> variable_contents
 
 (** Substitute a string *)
 val substitute_string: state -> string -> string

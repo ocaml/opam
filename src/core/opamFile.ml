@@ -1231,7 +1231,9 @@ module X = struct
 
     let variables t = List.rev_map fst t.variables
 
-    let variable t s = List.assoc s t.variables
+    let variable t s =
+      try Some (List.assoc s t.variables)
+      with Not_found -> None
 
     module type SECTION = sig
       val available: t -> section list
@@ -1241,7 +1243,7 @@ module X = struct
       val asmlink  : t -> section -> string list
       val bytelink : t -> section -> string list
       val requires : t -> section -> section list
-      val variable : t -> section -> variable -> variable_contents
+      val variable : t -> section -> variable -> variable_contents option
       val variables: t -> section -> variable list
     end
 
@@ -1257,8 +1259,11 @@ module X = struct
       let bytelink t s = (find t s).bytelink
       let asmlink  t s = (find t s).asmlink
       let requires t s = (find t s).requires
-      let variable t n s = List.assoc s (find t n).lvariables
-      let variables t n = List.rev_map fst (find t n).lvariables
+      let variable t n s =
+        try Some (List.assoc s (find t n).lvariables)
+        with Not_found -> None
+      let variables t n =
+        List.rev_map fst (find t n).lvariables
     end
 
     let filter t n = List.filter (fun s -> s.kind = n) t.sections

@@ -351,7 +351,7 @@ module Dot_config: sig
     val requires: t -> section -> section list
 
     (** Return the value of variables *)
-    val variable: t -> section -> variable  -> variable_contents
+    val variable: t -> section -> variable  -> variable_contents option
 
     (** The list of local variables *)
     val variables: t -> section -> variable list
@@ -368,7 +368,7 @@ module Dot_config: sig
   module Syntax: SECTION
 
   (** Top-level variables *)
-  val variable: t -> variable  -> variable_contents
+  val variable: t -> variable  -> variable_contents option
 
   (** The list of top-level variables *)
   val variables: t -> variable list
