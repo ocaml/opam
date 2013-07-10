@@ -934,11 +934,11 @@ let contents_of_variable t v =
           let installed = mem_installed_package_by_name t name in
           let no_section = OpamVariable.Full.section v = None in
           if var = OpamVariable.enable && installed && no_section then
-            Some (S "enable")
+            string "enable"
           else if var = OpamVariable.enable && not installed && no_section then
-            Some (S "disable")
+            string "disable"
           else if var = OpamVariable.installed && no_section then
-            Some (B installed)
+            bool installed
           else if var = OpamVariable.installed || var = OpamVariable.enable then (
             OpamGlobals.error
               "Syntax error: invalid section argument in '%s'.\nUse '%s:%s' instead."
@@ -946,10 +946,20 @@ let contents_of_variable t v =
               name_str
               (OpamVariable.to_string var);
             raise Variable_not_defined
-          ) else if not installed then
-            None
-          else
-            Some (read_var name) in
+          ) else if installed then (
+            match OpamVariable.to_string var with
+            | "bin"     -> dirname (OpamPath.Switch.bin t.root t.switch)
+            | "lib"     -> dirname (OpamPath.Switch.lib t.root t.switch name)
+            | "man"     -> dirname (OpamPath.Switch.man_dir t.root t.switch)
+            | "doc"     -> dirname (OpamPath.Switch.doc t.root t.switch name)
+            | "share"   -> dirname (OpamPath.Switch.share t.root t.switch name)
+            | "pinned"  -> bool (OpamPackage.Name.Map.mem name t.pinned)
+            | "version" ->
+              let nv = find_installed_package_by_name t name in
+              string (OpamPackage.Version.to_string (OpamPackage.version nv))
+            | _         -> Some (read_var name)
+          ) else
+            None in
     match process_one name with
     | Some r -> r
     | None   ->
