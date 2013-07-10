@@ -1098,7 +1098,7 @@ let add_to_env t (env: env) (updates: env_updates) =
     List.filter (fun (k,_) -> List.for_all (fun (u,_,_) -> u <> k) updates) env in
   env @ expand_env t updates
 
-let env_updates t =
+let env_updates ~opamswitch t =
   let comp = compiler t t.compiler in
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
@@ -1110,10 +1110,12 @@ let env_updates t =
     "MANPATH", "=:",
     OpamFilename.Dir.to_string (OpamPath.Switch.man_dir t.root t.switch) in
   let comp_env = OpamFile.Comp.env comp in
-  let switch = match !OpamGlobals.switch with
-    | `Command_line s -> [ "OPAMSWITCH", "=", s ]
-    | `Env _
-    | `Not_set -> [] in
+  let switch =
+    if not opamswitch then []
+    else match !OpamGlobals.switch with
+      | `Command_line s -> [ "OPAMSWITCH", "=", s ]
+      | `Env _
+      | `Not_set -> [] in
   let root =
     if !OpamGlobals.root_dir <> OpamGlobals.default_opam_dir then
       [ "OPAMROOT", "=", !OpamGlobals.root_dir ]
@@ -1135,11 +1137,11 @@ let get_opam_env t =
     | `Command_line _
     | `Not_set -> t
     | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
-  add_to_env t [] (env_updates t)
+  add_to_env t [] (env_updates ~opamswitch:true t)
 
 let get_full_env t =
   let env0 = OpamMisc.env () in
-  add_to_env t env0 (env_updates t)
+  add_to_env t env0 (env_updates ~opamswitch:true t)
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in
@@ -1250,8 +1252,8 @@ let update_init_scripts t ~global =
     (complete_sh   , OpamScript.complete);
     (complete_zsh  , OpamScript.complete_zsh);
     (switch_eval_sh, OpamScript.switch_eval);
-    (variables_sh  , string_of_env_update t `sh  (env_updates t));
-    (variables_csh , string_of_env_update t `csh (env_updates t));
+    (variables_sh  , string_of_env_update t `sh  (env_updates ~opamswitch:false t));
+    (variables_csh , string_of_env_update t `csh (env_updates ~opamswitch:false t));
   ] @
                 init_scripts
   in
