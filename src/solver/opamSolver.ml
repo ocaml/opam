@@ -29,19 +29,23 @@ let atom2debian (n, v) =
   | None       -> None
   | Some (r,v) -> Some (OpamFormula.string_of_relop r, OpamPackage.Version.to_string v)
 
+(* Get the optional depencies of a package *)
+let depopts_of_package universe package =
+  let opts =
+    try OpamPackage.Map.find package universe.u_depopts
+    with Not_found -> Empty in
+  OpamFormula.to_dnf opts
+
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
   let depends =
     try OpamPackage.Map.find package universe.u_depends
     with Not_found -> Empty in
   let depends =
-    let opts =
-      try OpamPackage.Map.find package universe.u_depopts
-      with Not_found -> Empty in
-    let opts = OpamFormula.to_dnf opts in
+    let opts = depopts_of_package universe package in
     if depopts then
       let opts = List.rev_map OpamFormula.of_conjunction opts in
-      And (depends, Or(depends,OpamFormula.ors opts))
+      And (depends, Or(depends, OpamFormula.ors opts))
     else
       let mem_installed conj =
         let is_installed (name,_) =
@@ -104,6 +108,33 @@ let atom2cudf opam2cudf (n, v) : Cudf_types.vpkg =
 
 (* load a cudf universe from an opam one *)
 let load_cudf_universe ?(depopts=false) universe =
+  (* The package numbering can be different in the universe if we
+     consider optional dependencies or not. To avoid that, we create a
+     dumb package which depends on all the optional dependencies. This
+     package should never appear to the user, so we make it
+     non-installable by adding conflicting constraints. *)
+  let universe =
+    let dummy_pkg = OpamPackage.create
+        (OpamPackage.Name.of_string "--depopts--")
+        (OpamPackage.Version.of_string "--none--") in
+    let dummy_atom =
+      Atom (OpamPackage.Name.of_string "--depopts--",
+            Atom (`Eq, OpamPackage.Version.of_string "--")) in
+    if not depopts then (
+      let depopts =
+        let all = OpamPackage.Set.fold (fun pkg acc ->
+            depopts_of_package universe pkg @ acc
+          ) universe.u_packages [] in
+        let all = List.rev_map OpamFormula.of_conjunction all in
+        And(dummy_atom, OpamFormula.ands all) in
+      { universe with
+        u_packages = OpamPackage.Set.add dummy_pkg universe.u_packages;
+        u_depends  = OpamPackage.Map.add dummy_pkg depopts universe.u_depopts; }
+    ) else
+      { universe with
+        u_packages = OpamPackage.Set.add dummy_pkg universe.u_packages;
+        u_depends  = OpamPackage.Map.add dummy_pkg dummy_atom universe.u_depopts; } in
+
   let opam2cudf =
     let opam2debian =
       OpamPackage.Set.fold
