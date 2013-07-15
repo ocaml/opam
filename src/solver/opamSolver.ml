@@ -129,11 +129,11 @@ let load_cudf_universe ?(depopts=false) universe =
         And(dummy_atom, OpamFormula.ands all) in
       { universe with
         u_packages = OpamPackage.Set.add dummy_pkg universe.u_packages;
-        u_depends  = OpamPackage.Map.add dummy_pkg depopts universe.u_depopts; }
+        u_depends  = OpamPackage.Map.add dummy_pkg depopts universe.u_depends; }
     ) else
       { universe with
         u_packages = OpamPackage.Set.add dummy_pkg universe.u_packages;
-        u_depends  = OpamPackage.Map.add dummy_pkg dummy_atom universe.u_depopts; } in
+        u_depends  = OpamPackage.Map.add dummy_pkg dummy_atom universe.u_depends; } in
 
   let opam2cudf =
     let opam2debian =
