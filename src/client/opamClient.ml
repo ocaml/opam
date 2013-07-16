@@ -93,6 +93,7 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
         else match installed_version with
           | Some v -> v
           | None   ->
+
             let nv =
               OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
             OpamPackage.version nv in
@@ -139,7 +140,7 @@ module API = struct
 
   let list ~print_short ~filter ~exact_name ~case_sensitive regexp =
     let t = OpamState.load_state "list" in
-    let names =names_of_regexp t ~filter ~exact_name ~case_sensitive regexp in
+    let names = names_of_regexp t ~filter ~exact_name ~case_sensitive regexp in
     if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
       let kind = match filter with
         | `roots
@@ -147,6 +148,13 @@ module API = struct
         | _          -> "Available" in
       OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
     );
+    let names = OpamPackage.Name.Map.mapi (fun name stats ->
+        if OpamState.mem_installed_package_by_name t name
+        && OpamState.is_locally_pinned t name then
+          { stats with installed_version = Some (OpamPackage.Version.pinned) }
+        else
+          stats
+      ) names in
     let max_n, max_v =
       OpamPackage.Name.Map.fold (fun name { installed_version } (max_n, max_v) ->
         let max_n = max max_n (String.length (OpamPackage.Name.to_string name)) in
@@ -185,7 +193,12 @@ module API = struct
 
       (* Compute the installed versions, for each switch *)
       let installed = OpamState.installed_versions t name in
-
+      let installed = OpamPackage.Map.fold (fun nv alias map ->
+          let nv =
+            if OpamState.is_locally_pinned t name then OpamPackage.pinned name
+            else nv in
+          OpamPackage.Map.add nv alias map
+        ) installed OpamPackage.Map.empty in
       let installed_str =
         let one (nv, aliases) =
           Printf.sprintf "%s [%s]"
@@ -203,7 +216,7 @@ module API = struct
 
       let repository =
         if OpamState.is_locally_pinned t name then
-          ["repository", "(pinned)"]
+          []
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
         else match repo_name with
@@ -311,9 +324,13 @@ module API = struct
           | _  -> Printf.sprintf "\n\n%s" long in
         ["description", short ^ long] in
 
+      let version =
+        if OpamState.is_locally_pinned t name then OpamPackage.Version.pinned
+        else current_version in
+
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
-        @ [ "version", OpamPackage.Version.to_string current_version ]
+        @ [ "version", OpamPackage.Version.to_string version ]
         @ repository
         @ url
         @ homepage
