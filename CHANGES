@@ -1,4 +1,5 @@
 1.0.1 (trunk)
+* Improve `opam pin` stability and start display information about dev revisions
 * Add a new `man` field in `.install` files
 * Support hierarchical installation in `.install` files
 * Add a new `stublibs` field in `.install` files
