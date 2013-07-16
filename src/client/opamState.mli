@@ -273,6 +273,12 @@ val is_pinned: state -> name -> bool
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
 
+(** Get the path and kind associated to a locally pinned package. *)
+val locally_pinned_package: state -> name -> dirname * repository_kind
+
+(** Return the repository associated to a locally pinned package. *)
+val repository_of_locally_pinned_package: state -> name -> repository
+
 (** Get the corresponding pinned package. If the package is pinned to
     a path (locally or via git/darcs), it returns the latest package as we
     assume that the most up-to-date build descriptions. *)

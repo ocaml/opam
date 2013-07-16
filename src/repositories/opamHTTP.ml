@@ -247,6 +247,9 @@ module B = struct
     ) else
       Not_available
 
+  let revision _ =
+    None
+
 end
 
 let make_urls_txt repo_root =

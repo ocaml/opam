@@ -36,6 +36,10 @@ module type VCS = sig
 
   (** Check whether the staging area is empty. *)
   val diff: repository -> bool
+
+  (** Return the HEAD revision. *)
+  val revision: repository -> string
+
 end
 
 (** Create a backend from a [VCS] implementation. *)

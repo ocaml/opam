@@ -223,6 +223,16 @@ module API = struct
           | None   -> []
           | Some r -> [ "repository", OpamRepositoryName.to_string r ] in
 
+      let revision =
+        if OpamState.is_locally_pinned t name
+        && OpamState.mem_installed_package_by_name t name then
+          let repo = OpamState.repository_of_locally_pinned_package t name in
+          match OpamRepository.revision repo with
+          | None   -> []
+          | Some v -> [ "revision", OpamPackage.Version.to_string v ]
+        else
+          [] in
+
       let url = match repo_name with
         | None           -> []
         | Some repo_name ->
@@ -331,6 +341,7 @@ module API = struct
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
         @ [ "version", OpamPackage.Version.to_string version ]
+        @ revision
         @ repository
         @ url
         @ homepage

@@ -44,16 +44,20 @@ module Hg = struct
     )
 
   let fetch repo =
-    let address = address repo in
-    OpamGlobals.msg "%-10s Synchronizing with %s%s\n"
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamFilename.prettify_dir address.address)
-      (match address.commit with
-       | None   -> ""
-       | Some c -> Printf.sprintf " [%s]" c);
     OpamFilename.in_dir repo.repo_root (fun () ->
       OpamSystem.command [ "hg" ; "pull" ]
     )
+
+  let revision repo =
+    OpamFilename.in_dir repo.repo_root (fun () ->
+        match OpamSystem.read_command_output [ "hg" ; "id" ; "-i" ] with
+        | []      -> "<none>"
+        | full::_ ->
+          if String.length full > 8 then
+            String.sub full 0 8
+          else
+            full
+      )
 
   let unknown_commit commit =
     OpamSystem.internal_error "Unknown mercurial revision/branch/bookmark: %s."

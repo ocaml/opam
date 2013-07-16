@@ -72,6 +72,7 @@ module type BACKEND = sig
   val pull_dir: name -> dirname -> dirname -> dirname download
   val pull_repo: repository -> unit
   val pull_archive: repository -> filename -> filename download
+  val revision: repository -> version option
 end
 
 exception Unknown_backend
@@ -134,6 +135,11 @@ let pull_file kind name local_dirname remote_filename =
 let pull_dir kind name local_dirname remote_dirname =
   let module B = (val find_backend_by_kind kind: BACKEND) in
   B.pull_dir name local_dirname remote_dirname
+
+let revision repo =
+  let kind = repo.repo_kind in
+  let module B = (val find_backend_by_kind kind: BACKEND) in
+  B.revision repo
 
 let pull_file_and_check_digest kind name dirname filename checksum =
   if OpamFilename.exists filename

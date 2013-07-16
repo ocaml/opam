@@ -48,6 +48,17 @@ module Git = struct
         OpamSystem.command [ "git" ; "fetch" ; "origin" ]
       )
 
+  let revision repo =
+    OpamFilename.in_dir repo.repo_root (fun () ->
+        match OpamSystem.read_command_output [ "git" ; "rev-parse" ; "HEAD" ] with
+        | []      -> "<none>"
+        | full::_ ->
+          if String.length full > 8 then
+            String.sub full 0 8
+          else
+            full
+      )
+
   let merge repo =
     let address = address repo in
     let merge commit =

@@ -106,6 +106,9 @@ module B = struct
       (OpamFilename.to_string filename);
     pull_file_quiet (OpamPath.Repository.archives_dir repo) filename
 
+  let revision _ =
+    None
+
 end
 
 let register () =

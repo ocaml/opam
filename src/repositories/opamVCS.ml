@@ -23,6 +23,7 @@ module type VCS = sig
   val fetch: repository -> unit
   val merge: repository -> unit
   val diff: repository -> bool
+  val revision: repository -> string
 end
 
 
@@ -66,17 +67,19 @@ module Make (VCS: VCS) = struct
       (OpamFilename.prettify filename);
     pull_file_quiet dirname filename
 
+  let repo dirname address =
+    let repo = OpamRepository.default () in
+    {
+      repo with
+      repo_root    = dirname;
+      repo_address = address;
+    }
+
   let pull_dir name dirname address =
     OpamGlobals.msg "%-10s Fetching %s\n"
       (OpamPackage.Name.to_string name)
       (OpamFilename.prettify_dir address);
-    let repo = OpamRepository.default () in
-    let repo = {
-      repo with
-      repo_root    = dirname;
-      repo_address = address;
-    } in
-    pull_repo repo
+    pull_repo (repo dirname address)
 
   let pull_repo repo =
     OpamGlobals.msg "%-10s Fetching %s\n"
@@ -89,5 +92,8 @@ module Make (VCS: VCS) = struct
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamFilename.prettify filename);
     pull_file_quiet (OpamPath.Repository.archives_dir repo) filename
+
+  let revision repo =
+    Some (OpamPackage.Version.of_string (VCS.revision repo))
 
 end

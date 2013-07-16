@@ -1712,26 +1712,40 @@ let update_switch_config t switch =
   OpamFile.Config.write (OpamPath.config t.root) config;
   update_init_scripts { t with switch }  ~global:None
 
+let locally_pinned_package t n =
+  let option = OpamPackage.Name.Map.find n t.pinned in
+  let path = OpamFilename.raw_dir (string_of_pin_option option) in
+  match kind_of_pin_option option with
+  | None      -> OpamGlobals.error_and_exit
+                   "%s has a wrong pinning kind." (OpamPackage.Name.to_string n)
+  | Some kind ->
+    match repository_kind_of_pin_kind kind with
+    | None    -> OpamSystem.internal_error "locally pinned"
+    | Some kind -> (path, kind)
+
+let repository_of_locally_pinned_package t n =
+  let path, kind = locally_pinned_package t n in
+  let root = OpamPath.Switch.pinned_dir t.root t.switch n in
+  {
+    repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
+    repo_root     = root;
+    repo_address  = path;
+    repo_kind     = kind;
+    repo_priority = 0;
+  }
+
 let update_pinned_package t n =
   if is_locally_pinned t n then
-    let pin = OpamPackage.Name.Map.find n t.pinned in
-    let path = OpamFilename.raw_dir (string_of_pin_option pin) in
-    match kind_of_pin_option pin with
-    | None      -> OpamGlobals.error_and_exit
-                     "%s has a wrong pinning kind." (OpamPackage.Name.to_string n)
-    | Some kind ->
-      match repository_kind_of_pin_kind kind with
-      | None      -> OpamSystem.internal_error "locally pinned"
-      | Some kind ->
-        let dst = OpamPath.Switch.pinned_dir t.root t.switch n in
-        let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
-        let result = B.pull_dir n dst path in
-        if result <> Not_available then (
-          (* If $pinned_path/opam does not exist, the cache the current OPAM file. *)
-          let opam = OpamPath.Switch.pinned_opam t.root t.switch n in
-          if not (OpamFilename.exists opam) then copy_pinned_opam t n
-        );
-        result
+    let path, kind = locally_pinned_package t n in
+    let dst = OpamPath.Switch.pinned_dir t.root t.switch n in
+    let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
+    let result = B.pull_dir n dst path in
+    if result <> Not_available then (
+      (* If $pinned_path/opam does not exist, the cache the current OPAM file. *)
+      let opam = OpamPath.Switch.pinned_opam t.root t.switch n in
+      if not (OpamFilename.exists opam) then copy_pinned_opam t n
+    );
+    result
   else
     OpamGlobals.error_and_exit "%s is not pinned."
       (OpamPackage.Name.to_string n)

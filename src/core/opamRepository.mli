@@ -117,7 +117,14 @@ module type BACKEND = sig
       [pull_file] but some backends have special needs. *)
   val pull_archive: repository -> filename -> filename download
 
+  (** Return the (optional) revision of a given repository. Useful
+      mainly when using CVS backends. *)
+  val revision: repository -> version option
+
 end
+
+(** Get the optional revision associated to a backend. *)
+val revision: repository -> version option
 
 (** Register a repository backend *)
 val register_backend: repository_kind -> (module BACKEND) -> unit
