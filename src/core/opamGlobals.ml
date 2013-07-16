@@ -53,7 +53,15 @@ let download_retry =
   try max 1 (int_of_string (OpamMisc.getenv "OPAMRETRY"))
   with _ -> 10
 
-let cudf_file = ref (None: string option)
+let cudf_file = ref (
+    try Some (OpamMisc.getenv "OPAMCUDFFILE")
+    with _ -> None
+  )
+
+let solver_timeout =
+  try float_of_string (OpamMisc.getenv "OPAMSOLVERTIMEOUT")
+  with _ -> 5.
+
 let aspcud_criteria =
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
   with _ -> "-removed,-notuptodate,-new"

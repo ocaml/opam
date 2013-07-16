@@ -99,9 +99,6 @@ let succ ~bounds l =
     let k = List.fold_left (+) 0 l in
     init ~bounds (k+1)
 
-(* Maximum duration of the state-space exploration. *)
-let exploration_timeout = 5.
-
 let fallback_msg =
   "You might need to add explicit version constraints to your \
    request to get a better answer.\n"
@@ -145,10 +142,10 @@ let brute_force ?(verbose=true) is_consistent state_space =
       let t1 = Unix.time () in
       if verbose && !count mod interval = interval - 1 then
         OpamGlobals.msg ".";
-      if t1 -. t0 > exploration_timeout then (
+      if t1 -. t0 > OpamGlobals.solver_timeout then (
         OpamGlobals.msg
           "The brute-force exploration algorithm timed-out [%d states, %.2gs].\n%s\n"
-          !count exploration_timeout fallback_msg;
+          !count OpamGlobals.solver_timeout fallback_msg;
         None
       ) else
       if is_consistent state then
