@@ -587,12 +587,22 @@ let switch_consistency_checks t =
     clean_file pin_opam name in
   let available =
     let dirs = OpamFilename.rec_dirs pin_cache in
-    let pkgs = List.rev_map (
+    let dirs = List.rev_map (
         OpamFilename.basename_dir
         |> OpamFilename.Base.to_string
         |> OpamPackage.Name.of_string
       ) dirs in
-    OpamPackage.Name.Set.of_list pkgs in
+    let files = OpamFilename.rec_files pin_cache in
+    let files = List.filter (fun f -> OpamFilename.ends_with ".opam" f) files in
+    let files = List.rev_map (
+        OpamFilename.chop_extension
+        |> OpamFilename.basename
+        |> OpamFilename.Base.to_string
+        |> OpamPackage.Name.of_string
+      ) files in
+    OpamPackage.Name.Set.union
+      (OpamPackage.Name.Set.of_list dirs)
+      (OpamPackage.Name.Set.of_list files) in
   let installed = OpamPackage.names_of_packages t.installed in
   let not_installed = OpamPackage.Name.Set.diff available installed in
   OpamPackage.Name.Set.iter clean_pin not_installed
