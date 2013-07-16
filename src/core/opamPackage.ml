@@ -20,16 +20,28 @@ let log fmt = OpamGlobals.log "PACKAGE" fmt
 
 module Version = struct
 
-  type t = string
+  type version =
+    | Version of string
+    | Pinned
 
-  let to_string x = x
+  type t = version
 
-  let of_string x = x
+  let to_string = function
+    | Version x -> x
+    | Pinned    -> "(pinned)"
 
-  let compare = Debian.Version.compare
+  let of_string x = Version x
+
+  let pinned = Pinned
+
+  let compare x y = match (x,y) with
+    | Version v1, Version v2 -> Debian.Version.compare v1 v2
+    | Pinned    , Pinned     -> 0
+    | Pinned    , _          -> 1
+    | _         , Pinned     -> -1
 
   module O = struct
-    type t = string
+    type t = version
     let to_string = to_string
     let compare = compare
   end
@@ -73,6 +85,8 @@ type t = {
 }
 
 let create name version = { name; version }
+
+let pinned name = { name; version = Version.pinned }
 
 let name t = t.name
 

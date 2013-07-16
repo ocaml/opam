@@ -21,6 +21,9 @@ module Version: sig
 
   include OpamMisc.ABSTRACT
 
+  (** A pinned package version *)
+  val pinned: t
+
   (** Compare two versions using the Debian version scheme *)
   val compare: t -> t -> int
 end
@@ -98,3 +101,6 @@ val unavailable: Name.t -> Version.t option -> 'a
 
 (** Unavailable because the package is pinned. *)
 val unavailable_because_pinned: Name.t -> Version.t option -> 'a
+
+(** Create a (path)-pinned package. *)
+val pinned: Name.t -> t
