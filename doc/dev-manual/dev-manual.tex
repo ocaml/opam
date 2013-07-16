@@ -14,7 +14,7 @@
 
 \title{
 OPAM: a Package Management Systems for OCaml\\
-Developer Manual (version 1.0)\\ ~\ \\
+Developer Manual (version 1.1)\\ ~\ \\
 ~\ \\}
 \author{Thomas GAZAGNAIRE\\
 \url{thomas.gazagnaire@ocamlpro.com}\\
@@ -990,9 +990,13 @@ The syntax of {\tt .comp} files follows the one described in
     ?requires:  [ STRING+ ]
     ?pp:        [ <ppflag>+ ]
     ?preinstalled: BOOL
+    ?env:       [ <env>+ ]
 
 <ppflag> := CAMLP4 { STRING+ }
           | STRING+
+
+<env>    := IDENT <eq> STRING
+<eq>     := '=' | '+=' | '=+' | ':=' | '=:'
 \end{Verbatim}
 }
 \begin{itemize}
@@ -1044,6 +1048,20 @@ The syntax of {\tt .comp} files follows the one described in
 
 \item {\tt preinstall} is {\tt true} when the version of the compiler available
   in the path is the same as {\tt name}.
+
+\item {\tt env} is the list of environment variables to set in the
+  given compiler switch:
+\begin{itemize}
+\item {\tt VAR = "value"} set the variable to the given value;
+\item {\tt VAR += "value"} prepend the given value to the variable;
+\item {\tt VAR =+ "value"} append the given value to the variable;
+\item {\tt VAR := "value"} prepend the given value to the variable,
+  separated by a colon. If the variable was empty, add the
+  colon anyway.
+\item {\tt VAR =: "value"} append the given value to the variable,
+  separated by a colon. If the variable was empty, add the colon
+  anyway.
+\end{itemize}
 \end{itemize}
 
 For instance the file, {\tt 3.12.1+memprof.comp} describes OCaml,
@@ -1055,6 +1073,7 @@ name:         "3.12.1"
 src:          "http://caml.inria.fr/pub/distrib/ocaml-3.12/ocaml-3.12.1.tar.gz"
 make:         [ "world" "world.opt" ]
 patches:      [ "http://bozman.cagdas.free.fr/documents/ocamlmemprof-3.12.0.patch" ]
+env:          [ CAML_LD_LIBRARY_PATH = "%{lib}%/stublibs" ]
 \end{verbatim}
 
 And the file {\tt trunk-g-notk-byte.comp} describes OCaml from SVN
@@ -1069,6 +1088,7 @@ configure:    [ "-no-tk" ]
 make:         [ "world" ]
 bytecomp:     [ "-g" ]
 bytelink:     [ "-g" ]
+env:          [ CAML_LD_LIBRARY_PATH = "%{lib}%/stublibs" ]
 \end{verbatim}
 
 \subsection{Commands}
