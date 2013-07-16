@@ -194,7 +194,7 @@ syntax defined in this section.
   for instance: {\tt =}, {\tt <=}, $\ldots$ Some symbols have a special
   meaning and thus are not valid {\tt SYMBOL}s: ``\verb+(+ \verb+)+
   \verb+[+ \verb+]+ \verb+{+ \verb+}+ \verb+:+''.
-\item {\tt IDENT} starts by a letter and is followed by any number of
+\item {\tt IDENT} starts with a letter and is followed by any number of
   letters, digit and symbols, for instance: {\tt foo}, {\tt foo-bar},
   $\ldots$.
 \end{itemize}
@@ -510,7 +510,7 @@ General remarks:
   fail in case a source filename is not available. To tell OPAM a
   source filename might not be generated (because of byte/native
   constraints or because of optional dependencies) the source filename
-  should start by \verb+?+.
+  should start with \verb+?+.
 
 \item It is much cleaner if the underlying build-system can generate
   the right \verb+$NAME.install+ files, containing the existing files only.
@@ -1154,7 +1154,7 @@ This command will:
 Any file can be processed using generated using a special mode of
 {\tt opam} which can perform tests and substitutes variables (see
 \S\ref{section:config} for the exact command to run). Substitution files
-contains some templates which will be replaced by some contents. The
+contains some templates which will be replaced with some contents. The
 syntax of templates is the following:
 
 \begin{itemize}
