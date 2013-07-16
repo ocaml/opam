@@ -181,6 +181,9 @@ module Switch: sig
   (** Build dir for all pinned packages *)
   val pinned_cache: t -> switch -> dirname
 
+  (** Cached OPAM file *)
+  val pinned_opam: t -> switch -> name -> filename
+
   (** Build dir for a given pinned package *)
   val pinned_dir: t -> switch -> name -> dirname
 
