@@ -854,6 +854,13 @@ module X = struct
       let make_file =
         OpamFormat.make_option (OpamFilename.Base.to_string |> OpamFormat.make_string)
           OpamFormat.make_filter in
+      let name_and_version = match OpamPackage.of_filename ~all:true filename with
+        | None  ->
+          let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
+          let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
+          [ Variable (s_name, name t.name);
+            Variable (s_version, version t.version) ]
+        | _     -> [] in
       let option c s f = match c with
         | None   -> []
         | Some v -> [ Variable (s, f v) ] in
@@ -871,7 +878,8 @@ module X = struct
         file_contents = [
           Variable (s_opam_version, OpamFormat.make_string OpamGlobals.opam_version);
           Variable (s_maintainer  , OpamFormat.make_string t.maintainer);
-        ] @ option  t.homepage      s_homepage      OpamFormat.make_string
+        ] @ name_and_version
+          @ option  t.homepage      s_homepage      OpamFormat.make_string
           @ list    t.authors       s_authors
               (String.concat ", " |> OpamFormat.make_string)
           @ option  t.license       s_license       OpamFormat.make_string
