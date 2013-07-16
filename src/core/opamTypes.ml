@@ -187,8 +187,13 @@ type pin_option =
   | Darcs of address
   | Hg of address
   | Unpin
+  | Edit
 
-type pin_kind = [`version|`git|`darcs|`hg|`local|`unpin]
+type pin_kind = [`version|`git|`darcs|`hg|`local]
+
+let repository_kind_of_pin_kind = function
+  | `version -> None
+  | (`git|`darcs|`hg|`local as k) -> Some k
 
 let mk_hashsep_vcs split construct str =
   let path, commit = split str in
@@ -243,7 +248,6 @@ let pin_kind_of_string = function
   | "hg"      -> `hg
   | "rsync"
   | "local"   -> `local
-  | "unpin"   -> `unpin
   | s -> OpamGlobals.error_and_exit "%s is not a valid kind of pinning." s
 
 type pin = {
@@ -251,27 +255,32 @@ type pin = {
   pin_option : pin_option;
 }
 
-let path_of_pin_option = function
+let string_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
   | Git p
   | Darcs p
   | Hg p
   | Local p   -> OpamFilename.Dir.to_string p
-  | Unpin     -> "none"
+  | Unpin     -> "unpin"
+  | Edit      -> "edit"
 
 let kind_of_pin_option = function
-  | Version _ -> `version
-  | Git _     -> `git
-  | Darcs _   -> `darcs
-  | Hg _      -> `hg
-  | Local _   -> `local
-  | Unpin     -> `unpin
+  | Version _ -> Some `version
+  | Git _     -> Some `git
+  | Darcs _   -> Some `darcs
+  | Hg _      -> Some `hg
+  | Local _   -> Some `local
+  | _         -> None
+
+let option fn = function
+  | None   -> ""
+  | Some k -> fn k
 
 let string_of_pin p =
   Printf.sprintf "{package=%s; path=%s; kind=%s}"
     (OpamPackage.Name.to_string p.pin_package)
-    (path_of_pin_option p.pin_option)
-    (string_of_pin_kind (kind_of_pin_option p.pin_option))
+    (string_of_pin_option p.pin_option)
+    (option string_of_pin_kind (kind_of_pin_option p.pin_option))
 
 (** Variable contents *)
 type variable_contents = OpamVariable.variable_contents =

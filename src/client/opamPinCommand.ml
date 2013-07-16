@@ -19,6 +19,11 @@ open OpamState.Types
 
 let log fmt = OpamGlobals.log "COMMAND" fmt
 
+let string_of_pin_kind_o o =
+  match kind_of_pin_option o with
+  | Some k -> string_of_pin_kind k
+  | None   -> "none"
+
 let pin ~force action =
   log "pin %s" (string_of_pin action);
   let t = OpamState.load_state "pin" in
@@ -29,12 +34,24 @@ let pin ~force action =
     let packages = OpamPackage.packages_of_name t.packages name in
     OpamPackage.Set.iter (fun nv ->
       OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
-      OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv));
+      OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch
+                            (OpamPackage.name nv));
     ) packages;
     if force then OpamState.add_to_reinstall t ~all:false packages;
     OpamFile.Pinned.write pin_f pins in
 
   match action.pin_option with
+  | Edit  ->
+    let editor =
+      try OpamMisc.getenv "OPAM_EDITOR"
+      with Not_found ->
+        try OpamMisc.getenv "VISUAL"
+        with Not_found ->
+          try OpamMisc.getenv "EDITOR"
+          with Not_found -> "nano" in
+    let file = OpamPath.Switch.pinned_opam t.root t.switch name in
+    ignore (Sys.command (Printf.sprintf "%s %s" editor (OpamFilename.to_string file)))
+
   | Unpin ->
     if not (OpamPackage.Name.Map.mem name pins) then
       OpamGlobals.error_and_exit "%s is not pinned." (OpamPackage.Name.to_string name);
@@ -42,21 +59,25 @@ let pin ~force action =
       | Version _ -> ()
       | _         ->
         if not force && OpamState.mem_installed_package_by_name t name then
-          OpamGlobals.error_and_exit "You must remove the package before unpinning it (or use --force).";
+          OpamGlobals.error_and_exit
+            "You must remove the package before unpinning it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
   | _     ->
     if not force && OpamPackage.Name.Map.mem name pins then (
       let current = OpamPackage.Name.Map.find name pins in
-      OpamGlobals.error_and_exit "Cannot pin %s to %s as it is already associated to %s. Use 'opam pin %s none' and retry (or use --force)."
+      OpamGlobals.error_and_exit
+        "Cannot pin %s to %s as it is already associated to %s. Use 'opam pin %s \
+         none' and retry (or use --force)."
         (OpamPackage.Name.to_string name)
-        (path_of_pin_option action.pin_option)
-        (path_of_pin_option current)
+        (string_of_pin_option action.pin_option)
+        (string_of_pin_option current)
         (OpamPackage.Name.to_string name);
     );
     let pins = OpamPackage.Name.Map.remove name pins in
 
     begin match action.pin_option with
+      | Edit            -> ()
       | Unpin           -> ()
       | Version version ->
         if not force && not (OpamState.mem_installed_package_by_name t name) then
@@ -68,14 +89,16 @@ let pin ~force action =
           let nv = OpamState.find_installed_package_by_name t name in
           if not force && OpamPackage.version nv <> version then
             OpamGlobals.error_and_exit
-              "Cannot pin %s as its current version is %s. You must install the version %s first (or use --force)."
+              "Cannot pin %s as its current version is %s. You must install the \
+               version %s first (or use --force)."
               (OpamPackage.Name.to_string name)
               (OpamPackage.Version.to_string (OpamPackage.version nv))
               (OpamPackage.Version.to_string version);
       | Git _ | Darcs _ | Local _ | Hg _ ->
         if not force && OpamState.mem_installed_package_by_name t name then
           OpamGlobals.error_and_exit
-            "Cannot pin %s to a dev version as it is already installed. You must remove it first (or use --force)."
+            "Cannot pin %s to a dev version as it is already installed. You must \
+             remove it first (or use --force)."
             (OpamPackage.Name.to_string name);
     end;
 
@@ -86,8 +109,8 @@ let pin ~force action =
         (OpamPackage.Name.to_string name)
     | Some _ ->
       log "Adding %s(%s) => %s"
-        (path_of_pin_option action.pin_option)
-        (string_of_pin_kind (kind_of_pin_option action.pin_option))
+        (string_of_pin_option action.pin_option)
+        (string_of_pin_kind_o action.pin_option)
         (OpamPackage.Name.to_string name);
       update_config (OpamPackage.Name.Map.add name action.pin_option pins)
 
@@ -96,8 +119,11 @@ let list () =
   let t = OpamState.load_state "pin-list" in
   let pins = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned t.root t.switch) in
   let print n a =
+    let kind = match kind_of_pin_option a with
+      | None   -> ""
+      | Some k -> string_of_pin_kind k in
     OpamGlobals.msg "%-20s %-8s %s\n"
       (OpamPackage.Name.to_string n)
-      (string_of_pin_kind (kind_of_pin_option a))
-      (path_of_pin_option a) in
+      kind
+      (string_of_pin_option a) in
   OpamPackage.Name.Map.iter print pins
