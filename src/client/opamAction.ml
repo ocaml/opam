@@ -511,7 +511,13 @@ let build_and_install_package_aux t ~metadata nv =
     | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
     | false -> "=-=-=", "=-=-="
   in
-  OpamGlobals.msg "\n%s Installing %s %s\n" left (OpamPackage.to_string nv) right;
+
+  let pinned =
+    let name = OpamPackage.name nv in
+    if OpamState.is_locally_pinned t name then " (pinned)"
+    else "" in
+  OpamGlobals.msg "\n%s Installing %s%s %s\n"
+    left (OpamPackage.to_string nv) pinned right;
 
   let opam = OpamState.opam t nv in
 

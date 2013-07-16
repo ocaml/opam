@@ -66,14 +66,12 @@ let rsync_file src dst =
 
 module B = struct
 
-  let pull_file local_dirname remote_filename =
-    log "pull-file";
+  let pull_file_quiet local_dirname remote_filename =
     let local_filename =
       OpamFilename.create local_dirname (OpamFilename.basename remote_filename) in
     rsync_file remote_filename local_filename
 
-  let pull_dir local_dirname remote_dirname =
-    log "pull-dir";
+  let pull_dir_quiet local_dirname remote_dirname =
     rsync_dirs remote_dirname local_dirname
 
   let pull_repo repo =
@@ -81,17 +79,32 @@ module B = struct
     OpamGlobals.msg "%-10s Synchronizing with %s\n"
       (OpamRepositoryName.to_string repo.repo_name)
       (OpamFilename.prettify_dir repo.repo_address);
-    ignore (pull_file repo.repo_root (OpamPath.Repository.version repo));
+    ignore (pull_file_quiet repo.repo_root (OpamPath.Repository.version repo));
     List.iter
-      (fun (local, remote) -> ignore (pull_dir (local repo) (remote repo)))
+      (fun (local, remote) -> ignore (pull_dir_quiet (local repo) (remote repo)))
       [
         (OpamPath.Repository.packages_dir , OpamPath.Repository.remote_packages_dir);
         (OpamPath.Repository.compilers_dir, OpamPath.Repository.remote_compilers_dir);
       ]
 
+
+  let pull_file name local_dirname remote_filename =
+    OpamGlobals.msg "%-10s Synchronizing with %s\n"
+      (OpamPackage.Name.to_string name)
+      (OpamFilename.to_string remote_filename);
+    pull_file_quiet local_dirname remote_filename
+
+  let pull_dir name local_dirname remote_dirname =
+    OpamGlobals.msg "%-10s Synchronizing with %s\n"
+      (OpamPackage.Name.to_string name)
+      (OpamFilename.Dir.to_string remote_dirname);
+    pull_dir_quiet local_dirname remote_dirname
+
   let pull_archive repo filename =
-    log "pull-archive";
-    pull_file (OpamPath.Repository.archives_dir repo) filename
+    OpamGlobals.msg "%-10s Synchronizing with %s\n"
+      (OpamRepositoryName.to_string repo.repo_name)
+      (OpamFilename.to_string filename);
+    pull_file_quiet (OpamPath.Repository.archives_dir repo) filename
 
 end
 
