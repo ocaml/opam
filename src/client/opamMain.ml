@@ -1030,7 +1030,10 @@ let pin =
         "Specific version, local path, git or darcs url to pin the package to, \
          or 'none' to unpin the package." [] in
     Arg.(value & pos 1 (some string) None & doc) in
+  let edit =
+    mk_flag ["e";"edit"] "Edit the OPAM file associated to the given package." in
   let list = mk_flag ["l";"list"] "List the currently pinned packages." in
+  let remove = mk_flag ["u";"unpin"] "Unpin the given package." in
   let kind =
     let doc = Arg.info ~docv:"KIND" ~doc:"Force the kind of pinning." ["k";"kind"] in
     let kinds = [
@@ -1044,21 +1047,28 @@ let pin =
     Arg.(value & opt (some & enum kinds) None & doc) in
   let force = mk_flag ["f";"force"] "Disable consistency checks." in
 
-  let pin global_options force kind list package pin =
+  let pin global_options force kind edit remove list package pin =
     set_global_options global_options;
-    if list then
-      Client.PIN.list ()
-    else match package, pin with
-      | None  , None   -> Client.PIN.list ()
-      | Some n, Some p ->
-        let pin = {
-          pin_package = OpamPackage.Name.of_string n;
-          pin_option  = pin_option_of_string ?kind:kind p
-        } in
-        Client.PIN.pin ~force pin
-      | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
+    let edit_opam n =
+      let pin = { pin_package = OpamPackage.Name.of_string n; pin_option = Edit } in
+      Client.PIN.pin ~force pin in
+    let unpin n =
+      let pin = { pin_package = OpamPackage.Name.of_string n; pin_option = Unpin } in
+      Client.PIN.pin ~force pin in
+    match package, pin, edit, remove, list with
+    | Some n, None,   true,  false, false -> edit_opam n
+    | Some n, None,   false, true,  false -> unpin n
+    | None,   None,   false, false, _     -> Client.PIN.list ()
+    | Some n, Some p, _    , false, false ->
+      let pin = {
+        pin_package = OpamPackage.Name.of_string n;
+        pin_option  = pin_option_of_string ?kind:kind p
+      } in
+      Client.PIN.pin ~force pin;
+      if edit then edit_opam n
+    | _ -> OpamGlobals.error_and_exit "Wrong arguments" in
 
-  Term.(pure pin $global_options $force $kind $list $package $pin_option),
+  Term.(pure pin $global_options $force $kind $edit $remove $list $package $pin_option),
   term_info "pin" ~doc ~man
 
 (* HELP *)
