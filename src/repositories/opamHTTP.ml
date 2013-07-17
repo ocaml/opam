@@ -232,7 +232,7 @@ module B = struct
 
   let pull_archive repo filename =
     log "pull-archive";
-    let state = make_state ~download_index:true repo in
+    let state = make_state ~download_index:false repo in
     if OpamFilename.Map.mem filename state.remote_local then (
       let local_file = OpamFilename.Map.find filename state.remote_local in
       if is_up_to_date state local_file then
