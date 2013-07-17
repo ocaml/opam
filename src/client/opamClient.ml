@@ -474,13 +474,37 @@ module API = struct
     let old_package_index = OpamState.package_state_index t in
 
     if repositories_need_update then (
+      let repos = OpamRepositoryName.Map.values repositories in
+
       (* update is IO-bounded, so it's OK to spawn a lot of jobs *)
-      OpamRepository.parallel_iter (OpamRepositoryName.Map.cardinal repositories)
+      OpamRepository.parallel_iter
+        (OpamRepositoryName.Map.cardinal repositories)
         OpamRepository.update
-        (OpamRepositoryName.Map.values repositories);
+        repos;
       let t = OpamRepositoryCommand.update_index t in
       OpamRepositoryCommand.relink_compilers t ~verbose:true old_compiler_index;
       OpamRepositoryCommand.relink_packages t ~verbose:true old_package_index;
+
+      (* Update the dev packages *)
+      let updates =
+        let map repo =
+          let packages = OpamRepository.get_cache_updates repo in
+          OpamPackage.Set.filter (fun nv ->
+              if OpamPackage.Map.mem nv t.package_index
+              && OpamPackage.Map.find nv t.package_index = repo.repo_name then
+                true
+              else (
+                let tmp = OpamPath.Repository.tmp_dir repo nv in
+                OpamFilename.rmdir tmp;
+                false
+              )
+            ) packages in
+        OpamRepository.map_reduce (OpamState.jobs t)
+          map
+          OpamPackage.Set.union
+          OpamPackage.Set.empty
+          repos in
+      OpamState.add_to_reinstall t ~all:true updates
     );
 
     if pinned_packages_need_update then

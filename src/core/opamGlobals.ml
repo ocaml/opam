@@ -115,7 +115,7 @@ let timestamp () =
 let log section fmt =
   Printf.ksprintf (fun str ->
     if !debug then
-      Printf.eprintf "%s  %06d  %-25s  %s\n"
+      Printf.eprintf "%s  %06d  %-25s  %s\n%!"
         (timestamp ()) (Unix.getpid ()) section str
   ) fmt
 

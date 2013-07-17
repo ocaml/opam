@@ -40,14 +40,13 @@ val default_address: address
 (** Constructor *)
 val repository_address: string -> address
 
-(** [get_upstream_update repo packages] checks for upstream changes
-    for packages in the [packages] map. Return the packages whose
-    contents have changed upstream (ie. either the 'url' file has
-    changed, the archive file has changed, or the contents of the
-    'files/' sub-directory, or, git and rsync-ed packages, upstream
-    contents have changed. *)
-val get_upstream_updates:
-  repository -> package_repository_state package_map -> package_set
+(** [get_cache_update repo] checks for upstream changes for
+    packages in the cache. Return the packages whose contents have
+    changed upstream (ie. either the 'url' file has changed, the
+    archive file has changed, or the contents of the 'files/'
+    sub-directory, or, git and rsync-ed packages, upstream contents
+    have changed. *)
+val get_cache_updates: repository -> package_set
 
 (** [cleanup repo _packages] cleans the tempory files in the given
     repository. [packages] contains all the 'active' package states,

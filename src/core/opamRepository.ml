@@ -462,22 +462,20 @@ let update repo =
   B.pull_repo repo;
   check_version repo
 
-let get_upstream_updates repo packages =
-  log "get-upstream-updates %s %s" (to_string repo)
-    (OpamMisc.string_of_list OpamPackage.to_string (OpamPackage.Map.keys packages));
+let get_cache_updates repo =
+  log "get-cache-updates %s" (to_string repo);
 
-  clean repo packages;
   let prefix = read_prefix repo in
 
   (* For each package in the cache, look at what changed upstream *)
   let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
   log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
-  let cached_packages = OpamPackage.Set.filter (fun nv ->
+  OpamPackage.Set.filter (fun nv ->
       let name = OpamPackage.name nv in
       let prefix = find_prefix prefix nv in
       let state = package_state repo prefix nv in
       match state.pkg_url with
-      | None       -> true
+      | None       -> false
       | Some url_f ->
         let url = OpamFile.URL.read url_f in
         let kind = match OpamFile.URL.kind url with
@@ -486,20 +484,14 @@ let get_upstream_updates repo packages =
         let filename = OpamFile.URL.url url in
         log "updating %s:%s" filename (string_of_repository_kind kind);
         let dirname = OpamPath.Repository.tmp_dir repo nv in
-        match pull kind name dirname filename with
-        | Not_available -> OpamGlobals.error_and_exit "%s is not available." filename
-        | Up_to_date _  -> false
-        | Result _      -> true
-    ) cached_packages in
-
-  let upstream_changes = OpamPackage.Map.fold (fun nv old_state set ->
-    let prefix = find_prefix prefix nv in
-    let new_state = package_state repo prefix nv in
-    if old_state.pkg_contents = new_state.pkg_contents then set
-    else OpamPackage.Set.add nv set
-  ) packages OpamPackage.Set.empty in
-
-  OpamPackage.Set.union cached_packages upstream_changes
+        match kind with
+        | `http -> false
+        | _    ->
+          match pull kind name dirname filename with
+          | Not_available -> OpamGlobals.error_and_exit "%s is not available." filename
+          | Up_to_date _  -> false
+          | Result _      -> true
+    ) cached_packages
 
 let files r nv =
   let prefix = find_prefix (read_prefix r) nv in
