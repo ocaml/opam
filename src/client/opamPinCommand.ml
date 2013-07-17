@@ -42,6 +42,8 @@ let pin ~force action =
 
   match action.pin_option with
   | Edit  ->
+    if not (OpamPackage.Name.Map.mem name pins) then
+      OpamGlobals.error_and_exit "%s is not pinned." (OpamPackage.Name.to_string name);
     let editor =
       try OpamMisc.getenv "OPAM_EDITOR"
       with Not_found ->
@@ -50,6 +52,8 @@ let pin ~force action =
           try OpamMisc.getenv "EDITOR"
           with Not_found -> "nano" in
     let file = OpamPath.Switch.pinned_opam t.root t.switch name in
+    if not (OpamFilename.exists file) then
+      OpamState.copy_pinned_opam t name;
     ignore (Sys.command (Printf.sprintf "%s %s" editor (OpamFilename.to_string file)))
 
   | Unpin ->

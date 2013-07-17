@@ -279,6 +279,9 @@ val locally_pinned_package: state -> name -> dirname * repository_kind
 (** Return the repository associated to a locally pinned package. *)
 val repository_of_locally_pinned_package: state -> name -> repository
 
+(** Cache the OPAM file of pinned package *)
+val copy_pinned_opam: state -> name -> unit
+
 (** Get the corresponding pinned package. If the package is pinned to
     a path (locally or via git/darcs), it returns the latest package as we
     assume that the most up-to-date build descriptions. *)

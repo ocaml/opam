@@ -459,7 +459,6 @@ let remove_package_aux t ~metadata ~rm_build nv =
   (* Remove the pinned cache *)
   log "Removing the pinned cache";
   OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch name);
-  OpamFilename.remove (OpamPath.Switch.pinned_opam t.root t.switch name);
 
   (* Update the metadata *)
   if metadata then (
