@@ -1486,7 +1486,7 @@ let output () =
   match !json_output with
   | None      -> ()
   | Some write ->
-    let json = `A !json_buffer in
+    let json = `A (List.rev !json_buffer) in
     write (to_string json)
 
 (*---------------------------------------------------------------------------

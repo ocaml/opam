@@ -19,15 +19,15 @@ open OpamState.Types
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 
-let print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers =
+let print_updated_compilers updates =
 
   let print singular plural map =
-    if not (OpamCompiler.Map.is_empty map) then (
-      if OpamCompiler.Map.cardinal map = 1 then
+    if not (OpamCompiler.Set.is_empty map) then (
+      if OpamCompiler.Set.cardinal map = 1 then
         OpamGlobals.msg "%s:\n" singular
       else
         OpamGlobals.msg "%s:\n" plural;
-      OpamCompiler.Map.iter (fun comp _ ->
+      OpamCompiler.Set.iter (fun comp ->
         OpamGlobals.msg " - %s\n" (OpamCompiler.to_string comp)
       ) map
     ) in
@@ -35,17 +35,17 @@ let print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers
   print
     "The following NEW compiler is available"
     "The following NEW compilers are available"
-    new_compilers;
+    updates.created;
 
   print
     "The following compiler has been updated"
     "Some compiler descriptions have been updated"
-    updated_compilers;
+    updates.updated;
 
   print
     "The following compiler is not available anymore"
     "Some following compiler are not available anymore"
-    deleted_compilers
+    updates.deleted
 
 let relink_compilers t ~verbose old_index =
   OpamGlobals.msg "Updating %s/\n"
@@ -103,23 +103,37 @@ let relink_compilers t ~verbose old_index =
         if OpamFilename.exists d then OpamFilename.copy ~src:d ~dst:comp_descr
   ) updated_compilers;
 
-  if verbose then
-    let updated_compilers, new_compilers =
-      OpamCompiler.Map.partition
-        (fun c _ -> OpamState.compiler_installed t c)
-        updated_compilers in
-    print_updated_compilers ~new_compilers ~updated_compilers ~deleted_compilers
+  let updated_compilers, new_compilers =
+    OpamCompiler.Map.partition
+      (fun c _ -> OpamState.compiler_installed t c)
+      updated_compilers in
 
-let print_updated_packages t
-    ~new_packages ~updated_packages ~packages_to_upgrade ~deleted_packages =
+  let set m =
+    OpamCompiler.Map.fold (fun comp _ acc ->
+        OpamCompiler.Set.add comp acc
+      ) m OpamCompiler.Set.empty in
+
+  let updates = {
+    created    = set new_compilers;
+    updated    = set updated_compilers;
+    deleted    = set deleted_compilers;
+    to_upgrade = OpamCompiler.Set.empty;
+  } in
+
+  if verbose then print_updated_compilers updates;
+
+  updates
+
+
+let print_updated_packages t updates =
 
   let print singular plural map fn =
-    if not (OpamPackage.Map.is_empty map) then (
-      if OpamPackage.Map.cardinal map = 1 then
+    if not (OpamPackage.Set.is_empty map) then (
+      if OpamPackage.Set.cardinal map = 1 then
         OpamGlobals.msg "%s:\n" singular
       else
         OpamGlobals.msg "%s:\n" plural;
-      OpamPackage.Map.iter (fun nv _ ->
+      OpamPackage.Set.iter (fun nv ->
         match fn nv with
         | None   -> OpamGlobals.msg " - %s\n" (OpamPackage.to_string nv)
         | Some s -> OpamGlobals.msg " - %s [%s]\n" (OpamPackage.to_string nv) s
@@ -144,25 +158,25 @@ let print_updated_packages t
   print
     "The following NEW package is available"
     "The following NEW packages are available"
-    new_packages
+    updates.created
     none;
 
   print
     "The following package has been updated upstream and needs to be UPGRADED"
     "The following packages have been updated upstream and need to be UPGRADED"
-    packages_to_upgrade
+    updates.to_upgrade
     installed_switches;
 
   print
     "The following package has been UPDATED upstream"
     "The following packages have been UPDATED upstream"
-    updated_packages
+    updates.updated
     none;
 
   print
     "The following package has been DELETED"
     "The following packages have been DELETED"
-    deleted_packages
+    updates.deleted
     none
 
 let print_updated_pinned_packages pinned_packages =
@@ -211,7 +225,9 @@ let update_pinned_packages t ~verbose packages =
   if verbose then print_updated_pinned_packages updates;
 
   (* update $opam/$oversion/reinstall for all installed switches *)
-  OpamState.add_to_reinstall ~all:true t updates
+  OpamState.add_to_reinstall ~all:true t updates;
+
+  updates
 
 (* Update the package contents, display the new packages and update
    reinstall *)
@@ -315,20 +331,31 @@ let relink_packages t ~verbose old_index =
       );
   ) updated_packages;
 
-  if verbose then (
-    let updated_packages, new_packages = OpamPackage.Map.partition (fun nv _ ->
-        OpamPackage.Map.mem nv old_index
-      ) updated_packages in
-    let packages_to_upgrade, updated_packages = OpamPackage.Map.partition (fun nv _ ->
-        OpamPackage.Set.mem nv all_installed
-      ) updated_packages in
-    print_updated_packages t
-      ~new_packages ~updated_packages ~packages_to_upgrade ~deleted_packages;
-  );
+  let updated_packages, new_packages = OpamPackage.Map.partition (fun nv _ ->
+      OpamPackage.Map.mem nv old_index
+    ) updated_packages in
+  let packages_to_upgrade, updated_packages = OpamPackage.Map.partition (fun nv _ ->
+      OpamPackage.Set.mem nv all_installed
+    ) updated_packages in
+
+  let set m =
+    OpamPackage.Map.fold (fun nv _ acc ->
+        OpamPackage.Set.add nv acc
+      ) m OpamPackage.Set.empty in
+
+  let updates = {
+    created    = set new_packages;
+    updated    = set updated_packages;
+    deleted    = set deleted_packages;
+    to_upgrade = set packages_to_upgrade;
+  } in
+
+  if verbose then print_updated_packages t updates;
 
   (* update $opam/$oversion/reinstall for all installed switches *)
-  let updates = OpamPackage.Set.of_list (OpamPackage.Map.keys updated_packages) in
-  OpamState.add_to_reinstall ~all:true t updates
+  OpamState.add_to_reinstall ~all:true t updates.updated;
+
+  updates
 
 let compare_repo t r1 r2 =
   OpamRepository.compare
@@ -424,8 +451,8 @@ let relink_all t ~verbose fn =
   fn t;
   let _ = update_index t in
   let t = OpamState.load_state ~save_cache:false "relink-all" in
-  relink_compilers t ~verbose old_compiler_index;
-  relink_packages t ~verbose old_package_index;
+  let _ = relink_compilers t ~verbose old_compiler_index in
+  let _ = relink_packages t ~verbose old_package_index in
   OpamState.rebuild_state_cache ()
 
 (* Remove any remaining of [repo] from OPAM state *)

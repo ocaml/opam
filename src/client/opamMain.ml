@@ -62,17 +62,23 @@ type build_options = {
   fake          : bool;
   external_tags : string list;
   jobs          : int option;
-  json_output   : string option;
+  json          : string option;
 }
 
 let create_build_options
     keep_build_dir make no_checksums build_test
     build_doc dryrun external_tags cudf_file fake
-    jobs json_output = {
+    jobs json = {
   keep_build_dir; make; no_checksums;
   build_test; build_doc; dryrun; external_tags;
-  cudf_file; fake; jobs; json_output
+  cudf_file; fake; jobs; json
 }
+
+let json_update = function
+  | None   -> ()
+  | Some f ->
+    let write str = OpamFilename.write (OpamFilename.of_string f) str in
+    OpamJson.set_output write
 
 let set_build_options b =
   OpamGlobals.keep_build_dir := !OpamGlobals.keep_build_dir || b.keep_build_dir;
@@ -83,7 +89,7 @@ let set_build_options b =
   OpamGlobals.external_tags  := b.external_tags;
   OpamGlobals.cudf_file      := b.cudf_file;
   OpamGlobals.fake           := b.fake;
-  OpamGlobals.json_output    := b.json_output;
+  json_update b.json;
   OpamGlobals.jobs           :=
     begin match b.jobs with
       | None   -> !OpamGlobals.jobs
@@ -309,6 +315,11 @@ let global_options =
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $switch $yes $root $no_base_packages)
 
+let json_flag =
+  mk_opt ["json"] "FILENAME"
+    "Save the result output of an OPAM run in a computer-readable file"
+    Arg.(some string) None
+
 (* Options common to all build commands *)
 let build_options =
   let keep_build_dir =
@@ -348,14 +359,10 @@ let build_options =
        care is the best way to corrupt your current compiler environment. When using \
        this option OPAM will run a dry-run of the solver and then fake the build and  \
        install commands." in
-  let output_json =
-    mk_opt ["output-json"] "FILENAME"
-      "Save the result output of an OPAM run in a computer-readable file"
-      Arg.(some string) None in
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
     $build_doc $dryrun $external_tags $cudf_file $fake
-    $jobs_flag $output_json)
+    $jobs_flag $json_flag)
 
 let guess_repository_kind kind address =
   match kind with
@@ -774,11 +781,12 @@ let update =
         that can be upgraded will be printed out, and the user can use \
         $(b,opam upgrade) to upgrade those.";
   ] in
-  let update global_options jobs repositories =
+  let update global_options jobs json repositories =
     set_global_options global_options;
+    json_update json;
     OpamGlobals.jobs := jobs;
     Client.update repositories in
-  Term.(pure update $global_options $jobs_flag $repository_list),
+  Term.(pure update $global_options $jobs_flag $json_flag $repository_list),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
@@ -1180,16 +1188,20 @@ let () =
     if is_external_command () then
       run_external_command ();
     match Term.eval_choice ~catch:false default commands with
-    | `Error _ -> exit 1
+    | `Error _ ->
+      OpamJson.output ();
+      exit 1
     | _        ->
       if !OpamGlobals.print_stats then (
         OpamFile.print_stats ();
         OpamState.print_stats ();
       );
+      OpamJson.output ();
       exit 0
   with
-  | OpamGlobals.Exit 0 -> ()
+  | OpamGlobals.Exit 0 -> OpamJson.output ()
   | e ->
+    OpamJson.output ();
     OpamGlobals.error "'%s' failed." (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
     begin match e with

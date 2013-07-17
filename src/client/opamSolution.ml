@@ -210,27 +210,53 @@ type state = {
   mutable s_reinstall      : package_set;
 }
 
-let output_json action_errors = match !OpamGlobals.json_output with
-  | None      -> ()
-  | Some file ->
-    let open OpamParallel in
-    let open OpamProcess in
-    let json_error = function
-      | Process_error r ->
-        `O [ ("process-error",
-              `O [ ("code", `String (string_of_int r.r_code));
-                   ("duration", `Float r.r_duration);
-                   ("info", `O (List.map (fun (k,v) -> (k, `String v)) r.r_info));
-                   ("stdout", `A (List.map (fun s -> `String s) r.r_stdout));
-                   ("stderr", `A (List.map (fun s -> `String s) r.r_stderr));
-                 ])]
-      | Internal_error s ->
-        `O [ ("internal-error", `String s) ] in
-    let json_action (a, e) =
-      `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
-           ("error"  ,  json_error e) ] in
-    let json = `A (List.map json_action action_errors) in
-    OpamFilename.write (OpamFilename.of_string file) (OpamJson.to_string json)
+let output_json_solution solution =
+  let to_remove = List.map OpamPackage.to_json solution.PackageActionGraph.to_remove in
+  let to_proceed =  ref [] in
+  PackageActionGraph.Topological.iter (function
+      | To_change(o,p)  ->
+        let json = match o with
+          | None   -> `O ["install", OpamPackage.to_json p]
+          | Some o ->
+            if OpamPackage.Version.compare
+                (OpamPackage.version o) (OpamPackage.version p) < 0
+            then
+              `O ["upgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]]
+            else
+              `O ["downgrade", `A [OpamPackage.to_json o; OpamPackage.to_json p]] in
+        to_proceed := json :: !to_proceed
+      | To_recompile p ->
+        let json = `O ["recompile", OpamPackage.to_json p] in
+        to_proceed := json :: !to_proceed
+      | To_delete _    -> ()
+    ) solution.PackageActionGraph.to_process;
+  let json = `O [
+      "to-remove" , `A to_remove;
+      "to-proceed", `A (List.rev !to_proceed);
+    ] in
+  OpamJson.add json
+
+let output_json_actions action_errors =
+  let open OpamParallel in
+  let open OpamProcess in
+  let json_error = function
+    | Process_error r ->
+      `O [ ("process-error",
+            `O [ ("code", `String (string_of_int r.r_code));
+                 ("duration", `Float r.r_duration);
+                 ("info", `O (List.map (fun (k,v) -> (k, `String v)) r.r_info));
+                 ("stdout", `A (List.map (fun s -> `String s) r.r_stdout));
+                 ("stderr", `A (List.map (fun s -> `String s) r.r_stderr));
+               ])]
+    | Internal_error s ->
+      `O [ ("internal-error", `String s) ] in
+  let json_action (a, e) =
+    `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
+         ("error"  ,  json_error e) ] in
+  List.iter (fun a ->
+      let json = json_action a in
+      OpamJson.add json
+    ) action_errors
 
 (* Mean function for applying solver solutions. One main process is
    deleting the packages and updating the global state of
@@ -301,6 +327,7 @@ let parallel_apply t action solution =
     | To_change (_, nv) -> add_to_install nv in
 
   try
+
     (* 1/ We remove all installed packages appearing in the solution. *)
     let deleted = OpamAction.remove_all_packages t ~metadata:true solution in
     remove_from_install deleted;
@@ -311,7 +338,9 @@ let parallel_apply t action solution =
     if !OpamGlobals.fake then
       OpamGlobals.msg "Simulation complete.\n";
 
-    output_json [];
+    (* XXX: we might want to output the sucessful actions as well. *)
+    output_json_actions [];
+
     OK
   with
   | PackageActionGraph.Parallel.Cyclic actions ->
@@ -341,7 +370,7 @@ let parallel_apply t action solution =
     );
     List.iter display_error errors;
 
-    output_json errors;
+    output_json_actions errors;
     Error (List.map fst errors @ remaining)
 
 let simulate_new_state state t =
@@ -382,7 +411,8 @@ let apply ?(force = false) t action solution =
           else None
         )  messages in
       OpamSolver.print_solution ~messages solution;
-      OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats)
+      OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
+      output_json_solution solution;
     );
 
     let continue =
