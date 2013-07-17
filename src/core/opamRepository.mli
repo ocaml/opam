@@ -18,6 +18,8 @@
 
 open OpamTypes
 
+include OpamMisc.ABSTRACT with type t := repository
+
 exception Unknown_backend
 
 (** Pretty-print *)

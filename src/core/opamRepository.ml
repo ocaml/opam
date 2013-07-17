@@ -63,6 +63,9 @@ module O = struct
   let to_string = to_string
 end
 
+let of_string _ =
+  failwith "TOTO"
+
 module Set = OpamMisc.Set.Make(O)
 
 module Map = OpamMisc.Map.Make(O)
