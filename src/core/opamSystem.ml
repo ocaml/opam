@@ -171,17 +171,14 @@ let rec_dirs dir =
     List.fold_left aux (d @ accu) d in
   aux [] dir
 
-(* WARNING it fails if [dir] is not a [S_DIR] or simlinks to a directory *)
-let rec remove_dir dir =
-  if Sys.file_exists dir then begin
-    List.iter remove_file (files_all_not_dir dir);
-    List.iter remove_dir (directories_strict dir);
-    try
-      log "rmdir %s" dir;
-      Unix.rmdir dir
-    with e ->
-      internal_error "Cannot remove %s (%s)." dir (Printexc.to_string e)
-  end
+(* XXX: won't work on windows *)
+let remove_dir dir =
+  log "rmdir %s" dir;
+  if Sys.file_exists dir then (
+    let err = Sys.command (Printf.sprintf "rm -rf %s" dir) in
+      if err <> 0 then
+        internal_error "Cannot remove %s (error %d)." dir err
+  )
 
 let with_tmp_dir fn =
   let dir = mk_temp_dir () in
