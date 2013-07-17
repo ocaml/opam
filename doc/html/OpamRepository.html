@@ -142,6 +142,9 @@ Download <i>$remote/archives/$nv.tar.gz</i>. If is not there, then
 <pre><span class="keyword">module type</span> <a href="OpamRepository.BACKEND.html">BACKEND</a> = <code class="code">sig</code> <a href="OpamRepository.BACKEND.html">..</a> <code class="code">end</code></pre><div class="info">
 Backend signature
 </div>
+<pre><span id="VALrevision"><span class="keyword">val</span> revision</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option</code></pre><div class="info">
+Get the optional revision associated to a backend.<br>
+</div>
 <pre><span id="VALregister_backend"><span class="keyword">val</span> register_backend</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> -> (module OpamRepository.BACKEND) -> unit</code></pre><div class="info">
 Register a repository backend<br>
 </div>

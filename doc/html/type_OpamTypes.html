@@ -697,18 +697,21 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Darcs</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.address<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Hg</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.address<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Unpin</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Edit</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pin&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;pin_package&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_pin&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pin_kind&nbsp;=&nbsp;[&nbsp;<span class="keywordsign">`</span>darcs&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>git&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>hg&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>local&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>unpin&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>version&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;pin_kind&nbsp;=&nbsp;[&nbsp;<span class="keywordsign">`</span>darcs&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>git&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>hg&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>local&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>version&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;repository_kind_of_pin_kind&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.pin_kind&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_kind&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pin_kind_of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_kind<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_pin_kind&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_kind&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pin_option_of_string&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?kind:<span class="constructor">OpamTypes</span>.pin_kind&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;path_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;kind_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_kind<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;kind_of_pin_option&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.pin_option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.pin_kind&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;config&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_is_rec&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;conf_is_byte&nbsp;:&nbsp;bool;<br>

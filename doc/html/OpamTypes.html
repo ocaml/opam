@@ -799,6 +799,13 @@ Pretty-print<br>
 <td align="left" valign="top" >
 <code><span id="TYPEELTpin_option.Unpin"><span class="constructor">Unpin</span></span></code></td>
 
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpin_option.Edit"><span class="constructor">Edit</span></span></code></td>
+
 </tr></table>
 
 <div class="info">
@@ -829,11 +836,14 @@ Pinned packages<br>
 <pre><span id="VALstring_of_pin"><span class="keyword">val</span> string_of_pin</span> : <code class="type"><a href="OpamTypes.html#TYPEpin">pin</a> -> string</code></pre><div class="info">
 Pretty-printing of pinned packages<br>
 </div>
-<pre><span id="TYPEpin_kind"><span class="keyword">type</span> <code class="type"></code>pin_kind</span> = <code class="type">[ `darcs | `git | `hg | `local | `unpin | `version ]</code> </pre>
+<pre><span id="TYPEpin_kind"><span class="keyword">type</span> <code class="type"></code>pin_kind</span> = <code class="type">[ `darcs | `git | `hg | `local | `version ]</code> </pre>
 <div class="info">
 Pin kind<br>
 </div>
 
+<pre><span id="VALrepository_kind_of_pin_kind"><span class="keyword">val</span> repository_kind_of_pin_kind</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_kind">pin_kind</a> -> <a href="OpamTypes.html#TYPErepository_kind">repository_kind</a> option</code></pre><div class="info">
+Convert a pin kind to a repository kind<br>
+</div>
 <pre><span id="VALpin_kind_of_string"><span class="keyword">val</span> pin_kind_of_string</span> : <code class="type">string -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a></code></pre><div class="info">
 Pretty-printing of pin kinds.<br>
 </div>
@@ -843,7 +853,13 @@ Parsing of pin kinds. Raise an error if it is not a valid value.<br>
 <pre><span id="VALpin_option_of_string"><span class="keyword">val</span> pin_option_of_string</span> : <code class="type">?kind:<a href="OpamTypes.html#TYPEpin_kind">pin_kind</a> -> string -> <a href="OpamTypes.html#TYPEpin_option">pin_option</a></code></pre><div class="info">
 Read pin options args<br>
 </div>
-<pre><span id="VALpath_of_pin_option"><span class="keyword">val</span> path_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a></code></pre><pre><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = {</code></pre><table class="typetable">
+<pre><span id="VALstring_of_pin_option"><span class="keyword">val</span> string_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> string</code></pre><div class="info">
+Convert a pin option to a string<br>
+</div>
+<pre><span id="VALkind_of_pin_option"><span class="keyword">val</span> kind_of_pin_option</span> : <code class="type"><a href="OpamTypes.html#TYPEpin_option">pin_option</a> -> <a href="OpamTypes.html#TYPEpin_kind">pin_kind</a> option</code></pre><div class="info">
+Get the pin kind from a pin option<br>
+</div>
+<pre><code><span id="TYPEconfig"><span class="keyword">type</span> <code class="type"></code>config</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>

@@ -52,6 +52,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fetch&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;merge&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;diff&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;revision&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Make</span>&nbsp;:&nbsp;<span class="keyword">functor</span>&nbsp;(<span class="constructor">VCS</span>&nbsp;:&nbsp;<span class="constructor">VCS</span>)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamRepository</span>.<span class="constructor">BACKEND</span><br>
 <span class="keyword">end</span></code></body></html>

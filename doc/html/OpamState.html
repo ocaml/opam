@@ -269,8 +269,12 @@ Update the user configuration.<br>
 </div>
 <br>
 <h2 id="2_Substitutions">Substitutions</h2><br>
-<pre><span id="VALcontents_of_variable"><span class="keyword">val</span> contents_of_variable</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEfull_variable">OpamTypes.full_variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a></code></pre><div class="info">
+<pre><span id="VALcontents_of_variable"><span class="keyword">val</span> contents_of_variable</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPEfull_variable">OpamTypes.full_variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a> option</code></pre><div class="info">
 Compute the value of a variable<br>
+</div>
+<pre><span id="VALcontents_of_variable_exn"><span class="keyword">val</span> contents_of_variable_exn</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEfull_variable">OpamTypes.full_variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a></code></pre><div class="info">
+Compute the value of a variable. Raise <code class="code">Exit</code> if the variable is
+    not valid.<br>
 </div>
 <pre><span id="VALsubstitute_string"><span class="keyword">val</span> substitute_string</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> string -> string</code></pre><div class="info">
 Substitute a string<br>
@@ -402,6 +406,12 @@ Is a package pinned ?<br>
 </div>
 <pre><span id="VALis_locally_pinned"><span class="keyword">val</span> is_locally_pinned</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> bool</code></pre><div class="info">
 Is the package locally pinned ? (ie. not a version pinning)<br>
+</div>
+<pre><span id="VALlocally_pinned_package"><span class="keyword">val</span> locally_pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> * <a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a></code></pre><div class="info">
+Get the path and kind associated to a locally pinned package.<br>
+</div>
+<pre><span id="VALrepository_of_locally_pinned_package"><span class="keyword">val</span> repository_of_locally_pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a></code></pre><div class="info">
+Return the repository associated to a locally pinned package.<br>
 </div>
 <pre><span id="VALpinned_package"><span class="keyword">val</span> pinned_package</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a></code></pre><div class="info">
 Get the corresponding pinned package. If the package is pinned to
