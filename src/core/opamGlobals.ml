@@ -101,8 +101,10 @@ let root_dir = ref (
     with _ -> default_opam_dir
   )
 
+let init_time = Unix.gettimeofday ()
+
 let timestamp () =
-  let time = Sys.time () in
+  let time = Unix.gettimeofday () -. init_time in
   let tm = Unix.gmtime time in
   let msec = time -. (floor time) in
   Printf.sprintf "%.2d:%.2d.%.3d"
