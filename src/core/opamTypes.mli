@@ -525,3 +525,14 @@ type package_repository_state = {
   pkg_metadata : string list;       (** Checksum of metadata *)
   pkg_contents : string list;       (** Checksum of contents *)
 }
+
+(** {2 JSON} *)
+type json = OpamJson.t
+
+(** {2 Updates} *)
+type 'a updates = {
+  created   : 'a;
+  updated   : 'a;
+  deleted   : 'a;
+  to_upgrade: 'a;
+}

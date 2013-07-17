@@ -1415,9 +1415,9 @@ end
 
 (* String conversion *)
 exception Escape of ((int * int) * (int * int)) * error
-type json =
+type t =
   [ `Null | `Bool of bool | `Float of float| `String of string
-  | `A of json list | `O of (string * json) list ]
+  | `A of t list | `O of (string * t) list ]
 
 let json_of_src ?encoding src =
   let dec d = match decode d with
@@ -1441,12 +1441,12 @@ let json_of_src ?encoding src =
   try `JSON (value (dec d) (fun v _ -> v) d) with
   | Escape (r, e) -> `Error (r, e)
 
-let of_string str: json =
+let of_string str: t =
   match json_of_src (`String str) with
   | `JSON j  -> j
   | `Error _ -> failwith "json_of_string"
 
-let json_to_dst ~minify dst (json:json) =
+let json_to_dst ~minify dst (json:t) =
   let enc e l = ignore (encode e (`Lexeme l)) in
   let rec value v k e = match v with
     | `A vs -> arr vs k e
@@ -1467,10 +1467,27 @@ let json_to_dst ~minify dst (json:json) =
   | `A _ | `O _ as json -> value json finish e
   | _ -> invalid_arg "invalid json text"
 
-let to_string (json:json) =
+let to_string (json:t) =
   let buf = Buffer.create 1024 in
   json_to_dst ~minify:false (`Buffer buf) json;
   Buffer.contents buf
+
+let json_output = ref None
+
+let json_buffer = ref []
+
+let add json =
+  json_buffer := json :: !json_buffer
+
+let set_output write =
+  json_output := Some write
+
+let output () =
+  match !json_output with
+  | None      -> ()
+  | Some write ->
+    let json = `A !json_buffer in
+    write (to_string json)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2012 Daniel C. Bünzli

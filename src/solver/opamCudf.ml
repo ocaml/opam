@@ -44,12 +44,19 @@ let string_of_package p =
 let string_of_packages l =
   OpamMisc.string_of_list string_of_package l
 
+let to_json p =
+  `O [ ("name", `String p.Cudf.package);
+       ("version", `String (string_of_int p.Cudf.version));
+       ("installed", `String (string_of_bool p.Cudf.installed));
+     ]
+
 (* Graph of cudf packages *)
 module Pkg = struct
   type t = Cudf.package
   include Common.CudfAdd
   let to_string = string_of_package
   let string_of_action ?causes:_ = string_of_action
+  let to_json = to_json
 end
 
 module ActionGraph = MakeActionGraph(Pkg)

@@ -18,6 +18,8 @@ open OpamMisc.OP
 
 exception Lexer_error of string
 
+type json = OpamJson.t
+
 type basename = OpamFilename.Base.t
 
 type dirname = OpamFilename.Dir.t
@@ -528,6 +530,13 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
+}
+
+type 'a updates = {
+  created: 'a;
+  updated: 'a;
+  deleted: 'a;
+  to_upgrade: 'a;
 }
 
 type lock =

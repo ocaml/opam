@@ -3,6 +3,7 @@ comp += [ "-warn-error" "A" ]
 begin library "opam-core"
   files   = [
     "opamScript.ml"
+    "opamJson.ml"
     "opamMisc.ml"
     "opamGlobals.ml"
     "opamGitVersion.ml"
@@ -25,7 +26,6 @@ begin library "opam-core"
     "opamPath.ml"
     "opamFile.ml"
     "opamRepository.ml"
-    "opamJson.ml"
   ]
 
   requires = [

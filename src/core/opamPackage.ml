@@ -40,10 +40,14 @@ module Version = struct
     | Pinned    , _          -> 1
     | _         , Pinned     -> -1
 
+  let to_json x =
+    `String (to_string x)
+
   module O = struct
     type t = version
     let to_string = to_string
     let compare = compare
+    let to_json = to_json
   end
 
   module Set = OpamMisc.Set.Make(O)
@@ -67,10 +71,13 @@ module Name = struct
     | 0 -> compare n1 n2
     | i -> i
 
+  let to_json x = `String x
+
   module O = struct
     type t = string
     let to_string = to_string
     let compare = compare
+    let to_json = to_json
   end
 
   module Set = OpamMisc.Set.Make(O)
@@ -143,11 +150,17 @@ let hash nv = Hashtbl.hash nv
 let equal nv1 nv2 =
   compare nv1 nv2 = 0
 
+let to_json nv =
+  `O [ ("name", Name.to_json (name nv));
+       ("version", Version.to_json (version nv));
+     ]
+
 module O = struct
   type tmp = t
   type t = tmp
   let compare = compare
   let to_string = to_string
+  let to_json = to_json
 end
 
 module Set = OpamMisc.Set.Make (O)

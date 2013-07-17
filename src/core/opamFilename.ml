@@ -297,11 +297,14 @@ let prettify_dir d =
 let prettify s =
   prettify_string (to_string s)
 
+let to_json x = `String (to_string x)
+
 module O = struct
   type tmp = t
   type t = tmp
   let compare x y = compare (to_string x) (to_string y)
   let to_string = to_string
+  let to_json = to_json
 end
 
 module Map = OpamMisc.Map.Make(O)
@@ -353,11 +356,19 @@ module Attribute = struct
                             "remote_file: '%s' is not a valid line."
                             (String.concat " " k)
 
+  let to_json x =
+    `O ([ ("base" , Base.to_json x.base);
+          ("md5"  , `String x.md5)]
+        @ match x. perm with
+          | None   -> []
+          | Some p -> ["perm", `String (string_of_int p)])
+
   module O = struct
     type tmp = t
     type t = tmp
     let to_string = to_string
     let compare = compare
+    let to_json = to_json
   end
 
   module Set = OpamMisc.Set.Make(O)

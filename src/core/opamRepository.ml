@@ -51,6 +51,11 @@ let local dirname = {
   repo_priority = 0;
 }
 
+let to_json r =
+  `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
+        ("kind", `String (string_of_repository_kind r.repo_kind));
+      ]
+
 let repository_address address =
   if Sys.file_exists address
   then OpamFilename.Dir.of_string address
@@ -61,6 +66,7 @@ module O = struct
   type t = tmp
   let compare = compare
   let to_string = to_string
+  let to_json = to_json
 end
 
 let of_string _ =

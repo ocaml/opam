@@ -498,11 +498,17 @@ let json_to_dst ~minify
 ]}
 *)
 
-type json =
+type t =
   [ `Null | `Bool of bool | `Float of float| `String of string
-  | `A of json list | `O of (string * json) list ]
+  | `A of t list | `O of (string * t) list ]
 
-val to_string: json -> string
+val to_string: t -> string
+
+val add: t -> unit
+
+val output: unit -> unit
+
+val set_output: (string -> unit) -> unit
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2012 Daniel C. Bünzli

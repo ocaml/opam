@@ -35,6 +35,9 @@ module type SET = sig
   (** Pretty-print a set *)
   val to_string: t -> string
 
+  (** Return a JSON representation of the given set *)
+  val to_json: t -> OpamJson.t
+
   (** Find an element in the list *)
   val find: (elt -> bool) -> t -> elt
 
@@ -47,6 +50,9 @@ module type MAP = sig
 
   (** Pretty-printing *)
   val to_string: ('a -> string) -> 'a t  -> string
+
+  (** Return a JSON representation of the given map. *)
+  val to_json: ('a -> OpamJson.t) -> 'a t -> OpamJson.t
 
   (** Return the values in the map. *)
   val values: 'a t -> 'a list
@@ -77,6 +83,9 @@ module type ABSTRACT = sig
   (** Convert an abstract value to a string *)
   val to_string: t -> string
 
+  (** Convert an abstract value to a JSON object *)
+  val to_json: t -> OpamJson.t
+
   module Set: SET with type elt = t
   module Map: MAP with type key = t
 end
@@ -85,6 +94,7 @@ end
 module type OrderedType = sig
   include Set.OrderedType
   val to_string: t -> string
+  val to_json: t -> OpamJson.t
 end
 
 (** Set constructor *)
@@ -102,6 +112,7 @@ module Base: sig
   type t = string
   val of_string: string -> t
   val to_string: t -> string
+  val to_json: t -> OpamJson.t
   module Map: MAP with type key = string
   module Set: SET with type elt = string
 end

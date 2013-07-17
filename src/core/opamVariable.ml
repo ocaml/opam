@@ -85,11 +85,15 @@ module Section = struct
       | None   -> n
       | Some s -> Printf.sprintf "%s.%s" n (string_of_section s)
 
+    let to_json x =
+      `String (to_string x)
+
     module O = struct
       type tmp = t
       type t = tmp
       let compare = compare
       let to_string = to_string
+      let to_json = to_json
     end
 
     module Set = OpamMisc.Set.Make (O)
@@ -148,11 +152,15 @@ module Full = struct
         prefix ^ ":" in
     prefix ^ to_string t.variable
 
+  let to_json x =
+    `String (to_string x)
+
   module O = struct
     type tmp = t
     type t = tmp
     let compare = compare
     let to_string = to_string
+    let to_json = to_json
   end
 
   module Set = OpamMisc.Set.Make(O)
