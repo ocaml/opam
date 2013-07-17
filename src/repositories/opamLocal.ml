@@ -89,9 +89,10 @@ module B = struct
 
 
   let pull_file name local_dirname remote_filename =
-    OpamGlobals.msg "%-10s Synchronizing with %s\n"
-      (OpamPackage.Name.to_string name)
-      (OpamFilename.to_string remote_filename);
+    if OpamFilename.exists remote_filename then
+      OpamGlobals.msg "%-10s Synchronizing with %s\n"
+        (OpamPackage.Name.to_string name)
+        (OpamFilename.to_string remote_filename);
     pull_file_quiet local_dirname remote_filename
 
   let pull_dir name local_dirname remote_dirname =
@@ -101,9 +102,10 @@ module B = struct
     pull_dir_quiet local_dirname remote_dirname
 
   let pull_archive repo filename =
-    OpamGlobals.msg "%-10s Synchronizing with %s\n"
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamFilename.to_string filename);
+    if OpamFilename.exists filename then
+      OpamGlobals.msg "%-10s Synchronizing with %s\n"
+        (OpamRepositoryName.to_string repo.repo_name)
+        (OpamFilename.to_string filename);
     pull_file_quiet (OpamPath.Repository.archives_dir repo) filename
 
   let revision _ =
