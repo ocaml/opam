@@ -19,11 +19,14 @@ let to_string x = x
 
 let of_string x = x
 
+let to_json x = `String x
+
 let compare = Debian.Version.compare
 
 module O = struct
   type t = string
   let to_string = to_string
+  let to_json = to_json
   let compare = compare
 end
 
