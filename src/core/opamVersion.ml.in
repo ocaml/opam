@@ -21,10 +21,13 @@ let of_string x = x
 
 let compare = Debian.Version.compare
 
+let to_json x = `String x
+
 module O = struct
   type t = string
   let to_string = to_string
   let compare = compare
+  let to_json x = `String x
 end
 
 module Set = OpamMisc.Set.Make(O)
