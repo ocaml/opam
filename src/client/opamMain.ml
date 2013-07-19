@@ -625,6 +625,16 @@ let config =
       conf_is_byte = is_byte;
       conf_options = List.map OpamVariable.Section.Full.of_string params;
     } in
+    let csh, fish =
+      match sh, csh, sexp, fish with
+      | false, false, false, false ->
+        (* No overrides have been provided, so guess which shell is active *)
+        (match OpamMisc.guess_shell_compat () with
+         | `csh                -> true , false
+         | `fish               -> false, true
+         | `sh | `bash | `zsh  -> false, false)
+      | _ -> false, false
+    in
     match command with
     | None           ->
       if env="nv" then
