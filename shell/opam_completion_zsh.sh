@@ -28,7 +28,7 @@ _opam_flags()
 _opam_packages()
 {
   local res
-   res="$( opam list -s )"
+   res="$( opam list -s -a)"
   _opam_add "$res"
 }
 
@@ -78,7 +78,7 @@ _opam()
 {
   local cmd cur prev
 
-  COMPREPLY=()  
+  COMPREPLY=()
   cmd=${COMP_WORDS[1]}
   subcmd=${COMP_WORDS[2]}
   cur=${COMP_WORDS[COMP_CWORD]}

@@ -28,7 +28,7 @@ _opam_flags()
 _opam_packages()
 {
   local res
-  res="$( opam list -s )"
+  res="$( opam list -a -s )"
   _opam_add "$res"
 }
 
