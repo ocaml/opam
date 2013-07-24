@@ -264,10 +264,12 @@ type solution = PackageActionGraph.solution
 (** Solver result *)
 type solver_result =
   | Nothing_to_do
-  | OK
+  | OK of package action list (** List of successful actions *)
   | Aborted
   | No_solution
-  | Error of package action list
+  | Error of package action list * package action list * package action list
+  (** List of successful actions, list of actions with errors,
+      list of remaining undone actions *)
 
 (** Solver result *)
 type ('a, 'b) result =

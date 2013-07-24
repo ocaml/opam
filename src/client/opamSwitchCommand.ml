@@ -191,7 +191,7 @@ let install_with_packages ~quiet ~packages switch compiler =
           wish_remove  = [];
           wish_upgrade = to_install } in
     begin try
-        OpamSolution.check_solution solution;
+        OpamSolution.check_solution t solution;
       with e ->
         remove_compiler ();
         raise e
@@ -270,7 +270,7 @@ let import filename =
       { wish_install = to_keep;
         wish_remove  = [];
         wish_upgrade = to_import } in
-  OpamSolution.check_solution solution
+  OpamSolution.check_solution t solution
 
 let export filename =
   let t = OpamState.load_state "switch-export" in

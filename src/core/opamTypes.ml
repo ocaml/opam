@@ -500,10 +500,10 @@ type solution = PackageActionGraph.solution
 
 type solver_result =
   | Nothing_to_do
-  | OK
+  | OK of package action list
   | Aborted
   | No_solution
-  | Error of package action list
+  | Error of package action list * package action list * package action list
 
 type ('a, 'b) result =
   | Success of 'a
