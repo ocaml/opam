@@ -239,7 +239,7 @@ let config c =
 
 let print_env env =
   List.iter (fun (k,v) ->
-    OpamGlobals.msg "%s=%s; export %s;\n" k v k;
+    OpamGlobals.msg "%s=%S; export %s;\n" k v k;
   ) env
 
 let print_csh_env env =
