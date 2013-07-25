@@ -456,8 +456,11 @@ let clean repo active_packages =
     else
       let old_state = OpamPackage.Map.find nv active_packages in
       let prefix = find_prefix prefix nv in
-      let new_state = package_state repo prefix nv in
-      if old_state.pkg_contents <> new_state.pkg_contents then cleanup ()
+      try
+        let new_state = package_state repo prefix nv in
+        if old_state.pkg_contents <> new_state.pkg_contents then cleanup ()
+      with Not_found ->
+        cleanup ()
   ) packages
 
 (* [packages] is the state of currently 'active' packages in this
@@ -479,10 +482,13 @@ let get_cache_updates repo =
   OpamPackage.Set.filter (fun nv ->
       let name = OpamPackage.name nv in
       let prefix = find_prefix prefix nv in
-      let state = package_state repo prefix nv in
-      match state.pkg_url with
-      | None       -> false
-      | Some url_f ->
+      let state =
+        try Some (package_state repo prefix nv)
+        with Not_found -> None in
+      match state with
+      | None                          -> false
+      | Some { pkg_url = None }       -> false
+      | Some { pkg_url = Some url_f } ->
         let url = OpamFile.URL.read url_f in
         let kind = match OpamFile.URL.kind url with
           | None   -> kind_of_url (OpamFile.URL.url url)
