@@ -174,12 +174,15 @@ let string_of_reason cudf2opam r =
   | Conflict (i,j,_) ->
     let nvi = cudf2opam i in
     let nvj = cudf2opam j in
-    let nva = min nvi nvj in
-    let nvb = max nvi nvj in
-    let str = Printf.sprintf "%s is in conflict with %s."
-        (OpamPackage.to_string nva)
-        (OpamPackage.to_string nvb) in
-    Some str
+    if OpamPackage.name nvi = OpamPackage.name nvj then
+      None
+    else
+      let nva = min nvi nvj in
+      let nvb = max nvi nvj in
+      let str = Printf.sprintf "%s is in conflict with %s."
+          (OpamPackage.to_string nva)
+          (OpamPackage.to_string nvb) in
+      Some str
   | Missing (p,m) ->
     let of_package =
       if p.Cudf.package = "dose-dummy-request" then ""
@@ -228,13 +231,14 @@ let make_chains depends =
 
 let string_of_reasons cudf2opam reasons =
   let open Algo.Diagnostic in
-  let depends, reasons = List.partition (function Dependency _ -> true | _ -> false) reasons in
+  let depends, reasons =
+    List.partition (function Dependency _ -> true | _ -> false) reasons in
   let chains = make_chains depends in
   let rec string_of_chain = function
     | []   -> ""
-    | [p]  -> OpamPackage.to_string (cudf2opam p)
+    | [p]  -> Printf.sprintf "%s." (OpamPackage.to_string (cudf2opam p))
     | p::t -> Printf.sprintf
-                "%s needed by %s."
+                "%s needed by %s"
                 (OpamPackage.to_string (cudf2opam p))
                 (string_of_chain t) in
   let string_of_chain c = string_of_chain (List.rev c) in
