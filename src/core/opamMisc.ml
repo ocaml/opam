@@ -78,6 +78,13 @@ module Set = struct
 
     include S
 
+    let fold f set i =
+      let r = ref i in
+      S.iter (fun elt ->
+          r := f elt !r
+        ) set;
+      !r
+
     let choose_one s =
       match elements s with
       | [x] -> x
@@ -116,6 +123,13 @@ module Map = struct
     module M = Map.Make(O)
 
     include M
+
+    let fold f map i =
+      let r = ref i in
+      M.iter (fun key value->
+          r:= f key value !r
+        ) map;
+      !r
 
     let values map =
       List.rev (M.fold (fun _ v acc -> v :: acc) map [])
