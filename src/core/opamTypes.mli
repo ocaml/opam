@@ -119,6 +119,9 @@ type variable_contents = OpamVariable.variable_contents =
   | B of bool
   | S of string
 
+(** A map from variables to their contents (i.e an environment) *)
+type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
+
 (** Content of [pp] variables *)
 type ppflag =
   | Camlp4 of string list

@@ -26,14 +26,24 @@ let post_message ?(failed=false) state action =
   let messages = OpamFile.OPAM.post_messages opam in
   let print_message message =
     if failed then
-      OpamGlobals.msg "\n=-= %s troobleshooting =-=\n%s\n"
+      OpamGlobals.msg "\n=-=-= %s troobleshooting =-=-=\n%s\n"
         (OpamPackage.to_string pkg) message
     else
-      OpamGlobals.msg "\n=-= %s information =-=\n%s\n"
+      OpamGlobals.msg "\n=-=-= %s information =-=-=\n%s\n"
         (OpamPackage.to_string pkg) message
   in
+  let local_variables = OpamVariable.Map.empty in
+  let local_variables =
+    OpamVariable.Map.add (OpamVariable.of_string "success")
+      (B (not failed)) local_variables
+  in
+  let local_variables =
+    OpamVariable.Map.add (OpamVariable.of_string "failure")
+      (B failed) local_variables
+  in
   List.iter (fun (message,filter) ->
-      if OpamState.eval_filter state filter then print_message message)
+      if OpamState.eval_filter state local_variables filter
+      then print_message message)
     messages
 
 let check_solution state = function
@@ -436,7 +446,8 @@ let apply ?(force = false) t action solution =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
         OpamMisc.filter_map (fun (s,f) ->
-          if OpamState.eval_filter new_state f then Some s
+          if OpamState.eval_filter new_state OpamVariable.Map.empty f
+          then Some s
           else None
         )  messages in
       OpamSolver.print_solution ~messages solution;

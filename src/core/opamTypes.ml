@@ -297,6 +297,8 @@ type variable_contents = OpamVariable.variable_contents =
   | B of bool
   | S of string
 
+type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
+
 type symbol =
   | Eq | Neq | Le | Ge | Lt | Gt
 
