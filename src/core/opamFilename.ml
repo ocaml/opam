@@ -164,6 +164,9 @@ let basename t = t.basename
 let read filename =
   OpamSystem.read (to_string filename)
 
+let open_in filename =
+  open_in (to_string filename)
+
 let write filename raw =
   OpamSystem.write (to_string filename) raw
 
@@ -187,7 +190,11 @@ let chop_extension filename =
 
 let rec_files d =
   let fs = OpamSystem.rec_files (Dir.to_string d) in
-  List.rev (List.rev_map of_string fs)
+  List.rev_map of_string fs
+
+let files d =
+  let fs = OpamSystem.files (Dir.to_string d) in
+  List.rev_map of_string fs
 
 let copy ~src ~dst =
   if src <> dst then OpamSystem.copy (to_string src) (to_string dst)

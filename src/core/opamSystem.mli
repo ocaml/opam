@@ -81,6 +81,9 @@ val files_with_links: string -> string list
     Links behaving like directory are crossed. *)
 val rec_files: string -> string list
 
+(** Return the list of files in the current directory. *)
+val files: string -> string list
+
 (** [rec_dirs dir] return the list list of all directories recursively
     (going through symbolink links). *)
 val rec_dirs: string -> string list

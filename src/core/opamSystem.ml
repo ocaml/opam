@@ -165,6 +165,9 @@ let rec_files dir =
     List.fold_left aux (f @ accu) d in
   aux [] dir
 
+let files dir =
+  files_with_links dir
+
 let rec_dirs dir =
   let rec aux accu dir =
     let d = directories_with_links dir in

@@ -22,8 +22,8 @@ module Lines = struct
   (* Lines of space separated words *)
   type t = string list list
 
-  let of_string str =
-    OpamLineLexer.main (Lexing.from_string str)
+  let of_channel ic =
+    OpamLineLexer.main (Lexing.from_channel ic)
 
   let to_string (lines: t) =
     let buf = Buffer.create 1024 in
@@ -39,9 +39,9 @@ module Syntax = struct
 
   type t = file
 
-  let of_string filename str =
+  let of_channel (filename:filename) (ic:in_channel) =
+    let lexbuf = Lexing.from_channel ic in
     let filename = OpamFilename.to_string filename in
-    let lexbuf = Lexing.from_string str in
     lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
                                   Lexing.pos_fname = filename };
     OpamParser.main OpamLexer.token lexbuf filename
@@ -65,6 +65,7 @@ module Syntax = struct
           (OpamMisc.string_of_list (fun x -> x) fields);
       OpamGlobals.exit 5;
     )
+
 end
 
 module X = struct
@@ -77,8 +78,8 @@ module X = struct
 
     let empty = OpamPackage.Name.Map.empty
 
-    let of_string _ s =
-      let lines = Lines.of_string s in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       List.fold_left (fun map -> function
         | []          -> map
         | [nv;prefix] -> OpamPackage.Name.Map.add (OpamPackage.Name.of_string nv)
@@ -106,8 +107,8 @@ module X = struct
 
     let empty = OpamFilename.Set.empty
 
-    let of_string _ s =
-      let lines = Lines.of_string s in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       let lines = OpamMisc.filter_map (function
           | []  -> None
           | [f] -> Some (OpamFilename.of_string f)
@@ -133,8 +134,8 @@ module X = struct
 
     let empty = OpamFilename.Attribute.Set.empty
 
-    let of_string _ s =
-      let lines = Lines.of_string s in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       let rs = OpamMisc.filter_map (function
           | [] -> None
           | l  -> Some (OpamFilename.Attribute.of_string (String.concat " " l))
@@ -180,8 +181,8 @@ module X = struct
       s_hg
     ]
 
-    let of_string filename str =
-      let s = Syntax.of_string filename str in
+    let of_channel filename ic =
+      let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let archive =
         OpamFormat.assoc_option s.file_contents s_archive OpamFormat.parse_string in
@@ -243,8 +244,8 @@ module X = struct
 
     let empty = (OpamPackage.Set.empty, OpamPackage.Set.empty)
 
-    let of_string _ s =
-      let lines = Lines.of_string s in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       let installed = ref OpamPackage.Set.empty in
       let roots = ref OpamPackage.Set.empty in
       let add n v r =
@@ -293,8 +294,8 @@ module X = struct
             (OpamPackage.Name.to_string n) (OpamPackage.Version.Set.to_string vs)
       ) map
 
-    let of_string _ s =
-      let lines = Lines.of_string s in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       let map = ref empty in
       let add n v = map := OpamPackage.Set.add (OpamPackage.create n v) !map in
       List.iter (function
@@ -342,8 +343,8 @@ module X = struct
 
     let empty = OpamPackage.Name.Map.empty
 
-    let of_string _ str =
-      let lines = Lines.of_string str in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       List.fold_left (fun map -> function
         | name_s :: repo_s ->
           let name = OpamPackage.Name.of_string name_s in
@@ -372,8 +373,8 @@ module X = struct
 
     let empty = None
 
-    let of_string _ str =
-      let lines = Lines.of_string str in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       let checksum = ref None in
       let map = List.fold_left (fun map -> function
         | [c] when !checksum = None ->
@@ -423,8 +424,8 @@ module X = struct
 
     let empty = OpamCompiler.Map.empty
 
-    let of_string _ str =
-      let lines = Lines.of_string str in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       List.fold_left (fun map -> function
         | [c; r] ->
           let c = OpamCompiler.of_string c in
@@ -454,8 +455,8 @@ module X = struct
 
     let empty = OpamPackage.Name.Map.empty
 
-    let of_string _ str =
-      let lines = Lines.of_string str in
+    let of_channel _ ic =
+      let lines = Lines.of_channel ic in
       let add name_s pin map =
         let name = OpamPackage.Name.of_string name_s in
         if OpamPackage.Name.Map.mem name map then
@@ -506,8 +507,8 @@ module X = struct
     let s_address = "address"
     let s_priority = "priority"
 
-    let of_string filename str =
-      let s = Syntax.of_string filename str in
+    let of_channel filename ic =
+      let s = Syntax.of_channel filename ic in
       let repo_name =
         OpamFormat.assoc s.file_contents s_name
           (OpamFormat.parse_string |> OpamRepositoryName.of_string) in
@@ -543,20 +544,24 @@ module X = struct
 
     let internal = "descr"
 
-    type t = string
+    type t = string * string
 
-    let empty = ""
+    let empty = "", ""
 
-    let synopsis str =
-      match OpamMisc.cut_at str '\n' with
-      | None       -> str
-      | Some (s,_) -> s
+    let synopsis = fst
 
-    let full str = str
+    let full (x,y) = x ^ "\n" ^ y
 
-    let of_string _ x = x
+    let of_channel _ ic =
+      let x =
+        try input_line ic
+        with _ -> "" in
+      let y =
+        try OpamSystem.string_of_channel ic
+        with _ -> "" in
+      x, y
 
-    let to_string _ x = x
+    let to_string _ = full
 
   end
 
@@ -577,8 +582,8 @@ module X = struct
         ) t [] in
       Lines.to_string l
 
-    let of_string _ s =
-      let l = Lines.of_string s in
+    let of_channel _ ic =
+      let l = Lines.of_channel ic in
       List.fold_left (fun map -> function
         | []            -> map
         | [switch; comp] -> OpamSwitch.Map.add (OpamSwitch.of_string switch)
@@ -645,8 +650,8 @@ module X = struct
       s_cores;
     ]
 
-    let of_string filename f =
-      let s = Syntax.of_string filename f in
+    let of_channel filename ic =
+      let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let opam_version =
         OpamFormat.assoc s.file_contents s_opam_version
@@ -913,9 +918,9 @@ module X = struct
           (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts])
         s
 
-    let of_string filename str =
+    let of_channel filename ic =
       let nv = OpamPackage.of_filename ~all:true filename in
-      let s = Syntax.of_string filename str in
+      let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let s = s.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version OpamFormat.parse_string in
@@ -1109,8 +1114,8 @@ module X = struct
       } in
       Syntax.to_string ~indent_variable:(fun _ -> true) s
 
-    let of_string filename str =
-      let s = Syntax.of_string filename str in
+    let of_channel filename ic =
+      let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let src = OpamFormat.parse_string |> optional_of_string in
       let mk field =
@@ -1122,7 +1127,7 @@ module X = struct
           if not (Filename.is_relative s) then
             OpamFilename.of_string s
           else
-            OpamSystem.internal_error "%s is not an absolute filename." str in
+            OpamSystem.internal_error "%s is not an absolute filename." s in
         let dst = OpamFormat.parse_string |> absolute_filename in
         let fn = OpamFormat.parse_pair src dst in
         OpamFormat.assoc_list s.file_contents s_misc (OpamFormat.parse_list fn) in
@@ -1183,8 +1188,8 @@ module X = struct
       s_requires;
     ]
 
-    let of_string filename str =
-      let file = Syntax.of_string filename str in
+    let of_channel filename ic =
+      let file = Syntax.of_channel filename ic in
       let parse_value = OpamFormat.parse_or [
           "string", (OpamFormat.parse_string |> s);
           "bool"  , (OpamFormat.parse_bool   |> b);
@@ -1394,8 +1399,8 @@ module X = struct
     let env t = t.env
     let tags t = t.tags
 
-    let of_string filename str =
-      let file = Syntax.of_string filename str in
+    let of_channel filename ic =
+      let file = Syntax.of_channel filename ic in
       Syntax.check file valid_fields;
       let s = file.file_contents in
       let parse_camlp4 = function
@@ -1533,7 +1538,8 @@ module X = struct
 
     let empty = ""
 
-    let of_string _ x = x
+    let of_channel _ ic =
+      OpamSystem.string_of_channel ic
 
     let to_string _ x = x
 
@@ -1547,7 +1553,8 @@ module X = struct
 
     let empty = ""
 
-    let of_string _ str = str
+    let of_channel _ ic =
+      OpamSystem.string_of_channel ic
 
     let to_string _ t = t
 
@@ -1569,7 +1576,7 @@ module type F = sig
   val internal : string
   type t
   val empty : t
-  val of_string : filename -> string -> t
+  val of_channel : filename -> in_channel  -> t
   val to_string : filename -> t -> string
 end
 
@@ -1623,7 +1630,11 @@ module Make (F : F) = struct
     log "read %s" filename;
     with_time reads F.internal (fun () ->
       if OpamFilename.exists f then
-        try F.of_string f (OpamFilename.read f)
+        try
+          let ic = OpamFilename.open_in f in
+          let r = F.of_channel f ic in
+          close_in ic;
+          r
         with OpamFormat.Bad_format msg ->
           OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
       else
@@ -1641,7 +1652,7 @@ module Make (F : F) = struct
   let dummy_file = OpamFilename.raw "<dummy>"
 
   let read_from_channel ic =
-    try F.of_string dummy_file (OpamSystem.string_of_channel ic)
+    try F.of_channel dummy_file ic
     with OpamFormat.Bad_format msg ->
       OpamSystem.internal_error "%s" msg
 

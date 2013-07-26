@@ -101,6 +101,9 @@ val basename: t -> Base.t
 (** Retrieves the contents from the hard disk. *)
 val read: t -> string
 
+(** Open a channel from a given file. *)
+val open_in: t -> in_channel
+
 (** Removes everything in [filename] if existed. *)
 val remove: t -> unit
 
