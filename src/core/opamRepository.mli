@@ -102,24 +102,20 @@ val download: repository -> package -> unit
 (** Backend signature *)
 module type BACKEND = sig
 
-  (** [pull_file name local_dir remote_file] pull the contents of
-      [remote_file] into [local_dir]. *)
-  val pull_file: name -> dirname -> filename -> filename download
+  (** [pull_url name local_dir remote_url] pull the contents of
+      [remote_url] into [local_dir]. Can return either a file or a
+      directory. *)
+  val pull_url: name -> dirname -> string -> generic_file download
 
-  (** [pull_dir name local_dir remote_dir] pull the contents of
-      [remote_dir] into [local_dir]. *)
-  val pull_dir: name -> dirname -> dirname -> dirname download
-
-  (** Pull a repository. Usually very similar to [pull_dir] but some
-      backends have special needs. *)
+  (** [pull_repo] pull the contents of a repository. *)
   val pull_repo: repository -> unit
 
-  (** Pull an archive in a repository. Usually very similar to
-      [pull_file] but some backends have special needs. *)
+  (** [pull_archive repo archive] pull [archive] in the given
+      repository. *)
   val pull_archive: repository -> filename -> filename download
 
-  (** Return the (optional) revision of a given repository. Useful
-      mainly when using CVS backends. *)
+  (** Return the (optional) revision of a given repository. Only useful
+      for VCS backends. *)
   val revision: repository -> version option
 
 end

@@ -274,7 +274,7 @@ val is_pinned: state -> name -> bool
 val is_locally_pinned: state -> name -> bool
 
 (** Get the path and kind associated to a locally pinned package. *)
-val locally_pinned_package: state -> name -> dirname * repository_kind
+val locally_pinned_package: state -> name -> string * repository_kind
 
 (** Return the repository associated to a locally pinned package. *)
 val repository_of_locally_pinned_package: state -> name -> repository
@@ -293,7 +293,7 @@ val pinned_package: state -> name -> package
 val pinned_path: state -> name -> dirname option
 
 (** Update pinned package *)
-val update_pinned_package: state -> name -> dirname download
+val update_pinned_package: state -> name -> generic_file download
 
 (** Add the given packages to the set of package to reinstall. If [all]
     is set, this is done for ALL the switches (useful when a package

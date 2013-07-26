@@ -162,11 +162,9 @@ module B = struct
     OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file);
     OpamFilename.download ~overwrite:true remote_file local_dir
 
-  let pull_files ~all repo =
-    log "pull-files";
-    let local_files =
-      if all then OpamFilename.rec_files repo.repo_root
-      else local_files repo in
+  let pull_repo repo =
+    log "pull-repo";
+    let local_files = local_files repo in
     let state = make_state ~download_index:true repo in
     if state.local_dir <> state.remote_dir then (
       let (--) = OpamFilename.Set.diff in
@@ -202,31 +200,18 @@ module B = struct
           let remote_file = OpamFilename.Map.find local_file state.local_remote in
           ignore (curl ~remote_file ~local_file)
         ) new_files;
-      if OpamFilename.Set.is_empty new_files then
-        Up_to_date repo.repo_root
-      else
-        Result repo.repo_root
-    ) else
-      Up_to_date repo.repo_root
-
-  let pull_dir _ dirname address =
-    log "pull-dir";
-    let repo = repo dirname address in
-    pull_files ~all:true repo
-
-  let pull_repo repo =
-    log "pull-repo";
-    ignore (pull_files ~all:false repo)
+    )
 
   (* XXX: add a proxy *)
-  let pull_file name dirname filename =
+  let pull_url name dirname remote_url =
     log "pull-file";
+    let filename = OpamFilename.of_string remote_url in
     OpamGlobals.msg "%-10s Downloading %s\n"
       (OpamPackage.Name.to_string name)
       (OpamFilename.to_string filename);
     try
       let local_file = OpamFilename.download ~overwrite:true filename dirname in
-      Result local_file
+      Result (F local_file)
     with _ ->
       Not_available
 

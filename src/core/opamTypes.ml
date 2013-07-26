@@ -39,6 +39,14 @@ type generic_file =
   | D of dirname
   | F of filename
 
+let download_map fn = function
+  | Up_to_date f  -> Up_to_date (fn f)
+  | Result  f     -> Result (fn f)
+  | Not_available -> Not_available
+
+let download_dir = download_map (fun d -> D d)
+let download_file = download_map (fun f -> F f)
+
 type version = OpamPackage.Version.t
 
 type version_set = OpamPackage.Version.Set.t

@@ -77,8 +77,7 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val pull_file: name -> dirname -> filename -> filename download
-  val pull_dir: name -> dirname -> dirname -> dirname download
+  val pull_url: name -> dirname -> string -> generic_file download
   val pull_repo: repository -> unit
   val pull_archive: repository -> filename -> filename download
   val revision: repository -> version option
@@ -137,31 +136,29 @@ let read_tmp dir =
   OpamPackage.Set.of_list
     (OpamMisc.filter_map OpamPackage.of_dirname (OpamFilename.Dir.Set.elements dirs))
 
-let pull_file kind name local_dirname remote_filename =
+let pull_url kind name local_dirname remote_url =
   let module B = (val find_backend_by_kind kind: BACKEND) in
-  B.pull_file name local_dirname remote_filename
-
-let pull_dir kind name local_dirname remote_dirname =
-  let module B = (val find_backend_by_kind kind: BACKEND) in
-  B.pull_dir name local_dirname remote_dirname
+  B.pull_url name local_dirname remote_url
 
 let revision repo =
   let kind = repo.repo_kind in
   let module B = (val find_backend_by_kind kind: BACKEND) in
   B.revision repo
 
-let pull_file_and_check_digest kind name dirname filename checksum =
+let pull_and_check_digest kind name dirname url checksum =
+  let filename = OpamFilename.of_string url in
   if OpamFilename.exists filename
   && OpamFilename.digest filename = checksum then
-    Up_to_date filename
-  else match pull_file kind name dirname filename with
-    | Not_available -> Not_available
-    | Up_to_date f  -> Up_to_date f
-    | Result f      ->
+    Up_to_date (F filename)
+  else match pull_url kind name dirname url with
+    | Not_available
+    | Up_to_date _
+    | Result (D _) as r -> r
+    | Result (F f)      ->
       let actual = OpamFilename.digest f in
       if !OpamGlobals.no_checksums
       || actual = checksum then
-        Result f
+        Result (F f)
       else
         OpamGlobals.error_and_exit
           "Wrong checksum for %s:\n\
@@ -175,12 +172,13 @@ let pull_file_and_check_digest kind name dirname filename checksum =
           checksum
           actual
 
-let pull_file_and_fix_digest ~url_file nv kind dirname filename checksum =
+let pull_and_fix_digest ~url_file nv kind dirname url checksum =
   let name = OpamPackage.name nv in
-  match pull_file kind name dirname filename with
-  | Not_available -> Not_available
-  | Up_to_date f  -> Up_to_date f
-  | Result f      ->
+  match pull_url kind name dirname url with
+  | Not_available
+  | Up_to_date _
+  | Result (D _) as r -> r
+  | Result (F f) as r ->
     let actual = OpamFilename.digest f in
     if checksum <> actual then (
       OpamGlobals.msg
@@ -189,7 +187,7 @@ let pull_file_and_fix_digest ~url_file nv kind dirname filename checksum =
       let url = OpamFile.URL.read url_file in
       OpamFile.URL.write url_file (OpamFile.URL.with_checksum url actual)
     );
-    Result f
+    r
 
 (* Infer the url kind: when the url is a local directory, use the
    `local` backend, otherwise use the `http` one. This function is
@@ -238,18 +236,6 @@ let copy_files repo nv dst =
   );
   OpamFilename.Set.of_list files
 
-let map fn = function
-  | Up_to_date f  -> Up_to_date (fn f)
-  | Result  f     -> Result (fn f)
-  | Not_available -> Not_available
-let dir = map (fun d -> D d)
-let file = map (fun f -> F f)
-
-let pull kind name download address =
-  match pull_file kind name download (OpamFilename.raw address) with
-  | Not_available -> dir (pull_dir kind name download (OpamFilename.raw_dir address))
-  | x             -> file x
-
 let make_archive ?(gener_digest=false) repo nv =
   let prefix = find_prefix (read_prefix repo) nv in
   let url_file = OpamPath.Repository.url repo prefix nv in
@@ -264,26 +250,25 @@ let make_archive ?(gener_digest=false) repo nv =
     if OpamFilename.exists url_file then (
       let url = OpamFile.URL.read url_file in
       let checksum = OpamFile.URL.checksum url in
-      let address = OpamFile.URL.url url in
+      let remote_url = OpamFile.URL.url url in
       let kind = match OpamFile.URL.kind url with
-        | None   -> kind_of_url address
+        | None   -> kind_of_url remote_url
         | Some k -> k in
-      log "downloading %s:%s" address (string_of_repository_kind kind);
+      log "downloading %s:%s" remote_url (string_of_repository_kind kind);
 
       let local_filename =
         OpamFilename.in_dir download_dir (fun () ->
           match checksum with
-          | None   -> pull kind name download_dir address
+          | None   -> pull_url kind name download_dir remote_url
           | Some c ->
-            let filename = OpamFilename.raw address in
             if gener_digest then
-              file (pull_file_and_fix_digest ~url_file nv kind download_dir filename c)
+              pull_and_fix_digest ~url_file nv kind download_dir remote_url c
             else
-              file (pull_file_and_check_digest kind name download_dir filename c)
+              pull_and_check_digest kind name download_dir remote_url c
         ) in
 
       match local_filename with
-      | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" address
+      | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" remote_url
       | Result (F f) | Up_to_date (F f) ->
         log "extracting %s to %s"
           (OpamFilename.to_string f)
@@ -499,7 +484,7 @@ let get_cache_updates repo =
         match kind with
         | `http -> false
         | _    ->
-          match pull kind name dirname filename with
+          match pull_url kind name dirname filename with
           | Not_available -> OpamGlobals.error_and_exit "%s is not available." filename
           | Up_to_date _  -> false
           | Result _      -> true

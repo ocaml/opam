@@ -47,6 +47,12 @@ type 'a download =
   | Not_available
   | Result of 'a
 
+(** Upcast a downloaded directory. *)
+val download_dir: dirname download -> generic_file download
+
+(** Upcast a downloaded file. *)
+val download_file: filename download -> generic_file download
+
 (** {2 Packages} *)
 
 (** Packages are ([name] * [version]) tuple *)
