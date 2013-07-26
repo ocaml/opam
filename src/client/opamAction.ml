@@ -224,14 +224,14 @@ let prepare_package_build t nv =
       OpamMisc.filter_map (fun (f,_) ->
         if List.mem f all then Some f else None
       ) patches in
-    List.iter (OpamState.substitute_file t) patches
+    List.iter (OpamState.substitute_file t OpamVariable.Map.empty) patches
   );
 
   (* Apply the patches *)
   List.iter (fun (base, filter) ->
     let root = OpamPath.Switch.build t.root t.switch nv in
     let patch = root // OpamFilename.Base.to_string base in
-    if OpamState.eval_filter t filter then (
+    if OpamState.eval_filter t OpamVariable.Map.empty filter then (
       OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
       OpamFilename.patch patch p_build)
   ) patches;
@@ -241,7 +241,8 @@ let prepare_package_build t nv =
      substitution files (see [substitute_file] and
      [OpamFilename.of_basename]. *)
   OpamFilename.in_dir p_build (fun () ->
-    List.iter (OpamState.substitute_file t) (OpamFile.OPAM.substs opam)
+    List.iter (OpamState.substitute_file t OpamVariable.Map.empty)
+      (OpamFile.OPAM.substs opam)
   )
 
 (* For pinned packages, we keep the build cache in
@@ -352,7 +353,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   else (
     let opam = OpamState.opam t nv in
     let env = compilation_env t opam in
-    match OpamState.filter_commands t (OpamFile.OPAM.remove opam) with
+    match OpamState.filter_commands t OpamVariable.Map.empty (OpamFile.OPAM.remove opam) with
     | []     -> ()
     | remove ->
       let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -532,7 +533,7 @@ let build_and_install_package_aux t ~metadata nv =
 
     (* Exec the given commands. *)
     let exec name f =
-      match OpamState.filter_commands t (f opam) with
+      match OpamState.filter_commands t OpamVariable.Map.empty (f opam) with
       | []       -> ()
       | commands ->
         OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
