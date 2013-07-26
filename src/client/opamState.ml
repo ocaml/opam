@@ -622,7 +622,7 @@ let print_stats () =
   List.iter (Printf.printf "save-state: %.2fs\n") !saves
 
 type cache = {
-  cached_opams: (package * OpamFile.OPAM.t) list;
+  cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
 }
 
 let check_marshaled_file file =
@@ -640,24 +640,22 @@ let check_marshaled_file file =
   really_input ic header 0 Marshal.header_size;
   let expected_size = magic_len + Marshal.total_size header 0 in
   let current_size = in_channel_length ic in
-  close_in ic;
   if not (expected_size = current_size) then (
+    close_in ic;
     OpamGlobals.error "The local-state cache is corrupted, removing it.";
     OpamSystem.internal_error "Corrupted cache";
-  )
+  );
+  seek_in ic magic_len;
+  ic
 
 let marshal_from_file file =
   try
-    check_marshaled_file file;
-    let ic = open_in_bin (OpamFilename.to_string file) in
-    let () =
-      let magic_len = String.length OpamVersion.magic in
-      really_input ic (String.create magic_len) 0 magic_len in
+    let ic = check_marshaled_file file in
     let (cache: cache) = Marshal.from_channel ic in
     close_in ic;
-    let opams = OpamPackage.Map.of_list cache.cached_opams in
-    Some opams
-  with _ ->
+    Some cache.cached_opams
+  with e ->
+    log "Got an error while loading the cache: %s" (Printexc.to_string e);
     OpamFilename.remove file;
     None
 
@@ -675,8 +673,7 @@ let save_state ~update t =
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
   output_string oc OpamVersion.magic;
-  let cached_opams = OpamPackage.Map.bindings t.opams in
-  Marshal.to_channel oc { cached_opams } [];
+  Marshal.to_channel oc { cached_opams = t.opams } [Marshal.No_sharing];
   close_out oc;
   let t1 = Unix.gettimeofday () in
   saves := (t1 -. t0) :: !saves
