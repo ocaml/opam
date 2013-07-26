@@ -26,8 +26,8 @@ type item = {
   name: name;
   current_version: version;
   installed_version: version option;
-  synopsis: string;
-  descr: string;
+  synopsis: string Lazy.t;
+  descr: string Lazy.t;
   tags: string list;
 }
 
@@ -98,9 +98,13 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
               OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
             OpamPackage.version nv in
       let nv = OpamPackage.create name current_version in
-      let descr_f = Lazy.force (OpamPackage.Map.find nv t.descrs) in
-      let synopsis = OpamFile.Descr.synopsis descr_f in
-      let descr = OpamFile.Descr.full descr_f in
+      let descr_f = OpamPackage.Map.find nv t.descrs in
+      let synopsis = lazy (
+        OpamFile.Descr.synopsis (Lazy.force descr_f)
+      ) in
+      let descr = lazy (
+        OpamFile.Descr.full (Lazy.force descr_f)
+      ) in
       let tags = OpamFile.OPAM.tags (OpamState.opam t nv) in
       OpamPackage.Name.Map.add
         name { name; current_version; installed_version; synopsis; descr; tags }
@@ -125,8 +129,8 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
        || exact_match (OpamPackage.Name.to_string name)
        || not exact_name &&
           (partial_match (OpamPackage.Name.to_string name)
-           || partial_match synopsis
-           || partial_match descr
+           || partial_match (Lazy.force synopsis)
+           || partial_match (Lazy.force descr)
            || partial_matchs tags))
     ) names in
 
@@ -179,7 +183,7 @@ module API = struct
           Printf.printf "%s  %s  %s\n"
             (OpamMisc.indent_left name max_n)
             (OpamMisc.indent_right version max_v)
-            (OpamMisc.sub_at synop_len synopsis)
+            (OpamMisc.sub_at synop_len (Lazy.force synopsis))
     ) names
 
   let info ~fields regexps =

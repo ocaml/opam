@@ -544,21 +544,22 @@ module X = struct
 
     let internal = "descr"
 
-    type t = string * string
+    type t = string * string Lazy.t
 
-    let empty = "", ""
+    let empty = "", lazy ""
 
     let synopsis = fst
 
-    let full (x,y) = x ^ "\n" ^ y
+    let full (x,y) = x ^ "\n" ^ (Lazy.force y)
 
     let of_channel _ ic =
       let x =
         try input_line ic
         with _ -> "" in
-      let y =
+      let y = lazy (
         try OpamSystem.string_of_channel ic
-        with _ -> "" in
+        with _ -> ""
+      ) in
       x, y
 
     let to_string _ = full
