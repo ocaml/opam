@@ -43,7 +43,7 @@ val resolve_and_apply:
   solver_result
 
 (** Raise an error if no solution is found or in case of error. *)
-val check_solution: solver_result -> unit
+val check_solution: OpamState.state -> solver_result -> unit
 
 (** {2 Atoms} *)
 
