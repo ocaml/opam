@@ -491,16 +491,20 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
         | To_delete _ -> None
       ) root_actions) in
 
-  (* the graph of interesting packages, which might be impacted by the
-     current actions *)
-  let interesting_packages =
+  let all_packages =
+    (* we consider the complete universe here (eg. including optional dependencies) *)
     let graph =
-      (* we consider the complete universe here (eg. including optional dependencies) *)
       create_graph
         (fun p -> p.Cudf.installed || Map.mem p actions)
         complete_universe in
-    List.iter (Graph.remove_vertex graph) to_remove_or_upgrade;
     Graph.mirror graph in
+
+  (* the graph of interesting packages, which might be impacted by the
+     current actions *)
+  let interesting_packages =
+    let graph = Graph.copy all_packages in
+    List.iter (Graph.remove_vertex graph) to_remove_or_upgrade;
+    graph in
 
   (* the packages to remove, and the associated root causes *)
   let to_remove, root_causes =
@@ -539,7 +543,7 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
     (* add the packages to recompile due to the REMOVAL of packages
        (ie. when an optional dependency has been removed). *)
     List.fold_left (fun to_recompile pkg ->
-      let succ = Graph.succ interesting_packages pkg in
+      let succ = Graph.succ all_packages pkg in
       Set.union to_recompile (Set.of_list succ)
     ) recompile_roots to_remove in
 
