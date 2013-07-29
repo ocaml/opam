@@ -602,6 +602,15 @@ let solution_of_actions ~simple_universe ~complete_universe root_actions =
         let pred = ActionGraph.pred to_process_complete action in
         let causes = List.filter (fun a -> ActionGraph.in_degree to_process a = 0) pred in
         let causes = List.rev_map action_contents causes in
+        let causes =
+          List.fold_left
+            (fun causes removed_pkg ->
+               if List.mem pkg (Graph.succ all_packages removed_pkg)
+               then removed_pkg :: causes
+               else causes)
+            causes
+            to_remove
+        in
         let cause = match causes with
           | [] -> Upstream_changes
           | _  -> Use causes in
