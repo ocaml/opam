@@ -830,7 +830,7 @@ module API = struct
         OpamPackage.Set.of_list (List.rev_map (fun (n,_) ->
             OpamState.find_installed_package_by_name t n
           ) atoms) in
-      let universe = OpamState.universe t Depends in
+      let universe = OpamState.universe t Remove in
       let to_remove =
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies
@@ -844,6 +844,10 @@ module API = struct
         OpamPackage.Set.of_list
           (OpamSolver.dependencies
              ~depopts:true ~installed:true universe installed_roots) in
+      (* installed includes the depopts, because we don't want to autoremove
+         them. But that may re-include packages that we wanted removed, so we
+         need to remove them again *)
+      let installed = OpamPackage.Set.diff installed to_remove in
       let to_remove =
         if atoms = [] then
           OpamPackage.Set.diff t.installed installed
