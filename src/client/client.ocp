@@ -11,12 +11,14 @@ begin library "opam-client"
     "opamRepositoryCommand.ml"
     "opamPinCommand.ml"
     "opamClient.ml"
+    "opamArg.ml"
   ]
 
   requires = [
     "opam-core"
     "opam-solver"
     "opam-repositories"
+    "cmdliner"
   ]
 
 end
@@ -28,7 +30,6 @@ begin program "opam"
   ]
   requires = [
     "opam-client"
-    "cmdliner"
  ]
 
 end
