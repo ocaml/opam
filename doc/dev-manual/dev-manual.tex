@@ -314,6 +314,7 @@ use when trying to build the packages.
     ?depexts:       [ [STRING+] [STRING+ ]+
     ?conflicts:     [ <package>+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
+    ?post-messages: [ (STRING ?{ <filter> } )+ ]
     ?os:            [ <formula(os)>+ ]
     ?ocaml-version: [ <and-formula(constraint)>+ ]
     ?libraries:     [ STRING+ ]
@@ -415,7 +416,7 @@ use when trying to build the packages.
 \item The content of {\tt remove} is the command to run before deleting
   the installed file.
 
-\item The {\tt depends}, {\tt depots} and {\tt conflicts} fields
+\item The {\tt depends}, {\tt depopts} and {\tt conflicts} fields
   contain formulas over package names, optionally parametrized by
   version constraints. Some examples or package formula:
 
@@ -432,7 +433,7 @@ use when trying to build the packages.
   {\tt "foo"} lesser or equal to $1.2$ and either any version of package
   {\tt "bar"} or the version $3.14$ of package {\tt "gna"}.}''  \\
 
-The {\tt optdeps} field contains a {\em OR} formula over
+The {\tt depopts} field contains a {\em OR} formula over
   package names, which means that top-level \verb+|+ are not
   mandatory. This field express optional dependencies that
   OPAM will not try to install. However, when installing a new
@@ -443,11 +444,18 @@ The {\tt optdeps} field contains a {\em OR} formula over
 \item The {\tt depexts} field is optional and contains tags describing
   the external dependencies.
 
-\item The {\tt message} field (since version $1.0.1$) is used to
+\item The {\tt messages} field (since version $1.0.1$) is used to
   display an alternative message when prompting a solution implying
   the given package. The typical use-case is to tell the user that
   some functionality will not be available as some optional
   dependencies are not installed.
+
+\item The {\tt post-messages} field (since version $1.1.0$) allows to print
+  specific messages to the user after the end of installation. The special
+  boolean variable \verb+failure+ is defined in the scope of the filter, and can
+  be used to print messages in case there was an error (typically, a hint on how
+  it can be resolved, or a link to an open issue). \verb+success+ is also
+  defined as syntactic sugar for \verb+!failure+.
 
 \item The {\tt os} and {\tt ocaml-version} fields are optional
   constraints over the supported OS and compiler version for this
