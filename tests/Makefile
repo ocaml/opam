@@ -139,6 +139,7 @@ install-remove:
 install-opt:
 	$(CHECK) -l install-opt-1
 	$(OPAM) install P5
+	test -f $(OPAM_ROOT)/system/lib/p5/p2_absent
 	$(CHECK) -l install-opt-2 P1.1 P5.1
 	$(OPAM) remove P5
 	$(CHECK) -l install-opt-3 P1.1
@@ -149,11 +150,20 @@ install-opt:
 	$(OPAM) install P5
 	$(CHECK) -l install-opt-6 P1.1 P5.1
 	$(OPAM) install P2
+	test -f $(OPAM_ROOT)/system/lib/p5/p2_present
 	$(CHECK) -l install-opt-7 P1.1 P2.1 P5.1
 	$(OPAM) remove P5 -a
 	$(CHECK) -l install-opt-8 P1.1 P2.1
 	$(OPAM) remove P2 -a
 	$(CHECK) -l install-opt-9
+	$(OPAM) install P1 P2 P5
+	test -f $(OPAM_ROOT)/system/lib/p5/p2_present
+	$(CHECK) -l install-opt-10 P1.1 P2.1 P5.1
+	$(OPAM) remove P2 -a
+	test -f $(OPAM_ROOT)/system/lib/p5/p2_absent
+	$(CHECK) -l install-opt-11 P1.1 P5.1
+	$(OPAM) remove P1
+	$(CHECK) -l install-opt-12
 
 install:
 	$(CHECK) -l install-1
