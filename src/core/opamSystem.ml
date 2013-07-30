@@ -66,12 +66,20 @@ let mkdir dir =
     end in
   aux dir
 
-let temp_file ?dir prefix =
+let temp_files = Hashtbl.create 1024
+
+let rec temp_file ?dir prefix =
   let temp_dir = match dir with
     | None   -> !OpamGlobals.root_dir / "log"
     | Some d -> d in
   mkdir temp_dir;
-  temp_dir / temp_basename prefix
+  let file = temp_dir / temp_basename prefix in
+  if Hashtbl.mem temp_files file then
+    temp_file ?dir prefix
+  else (
+    Hashtbl.add temp_files file true;
+    file
+  )
 
 let remove_file file =
   if Sys.file_exists file
