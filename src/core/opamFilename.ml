@@ -286,6 +286,18 @@ let with_flock file f x =
     OpamSystem.funlock (to_string file);
     raise e
 
+let checksum f =
+  if exists f then
+    [digest f]
+  else
+    []
+
+let checksum_dir d =
+  if exists_dir d then
+    List.map digest (rec_files d)
+  else
+    []
+
 let prettify_string s =
   let aux ~short ~prefix =
     let prefix = Filename.concat prefix "" in

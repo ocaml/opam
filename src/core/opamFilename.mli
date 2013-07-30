@@ -184,6 +184,13 @@ val patch: t -> Dir.t -> unit
 (** Compute the MD5 digest of a file *)
 val digest: t -> string
 
+(** Compute the MD5 digest a file. Return the empty list if the file
+    does not exist. *)
+val checksum: t -> string list
+
+(** Compute the MD5 digest for all files in a directory. *)
+val checksum_dir: Dir.t -> string list
+
 (** Create an empty file *)
 val touch: t -> unit
 
