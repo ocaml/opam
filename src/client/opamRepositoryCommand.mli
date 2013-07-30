@@ -33,6 +33,9 @@ val fix_compiler_descriptions: t -> verbose:bool -> compiler_set updates
     [verbose] is set. *)
 val fix_package_descriptions: t -> verbose:bool -> package_set updates
 
+(** Fix all the package and compiler descriptions. *)
+val fix_descriptions: t -> verbose:bool -> unit
+
 (** List the available repositories. *)
 val list: short:bool -> unit
 
