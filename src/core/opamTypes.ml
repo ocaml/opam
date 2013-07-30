@@ -73,6 +73,23 @@ type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
 type repository_kind = [`http|`local|`git|`darcs|`hg]
 
+let guess_repository_kind kind address =
+  match kind with
+  | None  ->
+    let address = OpamFilename.Dir.to_string address in
+    if Sys.file_exists address then
+      `local
+    else
+      let address, _ = OpamMisc.git_of_string address in
+      if OpamMisc.starts_with ~prefix:"git" address
+      || OpamMisc.ends_with ~suffix:"git" address then
+        `git
+      else if OpamMisc.starts_with ~prefix:"hg" address then
+        `hg
+      else
+        `http
+  | Some k -> k
+
 type repository = {
   repo_root    : repository_root;
   repo_name    : repository_name;
