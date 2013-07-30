@@ -381,9 +381,11 @@ let remove_package_aux t ~metadata ~rm_build nv =
       try
         OpamGlobals.msg "%s\n" (string_of_commands remove);
         let metadata = get_metadata t in
-        OpamFilename.exec ~env ?name exec_dir ~metadata remove
-      with _ ->
-        ();
+        OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true remove
+      with OpamSystem.Process_error r ->
+        OpamGlobals.error
+          "Warning: failure in package uninstall script, some files may remain:\n%s"
+          (OpamProcess.string_of_result r)
   );
 
   (* Remove the libraries *)
