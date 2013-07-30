@@ -868,7 +868,10 @@ let load_state ?(save_cache=true) call_site =
   let compiler_version =
     let comp_f = OpamPath.compiler_comp root compiler in
     if not (OpamFilename.exists comp_f) then
-      OpamCompiler.unknown compiler;
+      if compiler = OpamCompiler.system then
+        create_system_compiler_description root (OpamCompiler.Version.system ())
+      else
+        OpamCompiler.unknown compiler;
     OpamFile.Comp.version (OpamFile.Comp.read comp_f) in
   let opams = match opams with
     | None   ->
