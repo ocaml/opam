@@ -131,6 +131,16 @@ module Map = struct
         ) map;
       !r
 
+    let map f map =
+      fold (fun key value map ->
+          add key (f value) map
+        ) map empty
+
+    let mapi f map =
+      fold (fun key value map ->
+          add key (f key value) map
+        ) map empty
+
     let values map =
       List.rev (M.fold (fun _ v acc -> v :: acc) map [])
 
