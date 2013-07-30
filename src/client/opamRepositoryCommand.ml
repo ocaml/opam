@@ -38,13 +38,13 @@ let print_updated_compilers updates =
     updates.created;
 
   print
-    "The following compiler has been updated"
-    "Some compiler descriptions have been updated"
+    "The following compiler description has been UPDATED"
+    "The following compiler descriptions have been UPDATED"
     updates.updated;
 
   print
-    "The following compiler is not available anymore"
-    "Some following compiler are not available anymore"
+    "The following compiler description has been DELETED"
+    "The following compiler descriptions are been DELETED"
     updates.deleted
 
 let filter_compiler_checksums cs =
