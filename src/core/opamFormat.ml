@@ -316,10 +316,13 @@ let parse_formulas opt t =
     | [String n]             -> Atom (name n, Empty)
     | [Option(String n, g)]  -> Atom (name n, parse_constraints g)
     | [Group g]              -> Block (aux g)
-    | e1 :: Symbol "|" :: e2 -> Or (aux [e1], aux e2)
-    | e1 :: Symbol "&" :: e2 -> And (aux [e1], aux e2)
-    | e1 :: e2 when opt      -> Or (aux [e1], aux e2)
-    | e1 :: e2               -> And (aux [e1], aux e2) in
+    | [x]                    -> bad_format "Expected a formula list of the \
+                                            form [ \"item\" {condition}... ], \
+                                            got %s" (kind x)
+    | e1 :: Symbol "|" :: e2 -> let left = aux [e1] in Or (left, aux e2)
+    | e1 :: Symbol "&" :: e2 -> let left = aux [e1] in And (left, aux e2)
+    | e1 :: e2 when opt      -> let left = aux [e1] in Or (left, aux e2)
+    | e1 :: e2               -> let left = aux [e1] in And (left, aux e2) in
   match t with
   | List l -> aux l
   | x      -> bad_format "Expecting list, got %s" (kind x)
