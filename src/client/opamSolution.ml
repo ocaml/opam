@@ -81,6 +81,14 @@ let atom_of_name name =
 let atoms_of_names t names =
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
   let packages = OpamPackage.to_map t.packages in
+  (* gets back the original capitalization of the package name *)
+  let realname name =
+    let lc_name name = String.lowercase (OpamPackage.Name.to_string name) in
+    let m =
+      OpamPackage.Name.Map.filter (fun p _ -> lc_name name = lc_name p)
+        packages in
+    match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
+  in
   let exists name version =
     OpamPackage.Name.Map.mem name packages
     &&
@@ -104,6 +112,7 @@ let atoms_of_names t names =
       OpamPackage.unavailable name version in
   List.rev_map
     (fun name ->
+      let name = realname name in
       if exists name None then
         if available name None then
           atom_of_name name
@@ -114,7 +123,7 @@ let atoms_of_names t names =
         let nv =
           try OpamPackage.of_string (OpamPackage.Name.to_string name)
           with Not_found -> OpamPackage.unknown name None in
-        let sname = OpamPackage.name nv in
+        let sname = realname (OpamPackage.name nv) in
         let sversion = OpamPackage.version nv in
         log "The raw name %S not found, looking for package %s version %s"
           (OpamPackage.Name.to_string name)
