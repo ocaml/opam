@@ -52,7 +52,7 @@ let filter_compiler_checksums cs =
   List.filter keep cs
 
 let fix_compiler_descriptions t ~verbose =
-  OpamGlobals.msg "Updating %s/\n"
+  OpamGlobals.msg "Updating %s/ ...\n"
     (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
   let global_index = OpamState.compiler_state t in
   let repo_index = OpamState.compiler_repository_state t in
@@ -230,7 +230,7 @@ let filter_package_checksums cs =
 (* Update the package contents, display the new packages and update
    reinstall *)
 let fix_package_descriptions t ~verbose =
-  OpamGlobals.msg "Updating %s/\n"
+  OpamGlobals.msg "Updating %s/ ...\n"
     (OpamFilename.prettify_dir (OpamPath.packages_dir t.root));
 
   let global_index = OpamState.package_state t in
@@ -338,7 +338,7 @@ let compare_repo t r1 r2 =
 
 let update_index t =
   let file = OpamPath.repo_index t.root in
-  OpamGlobals.msg "Updating %s\n" (OpamFilename.prettify file);
+  OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
 
   let repositories = OpamState.sorted_repositories t in
   let repo_index = OpamFile.Repo_index.safe_read file in

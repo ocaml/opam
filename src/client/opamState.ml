@@ -745,11 +745,11 @@ let save_state ~update t =
   OpamFilename.remove file;
   if update then (
     OpamGlobals.msg
-      "Updating the cache of metadata (%s).\n"
+      "Updating the cache of metadata (%s) ...\n"
       (OpamFilename.prettify file);
   ) else
     OpamGlobals.msg
-      "Creating a cache of metadata in %s.\n"
+      "Creating a cache of metadata in %s ...\n"
       (OpamFilename.prettify file);
   let oc = open_out_bin (OpamFilename.to_string file) in
   output_string oc OpamVersion.magic;
