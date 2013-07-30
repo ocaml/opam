@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-SWITCH" 1 "" "Opam 1.0.1" "Opam Manual"
+.TH "OPAM-SWITCH" 1 "" "Opam 1.1.0" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -51,6 +51,9 @@ List installed compiler switches only.
 \fB\-j\fR \fIJOBS\fR, \fB\-\-jobs\fR=\fIJOBS\fR
 Set the maximal number of concurrent jobs to use. You can also set it using the OPAMJOBS environment variable.
 .TP 4
+\fB\-\-json\fR=\fIFILENAME\fR
+Save the result output of an OPAM run in a computer\-readable file
+.TP 4
 \fB\-m\fR \fIMAKE\fR, \fB\-\-make\fR=\fIMAKE\fR
 Use \fIMAKE\fR as the default 'make' command.
 .TP 4
@@ -62,9 +65,6 @@ Only install the compiler switch, without switching to it. If the compiler switc
 .TP 4
 \fB\-\-no\-warning\fR
 Do not display any warning related to environment variables.
-.TP 4
-\fB\-\-output\-json\fR=\fIFILENAME\fR
-Save the result output of an OPAM run in a computer\-readable file
 .TP 4
 \fB\-s\fR, \fB\-\-short\fR
 Output the names separated by one whitespace instead of using the usual formatting.
@@ -112,7 +112,7 @@ Do not install base packages (useful for testing purposes). This is equivalent t
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet when installing a new compiler.
 .TP 4
-\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/Users/tgazagna/.opam)
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/home/louis/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
