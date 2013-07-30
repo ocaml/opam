@@ -105,7 +105,7 @@ let print_state t =
       OpamPackage.Set.to_string t.packages
     else
       Printf.sprintf "%d packages" (OpamPackage.Set.cardinal t.packages) in
-  log "ROOT      : %s" (OpamFilename.Dir.to_string (OpamPath.root t.root));
+  log "ROOT      : %s" (OpamFilename.Dir.to_string t.root);
   log "SWITCH    : %s" (OpamSwitch.to_string t.switch);
   log "COMPILER  : %s" (OpamCompiler.to_string t.compiler);
   log "COMPILERS : %s" (OpamCompiler.Set.to_string t.compilers);
@@ -2027,7 +2027,7 @@ let check f =
 
     | Read_lock f ->
       (* Simply check that OPAM is correctly initialized *)
-      if OpamFilename.exists_dir (OpamPath.root root) then
+      if OpamFilename.exists_dir root then
         f ()
       else
         error ()

@@ -22,8 +22,6 @@ type t = dirname
 let default () =
   OpamFilename.Dir.of_string !OpamGlobals.root_dir
 
-let root t = t
-
 let config t = t // "config"
 
 let state_cache t = t // "state.cache"
@@ -70,7 +68,7 @@ let init  t = t / "opam-init"
 
 let log t = t / "log"
 
-let dev_packages_dir t = root t / "packages.dev"
+let dev_packages_dir t = t / "packages.dev"
 
 let dev_packages t nv = dev_packages_dir t / OpamPackage.to_string nv
 

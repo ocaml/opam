@@ -654,8 +654,7 @@ module API = struct
         update_setup t
 
       with e ->
-        if not !OpamGlobals.debug then
-          OpamFilename.rmdir (OpamPath.root root);
+        if not !OpamGlobals.debug then OpamFilename.rmdir root;
         raise e
 
   let install names =
