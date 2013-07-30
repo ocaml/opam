@@ -863,7 +863,7 @@ module X = struct
       let make_file =
         OpamFormat.make_option (OpamFilename.Base.to_string |> OpamFormat.make_string)
           OpamFormat.make_filter in
-      let name_and_version = match OpamPackage.of_filename ~all:true filename with
+      let name_and_version = match OpamPackage.of_filename filename with
         | None  ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
@@ -920,7 +920,7 @@ module X = struct
         s
 
     let of_channel filename ic =
-      let nv = OpamPackage.of_filename ~all:true filename in
+      let nv = OpamPackage.of_filename filename in
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let s = s.file_contents in
@@ -1419,12 +1419,7 @@ module X = struct
         | None   -> OpamSystem.internal_error
                       "%s is not a valid compiler description file."
                       (OpamFilename.to_string filename)
-        | Some c ->
-          let base = OpamCompiler.to_string c in
-          OpamCompiler.of_string base,
-          match OpamMisc.cut_at base '+' with
-          | None       -> OpamCompiler.Version.of_string base
-          | Some (n,_) -> OpamCompiler.Version.of_string n in
+        | Some c -> c, OpamCompiler.version c in
       let name =
         OpamFormat.assoc_default name_d s s_name
           (OpamFormat.parse_string |> OpamCompiler.of_string) in

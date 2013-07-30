@@ -112,21 +112,6 @@ let init repo =
   OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
   ignore (B.pull_repo repo)
 
-let nv_set_of_files ~all files =
-  OpamPackage.Set.of_list
-    (OpamMisc.filter_map
-       (OpamPackage.of_filename ~all)
-       (OpamFilename.Set.elements files)
-    )
-
-let compiler_set_of_files files =
-  let files = OpamFilename.Set.filter (OpamFilename.ends_with ".comp") files in
-  OpamFilename.Set.fold (fun f set ->
-      match OpamCompiler.of_filename f with
-      | None   -> set
-      | Some f -> OpamCompiler.Set.add f set
-  ) files OpamCompiler.Set.empty
-
 let read_tmp dir =
   let dirs =
     if OpamFilename.exists_dir dir then
@@ -379,8 +364,17 @@ let packages repo =
   ) else
     empty
 
-let compilers r =
-  OpamCompiler.list (OpamPath.Repository.compilers_dir r)
+let compilers repo =
+  let compilers = OpamCompiler.list (OpamPath.Repository.compilers_dir repo) in
+  OpamCompiler.Set.fold (fun comp map ->
+      let comp_file = OpamPath.Repository.compiler repo comp in
+      let comp_descr =
+        let f = OpamPath.Repository.compiler repo comp in
+        match OpamFilename.exists f with
+        | false -> None
+        | true  -> Some f in
+      OpamCompiler.Map.add comp (comp_file, comp_descr) map
+    ) compilers OpamCompiler.Map.empty
 
 (* XXX: not very efficient *)
 let compiler_state repo comp =
