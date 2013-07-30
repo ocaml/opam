@@ -785,21 +785,6 @@ let reinstall_system_compiler t =
   ) else
     OpamGlobals.exit 1
 
-(* #651 remove dangling symlinks *)
-let fix_symlink file =
-  if OpamFilename.is_symlink file then
-    if OpamFilename.exists file then (
-      OpamGlobals.msg "Fixing incorrect symlink: %s.\n"
-        (OpamFilename.prettify file);
-      let src = OpamFilename.readlink file in
-      OpamFilename.remove file;
-      OpamFilename.copy ~src ~dst:file;
-    ) else (
-      OpamGlobals.msg "Removing broken symlink: %s.\n"
-        (OpamFilename.prettify file);
-      OpamFilename.remove file;
-    )
-
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   let t0 = Unix.gettimeofday () in
@@ -834,7 +819,6 @@ let load_state ?(save_cache=true) call_site =
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
   let compilers =
     let files = OpamFilename.rec_files (OpamPath.compilers_dir root) in
-    List.iter fix_symlink files;
     let files =
       List.fold_left (fun acc file ->
         if OpamFilename.exists file then file :: acc
@@ -878,7 +862,6 @@ let load_state ?(save_cache=true) call_site =
       let packages = OpamPackage.list (OpamPath.packages_dir root) in
       OpamPackage.Set.fold (fun nv map ->
           let file = OpamPath.opam root nv in
-          fix_symlink file;
           let opam = OpamFile.OPAM.read file in
           OpamPackage.Map.add nv opam map
         ) packages OpamPackage.Map.empty
