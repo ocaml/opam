@@ -510,6 +510,8 @@ val output: unit -> unit
 
 val set_output: (string -> unit) -> unit
 
+val verbose: unit -> bool
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2012 Daniel C. Bünzli
    All rights reserved.
