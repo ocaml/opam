@@ -125,6 +125,9 @@ val chop_extension: t -> t
 (** List all the filenames, recursively *)
 val rec_files: Dir.t -> t list
 
+(** List all the filename. Do not recurse. *)
+val files: Dir.t -> t list
+
 (** Apply a function on the contents of a file *)
 val with_contents: (string -> 'a) -> t -> 'a
 
