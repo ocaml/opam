@@ -236,3 +236,7 @@ val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash|`fish]
 
 (** Guess the location of .profile *)
 val guess_dot_profile: [`csh|`zsh|`sh|`bash|`fish] -> string
+
+(** / *)
+
+val debug: bool ref

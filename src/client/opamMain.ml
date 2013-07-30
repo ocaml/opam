@@ -41,6 +41,7 @@ let set_global_options o =
     exit 0
   );
   OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
+  OpamMisc.debug       := !OpamGlobals.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
   begin match o.switch with
     | None   -> ()

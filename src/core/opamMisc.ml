@@ -47,6 +47,8 @@ module type OrderedType = sig
   val to_json: t -> OpamJson.t
 end
 
+let debug = ref false
+
 let string_of_list f = function
   | [] -> "{}"
   | l  ->
@@ -95,7 +97,7 @@ module Set = struct
       List.fold_left (fun set e -> add e set) empty l
 
     let to_string s =
-      if S.cardinal s > max_print then
+      if not !debug && S.cardinal s > max_print then
 	Printf.sprintf "%d elements" (S.cardinal s)
       else
 	let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
@@ -156,7 +158,7 @@ module Map = struct
       ) m1 m2
 
     let to_string string_of_value m =
-      if M.cardinal m > 100 then
+      if not !debug && M.cardinal m > 100 then
 	Printf.sprintf "%d elements" (M.cardinal m)
       else
 	let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
