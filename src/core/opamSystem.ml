@@ -288,8 +288,20 @@ let command ?verbose ?env ?name ?metadata cmd =
   if not (OpamProcess.is_success r) then
     process_error r
 
-let commands ?verbose ?env ?name ?metadata commands =
-  List.iter (command ?verbose ?env ?name ?metadata) commands
+let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
+  let err = ref None in
+  let command =
+    if keep_going then
+      (fun c ->
+        try command ?verbose ?env ?name ?metadata c with
+        | Process_error r -> if !err = None then err := Some r)
+    else
+      fun c -> command ?verbose ?env ?name ?metadata c
+  in
+  List.iter command commands;
+  match !err with
+  | Some err -> raise (Process_error err)
+  | None -> ()
 
 let read_command_output ?verbose ?env ?metadata cmd =
   let r = run_process ?verbose ?env ?metadata cmd in
