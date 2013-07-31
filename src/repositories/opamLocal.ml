@@ -87,24 +87,26 @@ module B = struct
         (OpamPath.Repository.compilers_dir, OpamPath.Repository.remote_compilers_dir);
       ]
 
-  let pull_file name local_dirname remote_filename =
+  let pull_file package local_dirname remote_filename =
     if OpamFilename.exists remote_filename then
       OpamGlobals.msg "%-10s Synchronizing with %s\n"
-        (OpamPackage.Name.to_string name)
+        (OpamPackage.to_string package)
         (OpamFilename.to_string remote_filename);
     pull_file_quiet local_dirname remote_filename
 
-  let pull_dir name local_dirname remote_dirname =
+  let pull_dir package local_dirname remote_dirname =
     OpamGlobals.msg "%-10s Synchronizing with %s\n"
-      (OpamPackage.Name.to_string name)
+      (OpamPackage.to_string package)
       (OpamFilename.Dir.to_string remote_dirname);
     pull_dir_quiet local_dirname remote_dirname
 
-  let pull_url name local_dirname remote_url =
+  let pull_url package local_dirname remote_url =
     if Sys.file_exists remote_url && Sys.is_directory remote_url then
-      download_dir (pull_dir name local_dirname (OpamFilename.Dir.of_string remote_url))
+      download_dir
+        (pull_dir package local_dirname (OpamFilename.Dir.of_string remote_url))
     else if Sys.file_exists remote_url then
-      download_file (pull_file name local_dirname (OpamFilename.of_string remote_url))
+      download_file
+        (pull_file package local_dirname (OpamFilename.of_string remote_url))
     else
       Not_available
 

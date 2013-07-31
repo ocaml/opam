@@ -94,18 +94,13 @@ val init: repository -> unit
 (** Update {i $opam/repo/$repo}. *)
 val update: repository -> unit
 
-(** Download {i $remote/archives/$nv.tar.gz}. If is not there, then
-    download the upstream archive, add the eventual files in it, and
-    create {i $nv.tar.gz}. *)
-val download: repository -> package -> unit
-
 (** Backend signature *)
 module type BACKEND = sig
 
-  (** [pull_url name local_dir remote_url] pull the contents of
+  (** [pull_url package local_dir remote_url] pull the contents of
       [remote_url] into [local_dir]. Can return either a file or a
       directory. *)
-  val pull_url: name -> dirname -> string -> generic_file download
+  val pull_url: package -> dirname -> string -> generic_file download
 
   (** [pull_repo] pull the contents of a repository. *)
   val pull_repo: repository -> unit
@@ -119,6 +114,21 @@ module type BACKEND = sig
   val revision: repository -> version option
 
 end
+
+(** Signature for pull functions *)
+type pull_fn = repository_kind -> package -> dirname -> string -> generic_file download
+
+(** Download an url *)
+val pull_url: pull_fn
+
+(** Pull and check the resulting digest *)
+val pull_and_check_digest: checksum:string -> pull_fn
+
+(** Pull and fix the resultging digest *)
+val pull_and_fix_digest: file:filename -> checksum:string -> pull_fn
+
+(** Pull an archive in a repository *)
+val pull_archive: repository -> package -> filename download
 
 (** Get the optional revision associated to a backend. *)
 val revision: repository -> version option

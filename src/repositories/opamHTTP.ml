@@ -203,11 +203,11 @@ module B = struct
     )
 
   (* XXX: add a proxy *)
-  let pull_url name dirname remote_url =
+  let pull_url package dirname remote_url =
     log "pull-file";
     let filename = OpamFilename.of_string remote_url in
     OpamGlobals.msg "%-10s Downloading %s\n"
-      (OpamPackage.Name.to_string name)
+      (OpamPackage.to_string package)
       (OpamFilename.to_string filename);
     try
       let local_file = OpamFilename.download ~overwrite:true filename dirname in

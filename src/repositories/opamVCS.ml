@@ -62,11 +62,11 @@ module Make (VCS: VCS) = struct
       repo_address = address;
     }
 
-  let pull_url name dirname remote_url =
+  let pull_url package dirname remote_url =
     let address = OpamFilename.Dir.of_string remote_url in
     let repo = repo dirname address in
     OpamGlobals.msg "%-10s Fetching %s\n"
-      (OpamPackage.Name.to_string name)
+      (OpamPackage.to_string package)
       (OpamFilename.prettify_dir address);
     download_dir (pull_repo repo)
 

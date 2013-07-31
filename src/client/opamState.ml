@@ -1753,7 +1753,8 @@ let update_pinned_package t n =
     let path, kind = locally_pinned_package t n in
     let dst = OpamPath.Switch.pinned_dir t.root t.switch n in
     let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
-    let result = B.pull_url n dst path in
+    let nv = OpamPackage.pinned n in
+    let result = B.pull_url nv dst path in
     if result <> Not_available then (
       (* If $pinned_path/opam does not exist, the cache the current OPAM file. *)
       let opam = OpamPath.Switch.pinned_opam t.root t.switch n in

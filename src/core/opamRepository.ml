@@ -77,7 +77,7 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val pull_url: name -> dirname -> string -> generic_file download
+  val pull_url: package -> dirname -> string -> generic_file download
   val pull_repo: repository -> unit
   val pull_archive: repository -> filename -> filename download
   val revision: repository -> version option
@@ -121,21 +121,23 @@ let read_tmp dir =
   OpamPackage.Set.of_list
     (OpamMisc.filter_map OpamPackage.of_dirname (OpamFilename.Dir.Set.elements dirs))
 
-let pull_url kind name local_dirname remote_url =
+type pull_fn = repository_kind -> package -> dirname -> string -> generic_file download
+
+let pull_url kind package local_dirname remote_url =
   let module B = (val find_backend_by_kind kind: BACKEND) in
-  B.pull_url name local_dirname remote_url
+  B.pull_url package local_dirname remote_url
 
 let revision repo =
   let kind = repo.repo_kind in
   let module B = (val find_backend_by_kind kind: BACKEND) in
   B.revision repo
 
-let pull_and_check_digest kind name dirname url checksum =
+let pull_and_check_digest ~checksum kind package dirname url =
   let filename = OpamFilename.of_string url in
   if OpamFilename.exists filename
   && OpamFilename.digest filename = checksum then
     Up_to_date (F filename)
-  else match pull_url kind name dirname url with
+  else match pull_url kind package dirname url with
     | Not_available
     | Up_to_date _
     | Result (D _) as r -> r
@@ -157,9 +159,8 @@ let pull_and_check_digest kind name dirname url checksum =
           checksum
           actual
 
-let pull_and_fix_digest ~url_file nv kind dirname url checksum =
-  let name = OpamPackage.name nv in
-  match pull_url kind name dirname url with
+let pull_and_fix_digest ~file ~checksum kind package dirname url =
+  match pull_url kind package dirname url with
   | Not_available
   | Up_to_date _
   | Result (D _) as r -> r
