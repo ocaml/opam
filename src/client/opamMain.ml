@@ -1015,7 +1015,9 @@ let switch =
            ~update_config:(not no_switch)
            (OpamSwitch.of_string switch)
            (mk_comp switch))
-    | _, l -> OpamGlobals.error_and_exit "too many arguments (%d)" (List.length l) in
+    | _, l ->
+      OpamGlobals.error_and_exit "wrong number of arguments (%d)"
+        (List.length l) in
 
   Term.(pure switch
     $global_options $build_options $command
