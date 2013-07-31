@@ -192,19 +192,8 @@ let get_archive t nv =
   let dst = OpamPath.archive t.root nv in
   if OpamFilename.exists dst then Some dst
   else
-    match OpamState.package_repository_state t nv with
-    | None   -> None
-    | Some s ->
-      begin match s.pkg_archive with
-        | None   -> OpamRepository.download s.pkg_repo nv
-        | Some _ -> ()
-      end;
-      let src = OpamPath.Repository.archive s.pkg_repo nv in
-      if OpamFilename.exists src then (
-        OpamFilename.move ~src ~dst;
-        Some dst;
-      ) else
-        None
+    (* XXX: TODO *)
+    None
 
 (* Prepare the package build:
    * apply the patches
@@ -270,11 +259,10 @@ let extract_package t nv =
 
       begin (* Copy eventual files *)
         try
-          let repo_name = OpamPackage.Map.find nv t.package_index in
-          let repo = OpamRepositoryName.Map.find repo_name t.repositories in
-          let _files = OpamFilename.in_dir pinned_dir (fun () ->
-            OpamRepository.copy_files repo nv
-          ) in ()
+          let _repo_name, _prefix =
+            OpamPackage.Map.find nv (Lazy.force t.package_index) in
+          (* XXX: TODO OpamRepository.copy_files repo nv *)
+          ()
         with Not_found ->
           ()
       end;
@@ -400,7 +388,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   log "Cleaning-up the active repository";
   begin
     try
-      let repo_name = OpamPackage.Map.find nv t.package_index in
+      let repo_name, _ = OpamPackage.Map.find nv (Lazy.force t.package_index) in
       let repo = OpamRepositoryName.Map.find repo_name t.repositories in
       let tmp_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
       OpamFilename.rmdir tmp_dir

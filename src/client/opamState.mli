@@ -19,70 +19,74 @@
 open OpamTypes
 
 (** Client state *)
-type state = {
+module Types: sig
 
-  (** Is the state partial ?
-      TODO: split-up global vs. repository state *)
-  partial: bool;
+  type t = {
 
-  (** The global OPAM root path *)
-  root: OpamPath.t;
+    (** Is the state partial ?
+        TODO: split-up global vs. repository state *)
+    partial: bool;
 
-  (** The current active switch *)
-  switch: switch;
+    (** The global OPAM root path *)
+    root: OpamPath.t;
 
-  (** The current compiler name (corresponding to a .comp file) *)
-  compiler: compiler;
+    (** The current active switch *)
+    switch: switch;
 
-  (** The current version of the compiler *)
-  compiler_version: compiler_version;
+    (** The current compiler name (corresponding to a .comp file) *)
+    compiler: compiler;
 
-  (** The list of OPAM files *)
-  opams: OpamFile.OPAM.t package_map;
+    (** The current version of the compiler *)
+    compiler_version: compiler_version;
 
-  (** The list of description files *)
-  descrs: OpamFile.Descr.t lazy_t package_map;
+    (** The list of OPAM files *)
+    opams: OpamFile.OPAM.t package_map;
 
-  (** The list of repositories *)
-  repositories: OpamFile.Repo_config.t repository_name_map;
+    (** The list of description files *)
+    descrs: OpamFile.Descr.t lazy_t package_map;
 
-  (** The eventual prefix files *)
-  prefixes: OpamFile.Prefix.t repository_name_map;
+    (** The list of repositories *)
+    repositories: OpamFile.Repo_config.t repository_name_map;
 
-  (** The list of packages *)
-  packages: package_set;
+    (** The list of packages *)
+    packages: package_set;
 
-  (** The list of packages, keeping the one available for the current
-      compiler version *)
-  available_packages: package_set Lazy.t;
+    (** The list of packages, keeping the one available for the current
+        compiler version *)
+    available_packages: package_set Lazy.t;
 
-  (** The association list between switch and compiler *)
-  aliases: OpamFile.Aliases.t;
+    (** The association list between switch and compiler *)
+    aliases: OpamFile.Aliases.t;
 
-  (** The list of compiler available to install *)
-  compilers: compiler_set;
+    (** The list of compiler available to install *)
+    compilers: compiler_set;
 
-  (** The list of pinned packages *)
-  pinned: OpamFile.Pinned.t;
+    (** The list of pinned packages *)
+    pinned: OpamFile.Pinned.t;
 
-  (** The list of installed packages *)
-  installed: OpamFile.Installed.t;
+    (** The list of installed packages *)
+    installed: OpamFile.Installed.t;
 
-  (** The list of packages explicitly installed by the user *)
-  installed_roots: OpamFile.Installed_roots.t;
+    (** The list of packages explicitly installed by the user *)
+    installed_roots: OpamFile.Installed_roots.t;
 
-  (** The list of packages which needs to be reinsalled *)
-  reinstall: OpamFile.Reinstall.t;
+    (** The list of packages which needs to be reinsalled *)
+    reinstall: OpamFile.Reinstall.t;
 
-  (** The main configuration file *)
-  config: OpamFile.Config.t;
+    (** The main configuration file *)
+    config: OpamFile.Config.t;
 
-  (** The package index *)
-  package_index: repository_name package_map;
+    (** Package index *)
+    package_index: (repository_name * string option) package_map Lazy.t;
 
-  (** The compiler index *)
-  compiler_index: repository_name compiler_map;
-}
+    (** Compiler index *)
+    compiler_index: (repository_name * string option) compiler_map Lazy.t;
+  }
+
+end
+
+type state = Types.t
+open Types
 
 (** Load the client state. The string argument is to identify to call
     site. *)
@@ -164,26 +168,14 @@ val filter_commands: state -> command list -> string list list
 (** Pretty print a map of repositories *)
 val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
-(** Build a map which says in which repository the latest metadata for
-    a given package is. Use the repository index order. *)
-val package_index: repository repository_name_map ->
-  repository_name list name_map -> repository_name package_map
-
-(** Build a map between package and package repository states. *)
-val package_state_index: state -> package_repository_state package_map
+(** Builds a map which says in which repository the latest metadata
+    for a given package are. The function respect the bustom
+    priorities given by the order of [priorities]. *)
+val package_index: state -> (repository_name * string option) package_map
 
 (** Build a map which says in which repository the latest metadata for
     a given compiler is. *)
-val compiler_index: repository list -> repository_name compiler_map
-
-(** Build a map between compiler and compiler repository states. *)
-val compiler_state_index: state -> compiler_repository_state compiler_map
-
-(** Get a package repository state. *)
-val package_repository_state: state -> package -> package_repository_state option
-
-(** Get a compiler repository state. *)
-val compiler_repository_state: state -> compiler -> compiler_repository_state option
+val compiler_index: state -> (repository_name * string option) compiler_map
 
 (** Sort repositories by priority. *)
 val sorted_repositories: state -> repository list
@@ -318,32 +310,6 @@ val confirm: ('a, unit, string, bool) format4 -> 'a
 (** Consistency checks: do the base package for the current compiler
     are installed ? *)
 val check_base_packages: state -> unit
-
-(** To be able to open [OpamState.Types] *)
-module Types: sig
-  type t = state = {
-    partial: bool;
-    root: OpamPath.t;
-    switch: switch;
-    compiler: compiler;
-    compiler_version: compiler_version;
-    opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t lazy_t package_map;
-    repositories: OpamFile.Repo_config.t repository_name_map;
-    prefixes: OpamFile.Prefix.t repository_name_map;
-    packages: package_set;
-    available_packages: package_set Lazy.t;
-    aliases: OpamFile.Aliases.t;
-    compilers: compiler_set;
-    pinned: OpamFile.Pinned.t;
-    installed: OpamFile.Installed.t;
-    installed_roots: OpamFile.Installed_roots.t;
-    reinstall: OpamFile.Reinstall.t;
-    config: OpamFile.Config.t;
-    package_index: repository_name package_map;
-    compiler_index: repository_name compiler_map;
-  }
-end
 
 (** / **)
 

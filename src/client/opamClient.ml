@@ -216,7 +216,9 @@ module API = struct
 
       (* where does it come from (eg. which repository) *)
       let repo_name =
-        try Some (OpamPackage.Map.find nv t.package_index)
+        try
+          let repo_name, _ = OpamPackage.Map.find nv (Lazy.force t.package_index) in
+          Some repo_name
         with Not_found -> None in
 
       let repository =
@@ -252,8 +254,7 @@ module API = struct
               let m = OpamPath.Repository.archive repo nv in
               [ "mirror-url", OpamFilename.to_string m ] in
             let file =
-              let prefix = OpamRepository.read_prefix repo in
-              let prefix = OpamRepository.find_prefix prefix nv in
+              let prefix = None in
               OpamPath.Repository.url repo prefix nv in
             let url =
               if not (OpamFilename.exists file) then
@@ -475,30 +476,31 @@ module API = struct
           (OpamMisc.pretty_list not_pinned) valid_pinned_packages
     end;
 
-    let old_compiler_index = OpamState.compiler_state_index t in
-    let old_package_index = OpamState.package_state_index t in
+    let old_compiler_index = OpamState.compiler_index t in
+    let old_package_index = OpamState.package_index t in
 
     if repositories_need_update then (
       let repos = OpamRepositoryName.Map.values repositories in
 
       (* update is IO-bounded, so it's OK to spawn a lot of jobs *)
-      OpamRepository.parallel_iter
+      OpamRepository.Parallel.iter_l
+        ~pre:(fun _ -> ()) ~post:(fun _ -> ())
+        ~child:OpamRepository.update
         (OpamRepositoryName.Map.cardinal repositories)
-        OpamRepository.update
         repos;
-      let t = OpamRepositoryCommand.update_index t in
+      OpamRepositoryCommand.update_index t;
       let compiler_updates =
         OpamRepositoryCommand.relink_compilers t ~verbose:true old_compiler_index in
       let package_updates =
         OpamRepositoryCommand.relink_packages t ~verbose:true old_package_index in
 
-      (* Update the dev packages *)
+      (* XXX: Update the dev packages *)
       let dev_updates =
         let map repo =
-          let packages = OpamRepository.get_cache_updates repo in
+          let packages = OpamPackage.Set.empty in
           OpamPackage.Set.filter (fun nv ->
-              if OpamPackage.Map.mem nv t.package_index
-              && OpamPackage.Map.find nv t.package_index = repo.repo_name then
+              if OpamPackage.Map.mem nv (Lazy.force t.package_index)
+              && fst (OpamPackage.Map.find nv (Lazy.force t.package_index)) = repo.repo_name then
                 true
               else (
                 let tmp = repo.repo_root / "tmp" / OpamPackage.to_string nv in
@@ -506,10 +508,10 @@ module API = struct
                 false
               )
             ) packages in
-        OpamRepository.map_reduce (OpamState.jobs t)
-          map
-          OpamPackage.Set.union
-          OpamPackage.Set.empty
+        OpamRepository.Parallel.map_reduce_l (OpamState.jobs t)
+          ~map
+          ~merge:OpamPackage.Set.union
+          ~init:OpamPackage.Set.empty
           repos in
       OpamState.add_to_reinstall t ~all:true dev_updates;
 
@@ -644,7 +646,7 @@ module API = struct
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_repository_state "init-1" in
-        let t = OpamRepositoryCommand.update_index t in
+        OpamRepositoryCommand.update_index t;
         let _ =
           OpamRepositoryCommand.relink_compilers t ~verbose:false OpamCompiler.Map.empty
         in

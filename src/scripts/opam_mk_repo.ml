@@ -78,7 +78,8 @@ let process () =
 
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
-  let prefix, packages = OpamRepository.packages repo in
+  let prefixes = OpamRepository.packages_with_prefixes repo in
+  let packages = OpamRepository.packages repo in
 
   let mk_packages str =
     match OpamPackage.of_string_opt str with
@@ -114,7 +115,7 @@ let process () =
 
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
-    let prefix = OpamRepository.find_prefix prefix nv in
+    let prefix = OpamPackage.Map.find nv prefixes in
     let opam_f = OpamPath.Repository.opam repo prefix nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
@@ -181,7 +182,8 @@ let process () =
       try
         if not dryrun then (
           OpamFilename.remove archive;
-          OpamRepository.make_archive ~gener_digest repo nv
+          (* XXX: TODO *)
+          (* OpamRepository.make_archive ~gener_digest repo nv *)
         ) else
           OpamGlobals.msg "Building %s\n" (OpamFilename.to_string archive)
       with e ->

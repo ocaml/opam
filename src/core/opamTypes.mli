@@ -532,6 +532,9 @@ type package_repository_state = {
   pkg_contents : string list;       (** Checksum of contents *)
 }
 
+(** Checksums *)
+type checksums = string list
+
 (** {2 JSON} *)
 type json = OpamJson.t
 

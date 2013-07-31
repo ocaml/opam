@@ -571,3 +571,5 @@ type package_repository_state = {
   pkg_metadata : string list;
   pkg_contents : string list;
 }
+
+type checksums = string list

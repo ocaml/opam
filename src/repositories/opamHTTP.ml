@@ -182,9 +182,8 @@ module B = struct
       log "new_files: %s" (OpamFilename.Set.to_string new_files);
       OpamFilename.Set.iter OpamFilename.remove to_delete;
 
-      let prefix, packages = OpamRepository.packages repo in
-      OpamPackage.Set.iter (fun nv ->
-        let prefix = OpamRepository.find_prefix prefix nv in
+      let packages = OpamRepository.packages_with_prefixes repo in
+      OpamPackage.Map.iter (fun nv prefix ->
         let opam_f = OpamPath.Repository.opam repo prefix nv in
         if not (OpamFilename.exists opam_f) then (
           OpamFilename.rmdir (OpamPath.Repository.packages repo prefix nv);
