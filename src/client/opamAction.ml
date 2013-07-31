@@ -191,9 +191,11 @@ let get_archive t nv =
   log "get_archive %s" (OpamPackage.to_string nv);
   let dst = OpamPath.archive t.root nv in
   if OpamFilename.exists dst then Some dst
-  else
-    (* XXX: TODO *)
-    None
+  else (
+    OpamState.download t nv;
+    if OpamFilename.exists dst then Some dst
+    else None
+  )
 
 (* Prepare the package build:
    * apply the patches
@@ -257,22 +259,17 @@ let extract_package t nv =
           "Synchronization: nothing to do as the pinned package has already \
            been initialized.\n";
 
-      begin (* Copy eventual files *)
-        try
-          let _repo_name, _prefix =
-            OpamPackage.Map.find nv (Lazy.force t.package_index) in
-          (* XXX: TODO OpamRepository.copy_files repo nv *)
-          ()
-        with Not_found ->
-          ()
-      end;
+      (* Copy the patches files *)
+      let _files =
+        let src = OpamPath.files t.root nv in
+        OpamState.copy_files ~src ~dst:pinned_dir in
 
       (* Copy the resulting dir *)
       OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
 
     | None ->
       match get_archive t nv with
-      | None         -> ()
+      | None         -> log "no-archive"
       | Some archive ->
         OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
         OpamFilename.extract archive build_dir
@@ -384,17 +381,10 @@ let remove_package_aux t ~metadata ~rm_build nv =
   if not !OpamGlobals.keep_build_dir && rm_build then
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
-  (* XXX: Clean-up the active repository *)
+  (* Clean-up the active repository *)
   log "Cleaning-up the active repository";
-  begin
-    try
-      let repo_name, _ = OpamPackage.Map.find nv (Lazy.force t.package_index) in
-      let repo = OpamRepositoryName.Map.find repo_name t.repositories in
-      let tmp_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
-      OpamFilename.rmdir tmp_dir
-    with Not_found ->
-      ()
-  end;
+  let dev_dir = OpamPath.dev_packages t.root nv in
+  if OpamFilename.exists_dir dev_dir then OpamFilename.rmdir dev_dir;
 
   let install =
     OpamFile.Dot_install.safe_read (OpamPath.Switch.install t.root t.switch name) in

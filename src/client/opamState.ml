@@ -641,22 +641,23 @@ let clean_file file name =
     OpamFilename.remove file
   )
 
+(* Check that the dev packages are installed -- if not, just remove
+   the tempory files. *)
 let global_consistency_checks t =
-  let clean_repo repo nv =
-    let tmp_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
-    clean_dir tmp_dir (OpamPackage.to_string nv) in
+  let dev_dir = OpamPath.dev_packages_dir t.root in
+  let dirs = OpamFilename.sub_dirs dev_dir in
   let all_installed = all_installed t in
-  OpamRepositoryName.Map.iter (fun _ repo ->
-    let tmp_dir = repo.repo_root / "tmp" in
-    let available =
-      let dirs = OpamFilename.sub_dirs tmp_dir in
-      let pkgs = OpamMisc.filter_map OpamPackage.of_dirname dirs in
-      OpamPackage.Set.of_list pkgs in
-    let not_installed = OpamPackage.Set.diff available all_installed in
-    OpamPackage.Set.iter (clean_repo repo) not_installed
-  ) t.repositories
+  List.iter (fun d ->
+      match OpamPackage.of_dirname d with
+      | None    -> clean_dir d "????"
+      | Some nv ->
+        if not (OpamPackage.Set.mem nv all_installed) then
+          clean_dir d (OpamPackage.to_string nv)
+    ) dirs
 
-let switch_consistency_checks t =
+(* Check that the pinned packages are installed -- if not, just remove
+   the tempory file. *)
+ let switch_consistency_checks t =
   let pin_cache = OpamPath.Switch.pinned_cache t.root t.switch in
   let clean_dir name =
     let name = OpamPackage.Name.to_string name in
@@ -1816,6 +1817,180 @@ let update_pinned_package t n =
   else
     OpamGlobals.error_and_exit "%s is not pinned."
       (OpamPackage.Name.to_string n)
+
+(* Dev packages *)
+
+(* Infer the url kind: when the url is a local directory, use the
+   `local` backend, otherwise use the `http` one. This function is
+   only used when the user hasn't specified a repository kind. *)
+let kind_of_url url =
+  if Sys.file_exists url
+  then `local
+  else `http
+
+let update_dev_packages t =
+  log "update-dev-packages";
+
+  (* For each package in the cache, look at what changed upstream *)
+  let cached_packages =
+    let dir = OpamPath.dev_packages_dir t.root in
+    let dirs = OpamFilename.sub_dirs dir in
+    let packages = OpamMisc.filter_map OpamPackage.of_dirname dirs in
+    OpamPackage.Set.of_list packages in
+
+  log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
+
+  let update nv =
+    let keep =
+      let url_f = OpamPath.url t.root nv in
+      if not (OpamFilename.exists url_f) then false
+      else
+        let url = OpamFile.URL.read url_f in
+        let kind = match OpamFile.URL.kind url with
+          | None   -> kind_of_url (OpamFile.URL.url url)
+          | Some k -> k in
+        let filename = OpamFile.URL.url url in
+        log "updating %s:%s" filename (string_of_repository_kind kind);
+        let dirname = OpamPath.dev_packages t.root nv in
+        match kind with
+        | `http -> false
+        | _    ->
+          match OpamRepository.pull_url kind nv dirname filename with
+          | Not_available -> OpamGlobals.error_and_exit "%s is not available." filename
+          | Up_to_date _  -> false
+          | Result _      -> true in
+    if keep then OpamPackage.Set.singleton nv
+    else OpamPackage.Set.empty in
+
+  OpamPackage.Parallel.map_reduce_l (2 * jobs t)
+    (OpamPackage.Set.elements cached_packages)
+    ~map:update
+    ~merge:OpamPackage.Set.union
+    ~init:OpamPackage.Set.empty
+
+let files t nv =
+  let dir = OpamPath.files t.root nv in
+  let l =
+    if not (OpamFilename.exists_dir dir) then []
+    else OpamFilename.rec_files dir in
+  OpamFilename.Set.of_list l
+
+let copy_files ~src ~dst =
+  let files = OpamFilename.files src in
+  List.iter (fun src ->
+      if not !OpamGlobals.do_not_copy_files then
+        let target =
+          OpamFilename.create dst (OpamFilename.basename src) in
+        if OpamFilename.exists target then
+          OpamGlobals.warning
+            "%s is replaced by the packager's overlay files. \
+             Set OPAMDONOTCOPYFILES to a non-empty value to no \
+             copy the overlay files."
+            (OpamFilename.to_string target);
+        OpamFilename.copy_in src dst
+    ) files;
+  OpamFilename.Set.of_list files
+
+let make_archive ?(gener_digest=false) nv
+    ~url_file ~files_dir ~download_dir ~local_archive =
+  OpamFilename.with_tmp_dir (fun extract_root ->
+
+      let extract_dir = extract_root / OpamPackage.to_string nv in
+      if OpamFilename.exists url_file then (
+        let url = OpamFile.URL.read url_file in
+        let checksum = OpamFile.URL.checksum url in
+        let remote_url = OpamFile.URL.url url in
+        let kind = match OpamFile.URL.kind url with
+          | None   -> kind_of_url remote_url
+          | Some k -> k in
+        log "downloading %s:%s" remote_url (string_of_repository_kind kind);
+        if not (OpamFilename.exists_dir download_dir) then
+          OpamFilename.mkdir download_dir;
+        let local_filename =
+          OpamFilename.in_dir download_dir (fun () ->
+              match checksum with
+              | None   -> OpamRepository.pull_url kind nv download_dir remote_url
+              | Some c ->
+                if gener_digest then
+                  OpamRepository.pull_and_fix_digest ~file:url_file ~checksum:c
+                    kind nv download_dir remote_url
+                else
+                  OpamRepository.pull_and_check_digest ~checksum:c
+                    kind nv download_dir remote_url
+            ) in
+
+        match local_filename with
+        | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" remote_url
+        | Result (F f) | Up_to_date (F f) ->
+          log "extracting %s to %s"
+            (OpamFilename.to_string f)
+            (OpamFilename.Dir.to_string extract_dir);
+          OpamFilename.extract f extract_dir
+        | Result (D d) | Up_to_date (D d) ->
+          if d <> extract_dir then (
+            log "copying %s to %s"
+              (OpamFilename.Dir.to_string d)
+              (OpamFilename.Dir.to_string extract_dir);
+            OpamFilename.copy_dir ~src:d ~dst:extract_dir
+          )
+      );
+
+      (* Eventually add the <package>/files/* to the extracted dir *)
+      let files =
+        if OpamFilename.exists_dir files_dir then (
+          if not (OpamFilename.exists_dir extract_dir) then
+            OpamFilename.mkdir extract_dir;
+          copy_files ~src:files_dir ~dst:extract_dir
+        ) else
+          OpamFilename.Set.empty in
+
+      (* Finally create the final archive *)
+      if not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_file then (
+        OpamGlobals.msg "Creating %s.\n" (OpamFilename.to_string local_archive);
+        OpamFilename.exec extract_root [
+          [ "tar" ; "czf" ;
+            OpamFilename.to_string local_archive ;
+            OpamPackage.to_string nv ]
+        ]
+      );
+    )
+
+let make_global_archive t nv =
+  let url_file = OpamPath.url t.root nv in
+  let files_dir = OpamPath.files t.root nv in
+  let download_dir = OpamPath.dev_packages t.root nv in
+  let local_archive = OpamPath.archive t.root nv in
+  make_archive nv ~url_file ~files_dir ~download_dir ~local_archive
+
+(* Download the archive on the OPAM server.
+   If it is not there, then:
+   * download the original archive upstream
+   * add eventual patches
+   * create a new tarball *)
+let download t nv =
+  let archive = OpamPath.archive t.root nv in
+  log "download %s (%s)" (OpamPackage.to_string nv) (OpamFilename.to_string archive);
+  (* If the archive is on the server, download it directly *)
+  let up_to_date () =
+    OpamGlobals.msg "The archive for %s is in the local cache.\n"
+      (OpamPackage.to_string nv);
+    log "The archive for %s is already downloaded and up-to-date"
+      (OpamPackage.to_string nv) in
+
+  if OpamFilename.exists archive then
+    up_to_date ()
+  else match repository_of_package t nv with
+    | None           -> log "no repository"
+    | Some (repo, _) ->
+      match OpamRepository.pull_archive repo nv with
+      | Up_to_date _      -> up_to_date ()
+      | Result local_file ->
+        log "Downloaded %s successfully" (OpamFilename.to_string local_file);
+        OpamFilename.copy ~src:local_file ~dst:archive;
+      | Not_available ->
+        log "The archive for %s is not available, need to build it"
+          (OpamPackage.to_string nv);
+        make_global_archive t nv
 
 let check f =
   let root = OpamPath.default () in

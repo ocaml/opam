@@ -17,7 +17,6 @@
 open OpamTypes
 open OpamState.Types
 open OpamMisc.OP
-open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 
@@ -491,26 +490,8 @@ module API = struct
       let package_updates =
         OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
 
-      (* XXX: Update the dev packages *)
-      let dev_updates =
-        let map repo =
-          let packages = OpamPackage.Set.empty in
-          OpamPackage.Set.filter (fun nv ->
-              if OpamPackage.Map.mem nv (Lazy.force t.package_index)
-              && fst (OpamPackage.Map.find nv (Lazy.force t.package_index)) = repo.repo_name then
-                true
-              else (
-                let tmp = repo.repo_root / "tmp" / OpamPackage.to_string nv in
-                OpamFilename.rmdir tmp;
-                false
-              )
-            ) packages in
-        OpamRepository.Parallel.map_reduce_l (OpamState.jobs t)
-          ~map
-          ~merge:OpamPackage.Set.union
-          ~init:OpamPackage.Set.empty
-          repos in
-
+      (* Update the dev packages *)
+      let dev_updates = OpamState.update_dev_packages t in
       OpamState.add_to_reinstall t ~all:true dev_updates;
 
       (* Eventually output some JSON file *)

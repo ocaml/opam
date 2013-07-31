@@ -245,6 +245,35 @@ val all_installed: state -> package_set
 (** Return a map containing the switch where a given package is installed. *)
 val installed_versions: state -> name -> switch list package_map
 
+(** [dev_package_updates t] checks for upstream changes for packages
+    in the global cache. Return the packages whose contents have
+    changed upstream. *)
+val update_dev_packages: state -> package_set
+
+(** [copy_files t nv dirname] copies the additional files associated
+    to a package in the given directory. *)
+val copy_files: src:dirname -> dst:dirname -> filename_set
+
+(** [make_archive ?gener_digest t package] builds the archive for
+    the given [package]. By default, the digest that appears in {i
+    $NAME.$VERSION/url} is not modified, unless [gener_digest] is
+    set. *)
+val make_global_archive: state -> package -> unit
+
+(** Same as [make_archive] but use some parameter files instead of
+    relying on the global state. *)
+val make_archive: ?gener_digest:bool -> package ->
+  url_file:filename ->
+  files_dir:dirname ->
+  download_dir:dirname ->
+  local_archive:filename ->
+  unit
+
+(** Download {i $remote/archives/$nv.tar.gz}. If is not there, then
+    download the upstream archive, add the eventual additional files
+    and create {i $nv.tar.gz}. *)
+val download: state -> package -> unit
+
 (** Global package state. *)
 val package_state: state -> checksums package_map
 
