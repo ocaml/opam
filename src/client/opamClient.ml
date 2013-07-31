@@ -511,17 +511,20 @@ module API = struct
           OpamPackage.Set.empty
           repos in
       OpamState.add_to_reinstall t ~all:true dev_updates;
-      let json to_json update =
-        `O [ ("created"   , to_json update.created);
-             ("updated"   , to_json update.updated);
-             ("deleted"   , to_json update.deleted);
-             ("to_upgrade", to_json update.to_upgrade); ] in
-      let updates = `O [
-          "package-updates"    , (json OpamPackage.Set.to_json package_updates);
-          "package-dev-updates", (OpamPackage.Set.to_json dev_updates);
-          "compiler-updates"   , (json OpamCompiler.Set.to_json compiler_updates);
-        ] in
-      OpamJson.add updates;
+
+      (* Eventually output some JSON file *)
+      if OpamJson.verbose () then
+        let json to_json update =
+          `O [ ("created"   , to_json update.created);
+               ("updated"   , to_json update.updated);
+               ("deleted"   , to_json update.deleted);
+               ("to_upgrade", to_json update.to_upgrade); ] in
+        let updates = `O [
+            "package-updates"    , (json OpamPackage.Set.to_json package_updates);
+            "package-dev-updates", (OpamPackage.Set.to_json dev_updates);
+            "compiler-updates"   , (json OpamCompiler.Set.to_json compiler_updates);
+          ] in
+        OpamJson.add updates;
     );
 
     if pinned_packages_need_update then (
