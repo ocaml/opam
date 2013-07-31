@@ -195,7 +195,6 @@ let package_index_aux root repositories =
       packages
     ) in
   OpamPackage.Name.Map.fold (fun n repos map ->
-      log "package-index-aux %s" (OpamPackage.Name.to_string n);
       List.fold_left (fun map repo_name ->
           let packages = get_packages repo_name in
           let packages =
@@ -204,12 +203,7 @@ let package_index_aux root repositories =
               ) packages in
           OpamPackage.Map.fold (fun nv prefix map ->
               if OpamPackage.Map.mem nv map then map
-              else (
-                log "package-index-aux %s -> %s"
-                  (OpamPackage.to_string nv)
-                  (OpamRepositoryName.to_string repo_name);
-                OpamPackage.Map.add nv (repo_name, prefix) map
-              )
+              else OpamPackage.Map.add nv (repo_name, prefix) map
             ) packages map
         ) map repos
     ) repo_index OpamPackage.Map.empty
