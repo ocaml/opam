@@ -564,10 +564,10 @@ module API = struct
       | Aborted
       | No_solution
       | Error _
-      | OK            -> ()
+      | OK _          -> ()
       | Nothing_to_do -> OpamGlobals.msg "Already up-to-date.\n"
     end;
-    OpamSolution.check_solution solution_found
+    OpamSolution.check_solution t solution_found
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %s" (OpamRepository.to_string repo);
@@ -741,7 +741,7 @@ module API = struct
             wish_upgrade = atoms }
       in
       let solution = OpamSolution.resolve_and_apply t (Install names) request in
-      OpamSolution.check_solution solution
+      OpamSolution.check_solution t solution
     )
 
   let remove ~autoremove names =
@@ -808,7 +808,7 @@ module API = struct
         OpamPackage.Set.of_list (List.rev_map (fun (n,_) ->
             OpamState.find_installed_package_by_name t n
           ) atoms) in
-      let universe = OpamState.universe t Depends in
+      let universe = OpamState.universe t Remove in
       let to_remove =
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies
@@ -822,6 +822,10 @@ module API = struct
         OpamPackage.Set.of_list
           (OpamSolver.dependencies
              ~depopts:true ~installed:true universe installed_roots) in
+      (* installed includes the depopts, because we don't want to autoremove
+         them. But that may re-include packages that we wanted removed, so we
+         need to remove them again *)
+      let installed = OpamPackage.Set.diff installed to_remove in
       let to_remove =
         if atoms = [] then
           OpamPackage.Set.diff t.installed installed
@@ -831,7 +835,7 @@ module API = struct
           { wish_install = OpamSolution.eq_atoms_of_packages installed;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [] } in
-      OpamSolution.check_solution solution
+      OpamSolution.check_solution t solution
     ) else
       OpamGlobals.msg "Nothing to do.\n"
 
@@ -874,7 +878,7 @@ module API = struct
     let to_process = List.map (fun pkg -> To_recompile pkg) depends in
     let solution =
       OpamSolution.apply t Reinstall (OpamSolver.sequential_solution to_process) in
-    OpamSolution.check_solution solution
+    OpamSolution.check_solution t solution
 
   module PIN        = OpamPinCommand
   module REPOSITORY = OpamRepositoryCommand

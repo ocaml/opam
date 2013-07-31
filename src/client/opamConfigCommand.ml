@@ -97,7 +97,7 @@ let list ns =
     ) [] configs in
   let contents =
     List.map
-      (fun v -> v, OpamState.contents_of_variable_exn t v)
+      (fun v -> v, OpamState.contents_of_variable_exn t OpamVariable.Map.empty v)
       variables in
   List.iter (fun (variable, contents) ->
     OpamGlobals.msg "%-40s %s\n"
@@ -278,7 +278,7 @@ let env ~csh ~sexp ~fish=
 let subst fs =
   log "config-substitute";
   let t = OpamState.load_state "config-substitute" in
-  List.iter (OpamState.substitute_file t) fs
+  List.iter (OpamState.substitute_file t OpamVariable.Map.empty) fs
 
 let quick_lookup v =
   let name = OpamVariable.Full.package v in
@@ -309,7 +309,7 @@ let variable v =
     | Some c -> c
     | None   ->
       let t = OpamState.load_state "config-variable" in
-      OpamState.contents_of_variable_exn t v in
+      OpamState.contents_of_variable_exn t OpamVariable.Map.empty v in
   OpamGlobals.msg "%s\n" (OpamVariable.string_of_variable_contents contents)
 
 let setup user global =

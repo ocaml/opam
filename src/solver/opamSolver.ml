@@ -46,6 +46,7 @@ let opam2debian universe depopts package =
     if depopts then
       let opts = List.rev_map OpamFormula.of_conjunction opts in
       And (depends, Or(depends, OpamFormula.ors opts))
+    else if universe.u_action = Remove then depends
     else
       let mem_installed conj =
         let is_installed (name,_) =

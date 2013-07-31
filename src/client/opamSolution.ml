@@ -20,11 +20,41 @@ open OpamTypes
 open OpamState.Types
 open OpamMisc.OP
 
-let check_solution = function
+let post_message ?(failed=false) state action =
+  let pkg = action_contents action in
+  let opam = OpamPackage.Map.find pkg state.opams in
+  let messages = OpamFile.OPAM.post_messages opam in
+  let print_message message =
+    if failed then
+      OpamGlobals.msg "\n=-=-= %s troobleshooting =-=-=\n%s.\n"
+        (OpamPackage.to_string pkg) message
+    else
+      OpamGlobals.msg "\n=-=-= %s information =-=-=\n%s.\n"
+        (OpamPackage.to_string pkg) message
+  in
+  let local_variables = OpamVariable.Map.empty in
+  let local_variables =
+    OpamVariable.Map.add (OpamVariable.of_string "success")
+      (B (not failed)) local_variables
+  in
+  let local_variables =
+    OpamVariable.Map.add (OpamVariable.of_string "failure")
+      (B failed) local_variables
+  in
+  List.iter (fun (message,filter) ->
+      if OpamState.eval_filter state local_variables filter
+      then print_message message)
+    messages
+
+let check_solution state = function
   | No_solution -> OpamGlobals.exit 3
-  | Error _     -> OpamGlobals.exit 4
+  | Error (success, failed, _remaining) ->
+    List.iter (post_message state) success;
+    List.iter (post_message ~failed:true state) failed;
+    OpamGlobals.exit 4
+  | OK actions ->
+    List.iter (post_message state) actions
   | Nothing_to_do
-  | OK
   | Aborted     -> ()
 
 let sum stats =
@@ -51,6 +81,14 @@ let atom_of_name name =
 let atoms_of_names t names =
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
   let packages = OpamPackage.to_map t.packages in
+  (* gets back the original capitalization of the package name *)
+  let realname name =
+    let lc_name name = String.lowercase (OpamPackage.Name.to_string name) in
+    let m =
+      OpamPackage.Name.Map.filter (fun p _ -> lc_name name = lc_name p)
+        packages in
+    match OpamPackage.Name.Map.keys m with [name] -> name | _ -> name
+  in
   let exists name version =
     OpamPackage.Name.Map.mem name packages
     &&
@@ -74,6 +112,7 @@ let atoms_of_names t names =
       OpamPackage.unavailable name version in
   List.rev_map
     (fun name ->
+      let name = realname name in
       if exists name None then
         if available name None then
           atom_of_name name
@@ -84,7 +123,7 @@ let atoms_of_names t names =
         let nv =
           try OpamPackage.of_string (OpamPackage.Name.to_string name)
           with Not_found -> OpamPackage.unknown name None in
-        let sname = OpamPackage.name nv in
+        let sname = realname (OpamPackage.name nv) in
         let sversion = OpamPackage.version nv in
         log "The raw name %S not found, looking for package %s version %s"
           (OpamPackage.Name.to_string name)
@@ -343,7 +382,7 @@ let parallel_apply t action solution =
     (* XXX: we might want to output the sucessful actions as well. *)
     output_json_actions [];
 
-    OK
+    OK (PackageActionGraph.fold_vertex (fun a b -> a::b) solution.to_process [])
   with
   | PackageActionGraph.Parallel.Cyclic actions ->
     let packages = List.map (List.map action_contents) actions in
@@ -373,7 +412,16 @@ let parallel_apply t action solution =
     List.iter display_error errors;
 
     output_json_actions errors;
-    Error (List.map fst errors @ remaining)
+    let errpkgs = List.map fst errors in
+    let successful =
+      PackageActionGraph.fold_vertex
+        (fun pkg successful ->
+           if not (List.mem pkg errpkgs) && not (List.mem pkg remaining)
+           then pkg::successful
+           else successful)
+        solution.to_process []
+    in
+    Error (successful, errpkgs, remaining)
 
 let simulate_new_state state t =
   let installed = List.fold_left
@@ -409,7 +457,8 @@ let apply ?(force = false) t action solution =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
         OpamMisc.filter_map (fun (s,f) ->
-          if OpamState.eval_filter new_state f then Some s
+          if OpamState.eval_filter new_state OpamVariable.Map.empty f
+          then Some s
           else None
         )  messages in
       OpamSolver.print_solution ~messages solution;

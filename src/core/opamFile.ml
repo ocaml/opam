@@ -730,6 +730,7 @@ module X = struct
       build_doc  : command list;
       depexts    : tags option;
       messages   : (string * filter option) list;
+      post_messages: (string * filter option) list;
     }
 
     let empty = {
@@ -758,6 +759,7 @@ module X = struct
       build_doc  = [];
       depexts    = None;
       messages   = [];
+      post_messages = [];
     }
 
     let create nv =
@@ -790,6 +792,7 @@ module X = struct
     let s_build_doc   = "build-doc"
     let s_depexts     = "depexts"
     let s_messages    = "messages"
+    let s_post_messages = "post-messages"
 
     let useful_fields = [
       s_opam_version;
@@ -814,6 +817,7 @@ module X = struct
       s_build_doc;
       s_depexts;
       s_messages;
+      s_post_messages;
       s_tags;
     ]
 
@@ -848,6 +852,7 @@ module X = struct
     let build_test t = t.build_test
     let depexts t = t.depexts
     let messages t = t.messages
+    let post_messages t = t.post_messages
 
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
@@ -911,6 +916,10 @@ module X = struct
           @ listm   t.build_test    s_build_test    OpamFormat.make_command
           @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
+          @ list    t.messages      s_messages
+              OpamFormat.(make_list (make_option make_string make_filter))
+          @ list    t.post_messages s_post_messages
+              OpamFormat.(make_list (make_option make_string make_filter))
           @ List.rev (List.rev_map (fun (s, v) -> Variable (s, v)) t.others);
       } in
       Syntax.to_string
@@ -995,6 +1004,7 @@ module X = struct
       let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
       let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
       let messages = OpamFormat.assoc_list s s_messages OpamFormat.parse_messages in
+      let post_messages = OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
       let others     =
         OpamMisc.filter_map (function
           | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
@@ -1004,7 +1014,7 @@ module X = struct
         depends; depopts; conflicts; libraries; syntax; others;
         patches; ocaml_version; os; build_env;
         homepage; authors; license; doc; tags;
-        build_test; build_doc; depexts; messages
+        build_test; build_doc; depexts; messages; post_messages
       }
   end
 
@@ -1109,6 +1119,7 @@ module X = struct
           Variable (s_stublibs, mk      t.stublibs);
           Variable (s_share   , mk      t.share);
           Variable (s_doc     , mk      t.doc);
+          Variable (s_man     , mk      t.man);
           Variable (s_misc    , mk_misc t.misc);
         ]
       } in

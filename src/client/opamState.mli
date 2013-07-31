@@ -141,27 +141,27 @@ val update_setup: state -> user_config option -> global_config option -> unit
 (** {2 Substitutions} *)
 
 (** Compute the value of a variable *)
-val contents_of_variable: state -> full_variable -> variable_contents option
+val contents_of_variable: state -> variable_map -> full_variable -> variable_contents option
 
 (** Compute the value of a variable. Raise [Exit] if the variable is
     not valid. *)
-val contents_of_variable_exn: state -> full_variable -> variable_contents
+val contents_of_variable_exn: state -> variable_map -> full_variable -> variable_contents
 
 (** Substitute a string *)
-val substitute_string: state -> string -> string
+val substitute_string: state -> variable_map -> string -> string
 
 (** Substitute file *)
-val substitute_file: state -> basename -> unit
+val substitute_file: state -> variable_map -> basename -> unit
 
 (** {2 Filters} *)
 
 (** Evaluate a filter *)
-val eval_filter: state -> filter option -> bool
+val eval_filter: state -> variable_map -> filter option -> bool
 
 (** Filter a list of commands by:
     - evaluating the substitution strings; and
     - removing the commands with a filter evaluating to "false" *)
-val filter_commands: state -> command list -> string list list
+val filter_commands: state -> variable_map -> command list -> string list list
 
 (** {2 Repositories} *)
 

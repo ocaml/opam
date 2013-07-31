@@ -244,7 +244,7 @@ let unavailable name version =
       (Name.to_string name)
   | Some v ->
     OpamGlobals.error_and_exit
-      "Version %s of %S is incompatible with your compiler or your OS."
+      "Version %s of %S is not available for your compiler or your OS."
       (Version.to_string v)
       (Name.to_string name)
 

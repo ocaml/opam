@@ -157,8 +157,11 @@ module OPAM: sig
   (** Commands to build the documentation *)
   val build_doc: t -> command list
 
-  (** Commands to build the documentation *)
+  (** Messages to display before taking action *)
   val messages: t -> (string * filter option) list
+
+  (** Messages to display at end of install *)
+  val post_messages: t -> (string * filter option) list
 
   (** Construct as [depends] *)
   val with_depends : t -> formula -> t

@@ -113,10 +113,11 @@ val command_exists: ?env:string array -> string -> bool
 val command: ?verbose:bool -> ?env:string array -> ?name:string ->
   ?metadata:(string * string) list -> command -> unit
 
-(** [commands cmds] executes the commands [cmds] in the correct
-    OPAM environment.  It stops whenever one command fails. *)
+(** [commands cmds] executes the commands [cmds] in the correct OPAM
+    environment. It stops whenever one command fails unless [keep_going] is set
+    to [true]. In this case, the first error is re-raised at the end. *)
 val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
-  ?metadata:(string * string) list -> command list -> unit
+  ?metadata:(string * string) list -> ?keep_going:bool -> command list -> unit
 
 (** [read_command_output cmd] executes the command [cmd] in the
     correct OPAM environment and return the lines from stdout if the command

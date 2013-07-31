@@ -78,12 +78,12 @@ let in_dir dirname fn =
   else
     OpamSystem.internal_error "Cannot CD to %s: the directory does not exist!" dirname
 
-let exec dirname ?env ?name ?metadata cmds =
+let exec dirname ?env ?name ?metadata ?keep_going cmds =
   let env = match env with
     | None   -> None
     | Some l -> Some (Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)) in
   in_dir dirname
-    (fun () -> OpamSystem.commands ?env ?name ?metadata cmds)
+    (fun () -> OpamSystem.commands ?env ?name ?metadata ?keep_going cmds)
 
 let move_dir ~src ~dst =
   OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]

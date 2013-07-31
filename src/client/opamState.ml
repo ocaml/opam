@@ -1034,7 +1034,7 @@ let source t ?(interactive_only=false) f =
   else s
 
 (* Return the contents of a fully qualified variable *)
-let contents_of_variable t v =
+let contents_of_variable t local_variables v =
   let name = OpamVariable.Full.package v in
   let var = OpamVariable.Full.variable v in
   let var_str = OpamVariable.to_string var in
@@ -1050,6 +1050,11 @@ let contents_of_variable t v =
     with Not_found ->
       OpamGlobals.error "%s is not defined" (OpamVariable.Full.to_string v);
       None in
+  let local_var =
+    try Some (OpamVariable.Map.find var local_variables)
+    with Not_found -> None
+  in
+  if local_var <> None then local_var else
   if name = OpamPackage.Name.global_config then (
     try string (OpamMisc.getenv var_str)
     with Not_found ->
@@ -1141,28 +1146,31 @@ let contents_of_variable t v =
       | h::t     -> Some (List.fold_left compose h t)
   )
 
-let contents_of_variable_exn t var =
-  match contents_of_variable t var with
+let contents_of_variable_exn t local_variables var =
+  match contents_of_variable t local_variables var with
   | None  ->
     OpamGlobals.error_and_exit "%s is not a valid variable."
       (OpamVariable.Full.to_string var)
   | Some c -> c
 
-let substitute_ident t i =
+let substitute_ident t local_variables i =
   let v = OpamVariable.Full.of_string i in
-  contents_of_variable_exn t v
+  contents_of_variable_exn t local_variables v
 
 (* Substitute the file contents *)
-let substitute_file t f =
+let substitute_file t local_variables f =
   let f = OpamFilename.of_basename f in
   let src = OpamFilename.add_extension f "in" in
   let contents = OpamFile.Subst.read src in
-  let newcontents = OpamFile.Subst.replace contents (contents_of_variable_exn t) in
+  let newcontents =
+    OpamFile.Subst.replace contents
+      (contents_of_variable_exn t local_variables)
+  in
   OpamFile.Subst.write f newcontents
 
 (* Substitue the string contents *)
-let substitute_string t s =
-  OpamFile.Subst.replace_string s (contents_of_variable_exn t)
+let substitute_string t local_variables s =
+  OpamFile.Subst.replace_string s (contents_of_variable_exn t local_variables)
 
 exception Filter_type_error
 
@@ -1180,15 +1188,15 @@ let bool_of_variable_contents ident = function
   | B b -> b
   | S _ -> filter_type_error (FIdent ident) "string" "bool"
 
-let eval_string t = function
-  | FString s -> substitute_string t s
-  | FIdent s  -> string_of_variable_contents s (substitute_ident t s)
+let eval_string t local_variables = function
+  | FString s -> substitute_string t local_variables s
+  | FIdent s  -> string_of_variable_contents s (substitute_ident t local_variables s)
   | f         -> filter_type_error f "bool" "string"
 
-let rec eval_bool t = function
+let rec eval_bool t local_variables = function
   | FBool b    -> b
-  | FString s  -> substitute_string t s = "true"
-  | FIdent s   -> bool_of_variable_contents s (substitute_ident t s)
+  | FString s  -> substitute_string t local_variables s = "true"
+  | FIdent s   -> bool_of_variable_contents s (substitute_ident t local_variables s)
   | FOp(e,s,f) ->
     (* We are supposed to compare version strings *)
     let s = match s with
@@ -1198,41 +1206,42 @@ let rec eval_bool t = function
       | Le  -> (fun a b -> Debian.Version.compare a b <= 0)
       | Gt  -> (fun a b -> Debian.Version.compare a b >  0)
       | Lt  -> (fun a b -> Debian.Version.compare a b <  0) in
-    s (eval_string t e) (eval_string t f)
-  | FOr(e,f)  -> eval_bool t e || eval_bool t f
-  | FAnd(e,f) -> eval_bool t e && eval_bool t f
-  | FNot e    -> not (eval_bool t e)
+    s (eval_string t local_variables e) (eval_string t local_variables f)
+  | FOr(e,f)  -> eval_bool t local_variables e || eval_bool t local_variables f
+  | FAnd(e,f) -> eval_bool t local_variables e && eval_bool t local_variables f
+  | FNot e    -> not (eval_bool t local_variables e)
 
-let eval_filter t = function
+let eval_filter t local_variables = function
   | None   -> true
   | Some f ->
-    try eval_bool t f
+    try eval_bool t local_variables f
     with _ -> false
 
-let filter_arg t (a,f) =
-  if eval_filter t f then
+let filter_arg t local_variables (a,f) =
+  if eval_filter t local_variables f then
     try match a with
-      | CString s -> Some (substitute_string t s)
-      | CIdent i  -> Some (string_of_variable_contents i (substitute_ident t i))
+      | CString s -> Some (substitute_string t local_variables s)
+      | CIdent i  ->
+        Some (string_of_variable_contents i (substitute_ident t local_variables i))
     with _ ->
       None
   else
     None
 
-let filter_command t (l, f) =
-  if eval_filter t f then
-    match OpamMisc.filter_map (filter_arg t) l with
+let filter_command t local_variables (l, f) =
+  if eval_filter t local_variables f then
+    match OpamMisc.filter_map (filter_arg t OpamVariable.Map.empty) l with
     | [] -> None
     | l  -> Some l
   else
     None
 
-let filter_commands t l =
-  OpamMisc.filter_map (filter_command t) l
+let filter_commands t local_variables l =
+  OpamMisc.filter_map (filter_command t local_variables) l
 
 let expand_env t (env: env_updates) : env =
   List.rev_map (fun (ident, symbol, string) ->
-    let string = substitute_string t string in
+    let string = substitute_string t OpamVariable.Map.empty string in
     let read_env () =
       let prefix = OpamFilename.Dir.to_string t.root in
       try OpamMisc.reset_env_value ~prefix (OpamMisc.getenv ident)
@@ -1362,7 +1371,7 @@ let string_of_env_update t shell updates =
     | `sh  -> sh
     | `csh -> csh in
   let aux (ident, symbol, string) =
-    let string = substitute_string t string in
+    let string = substitute_string t OpamVariable.Map.empty string in
     let key, value = match symbol with
       | "="  -> (ident, string)
       | "+="
@@ -1808,7 +1817,7 @@ let install_compiler t ~quiet switch compiler =
             ]
         end else begin
           let t = { t with switch } in
-          let builds = filter_commands t (OpamFile.Comp.build comp) in
+          let builds = filter_commands t OpamVariable.Map.empty (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
       end;

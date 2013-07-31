@@ -119,6 +119,9 @@ type variable_contents = OpamVariable.variable_contents =
   | B of bool
   | S of string
 
+(** A map from variables to their contents (i.e an environment) *)
+type variable_map = OpamVariable.variable_contents OpamVariable.Map.t
+
 (** Content of [pp] variables *)
 type ppflag =
   | Camlp4 of string list
@@ -194,10 +197,7 @@ type 'a action =
   (** The package must be deleted. *)
   | To_delete of 'a
 
-  (** The package is already installed, but it must be recompiled.
-      The second parameter is the collection of packages causing the
-      reinstallation. An empty list means that the package has been
-      modified upstream. *)
+  (** The package is already installed, but it must be recompiled. *)
   | To_recompile of 'a
 
 (** The possible causes of an action. *)
@@ -267,10 +267,12 @@ type solution = PackageActionGraph.solution
 (** Solver result *)
 type solver_result =
   | Nothing_to_do
-  | OK
+  | OK of package action list (** List of successful actions *)
   | Aborted
   | No_solution
-  | Error of package action list
+  | Error of package action list * package action list * package action list
+  (** List of successful actions, list of actions with errors,
+      list of remaining undone actions *)
 
 (** Solver result *)
 type ('a, 'b) result =
