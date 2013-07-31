@@ -188,7 +188,7 @@ let pull_archive repo nv =
   B.pull_archive repo filename
 
 let read_prefix local_repo =
-  OpamFile.Prefix.safe_read (OpamPath.Repository.prefix local_repo)
+  OpamFile.Prefix.safe_read (local_repo.repo_root // "prefix")
 
 let find_prefix prefix nv =
   let name = OpamPackage.name nv in
@@ -226,7 +226,7 @@ let make_archive ?(gener_digest=false) repo nv =
   let url_file = OpamPath.Repository.url repo prefix nv in
   let name = OpamPackage.name nv in
 
-  let download_dir = OpamPath.Repository.tmp_dir repo nv in
+  let download_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
   OpamFilename.mkdir download_dir;
 
   OpamFilename.with_tmp_dir (fun extract_root ->
@@ -351,7 +351,7 @@ let packages repo =
         | Some nv ->
           let packages = OpamPackage.Set.add nv packages in
           let prefix =
-            if dir = OpamPath.Repository.package repo None nv then prefix
+            if dir = OpamPath.Repository.packages repo None nv then prefix
             else
               OpamPackage.Name.Map.add
                 (OpamPackage.name nv)
@@ -367,9 +367,9 @@ let packages repo =
 let compilers repo =
   let compilers = OpamCompiler.list (OpamPath.Repository.compilers_dir repo) in
   OpamCompiler.Set.fold (fun comp map ->
-      let comp_file = OpamPath.Repository.compiler repo comp in
+      let comp_file = OpamPath.Repository.compiler_comp repo None comp in
       let comp_descr =
-        let f = OpamPath.Repository.compiler repo comp in
+        let f = OpamPath.Repository.compiler_descr repo None comp in
         match OpamFilename.exists f with
         | false -> None
         | true  -> Some f in
@@ -428,7 +428,7 @@ let clean repo active_packages =
   let prefix, packages = packages repo in
   OpamPackage.Set.iter (fun nv ->
     let cleanup () =
-      let tmp_dir = OpamPath.Repository.tmp_dir repo nv in
+      let tmp_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
       OpamFilename.rmdir tmp_dir;
       OpamFilename.remove (OpamPath.Repository.archive repo nv) in
     if not (OpamPackage.Map.mem nv active_packages) then cleanup ()
@@ -456,7 +456,7 @@ let get_cache_updates repo =
   let prefix = read_prefix repo in
 
   (* For each package in the cache, look at what changed upstream *)
-  let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
+  let cached_packages = read_tmp (repo.repo_root / "tmp") in
   log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
   OpamPackage.Set.filter (fun nv ->
       let name = OpamPackage.name nv in
@@ -474,7 +474,7 @@ let get_cache_updates repo =
           | Some k -> k in
         let filename = OpamFile.URL.url url in
         log "updating %s:%s" filename (string_of_repository_kind kind);
-        let dirname = OpamPath.Repository.tmp_dir repo nv in
+        let dirname = repo.repo_root / "tmp" / OpamPackage.to_string nv in
         match kind with
         | `http -> false
         | _    ->

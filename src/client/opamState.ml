@@ -111,8 +111,8 @@ let print_state t =
   log "ROOTS     : %s" (OpamPackage.Set.to_string t.installed_roots);
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
-let compiler t c =
-  OpamFile.Comp.safe_read (OpamPath.compiler t.root c)
+let compiler_comp t c =
+  OpamFile.Comp.safe_read (OpamPath.compiler_comp t.root c)
 
 let mem_installed_package_by_name_aux installed name =
   let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) installed in
@@ -349,7 +349,7 @@ let create_system_compiler_description root = function
   | Some version ->
     log "create-system-compiler-description %s"
       (OpamCompiler.Version.to_string version);
-    let comp = OpamPath.compiler root OpamCompiler.system in
+    let comp = OpamPath.compiler_comp root OpamCompiler.system in
     OpamFilename.remove comp;
     let f =
       OpamFile.Comp.create_preinstalled
@@ -472,7 +472,7 @@ let load_env_state call_site =
   }
 
 let get_compiler_packages t comp =
-  let comp = compiler t comp in
+  let comp = compiler_comp t comp in
   let available = OpamPackage.to_map (Lazy.force t.available_packages) in
 
   if OpamPackage.Name.Map.is_empty available then
@@ -564,11 +564,11 @@ let clean_file file name =
 
 let global_consistency_checks t =
   let clean_repo repo nv =
-    let tmp_dir = OpamPath.Repository.tmp_dir repo nv in
+    let tmp_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
     clean_dir tmp_dir (OpamPackage.to_string nv) in
   let all_installed = all_installed t in
   OpamRepositoryName.Map.iter (fun _ repo ->
-    let tmp_dir = OpamPath.Repository.tmp repo in
+    let tmp_dir = repo.repo_root / "tmp" in
     let available =
       let dirs = OpamFilename.sub_dirs tmp_dir in
       let pkgs = OpamMisc.filter_map OpamPackage.of_dirname dirs in
@@ -786,7 +786,7 @@ let load_state ?(save_cache=true) call_site =
             "The current switch (%s) is an unknown compiler switch."
             (OpamSwitch.to_string switch) in
   let compiler_version =
-    let comp_f = OpamPath.compiler root compiler in
+    let comp_f = OpamPath.compiler_comp root compiler in
     if not (OpamFilename.exists comp_f) then
       OpamCompiler.unknown compiler;
     OpamFile.Comp.version (OpamFile.Comp.read comp_f) in
@@ -797,7 +797,7 @@ let load_state ?(save_cache=true) call_site =
         OpamPackage.Map.add nv file map
       with _ ->
         map
-    ) (OpamPackage.list (OpamPath.opam_dir root)) OpamPackage.Map.empty in
+    ) (OpamPackage.list (OpamPath.packages_dir root)) OpamPackage.Map.empty in
   let opams = match opams with
     | None   ->
       package_files (fun root nv ->
@@ -813,7 +813,7 @@ let load_state ?(save_cache=true) call_site =
   let repositories = read_repositories root config in
   let prefixes = read_prefixes repositories in
   let package_index =
-    let f = OpamPath.package_index root in
+    let f = root / "repo" // "index.packages" in
     let refresh () =
       (* XXX: upgrade from 1.0.0 to 1.0.1 *)
       let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
@@ -827,7 +827,7 @@ let load_state ?(save_cache=true) call_site =
     else
       refresh () in
   let compiler_index =
-    let f = OpamPath.compiler_index root in
+    let f = root / "repo" // "index.compilers" in
     if OpamFilename.exists f then OpamFile.Compiler_index.read f
     else
       (* XXX: upgrade from 1.0.0 to 1.0.1 *)
@@ -921,7 +921,7 @@ let contents_of_variable t v =
       if var_str = "ocaml-version" then
         string (OpamCompiler.Version.to_string t.compiler_version)
       else if var_str = "preinstalled" then
-        bool (OpamFile.Comp.preinstalled (compiler t t.compiler))
+        bool (OpamFile.Comp.preinstalled (compiler_comp t t.compiler))
       else if var_str = "switch" then
         string (OpamSwitch.to_string t.switch)
       else if var_str = "jobs" then
@@ -1126,7 +1126,7 @@ let add_to_env t (env: env) (updates: env_updates) =
   env @ expand_env t updates
 
 let env_updates ~opamswitch t =
-  let comp = compiler t t.compiler in
+  let comp = compiler_comp t t.compiler in
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
   let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
@@ -1626,7 +1626,7 @@ let install_compiler t ~quiet switch compiler =
     (OpamSwitch.to_string switch)
     (OpamCompiler.to_string compiler);
 
-  let comp_f = OpamPath.compiler t.root compiler in
+  let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists comp_f) then (
     OpamGlobals.msg "Cannot find %s: %s is not a valid compiler name.\n"
       (OpamFilename.to_string comp_f)

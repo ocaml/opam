@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamState.Types
+open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 
@@ -51,7 +52,7 @@ let relink_compilers t ~verbose old_index =
   OpamGlobals.msg "Updating %s/\n"
     (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
   let old_index = OpamCompiler.Map.filter (fun comp _ ->
-      OpamFilename.exists (OpamPath.compiler t.root comp)
+      OpamFilename.exists (OpamPath.compiler_comp t.root comp)
     ) old_index in
   let compiler_index = OpamState.compiler_state_index t in
   log "old-index: %s" (OpamMisc.string_of_list OpamCompiler.to_string
@@ -92,7 +93,7 @@ let relink_compilers t ~verbose old_index =
     match OpamState.compiler_repository_state t comp with
     | None   -> ()
     | Some s ->
-      let comp_file  = OpamPath.compiler t.root comp in
+      let comp_file  = OpamPath.compiler_comp t.root comp in
       let comp_descr = OpamPath.compiler_descr t.root comp in
       OpamFilename.remove comp_file;
       OpamFilename.remove comp_descr;
@@ -232,9 +233,8 @@ let update_pinned_packages t ~verbose packages =
 (* Update the package contents, display the new packages and update
    reinstall *)
 let relink_packages t ~verbose old_index =
-  OpamGlobals.msg "Updating %s/ and %s/\n"
-    (OpamFilename.prettify_dir (OpamPath.opam_dir t.root))
-    (OpamFilename.prettify_dir (OpamPath.descr_dir t.root));
+  OpamGlobals.msg "Updating %s/\n"
+    (OpamFilename.prettify_dir (OpamPath.packages_dir t.root));
   let old_index = OpamPackage.Map.filter (fun nv _ ->
       OpamFilename.exists (OpamPath.opam t.root nv)
     ) old_index in
@@ -401,7 +401,7 @@ let update_index t =
   let repo_index, prefixes =
     List.fold_left (fun (repo_index, prefixes) repo ->
       let prefix, available = get_packages repo.repo_name in
-      let prefix_f = OpamPath.Repository.prefix repo in
+      let prefix_f = OpamFilename.OP.(repo.repo_root // "prefix") in
       if not (OpamPackage.Name.Map.is_empty prefix) then
         OpamFile.Prefix.write prefix_f prefix
       else if OpamFilename.exists prefix_f then
@@ -429,10 +429,10 @@ let update_index t =
   OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index;
 
   let package_index = OpamState.package_index t.repositories repo_index in
-  OpamFile.Package_index.write (OpamPath.package_index t.root) (Some package_index);
+  OpamFile.Package_index.write (t.root / "repo" // "index.packages") (Some package_index);
 
   let compiler_index = OpamState.compiler_index repositories in
-  OpamFile.Compiler_index.write (OpamPath.compiler_index t.root) compiler_index;
+  OpamFile.Compiler_index.write (t.root / "repo" // "index.compilers") compiler_index;
 
   { t with prefixes; package_index; compiler_index }
 
@@ -476,7 +476,7 @@ let cleanup t repo =
           let relink r g =
             if OpamFilename.exists g && OpamFilename.readlink g = r then
               OpamFilename.move ~src:r ~dst:g in
-          relink comp_f (OpamPath.compiler t.root comp);
+          relink comp_f (OpamPath.compiler_comp t.root comp);
           match descr_f with
           | Some descr_f -> relink descr_f (OpamPath.compiler_descr t.root comp)
           | None         -> ()

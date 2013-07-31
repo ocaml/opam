@@ -30,37 +30,49 @@ let state_cache t = t // "state.cache"
 
 let update_cache t = t // "update.cache"
 
-let opam_dir t = t / "opam"
-
 let lock t = t // "lock"
 
 let aliases t = t // "aliases"
 
-let opam t nv = opam_dir t // (OpamPackage.to_string nv ^ ".opam")
+let packages_dir t = t / "packages"
+
+let packages t nv =
+  packages_dir t
+  / OpamPackage.Name.to_string (OpamPackage.name nv)
+  / OpamPackage.to_string nv
+
+let opam t nv = packages t nv // "opam"
+
+let url t nv = packages t nv // "url"
+
+let descr t nv = packages t nv // "descr"
+
+let archive t nv = packages t nv // (OpamPackage.to_string nv ^ "+opam.tar.gz")
+
+let files t nv = packages t nv / "files"
 
 let compilers_dir t = t / "compilers"
 
-let compiler t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".comp")
+let compilers t c =
+  compilers_dir t
+  / OpamCompiler.Version.to_string (OpamCompiler.version c)
+  / OpamCompiler.to_string c
 
-let compiler_descr t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".descr")
+let compiler_comp t c =
+  compilers t c // (OpamCompiler.to_string c ^ ".comp")
 
-let descr_dir t = t / "descr"
-
-let descr t nv = descr_dir t // OpamPackage.to_string nv
-
-let archives_dir t = t / "archives"
-
-let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
+let compiler_descr t c =
+  compilers t c // (OpamCompiler.to_string c ^ ".descr")
 
 let repo_index t = t / "repo" // "index"
-
-let package_index t = t / "repo" // "index.packages"
-
-let compiler_index t = t / "repo" // "index.compilers"
 
 let init  t = t / "opam-init"
 
 let log t = t / "log"
+
+let dev_packages_dir t = root t / "packages.dev"
+
+let dev_packages t nv = dev_packages_dir t / OpamPackage.to_string nv
 
 module Switch = struct
 
@@ -142,24 +154,22 @@ module Repository = struct
 
   let config t = root t // "config"
 
-  let prefix t = root t // "prefix"
-
   let packages_dir t = root t / "packages"
 
   let remote_packages_dir t = t.repo_address / "packages"
 
-  let package t prefix nv =
+  let packages t prefix nv =
     match prefix with
     | None   -> packages_dir t / OpamPackage.to_string nv
     | Some p -> packages_dir t / p / OpamPackage.to_string nv
 
-  let opam t prefix nv = package t prefix nv // "opam"
+  let opam t prefix nv = packages t prefix nv // "opam"
 
-  let descr t prefix nv = package t prefix nv // "descr"
+  let descr t prefix nv = packages t prefix nv // "descr"
 
-  let url t prefix nv = package t prefix nv // "url"
+  let url t prefix nv = packages t prefix nv // "url"
 
-  let files t prefix nv = package t prefix nv / "files"
+  let files t prefix nv = packages t prefix nv / "files"
 
   let archives_dir t = root t / "archives"
 
@@ -174,12 +184,14 @@ module Repository = struct
 
   let remote_compilers_dir t = t.repo_address / "compilers"
 
-  let compiler t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".comp")
+  let compiler_comp t prefix c =
+    match prefix with
+    | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".comp")
+    | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".comp")
 
-  let compiler_descr t ov = compilers_dir t // (OpamCompiler.to_string ov ^ ".descr")
-
-  let tmp t = root t / "tmp"
-
-  let tmp_dir t nv = tmp t / OpamPackage.to_string nv
+  let compiler_descr t prefix c =
+    match prefix with
+    | None   -> compilers_dir t // (OpamCompiler.to_string c ^ ".descr")
+    | Some p -> compilers_dir t / p // (OpamCompiler.to_string c ^ ".descr")
 
 end

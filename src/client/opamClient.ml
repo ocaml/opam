@@ -17,6 +17,7 @@
 open OpamTypes
 open OpamState.Types
 open OpamMisc.OP
+open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "CLIENT" fmt
 
@@ -500,7 +501,7 @@ module API = struct
               && OpamPackage.Map.find nv t.package_index = repo.repo_name then
                 true
               else (
-                let tmp = OpamPath.Repository.tmp_dir repo nv in
+                let tmp = repo.repo_root / "tmp" / OpamPackage.to_string nv in
                 OpamFilename.rmdir tmp;
                 false
               )
@@ -637,9 +638,7 @@ module API = struct
         OpamRepository.init repo;
 
         (* Init global dirs *)
-        OpamFilename.mkdir (OpamPath.opam_dir root);
-        OpamFilename.mkdir (OpamPath.descr_dir root);
-        OpamFilename.mkdir (OpamPath.archives_dir root);
+        OpamFilename.mkdir (OpamPath.packages_dir root);
         OpamFilename.mkdir (OpamPath.compilers_dir root);
 
         (* Load the partial state, and update the global state *)

@@ -61,7 +61,7 @@ let list ~print_short ~installed =
 
   let officials, patches =
     OpamCompiler.Set.fold (fun comp (officials, patches) ->
-      let c = OpamFile.Comp.read (OpamPath.compiler t.root comp) in
+      let c = OpamFile.Comp.read (OpamPath.compiler_comp t.root comp) in
       let version = OpamFile.Comp.version c in
       if OpamCompiler.Version.to_string version = OpamCompiler.to_string comp then
         comp :: officials, patches
@@ -203,7 +203,7 @@ let install_with_packages ~quiet ~packages switch compiler =
 let install ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
   let comp_dir = OpamPath.Switch.root t.root switch in
-  let comp_f = OpamPath.compiler t.root compiler in
+  let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists_dir comp_dir)
   && not (OpamFilename.exists comp_f) then
     OpamCompiler.unknown compiler;

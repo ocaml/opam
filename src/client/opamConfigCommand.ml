@@ -127,7 +127,7 @@ let includes ~is_rec names =
 let config c =
   log "config-options";
   let t = OpamState.load_state "config-options" in
-  let comp = OpamState.compiler t t.compiler in
+  let comp = OpamState.compiler_comp t t.compiler in
   let names =
     OpamMisc.filter_map
       (fun (n,_) ->

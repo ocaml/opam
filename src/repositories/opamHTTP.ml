@@ -187,8 +187,8 @@ module B = struct
         let prefix = OpamRepository.find_prefix prefix nv in
         let opam_f = OpamPath.Repository.opam repo prefix nv in
         if not (OpamFilename.exists opam_f) then (
-          OpamFilename.rmdir (OpamPath.Repository.package repo prefix nv);
-          OpamFilename.rmdir (OpamPath.Repository.tmp_dir repo nv);
+          OpamFilename.rmdir (OpamPath.Repository.packages repo prefix nv);
+          OpamFilename.rmdir (repo.repo_root / "tmp" / OpamPackage.to_string nv);
           OpamFilename.remove (OpamPath.Repository.archive repo nv);
         )
       ) packages;

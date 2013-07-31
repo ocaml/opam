@@ -258,7 +258,7 @@ val dot_config: state -> name -> OpamFile.Dot_config.t
 val opam: state -> package -> OpamFile.OPAM.t
 
 (** Return the compiler descritpion file for the given compiler name *)
-val compiler: state -> compiler -> OpamFile.Comp.t
+val compiler_comp: state -> compiler -> OpamFile.Comp.t
 
 (** {2 Locks} *)
 

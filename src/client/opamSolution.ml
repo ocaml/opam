@@ -157,11 +157,13 @@ let print_variable_warnings t =
       "OCAMLFIND_COMMANDS";
       "OCAMLFIND_LDCONF";
     ] in
-    if OpamPackage.Set.exists (fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind") t.installed then
+    if OpamPackage.Set.exists (
+        fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind"
+      ) t.installed then
       List.iter warn ocamlfind_vars;
     (* 2. Warn about variables possibly set by other compilers *)
     let new_variables comp =
-      let comp_f = OpamPath.compiler t.root comp in
+      let comp_f = OpamPath.compiler_comp t.root comp in
       let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
       new_variables env in
     let vars = ref OpamMisc.StringSet.empty in

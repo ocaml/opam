@@ -402,7 +402,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
     try
       let repo_name = OpamPackage.Map.find nv t.package_index in
       let repo = OpamRepositoryName.Map.find repo_name t.repositories in
-      let tmp_dir = OpamPath.Repository.tmp_dir repo nv in
+      let tmp_dir = repo.repo_root / "tmp" / OpamPackage.to_string nv in
       OpamFilename.rmdir tmp_dir
     with Not_found ->
       ()
