@@ -1120,6 +1120,7 @@ module X = struct
           Variable (s_stublibs, mk      t.stublibs);
           Variable (s_share   , mk      t.share);
           Variable (s_doc     , mk      t.doc);
+          Variable (s_man     , mk      t.man);
           Variable (s_misc    , mk_misc t.misc);
         ]
       } in
