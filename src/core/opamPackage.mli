@@ -32,8 +32,8 @@ end
 module Name: sig
   include OpamMisc.ABSTRACT
 
-  (** default package *)
-  val default: t
+  (** global configuration package *)
+  val global_config: t
 end
 
 (** Package (name x version) pairs *)

@@ -750,9 +750,9 @@ module API = struct
     let atoms = OpamSolution.atoms_of_names t names in
     let atoms =
       List.filter (fun (n,_) ->
-        if n = OpamPackage.Name.default then (
+        if n = OpamPackage.Name.global_config then (
           OpamGlobals.msg "Package %s can not be removed.\n"
-            (OpamPackage.Name.to_string OpamPackage.Name.default);
+            (OpamPackage.Name.to_string OpamPackage.Name.global_config);
           false
         ) else
           true

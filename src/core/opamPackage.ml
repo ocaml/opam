@@ -64,7 +64,7 @@ module Name = struct
 
   let of_string x = x
 
-  let default = OpamGlobals.default_package
+  let global_config = OpamGlobals.global_config
 
   let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with

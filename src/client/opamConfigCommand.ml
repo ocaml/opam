@@ -28,15 +28,17 @@ let string_of_config t =
 
 let need_globals ns =
   ns = []
-  || List.mem OpamPackage.Name.default ns
-  || List.mem (OpamPackage.Name.of_string "globals") ns
+  || List.mem OpamPackage.Name.global_config ns
+  || List.mem (OpamPackage.Name.of_string "global") ns
 
 (* Implicit variables *)
 let implicits t ns =
   let global_implicits =
     if need_globals ns then
       List.map (fun variable ->
-        OpamVariable.Full.create_global OpamPackage.Name.default (OpamVariable.of_string variable)
+        OpamVariable.Full.create_global
+          OpamPackage.Name.global_config
+          (OpamVariable.of_string variable)
       ) [ "ocaml-version"; "preinstalled" ]
     else
       [] in
@@ -65,7 +67,8 @@ let list ns =
   let t = OpamState.load_state "config-list" in
   let globals =
     if need_globals ns then
-      [OpamPackage.Name.default, OpamState.dot_config t OpamPackage.Name.default]
+      [OpamPackage.Name.global_config,
+       OpamState.dot_config t OpamPackage.Name.global_config]
     else
       [] in
   let configs =
@@ -280,7 +283,7 @@ let subst fs =
 let quick_lookup v =
   let name = OpamVariable.Full.package v in
   let var = OpamVariable.Full.variable v in
-  if name = OpamPackage.Name.default then (
+  if name = OpamPackage.Name.global_config then (
     let root = OpamPath.default () in
     let switch = match !OpamGlobals.switch with
       | `Command_line s
@@ -288,7 +291,7 @@ let quick_lookup v =
       | `Not_set ->
 	let config = OpamPath.config root in
 	OpamFile.Config.switch (OpamFile.Config.read config) in
-    let config = OpamPath.Switch.config root switch OpamPackage.Name.default in
+    let config = OpamPath.Switch.config root switch OpamPackage.Name.global_config in
     let config = OpamFile.Dot_config.read config in
 
     if OpamVariable.to_string var = "switch" then

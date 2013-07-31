@@ -72,7 +72,7 @@ let default_repository_address = "http://opam.ocamlpro.com"
 
 let default_build_command = [ [ "./build.sh" ] ]
 
-let default_package = "conf-ocaml"
+let global_config = "global-config"
 
 let system = "system"
 

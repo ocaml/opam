@@ -924,6 +924,42 @@ let load_state ?(save_cache=true) call_site =
   ) else
     t
 
+(* install ~/.opam/switches/<switch>/config/global-conf.config *)
+let install_global_config root switch =
+  log "install_global_config switch=%s" (OpamSwitch.to_string switch);
+
+  (* .config *)
+  let vars =
+    let map f l = List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
+    let id x = x in
+
+    map OpamFilename.Dir.to_string
+      [
+        ("root", root);
+        ("prefix", OpamPath.Switch.root root switch);
+        ("lib", OpamPath.Switch.lib_dir root switch);
+        ("bin", OpamPath.Switch.bin root switch);
+        ("doc", OpamPath.Switch.doc_dir root switch);
+        ("stublibs", OpamPath.Switch.stublibs root switch);
+        ("toplevel", OpamPath.Switch.toplevel root switch);
+        ("man", OpamPath.Switch.man_dir root switch);
+        ("share", OpamPath.Switch.share_dir root switch);
+      ]
+    @ map id [
+      ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
+      ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
+      ("make" , !OpamGlobals.makecmd ());
+      ("os"   , OpamGlobals.os_string ());
+    ] in
+
+  let config = OpamFile.Dot_config.create vars in
+  OpamFile.Dot_config.write
+    (OpamPath.Switch.config root switch OpamPackage.Name.global_config)
+    config
+
+let fix_descriptions_hook =
+  ref (fun _ ~verbose:_ -> assert false)
+
 let rebuild_state_cache () =
   remove_state_cache ();
   let t = load_state ~save_cache:false "rebuild-cache" in
@@ -971,7 +1007,7 @@ let contents_of_variable t v =
     with Not_found ->
       OpamGlobals.error "%s is not defined" (OpamVariable.Full.to_string v);
       None in
-  if name = OpamPackage.Name.default then (
+  if name = OpamPackage.Name.global_config then (
     try string (OpamMisc.getenv var_str)
     with Not_found ->
       if var_str = "ocaml-version" then
@@ -1641,39 +1677,6 @@ let add_switch root switch compiler =
     OpamFile.Aliases.write aliases_f (OpamSwitch.Map.add switch compiler aliases);
   end
 
-(* install ~/.opam/<switch>/config/conf-ocaml.config *)
-let install_conf_ocaml_config root switch =
-  log "install_conf_ocaml_config switch=%s" (OpamSwitch.to_string switch);
-
-  (* .config *)
-  let vars =
-    let map f l = List.rev_map (fun (s,p) -> OpamVariable.of_string s, S (f p)) l in
-    let id x = x in
-
-    map OpamFilename.Dir.to_string
-      [
-        ("root", root);
-        ("prefix", OpamPath.Switch.root root switch);
-        ("lib", OpamPath.Switch.lib_dir root switch);
-        ("bin", OpamPath.Switch.bin root switch);
-        ("doc", OpamPath.Switch.doc_dir root switch);
-        ("stublibs", OpamPath.Switch.stublibs root switch);
-        ("toplevel", OpamPath.Switch.toplevel root switch);
-        ("man", OpamPath.Switch.man_dir root switch);
-        ("share", OpamPath.Switch.share_dir root switch);
-      ]
-    @ map id [
-      ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
-      ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
-      ("make" , !OpamGlobals.makecmd ());
-      ("os"   , OpamGlobals.os_string ());
-    ] in
-
-  let config = OpamFile.Dot_config.create vars in
-  OpamFile.Dot_config.write
-    (OpamPath.Switch.config root switch OpamPackage.Name.default)
-    config
-
 (* - compiles and install $opam/compiler/[ocaml_version].comp in $opam/[switch]
    - update $opam/switch
    - update $opam/config *)
@@ -1718,7 +1721,7 @@ let install_compiler t ~quiet switch compiler =
     OpamFilename.mkdir (OpamPath.Switch.man_dir ~num t.root switch)
   ) ["1";"1M";"2";"3";"4";"5";"6";"7";"9"];
 
-  install_conf_ocaml_config t.root switch;
+  install_global_config t.root switch;
 
   let comp = OpamFile.Comp.read comp_f in
   begin try

@@ -192,7 +192,7 @@ val find_repository_opt: state -> repository_name -> repository option
 (** {2 Compilers} *)
 
 (** (Re-)install the configuration for a given root and switch *)
-val install_conf_ocaml_config: dirname -> switch -> unit
+val install_global_config: dirname -> switch -> unit
 
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
