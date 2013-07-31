@@ -47,68 +47,74 @@ let print_updated_compilers updates =
     "Some following compiler are not available anymore"
     updates.deleted
 
-let relink_compilers t ~verbose old_index =
+let filter_compiler_checksums cs =
+  let keep f = OpamFilename.check_suffix f ".comp" in
+  List.filter keep cs
+
+let fix_compiler_descriptions t ~verbose =
   OpamGlobals.msg "Updating %s/\n"
     (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
-  let old_index = OpamCompiler.Map.filter (fun comp _ ->
-      OpamFilename.exists (OpamPath.compiler_comp t.root comp)
-    ) old_index in
-  let compiler_index = (* XXX *) OpamCompiler.Map.empty in
-  log "old-index: %s" (OpamMisc.string_of_list OpamCompiler.to_string
-                         (OpamCompiler.Map.keys old_index));
-  log "new-index: %s" (OpamMisc.string_of_list OpamCompiler.to_string
-                         (OpamCompiler.Map.keys compiler_index));
-  let updated_compilers =
-    OpamCompiler.Map.filter (fun comp state ->
-        not (OpamCompiler.Map.mem comp old_index)
-        || OpamCompiler.Map.find comp old_index <> state
-      ) compiler_index in
-  let deleted_compilers =
-    OpamCompiler.Set.fold (fun comp map ->
-        if comp = OpamCompiler.system
-        || OpamCompiler.Map.mem comp compiler_index
-        || OpamState.compiler_installed t comp then
-          map
-        else
-          OpamCompiler.Map.add comp true map
-      ) t.compilers OpamCompiler.Map.empty in
-
-  (* Delete compiler descritions, but keep the ones who disapeared and
-     are still installed *)
-  OpamCompiler.Map.iter (fun comp _ ->
-    if not (OpamState.compiler_installed t comp) then
-      (* XXX: TODO *)
-      ()
-  ) deleted_compilers;
-
-  (* Link existing compiler description files, following the
-     repository priorities *)
-  OpamCompiler.Map.iter (fun _ _ ->
-      (* XXX: TODO *)
-      ()
-    ) updated_compilers;
+  let global_index = OpamState.compiler_state t in
+  let repo_index = OpamState.compiler_repository_state t in
+  let niet _ = "" in
+  log "global-index: %s" (OpamCompiler.Map.to_string niet global_index);
+  log "repo-index  : %s" (OpamCompiler.Map.to_string niet repo_index);
 
   let updated_compilers, new_compilers =
-    OpamCompiler.Map.partition
-      (fun c _ -> OpamState.compiler_installed t c)
-      updated_compilers in
+    let updated_compilers =
+      OpamCompiler.Map.fold (fun comp state set ->
+          if not (OpamCompiler.Map.mem comp global_index)
+          || OpamCompiler.Map.find comp global_index <> state then
+            OpamCompiler.Set.add comp set
+          else
+            set
+        ) repo_index OpamCompiler.Set.empty in
+    OpamCompiler.Set.partition (OpamState.is_compiler_installed t) updated_compilers in
+  log "updated-compilers: %s" (OpamCompiler.Set.to_string updated_compilers);
+  log "new-compilers    : %s" (OpamCompiler.Set.to_string new_compilers);
 
-  let set m =
-    OpamCompiler.Map.fold (fun comp _ acc ->
-        OpamCompiler.Set.add comp acc
-      ) m OpamCompiler.Set.empty in
+  let deleted_compilers =
+    OpamCompiler.Set.fold (fun comp map ->
+        if comp = OpamCompiler.system             (* system *)
+        || OpamCompiler.Map.mem comp repo_index   (* OR available *)
+        || OpamState.is_compiler_installed t comp (* OR installed *)
+        then
+          map
+        else
+          OpamCompiler.Set.add comp map
+      ) t.compilers OpamCompiler.Set.empty in
+  log "deleted-compilers: %s" (OpamCompiler.Set.to_string deleted_compilers);
+
+  (* Delete compiler descritions *)
+  OpamCompiler.Set.iter (fun comp ->
+      let dir = OpamPath.compilers t.root comp in
+      OpamFilename.rmdir dir;
+    ) deleted_compilers;
+
+  (* Update the compiler description *)
+  OpamCompiler.Set.iter (fun comp ->
+      match OpamState.repository_of_compiler t comp with
+      | None                -> ()
+      | Some (repo, prefix) ->
+        let files = OpamRepository.compiler_files repo prefix comp in
+        let dir = OpamPath.compilers t.root comp in
+        if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
+        OpamFilename.mkdir dir;
+        List.iter (fun file ->
+            OpamFilename.copy_in file dir
+          ) files;
+    ) (OpamCompiler.Set.union updated_compilers new_compilers);
 
   let updates = {
-    created = set new_compilers;
-    updated = set updated_compilers;
-    deleted = set deleted_compilers;
+    created = new_compilers;
+    updated = updated_compilers;
+    deleted = deleted_compilers;
     changed = OpamCompiler.Set.empty; (* we don't reinstall compilers yet *)
   } in
 
   if verbose then print_updated_compilers updates;
 
   updates
-
 
 let print_updated_packages t updates =
 
@@ -214,69 +220,108 @@ let update_pinned_packages t ~verbose packages =
 
   updates
 
+let filter_package_checksums cs =
+  let keep f =
+    match OpamFilename.Base.to_string (OpamFilename.basename f) with
+    | "opam" | "descr" -> false
+    | _ -> true in
+  List.filter keep cs
+
 (* Update the package contents, display the new packages and update
    reinstall *)
-let relink_packages t ~verbose old_index =
+let fix_package_descriptions t ~verbose =
   OpamGlobals.msg "Updating %s/\n"
     (OpamFilename.prettify_dir (OpamPath.packages_dir t.root));
-  let old_index = OpamPackage.Map.filter (fun nv _ ->
-      OpamFilename.exists (OpamPath.opam t.root nv)
-    ) old_index in
-  let package_index = (* XXX: TODO *) OpamPackage.Map.empty in
-  log "old-index: %s"
-    (OpamMisc.string_of_list OpamPackage.to_string (OpamPackage.Map.keys old_index));
-  log "new-index: %s"
-    (OpamMisc.string_of_list
-       OpamPackage.to_string
-       (OpamPackage.Map.keys package_index));
-  let updated_packages =
-    OpamPackage.Map.filter (fun nv state ->
-        not (OpamPackage.Map.mem nv old_index)
-        || OpamPackage.Map.find nv old_index <> state
-      ) package_index in
-  let all_installed = OpamState.all_installed t in
-  let deleted_packages =
-    OpamPackage.Set.fold (fun nv map ->
-        if OpamPackage.Map.mem nv package_index
-        || OpamPackage.Set.mem nv all_installed then
-          map
-        else
-          OpamPackage.Map.add nv true map
-      ) t.packages OpamPackage.Map.empty in
 
-  (* Remove the deleted packages (which are not yet unininstalled) *)
-  OpamPackage.Map.iter (fun nv _ ->
-      let remove fn =
-        let file = fn t.root nv in
-        if OpamFilename.exists file then OpamFilename.remove file in
-      remove OpamPath.opam;
-      remove OpamPath.descr;
-      remove OpamPath.archive;
+  let global_index = OpamState.package_state t in
+  let repo_index   = OpamState.package_repository_state t in
+  let niet _ = "" in
+  log "global-index: %s" (OpamPackage.Map.to_string niet global_index);
+  log "repo-index  : %s" (OpamPackage.Map.to_string niet repo_index);
+
+  let updated_packages, new_packages =
+    let updated_packages =
+      OpamPackage.Map.fold (fun nv state set ->
+          if not (OpamPackage.Map.mem nv global_index)
+          || OpamPackage.Map.find nv global_index <> state then
+            OpamPackage.Set.add nv set
+          else
+            set
+        ) repo_index OpamPackage.Set.empty in
+    OpamPackage.Set.partition (fun nv ->
+        OpamPackage.Map.mem nv global_index
+      ) updated_packages in
+  log "new-packages    : %s" (OpamPackage.Set.to_string new_packages);
+
+  let all_installed = OpamState.all_installed t in
+  let changed_packages, updated_packages =
+    OpamPackage.Set.partition (fun nv ->
+        OpamPackage.Set.mem nv all_installed
+      ) updated_packages in
+  log "updated-packages: %s" (OpamPackage.Set.to_string updated_packages);
+  log "changed-packages: %s" (OpamPackage.Set.to_string changed_packages);
+
+  let deleted_packages =
+    OpamPackage.Set.filter (fun nv ->
+        not (OpamPackage.Map.mem nv repo_index         (* available *)
+             || OpamPackage.Set.mem nv all_installed)  (* OR installed *)
+      ) t.packages in
+  log "deleted-packages: %s" (OpamPackage.Set.to_string deleted_packages);
+
+  (* Remove the deleted packages *)
+  OpamPackage.Set.iter (fun nv ->
+      let dir = OpamPath.packages t.root nv in
+      OpamFilename.rmdir dir;
     ) deleted_packages;
 
-  (* Create symbolic links from $repo dirs to main dir *)
-  OpamPackage.Map.iter (fun _ _ ->
-      (* XXX: TODO *)
-      ()
-    ) updated_packages;
+  (* Update the package descriptions *)
+  let (++) = OpamPackage.Set.union in
+  OpamPackage.Set.iter (fun nv ->
+      match OpamState.repository_of_package t nv with
+      | None                -> ()
+      | Some (repo, prefix) ->
+        let root = OpamPath.Repository.packages repo prefix nv in
+        let files = OpamRepository.package_files repo prefix nv in
+        let dir = OpamPath.packages t.root nv in
+        if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
+        OpamFilename.mkdir dir;
+        List.iter (fun file ->
+            OpamFilename.copy_in ~root file dir
+          ) files;
+    ) (new_packages ++ updated_packages ++ changed_packages);
 
-  let updated_packages, new_packages = OpamPackage.Map.partition (fun nv _ ->
-      OpamPackage.Map.mem nv old_index
-    ) updated_packages in
-  let packages_to_upgrade, updated_packages = OpamPackage.Map.partition (fun nv _ ->
-      OpamPackage.Set.mem nv all_installed
-    ) updated_packages in
+  (* Do not recompile a package if only only OPAM or descr files have
+     changed. We recompile a package:
 
-  let set m =
-    OpamPackage.Map.fold (fun nv _ acc ->
-        OpamPackage.Set.add nv acc
-      ) m OpamPackage.Set.empty in
+     - if both global and repo states have an archive file and the
+       checksums of important files have changed;
+
+     - if both global and repo states don't have an archive file and
+       the checksums of important files have changed;
+
+     - if only one of them have an archive file, if the checksums of
+       the important files without the archive have changed. *)
+  let changed_packages = OpamPackage.Set.filter (fun nv ->
+      let archive_g, checksums_g =
+        OpamState.package_partial_state t nv ~archive:true in
+      let archive_r, checksums_r =
+        OpamState.package_repository_partial_state t nv ~archive:true in
+      if archive_g = archive_r then
+        checksums_g <> checksums_r
+      else
+        let _, checksums_g =
+          OpamState.package_partial_state t nv ~archive:false in
+        let _, checksums_r =
+          OpamState.package_repository_partial_state t nv ~archive:false in
+        checksums_g <> checksums_r
+    ) changed_packages in
+  log "packages-to-upgrade: %s" (OpamPackage.Set.to_string changed_packages);
 
   let updates = {
-    created = set new_packages;
-    updated = set updated_packages;
-    deleted = set deleted_packages;
-    changed = set packages_to_upgrade;
+    created = new_packages;
+    updated = updated_packages;
+    deleted = deleted_packages;
+    changed = changed_packages;
   } in
 
   if verbose then print_updated_packages t updates;
@@ -330,7 +375,9 @@ let update_index t =
   let repo_index =
     List.fold_left (fun repo_index repo ->
       let available = get_packages repo.repo_name in
-      packages := OpamPackage.Set.union available !packages;
+      packages := OpamPackage.Set.fold (fun nv set ->
+          OpamPackage.Set.add nv set
+        ) available !packages;
       OpamPackage.Set.fold (fun nv repo_index ->
           let name = OpamPackage.name nv in
           if not (OpamPackage.Name.Map.mem name repo_index) then
@@ -357,66 +404,63 @@ let update_config t repos =
   let new_config = OpamFile.Config.with_repositories t.config repos in
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
-let relink_all t ~verbose fn =
-  log "relink-all";
-  let old_compiler_index = OpamState.compiler_index t in
-  let old_package_index = OpamState.package_index t in
-  fn t;
+let fix_descriptions t ~verbose =
   let _ = update_index t in
-  let t = OpamState.load_state ~save_cache:false "relink-all" in
-  let _ = relink_compilers t ~verbose old_compiler_index in
-  let _ = relink_packages t ~verbose old_package_index in
+  let t = OpamState.load_state ~save_cache:false "fix-descriptions" in
+  let _ = fix_compiler_descriptions t ~verbose in
+  let _ = fix_package_descriptions t ~verbose in
   OpamState.rebuild_state_cache ()
 
 (* Remove any remaining of [repo] from OPAM state *)
 let cleanup t repo =
-  log "cleanup %s" (OpamRepositoryName.to_string repo.repo_name);
-  relink_all t ~verbose:true (fun t ->
-      let packages = OpamRepository.packages_with_prefixes repo in
-      OpamPackage.Map.iter (fun nv prefix ->
-          let relink r g =
-            let r = r repo prefix nv in
-            let g = g t.root nv in
-            if OpamFilename.exists g && OpamFilename.readlink g = r then
-              OpamFilename.move ~src:r ~dst:g in
-          relink OpamPath.Repository.opam OpamPath.opam;
-          relink OpamPath.Repository.descr OpamPath.descr;
-          relink (fun r _ -> OpamPath.Repository.archive r) OpamPath.archive;
-        ) packages;
-      let compilers = OpamRepository.compilers_with_prefixes repo in
-      OpamCompiler.Map.iter (fun comp prefix ->
-          let comp_f = OpamPath.Repository.compiler_comp repo prefix comp in
-          let descr_f = OpamPath.Repository.compiler_descr repo prefix comp in
-          let relink r g =
-            if OpamFilename.exists g && OpamFilename.readlink g = r then
-              OpamFilename.move ~src:r ~dst:g in
-          relink comp_f (OpamPath.compiler_comp t.root comp);
-          if OpamFilename.exists descr_f then
-            relink descr_f (OpamPath.compiler_descr t.root comp)
-        ) compilers;
-      let repos = OpamRepositoryName.Map.keys t.repositories in
-      update_config t (List.filter ((<>) repo.repo_name) repos);
-      OpamFilename.rmdir repo.repo_root;
-    )
+   log "cleanup %s" (OpamRepositoryName.to_string repo.repo_name);
+  let repos = OpamRepositoryName.Map.keys t.repositories in
+  update_config t (List.filter ((<>) repo.repo_name) repos);
+  OpamFilename.rmdir repo.repo_root;
+  fix_descriptions t ~verbose:true
 
 let priority repo_name ~priority =
   log "repository-priority";
+
+  (* 1/ update the config file *)
   let t = OpamState.load_state ~save_cache:false "repository-priority" in
-  relink_all t ~verbose:true (fun t ->
-      let repo = OpamState.find_repository t repo_name in
-      let config_f = OpamPath.Repository.config repo in
-      let config =
-        let config = OpamFile.Repo_config.read config_f in
-        { config with repo_priority = priority } in
-      OpamFile.Repo_config.write config_f config;
-      let repo_index_f = OpamPath.repo_index t.root in
-      let repo_index =
-        let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
-        let repo_index =
-          OpamPackage.Name.Map.map (List.filter ((<>)repo_name)) repo_index in
-        OpamPackage.Name.Map.filter (fun _ rs -> rs<>[]) repo_index in
-      OpamFile.Repo_index.write repo_index_f repo_index;
-    )
+  let repo = OpamState.find_repository t repo_name in
+  let config_f = OpamPath.Repository.config repo in
+  let config =
+    let config = OpamFile.Repo_config.read config_f in
+    { config with repo_priority = priority } in
+  OpamFile.Repo_config.write config_f config;
+
+  (* 2/ shuffle the repository index *)
+  let repo_index_f = OpamPath.repo_index t.root in
+  let repo_index =
+    let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
+    OpamPackage.Name.Map.map (fun repos ->
+        if not (List.mem repo_name repos) then repos
+        else
+          let repos = List.filter ((<>)repo_name) repos in
+          let prios = ref [] in
+          let priority_of n =
+            if List.mem_assoc n !prios then
+              List.assoc n !prios
+            else
+              let repo = OpamState.find_repository t repo_name in
+              let config_f = OpamPath.Repository.config repo in
+              let config = OpamFile.Repo_config.read config_f in
+              let prio = config.repo_priority in
+              prios := (n, prio) :: !prios;
+              prio in
+          let compare n1 n2 =
+            let p1 = priority_of n1 in
+            let p2 = priority_of n2 in
+            (* highest is better priority *)
+            p2 - p1 in
+          OpamMisc.insert compare repo_name repos
+      ) repo_index in
+  OpamFile.Repo_index.write repo_index_f repo_index;
+
+  (* relink the compiler and package descriptions *)
+  fix_descriptions t ~verbose:true
 
 let add name kind address ~priority:prio =
   log "repository-add";

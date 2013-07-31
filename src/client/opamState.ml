@@ -214,9 +214,6 @@ let package_index_aux root repositories =
         ) map repos
     ) repo_index OpamPackage.Map.empty
 
-let package_index t =
-  package_index_aux t.root t.repositories
-
 let compiler_index_aux repositories =
   log "compiler-index";
   let repositories = sorted_repositories_aux repositories in
@@ -230,6 +227,105 @@ let compiler_index_aux repositories =
 
 let compiler_index t =
   compiler_index_aux t.repositories
+
+let package_index t =
+  package_index_aux t.root t.repositories
+
+let package_state_one t all nv =
+  let opam    = OpamPath.opam t.root nv in
+  let descr   = OpamPath.descr t.root nv in
+  let url     = OpamPath.url t.root nv in
+  let files   = OpamPath.files t.root nv in
+  let archive = OpamPath.archive t.root nv in
+  if not (OpamFilename.exists opam) then None
+  else
+    let result = match all with
+      | `all ->
+        OpamFilename.checksum opam
+        @ OpamFilename.checksum descr
+        @ OpamFilename.checksum url
+        @ OpamFilename.checksum_dir files
+        @ OpamFilename.checksum archive
+      | `partial true ->
+        OpamFilename.checksum url
+        @ OpamFilename.checksum_dir files
+        @ OpamFilename.checksum archive
+      | `partial false ->
+        OpamFilename.checksum url
+        @ OpamFilename.checksum_dir files in
+    Some result
+
+let package_state t =
+  OpamPackage.Set.fold (fun nv map ->
+      match package_state_one t `all nv with
+      | None   -> map
+      | Some s -> OpamPackage.Map.add nv s map
+    ) t.packages OpamPackage.Map.empty
+
+let package_partial_state t nv ~archive =
+  match package_state_one t (`partial archive) nv with
+  | None   -> false, []
+  | Some s ->
+    let archive = OpamPath.archive t.root nv in
+    OpamFilename.exists archive, s
+
+let package_repository_state t =
+  let package_index = Lazy.force t.package_index in
+  OpamPackage.Map.fold (fun nv (repo, prefix) map ->
+      let repo = find_repository_exn t repo in
+      match OpamRepository.package_state repo prefix nv `all with
+      | [] -> map
+      | l  -> OpamPackage.Map.add nv l map
+    ) package_index OpamPackage.Map.empty
+
+let package_repository_partial_state t nv ~archive =
+  let package_index = Lazy.force t.package_index in
+  let repo, prefix = OpamPackage.Map.find nv package_index in
+  let repo = find_repository_exn t repo in
+  let exists_archive = OpamFilename.exists (OpamPath.Repository.archive repo nv) in
+  exists_archive, OpamRepository.package_state repo prefix nv (`partial archive)
+
+let repository_of_package t nv =
+  let package_index = Lazy.force t.package_index in
+  try
+    let repo, prefix = OpamPackage.Map.find nv package_index in
+    let repo = find_repository_exn t repo in
+    Some (repo, prefix)
+  with Not_found ->
+    None
+
+let compiler_state_one t c =
+  let comp = OpamPath.compiler_comp t.root c in
+  let descr = OpamPath.compiler_descr t.root c in
+  if OpamFilename.exists comp then
+    Some (OpamFilename.checksum comp @ OpamFilename.checksum descr)
+  else
+    None
+
+let compiler_state t =
+  OpamCompiler.Set.fold (fun c map ->
+      match compiler_state_one t c with
+      | None   -> map
+      | Some s -> OpamCompiler.Map.add c s map
+    ) t.compilers OpamCompiler.Map.empty
+
+let compiler_repository_state t =
+  let compiler_index = Lazy.force t.compiler_index in
+  OpamCompiler.Map.fold (fun comp (repo, prefix) map ->
+      let repo = find_repository_exn t repo in
+      match OpamRepository.compiler_state repo prefix comp with
+      | [] -> map
+      | l  -> OpamCompiler.Map.add comp l map
+    ) compiler_index OpamCompiler.Map.empty
+
+let repository_of_compiler t comp =
+  let compiler_index = Lazy.force t.compiler_index in
+  try
+    let repo, prefix = OpamCompiler.Map.find comp compiler_index in
+    let repo = find_repository_exn t repo in
+    Some (repo, prefix)
+  with Not_found ->
+    None
 
 let is_pinned_aux pinned n =
   OpamPackage.Name.Map.mem n pinned

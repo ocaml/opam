@@ -19,23 +19,19 @@
 open OpamState.Types
 open OpamTypes
 
-(** Update the repositories indexes ([repo/index], [repo/index.packages] and
-    [repo/index.compilers]). Return an updated state (including the correct
-    cache of repositories' [prefixes]). *)
+(** Update the repositories indexes ([repo/index]. *)
 val update_index: t -> unit
 
 (** Update the given pinned package. *)
 val update_pinned_packages: t -> verbose:bool -> name_set -> package_set
 
-(** [relink_compilers old_index] relinks the compiler files. *)
-val relink_compilers: t -> verbose:bool ->
-  (repository_name * string option) compiler_map -> compiler_set updates
+(** Fix the compiler descriptions and display the changes if [verbose]
+    is set. *)
+val fix_compiler_descriptions: t -> verbose:bool -> compiler_set updates
 
-(** [relink_package old_index upstream_changes] relinks the package
-    files and display the changes (if [verbose is set]). If
-    [upstream_changes] is set, these changes are also displayed. *)
-val relink_packages: t -> verbose:bool ->
-  (repository_name * string option) package_map  -> package_set updates
+(** Fix the the package descriptions and display the changes if
+    [verbose] is set. *)
+val fix_package_descriptions: t -> verbose:bool -> package_set updates
 
 (** List the available repositories. *)
 val list: short:bool -> unit

@@ -209,6 +209,14 @@ val is_compiler_installed: state -> compiler -> bool
 (** Is a switch installed ? *)
 val is_switch_installed: state -> switch -> bool
 
+(** Global compiler state *)
+val compiler_state: state -> checksums compiler_map
+
+(** Repository state *)
+val compiler_repository_state: state -> checksums compiler_map
+
+(** Return the active repository for a given compiler *)
+val repository_of_compiler: state -> compiler -> (repository * string option) option
 
 (** {2 Packages} *)
 
@@ -236,6 +244,22 @@ val all_installed: state -> package_set
 
 (** Return a map containing the switch where a given package is installed. *)
 val installed_versions: state -> name -> switch list package_map
+
+(** Global package state. *)
+val package_state: state -> checksums package_map
+
+(** Global & partial package state. *)
+val package_partial_state: state -> package -> archive:bool -> bool * checksums
+
+(** Repository state *)
+val package_repository_state: state -> checksums package_map
+
+(** Repository & partial package state. *)
+val package_repository_partial_state: state -> package -> archive:bool ->
+  bool * checksums
+
+(** Get the active repository for a given package *)
+val repository_of_package: state -> package -> (repository * string option) option
 
 (** {2 Configuration files} *)
 

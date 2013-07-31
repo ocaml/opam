@@ -384,7 +384,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   if not !OpamGlobals.keep_build_dir && rm_build then
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
-  (* Clean-up the active repository *)
+  (* XXX: Clean-up the active repository *)
   log "Cleaning-up the active repository";
   begin
     try
