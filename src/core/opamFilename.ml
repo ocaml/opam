@@ -400,3 +400,11 @@ module Attribute = struct
   module Map = OpamMisc.Map.Make(O)
 
 end
+
+let to_attribute root file =
+  let basename = Base.of_string (remove_prefix root file) in
+  let perm =
+    let s = Unix.stat (to_string file) in
+    s.Unix.st_perm in
+  let digest = digest file in
+  Attribute.create basename digest perm

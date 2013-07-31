@@ -234,3 +234,6 @@ module Attribute: sig
   val create: Base.t -> string -> int -> t
 
 end
+
+(** Convert a filename to an attribute, relatively to a root *)
+val to_attribute: Dir.t -> t -> Attribute.t

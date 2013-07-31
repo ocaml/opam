@@ -232,16 +232,9 @@ let make_urls_txt repo_root =
   let index =
     List.fold_left (fun set f ->
       if not (OpamFilename.exists f) then set
-      else (
-        let basename =
-          OpamFilename.Base.of_string (OpamFilename.remove_prefix repo_root f) in
-        let perm =
-          let s = Unix.stat (OpamFilename.to_string f) in
-          s.Unix.st_perm in
-        let digest = OpamFilename.digest f in
-        let attr = OpamFilename.Attribute.create basename digest perm in
+      else
+        let attr = OpamFilename.to_attribute repo_root f in
         OpamFilename.Attribute.Set.add attr set
-      )
     ) OpamFilename.Attribute.Set.empty (local_files repo)
   in
   if not (OpamFilename.Attribute.Set.is_empty index) then
