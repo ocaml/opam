@@ -411,6 +411,9 @@ let fix_descriptions t ~verbose =
   let _ = fix_package_descriptions t ~verbose in
   OpamState.rebuild_state_cache ()
 
+let () =
+  OpamState.fix_descriptions_hook := fix_descriptions
+
 (* Remove any remaining of [repo] from OPAM state *)
 let cleanup t repo =
    log "cleanup %s" (OpamRepositoryName.to_string repo.repo_name);

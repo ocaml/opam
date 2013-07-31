@@ -785,8 +785,12 @@ let reinstall_system_compiler t =
   ) else
     OpamGlobals.exit 1
 
+let upgrade_to_1_1_hook =
+  ref (fun () -> assert false)
+
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
+  !upgrade_to_1_1_hook ();
   let t0 = Unix.gettimeofday () in
   let root = OpamPath.default () in
 
@@ -942,6 +946,68 @@ let install_global_config root switch =
 
 let fix_descriptions_hook =
   ref (fun _ ~verbose:_ -> assert false)
+
+(* Upgrade to the new file overlay *)
+let upgrade_to_1_1 () =
+  let root  = OpamPath.default () in
+  let opam  = root / "opam" in
+  let descr = root / "descr" in
+  let compilers = root / "compilers" in
+  if OpamFilename.exists_dir opam then (
+
+    OpamGlobals.msg
+      "** Upgrading to OPAM 1.1 [DO NOT INTERRUPT THE PROCESS]   **\
+       \n\
+      \   In case something goes wrong, you can run that upgrade\
+      \   process again by doing:\
+       \n\
+      \       mkdir %s/opam && opam list\
+       \n\
+       ** Processing **\n"
+      (OpamFilename.prettify_dir (OpamPath.default ()));
+
+    OpamFilename.rmdir opam;
+    OpamFilename.rmdir descr;
+
+    (* Fix index priorities *)
+    OpamFilename.remove (OpamPath.repo_index root);
+
+    (* fix the base config files *)
+    let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
+    OpamSwitch.Map.iter (fun switch _ ->
+        install_global_config root switch
+      ) aliases;
+
+    OpamFilename.with_tmp_dir (fun dir ->
+        (* Fix system.comp *)
+        let system_comp = root / "compilers" // "system.comp" in
+        let tmp_file = OpamFilename.create dir (OpamFilename.basename system_comp) in
+        if OpamFilename.exists system_comp then (
+          log "backing up %s to %s"
+            (OpamFilename.to_string system_comp)
+            (OpamFilename.to_string tmp_file);
+          OpamFilename.move ~src:system_comp ~dst:tmp_file;
+        );
+        OpamFilename.rmdir compilers;
+        let system_comp = OpamPath.compiler_comp root OpamCompiler.system in
+        if OpamFilename.exists tmp_file then (
+          log "restoring %s" (OpamFilename.to_string tmp_file);
+          OpamFilename.mkdir (OpamFilename.dirname system_comp);
+          OpamFilename.move ~src:tmp_file ~dst:system_comp;
+        );
+
+        (* Fix all the descriptions *)
+        let t = load_state ~save_cache:false "update-to-1.1." in
+        !fix_descriptions_hook t ~verbose:false;
+
+        OpamGlobals.msg
+          "** Upgrade complete. You can continue to use OPAM as usual. **\n;";
+        OpamGlobals.exit 0
+      )
+  )
+
+let () =
+  upgrade_to_1_1_hook := upgrade_to_1_1
 
 let rebuild_state_cache () =
   remove_state_cache ();

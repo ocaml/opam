@@ -364,3 +364,6 @@ val check_base_packages: state -> unit
 
 (** Switch reinstall hook. *)
 val switch_reinstall_hook: (switch -> unit) ref
+
+(** Update hook *)
+val fix_descriptions_hook: (state -> verbose:bool -> unit) ref
