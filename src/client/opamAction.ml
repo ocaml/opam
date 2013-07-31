@@ -71,7 +71,7 @@ let install_package t nv =
       let local_sections = OpamFile.Dot_config.Section.available config in
       let libraries_in_opam =
         OpamFormula.fold_left (fun accu (n,_) ->
-          if OpamState.mem_installed_package_by_name t n then (
+          if OpamState.is_name_installed t n then (
             let nv = OpamState.find_installed_package_by_name t n in
             let opam = OpamState.opam t nv in
             let libs = OpamFile.OPAM.libraries opam in

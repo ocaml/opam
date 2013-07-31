@@ -192,7 +192,7 @@ let update_pinned_packages t ~verbose packages =
   (* Check if a pinned packages has been updated. *)
   let is_updated = function
     | n, (Local p | Git p | Darcs p) ->
-      if OpamState.mem_installed_package_by_name t n then
+      if OpamState.is_name_installed t n then
         let nv = OpamState.find_installed_package_by_name t n in
         match OpamState.update_pinned_package t n with
         | Up_to_date _  -> None

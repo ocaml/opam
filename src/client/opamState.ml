@@ -122,7 +122,7 @@ let mem_installed_package_by_name_aux installed name =
   let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) installed in
   not (OpamPackage.Set.is_empty set)
 
-let mem_installed_package_by_name t name =
+let is_name_installed t name =
   mem_installed_package_by_name_aux t.installed name
 
 let find_installed_package_by_name_aux installed name =
@@ -485,17 +485,17 @@ let get_compiler_packages t comp =
     pkg_available
   )
 
-let compiler_installed t comp =
+let is_compiler_installed t comp =
   OpamSwitch.Map.exists (fun _ c -> c = comp) t.aliases
 
-let switch_installed t switch =
+let is_switch_installed t switch =
   OpamSwitch.Map.mem switch t.aliases
 
 let check_base_packages t =
   let base_packages = get_compiler_packages t t.compiler in
   let missing_packages =
     List.filter
-      (fun (name,_) -> not (mem_installed_package_by_name t name))
+      (fun (name,_) -> not (is_name_installed t name))
       base_packages in
   if missing_packages <> [] then (
     let names = List.map (fst |> OpamPackage.Name.to_string) missing_packages in
@@ -897,7 +897,7 @@ let contents_of_variable t v =
           | "false" | "0" -> bool false
           | s             -> string s
         with Not_found ->
-          let installed = mem_installed_package_by_name t name in
+          let installed = is_name_installed t name in
           let no_section = OpamVariable.Full.section v = None in
           if var = OpamVariable.enable && installed && no_section then
             string "enable"
@@ -1593,7 +1593,7 @@ let install_compiler t ~quiet switch compiler =
   let switch_dir = OpamPath.Switch.root t.root switch in
 
   (* Do some clean-up if necessary *)
-  if not (switch_installed t switch)
+  if not (is_switch_installed t switch)
   && OpamFilename.exists_dir switch_dir then
     OpamFilename.rmdir switch_dir;
 

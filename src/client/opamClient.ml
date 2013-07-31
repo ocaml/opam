@@ -154,7 +154,7 @@ module API = struct
       OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
     );
     let names = OpamPackage.Name.Map.mapi (fun name stats ->
-        if OpamState.mem_installed_package_by_name t name
+        if OpamState.is_name_installed t name
         && OpamState.is_locally_pinned t name then
           { stats with installed_version = Some (OpamPackage.Version.pinned) }
         else
@@ -232,7 +232,7 @@ module API = struct
 
       let revision =
         if OpamState.is_locally_pinned t name
-        && OpamState.mem_installed_package_by_name t name then
+        && OpamState.is_name_installed t name then
           let repo = OpamState.repository_of_locally_pinned_package t name in
           match OpamRepository.revision repo with
           | None   -> []
@@ -566,7 +566,7 @@ module API = struct
         let to_upgrade =
           let packages =
             OpamMisc.filter_map (fun (n,_) ->
-              if OpamState.mem_installed_package_by_name t n then
+              if OpamState.is_name_installed t n then
                 Some (OpamState.find_installed_package_by_name t n)
               else (
                 OpamGlobals.msg
@@ -692,9 +692,9 @@ module API = struct
     let pkg_skip, pkg_new =
       List.partition (fun (n,v) ->
         match v with
-        | None       -> OpamState.mem_installed_package_by_name t n
+        | None       -> OpamState.is_name_installed t n
         | Some (_,v) ->
-          if OpamState.mem_installed_package_by_name t n then
+          if OpamState.is_name_installed t n then
             let nv = OpamState.find_installed_package_by_name t n in
             OpamPackage.version nv = v
           else
@@ -796,7 +796,7 @@ module API = struct
         (fun accu (n,v as atom) ->
           let nv = match v with
             | None ->
-              if OpamState.mem_installed_package_by_name t n then
+              if OpamState.is_name_installed t n then
                 OpamState.find_installed_package_by_name t n
               else
                 OpamPackage.create n dummy_version
@@ -869,7 +869,7 @@ module API = struct
       OpamMisc.filter_map (function (n,v) ->
         match v with
         | None ->
-          if not (OpamState.mem_installed_package_by_name t n) then (
+          if not (OpamState.is_name_installed t n) then (
             OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
             None
           ) else

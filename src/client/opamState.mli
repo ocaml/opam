@@ -204,26 +204,22 @@ val update_switch_config: state -> switch -> unit
 val get_compiler_packages: state -> compiler -> atom list
 
 (** Is a compiler installed ? *)
-val compiler_installed: state -> compiler -> bool
+val is_compiler_installed: state -> compiler -> bool
 
 (** Is a switch installed ? *)
-val switch_installed: state -> switch -> bool
+val is_switch_installed: state -> switch -> bool
+
 
 (** {2 Packages} *)
 
 (** Check whether a package name is installed *)
-val mem_installed_package_by_name: state -> name -> bool
+val is_name_installed: state -> name -> bool
+
+(** Return whether a package is installed *)
+val is_package_installed: state -> package -> bool
 
 (** Return the installed package with the right name *)
 val find_installed_package_by_name: state -> name -> package
-
-(** Check whether a package name is installed, but this time
-    using the collection of installed packages as argument *)
-val mem_installed_package_by_name_aux: package_set -> name -> bool
-
-(** Return the installed package with the right name, but this time
-    using the collection of installed packages as argument *)
-val find_installed_package_by_name_aux: package_set -> name -> package
 
 (** Return all the packages with the given name *)
 val find_packages_by_name: state -> name -> package_set option

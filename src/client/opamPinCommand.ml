@@ -62,7 +62,7 @@ let pin ~force action =
     begin match OpamPackage.Name.Map.find name pins with
       | Version _ -> ()
       | _         ->
-        if not force && OpamState.mem_installed_package_by_name t name then
+        if not force && OpamState.is_name_installed t name then
           OpamGlobals.error_and_exit
             "You must remove the package before unpinning it (or use --force).";
     end;
@@ -84,12 +84,12 @@ let pin ~force action =
       | Edit            -> ()
       | Unpin           -> ()
       | Version version ->
-        if not force && not (OpamState.mem_installed_package_by_name t name) then
+        if not force && not (OpamState.is_name_installed t name) then
           OpamGlobals.error_and_exit
             "Cannot pin %s to %s, you must install the package first (or use --force)."
             (OpamPackage.Name.to_string name)
             (OpamPackage.Version.to_string version);
-        if OpamState.mem_installed_package_by_name t name then
+        if OpamState.is_name_installed t name then
           let nv = OpamState.find_installed_package_by_name t name in
           if not force && OpamPackage.version nv <> version then
             OpamGlobals.error_and_exit
@@ -99,7 +99,7 @@ let pin ~force action =
               (OpamPackage.Version.to_string (OpamPackage.version nv))
               (OpamPackage.Version.to_string version);
       | Git _ | Darcs _ | Local _ | Hg _ ->
-        if not force && OpamState.mem_installed_package_by_name t name then
+        if not force && OpamState.is_name_installed t name then
           OpamGlobals.error_and_exit
             "Cannot pin %s to a dev version as it is already installed. You must \
              remove it first (or use --force)."
