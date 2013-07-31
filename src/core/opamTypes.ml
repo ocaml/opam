@@ -544,7 +544,7 @@ type 'a updates = {
   created: 'a;
   updated: 'a;
   deleted: 'a;
-  to_upgrade: 'a;
+  changed: 'a;
 }
 
 type lock =

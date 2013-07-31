@@ -99,10 +99,10 @@ let relink_compilers t ~verbose old_index =
       ) m OpamCompiler.Set.empty in
 
   let updates = {
-    created    = set new_compilers;
-    updated    = set updated_compilers;
-    deleted    = set deleted_compilers;
-    to_upgrade = OpamCompiler.Set.empty;
+    created = set new_compilers;
+    updated = set updated_compilers;
+    deleted = set deleted_compilers;
+    changed = OpamCompiler.Set.empty; (* we don't reinstall compilers yet *)
   } in
 
   if verbose then print_updated_compilers updates;
@@ -147,9 +147,9 @@ let print_updated_packages t updates =
     none;
 
   print
-    "The following package has been updated upstream and needs to be UPGRADED"
-    "The following packages have been updated upstream and need to be UPGRADED"
-    updates.to_upgrade
+    "The following package has been CHANGED upstream and needs to be recompiled"
+    "The following packages have been CHANGED upstream and need to be recompiled"
+    updates.changed
     installed_switches;
 
   print
@@ -273,10 +273,10 @@ let relink_packages t ~verbose old_index =
       ) m OpamPackage.Set.empty in
 
   let updates = {
-    created    = set new_packages;
-    updated    = set updated_packages;
-    deleted    = set deleted_packages;
-    to_upgrade = set packages_to_upgrade;
+    created = set new_packages;
+    updated = set updated_packages;
+    deleted = set deleted_packages;
+    changed = set packages_to_upgrade;
   } in
 
   if verbose then print_updated_packages t updates;

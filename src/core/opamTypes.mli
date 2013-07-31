@@ -540,8 +540,8 @@ type json = OpamJson.t
 
 (** {2 Updates} *)
 type 'a updates = {
-  created   : 'a;
-  updated   : 'a;
-  deleted   : 'a;
-  to_upgrade: 'a;
+  created: 'a;
+  updated: 'a;
+  deleted: 'a;
+  changed: 'a;
 }

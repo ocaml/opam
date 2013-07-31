@@ -518,10 +518,10 @@ module API = struct
       (* Eventually output some JSON file *)
       if OpamJson.verbose () then
         let json to_json update =
-          `O [ ("created"   , to_json update.created);
-               ("updated"   , to_json update.updated);
-               ("deleted"   , to_json update.deleted);
-               ("to_upgrade", to_json update.to_upgrade); ] in
+          `O [ ("created", to_json update.created);
+               ("updated", to_json update.updated);
+               ("deleted", to_json update.deleted);
+               ("changed", to_json update.changed); ] in
         let updates = `O [
             "package-updates"    , (json OpamPackage.Set.to_json package_updates);
             "package-dev-updates", (OpamPackage.Set.to_json dev_updates);
