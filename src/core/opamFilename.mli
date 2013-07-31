@@ -131,8 +131,10 @@ val files: Dir.t -> t list
 (** Apply a function on the contents of a file *)
 val with_contents: (string -> 'a) -> t -> 'a
 
-(** Copy a file in a directory *)
-val copy_in: t -> Dir.t -> unit
+(** Copy a file in a directory. If [root] is set, copy also the
+    sub-directories. For instance, [copy_in ~root:"/foo" "/foo/bar/gni"
+    "/toto"] creates ["/toto/bar/gni"]. *)
+val copy_in: ?root:Dir.t -> t -> Dir.t -> unit
 
 (** Move a file *)
 val move: src:t -> dst:t -> unit

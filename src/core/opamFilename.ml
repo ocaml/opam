@@ -219,12 +219,27 @@ let is_symlink src =
   with _ ->
     OpamSystem.internal_error "%s does not exist." (to_string src)
 
-let process_in fn src dst =
-  let src_s = to_string src in
-  let dst = Filename.concat (Dir.to_string dst) (Filename.basename src_s) in
+let starts_with dirname filename =
+  OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+
+let remove_prefix prefix filename =
+  let prefix =
+    let str = Dir.to_string prefix in
+    if str = "" then "" else Filename.concat str "" in
+  let filename = to_string filename in
+  OpamMisc.remove_prefix ~prefix filename
+
+let process_in ?root fn src dst =
+  let basename = match root with
+    | None   -> basename src
+    | Some r ->
+      if starts_with r src then remove_prefix r src
+      else OpamSystem.internal_error "%s is not a prefix of %s"
+          (Dir.to_string r) (to_string src) in
+  let dst = Filename.concat (Dir.to_string dst) basename in
   fn ~src ~dst:(of_string dst)
 
-let copy_in = process_in copy
+let copy_in ?root = process_in ?root copy
 
 let link_in = process_in link
 
@@ -234,18 +249,8 @@ let extract filename dirname =
 let extract_in filename dirname =
   OpamSystem.extract_in (to_string filename) (Dir.to_string dirname)
 
-let starts_with dirname filename =
-  OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
-
 let ends_with suffix filename =
   OpamMisc.ends_with ~suffix (to_string filename)
-
-let remove_prefix prefix filename =
-  let prefix =
-    let str = Dir.to_string prefix in
-    if str = "" then "" else Filename.concat str "" in
-  let filename = to_string filename in
-  OpamMisc.remove_prefix ~prefix filename
 
 let remove_suffix suffix filename =
   let suffix = Base.to_string suffix in
