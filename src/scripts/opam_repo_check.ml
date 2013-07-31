@@ -94,11 +94,12 @@ let () =
   ) packages;
 
   (** compilers *)
-  OpamCompiler.Map.iter (fun compiler prefix ->
-      let comp = OpamPath.Repository.compiler_comp repo prefix compiler in
-      let descr = OpamPath.Repository.compiler_descr repo prefix compiler in
-      OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string compiler);
+  let compilers = OpamRepository.compilers_with_prefixes repo in
+  OpamCompiler.Map.iter (fun c prefix ->
+      let comp = OpamPath.Repository.compiler_comp repo prefix c in
+      let descr = OpamPath.Repository.compiler_descr repo prefix c in
+      OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string c);
       write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
       if OpamFilename.exists descr then
         write OpamFile.Comp_descr.write descr (OpamFile.Comp_descr.read descr);
-    ) (OpamRepository.compilers_with_prefixes repo);
+  ) compilers
