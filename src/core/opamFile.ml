@@ -894,8 +894,7 @@ module X = struct
           Variable (s_maintainer  , OpamFormat.make_string t.maintainer);
         ] @ name_and_version
           @ option  t.homepage      s_homepage      OpamFormat.make_string
-          @ list    t.authors       s_authors
-              (String.concat ", " |> OpamFormat.make_string)
+          @ list    t.authors       s_authors       OpamFormat.make_string_list
           @ option  t.license       s_license       OpamFormat.make_string
           @ option  t.doc           s_doc           OpamFormat.make_string
           @ list    t.tags          s_tags          OpamFormat.make_string_list
