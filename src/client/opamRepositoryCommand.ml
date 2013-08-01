@@ -288,6 +288,11 @@ let fix_package_descriptions t ~verbose =
         List.iter (fun file ->
             OpamFilename.copy_in ~root file dir
           ) files;
+
+        (* that's not a good idea *at all* to enable this hook if you
+           are not in a testing environment *)
+        if !OpamGlobals.sync_archives then
+          OpamState.download t nv;
         OpamFilename.remove (OpamPath.archive t.root nv);
         let archives_dir = OpamPath.archives_dir t.root in
         List.iter (fun archive ->

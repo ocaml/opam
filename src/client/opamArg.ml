@@ -778,12 +778,20 @@ let update =
         that can be upgraded will be printed out, and the user can use \
         $(b,opam upgrade) to upgrade those.";
   ] in
-  let update global_options jobs json repositories =
+  let sync =
+    mk_flag ["sync-archives"]
+      "Always sync the remote archives files. This is not \
+       a good idea to enable this, unless your really know \
+       what your are doing: this flag will make OPAM try to \
+       download the archive files for ALL the available \
+       packages." in
+  let update global_options jobs json repositories sync =
     apply_global_options global_options;
     json_update json;
+    OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
     Client.update repositories in
-  Term.(pure update $global_options $jobs_flag $json_flag $repository_list),
+  Term.(pure update $global_options $jobs_flag $json_flag $repository_list $sync),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)
