@@ -644,13 +644,14 @@ module API = struct
         let compiler_names =
           OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
         (* Ugly hack to quiet OPAM on base packages *)
+        let display_messages = !OpamGlobals.display_messages in
         OpamGlobals.display_messages := false;
         let _solution =
           OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
             { wish_install = [];
               wish_remove  = [];
               wish_upgrade = compiler_packages } in
-        OpamGlobals.display_messages := true;
+        OpamGlobals.display_messages := display_messages;
         update_setup t
 
       with e ->
