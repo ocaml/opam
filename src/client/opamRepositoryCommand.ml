@@ -405,8 +405,7 @@ let update_config t repos =
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
 let fix_descriptions t ~verbose =
-  let _ = update_index t in
-  let t = OpamState.load_state ~save_cache:false "fix-descriptions" in
+  update_index t;
   let _ = fix_compiler_descriptions t ~verbose in
   let _ = fix_package_descriptions t ~verbose in
   OpamState.rebuild_state_cache ()

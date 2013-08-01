@@ -37,7 +37,7 @@ module Types: sig
     compiler: compiler;
 
     (** The current version of the compiler *)
-    compiler_version: compiler_version;
+    compiler_version: compiler_version lazy_t;
 
     (** The list of OPAM files *)
     opams: OpamFile.OPAM.t package_map;
@@ -77,10 +77,10 @@ module Types: sig
     config: OpamFile.Config.t;
 
     (** Package index *)
-    package_index: (repository_name * string option) package_map Lazy.t;
+    package_index: (repository_name * string option) package_map lazy_t;
 
     (** Compiler index *)
-    compiler_index: (repository_name * string option) compiler_map Lazy.t;
+    compiler_index: (repository_name * string option) compiler_map lazy_t;
   }
 
 end

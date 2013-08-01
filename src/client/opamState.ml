@@ -62,7 +62,7 @@ module Types = struct
     root: OpamPath.t;
     switch: switch;
     compiler: compiler;
-    compiler_version: compiler_version;
+    compiler_version: compiler_version lazy_t;
     opams: OpamFile.OPAM.t package_map;
     descrs: OpamFile.Descr.t lazy_t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
@@ -75,8 +75,8 @@ module Types = struct
     installed_roots: OpamFile.Installed_roots.t;
     reinstall: OpamFile.Reinstall.t;
     config: OpamFile.Config.t;
-    package_index: (repository_name * string option) package_map Lazy.t;
-    compiler_index: (repository_name * string option) compiler_map Lazy.t;
+    package_index: (repository_name * string option) package_map lazy_t;
+    compiler_index: (repository_name * string option) compiler_map lazy_t;
   }
 end
 
@@ -398,7 +398,7 @@ let available_packages system opams compiler_version =
                           (OpamFormula.string_of_relop r)
             end
           | _ ->
-            OpamCompiler.Version.compare compiler_version r v in
+            OpamCompiler.Version.compare (Lazy.force compiler_version) r v in
         match OpamFile.OPAM.ocaml_version opam with
         | None   -> true
         | Some c -> OpamFormula.eval atom c in
@@ -455,10 +455,10 @@ let system_needs_upgrade t =
          You should either:\n\
         \  (i)  reinstall OCaml version %s on your system; or\n\
         \  (ii) use a working compiler switch."
-        (OpamCompiler.Version.to_string t.compiler_version)
+        (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
     );
     false
-  | Some v -> t.compiler_version <> v
+  | Some v -> (Lazy.force t.compiler_version) <> v
 
 let read_repositories root config =
   let names = OpamFile.Config.repositories config in
@@ -486,7 +486,7 @@ let load_repository_state call_site =
   let aliases = OpamSwitch.Map.empty in
   let compilers = OpamCompiler.Set.empty in
   let compiler = OpamCompiler.of_string "none" in
-  let compiler_version = OpamCompiler.Version.of_string "none" in
+  let compiler_version = lazy (OpamCompiler.Version.of_string "none") in
   let opams = OpamPackage.Map.empty in
   let descrs = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
@@ -526,7 +526,7 @@ let load_env_state call_site =
   (* evertything else is empty *)
   let compilers = OpamCompiler.Set.empty in
   let repositories = OpamRepositoryName.Map.empty in
-  let compiler_version = OpamCompiler.Version.of_string "none" in
+  let compiler_version = lazy (OpamCompiler.Version.of_string "none") in
   let opams = OpamPackage.Map.empty in
   let descrs = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
@@ -847,14 +847,15 @@ let load_state ?(save_cache=true) call_site =
           OpamGlobals.error_and_exit
             "The current switch (%s) is an unknown compiler switch."
             (OpamSwitch.to_string switch) in
-  let compiler_version =
+  let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp root compiler in
     if not (OpamFilename.exists comp_f) then
       if compiler = OpamCompiler.system then
         create_system_compiler_description root (OpamCompiler.Version.system ())
       else
         OpamCompiler.unknown compiler;
-    OpamFile.Comp.version (OpamFile.Comp.read comp_f) in
+    OpamFile.Comp.version (OpamFile.Comp.read comp_f)
+  ) in
   let opams = match opams with
     | None   ->
       let packages = OpamPackage.list (OpamPath.packages_dir root) in
@@ -950,12 +951,12 @@ let upgrade_to_1_1 () =
   if OpamFilename.exists_dir opam then (
 
     OpamGlobals.msg
-      "** Upgrading to OPAM 1.1 [DO NOT INTERRUPT THE PROCESS]   **\
+      "** Upgrading to OPAM 1.1 [DO NOT INTERRUPT THE PROCESS]   **\n\
        \n\
-      \   In case something goes wrong, you can run that upgrade\
-      \   process again by doing:\
+      \   In case something goes wrong, you can run that upgrade\n\
+      \   process again by doing:\n\
        \n\
-      \       mkdir %s/opam && opam list\
+      \       mkdir %s/opam && opam list\n\
        \n\
        ** Processing **\n"
       (OpamFilename.prettify_dir (OpamPath.root ()));
@@ -1059,7 +1060,7 @@ let contents_of_variable t local_variables v =
     try string (OpamMisc.getenv var_str)
     with Not_found ->
       if var_str = "ocaml-version" then
-        string (OpamCompiler.Version.to_string t.compiler_version)
+        string (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
       else if var_str = "preinstalled" then
         bool (OpamFile.Comp.preinstalled (compiler_comp t t.compiler))
       else if var_str = "switch" then
