@@ -63,10 +63,10 @@ module Hg = struct
     OpamSystem.internal_error "Unknown mercurial revision/branch/bookmark: %s."
       commit
 
-  let merge repo =
+  let reset repo =
     let address = address repo in
     let merge commit =
-      try OpamSystem.command [ "hg" ; "update" ; commit ]; true
+      try OpamSystem.command [ "hg" ; "update" ; "--clean"; commit ]; true
       with _ -> false in
     let commit = match address.commit with
       | None   -> "tip"

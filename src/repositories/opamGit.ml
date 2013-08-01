@@ -59,10 +59,10 @@ module Git = struct
             full
       )
 
-  let merge repo =
+  let reset repo =
     let address = address repo in
     let merge commit =
-      try OpamSystem.command [ "git" ; "merge" ; commit ]; true
+      try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit ]; true
       with _ -> false in
     let commit = match address.commit with
       | None   -> "origin/master"

@@ -21,7 +21,7 @@ module type VCS = sig
   val exists: repository -> bool
   val init: repository -> unit
   val fetch: repository -> unit
-  val merge: repository -> unit
+  val reset: repository -> unit
   val diff: repository -> bool
   val revision: repository -> string
 end
@@ -35,7 +35,7 @@ module Make (VCS: VCS) = struct
   let pull repo =
     VCS.fetch repo;
     let diff = VCS.diff repo in
-    VCS.merge repo;
+    VCS.reset repo;
     diff
 
   let check_updates repo =

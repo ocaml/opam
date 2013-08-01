@@ -38,7 +38,7 @@ module Darcs = struct
     ()
 
   (* Merge is actually a full pull *)
-  let merge repo =
+  let reset repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
         let repo = OpamFilename.Dir.to_string repo.repo_address in
         OpamSystem.command [
