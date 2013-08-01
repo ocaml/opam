@@ -55,7 +55,8 @@ val compilers_with_prefixes: repository -> string option compiler_map
 (** {2 State} *)
 
 (** Get all the package files *)
-val package_files: repository -> string option -> package -> filename list
+val package_files: repository -> string option -> package ->
+  filename list * filename list
 
 (** Compute a package state (ie. a list of checksums). *)
 val package_state: repository -> string option -> package -> [`all|`partial of bool]

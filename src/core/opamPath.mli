@@ -65,7 +65,10 @@ val dev_packages: t -> package -> dirname
 (** Description file: {i $opam/packages/$NAME/$NAME.$VERSION/descr} *)
 val descr: t -> package -> filename
 
-(** Archives files: {i $opam/packages/$NAME.$VERSION/$NAME.$VERSION+opam.tar.gz} *)
+(** Archives dir *)
+val archives_dir: t -> dirname
+
+(** Archive file: {i $opam/archives/$NAME.$VERSION+opam.tar.gz} *)
 val archive: t -> package -> filename
 
 (** Compiler files: {i $opam/compilers/$VERSION/$COMP.comp} *)

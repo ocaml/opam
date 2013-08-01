@@ -241,7 +241,7 @@ let package_files repo prefix nv =
   let url = OpamPath.Repository.url repo prefix nv in
   let files = OpamPath.Repository.files repo prefix nv in
   let archive = OpamPath.Repository.archive repo nv in
-  file opam @ file descr @ file url @ dir files @ file archive
+  file opam @ file descr @ file url @ dir files, file archive
 
 let package_important_files repo prefix nv ~archive =
   let url = OpamPath.Repository.url repo prefix nv in
@@ -254,7 +254,7 @@ let package_important_files repo prefix nv ~archive =
 
 let package_state repo prefix nv all =
   let fs = match all with
-    | `all       -> package_files repo prefix nv
+    | `all       -> let f, a = package_files repo prefix nv in f @ a
     | `partial b -> package_important_files repo prefix nv ~archive:b in
   List.flatten (List.map OpamFilename.checksum fs)
 

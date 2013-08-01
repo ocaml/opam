@@ -281,13 +281,18 @@ let fix_package_descriptions t ~verbose =
       | None                -> ()
       | Some (repo, prefix) ->
         let root = OpamPath.Repository.packages repo prefix nv in
-        let files = OpamRepository.package_files repo prefix nv in
+        let files, archives = OpamRepository.package_files repo prefix nv in
         let dir = OpamPath.packages t.root nv in
         if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
         OpamFilename.mkdir dir;
         List.iter (fun file ->
             OpamFilename.copy_in ~root file dir
           ) files;
+        OpamFilename.remove (OpamPath.archive t.root nv);
+        let archives_dir = OpamPath.archives_dir t.root in
+        List.iter (fun archive ->
+            OpamFilename.copy_in archive archives_dir
+          ) archives;
     ) (new_packages ++ updated_packages ++ changed_packages);
 
   (* Do not recompile a package if only only OPAM or descr files have

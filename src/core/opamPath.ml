@@ -45,7 +45,9 @@ let url t nv = packages t nv // "url"
 
 let descr t nv = packages t nv // "descr"
 
-let archive t nv = packages t nv // (OpamPackage.to_string nv ^ "+opam.tar.gz")
+let archives_dir t = t / "archives"
+
+let archive t nv = archives_dir t // (OpamPackage.to_string nv ^ "+opam.tar.gz")
 
 let files t nv = packages t nv / "files"
 
