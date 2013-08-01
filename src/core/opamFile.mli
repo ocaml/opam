@@ -197,6 +197,9 @@ module Descr: sig
 
   include IO_FILE
 
+  (** Create a an abstract description file from a string *)
+  val of_string: string -> t
+
   (** Return the first line *)
   val synopsis: t -> string
 

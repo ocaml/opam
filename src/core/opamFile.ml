@@ -562,6 +562,13 @@ module X = struct
       ) in
       x, y
 
+    let of_string str =
+      let head, tail =
+        match OpamMisc.cut_at str '\n' with
+        | None       -> str, ""
+        | Some (h,t) -> h, t in
+      head, lazy tail
+
     let to_string _ = full
 
   end
