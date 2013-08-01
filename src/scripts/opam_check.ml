@@ -33,7 +33,7 @@ let () = Arg.parse spec ano usage
 let packages = OpamPackage.Set.of_list (List.map OpamPackage.of_string !packages)
 
 let installed () =
-  let root = OpamPath.default () in
+  let root = OpamPath.root () in
   let config = OpamFile.Config.read (OpamPath.config root) in
   let version = OpamFile.Config.switch config in
   let installed =

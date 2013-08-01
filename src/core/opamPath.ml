@@ -19,7 +19,7 @@ open OpamFilename.OP
 
 type t = dirname
 
-let default () =
+let root () =
   OpamFilename.Dir.of_string !OpamGlobals.root_dir
 
 let config t = t // "config"

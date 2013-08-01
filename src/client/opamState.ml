@@ -471,7 +471,7 @@ let read_repositories root config =
 (* Only used during init: load only repository-related information *)
 let load_repository_state call_site =
   log "LOAD-REPO-STATE(%s)" call_site;
-  let root = OpamPath.default () in
+  let root = OpamPath.root () in
   let config_p = OpamPath.config root in
   let config = OpamFile.Config.read config_p in
   let repositories = read_repositories root config in
@@ -507,7 +507,7 @@ let load_repository_state call_site =
 (* load partial state to be able to read env variables *)
 let load_env_state call_site =
   log "LOAD-ENV-STATE(%s)" call_site;
-  let root = OpamPath.default () in
+  let root = OpamPath.root () in
   let config_p = OpamPath.config root in
   let config = OpamFile.Config.read config_p in
   let switch = match !OpamGlobals.switch with
@@ -753,7 +753,7 @@ let save_state ~update t =
   saves := (t1 -. t0) :: !saves
 
 let remove_state_cache () =
-  let root = OpamPath.default () in
+  let root = OpamPath.root () in
   let file = OpamPath.state_cache root in
   OpamFilename.remove file
 
@@ -786,7 +786,7 @@ let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
   !upgrade_to_1_1_hook ();
   let t0 = Unix.gettimeofday () in
-  let root = OpamPath.default () in
+  let root = OpamPath.root () in
 
   let config_p = OpamPath.config root in
   let config =
@@ -943,7 +943,7 @@ let fix_descriptions_hook =
 
 (* Upgrade to the new file overlay *)
 let upgrade_to_1_1 () =
-  let root  = OpamPath.default () in
+  let root  = OpamPath.root () in
   let opam  = root / "opam" in
   let descr = root / "descr" in
   let compilers = root / "compilers" in
@@ -958,7 +958,7 @@ let upgrade_to_1_1 () =
       \       mkdir %s/opam && opam list\
        \n\
        ** Processing **\n"
-      (OpamFilename.prettify_dir (OpamPath.default ()));
+      (OpamFilename.prettify_dir (OpamPath.root ()));
 
     OpamFilename.rmdir opam;
     OpamFilename.rmdir descr;
@@ -2051,7 +2051,7 @@ let download t nv =
         make_global_archive t nv
 
 let check f =
-  let root = OpamPath.default () in
+  let root = OpamPath.root () in
   let with_switch_lock a f =
     OpamFilename.with_flock (OpamPath.Switch.lock root a) f in
   let error () =

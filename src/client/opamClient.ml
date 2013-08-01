@@ -571,7 +571,7 @@ module API = struct
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %s" (OpamRepository.to_string repo);
-    let root = OpamPath.default () in
+    let root = OpamPath.root () in
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in

@@ -284,7 +284,7 @@ let quick_lookup v =
   let name = OpamVariable.Full.package v in
   let var = OpamVariable.Full.variable v in
   if name = OpamPackage.Name.global_config then (
-    let root = OpamPath.default () in
+    let root = OpamPath.root () in
     let switch = match !OpamGlobals.switch with
       | `Command_line s
       | `Env s   -> OpamSwitch.of_string s
