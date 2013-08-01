@@ -412,7 +412,7 @@ let init =
     let repo_kind = guess_repository_kind repo_kind repo_address in
     let repo_priority = 0 in
     let repository = {
-      repo_root = OpamPath.Repository.create repo_name;
+      repo_root = OpamPath.Repository.create (OpamPath.root ()) repo_name;
       repo_name; repo_kind; repo_address; repo_priority } in
     let update_config =
       if no_setup then `no

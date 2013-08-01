@@ -39,7 +39,8 @@ let default () = {
   repo_kind     = `http;
   repo_address  = default_address;
   repo_priority = 0;
-  repo_root     = OpamPath.Repository.create OpamRepositoryName.default;
+  repo_root     =
+    OpamPath.Repository.create (OpamPath.root()) OpamRepositoryName.default;
 }
 
 let local dirname = {

@@ -199,7 +199,7 @@ end
 module Repository: sig
 
   (** Repository local path: {i $opam/repo/<name>} *)
-  val create: repository_name -> dirname
+  val create: t -> repository_name -> dirname
 
   (** Update cache *)
   val update_cache: repository -> filename

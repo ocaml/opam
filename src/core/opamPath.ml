@@ -141,7 +141,7 @@ module Repository = struct
 
   let update_cache t = root t // "update.cache"
 
-  let create name = default () / "repo" / OpamRepositoryName.to_string name
+  let create root name = root / "repo" / OpamRepositoryName.to_string name
 
   let version t = root t // "version"
 

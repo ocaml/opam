@@ -473,7 +473,7 @@ let add name kind address ~priority:prio =
     repo_kind     = kind;
     repo_address  = address;
     repo_priority = min_int; (* we initially put it as low-priority *)
-    repo_root     = OpamPath.Repository.create name;
+    repo_root     = OpamPath.Repository.create t.root name;
   } in
   if OpamState.mem_repository t name then
     OpamGlobals.error_and_exit
