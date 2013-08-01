@@ -174,7 +174,14 @@ let list dir =
     List.fold_left (fun set f ->
         match of_filename f with
         | None   -> set
-        | Some p -> Set.add p set
+        | Some p ->
+          if not (Set.mem p set) then Set.add p set
+          else
+            let suffix = Filename.concat (to_string p) "opam" in
+            let files = List.filter (OpamFilename.ends_with suffix) files in
+            OpamGlobals.error_and_exit "Multiple definition of package %s in %s:\n  %s"
+              (to_string p) (OpamFilename.Dir.to_string dir)
+              (String.concat "\n  " (List.map OpamFilename.to_string files));
       ) Set.empty files
   ) else
     Set.empty
