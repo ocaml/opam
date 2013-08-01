@@ -56,7 +56,7 @@ let fix_compiler_descriptions t ~verbose =
     (OpamFilename.prettify_dir (OpamPath.compilers_dir t.root));
   let global_index = OpamState.compiler_state t in
   let repo_index = OpamState.compiler_repository_state t in
-  let niet _ = "" in
+  let niet = String.concat ":" in
   log "global-index: %s" (OpamCompiler.Map.to_string niet global_index);
   log "repo-index  : %s" (OpamCompiler.Map.to_string niet repo_index);
 
@@ -235,7 +235,7 @@ let fix_package_descriptions t ~verbose =
 
   let global_index = OpamState.package_state t in
   let repo_index   = OpamState.package_repository_state t in
-  let niet _ = "" in
+  let niet = String.concat ":" in
   log "global-index: %s" (OpamPackage.Map.to_string niet global_index);
   log "repo-index  : %s" (OpamPackage.Map.to_string niet repo_index);
 
