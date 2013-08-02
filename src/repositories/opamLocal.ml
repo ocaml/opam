@@ -18,6 +18,8 @@ open OpamTypes
 
 let log fmt = OpamGlobals.log "RSYNC" fmt
 
+let rsync_arg = "-rLptgoDrvc"
+
 let rsync src dst =
   log "rsync: src=%s dst=%s" src dst;
   if Sys.file_exists src then (
@@ -25,7 +27,7 @@ let rsync src dst =
       OpamSystem.mkdir src;
       OpamSystem.mkdir dst;
       let lines = OpamSystem.read_command_output (
-          [ "rsync" ; "-rLptgoDrvc";
+          [ "rsync" ; rsync_arg;
             "--exclude"; ".git/*";
             "--exclude"; "_darcs/*";
             "--exclude"; ".hg/*";
@@ -53,7 +55,7 @@ let rsync_file src dst =
     (OpamFilename.to_string src) (OpamFilename.to_string dst);
   if OpamFilename.exists src then (
     let lines = OpamSystem.read_command_output [
-        "rsync"; "-av"; OpamFilename.to_string src; OpamFilename.to_string dst;
+        "rsync"; rsync_arg; OpamFilename.to_string src; OpamFilename.to_string dst;
       ] in
     match OpamMisc.rsync_trim lines with
     | []  -> Up_to_date dst
