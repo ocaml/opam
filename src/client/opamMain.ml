@@ -633,7 +633,7 @@ let config =
          | `csh                -> true , false
          | `fish               -> false, true
          | `sh | `bash | `zsh  -> false, false)
-      | _ -> false, false
+      | _ -> csh, fish
     in
     match command with
     | None           ->
