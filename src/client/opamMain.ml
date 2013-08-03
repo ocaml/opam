@@ -540,7 +540,7 @@ let config =
   let doc = config_doc in
   let commands = [
     ["env"]     , `env     , "Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH \
-                              and CAML_LD_LIBRARY_PATH according to the current selected \
+                              and CAML_LD_LIBRARY_PATH according to the currently selected \
                               compiler. The output of this command is meant to be evaluated by a \
                               shell, for example by doing $(b,eval `opam config env`).";
     ["setup"]   , `setup   , "Configure global and user parameters for OPAM. Use $(b, opam config setup) \
@@ -580,11 +580,11 @@ let config =
   ] in
   let man = [
     `S "DESCRIPTION";
-    `P "This command uses opam state to output information on how to use \
-        installed libraries, updating the user’s $PATH, and substitute \
-        variables used in opam packages.";
+    `P "This command uses OPAM state to output information on how to use \
+        installed libraries, update the $(b,PATH), and substitute \
+        variables used in OPAM packages.";
     `P "Apart from $(b,opam config env), most of these commands are used \
-        by opam internally, and thus are of limited interest for the casual \
+        by POAM internally, and are of limited interest for the casual \
         user.";
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
@@ -723,12 +723,12 @@ let install =
         compilers using $(b,opam switch). You can remove installed packages with \
         $(b,opam remove), and list installed packages with $(b,opam list -i). \
         See $(b,opam pin) as well to understand how to manage package versions.";
-    `P "This command will make opam use the dependency solver to compute the \
-        transitive closure of dependencies to be installed, and will handle \
-        conflicts as well. If the dependency solver returns more than one \
-        solution, opam will arbitraty select the first one. If dependencies \
-        are to be installed, opam will ask if the installation should really \
-        be performed.";
+    `P "This command makes OPAM use the dependency solver to compute the \
+        transitive closure of dependencies to be installed, and will also handle \
+        conflicts. If the dependency solver returns more than one \
+        solution, OPAM will arbitrarily select the first one. If dependencies \
+        are to be installed, OPAM will confirm if the installation should \
+        proceed.";
   ] in
   let install global_options build_options packages =
     set_global_options global_options;
@@ -744,8 +744,8 @@ let remove =
   let doc = remove_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command removes (i.e. uninstall) one or more packages currently \
-        installed in the currently selected compiler. To remove packages \
+    `P "This command removes (i.e. uninstalls) one or more packages currently \
+        installed in the currently selected compiler switch. To remove packages \
         installed in another compiler, you need to switch compilers using \
         $(b,opam switch) or use the $(b,--switch) flag. This command is the \
         inverse of $(b,opam-install).";
@@ -753,8 +753,8 @@ let remove =
   let autoremove =
     mk_flag ["a";"auto-remove"]
       "Remove all the packages which have not been explicitly installed and \
-       which are not necessary anymore. It is possible to enforce keeping an \
-       already installed package by running $(b,opam install <pkg>). This flag \
+       which are not necessary anymore. It is possible to prevent the removal of an \
+       already-installed package by running $(b,opam install <pkg>). This flag \
        can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
   let remove global_options build_options autoremove packages =
     set_global_options global_options;
@@ -769,8 +769,8 @@ let reinstall =
   let doc = "Reinstall a list of packages." in
   let man = [
     `S "DESCRIPTION";
-    `P "This command does removes the given packages, reinstall them and \
-        recompile the right package dependencies."
+    `P "This command removes the given packages, reinstalls them and \
+        recompiles the right package dependencies."
   ] in
   let reinstall global_options build_options packages =
     set_global_options global_options;
@@ -789,7 +789,7 @@ let update =
     `P "This command updates each repository that has been previously set up \
         by the $(b,opam init) or $(b,opam repository) commands. The list of packages \
         that can be upgraded will be printed out, and the user can use \
-        $(b,opam upgrade) to upgrade those.";
+        $(b,opam upgrade) to upgrade them.";
   ] in
   let update global_options jobs json repositories =
     set_global_options global_options;
