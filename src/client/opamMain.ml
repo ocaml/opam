@@ -584,7 +584,7 @@ let config =
         installed libraries, update the $(b,PATH), and substitute \
         variables used in OPAM packages.";
     `P "Apart from $(b,opam config env), most of these commands are used \
-        by POAM internally, and are of limited interest for the casual \
+        by OPAM internally, and are of limited interest for the casual \
         user.";
   ] @ mk_subdoc ~names:"DOMAINS" commands in
 
