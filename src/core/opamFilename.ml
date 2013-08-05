@@ -336,6 +336,22 @@ end
 module Map = OpamMisc.Map.Make(O)
 module Set = OpamMisc.Set.Make(O)
 
+let copy_files ~src ~dst =
+  let files = files src in
+  List.iter (fun src ->
+      if not !OpamGlobals.do_not_copy_files then
+        let target =
+          create dst (basename src) in
+        if exists target then
+          OpamGlobals.warning
+            "%s is replaced by the packager's overlay files. \
+             Set OPAMDONOTCOPYFILES to a non-empty value to no \
+             copy the overlay files."
+            (to_string target);
+        copy_in src dst
+    ) files;
+  Set.of_list files
+
 module OP = struct
 
   let (/) = (/)
