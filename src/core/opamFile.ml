@@ -723,6 +723,7 @@ module X = struct
       others     : (string * value) list;
       ocaml_version: compiler_constraint option;
       os         : (bool * string) generic_formula;
+      available  : filter;
       homepage   : string option;
       authors    : string list;
       license    : string option;
@@ -752,6 +753,7 @@ module X = struct
       others     = [];
       ocaml_version = None;
       os         = Empty;
+      available  = FBool true;
       homepage   = None;
       authors    = [];
       license    = None;
@@ -785,6 +787,7 @@ module X = struct
     let s_patches     = "patches"
     let s_configure_style = "configure-style"
     let s_os          = "os"
+    let s_available   = "available"
     let s_homepage    = "homepage"
     let s_authors     = "authors"
     let s_license     = "license"
@@ -811,6 +814,7 @@ module X = struct
       s_build_env;
       s_patches;
       s_os;
+      s_available;
       s_license;
       s_authors;
       s_homepage;
@@ -845,6 +849,7 @@ module X = struct
     let build_env t = t.build_env
     let patches t = t.patches
     let os t = t.os
+    let available t = t.available
     let homepage t = t.homepage
     let authors t = t.authors
     let license t = t.license
@@ -889,6 +894,9 @@ module X = struct
       let formula c s f = match c with
         | Empty -> []
         | x     -> [ Variable (s, f x) ] in
+      let filter c s f = match c with
+        | FBool true -> []
+        | x     -> [ Variable (s, f x) ] in
       let s = {
         file_name     = OpamFilename.to_string filename;
         file_contents = [
@@ -915,6 +923,8 @@ module X = struct
           @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
           @ option  t.ocaml_version s_ocaml_version OpamFormat.make_compiler_constraint
           @ formula t.os            s_os            OpamFormat.make_os_constraint
+          @ filter  t.available     s_available
+              (fun f -> List (OpamFormat.make_filter f))
           @ listm   t.build_test    s_build_test    OpamFormat.make_command
           @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
@@ -992,6 +1002,9 @@ module X = struct
           OpamFormat.parse_compiler_constraint in
       let os = OpamFormat.assoc_default OpamFormula.Empty s s_os
           OpamFormat.parse_os_constraint in
+      let available = OpamFormat.assoc_default (FBool true) s s_available
+          (function List l -> OpamFormat.parse_filter l
+                  | _ -> raise (OpamFormat.Bad_format "available: expecting a list")) in
       let parse_file = OpamFormat.parse_option
           (OpamFormat.parse_string |> OpamFilename.Base.of_string)
           OpamFormat.parse_filter in
@@ -1014,7 +1027,7 @@ module X = struct
         ) s in
       { name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax; others;
-        patches; ocaml_version; os; build_env;
+        patches; ocaml_version; os; available; build_env;
         homepage; authors; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages
       }

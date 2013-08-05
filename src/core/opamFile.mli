@@ -100,6 +100,9 @@ module OPAM: sig
   (** OS constraint *)
   val os: t -> (bool * string) generic_formula
 
+  (** Availability formula (OS + compiler constraints) *)
+  val available: t -> filter
+
   (** Package maintainer *)
   val maintainer: t -> string
 

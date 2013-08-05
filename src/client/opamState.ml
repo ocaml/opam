@@ -390,11 +390,11 @@ let jobs t =
   | None   -> OpamFile.Config.jobs t.config
   | Some j -> j
 
-(* List the packages which does fullfil the compiler constraints *)
-let available_packages system opams compiler_version =
+(* List the packages which does fullfil the compiler and OS constraints *)
+let available_packages t system =
   let filter nv =
-    if OpamPackage.Map.mem nv opams then (
-      let opam = OpamPackage.Map.find nv opams in
+    if OpamPackage.Map.mem nv t.opams then (
+      let opam = OpamPackage.Map.find nv t.opams in
       let consistent_ocaml_version () =
         let atom (r,v) =
           match OpamCompiler.Version.to_string v with
@@ -407,8 +407,7 @@ let available_packages system opams compiler_version =
                            (only '=' and '!=' are valid)."
                           (OpamFormula.string_of_relop r)
             end
-          | _ ->
-            OpamCompiler.Version.compare (Lazy.force compiler_version) r v in
+          | _ -> OpamCompiler.Version.compare (Lazy.force t.compiler_version) r v in
         match OpamFile.OPAM.ocaml_version opam with
         | None   -> true
         | Some c -> OpamFormula.eval atom c in
@@ -420,14 +419,17 @@ let available_packages system opams compiler_version =
             let ($) = if b then (=) else (<>) in
             os $ OpamGlobals.os_string () in
           OpamFormula.eval atom f in
+      let available () =
+        eval_bool t OpamVariable.Map.empty (OpamFile.OPAM.available opam) in
       consistent_ocaml_version ()
       && consistent_os ()
+      && available ()
     ) else
       false in
   OpamPackage.Map.fold (fun nv _ set ->
       if filter nv then OpamPackage.Set.add nv set
       else set
-    ) opams OpamPackage.Set.empty
+    ) t.opams OpamPackage.Set.empty
 
 let base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
@@ -893,16 +895,15 @@ let load_state ?(save_cache=true) call_site =
     (compiler = OpamCompiler.system) in
   let package_index = lazy (package_index_aux root repositories) in
   let compiler_index = lazy (compiler_index_aux repositories) in
-  let available_packages =
-    lazy (
-      available_packages system opams compiler_version
-    ) in
+  let available_packages_stub = lazy OpamPackage.Set.empty in
   let t = {
     partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
-    packages; available_packages; installed; installed_roots; reinstall;
+    packages; installed; installed_roots; reinstall;
     config; aliases; pinned; compilers;
     package_index; compiler_index;
+    available_packages = available_packages_stub
   } in
+  let t = { t with available_packages = lazy (available_packages t system) } in
   print_state t;
   if save_cache && not cached then
     save_state ~update:false t;
