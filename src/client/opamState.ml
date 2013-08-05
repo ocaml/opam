@@ -335,7 +335,7 @@ let pinned_package t n =
 let is_pinned t n = is_pinned_aux t.pinned n
 
 let copy_pinned_opam t n =
-  let dst = OpamPath.Switch.pinned_opam t.root t.switch n in
+  let dst = OpamPath.Switch.opam t.root t.switch (OpamPackage.pinned n) in
   let versions =
     OpamPackage.versions_of_name (Lazy.force t.available_packages) n in
   let version = OpamPackage.Version.Set.max_elt versions in
@@ -356,7 +356,7 @@ let is_locally_pinned t name =
 let opam t nv =
   let name = OpamPackage.name nv in
   if is_locally_pinned t name then
-    let opam_f = OpamPath.Switch.pinned_opam t.root t.switch name in
+    let opam_f = OpamPath.Switch.opam t.root t.switch (OpamPackage.pinned name) in
     if not (OpamFilename.exists opam_f) then copy_pinned_opam t name;
     OpamFile.OPAM.read (opam_f)
   else
@@ -641,7 +641,7 @@ let global_consistency_checks t =
 (* Check that the pinned packages are installed -- if not, just remove
    the tempory file. *)
  let switch_consistency_checks t =
-  let pin_cache = OpamPath.Switch.pinned_cache t.root t.switch in
+  let pin_cache = OpamPath.Switch.dev_packages_dir t.root t.switch in
   let clean_dir name =
     let name = OpamPackage.Name.to_string name in
     let pin_dir = pin_cache / name in
@@ -1840,7 +1840,7 @@ let locally_pinned_package t n =
 
 let repository_of_locally_pinned_package t n =
   let path, kind = locally_pinned_package t n in
-  let root = OpamPath.Switch.pinned_dir t.root t.switch n in
+  let root = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
   {
     repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
     repo_root     = root;
@@ -1852,7 +1852,7 @@ let repository_of_locally_pinned_package t n =
 let update_pinned_package t n =
   if is_locally_pinned t n then (
     let path, kind = locally_pinned_package t n in
-    let dst = OpamPath.Switch.pinned_dir t.root t.switch n in
+    let dst = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
     let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
     let nv = OpamPackage.pinned n in
     let result = B.pull_url nv dst path in
@@ -1860,7 +1860,7 @@ let update_pinned_package t n =
     | Not_available u -> OpamGlobals.error_and_exit "%s is not available." u
     | _ ->
       (* If $pinned_path/opam does not exist, the cache the current OPAM file. *)
-      let opam = OpamPath.Switch.pinned_opam t.root t.switch n in
+      let opam = OpamPath.Switch.opam t.root t.switch (OpamPackage.pinned n) in
       if not (OpamFilename.exists opam) then copy_pinned_opam t n;
       result
   ) else

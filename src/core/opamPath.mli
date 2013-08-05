@@ -95,106 +95,118 @@ val log: t -> dirname
 (** Switch related paths *)
 module Switch: sig
 
-  (** Root dir: {i $opam/switches/$switch} *)
+  (** Root dir: {i $opam/$switch} *)
   val root: t -> switch -> dirname
 
-  (** lock file: {i $opam/switches/lock} *)
+  (** lock file: {i $opam/lock} *)
   val lock: t -> switch -> filename
 
   (** Library path for a given package:
-      {i $opam/switches/$switch/lib/$name} *)
+      {i $opam/$switch/lib/$name} *)
   val lib: t -> switch -> name -> dirname
 
-  (** Library path: {i $opam/switches/$switch/lib} *)
+  (** Library path: {i $opam/$switch/lib} *)
   val lib_dir: t -> switch -> dirname
 
   (** DLL paths *)
   val stublibs: t -> switch -> dirname
 
-  (** toplevel path: {i $opam/switches/$switch/lib/toplevel} *)
+  (** toplevel path: {i $opam/$switch/lib/toplevel} *)
   val toplevel: t -> switch -> dirname
 
   (** Documentation path for a given package:
-      {i $opam/switches/$switch/doc/$name} *)
+      {i $opam/$switch/doc/$name} *)
   val doc: t -> switch -> name -> dirname
 
-  (** Documentation path: {i $opam/switches/$switch/doc/} *)
+  (** Documentation path: {i $opam/$switch/doc/} *)
   val doc_dir: t -> switch -> dirname
 
-  (** Shared directory: {i $opam/switches/$switch/share} *)
+  (** Shared directory: {i $opam/$switch/share} *)
   val share_dir: t -> switch -> dirname
 
   (** Share directory for a given package: {i
-      $opam/switches/$switch/share/$package} *)
+      $opam/$switch/share/$package} *)
   val share: t -> switch -> name -> dirname
 
-  (** Man pages path: {i $opam/switches/$switch/man/}. The optional
+  (** Man pages path: {i $opam/$switch/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
   val man_dir: ?num:string -> t -> switch -> dirname
 
-  (** Installed binaries: {i $opam/switches/$switch/bin} *)
+  (** Installed binaries: {i $opam/$switch/bin} *)
   val bin: t -> switch -> dirname
 
   (** List of installed packages with their version:
-      {i $opam/switches/$switch/installed} *)
+      {i $opam/$switch/installed} *)
   val installed: t -> switch -> filename
 
   (** List of packages expliciterly installed by the user: {i
-      $opam/switches/$switch/installed.roots} *)
+      $opam/$switch/installed.roots} *)
   val installed_roots: t -> switch -> filename
 
   (** Tempory folders used to decompress and compile
       the corresponding archives:
-      {i $opam/switches/$switch/build/$packages} *)
+      {i $opam/$switch/build/$packages} *)
   val build: t -> switch -> package -> dirname
 
   (** Tempory folders used to decompress and compile the OCaml
-      compiler: {i $opam/switches/$switch/build/ocaml} *)
+      compiler: {i $opam/$switch/build/ocaml} *)
   val build_ocaml: t -> switch -> dirname
 
-  (** Tempory folder: {i $opam/switches/$switch/build} *)
+  (** Tempory folder: {i $opam/$switch/build} *)
   val build_dir: t -> switch -> dirname
 
   (** Tempory location of install files: {i
-      $opam/switches/$switch/build/$package/$name.install} *)
+      $opam/$switch/build/$package/$name.install} *)
   val build_install: t -> switch -> package -> filename
 
   (** Tempory location of config files: {i
-      $opam/switches/$switch/build/$packages/$name.config} *)
+      $opam/$switch/build/$packages/$name.config} *)
   val build_config: t -> switch -> package -> filename
 
   (** Installed files for a given package: {i
-      $opam/switches/$switch/install/$name.install} *)
+      $opam/$switch/install/$name.install} *)
   val install: t -> switch -> name -> filename
 
-  (** Installed files: {i $opam/switches/$switch/install/} *)
+  (** Installed files: {i $opam/$switch/install/} *)
   val install_dir: t -> switch -> dirname
 
   (** Packages to reinstall on next upgrade: {i
-      $opam/switches/$switch/reinstall} *)
+      $opam/$switch/reinstall} *)
   val reinstall: t -> switch -> filename
 
   (** Compile and link flags for a given package: {i
-      $opam/switches/$switch/config/$name.config} *)
+      $opam/$switch/config/$name.config} *)
   val config: t -> switch -> name -> filename
 
-  (** Configuration folder: {i $opam/switches/$switch/config} *)
+  (** Configuration folder: {i $opam/$switch/config} *)
   val config_dir: t -> switch -> dirname
 
-  (** Pinned package file: {i $opam/switches/$switch/pinned}  *)
+  (** Pinned package file: {i $opam/$switch/pinned}  *)
   val pinned: t -> switch -> filename
 
   (** Build dir for all pinned packages: {i
-      $opam/switches/$switch/pinned.cache} *)
-  val pinned_cache: t -> switch -> dirname
-
-  (** Cached OPAM file: {i
-      $opam/switches/$switch/pinned.cache/$name.opam} *)
-  val pinned_opam: t -> switch -> name -> filename
+      $opam/$switch/packages.dev/} *)
+  val dev_packages_dir: t -> switch -> dirname
 
   (** Build dir for a given pinned package: {i
-      $opam/switches/$switch/pinned.cache/$name/} *)
-  val pinned_dir: t -> switch -> name -> dirname
+      $opam/$switch/packages.dev/$name.$version/} *)
+  val dev_package: t -> switch -> package -> dirname
+
+  (** Switch metadata overlay (over the global metadata): {i
+      $opam/$switch/overlay/} *)
+  val overlay_dir: t -> switch -> dirname
+
+  (** Switch metadata overlay (over the global metadata): {i
+      $opam/$switch/overlay/$name.$version} *)
+  val overlay: t -> switch -> package -> dirname
+
+  (** OPAM overlay: {i
+      $opam/$switch/cache/$name.$version/opam} *)
+  val opam: t -> switch -> package -> filename
+
+  (** URL overlay: {i
+      $opam/$switch/overlay/$name.$version/url} *)
+  val url: t -> switch -> package -> filename
 
 end
 

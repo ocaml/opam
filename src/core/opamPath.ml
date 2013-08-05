@@ -113,9 +113,11 @@ module Switch = struct
 
   let build_ocaml t a = build_dir t a / "ocaml"
 
-  let build_install t a nv = build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install")
+  let build_install t a nv =
+    build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".install")
 
-  let build_config t a nv = build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".config")
+  let build_config t a nv =
+    build t a nv // (OpamPackage.Name.to_string (OpamPackage.name nv) ^ ".config")
 
   let install_dir t a = root t a / "install"
 
@@ -129,11 +131,17 @@ module Switch = struct
 
   let pinned t a = root t a // "pinned"
 
-  let pinned_cache t a = root t a / "pinned.cache"
+  let dev_packages_dir t a = root t a / "packages.dev"
 
-  let pinned_dir t a n = pinned_cache t a / OpamPackage.Name.to_string n
+  let dev_package t a nv = dev_packages_dir t a / OpamPackage.to_string nv
 
-  let pinned_opam t a n = pinned_cache t a // (OpamPackage.Name.to_string n ^ ".opam")
+  let overlay_dir t a = root t a / "overlay"
+
+  let overlay t a nv = overlay_dir t a / OpamPackage.to_string nv
+
+  let opam t a nv = overlay t a nv // "opam"
+
+  let url t a nv = overlay t a nv // "url"
 
 end
 

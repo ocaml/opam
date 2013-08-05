@@ -34,8 +34,7 @@ let pin ~force action =
     let packages = OpamPackage.packages_of_name t.packages name in
     OpamPackage.Set.iter (fun nv ->
       OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
-      OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch
-                            (OpamPackage.name nv));
+      OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch nv);
     ) packages;
     if force then OpamState.add_to_reinstall t ~all:false packages;
     OpamFile.Pinned.write pin_f pins in
@@ -51,7 +50,7 @@ let pin ~force action =
         with Not_found ->
           try OpamMisc.getenv "EDITOR"
           with Not_found -> "nano" in
-    let file = OpamPath.Switch.pinned_opam t.root t.switch name in
+    let file = OpamPath.Switch.opam t.root t.switch (OpamPackage.pinned name) in
     if not (OpamFilename.exists file) then
       OpamState.copy_pinned_opam t name;
     ignore (Sys.command (Printf.sprintf "%s %s" editor (OpamFilename.to_string file)))

@@ -246,7 +246,7 @@ let extract_package t nv =
   OpamFilename.rmdir build_dir;
   begin if OpamState.is_locally_pinned t (OpamPackage.name nv) then (
       let pinned_dir =
-        OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
+        OpamPath.Switch.dev_package t.root t.switch nv in
       if not (OpamFilename.exists_dir pinned_dir) then (
         match OpamState.update_pinned_package t (OpamPackage.name nv) with
         | Not_available u -> OpamGlobals.error "%s is not available" u
@@ -435,7 +435,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Remove the pinned cache *)
   log "Removing the pinned cache";
-  OpamFilename.rmdir (OpamPath.Switch.pinned_dir t.root t.switch name);
+  OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch nv);
 
   (* Update the metadata *)
   if metadata then (
