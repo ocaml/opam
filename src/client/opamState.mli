@@ -245,34 +245,12 @@ val all_installed: state -> package_set
 (** Return a map containing the switch where a given package is installed. *)
 val installed_versions: state -> name -> switch list package_map
 
-(** [dev_package_updates t] checks for upstream changes for packages
-    in the global cache. Return the packages whose contents have
-    changed upstream. *)
-val update_dev_packages: state -> package_set
+(** Download the OPAM-package archive ($name.$version+opam.tar.gz) *)
+val download_archive: state -> package -> filename option
 
-(** [copy_files t nv dirname] copies the additional files associated
-    to a package in the given directory. *)
-val copy_files: src:dirname -> dst:dirname -> filename_set
-
-(** [make_archive ?gener_digest t package] builds the archive for
-    the given [package]. By default, the digest that appears in {i
-    $NAME.$VERSION/url} is not modified, unless [gener_digest] is
-    set. *)
-val make_global_archive: state -> package -> unit
-
-(** Same as [make_archive] but use some parameter files instead of
-    relying on the global state. *)
-val make_archive: ?gener_digest:bool -> package ->
-  url_file:filename ->
-  files_dir:dirname ->
-  download_dir:dirname ->
-  local_archive:filename ->
-  unit
-
-(** Download {i $remote/archives/$nv.tar.gz}. If is not there, then
-    download the upstream archive, add the eventual additional files
-    and create {i $nv.tar.gz}. *)
-val download: state -> package -> unit
+(** Download the upstream archive, add the eventual additional files
+    and return the directory.. *)
+val download_upstream: state -> package -> dirname -> generic_file option
 
 (** Global package state. *)
 val package_state: state -> checksums package_map
@@ -290,6 +268,24 @@ val package_repository_partial_state: state -> package -> archive:bool ->
 (** Get the active repository for a given package *)
 val repository_of_package: state -> package -> (repository * string option) option
 
+(** Add the given packages to the set of package to reinstall. If [all]
+    is set, this is done for ALL the switches (useful when a package
+    change upstream for instance). If not, only the reinstall state of the
+    current switch is changed. *)
+val add_to_reinstall: state -> all:bool -> package_set -> unit
+
+(** {2 Development packages} *)
+
+(** Get all the development packages. This include the one locally
+    pinned (for the current switch) and the global dev packages. *)
+val dev_packages: state -> package_set
+
+(** [update_dev_packages t] checks for upstream changes for packages
+    first in the switch cache and then in the global cache. Return the
+    packages whose contents have changed upstream. Side-effect: update
+    the reinstall files. *)
+val update_dev_packages: state -> package_set
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)
@@ -297,6 +293,9 @@ val dot_config: state -> name -> OpamFile.Dot_config.t
 
 (** Return the OPAM file for the given package *)
 val opam: state -> package -> OpamFile.OPAM.t
+
+(** Return the URL file for the given package *)
+val url: state -> package -> OpamFile.URL.t option
 
 (** Return the compiler descritpion file for the given compiler name *)
 val compiler_comp: state -> compiler -> OpamFile.Comp.t
@@ -314,28 +313,20 @@ val is_pinned: state -> name -> bool
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
 
-(** Get the path and kind associated to a locally pinned package. *)
-val locally_pinned_package: state -> name -> address * repository_kind
+(** Return the URL file associated with a locally pinned package. *)
+val url_of_locally_pinned_package: state -> name -> OpamFile.URL.t
 
-(** Return the repository associated to a locally pinned package. *)
+(** Return the repository associtated with a locally pinned
+    package. *)
 val repository_of_locally_pinned_package: state -> name -> repository
 
-(** Cache the OPAM file of pinned package *)
-val copy_pinned_opam: state -> name -> unit
+(** {2 Overlays} *)
 
-(** Get the corresponding pinned package. If the package is pinned to
-    a path (locally or via git/darcs), it returns the latest package as we
-    assume that the most up-to-date build descriptions. *)
-val pinned_package: state -> name -> package
+(** Cache an OPAM file *)
+val add_opam_overlay: state -> package -> unit
 
-(** Update pinned package *)
-val update_pinned_package: state -> name -> generic_file download
-
-(** Add the given packages to the set of package to reinstall. If [all]
-    is set, this is done for ALL the switches (useful when a package
-    change upstream for instance). If not, only the reinstall state of the
-    current switch is changed. *)
-val add_to_reinstall: state -> all:bool -> package_set -> unit
+(** Cache an URL file *)
+val add_url_overlay: state -> package -> OpamFile.URL.t -> unit
 
 (** {2 System compilers} *)
 

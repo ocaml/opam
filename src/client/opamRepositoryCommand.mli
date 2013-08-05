@@ -22,8 +22,8 @@ open OpamTypes
 (** Update the repositories indexes ([repo/index]. *)
 val update_index: t -> unit
 
-(** Update the given pinned package. *)
-val update_pinned_packages: t -> verbose:bool -> name_set -> package_set
+(** Update the given dev packages. *)
+val update_dev_packages: t -> verbose:bool -> package_set -> package_set
 
 (** Fix the compiler descriptions and display the changes if [verbose]
     is set. *)

@@ -170,7 +170,7 @@ let print_updated_packages t updates =
     updates.deleted
     none
 
-let print_updated_pinned_packages pinned_packages =
+let print_updated_dev_packages pinned_packages =
   let print singular plural map =
     if not (OpamPackage.Set.is_empty map) then (
       if OpamPackage.Set.cardinal map = 1 then
@@ -178,44 +178,19 @@ let print_updated_pinned_packages pinned_packages =
       else
         OpamGlobals.msg "%s:\n" plural;
       OpamPackage.Set.iter (fun nv ->
-        OpamGlobals.msg " - %s [pinned]\n"
-          (OpamPackage.Name.to_string (OpamPackage.name nv))
-      ) map
+          OpamGlobals.msg " - %s\n" (OpamPackage.to_string nv)
+        ) map
     ) in
   print
-    "The following PINNED package needs to be upgraded"
-    "The following PINNED packages need to be upgraded"
+    "The following DEV package needs to be upgraded"
+    "The following DEV packages need to be upgraded"
     pinned_packages
 
 (* Check for updates in pinned packages *)
-let update_pinned_packages t ~verbose packages =
-  log "check-pinned-packages updates %s" (OpamPackage.Name.Set.to_string packages);
-  let pinned =
-    OpamPackage.Name.Map.filter
-      (fun n _ -> OpamPackage.Name.Set.mem n packages)
-      t.pinned in
-  let pinned = OpamPackage.Name.Map.bindings pinned in
-  (* Check if a pinned packages has been updated. *)
-  let is_updated = function
-    | n, (Local _ | Git _ | Darcs _) ->
-      if OpamState.is_name_installed t n then
-        let nv = OpamState.find_installed_package_by_name t n in
-        match OpamState.update_pinned_package t n with
-        | Up_to_date _    -> None
-        | Result _        -> Some nv
-        | Not_available u -> OpamGlobals.error "%s is not available" u; None
-      else
-        None
-    | _ -> None
-  in
-  let updates = OpamMisc.filter_map is_updated pinned in
-  let updates = OpamPackage.Set.of_list updates in
-
-  if verbose then print_updated_pinned_packages updates;
-
-  (* update $opam/$oversion/reinstall for all installed switches *)
-  OpamState.add_to_reinstall ~all:true t updates;
-
+let update_dev_packages t ~verbose packages =
+  log "update-dev-packages updates %s" (OpamPackage.Set.to_string packages);
+  let updates = OpamState.update_dev_packages t in
+  if verbose then print_updated_dev_packages updates;
   updates
 
 let filter_package_checksums cs =
@@ -268,8 +243,8 @@ let fix_package_descriptions t ~verbose =
 
   (* Remove the deleted packages *)
   OpamPackage.Set.iter (fun nv ->
-      let dir = OpamPath.packages t.root nv in
-      OpamFilename.rmdir dir;
+      OpamFilename.rmdir  (OpamPath.packages t.root nv);
+      OpamFilename.remove (OpamPath.archive t.root nv);
     ) deleted_packages;
 
   (* Update the package descriptions *)
@@ -286,12 +261,12 @@ let fix_package_descriptions t ~verbose =
         List.iter (fun file ->
             OpamFilename.copy_in ~root file dir
           ) files;
-
+        OpamFilename.remove (OpamPath.archive t.root nv);
         (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)
         if !OpamGlobals.sync_archives then
-          OpamState.download t nv;
-        OpamFilename.remove (OpamPath.archive t.root nv);
+          match OpamState.download_archive t nv with
+          | None | Some _ -> ()
     ) (new_packages ++ updated_packages ++ changed_packages);
 
   (* Do not recompile a package if only only OPAM or descr files have

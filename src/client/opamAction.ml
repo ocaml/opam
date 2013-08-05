@@ -187,16 +187,6 @@ let install_package t nv =
   if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
     OpamFilename.rmdir build_dir
 
-let get_archive t nv =
-  log "get_archive %s" (OpamPackage.to_string nv);
-  let dst = OpamPath.archive t.root nv in
-  if OpamFilename.exists dst then Some dst
-  else (
-    OpamState.download t nv;
-    if OpamFilename.exists dst then Some dst
-    else None
-  )
-
 (* Prepare the package build:
    * apply the patches
    * substitute the files *)
@@ -236,44 +226,35 @@ let prepare_package_build t nv =
       (OpamFile.OPAM.substs opam)
   )
 
-(* For pinned packages, we keep the build cache in
-   ~/.opam/<switch>/pinned.cache/<name> as:
-   i) it's quite important to build and sync-up in different places
-   ii) the build directory will be deleted afterwards anyway *)
 let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
-  begin if OpamState.is_locally_pinned t (OpamPackage.name nv) then (
-      let pinned_dir =
-        OpamPath.Switch.dev_package t.root t.switch nv in
-      if not (OpamFilename.exists_dir pinned_dir) then (
-        match OpamState.update_pinned_package t (OpamPackage.name nv) with
-        | Not_available u -> OpamGlobals.error "%s is not available" u
-        | Result _
-        | Up_to_date _    -> ()
-      ) else
-        OpamGlobals.msg
-          "Synchronization: nothing to do as the pinned package has already \
-           been initialized.\n";
 
+  let extract_and_copy_files = function
+    | None   -> ()
+    | Some f ->
+      OpamFilename.extract_generic_file f build_dir;
       (* Copy the patches files *)
       let _files =
         let src = OpamPath.files t.root nv in
-        OpamState.copy_files ~src ~dst:pinned_dir in
+        OpamFilename.copy_files ~src ~dst:build_dir in
+      () in
 
-      (* Copy the resulting dir *)
-      OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
-
-    ) else match get_archive t nv with
-      | None         -> log "no-archive"
-      | Some archive ->
-        OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);
-        OpamFilename.extract archive build_dir
-  end;
+  if OpamState.is_locally_pinned t (OpamPackage.name nv) then
+    let dir = OpamPath.Switch.dev_package t.root t.switch nv in
+    extract_and_copy_files (OpamState.download_upstream t nv dir)
+  else (
+    match OpamState.download_archive t nv with
+    | Some f -> OpamFilename.extract f build_dir
+    | None   ->
+      let dir = OpamPath.dev_package t.root nv in
+      extract_and_copy_files (OpamState.download_upstream t nv dir)
+  );
 
   prepare_package_build t nv;
   build_dir
+
 
 let string_of_commands commands =
   let commands_s = List.map (fun cmd -> String.concat " " cmd)  commands in
