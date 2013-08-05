@@ -147,7 +147,15 @@ let install_with_packages ~quiet ~packages switch compiler =
   let t = OpamState.load_state "switch-install-with-packages-1" in
 
   (* install the new OCaml version *)
-  OpamState.install_compiler t ~quiet switch compiler;
+  begin try OpamState.install_compiler t ~quiet switch compiler
+    with e ->
+      (* in case of reinstall, the switch may still be in t.aliases *)
+      let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
+      OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
+      let compdir = OpamPath.Switch.root t.root switch in
+      (try OpamFilename.rmdir compdir with _ -> ());
+      raise e
+  end;
 
   (* install the compiler packages *)
   OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch);
@@ -291,6 +299,12 @@ let reinstall switch =
       (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
+  if t.switch = switch then (
+    OpamGlobals.msg "Cannot reinstall %s as it is the current compiler.\n"
+      (OpamSwitch.to_string switch);
+    OpamGlobals.exit 1;
+  );
+
   let ocaml_version = OpamSwitch.Map.find switch t.aliases in
   let packages = Some (t.installed, t.installed_roots) in
 
