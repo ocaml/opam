@@ -179,16 +179,11 @@ let process () =
       OpamGlobals.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
     OpamPackage.Set.iter (fun nv ->
         let prefix = OpamPackage.Map.find nv prefixes in
-        let url_file = OpamPath.Repository.url repo prefix nv in
-        let files_dir = OpamPath.Repository.files repo prefix nv in
         let local_archive = OpamPath.Repository.archive repo nv in
         try
           if not dryrun then (
             OpamFilename.remove local_archive;
-            OpamFilename.with_tmp_dir (fun download_dir ->
-                OpamState.make_archive ~gener_digest nv
-                  ~url_file ~files_dir ~download_dir ~local_archive
-              )
+            OpamRepository.make_archive ~gener_digest repo prefix nv;
           ) else
             OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive)
       with e ->
