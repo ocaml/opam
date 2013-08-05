@@ -382,7 +382,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Clean-up the active repository *)
   log "Cleaning-up the active repository";
-  let dev_dir = OpamPath.dev_packages t.root nv in
+  let dev_dir = OpamPath.dev_package t.root nv in
   if OpamFilename.exists_dir dev_dir then OpamFilename.rmdir dev_dir;
 
   let install =

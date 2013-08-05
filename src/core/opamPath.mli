@@ -60,7 +60,7 @@ val files: t -> package -> dirname
 val dev_packages_dir: t -> dirname
 
 (** Tempory folder for dev packages {i $opam/packages.dev/$NAME.$VERSION/} *)
-val dev_packages: t -> package -> dirname
+val dev_package: t -> package -> dirname
 
 (** Description file: {i $opam/packages/$NAME/$NAME.$VERSION/descr} *)
 val descr: t -> package -> filename

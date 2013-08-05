@@ -72,7 +72,7 @@ let log t = t / "log"
 
 let dev_packages_dir t = t / "packages.dev"
 
-let dev_packages t nv = dev_packages_dir t / OpamPackage.to_string nv
+let dev_package t nv = dev_packages_dir t / OpamPackage.to_string nv
 
 module Switch = struct
 

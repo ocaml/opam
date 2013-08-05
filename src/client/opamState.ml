@@ -1899,7 +1899,7 @@ let update_dev_packages t =
         let kind = guess_repository_kind (OpamFile.URL.kind url) filename in
         log "updating %s:%s"
           (string_of_address filename) (string_of_repository_kind kind);
-        let dirname = OpamPath.dev_packages t.root nv in
+        let dirname = OpamPath.dev_package t.root nv in
         match kind with
         | `http -> false
         | _    ->
@@ -2005,7 +2005,7 @@ let make_archive ?(gener_digest=false) nv
 let make_global_archive t nv =
   let url_file = OpamPath.url t.root nv in
   let files_dir = OpamPath.files t.root nv in
-  let download_dir = OpamPath.dev_packages t.root nv in
+  let download_dir = OpamPath.dev_package t.root nv in
   let local_archive = OpamPath.archive t.root nv in
   make_archive nv ~url_file ~files_dir ~download_dir ~local_archive
 
