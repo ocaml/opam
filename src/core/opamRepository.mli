@@ -52,8 +52,8 @@ val compilers_with_prefixes: repository -> string option compiler_map
 (** {2 State} *)
 
 (** Get all the package files *)
-val package_files: repository -> string option -> package ->
-  filename list * filename list
+val package_files: repository -> string option -> package -> archive:bool ->
+  filename list
 
 (** Compute a package state (ie. a list of checksums). *)
 val package_state: repository -> string option -> package -> [`all|`partial of bool]
@@ -111,6 +111,12 @@ val pull_archive: repository -> package -> filename download
 
 (** Get the optional revision associated to a backend. *)
 val revision: repository -> version option
+
+(** [make_archive ?gener_digest repo prefix package] builds the
+    archive for the given [package]. By default, the digest that
+    appears in {i $NAME.$VERSION/url} is not modified, unless
+    [gener_digest] is set. *)
+val make_archive: ?gener_digest:bool -> repository -> string option -> package -> unit
 
 (** Register a repository backend *)
 val register_backend: repository_kind -> (module BACKEND) -> unit

@@ -16,6 +16,7 @@
 
 open OpamTypes
 open OpamMisc.OP
+open OpamFilename.OP
 
 let log fmt = OpamGlobals.log "REPOSITORY" fmt
 
@@ -221,13 +222,15 @@ let packages r =
 let packages_with_prefixes r =
   OpamPackage.prefixes (OpamPath.Repository.packages_dir r)
 
-let package_files repo prefix nv =
+let package_files repo prefix nv ~archive =
   let opam = OpamPath.Repository.opam repo prefix nv in
   let descr = OpamPath.Repository.descr repo prefix nv in
   let url = OpamPath.Repository.url repo prefix nv in
   let files = OpamPath.Repository.files repo prefix nv in
-  let archive = OpamPath.Repository.archive repo nv in
-  file opam @ file descr @ file url @ dir files, file archive
+  let archive =
+    if archive then file (OpamPath.Repository.archive repo nv)
+    else [] in
+  file opam @ file descr @ file url @ dir files @ archive
 
 let package_important_files repo prefix nv ~archive =
   let url = OpamPath.Repository.url repo prefix nv in
@@ -240,7 +243,7 @@ let package_important_files repo prefix nv ~archive =
 
 let package_state repo prefix nv all =
   let fs = match all with
-    | `all       -> let f, a = package_files repo prefix nv in f @ a
+    | `all       -> package_files repo prefix nv ~archive:true
     | `partial b -> package_important_files repo prefix nv ~archive:b in
   List.flatten (List.map OpamFilename.checksum fs)
 
@@ -249,6 +252,79 @@ let update repo =
   let module B = (val find_backend repo: BACKEND) in
   B.pull_repo repo;
   check_version repo
+
+
+let make_archive ?(gener_digest=false) repo prefix nv =
+  let url_file = OpamPath.Repository.url repo prefix nv in
+  let files_dir = OpamPath.Repository.files repo prefix nv in
+  let archive = OpamPath.Repository.archive repo nv in
+
+  (* Download the remote file / fetch the remote repository *)
+  let download download_dir =
+    if OpamFilename.exists url_file then (
+      let url = OpamFile.URL.read url_file in
+      let checksum = OpamFile.URL.checksum url in
+      let remote_url = OpamFile.URL.url url in
+      let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
+      log "downloading %s:%s"
+        (string_of_address remote_url) (string_of_repository_kind kind);
+      if not (OpamFilename.exists_dir download_dir) then
+        OpamFilename.mkdir download_dir;
+      OpamFilename.in_dir download_dir (fun () ->
+          match checksum with
+          | None   -> Some (pull_url kind nv download_dir remote_url)
+          | Some c ->
+            if gener_digest then
+              Some (pull_and_fix_digest ~file:url_file ~checksum:c
+                      kind nv download_dir remote_url)
+            else
+              Some (pull_and_check_digest ~checksum:c
+                      kind nv download_dir remote_url)
+        )
+    ) else
+      None
+  in
+
+  (* if we've downloaded a file, extract it, otherwise just copy it *)
+  let extract local_filename extract_dir =
+    match local_filename with
+    | None                   -> ()
+    | Some (Not_available u) -> OpamGlobals.error_and_exit "%s is not available" u
+    | Some ( Result r
+           | Up_to_date r )  -> OpamFilename.extract_generic_file r extract_dir in
+
+  (* Eventually add <package>/files/* into the extracted dir *)
+  let copy_files extract_dir =
+    if OpamFilename.exists_dir files_dir then (
+      if not (OpamFilename.exists_dir extract_dir) then
+        OpamFilename.mkdir extract_dir;
+      OpamFilename.copy_files ~src:files_dir ~dst:extract_dir
+    ) else
+      OpamFilename.Set.empty in
+
+    (* Finally create the final archive *)
+  let create_archive files extract_root =
+    if not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_file then (
+      OpamGlobals.msg "Creating %s.\n" (OpamFilename.to_string archive);
+      OpamFilename.exec extract_root [
+        [ "tar" ; "czf" ;
+          OpamFilename.to_string archive ;
+          OpamPackage.to_string nv ]
+      ];
+      Some archive
+    ) else
+      None in
+
+  OpamFilename.with_tmp_dir (fun extract_root ->
+      OpamFilename.with_tmp_dir (fun download_dir ->
+          let local_filename = download download_dir in
+          let extract_dir = extract_root / OpamPackage.to_string nv in
+          extract local_filename extract_dir;
+          let files = copy_files extract_dir in
+          match create_archive files extract_root with
+          | None | Some _ -> ()
+        )
+    )
 
 module Graph = struct
   module Vertex =  struct
