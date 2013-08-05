@@ -153,10 +153,13 @@ val apply_build_options: build_options -> unit
 val repository_name: repository_name Arg.converter
 
 (** Repository address converter *)
-val repository_address: address Arg.converter
+val address: address Arg.converter
 
 (** Filename converter *)
 val filename: filename Arg.converter
+
+(** Dirnam converter *)
+val dirname: dirname Arg.converter
 
 (** Compiler converter *)
 val compiler: compiler Arg.converter

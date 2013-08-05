@@ -128,14 +128,19 @@ let repository_name =
   let print ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
   parse, print
 
-let repository_address =
-  let parse str = `Ok (OpamRepository.repository_address str) in
-  let print ppf address = pr_str ppf (OpamFilename.Dir.to_string address) in
+let address =
+  let parse str = `Ok (address_of_string str) in
+  let print ppf address = pr_str ppf (string_of_address address) in
   parse, print
 
 let filename =
   let parse str = `Ok (OpamFilename.of_string str) in
   let print ppf filename = pr_str ppf (OpamFilename.to_string filename) in
+  parse, print
+
+let dirname =
+  let parse str = `Ok (OpamFilename.Dir.of_string str) in
+  let print ppf filename = pr_str ppf (OpamFilename.Dir.to_string filename) in
   parse, print
 
 let compiler =
@@ -401,7 +406,7 @@ let init =
     Arg.(value & pos ~rev:true 1 repository_name OpamRepositoryName.default & doc) in
   let repo_address =
     let doc = Arg.info ~docv:"ADDRESS" ~doc:"Address of the repository." [] in
-    Arg.(value & pos ~rev:true 0 repository_address OpamRepository.default_address & doc) in
+    Arg.(value & pos ~rev:true 0 address OpamRepository.default_address & doc) in
   let no_setup   = mk_flag ["n";"no-setup"]   "Do not update the global and user configuration options to setup OPAM." in
   let auto_setup = mk_flag ["a";"auto-setup"] "Automatically setup all the global and user configuration options for OPAM." in
   let init global_options
