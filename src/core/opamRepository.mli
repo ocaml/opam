@@ -22,6 +22,9 @@ include OpamMisc.ABSTRACT with type t := repository
 
 exception Unknown_backend
 
+(** Default repository address*)
+val default_address: address
+
 (** Pretty-print *)
 val to_string: repository -> string
 
@@ -33,12 +36,6 @@ val default: unit -> repository
 
 (** Create a local repository on a given path *)
 val local: dirname -> repository
-
-(** Default repository address *)
-val default_address: address
-
-(** Constructor *)
-val repository_address: string -> address
 
 (** Get the list of packages *)
 val packages: repository -> package_set
@@ -82,7 +79,7 @@ module type BACKEND = sig
   (** [pull_url package local_dir remote_url] pull the contents of
       [remote_url] into [local_dir]. Can return either a file or a
       directory. *)
-  val pull_url: package -> dirname -> string -> generic_file download
+  val pull_url: package -> dirname -> address -> generic_file download
 
   (** [pull_repo] pull the contents of a repository. *)
   val pull_repo: repository -> unit
@@ -98,7 +95,7 @@ module type BACKEND = sig
 end
 
 (** Signature for pull functions *)
-type pull_fn = repository_kind -> package -> dirname -> string -> generic_file download
+type pull_fn = repository_kind -> package -> dirname -> address -> generic_file download
 
 (** Download an url *)
 val pull_url: pull_fn

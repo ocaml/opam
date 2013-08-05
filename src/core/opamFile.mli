@@ -420,8 +420,10 @@ module URL: sig
 
   include IO_FILE
 
+  val create: repository_kind option -> address -> t
+
   (** URL address *)
-  val url: t -> string
+  val url: t -> address
 
   (** Backend kind (could be curl/rsync/git/darcs/hg at the moment) *)
   val kind: t -> repository_kind option

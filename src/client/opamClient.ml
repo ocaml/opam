@@ -248,9 +248,10 @@ module API = struct
         | None                     -> []
         | Some (repo_name, prefix) ->
           if OpamState.is_locally_pinned t name then
-            match OpamState.pinned_path t name with
-            | Some p -> [ "pinned-path", OpamFilename.Dir.to_string p ]
-            | None   -> OpamGlobals.error_and_exit "invalid pinned package"
+            if OpamState.is_locally_pinned t name then
+              [ "pinned", "true" ]
+            else
+              OpamGlobals.error_and_exit "invalid pinned package"
           else if OpamState.mem_repository t repo_name then
             let repo = OpamState.find_repository t repo_name in
             let mirror =
@@ -268,7 +269,7 @@ module API = struct
                   | None   -> "http"
                   | Some k -> string_of_repository_kind k in
                 let checksum = OpamFile.URL.checksum url in
-                [ "upstream-url"  , Printf.sprintf "%s" archive;
+                [ "upstream-url"  , Printf.sprintf "%s" (string_of_address archive);
                   "upstream-kind" , kind ]
                 @ match checksum with
                 | None   -> []

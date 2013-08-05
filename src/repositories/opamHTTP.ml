@@ -49,10 +49,11 @@ let make_state ~download_index repo =
   if List.mem_assoc repo.repo_address !state_cache then
     List.assoc repo.repo_address !state_cache
   else (
-    let remote_index_file = repo.repo_address // "urls.txt" in
+    let repo_address = OpamFilename.raw_dir (fst repo.repo_address) in
+    let remote_index_file = repo_address // "urls.txt" in
     let local_index_file = index_file repo.repo_root in
     let local_index_file_save = index_file_save repo.repo_root in
-    let remote_index_archive = repo.repo_address // "index.tar.gz" in
+    let remote_index_archive = repo_address // "index.tar.gz" in
     let local_index_archive = repo.repo_root // "index.tar.gz" in
     let index =
       if download_index then (
@@ -81,7 +82,7 @@ let make_state ~download_index repo =
             | None  ->  0o640
             | Some p -> p in
           let digest = OpamFilename.Attribute.md5 r in
-          let remote = OpamFilename.create repo.repo_address base in
+          let remote = repo_address // OpamFilename.Base.to_string base in
           let local = OpamFilename.create repo.repo_root base in
           OpamFilename.Map.add remote local rl,
           OpamFilename.Map.add local remote lr,
@@ -95,7 +96,7 @@ let make_state ~download_index repo =
            [], []) in
       remote_local, local_remote, locals, perms, digests in
     let state = {
-      remote_dir = repo.repo_address;
+      remote_dir = repo_address;
       local_dir  = repo.repo_root;
       remote_index_archive; local_index_archive;
       local_files; remote_local; local_remote;
@@ -149,10 +150,8 @@ module B = struct
           "Cannot find index.tar.gz on the OPAM repository. \
            Initialisation might take some time.\n"
     with _ ->
-      OpamGlobals.error_and_exit
-        "Error: %s is unavailable."
-        (OpamFilename.Dir.to_string repo.repo_address)
-
+      OpamGlobals.error_and_exit "Error: %s is unavailable."
+        (string_of_address repo.repo_address)
 
   let curl ~remote_file ~local_file =
     log "curl";
@@ -194,6 +193,7 @@ module B = struct
   (* XXX: add a proxy *)
   let pull_url package dirname remote_url =
     log "pull-file";
+    let remote_url = string_of_address remote_url in
     let filename = OpamFilename.of_string remote_url in
     OpamGlobals.msg "%-10s Downloading %s\n"
       (OpamPackage.to_string package)

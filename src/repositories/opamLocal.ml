@@ -81,7 +81,7 @@ module B = struct
     log "pull-repo";
     OpamGlobals.msg "%-10s Synchronizing with %s\n"
       (OpamRepositoryName.to_string repo.repo_name)
-      (OpamFilename.prettify_dir repo.repo_address);
+      (string_of_address repo.repo_address);
     ignore (pull_file_quiet repo.repo_root (OpamPath.Repository.version repo));
     List.iter
       (fun (local, remote) -> ignore (pull_dir_quiet (local repo) (remote repo)))
@@ -104,6 +104,7 @@ module B = struct
     pull_dir_quiet local_dirname remote_dirname
 
   let pull_url package local_dirname remote_url =
+    let remote_url = string_of_address remote_url in
     if Sys.file_exists remote_url && Sys.is_directory remote_url then
       download_dir
         (pull_dir package local_dirname (OpamFilename.Dir.of_string remote_url))

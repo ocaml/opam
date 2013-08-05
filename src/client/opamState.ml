@@ -334,17 +334,6 @@ let pinned_package t n =
 
 let is_pinned t n = is_pinned_aux t.pinned n
 
-let pinned_path t name =
-  if OpamPackage.Name.Map.mem name t.pinned then
-    match OpamPackage.Name.Map.find name t.pinned with
-    | Local d
-    | Darcs d
-    | Git d
-    | Hg d -> Some d
-    | _     -> None
-  else
-    None
-
 let copy_pinned_opam t n =
   let dst = OpamPath.Switch.pinned_opam t.root t.switch n in
   let versions =
@@ -1840,7 +1829,7 @@ let update_switch_config t switch =
 
 let locally_pinned_package t n =
   let option = OpamPackage.Name.Map.find n t.pinned in
-  let path = string_of_pin_option option in
+  let path = address_of_string (string_of_pin_option option) in
   match kind_of_pin_option option with
   | None      -> OpamGlobals.error_and_exit
                    "%s has a wrong pinning kind." (OpamPackage.Name.to_string n)
@@ -1855,7 +1844,7 @@ let repository_of_locally_pinned_package t n =
   {
     repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
     repo_root     = root;
-    repo_address  = OpamFilename.Dir.of_string path;
+    repo_address  = path;
     repo_kind     = kind;
     repo_priority = 0;
   }
@@ -1905,17 +1894,16 @@ let update_dev_packages t =
       if not (OpamFilename.exists url_f) then false
       else
         let url = OpamFile.URL.read url_f in
-        let kind = match OpamFile.URL.kind url with
-          | None   -> kind_of_url (OpamFile.URL.url url)
-          | Some k -> k in
         let filename = OpamFile.URL.url url in
-        log "updating %s:%s" filename (string_of_repository_kind kind);
+        let kind = guess_repository_kind (OpamFile.URL.kind url) filename in
+        log "updating %s:%s"
+          (string_of_address filename) (string_of_repository_kind kind);
         let dirname = OpamPath.dev_packages t.root nv in
         match kind with
         | `http -> false
         | _    ->
           match OpamRepository.pull_url kind nv dirname filename with
-          | Not_available -> OpamGlobals.error_and_exit "%s is not available." filename
+          | Not_available -> OpamGlobals.error_and_exit "%s is not available." (fst filename)
           | Up_to_date _  -> false
           | Result _      -> true in
     if keep then OpamPackage.Set.singleton nv
@@ -1959,10 +1947,9 @@ let make_archive ?(gener_digest=false) nv
         let url = OpamFile.URL.read url_file in
         let checksum = OpamFile.URL.checksum url in
         let remote_url = OpamFile.URL.url url in
-        let kind = match OpamFile.URL.kind url with
-          | None   -> kind_of_url remote_url
-          | Some k -> k in
-        log "downloading %s:%s" remote_url (string_of_repository_kind kind);
+        let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
+        log "downloading %s:%s"
+          (string_of_address remote_url) (string_of_repository_kind kind);
         if not (OpamFilename.exists_dir download_dir) then
           OpamFilename.mkdir download_dir;
         let local_filename =
@@ -1979,7 +1966,7 @@ let make_archive ?(gener_digest=false) nv
             ) in
 
         match local_filename with
-        | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" remote_url
+        | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" (fst remote_url)
         | Result (F f) | Up_to_date (F f) ->
           log "extracting %s to %s"
             (OpamFilename.to_string f)

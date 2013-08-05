@@ -156,13 +156,17 @@ module X = struct
     let internal = "url"
 
     type t = {
-      url     : string;
+      url     : address;
       kind    : repository_kind option;
       checksum: string option;
     }
 
+    let create kind url = {
+      url; kind; checksum = None;
+    }
+
     let empty = {
-      url     = "<none>";
+      url     = ("<none>", None);
       kind    = None;
       checksum= None;
     }
@@ -207,6 +211,7 @@ module X = struct
             x, Some `hg
         | _ ->
             OpamGlobals.error_and_exit "Too many URLS" in
+      let url = address_of_string url in
       { url; kind; checksum }
 
     let to_string filename t =
@@ -216,7 +221,7 @@ module X = struct
       let s = {
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (url_name , OpamFormat.make_string t.url);
+          Variable (url_name , OpamFormat.make_string (string_of_address t.url));
         ] @ match t.checksum with
             | None   -> []
             | Some c -> [Variable (s_checksum, OpamFormat.make_string c)]
@@ -491,7 +496,7 @@ module X = struct
 
     let empty = {
       repo_name     = OpamRepositoryName.of_string "<none>";
-      repo_address  = OpamFilename.raw_dir "<none>";
+      repo_address  = ("<none>", None);
       repo_root     = OpamFilename.raw_dir "<none>";
       repo_kind     = `local;
       repo_priority = 0;
@@ -509,7 +514,7 @@ module X = struct
           (OpamFormat.parse_string |> OpamRepositoryName.of_string) in
       let repo_address =
         OpamFormat.assoc s.file_contents s_address
-          (OpamFormat.parse_string |> OpamFilename.address_of_string) in
+          (OpamFormat.parse_string |> address_of_string) in
       let repo_kind =
         OpamFormat.assoc s.file_contents s_kind
           (OpamFormat.parse_string |> repository_kind_of_string) in
@@ -525,7 +530,7 @@ module X = struct
           Variable (s_name    ,
                     OpamFormat.make_string (OpamRepositoryName.to_string t.repo_name));
           Variable (s_address ,
-                    OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_address));
+                    OpamFormat.make_string (string_of_address t.repo_address));
           Variable (s_kind    ,
                     OpamFormat.make_string (string_of_repository_kind t.repo_kind));
           Variable (s_priority,

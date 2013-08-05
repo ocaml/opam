@@ -244,15 +244,12 @@ let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
-  begin match OpamState.pinned_path t (OpamPackage.name nv) with
-    | Some p ->
-
+  begin if OpamState.is_locally_pinned t (OpamPackage.name nv) then (
       let pinned_dir =
         OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
       if not (OpamFilename.exists_dir pinned_dir) then (
         match OpamState.update_pinned_package t (OpamPackage.name nv) with
-        | Not_available -> OpamGlobals.error "%s is not available"
-                             (OpamFilename.Dir.to_string p)
+        | Not_available -> OpamGlobals.error "XXX is not available"
         | Result _
         | Up_to_date _  -> ()
       ) else
@@ -268,8 +265,7 @@ let extract_package t nv =
       (* Copy the resulting dir *)
       OpamFilename.copy_dir ~src:pinned_dir ~dst:build_dir
 
-    | None ->
-      match get_archive t nv with
+    ) else match get_archive t nv with
       | None         -> log "no-archive"
       | Some archive ->
         OpamGlobals.msg "Extracting %s.\n" (OpamFilename.to_string archive);

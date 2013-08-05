@@ -197,14 +197,14 @@ let update_pinned_packages t ~verbose packages =
   let pinned = OpamPackage.Name.Map.bindings pinned in
   (* Check if a pinned packages has been updated. *)
   let is_updated = function
-    | n, (Local p | Git p | Darcs p) ->
+    | n, (Local _ | Git _ | Darcs _) ->
       if OpamState.is_name_installed t n then
         let nv = OpamState.find_installed_package_by_name t n in
         match OpamState.update_pinned_package t n with
         | Up_to_date _  -> None
         | Result _      -> Some nv
         | Not_available ->
-          OpamGlobals.error "%s is not available" (OpamFilename.Dir.to_string p);
+          OpamGlobals.error "XXX is not available";
           None
       else
         None
@@ -538,7 +538,7 @@ let list ~short =
         r.repo_priority
         (Printf.sprintf "[%s]" (string_of_repository_kind r.repo_kind))
         (OpamRepositoryName.to_string r.repo_name)
-        (OpamFilename.Dir.to_string r.repo_address) in
+        (string_of_address r.repo_address) in
     let repos = OpamState.sorted_repositories t in
     List.iter pretty_print repos
   )

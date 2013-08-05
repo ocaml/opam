@@ -29,10 +29,10 @@ let to_string r =
     (OpamRepositoryName.to_string r.repo_name)
     r.repo_priority
     (OpamTypes.string_of_repository_kind r.repo_kind)
-    (OpamFilename.Dir.to_string r.repo_address)
+    (string_of_address r.repo_address)
 
 let default_address =
-  OpamFilename.raw_dir OpamGlobals.default_repository_address
+  OpamGlobals.default_repository_address, None
 
 let default () = {
   repo_name     = OpamRepositoryName.default;
@@ -46,7 +46,7 @@ let default () = {
 let local dirname = {
   repo_name     = OpamRepositoryName.of_string "local";
   repo_root     = dirname;
-  repo_address  = dirname;
+  repo_address  = ("<none>", None);
   repo_kind     = `local;
   repo_priority = 0;
 }
@@ -55,11 +55,6 @@ let to_json r =
   `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
         ("kind", `String (string_of_repository_kind r.repo_kind));
       ]
-
-let repository_address address =
-  if Sys.file_exists address
-  then OpamFilename.Dir.of_string address
-  else OpamFilename.raw_dir address
 
 module O = struct
   type tmp = repository
@@ -77,7 +72,7 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val pull_url: package -> dirname -> string -> generic_file download
+  val pull_url: package -> dirname -> address -> generic_file download
   val pull_repo: repository -> unit
   val pull_archive: repository -> filename -> filename download
   val revision: repository -> version option
@@ -112,16 +107,7 @@ let init repo =
   OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
   ignore (B.pull_repo repo)
 
-let read_tmp dir =
-  let dirs =
-    if OpamFilename.exists_dir dir then
-      OpamFilename.Dir.Set.of_list (OpamFilename.sub_dirs dir)
-    else
-      OpamFilename.Dir.Set.empty in
-  OpamPackage.Set.of_list
-    (OpamMisc.filter_map OpamPackage.of_dirname (OpamFilename.Dir.Set.elements dirs))
-
-type pull_fn = repository_kind -> package -> dirname -> string -> generic_file download
+type pull_fn = repository_kind -> package -> dirname -> address -> generic_file download
 
 let pull_url kind package local_dirname remote_url =
   let module B = (val find_backend_by_kind kind: BACKEND) in
@@ -133,7 +119,7 @@ let revision repo =
   B.revision repo
 
 let pull_and_check_digest ~checksum kind package dirname url =
-  let filename = OpamFilename.of_string url in
+  let filename = OpamFilename.of_string (string_of_address url) in
   if OpamFilename.exists filename
   && OpamFilename.digest filename = checksum then
     Up_to_date (F filename)

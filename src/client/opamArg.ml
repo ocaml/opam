@@ -873,7 +873,7 @@ let repository name =
       | [] | [_] -> error `missing usage_add
       | [name;address] ->
         let name = OpamRepositoryName.of_string name in
-        let address = OpamRepository.repository_address address in
+        let address = address_of_string address in
         let kind = guess_repository_kind kind address in
         Client.REPOSITORY.add name kind address ~priority
       | _ -> error `toomany usage_add in

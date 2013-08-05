@@ -25,11 +25,12 @@ module Darcs = struct
     OpamFilename.exists_dir (repo.repo_root / "_darcs")
 
   let init repo =
-    let repo = OpamFilename.Dir.to_string repo.repo_address in
-    OpamSystem.commands [
-      [ "darcs" ; "init" ];
-      [ "darcs" ; "get" ; repo; "--lazy" ];
-    ]
+    OpamFilename.in_dir repo.repo_root (fun () ->
+        OpamSystem.commands [
+          [ "darcs" ; "init" ];
+          [ "darcs" ; "get" ; fst repo.repo_address; "--lazy" ];
+        ];
+      )
 
   (* With darcs, it is apparently easier to compute a diff between
      remote and local, without fething at all. So we set fetch to be a
@@ -40,19 +41,17 @@ module Darcs = struct
   (* Merge is actually a full pull *)
   let reset repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
-        let repo = OpamFilename.Dir.to_string repo.repo_address in
         OpamSystem.command [
-          "darcs" ; "pull"; repo; "--all"; "--quiet"
+          "darcs" ; "pull"; fst repo.repo_address; "--all"; "--quiet"
         ];
     )
 
   (* Difference between remote and local is a 'pull --dry-run' *)
   let diff repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
-        let repo = OpamFilename.Dir.to_string repo.repo_address in
         let patches =
           OpamSystem.read_command_output [
-            "darcs" ; "pull" ; repo; "--dry-run" ; "--quiet"
+            "darcs" ; "pull" ; fst repo.repo_address; "--dry-run" ; "--quiet"
           ] in
         patches <> []
       )

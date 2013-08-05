@@ -161,7 +161,13 @@ type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 type repository_kind = [`http|`local|`git|`darcs|`hg]
 
 (** Repository address *)
-type address = dirname
+type address = string * string option
+
+(** Print an address *)
+val string_of_address: address -> string
+
+(** Parse an address *)
+val address_of_string: string -> address
 
 (** Guess the repository kind *)
 val guess_repository_kind: repository_kind option -> address -> repository_kind
