@@ -122,6 +122,7 @@ let revision repo =
 let pull_and_check_digest ~checksum kind package dirname url =
   let filename = OpamFilename.of_string (string_of_address url) in
   if OpamFilename.exists filename
+  && not (Sys.is_directory (OpamFilename.to_string filename))
   && OpamFilename.digest filename = checksum then
     Up_to_date (F filename)
   else match pull_url kind package dirname url with
