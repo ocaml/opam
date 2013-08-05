@@ -249,9 +249,9 @@ let extract_package t nv =
         OpamPath.Switch.pinned_dir t.root t.switch (OpamPackage.name nv) in
       if not (OpamFilename.exists_dir pinned_dir) then (
         match OpamState.update_pinned_package t (OpamPackage.name nv) with
-        | Not_available -> OpamGlobals.error "XXX is not available"
+        | Not_available u -> OpamGlobals.error "%s is not available" u
         | Result _
-        | Up_to_date _  -> ()
+        | Up_to_date _    -> ()
       ) else
         OpamGlobals.msg
           "Synchronization: nothing to do as the pinned package has already \

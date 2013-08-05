@@ -1850,19 +1850,20 @@ let repository_of_locally_pinned_package t n =
   }
 
 let update_pinned_package t n =
-  if is_locally_pinned t n then
+  if is_locally_pinned t n then (
     let path, kind = locally_pinned_package t n in
     let dst = OpamPath.Switch.pinned_dir t.root t.switch n in
     let module B = (val OpamRepository.find_backend kind: OpamRepository.BACKEND) in
     let nv = OpamPackage.pinned n in
     let result = B.pull_url nv dst path in
-    if result <> Not_available then (
+    match result with
+    | Not_available u -> OpamGlobals.error_and_exit "%s is not available." u
+    | _ ->
       (* If $pinned_path/opam does not exist, the cache the current OPAM file. *)
       let opam = OpamPath.Switch.pinned_opam t.root t.switch n in
-      if not (OpamFilename.exists opam) then copy_pinned_opam t n
-    );
-    result
-  else
+      if not (OpamFilename.exists opam) then copy_pinned_opam t n;
+      result
+  ) else
     OpamGlobals.error_and_exit "%s is not pinned."
       (OpamPackage.Name.to_string n)
 
@@ -1903,9 +1904,9 @@ let update_dev_packages t =
         | `http -> false
         | _    ->
           match OpamRepository.pull_url kind nv dirname filename with
-          | Not_available -> OpamGlobals.error_and_exit "%s is not available." (fst filename)
-          | Up_to_date _  -> false
-          | Result _      -> true in
+          | Not_available u -> OpamGlobals.error_and_exit "%s is not available." u
+          | Up_to_date _    -> false
+          | Result _        -> true in
     if keep then OpamPackage.Set.singleton nv
     else OpamPackage.Set.empty in
 
@@ -1966,7 +1967,7 @@ let make_archive ?(gener_digest=false) nv
             ) in
 
         match local_filename with
-        | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" (fst remote_url)
+        | Not_available u -> OpamGlobals.error_and_exit "Cannot get %s" u
         | Result (F f) | Up_to_date (F f) ->
           log "extracting %s to %s"
             (OpamFilename.to_string f)
@@ -2033,7 +2034,7 @@ let download t nv =
       | Result local_file ->
         log "Downloaded %s successfully" (OpamFilename.to_string local_file);
         OpamFilename.copy ~src:local_file ~dst:archive;
-      | Not_available ->
+      | Not_available _ ->
         log "The archive for %s is not available, need to build it"
           (OpamPackage.to_string nv);
         make_global_archive t nv

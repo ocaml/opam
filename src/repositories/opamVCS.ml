@@ -85,7 +85,7 @@ module Make (VCS: VCS) = struct
     if OpamFilename.exists local_file then
       Up_to_date local_file
     else
-      Not_available
+      Not_available (OpamFilename.to_string filename)
 
   let revision repo =
     Some (OpamPackage.Version.of_string (VCS.revision repo))

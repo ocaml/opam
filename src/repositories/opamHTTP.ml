@@ -202,7 +202,7 @@ module B = struct
       let local_file = OpamFilename.download ~overwrite:true filename dirname in
       Result (F local_file)
     with _ ->
-      Not_available
+      Not_available remote_url
 
   let pull_archive repo filename =
     log "pull-archive";
@@ -219,7 +219,7 @@ module B = struct
         Result result
       )
     ) else
-      Not_available
+      Not_available (OpamFilename.to_string filename)
 
   let revision _ =
     None

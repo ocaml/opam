@@ -858,9 +858,9 @@ module API = struct
               (* [opam reinstall <pkg>] when pkg is pinned means we want
                  to sync the pkg with the pinned source. *)
               match OpamState.update_pinned_package t n with
-              | Up_to_date _  -> None
-              | Result _      -> Some nv
-              | Not_available -> None
+              | Up_to_date _    -> None
+              | Result _        -> Some nv
+              | Not_available _ -> None
             ) else
               Some nv
         | Some (_,v) ->

@@ -40,15 +40,15 @@ let rsync src dst =
     ) else
       Up_to_date []
   ) else
-    Not_available
+    Not_available src
 
 let rsync_dirs src dst =
   let src_s = Filename.concat (OpamFilename.Dir.to_string src) "" in
   let dst_s = OpamFilename.Dir.to_string dst in
   match rsync src_s dst_s with
-  | Not_available -> Not_available
-  | Result _      -> Result dst
-  | Up_to_date _  -> Up_to_date dst
+  | Not_available s -> Not_available s
+  | Result _        -> Result dst
+  | Up_to_date _    -> Up_to_date dst
 
 let rsync_file src dst =
   log "rsync_file src=%s dst=%s"
@@ -65,7 +65,7 @@ let rsync_file src dst =
         "unknown rsync output: {%s}"
         (String.concat ", " l)
   ) else
-    Not_available
+    Not_available (OpamFilename.to_string src)
 
 module B = struct
 
@@ -112,7 +112,7 @@ module B = struct
       download_file
         (pull_file package local_dirname (OpamFilename.of_string remote_url))
     else
-      Not_available
+      Not_available remote_url
 
   let pull_archive repo filename =
     if OpamFilename.exists filename then

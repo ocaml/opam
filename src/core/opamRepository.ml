@@ -124,7 +124,7 @@ let pull_and_check_digest ~checksum kind package dirname url =
   && OpamFilename.digest filename = checksum then
     Up_to_date (F filename)
   else match pull_url kind package dirname url with
-    | Not_available
+    | Not_available _
     | Up_to_date _
     | Result (D _) as r -> r
     | Result (F f)      ->
@@ -147,7 +147,7 @@ let pull_and_check_digest ~checksum kind package dirname url =
 
 let pull_and_fix_digest ~file ~checksum kind package dirname url =
   match pull_url kind package dirname url with
-  | Not_available
+  | Not_available _
   | Up_to_date _
   | Result (D _) as r -> r
   | Result (F f) as r ->

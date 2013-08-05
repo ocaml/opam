@@ -44,7 +44,7 @@ type generic_file =
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
-  | Not_available
+  | Not_available of string
   | Result of 'a
 
 (** Upcast a downloaded directory. *)

@@ -32,7 +32,7 @@ type 'a filename_map = 'a OpamFilename.Map.t
 
 type 'a download =
   | Up_to_date of 'a
-  | Not_available
+  | Not_available of string
   | Result of 'a
 
 type generic_file =
@@ -40,9 +40,9 @@ type generic_file =
   | F of filename
 
 let download_map fn = function
-  | Up_to_date f  -> Up_to_date (fn f)
-  | Result  f     -> Result (fn f)
-  | Not_available -> Not_available
+  | Up_to_date f    -> Up_to_date (fn f)
+  | Result  f       -> Result (fn f)
+  | Not_available d -> Not_available d
 
 let download_dir = download_map (fun d -> D d)
 let download_file = download_map (fun f -> F f)

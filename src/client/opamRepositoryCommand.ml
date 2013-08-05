@@ -201,11 +201,9 @@ let update_pinned_packages t ~verbose packages =
       if OpamState.is_name_installed t n then
         let nv = OpamState.find_installed_package_by_name t n in
         match OpamState.update_pinned_package t n with
-        | Up_to_date _  -> None
-        | Result _      -> Some nv
-        | Not_available ->
-          OpamGlobals.error "XXX is not available";
-          None
+        | Up_to_date _    -> None
+        | Result _        -> Some nv
+        | Not_available u -> OpamGlobals.error "%s is not available" u; None
       else
         None
     | _ -> None
