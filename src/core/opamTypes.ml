@@ -103,7 +103,7 @@ let string_of_repository_kind = function
   | `local -> "local"
   | `git   -> "git"
   | `darcs -> "darcs"
-  | `hg -> "hg"
+  | `hg    -> "hg"
 
 let repository_kind_of_string = function
   | "wget"
@@ -113,7 +113,7 @@ let repository_kind_of_string = function
   | "local" -> `local
   | "git"   -> `git
   | "darcs" -> `darcs
-  | "hg" -> `hg
+  | "hg"    -> `hg
   | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
 
 type variable = OpamVariable.t
