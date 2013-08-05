@@ -182,6 +182,9 @@ let rec_dirs dir =
     List.fold_left aux (d @ accu) d in
   aux [] dir
 
+let dirs dir =
+  directories_with_links dir
+
 (* XXX: won't work on windows *)
 let remove_dir dir =
   log "rmdir %s" dir;

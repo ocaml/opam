@@ -68,8 +68,8 @@ let rec_dirs d =
   let fs = OpamSystem.rec_dirs (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)
 
-let sub_dirs d =
-  let fs = OpamSystem.directories_with_links (Dir.to_string d) in
+let dirs d =
+  let fs = OpamSystem.dirs (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)
 
 let in_dir dirname fn =

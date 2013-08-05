@@ -628,7 +628,7 @@ let clean_file file name =
    the tempory files. *)
 let global_consistency_checks t =
   let dev_dir = OpamPath.dev_packages_dir t.root in
-  let dirs = OpamFilename.sub_dirs dev_dir in
+  let dirs = OpamFilename.dirs dev_dir in
   let all_installed = all_installed t in
   List.iter (fun d ->
       match OpamPackage.of_dirname d with
@@ -1883,7 +1883,7 @@ let update_dev_packages t =
   (* For each package in the cache, look at what changed upstream *)
   let cached_packages =
     let dir = OpamPath.dev_packages_dir t.root in
-    let dirs = OpamFilename.sub_dirs dir in
+    let dirs = OpamFilename.dirs dir in
     let packages = OpamMisc.filter_map OpamPackage.of_dirname dirs in
     OpamPackage.Set.of_list packages in
 

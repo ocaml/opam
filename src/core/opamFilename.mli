@@ -37,8 +37,8 @@ val mkdir: Dir.t -> unit
 (** List the sub-directory recursively *)
 val rec_dirs: Dir.t -> Dir.t list
 
-(** List the sub-directory *)
-val sub_dirs: Dir.t -> Dir.t list
+(** List the sub-directory (do not recurse) *)
+val dirs: Dir.t -> Dir.t list
 
 (** Evaluate a function in a given directory *)
 val in_dir: Dir.t -> (unit -> 'a) -> 'a
