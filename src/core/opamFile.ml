@@ -176,41 +176,36 @@ module X = struct
     let s_git = "git"
     let s_darcs = "darcs"
     let s_hg = "hg"
+    let s_local = "local"
 
     let valid_fields = [
       s_archive;
       s_checksum;
       s_git;
       s_darcs;
-      s_hg
+      s_hg;
+      s_local;
     ]
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
-      let archive =
-        OpamFormat.assoc_option s.file_contents s_archive OpamFormat.parse_string in
-      let git =
-        OpamFormat.assoc_option s.file_contents s_git OpamFormat.parse_string in
-      let darcs =
-        OpamFormat.assoc_option s.file_contents s_darcs OpamFormat.parse_string in
-      let hg =
-        OpamFormat.assoc_option s.file_contents s_hg OpamFormat.parse_string in
-      let checksum =
-        OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
-      let url, kind = match archive, git, darcs, hg with
-        | None  , None  , None  , None ->
+      let get f = OpamFormat.assoc_option s.file_contents f OpamFormat.parse_string in
+      let archive  = get s_archive in
+      let git      = get s_git in
+      let darcs    = get s_darcs in
+      let hg       = get s_hg in
+      let local    = get s_local in
+      let checksum = get s_checksum in
+      let url, kind = match archive, git, darcs, hg, local with
+        | None  , None  , None  , None, None ->
             OpamGlobals.error_and_exit "Missing URL"
-        | Some x, None  , None  , None   ->
-            x, Some `http
-        | None  , Some x, None  , None   ->
-            x, Some `git
-        | None  , None  , Some x, None   ->
-            x, Some `darcs
-        | None  , None  , None  , Some x ->
-            x, Some `hg
-        | _ ->
-            OpamGlobals.error_and_exit "Too many URLS" in
+        | Some x, None  , None  , None  , None   -> x, Some `http
+        | None  , Some x, None  , None  , None   -> x, Some `git
+        | None  , None  , Some x, None  , None   -> x, Some `darcs
+        | None  , None  , None  , Some x, None   -> x, Some `hg
+        | None  , None  , None  , None  , Some x -> x, Some `local
+        | _ -> OpamGlobals.error_and_exit "Too many URLS" in
       let url = address_of_string url in
       { url; kind; checksum }
 
