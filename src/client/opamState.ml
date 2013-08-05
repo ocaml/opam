@@ -149,6 +149,218 @@ let dot_config t nv =
 let is_package_installed t nv =
   OpamPackage.Set.mem nv t.installed
 
+let jobs t =
+  match !OpamGlobals.jobs with
+  | None   -> OpamFile.Config.jobs t.config
+  | Some j -> j
+
+(* filter handling *)
+
+(* Return the contents of a fully qualified variable *)
+let contents_of_variable t local_variables v =
+  let name = OpamVariable.Full.package v in
+  let var = OpamVariable.Full.variable v in
+  let var_str = OpamVariable.to_string var in
+  let string str = Some (S str) in
+  let bool b = Some (B b) in
+  let int i = string (string_of_int i) in
+  let dirname dir = string (OpamFilename.Dir.to_string dir) in
+  let read_var name =
+    let c = dot_config t name in
+    try match OpamVariable.Full.section v with
+      | None   -> OpamFile.Dot_config.variable c var
+      | Some s -> OpamFile.Dot_config.Section.variable c s var
+    with Not_found ->
+      OpamGlobals.error "%s is not defined" (OpamVariable.Full.to_string v);
+      None in
+  let local_var =
+    try Some (OpamVariable.Map.find var local_variables)
+    with Not_found -> None
+  in
+  if local_var <> None then local_var else
+  if name = OpamPackage.Name.global_config then (
+    try string (OpamMisc.getenv var_str)
+    with Not_found ->
+      if var_str = "ocaml-version" then
+        string (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
+      else if var_str = "preinstalled" then
+        bool (OpamFile.Comp.preinstalled (compiler_comp t t.compiler))
+      else if var_str = "switch" then
+        string (OpamSwitch.to_string t.switch)
+      else if var_str = "jobs" then
+        int (jobs t)
+      else
+        read_var name
+  ) else (
+    let process_one name =
+      let exists = find_packages_by_name t name <> None in
+      let name_str = OpamPackage.Name.to_string name in
+      if not exists then None
+      else
+        try
+          let var_hook = Printf.sprintf "OPAM_%s_%s" name_str var_str in
+          match OpamMisc.getenv var_hook with
+          | "true"  | "1" -> bool true
+          | "false" | "0" -> bool false
+          | s             -> string s
+        with Not_found ->
+          let installed = is_name_installed t name in
+          let no_section = OpamVariable.Full.section v = None in
+          if var = OpamVariable.enable && installed && no_section then
+            string "enable"
+          else if var = OpamVariable.enable && not installed && no_section then
+            string "disable"
+          else if var = OpamVariable.installed && no_section then
+            bool installed
+          else if var = OpamVariable.installed || var = OpamVariable.enable then (
+            OpamGlobals.error
+              "Syntax error: invalid section argument in '%s'.\nUse '%s:%s' instead."
+              (OpamVariable.Full.to_string v)
+              name_str
+              (OpamVariable.to_string var);
+            None
+          ) else if installed then (
+            match OpamVariable.to_string var with
+            | "bin"     -> dirname (OpamPath.Switch.bin t.root t.switch)
+            | "lib"     -> dirname (OpamPath.Switch.lib t.root t.switch name)
+            | "man"     -> dirname (OpamPath.Switch.man_dir t.root t.switch)
+            | "doc"     -> dirname (OpamPath.Switch.doc t.root t.switch name)
+            | "share"   -> dirname (OpamPath.Switch.share t.root t.switch name)
+            | "pinned"  -> bool (OpamPackage.Name.Map.mem name t.pinned)
+            | "version" ->
+              let nv = find_installed_package_by_name t name in
+              string (OpamPackage.Version.to_string (OpamPackage.version nv))
+            | _         -> read_var name
+          ) else
+            None in
+    match process_one name with
+    | Some r -> Some r
+    | None   ->
+      let name_str = OpamPackage.Name.to_string name in
+      let names =
+        try OpamMisc.split name_str '+'
+        with _ -> [name_str] in
+      let names = List.rev_map OpamPackage.Name.of_string names in
+      let results =
+        List.rev_map (fun name ->
+            match process_one name with
+            | None   ->
+              OpamGlobals.error_and_exit
+                "%s does not define the variable %s."
+                (OpamPackage.Name.to_string name) (OpamVariable.to_string var)
+            | Some r -> r
+          ) names in
+      let rec compose x y = match x,y with
+        | S "enable" , S "enable"  -> S "enable"
+        | S "disable", S "enable"
+        | S "enable" , S "disable"
+        | S "disable", S "disable" -> S "disable"
+        | B b1       , B b2        -> B (b1 && b2)
+        | S b, r     | r, S b      ->
+          if b = "true" then compose (B true) r
+          else if b = "false" then compose (B false) r
+          else
+            OpamGlobals.error_and_exit
+              "Cannot compose %s and %s"
+              (OpamVariable.string_of_variable_contents x)
+              (OpamVariable.string_of_variable_contents y) in
+      match results with
+      | [] | [_] -> assert false
+      | h::t     -> Some (List.fold_left compose h t)
+  )
+
+let contents_of_variable_exn t local_variables var =
+  match contents_of_variable t local_variables var with
+  | None  ->
+    OpamGlobals.error_and_exit "%s is not a valid variable."
+      (OpamVariable.Full.to_string var)
+  | Some c -> c
+
+let substitute_ident t local_variables i =
+  let v = OpamVariable.Full.of_string i in
+  contents_of_variable_exn t local_variables v
+
+(* Substitute the file contents *)
+let substitute_file t local_variables f =
+  let f = OpamFilename.of_basename f in
+  let src = OpamFilename.add_extension f "in" in
+  let contents = OpamFile.Subst.read src in
+  let newcontents =
+    OpamFile.Subst.replace contents
+      (contents_of_variable_exn t local_variables)
+  in
+  OpamFile.Subst.write f newcontents
+
+(* Substitue the string contents *)
+let substitute_string t local_variables s =
+  OpamFile.Subst.replace_string s (contents_of_variable_exn t local_variables)
+
+exception Filter_type_error
+
+let filter_type_error f actual expected =
+  OpamGlobals.error
+    "\'%s\' has type %s, but a filter element of type %s was expected."
+    (string_of_filter f) actual expected;
+  raise Filter_type_error
+
+let string_of_variable_contents ident = function
+  | S s -> s
+  | B _ -> filter_type_error (FIdent ident) "bool" "string"
+
+let bool_of_variable_contents ident = function
+  | B b -> b
+  | S _ -> filter_type_error (FIdent ident) "string" "bool"
+
+let eval_string t local_variables = function
+  | FString s -> substitute_string t local_variables s
+  | FIdent s  -> string_of_variable_contents s (substitute_ident t local_variables s)
+  | f         -> filter_type_error f "bool" "string"
+
+let rec eval_bool t local_variables = function
+  | FBool b    -> b
+  | FString s  -> substitute_string t local_variables s = "true"
+  | FIdent s   -> bool_of_variable_contents s (substitute_ident t local_variables s)
+  | FOp(e,s,f) ->
+    (* We are supposed to compare version strings *)
+    let s = match s with
+      | Eq  -> (fun a b -> Debian.Version.compare a b =  0)
+      | Neq -> (fun a b -> Debian.Version.compare a b <> 0)
+      | Ge  -> (fun a b -> Debian.Version.compare a b >= 0)
+      | Le  -> (fun a b -> Debian.Version.compare a b <= 0)
+      | Gt  -> (fun a b -> Debian.Version.compare a b >  0)
+      | Lt  -> (fun a b -> Debian.Version.compare a b <  0) in
+    s (eval_string t local_variables e) (eval_string t local_variables f)
+  | FOr(e,f)  -> eval_bool t local_variables e || eval_bool t local_variables f
+  | FAnd(e,f) -> eval_bool t local_variables e && eval_bool t local_variables f
+  | FNot e    -> not (eval_bool t local_variables e)
+
+let eval_filter t local_variables = function
+  | None   -> true
+  | Some f ->
+    try eval_bool t local_variables f
+    with _ -> false
+
+let filter_arg t local_variables (a,f) =
+  if eval_filter t local_variables f then
+    try match a with
+      | CString s -> Some (substitute_string t local_variables s)
+      | CIdent i  ->
+        Some (string_of_variable_contents i (substitute_ident t local_variables i))
+    with _ ->
+      None
+  else
+    None
+
+let filter_command t local_variables (l, f) =
+  if eval_filter t local_variables f then
+    match OpamMisc.filter_map (filter_arg t OpamVariable.Map.empty) l with
+    | [] -> None
+    | l  -> Some l
+  else
+    None
+
+let filter_commands t local_variables l =
+  OpamMisc.filter_map (filter_command t local_variables) l
 
 (* Sort repositories by priority *)
 let sorted_repositories_aux repositories =
@@ -384,11 +596,6 @@ let is_locally_pinned t name =
     | _ -> true
   else
     false
-
-let jobs t =
-  match !OpamGlobals.jobs with
-  | None   -> OpamFile.Config.jobs t.config
-  | Some j -> j
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
@@ -1052,212 +1259,6 @@ let source t ?(interactive_only=false) f =
   if interactive_only then
     Printf.sprintf "if tty -s >/dev/null 2>&1; then\n  %sfi\n" s
   else s
-
-(* Return the contents of a fully qualified variable *)
-let contents_of_variable t local_variables v =
-  let name = OpamVariable.Full.package v in
-  let var = OpamVariable.Full.variable v in
-  let var_str = OpamVariable.to_string var in
-  let string str = Some (S str) in
-  let bool b = Some (B b) in
-  let int i = string (string_of_int i) in
-  let dirname dir = string (OpamFilename.Dir.to_string dir) in
-  let read_var name =
-    let c = dot_config t name in
-    try match OpamVariable.Full.section v with
-      | None   -> OpamFile.Dot_config.variable c var
-      | Some s -> OpamFile.Dot_config.Section.variable c s var
-    with Not_found ->
-      OpamGlobals.error "%s is not defined" (OpamVariable.Full.to_string v);
-      None in
-  let local_var =
-    try Some (OpamVariable.Map.find var local_variables)
-    with Not_found -> None
-  in
-  if local_var <> None then local_var else
-  if name = OpamPackage.Name.global_config then (
-    try string (OpamMisc.getenv var_str)
-    with Not_found ->
-      if var_str = "ocaml-version" then
-        string (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
-      else if var_str = "preinstalled" then
-        bool (OpamFile.Comp.preinstalled (compiler_comp t t.compiler))
-      else if var_str = "switch" then
-        string (OpamSwitch.to_string t.switch)
-      else if var_str = "jobs" then
-        int (jobs t)
-      else
-        read_var name
-  ) else (
-    let process_one name =
-      let exists = find_packages_by_name t name <> None in
-      let name_str = OpamPackage.Name.to_string name in
-      if not exists then None
-      else
-        try
-          let var_hook = Printf.sprintf "OPAM_%s_%s" name_str var_str in
-          match OpamMisc.getenv var_hook with
-          | "true"  | "1" -> bool true
-          | "false" | "0" -> bool false
-          | s             -> string s
-        with Not_found ->
-          let installed = is_name_installed t name in
-          let no_section = OpamVariable.Full.section v = None in
-          if var = OpamVariable.enable && installed && no_section then
-            string "enable"
-          else if var = OpamVariable.enable && not installed && no_section then
-            string "disable"
-          else if var = OpamVariable.installed && no_section then
-            bool installed
-          else if var = OpamVariable.installed || var = OpamVariable.enable then (
-            OpamGlobals.error
-              "Syntax error: invalid section argument in '%s'.\nUse '%s:%s' instead."
-              (OpamVariable.Full.to_string v)
-              name_str
-              (OpamVariable.to_string var);
-            None
-          ) else if installed then (
-            match OpamVariable.to_string var with
-            | "bin"     -> dirname (OpamPath.Switch.bin t.root t.switch)
-            | "lib"     -> dirname (OpamPath.Switch.lib t.root t.switch name)
-            | "man"     -> dirname (OpamPath.Switch.man_dir t.root t.switch)
-            | "doc"     -> dirname (OpamPath.Switch.doc t.root t.switch name)
-            | "share"   -> dirname (OpamPath.Switch.share t.root t.switch name)
-            | "pinned"  -> bool (OpamPackage.Name.Map.mem name t.pinned)
-            | "version" ->
-              let nv = find_installed_package_by_name t name in
-              string (OpamPackage.Version.to_string (OpamPackage.version nv))
-            | _         -> read_var name
-          ) else
-            None in
-    match process_one name with
-    | Some r -> Some r
-    | None   ->
-      let name_str = OpamPackage.Name.to_string name in
-      let names =
-        try OpamMisc.split name_str '+'
-        with _ -> [name_str] in
-      let names = List.rev_map OpamPackage.Name.of_string names in
-      let results =
-        List.rev_map (fun name ->
-            match process_one name with
-            | None   ->
-              OpamGlobals.error_and_exit
-                "%s does not define the variable %s."
-                (OpamPackage.Name.to_string name) (OpamVariable.to_string var)
-            | Some r -> r
-          ) names in
-      let rec compose x y = match x,y with
-        | S "enable" , S "enable"  -> S "enable"
-        | S "disable", S "enable"
-        | S "enable" , S "disable"
-        | S "disable", S "disable" -> S "disable"
-        | B b1       , B b2        -> B (b1 && b2)
-        | S b, r     | r, S b      ->
-          if b = "true" then compose (B true) r
-          else if b = "false" then compose (B false) r
-          else
-            OpamGlobals.error_and_exit
-              "Cannot compose %s and %s"
-              (OpamVariable.string_of_variable_contents x)
-              (OpamVariable.string_of_variable_contents y) in
-      match results with
-      | [] | [_] -> assert false
-      | h::t     -> Some (List.fold_left compose h t)
-  )
-
-let contents_of_variable_exn t local_variables var =
-  match contents_of_variable t local_variables var with
-  | None  ->
-    OpamGlobals.error_and_exit "%s is not a valid variable."
-      (OpamVariable.Full.to_string var)
-  | Some c -> c
-
-let substitute_ident t local_variables i =
-  let v = OpamVariable.Full.of_string i in
-  contents_of_variable_exn t local_variables v
-
-(* Substitute the file contents *)
-let substitute_file t local_variables f =
-  let f = OpamFilename.of_basename f in
-  let src = OpamFilename.add_extension f "in" in
-  let contents = OpamFile.Subst.read src in
-  let newcontents =
-    OpamFile.Subst.replace contents
-      (contents_of_variable_exn t local_variables)
-  in
-  OpamFile.Subst.write f newcontents
-
-(* Substitue the string contents *)
-let substitute_string t local_variables s =
-  OpamFile.Subst.replace_string s (contents_of_variable_exn t local_variables)
-
-exception Filter_type_error
-
-let filter_type_error f actual expected =
-  OpamGlobals.error
-    "\'%s\' has type %s, but a filter element of type %s was expected."
-    (string_of_filter f) actual expected;
-  raise Filter_type_error
-
-let string_of_variable_contents ident = function
-  | S s -> s
-  | B _ -> filter_type_error (FIdent ident) "bool" "string"
-
-let bool_of_variable_contents ident = function
-  | B b -> b
-  | S _ -> filter_type_error (FIdent ident) "string" "bool"
-
-let eval_string t local_variables = function
-  | FString s -> substitute_string t local_variables s
-  | FIdent s  -> string_of_variable_contents s (substitute_ident t local_variables s)
-  | f         -> filter_type_error f "bool" "string"
-
-let rec eval_bool t local_variables = function
-  | FBool b    -> b
-  | FString s  -> substitute_string t local_variables s = "true"
-  | FIdent s   -> bool_of_variable_contents s (substitute_ident t local_variables s)
-  | FOp(e,s,f) ->
-    (* We are supposed to compare version strings *)
-    let s = match s with
-      | Eq  -> (fun a b -> Debian.Version.compare a b =  0)
-      | Neq -> (fun a b -> Debian.Version.compare a b <> 0)
-      | Ge  -> (fun a b -> Debian.Version.compare a b >= 0)
-      | Le  -> (fun a b -> Debian.Version.compare a b <= 0)
-      | Gt  -> (fun a b -> Debian.Version.compare a b >  0)
-      | Lt  -> (fun a b -> Debian.Version.compare a b <  0) in
-    s (eval_string t local_variables e) (eval_string t local_variables f)
-  | FOr(e,f)  -> eval_bool t local_variables e || eval_bool t local_variables f
-  | FAnd(e,f) -> eval_bool t local_variables e && eval_bool t local_variables f
-  | FNot e    -> not (eval_bool t local_variables e)
-
-let eval_filter t local_variables = function
-  | None   -> true
-  | Some f ->
-    try eval_bool t local_variables f
-    with _ -> false
-
-let filter_arg t local_variables (a,f) =
-  if eval_filter t local_variables f then
-    try match a with
-      | CString s -> Some (substitute_string t local_variables s)
-      | CIdent i  ->
-        Some (string_of_variable_contents i (substitute_ident t local_variables i))
-    with _ ->
-      None
-  else
-    None
-
-let filter_command t local_variables (l, f) =
-  if eval_filter t local_variables f then
-    match OpamMisc.filter_map (filter_arg t OpamVariable.Map.empty) l with
-    | [] -> None
-    | l  -> Some l
-  else
-    None
-
-let filter_commands t local_variables l =
-  OpamMisc.filter_map (filter_command t local_variables) l
 
 let expand_env t (env: env_updates) : env =
   List.rev_map (fun (ident, symbol, string) ->
