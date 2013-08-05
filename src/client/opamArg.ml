@@ -442,8 +442,8 @@ let list =
   let doc = list_doc in
   let man = [
     `S "DESCRIPTION";
-    `P "This command displays the list of available packages, or the list of \
-        installed packages if the $(b,--installed) switch is used.";
+    `P "This command displays the list of installed packages, or the list of \
+        all the available packages if the $(b,--all) flag is used.";
     `P "Unless the $(b,--short) switch is used, the output format displays one \
         package per line, and each line contains the name of the package, the \
         installed version or -- if the package is not installed, and a short \
