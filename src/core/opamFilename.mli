@@ -73,6 +73,11 @@ val with_tmp_dir: (Dir.t -> 'a) -> 'a
 
 include OpamMisc.ABSTRACT
 
+(** Generic filename *)
+type generic_file =
+  | D of Dir.t
+  | F of t
+
 (** Create a filename from a Dir.t and a basename *)
 val create: Dir.t -> Base.t -> t
 
@@ -160,6 +165,9 @@ val extract: t -> Dir.t -> unit
 
 (** Extract an archive in a given directory (which should already exists) *)
 val extract_in: t -> Dir.t -> unit
+
+(** Extract a generic file *)
+val extract_generic_file: generic_file -> Dir.t -> unit
 
 (** Check whether a filename starts by a given Dir.t *)
 val starts_with: Dir.t -> t -> bool

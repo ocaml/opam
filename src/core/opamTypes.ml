@@ -35,7 +35,7 @@ type 'a download =
   | Not_available of string
   | Result of 'a
 
-type generic_file =
+type generic_file = OpamFilename.generic_file =
   | D of dirname
   | F of filename
 

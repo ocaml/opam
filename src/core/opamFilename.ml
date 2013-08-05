@@ -249,6 +249,25 @@ let extract filename dirname =
 let extract_in filename dirname =
   OpamSystem.extract_in (to_string filename) (Dir.to_string dirname)
 
+type generic_file =
+  | D of Dir.t
+  | F of t
+
+let extract_generic_file filename dirname =
+  match filename with
+  | F f ->
+    log "extracting %s to %s"
+      (to_string f)
+      (Dir.to_string dirname);
+    extract f dirname
+  | D d ->
+    if d <> dirname then (
+      log "copying %s to %s"
+        (Dir.to_string d)
+        (Dir.to_string dirname);
+      copy_dir ~src:d ~dst:dirname
+    )
+
 let ends_with suffix filename =
   OpamMisc.ends_with ~suffix (to_string filename)
 

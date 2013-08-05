@@ -37,7 +37,7 @@ type filename_set = OpamFilename.Set.t
 type 'a filename_map = 'a OpamFilename.Map.t
 
 (** Generalized file type *)
-type generic_file =
+type generic_file = OpamFilename.generic_file =
   | D of dirname
   | F of filename
 
