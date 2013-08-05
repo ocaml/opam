@@ -207,6 +207,9 @@ val env: unit -> (string * string) list
 (** Return a pretty-printed backtrace *)
 val pretty_backtrace: unit -> string
 
+(** Prettify a local path (eg. replace /home/me/ by '~') *)
+val prettify_path: string -> string
+
 module OP: sig
 
   (** Pipe operator *)

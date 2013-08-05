@@ -450,3 +450,15 @@ let guess_dot_profile shell =
     else
       bashrc
   | _     -> home ".profile"
+
+let prettify_path s =
+  let aux ~short ~prefix =
+    let prefix = Filename.concat prefix "" in
+    if starts_with ~prefix s then
+      let suffix = remove_prefix ~prefix s in
+      Some (Filename.concat short suffix)
+    else
+      None in
+  match aux ~short:"~" ~prefix:(getenv "HOME") with
+  | Some p -> p
+  | None   -> s

@@ -317,23 +317,11 @@ let checksum_dir d =
   else
     []
 
-let prettify_string s =
-  let aux ~short ~prefix =
-    let prefix = Filename.concat prefix "" in
-    if OpamMisc.starts_with ~prefix s then
-      let suffix = OpamMisc.remove_prefix ~prefix s in
-      Some (Filename.concat short suffix)
-    else
-      None in
-  match aux ~short:"~" ~prefix:(OpamMisc.getenv "HOME") with
-  | Some p -> p
-  | None   -> s
-
 let prettify_dir d =
-  prettify_string (Dir.to_string d)
+  OpamMisc.prettify_path (Dir.to_string d)
 
 let prettify s =
-  prettify_string (to_string s)
+  OpamMisc.prettify_path (to_string s)
 
 let to_json x = `String (to_string x)
 
