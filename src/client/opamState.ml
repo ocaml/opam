@@ -865,8 +865,13 @@ let load_state ?(save_cache=true) call_site =
       let packages = OpamPackage.list (OpamPath.packages_dir root) in
       OpamPackage.Set.fold (fun nv map ->
           let file = OpamPath.opam root nv in
-          let opam = OpamFile.OPAM.read file in
-          OpamPackage.Map.add nv opam map
+          try
+            let opam = OpamFile.OPAM.read file in
+            OpamPackage.Map.add nv opam map
+          with Parsing.Parse_error | OpamSystem.Internal_error _ ->
+            OpamGlobals.warning "File %s contains errors, skipping."
+              (OpamFilename.to_string file);
+            map
         ) packages OpamPackage.Map.empty
     | Some o -> o in
   let descrs =
