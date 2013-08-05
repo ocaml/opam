@@ -295,11 +295,6 @@ let download_iter ~overwrite filenames dirname =
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
 
-let address_of_string address =
-  if Sys.file_exists address
-  then Dir.of_string address
-  else raw_dir address
-
 let with_flock file f x =
   OpamSystem.flock (to_string file);
   try
