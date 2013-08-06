@@ -262,12 +262,17 @@ let fix_package_descriptions t ~verbose =
             OpamFilename.copy_in ~root file dir
           ) files;
         OpamFilename.remove (OpamPath.archive t.root nv);
-        (* that's not a good idea *at all* to enable this hook if you
-           are not in a testing environment *)
-        if !OpamGlobals.sync_archives then
-          match OpamState.download_archive t nv with
-          | None | Some _ -> ()
     ) (new_packages ++ updated_packages ++ changed_packages);
+
+  (* that's not a good idea *at all* to enable this hook if you
+           are not in a testing environment *)
+  OpamPackage.Map.iter (fun nv _ ->
+      if !OpamGlobals.sync_archives then (
+        log "download %s" (OpamFilename.to_string (OpamPath.archive t.root nv));
+        match OpamState.download_archive t nv with
+        | None | Some _ -> ()
+      )
+    ) repo_index;
 
   (* Do not recompile a package if only only OPAM or descr files have
      changed. We recompile a package:
