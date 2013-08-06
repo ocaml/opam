@@ -76,15 +76,15 @@ module Make (VCS: VCS) = struct
     ignore (pull_repo repo)
 
   let pull_archive repo filename =
-    OpamGlobals.msg "%-10s Fetching %s\n"
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamFilename.prettify filename);
     let dirname = OpamPath.Repository.archives_dir repo in
     let basename = OpamFilename.basename filename in
     let local_file = OpamFilename.create dirname basename in
-    if OpamFilename.exists local_file then
+    if OpamFilename.exists local_file then (
+      OpamGlobals.msg "%-10s Using %s\n"
+        (OpamRepositoryName.to_string repo.repo_name)
+        (OpamFilename.prettify local_file);
       Up_to_date local_file
-    else
+    ) else
       Not_available (OpamFilename.to_string filename)
 
   let revision repo =
