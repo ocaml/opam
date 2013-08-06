@@ -501,6 +501,7 @@ module X = struct
     let s_kind = "kind"
     let s_address = "address"
     let s_priority = "priority"
+    let s_root = "root"
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
@@ -515,7 +516,11 @@ module X = struct
           (OpamFormat.parse_string |> repository_kind_of_string) in
       let repo_priority =
         OpamFormat.assoc_default 0 s.file_contents s_priority OpamFormat.parse_int in
-      let repo_root = OpamPath.Repository.create (OpamPath.root ()) repo_name in
+      let repo_root =
+        match OpamFormat.assoc_option s.file_contents s_root
+                (OpamFormat.parse_string |> OpamFilename.raw_dir)
+        with None   -> OpamPath.Repository.create (OpamPath.root ()) repo_name
+           | Some f -> f in
       { repo_name; repo_address; repo_kind; repo_priority; repo_root }
 
     let to_string filename t =
@@ -530,6 +535,8 @@ module X = struct
                     OpamFormat.make_string (string_of_repository_kind t.repo_kind));
           Variable (s_priority,
                     OpamFormat.make_int t.repo_priority);
+          Variable (s_root,
+                    OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_root));
         ] } in
       Syntax.to_string s
 
