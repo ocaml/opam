@@ -466,11 +466,15 @@ module API = struct
 
     if repositories_need_update then (
       let repos = OpamRepositoryName.Map.values repositories in
+      let child repo =
+        try OpamRepository.update repo
+        with _ ->
+          OpamGlobals.error "Skipping %s as the repository is not available.\n"
+            (string_of_address repo.repo_address) in
 
       (* Update each remote backend *)
       OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos
-        ~child:OpamRepository.update
-        ~post:ignore ~pre:ignore;
+        ~child ~post:ignore ~pre:ignore;
       OpamRepositoryCommand.update_index t;
       let compiler_updates =
         OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
