@@ -896,7 +896,14 @@ let dev_packages t =
   OpamPackage.Set.union (keys global) (keys switch)
 
 let global_consistency_checks t =
-  consistency_checks (OpamPath.dev_packages_dir t.root) (all_installed t)
+  consistency_checks (OpamPath.dev_packages_dir t.root) (all_installed t);
+  let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases t.root) in
+  if OpamSwitch.Map.exists (fun _ c -> c =  OpamCompiler.system) aliases then
+    let comp_f = OpamPath.compiler_comp t.root OpamCompiler.system in
+    if not (OpamFilename.exists comp_f) then (
+      OpamGlobals.msg "Regenerating the system compiler description.\n";
+      create_system_compiler_description t.root (OpamCompiler.Version.system ());
+    )
 
 let switch_consistency_checks t =
   consistency_checks (OpamPath.Switch.dev_packages_dir t.root t.switch) t.installed
@@ -1063,11 +1070,9 @@ let load_state ?(save_cache=true) call_site =
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp root compiler in
     if not (OpamFilename.exists comp_f) then
-      if compiler = OpamCompiler.system then
-        create_system_compiler_description root (OpamCompiler.Version.system ())
-      else
-        OpamCompiler.unknown compiler;
-    OpamFile.Comp.version (OpamFile.Comp.read comp_f)
+      OpamCompiler.unknown compiler
+    else
+      OpamFile.Comp.version (OpamFile.Comp.read comp_f)
   ) in
   let opams = match opams with
     | None   ->
