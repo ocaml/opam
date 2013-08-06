@@ -477,10 +477,6 @@ module API = struct
       let package_updates =
         OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
 
-      (* Update the dev packages *)
-      let dev_updates = OpamState.update_dev_packages t in
-      OpamState.add_to_reinstall t ~all:true dev_updates;
-
       (* Eventually output some JSON file *)
       if OpamJson.verbose () then
         let json to_json update =
@@ -489,9 +485,8 @@ module API = struct
                ("deleted", to_json update.deleted);
                ("changed", to_json update.changed); ] in
         let updates = `O [
-            "package-updates"    , (json OpamPackage.Set.to_json package_updates);
-            "package-dev-updates", (OpamPackage.Set.to_json dev_updates);
-            "compiler-updates"   , (json OpamCompiler.Set.to_json compiler_updates);
+            "package-updates" , (json OpamPackage.Set.to_json package_updates);
+            "compiler-updates", (json OpamCompiler.Set.to_json compiler_updates);
           ] in
         OpamJson.add updates;
     );
@@ -499,7 +494,7 @@ module API = struct
     if dev_packages_need_update then (
       let updates =
         OpamRepositoryCommand.update_dev_packages ~verbose:true t dev_packages in
-      let json = `O [ "dev", OpamPackage.Set.to_json updates ] in
+      let json = `O [ "dev-packages-update", OpamPackage.Set.to_json updates ] in
       OpamJson.add json
     );
 
