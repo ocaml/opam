@@ -167,6 +167,13 @@ let of_filename f =
   else
     None
 
+(* $NAME.$VERSION+opam.tar.gz *)
+let of_archive f =
+  let base = OpamFilename.basename f in
+  match OpamMisc.cut_at (OpamFilename.Base.to_string base) '+' with
+  | None       -> None
+  | Some (s,_) -> of_string_opt s
+
 let list dir =
   log "list %s" (OpamFilename.Dir.to_string dir);
   if OpamFilename.exists_dir dir then (

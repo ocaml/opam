@@ -88,7 +88,20 @@ module B = struct
       [
         (OpamPath.Repository.packages_dir , OpamPath.Repository.remote_packages_dir);
         (OpamPath.Repository.compilers_dir, OpamPath.Repository.remote_compilers_dir);
-      ]
+      ];
+    let archives = OpamFilename.files (OpamPath.Repository.archives_dir repo) in
+    log "archives: %s" (OpamMisc.string_of_list OpamFilename.to_string archives);
+    List.iter (fun archive ->
+        match OpamPackage.of_archive archive with
+        | None    ->
+          OpamGlobals.msg "Removing %s\n." (OpamFilename.to_string archive);
+          OpamFilename.remove archive
+        | Some nv ->
+        let remote_filename = OpamPath.Repository.remote_archive repo nv in
+        match rsync_file remote_filename archive with
+        | Not_available _ -> OpamFilename.remove archive
+        | _               -> ()
+      ) archives
 
   let pull_file package local_dirname remote_filename =
     if OpamFilename.exists remote_filename then

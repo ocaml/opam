@@ -59,6 +59,11 @@ val of_filename: OpamFilename.t -> t option
     $name} and {i $version} from {i /path/to/$name.$version/} *)
 val of_dirname: OpamFilename.Dir.t -> t option
 
+(** Guess the package name from an archive file. This function extract
+    {i $name} and {i $version} from {i
+    /path/to/$name.$version+opam.tar.gz} *)
+val of_archive: OpamFilename.t -> t option
+
 (** Convert a set of pairs to a map [name -> versions] *)
 val to_map: Set.t -> Version.Set.t Name.Map.t
 
