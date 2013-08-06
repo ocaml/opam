@@ -1890,29 +1890,33 @@ let repository_of_locally_pinned_package t n =
 
 (* Dev packages *)
 
-let update_dev_packages t =
-  log "update-dev-packages";
-
-  let update nv =
-    let needs_update = OpamPackage.Set.singleton nv in
-    let skip = OpamPackage.Set.empty in
-    match url t nv with
-    | None     -> skip
-    | Some url ->
-      let remote_url = OpamFile.URL.url url in
-      let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
+let update_dev_package t nv =
+  log "update-dev-package %s" (OpamPackage.to_string nv);
+  let needs_update = OpamPackage.Set.singleton nv in
+  let skip = OpamPackage.Set.empty in
+  match url t nv with
+  | None     -> skip
+  | Some url ->
+    let remote_url = OpamFile.URL.url url in
+    match guess_repository_kind (OpamFile.URL.kind url) remote_url with
+    | ` http -> skip
+    | kind   ->
       log "updating %s:%s"
         (string_of_address remote_url) (string_of_repository_kind kind);
       let dirname = OpamPath.dev_package t.root nv in
       match OpamRepository.pull_url kind nv dirname remote_url with
       | Not_available u -> OpamGlobals.error "%s is not available anymore!" u; skip
       | Up_to_date _    -> skip
-      | Result _        -> needs_update in
+      | Result _        -> needs_update
 
+let update_dev_packages t =
+  log "update-dev-packages";
   let updates packages =
     let packages = OpamPackage.Set.elements packages in
     OpamPackage.Parallel.map_reduce_l (2 * jobs t) packages
-      ~map:update ~merge:OpamPackage.Set.union ~init:OpamPackage.Set.empty in
+      ~map:(update_dev_package t)
+      ~merge:OpamPackage.Set.union
+      ~init:OpamPackage.Set.empty in
 
   let switch_dev_packages = keys (switch_dev_packages t) in
   let global_dev_packages =
