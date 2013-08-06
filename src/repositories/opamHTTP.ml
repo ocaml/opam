@@ -237,8 +237,7 @@ let make_urls_txt repo_root =
         OpamFilename.Attribute.Set.add attr set
     ) OpamFilename.Attribute.Set.empty (local_files repo)
   in
-  if not (OpamFilename.Attribute.Set.is_empty index) then
-    OpamFile.File_attributes.write local_index_file index;
+  OpamFile.File_attributes.write local_index_file index;
   index
 
 let make_index_tar_gz repo_root =
