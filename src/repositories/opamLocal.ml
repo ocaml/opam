@@ -28,9 +28,9 @@ let rsync src dst =
       OpamSystem.mkdir dst;
       let lines = OpamSystem.read_command_output (
           [ "rsync" ; rsync_arg;
-            "--exclude"; ".git/*";
-            "--exclude"; "_darcs/*";
-            "--exclude"; ".hg/*";
+            "--exclude"; ".git";
+            "--exclude"; "_darcs";
+            "--exclude"; ".hg";
             "--delete";
             src; dst; ]
         ) in
