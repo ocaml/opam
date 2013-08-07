@@ -533,19 +533,41 @@ let repository_of_compiler t comp =
   with Not_found ->
     None
 
-let is_pinned_aux pinned n =
-  OpamPackage.Name.Map.mem n pinned
-
-let pinned_package_aux pinned n =
-  match OpamPackage.Name.Map.find n pinned with
-  | Version v -> OpamPackage.create n v
-  | _         -> OpamPackage.pinned n
-
-let pinned_package t n =
-  pinned_package_aux t.pinned n
-
 let is_pinned t n =
-  is_pinned_aux t.pinned n
+  OpamPackage.Name.Map.mem n t.pinned
+
+(* is the current package locally pinned *)
+let is_locally_pinned t name =
+  if OpamPackage.Name.Map.mem name t.pinned then
+    match OpamPackage.Name.Map.find name t.pinned with
+    | Edit | Unpin | Version _ -> false
+    | _ -> true
+  else
+    false
+
+let locally_pinned_package t n =
+  let option = OpamPackage.Name.Map.find n t.pinned in
+  let path = string_of_pin_option option in
+  match kind_of_pin_option option with
+  | None      -> OpamGlobals.error_and_exit
+                   "%s has a wrong pinning kind." (OpamPackage.Name.to_string n)
+  | Some kind ->
+    match repository_kind_of_pin_kind kind with
+    | None    -> OpamSystem.internal_error "locally pinned"
+    | Some kind -> (address_of_string path, kind)
+
+let url_of_locally_pinned_package t n =
+  let path, kind = locally_pinned_package t n in
+  OpamFile.URL.create (Some kind) path
+
+let repository_of_locally_pinned_package t n =
+  let url = url_of_locally_pinned_package t n in
+  let repo_address = OpamFile.URL.url url in
+  let repo_kind = guess_repository_kind (OpamFile.URL.kind url) repo_address in
+  let repo_root = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
+  { repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
+    repo_priority = 0;
+    repo_root; repo_address; repo_kind }
 
 (* check for overlay first, and then fallback to the global state *)
 let opam t nv =
@@ -588,14 +610,6 @@ let url t nv =
     else
       None
 
-(* is the current package locally pinned *)
-let is_locally_pinned t name =
-  if OpamPackage.Name.Map.mem name t.pinned then
-    match OpamPackage.Name.Map.find name t.pinned with
-    | Edit | Unpin | Version _ -> false
-    | _ -> true
-  else
-    false
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
@@ -1868,30 +1882,6 @@ let update_switch_config t switch =
   let config = OpamFile.Config.with_switch t.config switch in
   OpamFile.Config.write (OpamPath.config t.root) config;
   update_init_scripts { t with switch }  ~global:None
-
-let locally_pinned_package t n =
-  let option = OpamPackage.Name.Map.find n t.pinned in
-  let path = string_of_pin_option option in
-  match kind_of_pin_option option with
-  | None      -> OpamGlobals.error_and_exit
-                   "%s has a wrong pinning kind." (OpamPackage.Name.to_string n)
-  | Some kind ->
-    match repository_kind_of_pin_kind kind with
-    | None    -> OpamSystem.internal_error "locally pinned"
-    | Some kind -> (address_of_string path, kind)
-
-let url_of_locally_pinned_package t n =
-  let path, kind = locally_pinned_package t n in
-  OpamFile.URL.create (Some kind) path
-
-let repository_of_locally_pinned_package t n =
-  let url = url_of_locally_pinned_package t n in
-  let repo_address = OpamFile.URL.url url in
-  let repo_kind = guess_repository_kind (OpamFile.URL.kind url) repo_address in
-  let repo_root = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
-  { repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
-    repo_priority = 0;
-    repo_root; repo_address; repo_kind }
 
 (* Dev packages *)
 

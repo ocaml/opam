@@ -307,9 +307,6 @@ val check: lock -> unit
 
 (** {2 Pinned packages} *)
 
-(** Is a package pinned ? *)
-val is_pinned: state -> name -> bool
-
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
 
