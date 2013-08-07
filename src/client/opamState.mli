@@ -319,11 +319,27 @@ val repository_of_locally_pinned_package: state -> name -> repository
 
 (** {2 Overlays} *)
 
+(** Compute the overlay package for a given name. It return the higher
+    package available with this name.  *)
+val overlay_of_name: state -> name -> package
+
 (** Cache an OPAM file *)
-val add_opam_overlay: state -> package -> unit
+val add_opam_overlay: state -> package -> OpamFile.OPAM.t -> unit
 
 (** Cache an URL file *)
 val add_url_overlay: state -> package -> OpamFile.URL.t -> unit
+
+(** Cache a descr file *)
+val add_descr_overlay: state -> package -> OpamFile.Descr.t -> unit
+
+(** Cache additional files *)
+val add_files_overlay: state -> package -> filename list -> unit
+
+(** Add overlay files for a pinned package *)
+val add_pinned_overlay: state -> name -> unit
+
+(** Remove all overlay files *)
+val remove_overlay: state -> package -> unit
 
 (** {2 System compilers} *)
 

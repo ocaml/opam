@@ -579,24 +579,47 @@ let opam t nv =
     with Not_found ->
       OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
 
-(* Add an OPAM overlay *)
-let add_opam_overlay t nv =
+let overlay_of_name t name =
+  let versions = OpamPackage.versions_of_name t.packages name in
+  let version = OpamPackage.Version.Set.max_elt versions in
+  OpamPackage.create name version
+
+let add_opam_overlay t nv opam =
   let dst = OpamPath.Switch.opam t.root t.switch nv in
-  let nv =
-    if OpamPackage.version nv = OpamPackage.Version.pinned then
-      let name = OpamPackage.name nv in
-      let versions = OpamPackage.versions_of_name t.packages name in
-      let version = OpamPackage.Version.Set.max_elt versions in
-      OpamPackage.create name version
-    else
-      nv in
-  let opam = opam t nv in
   OpamFile.OPAM.write dst opam
 
-(* Add an URL overlay *)
 let add_url_overlay t nv url =
   let dst = OpamPath.Switch.url t.root t.switch nv in
   OpamFile.URL.write dst url
+
+let add_descr_overlay t nv descr =
+  let dst = OpamPath.Switch.descr t.root t.switch nv in
+  OpamFile.Descr.write dst descr
+
+let add_files_overlay t nv files =
+  let dst = OpamPath.Switch.files t.root t.switch nv in
+  List.iter (fun file ->
+      OpamFilename.copy_in file dst
+    ) files
+
+let add_pinned_overlay t name =
+  let ov = overlay_of_name t name in
+  let opam_f = OpamPath.opam t.root ov in
+  let descr_f = OpamPath.descr t.root ov in
+  let files_f = OpamPath.files t.root ov in
+  let nv = OpamPackage.pinned name in
+  add_opam_overlay t nv (OpamFile.OPAM.read opam_f);
+  if OpamFilename.exists descr_f then
+    add_descr_overlay t nv (OpamFile.Descr.read descr_f);
+  add_url_overlay t nv (url_of_locally_pinned_package t name);
+  if OpamFilename.exists_dir files_f then
+    add_files_overlay t nv (OpamFilename.files files_f)
+
+let remove_overlay t nv =
+  OpamFilename.rmdir (OpamPath.Switch.overlay t.root t.switch nv)
+
+let has_url_overlay t nv =
+  OpamFilename.exists (OpamPath.Switch.url t.root t.switch nv)
 
 (* check for an overlay first, and the fallback to the global state *)
 let url t nv =
@@ -610,6 +633,9 @@ let url t nv =
     else
       None
 
+let dev_package t nv =
+  if has_url_overlay t nv then OpamPath.Switch.dev_package t.root t.switch nv
+  else OpamPath.dev_package t.root nv
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
