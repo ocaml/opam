@@ -24,7 +24,7 @@ type global_options = {
   quiet  : bool;
   switch : string option;
   yes    : bool;
-  root   : string;
+  root   : dirname;
   no_base_packages: bool;
   git_version     : bool;
 }
@@ -48,7 +48,7 @@ let apply_global_options o =
     | None   -> ()
     | Some s -> OpamGlobals.switch := `Command_line s
   end;
-  OpamGlobals.root_dir := OpamSystem.real_path o.root;
+  OpamGlobals.root_dir := OpamFilename.Dir.to_string o.root;
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages
 
@@ -140,7 +140,7 @@ let filename =
 
 let dirname =
   let parse str = `Ok (OpamFilename.Dir.of_string str) in
-  let print ppf filename = pr_str ppf (OpamFilename.Dir.to_string filename) in
+  let print ppf dir = pr_str ppf (OpamFilename.prettify_dir dir) in
   parse, print
 
 let compiler =
@@ -310,7 +310,7 @@ let global_options =
     mk_opt ~section ["r";"root"]
       "ROOT" "Use $(docv) as the current root path. \
               This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
-      Arg.string !OpamGlobals.root_dir in
+      dirname (OpamPath.root ()) in
   let no_base_packages =
     mk_flag ~section ["no-base-packages"]
       "Do not install base packages (useful for testing purposes). \
