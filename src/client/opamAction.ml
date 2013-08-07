@@ -307,15 +307,19 @@ let remove_package_aux t ~metadata ~rm_build nv =
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
-  let opam_f = OpamPath.opam t.root nv in
+  let opam =
+    try Some (OpamState.opam t nv)
+    with _ -> None in
+
   OpamGlobals.msg "Removing %s.\n" (OpamPackage.to_string nv);
 
-  if not (OpamFilename.exists opam_f) then
-    OpamGlobals.msg "  No OPAM file has been found!\n"
-  else (
-    let opam = OpamState.opam t nv in
+  begin match opam with
+  | None      -> OpamGlobals.msg "  No OPAM file has been found!\n"
+  | Some opam ->
     let env = compilation_env t opam in
-    match OpamState.filter_commands t OpamVariable.Map.empty (OpamFile.OPAM.remove opam) with
+    let commands =
+      OpamState.filter_commands t OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+    match commands with
     | []     -> ()
     | remove ->
       let p_build = OpamPath.Switch.build t.root t.switch nv in
@@ -348,7 +352,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
         OpamGlobals.error
           "Warning: failure in package uninstall script, some files may remain:\n%s"
           (OpamProcess.string_of_result r)
-  );
+  end;
 
   (* Remove the libraries *)
   OpamFilename.rmdir (OpamPath.Switch.lib t.root t.switch name);
