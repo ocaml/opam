@@ -596,10 +596,11 @@ let add_descr_overlay t nv descr =
   let dst = OpamPath.Switch.descr t.root t.switch nv in
   OpamFile.Descr.write dst descr
 
-let add_files_overlay t nv files =
+let add_files_overlay t nv root files =
   let dst = OpamPath.Switch.files t.root t.switch nv in
   List.iter (fun file ->
-      OpamFilename.copy_in file dst
+      let base = OpamFilename.remove_prefix root file in
+      OpamFilename.copy ~src:file ~dst:(dst // base)
     ) files
 
 let add_pinned_overlay t name =
@@ -613,7 +614,7 @@ let add_pinned_overlay t name =
     add_descr_overlay t nv (OpamFile.Descr.read descr_f);
   add_url_overlay t nv (url_of_locally_pinned_package t name);
   if OpamFilename.exists_dir files_f then
-    add_files_overlay t nv (OpamFilename.files files_f)
+    add_files_overlay t nv files_f (OpamFilename.files files_f)
 
 let remove_overlay t nv =
   OpamFilename.rmdir (OpamPath.Switch.overlay t.root t.switch nv)
