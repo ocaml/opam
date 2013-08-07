@@ -116,7 +116,7 @@ let print_state t =
   log "REINSTALL : %s" (OpamPackage.Set.to_string t.reinstall)
 
 let compiler_comp t c =
-  OpamFile.Comp.safe_read (OpamPath.compiler_comp t.root c)
+  OpamFile.Comp.read (OpamPath.compiler_comp t.root c)
 
 let mem_installed_package_by_name_aux installed name =
   let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) installed in
