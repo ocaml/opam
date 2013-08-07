@@ -677,7 +677,9 @@ let system_needs_upgrade t =
         (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
     );
     false
-  | Some v -> (Lazy.force t.compiler_version) <> v
+  | Some v ->
+    OpamFilename.exists (OpamPath.compiler_comp t.root t.compiler)
+    && (Lazy.force t.compiler_version) <> v
 
 let read_repositories root config =
   let names = OpamFile.Config.repositories config in
@@ -1069,6 +1071,9 @@ let load_state ?(save_cache=true) call_site =
             (OpamSwitch.to_string switch) in
   let compiler_version = lazy (
     let comp_f = OpamPath.compiler_comp root compiler in
+    (* XXX: useful for upgrade to 1.1 *)
+    if compiler = OpamCompiler.system && not (OpamFilename.exists comp_f) then
+      create_system_compiler_description root (OpamCompiler.Version.system ());
     if not (OpamFilename.exists comp_f) then
       OpamCompiler.unknown compiler
     else
