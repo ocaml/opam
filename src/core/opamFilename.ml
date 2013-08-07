@@ -350,8 +350,7 @@ let copy_files ~src ~dst =
             (to_string dst_file);
         OpamGlobals.msg "Copying %s to %s/\n" (to_string file) (Dir.to_string dst);
         copy ~src:file ~dst:dst_file
-    ) files;
-  Set.of_list files
+    ) files
 
 module OP = struct
 

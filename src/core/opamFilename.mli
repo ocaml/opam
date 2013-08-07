@@ -213,7 +213,7 @@ val with_flock: t -> ('a -> 'b) -> 'a -> 'b
 (** [copy_if_check t src dst] copies all the files from one directory
     to another. Do nothing if OPAMDONOTCOPYFILE is set to a non-empty
     value. *)
-val copy_files: src:Dir.t -> dst:Dir.t -> Set.t
+val copy_files: src:Dir.t -> dst:Dir.t -> unit
 
 module OP: sig
 

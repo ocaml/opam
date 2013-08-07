@@ -291,6 +291,9 @@ val repository_of_package: state -> package -> (repository * string option) opti
     current switch is changed. *)
 val add_to_reinstall: state -> all:bool -> package_set -> unit
 
+(** Return the files for a given package *)
+val copy_files: state -> package -> dirname -> unit
+
 (** {2 Development packages} *)
 
 (** Get all the development packages. This include the one locally

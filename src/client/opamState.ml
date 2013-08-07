@@ -626,6 +626,11 @@ let files t nv =
     if OpamFilename.exists_dir dir then Some dir
     else None
 
+let copy_files t nv dst =
+  match files t nv with
+  | None     -> ()
+  | Some src -> OpamFilename.copy_files ~src ~dst
+
 let add_pinned_overlay t name =
   let ov = overlay_of_name t name in
   let opam_f = OpamPath.opam t.root ov in

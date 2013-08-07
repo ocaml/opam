@@ -238,11 +238,7 @@ let extract_package t nv =
     | None   -> ()
     | Some f ->
       OpamFilename.extract_generic_file f build_dir;
-      (* Copy the patches files *)
-      let _files =
-        let src = OpamPath.files t.root nv in
-        OpamFilename.copy_files ~src ~dst:build_dir in
-      () in
+      OpamState.copy_files t nv build_dir in
 
   if OpamState.is_locally_pinned t (OpamPackage.name nv) then
     let dir = OpamPath.Switch.dev_package t.root t.switch nv in
