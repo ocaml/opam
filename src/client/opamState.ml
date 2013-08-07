@@ -1954,7 +1954,7 @@ let update_dev_package t nv =
     | kind   ->
       log "updating %s:%s"
         (string_of_address remote_url) (string_of_repository_kind kind);
-      let dirname = OpamPath.dev_package t.root nv in
+      let dirname = dev_package t nv in
       match OpamRepository.pull_url kind nv dirname remote_url with
       | Not_available u -> OpamGlobals.error "%s is not available anymore!" u; skip
       | Up_to_date _    -> skip
