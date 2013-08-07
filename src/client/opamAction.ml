@@ -374,7 +374,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
     List.iter (fun (base, dst) ->
         let dst_dir = dst_fn t.root t.switch in
         let dst_file = match dst with
-          | None   -> OpamFilename.create dst_dir base.c
+          | None   -> dst_dir // Filename.basename (OpamFilename.Base.to_string base.c)
           | Some b -> OpamFilename.create dst_dir b in
         OpamFilename.remove dst_file
       ) files in
