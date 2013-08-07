@@ -288,14 +288,11 @@ let global_options =
   let debug =
     mk_flag ~section ["debug"]
       "Print debug message on stdout. \
-       This is equivalent to setting $(b,\\$OPAMDEBUG) to a value greater or \
-       equal to 2."  in
+       This is equivalent to setting $(b,\\$OPAMDEBUG) to a non-empty value."  in
   let verbose =
     mk_flag ~section ["v";"verbose"]
       "Be more verbose. \
-       This is equivalent to setting either $(b,\\$OPAMDEBUG) to a value greater \
-       or equal to 1 \
-       or $(b,\\$OPAMVERBOSE) to a non-empty string." in
+       This is equivalent to setting $(b,\\$OPAMVERBOSE) to a non-empty value." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
   let switch =

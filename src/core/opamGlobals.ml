@@ -23,15 +23,8 @@ let check var = ref (
     with Not_found -> false
   )
 
-let debug = ref (
-    try int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 2
-    with _ -> false
-  )
-
-let verbose =
-  try ref (int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 1)
-  with _ -> check "VERBOSE"
-
+let debug            = check "DEBUG"
+let verbose          = check "VERBOSE"
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
