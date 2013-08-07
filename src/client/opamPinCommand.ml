@@ -41,8 +41,9 @@ let pin ~force action =
 
   match action.pin_option with
   | Edit  ->
-    if not (OpamPackage.Name.Map.mem name pins) then
-      OpamGlobals.error_and_exit "%s is not pinned." (OpamPackage.Name.to_string name);
+    if not (OpamState.is_locally_pinned t name) then
+      OpamGlobals.error_and_exit "%s is not locally pinned."
+        (OpamPackage.Name.to_string name);
     let editor =
       try OpamMisc.getenv "OPAM_EDITOR"
       with Not_found ->
@@ -52,8 +53,7 @@ let pin ~force action =
           with Not_found -> "nano" in
     let nv = OpamPackage.pinned name in
     let file = OpamPath.Switch.opam t.root t.switch nv in
-    if not (OpamFilename.exists file) then
-      OpamState.add_opam_overlay t nv;
+    if not (OpamFilename.exists file) then OpamState.add_pinned_overlay t name;
     ignore (Sys.command (Printf.sprintf "%s %s" editor (OpamFilename.to_string file)))
 
   | Unpin ->
@@ -67,6 +67,9 @@ let pin ~force action =
             "You must remove the package before unpinning it (or use --force).";
     end;
     update_config (OpamPackage.Name.Map.remove name pins);
+    let nv = OpamPackage.pinned name in
+    OpamState.remove_overlay t nv
+
   | _     ->
     if not force && OpamPackage.Name.Map.mem name pins then (
       let current = OpamPackage.Name.Map.find name pins in
@@ -116,7 +119,10 @@ let pin ~force action =
         (string_of_pin_option action.pin_option)
         (string_of_pin_kind_o action.pin_option)
         (OpamPackage.Name.to_string name);
-      update_config (OpamPackage.Name.Map.add name action.pin_option pins)
+      let pinned = OpamPackage.Name.Map.add name action.pin_option pins in
+      update_config pinned;
+      let t = { t with pinned } in
+      OpamState.add_pinned_overlay t name
 
 let list () =
   log "pin_list";
