@@ -32,17 +32,17 @@ type 'a filename_map = 'a OpamFilename.Map.t
 
 type 'a download =
   | Up_to_date of 'a
-  | Not_available
+  | Not_available of string
   | Result of 'a
 
-type generic_file =
+type generic_file = OpamFilename.generic_file =
   | D of dirname
   | F of filename
 
 let download_map fn = function
-  | Up_to_date f  -> Up_to_date (fn f)
-  | Result  f     -> Result (fn f)
-  | Not_available -> Not_available
+  | Up_to_date f    -> Up_to_date (fn f)
+  | Result  f       -> Result (fn f)
+  | Not_available d -> Not_available d
 
 let download_dir = download_map (fun d -> D d)
 let download_file = download_map (fun f -> F f)
@@ -63,7 +63,16 @@ type package_set = OpamPackage.Set.t
 
 type 'a package_map = 'a OpamPackage.Map.t
 
-type address = dirname
+type address = string * string option
+
+let string_of_address = function
+  | url, None   -> url
+  | url, Some c -> Printf.sprintf "%s#%s" url c
+
+let address_of_string str =
+  match OpamMisc.cut_at str '#' with
+  | None       -> str, None
+  | Some (a,c) -> OpamSystem.real_path a, Some c
 
 type repository_name = OpamRepositoryName.t
 
@@ -72,6 +81,21 @@ type repository_root = dirname
 type 'a repository_name_map = 'a OpamRepositoryName.Map.t
 
 type repository_kind = [`http|`local|`git|`darcs|`hg]
+
+let guess_repository_kind kind (address, ext) =
+  match kind with
+  | Some k -> k
+  | None   ->
+    if ext = None && Sys.file_exists address then
+      `local
+    else
+      if OpamMisc.starts_with ~prefix:"git" address
+      || OpamMisc.ends_with ~suffix:"git" address then
+        `git
+      else if OpamMisc.starts_with ~prefix:"hg" address then
+        `hg
+      else
+        `http
 
 type repository = {
   repo_root    : repository_root;
@@ -86,7 +110,7 @@ let string_of_repository_kind = function
   | `local -> "local"
   | `git   -> "git"
   | `darcs -> "darcs"
-  | `hg -> "hg"
+  | `hg    -> "hg"
 
 let repository_kind_of_string = function
   | "wget"
@@ -96,7 +120,7 @@ let repository_kind_of_string = function
   | "local" -> `local
   | "git"   -> `git
   | "darcs" -> `darcs
-  | "hg" -> `hg
+  | "hg"    -> `hg
   | s -> OpamGlobals.error_and_exit "%s is not a valid repository kind." s
 
 type variable = OpamVariable.t
@@ -205,32 +229,12 @@ let repository_kind_of_pin_kind = function
   | `version -> None
   | (`git|`darcs|`hg|`local as k) -> Some k
 
-let mk_hashsep_vcs split construct str =
-  let path, commit = split str in
-  if Sys.file_exists path then
-    let real_path = OpamFilename.Dir.of_string path in
-    match commit with
-    | None   -> construct real_path
-    | Some c ->
-      let path = Printf.sprintf "%s#%s" (OpamFilename.Dir.to_string real_path) c in
-      construct (OpamFilename.Dir.of_string path)
-  else
-    construct (OpamFilename.raw_dir str)
-
-let mk_git str = mk_hashsep_vcs OpamMisc.git_of_string (fun x -> Git x) str
-
-let mk_hg str = mk_hashsep_vcs OpamMisc.hg_of_string (fun x -> Hg x) str
-
 let pin_option_of_string ?kind s =
   match kind with
   | Some `version -> Version (OpamPackage.Version.of_string s)
-  | Some `git     -> mk_git s
-  | Some `hg      -> mk_hg s
-  | Some `darcs   ->
-    if Sys.file_exists s then
-      Darcs (OpamFilename.Dir.of_string s)
-    else
-      Darcs (OpamFilename.raw_dir s)
+  | Some `git     -> Git (address_of_string s)
+  | Some `hg      -> Hg (address_of_string s)
+  | Some `darcs   -> Darcs (address_of_string s)
   | Some `local   -> Local (OpamFilename.Dir.of_string s)
   | Some `unpin   -> Unpin
   | None          ->
@@ -239,7 +243,7 @@ let pin_option_of_string ?kind s =
     else if Sys.file_exists s then
       Local (OpamFilename.Dir.of_string s)
     else if OpamMisc.contains s ('/') then
-      mk_git s
+      Git (address_of_string s)
     else
       Version (OpamPackage.Version.of_string s)
 
@@ -269,7 +273,7 @@ let string_of_pin_option = function
   | Version v -> OpamPackage.Version.to_string v
   | Git p
   | Darcs p
-  | Hg p
+  | Hg p      -> string_of_address p
   | Local p   -> OpamFilename.Dir.to_string p
   | Unpin     -> "unpin"
   | Edit      -> "edit"
@@ -546,7 +550,7 @@ type 'a updates = {
   created: 'a;
   updated: 'a;
   deleted: 'a;
-  to_upgrade: 'a;
+  changed: 'a;
 }
 
 type lock =
@@ -556,20 +560,4 @@ type lock =
 
 type tags = OpamMisc.StringSet.t OpamMisc.StringSetMap.t
 
-type compiler_repository_state = {
-  comp_repo     : repository;
-  comp_file     : filename;
-  comp_descr    : filename option;
-  comp_checksums: string list;
-}
-
-type package_repository_state = {
-  pkg_repo     : repository;
-  pkg_opam     : filename;
-  pkg_descr    : filename option;
-  pkg_archive  : filename option;
-  pkg_url      : filename option;
-  pkg_files    : dirname option;
-  pkg_metadata : string list;
-  pkg_contents : string list;
-}
+type checksums = string list

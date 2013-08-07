@@ -30,23 +30,24 @@ let to_string r =
     (OpamRepositoryName.to_string r.repo_name)
     r.repo_priority
     (OpamTypes.string_of_repository_kind r.repo_kind)
-    (OpamFilename.Dir.to_string r.repo_address)
+    (string_of_address r.repo_address)
 
 let default_address =
-  OpamFilename.raw_dir OpamGlobals.default_repository_address
+  OpamGlobals.default_repository_address, None
 
 let default () = {
   repo_name     = OpamRepositoryName.default;
   repo_kind     = `http;
   repo_address  = default_address;
   repo_priority = 0;
-  repo_root     = OpamPath.Repository.create OpamRepositoryName.default;
+  repo_root     =
+    OpamPath.Repository.create (OpamPath.root()) OpamRepositoryName.default;
 }
 
 let local dirname = {
   repo_name     = OpamRepositoryName.of_string "local";
   repo_root     = dirname;
-  repo_address  = dirname;
+  repo_address  = ("<none>", None);
   repo_kind     = `local;
   repo_priority = 0;
 }
@@ -55,11 +56,6 @@ let to_json r =
   `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
         ("kind", `String (string_of_repository_kind r.repo_kind));
       ]
-
-let repository_address address =
-  if Sys.file_exists address
-  then OpamFilename.Dir.of_string address
-  else OpamFilename.raw_dir address
 
 module O = struct
   type tmp = repository
@@ -77,7 +73,7 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val pull_url: name -> dirname -> string -> generic_file download
+  val pull_url: package -> dirname -> address -> generic_file download
   val pull_repo: repository -> unit
   val pull_archive: repository -> filename -> filename download
   val revision: repository -> version option
@@ -112,46 +108,25 @@ let init repo =
   OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
   ignore (B.pull_repo repo)
 
-let nv_set_of_files ~all files =
-  OpamPackage.Set.of_list
-    (OpamMisc.filter_map
-       (OpamPackage.of_filename ~all)
-       (OpamFilename.Set.elements files)
-    )
+type pull_fn = repository_kind -> package -> dirname -> address -> generic_file download
 
-let compiler_set_of_files files =
-  let files = OpamFilename.Set.filter (OpamFilename.ends_with ".comp") files in
-  OpamFilename.Set.fold (fun f set ->
-      match OpamCompiler.of_filename f with
-      | None   -> set
-      | Some f -> OpamCompiler.Set.add f set
-  ) files OpamCompiler.Set.empty
-
-let read_tmp dir =
-  let dirs =
-    if OpamFilename.exists_dir dir then
-      OpamFilename.Dir.Set.of_list (OpamFilename.sub_dirs dir)
-    else
-      OpamFilename.Dir.Set.empty in
-  OpamPackage.Set.of_list
-    (OpamMisc.filter_map OpamPackage.of_dirname (OpamFilename.Dir.Set.elements dirs))
-
-let pull_url kind name local_dirname remote_url =
+let pull_url kind package local_dirname remote_url =
   let module B = (val find_backend_by_kind kind: BACKEND) in
-  B.pull_url name local_dirname remote_url
+  B.pull_url package local_dirname remote_url
 
 let revision repo =
   let kind = repo.repo_kind in
   let module B = (val find_backend_by_kind kind: BACKEND) in
   B.revision repo
 
-let pull_and_check_digest kind name dirname url checksum =
-  let filename = OpamFilename.of_string url in
+let pull_and_check_digest ~checksum kind package dirname url =
+  let filename = OpamFilename.of_string (string_of_address url) in
   if OpamFilename.exists filename
+  && not (Sys.is_directory (OpamFilename.to_string filename))
   && OpamFilename.digest filename = checksum then
     Up_to_date (F filename)
-  else match pull_url kind name dirname url with
-    | Not_available
+  else match pull_url kind package dirname url with
+    | Not_available _
     | Up_to_date _
     | Result (D _) as r -> r
     | Result (F f)      ->
@@ -172,10 +147,9 @@ let pull_and_check_digest kind name dirname url checksum =
           checksum
           actual
 
-let pull_and_fix_digest ~url_file nv kind dirname url checksum =
-  let name = OpamPackage.name nv in
-  match pull_url kind name dirname url with
-  | Not_available
+let pull_and_fix_digest ~file ~checksum kind package dirname url =
+  match pull_url kind package dirname url with
+  | Not_available _
   | Up_to_date _
   | Result (D _) as r -> r
   | Result (F f) as r ->
@@ -183,145 +157,16 @@ let pull_and_fix_digest ~url_file nv kind dirname url checksum =
     if checksum <> actual then (
       OpamGlobals.msg
         "Fixing wrong checksum for %s: current value is %s, setting it to %s.\n"
-        (OpamPackage.to_string nv) checksum actual;
-      let url = OpamFile.URL.read url_file in
-      OpamFile.URL.write url_file (OpamFile.URL.with_checksum url actual)
+        (OpamPackage.to_string package) checksum actual;
+      let u = OpamFile.URL.read file in
+      OpamFile.URL.write file (OpamFile.URL.with_checksum u actual)
     );
     r
-
-(* Infer the url kind: when the url is a local directory, use the
-   `local` backend, otherwise use the `http` one. This function is
-   only used when the user hasn't specified a repository kind. *)
-let kind_of_url url =
-  if Sys.file_exists url
-  then `local
-  else `http
 
 let pull_archive repo nv =
   let module B = (val find_backend_by_kind repo.repo_kind: BACKEND) in
   let filename = OpamPath.Repository.remote_archive repo nv in
   B.pull_archive repo filename
-
-let read_prefix local_repo =
-  OpamFile.Prefix.safe_read (OpamPath.Repository.prefix local_repo)
-
-let find_prefix prefix nv =
-  let name = OpamPackage.name nv in
-  if not (OpamPackage.Name.Map.mem name prefix) then None
-  else Some (OpamPackage.Name.Map.find name prefix)
-
-(* Copy the file in local_repo in current dir *)
-let copy_files repo nv dst =
-  let prefix = find_prefix (read_prefix repo) nv in
-  (* Eventually add the <package>/files/* to the extracted dir *)
-  log "Adding the files to the archive";
-  let files_dir = OpamPath.Repository.files repo prefix nv in
-  let files = OpamFilename.rec_files files_dir in
-  if files <> [] then (
-    if not (OpamFilename.exists_dir dst) then
-      OpamFilename.mkdir dst;
-    List.iter (fun file ->
-      let basename = OpamFilename.remove_prefix files_dir file in
-      let dst_file = dst // basename in
-      if OpamFilename.exists dst_file then
-        OpamGlobals.warning
-          "Skipping %s as it already exists in %s."
-          basename
-          (OpamFilename.Dir.to_string dst)
-      else (
-        OpamGlobals.msg "Copying %s.\n" basename;
-        OpamFilename.copy_in file dst
-      )
-    ) files;
-  );
-  OpamFilename.Set.of_list files
-
-let make_archive ?(gener_digest=false) repo nv =
-  let prefix = find_prefix (read_prefix repo) nv in
-  let url_file = OpamPath.Repository.url repo prefix nv in
-  let name = OpamPackage.name nv in
-
-  let download_dir = OpamPath.Repository.tmp_dir repo nv in
-  OpamFilename.mkdir download_dir;
-
-  OpamFilename.with_tmp_dir (fun extract_root ->
-    let extract_dir = extract_root / OpamPackage.to_string nv in
-
-    if OpamFilename.exists url_file then (
-      let url = OpamFile.URL.read url_file in
-      let checksum = OpamFile.URL.checksum url in
-      let remote_url = OpamFile.URL.url url in
-      let kind = match OpamFile.URL.kind url with
-        | None   -> kind_of_url remote_url
-        | Some k -> k in
-      log "downloading %s:%s" remote_url (string_of_repository_kind kind);
-
-      let local_filename =
-        OpamFilename.in_dir download_dir (fun () ->
-          match checksum with
-          | None   -> pull_url kind name download_dir remote_url
-          | Some c ->
-            if gener_digest then
-              pull_and_fix_digest ~url_file nv kind download_dir remote_url c
-            else
-              pull_and_check_digest kind name download_dir remote_url c
-        ) in
-
-      match local_filename with
-      | Not_available -> OpamGlobals.error_and_exit "Cannot get %s" remote_url
-      | Result (F f) | Up_to_date (F f) ->
-        log "extracting %s to %s"
-          (OpamFilename.to_string f)
-          (OpamFilename.Dir.to_string extract_dir);
-        OpamFilename.extract f extract_dir
-      | Result (D d) | Up_to_date (D d) ->
-        if d <> extract_dir then (
-          log "copying %s to %s"
-            (OpamFilename.Dir.to_string d)
-            (OpamFilename.Dir.to_string extract_dir);
-          OpamFilename.copy_dir ~src:d ~dst:extract_dir
-        )
-    );
-
-    (* Eventually add the <package>/files/* to the extracted dir *)
-    let files =
-      if not (OpamFilename.exists_dir extract_dir) then
-        OpamFilename.mkdir extract_dir;
-      copy_files repo nv extract_dir in
-
-    (* Finally create the final archive *)
-    if not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_file then (
-      OpamFilename.mkdir (OpamPath.Repository.archives_dir repo);
-      let local_archive = OpamPath.Repository.archive repo nv in
-      OpamGlobals.msg "Creating %s.\n" (OpamFilename.to_string local_archive);
-      OpamFilename.exec extract_root [
-        [ "tar" ; "czf" ;
-          OpamFilename.to_string local_archive ;
-          OpamPackage.to_string nv ]
-      ]
-    );
-  )
-
-(* Download the archive on the OPAM server.
-   If it is not there, then:
-   * download the original archive upstream
-   * add eventual patches
-   * create a new tarball *)
-let download repo nv =
-  log "download %s %s" (to_string repo) (OpamPackage.to_string nv);
-  (* If the archive is on the server, download it directly *)
-  match pull_archive repo nv with
-  | Up_to_date _ ->
-    OpamGlobals.msg "The archive for %s is in the local cache.\n"
-      (OpamPackage.to_string nv);
-    log "The archive for %s is already downloaded and up-to-date"
-      (OpamPackage.to_string nv)
-  | Result local_file ->
-    log "Downloaded %s successfully" (OpamFilename.to_string local_file)
-  | Not_available ->
-    log "The archive for %s is not available, need to build it"
-      (OpamPackage.to_string nv);
-    make_archive repo nv
 
 let check_version repo =
   let repo_version =
@@ -349,155 +194,139 @@ let extract_prefix repo dir nv =
   let dir = OpamFilename.Dir.to_string dir in
   OpamMisc.remove_prefix ~prefix (OpamMisc.remove_suffix ~suffix dir)
 
-(* Used on upgrade to get the list of available packages in the repository *)
-let packages repo =
-  log "repository-package %s" (to_string repo);
-  let dir = OpamPath.Repository.packages_dir repo in
-  let empty = OpamPackage.Name.Map.empty, OpamPackage.Set.empty in
-  if OpamFilename.exists_dir dir then (
-    let files = OpamFilename.rec_files dir in
-    List.fold_left (fun (prefix, packages as acc) file ->
-      if OpamFilename.basename file = OpamFilename.Base.of_string "opam" then (
-        let dir  = OpamFilename.dirname file in
-        let base = OpamFilename.basename_dir dir in
-        let base = OpamFilename.Base.to_string base in
-        match OpamPackage.of_string_opt base with
-        | None    -> acc
-        | Some nv ->
-          let packages = OpamPackage.Set.add nv packages in
-          let prefix =
-            if dir = OpamPath.Repository.package repo None nv then prefix
-            else
-              OpamPackage.Name.Map.add
-                (OpamPackage.name nv)
-                (extract_prefix repo dir nv)
-                prefix in
-          prefix, packages
-      ) else
-        acc
-    ) empty files
-  ) else
-    empty
+let file f =
+  if OpamFilename.exists f then [f] else []
 
-let compilers r =
-  OpamCompiler.list (OpamPath.Repository.compilers_dir r)
+let dir d =
+  if OpamFilename.exists_dir d then OpamFilename.rec_files d else []
 
-(* XXX: not very efficient *)
-let compiler_state repo comp =
-  let comps = compilers repo in
-  let comp_repo = repo in
-  let comp_file, comp_descr = OpamCompiler.Map.find comp comps in
-  let comp_checksums =
-    OpamFilename.digest comp_file ::
-      match comp_descr with
-      | None   -> []
-      | Some f -> [OpamFilename.digest f] in
-  { comp_repo; comp_file; comp_descr; comp_checksums }
+(* Compiler updates *)
 
-let package_state repo_p prefix nv =
-  let pkg_repo = repo_p in
-  let pkg_opam = OpamPath.Repository.opam repo_p prefix nv in
-  if not (OpamFilename.exists pkg_opam) then
-    raise Not_found;
+let compilers_with_prefixes r =
+  OpamCompiler.prefixes (OpamPath.Repository.compilers_dir r)
 
-  (* files *)
-  let aux exists fn =
-    let f = fn repo_p nv in
-    if exists f then Some f
-    else None in
-  let file = aux OpamFilename.exists in
-  let dir  = aux OpamFilename.exists_dir in
-  let pkg_descr   = file (fun r -> OpamPath.Repository.descr r prefix) in
-  let pkg_url     = file (fun r -> OpamPath.Repository.url r prefix) in
-  let pkg_files   = dir  (fun r -> OpamPath.Repository.files r prefix) in
-  let pkg_archive = file OpamPath.Repository.archive in
+let compilers repo =
+OpamCompiler.list (OpamPath.Repository.compilers_dir repo)
 
-  (* checksums *)
-  let aux digest = function
-    | None   -> []
-    | Some f -> [digest f] in
-  let file  = aux OpamFilename.digest in
-  let dir d = List.flatten (aux (fun dir ->
-    let files = OpamFilename.rec_files dir in
-    List.map OpamFilename.digest files
-  ) d) in
-  let sort = List.sort String.compare in
-  let pkg_metadata = sort (OpamFilename.digest pkg_opam :: file pkg_descr) in
-  let pkg_contents = sort (file pkg_archive @ file pkg_url @ dir pkg_files) in
-  { pkg_repo; pkg_opam; pkg_descr; pkg_metadata;
-    pkg_archive; pkg_url; pkg_files; pkg_contents; }
+let compiler_files repo prefix c =
+  let comp = OpamPath.Repository.compiler_comp repo prefix c in
+  let descr = OpamPath.Repository.compiler_descr repo prefix c in
+  file comp @ file descr
 
+let compiler_state repo prefix c =
+  let fs = compiler_files repo prefix c in
+  List.flatten (List.map OpamFilename.checksum fs)
 
-(* Clean-up archives and tmp files on URL changes *)
-let clean repo active_packages =
-  log "cleanup";
-  let prefix, packages = packages repo in
-  OpamPackage.Set.iter (fun nv ->
-    let cleanup () =
-      let tmp_dir = OpamPath.Repository.tmp_dir repo nv in
-      OpamFilename.rmdir tmp_dir;
-      OpamFilename.remove (OpamPath.Repository.archive repo nv) in
-    if not (OpamPackage.Map.mem nv active_packages) then cleanup ()
-    else
-      let old_state = OpamPackage.Map.find nv active_packages in
-      let prefix = find_prefix prefix nv in
-      try
-        let new_state = package_state repo prefix nv in
-        if old_state.pkg_contents <> new_state.pkg_contents then cleanup ()
-      with Not_found ->
-        cleanup ()
-  ) packages
+let packages r =
+  OpamPackage.list (OpamPath.Repository.packages_dir r)
 
-(* [packages] is the state of currently 'active' packages in this
-   repository. *)
+let packages_with_prefixes r =
+  OpamPackage.prefixes (OpamPath.Repository.packages_dir r)
+
+let package_files repo prefix nv ~archive =
+  let opam = OpamPath.Repository.opam repo prefix nv in
+  let descr = OpamPath.Repository.descr repo prefix nv in
+  let url = OpamPath.Repository.url repo prefix nv in
+  let files = OpamPath.Repository.files repo prefix nv in
+  let archive =
+    if archive then file (OpamPath.Repository.archive repo nv)
+    else [] in
+  file opam @ file descr @ file url @ dir files @ archive
+
+let package_important_files repo prefix nv ~archive =
+  let url = OpamPath.Repository.url repo prefix nv in
+  let files = OpamPath.Repository.files repo prefix nv in
+  if archive then
+    let archive = OpamPath.Repository.archive repo nv in
+    file url @ dir files @ file archive
+  else
+    file url @ dir files
+
+let package_state repo prefix nv all =
+  let fs = match all with
+    | `all       -> package_files repo prefix nv ~archive:true
+    | `partial b -> package_important_files repo prefix nv ~archive:b in
+  List.flatten (List.map OpamFilename.checksum fs)
+
 let update repo =
   log "update %s" (to_string repo);
   let module B = (val find_backend repo: BACKEND) in
   B.pull_repo repo;
   check_version repo
 
-let get_cache_updates repo =
-  log "get-cache-updates %s" (to_string repo);
 
-  let prefix = read_prefix repo in
+let make_archive ?(gener_digest=false) repo prefix nv =
+  let url_file = OpamPath.Repository.url repo prefix nv in
+  let files_dir = OpamPath.Repository.files repo prefix nv in
+  let archive = OpamPath.Repository.archive repo nv in
 
-  (* For each package in the cache, look at what changed upstream *)
-  let cached_packages = read_tmp (OpamPath.Repository.tmp repo) in
-  log "cached_packages: %s" (OpamPackage.Set.to_string cached_packages);
-  OpamPackage.Set.filter (fun nv ->
-      let name = OpamPackage.name nv in
-      let prefix = find_prefix prefix nv in
-      let state =
-        try Some (package_state repo prefix nv)
-        with Not_found -> None in
-      match state with
-      | None                          -> false
-      | Some { pkg_url = None }       -> false
-      | Some { pkg_url = Some url_f } ->
-        let url = OpamFile.URL.read url_f in
-        let kind = match OpamFile.URL.kind url with
-          | None   -> kind_of_url (OpamFile.URL.url url)
-          | Some k -> k in
-        let filename = OpamFile.URL.url url in
-        log "updating %s:%s" filename (string_of_repository_kind kind);
-        let dirname = OpamPath.Repository.tmp_dir repo nv in
-        match kind with
-        | `http -> false
-        | _    ->
-          match pull_url kind name dirname filename with
-          | Not_available -> OpamGlobals.error_and_exit "%s is not available." filename
-          | Up_to_date _  -> false
-          | Result _      -> true
-    ) cached_packages
+  (* Download the remote file / fetch the remote repository *)
+  let download download_dir =
+    if OpamFilename.exists url_file then (
+      let url = OpamFile.URL.read url_file in
+      let checksum = OpamFile.URL.checksum url in
+      let remote_url = OpamFile.URL.url url in
+      let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
+      log "downloading %s:%s"
+        (string_of_address remote_url) (string_of_repository_kind kind);
+      if not (OpamFilename.exists_dir download_dir) then
+        OpamFilename.mkdir download_dir;
+      OpamFilename.in_dir download_dir (fun () ->
+          match checksum with
+          | None   -> Some (pull_url kind nv download_dir remote_url)
+          | Some c ->
+            if gener_digest then
+              Some (pull_and_fix_digest ~file:url_file ~checksum:c
+                      kind nv download_dir remote_url)
+            else
+              Some (pull_and_check_digest ~checksum:c
+                      kind nv download_dir remote_url)
+        )
+    ) else
+      None
+  in
 
-let files r nv =
-  let prefix = find_prefix (read_prefix r) nv in
-  let l =
-    if OpamFilename.exists_dir (OpamPath.Repository.files r prefix nv) then
-      OpamFilename.rec_files (OpamPath.Repository.files r prefix nv)
-    else
-      [] in
-  OpamFilename.Set.of_list l
+  (* if we've downloaded a file, extract it, otherwise just copy it *)
+  let extract local_filename extract_dir =
+    match local_filename with
+    | None                   -> ()
+    | Some (Not_available u) -> OpamGlobals.error_and_exit "%s is not available" u
+    | Some ( Result r
+           | Up_to_date r )  -> OpamFilename.extract_generic_file r extract_dir in
+
+  (* Eventually add <package>/files/* into the extracted dir *)
+  let copy_files extract_dir =
+    if OpamFilename.exists_dir files_dir then (
+      if not (OpamFilename.exists_dir extract_dir) then
+        OpamFilename.mkdir extract_dir;
+      OpamFilename.copy_files ~src:files_dir ~dst:extract_dir;
+      OpamFilename.Set.of_list (OpamFilename.rec_files extract_dir)
+    ) else
+      OpamFilename.Set.empty in
+
+    (* Finally create the final archive *)
+  let create_archive files extract_root =
+    if not (OpamFilename.Set.is_empty files) || OpamFilename.exists url_file then (
+      OpamGlobals.msg "Creating %s.\n" (OpamFilename.to_string archive);
+      OpamFilename.exec extract_root [
+        [ "tar" ; "czf" ;
+          OpamFilename.to_string archive ;
+          OpamPackage.to_string nv ]
+      ];
+      Some archive
+    ) else
+      None in
+
+  OpamFilename.with_tmp_dir (fun extract_root ->
+      OpamFilename.with_tmp_dir (fun download_dir ->
+          let local_filename = download download_dir in
+          let extract_dir = extract_root / OpamPackage.to_string nv in
+          extract local_filename extract_dir;
+          let files = copy_files extract_dir in
+          match create_archive files extract_root with
+          | None | Some _ -> ()
+        )
+    )
 
 module Graph = struct
   module Vertex =  struct
@@ -519,26 +348,6 @@ module Graph = struct
   end)
 end
 
-let map_reduce jobs map merge init = function
-  | []           -> init
-  | [repository] -> merge (map repository) init
-  | repositories ->
-    if jobs = 1 then
-      List.fold_left (fun acc repo -> merge (map repo) acc) init repositories
-    else
-      let g = Graph.Parallel.create repositories in
-      Graph.Parallel.map_reduce jobs g ~map ~merge ~init
-
-let parallel_iter jobs fn = function
-  | []           -> ()
-  | [repository] -> fn repository
-  | repositories ->
-    if jobs = 1 then List.iter fn repositories
-    else
-      let g = Graph.Parallel.create repositories in
-      let pre _ = () in
-      let post _ = () in
-      let child = fn in
-      Graph.Parallel.iter jobs g ~pre ~post ~child
+module Parallel = Graph.Parallel
 
 let find_backend = find_backend_by_kind

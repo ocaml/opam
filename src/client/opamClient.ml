@@ -153,7 +153,7 @@ module API = struct
       OpamGlobals.msg "%s packages for %s:\n" kind (OpamSwitch.to_string t.switch);
     );
     let names = OpamPackage.Name.Map.mapi (fun name stats ->
-        if OpamState.mem_installed_package_by_name t name
+        if OpamState.is_name_installed t name
         && OpamState.is_locally_pinned t name then
           { stats with installed_version = Some (OpamPackage.Version.pinned) }
         else
@@ -214,22 +214,29 @@ module API = struct
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
-      let repo_name =
-        try Some (OpamPackage.Map.find nv t.package_index)
-        with Not_found -> None in
+      (* Note: this is a bit costly to do so, so only do it when
+         --verbose is active. *)
+      let repo_name_and_prefix =
+        if not !OpamGlobals.verbose then None
+        else
+          try
+            let res = OpamPackage.Map.find nv (Lazy.force t.package_index) in
+            Some res
+          with Not_found ->
+            None in
 
       let repository =
         if OpamState.is_locally_pinned t name then
-          []
+          ["pinned", "true"]
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
-        else match repo_name with
-          | None   -> []
-          | Some r -> [ "repository", OpamRepositoryName.to_string r ] in
+        else match repo_name_and_prefix with
+          | None       -> []
+          | Some (r,_) -> [ "repository", OpamRepositoryName.to_string r ] in
 
       let revision =
         if OpamState.is_locally_pinned t name
-        && OpamState.mem_installed_package_by_name t name then
+        && OpamState.is_name_installed t name then
           let repo = OpamState.repository_of_locally_pinned_package t name in
           match OpamRepository.revision repo with
           | None   -> []
@@ -237,44 +244,20 @@ module API = struct
         else
           [] in
 
-      let url = match repo_name with
-        | None           -> []
-        | Some repo_name ->
-          if not !OpamGlobals.verbose then []
-          else if OpamState.is_locally_pinned t name then
-            match OpamState.pinned_path t name with
-            | Some p -> [ "pinned-path", OpamFilename.Dir.to_string p ]
-            | None   -> OpamGlobals.error_and_exit "invalid pinned package"
-          else if OpamState.mem_repository t repo_name then
-            let repo = OpamState.find_repository t repo_name in
-            let mirror =
-              let m = OpamPath.Repository.archive repo nv in
-              [ "mirror-url", OpamFilename.to_string m ] in
-            let file =
-              let prefix = OpamRepository.read_prefix repo in
-              let prefix = OpamRepository.find_prefix prefix nv in
-              OpamPath.Repository.url repo prefix nv in
-            let url =
-              if not (OpamFilename.exists file) then
-                [ "upstream-url", "<none>" ]
-              else (
-                let url = OpamFile.URL.read file in
-                let archive = OpamFile.URL.url url in
-                let kind =
-                  match OpamFile.URL.kind url with
-                  | None   -> "http"
-                  | Some k -> string_of_repository_kind k in
-                let checksum = OpamFile.URL.checksum url in
-                [ "upstream-url"  , Printf.sprintf "%s" archive;
-                  "upstream-kind" , kind ]
-                @ match checksum with
-                | None   -> []
-                | Some c -> [ "upstream-checksum", c ]
-              ) in
-            mirror @ url
-          else
-            []
-      in
+      let url = match OpamState.url t nv with
+        | None   -> []
+        | Some u ->
+          let kind =
+            match OpamFile.URL.kind u with
+            | None   -> "http"
+            | Some k -> string_of_repository_kind k in
+          let url = string_of_address (OpamFile.URL.url u) in
+          let checksum = OpamFile.URL.checksum u in
+          [ "upstream-url" , url;
+            "upstream-kind", kind ]
+          @ match checksum with
+            | None   -> []
+            | Some c -> [ "upstream-checksum", c ] in
 
       (* All the version of the package *)
       let versions = OpamPackage.versions_of_name t.packages name in
@@ -394,17 +377,24 @@ module API = struct
     let repositories_need_update =
       not (OpamRepositoryName.Map.is_empty repositories) in
 
-    let pinned_packages =
+    let dev_packages =
+      let all = OpamState.dev_packages t in
       if repos = [] then
-        OpamPackage.Name.Set.of_list (OpamPackage.Name.Map.keys t.pinned)
+        all
       else
-        let names =
-          List.rev_map
-            (OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
-            repos in
-        OpamPackage.Name.Set.of_list (List.filter (OpamState.is_pinned t) names) in
-    let pinned_packages_need_update =
-      not (OpamPackage.Name.Set.is_empty pinned_packages) in
+        OpamPackage.Set.filter (fun nv ->
+            let name repo_name =
+              (OpamRepositoryName.to_string |> OpamPackage.Name.of_string) repo_name
+              =  OpamPackage.name nv in
+            let package repo_name =
+              (OpamRepositoryName.to_string |> OpamPackage.of_string) repo_name
+              = nv in
+            List.exists (fun repo_name ->
+                name repo_name || package repo_name
+              ) repos
+          ) all in
+    let dev_packages_need_update =
+      not (OpamPackage.Set.is_empty dev_packages) in
 
     let valid_repositories =
       OpamMisc.StringSet.of_list
@@ -474,60 +464,41 @@ module API = struct
           (OpamMisc.pretty_list not_pinned) valid_pinned_packages
     end;
 
-    let old_compiler_index = OpamState.compiler_state_index t in
-    let old_package_index = OpamState.package_state_index t in
-
     if repositories_need_update then (
       let repos = OpamRepositoryName.Map.values repositories in
+      let child repo =
+        try OpamRepository.update repo
+        with _ ->
+          OpamGlobals.error "Skipping %s as the repository is not available.\n"
+            (string_of_address repo.repo_address) in
 
-      (* update is IO-bounded, so it's OK to spawn a lot of jobs *)
-      OpamRepository.parallel_iter
-        (OpamRepositoryName.Map.cardinal repositories)
-        OpamRepository.update
-        repos;
-      let t = OpamRepositoryCommand.update_index t in
+      (* Update each remote backend *)
+      OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos
+        ~child ~post:ignore ~pre:ignore;
+      OpamRepositoryCommand.update_index t;
       let compiler_updates =
-        OpamRepositoryCommand.relink_compilers t ~verbose:true old_compiler_index in
+        OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
       let package_updates =
-        OpamRepositoryCommand.relink_packages t ~verbose:true old_package_index in
+        OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
 
-      (* Update the dev packages *)
-      let dev_updates =
-        let map repo =
-          let packages = OpamRepository.get_cache_updates repo in
-          OpamPackage.Set.filter (fun nv ->
-              if OpamPackage.Map.mem nv t.package_index
-              && OpamPackage.Map.find nv t.package_index = repo.repo_name then
-                true
-              else (
-                let tmp = OpamPath.Repository.tmp_dir repo nv in
-                OpamFilename.rmdir tmp;
-                false
-              )
-            ) packages in
-        OpamRepository.map_reduce (OpamState.jobs t)
-          map
-          OpamPackage.Set.union
-          OpamPackage.Set.empty
-          repos in
-      OpamState.add_to_reinstall t ~all:true dev_updates;
-      let json to_json update =
-        `O [ ("created"   , to_json update.created);
-             ("updated"   , to_json update.updated);
-             ("deleted"   , to_json update.deleted);
-             ("to_upgrade", to_json update.to_upgrade); ] in
-      let updates = `O [
-          "package-updates"    , (json OpamPackage.Set.to_json package_updates);
-          "package-dev-updates", (OpamPackage.Set.to_json dev_updates);
-          "compiler-updates"   , (json OpamCompiler.Set.to_json compiler_updates);
-        ] in
-      OpamJson.add updates;
+      (* Eventually output some JSON file *)
+      if OpamJson.verbose () then
+        let json to_json update =
+          `O [ ("created", to_json update.created);
+               ("updated", to_json update.updated);
+               ("deleted", to_json update.deleted);
+               ("changed", to_json update.changed); ] in
+        let updates = `O [
+            "package-updates" , (json OpamPackage.Set.to_json package_updates);
+            "compiler-updates", (json OpamCompiler.Set.to_json compiler_updates);
+          ] in
+        OpamJson.add updates;
     );
 
-    if pinned_packages_need_update then (
+    if dev_packages_need_update then (
       let updates =
-        OpamRepositoryCommand.update_pinned_packages ~verbose:true t pinned_packages in
-      let json = `O [ "pinned", OpamPackage.Set.to_json updates ] in
+        OpamRepositoryCommand.update_dev_packages ~verbose:true t dev_packages in
+      let json = `O [ "dev-packages-update", OpamPackage.Set.to_json updates ] in
       OpamJson.add json
     );
 
@@ -560,7 +531,7 @@ module API = struct
         let to_upgrade =
           let packages =
             OpamMisc.filter_map (fun (n,_) ->
-              if OpamState.mem_installed_package_by_name t n then
+              if OpamState.is_name_installed t n then
                 Some (OpamState.find_installed_package_by_name t n)
               else (
                 OpamGlobals.msg
@@ -586,7 +557,7 @@ module API = struct
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %s" (OpamRepository.to_string repo);
-    let root = OpamPath.default () in
+    let root = OpamPath.root () in
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
@@ -634,21 +605,15 @@ module API = struct
         OpamRepository.init repo;
 
         (* Init global dirs *)
-        OpamFilename.mkdir (OpamPath.opam_dir root);
-        OpamFilename.mkdir (OpamPath.descr_dir root);
-        OpamFilename.mkdir (OpamPath.archives_dir root);
+        OpamFilename.mkdir (OpamPath.packages_dir root);
         OpamFilename.mkdir (OpamPath.compilers_dir root);
 
         (* Load the partial state, and update the global state *)
         log "updating repository state";
         let t = OpamState.load_repository_state "init-1" in
-        let t = OpamRepositoryCommand.update_index t in
-        let _ =
-          OpamRepositoryCommand.relink_compilers t ~verbose:false OpamCompiler.Map.empty
-        in
-        let _ =
-	  OpamRepositoryCommand.relink_packages t ~verbose:false OpamPackage.Map.empty
-        in
+        OpamRepositoryCommand.update_index t;
+        let _ = OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:false in
+        let _ = OpamRepositoryCommand.fix_package_descriptions t ~verbose:false in
 
         (* Load the partial state, and install the new compiler if needed *)
 	log "updating package state";
@@ -665,18 +630,18 @@ module API = struct
         let compiler_names =
           OpamPackage.Name.Set.of_list (List.rev_map fst compiler_packages) in
         (* Ugly hack to quiet OPAM on base packages *)
+        let display_messages = !OpamGlobals.display_messages in
         OpamGlobals.display_messages := false;
         let _solution =
           OpamSolution.resolve_and_apply ~force:true t (Init compiler_names)
             { wish_install = [];
               wish_remove  = [];
               wish_upgrade = compiler_packages } in
-        OpamGlobals.display_messages := true;
+        OpamGlobals.display_messages := display_messages;
         update_setup t
 
       with e ->
-        if not !OpamGlobals.debug then
-          OpamFilename.rmdir (OpamPath.root root);
+        if not !OpamGlobals.debug then OpamFilename.rmdir root;
         raise e
 
   let install names =
@@ -688,9 +653,9 @@ module API = struct
     let pkg_skip, pkg_new =
       List.partition (fun (n,v) ->
         match v with
-        | None       -> OpamState.mem_installed_package_by_name t n
+        | None       -> OpamState.is_name_installed t n
         | Some (_,v) ->
-          if OpamState.mem_installed_package_by_name t n then
+          if OpamState.is_name_installed t n then
             let nv = OpamState.find_installed_package_by_name t n in
             OpamPackage.version nv = v
           else
@@ -772,9 +737,9 @@ module API = struct
     let atoms = OpamSolution.atoms_of_names t names in
     let atoms =
       List.filter (fun (n,_) ->
-        if n = OpamPackage.Name.default then (
+        if n = OpamPackage.Name.global_config then (
           OpamGlobals.msg "Package %s can not be removed.\n"
-            (OpamPackage.Name.to_string OpamPackage.Name.default);
+            (OpamPackage.Name.to_string OpamPackage.Name.global_config);
           false
         ) else
           true
@@ -792,7 +757,7 @@ module API = struct
         (fun accu (n,v as atom) ->
           let nv = match v with
             | None ->
-              if OpamState.mem_installed_package_by_name t n then
+              if OpamState.is_name_installed t n then
                 OpamState.find_installed_package_by_name t n
               else
                 OpamPackage.create n dummy_version
@@ -869,20 +834,12 @@ module API = struct
       OpamMisc.filter_map (function (n,v) ->
         match v with
         | None ->
-          if not (OpamState.mem_installed_package_by_name t n) then (
+          if not (OpamState.is_name_installed t n) then (
             OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
             None
           ) else
             let nv = OpamState.find_installed_package_by_name t n in
-            if OpamState.is_pinned t n then (
-              (* [opam reinstall <pkg>] when pkg is pinned means we want
-                 to sync the pkg with the pinned source. *)
-              match OpamState.update_pinned_package t n with
-              | Up_to_date _  -> None
-              | Result _      -> Some nv
-              | Not_available -> None
-            ) else
-              Some nv
+            Some nv
         | Some (_,v) ->
           let nv = OpamPackage.create n v in
           if OpamPackage.Set.mem nv t.installed then

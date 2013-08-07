@@ -21,27 +21,16 @@ let log fmt = OpamGlobals.log "GIT" fmt
 
 module Git = struct
 
-  type address = {
-    address: dirname;
-    commit : string option;
-  }
-
-  (* A git address could be of the form: git://path/to/the/repository/#SHA *)
-  let address repo =
-    let address = OpamFilename.Dir.to_string repo.repo_address in
-    let address, commit = OpamMisc.git_of_string address in
-    { address = OpamFilename.raw_dir address; commit }
-
   let exists repo =
     OpamFilename.exists_dir (repo.repo_root / ".git")
 
   let init repo =
-    let address = address repo in
-    let repo = OpamFilename.Dir.to_string address.address in
-    OpamSystem.commands [
-      [ "git" ; "init" ] ;
-      [ "git" ; "remote" ; "add" ; "origin" ; repo ] ;
-    ]
+    OpamFilename.in_dir repo.repo_root (fun () ->
+      OpamSystem.commands [
+        [ "git" ; "init" ] ;
+        [ "git" ; "remote" ; "add" ; "origin" ; fst repo.repo_address ] ;
+      ]
+    )
 
   let fetch repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
@@ -59,12 +48,11 @@ module Git = struct
             full
       )
 
-  let merge repo =
-    let address = address repo in
+  let reset repo =
     let merge commit =
-      try OpamSystem.command [ "git" ; "merge" ; commit ]; true
+      try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit ]; true
       with _ -> false in
-    let commit = match address.commit with
+    let commit = match snd repo.repo_address with
       | None   -> "origin/master"
       | Some c -> c in
     OpamFilename.in_dir repo.repo_root (fun () ->
@@ -74,12 +62,11 @@ module Git = struct
     )
 
   let diff repo =
-    let address = address repo in
     let diff commit =
       try Some (
         OpamSystem.read_command_output ["git" ; "diff" ; commit ; "--name-only"])
       with _ -> None in
-    let commit = match address.commit with
+    let commit = match snd repo.repo_address with
       | None   -> "origin/master"
       | Some c -> c in
     OpamFilename.in_dir repo.repo_root (fun () ->

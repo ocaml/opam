@@ -47,6 +47,8 @@ module type OrderedType = sig
   val to_json: t -> OpamJson.t
 end
 
+let debug = ref false
+
 let string_of_list f = function
   | [] -> "{}"
   | l  ->
@@ -95,7 +97,7 @@ module Set = struct
       List.fold_left (fun set e -> add e set) empty l
 
     let to_string s =
-      if S.cardinal s > max_print then
+      if not !debug && S.cardinal s > max_print then
 	Printf.sprintf "%d elements" (S.cardinal s)
       else
 	let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
@@ -131,6 +133,16 @@ module Map = struct
         ) map;
       !r
 
+    let map f map =
+      fold (fun key value map ->
+          add key (f value) map
+        ) map empty
+
+    let mapi f map =
+      fold (fun key value map ->
+          add key (f key value) map
+        ) map empty
+
     let values map =
       List.rev (M.fold (fun _ v acc -> v :: acc) map [])
 
@@ -146,7 +158,7 @@ module Map = struct
       ) m1 m2
 
     let to_string string_of_value m =
-      if M.cardinal m > 100 then
+      if not !debug && M.cardinal m > 100 then
 	Printf.sprintf "%d elements" (M.cardinal m)
       else
 	let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
@@ -365,22 +377,12 @@ let sub_at n s =
   else
     String.sub s 0 n
 
-let git_of_string a =
-  match cut_at a '#' with
-  | None       -> a, None
-  | Some (a,c) -> a, Some c
-
-(* maybe paths processing will become different for git and hg, so here is
-   a separate function. *)
-let hg_of_string = git_of_string
-
 let pretty_backtrace () =
   match Printexc.get_backtrace () with
   | "" -> ""
   | b  ->
     let b = String.concat "\n  " (split b '\n') in
     Printf.sprintf "Backtrace:\n  %s\n" b
-
 
 let default_columns = 100
 
@@ -448,3 +450,15 @@ let guess_dot_profile shell =
     else
       bashrc
   | _     -> home ".profile"
+
+let prettify_path s =
+  let aux ~short ~prefix =
+    let prefix = Filename.concat prefix "" in
+    if starts_with ~prefix s then
+      let suffix = remove_prefix ~prefix s in
+      Some (Filename.concat short suffix)
+    else
+      None in
+  match aux ~short:"~" ~prefix:(getenv "HOME") with
+  | Some p -> p
+  | None   -> s

@@ -68,8 +68,8 @@ let rec_dirs d =
   let fs = OpamSystem.rec_dirs (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)
 
-let sub_dirs d =
-  let fs = OpamSystem.directories_with_links (Dir.to_string d) in
+let dirs d =
+  let fs = OpamSystem.dirs (Dir.to_string d) in
   List.rev (List.rev_map Dir.of_string fs)
 
 let in_dir dirname fn =
@@ -219,12 +219,27 @@ let is_symlink src =
   with _ ->
     OpamSystem.internal_error "%s does not exist." (to_string src)
 
-let process_in fn src dst =
-  let src_s = to_string src in
-  let dst = Filename.concat (Dir.to_string dst) (Filename.basename src_s) in
+let starts_with dirname filename =
+  OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+
+let remove_prefix prefix filename =
+  let prefix =
+    let str = Dir.to_string prefix in
+    if str = "" then "" else Filename.concat str "" in
+  let filename = to_string filename in
+  OpamMisc.remove_prefix ~prefix filename
+
+let process_in ?root fn src dst =
+  let basename = match root with
+    | None   -> basename src
+    | Some r ->
+      if starts_with r src then remove_prefix r src
+      else OpamSystem.internal_error "%s is not a prefix of %s"
+          (Dir.to_string r) (to_string src) in
+  let dst = Filename.concat (Dir.to_string dst) basename in
   fn ~src ~dst:(of_string dst)
 
-let copy_in = process_in copy
+let copy_in ?root = process_in ?root copy
 
 let link_in = process_in link
 
@@ -234,18 +249,27 @@ let extract filename dirname =
 let extract_in filename dirname =
   OpamSystem.extract_in (to_string filename) (Dir.to_string dirname)
 
-let starts_with dirname filename =
-  OpamMisc.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+type generic_file =
+  | D of Dir.t
+  | F of t
+
+let extract_generic_file filename dirname =
+  match filename with
+  | F f ->
+    log "extracting %s to %s"
+      (to_string f)
+      (Dir.to_string dirname);
+    extract f dirname
+  | D d ->
+    if d <> dirname then (
+      log "copying %s to %s"
+        (Dir.to_string d)
+        (Dir.to_string dirname);
+      copy_dir ~src:d ~dst:dirname
+    )
 
 let ends_with suffix filename =
   OpamMisc.ends_with ~suffix (to_string filename)
-
-let remove_prefix prefix filename =
-  let prefix =
-    let str = Dir.to_string prefix in
-    if str = "" then "" else Filename.concat str "" in
-  let filename = to_string filename in
-  OpamMisc.remove_prefix ~prefix filename
 
 let remove_suffix suffix filename =
   let suffix = Base.to_string suffix in
@@ -271,11 +295,6 @@ let download_iter ~overwrite filenames dirname =
 let patch filename dirname =
   in_dir dirname (fun () -> OpamSystem.patch (to_string filename))
 
-let address_of_string address =
-  if Sys.file_exists address
-  then Dir.of_string address
-  else raw_dir address
-
 let with_flock file f x =
   OpamSystem.flock (to_string file);
   try
@@ -286,23 +305,23 @@ let with_flock file f x =
     OpamSystem.funlock (to_string file);
     raise e
 
-let prettify_string s =
-  let aux ~short ~prefix =
-    let prefix = Filename.concat prefix "" in
-    if OpamMisc.starts_with ~prefix s then
-      let suffix = OpamMisc.remove_prefix ~prefix s in
-      Some (Filename.concat short suffix)
-    else
-      None in
-  match aux ~short:"~" ~prefix:(OpamMisc.getenv "HOME") with
-  | Some p -> p
-  | None   -> s
+let checksum f =
+  if exists f then
+    [digest f]
+  else
+    []
+
+let checksum_dir d =
+  if exists_dir d then
+    List.map digest (rec_files d)
+  else
+    []
 
 let prettify_dir d =
-  prettify_string (Dir.to_string d)
+  OpamMisc.prettify_path (Dir.to_string d)
 
 let prettify s =
-  prettify_string (to_string s)
+  OpamMisc.prettify_path (to_string s)
 
 let to_json x = `String (to_string x)
 
@@ -316,6 +335,22 @@ end
 
 module Map = OpamMisc.Map.Make(O)
 module Set = OpamMisc.Set.Make(O)
+
+let copy_files ~src ~dst =
+  let files = rec_files src in
+  List.iter (fun file ->
+      if not !OpamGlobals.do_not_copy_files then
+        let base = remove_prefix src file in
+        let dst_file = create dst (Base.of_string base) in
+        if exists dst_file then
+          OpamGlobals.warning
+            "%s is replaced by the packager's overlay files. \
+             Set OPAMDONOTCOPYFILES to a non-empty value to no \
+             copy the overlay files."
+            (to_string dst_file);
+        OpamGlobals.msg "Copying %s to %s/\n" (to_string file) (Dir.to_string dst);
+        copy ~src:file ~dst:dst_file
+    ) files
 
 module OP = struct
 
@@ -383,3 +418,11 @@ module Attribute = struct
   module Map = OpamMisc.Map.Make(O)
 
 end
+
+let to_attribute root file =
+  let basename = Base.of_string (remove_prefix root file) in
+  let perm =
+    let s = Unix.stat (to_string file) in
+    s.Unix.st_perm in
+  let digest = digest file in
+  Attribute.create basename digest perm

@@ -19,70 +19,74 @@
 open OpamTypes
 
 (** Client state *)
-type state = {
+module Types: sig
 
-  (** Is the state partial ?
-      TODO: split-up global vs. repository state *)
-  partial: bool;
+  type t = {
 
-  (** The global OPAM root path *)
-  root: OpamPath.t;
+    (** Is the state partial ?
+        TODO: split-up global vs. repository state *)
+    partial: bool;
 
-  (** The current active switch *)
-  switch: switch;
+    (** The global OPAM root path *)
+    root: OpamPath.t;
 
-  (** The current compiler name (corresponding to a .comp file) *)
-  compiler: compiler;
+    (** The current active switch *)
+    switch: switch;
 
-  (** The current version of the compiler *)
-  compiler_version: compiler_version;
+    (** The current compiler name (corresponding to a .comp file) *)
+    compiler: compiler;
 
-  (** The list of OPAM files *)
-  opams: OpamFile.OPAM.t package_map;
+    (** The current version of the compiler *)
+    compiler_version: compiler_version lazy_t;
 
-  (** The list of description files *)
-  descrs: OpamFile.Descr.t lazy_t package_map;
+    (** The list of OPAM files *)
+    opams: OpamFile.OPAM.t package_map;
 
-  (** The list of repositories *)
-  repositories: OpamFile.Repo_config.t repository_name_map;
+    (** The list of description files *)
+    descrs: OpamFile.Descr.t lazy_t package_map;
 
-  (** The eventual prefix files *)
-  prefixes: OpamFile.Prefix.t repository_name_map;
+    (** The list of repositories *)
+    repositories: OpamFile.Repo_config.t repository_name_map;
 
-  (** The list of packages *)
-  packages: package_set;
+    (** The list of packages *)
+    packages: package_set;
 
-  (** The list of packages, keeping the one available for the current
-      compiler version *)
-  available_packages: package_set Lazy.t;
+    (** The list of packages, keeping the one available for the current
+        compiler version *)
+    available_packages: package_set Lazy.t;
 
-  (** The association list between switch and compiler *)
-  aliases: OpamFile.Aliases.t;
+    (** The association list between switch and compiler *)
+    aliases: OpamFile.Aliases.t;
 
-  (** The list of compiler available to install *)
-  compilers: compiler_set;
+    (** The list of compiler available to install *)
+    compilers: compiler_set;
 
-  (** The list of pinned packages *)
-  pinned: OpamFile.Pinned.t;
+    (** The list of pinned packages *)
+    pinned: OpamFile.Pinned.t;
 
-  (** The list of installed packages *)
-  installed: OpamFile.Installed.t;
+    (** The list of installed packages *)
+    installed: OpamFile.Installed.t;
 
-  (** The list of packages explicitly installed by the user *)
-  installed_roots: OpamFile.Installed_roots.t;
+    (** The list of packages explicitly installed by the user *)
+    installed_roots: OpamFile.Installed_roots.t;
 
-  (** The list of packages which needs to be reinsalled *)
-  reinstall: OpamFile.Reinstall.t;
+    (** The list of packages which needs to be reinsalled *)
+    reinstall: OpamFile.Reinstall.t;
 
-  (** The main configuration file *)
-  config: OpamFile.Config.t;
+    (** The main configuration file *)
+    config: OpamFile.Config.t;
 
-  (** The package index *)
-  package_index: repository_name package_map;
+    (** Package index *)
+    package_index: (repository_name * string option) package_map lazy_t;
 
-  (** The compiler index *)
-  compiler_index: repository_name compiler_map;
-}
+    (** Compiler index *)
+    compiler_index: (repository_name * string option) compiler_map lazy_t;
+  }
+
+end
+
+type state = Types.t
+open Types
 
 (** Load the client state. The string argument is to identify to call
     site. *)
@@ -159,31 +163,36 @@ val eval_filter: state -> variable_map -> filter option -> bool
     - removing the commands with a filter evaluating to "false" *)
 val filter_commands: state -> variable_map -> command list -> string list list
 
+(** {2 Helpers} *)
+
+(** Return the OPAM file for the given package *)
+val opam: state -> package -> OpamFile.OPAM.t
+
+(** Return the URL file for the given package *)
+val url: state -> package -> OpamFile.URL.t option
+
+(** Return the Descr file for the given package *)
+val descr: state -> package -> OpamFile.Descr.t option
+
+(** Return the files/ directory overlay for the given package *)
+val files: state -> package -> dirname option
+
+(** Return the compiler description *)
+val compiler_comp: state -> compiler -> OpamFile.Comp.t
+
 (** {2 Repositories} *)
 
 (** Pretty print a map of repositories *)
 val string_of_repositories: OpamFile.Repo_config.t repository_name_map -> string
 
-(** Build a map which says in which repository the latest metadata for
-    a given package is. Use the repository index order. *)
-val package_index: repository repository_name_map ->
-  repository_name list name_map -> repository_name package_map
-
-(** Build a map between package and package repository states. *)
-val package_state_index: state -> package_repository_state package_map
+(** Builds a map which says in which repository the latest metadata
+    for a given package are. The function respect the bustom
+    priorities given by the order of [priorities]. *)
+val package_index: state -> (repository_name * string option) package_map
 
 (** Build a map which says in which repository the latest metadata for
     a given compiler is. *)
-val compiler_index: repository list -> repository_name compiler_map
-
-(** Build a map between compiler and compiler repository states. *)
-val compiler_state_index: state -> compiler_repository_state compiler_map
-
-(** Get a package repository state. *)
-val package_repository_state: state -> package -> package_repository_state option
-
-(** Get a compiler repository state. *)
-val compiler_repository_state: state -> compiler -> compiler_repository_state option
+val compiler_index: state -> (repository_name * string option) compiler_map
 
 (** Sort repositories by priority. *)
 val sorted_repositories: state -> repository list
@@ -200,7 +209,7 @@ val find_repository_opt: state -> repository_name -> repository option
 (** {2 Compilers} *)
 
 (** (Re-)install the configuration for a given root and switch *)
-val install_conf_ocaml_config: dirname -> switch -> unit
+val install_global_config: dirname -> switch -> unit
 
 (** Install the given compiler *)
 val install_compiler: state -> quiet:bool -> switch -> compiler -> unit
@@ -212,26 +221,30 @@ val update_switch_config: state -> switch -> unit
 val get_compiler_packages: state -> compiler -> atom list
 
 (** Is a compiler installed ? *)
-val compiler_installed: state -> compiler -> bool
+val is_compiler_installed: state -> compiler -> bool
 
 (** Is a switch installed ? *)
-val switch_installed: state -> switch -> bool
+val is_switch_installed: state -> switch -> bool
+
+(** Global compiler state *)
+val compiler_state: state -> checksums compiler_map
+
+(** Repository state *)
+val compiler_repository_state: state -> checksums compiler_map
+
+(** Return the active repository for a given compiler *)
+val repository_of_compiler: state -> compiler -> (repository * string option) option
 
 (** {2 Packages} *)
 
 (** Check whether a package name is installed *)
-val mem_installed_package_by_name: state -> name -> bool
+val is_name_installed: state -> name -> bool
+
+(** Return whether a package is installed *)
+val is_package_installed: state -> package -> bool
 
 (** Return the installed package with the right name *)
 val find_installed_package_by_name: state -> name -> package
-
-(** Check whether a package name is installed, but this time
-    using the collection of installed packages as argument *)
-val mem_installed_package_by_name_aux: package_set -> name -> bool
-
-(** Return the installed package with the right name, but this time
-    using the collection of installed packages as argument *)
-val find_installed_package_by_name_aux: package_set -> name -> package
 
 (** Return all the packages with the given name *)
 val find_packages_by_name: state -> name -> package_set option
@@ -249,16 +262,54 @@ val all_installed: state -> package_set
 (** Return a map containing the switch where a given package is installed. *)
 val installed_versions: state -> name -> switch list package_map
 
+(** Download the OPAM-package archive ($name.$version+opam.tar.gz) *)
+val download_archive: state -> package -> filename option
+
+(** Download the upstream archive, add the eventual additional files
+    and return the directory.. *)
+val download_upstream: state -> package -> dirname -> generic_file option
+
+(** Global package state. *)
+val package_state: state -> checksums package_map
+
+(** Global & partial package state. *)
+val package_partial_state: state -> package -> archive:bool -> bool * checksums
+
+(** Repository state *)
+val package_repository_state: state -> checksums package_map
+
+(** Repository & partial package state. *)
+val package_repository_partial_state: state -> package -> archive:bool ->
+  bool * checksums
+
+(** Get the active repository for a given package *)
+val repository_of_package: state -> package -> (repository * string option) option
+
+(** Add the given packages to the set of package to reinstall. If [all]
+    is set, this is done for ALL the switches (useful when a package
+    change upstream for instance). If not, only the reinstall state of the
+    current switch is changed. *)
+val add_to_reinstall: state -> all:bool -> package_set -> unit
+
+(** Return the files for a given package *)
+val copy_files: state -> package -> dirname -> unit
+
+(** {2 Development packages} *)
+
+(** Get all the development packages. This include the one locally
+    pinned (for the current switch) and the global dev packages. *)
+val dev_packages: state -> package_set
+
+(** [update_dev_packages t] checks for upstream changes for packages
+    first in the switch cache and then in the global cache. Return the
+    packages whose contents have changed upstream. Side-effect: update
+    the reinstall files. *)
+val update_dev_packages: state -> package_set
+
 (** {2 Configuration files} *)
 
 (** Return the .config file for the given package *)
 val dot_config: state -> name -> OpamFile.Dot_config.t
-
-(** Return the OPAM file for the given package *)
-val opam: state -> package -> OpamFile.OPAM.t
-
-(** Return the compiler descritpion file for the given compiler name *)
-val compiler: state -> compiler -> OpamFile.Comp.t
 
 (** {2 Locks} *)
 
@@ -267,39 +318,39 @@ val check: lock -> unit
 
 (** {2 Pinned packages} *)
 
-(** Is a package pinned ? *)
-val is_pinned: state -> name -> bool
-
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
 
-(** Get the path and kind associated to a locally pinned package. *)
-val locally_pinned_package: state -> name -> string * repository_kind
+(** Return the URL file associated with a locally pinned package. *)
+val url_of_locally_pinned_package: state -> name -> OpamFile.URL.t
 
-(** Return the repository associated to a locally pinned package. *)
+(** Return the repository associtated with a locally pinned
+    package. *)
 val repository_of_locally_pinned_package: state -> name -> repository
 
-(** Cache the OPAM file of pinned package *)
-val copy_pinned_opam: state -> name -> unit
+(** {2 Overlays} *)
 
-(** Get the corresponding pinned package. If the package is pinned to
-    a path (locally or via git/darcs), it returns the latest package as we
-    assume that the most up-to-date build descriptions. *)
-val pinned_package: state -> name -> package
+(** Compute the overlay package for a given name. It return the higher
+    package available with this name.  *)
+val overlay_of_name: state -> name -> package
 
-(** Get the path associated to the given pinned package. Return [None]
-    if the package is not pinned or if it is pinned to a version
-    number. *)
-val pinned_path: state -> name -> dirname option
+(** Cache an OPAM file *)
+val add_opam_overlay: state -> package -> OpamFile.OPAM.t -> unit
 
-(** Update pinned package *)
-val update_pinned_package: state -> name -> generic_file download
+(** Cache an URL file *)
+val add_url_overlay: state -> package -> OpamFile.URL.t -> unit
 
-(** Add the given packages to the set of package to reinstall. If [all]
-    is set, this is done for ALL the switches (useful when a package
-    change upstream for instance). If not, only the reinstall state of the
-    current switch is changed. *)
-val add_to_reinstall: state -> all:bool -> package_set -> unit
+(** Cache a descr file *)
+val add_descr_overlay: state -> package -> OpamFile.Descr.t -> unit
+
+(** Cache additional files *)
+val add_files_overlay: state -> package -> dirname -> filename list -> unit
+
+(** Add overlay files for a pinned package *)
+val add_pinned_overlay: state -> name -> unit
+
+(** Remove all overlay files *)
+val remove_overlay: state -> package -> unit
 
 (** {2 System compilers} *)
 
@@ -319,33 +370,10 @@ val confirm: ('a, unit, string, bool) format4 -> 'a
     are installed ? *)
 val check_base_packages: state -> unit
 
-(** To be able to open [OpamState.Types] *)
-module Types: sig
-  type t = state = {
-    partial: bool;
-    root: OpamPath.t;
-    switch: switch;
-    compiler: compiler;
-    compiler_version: compiler_version;
-    opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t lazy_t package_map;
-    repositories: OpamFile.Repo_config.t repository_name_map;
-    prefixes: OpamFile.Prefix.t repository_name_map;
-    packages: package_set;
-    available_packages: package_set Lazy.t;
-    aliases: OpamFile.Aliases.t;
-    compilers: compiler_set;
-    pinned: OpamFile.Pinned.t;
-    installed: OpamFile.Installed.t;
-    installed_roots: OpamFile.Installed_roots.t;
-    reinstall: OpamFile.Reinstall.t;
-    config: OpamFile.Config.t;
-    package_index: repository_name package_map;
-    compiler_index: repository_name compiler_map;
-  }
-end
-
 (** / **)
 
 (** Switch reinstall hook. *)
 val switch_reinstall_hook: (switch -> unit) ref
+
+(** Update hook *)
+val fix_descriptions_hook: (state -> verbose:bool -> unit) ref

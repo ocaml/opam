@@ -52,41 +52,72 @@ module Version = struct
 
 end
 
-include OpamMisc.Base
+module O = struct
 
+  type t = {
+    version: Version.t;
+    name   : string;
+  }
+
+  let compare t1 t2 =
+    String.compare t1.name t2.name
+
+  let to_string t = t.name
+
+  let of_string str =
+    let version = Version.of_string str in
+    { version; name = str }
+
+  let to_json t = `String (to_string t)
+
+end
+
+include O
+module Set = OpamMisc.Set.Make(O)
+module Map = OpamMisc.Map.Make(O)
+
+let version t = t.version
+
+(* DIR/$NAME.comp *)
 let of_filename f =
-  if not (OpamFilename.check_suffix f ".comp") then None
+  if OpamFilename.check_suffix f ".comp" then
+    (OpamFilename.chop_extension
+     |> OpamFilename.basename
+     |> OpamFilename.Base.to_string
+     |> of_string
+     |> fun x -> Some x) f
   else
-    Some ((
-        OpamFilename.chop_extension
-        |> OpamFilename.basename
-        |> OpamFilename.Base.to_string
-        |> of_string
-      ) f)
+    None
 
-let list t =
-  log "list dir=%s" (OpamFilename.Dir.to_string t);
-  if OpamFilename.exists_dir t then (
-    let files = OpamFilename.rec_files t in
-    let comps  = List.filter (fun f -> OpamFilename.check_suffix f ".comp") files in
-    let descrs = List.filter (fun f -> OpamFilename.check_suffix f ".descr") files in
-    let same =
-      let comp  = OpamFilename.Base.of_string ".comp"  in
-      let descr = OpamFilename.Base.of_string ".descr" in
-      fun c d ->
-        OpamFilename.remove_suffix comp c = OpamFilename.remove_suffix descr d in
-    (* XXX: dummy pairing *)
-    let pairs = List.map (fun c ->
-        if List.exists (same c) descrs then
-          (c, Some (List.find (same c) descrs))
-        else
-          (c, None)
-      ) comps in
-    List.fold_left (fun map (f,d) ->
+let list dir =
+  log "list %s" (OpamFilename.Dir.to_string dir);
+  if OpamFilename.exists_dir dir then (
+    let files = OpamFilename.rec_files dir in
+    List.fold_left (fun set f ->
+        match of_filename f with
+        | None   -> set
+        | Some c -> Set.add c set
+      ) Set.empty files
+  ) else
+    Set.empty
+
+let prefixes dir =
+  log "prefixes %s" (OpamFilename.Dir.to_string dir);
+  if OpamFilename.exists_dir dir then (
+    let files = OpamFilename.rec_files dir in
+    List.fold_left (fun map f ->
         match of_filename f with
         | None   -> map
-        | Some c -> Map.add c (f,d) map
-      ) Map.empty pairs
+        | Some c ->
+          let suffix = OpamFilename.Dir.to_string (OpamFilename.dirname f) in
+          let prefix =
+            match
+              OpamMisc.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
+            with
+            | "" -> None
+            | p  -> Some p in
+          Map.add c prefix map
+      ) Map.empty files
   ) else
     Map.empty
 

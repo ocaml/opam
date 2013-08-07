@@ -30,9 +30,9 @@ module type VCS = sig
       in a staging area. *)
   val fetch: repository -> unit
 
-  (** Merge the staging area into the master branch of the
-      repository. *)
-  val merge: repository -> unit
+    (** Reset the master branch of the repository to match the remote
+        repository state. *)
+  val reset: repository -> unit
 
   (** Check whether the staging area is empty. *)
   val diff: repository -> bool

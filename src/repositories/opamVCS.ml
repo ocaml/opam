@@ -21,7 +21,7 @@ module type VCS = sig
   val exists: repository -> bool
   val init: repository -> unit
   val fetch: repository -> unit
-  val merge: repository -> unit
+  val reset: repository -> unit
   val diff: repository -> bool
   val revision: repository -> string
 end
@@ -35,7 +35,7 @@ module Make (VCS: VCS) = struct
   let pull repo =
     VCS.fetch repo;
     let diff = VCS.diff repo in
-    VCS.merge repo;
+    VCS.reset repo;
     diff
 
   let check_updates repo =
@@ -62,31 +62,30 @@ module Make (VCS: VCS) = struct
       repo_address = address;
     }
 
-  let pull_url name dirname remote_url =
-    let address = OpamFilename.Dir.of_string remote_url in
-    let repo = repo dirname address in
+  let pull_url package dirname remote_url =
+    let repo = repo dirname remote_url in
     OpamGlobals.msg "%-10s Fetching %s\n"
-      (OpamPackage.Name.to_string name)
-      (OpamFilename.prettify_dir address);
+      (OpamPackage.to_string package)
+      (string_of_address remote_url);
     download_dir (pull_repo repo)
 
   let pull_repo repo =
     OpamGlobals.msg "%-10s Fetching %s\n"
       (OpamRepositoryName.to_string repo.repo_name)
-      (OpamFilename.prettify_dir repo.repo_address);
+      (string_of_address repo.repo_address);
     ignore (pull_repo repo)
 
   let pull_archive repo filename =
-    OpamGlobals.msg "%-10s Fetching %s\n"
-      (OpamRepositoryName.to_string repo.repo_name)
-      (OpamFilename.prettify filename);
     let dirname = OpamPath.Repository.archives_dir repo in
     let basename = OpamFilename.basename filename in
     let local_file = OpamFilename.create dirname basename in
-    if OpamFilename.exists local_file then
+    if OpamFilename.exists local_file then (
+      OpamGlobals.msg "%-10s Using %s\n"
+        (OpamRepositoryName.to_string repo.repo_name)
+        (OpamFilename.prettify local_file);
       Up_to_date local_file
-    else
-      Not_available
+    ) else
+      Not_available (OpamFilename.to_string filename)
 
   let revision repo =
     Some (OpamPackage.Version.of_string (VCS.revision repo))
