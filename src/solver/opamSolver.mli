@@ -39,7 +39,10 @@ val solution_is_empty: solution -> bool
 val delete_or_update : solution -> bool
 
 (** Display a solution *)
-val print_solution: messages:(package -> string list) -> solution -> unit
+val print_solution:
+  messages:(package -> string list) ->
+  rewrite:(package -> package) ->
+  solution -> unit
 
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description.  An empty [list] : No solution

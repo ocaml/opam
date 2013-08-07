@@ -461,7 +461,11 @@ let apply ?(force = false) t action solution =
           then Some s
           else None
         )  messages in
-      OpamSolver.print_solution ~messages solution;
+      let rewrite nv =
+        let name = OpamPackage.name nv in
+        if not (OpamState.is_locally_pinned t name) then nv
+        else OpamPackage.pinned name in
+      OpamSolver.print_solution ~messages ~rewrite solution;
       OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
       output_json_solution solution;
     );
