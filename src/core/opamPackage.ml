@@ -28,9 +28,11 @@ module Version = struct
 
   let to_string = function
     | Version x -> x
-    | Pinned    -> "(pinned)"
+    | Pinned    -> "pinned"
 
-  let of_string x = Version x
+  let of_string = function
+    | "pinned"  -> Pinned
+    | v         -> Version v
 
   let pinned = Pinned
 
@@ -64,7 +66,7 @@ module Name = struct
 
   let of_string x = x
 
-  let default = OpamGlobals.default_package
+  let global_config = OpamGlobals.global_config
 
   let compare n1 n2 =
     match compare (String.lowercase n1) (String.lowercase n2) with
@@ -99,6 +101,8 @@ let name t = t.name
 
 let version t = t.version
 
+let is_pinned t = t.version = Version.pinned
+
 let sep = '.'
 
 let of_string_opt s =
@@ -111,31 +115,6 @@ let of_string_opt s =
 let of_string s = match of_string_opt s with
   | Some x -> x
   | None   -> OpamGlobals.error_and_exit "%s is not a valid versioned package name" s
-
-(* XXX: this function is quite hackish, as it mainly depends on the shape the paths
-   built in path.ml *)
-let of_filename ~all f =
-  let f = OpamMisc.strip (OpamFilename.to_string f) in
-  let base = Filename.basename f in
-  let parent = Filename.basename (Filename.dirname f) in
-  match base with
-  | "descr"
-  | "opam" -> if all then of_string_opt parent else None
-  | "url"  -> of_string_opt parent
-  | _      ->
-    if Filename.check_suffix base ".opam" then
-      of_string_opt (Filename.chop_suffix base ".opam")
-    else if Filename.check_suffix base "+opam.tar.gz" then
-      of_string_opt (Filename.chop_suffix base "+opam.tar.gz")
-    else
-      match parent with
-      | "files" ->
-        let parent2 = Filename.basename (Filename.dirname (Filename.dirname f)) in
-        of_string_opt parent2
-      | _ -> None
-
-let of_dirname d =
-  of_string_opt (OpamFilename.Base.to_string (OpamFilename.basename_dir d))
 
 let to_string t =
   Printf.sprintf "%s%c%s" (Name.to_string t.name) sep (Version.to_string t.version)
@@ -179,30 +158,65 @@ let to_map nv =
     Name.Map.add name (Version.Set.add version versions) (Name.Map.remove name map)
   ) nv Name.Map.empty
 
+(* $DIR/$NAME.$VERSION/ *)
+let of_dirname =
+  OpamFilename.basename_dir
+  |> OpamFilename.Base.to_string
+  |> of_string_opt
+
+(* $DIR/$NAME.$VERSION/opam *)
+let of_filename f =
+  if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
+    of_dirname (OpamFilename.dirname f)
+  else
+    None
+
+(* $NAME.$VERSION+opam.tar.gz *)
+let of_archive f =
+  let base = OpamFilename.basename f in
+  match OpamMisc.cut_at (OpamFilename.Base.to_string base) '+' with
+  | None       -> None
+  | Some (s,_) -> of_string_opt s
+
 let list dir =
   log "list %s" (OpamFilename.Dir.to_string dir);
   if OpamFilename.exists_dir dir then (
-    let dot_opams =
-      let files = OpamFilename.rec_files dir in
-      let files = List.filter (fun f -> OpamFilename.check_suffix f ".opam") files in
-      List.fold_left (fun set file ->
-        match of_filename ~all:true file with
-        | None    ->
-          log "%s is not a valid package filename!" (OpamFilename.to_string file);
-          set
-        | Some nv -> Set.add nv set
-      ) Set.empty files in
-    let opam =
-      let all = OpamFilename.rec_dirs dir in
-      let basenames = List.map OpamFilename.basename_dir all in
-      Set.of_list
-        (OpamMisc.filter_map
-           (OpamFilename.Base.to_string |> of_string_opt)
-           basenames) in
-
-    Set.union dot_opams opam
+    let files = OpamFilename.rec_files dir in
+    List.fold_left (fun set f ->
+        match of_filename f with
+        | None   -> set
+        | Some p ->
+          if not (Set.mem p set) then Set.add p set
+          else
+            let suffix = Filename.concat (to_string p) "opam" in
+            let files = List.filter (OpamFilename.ends_with suffix) files in
+            OpamGlobals.error_and_exit "Multiple definition of package %s in %s:\n  %s"
+              (to_string p) (OpamFilename.Dir.to_string dir)
+              (String.concat "\n  " (List.map OpamFilename.to_string files));
+      ) Set.empty files
   ) else
     Set.empty
+
+let prefixes dir =
+  log "prefixes %s" (OpamFilename.Dir.to_string dir);
+  if OpamFilename.exists_dir dir then (
+    let files = OpamFilename.rec_files dir in
+    List.fold_left (fun map f ->
+        match of_filename f with
+        | None   -> map
+        | Some p ->
+          let dirname = OpamFilename.dirname_dir (OpamFilename.dirname f) in
+          let suffix = OpamFilename.Dir.to_string dirname in
+          let prefix =
+            match
+              OpamMisc.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
+            with
+            | "" -> None
+            | p  -> Some p in
+          Map.add p prefix map
+      ) Map.empty files
+  ) else
+    Map.empty
 
 let versions_of_packages nvset =
   Set.fold
@@ -262,3 +276,23 @@ let unavailable_because_pinned name = function
       "Version %s of %S is not available because the package is pinned."
       (Version.to_string v)
       (Name.to_string name)
+
+module Graph = struct
+  module Vertex = struct
+    include O
+    let equal x y = compare x y = 0
+    let hash = Hashtbl.hash
+  end
+  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (Vertex)
+  module Topological = Graph.Topological.Make (PG)
+  module Traverse = Graph.Traverse.Dfs(PG)
+  module Components = Graph.Components.Make(PG)
+  module Parallel = OpamParallel.Make(struct
+    let string_of_vertex = to_string
+    include PG
+    include Topological
+    include Traverse
+    include Components
+  end)
+end
+module Parallel = Graph.Parallel

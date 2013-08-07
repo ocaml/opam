@@ -38,15 +38,21 @@ end
 (** Compiler names *)
 include OpamMisc.ABSTRACT
 
-(** Convert a filename into a compiler name *)
+(** Convert a filename into a compiler name. This function extract
+    [name] from {i /path/to/$name.comp}. *)
 val of_filename: OpamFilename.t -> t option
 
-(** List the compiler available in a directory (and their eventual
-    descrition file) *)
-val list: OpamFilename.Dir.t -> (OpamFilename.t * OpamFilename.t option) Map.t
+(** List the compiler available in the global state. *)
+val list: OpamFilename.Dir.t -> Set.t
+
+(** List the compiler available in a directory (and their prefix) *)
+val prefixes: OpamFilename.Dir.t -> string option Map.t
 
 (** System compiler *)
 val system: t
 
 (** Errors *)
 val unknown: t -> 'a
+
+(** Return the compiler version *)
+val version: t -> Version.t

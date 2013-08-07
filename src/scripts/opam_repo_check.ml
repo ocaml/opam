@@ -62,13 +62,11 @@ let () =
 
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
-  let prefix, packages = OpamRepository.packages repo in
+  let packages = OpamRepository.packages_with_prefixes repo in
 
   (** packages *)
-  OpamPackage.Set.iter (fun package ->
+  OpamPackage.Map.iter (fun package prefix ->
     OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string package);
-
-    let prefix = OpamRepository.find_prefix prefix package in
 
     (** Descr *)
     let descr = OpamPath.Repository.descr repo prefix package in
@@ -96,11 +94,12 @@ let () =
   ) packages;
 
   (** compilers *)
-  OpamCompiler.Map.iter (fun compiler (comp, descr) ->
-    OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string compiler);
-    write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
-    match descr with
-    | None   -> ()
-    | Some d -> write OpamFile.Comp_descr.write d (OpamFile.Comp_descr.read d);
-
-  ) (OpamRepository.compilers repo);
+  let compilers = OpamRepository.compilers_with_prefixes repo in
+  OpamCompiler.Map.iter (fun c prefix ->
+      let comp = OpamPath.Repository.compiler_comp repo prefix c in
+      let descr = OpamPath.Repository.compiler_descr repo prefix c in
+      OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string c);
+      write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
+      if OpamFilename.exists descr then
+        write OpamFile.Comp_descr.write descr (OpamFile.Comp_descr.read descr);
+  ) compilers

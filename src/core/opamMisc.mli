@@ -181,12 +181,6 @@ val indent_right: string -> int -> string
 (** Cut a string *)
 val sub_at: int -> string -> string
 
-(** Cut a git string of the form /git/address[#SHA] into (address * commit) *)
-val git_of_string: string -> string * string option
-
-(** same as [git_of_string] but for mercurial paths *)
-val hg_of_string: string -> string * string option
-
 (** {2 Misc} *)
 
 (** Remove from a ':' separated list of string the one with the given prefix *)
@@ -213,6 +207,9 @@ val env: unit -> (string * string) list
 (** Return a pretty-printed backtrace *)
 val pretty_backtrace: unit -> string
 
+(** Prettify a local path (eg. replace /home/me/ by '~') *)
+val prettify_path: string -> string
+
 module OP: sig
 
   (** Pipe operator *)
@@ -236,3 +233,7 @@ val guess_shell_compat: unit -> [`csh|`zsh|`sh|`bash|`fish]
 
 (** Guess the location of .profile *)
 val guess_dot_profile: [`csh|`zsh|`sh|`bash|`fish] -> string
+
+(** / *)
+
+val debug: bool ref

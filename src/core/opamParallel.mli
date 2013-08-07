@@ -45,8 +45,22 @@ module type SIG = sig
     post:(G.V.t -> unit) ->
     unit
 
-  (** Map-reduce on a taks graph *)
+  (** Parallel iteration on a list. *)
+  val iter_l: int -> G.vertex list ->
+    pre:(G.V.t -> unit) ->
+    child:(G.V.t -> unit) ->
+    post:(G.V.t -> unit) ->
+    unit
+
+  (** Map-reduce on a graph *)
   val map_reduce: int -> G.t ->
+    map:(G.V.t -> 'a) ->
+    merge:('a -> 'a -> 'a) ->
+    init:'a ->
+    'a
+
+  (** Map-reduce on a list. *)
+  val map_reduce_l: int -> G.vertex list ->
     map:(G.V.t -> 'a) ->
     merge:('a -> 'a -> 'a) ->
     init:'a ->

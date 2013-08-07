@@ -38,7 +38,19 @@ module type SIG = sig
     post:(G.V.t -> unit) ->
     unit
 
+  val iter_l: int -> G.vertex list ->
+    pre:(G.V.t -> unit) ->
+    child:(G.V.t -> unit) ->
+    post:(G.V.t -> unit) ->
+    unit
+
   val map_reduce: int -> G.t ->
+    map:(G.V.t -> 'a) ->
+    merge:('a -> 'a -> 'a) ->
+    init:'a ->
+    'a
+
+  val map_reduce_l: int -> G.vertex list ->
     map:(G.V.t -> 'a) ->
     merge:('a -> 'a -> 'a) ->
     init:'a ->
@@ -340,5 +352,25 @@ module Make (G : G) = struct
     let g = G.create () in
     List.iter (G.add_vertex g) l;
     g
+
+  let map_reduce_l jobs list ~map ~merge ~init = match list with
+    | []    -> init
+    | [elt] -> merge (map elt) init
+    | _     ->
+      if jobs = 1 then
+        List.fold_left (fun acc repo -> merge (map repo) acc) init list
+      else
+        let g = create list in
+        map_reduce jobs g ~map ~merge ~init
+
+  let iter_l jobs list ~pre ~child ~post = match list with
+    | []    -> ()
+    | [elt] -> pre elt; child elt; post elt
+    | list  ->
+      if jobs = 1 then
+        List.iter (fun elt -> pre elt; child elt; post elt) list
+      else
+        let g = create list in
+        iter jobs g ~pre ~post ~child
 
 end

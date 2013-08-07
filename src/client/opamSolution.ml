@@ -196,11 +196,13 @@ let print_variable_warnings t =
       "OCAMLFIND_COMMANDS";
       "OCAMLFIND_LDCONF";
     ] in
-    if OpamPackage.Set.exists (fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind") t.installed then
+    if OpamPackage.Set.exists (
+        fun nv -> OpamPackage.Name.to_string (OpamPackage.name nv) = "ocamlfind"
+      ) t.installed then
       List.iter warn ocamlfind_vars;
     (* 2. Warn about variables possibly set by other compilers *)
     let new_variables comp =
-      let comp_f = OpamPath.compiler t.root comp in
+      let comp_f = OpamPath.compiler_comp t.root comp in
       let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
       new_variables env in
     let vars = ref OpamMisc.StringSet.empty in
@@ -459,7 +461,11 @@ let apply ?(force = false) t action solution =
           then Some s
           else None
         )  messages in
-      OpamSolver.print_solution ~messages solution;
+      let rewrite nv =
+        let name = OpamPackage.name nv in
+        if not (OpamState.is_locally_pinned t name) then nv
+        else OpamPackage.pinned name in
+      OpamSolver.print_solution ~messages ~rewrite solution;
       OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
       output_json_solution solution;
     );

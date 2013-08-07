@@ -78,7 +78,8 @@ let process () =
 
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
-  let prefix, packages = OpamRepository.packages repo in
+  let prefixes = OpamRepository.packages_with_prefixes repo in
+  let packages = OpamRepository.packages repo in
 
   let mk_packages str =
     match OpamPackage.of_string_opt str with
@@ -114,7 +115,7 @@ let process () =
 
   (* Compute the transitive closure of packages *)
   let get_dependencies nv =
-    let prefix = OpamRepository.find_prefix prefix nv in
+    let prefix = OpamPackage.Map.find nv prefixes in
     let opam_f = OpamPath.Repository.opam repo prefix nv in
     if OpamFilename.exists opam_f then (
       let opam = OpamFile.OPAM.read opam_f in
@@ -144,8 +145,7 @@ let process () =
     let aux r =
       OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
     let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
-    OpamPackage.Set.of_list
-      (OpamMisc.filter_map (OpamPackage.of_filename ~all:true) list) in
+    OpamPackage.Set.of_list (OpamMisc.filter_map OpamPackage.of_filename list) in
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
@@ -178,15 +178,16 @@ let process () =
     if not (OpamPackage.Set.is_empty to_add) then
       OpamGlobals.msg "Packages to build: %s\n" (OpamPackage.Set.to_string to_add);
     OpamPackage.Set.iter (fun nv ->
-      let archive = OpamPath.Repository.archive repo nv in
-      try
-        if not dryrun then (
-          OpamFilename.remove archive;
-          OpamRepository.make_archive ~gener_digest repo nv
-        ) else
-          OpamGlobals.msg "Building %s\n" (OpamFilename.to_string archive)
+        let prefix = OpamPackage.Map.find nv prefixes in
+        let local_archive = OpamPath.Repository.archive repo nv in
+        try
+          if not dryrun then (
+            OpamFilename.remove local_archive;
+            OpamRepository.make_archive ~gener_digest repo prefix nv;
+          ) else
+            OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive)
       with e ->
-        OpamFilename.remove archive;
+        OpamFilename.remove local_archive;
         errors := (nv, e) :: !errors;
     ) to_add;
   );

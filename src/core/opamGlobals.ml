@@ -23,15 +23,8 @@ let check var = ref (
     with Not_found -> false
   )
 
-let debug = ref (
-    try int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 2
-    with _ -> false
-  )
-
-let verbose =
-  try ref (int_of_string (OpamMisc.getenv "OPAMDEBUG") >= 1)
-  with _ -> check "VERBOSE"
-
+let debug            = check "DEBUG"
+let verbose          = check "VERBOSE"
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
@@ -43,6 +36,8 @@ let fake             = check "FAKE"
 let print_stats      = check "STATS"
 let utf8_msgs        = check "UTF8MSGS"
 let autoremove       = check "AUTOREMOVE"
+let do_not_copy_files = check "DONOTCOPYFILES"
+let sync_archives    = check "SYNCARCHIVES"
 
 let jobs = ref (
     try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
@@ -71,7 +66,7 @@ let default_repository_address = "http://opam.ocamlpro.com"
 
 let default_build_command = [ [ "./build.sh" ] ]
 
-let default_package = "conf-ocaml"
+let global_config = "global-config"
 
 let system = "system"
 

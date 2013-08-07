@@ -315,6 +315,7 @@ use when trying to build the packages.
     ?conflicts:     [ <package>+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?post-messages: [ (STRING ?{ <filter> } )+ ]
+    ?available:     [ <filter> ]
     ?os:            [ <formula(os)>+ ]
     ?ocaml-version: [ <and-formula(constraint)>+ ]
     ?libraries:     [ STRING+ ]
@@ -457,9 +458,11 @@ The {\tt depopts} field contains a {\em OR} formula over
   it can be resolved, or a link to an open issue). \verb+success+ is also
   defined as syntactic sugar for \verb+!failure+.
 
-\item The {\tt os} and {\tt ocaml-version} fields are optional
-  constraints over the supported OS and compiler version for this
-  package. In case the filter is not valid, the package is disabled.
+\item The {\tt available} field (since version $1.1.0$) can be used to add
+  constraints on the OS and OCaml versions currently in use, using the built-in
+  \verb+os+ and \verb+ocaml-version+ variables. In case the filter is not valid,
+  the package is disabled. The {\tt os} and {\tt ocaml-version} fields are
+  deprecated, please use {\tt available} instead in newly created packages.
 
 \item The {\tt libraries} and {\tt syntax} fields contain the
   libraries and syntax extensions defined by the package. See

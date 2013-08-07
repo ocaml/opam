@@ -158,8 +158,10 @@ OCAMLBUILD_FILES =\
 
 .PHONY: libuninstall libinstall libinstall-with-ocamlbuild
 libinstall: META
+	$(MAKE) libuninstall
 	ocamlfind install opam META $(FILES)
 libinstall-with-ocamlbuild: META
+	$(MAKE) libuninstall
 	ocamlfind install opam META $(OCAMLBUILD_FILES)
 libuninstall:
 	ocamlfind remove opam

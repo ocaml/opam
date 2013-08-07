@@ -124,20 +124,18 @@ module Full = struct
 
   let of_string s =
     match OpamMisc.rcut_at s ':' with
-    | None ->
-      create_global
-        (OpamPackage.Name.of_string OpamGlobals.default_package)
-        (of_string s)
+    | None -> create_global OpamPackage.Name.global_config (of_string s)
     | Some (p,v) ->
       let v = of_string v in
       match OpamMisc.cut_at p '.' with
-      | None -> create_global (OpamPackage.Name.of_string p) v
-      | Some (p,s) -> create_local (OpamPackage.Name.of_string p) (Section.of_string s) v
+      | None       -> create_global (OpamPackage.Name.of_string p) v
+      | Some (p,s) -> create_local
+                        (OpamPackage.Name.of_string p) (Section.of_string s) v
 
   let to_string t =
     let package =
       let n = OpamPackage.Name.to_string (package t) in
-      if n = OpamGlobals.default_package then
+      if n = OpamGlobals.global_config then
         ""
       else
         n in

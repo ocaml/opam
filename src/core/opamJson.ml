@@ -1482,6 +1482,9 @@ let add json =
 let set_output write =
   json_output := Some write
 
+let verbose () =
+  !json_output <> None
+
 let output () =
   match !json_output with
   | None      -> ()

@@ -32,8 +32,8 @@ end
 module Name: sig
   include OpamMisc.ABSTRACT
 
-  (** default package *)
-  val default: t
+  (** global configuration package *)
+  val global_config: t
 end
 
 (** Package (name x version) pairs *)
@@ -51,15 +51,18 @@ val version: t -> Version.t
 (** Create a new pair (name x version) *)
 val create: Name.t -> Version.t -> t
 
-(** Create a new pair from a filename. This function extracts {i
-    $name} and {i $version} from {i /path/to/$name.$version.XXX} with
-    various heuristics. If [all] is unset, discard "opam" and "url"
-    files. *)
-val of_filename: all:bool -> OpamFilename.t -> t option
+(** Guess the package name from a filename. This function extracts
+    [name] and [version] from {i /path/to/$name.$version/opam} *)
+val of_filename: OpamFilename.t -> t option
 
-(** Create a new pair from a directory name. This function extracts {i
+(** Guess the package name from a directory name. This function extracts {i
     $name} and {i $version} from {i /path/to/$name.$version/} *)
 val of_dirname: OpamFilename.Dir.t -> t option
+
+(** Guess the package name from an archive file. This function extract
+    {i $name} and {i $version} from {i
+    /path/to/$name.$version+opam.tar.gz} *)
+val of_archive: OpamFilename.t -> t option
 
 (** Convert a set of pairs to a map [name -> versions] *)
 val to_map: Set.t -> Version.Set.t Name.Map.t
@@ -85,9 +88,12 @@ val equal: t -> t -> bool
 (** Hash a package *)
 val hash: t -> int
 
-(** List all the .opam files and the package directories in a given
-    path *)
+(** Return all the package descriptions in a given directory *)
 val list: OpamFilename.Dir.t -> Set.t
+
+(** Return all the package descriptions in the current directory (and
+    their eventual prefixes). *)
+val prefixes: OpamFilename.Dir.t -> string option Map.t
 
 (** {2 Errors} *)
 
@@ -104,3 +110,9 @@ val unavailable_because_pinned: Name.t -> Version.t option -> 'a
 
 (** Create a (path)-pinned package. *)
 val pinned: Name.t -> t
+
+(** Check if a package is pinned. *)
+val is_pinned: t -> bool
+
+(** Parallel executions. *)
+module Parallel: OpamParallel.SIG with type G.V.t = t

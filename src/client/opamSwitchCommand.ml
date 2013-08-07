@@ -61,7 +61,7 @@ let list ~print_short ~installed =
 
   let officials, patches =
     OpamCompiler.Set.fold (fun comp (officials, patches) ->
-      let c = OpamFile.Comp.read (OpamPath.compiler t.root comp) in
+      let c = OpamFile.Comp.read (OpamPath.compiler_comp t.root comp) in
       let version = OpamFile.Comp.version c in
       if OpamCompiler.Version.to_string version = OpamCompiler.to_string comp then
         comp :: officials, patches
@@ -171,7 +171,7 @@ let install_with_packages ~quiet ~packages switch compiler =
 
   let bad_packages =
     OpamMisc.filter_map (fun (n, c) ->
-      if OpamState.mem_installed_package_by_name t n then (
+      if OpamState.is_name_installed t n then (
         let nv = OpamState.find_installed_package_by_name t n in
         if c = Some (`Eq, OpamPackage.version nv) then
           None
@@ -211,11 +211,11 @@ let install_with_packages ~quiet ~packages switch compiler =
 let install ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
   let comp_dir = OpamPath.Switch.root t.root switch in
-  let comp_f = OpamPath.compiler t.root compiler in
+  let comp_f = OpamPath.compiler_comp t.root compiler in
   if not (OpamFilename.exists_dir comp_dir)
   && not (OpamFilename.exists comp_f) then
     OpamCompiler.unknown compiler;
-  if not (OpamState.switch_installed t switch) then
+  if not (OpamState.is_switch_installed t switch) then
     install_with_packages ~quiet ~packages:None switch compiler
   else (
     let a = OpamSwitch.Map.find switch t.aliases in
@@ -231,7 +231,7 @@ let install ~quiet ~warning ~update_config switch compiler =
 let switch ~quiet ~warning switch =
   log "switch switch=%s" (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-1" in
-  if not (OpamState.switch_installed t switch) then (
+  if not (OpamState.is_switch_installed t switch) then (
     let compiler = OpamCompiler.of_string (OpamSwitch.to_string switch) in
     install ~quiet ~warning ~update_config:true switch compiler
   ) else
@@ -294,7 +294,7 @@ let show () =
 let reinstall switch =
   log "reinstall switch=%s" (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-reinstall" in
-  if not (OpamState.switch_installed t switch) then (
+  if not (OpamState.is_switch_installed t switch) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;

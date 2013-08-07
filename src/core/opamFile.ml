@@ -156,13 +156,17 @@ module X = struct
     let internal = "url"
 
     type t = {
-      url     : string;
+      url     : address;
       kind    : repository_kind option;
       checksum: string option;
     }
 
+    let create kind url = {
+      url; kind; checksum = None;
+    }
+
     let empty = {
-      url     = "<none>";
+      url     = ("<none>", None);
       kind    = None;
       checksum= None;
     }
@@ -172,56 +176,47 @@ module X = struct
     let s_git = "git"
     let s_darcs = "darcs"
     let s_hg = "hg"
+    let s_local = "local"
 
     let valid_fields = [
       s_archive;
       s_checksum;
       s_git;
       s_darcs;
-      s_hg
+      s_hg;
+      s_local;
     ]
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
-      let archive =
-        OpamFormat.assoc_option s.file_contents s_archive OpamFormat.parse_string in
-      let git =
-        OpamFormat.assoc_option s.file_contents s_git OpamFormat.parse_string in
-      let darcs =
-        OpamFormat.assoc_option s.file_contents s_darcs OpamFormat.parse_string in
-      let hg =
-        OpamFormat.assoc_option s.file_contents s_hg OpamFormat.parse_string in
-      let checksum =
-        OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
-      let url, kind = match archive, git, darcs, hg with
-        | None  , None  , None  , None ->
+      let get f = OpamFormat.assoc_option s.file_contents f OpamFormat.parse_string in
+      let archive  = get s_archive in
+      let git      = get s_git in
+      let darcs    = get s_darcs in
+      let hg       = get s_hg in
+      let local    = get s_local in
+      let checksum = get s_checksum in
+      let url, kind = match archive, git, darcs, hg, local with
+        | None  , None  , None  , None, None ->
             OpamGlobals.error_and_exit "Missing URL"
-        | Some x, None  , None  , None   ->
-            x, Some `http
-        | None  , Some x, None  , None   ->
-            x, Some `git
-        | None  , None  , Some x, None   ->
-            x, Some `darcs
-        | None  , None  , None  , Some x ->
-            x, Some `hg
-        | _ ->
-            OpamGlobals.error_and_exit "Too many URLS" in
+        | Some x, None  , None  , None  , None   -> x, Some `http
+        | None  , Some x, None  , None  , None   -> x, Some `git
+        | None  , None  , Some x, None  , None   -> x, Some `darcs
+        | None  , None  , None  , Some x, None   -> x, Some `hg
+        | None  , None  , None  , None  , Some x -> x, Some `local
+        | _ -> OpamGlobals.error_and_exit "Too many URLS" in
+      let url = address_of_string url in
       { url; kind; checksum }
 
     let to_string filename t =
       let url_name = match t.kind with
-        | Some `git   -> "git"
-        | Some `darcs -> "darcs"
-        | Some `hg    -> "hg"
-        | None
-        | Some `http  -> "archive"
-        | Some `local -> OpamGlobals.error_and_exit
-                           "Local packages are not (yet) supported." in
+        | None   -> "archive"
+        | Some k -> string_of_repository_kind k in
       let s = {
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (url_name , OpamFormat.make_string t.url);
+          Variable (url_name , OpamFormat.make_string (string_of_address t.url));
         ] @ match t.checksum with
             | None   -> []
             | Some c -> [Variable (s_checksum, OpamFormat.make_string c)]
@@ -496,7 +491,7 @@ module X = struct
 
     let empty = {
       repo_name     = OpamRepositoryName.of_string "<none>";
-      repo_address  = OpamFilename.raw_dir "<none>";
+      repo_address  = ("<none>", None);
       repo_root     = OpamFilename.raw_dir "<none>";
       repo_kind     = `local;
       repo_priority = 0;
@@ -506,6 +501,7 @@ module X = struct
     let s_kind = "kind"
     let s_address = "address"
     let s_priority = "priority"
+    let s_root = "root"
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
@@ -514,13 +510,17 @@ module X = struct
           (OpamFormat.parse_string |> OpamRepositoryName.of_string) in
       let repo_address =
         OpamFormat.assoc s.file_contents s_address
-          (OpamFormat.parse_string |> OpamFilename.address_of_string) in
+          (OpamFormat.parse_string |> address_of_string) in
       let repo_kind =
         OpamFormat.assoc s.file_contents s_kind
           (OpamFormat.parse_string |> repository_kind_of_string) in
       let repo_priority =
         OpamFormat.assoc_default 0 s.file_contents s_priority OpamFormat.parse_int in
-      let repo_root = OpamPath.Repository.create repo_name in
+      let repo_root =
+        match OpamFormat.assoc_option s.file_contents s_root
+                (OpamFormat.parse_string |> OpamFilename.raw_dir)
+        with None   -> OpamPath.Repository.create (OpamPath.root ()) repo_name
+           | Some f -> f in
       { repo_name; repo_address; repo_kind; repo_priority; repo_root }
 
     let to_string filename t =
@@ -530,11 +530,13 @@ module X = struct
           Variable (s_name    ,
                     OpamFormat.make_string (OpamRepositoryName.to_string t.repo_name));
           Variable (s_address ,
-                    OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_address));
+                    OpamFormat.make_string (string_of_address t.repo_address));
           Variable (s_kind    ,
                     OpamFormat.make_string (string_of_repository_kind t.repo_kind));
           Variable (s_priority,
                     OpamFormat.make_int t.repo_priority);
+          Variable (s_root,
+                    OpamFormat.make_string (OpamFilename.Dir.to_string t.repo_root));
         ] } in
       Syntax.to_string s
 
@@ -561,6 +563,13 @@ module X = struct
         with _ -> ""
       ) in
       x, y
+
+    let of_string str =
+      let head, tail =
+        match OpamMisc.cut_at str '\n' with
+        | None       -> str, ""
+        | Some (h,t) -> h, t in
+      head, lazy tail
 
     let to_string _ = full
 
@@ -721,6 +730,7 @@ module X = struct
       others     : (string * value) list;
       ocaml_version: compiler_constraint option;
       os         : (bool * string) generic_formula;
+      available  : filter;
       homepage   : string option;
       authors    : string list;
       license    : string option;
@@ -750,6 +760,7 @@ module X = struct
       others     = [];
       ocaml_version = None;
       os         = Empty;
+      available  = FBool true;
       homepage   = None;
       authors    = [];
       license    = None;
@@ -783,6 +794,7 @@ module X = struct
     let s_patches     = "patches"
     let s_configure_style = "configure-style"
     let s_os          = "os"
+    let s_available   = "available"
     let s_homepage    = "homepage"
     let s_authors     = "authors"
     let s_license     = "license"
@@ -809,6 +821,7 @@ module X = struct
       s_build_env;
       s_patches;
       s_os;
+      s_available;
       s_license;
       s_authors;
       s_homepage;
@@ -843,6 +856,7 @@ module X = struct
     let build_env t = t.build_env
     let patches t = t.patches
     let os t = t.os
+    let available t = t.available
     let homepage t = t.homepage
     let authors t = t.authors
     let license t = t.license
@@ -868,7 +882,7 @@ module X = struct
       let make_file =
         OpamFormat.make_option (OpamFilename.Base.to_string |> OpamFormat.make_string)
           OpamFormat.make_filter in
-      let name_and_version = match OpamPackage.of_filename ~all:true filename with
+      let name_and_version = match OpamPackage.of_filename filename with
         | None  ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
@@ -886,6 +900,9 @@ module X = struct
         | l  -> [ Variable (s, OpamFormat.make_list f l) ] in
       let formula c s f = match c with
         | Empty -> []
+        | x     -> [ Variable (s, f x) ] in
+      let filter c s f = match c with
+        | FBool true -> []
         | x     -> [ Variable (s, f x) ] in
       let s = {
         file_name     = OpamFilename.to_string filename;
@@ -913,6 +930,8 @@ module X = struct
           @ list    t.patches       s_patches       (OpamFormat.make_list make_file)
           @ option  t.ocaml_version s_ocaml_version OpamFormat.make_compiler_constraint
           @ formula t.os            s_os            OpamFormat.make_os_constraint
+          @ filter  t.available     s_available
+              (fun f -> List (OpamFormat.make_filter f))
           @ listm   t.build_test    s_build_test    OpamFormat.make_command
           @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
@@ -928,7 +947,7 @@ module X = struct
         s
 
     let of_channel filename ic =
-      let nv = OpamPackage.of_filename ~all:true filename in
+      let nv = OpamPackage.of_filename filename in
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let s = s.file_contents in
@@ -990,6 +1009,9 @@ module X = struct
           OpamFormat.parse_compiler_constraint in
       let os = OpamFormat.assoc_default OpamFormula.Empty s s_os
           OpamFormat.parse_os_constraint in
+      let available = OpamFormat.assoc_default (FBool true) s s_available
+          (function List l -> OpamFormat.parse_filter l
+                  | _ -> raise (OpamFormat.Bad_format "available: expecting a list")) in
       let parse_file = OpamFormat.parse_option
           (OpamFormat.parse_string |> OpamFilename.Base.of_string)
           OpamFormat.parse_filter in
@@ -1012,7 +1034,7 @@ module X = struct
         ) s in
       { name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax; others;
-        patches; ocaml_version; os; build_env;
+        patches; ocaml_version; os; available; build_env;
         homepage; authors; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages
       }
@@ -1429,12 +1451,7 @@ module X = struct
         | None   -> OpamSystem.internal_error
                       "%s is not a valid compiler description file."
                       (OpamFilename.to_string filename)
-        | Some c ->
-          let base = OpamCompiler.to_string c in
-          OpamCompiler.of_string base,
-          match OpamMisc.cut_at base '+' with
-          | None       -> OpamCompiler.Version.of_string base
-          | Some (n,_) -> OpamCompiler.Version.of_string n in
+        | Some c -> c, OpamCompiler.version c in
       let name =
         OpamFormat.assoc_default name_d s s_name
           (OpamFormat.parse_string |> OpamCompiler.of_string) in
