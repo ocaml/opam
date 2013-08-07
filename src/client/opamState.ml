@@ -569,11 +569,15 @@ let repository_of_locally_pinned_package t n =
     repo_priority = 0;
     repo_root; repo_address; repo_kind }
 
-(* check for overlay first, and then fallback to the global state *)
+let real_package t nv =
+  let name = OpamPackage.name nv in
+  if is_locally_pinned t name then OpamPackage.pinned name
+  else nv
+
 let opam t nv =
+  let nv = real_package t nv in
   let overlay = OpamPath.Switch.opam t.root t.switch nv in
-  if OpamFilename.exists overlay then
-    OpamFile.OPAM.read overlay
+  if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
   else
     try OpamPackage.Map.find nv t.opams
     with Not_found ->
@@ -596,12 +600,31 @@ let add_descr_overlay t nv descr =
   let dst = OpamPath.Switch.descr t.root t.switch nv in
   OpamFile.Descr.write dst descr
 
+let descr t nv =
+  let nv = real_package t nv in
+  let read file = Some (OpamFile.Descr.read file) in
+  let overlay = OpamPath.Switch.descr t.root t.switch nv in
+  if OpamFilename.exists overlay then read overlay
+  else
+    let file = OpamPath.descr t.root nv in
+    if OpamFilename.exists file then read file
+    else None
+
 let add_files_overlay t nv root files =
   let dst = OpamPath.Switch.files t.root t.switch nv in
   List.iter (fun file ->
       let base = OpamFilename.remove_prefix root file in
       OpamFilename.copy ~src:file ~dst:(dst // base)
     ) files
+
+let files t nv =
+  let nv = real_package t nv in
+  let overlay = OpamPath.Switch.files t.root t.switch nv in
+  if OpamFilename.exists_dir overlay then Some overlay
+  else
+    let dir = OpamPath.files t.root nv in
+    if OpamFilename.exists_dir dir then Some dir
+    else None
 
 let add_pinned_overlay t name =
   let ov = overlay_of_name t name in
@@ -624,6 +647,7 @@ let has_url_overlay t nv =
 
 (* check for an overlay first, and the fallback to the global state *)
 let url t nv =
+  let nv = real_package t nv in
   let overlay = OpamPath.Switch.url t.root t.switch nv in
   if OpamFilename.exists overlay then
     Some (OpamFile.URL.read overlay)

@@ -163,6 +163,23 @@ val eval_filter: state -> variable_map -> filter option -> bool
     - removing the commands with a filter evaluating to "false" *)
 val filter_commands: state -> variable_map -> command list -> string list list
 
+(** {2 Helpers} *)
+
+(** Return the OPAM file for the given package *)
+val opam: state -> package -> OpamFile.OPAM.t
+
+(** Return the URL file for the given package *)
+val url: state -> package -> OpamFile.URL.t option
+
+(** Return the Descr file for the given package *)
+val descr: state -> package -> OpamFile.Descr.t option
+
+(** Return the files/ directory overlay for the given package *)
+val files: state -> package -> dirname option
+
+(** Return the compiler description *)
+val compiler_comp: state -> compiler -> OpamFile.Comp.t
+
 (** {2 Repositories} *)
 
 (** Pretty print a map of repositories *)
@@ -290,15 +307,6 @@ val update_dev_packages: state -> package_set
 
 (** Return the .config file for the given package *)
 val dot_config: state -> name -> OpamFile.Dot_config.t
-
-(** Return the OPAM file for the given package *)
-val opam: state -> package -> OpamFile.OPAM.t
-
-(** Return the URL file for the given package *)
-val url: state -> package -> OpamFile.URL.t option
-
-(** Return the compiler descritpion file for the given compiler name *)
-val compiler_comp: state -> compiler -> OpamFile.Comp.t
 
 (** {2 Locks} *)
 
