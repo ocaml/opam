@@ -1791,6 +1791,16 @@ let update_setup_interactive t shell dot_profile =
    change upstream for instance). If not, only the reinstall state of the
    current switch is changed. *)
 let add_to_reinstall t ~all packages =
+  log "add-to-reinstall all:%b packages:%s" all (OpamPackage.Set.to_string packages);
+  let packages = OpamPackage.Set.fold (fun nv set ->
+      try
+        let nv =
+          if not (OpamPackage.is_pinned nv) then nv
+          else find_installed_package_by_name t (OpamPackage.name nv) in
+        OpamPackage.Set.add nv set
+      with Not_found ->
+        set
+    ) packages OpamPackage.Set.empty in
   let aux switch =
     let installed =
       OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
