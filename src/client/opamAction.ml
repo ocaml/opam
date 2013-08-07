@@ -314,44 +314,45 @@ let remove_package_aux t ~metadata ~rm_build nv =
   OpamGlobals.msg "Removing %s.\n" (OpamPackage.to_string nv);
 
   begin match opam with
-  | None      -> OpamGlobals.msg "  No OPAM file has been found!\n"
-  | Some opam ->
-    let env = compilation_env t opam in
-    let commands =
-      OpamState.filter_commands t OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
-    match commands with
-    | []     -> ()
-    | remove ->
-      let p_build = OpamPath.Switch.build t.root t.switch nv in
-      (* We try to run the remove scripts in the folder where it was
-         extracted If it does not exist, we try to download and
-         extract the archive again, if that fails, we don't really
-         care. *)
-      (* We also use a small hack: if the remove command is simply
-         'ocamlfind remove xxx' then, no need to extract the archive
-         again. *)
-      let use_ocamlfind = function
-        | [] -> true
-        | "ocamlfind" :: _ -> true
-        | _ -> false in
-      if not (OpamFilename.exists_dir p_build)
-      && not (List.for_all use_ocamlfind remove) then (
-        try let _ = extract_package t nv in ()
-        with _ -> ()
-      );
-      let name = OpamPackage.Name.to_string name in
-      let exec_dir, name =
-        if OpamFilename.exists_dir p_build
-        then p_build, Some name
-        else t.root , None in
-      try
-        OpamGlobals.msg "%s\n" (string_of_commands remove);
-        let metadata = get_metadata t in
-        OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true remove
-      with OpamSystem.Process_error r ->
-        OpamGlobals.error
-          "Warning: failure in package uninstall script, some files may remain:\n%s"
-          (OpamProcess.string_of_result r)
+    | None      -> OpamGlobals.msg "  No OPAM file has been found!\n"
+    | Some opam ->
+      let env = compilation_env t opam in
+      let commands =
+        OpamState.filter_commands t
+          OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+      match commands with
+      | []     -> ()
+      | remove ->
+        let p_build = OpamPath.Switch.build t.root t.switch nv in
+        (* We try to run the remove scripts in the folder where it was
+           extracted If it does not exist, we try to download and
+           extract the archive again, if that fails, we don't really
+           care. *)
+        (* We also use a small hack: if the remove command is simply
+           'ocamlfind remove xxx' then, no need to extract the archive
+           again. *)
+        let use_ocamlfind = function
+          | [] -> true
+          | "ocamlfind" :: _ -> true
+          | _ -> false in
+        if not (OpamFilename.exists_dir p_build)
+        && not (List.for_all use_ocamlfind remove) then (
+          try let _ = extract_package t nv in ()
+          with _ -> ()
+        );
+        let name = OpamPackage.Name.to_string name in
+        let exec_dir, name =
+          if OpamFilename.exists_dir p_build
+          then p_build, Some name
+          else t.root , None in
+        try
+          OpamGlobals.msg "%s\n" (string_of_commands remove);
+          let metadata = get_metadata t in
+          OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true remove
+        with OpamSystem.Process_error r ->
+          OpamGlobals.error
+            "Warning: failure in package uninstall script, some files may remain:\n%s"
+            (OpamProcess.string_of_result r)
   end;
 
   (* Remove the libraries *)
@@ -396,12 +397,12 @@ let remove_package_aux t ~metadata ~rm_build nv =
   (* Remove the misc files *)
   log "Removing the misc files";
   List.iter (fun (_,dst) ->
-    if OpamFilename.exists dst then begin
-      OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
-      if OpamState.confirm "Continue ?" then
-        OpamFilename.remove dst
-    end
-  ) (OpamFile.Dot_install.misc install);
+      if OpamFilename.exists dst then begin
+        OpamGlobals.msg "Removing %s." (OpamFilename.to_string dst);
+        if OpamState.confirm "Continue ?" then
+          OpamFilename.remove dst
+      end
+    ) (OpamFile.Dot_install.misc install);
 
   (* Removing the shared dir if it is empty, overwise keep files for
      future installation. TODO: is it the expected semantics ? *)
