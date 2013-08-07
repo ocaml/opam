@@ -111,5 +111,8 @@ val unavailable_because_pinned: Name.t -> Version.t option -> 'a
 (** Create a (path)-pinned package. *)
 val pinned: Name.t -> t
 
+(** Check if a package is pinned. *)
+val is_pinned: t -> bool
+
 (** Parallel executions. *)
 module Parallel: OpamParallel.SIG with type G.V.t = t

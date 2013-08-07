@@ -101,6 +101,8 @@ let name t = t.name
 
 let version t = t.version
 
+let is_pinned t = t.version = Version.pinned
+
 let sep = '.'
 
 let of_string_opt s =
