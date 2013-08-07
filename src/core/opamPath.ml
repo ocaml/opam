@@ -143,6 +143,10 @@ module Switch = struct
 
   let url t a nv = overlay t a nv // "url"
 
+  let descr t a nv = overlay t a nv // "descr"
+
+  let files t a nv = overlay t a nv / "files"
+
 end
 
 module Repository = struct

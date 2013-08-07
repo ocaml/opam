@@ -208,6 +208,12 @@ module Switch: sig
       $opam/$switch/overlay/$name.$version/url} *)
   val url: t -> switch -> package -> filename
 
+  (** Descr orverlay *)
+  val descr: t -> switch -> package -> filename
+
+  (** Files overlay *)
+  val files: t -> switch -> package -> dirname
+
 end
 
 (** Repository paths *)
