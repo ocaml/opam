@@ -8,6 +8,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -51,8 +52,20 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filename&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;filename_set&nbsp;=&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Set</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;filename_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFilename</span>.<span class="constructor">Map</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;generic_file&nbsp;=&nbsp;<span class="constructor">D</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">F</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;download&nbsp;=&nbsp;<span class="constructor">Up_to_date</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Not_available</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Result</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;generic_file&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamFilename</span>.generic_file&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">D</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">F</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;download&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Up_to_date</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Not_available</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Result</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download_dir&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;<span class="constructor">OpamTypes</span>.download&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.generic_file&nbsp;<span class="constructor">OpamTypes</span>.download<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;download_file&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;<span class="constructor">OpamTypes</span>.download&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.generic_file&nbsp;<span class="constructor">OpamTypes</span>.download<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package_set&nbsp;=&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Set</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;package_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamPackage</span>.<span class="constructor">Map</span>.t<br>
@@ -75,6 +88,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamVariable</span>.variable_contents&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">B</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">S</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;variable_map&nbsp;=&nbsp;<span class="constructor">OpamVariable</span>.variable_contents&nbsp;<span class="constructor">OpamVariable</span>.<span class="constructor">Map</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ppflag&nbsp;=&nbsp;<span class="constructor">Camlp4</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Cmd</span>&nbsp;<span class="keyword">of</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;generic_formula&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamFormula</span>.formula&nbsp;=<br>
@@ -90,11 +104,16 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;repository_name&nbsp;=&nbsp;<span class="constructor">OpamRepositoryName</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;repository_name_map&nbsp;=&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamRepositoryName</span>.<span class="constructor">Map</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;repository_kind&nbsp;=&nbsp;[&nbsp;<span class="keywordsign">`</span>darcs&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>git&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>hg&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>http&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>local&nbsp;]<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;address&nbsp;=&nbsp;string&nbsp;*&nbsp;string&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_address&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.address&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;address_of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.address<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guess_repository_kind&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_kind&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.address&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_kind<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;string_of_repository_kind&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[&nbsp;<span class="keywordsign">`</span>darcs&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>git&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>hg&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>http&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>local&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;repository_kind_of_string&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;[&nbsp;<span class="keywordsign">`</span>darcs&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>git&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>hg&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>http&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span>local&nbsp;]<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;address&nbsp;=&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;repository_root&nbsp;=&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;repository&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;repo_root&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_root;<br>
@@ -263,9 +282,18 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_l&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.vertex&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_reduce&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;map:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;merge:(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;init:<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_reduce_l&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.vertex&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;map:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;merge:(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;init:<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">G</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">OpamParallel</span>.error)&nbsp;list&nbsp;*&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
@@ -454,9 +482,18 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_l&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.vertex&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_reduce&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;map:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;merge:(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;init:<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_reduce_l&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.vertex&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;map:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;merge:(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;init:<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">G</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">OpamParallel</span>.error)&nbsp;list&nbsp;*<br>
@@ -633,9 +670,18 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;iter_l&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.vertex&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pre:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;post:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_reduce&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;map:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;merge:(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;init:<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_reduce_l&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">G</span>.vertex&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;map:(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;merge:(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;init:<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">G</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Errors</span>&nbsp;<span class="keyword">of</span>&nbsp;(<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;*&nbsp;<span class="constructor">OpamParallel</span>.error)&nbsp;list&nbsp;*&nbsp;<span class="constructor">G</span>.<span class="constructor">V</span>.t&nbsp;list<br>
@@ -655,10 +701,12 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solution&nbsp;=&nbsp;<span class="constructor">OpamTypes</span>.<span class="constructor">PackageActionGraph</span>.solution<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solver_result&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Nothing_to_do</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">OK</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">OK</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Aborted</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">No_solution</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Error</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Error</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list&nbsp;*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list&nbsp;*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="constructor">OpamTypes</span>.action&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;(<span class="keywordsign">'</span>a,&nbsp;<span class="keywordsign">'</span>b)&nbsp;result&nbsp;=&nbsp;<span class="constructor">Success</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Conflicts</span>&nbsp;<span class="keyword">of</span>&nbsp;(unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b)<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;request&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;wish_install&nbsp;:&nbsp;<span class="keywordsign">'</span>a&nbsp;<span class="constructor">OpamTypes</span>.conjunction;<br>
@@ -781,20 +829,12 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;env&nbsp;=&nbsp;(string&nbsp;*&nbsp;string)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;env_updates&nbsp;=&nbsp;(string&nbsp;*&nbsp;string&nbsp;*&nbsp;string)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;tags&nbsp;=&nbsp;<span class="constructor">OpamMisc</span>.<span class="constructor">StringSet</span>.t&nbsp;<span class="constructor">OpamMisc</span>.<span class="constructor">StringSetMap</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;compiler_repository_state&nbsp;=&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;comp_repo&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;comp_file&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;comp_descr&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;comp_checksums&nbsp;:&nbsp;string&nbsp;list;<br>
-&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;package_repository_state&nbsp;=&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_repo&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_opam&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_descr&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_archive&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_url&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_files&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.dirname&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_metadata&nbsp;:&nbsp;string&nbsp;list;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;pkg_contents&nbsp;:&nbsp;string&nbsp;list;<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;checksums&nbsp;=&nbsp;string&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;json&nbsp;=&nbsp;<span class="constructor">OpamJson</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;updates&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;created&nbsp;:&nbsp;<span class="keywordsign">'</span>a;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;updated&nbsp;:&nbsp;<span class="keywordsign">'</span>a;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;deleted&nbsp;:&nbsp;<span class="keywordsign">'</span>a;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;changed&nbsp;:&nbsp;<span class="keywordsign">'</span>a;<br>
 &nbsp;&nbsp;}<br>
 <span class="keyword">end</span></code></body></html>

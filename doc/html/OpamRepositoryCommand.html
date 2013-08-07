@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -58,21 +59,22 @@
 Repository sub-command functions.<br>
 </div>
 <hr width="100%">
-<pre><span id="VALupdate_index"><span class="keyword">val</span> update_index</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> <a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a></code></pre><div class="info">
-Update the repositories indexes (<code class="code">repo/index</code>, <code class="code">repo/index.packages</code> and
-    <code class="code">repo/index.compilers</code>). Return an updated state (including the correct
-    cache of repositories' <code class="code">prefixes</code>).<br>
+<pre><span id="VALupdate_index"><span class="keyword">val</span> update_index</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> unit</code></pre><div class="info">
+Update the repositories indexes (<code class="code">repo/index</code>.<br>
 </div>
-<pre><span id="VALupdate_pinned_packages"><span class="keyword">val</span> update_pinned_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
-Update the given pinned package.<br>
+<pre><span id="VALupdate_dev_packages"><span class="keyword">val</span> update_dev_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       verbose:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+Update the given dev packages.<br>
 </div>
-<pre><span id="VALrelink_compilers"><span class="keyword">val</span> relink_compilers</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       verbose:bool -><br>       <a href="OpamTypes.html#TYPEcompiler_repository_state">OpamTypes.compiler_repository_state</a> <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a> -> unit</code></pre><div class="info">
-<code class="code">relink_compilers old_index</code> relinks the compiler files.<br>
+<pre><span id="VALfix_compiler_descriptions"><span class="keyword">val</span> fix_compiler_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a> <a href="OpamTypes.html#TYPEupdates">OpamTypes.updates</a></code></pre><div class="info">
+Fix the compiler descriptions and display the changes if <code class="code">verbose</code>
+    is set.<br>
 </div>
-<pre><span id="VALrelink_packages"><span class="keyword">val</span> relink_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       verbose:bool -><br>       <a href="OpamTypes.html#TYPEpackage_repository_state">OpamTypes.package_repository_state</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a> -> unit</code></pre><div class="info">
-<code class="code">relink_package old_index upstream_changes</code> relinks the package
-    files and display the changes (if <code class="code">verbose is set</code>). If
-    <code class="code">upstream_changes</code> is set, these changes are also displayed.<br>
+<pre><span id="VALfix_package_descriptions"><span class="keyword">val</span> fix_package_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> <a href="OpamTypes.html#TYPEupdates">OpamTypes.updates</a></code></pre><div class="info">
+Fix the the package descriptions and display the changes if
+    <code class="code">verbose</code> is set.<br>
+</div>
+<pre><span id="VALfix_descriptions"><span class="keyword">val</span> fix_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> unit</code></pre><div class="info">
+Fix all the package and compiler descriptions.<br>
 </div>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">short:bool -> unit</code></pre><div class="info">
 List the available repositories.<br>

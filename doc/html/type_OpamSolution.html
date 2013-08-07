@@ -8,6 +8,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -60,7 +61,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.user_action&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.atom&nbsp;<span class="constructor">OpamTypes</span>.request&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.solver_result<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;check_solution&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.solver_result&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;check_solution&nbsp;:&nbsp;<span class="constructor">OpamState</span>.state&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.solver_result&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;eq_atom&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.version&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.atom<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;atom_of_package&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.atom<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;atoms_of_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.atom&nbsp;list<br>

@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -81,13 +82,16 @@ Return the version name<br>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Name.t -> Version.t -> t</code></pre><div class="info">
 Create a new pair (name x version)<br>
 </div>
-<pre><span id="VALof_filename"><span class="keyword">val</span> of_filename</span> : <code class="type">all:bool -> OpamFilename.t -> t option</code></pre><div class="info">
-Create a new pair from a filename. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version.XXX</i> with
-    various heuristics. If <code class="code">all</code> is unset, discard "opam" and "url"
-    files.<br>
+<pre><span id="VALof_filename"><span class="keyword">val</span> of_filename</span> : <code class="type">OpamFilename.t -> t option</code></pre><div class="info">
+Guess the package name from a filename. This function extracts
+    <code class="code">name</code> and <code class="code">version</code> from <i>/path/to/$name.$version/opam</i><br>
 </div>
 <pre><span id="VALof_dirname"><span class="keyword">val</span> of_dirname</span> : <code class="type">OpamFilename.Dir.t -> t option</code></pre><div class="info">
-Create a new pair from a directory name. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version/</i><br>
+Guess the package name from a directory name. This function extracts <i>    $name</i> and <i>$version</i> from <i>/path/to/$name.$version/</i><br>
+</div>
+<pre><span id="VALof_archive"><span class="keyword">val</span> of_archive</span> : <code class="type">OpamFilename.t -> t option</code></pre><div class="info">
+Guess the package name from an archive file. This function extract
+    <i>$name</i> and <i>$version</i> from <i>    /path/to/$name.$version+opam.tar.gz</i><br>
 </div>
 <pre><span id="VALto_map"><span class="keyword">val</span> to_map</span> : <code class="type">Set.t -> Version.Set.t Name.Map.t</code></pre><div class="info">
 Convert a set of pairs to a map <code class="code">name -&gt; versions</code><br>
@@ -114,8 +118,11 @@ Are two packages equal ?<br>
 Hash a package<br>
 </div>
 <pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
-List all the .opam files and the package directories in a given
-    path<br>
+Return all the package descriptions in a given directory<br>
+</div>
+<pre><span id="VALprefixes"><span class="keyword">val</span> prefixes</span> : <code class="type">OpamFilename.Dir.t -> string option Map.t</code></pre><div class="info">
+Return all the package descriptions in the current directory (and
+    their eventual prefixes).<br>
 </div>
 <br>
 <h2 id="2_Errors">Errors</h2><br>
@@ -132,5 +139,11 @@ Unavailable because the package is pinned.<br>
 </div>
 <pre><span id="VALpinned"><span class="keyword">val</span> pinned</span> : <code class="type">Name.t -> t</code></pre><div class="info">
 Create a (path)-pinned package.<br>
+</div>
+<pre><span id="VALis_pinned"><span class="keyword">val</span> is_pinned</span> : <code class="type">t -> bool</code></pre><div class="info">
+Check if a package is pinned.<br>
+</div>
+<pre><span class="keyword">module</span> <a href="OpamPackage.Parallel.html">Parallel</a>: <code class="type"><a href="OpamParallel.SIG.html">OpamParallel.SIG</a></code><code class="type">  with type G.V.t = t</code></pre><div class="info">
+Parallel executions.
 </div>
 </body></html>

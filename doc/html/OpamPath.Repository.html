@@ -12,6 +12,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -56,14 +57,11 @@
 Repository paths<br>
 </div>
 <hr width="100%">
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Repository local path: <i>$opam/repo/&lt;name&gt;</i><br>
 </div>
 <pre><span id="VALupdate_cache"><span class="keyword">val</span> update_cache</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 Update cache<br>
-</div>
-<pre><span id="VALprefix"><span class="keyword">val</span> prefix</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Prefix file <i>$opam/repo/prefix</i><br>
 </div>
 <pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 Return the version file<br>
@@ -83,7 +81,7 @@ Packages folder: <i>$opam/repo/$repo/packages</i><br>
 <pre><span id="VALremote_packages_dir"><span class="keyword">val</span> remote_packages_dir</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Remote package files: <i>$remote/packages</i><br>
 </div>
-<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       string option -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       string option -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Package folder: <i>$opam/repo/$repo/packages/XXX/$NAME.$VERSION</i><br>
 </div>
 <pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       string option -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
@@ -114,22 +112,16 @@ Return the archive folder: <i>$opam/repo/$repo/archives/</i><br>
 Return the upload folder for a given version:
       <i>$opam/repo/$repo/upload/</i><br>
 </div>
-<pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Compiler files: <i>$opam/repo/$repo/compilers/$OVERSION.comp</i><br>
-</div>
-<pre><span id="VALcompiler_descr"><span class="keyword">val</span> compiler_descr</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Compiler description files: <i>$opam/repo/$repo/compilers/$OVERSION.descr</i><br>
-</div>
 <pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Compiler files: <i>$opam/repo/$repo/compilers/</i><br>
 </div>
+<pre><span id="VALcompiler_comp"><span class="keyword">val</span> compiler_comp</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       string option -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Compiler files: <i>$opam/repo/$repo/compilers/XXX/$OVERSION.comp</i><br>
+</div>
+<pre><span id="VALcompiler_descr"><span class="keyword">val</span> compiler_descr</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       string option -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Compiler description files: <i>$opam/repo/$repo/compilers/XXX/$OVERSION.descr</i><br>
+</div>
 <pre><span id="VALremote_compilers_dir"><span class="keyword">val</span> remote_compilers_dir</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Remote compiler files: <i>$remote/compilers</i><br>
-</div>
-<pre><span id="VALtmp"><span class="keyword">val</span> tmp</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Tempory folder <i>$opam/repo/$repo/tmp</i><br>
-</div>
-<pre><span id="VALtmp_dir"><span class="keyword">val</span> tmp_dir</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Tempory folder <i>$opam/repo/$repo/tmp/$NAME.$VERSION/</i><br>
 </div>
 </body></html>

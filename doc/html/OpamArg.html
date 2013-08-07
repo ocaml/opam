@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OpamAction.html">
+<link rel="next" href="OpamClient.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
+<link title="OpamClient" rel="Chapter" href="OpamClient.html">
+<link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
+<link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
+<link title="OpamRepositoryCommand" rel="Chapter" href="OpamRepositoryCommand.html">
+<link title="OpamSolution" rel="Chapter" href="OpamSolution.html">
+<link title="OpamState" rel="Chapter" href="OpamState.html">
+<link title="OpamSwitchCommand" rel="Chapter" href="OpamSwitchCommand.html">
+<link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
+<link title="OpamFile" rel="Chapter" href="OpamFile.html">
+<link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
+<link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
+<link title="OpamJson" rel="Chapter" href="OpamJson.html">
+<link title="OpamMisc" rel="Chapter" href="OpamMisc.html">
+<link title="OpamPackage" rel="Chapter" href="OpamPackage.html">
+<link title="OpamParallel" rel="Chapter" href="OpamParallel.html">
+<link title="OpamPath" rel="Chapter" href="OpamPath.html">
+<link title="OpamProcess" rel="Chapter" href="OpamProcess.html">
+<link title="OpamRepository" rel="Chapter" href="OpamRepository.html">
+<link title="OpamRepositoryName" rel="Chapter" href="OpamRepositoryName.html">
+<link title="OpamSwitch" rel="Chapter" href="OpamSwitch.html">
+<link title="OpamSystem" rel="Chapter" href="OpamSystem.html">
+<link title="OpamTypes" rel="Chapter" href="OpamTypes.html">
+<link title="OpamVariable" rel="Chapter" href="OpamVariable.html">
+<link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
+<link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
+<link title="OpamGit" rel="Chapter" href="OpamGit.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
+<link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
+<link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Commands" rel="Section" href="#2_Commands">
+<link title="Flags" rel="Section" href="#2_Flags">
+<link title="Misc" rel="Section" href="#2_Misc">
+<link title="Global options" rel="Subsection" href="#3_Globaloptions">
+<link title="Build options" rel="Subsection" href="#3_Buildoptions">
+<link title="Converters" rel="Subsection" href="#3_Converters">
+<title>OpamArg</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OpamAction.html" title="OpamAction">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OpamClient.html" title="OpamClient">Next</a>
+</div>
+<h1>Module <a href="type_OpamArg.html">OpamArg</a></h1>
+<pre><span class="keyword">module</span> OpamArg: <code class="code">sig</code> <a href="OpamArg.html">..</a> <code class="code">end</code></pre><div class="info">
+OPAM command-line arguments<br>
+</div>
+<hr width="100%">
+<br>
+<h2 id="2_Commands">Commands</h2><br>
+<pre><span id="TYPEcommand"><span class="keyword">type</span> <code class="type"></code>command</span> = <code class="type">unit Cmdliner.Term.t * Cmdliner.Term.info</code> </pre>
+<div class="info">
+Type of commands<br>
+</div>
+
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">?at_exit:(unit -> unit) -> <a href="OpamArg.html#TYPEcommand">command</a> -> <a href="OpamArg.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
+<code class="code">run default commdands at_exit</code> build a binary which takes
+    <code class="code">commands</code> as subcommand and <code class="code">default</code> as default argument
+    (ie. which will be executed when no subcommand is
+    given). <code class="code">at_exit</code> is executed before the program exits.<br>
+</div>
+<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam<br>
+</div>
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam init<br>
+</div>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam list<br>
+</div>
+<pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam info<br>
+</div>
+<pre><span id="VALsearch"><span class="keyword">val</span> search</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam search<br>
+</div>
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam install<br>
+</div>
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam remove<br>
+</div>
+<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam reinstall<br>
+</div>
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam update<br>
+</div>
+<pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam upgrade<br>
+</div>
+<pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam config<br>
+</div>
+<pre><span id="VALremote"><span class="keyword">val</span> remote</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam remote (alias for 'opam repository')<br>
+</div>
+<pre><span id="VALrepository"><span class="keyword">val</span> repository</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam repository<br>
+</div>
+<pre><span id="VALswitch"><span class="keyword">val</span> switch</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam switch<br>
+</div>
+<pre><span id="VALpin"><span class="keyword">val</span> pin</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam pin<br>
+</div>
+<pre><span id="VALhelp"><span class="keyword">val</span> help</span> : <code class="type"><a href="OpamArg.html#TYPEcommand">command</a></code></pre><div class="info">
+opam help<br>
+</div>
+<br>
+<h2 id="2_Flags">Flags</h2><br>
+<pre><span id="VALprint_short_flag"><span class="keyword">val</span> print_short_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--short<br>
+</div>
+<pre><span id="VALinstalled_flag"><span class="keyword">val</span> installed_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--installed<br>
+</div>
+<pre><span id="VALinstalled_roots_flag"><span class="keyword">val</span> installed_roots_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--installed-root<br>
+</div>
+<pre><span id="VALfish_flag"><span class="keyword">val</span> fish_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--fish<br>
+</div>
+<pre><span id="VALzsh_flag"><span class="keyword">val</span> zsh_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--zsh<br>
+</div>
+<pre><span id="VALcsh_flag"><span class="keyword">val</span> csh_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--csh<br>
+</div>
+<pre><span id="VALsh_flag"><span class="keyword">val</span> sh_flag</span> : <code class="type">bool Cmdliner.Term.t</code></pre><div class="info">
+--sh<br>
+</div>
+<pre><span id="VALdot_profile_flag"><span class="keyword">val</span> dot_profile_flag</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option Cmdliner.Term.t</code></pre><div class="info">
+--dot-profile<br>
+</div>
+<pre><span id="VALrepo_kind_flag"><span class="keyword">val</span> repo_kind_flag</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> option Cmdliner.Term.t</code></pre><div class="info">
+--http/ --git/ --local<br>
+</div>
+<pre><span id="VALjobs_flag"><span class="keyword">val</span> jobs_flag</span> : <code class="type">int option Cmdliner.Term.t</code></pre><div class="info">
+--jobs<br>
+</div>
+<pre><span id="VALjson_flag"><span class="keyword">val</span> json_flag</span> : <code class="type">string option Cmdliner.Term.t</code></pre><div class="info">
+--json<br>
+</div>
+<pre><span id="VALpattern_list"><span class="keyword">val</span> pattern_list</span> : <code class="type">string list Cmdliner.Term.t</code></pre><div class="info">
+patterns<br>
+</div>
+<pre><span id="VALname_list"><span class="keyword">val</span> name_list</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list Cmdliner.Term.t</code></pre><div class="info">
+package names<br>
+</div>
+<pre><span id="VALrepository_list"><span class="keyword">val</span> repository_list</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list Cmdliner.Term.t</code></pre><div class="info">
+repositories<br>
+</div>
+<pre><span id="VALparam_list"><span class="keyword">val</span> param_list</span> : <code class="type">string list Cmdliner.Term.t</code></pre><div class="info">
+parameters<br>
+</div>
+<br>
+<h3 id="3_Globaloptions">Global options</h3><br>
+<pre><span id="TYPEglobal_options"><span class="keyword">type</span> <code class="type"></code>global_options</span> </pre>
+<div class="info">
+Abstract type for global options<br>
+</div>
+
+<pre><span id="VALglobal_options"><span class="keyword">val</span> global_options</span> : <code class="type"><a href="OpamArg.html#TYPEglobal_options">global_options</a> Cmdliner.Term.t</code></pre><div class="info">
+Global options<br>
+</div>
+<pre><span id="VALapply_global_options"><span class="keyword">val</span> apply_global_options</span> : <code class="type"><a href="OpamArg.html#TYPEglobal_options">global_options</a> -> unit</code></pre><div class="info">
+Apply global options<br>
+</div>
+<br>
+<h3 id="3_Buildoptions">Build options</h3><br>
+<pre><span id="TYPEbuild_options"><span class="keyword">type</span> <code class="type"></code>build_options</span> </pre>
+<div class="info">
+Abstract type for build options<br>
+</div>
+
+<pre><span id="VALbuild_options"><span class="keyword">val</span> build_options</span> : <code class="type"><a href="OpamArg.html#TYPEbuild_options">build_options</a> Cmdliner.Term.t</code></pre><div class="info">
+Build options<br>
+</div>
+<pre><span id="VALapply_build_options"><span class="keyword">val</span> apply_build_options</span> : <code class="type"><a href="OpamArg.html#TYPEbuild_options">build_options</a> -> unit</code></pre><div class="info">
+Applly build options<br>
+</div>
+<br>
+<h3 id="3_Converters">Converters</h3><br>
+<pre><span id="VALrepository_name"><span class="keyword">val</span> repository_name</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> Cmdliner.Arg.converter</code></pre><div class="info">
+Repository name converter<br>
+</div>
+<pre><span id="VALaddress"><span class="keyword">val</span> address</span> : <code class="type"><a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> Cmdliner.Arg.converter</code></pre><div class="info">
+Repository address converter<br>
+</div>
+<pre><span id="VALfilename"><span class="keyword">val</span> filename</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> Cmdliner.Arg.converter</code></pre><div class="info">
+Filename converter<br>
+</div>
+<pre><span id="VALdirname"><span class="keyword">val</span> dirname</span> : <code class="type"><a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> Cmdliner.Arg.converter</code></pre><div class="info">
+Dirnam converter<br>
+</div>
+<pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> Cmdliner.Arg.converter</code></pre><div class="info">
+Compiler converter<br>
+</div>
+<pre><span id="VALpackage_name"><span class="keyword">val</span> package_name</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> Cmdliner.Arg.converter</code></pre><div class="info">
+Package name converter<br>
+</div>
+<br>
+<h2 id="2_Misc">Misc</h2><br>
+<pre><span id="VALenum_with_default"><span class="keyword">val</span> enum_with_default</span> : <code class="type">(string * ([> `default of string ] as 'a)) list -> 'a Cmdliner.Arg.converter</code></pre><div class="info">
+Enumeration with a default command<br>
+</div>
+</body></html>

@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -486,6 +487,6 @@ let json_of_src ?encoding
   match json with `A _ | `O _ as json -&gt; value json finish e
   | _ -&gt; invalid_arg "invalid json text"
 </code></pre><br>
-<pre><span id="TYPEjson"><span class="keyword">type</span> <code class="type"></code>json</span> = <code class="type">[ `A of <a href="OpamJson.html#TYPEjson">json</a> list<br>       | `Bool of bool<br>       | `Float of float<br>       | `Null<br>       | `O of (string * <a href="OpamJson.html#TYPEjson">json</a>) list<br>       | `String of string ]</code> </pre>
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">[ `A of <a href="OpamJson.html#TYPEt">t</a> list<br>       | `Bool of bool<br>       | `Float of float<br>       | `Null<br>       | `O of (string * <a href="OpamJson.html#TYPEt">t</a>) list<br>       | `String of string ]</code> </pre>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamJson.html#TYPEjson">json</a> -> string</code></pre></body></html>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamJson.html#TYPEt">t</a> -> string</code></pre><pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="OpamJson.html#TYPEt">t</a> -> unit</code></pre><pre><span id="VALoutput"><span class="keyword">val</span> output</span> : <code class="type">unit -> unit</code></pre><pre><span id="VALset_output"><span class="keyword">val</span> set_output</span> : <code class="type">(string -> unit) -> unit</code></pre><pre><span id="VALverbose"><span class="keyword">val</span> verbose</span> : <code class="type">unit -> bool</code></pre></body></html>

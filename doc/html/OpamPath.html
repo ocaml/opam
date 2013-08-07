@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -66,11 +67,8 @@ The various paths where OPAM configuration files are stored.<br>
 Type of path root<br>
 </div>
 
-<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type">unit -> <a href="OpamPath.html#TYPEt">t</a></code></pre><div class="info">
+<pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type">unit -> <a href="OpamPath.html#TYPEt">t</a></code></pre><div class="info">
 Default root path<br>
-</div>
-<pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Root dir: <i>$opam/</i><br>
 </div>
 <pre><span id="VALstate_cache"><span class="keyword">val</span> state_cache</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 State cache<br>
@@ -87,41 +85,50 @@ Main configuration file: <i>$opam/config</i><br>
 <pre><span id="VALaliases"><span class="keyword">val</span> aliases</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 Compiler aliases<br>
 </div>
-<pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-OPAM files: <i>$opam/opam/$NAME.$VERSION.opam</i><br>
+<pre><span id="VALpackages_dir"><span class="keyword">val</span> packages_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Package directroy <i>$opam/packages/</i><br>
 </div>
-<pre><span id="VALcompiler"><span class="keyword">val</span> compiler</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Compiler files: <i>$opam/compilers/$OVERSION.comp</i><br>
+<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Package sub-directory <i>$opam/packages/$NAME/$NAME.$VERSION/</i><br>
+</div>
+<pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+OPAM files: <i>$opam/packages/$NAME/$NAME.$VERSION/opam</i><br>
+</div>
+<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+URL files: <i>$opam/packages/$NAME/$NAME.$VERSION/url</i><br>
+</div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Additional files: <i>$opam/packages/$NAME/$NAME.$VERSION/files</i><br>
+</div>
+<pre><span id="VALdev_packages_dir"><span class="keyword">val</span> dev_packages_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Tempory folder for dev packages <i>$opam/packages.dev/</i><br>
+</div>
+<pre><span id="VALdev_package"><span class="keyword">val</span> dev_package</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Tempory folder for dev packages <i>$opam/packages.dev/$NAME.$VERSION/</i><br>
+</div>
+<pre><span id="VALdescr"><span class="keyword">val</span> descr</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Description file: <i>$opam/packages/$NAME/$NAME.$VERSION/descr</i><br>
+</div>
+<pre><span id="VALarchives_dir"><span class="keyword">val</span> archives_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Archives dir<br>
+</div>
+<pre><span id="VALarchive"><span class="keyword">val</span> archive</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Archive file: <i>$opam/archives/$NAME.$VERSION+opam.tar.gz</i><br>
+</div>
+<pre><span id="VALcompiler_comp"><span class="keyword">val</span> compiler_comp</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Compiler files: <i>$opam/compilers/$VERSION/$COMP.comp</i><br>
 </div>
 <pre><span id="VALcompiler_descr"><span class="keyword">val</span> compiler_descr</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Compiler description files: <i>$opam/compilers/$OVERSION.descr</i><br>
+Compiler description files: <i>$opam/compilers/$VERSION/$COMP.descr</i><br>
 </div>
 <pre><span id="VALcompilers_dir"><span class="keyword">val</span> compilers_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Compiler files: <i>$opam/compilers/</i><br>
 </div>
-<pre><span id="VALdescr"><span class="keyword">val</span> descr</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Description file: <i>$opam/descr/$NAME.$VERSION</i><br>
-</div>
-<pre><span id="VALarchive"><span class="keyword">val</span> archive</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Archives files: <i>$opam/archives/$NAME.$VERSION.tar.gz</i><br>
-</div>
-<pre><span id="VALopam_dir"><span class="keyword">val</span> opam_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-OPAM files folder: <i>$opam/opam/</i><br>
-</div>
-<pre><span id="VALdescr_dir"><span class="keyword">val</span> descr_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Description files folder: <i>$opam/descr/</i><br>
-</div>
-<pre><span id="VALarchives_dir"><span class="keyword">val</span> archives_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Archives files folder: <i>$opam/archives/</i><br>
+<pre><span id="VALcompilers"><span class="keyword">val</span> compilers</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Compiler subdir <i>$opam/compilers/$VERSION/$COMP</i><br>
 </div>
 <pre><span id="VALrepo_index"><span class="keyword">val</span> repo_index</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 Return the repository index: <i>$opam/repo/index</i><br>
-</div>
-<pre><span id="VALpackage_index"><span class="keyword">val</span> package_index</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Return the packages index: <i>$opam/repo/index.packages</i><br>
-</div>
-<pre><span id="VALcompiler_index"><span class="keyword">val</span> compiler_index</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Return the compiler index: <i>$opam/repo/index.compilers</i><br>
 </div>
 <pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamPath.html#TYPEt">t</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Init scripts<br>

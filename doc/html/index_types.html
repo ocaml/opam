@@ -9,6 +9,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -81,10 +82,20 @@ Formula atoms for OPAM
 Basenames
 </div>
 </td></tr>
+<tr><td><a href="OpamArg.html#TYPEbuild_options">build_options</a> [<a href="OpamArg.html">OpamArg</a>]</td>
+<td><div class="info">
+Abstract type for build options
+</div>
+</td></tr>
 <tr><td align="left"><br>C</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEcause">cause</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 The possible causes of an action.
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEchecksums">checksums</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Checksums
 </div>
 </td></tr>
 <tr><td><a href="OpamFormula.html#TYPEcnf">cnf</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
@@ -102,6 +113,11 @@ Command
 a command is a list of words
 </div>
 </td></tr>
+<tr><td><a href="OpamArg.html#TYPEcommand">command</a> [<a href="OpamArg.html">OpamArg</a>]</td>
+<td><div class="info">
+Type of commands
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEcompiler">compiler</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Compiler names
@@ -115,11 +131,6 @@ Compiler constraints
 <tr><td><a href="OpamTypes.html#TYPEcompiler_map">compiler_map</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Maps of compiler names
-</div>
-</td></tr>
-<tr><td><a href="OpamTypes.html#TYPEcompiler_repository_state">compiler_repository_state</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Compiler repository state
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEcompiler_set">compiler_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -285,6 +296,11 @@ Fully qualified variables (ie.
 Generalized file type
 </div>
 </td></tr>
+<tr><td><a href="OpamFilename.html#TYPEgeneric_file">generic_file</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<td><div class="info">
+Generic filename
+</div>
+</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEgeneric_formula">generic_formula</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 A generic formula
@@ -293,6 +309,11 @@ A generic formula
 <tr><td><a href="OpamTypes.html#TYPEglobal_config">global_config</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Global configuration option
+</div>
+</td></tr>
+<tr><td><a href="OpamArg.html#TYPEglobal_options">global_options</a> [<a href="OpamArg.html">OpamArg</a>]</td>
+<td><div class="info">
+Abstract type for global options
 </div>
 </td></tr>
 <tr><td align="left"><br>I</td></tr>
@@ -304,8 +325,11 @@ When folding recursively a value <code class="code">Variable (s, v)</code> for p
 </div>
 </td></tr>
 <tr><td align="left"><br>J</td></tr>
-<tr><td><a href="OpamJson.html#TYPEjson">json</a> [<a href="OpamJson.html">OpamJson</a>]</td>
-<td></td></tr>
+<tr><td><a href="OpamTypes.html#TYPEjson">json</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+JSON
+</div>
+</td></tr>
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="OpamJson.html#TYPElexeme">lexeme</a> [<a href="OpamJson.html">OpamJson</a>]</td>
 <td><div class="info">
@@ -362,11 +386,6 @@ Packages are (<code class="code">name</code> * <code class="code">version</code>
 Map of packages
 </div>
 </td></tr>
-<tr><td><a href="OpamTypes.html#TYPEpackage_repository_state">package_repository_state</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
-<td><div class="info">
-Package repository state
-</div>
-</td></tr>
 <tr><td><a href="OpamTypes.html#TYPEpackage_set">package_set</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Set of packages
@@ -390,6 +409,11 @@ Pinned packages options
 <tr><td><a href="OpamTypes.html#TYPEppflag">ppflag</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Content of <code class="code">pp</code> variables
+</div>
+</td></tr>
+<tr><td><a href="OpamRepository.html#TYPEpull_fn">pull_fn</a> [<a href="OpamRepository.html">OpamRepository</a>]</td>
+<td><div class="info">
+Signature for pull functions
 </div>
 </td></tr>
 <tr><td align="left"><br>R</td></tr>
@@ -485,10 +509,7 @@ A state.
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#TYPEstate">state</a> [<a href="OpamState.html">OpamState</a>]</td>
-<td><div class="info">
-Client state
-</div>
-</td></tr>
+<td></td></tr>
 <tr><td><a href="OpamHeuristic.html#TYPEstate_space">state_space</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
 <td><div class="info">
 A state space.
@@ -537,6 +558,8 @@ Type of path root
 </td></tr>
 <tr><td><a href="OpamMisc.Base.html#TYPEt">t</a> [<a href="OpamMisc.Base.html">OpamMisc.Base</a>]</td>
 <td></td></tr>
+<tr><td><a href="OpamJson.html#TYPEt">t</a> [<a href="OpamJson.html">OpamJson</a>]</td>
+<td></td></tr>
 <tr><td><a href="OpamFormula.html#TYPEt">t</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 An atom is: <code class="code">name</code> * (<code class="code">relop</code> * <code class="code">version</code>) formula.
@@ -568,6 +591,11 @@ Difference between universe
 <tr><td><a href="OpamTypes.html#TYPEuniverse">universe</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Solver universe
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEupdates">updates</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+Updates
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEupload">upload</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
@@ -609,6 +637,11 @@ Variable contents
 <tr><td><a href="OpamTypes.html#TYPEvariable_contents">variable_contents</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
 <td><div class="info">
 Content of user-defined variables
+</div>
+</td></tr>
+<tr><td><a href="OpamTypes.html#TYPEvariable_map">variable_map</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>
+<td><div class="info">
+A map from variables to their contents (i.e an environment)
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.html#TYPEversion">version</a> [<a href="OpamTypes.html">OpamTypes</a>]</td>

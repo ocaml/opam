@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -126,9 +127,15 @@ Change the current working directory<br>
     recursively.
     Links behaving like directory are crossed.<br>
 </div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info">
+Return the list of files in the current directory.<br>
+</div>
 <pre><span id="VALrec_dirs"><span class="keyword">val</span> rec_dirs</span> : <code class="type">string -> string list</code></pre><div class="info">
 <code class="code">rec_dirs dir</code> return the list list of all directories recursively
     (going through symbolink links).<br>
+</div>
+<pre><span id="VALdirs"><span class="keyword">val</span> dirs</span> : <code class="type">string -> string list</code></pre><div class="info">
+Return the list of directories in the current directory.<br>
 </div>
 <pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
 Return the version of the current OCaml compiler. If no OCaml
@@ -156,9 +163,10 @@ Test wether a command exists in the environment.<br>
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code> in the correct OPAM
     environment.<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
-<code class="code">commands cmds</code> executes the commands <code class="code">cmds</code> in the correct
-    OPAM environment.  It stops whenever one command fails.<br>
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -><br>       ?keep_going:bool -> <a href="OpamSystem.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
+<code class="code">commands cmds</code> executes the commands <code class="code">cmds</code> in the correct OPAM
+    environment. It stops whenever one command fails unless <code class="code">keep_going</code> is set
+    to <code class="code">true</code>. In this case, the first error is re-raised at the end.<br>
 </div>
 <pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> in the

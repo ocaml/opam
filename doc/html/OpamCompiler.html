@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -66,16 +67,22 @@ OCaml compiler versions
 Compiler names<br>
 </div>
 <pre><span id="VALof_filename"><span class="keyword">val</span> of_filename</span> : <code class="type">OpamFilename.t -> t option</code></pre><div class="info">
-Convert a filename into a compiler name<br>
+Convert a filename into a compiler name. This function extract
+    <code class="code">name</code> from <i>/path/to/$name.comp</i>.<br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> (OpamFilename.t * OpamFilename.t option) Map.t</code></pre><div class="info">
-List the compiler available in a directory (and their eventual
-    descrition file)<br>
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">OpamFilename.Dir.t -> Set.t</code></pre><div class="info">
+List the compiler available in the global state.<br>
+</div>
+<pre><span id="VALprefixes"><span class="keyword">val</span> prefixes</span> : <code class="type">OpamFilename.Dir.t -> string option Map.t</code></pre><div class="info">
+List the compiler available in a directory (and their prefix)<br>
 </div>
 <pre><span id="VALsystem"><span class="keyword">val</span> system</span> : <code class="type">t</code></pre><div class="info">
 System compiler<br>
 </div>
 <pre><span id="VALunknown"><span class="keyword">val</span> unknown</span> : <code class="type">t -> 'a</code></pre><div class="info">
 Errors<br>
+</div>
+<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> Version.t</code></pre><div class="info">
+Return the compiler version<br>
 </div>
 </body></html>

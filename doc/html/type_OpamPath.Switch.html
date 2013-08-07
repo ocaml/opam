@@ -8,6 +8,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -79,9 +80,18 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;config_dir&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pinned&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pinned_cache&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pinned_opam&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pinned_dir&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dev_packages_dir&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dev_package&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;overlay_dir&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;overlay&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;opam&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;url&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;descr&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;files&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.switch&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 <span class="keyword">end</span></code></body></html>

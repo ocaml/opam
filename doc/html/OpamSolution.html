@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -68,7 +69,7 @@ Apply a solution returned by the solver.<br>
 <pre><span id="VALresolve_and_apply"><span class="keyword">val</span> resolve_and_apply</span> : <code class="type">?force:bool -><br>       <a href="OpamState.html#TYPEstate">OpamState.state</a> -><br>       <a href="OpamTypes.html#TYPEuser_action">OpamTypes.user_action</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a></code></pre><div class="info">
 Call the solver to get a solution and then call <code class="code">apply</code>.<br>
 </div>
-<pre><span id="VALcheck_solution"><span class="keyword">val</span> check_solution</span> : <code class="type"><a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a> -> unit</code></pre><div class="info">
+<pre><span id="VALcheck_solution"><span class="keyword">val</span> check_solution</span> : <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a> -> <a href="OpamTypes.html#TYPEsolver_result">OpamTypes.solver_result</a> -> unit</code></pre><div class="info">
 Raise an error if no solution is found or in case of error.<br>
 </div>
 <br>

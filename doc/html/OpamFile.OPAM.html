@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -74,6 +75,9 @@ Compiler constraint<br>
 <pre><span id="VALos"><span class="keyword">val</span> os</span> : <code class="type">t -> (bool * string) <a href="OpamTypes.html#TYPEgeneric_formula">OpamTypes.generic_formula</a></code></pre><div class="info">
 OS constraint<br>
 </div>
+<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a></code></pre><div class="info">
+Availability formula (OS + compiler constraints)<br>
+</div>
 <pre><span id="VALmaintainer"><span class="keyword">val</span> maintainer</span> : <code class="type">t -> string</code></pre><div class="info">
 Package maintainer<br>
 </div>
@@ -132,7 +136,10 @@ Commands to build and run the tests<br>
 Commands to build the documentation<br>
 </div>
 <pre><span id="VALmessages"><span class="keyword">val</span> messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info">
-Commands to build the documentation<br>
+Messages to display before taking action<br>
+</div>
+<pre><span id="VALpost_messages"><span class="keyword">val</span> post_messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info">
+Messages to display at end of install<br>
 </div>
 <pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> t</code></pre><div class="info">
 Construct as <code class="code">depends</code><br>

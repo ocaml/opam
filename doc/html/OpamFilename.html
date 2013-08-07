@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -79,13 +80,13 @@ Create a directory<br>
 <pre><span id="VALrec_dirs"><span class="keyword">val</span> rec_dirs</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info">
 List the sub-directory recursively<br>
 </div>
-<pre><span id="VALsub_dirs"><span class="keyword">val</span> sub_dirs</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info">
-List the sub-directory<br>
+<pre><span id="VALdirs"><span class="keyword">val</span> dirs</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info">
+List the sub-directory (do not recurse)<br>
 </div>
 <pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">Dir.t -> (unit -> 'a) -> 'a</code></pre><div class="info">
 Evaluate a function in a given directory<br>
 </div>
-<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?env:(string * string) list -><br>       ?name:string -> ?metadata:(string * string) list -> string list list -> unit</code></pre><div class="info">
+<pre><span id="VALexec"><span class="keyword">val</span> exec</span> : <code class="type">Dir.t -><br>       ?env:(string * string) list -><br>       ?name:string -><br>       ?metadata:(string * string) list -><br>       ?keep_going:bool -> string list list -> unit</code></pre><div class="info">
 Execute a list of commands in a given directory<br>
 </div>
 <pre><span id="VALmove_dir"><span class="keyword">val</span> move_dir</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
@@ -113,6 +114,26 @@ Creation from a raw string (as <i>http://&lt;path&gt;</i>)<br>
 Execute a function in a temp directory<br>
 </div>
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
+<pre><code><span id="TYPEgeneric_file"><span class="keyword">type</span> <code class="type"></code>generic_file</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTgeneric_file.D"><span class="constructor">D</span></span> <span class="keyword">of</span> <code class="type">Dir.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTgeneric_file.F"><span class="constructor">F</span></span> <span class="keyword">of</span> <code class="type">t</code></code></td>
+
+</tr></table>
+
+<div class="info">
+Generic filename<br>
+</div>
+
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">Dir.t -> Base.t -> t</code></pre><div class="info">
 Create a filename from a Dir.t and a basename<br>
 </div>
@@ -142,6 +163,9 @@ Return the base name<br>
 <pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">t -> string</code></pre><div class="info">
 Retrieves the contents from the hard disk.<br>
 </div>
+<pre><span id="VALopen_in"><span class="keyword">val</span> open_in</span> : <code class="type">t -> Pervasives.in_channel</code></pre><div class="info">
+Open a channel from a given file.<br>
+</div>
 <pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">t -> unit</code></pre><div class="info">
 Removes everything in <code class="code">filename</code> if existed.<br>
 </div>
@@ -163,11 +187,16 @@ Remove the file extension<br>
 <pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">Dir.t -> t list</code></pre><div class="info">
 List all the filenames, recursively<br>
 </div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">Dir.t -> t list</code></pre><div class="info">
+List all the filename. Do not recurse.<br>
+</div>
 <pre><span id="VALwith_contents"><span class="keyword">val</span> with_contents</span> : <code class="type">(string -> 'a) -> t -> 'a</code></pre><div class="info">
 Apply a function on the contents of a file<br>
 </div>
-<pre><span id="VALcopy_in"><span class="keyword">val</span> copy_in</span> : <code class="type">t -> Dir.t -> unit</code></pre><div class="info">
-Copy a file in a directory<br>
+<pre><span id="VALcopy_in"><span class="keyword">val</span> copy_in</span> : <code class="type">?root:Dir.t -> t -> Dir.t -> unit</code></pre><div class="info">
+Copy a file in a directory. If <code class="code">root</code> is set, copy also the
+    sub-directories. For instance, <code class="code">copy_in ~root:"/foo" "/foo/bar/gni"
+    "/toto"</code> creates <code class="code">"/toto/bar/gni"</code>.<br>
 </div>
 <pre><span id="VALmove"><span class="keyword">val</span> move</span> : <code class="type">src:t -> dst:t -> unit</code></pre><div class="info">
 Move a file<br>
@@ -194,6 +223,9 @@ Extract an archive in a given directory (it rewrites the root to
 <pre><span id="VALextract_in"><span class="keyword">val</span> extract_in</span> : <code class="type">t -> Dir.t -> unit</code></pre><div class="info">
 Extract an archive in a given directory (which should already exists)<br>
 </div>
+<pre><span id="VALextract_generic_file"><span class="keyword">val</span> extract_generic_file</span> : <code class="type"><a href="OpamFilename.html#TYPEgeneric_file">generic_file</a> -> Dir.t -> unit</code></pre><div class="info">
+Extract a generic file<br>
+</div>
 <pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type">Dir.t -> t -> bool</code></pre><div class="info">
 Check whether a filename starts by a given Dir.t<br>
 </div>
@@ -219,20 +251,31 @@ Apply a patch to a directory<br>
 <pre><span id="VALdigest"><span class="keyword">val</span> digest</span> : <code class="type">t -> string</code></pre><div class="info">
 Compute the MD5 digest of a file<br>
 </div>
+<pre><span id="VALchecksum"><span class="keyword">val</span> checksum</span> : <code class="type">t -> string list</code></pre><div class="info">
+Compute the MD5 digest a file. Return the empty list if the file
+    does not exist.<br>
+</div>
+<pre><span id="VALchecksum_dir"><span class="keyword">val</span> checksum_dir</span> : <code class="type">Dir.t -> string list</code></pre><div class="info">
+Compute the MD5 digest for all files in a directory.<br>
+</div>
 <pre><span id="VALtouch"><span class="keyword">val</span> touch</span> : <code class="type">t -> unit</code></pre><div class="info">
 Create an empty file<br>
 </div>
 <pre><span id="VALchmod"><span class="keyword">val</span> chmod</span> : <code class="type">t -> int -> unit</code></pre><div class="info">
 Change file permissions<br>
 </div>
-<pre><span id="VALaddress_of_string"><span class="keyword">val</span> address_of_string</span> : <code class="type">string -> Dir.t</code></pre><div class="info">
-Create an local of remote address from a string,
-    depending whether the string exits in the filesystem.<br>
-</div>
 <pre><span id="VALwith_flock"><span class="keyword">val</span> with_flock</span> : <code class="type">t -> ('a -> 'b) -> 'a -> 'b</code></pre><div class="info">
 File locks<br>
 </div>
+<pre><span id="VALcopy_files"><span class="keyword">val</span> copy_files</span> : <code class="type">src:Dir.t -> dst:Dir.t -> unit</code></pre><div class="info">
+<code class="code">copy_if_check t src dst</code> copies all the files from one directory
+    to another. Do nothing if OPAMDONOTCOPYFILE is set to a non-empty
+    value.<br>
+</div>
 <pre><span class="keyword">module</span> <a href="OpamFilename.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamFilename.OP.html">..</a> <code class="code">end</code></pre><pre><span class="keyword">module</span> <a href="OpamFilename.Attribute.html">Attribute</a>: <code class="code">sig</code> <a href="OpamFilename.Attribute.html">..</a> <code class="code">end</code></pre><div class="info">
 Simple structure to hanle file attributes
+</div>
+<pre><span id="VALto_attribute"><span class="keyword">val</span> to_attribute</span> : <code class="type">Dir.t -> t -> Attribute.t</code></pre><div class="info">
+Convert a filename to an attribute, relatively to a root<br>
 </div>
 </body></html>

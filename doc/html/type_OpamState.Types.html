@@ -8,6 +8,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -45,17 +46,15 @@
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.state&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;partial&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;root&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.switch;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;compiler&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;compiler_version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_version;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compiler_version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.compiler_version&nbsp;lazy_t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;opams&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">OPAM</span>.t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;descrs&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Descr</span>.t&nbsp;lazy_t&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;repositories&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Repo_config</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;prefixes&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Prefix</span>.t&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;available_packages&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="constructor">Lazy</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;aliases&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Aliases</span>.t;<br>
@@ -65,7 +64,11 @@
 &nbsp;&nbsp;&nbsp;&nbsp;installed_roots&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Installed_roots</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;reinstall&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Reinstall</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;config&nbsp;:&nbsp;<span class="constructor">OpamFile</span>.<span class="constructor">Config</span>.t;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;package_index&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;compiler_index&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="constructor">OpamTypes</span>.compiler_map;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;package_index&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.repository_name&nbsp;*&nbsp;string&nbsp;option)&nbsp;<span class="constructor">OpamTypes</span>.package_map<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lazy_t;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compiler_index&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.repository_name&nbsp;*&nbsp;string&nbsp;option)&nbsp;<span class="constructor">OpamTypes</span>.compiler_map<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lazy_t;<br>
 &nbsp;&nbsp;}<br>
 <span class="keyword">end</span></code></body></html>

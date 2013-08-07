@@ -12,6 +12,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -65,8 +66,14 @@ Parallel iterator<br>
       process (respectively before and after the child process has
       been created).<br>
 </div>
+<pre><span id="VALiter_l"><span class="keyword">val</span> iter_l</span> : <code class="type">int -><br>       OpamParallel.G.vertex list -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
+Parallel iteration on a list.<br>
+</div>
 <pre><span id="VALmap_reduce"><span class="keyword">val</span> map_reduce</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       map:(G.V.t -> 'a) -> merge:('a -> 'a -> 'a) -> init:'a -> 'a</code></pre><div class="info">
-Map-reduce on a taks graph<br>
+Map-reduce on a graph<br>
+</div>
+<pre><span id="VALmap_reduce_l"><span class="keyword">val</span> map_reduce_l</span> : <code class="type">int -><br>       OpamParallel.G.vertex list -><br>       map:(G.V.t -> 'a) -> merge:('a -> 'a -> 'a) -> init:'a -> 'a</code></pre><div class="info">
+Map-reduce on a list.<br>
 </div>
 <pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">G.V.t list -> OpamParallel.G.t</code></pre><div class="info">
 Build a graph on concurrent tasks from a list of tasks.<br>

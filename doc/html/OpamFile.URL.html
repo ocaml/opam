@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -59,7 +60,7 @@
 </div>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type">t -> string</code></pre><div class="info">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> option -> <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> t</code></pre><pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a></code></pre><div class="info">
 URL address<br>
 </div>
 <pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> <a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> option</code></pre><div class="info">

@@ -12,6 +12,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -65,6 +66,9 @@ Make a set from a list<br>
 </div>
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">t -> string</code></pre><div class="info">
 Pretty-print a set<br>
+</div>
+<pre><span id="VALto_json"><span class="keyword">val</span> to_json</span> : <code class="type">t -> <a href="OpamJson.html#TYPEt">OpamJson.t</a></code></pre><div class="info">
+Return a JSON representation of the given set<br>
 </div>
 <pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type">(elt -> bool) -> t -> elt</code></pre><div class="info">
 Find an element in the list<br>

@@ -11,6 +11,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -68,24 +69,20 @@ Create a backend from a <code class="code">VCS</code> implementation.<br>
 </tr>
 </table>
 <hr width="100%">
-<pre><span id="VALpull_file"><span class="keyword">val</span> pull_file</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
-<code class="code">pull_file name local_dir remote_file</code> pull the contents of
-      <code class="code">remote_file</code> into <code class="code">local_dir</code>.<br>
-</div>
-<pre><span id="VALpull_dir"><span class="keyword">val</span> pull_dir</span> : <code class="type"><a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
-<code class="code">pull_dir name local_dir remote_dir</code> pull the contents of
-      <code class="code">remote_dir</code> into <code class="code">local_dir</code>.<br>
+<pre><span id="VALpull_url"><span class="keyword">val</span> pull_url</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> <a href="OpamTypes.html#TYPEgeneric_file">OpamTypes.generic_file</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
+<code class="code">pull_url package local_dir remote_url</code> pull the contents of
+      <code class="code">remote_url</code> into <code class="code">local_dir</code>. Can return either a file or a
+      directory.<br>
 </div>
 <pre><span id="VALpull_repo"><span class="keyword">val</span> pull_repo</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit</code></pre><div class="info">
-Pull a repository. Usually very similar to <code class="code">pull_dir</code> but some
-      backends have special needs.<br>
+<code class="code">pull_repo</code> pull the contents of a repository.<br>
 </div>
 <pre><span id="VALpull_archive"><span class="keyword">val</span> pull_archive</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
-Pull an archive in a repository. Usually very similar to
-      <code class="code">pull_file</code> but some backends have special needs.<br>
+<code class="code">pull_archive repo archive</code> pull <code class="code">archive</code> in the given
+      repository.<br>
 </div>
 <pre><span id="VALrevision"><span class="keyword">val</span> revision</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option</code></pre><div class="info">
-Return the (optional) revision of a given repository. Useful
-      mainly when using CVS backends.<br>
+Return the (optional) revision of a given repository. Only useful
+      for VCS backends.<br>
 </div>
 </body></html>

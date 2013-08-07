@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -59,6 +60,9 @@ Package descriptions: <code class="code">$opam/descr/</code><br>
 </div>
 <hr width="100%">
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> t</code></pre><div class="info">
+Create a an abstract description file from a string<br>
+</div>
 <pre><span id="VALsynopsis"><span class="keyword">val</span> synopsis</span> : <code class="type">t -> string</code></pre><div class="info">
 Return the first line<br>
 </div>

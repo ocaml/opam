@@ -13,6 +13,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -149,12 +150,6 @@ right indenting<br>
 <pre><span id="VALsub_at"><span class="keyword">val</span> sub_at</span> : <code class="type">int -> string -> string</code></pre><div class="info">
 Cut a string<br>
 </div>
-<pre><span id="VALgit_of_string"><span class="keyword">val</span> git_of_string</span> : <code class="type">string -> string * string option</code></pre><div class="info">
-Cut a git string of the form /git/address<code class="code">#SHA</code> into (address * commit)<br>
-</div>
-<pre><span id="VALhg_of_string"><span class="keyword">val</span> hg_of_string</span> : <code class="type">string -> string * string option</code></pre><div class="info">
-same as <code class="code">git_of_string</code> but for mercurial paths<br>
-</div>
 <br>
 <h2 id="2_Misc">Misc</h2><br>
 <pre><span id="VALreset_env_value"><span class="keyword">val</span> reset_env_value</span> : <code class="type">prefix:string -> string -> string list</code></pre><div class="info">
@@ -181,6 +176,9 @@ Lazy environment<br>
 <pre><span id="VALpretty_backtrace"><span class="keyword">val</span> pretty_backtrace</span> : <code class="type">unit -> string</code></pre><div class="info">
 Return a pretty-printed backtrace<br>
 </div>
+<pre><span id="VALprettify_path"><span class="keyword">val</span> prettify_path</span> : <code class="type">string -> string</code></pre><div class="info">
+Prettify a local path (eg. replace /home/me/ by '~')<br>
+</div>
 <pre><span class="keyword">module</span> <a href="OpamMisc.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamMisc.OP.html">..</a> <code class="code">end</code></pre><pre><span id="VALterminal_columns"><span class="keyword">val</span> terminal_columns</span> : <code class="type">unit -> int</code></pre><div class="info">
 When <code class="code">stdout</code> refers to a terminal, query the number of columns.
     Otherwise return <code class="code">max_int</code>.<br>
@@ -194,4 +192,6 @@ Guess the shell compat-mode<br>
 <pre><span id="VALguess_dot_profile"><span class="keyword">val</span> guess_dot_profile</span> : <code class="type">[ `bash | `csh | `fish | `sh | `zsh ] -> string</code></pre><div class="info">
 Guess the location of .profile<br>
 </div>
-</body></html>
+<br>
+/<br>
+<pre><span id="VALdebug"><span class="keyword">val</span> debug</span> : <code class="type">bool Pervasives.ref</code></pre></body></html>

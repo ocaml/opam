@@ -12,6 +12,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -77,7 +78,7 @@ Is the solution empty ?<br>
 <pre><span id="VALdelete_or_update"><span class="keyword">val</span> delete_or_update</span> : <code class="type"><a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> bool</code></pre><div class="info">
 Does the solution implies deleting or updating a package<br>
 </div>
-<pre><span id="VALprint_solution"><span class="keyword">val</span> print_solution</span> : <code class="type">messages:(<a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> string list) -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> unit</code></pre><div class="info">
+<pre><span id="VALprint_solution"><span class="keyword">val</span> print_solution</span> : <code class="type">messages:(<a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> string list) -><br>       rewrite:(<a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a>) -><br>       <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> unit</code></pre><div class="info">
 Display a solution<br>
 </div>
 <pre><span id="VALresolve"><span class="keyword">val</span> resolve</span> : <code class="type">?verbose:bool -><br>       <a href="OpamTypes.html#TYPEuniverse">OpamTypes.universe</a> -><br>       <a href="OpamTypes.html#TYPEatom">OpamTypes.atom</a> <a href="OpamTypes.html#TYPErequest">OpamTypes.request</a> -><br>       (<a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a>, string) <a href="OpamTypes.html#TYPEresult">OpamTypes.result</a></code></pre><div class="info">

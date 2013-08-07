@@ -12,6 +12,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -57,47 +58,47 @@ Switch related paths<br>
 </div>
 <hr width="100%">
 <pre><span id="VALroot"><span class="keyword">val</span> root</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Root dir: <i>$opam/$OVERSION</i><br>
+Root dir: <i>$opam/$switch</i><br>
 </div>
 <pre><span id="VALlock"><span class="keyword">val</span> lock</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-lock file<br>
+lock file: <i>$opam/lock</i><br>
 </div>
 <pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Library path for a given package:
-      <i>$opam/$OVERSION/lib/NAME</i><br>
+      <i>$opam/$switch/lib/$name</i><br>
 </div>
 <pre><span id="VALlib_dir"><span class="keyword">val</span> lib_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Library path: <i>$opam/$OVERSION/lib/</i><br>
+Library path: <i>$opam/$switch/lib</i><br>
 </div>
 <pre><span id="VALstublibs"><span class="keyword">val</span> stublibs</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 DLL paths<br>
 </div>
 <pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-toplevel path: <i>$opam/$OVERSION/lib/toplevel</i><br>
+toplevel path: <i>$opam/$switch/lib/toplevel</i><br>
 </div>
 <pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Documentation path for a given package:
-      <i>$opam/$OVERSION/doc/NAME</i><br>
+      <i>$opam/$switch/doc/$name</i><br>
 </div>
 <pre><span id="VALdoc_dir"><span class="keyword">val</span> doc_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Documentation path: <i>$opam/$OVERSION/doc/</i><br>
+Documentation path: <i>$opam/$switch/doc/</i><br>
 </div>
 <pre><span id="VALshare_dir"><span class="keyword">val</span> share_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Shared directory: <i>$opam/$OVERSION/share</i><br>
+Shared directory: <i>$opam/$switch/share</i><br>
 </div>
 <pre><span id="VALshare"><span class="keyword">val</span> share</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Share directory for a given package: <i>$opam/$OVERSION/share/$package</i><br>
+Share directory for a given package: <i>      $opam/$switch/share/$package</i><br>
 </div>
 <pre><span id="VALman_dir"><span class="keyword">val</span> man_dir</span> : <code class="type">?num:string -> <a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Man pages path: <i>$opam/$OVERSION/man/</i>. The optional
+Man pages path: <i>$opam/$switch/man/</i>. The optional
       <code class="code">num</code> argument will add a <i>manN </i> suffix if specified<br>
 </div>
 <pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Installed binaries: <i>$opam/$OVERSION/bin</i><br>
+Installed binaries: <i>$opam/$switch/bin</i><br>
 </div>
 <pre><span id="VALinstalled"><span class="keyword">val</span> installed</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 List of installed packages with their version:
-      <i>$opam/$OVERSION/installed</i><br>
+      <i>$opam/$switch/installed</i><br>
 </div>
 <pre><span id="VALinstalled_roots"><span class="keyword">val</span> installed_roots</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
 List of packages expliciterly installed by the user: <i>      $opam/$switch/installed.roots</i><br>
@@ -105,51 +106,61 @@ List of packages expliciterly installed by the user: <i>      $opam/$switch/inst
 <pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
 Tempory folders used to decompress and compile
       the corresponding archives:
-      <i>$opam/$OVERSION/build/$NAME-$VERSION</i><br>
+      <i>$opam/$switch/build/$packages</i><br>
 </div>
 <pre><span id="VALbuild_ocaml"><span class="keyword">val</span> build_ocaml</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Tempory folders used to decompress and compile
-      the OCaml compiler:
-      <i>$opam/$OVERSION/build/_</i><br>
+Tempory folders used to decompress and compile the OCaml
+      compiler: <i>$opam/$switch/build/ocaml</i><br>
 </div>
 <pre><span id="VALbuild_dir"><span class="keyword">val</span> build_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Tempory folder: <i>$opam/$OVERSION/build</i><br>
+Tempory folder: <i>$opam/$switch/build</i><br>
 </div>
 <pre><span id="VALbuild_install"><span class="keyword">val</span> build_install</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Tempory location of install files:
-      <i>$opam/$OVERSION/build/$NAME.$VERSION/$NAME.install</i><br>
+Tempory location of install files: <i>      $opam/$switch/build/$package/$name.install</i><br>
 </div>
 <pre><span id="VALbuild_config"><span class="keyword">val</span> build_config</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Tempory location of config files: <i>      $opam/$OVERSION/build/$NAME.$VERSION/$NAME.config</i><br>
+Tempory location of config files: <i>      $opam/$switch/build/$packages/$name.config</i><br>
 </div>
 <pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Installed files for a given package:
-      <i>$opam/$OVERSION/install/$NAME.install</i><br>
+Installed files for a given package: <i>      $opam/$switch/install/$name.install</i><br>
 </div>
 <pre><span id="VALinstall_dir"><span class="keyword">val</span> install_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Installed files: <i>$opam/$OVERSION/install/</i><br>
+Installed files: <i>$opam/$switch/install/</i><br>
 </div>
 <pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Packages to reinstall on next upgrade:
-      <i>$opam/$OVERSION/reinstall</i><br>
+Packages to reinstall on next upgrade: <i>      $opam/$switch/reinstall</i><br>
 </div>
 <pre><span id="VALconfig"><span class="keyword">val</span> config</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Compile and link flags for a given package:
-      <i>$opam/$OVERSION/config/$NAME.config</i><br>
+Compile and link flags for a given package: <i>      $opam/$switch/config/$name.config</i><br>
 </div>
 <pre><span id="VALconfig_dir"><span class="keyword">val</span> config_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Configuration folder: <i>$opam/$OVERSION/config</i><br>
+Configuration folder: <i>$opam/$switch/config</i><br>
 </div>
 <pre><span id="VALpinned"><span class="keyword">val</span> pinned</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Pinned package file<br>
+Pinned package file: <i>$opam/$switch/pinned</i><br>
 </div>
-<pre><span id="VALpinned_cache"><span class="keyword">val</span> pinned_cache</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Build dir for all pinned packages<br>
+<pre><span id="VALdev_packages_dir"><span class="keyword">val</span> dev_packages_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Build dir for all pinned packages: <i>      $opam/$switch/packages.dev/</i><br>
 </div>
-<pre><span id="VALpinned_opam"><span class="keyword">val</span> pinned_opam</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
-Cached OPAM file<br>
+<pre><span id="VALdev_package"><span class="keyword">val</span> dev_package</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Build dir for a given pinned package: <i>      $opam/$switch/packages.dev/$name.$version/</i><br>
 </div>
-<pre><span id="VALpinned_dir"><span class="keyword">val</span> pinned_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
-Build dir for a given pinned package<br>
+<pre><span id="VALoverlay_dir"><span class="keyword">val</span> overlay_dir</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Switch metadata overlay (over the global metadata): <i>      $opam/$switch/overlay/</i><br>
+</div>
+<pre><span id="VALoverlay"><span class="keyword">val</span> overlay</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Switch metadata overlay (over the global metadata): <i>      $opam/$switch/overlay/$name.$version</i><br>
+</div>
+<pre><span id="VALopam"><span class="keyword">val</span> opam</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+OPAM overlay: <i>      $opam/$switch/cache/$name.$version/opam</i><br>
+</div>
+<pre><span id="VALurl"><span class="keyword">val</span> url</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+URL overlay: <i>      $opam/$switch/overlay/$name.$version/url</i><br>
+</div>
+<pre><span id="VALdescr"><span class="keyword">val</span> descr</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info">
+Descr orverlay<br>
+</div>
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a> -> <a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a> -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a></code></pre><div class="info">
+Files overlay<br>
 </div>
 </body></html>

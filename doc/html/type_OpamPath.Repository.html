@@ -8,6 +8,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -45,9 +46,8 @@
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;create&nbsp;:&nbsp;<span class="constructor">OpamPath</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_cache&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;prefix&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remote_version&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;raw_config&nbsp;:<br>
@@ -55,7 +55,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;config&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;packages_dir&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remote_packages_dir&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;package&nbsp;:<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;packages&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;opam&nbsp;:<br>
@@ -76,13 +76,12 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;archives_dir&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;upload_dir&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_descr&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers_dir&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_comp&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_descr&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.filename<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remote_compilers_dir&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;tmp&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;tmp_dir&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.dirname<br>
 <span class="keyword">end</span></code></body></html>

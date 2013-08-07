@@ -11,6 +11,7 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="OpamAction" rel="Chapter" href="OpamAction.html">
+<link title="OpamArg" rel="Chapter" href="OpamArg.html">
 <link title="OpamClient" rel="Chapter" href="OpamClient.html">
 <link title="OpamConfigCommand" rel="Chapter" href="OpamConfigCommand.html">
 <link title="OpamPinCommand" rel="Chapter" href="OpamPinCommand.html">
@@ -51,10 +52,10 @@
 &nbsp;</div>
 <h1>Module <a href="type_OpamState.Types.html">OpamState.Types</a></h1>
 <pre><span class="keyword">module</span> Types: <code class="code">sig</code> <a href="OpamState.Types.html">..</a> <code class="code">end</code></pre><div class="info">
-To be able to open <code class="code">OpamState.Types</code><br>
+Client state<br>
 </div>
 <hr width="100%">
-<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type"><a href="OpamState.html#TYPEstate">OpamState.state</a></code> = {</pre><table class="typetable">
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -87,7 +88,7 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.compiler_version">compiler_version</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a></code>;</code></td>
+<code><span id="TYPEELTt.compiler_version">compiler_version</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> lazy_t</code>;</code></td>
 
 </tr>
 <tr>
@@ -109,13 +110,6 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTt.repositories">repositories</span>&nbsp;:<code class="type">OpamFile.Repo_config.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a></code>;</code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code>&nbsp;&nbsp;</code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTt.prefixes">prefixes</span>&nbsp;:<code class="type">OpamFile.Prefix.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a></code>;</code></td>
 
 </tr>
 <tr>
@@ -185,14 +179,14 @@ To be able to open <code class="code">OpamState.Types</code><br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.package_index">package_index</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+<code><span id="TYPEELTt.package_index">package_index</span>&nbsp;:<code class="type">(<a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> * string option) <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a> lazy_t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.compiler_index">compiler_index</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code>;</code></td>
+<code><span id="TYPEELTt.compiler_index">compiler_index</span>&nbsp;:<code class="type">(<a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> * string option) <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a> lazy_t</code>;</code></td>
 
 </tr></table>
 }
