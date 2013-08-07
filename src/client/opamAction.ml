@@ -115,6 +115,9 @@ let install_package t nv =
       let warnings = ref [] in
       let check ~src ~dst base =
         let src_file = OpamFilename.create src base.c in
+        if base.optional && not (OpamFilename.exists src_file) then
+          log "Not installing %s is not present and optional."
+            (OpamFilename.to_string src_file);
         if not base.optional && not (OpamFilename.exists src_file) then (
           warnings := (dst, base.c) :: !warnings
         );
