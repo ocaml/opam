@@ -56,7 +56,7 @@ Build and \fBrun\fR the package unit\-tests. This is equivalent to setting \fB$O
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
-Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a non\-empty value.
 .TP 4
 \fB\-\-git\-version\fR
 Print the git version if it exists and exit.
@@ -70,14 +70,14 @@ Do not install base packages (useful for testing purposes). This is equivalent t
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet when installing a new compiler.
 .TP 4
-\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/home/louis/.opam)
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=~/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
 Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
-Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
+Be more verbose. This is equivalent to setting \fB$OPAMVERBOSE\fR to a non\-empty value.
 .TP 4
 \fB\-\-version\fR
 Show version information.

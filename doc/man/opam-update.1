@@ -12,7 +12,7 @@ opam\-update \- Update the list of available packages.
 \fBopam update\fR [\fIOPTION\fR]... [\fIREPOSITORIES\fR]...
 .SH DESCRIPTION
 .P
-This command updates each repository that has been previously set up by the \fBopam init\fR or \fBopam repository\fR commands. The list of packages that can be upgraded will be printed out, and the user can use \fBopam upgrade\fR to upgrade those.
+This command updates each repository that has been previously set up by the \fBopam init\fR or \fBopam repository\fR commands. The list of packages that can be upgraded will be printed out, and the user can use \fBopam upgrade\fR to upgrade them.
 .SH ARGUMENTS
 .TP 4
 \fIREPOSITORIES\fR
@@ -24,12 +24,15 @@ Set the maximal number of concurrent jobs to use. You can also set it using the 
 .TP 4
 \fB\-\-json\fR=\fIFILENAME\fR
 Save the result output of an OPAM run in a computer\-readable file
+.TP 4
+\fB\-\-sync\-archives\fR
+Always sync the remote archives files. This is not a good idea to enable this, unless your really know what your are doing: this flag will make OPAM try to download the archive files for ALL the available packages.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
-Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a non\-empty value.
 .TP 4
 \fB\-\-git\-version\fR
 Print the git version if it exists and exit.
@@ -43,14 +46,14 @@ Do not install base packages (useful for testing purposes). This is equivalent t
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet when installing a new compiler.
 .TP 4
-\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/home/louis/.opam)
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=~/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
 Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
-Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
+Be more verbose. This is equivalent to setting \fB$OPAMVERBOSE\fR to a non\-empty value.
 .TP 4
 \fB\-\-version\fR
 Show version information.

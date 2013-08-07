@@ -12,9 +12,9 @@ opam\-config \- Display configuration options for packages.
 \fBopam config\fR [\fIOPTION\fR]... [\fIDOMAIN\fR] [\fIARG\fR]...
 .SH DESCRIPTION
 .P
-This command uses opam state to output information on how to use installed libraries, updating the user’s PATH, and substitute variables used in opam packages.
+This command uses OPAM state to output information on how to use installed libraries, update the \fBPATH\fR, and substitute variables used in OPAM packages.
 .P
-Apart from \fBopam config env\fR, most of these commands are used by opam internally, and thus are of limited interest for the casual user.
+Apart from \fBopam config env\fR, most of these commands are used by OPAM internally, and are of limited interest for the casual user.
 .SH ARGUMENTS
 .TP 4
 \fIDOMAIN\fR
@@ -71,7 +71,7 @@ Use zsh\-compatible mode for configuring OPAM.
 .SH DOMAINS
 .TP 4
 \fBenv\fR
-Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH according to the current selected compiler. The output of this command is meant to be evaluated by a shell, for example by doing \fBeval `opam config env`\fR.
+Return the environment variables PATH, MANPATH, OCAML_TOPLEVEL_PATH and CAML_LD_LIBRARY_PATH according to the currently selected compiler. The output of this command is meant to be evaluated by a shell, for example by doing \fBeval `opam config env`\fR.
 .TP 4
 \fBsetup\fR
 Configure global and user parameters for OPAM. Use \fB opam config setup\fR to display more options. Use \fB\-\-list\fR to display the current configuration options. You can use this command to automatically update: (i) user\-configuration files such as ~/.profile and ~/.ocamlinit; and (ii) global\-configaration files controlling which shell scripts are loaded on startup, such as auto\-completion. These configuration options can be updated using: \fBopam config setup \-\-global\fR to setup the global configuration files stored in \fB~/.opam/opam\-init/\fR and \fBopam config setup \-\-user\fR to setup the user ones. To modify both the global and user configuration, use \fBopam config setup \-\-all\fR.
@@ -107,7 +107,7 @@ returns assembly compile options.
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
-Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a non\-empty value.
 .TP 4
 \fB\-\-git\-version\fR
 Print the git version if it exists and exit.
@@ -121,14 +121,14 @@ Do not install base packages (useful for testing purposes). This is equivalent t
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet when installing a new compiler.
 .TP 4
-\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/home/louis/.opam)
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=~/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
 Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
-Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
+Be more verbose. This is equivalent to setting \fB$OPAMVERBOSE\fR to a non\-empty value.
 .TP 4
 \fB\-\-version\fR
 Show version information.

@@ -12,7 +12,7 @@ opam\-remove \- Remove a list of packages.
 \fBopam remove\fR [\fIOPTION\fR]... [\fIPACKAGES\fR]...
 .SH DESCRIPTION
 .P
-This command removes (i.e. uninstall) one or more packages currently installed in the currently selected compiler. To remove packages installed in another compiler, you need to switch compilers using \fBopam switch\fR or use the \fB\-\-switch\fR flag. This command is the inverse of \fBopam\-install\fR.
+This command removes (i.e. uninstalls) one or more packages currently installed in the currently selected compiler switch. To remove packages installed in another compiler, you need to switch compilers using \fBopam switch\fR or use the \fB\-\-switch\fR flag. This command is the inverse of \fBopam\-install\fR.
 .SH ARGUMENTS
 .TP 4
 \fIPACKAGES\fR
@@ -20,7 +20,7 @@ List of package names.
 .SH OPTIONS
 .TP 4
 \fB\-a\fR, \fB\-\-auto\-remove\fR
-Remove all the packages which have not been explicitly installed and which are not necessary anymore. It is possible to enforce keeping an already installed package by running \fBopam install <pkg>\fR. This flag can also be set using the \fB$OPAMAUTOREMOVE\fR configuration variable.
+Remove all the packages which have not been explicitly installed and which are not necessary anymore. It is possible to prevent the removal of an already\-installed package by running \fBopam install <pkg>\fR. This flag can also be set using the \fB$OPAMAUTOREMOVE\fR configuration variable.
 .TP 4
 \fB\-b\fR, \fB\-\-keep\-build\-dir\fR
 Keep the build directory. This is equivalent to setting \fB$OPAMKEEPBUILDIR\fR to a non\-empty string.
@@ -59,7 +59,7 @@ Build and \fBrun\fR the package unit\-tests. This is equivalent to setting \fB$O
 These options are common to all commands.
 .TP 4
 \fB\-\-debug\fR
-Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a value greater or equal to 2.
+Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a non\-empty value.
 .TP 4
 \fB\-\-git\-version\fR
 Print the git version if it exists and exit.
@@ -73,14 +73,14 @@ Do not install base packages (useful for testing purposes). This is equivalent t
 \fB\-q\fR, \fB\-\-quiet\fR
 Be quiet when installing a new compiler.
 .TP 4
-\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=/home/louis/.opam)
+\fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=~/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
 Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
 .TP 4
 \fB\-v\fR, \fB\-\-verbose\fR
-Be more verbose. This is equivalent to setting either \fB$OPAMDEBUG\fR to a value greater or equal to 1 or \fB$OPAMVERBOSE\fR to a non\-empty string.
+Be more verbose. This is equivalent to setting \fB$OPAMVERBOSE\fR to a non\-empty value.
 .TP 4
 \fB\-\-version\fR
 Show version information.
