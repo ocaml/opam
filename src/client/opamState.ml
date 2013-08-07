@@ -1271,15 +1271,26 @@ let upgrade_to_1_1 () =
     (* Remove pinned cache *)
     OpamSwitch.Map.iter (fun switch _ ->
         let pinned_cache = OpamPath.Switch.root root switch / "pinned.cache" in
-        OpamGlobals.msg
-          "Removing the cache of pinned packages for the switch %s ..."
-          (OpamSwitch.to_string switch);
-        OpamFilename.rmdir pinned_cache;
+        if OpamFilename.exists_dir pinned_cache then (
+          OpamGlobals.msg
+            "Removing the cache of pinned packages for the switch %s ...\n"
+            (OpamSwitch.to_string switch);
+          OpamFilename.rmdir pinned_cache;
+        )
       ) aliases;
 
     (* Fix all the descriptions *)
     let t = load_state ~save_cache:false "update-to-1.1." in
     !fix_descriptions_hook t ~verbose:false;
+
+    (* Fix the pinned packages *)
+    OpamSwitch.Map.iter (fun switch _ ->
+        let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
+        OpamPackage.Name.Map.iter (fun name _ ->
+            let t = { t with switch } in
+            if is_locally_pinned t name then add_pinned_overlay t name
+          ) pinned
+      ) aliases;
 
     OpamGlobals.msg
       "** Upgrade complete. You can continue to use OPAM as usual. **\n;";
