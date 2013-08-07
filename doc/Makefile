@@ -28,5 +28,5 @@ html:
 	  -I ../_obuild/opam-repositories -I ../_obuild/opam-client \
 	  -I ../_obuild/opam-lib -I ../_obuild/cudf -I ../_obuild/dose \
 	  -I ../_obuild/re -I ../_obuild/unix -I ../_obuild/extlib \
-	  -I ../_obuild/arg -I ../_obuild/graph \
+	  -I ../_obuild/arg -I ../_obuild/graph -I ../_obuild/cmdliner \
 	  ../src/**/*.mli -html -d html/
