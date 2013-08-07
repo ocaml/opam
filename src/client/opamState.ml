@@ -921,10 +921,17 @@ let keys map =
 
 (* Check that the dev packages are installed -- if not, just remove
    the tempory files. *)
-let consistency_checks dir installed =
+let consistency_checks dir pinned installed all_installed =
   let dev_packages = dev_packages dir in
   OpamPackage.Map.iter (fun nv dir ->
-      if not (OpamPackage.Set.mem nv installed) then clean_dir dir nv
+      let name = OpamPackage.name nv in
+      if OpamPackage.is_pinned nv then (
+        if not (OpamPackage.Name.Map.mem name pinned)
+        || OpamPackage.Set.for_all (fun nv -> OpamPackage.name nv <> name) installed
+        then
+          clean_dir dir nv
+      ) else if not (OpamPackage.Set.mem nv all_installed) then
+        clean_dir dir nv
     ) dev_packages;
   let files = OpamFilename.files dir in
   List.iter (fun f ->
@@ -938,7 +945,8 @@ let dev_packages t =
   OpamPackage.Set.union (keys global) (keys switch)
 
 let global_consistency_checks t =
-  consistency_checks (OpamPath.dev_packages_dir t.root) (all_installed t);
+  consistency_checks (OpamPath.dev_packages_dir t.root)
+    t.pinned t.installed (all_installed t);
   let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases t.root) in
   if OpamSwitch.Map.exists (fun _ c -> c =  OpamCompiler.system) aliases then
     let comp_f = OpamPath.compiler_comp t.root OpamCompiler.system in
@@ -948,7 +956,8 @@ let global_consistency_checks t =
     )
 
 let switch_consistency_checks t =
-  consistency_checks (OpamPath.Switch.dev_packages_dir t.root t.switch) t.installed
+  consistency_checks (OpamPath.Switch.dev_packages_dir t.root t.switch)
+    t.pinned t.installed t.installed
 
 let loads = ref []
 let saves = ref []
