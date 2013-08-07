@@ -633,7 +633,11 @@ let copy_files t nv dst =
 
 let add_pinned_overlay t name =
   let ov = overlay_of_name t name in
-  let opam_f = OpamPath.opam t.root ov in
+  let opam_f =
+    let path, _ = locally_pinned_package t name in
+    let dir = OpamFilename.raw_dir (fst path) in
+    if OpamFilename.exists (dir // "opam") then dir // "opam"
+    else OpamPath.opam t.root ov in
   let descr_f = OpamPath.descr t.root ov in
   let files_f = OpamPath.files t.root ov in
   let nv = OpamPackage.pinned name in
@@ -1984,11 +1988,16 @@ let update_dev_package t nv =
     | kind   ->
       log "updating %s:%s"
         (string_of_address remote_url) (string_of_repository_kind kind);
-      let dirname = dev_package t nv in
-      match OpamRepository.pull_url kind nv dirname remote_url with
-      | Not_available u -> OpamGlobals.error "%s is not available anymore!" u; skip
-      | Up_to_date _    -> skip
-      | Result _        -> needs_update
+        let dirname = dev_package t nv in
+        let r = OpamRepository.pull_url kind nv dirname remote_url in
+        if kind = `local && OpamFilename.exists (dirname // "opam") then (
+          let dst = OpamPath.Switch.opam t.root t.switch nv in
+          OpamFilename.copy ~src:(dirname // "opam") ~dst;
+        );
+        match r with
+        | Not_available u -> OpamGlobals.error "%s is not available anymore!" u; skip
+        | Up_to_date _    -> skip
+        | Result _        -> needs_update
 
 let update_dev_packages t =
   log "update-dev-packages";
