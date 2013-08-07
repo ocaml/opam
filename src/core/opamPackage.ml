@@ -28,9 +28,11 @@ module Version = struct
 
   let to_string = function
     | Version x -> x
-    | Pinned    -> "(pinned)"
+    | Pinned    -> "pinned"
 
-  let of_string x = Version x
+  let of_string = function
+    | "pinned"  -> Pinned
+    | v         -> Version v
 
   let pinned = Pinned
 
