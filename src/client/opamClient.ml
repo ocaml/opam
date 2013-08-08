@@ -72,7 +72,9 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
     | `all         -> t.packages
     | `installed   -> t.installed
     | `roots       -> t.installed_roots
-    | `installable -> OpamSolver.installable (OpamState.universe t Depends) in
+    | `installable ->
+      let installable = OpamSolver.installable (OpamState.universe t Depends) in
+      OpamPackage.Set.union t.installed installable in
   let names =
     OpamPackage.Set.fold
       (fun nv set -> OpamPackage.Name.Set.add (OpamPackage.name nv) set)
