@@ -1,4 +1,4 @@
 bin: [
   "_obuild/opam/opam.asm" { "opam" }
-  "_obuild/opam-mk-repo/opam-mk-repo.asm" { "opam-mk-repo" }
+  "_obuild/opam-admin/opam-admin.asm" { "opam-admin" }
 ]
