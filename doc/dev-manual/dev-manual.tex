@@ -990,7 +990,8 @@ The syntax of {\tt .comp} files follows the one described in
     opam-version: "1"
     name:       STRING
     src:        STRING
-    make:       [ STRING+ ]
+    ?make:      STRING+ ]
+    ?build:     [[STRING+]]
     ?patches:   [ STRING+ ]
     ?configure: [ STRING+ ]
     ?bytecomp:  [ STRING+ ]
@@ -1015,14 +1016,22 @@ The syntax of {\tt .comp} files follows the one described in
 \item {\tt name} is the compiler name, it should be identical to the filename.
 \item {\tt src} is the location where this version can be downloaded. It can be:
 \begin{itemize}
-\item an archive available in the local filesystem
-\item an archive available via {\tt http} or {\tt ftp}
-\item a version-controlled repository under {\tt svn} or {\tt git}
-  (with the expectation that these tools are installed on the user host).
+\item A directory on the local file system (which will be linked or,
+  if file system doesn't support links, copied to the build directory)
+\item An archive file on the local file system (which will be unpacked
+  into the build directory)
+\item An archive file at a URL that is understood by either curl or
+  wget (which will be fetched using either curl (if that available) or
+  wget (if curl is not available) and unpacked into the build
+  directory)
+\item a version-controlled repository under {\tt git} if the string
+  starts by {\tt git@} or ends by {\tt .git}, or a specific commit,
+  tag or branch in that repository if the string ends by \verb+#<SHA1>+
+  or \verb+#<tag-name>+ or \verb+#<branch-name>+.
 \end{itemize}
 
-\item {\tt patches} are optional patch addresses, available via {\tt http}, {\tt ftp}
-  or locally on the filesystem.
+\item {\tt patches} are optional patch addresses, available via {\tt
+  http} or locally on the filesystem.
 
 \item {\tt configure} are the optional flags to pass to the configure
   script. The order is relevant: {\tt --prefix=\$opam/SWITCH/} will be automatically
@@ -1031,7 +1040,9 @@ The syntax of {\tt .comp} files follows the one described in
   and {\tt --mandir}, then every {\tt --prefix} will be ignored by {\tt configure}.
 
 \item {\tt make} are the flags to pass to {\tt make}.
-  It must at least contain some target like {\tt world} or {\tt world.opt}.
+  It must at least contain some target like {\tt world} or {\tt
+    world.opt}. If {\tt make} is not present, OPAM will execute all
+  the commands listed in {\tt build}.
 
 \item {\tt bytecomp}, {\tt asmcomp}, {\tt bytelink} and {\tt asmlink}
   are the compilation and linking flags to pass to the OCaml
