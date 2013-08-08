@@ -214,25 +214,14 @@ module API = struct
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
-      (* Note: this is a bit costly to do so, so only do it when
-         --verbose is active. *)
-      let repo_name_and_prefix =
-        if not !OpamGlobals.verbose then None
-        else
-          try
-            let res = OpamPackage.Map.find nv (Lazy.force t.package_index) in
-            Some res
-          with Not_found ->
-            None in
-
       let repository =
         if OpamState.is_locally_pinned t name then
           ["pinned", "true"]
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
-        else match repo_name_and_prefix with
-          | None       -> []
-          | Some (r,_) -> [ "repository", OpamRepositoryName.to_string r ] in
+        else match OpamState.repository_of_package t nv with
+          | None   -> []
+          | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ] in
 
       let revision =
         if OpamState.is_locally_pinned t name
