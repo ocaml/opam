@@ -404,7 +404,7 @@ let parallel_apply t action solution =
       ) remaining;
     );
     if can_try_to_recover_from_error errors then (
-      let pkgs = List.map (fst |> action_contents |> OpamPackage.to_string) errors in
+      let pkgs = List.map (fst ++ action_contents ++ OpamPackage.to_string) errors in
       OpamGlobals.msg "==== ERROR RECOVERY [%s] ====\n" (String.concat ", " pkgs);
       List.iter recover_from_error (List.map fst errors);
       List.iter recover_from_error remaining;

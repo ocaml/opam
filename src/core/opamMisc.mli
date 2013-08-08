@@ -213,7 +213,10 @@ val prettify_path: string -> string
 module OP: sig
 
   (** Pipe operator *)
-  val (|>): ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
+  val (|>): 'a -> ('a -> 'b) -> 'b
+
+  (** Function composition *)
+  val (++): ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
 
   (** [finally f cleaner] call the [cleaner] function when [f] is
       complete even in the presence of exceptions. *)

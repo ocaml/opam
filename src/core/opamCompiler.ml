@@ -81,11 +81,12 @@ let version t = t.version
 (* DIR/$NAME.comp *)
 let of_filename f =
   if OpamFilename.check_suffix f ".comp" then
-    (OpamFilename.chop_extension
-     |> OpamFilename.basename
-     |> OpamFilename.Base.to_string
-     |> of_string
-     |> fun x -> Some x) f
+    f
+    |> OpamFilename.chop_extension
+    |> OpamFilename.basename
+    |> OpamFilename.Base.to_string
+    |> of_string
+    |> fun x -> Some x
   else
     None
 

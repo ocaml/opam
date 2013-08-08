@@ -171,11 +171,11 @@ let pull_archive repo nv =
 let check_version repo =
   let repo_version =
     try
-      (OpamPath.Repository.version |>
-       OpamFilename.read |>
-       OpamMisc.strip |>
-       OpamVersion.of_string
-      ) repo
+      repo
+      |> OpamPath.Repository.version
+      |> OpamFilename.read
+      |> OpamMisc.strip
+      |> OpamVersion.of_string
     with _ ->
       OpamVersion.of_string "0.7.5" in
   if OpamVersion.compare repo_version OpamVersion.current > 0 then

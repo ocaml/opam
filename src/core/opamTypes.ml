@@ -466,7 +466,7 @@ end
 module PackageAction = struct
   include OpamPackage
 
-  let string_of_name = OpamPackage.name |> OpamPackage.Name.to_string
+  let string_of_name = OpamPackage.name ++ OpamPackage.Name.to_string
 
   let string_of_names ps =
     String.concat ", " (List.map string_of_name ps)

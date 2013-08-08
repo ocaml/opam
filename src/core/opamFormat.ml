@@ -508,8 +508,8 @@ let make_commands =
 
 let parse_simple_arg =
   parse_or [
-    "ident" , (parse_ident  |> fun x -> CIdent x);
-    "string", (parse_string |> fun x -> CString x);
+    "ident" , (parse_ident  ++ fun x -> CIdent x);
+    "string", (parse_string ++ fun x -> CString x);
   ]
 
 let parse_arg =
@@ -534,8 +534,8 @@ let parse_messages =
 
 let parse_string_set =
   parse_or [
-    "string"     , (parse_string |> OpamMisc.StringSet.singleton);
-    "string-list", (parse_string_list |> OpamMisc.StringSet.of_list);
+    "string"     , (parse_string ++ OpamMisc.StringSet.singleton);
+    "string-list", (parse_string_list ++ OpamMisc.StringSet.of_list);
   ]
 
 let make_string_set s =

@@ -862,7 +862,7 @@ let get_compiler_packages t comp =
         List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
     if pkg_not <> [] then (
       List.iter
-        (OpamPackage.Name.to_string |> OpamGlobals.error "Package %s not found")
+        (OpamPackage.Name.to_string ++ OpamGlobals.error "Package %s not found")
         pkg_not;
       OpamGlobals.exit 1
     );
@@ -883,7 +883,7 @@ let check_base_packages t =
       (fun (name,_) -> not (is_name_installed t name))
       base_packages in
   if missing_packages <> [] then (
-    let names = List.map (fst |> OpamPackage.Name.to_string) missing_packages in
+    let names = List.map (fst ++ OpamPackage.Name.to_string) missing_packages in
     OpamGlobals.warning "Some of the compiler base packages are not installed. \
                          You should run:\n\n    $ opam install %s\n"
       (String.concat " " names)

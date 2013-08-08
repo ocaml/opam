@@ -229,7 +229,9 @@ module StringSetMap = Map.Make(StringSet)
 
 module OP = struct
 
-  let (|>) f g x = g (f x)
+  let (|>) f g = g f
+
+  let (++) f g x = g (f x)
 
   let finally f clean =
     let safe_clean () =

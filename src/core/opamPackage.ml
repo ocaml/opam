@@ -159,8 +159,9 @@ let to_map nv =
   ) nv Name.Map.empty
 
 (* $DIR/$NAME.$VERSION/ *)
-let of_dirname =
-  OpamFilename.basename_dir
+let of_dirname f =
+  f
+  |> OpamFilename.basename_dir
   |> OpamFilename.Base.to_string
   |> of_string_opt
 

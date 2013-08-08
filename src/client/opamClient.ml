@@ -384,10 +384,10 @@ module API = struct
       else
         OpamPackage.Set.filter (fun nv ->
             let name repo_name =
-              (OpamRepositoryName.to_string |> OpamPackage.Name.of_string) repo_name
+              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
               =  OpamPackage.name nv in
             let package repo_name =
-              (OpamRepositoryName.to_string |> OpamPackage.of_string) repo_name
+              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string)
               = nv in
             List.exists (fun repo_name ->
                 name repo_name || package repo_name
@@ -414,7 +414,7 @@ module API = struct
         let valid_names =
           OpamMisc.StringSet.of_list
             (List.rev_map
-               (OpamPackage.name |> OpamPackage.Name.to_string)
+               (OpamPackage.name ++ OpamPackage.Name.to_string)
                (OpamPackage.Set.elements t.packages)) in
         let (--) = OpamMisc.StringSet.diff in
         let unknown_names = all -- valid_repositories -- valid_names in
