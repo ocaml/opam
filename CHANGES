@@ -1,4 +1,6 @@
 1.1.0 (trunk)
+* Rewrite the code which updates pin et dev packages to be quicker and more reliable
+* Add {opam,url,desc,files/} overlay for all packages
 * `opam config env` now detects the current shell and outputs a sensible default if no override is provided.
 * Improve `opam pin` stability and start display information about dev revisions
 * Add a new `man` field in `.install` files
