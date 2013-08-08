@@ -11,7 +11,7 @@ man:
 	for i in $(TOPICS); do\
 	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1;\
 	done
-	for i in opam-mk-repo opam-check; do\
+	for i in opam-admin; do\
 	  pandoc -s -t man man-ext/$$i.md -o man/$$i.1;\
 	done
 
