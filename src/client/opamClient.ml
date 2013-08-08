@@ -113,26 +113,16 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
 
   (* Filter the list of packages, depending on user predicates *)
   let names =
-    OpamPackage.Name.Map.filter (fun name
-      { installed_version; synopsis; descr; tags } ->
-      (match filter with
-        | `installed -> installed_version <> None
-        | `roots     ->
-          begin match installed_version with
-            | None   -> false
-            | Some v -> OpamPackage.Set.mem (OpamPackage.create name v)
-                          t.installed_roots
-          end
-        | _  -> true)
-      &&
-      (regexps = []
-       || exact_match (OpamPackage.Name.to_string name)
-       || not exact_name &&
-          (partial_match (OpamPackage.Name.to_string name)
-           || partial_match (Lazy.force synopsis)
-           || partial_match (Lazy.force descr)
-           || partial_matchs tags))
-    ) names in
+    OpamPackage.Name.Map.filter
+      (fun name { synopsis; descr; tags } ->
+         regexps = []
+         || exact_match (OpamPackage.Name.to_string name)
+         || not exact_name &&
+            (partial_match (OpamPackage.Name.to_string name)
+             || partial_match (Lazy.force synopsis)
+             || partial_match (Lazy.force descr)
+             || partial_matchs tags)
+      ) names in
 
   if not (OpamPackage.Set.is_empty t.packages)
   && OpamPackage.Name.Map.is_empty names then
