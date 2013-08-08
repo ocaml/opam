@@ -680,6 +680,7 @@ let dev_package t nv =
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
+  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
   let filter nv =
     if OpamPackage.Map.mem nv t.opams then (
       let opam = OpamPackage.Map.find nv t.opams in
@@ -707,11 +708,14 @@ let available_packages t system =
             let ($) = if b then (=) else (<>) in
             os $ OpamGlobals.os_string () in
           OpamFormula.eval atom f in
+      let has_reposiotry () =
+        OpamPackage.Map.mem nv repo_index in
       let available () =
         eval_bool t OpamVariable.Map.empty (OpamFile.OPAM.available opam) in
       consistent_ocaml_version ()
       && consistent_os ()
       && available ()
+      && has_reposiotry ()
     ) else
       false in
   OpamPackage.Map.fold (fun nv _ set ->
