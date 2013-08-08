@@ -33,7 +33,6 @@ type item = {
 
 let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
   log "names_of_regexp regexps=%s" (OpamMisc.string_of_list (fun x -> x) regexps);
-  let universe = OpamState.universe t Depends in
   (* the regexp can also simply be a package. *)
   let fix_versions =
     let packages = OpamMisc.filter_map OpamPackage.of_string_opt regexps in
@@ -70,8 +69,10 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
   let partial_matchs strs =
     List.exists partial_match strs in
   let packages = match filter with
-    | `all -> t.packages
-    | _    -> OpamSolver.installable universe in
+    | `all         -> t.packages
+    | `installed   -> t.installed
+    | `roots       -> t.installed_roots
+    | `installable -> OpamSolver.installable (OpamState.universe t Depends) in
   let names =
     OpamPackage.Set.fold
       (fun nv set -> OpamPackage.Name.Set.add (OpamPackage.name nv) set)
@@ -93,7 +94,6 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
         else match installed_version with
           | Some v -> v
           | None   ->
-
             let nv =
               OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
             OpamPackage.version nv in
