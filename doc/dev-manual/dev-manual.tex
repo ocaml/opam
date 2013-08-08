@@ -1,4 +1,4 @@
-\documentclass[a4paper,11pt]{article}
+\documentclass[a4paper,10pt]{article}
 
 \usepackage{url}
 \usepackage{eurosym}
@@ -22,6 +22,8 @@ Developer Manual (version 1.1)\\ ~\ \\
 
 \begin{document}
 
+\newcommand{\OPAM}{{\sc Opam}}
+
 \maketitle
 
 \vfill
@@ -30,9 +32,9 @@ Developer Manual (version 1.1)\\ ~\ \\
 
 \section*{Overview}
 
-OPAM is a source-based package manager for OCaml. It supports multiple simultaneous
-compiler installations, flexible package constraints, and a Git-friendly development
-workflow.\\
+\OPAM\ is a source-based package manager for OCaml. It supports multiple
+simultaneous compiler installations, flexible package constraints, and
+a Git-friendly development work-flow.\\
 
 A package management system has typically two kinds of users: {\em
   end-users} who install and use packages for their own projects; and
@@ -42,11 +44,11 @@ a package being a collection of OCaml libraries and/or programs.
 Packagers want to take a collection of their own libraries and
 programs and make them available to other developpers.\\
 
-This document describes the design of OPAM to answer both of these needs.
+This document describes the design of \OPAM\ to answer both of these needs.
 
 \subsection*{Conventions}
 
-In this document, \verb+$home+, \verb+$opam+, \verb+$package+ and
+In this document, \verb+$home+, \verb+$opam+, and
 \verb+$path+ are assumed to be defined as follows:
 
 \begin{itemize}
@@ -60,9 +62,6 @@ In this document, \verb+$home+, \verb+$opam+, \verb+$package+ and
 \item {\tt \$opam} refers to the filesystem subtree containing the
   client state. Default directory is {\tt \$home/.opam}.
 
-\item {\tt \$package} refers to a path in the packager filesystem, where
-  lives the collection of libraries and programs he wants to package.
-
 \item {\tt \$path} refers to a list of paths in the packager filesystem, where
   lives the collection of programs ({\tt ocamlc}, {\tt ocamldep}, {\tt ocamlopt},
   {\tt ocamlbuild}, ...).
@@ -75,7 +74,7 @@ instance package names will be written \verb+$NAME+, package versions
 installed \verb+$SWITCH+.\\
 
 This document is organized as follows: Section~\ref{section:packages}
-describes the core of OPAM, e.g. the management of
+describes the core of \OPAM, e.g. the management of
 packages. Section~\ref{section:repositories} describes how
 repositories are handled, Section~\ref{section:switches} focus on
 compiler switches and finally Section~\ref{section:config} explain how
@@ -97,82 +96,45 @@ switches.
 \begin{itemize}
 
 \item {\tt \$opam/config} is the main configuration file. It defines
-  the OPAM version, the repository addresses and the current compiler
+  the version of \OPAM, the repository addresses and the current compiler
   version. The file format is described in \S\ref{file:config}.
 
-\item \verb+$opam/opam/$NAME.$VERSION.opam+ is the OPAM specification
-  for the package \verb+$NAME+ with version \verb+$VERSION+ (which
-  might not be installed). The format of OPAM files is described in
-  \S\ref{file:opam}.
+\item \verb+$opam/packages/$NAME/$NAME.$VERSION/opam+ is the
+  specification for the package \verb+$NAME+ with version
+  \verb+$VERSION+ (which might not be installed). The format of {\tt opam}
+  files is described in \S\ref{file:opam}.
 
-\item \verb+$opam/descr/$NAME.$VERSION+ contains the description for the
-  version \verb+$VERSION+ of package \verb+$NAME+ (which might not be
-  installed). The first line of this file is the package synopsis.
+\item \verb+$opam/packages/$NAME/$NAME.$VERSION/descr+ contains the
+  description for the version \verb+$VERSION+ of package \verb+$NAME+
+  (which might not be installed). The first line of this file is the
+  package synopsis.
+
+\item \verb+$opam/packages/$NAME/$NAME.$VERSION/url+ contains the
+  upstream location for version \verb+$VERSION+ of package \verb+$NAME+
+  (which might not be installed). The format of {\tt url} files is
+  described in \S\ref{file:url}.
+
+\item \verb+$opam/packages/$NAME/$NAME.$VERSION/files/+ contains the
+  eventual overlay files on top of the upstream sources, for version
+  \verb+$VERSION+ of package \verb+$NAME+ (which might not be
+  installed). This files are copied in the build directory before
+  building and installing a package.
 
 \item \verb+$opam/archives/$NAME.$VERSION+opam.tar.gz+ contains the source
   archives for the version \verb+$VERSION+ of package
   \verb+$NAME+. This archive might be a bit different from the
-  upstream library as it might have been repackaged by OPAM to include
-  additional files.
+  upstream library as it might have been repackaged by \OPAM\ to include
+  the evenutal overlay files.
 
-\item \verb+$opam/$SWITCH/installed+ is the list of installed
-  packages for the compiler instance \verb+$SWITCH+. The file format
-  is described in \S\ref{file:installed}.
+\item \verb+$opam/packages.dev.+ contains cached information for
+  development packages. \OPAM\ uses it on update to check which
+  package needs to be upgraded.
 
-\item \verb+$opam/$SWITCH/config/$NAME.config+ is a
-  platform-specific configuration file of for the installed package
-  \verb+$NAME+ with the compiler instance \verb+$SWITCH+. The file
-  format is described in \S\ref{file:config}.
-  \verb+$opam/$SWITCH/config/+ can be shortened to \verb+$config/+
-  for more readability.
-
-\item \verb+$opam/$SWITCH/install/$NAME.install+ is a
-  platform-specific package installation file for the installed
-  package \verb+$NAME+ with the compiler instance \verb+$SWITCH+. The
-  file format is described in \S\ref{file:install}.
-  \verb+$opam/$SWITCH/install+ can be shortened to \verb+$install/+
-  for more readability.
-
-\item \verb+$opam/$SWITCH/lib/$NAME/+ contains the libraries
-  associated to the installed package \verb+$NAME+ with the compiler
-  instance \verb+$SWITCH+. \verb+$opam/$SWITCH/lib/+ can be
-  shortened to \verb+$lib/+ for more readability.
-
-\item \verb+$opam/$SWITCH/doc/$NAME/+ contains the documentation
-  associated to the installed package {\tt NAME} with the compiler
-  instance \verb+$SWITCH+. \verb+$opam/SWITCH/doc/+ can be
-  shortened to \verb+$doc/+ for more readability.
-
-\item \verb+$opam/$SWITCH/bin/+ contains the program files for all
-  installed packages with the compiler instance
-  \verb+$SWITCH+. \verb+$opam/$SWITCH/bin/+ can be shortened to
-  \verb+$bin/+ for more readability.
-
-\item \verb+$opam/$SWITCH/build/$NAME.$VERSION/+ is a tempory folder
-  used to build package \verb+$NAME+ with version \verb+$VERSION+,
-  with compiler instance \verb+$SWITCH+. \verb+$opam/$SWITCH/build/+
-  can be shortened to \verb+$build/+ for more readability.
-
-\item \verb+$opam/$SWITCH/reinstall+ contains the list of packages
-  which has been changed upstream since the last upgrade. This can
-  happen for instance when a packager uploads a new archive or fix the
-  OPAM file for a specific package version. Every package appearing in
-  this file will be reinstalled (or upgraded if a new version is
-  available) during the next upgrade when the current instance of the
-  compiler is \verb+$SWITCH+. The file format is similar to the one
-  described in \S\ref{file:installed}.
-
-\item \verb+$opam/$SWITCH/pinned+ contains the list of pinned
-  packages. The file format is described in \S\ref{file:pinned}.
-
-\item \verb+$opam/$SWITCH/pinned.cache.+ contains cached information
-  for cached packages. OPAM uses it on update to check which package
-  needs to be upgraded.
 \end{itemize}
 
 \subsection{Files}
 
-\subsubsection{General Syntax of OPAM files}
+\subsubsection{General Syntax of Structured Files}
 \label{file:general}
 
 Most of the files in the client and server states share the same
@@ -215,7 +177,7 @@ syntax defined in this section.
 
 \end{description}
 
-All structured OPAM files share the same syntax:
+All structured files share the same syntax:
 
 {\small
 \begin{Verbatim}[frame=single]
@@ -235,31 +197,6 @@ All structured OPAM files share the same syntax:
 \end{Verbatim}
 }
 
-
-\subsubsection{Package List: {\tt installed}, {\tt reinstall} and {\tt
-  update}}
-\label{file:installed}
-
-The following configuration files: \verb+$opam/$SWITCH/installed+,
-\verb+$opam/$SWITCH/reinstall+, and \verb+$opam/repo/$REPO/updated+
-follow a very simple syntax. The file is a list of lines which
-contains a space-separated name and a version. Each line
-\verb+$NAME $VERSION+ means that the version \verb+$VERSION+ of
-package \verb+$NAME+ has been compiled with the compiler instance
-\verb+$SWITCH+ and has been installed on the system in
-\verb+$lib/$NAME+ and \verb+$bin/+. \\
-
-For instance, if {\tt batteries} version {\tt 1.0+beta} and {\tt
-  ocamlfind} version {\tt 1.2} are installed, then
-\verb+$opam/$SWITCH/installed+ will contain:
-
-{\small
-\begin{Verbatim}[frame=single]
-batteries 1.0+beta
-ocamlfind 1.2
-\end{Verbatim}
-}
-
 \subsubsection{Global Configuration File: {\tt config}}
 \label{file:config}
 
@@ -276,19 +213,19 @@ the following restrictions:
 \end{Verbatim}
 }
 
-The field {\tt opam-version} indicates the current OPAM format.
+The field {\tt opam-version} indicates the current \OPAM\ format.
 
-The field {\tt repositories} contains the list of OPAM repositories.
+The field {\tt repositories} contains the list of \OPAM\ repositories.
 
 The field {\tt switch} corresponds to the current compiler instance.
 
-The field {\tt cores} is the number of parallel process that OPAM will
-use when trying to build the packages.
+The field {\tt cores} is the number of parallel process that
+\OPAM\ will use when trying to build the packages.
 
-\subsubsection{Package Specification files: {\tt *.opam}}
+\subsubsection{Package Specification files: {\tt opam}}
 \label{file:opam}
 
-\verb+$opam/opam/$NAME.$VERSION.opam+ follows the syntax defined in
+\verb+$opam/packages/$NAME/$NAME.$VERSION/opam+ follows the syntax defined in
 \S\ref{file:general} with the following restrictions:
 
 {\small
@@ -358,7 +295,7 @@ use when trying to build the packages.
 
 \begin{itemize}
 
-\item The first line specifies the OPAM version.
+\item The first line specifies the \OPAM\ version.
 
 \item The content of {\tt name} is \verb+$NAME+, the content of {\tt
   version} is \verb+$VERSION+. Both fields are optional are they can
@@ -437,7 +374,7 @@ use when trying to build the packages.
 The {\tt depopts} field contains a {\em OR} formula over
   package names, which means that top-level \verb+|+ are not
   mandatory. This field express optional dependencies that
-  OPAM will not try to install. However, when installing a new
+  \OPAM\ will not try to install. However, when installing a new
   package it will check if it is an optional dependency of already
   installed packages. If it is the case, it will re-install the
   packages (and their transitive forward-dependency closure).
@@ -470,80 +407,45 @@ The {\tt depopts} field contains a {\em OR} formula over
 
 \end{itemize}
 
-\subsubsection{Package installation files: {\tt *.install}}
-\label{file:install}
+\subsubsection{URL files: {\tt url}}
+\label{file:url}
 
-\verb+$opam/$SWITCH/install/NAME.install+ follows the syntax defined
-in \S\ref{file:general} with the following restrictions:
+The syntax of {\tt url} files follows the one described in
+\S\ref{file:general} with the following restrictions:
 
-{\small
+{
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
-    ?lib:      [ <mv>+ ]
-    ?bin:      [ <mv>+ ]
-    ?toplevel: [ <mv>+ ]
-    ?share:    [ <mv>+ ]
-    ?doc:      [ <mv>+ ]
-    ?misc:     [ <mv>+ ]
-    ?stublibs: [ <mv>+ ]
-    ?man:      [ <mv>+ ]
-
-<mv> := STRING
-      | STRING { STRING }
+    ?src:       STRING
+    ?archive:   STRING
+    ?http:      STRING
+    ?local:     STRING
+    ?git:       STRING
+    ?darcs:     STRING
+    ?hg:        STRING
+    ?checksum:  STRING
 \end{Verbatim}
 }
 
-\begin{itemize}
-\item Files listed under {\tt lib} are copied into \verb+$lib/$NAME/+.
-\item Files listed under {\tt bin} are copied into \verb+$bin/+.
-\item Files listed under {\tt doc} are copied into \verb+$doc/$NAME/+.
-\item Files listed under {\tt toplevel} are copied into \verb+$prefix/toplevel+.
-\item Files lister under {\tt stublibs} are copied into \verb+$lib/stublibs/+
-\item Files listed under {\tt man} are copied into
-  \verb+$lib/man/man3+. You can change the sub-directory by setting
-  the right optional argument (for instance:
-  \verb+man: [ "foo.1" {"man1"} ]+.
-\item Files listed under {\tt misc} are processed as follows:
-  for each pair \verb+$SRC { $DST }+, the tool asks the user if
-  he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
-\end{itemize}
-
-General remarks:
-\begin{itemize}
-
-\item You control where the files are copied under the given prefix by
-  using the optional argument. For instance:
-  \verb+doc: [ "_build/foo.html" {"foo/index.html"} ]+ will copy the
-  given HTML page under \verb+$doc/$NAME/foo/index.html+.
-
-\item OPAM will try to install all the files in sequence, and it will
-  fail in case a source filename is not available. To tell OPAM a
-  source filename might not be generated (because of byte/native
-  constraints or because of optional dependencies) the source filename
-  should start with \verb+?+.
-
-\item It is much cleaner if the underlying build-system can generate
-  the right \verb+$NAME.install+ files, containing the existing files only.
-
-\end{itemize}
-
-\subsubsection{Pinned Packages: {\tt pinned}}
-
-\verb+$opam/$SWITCH/pinned+ contains a list of lines of the form:
-
-\begin{Verbatim}
-<name> <kind> <path>
-\end{Verbatim}
+{\tt src}, {\tt archive}, {\tt http}, {\tt local}, {\tt git}, {\tt
+  hg}, {\tt darcs} are the location where the package upstream sources
+can be downloaded. It can be:
 
 \begin{itemize}
-\item \verb+<name>+ is the name of the pinned package
-
-\item \verb+<kind>+ is the kind of pinning. This could be \verb+version+,
-\verb+local+, \verb+git+ or \verb+darcs+.
-
-\item \verb+<path>+ is either the version number (if kind is
-  \verb+version+) or the path to synchronize with.
+\item A directory on the local file system (which will be copied to
+  the build directory). Use {\tt local}.
+\item An archive file on the local file system (which will be unpacked
+  into the build directory). Use {\tt local}.
+\item An archive file at a URL that is understood by either curl or
+  wget (which will be fetched using either curl (if that available) or
+  wget (if curl is not available) and unpacked into the build
+  directory). Use {\tt http}.
+\item a version-controlled repository under git, darcs or
+  hg, or a specific commit, tag or branch in that repository if
+  the string ends by \verb+#<SHA1>+ or \verb+#<tag-name>+ or
+  \verb+#<branch-name>+. Use {\tt git}, {\tt hg} or {\tt darcs}.
+\item \OPAM\ will try to guess the source kind if you use {\tt src} or
+  {\tt archive}.
 \end{itemize}
 
 \subsection{Commands}
@@ -551,7 +453,7 @@ General remarks:
 \subsubsection{Creating a Fresh Client State}
 \label{opam-init}
 
-When an end-user starts OPAM for the first time, he needs to
+When an end-user starts \OPAM\ for the first time, he needs to
 initialize \verb+$opam/+ in a consistent state. In order to do so, he
 should run:
 
@@ -561,7 +463,7 @@ should run:
 
 Where:
 \begin{itemize}
-\item \verb+$KIND+ is the kind of OPAM repository (default is {\tt
+\item \verb+$KIND+ is the kind of \OPAM\ repository (default is {\tt
   http});
 \item \verb+$REPO+ is the name of the repository (default is {\tt
   default}); and
@@ -587,17 +489,16 @@ This command will:
 \item Initialize \verb+$opam/repo/$REPO+ by running the
   appropriate operations (depending on the repository kind).
 
-\item Symlink all OPAM and description files (ie. create a symbolic
-  link from every file in \verb+$opam/repo/$REPO/opam/+ to
-  \verb+$opam/opam/+ and from every file in
-  \verb+$opam/repo/$REPO/descr/+ to \verb+$opam/descr/+).
+\item Copy all \OPAM\ and description files (ie. copy
+  every file in \verb+$opam/repo/$REPO/packages/+ to
+  \verb+$opam/packages/+).
 
 \item Create \verb+$opam/repo/index+ and for each version
   \verb+$VERSION+ of package \verb+$NAME+ appearing in the repository,
   append the line \verb+'$REPO $NAME $VERSION'+ to the file.
 
 \item Create the empty directories \verb+$opam/archives+,
-  \verb+$lib/+, \verb+$bin/+ and \verb+$doc/+.
+  \verb+$opam/$SWITCH/lib/+, \verb+$opam/$SWITCH/bin/+ and \verb+$opam/$SWITCH/doc/+.
 
 \end{enumerate}
 
@@ -612,10 +513,11 @@ he should run:
 \end{verbatim}
 
 This command will parse \verb+$opam/$SWITCH/installed+ to know the
-installed packages, and \verb+$opam/opam/*.opam+ to get all the
+installed packages, and
+\verb+$opam/packages/$NAME/$NAME.$VERSION/opam+ to get all the
 available packages. It will then build a summary of each packages. The
-description of each package will be read in \verb+$opam/descr/+ if it
-exists.
+description of each package will be read in
+\verb+$opam/packages/$NAME/$NAME.$VERSION/descr+ if it exists.
 
 For instance, if {\tt batteries} version {\tt 1.1.3} is installed,
 {\tt ounit} version {\tt 2.3+dev} is installed and {\tt camomille} is
@@ -639,8 +541,8 @@ he should run:
 This command will parse \verb+$opam/$SWITCH/installed+ to get the
 installed version of \verb+$NAME+, will process
 \verb+$opam/repo/index+ to get the repository where the package comes
-from and will look for \verb+$opam/opam/$NAME.*.opam+ to get available
-versions of \verb+$NAME+. It can then display:
+from and will look for \verb+$opam/packages/$NAME/$NAME.$VERSION/opam+
+to get available versions of \verb+$NAME+. It can then display:
 
 \begin{verbatim}
     package: $NAME
@@ -690,26 +592,35 @@ This command will:
   downloaded. The cache location is:
   \verb+$opam/archives/$NAME.VERSION.tar.gz+
 
-\item If not, process \verb+$opam/repo/index/+ to get the repository
+\item If not, process \verb+$opam/repo/index/+ (see
+  \ref{section:repositories}) to get the repository
   \verb+$REPO+ where the archive is available and then ask the
-  repository to download the archive if necessary..
+  repository to download the archive if necessary.
 
-  Once this is done, symlink the archive in \verb+$opam/archives+.
+  Once this is done, the archive might become available in
+  \verb+$opam/repo/$REPO/archives/+. It it is, copy it in the global
+  state (in \verb+$opam/archives+). If it is not, download it upstream
+  by looking at \verb|$opam/packages/$NAME/$NAME.$VERSION/url| and add
+  the eventual overlay files located in
+  \verb|$opam/packages/$NAME/$NAME.$VERSION/files|. Note: this files
+  can be overwritten by anything present in
+  \verb|$opam/$SWITCH/overlay/$NAME.$VERSION/|.
 
-\item Decompress the archive into \verb+$build/$NAME.$VERSION/+.
+\item Decompress the archive into \verb+$opam/$SWITCH/build/$NAME.$VERSION/+.
 
 \item Substitute the required files.
 
-\item Run the list of commands to build the package with \verb+$bin+
+\item Run the list of commands to build the package with \verb+$opam/$SWITCH/bin+
   in the path.
 
-\item Process \verb+$build/$NAME.$VERSION/$NAME.install+ to install
+\item Process \verb+$opam/$SWITCH/build/$NAME.$VERSION/$NAME.install+ to install
   the created files. The file format is described in \S\ref{file:install}.
 
 \item Install the installation file
-  \verb+$build/$NAME.$VERSION/$NAME.install+ in \verb+$install/+ and
-  the configuration file \verb+$build/$NAME.$VERSION/$NAME.config+ in
-  \verb+$config/+.
+  \verb+$opam/$SWITCH/build/$NAME.$VERSION/$NAME.install+ in
+  \verb+$opam/$SWITCH/install/+ and the configuration file
+  \verb+$opam/$SWITCH/build/$NAME.$VERSION/$NAME.config+ in
+  \verb+$opam/$SWITCH/config/+.
 
 \end{enumerate}
 \end{enumerate}
@@ -730,30 +641,24 @@ This command will follow the following steps:
 
 \item Update each repositories in \verb+$opam/config+.
 
-\item For each repositories in \verb+$opam/config+, process
-  \verb+$opam/repo/$REPO/updated+ and update \verb+$opam/repo/index+,
-  \verb+$opam/opam/+ and \verb+$opam/desc+ accordingly (ie. add the
-  right lines in \verb+$opam/repo/index+ and create the missing
-  symlinks). Here, the order in which the repositories are specified
+\item For each repositories in \verb+$opam/config+, call the
+  corresponding update scripts. Then, look at the difference between
+  the digest of files in the global state and in each repositories,
+  and fix the discrepancies (while notifying the user) if necessary.
+  Here, the order in which the repositories are specified
   is important: the first repository containing a given version for a
   package will be the one providing it (this can be changed manually
   by editing \verb+$opam/repo/index+ later).
 
-\item For each line \verb+$REPO $NAME $VERSION+ in
-  \verb+$opam/repo/index+, if the version \verb+$VERSION+ of package
-  \verb+$NAME+ has been modified upstream (ie. if the line
-  \verb+$NAME $VERSION+ appears in \verb+$opam/repo/$REPO/$updated+)
-  and if the package is already installed (ie. it appears in
-  \verb+opam/$SWITCH/installed+), then update
+\item For each installed pinned et development packages, look at what
+  changed upstream and if something has changed, update
   \verb+$opam/$SWITCH/reinstall+ accordingly (for each compiler
   version \verb+$SWITCH+).
 
-  Packages in \verb+$opam/$SWITCH/reinstall+ will be reinstalled (or
+\item Packages in \verb+$opam/$SWITCH/reinstall+ will be reinstalled (or
   upgraded if a new version is available) on the next {\tt opam
     upgrade} (see \S\ref{opam-upgrade}), with \verb+$SWITCH+ being
   the current compiler version when the upgrade command is run.
-
-\item Delete each \verb+$opam/repo/$REPO/$updated+
 
 \end{itemize}
 
@@ -783,53 +688,6 @@ See \S\ref{opam-install}.
   \verb+$opam/$SWITCH/reinstall+.
 
 \end{itemize}
-
-\subsubsection{Uploading Packages}
-\label{opam-upload}
-
-When a packager wants to create a package, he should:
-
-\begin{enumerate}
-
-\item create \verb+$package/$NAME.$VERSION.opam+ containing in the format
-  specified in \S\ref{file:opam}.
-
-\item create a file describing the package
-
-\item make sure the build scripts:
-\begin{itemize}
-\item build the libraries and packages advertised in
-  \verb+$package/$NAME.$VERSION.opam+
-\item generates a valid \verb+$package/$NAME.install+ containing the
-  list of files to install (the file format is described in
-  \ref{file:install}).
-\item generates a valid \verb+$package/$NAME.config+ containing the
-  configuration flags for libraries exported by this package (the file
-  format is described in \ref{file:dotconfig}).
-\end{itemize}
-
-\item create an archive \verb+$NAME.$VERSION.tar.gz+ with the sources he
-  wants to distribute.
-
-\item run the following command:
-
-\begin{verbatim}
-    $ opam upload --opam $OPAM --descr $DESCR --archive $ARCHIVE $REPO
-\end{verbatim}
-
-This command will parse \verb+$OPAM+ to get the package name and
-version and it will:
-\begin{itemize}
-\item move \verb+$OPAM+ to \verb+$opam/repo/$REPO/upload/$NAME.$VERSION.opam+
-\item move \verb+$DESCR+ to \verb+$opam/repo/$REPO/descr/$NAME.$VERSION+
-\item move \verb+$ARCHIVE+ to \verb+$opam/repo/$REPO/archives/$NAME.$VERSION.tar.gz+
-\end{itemize}
-
-It will then perform the necessary operation (depending on the
-repository kind) to upload the files upstream.
-
-\end{enumerate}
-
 \subsubsection{Removing Packages}
 \label{opam-remove}
 
@@ -862,126 +720,123 @@ in OCaml.
   remove.
 \end{itemize}
 
-\section{Managing Repositories}
-\label{section:repositories}
-
-\subsection{State}
-\label{state-repo}
-
-Configuration files for OPAM repositories \verb+REPO+ are stored in
-\verb+$opam/repo/$REPO+. Repositories can be of different kinds
-(stored on the local filesystem, available via HTTP, stored under git,
-$\ldots$); they all share the same filesystem hierachy, which is
-updated by different operations, depending on the repository kind.
-
-\begin{itemize}
-
-\item \verb+$opam/repo/$REPO/config+ contains the configuration
-  off the repository \verb+$REPO+. The format of repository config
-  files is described in \S\ref{file:repo-config}.
-
-\item \verb+$opam/repo/$REPO/opam/$NAME.$VERSION.opam+ is the OPAM
-  specification for the package \verb+$NAME+ with version
-  \verb+$VERSION+ (which might not be installed). The format of OPAM
-  files is described in \S\ref{file:opam}.
-
-\item \verb+$opam/repo/$REPO/descr/$NAME.$VERSION+ contains the textual
-  description for the version \verb+$VERSION+ of package \verb+$NAME+
-  (which might not be installed). The first line of this file is the
-  package synopsis.
-
-\item \verb+$opam/repo/$REPO/archives/$NAME.$VERSION.tar.gz+ contains
-  the source archives for the version \verb+$VERSION+ of package
-  \verb+$NAME+. This folder is populated when a package needs to be
-  downloaded.
-
-\item \verb+$opam/repo/$REPO/updated+ contains the new available
-  packages which have not yet been synchronized with the client
-  state. This file is created on update.If the file empty, this means that the
-  client state is up-to-date. The file format is the same as the one
-  described in \S\ref{file:installed}.
-
-\item \verb+$opam/repo/$REPO/upload/$NAME.$VERSION/+ contains the
-  OPAM, description and archive files to upload to the OPAM repository
-  for the version \verb+$VERSION+ of package \verb+$NAME+.
-
-\end{itemize}
-
-\subsection{Files}
-
-\subsubsection{Index of packages}
-\label{file:index}
-
-\verb+$opam/repo/index+ follows a very simple syntax: each line of the
-file contains a space separated list of words \verb+$NAME $REPO+
-specifying that all the versions of package \verb+$NAME+ are available
-in the OPAM repository \verb+$REPO+. The file contains information on
-all available packages (e.g. not only on the installed one). \\
-
-For instance, if {\tt batteries} version {\tt 1.0+beta} is available
-in the {\tt testing} repository and {\tt ocamlfind} version {\tt 1.2}
-is available in the {\tt default} and testing repositories (where {\tt
-  default} is one being used), then \verb+$opam/repo/index+ will
-contain:
-
-{\small
-\begin{Verbatim}[frame=single]
-batteries testing
-ocamlfind default
-\end{Verbatim}
-}
-
-\subsection{Commands}
-
-\subsubsection{Managing OPAM repository}
-
-When the user wants to manage OPAM repositories, he should write:
-
-\begin{verbatim}
-    $ opam repository list # 'opam repository' works as well
-    $ opam repository add [--kind $KIND] $REPO $ADRESS
-    $ opam repository remove $REPO
-\end{verbatim}
-
-\begin{itemize}
-\item \verb+list+ lists the current repositories by looking at
-  \verb+$opam/config+
-
-\item \verb+add [--kind $KIND] $REPO $ADDRESS+ initializes
-  \verb+$REPO+ as described in \S\ref{opam-init}.
-
-\item \verb+remove $REPO+ deletes \verb+$opam/repo/$REPO+ and removes
-  \verb+$REPO+ from the {\tt repositories} list in \verb+$opam/config+.
-  Then, for each package in \verb+$opam/repo/index+ it updates the link
-  between packages and repositories (ie. it either deletes packages or
-  symlink them to the new repository containing the package).
-
-\end{itemize}
-
 \section{Managing Compiler Switches}
 \label{section:switches}
 
-This milestone focus on the support of multiple compiler versions.
+\OPAM\ is able to manage concurrent compiler installations.
 
 \subsection{State}
 
-The state of OPAM repositories is extended with the directory
-\verb+$opam/repo/$repo/compiler+ containing the compiler description
-files. When a repository is updated, this directory is updated as
-well.
+Compiler descriptions are stored in two files:
+
+\begin{itemize}
+
+\item \verb|$opam/compilers/$VERSION/$VERSION[+$TAG]/comp| contains the meta-data
+  for a given compiler.\verb+$VERSION+ is the compiler version and
+  \verb+$TAG+ an optional tag (such as \verb|4.01+fp|).
+  The format of {\tt .comp} file is described in \ref{file:comp}.
+
+\item (optional) \verb|$opam/compilers/$VERSION/$VERSION[+$TAG]/descr|
+  contains the description of that compiler. \verb+$VERSION+ is the
+  compiler version and \verb+$TAG+ an optional tag (such as
+  \verb|4.01+fp|). The first line of that line is used as synopsis and
+  is displayed with {\tt opam repository list}.
+
+\end{itemize}
+
+Switch-related meta-data are stored under \verb+$opam/$SWITCH/+:
+
+\begin{itemize}
+
+\item \verb+$opam/$SWITCH/installed+ is the list of installed
+  packages for the compiler instance \verb+$SWITCH+. The file format
+  is described in \S\ref{file:installed}.
+
+\item \verb+$opam/$SWITCH/installed.root+ is the list of installed
+  packages roots for the compiler instance \verb+$SWITCH+.
+  The file format is described in \S\ref{file:installed}. A package
+  root has been explicitely installed by the user.
+
+\item \verb+$opam/$SWITCH/config/$NAME.config+ is a
+  platform-specific configuration file of for the installed package
+  \verb+$NAME+ with the compiler instance \verb+$SWITCH+. The file
+  format is described in \S\ref{file:config}.
+
+\item \verb+$opam/$SWITCH/install/$NAME.install+ is a
+  platform-specific package installation file for the installed
+  package \verb+$NAME+ with the compiler instance \verb+$SWITCH+. The
+  file format is described in \S\ref{file:install}.
+
+\item \verb+$opam/$SWITCH/lib/$NAME/+ contains the libraries
+  associated to the installed package \verb+$NAME+ with the compiler
+  instance \verb+$SWITCH+.
+
+\item \verb+$opam/$SWITCH/doc/$NAME/+ contains the documentation
+  associated to the installed package {\tt NAME} with the compiler
+  instance \verb+$SWITCH+.
+
+\item \verb+$opam/$SWITCH/bin/+ contains the program files for all
+  installed packages with the compiler instance
+  \verb+$SWITCH+.
+
+\item \verb+$opam/$SWITCH/build/$NAME.$VERSION/+ is a tempory folder
+  used to build package \verb+$NAME+ with version \verb+$VERSION+,
+  with compiler instance \verb+$SWITCH+.
+
+\item \verb+$opam/$SWITCH/reinstall+ contains the list of packages
+  which has been changed upstream since the last upgrade. This can
+  happen for instance when a packager uploads a new archive or fix the
+  {\tt opam} file for a specific package version. Every package appearing in
+  this file will be reinstalled (or upgraded if a new version is
+  available) during the next upgrade when the current instance of the
+  compiler is \verb+$SWITCH+. The file format is similar to the one
+  described in \S\ref{file:installed}.
+
+\item \verb+$opam/$SWITCH/pinned+ contains the list of pinned
+  packages. The file format is described in \S\ref{file:pinned}.
+
+\item \verb+$opam/$SWITCH/overlay/$NAME.$VERSION/+ contains overlay
+  files for the version \verb+$VERSION+ of package \verb+$NAME+, for the
+  switch \verb+$SWITCH+. These possible overlay files are {\tt opam}, {\tt
+    url}, {\tt descr} or the directory {\tt files/}. If one of this
+  file (or directory) is present, the file (or directory) will be used
+  instead of the global one.
+
+\item \verb+$opam/$SWITCH/packages.dev+ contains cached information
+  for dev and pinned packages. \OPAM\ uses it on update to check which
+  package needs to be upgraded.
+
+\end{itemize}
 
 \subsection{Files}
 
-\subsubsection{Compiler Description Files}
+\subsubsection{Package List: {\tt installed} and {\tt reinstall}}
+\label{file:installed}
 
-For each compiler switch {\tt SWITCH}, the client state will be
-extended with the following files:
+The following configuration files: \verb+$opam/$SWITCH/installed+,
+\verb+$opam/$SWITCH/reinstall+, and \verb+$opam/repo/$REPO/updated+
+follow a very simple syntax. The file is a list of lines which
+contains a space-separated name and a version. Each line
+\verb+$NAME $VERSION+ means that the version \verb+$VERSION+ of
+package \verb+$NAME+ has been compiled with the compiler instance
+\verb+$SWITCH+ and has been installed on the system in
+\verb+$opam/$SWITCH/lib/$NAME+ and \verb+$opam/$SWITCH/bin/+. \\
 
-\begin{itemize}
-\item {\tt \$opam/compilers/SWITCH.comp}
-\end{itemize}
+For instance, if {\tt batteries} version {\tt 1.0+beta} and {\tt
+  ocamlfind} version {\tt 1.2} are installed, then
+\verb+$opam/$SWITCH/installed+ will contain:
 
-The syntax of {\tt .comp} files follows the one described in
+{\small
+\begin{Verbatim}[frame=single]
+batteries 1.0+beta
+ocamlfind 1.2
+\end{Verbatim}
+}
+
+\subsubsection{Compiler Description Files: {\tt comp}}
+\label{file:comp}
+
+The syntax of {\tt comp} files follows the one described in
 \S\ref{file:general} with the following restrictions:
 
 {
@@ -1038,7 +893,7 @@ The syntax of {\tt .comp} files follows the one described in
   hg, or a specific commit, tag or branch in that repository if
   the string ends by \verb+#<SHA1>+ or \verb+#<tag-name>+ or
   \verb+#<branch-name>+. Use {\tt git}, {\tt hg} or {\tt darcs}.
-\item OPAM will try to guess the source kind if you use {\tt src} or
+\item \OPAM\ will try to guess the source kind if you use {\tt src} or
   {\tt archive}.
 \end{itemize}
 
@@ -1053,7 +908,7 @@ The syntax of {\tt .comp} files follows the one described in
 
 \item {\tt make} are the flags to pass to {\tt make}.
   It must at least contain some target like {\tt world} or {\tt
-    world.opt}. If {\tt make} is not present, OPAM will execute all
+    world.opt}. If {\tt make} is not present, \OPAM\ will execute all
   the commands listed in {\tt build}.
 
 \item {\tt bytecomp}, {\tt asmcomp}, {\tt bytelink} and {\tt asmlink}
@@ -1125,6 +980,83 @@ bytelink:     [ "-g" ]
 env:          [ CAML_LD_LIBRARY_PATH = "%{lib}%/stublibs" ]
 \end{verbatim}
 
+
+\subsubsection{Package installation files: {\tt *.install}}
+\label{file:install}
+
+\verb+$opam/$SWITCH/install/NAME.install+ follows the syntax defined
+in \S\ref{file:general} with the following restrictions:
+
+{\small
+\begin{Verbatim}[frame=single]
+<file> :=
+    opam-version: "1"
+    ?lib:      [ <mv>+ ]
+    ?bin:      [ <mv>+ ]
+    ?toplevel: [ <mv>+ ]
+    ?share:    [ <mv>+ ]
+    ?doc:      [ <mv>+ ]
+    ?misc:     [ <mv>+ ]
+    ?stublibs: [ <mv>+ ]
+    ?man:      [ <mv>+ ]
+
+<mv> := STRING
+      | STRING { STRING }
+\end{Verbatim}
+}
+
+\begin{itemize}
+\item Files listed under {\tt lib} are copied into \verb+$opam/$SWITCH/lib/$NAME/+.
+\item Files listed under {\tt bin} are copied into \verb+$opam/$SWITCH/bin/+.
+\item Files listed under {\tt doc} are copied into \verb+$opam/$SWITCH/doc/$NAME/+.
+\item Files listed under {\tt toplevel} are copied into \verb+$opam/$SWITCH/toplevel+.
+\item Files lister under {\tt stublibs} are copied into \verb+$opam/$SWITCH/lib/stublibs/+
+\item Files listed under {\tt man} are copied into
+  \verb+$opam/$SWITCH/man/man3+. You can change the sub-directory by setting
+  the right optional argument (for instance:
+  \verb+man: [ "foo.1" {"man1"} ]+.
+\item Files listed under {\tt misc} are processed as follows:
+  for each pair \verb+$SRC { $DST }+, the tool asks the user if
+  he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
+\end{itemize}
+
+General remarks:
+\begin{itemize}
+
+\item You control where the files are copied under the given prefix by
+  using the optional argument. For instance:
+  \verb+doc: [ "_build/foo.html" {"foo/index.html"} ]+ will copy the
+  given HTML page under \verb+$opam/$SWITCH/doc/$NAME/foo/index.html+.
+
+\item \OPAM\ will try to install all the files in sequence, and it will
+  fail in case a source filename is not available. To tell \OPAM\ a
+  source filename might not be generated (because of byte/native
+  constraints or because of optional dependencies) the source filename
+  should start with \verb+?+.
+
+\item It is much cleaner if the underlying build-system can generate
+  the right \verb+$NAME.install+ files, containing the existing files only.
+
+\end{itemize}
+
+\subsubsection{Pinned Packages: {\tt pinned}}
+
+\verb+$opam/$SWITCH/pinned+ contains a list of lines of the form:
+
+\begin{Verbatim}
+<name> <kind> <path>
+\end{Verbatim}
+
+\begin{itemize}
+\item \verb+<name>+ is the name of the pinned package
+
+\item \verb+<kind>+ is the kind of pinning. This could be \verb+version+,
+\verb+local+, \verb+git+ or \verb+darcs+.
+
+\item \verb+<path>+ is either the version number (if kind is
+  \verb+version+) or the path to synchronize with.
+\end{itemize}
+
 \subsection{Commands}
 
 \subsubsection{Switching Compiler Version}
@@ -1132,46 +1064,150 @@ env:          [ CAML_LD_LIBRARY_PATH = "%{lib}%/stublibs" ]
 If the user wants to switch to another compiler version, he should run:
 
 \begin{verbatim}
-    $ opam switch [-clone] [-alias $ALIAS] $SWITCH
+    $ opam switch [-alias-of $COMPILER] $SWITCH
 \end{verbatim}
 
 This command will:
 
 \begin{itemize}
 
-\item If \verb+$ALIAS+ is not set, set it to \verb+$SWITCH+
+\item If \verb+$COMPILER+ is not set, set it to \verb+$SWITCH+
 
-\item Look for an existing \verb+$opam/$ALIAS+ directory.
+\item Look for an existing \verb+$opam/$COMPILER+ directory.
 
 \begin{itemize}
 \item If it
   exists, then change the {\tt ocaml-version} content to
-  \verb+$ALIAS+ in  \verb+$opam/config+.
+  \verb+$COMPILER+ in  \verb+$opam/config+.
 
 \item If it does not exist, look for an existing
-  \verb+$opam/compilers/SWITCH.comp+. If the file does not exists,
-  the command will fail with a well-defined error.
+  \verb|$opam/compilers/$VERSION/$VERSON[+$TAG]/comp|, where
+  \verb|$COMPILER = $VERSION[+TAG]| If the file does not exists, the
+  command will fail with a well-defined error.
 
 \item If the file exist, then build the new compiler with the right
-  options (and pass \verb+--prefix $opam/$ALIAS+ to
+  options (and pass \verb+--prefix $opam/$SWITCH+ to
   \verb+./configure+) and initialize everything in \verb+$opam/+
   in a consistent state as if ``\verb+opam init+'' has just been called.
 
 \item Update the file \verb+$opam/aliases+ with the line
-  \verb+$ALIAS $SWITCH+
+  \verb+$SWITCH $COMPILER+
 
 \end{itemize}
 
-\item If the \verb+-clone+ option is set, the command will try to install
-  the packages that were installed before switching
-  (that are not currently installed).
-  In case the new version contains installed packages
-  that were not installed before switching, it will try to keep them.
+\end{itemize}
 
-  In short, the heuristic is to install the maximum of previous packages
-  and remove the minimum.
-  The success depends on the compatibility of the existing packages
-  with respect to this new \verb+$SWITCH+.
+\section{Managing Repositories}
+\label{section:repositories}
+
+\subsection{State}
+\label{state-repo}
+
+Configuration files for the remote repository \verb+REPO+ are stored in
+\verb+$opam/repo/$REPO+. Repositories can be of different kinds
+(stored on the local filesystem, available via HTTP, stored under git,
+$\ldots$); they all share the same filesystem hierachy, which is
+updated by different operations, depending on the repository kind.
+
+\begin{itemize}
+
+\item \verb+$opam/repo/$REPO/version+ contains the minimum version of
+  \OPAM\ which can read that repository meta-data.
+
+\item \verb+$opam/repo/$REPO/config+ contains the configuration
+  off the repository \verb+$REPO+. The format of repository config
+  files is described in \S\ref{file:repo-config}.
+
+\item \verb+$opam/repo/$REPO/packages/$PREFIX/$NAME.$VERSION/opam+ is
+  the {\tt opam} file for the package \verb+$NAME+ with version
+  \verb+$VERSION+ (which might not be installed) with any possible
+  \verb+$PREFIX+. The format of {\tt opam} files is described in
+  \S\ref{file:opam}.
+
+\item (optional) \verb+$opam/repo/$REPO/packages/$PREFIX/$NAME.$VERSION/descr+
+  contains the textual description for the version \verb+$VERSION+ of
+  package \verb+$NAME+ (which might not be installed) with any
+  possible \verb+$PREFIX+ -- it should be in the same loacation as the
+  corresponding {\tt opam} file. The first line of this file is the
+  package synopsis.
+
+\item (optional) \verb+$opam/repo/$REPO/packages/$PREFIX/$NAME.$VERSION/url+
+  contains the upstream location for the version \verb+$VERSION+ of
+  package \verb+$NAME+ (which might not be installed) with any
+  possible \verb+$PREFIX+ -- it should be in the same loacation as the
+  corresponding {\tt opam} file. The format of {\tt url} files is
+  described in \S\ref{file:url}.
+
+\item (optional) \verb+$opam/repo/$REPO/packages/$PREFIX/$NAME.$VERSION/files/+
+  contains the overlay files for the version \verb+$VERSION+ of
+  package \verb+$NAME+ (which might not be installed) with any
+  possible \verb+$PREFIX+ -- it should be in the same loacation as the
+  corresponding {\tt opam} file. The overlay files are added to the
+  build directory when a package is built and installed.
+
+\item (optional)
+  \verb+$opam/repo/$REPO/archives/$NAME.$VERSION.tar.gz+ contains the
+  source archives for the version \verb+$VERSION+ of package
+  \verb+$NAME+. This folder is populated when a package needs to be
+  downloaded and that the given repository expose such a file. If the
+  file is not present, \OPAM\ will download the package from the
+  upstream sources.
+
+\end{itemize}
+
+\subsection{Files}
+
+\subsubsection{Index of packages}
+\label{file:index}
+
+\verb+$opam/repo/index+ follows a very simple syntax: each line of the
+file contains a space separated list of words
+\verb|$NAME.$VERSION $REPO+| specifying that all the version
+\verb+$VERSION+ of package \verb+$NAME+ is available in the remote
+repositories \verb|$REPO+|. The file contains information on all
+available packages (e.g. not only on the installed one). \\
+
+For instance, if {\tt batteries} version {\tt 1.0+beta} is available
+in the {\tt testing} repository and {\tt ocamlfind} version {\tt 1.2}
+is available in the {\tt default} and testing repositories (where {\tt
+  default} is one being used), then \verb+$opam/repo/index+ will
+contain:
+
+{\small
+\begin{Verbatim}[frame=single]
+batteries.1.0+beta testing
+ocamlfind.1.2 default testing
+\end{Verbatim}
+}
+
+\subsection{Commands}
+
+\subsubsection{Managing Remote Repository}
+
+An user can manage remote repositories, by writing:
+
+\begin{verbatim}
+    $ opam repository list # 'opam repository' works as well
+    $ opam repository add [--kind $KIND] $REPO $ADRESS
+    $ opam repository remove $REPO
+\end{verbatim}
+
+\begin{itemize}
+\item \verb+list+ lists the current repositories by looking at
+  \verb+$opam/config+
+
+\item \verb+add [--kind $KIND] $REPO $ADDRESS+ initializes
+  \verb+$REPO+ as described in \S\ref{opam-init}.
+
+\item For distributed version controlled repository, the user can use
+  \verb+url#hash+ or \verb+url#name+ where {\tt hash} is a given
+  revision name and {\tt name} it the name of a tag or a branch.
+
+\item \verb+remove $REPO+ deletes \verb+$opam/repo/$REPO+ and removes
+  \verb+$REPO+ from the {\tt repositories} list in \verb+$opam/config+.
+  Then, for each package in \verb+$opam/repo/index+ it updates the link
+  between packages and repositories (ie. it either deletes packages or
+  symlink them to the new repository containing the package).
 
 \end{itemize}
 
@@ -1195,23 +1231,11 @@ syntax of templates is the following:
 
 \item templates such as \verb+%{$NAME:$VAR}%+ are replaced by the value
   of the variable \verb+$VAR+ defined at the root of the file
-  \verb+$config/NAME.config+.
+  \verb+$opam/$SWITCH/config/NAME.config+.
 
 \item templates such as \verb+%{$NAME.$LIB:$VAR}%+ are replaced by the
   value of the variable \verb+$VAR+ defined in the \verb+$LIB+ section
-  in the file \verb+$config/PACKAGE.config+
-
-%% \item templates such as \verb+%{IF $test %{ $then %} THEN %{ $else %}}+ are
-%%    replaced by \verb+$then+ if \verb+$test+ is either:
-%% \begin{itemize}
-%% \item the ident {\tt true}
-%% \item or a (global or local) variable whose value is the ident {\tt
-%%   true}
-%% \item or an expression \verb+$var1 = $var2+ or \verb+$var = STRING+
-%%   where the contents of both sides of {\tt =} evaluates to the same
-%%   value.
-%% \end{itemize}
-%% Otherwise, the template is replaced by \verb+$else+.
+  in the file \verb+$opam/$SWITCH/config/$NAME.config+
 
 \end{itemize}
 
@@ -1257,11 +1281,11 @@ package, and are used to substitute variables in template files (see
 \begin{itemize}
 
 \item \verb+%{$NAME:$VAR}%+ will refer to the variable \verb+$VAR+
-  defined at the root of the configuration file \verb+$config/NAME.config+.
+  defined at the root of the configuration file \verb+$opam/$SWITCH/config/NAME.config+.
 
 \item \verb+%{$NAME.$LIB:$VAR}%+ will refer to the variable \verb+$VAR+
   defined in the {\tt library} or {\tt syntax} section named
-  \verb+$LIB+ in the configuration file \verb+$config/$NAME.config+.
+  \verb+$LIB+ in the configuration file \verb+$opam/$SWITCH/config/$NAME.config+.
 
 \end{itemize}
 
@@ -1277,7 +1301,7 @@ compilation or pre-processing arguments (ie. should they go on the
 compiler command line or should they be passed to the {\tt -pp}
 option). This is the responsibility of the build tool to do the right
 thing and the {\tt <kind>} of sections is only used for documentation
-purposes in OPAM. \\
+purposes in \OPAM. \\
 
 The available options are:
 
@@ -1303,9 +1327,9 @@ The available options are:
 
 \subsubsection{Getting Package Configuration}
 
-The first version of OPAM contains the minimal information to be able
-to use installed libraries. In order to do so, the end-user (or the
-packager) should run:
+\OPAM\ contains the minimal information to be able to use installed
+libraries. In order to do so, the end-user (or the packager) should
+run:
 
 \begin{verbatim}
     $ opam config list
@@ -1333,7 +1357,7 @@ packager) should run:
   dependencies).
 \item \verb+bytecomp+, \verb+asmcomp+, \verb+bytelink+ and
   \verb+asmlink+ return the associated value for the section
-  \verb+$LIB+ in the file \verb+$config/$NAME.config+ (\verb+-R+ gives
+  \verb+$LIB+ in the file \verb+$opam/$SWITCH/config/$NAME.config+ (\verb+-R+ gives
   a result taking into account the transitive closure of all
   dependencies).
 \end{itemize}
