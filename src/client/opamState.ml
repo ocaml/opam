@@ -581,14 +581,18 @@ let real_package t nv =
   if is_locally_pinned t name then OpamPackage.pinned name
   else nv
 
-let opam t nv =
+let opam_opt t nv =
   let nv = real_package t nv in
   let overlay = OpamPath.Switch.opam t.root t.switch nv in
-  if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
+  if OpamFilename.exists overlay then Some (OpamFile.OPAM.read overlay)
   else
-    try OpamPackage.Map.find nv t.opams
-    with Not_found ->
-      OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
+    try Some (OpamPackage.Map.find nv t.opams)
+    with Not_found -> None
+
+let opam t nv =
+  match opam_opt t nv with
+  | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
+  | Some nv -> nv
 
 let overlay_of_name t name =
   let versions = OpamPackage.versions_of_name t.packages name in
@@ -673,6 +677,14 @@ let url t nv =
       Some (OpamFile.URL.read url)
     else
       None
+
+let is_dev_package t nv =
+  match url t nv with
+  | None     -> false
+  | Some url ->
+    match guess_repository_kind (OpamFile.URL.kind url) (OpamFile.URL.url url) with
+    | `http  -> false
+    | _      -> true
 
 let dev_package t nv =
   if has_url_overlay t nv then OpamPath.Switch.dev_package t.root t.switch nv
@@ -903,7 +915,7 @@ let clean_file file nv =
     OpamFilename.remove file
   )
 
-let dev_packages dir =
+let dev_packages_of_dir dir =
   let dirs = OpamFilename.dirs dir in
   List.fold_left (fun map dir ->
       match OpamPackage.of_dirname dir with
@@ -916,10 +928,10 @@ let dev_packages dir =
     ) OpamPackage.Map.empty dirs
 
 let global_dev_packages t =
-  dev_packages (OpamPath.dev_packages_dir t.root)
+  dev_packages_of_dir (OpamPath.dev_packages_dir t.root)
 
 let switch_dev_packages t =
-  dev_packages (OpamPath.Switch.dev_packages_dir t.root t.switch)
+  dev_packages_of_dir (OpamPath.Switch.dev_packages_dir t.root t.switch)
 
 let keys map =
   OpamPackage.Map.fold (fun nv _ set ->
@@ -929,7 +941,7 @@ let keys map =
 (* Check that the dev packages are installed -- if not, just remove
    the tempory files. *)
 let consistency_checks dir pinned installed all_installed =
-  let dev_packages = dev_packages dir in
+  let dev_packages = dev_packages_of_dir dir in
   OpamPackage.Map.iter (fun nv dir ->
       let name = OpamPackage.name nv in
       if OpamPackage.is_pinned nv then (
@@ -949,7 +961,8 @@ let consistency_checks dir pinned installed all_installed =
 let dev_packages t =
   let global = global_dev_packages t in
   let switch = switch_dev_packages t in
-  OpamPackage.Set.union (keys global) (keys switch)
+  let all = OpamPackage.Set.union (keys global) (keys switch) in
+  OpamPackage.Set.filter (is_dev_package t) all
 
 let global_consistency_checks t =
   consistency_checks (OpamPath.dev_packages_dir t.root)

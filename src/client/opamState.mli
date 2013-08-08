@@ -165,6 +165,9 @@ val filter_commands: state -> variable_map -> command list -> string list list
 (** Return the OPAM file for the given package *)
 val opam: state -> package -> OpamFile.OPAM.t
 
+(** Return the OPAM file for the given package *)
+val opam_opt: state -> package -> OpamFile.OPAM.t option
+
 (** Return the URL file for the given package *)
 val url: state -> package -> OpamFile.URL.t option
 
@@ -307,6 +310,9 @@ val dev_packages: state -> package_set
     packages whose contents have changed upstream. Side-effect: update
     the reinstall files. *)
 val update_dev_packages: state -> package_set
+
+(** Check whether a package is a development package *)
+val is_dev_package: state -> package -> bool
 
 (** {2 Configuration files} *)
 

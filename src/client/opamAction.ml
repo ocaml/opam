@@ -297,6 +297,21 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
     (OpamPath.Switch.reinstall t.root t.switch)
     reinstall
 
+let dev_opam_opt t nv build_dir =
+  let opam () = OpamState.opam_opt t nv in
+  if OpamState.is_dev_package t nv then
+    let overlay = build_dir // "opam" in
+    if OpamFilename.exists overlay then
+      try Some (OpamFile.OPAM.read overlay)
+      with _ -> opam ()
+    else opam ()
+  else opam ()
+
+let dev_opam t nv build_dir =
+  match dev_opam_opt t nv build_dir with
+  | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
+  | Some nv -> nv
+
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
@@ -306,9 +321,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   let name = OpamPackage.name nv in
 
   (* Run the remove script *)
-  let opam =
-    try Some (OpamState.opam t nv)
-    with _ -> None in
+  let opam = OpamState.opam_opt t nv in
 
   OpamGlobals.msg "Removing %s.\n" (OpamPackage.to_string nv);
 
@@ -339,6 +352,9 @@ let remove_package_aux t ~metadata ~rm_build nv =
           try let _ = extract_package t nv in ()
           with _ -> ()
         );
+        let opam = dev_opam t nv p_build in
+        let remove = OpamState.filter_commands t
+            OpamVariable.Map.empty (OpamFile.OPAM.build opam) in
         let name = OpamPackage.Name.to_string name in
         let exec_dir, name =
           if OpamFilename.exists_dir p_build
@@ -359,7 +375,6 @@ let remove_package_aux t ~metadata ~rm_build nv =
 
   (* Remove the documentation *)
   OpamFilename.rmdir (OpamPath.Switch.doc t.root t.switch name);
-  (* XXX: remove the man pages *)
 
   (* Remove build/<package> if requested *)
   if not !OpamGlobals.keep_build_dir && rm_build then
@@ -481,16 +496,18 @@ let build_and_install_package_aux t ~metadata nv =
 
   OpamGlobals.msg "\n%s Installing %s %s\n" left (OpamPackage.to_string nv) right;
 
-  let opam = OpamState.opam t nv in
-
-  (* Get the env variables set up in the compiler description file *)
-  let env = compilation_env t opam in
-
   try
 
     (* This one can raises an exception (for insance an user's CTRL-C
        when the sync takes too long. *)
     let p_build = extract_package t nv in
+
+    (* For dev packages, we look for any opam file at the root of the build
+     directory *)
+    let opam = dev_opam t nv p_build in
+
+    (* Get the env variables set up in the compiler description file *)
+    let env = compilation_env t opam in
 
     (* Exec the given commands. *)
     let exec name f =
