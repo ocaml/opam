@@ -406,18 +406,16 @@ let package_index_aux root repositories =
       package_maps := (repo_name, packages) :: !package_maps;
       packages
     ) in
-  OpamPackage.Name.Map.fold (fun n repos map ->
-      List.fold_left (fun map repo_name ->
-          let packages = get_packages repo_name in
-          let packages =
-            OpamPackage.Map.filter (fun nv _ ->
-                OpamPackage.name nv = n
-              ) packages in
-          OpamPackage.Map.fold (fun nv prefix map ->
-              if OpamPackage.Map.mem nv map then map
-              else OpamPackage.Map.add nv (repo_name, prefix) map
-            ) packages map
-        ) map repos
+  OpamPackage.Map.fold (fun nv repos map ->
+      match repos with
+      | []           -> map
+      | repo_name::_ ->
+        let packages = get_packages repo_name in
+        let prefix =
+          try OpamPackage.Map.find nv packages
+          with Not_found -> None in
+        if OpamPackage.Map.mem nv map then map
+        else OpamPackage.Map.add nv (repo_name, prefix) map
     ) repo_index OpamPackage.Map.empty
 
 let compiler_index_aux repositories =
@@ -491,12 +489,21 @@ let package_repository_partial_state t nv ~archive =
   let exists_archive = OpamFilename.exists (OpamPath.Repository.archive repo nv) in
   exists_archive, OpamRepository.package_state repo prefix nv (`partial archive)
 
-let repository_of_package t nv =
+let repository_and_prefix_of_package t nv =
   let package_index = Lazy.force t.package_index in
-  try
+   try
     let repo, prefix = OpamPackage.Map.find nv package_index in
     let repo = find_repository_exn t repo in
     Some (repo, prefix)
+   with Not_found ->
+     None
+
+let repository_of_package t nv =
+  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
+  try
+    match OpamPackage.Map.find nv repo_index with
+    | []           -> None
+    | repo_name::_ -> Some (OpamRepositoryName.Map.find repo_name t.repositories)
   with Not_found ->
     None
 
@@ -524,7 +531,7 @@ let compiler_repository_state t =
       | l  -> OpamCompiler.Map.add comp l map
     ) compiler_index OpamCompiler.Map.empty
 
-let repository_of_compiler t comp =
+let repository_and_prefix_of_compiler t comp =
   let compiler_index = Lazy.force t.compiler_index in
   try
     let repo, prefix = OpamCompiler.Map.find comp compiler_index in

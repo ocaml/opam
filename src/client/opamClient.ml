@@ -599,8 +599,7 @@ module API = struct
           (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
 
         (* Init repository *)
-        OpamFile.Repo_index.write
-          (OpamPath.repo_index root) OpamPackage.Name.Map.empty;
+        OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Map.empty;
         OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
         OpamRepository.init repo;
 

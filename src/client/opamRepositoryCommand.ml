@@ -93,7 +93,7 @@ let fix_compiler_descriptions t ~verbose =
 
   (* Update the compiler description *)
   OpamCompiler.Set.iter (fun comp ->
-      match OpamState.repository_of_compiler t comp with
+      match OpamState.repository_and_prefix_of_compiler t comp with
       | None                -> ()
       | Some (repo, prefix) ->
         let files = OpamRepository.compiler_files repo prefix comp in
@@ -250,7 +250,7 @@ let fix_package_descriptions t ~verbose =
   (* Update the package descriptions *)
   let (++) = OpamPackage.Set.union in
   OpamPackage.Set.iter (fun nv ->
-      match OpamState.repository_of_package t nv with
+      match OpamState.repository_and_prefix_of_package t nv with
       | None                -> ()
       | Some (repo, prefix) ->
         let root = OpamPath.Repository.packages repo prefix nv in
@@ -345,15 +345,14 @@ let update_index t =
 
   (* Remove package without any valid repository *)
   let repo_index =
-    OpamPackage.Name.Map.fold (fun n repos repo_index ->
-      let valid_repos = List.filter (fun repo ->
-        let available = get_packages repo in
-        OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) available
-      ) repos in
-      match valid_repos with
-      | [] -> repo_index
-      | _  -> OpamPackage.Name.Map.add n valid_repos repo_index
-    ) repo_index OpamPackage.Name.Map.empty in
+    OpamPackage.Map.fold (fun nv repos repo_index ->
+        let valid_repos = List.filter (fun repo ->
+            OpamPackage.Set.mem nv (get_packages repo)
+          ) repos in
+        match valid_repos with
+        | [] -> repo_index
+        | _  -> OpamPackage.Map.add nv valid_repos repo_index
+      ) repo_index OpamPackage.Map.empty in
 
   (* Add new repositories *)
   let repo_index =
@@ -363,15 +362,14 @@ let update_index t =
           OpamPackage.Set.add nv set
         ) available !packages;
       OpamPackage.Set.fold (fun nv repo_index ->
-          let name = OpamPackage.name nv in
-          if not (OpamPackage.Name.Map.mem name repo_index) then
-            OpamPackage.Name.Map.add name [repo.repo_name] repo_index
+          if not (OpamPackage.Map.mem nv repo_index) then
+            OpamPackage.Map.add nv [repo.repo_name] repo_index
           else
-            let repos = OpamPackage.Name.Map.find name repo_index in
+            let repos = OpamPackage.Map.find nv repo_index in
             if not (List.mem repo.repo_name repos) then
-              let repo_index = OpamPackage.Name.Map.remove name repo_index in
+              let repo_index = OpamPackage.Map.remove nv repo_index in
               let repos = OpamMisc.insert (compare_repo t) repo.repo_name repos in
-              OpamPackage.Name.Map.add name repos repo_index
+              OpamPackage.Map.add nv repos repo_index
             else
               repo_index
         ) available repo_index
@@ -421,10 +419,10 @@ let priority repo_name ~priority =
   let repo_index_f = OpamPath.repo_index t.root in
   let repo_index =
     let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
-    OpamPackage.Name.Map.map (fun repos ->
+    OpamPackage.Map.map (fun repos ->
         if not (List.mem repo_name repos) then repos
         else
-          let repos = List.filter ((<>)repo_name) repos in
+          let repos = List.filter ((<>) repo_name) repos in
           let prios = ref [] in
           let priority_of n =
             if List.mem_assoc n !prios then

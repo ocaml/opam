@@ -334,27 +334,31 @@ module X = struct
 
     let internal = "repo-index"
 
-    type t = repository_name list OpamPackage.Name.Map.t
+    type t = repository_name list OpamPackage.Map.t
 
-    let empty = OpamPackage.Name.Map.empty
+    let empty = OpamPackage.Map.empty
 
     let of_channel _ ic =
       let lines = Lines.of_channel ic in
       List.fold_left (fun map -> function
-        | name_s :: repo_s ->
-          let name = OpamPackage.Name.of_string name_s in
-          if OpamPackage.Name.Map.mem name map then
-            OpamGlobals.error_and_exit "multiple lines for package %s" name_s
+        | nv_s :: repos_s ->
+          let nv = match OpamPackage.of_string_opt nv_s with
+            | Some nv -> nv
+            | None    -> OpamGlobals.error_and_exit
+                           "The index repository file is corrupted. Please run \
+                            'opam update' to fix the issue." in
+          if OpamPackage.Map.mem nv map then
+            OpamGlobals.error_and_exit "multiple lines for package %s" nv_s
           else
-            let repo_s = List.map OpamRepositoryName.of_string repo_s in
-            OpamPackage.Name.Map.add name repo_s map
+            let repos = List.map OpamRepositoryName.of_string repos_s in
+            OpamPackage.Map.add nv repos map
         | [] -> map
-      ) OpamPackage.Name.Map.empty lines
+      ) OpamPackage.Map.empty lines
 
     let to_string _ map =
-      let lines = OpamPackage.Name.Map.fold (fun name repo_s lines ->
+      let lines = OpamPackage.Map.fold (fun nv repo_s lines ->
           let repo_s = List.map OpamRepositoryName.to_string repo_s in
-          (OpamPackage.Name.to_string name :: repo_s) :: lines
+          (OpamPackage.to_string nv :: repo_s) :: lines
         ) map [] in
       Lines.to_string (List.rev lines)
 

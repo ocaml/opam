@@ -387,7 +387,7 @@ end
 (** {2 Repository files} *)
 
 (** Association between package names and repositories: [$opam/repo/index] *)
-module Repo_index: IO_FILE with type t = repository_name list name_map
+module Repo_index: IO_FILE with type t = repository_name list package_map
 
 (** Association between packages and repositories:
     [$opam/repo/index.packages] *)

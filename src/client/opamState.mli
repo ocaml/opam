@@ -233,7 +233,8 @@ val compiler_state: state -> checksums compiler_map
 val compiler_repository_state: state -> checksums compiler_map
 
 (** Return the active repository for a given compiler *)
-val repository_of_compiler: state -> compiler -> (repository * string option) option
+val repository_and_prefix_of_compiler:
+  state -> compiler -> (repository * string option) option
 
 (** {2 Packages} *)
 
@@ -283,7 +284,11 @@ val package_repository_partial_state: state -> package -> archive:bool ->
   bool * checksums
 
 (** Get the active repository for a given package *)
-val repository_of_package: state -> package -> (repository * string option) option
+val repository_of_package: state -> package -> repository option
+
+(** Get the active repository for a given package *)
+val repository_and_prefix_of_package:
+  state -> package -> (repository * string option) option
 
 (** Add the given packages to the set of package to reinstall. If [all]
     is set, this is done for ALL the switches (useful when a package
