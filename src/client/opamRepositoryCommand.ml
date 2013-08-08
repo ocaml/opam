@@ -386,11 +386,11 @@ let update_config t repos =
   let new_config = OpamFile.Config.with_repositories t.config repos in
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
-let fix_descriptions t ~verbose =
+let fix_descriptions ?(save_cache=true) t ~verbose =
   update_index t;
   let _ = fix_compiler_descriptions t ~verbose in
   let _ = fix_package_descriptions t ~verbose in
-  OpamState.rebuild_state_cache ()
+  if save_cache then OpamState.rebuild_state_cache ()
 
 let () =
   OpamState.fix_descriptions_hook := fix_descriptions

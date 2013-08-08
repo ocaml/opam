@@ -101,9 +101,6 @@ val remove_state_cache: unit -> unit
 (** Display stats *)
 val print_stats: unit -> unit
 
-(** Load repository related states only. All the other fields are left empty. *)
-val load_repository_state: string -> state
-
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> state
 
@@ -381,4 +378,4 @@ val check_base_packages: state -> unit
 val switch_reinstall_hook: (switch -> unit) ref
 
 (** Update hook *)
-val fix_descriptions_hook: (state -> verbose:bool -> unit) ref
+val fix_descriptions_hook: (?save_cache:bool -> state -> verbose:bool -> unit) ref

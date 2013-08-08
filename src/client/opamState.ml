@@ -772,42 +772,6 @@ let read_repositories root config =
     OpamRepositoryName.Map.add repo_name repo map
   ) OpamRepositoryName.Map.empty names
 
-(* Only used during init: load only repository-related information *)
-let load_repository_state call_site =
-  log "LOAD-REPO-STATE(%s)" call_site;
-  let root = OpamPath.root () in
-  let config_p = OpamPath.config root in
-  let config = OpamFile.Config.read config_p in
-  let repositories = read_repositories root config in
-  let switch = match !OpamGlobals.switch with
-    | `Command_line s
-    | `Env s   -> OpamSwitch.of_string s
-    | `Not_set -> OpamFile.Config.switch config in
-
-  let partial = true in
-
-  (* evertything else is empty *)
-  let aliases = OpamSwitch.Map.empty in
-  let compilers = OpamCompiler.Set.empty in
-  let compiler = OpamCompiler.of_string "none" in
-  let compiler_version = lazy (OpamCompiler.Version.of_string "none") in
-  let opams = OpamPackage.Map.empty in
-  let descrs = OpamPackage.Map.empty in
-  let packages = OpamPackage.Set.empty in
-  let available_packages = lazy OpamPackage.Set.empty in
-  let installed = OpamPackage.Set.empty in
-  let installed_roots = OpamPackage.Set.empty in
-  let reinstall = OpamPackage.Set.empty in
-  let package_index = lazy OpamPackage.Map.empty in
-  let compiler_index = lazy OpamCompiler.Map.empty in
-  let pinned = OpamPackage.Name.Map.empty in
-  {
-    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
-    packages; available_packages; installed; installed_roots; reinstall;
-    config; aliases; pinned; compilers;
-    package_index; compiler_index;
-  }
-
 (* load partial state to be able to read env variables *)
 let load_env_state call_site =
   log "LOAD-ENV-STATE(%s)" call_site;
@@ -1259,7 +1223,7 @@ let install_global_config root switch =
     config
 
 let fix_descriptions_hook =
-  ref (fun _ ~verbose:_ -> assert false)
+  ref (fun ?save_cache:_ _ ~verbose:_ -> assert false)
 
 (* Upgrade to the new file overlay *)
 let upgrade_to_1_1 () =

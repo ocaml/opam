@@ -588,10 +588,8 @@ module API = struct
 
         (* Load the partial state, and update the global state *)
         log "updating repository state";
-        let t = OpamState.load_repository_state "init-1" in
-        OpamRepositoryCommand.update_index t;
-        let _ = OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:false in
-        let _ = OpamRepositoryCommand.fix_package_descriptions t ~verbose:false in
+        let t = OpamState.load_state ~save_cache:false "init-1" in
+        OpamRepositoryCommand.fix_descriptions t ~save_cache:false ~verbose:false;
 
         (* Load the partial state, and install the new compiler if needed *)
 	log "updating package state";
