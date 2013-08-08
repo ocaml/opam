@@ -1912,15 +1912,20 @@ let install_compiler t ~quiet switch compiler =
               "No source for compiler %s"
               (OpamCompiler.to_string compiler) in
         let build_dir = OpamPath.Switch.build_ocaml t.root switch in
-        let comp_src_raw = OpamFilename.to_string comp_src in
-        if Sys.file_exists comp_src_raw && Sys.is_directory comp_src_raw then
+        let kind = guess_repository_kind (OpamFile.Comp.kind comp) comp_src in
+        if kind = `local
+        && Sys.file_exists (fst comp_src)
+        && Sys.is_directory (fst comp_src) then
           OpamFilename.link_dir
-            ~src:(OpamFilename.Dir.of_string comp_src_raw) ~dst:build_dir
-        else if Sys.file_exists comp_src_raw then
-          OpamFilename.extract comp_src build_dir
+            ~src:(OpamFilename.Dir.of_string (fst comp_src)) ~dst:build_dir
         else OpamFilename.with_tmp_dir (fun download_dir ->
-            let file = OpamFilename.download ~overwrite:true comp_src download_dir in
-            OpamFilename.extract file build_dir;
+            let result =
+              OpamRepository.pull_url kind (OpamPackage.of_string "compiler.get")
+                download_dir comp_src in
+            match result with
+            | Not_available u -> OpamGlobals.error_and_exit "%s is not available." u
+            | Up_to_date r
+            | Result r        -> OpamFilename.extract_generic_file r build_dir
           );
         let patches = OpamFile.Comp.patches comp in
         let patches = List.map (fun f ->

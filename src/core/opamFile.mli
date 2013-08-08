@@ -247,7 +247,10 @@ module Comp: sig
   val version: t -> compiler_version
 
   (** Return the url of the compiler *)
-  val src: t -> filename option
+  val src: t -> address option
+
+  (** Return the url kind *)
+  val kind: t -> repository_kind option
 
   (** Return the list of patches to apply *)
   val patches: t -> filename list

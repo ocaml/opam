@@ -172,6 +172,8 @@ module X = struct
     }
 
     let s_archive = "archive"
+    let s_src = "src"
+    let s_http = "http"
     let s_checksum = "checksum"
     let s_git = "git"
     let s_darcs = "darcs"
@@ -180,33 +182,45 @@ module X = struct
 
     let valid_fields = [
       s_archive;
-      s_checksum;
+      s_src;
+      s_http;
       s_git;
       s_darcs;
       s_hg;
       s_local;
+      s_checksum;
     ]
+
+    let url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local =
+      match src, archive, http, git, darcs, hg, local with
+      | None  , None  , None  , None  , None  , None  , None   -> None  , None
+      | Some x, None  , None  , None  , None  , None  , None
+      | None  , Some x, None  , None  , None  , None  , None   -> Some x, None
+      | None  , None  , Some x, None  , None  , None  , None   -> Some x, Some `http
+      | None  , None  , None  , Some x, None  , None  , None   -> Some x, Some `git
+      | None  , None  , None  , None  , Some x, None  , None   -> Some x, Some `darcs
+      | None  , None  , None  , None  , None  , Some x, None   -> Some x, Some `hg
+      | None  , None  , None  , None  , None  , None  , Some x -> Some x, Some `local
+      | _ -> OpamGlobals.error_and_exit "Too many URLS"
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
-      let get f = OpamFormat.assoc_option s.file_contents f OpamFormat.parse_string in
+      let get f = OpamFormat.assoc_option s.file_contents f
+          (OpamFormat.parse_string ++ address_of_string) in
       let archive  = get s_archive in
+      let http     = get s_http in
+      let src      = get s_src in
       let git      = get s_git in
       let darcs    = get s_darcs in
       let hg       = get s_hg in
       let local    = get s_local in
-      let checksum = get s_checksum in
-      let url, kind = match archive, git, darcs, hg, local with
-        | None  , None  , None  , None, None ->
-            OpamGlobals.error_and_exit "Missing URL"
-        | Some x, None  , None  , None  , None   -> x, Some `http
-        | None  , Some x, None  , None  , None   -> x, Some `git
-        | None  , None  , Some x, None  , None   -> x, Some `darcs
-        | None  , None  , None  , Some x, None   -> x, Some `hg
-        | None  , None  , None  , None  , Some x -> x, Some `local
-        | _ -> OpamGlobals.error_and_exit "Too many URLS" in
-      let url = address_of_string url in
+      let checksum =
+        OpamFormat.assoc_option s.file_contents s_checksum OpamFormat.parse_string in
+      let url, kind = url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local in
+      let url = match url with
+        | None   -> OpamGlobals.error_and_exit "Missing URL"
+        | Some u -> u in
       { url; kind; checksum }
 
     let to_string filename t =
@@ -1336,7 +1350,8 @@ module X = struct
       name         : compiler ;
       version      : compiler_version ;
       preinstalled : bool;
-      src          : filename option ;
+      src          : address option ;
+      kind         : repository_kind option ;
       patches      : filename list ;
       configure    : string list ;
       make         : string list ;
@@ -1357,6 +1372,7 @@ module X = struct
       name         = OpamCompiler.of_string "<none>";
       version      = OpamCompiler.Version.of_string "<none>";
       src          = None;
+      kind         = None;
       preinstalled = false;
       patches   = [];
       configure = [];
@@ -1383,7 +1399,6 @@ module X = struct
 
     let s_name      = "name"
     let s_version   = "version"
-    let s_src       = "src"
     let s_patches   = "patches"
     let s_configure = "configure"
     let s_make      = "make"
@@ -1398,12 +1413,25 @@ module X = struct
     let s_env       = "env"
     let s_preinstalled = "preinstalled"
     let s_tags      = "tags"
+    let s_src       = "src"
+    let s_http      = "http"
+    let s_archive   = "archive"
+    let s_git       = "git"
+    let s_darcs     = "darcs"
+    let s_hg        = "hg"
+    let s_local     = "local"
 
     let valid_fields = [
       s_opam_version;
       s_name;
       s_version;
       s_src;
+      s_archive;
+      s_http;
+      s_git;
+      s_darcs;
+      s_hg;
+      s_local;
       s_patches;
       s_configure;
       s_make;
@@ -1427,6 +1455,8 @@ module X = struct
     let make t = t.make
     let build t = t.build
     let src t = t.src
+    let kind t = t.kind
+
     let packages t = t.packages
     let asmlink t = t.asmlink
     let asmcomp t = t.asmcomp
@@ -1475,8 +1505,17 @@ module X = struct
           (OpamFilename.to_string filename)
           (OpamCompiler.Version.to_string version)
           (OpamCompiler.Version.to_string version_d);
-      let src = OpamFormat.assoc_option s s_src
-          (OpamFormat.parse_string ++ OpamFilename.raw) in
+      let address field =
+        OpamFormat.assoc_option s field
+          (OpamFormat.parse_string ++ address_of_string) in
+      let src = address s_src in
+      let archive = address s_archive in
+      let http = address s_http in
+      let git = address s_git in
+      let darcs = address s_darcs in
+      let hg = address s_hg in
+      let local = address s_local in
+      let src, kind = URL.url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local in
       let patches =
         OpamFormat.assoc_list s s_patches
           (OpamFormat.parse_list (OpamFormat.parse_string ++ OpamFilename.raw)) in
@@ -1507,7 +1546,7 @@ module X = struct
         OpamGlobals.error_and_exit
           "You should either specify an url (with 'sources')  or use 'preinstalled: \
            true' to pick the already installed compiler version.";
-      { opam_version; name; version; src;
+      { opam_version; name; version; src; kind;
         patches; configure; make; build;
         bytecomp; asmcomp; bytelink; asmlink; packages;
         requires; pp;
@@ -1520,6 +1559,10 @@ module X = struct
         | Cmd l    -> OpamFormat.make_string_list l
         | Camlp4 l ->
           List (Symbol "CAMLP4" :: List.rev (List.rev_map OpamFormat.make_string l)) in
+      let src = match s.kind, s.src with
+        | _          , None   -> None
+        | Some kind  , Some x -> Some (string_of_repository_kind kind, x)
+        | None       , Some x -> Some ("archive", x) in
       Syntax.to_string {
         file_name     = OpamFilename.to_string filename;
         file_contents = [
@@ -1530,12 +1573,10 @@ module X = struct
             Variable (s_version,
                       OpamFormat.make_string
                         (OpamCompiler.Version.to_string s.version));
-          ] @ (match s.src with
-               | None   -> []
-               | Some s ->
-                 [Variable (s_src, OpamFormat.make_string (OpamFilename.to_string s))]
-              ) @ [
-
+        ] @ (match src with
+            | None       -> []
+            | Some (s,c) -> [Variable (s, OpamFormat.make_string (string_of_address c))]
+          ) @ [
             Variable (s_patches,
                       OpamFormat.make_list
                         (OpamFilename.to_string ++ OpamFormat.make_string)
