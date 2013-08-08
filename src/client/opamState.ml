@@ -720,19 +720,17 @@ let create_system_compiler_description root = function
   | Some version ->
     log "create-system-compiler-description %s"
       (OpamCompiler.Version.to_string version);
-    let comp = OpamPath.compiler_comp root OpamCompiler.system in
-    OpamFilename.remove comp;
-    let f =
-      OpamFile.Comp.create_preinstalled
-        OpamCompiler.system version
-        (if not !OpamGlobals.no_base_packages then base_packages else [])
-        [ ("CAML_LD_LIBRARY_PATH", "=",
-          "%{lib}%/stublibs"
-          ^ ":" ^
-          (match Lazy.force OpamSystem.system_ocamlc_where with
-           | Some d -> Filename.concat d "stublibs"
-           | None   -> assert false))
-        ] in
+    match Lazy.force OpamSystem.system_ocamlc_where with
+    | None     -> ()
+    | Some dir ->
+      let comp = OpamPath.compiler_comp root OpamCompiler.system in
+      OpamFilename.remove comp;
+      let f =
+        OpamFile.Comp.create_preinstalled
+          OpamCompiler.system version
+          (if not !OpamGlobals.no_base_packages then base_packages else [])
+          [ "CAML_LD_LIBRARY_PATH", "=",
+            "%{lib}%/stublibs" ^ ":" ^ Filename.concat dir "stublibs" ] in
     OpamFile.Comp.write comp f
 
 let system_needs_upgrade_displayed = ref false
@@ -1301,7 +1299,8 @@ let upgrade_to_1_1 () =
           log "restoring %s" (OpamFilename.to_string tmp_file);
           OpamFilename.mkdir (OpamFilename.dirname system_comp);
           OpamFilename.move ~src:tmp_file ~dst:system_comp;
-        );
+        ) else
+          create_system_compiler_description root (OpamCompiler.Version.system ())
       );
     (* Remove pinned cache *)
     OpamSwitch.Map.iter (fun switch _ ->
