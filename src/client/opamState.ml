@@ -1256,6 +1256,7 @@ let fix_descriptions_hook =
 let upgrade_to_1_1 () =
   let root  = OpamPath.root () in
   let opam  = root / "opam" in
+  let opam_tmp = root / "opam_tmp" in
   let descr = root / "descr" in
   let compilers = root / "compilers" in
   if OpamFilename.exists_dir opam then (
@@ -1271,7 +1272,7 @@ let upgrade_to_1_1 () =
        ** Processing **\n"
       (OpamFilename.prettify_dir (OpamPath.root ()));
 
-    OpamFilename.rmdir opam;
+    OpamFilename.move_dir ~src:opam ~dst:opam_tmp;
     OpamFilename.rmdir descr;
 
     (* Fix index priorities *)
@@ -1326,8 +1327,21 @@ let upgrade_to_1_1 () =
           ) pinned
       ) aliases;
 
+    (* Workaround to add back packages without repositories *)
+    List.iter (fun file ->
+        let nv =
+          file
+          |> OpamFilename.chop_extension
+          |> OpamFilename.basename
+          |> OpamFilename.Base.to_string
+          |> OpamPackage.of_string in
+        let dst = OpamPath.opam root nv in
+        if not (OpamFilename.exists dst) then OpamFilename.copy ~src:file ~dst
+      ) (OpamFilename.files opam_tmp);
+    OpamFilename.rmdir opam_tmp;
+
     OpamGlobals.msg
-      "** Upgrade complete. You can continue to use OPAM as usual. **\n;";
+      "\n** Upgrade complete. You can continue to use OPAM as usual. **\n;";
     OpamGlobals.exit 0
   )
 
