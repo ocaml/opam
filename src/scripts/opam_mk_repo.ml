@@ -82,6 +82,13 @@ let process {index; gener_digest; dryrun; recurse; names} =
       )
     ) tmp_dirs;
 
+  let () =
+    let checkdir dir = Sys.file_exists dir && Sys.is_directory dir in
+    if not (checkdir "packages" || checkdir "compilers") then
+      OpamGlobals.error_and_exit
+        "No repository found in current directory.\n\
+         Please make sure there is a \"packages\" or \"compilers\" directory" in
+
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
   let prefixes = OpamRepository.packages_with_prefixes repo in
