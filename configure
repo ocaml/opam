@@ -4475,7 +4475,7 @@ else
   as_fn_error $? "You must have either curl or wget installed." "$LINENO" 5
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml doc/man-ext/opam-admin.md doc/man-ext/opam-check.md"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml doc/man-ext/opam-check.md"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5185,7 +5185,6 @@ do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
-    "doc/man-ext/opam-admin.md") CONFIG_FILES="$CONFIG_FILES doc/man-ext/opam-admin.md" ;;
     "doc/man-ext/opam-check.md") CONFIG_FILES="$CONFIG_FILES doc/man-ext/opam-check.md" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
