@@ -470,7 +470,7 @@ let funlock file =
       OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
       close_in ic;
       log "rm %s" file;
-      Unix.unlink file;
+      try Unix.unlink file with _ -> ()
   ) else
     log "Cannot find %s, but continuing anyway..." file
 
