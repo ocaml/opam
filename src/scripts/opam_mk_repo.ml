@@ -17,64 +17,70 @@
 open OpamTypes
 open OpamFilename.OP
 
-let () =
-  OpamHTTP.register ();
-  OpamGit.register ();
-  OpamDarcs.register ();
-  OpamLocal.register ();
-  OpamHg.register ()
-
 let log fmt = OpamGlobals.log "OPAM-MK-REPO" fmt
 
-let tmp_dirs = [ "tmp"; "log" ]
+type args = {
+  index: bool;
+  names: string list;
+  gener_digest: bool;
+  dryrun: bool;
+  recurse: bool;
+}
 
-let () =
+let args =
+  let open Cmdliner in
+  (*{[
+       let all =
+         let doc = "Build all package archives (this is the default unless -i)" in
+         Arg.(value & flag & info ["a";"all"] ~doc)
+       in
+     }]*)
+  let index =
+    let doc = "Only build indexes, not package archives." in
+    Arg.(value & flag & info ["i";"index"] ~doc)
+  in
+  let gener_digest =
+    let doc = "Automatically correct the wrong archive checksums." in
+    Arg.(value & flag & info ["g";"generate-checksums"] ~doc)
+  in
+  let dryrun =
+    let doc = "Simply display the possible actions instead of executing them." in
+    Arg.(value & flag & info ["d";"dryrun"] ~doc)
+  in
+  let recurse =
+    let doc = "Recurse among the transitive dependencies." in
+    Arg.(value & flag & info ["r";"recursive"] ~doc)
+  in
+  let names =
+    let doc = "Names of the packages to include in the repo." in
+    Arg.(value & pos_all string [] & info [] ~docv:"PKG" ~doc)
+  in
+  Term.(
+    pure
+      (fun index gener_digest dryrun recurse names ->
+         {index; gener_digest; dryrun; recurse; names})
+      $index $gener_digest $dryrun $recurse $names
+  )
+
+let process {index; gener_digest; dryrun; recurse; names} =
+  let () =
+    OpamHTTP.register ();
+    OpamGit.register ();
+    OpamDarcs.register ();
+    OpamLocal.register ();
+    OpamHg.register () in
+
+  let tmp_dirs = [ "tmp"; "log" ] in
+
   List.iter (fun dir ->
-    if Sys.file_exists dir then (
-      Printf.eprintf
-        "ERROR: The subdirectory '%s' already exists in the current directory. \n\
-         Please remove or rename it or run %s in a different folder.\n"
-        dir Sys.argv.(0);
-      exit 1;
-    )
-  ) tmp_dirs
-
-let all, index, names, gener_digest, dryrun, recurse =
-  let usage = Printf.sprintf "%s [-all] [<package>]*" (Filename.basename Sys.argv.(0)) in
-  let all = ref true in
-  let index = ref false in
-  let names = ref [] in
-  let gener_digest = ref false in
-  let dryrun = ref false in
-  let recurse = ref false in
-  let specs = Arg.align [
-      ("-v"       , Arg.Unit OpamVersion.message, " Display version information");
-      ("--version", Arg.Unit OpamVersion.message, " Display version information");
-
-      ("-a"   , Arg.Set all, "");
-      ("--all", Arg.Set all  ,
-       Printf.sprintf " Build all package archives (default is %b)" !all);
-
-      ("-i"     , Arg.Set index, "");
-      ("--index", Arg.Set index,
-       Printf.sprintf " Build indexes only (default is %b)" !index);
-
-      ("-g"                  , Arg.Set gener_digest, "");
-      ("--generate-checksums", Arg.Set gener_digest,
-       Printf.sprintf " Automatically correct the wrong archive checksums (default \
-                       is %b)" !gener_digest);
-
-      ("-d"      , Arg.Set dryrun, "");
-      ("--dryrun", Arg.Set dryrun, " Simply display the possible actions instead of \
-                                    executing them");
-
-      ("-r", Arg.Set recurse, " Recurse among the transitive dependencies");
-    ] in
-  let ano p = names := p :: !names in
-  Arg.parse specs ano usage;
-  !all, !index, !names, !gener_digest, !dryrun, !recurse
-
-let process () =
+      if Sys.file_exists dir then (
+        Printf.eprintf
+          "ERROR: The subdirectory '%s' already exists in the current directory. \n\
+           Please remove or rename it or run %s in a different folder.\n"
+          dir Sys.argv.(0);
+        exit 1;
+      )
+    ) tmp_dirs;
 
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
@@ -222,9 +228,3 @@ let process () =
       OpamGlobals.error "Got some errors while processing: %s"
         (String.concat ", " (List.map OpamPackage.to_string all_errors));
       List.iter display_error !errors
-
-let () =
-  try process ()
-  with
-  | OpamGlobals.Exit i -> exit i
-  | e -> Printf.eprintf "%s\n" (Printexc.to_string e)

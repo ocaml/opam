@@ -18,31 +18,33 @@
 open OpamTypes
 open OpamFilename.OP
 
-let opt_normalize = ref false
-let opt_repair = ref false
+type args = {
+  normalize: bool;
+  repair: bool;
+}
 
-let () =
-  let usage = Printf.sprintf "Usage: %s" Sys.argv.(0) in
-  let specs = [
-    ("--version"  , Arg.Unit OpamVersion.message, " Display version information");
-    ("--normalize", Arg.Set opt_normalize         , " Normalize all files in the repository");
-    ("--repair"   , Arg.Set opt_repair            , " Try to repair most of warnings");
-  ] in
-  let ano x =
-    Printf.eprintf "%s: invalid argument" x in
-  Arg.parse specs ano usage
-
-let write f_write fic st = if !opt_normalize then f_write fic st
+let args =
+  let open Cmdliner in
+  let normalize =
+    let doc = "Normalize all files in the repository." in
+    Arg.(value & flag & info ["normalize"] ~doc)
+  in
+  let repair =
+    let doc = "Attempt to repair most warnings." in
+    Arg.(value & flag & info ["repair"] ~doc)
+  in
+  Term.(pure (fun normalize repair -> { normalize; repair })
+        $ normalize $ repair)
 
 module Check = struct
   (*   let descr x = x *)
-  let opam t =
+  let opam t args =
     List.fold_left
       (fun t (s, f_cons, f_make) ->
         f_make t (List.map
             (function
              | (CString "make", f0) :: l, f1 as x ->
-               if !opt_repair then
+               if args.repair then
                  (CIdent "make", f0) :: l, f1
                else
                  let _ = OpamGlobals.warning "unescaped 'make' in %s" s in
@@ -58,7 +60,9 @@ module Check = struct
       (*   let comp_descr x = x *)
 end
 
-let () =
+let process args =
+
+  let write f_write fic st = if args.normalize then f_write fic st in
 
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
@@ -74,7 +78,7 @@ let () =
 
     (** OPAM *)
     let opam = OpamPath.Repository.opam repo prefix package in
-    write OpamFile.OPAM.write opam (Check.opam (OpamFile.OPAM.read opam));
+    write OpamFile.OPAM.write opam (Check.opam (OpamFile.OPAM.read opam) args);
 
     (** URL *)
     let url = OpamPath.Repository.url repo prefix package in

@@ -3,7 +3,7 @@
 LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
-TARGETS = opam opam-mk-repo
+TARGETS = opam opam-admin
 
 .PHONY: all
 
@@ -36,8 +36,7 @@ with-ocamlbuild: autogen
 	done;\
 	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native opam_mk_repo.native opam_repo_check.native &&\
 	ln -sf _build/src/client/opamMain.native opam &&\
-	ln -sf _build/src/scripts/opam_mk_repo.native opam-mk-repo &&\
-	ln -sf _build/src/scripts/opam_repo_check.native opam-repo-check
+	ln -sf _build/src/scripts/opam_admin.native opam-admin
 
 $(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
 	$(MAKE) -C ocp-build
@@ -67,7 +66,7 @@ distclean: clean
 	$(MAKE) -C $(SRC_EXT) distclean
 	rm -f META Makefile.config config.log config.status
 	rm -f src/core/opamVersion.ml src/core/opamGitVersion.ml src/core/opamScript.ml
-	rm -f doc/man-ext/opam-mk-repo.md doc/man-ext/opam-check.md
+	rm -f doc/man-ext/opam-admin.md
 
 .PHONY: tests
 
