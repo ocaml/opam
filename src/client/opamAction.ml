@@ -354,7 +354,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
         );
         let opam = dev_opam t nv p_build in
         let remove = OpamState.filter_commands t
-            OpamVariable.Map.empty (OpamFile.OPAM.build opam) in
+            OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
         let name = OpamPackage.Name.to_string name in
         let exec_dir, name =
           if OpamFilename.exists_dir p_build
