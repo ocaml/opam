@@ -234,11 +234,12 @@ let extract_package t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
 
-  let extract_and_copy_files = function
-    | None   -> ()
-    | Some f ->
-      OpamFilename.extract_generic_file f build_dir;
-      OpamState.copy_files t nv build_dir in
+  let extract_and_copy_files file =
+    begin match file with
+      | None   -> ()
+      | Some f -> OpamFilename.extract_generic_file f build_dir
+    end;
+    OpamState.copy_files t nv build_dir in
 
   if OpamState.is_locally_pinned t (OpamPackage.name nv) then
     let dir = OpamPath.Switch.dev_package t.root t.switch nv in
