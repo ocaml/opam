@@ -1,5 +1,7 @@
 OPAM    = ../_obuild/opam/opam.byte
 TOPICS  = $(shell $(OPAM) help topics)
+OPAM_ADMIN = ../_obuild/opam-admin/opam-admin.byte
+TOPICS_ADMIN = check make
 HELPFMT = --help=groff
 
 .PHONY: man html dev-manual tutorials
@@ -11,7 +13,11 @@ man:
 	for i in $(TOPICS); do\
 	  $(OPAM) $$i $(HELPFMT) > man/opam-$$i.1;\
 	done
-	for i in opam-admin; do\
+	$(OPAM_ADMIN) $(HELPFMT) > man/opam-admin.1
+	for i in $(TOPICS_ADMIN); do\
+	  $(OPAM_ADMIN) $$i $(HELPFMT) > man/opam-admin-$$i.1;\
+	done
+	for i in opam-check; do\
 	  pandoc -s -t man man-ext/$$i.md -o man/$$i.1;\
 	done
 

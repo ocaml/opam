@@ -1,26 +1,25 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-ADMIN" 1 "" "Opam-admin 1.1.0" "Opam-admin Manual"
+.TH "OPAM-ADMIN-CHECK" 1 "" "Opam-admin 1.1.0" "Opam-admin Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-admin \- Administration tool for local repositories.
+opam\-admin\-check \- Check a local repo for errors.
 .SH SYNOPSIS
 .P
-\fBopam\-admin\fR \fICOMMAND\fR ...
-.SH COMMANDS
-.TP 4
-\fBcheck\fR
-Check a local repo for errors.
-.TP 4
-\fBmake\fR
-Initialize a repo for serving files.
+\fBopam\-admin check\fR [\fIOPTION\fR]... 
 .SH OPTIONS
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-normalize\fR
+Normalize all files in the repository.
+.TP 4
+\fB\-\-repair\fR
+Attempt to repair most warnings.
 .TP 4
 \fB\-\-version\fR
 Show version information.

@@ -27,7 +27,6 @@ Makefile.config
 config.log
 config.status
 doc/man-ext/opam-check.md
-doc/man-ext/opam-admin.md
 src/core/opamGitVersion.ml
 src/core/opamScript.ml
 src/core/opamVersion.ml
