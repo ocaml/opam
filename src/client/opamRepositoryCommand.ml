@@ -248,7 +248,6 @@ let fix_package_descriptions t ~verbose =
     ) deleted_packages;
 
   (* Update the package descriptions *)
-  let (++) = OpamPackage.Set.union in
   OpamPackage.Set.iter (fun nv ->
       match OpamState.repository_and_prefix_of_package t nv with
       | None                -> ()
@@ -262,7 +261,7 @@ let fix_package_descriptions t ~verbose =
             OpamFilename.copy_in ~root file dir
           ) files;
         OpamFilename.remove (OpamPath.archive t.root nv);
-    ) (new_packages ++ updated_packages ++ changed_packages);
+    ) changed_packages;
 
   (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)

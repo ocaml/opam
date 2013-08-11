@@ -1124,17 +1124,34 @@ let load_state ?(save_cache=true) call_site =
     else
       OpamFile.Comp.version (OpamFile.Comp.read comp_f)
   ) in
+  let repositories = read_repositories root config in
+  let package_index = package_index_aux repositories in
+  let compiler_index = compiler_index_aux repositories in
   let opams = match opams with
     | None   ->
-      let packages = OpamPackage.list (OpamPath.packages_dir root) in
+      let packages =
+        OpamPackage.Set.union
+          (OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch))
+          (OpamPackage.Set.of_list (OpamPackage.Map.keys package_index)) in
       OpamPackage.Set.fold (fun nv map ->
-          let file = OpamPath.opam root nv in
           try
+            let file =
+              let f1 = OpamPath.opam root nv in
+              if OpamFilename.exists f1 then f1
+              else
+                let repo, prefix = OpamPackage.Map.find nv package_index in
+                let repo = OpamRepositoryName.Map.find repo repositories in
+                OpamPath.Repository.opam repo prefix nv in
             let opam = OpamFile.OPAM.read file in
             OpamPackage.Map.add nv opam map
-          with Parsing.Parse_error | OpamSystem.Internal_error _ ->
-            OpamGlobals.warning "File %s contains errors, skipping."
-              (OpamFilename.to_string file);
+          with
+          | Not_found ->
+            OpamGlobals.warning "Cannot file OPAM file for %s, skipping."
+              (OpamPackage.to_string nv);
+            map
+          | Parsing.Parse_error | OpamSystem.Internal_error _ ->
+            OpamGlobals.warning "Errors while parsing %s OPAM file, skipping."
+              (OpamPackage.to_string nv);
             map
         ) packages OpamPackage.Map.empty
     | Some o -> o in
@@ -1142,7 +1159,6 @@ let load_state ?(save_cache=true) call_site =
     OpamPackage.Map.mapi (fun nv _ ->
         lazy (OpamFile.Descr.safe_read (OpamPath.descr root nv))
       ) opams in
-  let repositories = read_repositories root config in
   let pinned =
     OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
   let installed =
@@ -1155,8 +1171,6 @@ let load_state ?(save_cache=true) call_site =
     OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let system =
     (compiler = OpamCompiler.system) in
-  let package_index = package_index_aux repositories in
-  let compiler_index = compiler_index_aux repositories in
   let available_packages_stub = lazy OpamPackage.Set.empty in
   let t = {
     partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
