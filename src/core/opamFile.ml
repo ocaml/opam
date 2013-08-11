@@ -344,122 +344,46 @@ module X = struct
 
   end
 
-  module Repo_index = struct
+  module Repo_index (A : OpamMisc.ABSTRACT) = struct
 
     let internal = "repo-index"
 
-    type t = repository_name list OpamPackage.Map.t
+    type t = (repository_name * string option) A.Map.t
 
-    let empty = OpamPackage.Map.empty
+    let empty = A.Map.empty
 
     let of_channel _ ic =
       let lines = Lines.of_channel ic in
       List.fold_left (fun map -> function
-        | nv_s :: repos_s ->
-          let nv = match OpamPackage.of_string_opt nv_s with
-            | Some nv -> nv
-            | None    -> OpamGlobals.error_and_exit
-                           "The index repository file is corrupted. Please run \
-                            'mkdir %s/opam && opam list' to fix the issue."
-                           (OpamPath.root () |> OpamFilename.Dir.to_string) in
-          if OpamPackage.Map.mem nv map then
-            OpamGlobals.error_and_exit "multiple lines for package %s" nv_s
-          else
-            let repos = List.map OpamRepositoryName.of_string repos_s in
-            OpamPackage.Map.add nv repos map
-        | [] -> map
-      ) OpamPackage.Map.empty lines
+          | [] | [_]                 -> map
+          | a_s :: repos_s :: prefix ->
+            let a = A.of_string a_s in
+            if A.Map.mem a map then
+              OpamGlobals.error_and_exit "multiple lines for %s" a_s
+            else
+              let repo_name = OpamRepositoryName.of_string repos_s in
+              let prefix = match prefix with
+                | []  -> None
+                | [p] -> Some p
+                | _   -> OpamGlobals.error_and_exit "Too many prefixes" in
+              A.Map.add a (repo_name, prefix) map
+        ) A.Map.empty lines
 
     let to_string _ map =
-      let lines = OpamPackage.Map.fold (fun nv repo_s lines ->
-          let repo_s = List.map OpamRepositoryName.to_string repo_s in
-          (OpamPackage.to_string nv :: repo_s) :: lines
+      let lines = A.Map.fold (fun nv (repo_name, prefix) lines ->
+          let repo_s = OpamRepositoryName.to_string repo_name in
+          let prefix_s = match prefix with
+            | None   -> []
+            | Some p -> [p] in
+          (A.to_string nv :: repo_s :: prefix_s) :: lines
         ) map [] in
       Lines.to_string (List.rev lines)
 
   end
 
-  module Package_index = struct
+  module Package_index = Repo_index(OpamPackage)
 
-    let internal = "package-index"
-
-    type t = repository_name package_map option
-
-    let empty = None
-
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
-      let checksum = ref None in
-      let map = List.fold_left (fun map -> function
-        | [c] when !checksum = None ->
-          checksum := Some c;
-          map
-        | [nv; r] ->
-          let nv = OpamPackage.of_string nv in
-          let r  = OpamRepositoryName.of_string r in
-          OpamPackage.Map.add nv r map
-        | []      -> map
-        | l       ->
-          OpamGlobals.error_and_exit "%s: invalid package index line"
-            (String.concat " " l)
-      ) OpamPackage.Map.empty lines in
-      match !checksum with
-      | None          -> None
-      | Some expected ->
-        let actual =
-          let root = OpamFilename.Dir.of_string !OpamGlobals.root_dir in
-          OpamFilename.digest (OpamPath.repo_index root) in
-        if actual <> expected then
-          None
-        else
-          Some map
-
-    let to_string _ = function
-      | None     -> ""
-      | Some map ->
-        let lines = OpamPackage.Map.fold (fun nv r lines ->
-          let nv = OpamPackage.to_string nv in
-          let r  = OpamRepositoryName.to_string r in
-          [nv; r] :: lines
-        ) map [] in
-        let repo_index =
-          let root = OpamFilename.Dir.of_string !OpamGlobals.root_dir  in
-          OpamPath.repo_index root in
-        let checksum = OpamFilename.digest repo_index in
-        Lines.to_string ([ checksum ] :: List.rev lines)
-
-  end
-
-  module Compiler_index = struct
-
-    let internal = "compiler-index"
-
-    type t = repository_name compiler_map
-
-    let empty = OpamCompiler.Map.empty
-
-    let of_channel _ ic =
-      let lines = Lines.of_channel ic in
-      List.fold_left (fun map -> function
-        | [c; r] ->
-          let c = OpamCompiler.of_string c in
-          let r = OpamRepositoryName.of_string r in
-          OpamCompiler.Map.add c r map
-        | []      -> map
-        | l       ->
-          OpamGlobals.error_and_exit "%s: invalid compiler index line"
-            (String.concat " " l)
-      ) empty lines
-
-    let to_string _ map =
-      let lines = OpamCompiler.Map.fold (fun nv r lines ->
-          let nv = OpamCompiler.to_string nv in
-          let r  = OpamRepositoryName.to_string r in
-          [nv; r] :: lines
-        ) map [] in
-      Lines.to_string (List.rev lines)
-
-  end
+  module Compiler_index = Repo_index(OpamCompiler)
 
   module Pinned = struct
 
@@ -1744,11 +1668,6 @@ end
 module Config = struct
   include Config
   include Make (Config)
-end
-
-module Repo_index = struct
-  include Repo_index
-  include Make (Repo_index)
 end
 
 module Package_index = struct

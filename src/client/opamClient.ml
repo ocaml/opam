@@ -456,10 +456,12 @@ module API = struct
       (* Update each remote backend *)
       OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos
         ~child ~post:ignore ~pre:ignore;
-      OpamRepositoryCommand.update_index t;
+
       let compiler_updates =
+        OpamRepositoryCommand.update_compiler_index t;
         OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
       let package_updates =
+        OpamRepositoryCommand.update_package_index t;
         OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
 
       (* Eventually output some JSON file *)
@@ -580,7 +582,10 @@ module API = struct
           (OpamSwitch.Map.add switch compiler OpamSwitch.Map.empty);
 
         (* Init repository *)
-        OpamFile.Repo_index.write (OpamPath.repo_index root) OpamPackage.Map.empty;
+        OpamFile.Package_index.write (OpamPath.package_index root)
+          OpamPackage.Map.empty;
+        OpamFile.Compiler_index.write (OpamPath.compiler_index root)
+          OpamCompiler.Map.empty;
         OpamFile.Repo_config.write (OpamPath.Repository.config repo) repo;
         OpamRepository.init repo;
 

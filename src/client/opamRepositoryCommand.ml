@@ -320,63 +320,37 @@ let compare_repo t r1 r2 =
     (OpamState.find_repository t r1)
     (OpamState.find_repository t r2)
 
-let update_index t =
-  let file = OpamPath.repo_index t.root in
+let update_package_index t =
+  let file = OpamPath.package_index t.root in
   OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
-
   let repositories = OpamState.sorted_repositories t in
-  let repo_index = OpamFile.Repo_index.safe_read file in
-
-  (* All the existing packages *)
-  let packages = ref OpamPackage.Set.empty in
-
-  (* Cache of packages per repository *)
-  let packages_repo = ref [] in
-  let get_packages repo_name =
-    if List.mem_assoc repo_name !packages_repo then
-      List.assoc repo_name !packages_repo
-    else
-      match OpamState.find_repository_opt t repo_name with
-      | Some repo ->
-        let pkgs = OpamRepository.packages repo in
-        packages_repo := (repo_name, pkgs) :: !packages_repo;
-        pkgs
-      | None -> OpamPackage.Set.empty in
-
-  (* Remove package without any valid repository *)
-  let repo_index =
-    OpamPackage.Map.fold (fun nv repos repo_index ->
-        let valid_repos = List.filter (fun repo ->
-            OpamPackage.Set.mem nv (get_packages repo)
-          ) repos in
-        match valid_repos with
-        | [] -> repo_index
-        | _  -> OpamPackage.Map.add nv valid_repos repo_index
-      ) repo_index OpamPackage.Map.empty in
-
-  (* Add new repositories *)
   let repo_index =
     List.fold_left (fun repo_index repo ->
-      let available = get_packages repo.repo_name in
-      packages := OpamPackage.Set.fold (fun nv set ->
-          OpamPackage.Set.add nv set
-        ) available !packages;
-      OpamPackage.Set.fold (fun nv repo_index ->
-          if not (OpamPackage.Map.mem nv repo_index) then
-            OpamPackage.Map.add nv [repo.repo_name] repo_index
-          else
-            let repos = OpamPackage.Map.find nv repo_index in
-            if not (List.mem repo.repo_name repos) then
-              let repo_index = OpamPackage.Map.remove nv repo_index in
-              let repos = OpamMisc.insert (compare_repo t) repo.repo_name repos in
-              OpamPackage.Map.add nv repos repo_index
+        let packages = OpamRepository.packages_with_prefixes repo in
+        OpamPackage.Map.fold (fun nv prefix repo_index ->
+            if not (OpamPackage.Map.mem nv repo_index) then
+              OpamPackage.Map.add nv (repo.repo_name, prefix) repo_index
             else
               repo_index
-        ) available repo_index
-      ) repo_index repositories in
+          ) packages repo_index
+      ) OpamPackage.Map.empty repositories in
+  OpamFile.Package_index.write file repo_index
 
-  (* Write ~/.opam/repo/index *)
-  OpamFile.Repo_index.write (OpamPath.repo_index t.root) repo_index
+let update_compiler_index t =
+  let file = OpamPath.compiler_index t.root in
+  OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
+  let repositories = OpamState.sorted_repositories t in
+  let repo_index =
+    List.fold_left (fun repo_index repo ->
+        let compilers = OpamRepository.compilers_with_prefixes repo in
+        OpamCompiler.Map.fold (fun comp prefix repo_index ->
+            if not (OpamCompiler.Map.mem comp repo_index) then
+              OpamCompiler.Map.add comp (repo.repo_name, prefix) repo_index
+            else
+              repo_index
+          ) compilers repo_index
+      ) OpamCompiler.Map.empty repositories in
+  OpamFile.Compiler_index.write file repo_index
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
@@ -387,8 +361,9 @@ let update_config t repos =
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
 let fix_descriptions ?(save_cache=true) t ~verbose =
-  update_index t;
+  update_compiler_index t;
   let _ = fix_compiler_descriptions t ~verbose in
+  update_package_index t;
   let _ = fix_package_descriptions t ~verbose in
   if save_cache then OpamState.rebuild_state_cache ()
 
@@ -414,35 +389,6 @@ let priority repo_name ~priority =
     let config = OpamFile.Repo_config.read config_f in
     { config with repo_priority = priority } in
   OpamFile.Repo_config.write config_f config;
-
-  (* 2/ shuffle the repository index *)
-  let repo_index_f = OpamPath.repo_index t.root in
-  let repo_index =
-    let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
-    OpamPackage.Map.map (fun repos ->
-        if not (List.mem repo_name repos) then repos
-        else
-          let repos = List.filter ((<>) repo_name) repos in
-          let prios = ref [] in
-          let priority_of n =
-            if List.mem_assoc n !prios then
-              List.assoc n !prios
-            else
-              let repo = OpamState.find_repository t repo_name in
-              let config_f = OpamPath.Repository.config repo in
-              let config = OpamFile.Repo_config.read config_f in
-              let prio = config.repo_priority in
-              prios := (n, prio) :: !prios;
-              prio in
-          let compare n1 n2 =
-            let p1 = priority_of n1 in
-            let p2 = priority_of n2 in
-            (* highest is better priority *)
-            p2 - p1 in
-          OpamMisc.insert compare repo_name repos
-      ) repo_index in
-  OpamFile.Repo_index.write repo_index_f repo_index;
-
   (* relink the compiler and package descriptions *)
   fix_descriptions t ~verbose:true
 

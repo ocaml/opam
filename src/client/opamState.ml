@@ -75,8 +75,8 @@ module Types = struct
     installed_roots: OpamFile.Installed_roots.t;
     reinstall: OpamFile.Reinstall.t;
     config: OpamFile.Config.t;
-    package_index: (repository_name * string option) package_map lazy_t;
-    compiler_index: (repository_name * string option) compiler_map lazy_t;
+    package_index: OpamFile.Package_index.t;
+    compiler_index: OpamFile.Compiler_index.t;
   }
 end
 
@@ -390,33 +390,16 @@ let find_repository_opt t repo_name =
   try Some (find_repository_exn t repo_name)
   with Not_found -> None
 
-(* This function is bit complex because we want to respect the package
-   priorities set in ~/.opam/repo/index, and then respect the repository
-   priorities. *)
-let package_index_aux root repositories =
+let package_index_aux repositories =
   log "package-index";
-  let package_maps = ref [] in
-  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index root) in
-  let get_packages repo_name =
-    if List.mem_assoc repo_name !package_maps then
-      List.assoc repo_name !package_maps
-    else (
-      let repo = find_repository_aux repo_name repositories in
+  let repositories = sorted_repositories_aux repositories in
+  List.fold_left (fun map repo ->
       let packages = OpamRepository.packages_with_prefixes repo in
-      package_maps := (repo_name, packages) :: !package_maps;
-      packages
-    ) in
-  OpamPackage.Map.fold (fun nv repos map ->
-      match repos with
-      | []           -> map
-      | repo_name::_ ->
-        let packages = get_packages repo_name in
-        let prefix =
-          try OpamPackage.Map.find nv packages
-          with Not_found -> None in
-        if OpamPackage.Map.mem nv map then map
-        else OpamPackage.Map.add nv (repo_name, prefix) map
-    ) repo_index OpamPackage.Map.empty
+      OpamPackage.Map.fold (fun nv prefix map ->
+          if OpamPackage.Map.mem nv map then map
+          else OpamPackage.Map.add nv (repo.repo_name, prefix) map
+        ) packages map
+    ) OpamPackage.Map.empty repositories
 
 let compiler_index_aux repositories =
   log "compiler-index";
@@ -433,7 +416,7 @@ let compiler_index t =
   compiler_index_aux t.repositories
 
 let package_index t =
-  package_index_aux t.root t.repositories
+  package_index_aux t.repositories
 
 let package_state_one t all nv =
   let opam    = OpamPath.opam t.root nv in
@@ -474,36 +457,32 @@ let package_partial_state t nv ~archive =
     OpamFilename.exists archive, s
 
 let package_repository_state t =
-  let package_index = Lazy.force t.package_index in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
       let repo = find_repository_exn t repo in
       match OpamRepository.package_state repo prefix nv `all with
       | [] -> map
       | l  -> OpamPackage.Map.add nv l map
-    ) package_index OpamPackage.Map.empty
+    ) t.package_index OpamPackage.Map.empty
 
 let package_repository_partial_state t nv ~archive =
-  let package_index = Lazy.force t.package_index in
-  let repo, prefix = OpamPackage.Map.find nv package_index in
+  let repo, prefix = OpamPackage.Map.find nv t.package_index in
   let repo = find_repository_exn t repo in
   let exists_archive = OpamFilename.exists (OpamPath.Repository.archive repo nv) in
   exists_archive, OpamRepository.package_state repo prefix nv (`partial archive)
 
 let repository_and_prefix_of_package t nv =
-  let package_index = Lazy.force t.package_index in
    try
-    let repo, prefix = OpamPackage.Map.find nv package_index in
+    let repo, prefix = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository_exn t repo in
     Some (repo, prefix)
    with Not_found ->
      None
 
 let repository_of_package t nv =
-  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
   try
-    match OpamPackage.Map.find nv repo_index with
-    | []           -> None
-    | repo_name::_ -> Some (OpamRepositoryName.Map.find repo_name t.repositories)
+    let repo, _ = OpamPackage.Map.find nv t.package_index in
+    let repo = OpamRepositoryName.Map.find repo t.repositories in
+    Some repo
   with Not_found ->
     None
 
@@ -523,18 +502,16 @@ let compiler_state t =
     ) t.compilers OpamCompiler.Map.empty
 
 let compiler_repository_state t =
-  let compiler_index = Lazy.force t.compiler_index in
   OpamCompiler.Map.fold (fun comp (repo, prefix) map ->
       let repo = find_repository_exn t repo in
       match OpamRepository.compiler_state repo prefix comp with
       | [] -> map
       | l  -> OpamCompiler.Map.add comp l map
-    ) compiler_index OpamCompiler.Map.empty
+    ) t.compiler_index OpamCompiler.Map.empty
 
 let repository_and_prefix_of_compiler t comp =
-  let compiler_index = Lazy.force t.compiler_index in
   try
-    let repo, prefix = OpamCompiler.Map.find comp compiler_index in
+    let repo, prefix = OpamCompiler.Map.find comp t.compiler_index in
     let repo = find_repository_exn t repo in
     Some (repo, prefix)
   with Not_found ->
@@ -692,7 +669,6 @@ let dev_package t nv =
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
-  let repo_index = OpamFile.Repo_index.safe_read (OpamPath.repo_index t.root) in
   let filter nv =
     if OpamPackage.Map.mem nv t.opams then (
       let opam = OpamPackage.Map.find nv t.opams in
@@ -721,7 +697,7 @@ let available_packages t system =
             os $ OpamGlobals.os_string () in
           OpamFormula.eval atom f in
       let has_reposiotry () =
-        OpamPackage.Map.mem nv repo_index in
+        OpamPackage.Map.mem nv t.package_index in
       let available () =
         eval_bool t OpamVariable.Map.empty (OpamFile.OPAM.available opam) in
       consistent_ocaml_version ()
@@ -815,8 +791,8 @@ let load_env_state call_site =
   let installed_roots = OpamPackage.Set.empty in
   let reinstall = OpamPackage.Set.empty in
   let pinned = OpamPackage.Name.Map.empty in
-  let package_index = lazy OpamPackage.Map.empty in
-  let compiler_index = lazy OpamCompiler.Map.empty in
+  let package_index = OpamPackage.Map.empty in
+  let compiler_index = OpamCompiler.Map.empty in
   {
     partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
     packages; available_packages; installed; installed_roots; reinstall;
@@ -1179,8 +1155,8 @@ let load_state ?(save_cache=true) call_site =
     OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let system =
     (compiler = OpamCompiler.system) in
-  let package_index = lazy (package_index_aux root repositories) in
-  let compiler_index = lazy (compiler_index_aux repositories) in
+  let package_index = package_index_aux repositories in
+  let compiler_index = compiler_index_aux repositories in
   let available_packages_stub = lazy OpamPackage.Set.empty in
   let t = {
     partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
@@ -1245,7 +1221,8 @@ let upgrade_to_1_1 () =
   let opam_tmp = root / "opam_tmp" in
   let descr = root / "descr" in
   let compilers = root / "compilers" in
-  if OpamFilename.exists_dir opam then (
+  let repo_index = root / "repo" // "index" in
+  if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
 
     OpamGlobals.msg
       "** Upgrading to OPAM 1.1 [DO NOT INTERRUPT THE PROCESS]   **\n\
@@ -1258,11 +1235,12 @@ let upgrade_to_1_1 () =
        ** Processing **\n"
       (OpamFilename.prettify_dir (OpamPath.root ()));
 
-    OpamFilename.move_dir ~src:opam ~dst:opam_tmp;
+    if OpamFilename.exists_dir opam then
+      OpamFilename.move_dir ~src:opam ~dst:opam_tmp;
     OpamFilename.rmdir descr;
 
     (* Fix index priorities *)
-    OpamFilename.remove (OpamPath.repo_index root);
+    OpamFilename.remove (OpamPath.root () / "repo" // "index");
 
     (* fix the base config files *)
     let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in
@@ -2036,7 +2014,7 @@ let download_archive t nv =
   let dst = OpamPath.archive t.root nv in
   if OpamFilename.exists dst then Some dst
   else
-    let repo, _ = OpamPackage.Map.find nv (Lazy.force t.package_index) in
+    let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
     match OpamRepository.pull_archive repo nv with
     | Not_available _ -> None
