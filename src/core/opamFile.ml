@@ -901,12 +901,12 @@ module X = struct
         OpamFormat.make_option (OpamFilename.Base.to_string ++ OpamFormat.make_string)
           OpamFormat.make_filter in
       let name_and_version = match OpamPackage.of_filename filename with
-        | None  ->
+        | Some nv when not (OpamPackage.is_pinned nv) -> []
+        | _ ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
           [ Variable (s_name, name t.name);
-            Variable (s_version, version t.version) ]
-        | _     -> [] in
+            Variable (s_version, version t.version) ] in
       let option c s f = match c with
         | None   -> []
         | Some v -> [ Variable (s, f v) ] in
@@ -994,6 +994,7 @@ module X = struct
             (OpamFilename.to_string filename);
         | Some v, None    -> v
         | None  , Some nv -> OpamPackage.version nv
+        | Some v, Some nv when OpamPackage.is_pinned nv -> v
         | Some v, Some nv ->
           if OpamPackage.version nv <> v then
             OpamGlobals.error_and_exit

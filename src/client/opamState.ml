@@ -92,6 +92,10 @@ let universe t action = {
   u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams;
   u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams;
   u_installed_roots = t.installed_roots;
+  u_pinned    =
+    OpamPackage.Name.Map.fold
+      (fun k _ set -> OpamPackage.Name.Set.add k set)
+      t.pinned OpamPackage.Name.Set.empty;
 }
 
 let string_of_repositories r =
@@ -730,10 +734,40 @@ let available_packages t system =
       && has_reposiotry ()
     ) else
       false in
-  OpamPackage.Map.fold (fun nv _ set ->
-      if filter nv then OpamPackage.Set.add nv set
-      else set
-    ) t.opams OpamPackage.Set.empty
+  let pinned_version nv =
+    let name = OpamPackage.name nv in
+    try
+      match OpamPackage.Name.Map.find name t.pinned with
+      | Version v -> OpamPackage.create name v
+      | _ ->
+        let nv1 = OpamPackage.pinned name in
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv1 in
+        let opam = OpamFile.OPAM.read overlay in
+        if OpamFile.OPAM.version opam = OpamPackage.Version.pinned then
+          (OpamGlobals.warning
+             "Package %s is pinned locally but with unspecified version:\n\
+              is your OPAM directory up-to-date ? Please try running 'mkdir ~/.opam/opam && opam list'."
+             (OpamPackage.Name.to_string name);
+           nv)
+        else
+          OpamPackage.create name (OpamFile.OPAM.version opam)
+    with Not_found ->
+      nv
+  in
+  let _pinned, set =
+    OpamPackage.Map.fold (fun nv _ (pinned, set) ->
+        if OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned then
+          (pinned, set)
+        else
+          let nv1 = pinned_version nv in
+          let pinned =
+            if nv1 != nv
+            then OpamPackage.Name.Set.add (OpamPackage.name nv1) pinned
+            else pinned in
+          if filter nv1 then pinned, OpamPackage.Set.add nv1 set
+          else pinned, set
+      ) t.opams (OpamPackage.Name.Set.empty, OpamPackage.Set.empty) in
+  set
 
 let base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
@@ -1248,7 +1282,7 @@ let upgrade_to_1_1 () =
   if OpamFilename.exists_dir opam then (
 
     OpamGlobals.msg
-      "** Upgrading to OPAM 1.1 [DO NOT INTERRUPT THE PROCESS]   **\n\
+      "\n** Upgrading to OPAM 1.1 \027[31m[DO NOT INTERRUPT THE PROCESS]\027[m **\n\
        \n\
       \   In case something goes wrong, you can run that upgrade\n\
       \   process again by doing:\n\
@@ -1328,7 +1362,7 @@ let upgrade_to_1_1 () =
     OpamFilename.rmdir opam_tmp;
 
     OpamGlobals.msg
-      "\n** Upgrade complete. You can continue to use OPAM as usual. **\n;";
+      "\n** Upgrade complete. You can continue to use OPAM as usual. **\n";
     OpamGlobals.exit 0
   )
 

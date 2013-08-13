@@ -544,6 +544,7 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
+  u_pinned   : name_set;
 }
 
 type 'a updates = {

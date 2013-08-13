@@ -22,7 +22,7 @@ open OpamMisc.OP
 
 let post_message ?(failed=false) state action =
   let pkg = action_contents action in
-  let opam = OpamPackage.Map.find pkg state.opams in
+  let opam = OpamState.opam state pkg in
   let messages = OpamFile.OPAM.post_messages opam in
   let print_message message =
     if failed then
