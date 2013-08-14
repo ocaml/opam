@@ -52,7 +52,7 @@ let pin ~force action =
           try OpamMisc.getenv "EDITOR"
           with Not_found -> "nano" in
     let nv = OpamPackage.pinned name in
-    let file = OpamPath.Switch.opam t.root t.switch nv in
+    let file = OpamPath.Switch.Overlay.opam t.root t.switch nv in
     if not (OpamFilename.exists file) then OpamState.add_pinned_overlay t name;
     ignore (Sys.command (Printf.sprintf "%s %s" editor (OpamFilename.to_string file)))
 
