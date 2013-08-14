@@ -887,6 +887,7 @@ module X = struct
     let messages t = t.messages
     let post_messages t = t.post_messages
 
+    let with_version t version = { t with version }
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
     let with_build t build = { t with build }
