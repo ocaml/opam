@@ -746,7 +746,6 @@ module X = struct
       libraries  : section list;
       syntax     : section list;
       patches    : (basename * filter option) list;
-      others     : (string * value) list;
       ocaml_version: compiler_constraint option;
       os         : (bool * string) generic_formula;
       available  : filter;
@@ -776,7 +775,6 @@ module X = struct
       libraries  = [];
       syntax     = [];
       patches    = [];
-      others     = [];
       ocaml_version = None;
       os         = Empty;
       available  = FBool true;
@@ -887,6 +885,7 @@ module X = struct
     let messages t = t.messages
     let post_messages t = t.post_messages
 
+    let with_version t version = { t with version }
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
     let with_build t build = { t with build }
@@ -957,8 +956,7 @@ module X = struct
           @ list    t.messages      s_messages
               OpamFormat.(make_list (make_option make_string make_filter))
           @ list    t.post_messages s_post_messages
-              OpamFormat.(make_list (make_option make_string make_filter))
-          @ List.rev (List.rev_map (fun (s, v) -> Variable (s, v)) t.others);
+              OpamFormat.(make_list (make_option make_string make_filter));
       } in
       Syntax.to_string
         ~indent_variable:
@@ -1047,13 +1045,8 @@ module X = struct
       let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
       let messages = OpamFormat.assoc_list s s_messages OpamFormat.parse_messages in
       let post_messages = OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
-      let others     =
-        OpamMisc.filter_map (function
-          | Variable (x,v) -> if List.mem x useful_fields then None else Some (x,v)
-          | _              -> None
-        ) s in
       { name; version; maintainer; substs; build; remove;
-        depends; depopts; conflicts; libraries; syntax; others;
+        depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; authors; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages

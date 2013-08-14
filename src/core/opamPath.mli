@@ -192,28 +192,29 @@ module Switch: sig
       $opam/$switch/packages.dev/$name.$version/} *)
   val dev_package: t -> switch -> package -> dirname
 
-  (** Switch metadata overlay (over the global metadata): {i
-      $opam/$switch/overlay/} *)
-  val overlay_dir: t -> switch -> dirname
+  module Overlay: sig
+    (** Switch metadata overlay (over the global metadata): {i
+        $opam/$switch/overlay/} *)
+    val dir: t -> switch -> dirname
 
-  (** Switch metadata overlay (over the global metadata): {i
-      $opam/$switch/overlay/$name.$version} *)
-  val overlay: t -> switch -> package -> dirname
+    (** Switch metadata overlay (over the global metadata): {i
+        $opam/$switch/overlay/$name.$version} *)
+    val package: t -> switch -> package -> dirname
 
-  (** OPAM overlay: {i
-      $opam/$switch/cache/$name.$version/opam} *)
-  val opam: t -> switch -> package -> filename
+    (** OPAM overlay: {i
+        $opam/$switch/cache/$name.$version/opam} *)
+    val opam: t -> switch -> package -> filename
 
-  (** URL overlay: {i
-      $opam/$switch/overlay/$name.$version/url} *)
-  val url: t -> switch -> package -> filename
+    (** URL overlay: {i
+        $opam/$switch/overlay/$name.$version/url} *)
+    val url: t -> switch -> package -> filename
 
-  (** Descr orverlay *)
-  val descr: t -> switch -> package -> filename
+    (** Descr orverlay *)
+    val descr: t -> switch -> package -> filename
 
-  (** Files overlay *)
-  val files: t -> switch -> package -> dirname
-
+    (** Files overlay *)
+    val files: t -> switch -> package -> dirname
+  end
 end
 
 (** Repository paths *)
