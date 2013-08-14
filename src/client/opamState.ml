@@ -583,7 +583,7 @@ let real_package t nv =
 
 let opam_opt t nv =
   let nv = real_package t nv in
-  let overlay = OpamPath.Switch.opam t.root t.switch nv in
+  let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
   if OpamFilename.exists overlay then Some (OpamFile.OPAM.read overlay)
   else
     try Some (OpamPackage.Map.find nv t.opams)
@@ -600,21 +600,21 @@ let overlay_of_name t name =
   OpamPackage.create name version
 
 let add_opam_overlay t nv opam =
-  let dst = OpamPath.Switch.opam t.root t.switch nv in
+  let dst = OpamPath.Switch.Overlay.opam t.root t.switch nv in
   OpamFile.OPAM.write dst opam
 
 let add_url_overlay t nv url =
-  let dst = OpamPath.Switch.url t.root t.switch nv in
+  let dst = OpamPath.Switch.Overlay.url t.root t.switch nv in
   OpamFile.URL.write dst url
 
 let add_descr_overlay t nv descr =
-  let dst = OpamPath.Switch.descr t.root t.switch nv in
+  let dst = OpamPath.Switch.Overlay.descr t.root t.switch nv in
   OpamFile.Descr.write dst descr
 
 let descr t nv =
   let nv = real_package t nv in
   let read file = Some (OpamFile.Descr.read file) in
-  let overlay = OpamPath.Switch.descr t.root t.switch nv in
+  let overlay = OpamPath.Switch.Overlay.descr t.root t.switch nv in
   if OpamFilename.exists overlay then read overlay
   else
     let file = OpamPath.descr t.root nv in
@@ -622,7 +622,7 @@ let descr t nv =
     else None
 
 let add_files_overlay t nv root files =
-  let dst = OpamPath.Switch.files t.root t.switch nv in
+  let dst = OpamPath.Switch.Overlay.files t.root t.switch nv in
   List.iter (fun file ->
       let base = OpamFilename.remove_prefix root file in
       OpamFilename.copy ~src:file ~dst:(dst // base)
@@ -630,7 +630,7 @@ let add_files_overlay t nv root files =
 
 let files t nv =
   let nv = real_package t nv in
-  let overlay = OpamPath.Switch.files t.root t.switch nv in
+  let overlay = OpamPath.Switch.Overlay.files t.root t.switch nv in
   if OpamFilename.exists_dir overlay then Some overlay
   else
     let dir = OpamPath.files t.root nv in
@@ -660,15 +660,15 @@ let add_pinned_overlay t name =
     add_files_overlay t nv files_f (OpamFilename.files files_f)
 
 let remove_overlay t nv =
-  OpamFilename.rmdir (OpamPath.Switch.overlay t.root t.switch nv)
+  OpamFilename.rmdir (OpamPath.Switch.Overlay.package t.root t.switch nv)
 
 let has_url_overlay t nv =
-  OpamFilename.exists (OpamPath.Switch.url t.root t.switch nv)
+  OpamFilename.exists (OpamPath.Switch.Overlay.url t.root t.switch nv)
 
 (* check for an overlay first, and the fallback to the global state *)
 let url t nv =
   let nv = real_package t nv in
-  let overlay = OpamPath.Switch.url t.root t.switch nv in
+  let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
   if OpamFilename.exists overlay then
     Some (OpamFile.URL.read overlay)
   else
@@ -1997,7 +1997,7 @@ let update_dev_package t nv =
         let dirname = dev_package t nv in
         let r = OpamRepository.pull_url kind nv dirname remote_url in
         if kind = `local && OpamFilename.exists (dirname // "opam") then (
-          let dst = OpamPath.Switch.opam t.root t.switch nv in
+          let dst = OpamPath.Switch.Overlay.opam t.root t.switch nv in
           OpamFilename.copy ~src:(dirname // "opam") ~dst;
         );
         match r with

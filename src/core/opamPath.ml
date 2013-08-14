@@ -135,18 +135,21 @@ module Switch = struct
 
   let dev_package t a nv = dev_packages_dir t a / OpamPackage.to_string nv
 
-  let overlay_dir t a = root t a / "overlay"
+  module Overlay = struct
 
-  let overlay t a nv = overlay_dir t a / OpamPackage.to_string nv
+    let dir t a = root t a / "overlay"
 
-  let opam t a nv = overlay t a nv // "opam"
+    let package t a nv = dir t a / OpamPackage.to_string nv
 
-  let url t a nv = overlay t a nv // "url"
+    let opam t a nv = package t a nv // "opam"
 
-  let descr t a nv = overlay t a nv // "descr"
+    let url t a nv = package t a nv // "url"
 
-  let files t a nv = overlay t a nv / "files"
+    let descr t a nv = package t a nv // "descr"
 
+    let files t a nv = package t a nv / "files"
+
+  end
 end
 
 module Repository = struct
