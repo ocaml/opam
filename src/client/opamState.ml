@@ -1400,6 +1400,9 @@ let env_updates ~opamswitch t =
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
   let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
+  let perl5 = OpamPackage.Name.of_string "perl5" in
+  let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch perl5 in
+  let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
   let toplevel_dir =
     "OCAML_TOPLEVEL_PATH", "=",
     OpamFilename.Dir.to_string (OpamPath.Switch.toplevel t.root t.switch) in
@@ -1419,11 +1422,11 @@ let env_updates ~opamswitch t =
     else
       [] in
 
-  new_path :: man_path :: toplevel_dir :: (switch @ root @ comp_env)
+  new_path :: man_path :: toplevel_dir :: new_perl5lib :: (switch @ root @ comp_env)
 
 (* This function is used by 'opam config env' and 'opam switch' to
    display the environment variables. We have to make sure that
-   OPAMSWITCH is always the one being reported in '~/.opa/config'
+   OPAMSWITCH is always the one being reported in '~/.opam/config'
    otherwise we can have very weird results (as the inability to switch
    between compilers).
 
