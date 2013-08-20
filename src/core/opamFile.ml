@@ -360,7 +360,7 @@ module X = struct
             | Some nv -> nv
             | None    -> OpamGlobals.error_and_exit
                            "The index repository file is corrupted. Please run \
-                            'mdkir %s/opam && opam list' to fix the issue."
+                            'mkdir %s/opam && opam list' to fix the issue."
                            (OpamPath.root () |> OpamFilename.Dir.to_string) in
           if OpamPackage.Map.mem nv map then
             OpamGlobals.error_and_exit "multiple lines for package %s" nv_s
