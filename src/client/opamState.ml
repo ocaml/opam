@@ -991,8 +991,10 @@ let check_marshaled_file file =
 
 let marshal_from_file file =
   try
+    let chrono = OpamGlobals.timer () in
     let ic = check_marshaled_file file in
     let (cache: cache) = Marshal.from_channel ic in
+    log "Loaded %s in %.3fs" (OpamFilename.to_string file) (chrono ());
     close_in ic;
     Some cache.cached_opams
   with e ->
@@ -1051,8 +1053,8 @@ let upgrade_to_1_1_hook =
 
 let load_state ?(save_cache=true) call_site =
   log "LOAD-STATE(%s)" call_site;
+  let chrono = OpamGlobals.timer () in
   !upgrade_to_1_1_hook ();
-  let t0 = Unix.gettimeofday () in
   let root = OpamPath.root () in
 
   let config_p = OpamPath.config root in
@@ -1185,8 +1187,9 @@ let load_state ?(save_cache=true) call_site =
   print_state t;
   if save_cache && not cached then
     save_state ~update:false t;
-  let t1 = Unix.gettimeofday () in
-  loads :=  (t1 -. t0) :: !loads;
+  let load_time = chrono () in
+  loads := load_time :: !loads;
+  log "State %s loaded in %.3fs" call_site load_time;
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (
     reinstall_system_compiler t;

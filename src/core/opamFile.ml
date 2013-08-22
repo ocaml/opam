@@ -1609,7 +1609,7 @@ let writes = (writes, writes_t)
 
 module Make (F : F) = struct
 
-  let log = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal)
+  let log fmt = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal) fmt
 
   let write f v =
     log "write %s" (OpamFilename.to_string f);
@@ -1619,19 +1619,20 @@ module Make (F : F) = struct
 
   let read f =
     let filename = OpamFilename.to_string f in
-    log "read %s" filename;
     with_time reads F.internal (fun () ->
-      if OpamFilename.exists f then
-        try
-          let ic = OpamFilename.open_in f in
-          let r = F.of_channel f ic in
-          close_in ic;
-          r
-        with OpamFormat.Bad_format msg ->
-          OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
-      else
-        OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
-    )
+        let chrono = OpamGlobals.timer () in
+        if OpamFilename.exists f then
+          try
+            let ic = OpamFilename.open_in f in
+            let r = F.of_channel f ic in
+            close_in ic;
+            log "read %s in %.3fs" filename (chrono ());
+            r
+          with OpamFormat.Bad_format msg ->
+            OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
+        else
+          OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
+      )
 
   let safe_read f =
     if OpamFilename.exists f then

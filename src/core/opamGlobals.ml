@@ -206,3 +206,10 @@ let default_jobs = 1
 
 let exit i =
   raise (Exit i)
+
+let timer () =
+  if !debug then
+    let t = Sys.time () in
+    fun () -> Sys.time () -. t
+  else
+    fun () -> 0.
