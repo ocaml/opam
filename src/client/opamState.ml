@@ -1125,8 +1125,10 @@ let load_state ?(save_cache=true) call_site =
       OpamFile.Comp.version (OpamFile.Comp.read comp_f)
   ) in
   let repositories = read_repositories root config in
-  let package_index = package_index_aux repositories in
-  let compiler_index = compiler_index_aux repositories in
+  let package_index =
+    OpamFile.Package_index.safe_read (OpamPath.package_index root) in
+  let compiler_index =
+    OpamFile.Compiler_index.safe_read (OpamPath.compiler_index root) in
   let opams = match opams with
     | None   ->
       let packages =
