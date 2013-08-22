@@ -64,7 +64,6 @@ module Types = struct
     compiler: compiler;
     compiler_version: compiler_version lazy_t;
     opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t lazy_t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     packages: package_set;
     available_packages: package_set Lazy.t;
@@ -615,7 +614,7 @@ let add_descr_overlay t nv descr =
   let dst = OpamPath.Switch.Overlay.descr t.root t.switch nv in
   OpamFile.Descr.write dst descr
 
-let descr t nv =
+let descr_opt t nv =
   let nv = real_package t nv in
   let read file = Some (OpamFile.Descr.read file) in
   let overlay = OpamPath.Switch.Overlay.descr t.root t.switch nv in
@@ -624,6 +623,11 @@ let descr t nv =
     let file = OpamPath.descr t.root nv in
     if OpamFilename.exists file then read file
     else None
+
+let descr t nv =
+  match descr_opt t nv with
+  | None -> OpamFile.Descr.empty
+  | Some f -> f
 
 let add_files_overlay t nv root files =
   let dst = OpamPath.Switch.Overlay.files t.root t.switch nv in
@@ -842,7 +846,6 @@ let load_env_state call_site =
   let repositories = OpamRepositoryName.Map.empty in
   let compiler_version = lazy (OpamCompiler.Version.of_string "none") in
   let opams = OpamPackage.Map.empty in
-  let descrs = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
   let available_packages = lazy OpamPackage.Set.empty in
   let installed = OpamPackage.Set.empty in
@@ -852,7 +855,7 @@ let load_env_state call_site =
   let package_index = lazy OpamPackage.Map.empty in
   let compiler_index = lazy OpamCompiler.Map.empty in
   {
-    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
+    partial; root; switch; compiler; compiler_version; repositories; opams;
     packages; available_packages; installed; installed_roots; reinstall;
     config; aliases; pinned; compilers;
     package_index; compiler_index;
@@ -1196,10 +1199,6 @@ let load_state ?(save_cache=true) call_site =
             map
         ) packages OpamPackage.Map.empty
     | Some o -> o in
-  let descrs =
-    OpamPackage.Map.mapi (fun nv _ ->
-        lazy (OpamFile.Descr.safe_read (OpamPath.descr root nv))
-      ) opams in
   let repositories = read_repositories root config in
   let pinned =
     OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
@@ -1217,7 +1216,7 @@ let load_state ?(save_cache=true) call_site =
   let compiler_index = lazy (compiler_index_aux repositories) in
   let available_packages_stub = lazy OpamPackage.Set.empty in
   let t = {
-    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
+    partial; root; switch; compiler; compiler_version; repositories; opams;
     packages; installed; installed_roots; reinstall;
     config; aliases; pinned; compilers;
     package_index; compiler_index;

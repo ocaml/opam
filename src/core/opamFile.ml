@@ -565,22 +565,22 @@ module X = struct
 
     let internal = "descr"
 
-    type t = string * string Lazy.t
+    type t = string * string
 
-    let empty = "", lazy ""
+    let empty = "", ""
 
     let synopsis = fst
 
-    let full (x,y) = x ^ "\n" ^ (Lazy.force y)
+    let full (x,y) = x ^ "\n" ^ y
 
     let of_channel _ ic =
       let x =
         try input_line ic
         with _ -> "" in
-      let y = lazy (
+      let y =
         try OpamSystem.string_of_channel ic
         with _ -> ""
-      ) in
+      in
       x, y
 
     let of_string str =
@@ -588,7 +588,7 @@ module X = struct
         match OpamMisc.cut_at str '\n' with
         | None       -> str, ""
         | Some (h,t) -> h, t in
-      head, lazy tail
+      head, tail
 
     let to_string _ = full
 
