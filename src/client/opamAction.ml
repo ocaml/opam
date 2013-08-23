@@ -286,6 +286,14 @@ let get_metadata t =
   ]
 
 let update_metadata t ~installed ~installed_roots ~reinstall =
+  let mark_pinned_versions =
+    OpamPackage.Set.map (fun p ->
+        let name = OpamPackage.name p in
+        if OpamPackage.Name.Map.mem name t.pinned then OpamPackage.pinned name
+        else p) in
+  let installed       = mark_pinned_versions installed in
+  let installed_roots = mark_pinned_versions installed_roots in
+  let reinstall       = mark_pinned_versions reinstall in
   let installed_roots = OpamPackage.Set.inter installed_roots installed in
   let reinstall = OpamPackage.Set.inter installed_roots reinstall in
   OpamFile.Installed.write
