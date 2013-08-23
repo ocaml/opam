@@ -100,7 +100,9 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
               OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
             OpamPackage.version nv in
       let nv = OpamPackage.create name current_version in
-      let descr_f = OpamPackage.Map.find nv t.descrs in
+      let descr_f = lazy (
+        OpamState.descr t nv
+      ) in
       let synopsis = lazy (
         OpamFile.Descr.synopsis (Lazy.force descr_f)
       ) in
@@ -292,15 +294,8 @@ module API = struct
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
       let descr =
-        let d = Lazy.force (OpamPackage.Map.find nv t.descrs) in
-        let d = OpamFile.Descr.full d in
-        let short, long = match OpamMisc.cut_at d '\n' with
-          | None       -> OpamMisc.strip d, ""
-          | Some (s,l) -> s, OpamMisc.strip l in
-        let long = match long with
-          | "" -> ""
-          | _  -> Printf.sprintf "\n\n%s" long in
-        ["description", short ^ long] in
+        let d = OpamState.descr t nv in
+        ["description", OpamFile.Descr.full d] in
 
       let version =
         if OpamState.is_locally_pinned t name then OpamPackage.Version.pinned
