@@ -363,8 +363,8 @@ module API = struct
               (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
               =  OpamPackage.name nv in
             let package repo_name =
-              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string)
-              = nv in
+              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
+              = Some nv in
             List.exists (fun repo_name ->
                 name repo_name || package repo_name
               ) repos
@@ -411,12 +411,12 @@ module API = struct
       match unknown_names with
       | []  -> ()
       | [s] ->
-        OpamGlobals.msg
-          "Cannot update the repository %s.%s\n"
+        OpamGlobals.error_and_exit
+          "Cannot update the repository %s.%s"
           s valid_repositories
       | _   ->
-        OpamGlobals.msg
-          "Cannot update the repositories %s.%s\n"
+        OpamGlobals.error_and_exit
+          "Cannot update the repositories %s.%s"
           (OpamMisc.pretty_list unknown_names) valid_repositories
     end;
     begin
