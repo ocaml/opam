@@ -32,8 +32,10 @@ let () =
   at_exit (fun () ->
       flush stderr;
       flush stdout;
-      if !OpamGlobals.print_stats then
+      if !OpamGlobals.print_stats then (
         OpamFile.print_stats ();
+        OpamSystem.print_stats ();
+      );
       OpamJson.output ()
     );
   run default commands

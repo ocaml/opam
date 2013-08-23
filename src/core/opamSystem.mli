@@ -166,3 +166,6 @@ val patch: string -> unit
 
 (** Create a tempory file in {i ~/.opam/logs/<name>XXX} *)
 val temp_file: ?dir:string -> string -> string
+
+(** Print stats *)
+val print_stats: unit -> unit

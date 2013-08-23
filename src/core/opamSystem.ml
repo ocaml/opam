@@ -264,8 +264,17 @@ let command_exists ?(env=default_env) name =
   OpamProcess.clean_files r;
   OpamProcess.is_success r
 
+let runs = ref []
+let print_stats () =
+  match !runs with
+  | [] -> ()
+  | l  ->
+    OpamGlobals.msg "%d external processes called:\n  %s\n%!"
+      (List.length l) (String.concat "\n  " (List.map (String.concat " ") l))
+
 let run_process ?verbose ?(env=default_env) ?name ?metadata command =
   let chrono = OpamGlobals.timer () in
+  runs := command :: !runs;
   match command with
   | []          -> invalid_arg "run_process"
   | cmd :: args ->
