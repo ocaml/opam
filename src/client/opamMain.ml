@@ -29,10 +29,11 @@ let commands = [
 ]
 
 let () =
-  let at_exit () =
-    if !OpamGlobals.print_stats then (
-      OpamFile.print_stats ();
-      OpamState.print_stats ();
+  at_exit (fun () ->
+      flush stderr;
+      flush stdout;
+      if !OpamGlobals.print_stats then
+        OpamFile.print_stats ();
+      OpamJson.output ()
     );
-    OpamJson.output () in
-  run ~at_exit default commands
+  run default commands

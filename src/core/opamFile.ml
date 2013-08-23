@@ -1572,67 +1572,44 @@ module type F = sig
   val to_string : filename -> t -> string
 end
 
-let reads = Hashtbl.create 64
-let writes = Hashtbl.create 64
-let incr tbl n =
-  let v =
-    try Hashtbl.find tbl n
-    with _ -> 0 in
-  Hashtbl.replace tbl n (v+1)
-
-let reads_t = Hashtbl.create 64
-let writes_t = Hashtbl.create 64
-let incr_t tbl n t =
-  let v =
-    try Hashtbl.find tbl n
-    with _ -> 0. in
-  Hashtbl.replace tbl n (v+.t)
-
+let read_files = ref []
+let write_files = ref []
 let print_stats () =
-  Hashtbl.iter (fun n c ->
-    Printf.eprintf "read(%s): %d - %.02fs\n" n c (Hashtbl.find reads_t n)
-  ) reads;
-  Hashtbl.iter (fun n c ->
-    Printf.eprintf "write(%s): %d - %02fs\n" n c (Hashtbl.find writes_t n)
-  ) writes
-
-let with_time (tbl, tbl_t) n f =
-  let t0 = Unix.gettimeofday () in
-  let r = f () in
-  let t1 =  Unix.gettimeofday () in
-  incr tbl n;
-  incr_t tbl_t n (t1 -. t0);
-  r
-
-let reads = (reads, reads_t)
-let writes = (writes, writes_t)
+  let aux kind = function
+    | [] -> ()
+    | l  ->
+      OpamGlobals.msg "%d files %s:\n  %s\n%!"
+        (List.length !read_files) kind (String.concat "\n  " l)
+  in
+  aux "read" !read_files;
+  aux "write" !write_files
 
 module Make (F : F) = struct
 
   let log fmt = OpamGlobals.log (Printf.sprintf "FILE(%s)" F.internal) fmt
 
   let write f v =
-    log "write %s" (OpamFilename.to_string f);
-    with_time writes F.internal (fun () ->
-      OpamFilename.write f (F.to_string f v)
-    )
+    let filename = OpamFilename.prettify f in
+    let chrono = OpamGlobals.timer () in
+    OpamFilename.write f (F.to_string f v);
+    write_files := filename :: !write_files;
+    log "Wrote %s in %.3fs" filename (chrono ())
 
   let read f =
-    let filename = OpamFilename.to_string f in
-    with_time reads F.internal (fun () ->
-        let chrono = OpamGlobals.timer () in
-        if OpamFilename.exists f then
-          try
-            let ic = OpamFilename.open_in f in
-            let r = F.of_channel f ic in
-            close_in ic;
-            log "read %s in %.3fs" filename (chrono ());
-            r
-          with OpamFormat.Bad_format msg ->
-            OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
-        else
-          OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
-      )
+    let filename = OpamFilename.prettify f in
+    read_files := filename :: !read_files;
+    let chrono = OpamGlobals.timer () in
+    if OpamFilename.exists f then
+      try
+        let ic = OpamFilename.open_in f in
+        let r = F.of_channel f ic in
+        close_in ic;
+        log "Read %s in %.3fs" filename (chrono ());
+        r
+      with OpamFormat.Bad_format msg ->
+        OpamSystem.internal_error "File %s: %s" (OpamFilename.to_string f) msg
+    else
+      OpamSystem.internal_error "File %s does not exist" (OpamFilename.to_string f)
 
   let safe_read f =
     if OpamFilename.exists f then

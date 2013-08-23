@@ -955,13 +955,6 @@ let switch_consistency_checks t =
   consistency_checks (OpamPath.Switch.dev_packages_dir t.root t.switch)
     t.pinned t.installed t.installed
 
-let loads = ref []
-let saves = ref []
-
-let print_stats () =
-  List.iter (Printf.printf "load-state: %.2fs\n") !loads;
-  List.iter (Printf.printf "save-state: %.2fs\n") !saves
-
 type cache = {
   cached_opams: OpamFile.OPAM.t OpamPackage.Map.t;
 }
@@ -994,8 +987,8 @@ let marshal_from_file file =
     let chrono = OpamGlobals.timer () in
     let ic = check_marshaled_file file in
     let (cache: cache) = Marshal.from_channel ic in
-    log "Loaded %s in %.3fs" (OpamFilename.to_string file) (chrono ());
     close_in ic;
+    log "Loaded %s in %.3fs" (OpamFilename.to_string file) (chrono ());
     Some cache.cached_opams
   with e ->
     log "Got an error while loading the cache: %s" (Printexc.to_string e);
@@ -1003,7 +996,7 @@ let marshal_from_file file =
     None
 
 let save_state ~update t =
-  let t0 = Unix.gettimeofday () in
+  let chrono = OpamGlobals.timer () in
   let file = OpamPath.state_cache t.root in
   OpamFilename.remove file;
   if update then (
@@ -1018,8 +1011,7 @@ let save_state ~update t =
   output_string oc OpamVersion.magic;
   Marshal.to_channel oc { cached_opams = t.opams } [Marshal.No_sharing];
   close_out oc;
-  let t1 = Unix.gettimeofday () in
-  saves := (t1 -. t0) :: !saves
+  log "%s written in %.3fs" (OpamFilename.prettify file) (chrono ())
 
 let remove_state_cache () =
   let root = OpamPath.root () in
@@ -1188,7 +1180,6 @@ let load_state ?(save_cache=true) call_site =
   if save_cache && not cached then
     save_state ~update:false t;
   let load_time = chrono () in
-  loads := load_time :: !loads;
   log "State %s loaded in %.3fs" call_site load_time;
   (* Check whether the system compiler has been updated *)
   if system_needs_upgrade t then (

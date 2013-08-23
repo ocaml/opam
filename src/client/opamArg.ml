@@ -1191,7 +1191,7 @@ let run_external_command () =
   ) else
     ()
 
-let run ?(at_exit = fun () -> ()) default commands =
+let run default commands =
   Sys.catch_break true;
   let _ = Sys.signal Sys.sigpipe Sys.Signal_ignore in
   try
@@ -1200,7 +1200,7 @@ let run ?(at_exit = fun () -> ()) default commands =
     | `Error _ -> exit 1
     | _        -> exit 0
   with
-  | OpamGlobals.Exit 0 -> at_exit ()
+  | OpamGlobals.Exit 0 -> ()
   | e                  ->
     OpamGlobals.error "'%s' failed." (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
@@ -1215,5 +1215,4 @@ let run ?(at_exit = fun () -> ()) default commands =
         Printf.fprintf stderr "Fatal error:\n%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
     end;
-    at_exit ();
     exit !exit_code

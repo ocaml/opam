@@ -98,9 +98,6 @@ val rebuild_state_cache: unit -> unit
 (** Remove the state cache *)
 val remove_state_cache: unit -> unit
 
-(** Display stats *)
-val print_stats: unit -> unit
-
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> state
 
