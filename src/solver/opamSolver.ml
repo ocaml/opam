@@ -22,6 +22,14 @@ let log fmt = OpamGlobals.log "SOLVER" fmt
 let s_status = "status"
 let s_installed   = "  installed"
 
+(* Returns the package with its real version if it has been pinned *)
+let real_version universe pkg =
+  if OpamPackage.is_pinned pkg then
+    let name = OpamPackage.name pkg in
+    OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name)
+      universe.u_available
+  else pkg
+
 (* Convert an OPAM formula into a debian formula *)
 let atom2debian (n, v) =
   (OpamPackage.Name.to_string n, None),
@@ -38,6 +46,7 @@ let depopts_of_package universe package =
 
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
+  let package = real_version universe package in
   let depends =
     try OpamPackage.Map.find package universe.u_depends
     with Not_found -> Empty in
@@ -60,9 +69,13 @@ let opam2debian universe depopts package =
   let conflicts =
     try OpamPackage.Map.find package universe.u_conflicts
     with Not_found -> Empty in
-  let installed = OpamPackage.Set.mem package universe.u_installed in
+  let installed =
+    OpamPackage.Set.exists (fun pkg -> real_version universe pkg = package)
+      universe.u_installed in
   let reinstall = match universe.u_action with
-    | Upgrade reinstall -> OpamPackage.Set.mem package reinstall
+    | Upgrade reinstall ->
+      OpamPackage.Set.exists (fun pkg -> package = real_version universe pkg)
+        reinstall
     | _                 -> false in
   let installed_root = OpamPackage.Set.mem package universe.u_installed_roots in
   let open Debian.Packages in
@@ -139,7 +152,9 @@ let load_cudf_universe ?(depopts=false) universe =
   let opam2cudf =
     let opam2debian =
       OpamPackage.Set.fold
-        (fun pkg map -> OpamPackage.Map.add pkg (opam2debian universe depopts pkg) map)
+        (fun pkg map ->
+           OpamPackage.Map.add (real_version universe pkg)
+             (opam2debian universe depopts pkg) map)
         universe.u_packages
         OpamPackage.Map.empty in
     let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
@@ -147,12 +162,21 @@ let load_cudf_universe ?(depopts=false) universe =
   let cudf2opam =
     let h = Hashtbl.create 1024 in
     OpamPackage.Map.iter (fun opam cudf ->
-      Hashtbl.add h (cudf.Cudf.package,cudf.Cudf.version) opam
+        let opam =
+          if OpamPackage.Name.Set.mem (OpamPackage.name opam) universe.u_pinned
+          && opam = real_version universe opam
+          then OpamPackage.pinned (OpamPackage.name opam)
+          else opam
+        in Hashtbl.add h (cudf.Cudf.package,cudf.Cudf.version) opam
     ) opam2cudf;
     h in
+  let opam_universe = universe in
   let universe =
     let available = OpamPackage.Set.elements universe.u_available in
-    let universe = List.rev_map (fun nv -> OpamPackage.Map.find nv opam2cudf) available in
+    let universe =
+      List.rev_map
+        (fun nv -> OpamPackage.Map.find (real_version universe nv) opam2cudf)
+        available in
     try Cudf.load_universe universe
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
@@ -160,6 +184,7 @@ let load_cudf_universe ?(depopts=false) universe =
      choose to keep it bigger to get more precise conflict messages. *)
   (* let universe = Algo.Depsolver.trim universe in *)
   (fun opam ->
+    let opam = real_version opam_universe opam in
     try OpamPackage.Map.find opam opam2cudf
     with Not_found ->
       OpamGlobals.error_and_exit
