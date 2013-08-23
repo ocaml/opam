@@ -94,10 +94,20 @@ let root_dir = ref (
     with _ -> default_opam_dir
   )
 
-let init_time = Unix.gettimeofday ()
+let timer () =
+  if !debug then
+    let t = Sys.time () in
+    fun () -> Sys.time () -. t
+  else
+    fun () -> 0.
+
+(* For forked process, we want to get the time since the beginning of
+   the parent process. *)
+let global_start_time =
+  Unix.gettimeofday ()
 
 let timestamp () =
-  let time = Unix.gettimeofday () -. init_time in
+  let time = Unix.gettimeofday () -. global_start_time in
   let tm = Unix.gmtime time in
   let msec = time -. (floor time) in
   Printf.sprintf "%.2d:%.2d.%.3d"
@@ -106,11 +116,11 @@ let timestamp () =
     (int_of_float (1000.0 *. msec))
 
 let log section fmt =
-  Printf.ksprintf (fun str ->
-    if !debug then
-      Printf.eprintf "%s  %06d  %-25s  %s\n%!"
-        (timestamp ()) (Unix.getpid ()) section str
-  ) fmt
+  if !debug then
+    Printf.fprintf stderr ("%s  %06d  %-25s"^^fmt^^"\n%!")
+      (timestamp ()) (Unix.getpid ()) section
+  else
+    Printf.ifprintf stderr fmt
 
 let error fmt =
   Printf.ksprintf (fun str ->
@@ -206,10 +216,3 @@ let default_jobs = 1
 
 let exit i =
   raise (Exit i)
-
-let timer () =
-  if !debug then
-    let t = Sys.time () in
-    fun () -> Sys.time () -. t
-  else
-    fun () -> 0.
