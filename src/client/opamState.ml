@@ -1220,7 +1220,10 @@ let load_state ?(save_cache=true) call_site =
   let reinstall =
     OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages =
-    OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
+    OpamPackage.Name.Map.fold
+      (fun name _ -> OpamPackage.Set.add (OpamPackage.pinned name))
+      pinned
+      (OpamPackage.Set.of_list (OpamPackage.Map.keys opams)) in
   let system =
     (compiler = OpamCompiler.system) in
   let package_index = lazy (package_index_aux root repositories) in
