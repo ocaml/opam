@@ -646,7 +646,7 @@ module API = struct
   let install names =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "install" in
-    let atoms = OpamSolution.atoms_of_names t names in
+    let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let pkg_skip, pkg_new =
@@ -690,6 +690,8 @@ module API = struct
       OpamFile.Installed_roots.write file t.installed_roots;
     );
 
+    OpamSolution.check_availability t atoms;
+
     if pkg_new <> [] then (
 
       (* Display a warning if at least one package contains
@@ -722,7 +724,8 @@ module API = struct
             wish_remove  = [] ;
             wish_upgrade = [] }
         else
-          { wish_install = OpamSolution.atoms_of_packages t.installed_roots;
+          { wish_install = OpamSolution.atoms_of_packages
+                (OpamPackage.Set.inter t.installed_roots (Lazy.force t.available_packages));
             wish_remove  = [] ;
             wish_upgrade = atoms }
       in
