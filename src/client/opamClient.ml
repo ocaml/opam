@@ -512,10 +512,19 @@ module API = struct
     let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
     let solution_found = match names with
       | None ->
+        let to_remove =
+          let (--) = OpamPackage.Name.Set.diff in
+          OpamPackage.names_of_packages t.installed
+          -- OpamPackage.names_of_packages (Lazy.force t.available_packages)
+          -- OpamPackage.names_of_packages to_reinstall in
+        let to_upgrade =
+          OpamPackage.Set.filter (fun nv ->
+              not (OpamPackage.Name.Set.mem (OpamPackage.name nv) to_remove)
+            ) t.installed in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = [];
-            wish_remove  = [];
-            wish_upgrade = OpamSolution.atoms_of_packages t.installed }
+            wish_remove  = OpamSolution.atoms_of_names ~permissive:true t to_remove;
+            wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
       | Some names ->
         let names = OpamSolution.atoms_of_names t names in
         let to_upgrade =
@@ -530,7 +539,10 @@ module API = struct
               )
             ) names in
           (OpamPackage.Set.of_list packages) in
-        let installed_roots = OpamPackage.Set.diff t.installed_roots to_reinstall in
+        let installed_roots =
+          let (--) = OpamPackage.Set.diff in
+          OpamPackage.Set.inter (t.installed_roots -- to_reinstall)
+            (Lazy.force t.available_packages) in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
             wish_remove  = [];
@@ -721,7 +733,7 @@ module API = struct
   let remove ~autoremove names =
     log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "remove" in
-    let atoms = OpamSolution.atoms_of_names t names in
+    let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let atoms =
       List.filter (fun (n,_) ->
         if n = OpamPackage.Name.global_config then (

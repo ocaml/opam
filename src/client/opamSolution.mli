@@ -61,8 +61,11 @@ val atoms_of_packages: package_set -> atom list
 val eq_atoms_of_packages: package_set -> atom list
 
 (** Return a list of atoms from a list of names (wich can eventually
-    be of the form name.version) *)
-val atoms_of_names: OpamState.state -> name_set -> atom list
+    be of the form name.version). Unless [permissive] is set, will abort in
+    case the package is not available *)
+val atoms_of_names: ?permissive: bool -> OpamState.state -> name_set -> atom list
+
+val check_availability: OpamState.state -> atom list -> unit
 
 (** {2 Stats} *)
 val sum: stats -> int
