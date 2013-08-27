@@ -191,24 +191,26 @@ module API = struct
 
       (* Compute the installed versions, for each switch *)
       let installed = OpamState.installed_versions t name in
+      (* let installed = OpamPackage.Map.fold (fun nv alias map -> *)
+      (*     OpamPackage.Map.add (OpamState.pinning_version t nv) alias map *)
+      (*   ) installed OpamPackage.Map.empty in *)
       let installed_str =
         let one (nv, aliases) =
           Printf.sprintf "%s [%s]"
             (OpamPackage.to_string nv)
             (String.concat " " (List.map OpamSwitch.to_string aliases)) in
         String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
+      let is_pinned = current_version = OpamPackage.Version.pinned in
 
       let nv = OpamPackage.create name current_version in
       let nv =
-        if current_version = OpamPackage.Version.pinned
-        then OpamState.pinning_version t nv
+        if is_pinned then OpamState.pinning_version t nv
         else nv in
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
       let repository =
-        if OpamState.is_locally_pinned t name then
-          ["pinned", "true"]
+        if is_pinned then ["pinned", "true"]
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
         else match OpamState.repository_of_package t nv with
@@ -216,8 +218,7 @@ module API = struct
           | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ] in
 
       let revision =
-        if OpamState.is_locally_pinned t name
-        && OpamState.is_name_installed t name then
+        if is_pinned && OpamState.is_name_installed t name then
           let repo = OpamState.repository_of_locally_pinned_package t name in
           match OpamRepository.revision repo with
           | None   -> []
