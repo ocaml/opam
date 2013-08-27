@@ -191,12 +191,6 @@ module API = struct
 
       (* Compute the installed versions, for each switch *)
       let installed = OpamState.installed_versions t name in
-      let installed = OpamPackage.Map.fold (fun nv alias map ->
-          let nv =
-            if OpamState.is_locally_pinned t name then OpamPackage.pinned name
-            else nv in
-          OpamPackage.Map.add nv alias map
-        ) installed OpamPackage.Map.empty in
       let installed_str =
         let one (nv, aliases) =
           Printf.sprintf "%s [%s]"
@@ -205,6 +199,10 @@ module API = struct
         String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
 
       let nv = OpamPackage.create name current_version in
+      let nv =
+        if current_version = OpamPackage.Version.pinned
+        then OpamState.pinning_version t nv
+        else nv in
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
@@ -297,9 +295,7 @@ module API = struct
         let d = OpamState.descr t nv in
         ["description", OpamFile.Descr.full d] in
 
-      let version =
-        if OpamState.is_locally_pinned t name then OpamPackage.Version.pinned
-        else current_version in
+      let version = OpamPackage.version nv in
 
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
