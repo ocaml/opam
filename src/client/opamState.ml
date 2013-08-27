@@ -686,7 +686,6 @@ let has_url_overlay t nv =
 
 (* check for an overlay first, and the fallback to the global state *)
 let url t nv =
-  let nv = real_package t nv in
   let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
   if OpamFilename.exists overlay then
     Some (OpamFile.URL.read overlay)
@@ -698,6 +697,7 @@ let url t nv =
       None
 
 let is_dev_package t nv =
+  let nv = real_package t nv in
   match url t nv with
   | None     -> false
   | Some url ->
@@ -2030,6 +2030,7 @@ let update_switch_config t switch =
 
 let update_dev_package t nv =
   log "update-dev-package %s" (OpamPackage.to_string nv);
+  let nv = real_package t nv in
   let needs_update = OpamPackage.Set.singleton nv in
   let skip = OpamPackage.Set.empty in
   match url t nv with
@@ -2090,6 +2091,7 @@ let download_archive t nv =
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
 let download_upstream t nv dirname =
+  let nv = real_package t nv in
   match url t nv with
   | None   -> None
   | Some u ->
