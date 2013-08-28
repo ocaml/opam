@@ -71,7 +71,7 @@ let string_of_address = function
 
 let address_of_string str =
   match OpamMisc.cut_at str '#' with
-  | None       -> str, None
+  | None       -> OpamSystem.real_path str, None
   | Some (a,c) -> OpamSystem.real_path a, Some c
 
 type repository_name = OpamRepositoryName.t
@@ -544,6 +544,7 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
+  u_pinned   : name_set;
 }
 
 type 'a updates = {

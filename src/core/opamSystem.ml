@@ -547,32 +547,30 @@ let really_download ~overwrite ~src ~dst =
       ( [] | _::_::_ ) ->
       internal_error "Too many downloaded files."
     | [filename] ->
-      let dst_file = dst / Filename.basename filename in
-      if not overwrite && Sys.file_exists dst_file then
-        internal_error "The downloaded file will overwrite %s." dst_file;
+      if not overwrite && Sys.file_exists dst then
+        internal_error "The downloaded file will overwrite %s." dst;
       commands [
-        [ "rm"; "-f"; dst_file ];
-        [ "mv"; filename; dst_file ];
+        [ "rm"; "-f"; dst ];
+        [ "mv"; filename; dst ];
       ];
-      dst_file
+      dst
   in
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
   with
   | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
   | _ -> internal_error "Cannot download %s, please check your connection settings." src
 
-let download ~overwrite ~filename:src ~dirname:dst =
-  let dst_file = dst / Filename.basename src in
-  if dst_file = src then
-    dst_file
+let download ~overwrite ~filename:src ~dst:dst =
+  if dst = src then
+    dst
   else if Sys.file_exists src then (
-    if not overwrite && Sys.file_exists dst_file then
-      internal_error "The downloaded file will overwrite %s." dst_file;
+    if not overwrite && Sys.file_exists dst then
+      internal_error "The downloaded file will overwrite %s." dst;
     commands [
-      [ "rm"; "-f"; dst_file ];
+      [ "rm"; "-f"; dst ];
       [ "cp"; src; dst ]
     ];
-    dst_file
+    dst
   ) else
     really_download ~overwrite ~src ~dst
 

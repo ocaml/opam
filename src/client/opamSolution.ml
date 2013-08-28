@@ -22,7 +22,7 @@ open OpamMisc.OP
 
 let post_message ?(failed=false) state action =
   let pkg = action_contents action in
-  let opam = OpamPackage.Map.find pkg state.opams in
+  let opam = OpamState.opam state pkg in
   let messages = OpamFile.OPAM.post_messages opam in
   let print_message message =
     if failed then
@@ -325,8 +325,10 @@ let parallel_apply t action solution =
     | Install r
     | Import r
     | Switch r  -> OpamPackage.Name.Set.union root_installs r
-    | Upgrade _ -> root_installs
-    | _ -> OpamPackage.Name.Set.empty in
+    | Upgrade _
+    | Reinstall -> root_installs
+    | Depends
+    | Remove -> OpamPackage.Name.Set.empty in
 
   (* flush the contents of installed and installed.root to disk. This
      should be called as often as possible to keep the global state of

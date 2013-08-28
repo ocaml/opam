@@ -75,6 +75,13 @@ The API documentation is available
  and under the `doc/html/` directory; the developer manual is in
  the `doc/dev-manual/` directory.
 
+### Related repositories
+
+- [OCamlPro/opam-repository](https://github.com/OCamlPro/opam-repository) is the official repository for OPAM packages and compilers. A number of non-official repositories are also available on the interwebs, for instance on [Github](https://github.com/search?q=opam-repo&type=Repositories).
+- [opam2web](https://github.com/OCamlPro/opam2web) generates a collection of browsable HTML files for a given repository. It is used to generate http://opam.ocamlpro.com.
+- [opam-rt](https://github.com/OCamlPro/opam-rt) is the regression framework for OPAM.
+- [opamlot](https://github.com/ocamllabs/ocamlot) is the automated QA environment for OPAM. 
+
 ## Copyright and license
 
 Copyright 2012-2013 OCamlPro  

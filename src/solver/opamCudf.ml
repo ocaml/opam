@@ -167,8 +167,7 @@ let vpkg2opamstr cudf2opam (name, constr) =
     with _ ->
       Common.CudfAdd.decode name
 
-
-let string_of_reason cudf2opam r =
+let string_of_reason cudf2opam opam_universe r =
   let open Algo.Diagnostic in
   match r with
   | Conflict (i,j,_) ->
@@ -189,14 +188,41 @@ let string_of_reason cudf2opam r =
       else
         let nv = cudf2opam p in
         Printf.sprintf " of package %s" (OpamPackage.to_string nv) in
-    let dependencies =
-      if List.length m > 1 then "dependencies" else "dependency" in
-    let deps = List.rev_map (vpkg2opamstr cudf2opam) m in
-    let str = Printf.sprintf
-        "The %s %s%s is not available for your compiler or your OS."
-        dependencies
-        (String.concat ", " deps)
-        of_package in
+    let pinned_deps, deps =
+      List.partition
+        (fun (p,_) ->
+           let name = OpamPackage.Name.of_string (Common.CudfAdd.decode p) in
+           OpamPackage.Name.Set.mem name opam_universe.u_pinned)
+        m in
+    let pinned_deps = List.rev_map (vpkg2opamstr cudf2opam) pinned_deps in
+    let deps = List.rev_map (vpkg2opamstr cudf2opam) deps in
+    let str = "" in
+    let str =
+      if pinned_deps <> [] then
+        let dependencies, are, s, have =
+          if List.length pinned_deps > 1 then "dependencies", "are", "s", "have"
+          else "dependency", "is", "", "has" in
+        Printf.sprintf
+          "%s\nThe %s %s%s %s not available because the package%s %s been pinned."
+          str
+          dependencies
+          (String.concat ", " pinned_deps)
+          of_package
+          are s have
+      else str in
+    let str =
+      if deps <> [] then
+        let dependencies, are =
+          if List.length deps > 1 then "dependencies", "are"
+          else "dependency", "is" in
+        Printf.sprintf
+          "%s\nThe %s %s%s %s not available for your compiler or your OS."
+          str
+          dependencies
+          (String.concat ", " deps)
+          of_package
+          are
+      else str in
     Some str
   | Dependency _  -> None
 
@@ -229,7 +255,7 @@ let make_chains depends =
   let chains = List.flatten (List.map unroll roots) in
   List.filter (function [_] -> false | _ -> true) chains
 
-let string_of_reasons cudf2opam reasons =
+let string_of_reasons cudf2opam opam_universe reasons =
   let open Algo.Diagnostic in
   let depends, reasons =
     List.partition (function Dependency _ -> true | _ -> false) reasons in
@@ -243,7 +269,7 @@ let string_of_reasons cudf2opam reasons =
                 (string_of_chain t) in
   let string_of_chain c = string_of_chain (List.rev c) in
   let b = Buffer.create 1024 in
-  let reasons = OpamMisc.filter_map (string_of_reason cudf2opam) reasons in
+  let reasons = OpamMisc.filter_map (string_of_reason cudf2opam opam_universe) reasons in
   let reasons = OpamMisc.StringSet.(elements (of_list reasons)) in
   begin match reasons with
     | []  -> ()

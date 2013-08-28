@@ -126,10 +126,10 @@ val s_installed_root: string
 val string_of_vpkgs: Cudf_types.vpkg list -> string
 
 (** Convert a reason to something readable by the user *)
-val string_of_reason: (Cudf.package -> package) -> Algo.Diagnostic.reason -> string option
+val string_of_reason: (Cudf.package -> package) -> universe -> Algo.Diagnostic.reason -> string option
 
 (** Convert a list of reasons to something readable by the user *)
-val string_of_reasons: (Cudf.package -> package) -> Algo.Diagnostic.reason list -> string
+val string_of_reasons: (Cudf.package -> package) -> universe -> Algo.Diagnostic.reason list -> string
 
 (** Pretty-print atoms *)
 val string_of_atom: Cudf_types.vpkg -> string
