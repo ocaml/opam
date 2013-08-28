@@ -651,19 +651,30 @@ let copy_files t nv dst =
   | Some src -> OpamFilename.copy_files ~src ~dst
 
 let add_pinned_overlay t name =
-  let ov = overlay_of_name t name in
+  let local_pin, ov =
+    match OpamPackage.Name.Map.find name t.pinned with
+    | Version v -> false, OpamPackage.create name v
+    | _ -> true, overlay_of_name t name in
   let opam_f =
-    let path, _ = locally_pinned_package t name in
-    let dir = OpamFilename.raw_dir (fst path) in
-    if OpamFilename.exists (dir // "opam") then dir // "opam"
+    if local_pin then
+      let path, _ = locally_pinned_package t name in
+      let dir = OpamFilename.raw_dir (fst path) in
+      if OpamFilename.exists (dir // "opam") then dir // "opam"
+      else OpamPath.opam t.root ov
     else OpamPath.opam t.root ov in
   let descr_f = OpamPath.descr t.root ov in
+  let url_opt =
+    if local_pin then Some (url_of_locally_pinned_package t name) else
+      let f = OpamPath.url t.root ov in
+      if OpamFilename.exists f then Some (OpamFile.URL.read f) else None in
   let files_f = OpamPath.files t.root ov in
   let nv = OpamPackage.pinned name in
   add_opam_overlay t nv (OpamFile.OPAM.read opam_f);
   if OpamFilename.exists descr_f then
     add_descr_overlay t nv (OpamFile.Descr.read descr_f);
-  add_url_overlay t nv (url_of_locally_pinned_package t name);
+  (match url_opt with
+   | Some url -> add_url_overlay t nv url
+   | None -> ());
   if OpamFilename.exists_dir files_f then
     add_files_overlay t nv files_f (OpamFilename.files files_f)
 
