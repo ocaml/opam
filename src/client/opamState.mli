@@ -42,9 +42,6 @@ module Types: sig
     (** The list of OPAM files *)
     opams: OpamFile.OPAM.t package_map;
 
-    (** The list of description files *)
-    descrs: OpamFile.Descr.t lazy_t package_map;
-
     (** The list of repositories *)
     repositories: OpamFile.Repo_config.t repository_name_map;
 
@@ -172,7 +169,10 @@ val opam_opt: state -> package -> OpamFile.OPAM.t option
 val url: state -> package -> OpamFile.URL.t option
 
 (** Return the Descr file for the given package *)
-val descr: state -> package -> OpamFile.Descr.t option
+val descr: state -> package -> OpamFile.Descr.t
+
+(** Return the Descr file for the given package *)
+val descr_opt: state -> package -> OpamFile.Descr.t option
 
 (** Return the files/ directory overlay for the given package *)
 val files: state -> package -> dirname option
@@ -328,6 +328,10 @@ val check: lock -> unit
 
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
+
+(** Returns the versionned package corresponding to the version the package has
+    been pinned to. If not pinned, returns [package] unchanged *)
+val pinning_version: state -> package -> package
 
 (** Return the URL file associated with a locally pinned package. *)
 val url_of_locally_pinned_package: state -> name -> OpamFile.URL.t

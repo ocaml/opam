@@ -565,22 +565,22 @@ module X = struct
 
     let internal = "descr"
 
-    type t = string * string Lazy.t
+    type t = string * string
 
-    let empty = "", lazy ""
+    let empty = "", ""
 
     let synopsis = fst
 
-    let full (x,y) = x ^ "\n" ^ (Lazy.force y)
+    let full (x,y) = x ^ "\n" ^ y
 
     let of_channel _ ic =
       let x =
         try input_line ic
         with _ -> "" in
-      let y = lazy (
+      let y =
         try OpamSystem.string_of_channel ic
         with _ -> ""
-      ) in
+      in
       x, y
 
     let of_string str =
@@ -588,7 +588,7 @@ module X = struct
         match OpamMisc.cut_at str '\n' with
         | None       -> str, ""
         | Some (h,t) -> h, t in
-      head, lazy tail
+      head, tail
 
     let to_string _ = full
 
@@ -901,12 +901,12 @@ module X = struct
         OpamFormat.make_option (OpamFilename.Base.to_string ++ OpamFormat.make_string)
           OpamFormat.make_filter in
       let name_and_version = match OpamPackage.of_filename filename with
-        | None  ->
+        | Some nv when not (OpamPackage.is_pinned nv) -> []
+        | _ ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
           [ Variable (s_name, name t.name);
-            Variable (s_version, version t.version) ]
-        | _     -> [] in
+            Variable (s_version, version t.version) ] in
       let option c s f = match c with
         | None   -> []
         | Some v -> [ Variable (s, f v) ] in
@@ -994,6 +994,7 @@ module X = struct
             (OpamFilename.to_string filename);
         | Some v, None    -> v
         | None  , Some nv -> OpamPackage.version nv
+        | Some v, Some nv when OpamPackage.is_pinned nv -> v
         | Some v, Some nv ->
           if OpamPackage.version nv <> v then
             OpamGlobals.error_and_exit

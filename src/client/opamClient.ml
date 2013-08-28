@@ -100,7 +100,9 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
               OpamPackage.Set.max_elt (OpamPackage.Set.filter has_name packages) in
             OpamPackage.version nv in
       let nv = OpamPackage.create name current_version in
-      let descr_f = OpamPackage.Map.find nv t.descrs in
+      let descr_f = lazy (
+        OpamState.descr t nv
+      ) in
       let synopsis = lazy (
         OpamFile.Descr.synopsis (Lazy.force descr_f)
       ) in
@@ -206,26 +208,26 @@ module API = struct
 
       (* Compute the installed versions, for each switch *)
       let installed = OpamState.installed_versions t name in
-      let installed = OpamPackage.Map.fold (fun nv alias map ->
-          let nv =
-            if OpamState.is_locally_pinned t name then OpamPackage.pinned name
-            else nv in
-          OpamPackage.Map.add nv alias map
-        ) installed OpamPackage.Map.empty in
+      (* let installed = OpamPackage.Map.fold (fun nv alias map -> *)
+      (*     OpamPackage.Map.add (OpamState.pinning_version t nv) alias map *)
+      (*   ) installed OpamPackage.Map.empty in *)
       let installed_str =
         let one (nv, aliases) =
           Printf.sprintf "%s [%s]"
             (OpamPackage.to_string nv)
             (String.concat " " (List.map OpamSwitch.to_string aliases)) in
         String.concat ", " (List.map one (OpamPackage.Map.bindings installed)) in
+      let is_pinned = current_version = OpamPackage.Version.pinned in
 
       let nv = OpamPackage.create name current_version in
+      let nv =
+        if is_pinned then OpamState.pinning_version t nv
+        else nv in
       let opam = OpamState.opam t nv in
 
       (* where does it come from (eg. which repository) *)
       let repository =
-        if OpamState.is_locally_pinned t name then
-          ["pinned", "true"]
+        if is_pinned then ["pinned", "true"]
         else if OpamRepositoryName.Map.cardinal t.repositories <= 1 then
           []
         else match OpamState.repository_of_package t nv with
@@ -233,8 +235,7 @@ module API = struct
           | Some r -> [ "repository", OpamRepositoryName.to_string r.repo_name ] in
 
       let revision =
-        if OpamState.is_locally_pinned t name
-        && OpamState.is_name_installed t name then
+        if is_pinned && OpamState.is_name_installed t name then
           let repo = OpamState.repository_of_locally_pinned_package t name in
           match OpamRepository.revision repo with
           | None   -> []
@@ -309,19 +310,10 @@ module API = struct
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
       let descr =
-        let d = Lazy.force (OpamPackage.Map.find nv t.descrs) in
-        let d = OpamFile.Descr.full d in
-        let short, long = match OpamMisc.cut_at d '\n' with
-          | None       -> OpamMisc.strip d, ""
-          | Some (s,l) -> s, OpamMisc.strip l in
-        let long = match long with
-          | "" -> ""
-          | _  -> Printf.sprintf "\n\n%s" long in
-        ["description", short ^ long] in
+        let d = OpamState.descr t nv in
+        ["description", OpamFile.Descr.full d] in
 
-      let version =
-        if OpamState.is_locally_pinned t name then OpamPackage.Version.pinned
-        else current_version in
+      let version = OpamPackage.version nv in
 
       let all_fields =
         [ "package", OpamPackage.Name.to_string name ]
@@ -385,8 +377,8 @@ module API = struct
               (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
               =  OpamPackage.name nv in
             let package repo_name =
-              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string)
-              = nv in
+              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
+              = Some nv in
             List.exists (fun repo_name ->
                 name repo_name || package repo_name
               ) repos
@@ -433,12 +425,12 @@ module API = struct
       match unknown_names with
       | []  -> ()
       | [s] ->
-        OpamGlobals.msg
-          "Cannot update the repository %s.%s\n"
+        OpamGlobals.error_and_exit
+          "Cannot update the repository %s.%s"
           s valid_repositories
       | _   ->
-        OpamGlobals.msg
-          "Cannot update the repositories %s.%s\n"
+        OpamGlobals.error_and_exit
+          "Cannot update the repositories %s.%s"
           (OpamMisc.pretty_list unknown_names) valid_repositories
     end;
     begin

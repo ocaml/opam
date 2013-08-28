@@ -64,7 +64,6 @@ module Types = struct
     compiler: compiler;
     compiler_version: compiler_version lazy_t;
     opams: OpamFile.OPAM.t package_map;
-    descrs: OpamFile.Descr.t lazy_t package_map;
     repositories: OpamFile.Repo_config.t repository_name_map;
     packages: package_set;
     available_packages: package_set Lazy.t;
@@ -92,6 +91,10 @@ let universe t action = {
   u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams;
   u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams;
   u_installed_roots = t.installed_roots;
+  u_pinned    =
+    OpamPackage.Name.Map.fold
+      (fun k _ set -> OpamPackage.Name.Set.add k set)
+      t.pinned OpamPackage.Name.Set.empty;
 }
 
 let string_of_repositories r =
@@ -611,7 +614,7 @@ let add_descr_overlay t nv descr =
   let dst = OpamPath.Switch.Overlay.descr t.root t.switch nv in
   OpamFile.Descr.write dst descr
 
-let descr t nv =
+let descr_opt t nv =
   let nv = real_package t nv in
   let read file = Some (OpamFile.Descr.read file) in
   let overlay = OpamPath.Switch.Overlay.descr t.root t.switch nv in
@@ -620,6 +623,11 @@ let descr t nv =
     let file = OpamPath.descr t.root nv in
     if OpamFilename.exists file then read file
     else None
+
+let descr t nv =
+  match descr_opt t nv with
+  | None -> OpamFile.Descr.empty
+  | Some f -> f
 
 let add_files_overlay t nv root files =
   let dst = OpamPath.Switch.Overlay.files t.root t.switch nv in
@@ -643,19 +651,30 @@ let copy_files t nv dst =
   | Some src -> OpamFilename.copy_files ~src ~dst
 
 let add_pinned_overlay t name =
-  let ov = overlay_of_name t name in
+  let local_pin, ov =
+    match OpamPackage.Name.Map.find name t.pinned with
+    | Version v -> false, OpamPackage.create name v
+    | _ -> true, overlay_of_name t name in
   let opam_f =
-    let path, _ = locally_pinned_package t name in
-    let dir = OpamFilename.raw_dir (fst path) in
-    if OpamFilename.exists (dir // "opam") then dir // "opam"
+    if local_pin then
+      let path, _ = locally_pinned_package t name in
+      let dir = OpamFilename.raw_dir (fst path) in
+      if OpamFilename.exists (dir // "opam") then dir // "opam"
+      else OpamPath.opam t.root ov
     else OpamPath.opam t.root ov in
   let descr_f = OpamPath.descr t.root ov in
+  let url_opt =
+    if local_pin then Some (url_of_locally_pinned_package t name) else
+      let f = OpamPath.url t.root ov in
+      if OpamFilename.exists f then Some (OpamFile.URL.read f) else None in
   let files_f = OpamPath.files t.root ov in
   let nv = OpamPackage.pinned name in
   add_opam_overlay t nv (OpamFile.OPAM.read opam_f);
   if OpamFilename.exists descr_f then
     add_descr_overlay t nv (OpamFile.Descr.read descr_f);
-  add_url_overlay t nv (url_of_locally_pinned_package t name);
+  (match url_opt with
+   | Some url -> add_url_overlay t nv url
+   | None -> ());
   if OpamFilename.exists_dir files_f then
     add_files_overlay t nv files_f (OpamFilename.files files_f)
 
@@ -667,7 +686,6 @@ let has_url_overlay t nv =
 
 (* check for an overlay first, and the fallback to the global state *)
 let url t nv =
-  let nv = real_package t nv in
   let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
   if OpamFilename.exists overlay then
     Some (OpamFile.URL.read overlay)
@@ -679,6 +697,7 @@ let url t nv =
       None
 
 let is_dev_package t nv =
+  let nv = real_package t nv in
   match url t nv with
   | None     -> false
   | Some url ->
@@ -689,6 +708,26 @@ let is_dev_package t nv =
 let dev_package t nv =
   if has_url_overlay t nv then OpamPath.Switch.dev_package t.root t.switch nv
   else OpamPath.dev_package t.root nv
+
+let pinning_version t nv =
+  let name = OpamPackage.name nv in
+  try
+    match OpamPackage.Name.Map.find name t.pinned with
+    | Version v -> OpamPackage.create name v
+    | _ ->
+      let nv1 = OpamPackage.pinned name in
+      let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv1 in
+      let opam = OpamFile.OPAM.read overlay in
+      if OpamFile.OPAM.version opam = OpamPackage.Version.pinned then
+        (OpamGlobals.warning
+           "Package %s is pinned locally but with unspecified version:\n\
+            is your OPAM directory up-to-date ? Please try running 'mkdir ~/.opam/opam && opam list'."
+           (OpamPackage.Name.to_string name);
+         nv)
+      else
+        OpamPackage.create name (OpamFile.OPAM.version opam)
+  with Not_found ->
+    nv
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
@@ -730,10 +769,20 @@ let available_packages t system =
       && has_reposiotry ()
     ) else
       false in
-  OpamPackage.Map.fold (fun nv _ set ->
-      if filter nv then OpamPackage.Set.add nv set
-      else set
-    ) t.opams OpamPackage.Set.empty
+  let _pinned, set =
+    OpamPackage.Map.fold (fun nv _ (pinned, set) ->
+        if OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned then
+          (pinned, set)
+        else
+          let nv1 = pinning_version t nv in
+          let pinned =
+            if nv1 != nv
+            then OpamPackage.Name.Set.add (OpamPackage.name nv1) pinned
+            else pinned in
+          if filter nv1 then pinned, OpamPackage.Set.add nv1 set
+          else pinned, set
+      ) t.opams (OpamPackage.Name.Set.empty, OpamPackage.Set.empty) in
+  set
 
 let base_packages =
   List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
@@ -808,7 +857,6 @@ let load_env_state call_site =
   let repositories = OpamRepositoryName.Map.empty in
   let compiler_version = lazy (OpamCompiler.Version.of_string "none") in
   let opams = OpamPackage.Map.empty in
-  let descrs = OpamPackage.Map.empty in
   let packages = OpamPackage.Set.empty in
   let available_packages = lazy OpamPackage.Set.empty in
   let installed = OpamPackage.Set.empty in
@@ -818,7 +866,7 @@ let load_env_state call_site =
   let package_index = lazy OpamPackage.Map.empty in
   let compiler_index = lazy OpamCompiler.Map.empty in
   {
-    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
+    partial; root; switch; compiler; compiler_version; repositories; opams;
     packages; available_packages; installed; installed_roots; reinstall;
     config; aliases; pinned; compilers;
     package_index; compiler_index;
@@ -1162,10 +1210,6 @@ let load_state ?(save_cache=true) call_site =
             map
         ) packages OpamPackage.Map.empty
     | Some o -> o in
-  let descrs =
-    OpamPackage.Map.mapi (fun nv _ ->
-        lazy (OpamFile.Descr.safe_read (OpamPath.descr root nv))
-      ) opams in
   let repositories = read_repositories root config in
   let pinned =
     OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
@@ -1176,14 +1220,17 @@ let load_state ?(save_cache=true) call_site =
   let reinstall =
     OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages =
-    OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
+    OpamPackage.Name.Map.fold
+      (fun name _ -> OpamPackage.Set.add (OpamPackage.pinned name))
+      pinned
+      (OpamPackage.Set.of_list (OpamPackage.Map.keys opams)) in
   let system =
     (compiler = OpamCompiler.system) in
   let package_index = lazy (package_index_aux root repositories) in
   let compiler_index = lazy (compiler_index_aux repositories) in
   let available_packages_stub = lazy OpamPackage.Set.empty in
   let t = {
-    partial; root; switch; compiler; compiler_version; repositories; opams; descrs;
+    partial; root; switch; compiler; compiler_version; repositories; opams;
     packages; installed; installed_roots; reinstall;
     config; aliases; pinned; compilers;
     package_index; compiler_index;
@@ -1248,7 +1295,7 @@ let upgrade_to_1_1 () =
   if OpamFilename.exists_dir opam then (
 
     OpamGlobals.msg
-      "** Upgrading to OPAM 1.1 [DO NOT INTERRUPT THE PROCESS]   **\n\
+      "\n** Upgrading to OPAM 1.1 \027[31m[DO NOT INTERRUPT THE PROCESS]\027[m **\n\
        \n\
       \   In case something goes wrong, you can run that upgrade\n\
       \   process again by doing:\n\
@@ -1328,7 +1375,7 @@ let upgrade_to_1_1 () =
     OpamFilename.rmdir opam_tmp;
 
     OpamGlobals.msg
-      "\n** Upgrade complete. You can continue to use OPAM as usual. **\n;";
+      "\n** Upgrade complete. You can continue to use OPAM as usual. **\n";
     OpamGlobals.exit 0
   )
 
@@ -1986,6 +2033,7 @@ let update_switch_config t switch =
 
 let update_dev_package t nv =
   log "update-dev-package %s" (OpamPackage.to_string nv);
+  let nv = real_package t nv in
   let needs_update = OpamPackage.Set.singleton nv in
   let skip = OpamPackage.Set.empty in
   match url t nv with
@@ -2046,17 +2094,16 @@ let download_archive t nv =
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
 let download_upstream t nv dirname =
+  let nv = real_package t nv in
   match url t nv with
   | None   -> None
   | Some u ->
     let url = OpamFile.URL.url u in
     let kind = guess_repository_kind (OpamFile.URL.kind u) url in
-    if OpamFilename.exists_dir dirname then
-      Some (D dirname)
-    else match OpamRepository.pull_url kind nv dirname url with
-      | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
-      | Result f
-      | Up_to_date f    -> Some f
+    match OpamRepository.pull_url kind nv dirname url with
+    | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
+    | Result f
+    | Up_to_date f    -> Some f
 
 let check f =
   let root = OpamPath.root () in
