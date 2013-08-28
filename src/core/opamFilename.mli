@@ -185,6 +185,10 @@ val remove_suffix: Base.t -> t -> string
     of the downloaded file if the download is successful.  *)
 val download: overwrite:bool -> t -> Dir.t -> t
 
+(** same as [download], but with a specified destination filename instead of a
+    directory *)
+val download_as: overwrite:bool -> t -> t -> unit
+
 (** iterate downloads until one is sucessful *)
 val download_iter: overwrite:bool -> t list -> Dir.t -> t
 

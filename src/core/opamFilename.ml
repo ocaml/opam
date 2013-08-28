@@ -278,9 +278,17 @@ let remove_suffix suffix filename =
 
 let download ~overwrite filename dirname =
   mkdir dirname;
+  let dst = to_string (create dirname (basename filename)) in
   let file = OpamSystem.download ~overwrite
-      ~filename:(to_string filename) ~dirname:(Dir.to_string dirname) in
+      ~filename:(to_string filename) ~dst in
   of_string file
+
+let download_as ~overwrite filename dest =
+  mkdir (dirname dest);
+  let file = OpamSystem.download ~overwrite
+      ~filename:(to_string filename) ~dst:(to_string dest) in
+  assert (file = to_string dest);
+  ()
 
 let download_iter ~overwrite filenames dirname =
   let rec aux = function
