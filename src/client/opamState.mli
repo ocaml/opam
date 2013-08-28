@@ -329,6 +329,10 @@ val check: lock -> unit
 (** Is the package locally pinned ? (ie. not a version pinning) *)
 val is_locally_pinned: state -> name -> bool
 
+(** Returns the versionned package corresponding to the version the package has
+    been pinned to. If not pinned, returns [package] unchanged *)
+val pinning_version: state -> package -> package
+
 (** Return the URL file associated with a locally pinned package. *)
 val url_of_locally_pinned_package: state -> name -> OpamFile.URL.t
 
