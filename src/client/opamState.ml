@@ -686,7 +686,6 @@ let has_url_overlay t nv =
 
 (* check for an overlay first, and the fallback to the global state *)
 let url t nv =
-  let nv = real_package t nv in
   let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
   if OpamFilename.exists overlay then
     Some (OpamFile.URL.read overlay)
@@ -698,6 +697,7 @@ let url t nv =
       None
 
 let is_dev_package t nv =
+  let nv = real_package t nv in
   match url t nv with
   | None     -> false
   | Some url ->
@@ -708,6 +708,26 @@ let is_dev_package t nv =
 let dev_package t nv =
   if has_url_overlay t nv then OpamPath.Switch.dev_package t.root t.switch nv
   else OpamPath.dev_package t.root nv
+
+let pinning_version t nv =
+  let name = OpamPackage.name nv in
+  try
+    match OpamPackage.Name.Map.find name t.pinned with
+    | Version v -> OpamPackage.create name v
+    | _ ->
+      let nv1 = OpamPackage.pinned name in
+      let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv1 in
+      let opam = OpamFile.OPAM.read overlay in
+      if OpamFile.OPAM.version opam = OpamPackage.Version.pinned then
+        (OpamGlobals.warning
+           "Package %s is pinned locally but with unspecified version:\n\
+            is your OPAM directory up-to-date ? Please try running 'mkdir ~/.opam/opam && opam list'."
+           (OpamPackage.Name.to_string name);
+         nv)
+      else
+        OpamPackage.create name (OpamFile.OPAM.version opam)
+  with Not_found ->
+    nv
 
 (* List the packages which does fullfil the compiler and OS constraints *)
 let available_packages t system =
@@ -749,32 +769,12 @@ let available_packages t system =
       && has_reposiotry ()
     ) else
       false in
-  let pinned_version nv =
-    let name = OpamPackage.name nv in
-    try
-      match OpamPackage.Name.Map.find name t.pinned with
-      | Version v -> OpamPackage.create name v
-      | _ ->
-        let nv1 = OpamPackage.pinned name in
-        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv1 in
-        let opam = OpamFile.OPAM.read overlay in
-        if OpamFile.OPAM.version opam = OpamPackage.Version.pinned then
-          (OpamGlobals.warning
-             "Package %s is pinned locally but with unspecified version:\n\
-              is your OPAM directory up-to-date ? Please try running 'mkdir ~/.opam/opam && opam list'."
-             (OpamPackage.Name.to_string name);
-           nv)
-        else
-          OpamPackage.create name (OpamFile.OPAM.version opam)
-    with Not_found ->
-      nv
-  in
   let _pinned, set =
     OpamPackage.Map.fold (fun nv _ (pinned, set) ->
         if OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned then
           (pinned, set)
         else
-          let nv1 = pinned_version nv in
+          let nv1 = pinning_version t nv in
           let pinned =
             if nv1 != nv
             then OpamPackage.Name.Set.add (OpamPackage.name nv1) pinned
@@ -1220,7 +1220,10 @@ let load_state ?(save_cache=true) call_site =
   let reinstall =
     OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages =
-    OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
+    OpamPackage.Name.Map.fold
+      (fun name _ -> OpamPackage.Set.add (OpamPackage.pinned name))
+      pinned
+      (OpamPackage.Set.of_list (OpamPackage.Map.keys opams)) in
   let system =
     (compiler = OpamCompiler.system) in
   let package_index = lazy (package_index_aux root repositories) in
@@ -2030,6 +2033,7 @@ let update_switch_config t switch =
 
 let update_dev_package t nv =
   log "update-dev-package %s" (OpamPackage.to_string nv);
+  let nv = real_package t nv in
   let needs_update = OpamPackage.Set.singleton nv in
   let skip = OpamPackage.Set.empty in
   match url t nv with
@@ -2090,6 +2094,7 @@ let download_archive t nv =
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
 let download_upstream t nv dirname =
+  let nv = real_package t nv in
   match url t nv with
   | None   -> None
   | Some u ->
