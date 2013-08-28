@@ -2084,12 +2084,10 @@ let download_upstream t nv dirname =
   | Some u ->
     let url = OpamFile.URL.url u in
     let kind = guess_repository_kind (OpamFile.URL.kind u) url in
-    if OpamFilename.exists_dir dirname then
-      Some (D dirname)
-    else match OpamRepository.pull_url kind nv dirname url with
-      | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
-      | Result f
-      | Up_to_date f    -> Some f
+    match OpamRepository.pull_url kind nv dirname url with
+    | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
+    | Result f
+    | Up_to_date f    -> Some f
 
 let check f =
   let root = OpamPath.root () in

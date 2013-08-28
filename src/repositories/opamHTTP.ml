@@ -156,10 +156,8 @@ module B = struct
   let curl ~remote_file ~local_file =
     log "curl";
     log "dowloading %s" (OpamFilename.to_string remote_file);
-    let local_dir = OpamFilename.dirname local_file in
-    OpamFilename.mkdir local_dir;
     OpamGlobals.msg "Downloading %s\n" (OpamFilename.to_string remote_file);
-    OpamFilename.download ~overwrite:true remote_file local_dir
+    OpamFilename.download_as ~overwrite:true remote_file local_file
 
   let pull_repo repo =
     log "pull-repo";
@@ -186,7 +184,7 @@ module B = struct
       else
         OpamFilename.Set.iter (fun local_file ->
           let remote_file = OpamFilename.Map.find local_file state.local_remote in
-          ignore (curl ~remote_file ~local_file)
+          curl ~remote_file ~local_file
         ) new_files;
     )
 
@@ -215,8 +213,8 @@ module B = struct
 	OpamGlobals.msg "%-10s Downloading %s\n"
 	  (OpamRepositoryName.to_string repo.repo_name)
 	  (OpamFilename.prettify filename);
-	let result = curl ~remote_file:filename ~local_file in
-        Result result
+	curl ~remote_file:filename ~local_file;
+        Result local_file
       )
     ) else
       Not_available (OpamFilename.to_string filename)
