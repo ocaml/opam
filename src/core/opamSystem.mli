@@ -159,7 +159,7 @@ val funlock: string -> unit
 (** {2 Misc} *)
 
 (** download compiler sources *)
-val download: overwrite:bool -> filename:string -> dirname:string -> string
+val download: overwrite:bool -> filename:string -> dst:string -> string
 
 (** Apply a patch file in the current directory. *)
 val patch: string -> unit
