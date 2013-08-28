@@ -134,7 +134,7 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
 
 module API = struct
 
-  let list ~print_short ~filter ~exact_name ~case_sensitive regexp =
+  let list ~print_short ~filter ~order ~exact_name ~case_sensitive regexp =
     let t = OpamState.load_state "list" in
     let names = names_of_regexp t ~filter ~exact_name ~case_sensitive regexp in
     if not print_short && OpamPackage.Name.Map.cardinal names > 0 then (
@@ -160,14 +160,31 @@ module API = struct
         let max_v = max max_v (String.length v_str) in
         max_n, max_v
       ) names (0,0) in
-    OpamPackage.Name.Map.iter (
+    let names = OpamPackage.Name.Map.bindings names in
+    let names = match order with
+      | `normal  -> names
+      | `depends ->
+        let universe = OpamState.universe t Depends in
+        let packages_info =
+          List.map (fun (name, info) ->
+              (OpamPackage.create name info.current_version, info)
+            ) names in
+        let packages =
+          let packages = OpamPackage.Set.of_list (List.map fst packages_info) in
+          OpamSolver.dependencies
+            ~depopts:true ~installed:false universe packages in
+        List.fold_left (fun acc nv ->
+            try (OpamPackage.name nv, List.assoc nv packages_info) :: acc
+            with Not_found -> acc
+          ) [] packages in
+    List.iter (
       if print_short then
-        fun name _ -> Printf.printf "%s " (OpamPackage.Name.to_string name)
+        fun (name, _) -> Printf.printf "%s " (OpamPackage.Name.to_string name)
       else
         let synop_len =
           let col = OpamMisc.terminal_columns () in
           max 0 (col - max_n - max_v - 4) in
-        fun name { installed_version; synopsis } ->
+        fun (name, { installed_version; synopsis }) ->
           let name = OpamPackage.Name.to_string name in
           let version = match installed_version with
             | None   -> s_not_installed
@@ -860,9 +877,9 @@ module SafeAPI = struct
 
   let init = API.init
 
-  let list ~print_short ~filter ~exact_name ~case_sensitive pkg_str =
+  let list ~print_short ~filter ~order ~exact_name ~case_sensitive pkg_str =
     read_lock (fun () ->
-      API.list ~print_short ~filter ~exact_name ~case_sensitive pkg_str
+      API.list ~print_short ~filter ~order ~exact_name ~case_sensitive pkg_str
     )
 
   let info ~fields regexps =

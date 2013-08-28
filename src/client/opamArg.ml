@@ -452,17 +452,19 @@ let list =
   let all =
     mk_flag ["a";"all"]
       "List all the packages which can be installed on the system." in
-  let list global_options print_short all installed installed_roots packages =
+  let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
+  let list global_options print_short all installed installed_roots sort packages =
     apply_global_options global_options;
     let filter = match all, installed, installed_roots with
       | true, _, _ -> `installable
       | _, _, true -> `roots
       | _, true, _ -> `installed
       | _          -> `installed in
-    Client.list ~print_short ~filter ~exact_name:true ~case_sensitive:false
+    let order = if sort then `depends else `normal in
+    Client.list ~print_short ~filter ~order ~exact_name:true ~case_sensitive:false
       packages in
   Term.(pure list $global_options
-    $print_short_flag $all $installed_flag $installed_roots_flag
+    $print_short_flag $all $installed_flag $installed_roots_flag $sort
     $pattern_list),
   term_info "list" ~doc ~man
 
@@ -487,7 +489,8 @@ let search =
       | _, true -> `roots
       | true, _ -> `installed
       | _       -> `all in
-    Client.list ~print_short ~filter ~exact_name:false ~case_sensitive pkgs in
+    let order = `normal in
+    Client.list ~print_short ~filter ~order ~exact_name:false ~case_sensitive pkgs in
   Term.(pure search $global_options
     $print_short_flag $installed_flag $installed_roots_flag $case_sensitive
     $pattern_list),

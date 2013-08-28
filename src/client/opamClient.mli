@@ -32,6 +32,7 @@ module API: sig
   val list:
     print_short:bool ->
     filter:[`all|`installed|`roots|`installable] ->
+    order:[`normal|`depends] ->
     exact_name:bool ->
     case_sensitive:bool ->
     string list ->
