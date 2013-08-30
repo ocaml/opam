@@ -73,6 +73,11 @@ let pin ~force action =
   | _     ->
     if not force && OpamPackage.Name.Map.mem name pins then (
       let current = OpamPackage.Name.Map.find name pins in
+      if current = action.pin_option then
+        OpamGlobals.error_and_exit
+          "Package %s is already pinned to %s."
+        (OpamPackage.Name.to_string name)
+        (string_of_pin_option current);
       OpamGlobals.error_and_exit
         "Cannot pin %s to %s as it is already associated to %s. Use 'opam pin %s \
          none' and retry (or use --force)."
