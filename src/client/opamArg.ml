@@ -24,14 +24,15 @@ type global_options = {
   quiet  : bool;
   switch : string option;
   yes    : bool;
+  strict : bool;
   root   : dirname;
   no_base_packages: bool;
   git_version     : bool;
 }
 
 let create_global_options
-    git_version debug verbose quiet switch yes root no_base_packages =
-  { git_version; debug; verbose; quiet; switch; yes; root; no_base_packages }
+    git_version debug verbose quiet switch yes strict root no_base_packages =
+  { git_version; debug; verbose; quiet; switch; yes; strict; root; no_base_packages }
 
 let apply_global_options o =
   if o.git_version then (
@@ -50,6 +51,7 @@ let apply_global_options o =
   end;
   OpamGlobals.root_dir := OpamFilename.Dir.to_string o.root;
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
+  OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages
 
 (* Build options *)
@@ -306,6 +308,11 @@ let global_options =
        to all questions that would otherwise be \
        asked to the user. \
        This is equivalent to setting $(b,\\$OPAMYES) to a non-empty string." in
+  let strict =
+    mk_flag ~section ["strict"]
+      "Fail whenever an error is found in a package definition \
+       or a configuration file. The default is to continue silently \
+       if possible." in
   let root =
     mk_opt ~section ["r";"root"]
       "ROOT" "Use $(docv) as the current root path. \
@@ -317,7 +324,7 @@ let global_options =
        This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
        string." in
   Term.(pure create_global_options
-    $git_version $debug $verbose $quiet $switch $yes $root $no_base_packages)
+    $git_version $debug $verbose $quiet $switch $yes $strict $root $no_base_packages)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
