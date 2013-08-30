@@ -49,22 +49,32 @@ module Syntax = struct
   let to_string ?(indent_variable = fun _ -> false) (t: t) =
     OpamFormat.string_of_file ~indent_variable t
 
-  let check f fields =
-    if not (OpamFormat.is_valid f.file_contents fields) then (
-      let invalids = OpamFormat.invalid_fields f.file_contents fields in
-      let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
-      if too_many <> [] then
-        OpamGlobals.error
-          "%s appears too many times in %s"
-          f.file_name
-          (OpamMisc.string_of_list (fun x -> x) too_many);
-      if invalids <> [] then
-        OpamGlobals.error "%s are invalid field names in %s. Valid fields are %s"
-          (OpamMisc.string_of_list (fun x -> x) invalids)
-          f.file_name
-          (OpamMisc.string_of_list (fun x -> x) fields);
-      OpamGlobals.exit 5;
-    )
+  let check =
+    let not_already_warned = ref true in
+    fun f fields ->
+      if not (OpamFormat.is_valid f.file_contents fields) then
+        let invalids = OpamFormat.invalid_fields f.file_contents fields in
+        let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
+        if too_many <> [] then
+          OpamGlobals.error "duplicated fields in %s: %s"
+            f.file_name
+            (OpamMisc.string_of_list (fun x -> x) too_many);
+        if !OpamGlobals.strict then (
+          if invalids <> [] then
+            (let are,s = match invalids with [_] -> "is an","" | _ -> "are","s" in
+             OpamGlobals.error "%s %s invalid field name%s in %s. Valid fields: %s\n\
+                                Either there is an error in the package, or your \
+                                OPAM is not up-to-date."
+               (OpamMisc.string_of_list (fun x -> x) invalids)
+               are s f.file_name
+               (OpamMisc.string_of_list (fun x -> x) fields));
+          OpamGlobals.exit 5
+        ) else if !not_already_warned then (
+          not_already_warned := false;
+          if invalids <> [] then
+            OpamGlobals.warning "unknown fields in %s: is your OPAM up-to-date ?"
+              f.file_name
+        )
 
 end
 
