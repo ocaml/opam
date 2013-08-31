@@ -512,11 +512,27 @@ module API = struct
     let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
     let solution_found = match names with
       | None ->
-        let to_remove =
+        let not_available =
           let (--) = OpamPackage.Name.Set.diff in
-          OpamPackage.names_of_packages t.installed
-          -- OpamPackage.names_of_packages (Lazy.force t.available_packages)
-          -- OpamPackage.names_of_packages to_reinstall in
+          let not_available_names =
+            OpamPackage.names_of_packages t.installed
+            -- OpamPackage.names_of_packages (Lazy.force t.available_packages)
+            -- OpamPackage.names_of_packages to_reinstall in
+          OpamPackage.Name.Set.fold (fun name acc ->
+              OpamPackage.Set.union acc (OpamPackage.packages_of_name t.installed name))
+            not_available_names (OpamPackage.Set.empty) in
+        let t =
+          (* This is a hack to tell the solver not to ignore unavailable packages, so that
+             they can be removed *)
+          {t with available_packages = lazy (
+               OpamPackage.Set.union (Lazy.force t.available_packages) not_available
+             )} in
+        let to_remove =
+          let universe = OpamState.universe t Reinstall in
+          let to_remove = OpamPackage.Set.of_list
+              (OpamSolver.reverse_dependencies
+                 ~depopts:false ~installed:true universe not_available) in
+          OpamPackage.names_of_packages to_remove in
         let to_upgrade =
           OpamPackage.Set.filter (fun nv ->
               not (OpamPackage.Name.Set.mem (OpamPackage.name nv) to_remove)
