@@ -1074,6 +1074,7 @@ module X = struct
       toplevel: (basename optional * basename option) list;
       stublibs: (basename optional * basename option) list;
       share   : (basename optional * basename option) list;
+      etc     : (basename optional * basename option) list;
       doc     : (basename optional * basename option) list;
       man     : (basename optional * basename option) list;
       misc    : (basename optional * filename) list;
@@ -1086,6 +1087,7 @@ module X = struct
       stublibs = [];
       misc     = [];
       share    = [];
+      etc      = [];
       man      = [];
       doc      = [];
     }
@@ -1096,6 +1098,7 @@ module X = struct
     let stublibs t = t.stublibs
     let misc t = t.misc
     let share t = t.share
+    let etc t = t.etc
     let doc t = t.doc
     let man t =
       List.map (fun (src, dst) ->
@@ -1113,6 +1116,7 @@ module X = struct
     let s_toplevel = "toplevel"
     let s_stublibs = "stublibs"
     let s_share    = "share"
+    let s_etc      = "etc"
     let s_doc      = "doc"
     let s_man      = "man"
 
@@ -1124,6 +1128,7 @@ module X = struct
       s_stublibs;
       s_misc;
       s_share;
+      s_etc;
       s_doc;
       s_man;
     ]
@@ -1164,6 +1169,7 @@ module X = struct
           Variable (s_toplevel, mk      t.toplevel);
           Variable (s_stublibs, mk      t.stublibs);
           Variable (s_share   , mk      t.share);
+          Variable (s_etc     , mk      t.etc);
           Variable (s_doc     , mk      t.doc);
           Variable (s_man     , mk      t.man);
           Variable (s_misc    , mk_misc t.misc);
@@ -1193,9 +1199,10 @@ module X = struct
       let toplevel = mk s_toplevel in
       let stublibs = mk s_stublibs in
       let share    = mk s_share    in
+      let etc      = mk s_etc      in
       let doc      = mk s_doc      in
       let man      = mk s_man      in
-      { lib; bin; misc; toplevel; stublibs; share; doc; man }
+      { lib; bin; misc; toplevel; stublibs; share; etc; doc; man }
 
   end
 

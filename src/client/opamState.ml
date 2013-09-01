@@ -229,6 +229,7 @@ let contents_of_variable t local_variables v =
             | "man"     -> dirname (OpamPath.Switch.man_dir t.root t.switch)
             | "doc"     -> dirname (OpamPath.Switch.doc t.root t.switch name)
             | "share"   -> dirname (OpamPath.Switch.share t.root t.switch name)
+            | "etc"     -> dirname (OpamPath.Switch.etc t.root t.switch name)
             | "pinned"  -> bool (OpamPackage.Name.Map.mem name t.pinned)
             | "version" ->
               let nv = find_installed_package_by_name t name in
@@ -1269,6 +1270,7 @@ let install_global_config root switch =
         ("toplevel", OpamPath.Switch.toplevel root switch);
         ("man", OpamPath.Switch.man_dir root switch);
         ("share", OpamPath.Switch.share_dir root switch);
+        ("etc", OpamPath.Switch.etc_dir root switch);
       ]
     @ map id [
       ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
