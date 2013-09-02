@@ -123,7 +123,24 @@ let colorise c s =
     in
     Printf.sprintf "\027[%dm%s\027[m" code s
 
-let acolor c oc s = output_string oc (colorise c s)
+let indent_left str n =
+  if String.length str >= n then str
+  else
+    let nstr = String.make n ' ' in
+    String.blit str 0 nstr 0 (String.length str);
+    nstr
+
+let acolor_with_width width c oc s =
+  let str = colorise c s in
+  output_string oc str;
+  match width with
+  | None   -> ()
+  | Some w ->
+    if String.length str >= w then ()
+    else output_string oc (String.make (w-String.length str) ' ')
+
+let acolor c oc s = acolor_with_width None c oc s
+let acolor_w width c oc s = acolor_with_width (Some width) c oc s
 
 let timestamp () =
   let time = Unix.gettimeofday () -. global_start_time in
@@ -137,8 +154,8 @@ let timestamp () =
 let log section fmt =
   Printf.ksprintf (fun str ->
     if !debug then
-      Printf.eprintf "%s  %06d  %-25a  %s\n%!"
-        (timestamp ()) (Unix.getpid ()) (acolor `yellow) section str
+      Printf.eprintf "%s  %06d  %a  %s\n%!"
+        (timestamp ()) (Unix.getpid ()) (acolor_w 30 `yellow) section str
   ) fmt
 
 let error fmt =
