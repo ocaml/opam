@@ -429,44 +429,56 @@ let package_state_one t all nv =
   let url     = OpamPath.url t.root nv in
   let files   = OpamPath.files t.root nv in
   let archive = OpamPath.archive t.root nv in
-  if not (OpamFilename.exists opam) then None
-  else
-    let result = match all with
-      | `all ->
-        OpamFilename.checksum opam
-        @ OpamFilename.checksum descr
-        @ OpamFilename.checksum url
-        @ OpamFilename.checksum_dir files
-        @ OpamFilename.checksum archive
-      | `partial true ->
-        OpamFilename.checksum url
-        @ OpamFilename.checksum_dir files
-        @ OpamFilename.checksum archive
-      | `partial false ->
-        OpamFilename.checksum url
-        @ OpamFilename.checksum_dir files in
-    Some result
+  if not (OpamFilename.exists opam) then []
+  else match all with
+    | `all ->
+      OpamFilename.checksum opam
+      @ OpamFilename.checksum descr
+      @ OpamFilename.checksum url
+      @ OpamFilename.checksum_dir files
+      @ OpamFilename.checksum archive
+    | `partial true ->
+      OpamFilename.checksum url
+      @ OpamFilename.checksum_dir files
+      @ OpamFilename.checksum archive
+    | `partial false ->
+      OpamFilename.checksum url
+      @ OpamFilename.checksum_dir files
+
+let all_installed t =
+  OpamSwitch.Map.fold (fun switch _ accu ->
+    let installed_f = OpamPath.Switch.installed t.root switch in
+    let installed = OpamFile.Installed.safe_read installed_f in
+    OpamPackage.Set.union installed accu
+  ) t.aliases OpamPackage.Set.empty
 
 let package_state t =
-  OpamPackage.Set.fold (fun nv map ->
-      match package_state_one t `all nv with
-      | None   -> map
-      | Some s -> OpamPackage.Map.add nv s map
-    ) t.packages OpamPackage.Map.empty
+  let installed = OpamPackage.Set.fold (fun nv map ->
+      let state = package_state_one t `all nv in
+      OpamPackage.Map.add nv state map
+    ) (all_installed t) OpamPackage.Map.empty in
+  OpamPackage.Map.fold (fun nv (repo, prefix) map ->
+      if OpamPackage.Map.mem nv map then
+        map
+      else
+        let repo = find_repository_exn t repo in
+        let state = OpamRepository.package_state repo prefix nv `all in
+        OpamPackage.Map.add nv state map
+    ) t.package_index installed
 
 let package_partial_state t nv ~archive =
   match package_state_one t (`partial archive) nv with
-  | None   -> false, []
-  | Some s ->
+  | []    -> false, []
+  | state ->
     let archive = OpamPath.archive t.root nv in
-    OpamFilename.exists archive, s
+    OpamFilename.exists archive, state
 
 let package_repository_state t =
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
       let repo = find_repository_exn t repo in
       match OpamRepository.package_state repo prefix nv `all with
-      | [] -> map
-      | l  -> OpamPackage.Map.add nv l map
+      | []    -> map
+      | state -> OpamPackage.Map.add nv state map
     ) t.package_index OpamPackage.Map.empty
 
 let package_repository_partial_state t nv ~archive =
