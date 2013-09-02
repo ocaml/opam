@@ -143,13 +143,13 @@ let atoms_of_names ?(permissive=false) t names =
 (* Pretty-print errors *)
 let display_error (n, error) =
   let f action nv =
-    OpamGlobals.error "\n==== ERROR [while %s %s] ====" action
-      (OpamPackage.to_string nv);
+    let disp =
+      OpamGlobals.header_error "while %s %s" action (OpamPackage.to_string nv) in
     match error with
     | OpamParallel.Process_error r  ->
-      OpamGlobals.error "%s" (OpamProcess.string_of_result r)
+      disp "%s" (OpamProcess.string_of_result ~color:`red r)
     | OpamParallel.Internal_error s ->
-      OpamGlobals.error "Internal error:\n  %s" s in
+      disp "Internal error:\n  %s" s in
   match n with
   | To_change (Some o, nv) ->
     if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version nv) < 0
@@ -399,15 +399,14 @@ let parallel_apply t action solution =
     if remaining <> [] then (
       OpamGlobals.error
         "Due to some errors while processing %s, the following actions will NOT \
-         be proceeded:"
-        (string_of_errors errors);
-      List.iter (fun n ->
-        OpamGlobals.error "%s" (PackageAction.string_of_action n)
-      ) remaining;
+         proceed:\n%s"
+        (string_of_errors errors)
+        (String.concat "\n" (List.map PackageAction.string_of_action remaining))
     );
     if can_try_to_recover_from_error errors then (
       let pkgs = List.map (fst ++ action_contents ++ OpamPackage.to_string) errors in
-      OpamGlobals.msg "==== ERROR RECOVERY [%s] ====\n" (String.concat ", " pkgs);
+      OpamGlobals.header_msg "%s [%s]" (OpamGlobals.colorise `yellow "ERROR RECOVERY")
+        (String.concat ", " pkgs);
       List.iter recover_from_error (List.map fst errors);
       List.iter recover_from_error remaining;
     );

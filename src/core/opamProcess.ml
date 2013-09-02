@@ -65,9 +65,12 @@ let make_info ?code ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadat
 
   List.rev !b
 
-let string_of_info info =
+let string_of_info ?(color=`yellow) info =
   let b = Buffer.create 1024 in
-  List.iter (fun (k,v) -> Printf.bprintf b "# %-15s %s\n" k v) info;
+  List.iter
+    (fun (k,v) -> Printf.bprintf b "%s %-20s %s\n"
+        (OpamGlobals.colorise color "#")
+        (OpamGlobals.colorise color k) v) info;
   Buffer.contents b
 
 let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
@@ -238,21 +241,27 @@ let rec truncate = function
       | []     -> []
       | _ :: t -> truncate t
 
-let string_of_result r =
+let string_of_result ?(color=`yellow) r =
   let b = Buffer.create 2048 in
   let print = Buffer.add_string b in
   let println str =
     print str;
     Buffer.add_char b '\n' in
 
-  print (string_of_info r.r_info);
+  print (string_of_info ~color r.r_info);
 
   if r.r_stdout <> [] then
-    print "### stdout ###\n";
-  List.iter println (truncate r.r_stdout);
+    print (OpamGlobals.colorise color "### stdout ###\n");
+  List.iter (fun s ->
+      print (OpamGlobals.colorise color "# ");
+      println s)
+    (truncate r.r_stdout);
 
   if r.r_stderr <> [] then
-    print "### stderr ###\n";
-  List.iter println (truncate r.r_stderr);
+    print (OpamGlobals.colorise color "### stderr ###\n");
+  List.iter (fun s ->
+      print (OpamGlobals.colorise color "# ");
+      println s)
+    (truncate r.r_stderr);
 
   Buffer.contents b

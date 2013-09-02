@@ -189,7 +189,7 @@ let install_package t nv =
             (OpamFilename.Base.to_string base)
             (OpamFilename.Dir.to_string dir) in
         OpamSystem.internal_error
-          "Error while installing the following files:\n%s"
+          "While installing the following files:\n%s"
           (String.concat "\n" (List.map print !warnings));
       )
     );
