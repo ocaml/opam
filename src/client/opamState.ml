@@ -612,8 +612,20 @@ let descr_opt t nv =
 
 let descr t nv =
   match descr_opt t nv with
-  | None -> OpamFile.Descr.empty
+  | None   -> OpamFile.Descr.empty
   | Some f -> f
+
+(* check for an overlay first, and the fallback to the global state *)
+let url t nv =
+  let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
+  if OpamFilename.exists overlay then
+    Some (OpamFile.URL.read overlay)
+  else
+    let url = OpamPath.url t.root nv in
+    if OpamFilename.exists url then
+      Some (OpamFile.URL.read url)
+    else
+      None
 
 let add_files_overlay t nv root files =
   let dst = OpamPath.Switch.Overlay.files t.root t.switch nv in
@@ -669,18 +681,6 @@ let remove_overlay t nv =
 
 let has_url_overlay t nv =
   OpamFilename.exists (OpamPath.Switch.Overlay.url t.root t.switch nv)
-
-(* check for an overlay first, and the fallback to the global state *)
-let url t nv =
-  let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
-  if OpamFilename.exists overlay then
-    Some (OpamFile.URL.read overlay)
-  else
-    let url = OpamPath.url t.root nv in
-    if OpamFilename.exists url then
-      Some (OpamFile.URL.read url)
-    else
-      None
 
 let is_dev_package t nv =
   let nv = real_package t nv in
