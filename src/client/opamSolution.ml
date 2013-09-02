@@ -443,6 +443,8 @@ let simulate_new_state state t =
 
 (* Apply a solution *)
 let apply ?(force = false) t action solution =
+  log "apply";
+  if !OpamGlobals.debug then PackageActionGraph.dump_solution solution;
   if OpamSolver.solution_is_empty solution then
     (* The current state satisfies the request contraints *)
     Nothing_to_do
@@ -518,6 +520,7 @@ let resolve ?(verbose=true) t action request =
 let resolve_and_apply ?(force=false) t action request =
   match resolve t action request with
   | Conflicts cs ->
+    log "conflict!";
     OpamGlobals.msg "%s\n" (cs ());
     No_solution
   | Success solution -> apply ~force t action solution

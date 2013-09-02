@@ -426,6 +426,8 @@ module type ACTION_GRAPH = sig
     root_causes: (package * package cause) list;
   }
 
+  val dump_solution: solution -> unit
+
 end
 
 module type PKG = sig
@@ -461,7 +463,23 @@ module MakeActionGraph (Pkg: PKG) = struct
     to_process: t;
     root_causes: (package * package cause) list;
   }
+
+  module Dot = Graph.Graphviz.Dot(struct
+      include PG
+      let edge_attributes _ = []
+      let default_edge_attributes _ = []
+      let get_subgraph _ = None
+      let vertex_attributes _ = []
+      let vertex_name v = Pkg.string_of_action v
+      let default_vertex_attributes _ = []
+      let graph_attributes _ = []
+    end)
+
+  let dump_solution g =
+    Dot.output_graph stdout g.to_process
+
 end
+
 
 module PackageAction = struct
   include OpamPackage

@@ -243,6 +243,9 @@ module type ACTION_GRAPH = sig
     root_causes: (package * package cause) list;
   }
 
+  (** Dump a solution graph *)
+  val dump_solution: solution -> unit
+
 end
 
 (** Signature of packages *)
