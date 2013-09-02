@@ -143,6 +143,9 @@ let install_package t nv =
       (* bin *)
       install_files (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
 
+      (* sbin *)
+      install_files (fun r s _ -> OpamPath.Switch.sbin r s) OpamFile.Dot_install.sbin;
+
       (* lib *)
       install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
 
@@ -413,6 +416,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   (* Remove the binaries *)
   log "Removing the binaries";
   remove_files OpamPath.Switch.bin OpamFile.Dot_install.bin;
+  remove_files OpamPath.Switch.sbin OpamFile.Dot_install.sbin;
 
   (* Remove the C bindings *)
   remove_files OpamPath.Switch.stublibs OpamFile.Dot_install.stublibs;
