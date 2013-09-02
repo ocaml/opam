@@ -992,6 +992,7 @@ in \S\ref{file:general} with the following restrictions:
 <file> :=
     ?lib:      [ <mv>+ ]
     ?bin:      [ <mv>+ ]
+    ?sbin:     [ <mv>+ ]
     ?toplevel: [ <mv>+ ]
     ?share:    [ <mv>+ ]
     ?etc:      [ <mv>+ ]
@@ -1008,6 +1009,7 @@ in \S\ref{file:general} with the following restrictions:
 \begin{itemize}
 \item Files listed under {\tt lib} are copied into \verb+$opam/$SWITCH/lib/$NAME/+.
 \item Files listed under {\tt bin} are copied into \verb+$opam/$SWITCH/bin/+.
+\item Files listed under {\tt sbin} are copied into \verb+$opam/$SWITCH/sbin/+.
 \item Files listed under {\tt doc} are copied into \verb+$opam/$SWITCH/doc/$NAME/+.
 \item Files listed under {\tt share} are copied into \verb+$opam/$SWITCH/share/$NAME/+.
 \item Files listed under {\tt etc} are copied into \verb+$opam/$SWITCH/etc/$NAME/+.
