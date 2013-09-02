@@ -350,7 +350,7 @@ module API = struct
     let solution = OpamSolution.resolve ~verbose:false t (Upgrade reinstall)
         { wish_install = [];
           wish_remove  = [];
-          wish_upgrade = OpamSolution.atoms_of_packages t.installed } in
+          wish_upgrade = OpamSolution.atoms_of_packages t.installed_roots } in
     match solution with
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
@@ -495,7 +495,7 @@ module API = struct
     OpamState.rebuild_state_cache ();
 
     match dry_upgrade () with
-    | None   -> OpamGlobals.msg "Everything is up-to-date.\n"
+    | None       -> OpamGlobals.msg "No stats.\n"
     | Some stats ->
       if OpamSolution.sum stats > 0 then (
         OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
