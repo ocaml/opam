@@ -377,8 +377,8 @@ let remove_package_aux t ~metadata ~rm_build nv =
           let metadata = get_metadata t in
           OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true remove
         with OpamSystem.Process_error r ->
-          OpamGlobals.error
-            "Warning: failure in package uninstall script, some files may remain:\n%s"
+          OpamGlobals.warning
+            "failure in package uninstall script, some files may remain:\n%s"
             (OpamProcess.string_of_result r)
   end;
 
@@ -480,7 +480,7 @@ let remove_all_packages t ~metadata sol =
   let deleted = ref [] in
   let delete nv =
     if !deleted = [] then
-      OpamGlobals.msg "\n=-=-= Removing Packages =-=-=\n";
+      OpamGlobals.header_msg "Removing Packages";
     deleted := nv :: !deleted;
     try remove_package t ~rm_build:true ~metadata:false nv;
     with _ -> () in
@@ -505,17 +505,12 @@ let remove_all_packages t ~metadata sol =
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
 let build_and_install_package_aux t ~metadata nv =
-  let left, right = match !OpamGlobals.utf8_msgs with
-    | true -> "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
-    | false -> "=-=-=", "=-=-="
-  in
-
   let nv =
     let name = OpamPackage.name nv in
     if OpamState.is_locally_pinned t name then OpamPackage.pinned name
     else nv in
 
-  OpamGlobals.msg "\n%s Installing %s %s\n" left (OpamPackage.to_string nv) right;
+  OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv);
 
   try
 
