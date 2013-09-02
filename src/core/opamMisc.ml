@@ -158,7 +158,7 @@ module Map = struct
       ) m1 m2
 
     let to_string string_of_value m =
-      if not !debug && M.cardinal m > 100 then
+      if not !debug && M.cardinal m > max_print then
 	Printf.sprintf "%d elements" (M.cardinal m)
       else
 	let s (k,v) = Printf.sprintf "%s:%s" (O.to_string k) (string_of_value v) in
