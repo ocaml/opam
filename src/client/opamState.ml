@@ -454,15 +454,8 @@ let all_installed t =
   ) t.aliases OpamPackage.Set.empty
 
 let package_state t =
-  let files = OpamFilename.rec_files (OpamPath.packages_dir t.root) in
-  log "files(%s) = %s"
-    (OpamFilename.Dir.to_string (OpamPath.packages_dir t.root))
-    (OpamMisc.string_of_list OpamFilename.to_string files);
   let installed = OpamPackage.Set.fold (fun nv map ->
       let state = package_state_one t `all nv in
-      log "XXX: package-state-one %s %s %b"
-        (OpamPackage.to_string nv) (String.concat ":" state)
-        (OpamFilename.exists (OpamPath.opam t.root nv));
       OpamPackage.Map.add nv state map
     ) (all_installed t) OpamPackage.Map.empty in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
