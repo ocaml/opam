@@ -171,19 +171,19 @@ let msg fmt =
   ) fmt
 
 let header_msg fmt =
-  let mark = match !utf8_msgs with
-    | true -> colorise `yellow "\xF0\x9F\x90\xAB" (* UTF-8 <U+1F42B, U+0020> *)
-    | false -> colorise `cyan "=-=-="
+  let markl, markr = match !utf8_msgs with
+    | true -> colorise `yellow "\xF0\x9F\x90\xAB " (* UTF-8 <U+1F42B, U+0020> *), ""
+    | false -> let mark = colorise `cyan "=-=-=" in mark, mark
   in
   Printf.ksprintf (fun str ->
     flush stderr;
     if !display_messages then (
       print_char '\n';
-      print_string mark;
+      print_string markl;
       print_char ' ';
       print_string (colorise `bold str);
       print_char ' ';
-      print_string mark;
+      print_string markr;
       print_char '\n';
       flush stdout;
     )
