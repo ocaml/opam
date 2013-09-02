@@ -83,8 +83,11 @@ val compilers_dir: t -> dirname
 (** Compiler subdir {i $opam/compilers/$VERSION/$COMP} *)
 val compilers: t -> compiler -> dirname
 
-(** Return the repository index: {i $opam/repo/index} *)
-val repo_index: t -> filename
+(** Return the repository index: {i $opam/repo/package-index} *)
+val package_index: t -> filename
+
+(** Return the repository index: {i $opam/repo/compiler-index} *)
+val compiler_index: t -> filename
 
 (** Init scripts *)
 val init: t -> dirname

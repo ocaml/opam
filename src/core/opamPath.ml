@@ -64,7 +64,9 @@ let compiler_comp t c =
 let compiler_descr t c =
   compilers t c // (OpamCompiler.to_string c ^ ".descr")
 
-let repo_index t = t / "repo" // "index"
+let package_index t = t / "repo" // "package-index"
+
+let compiler_index t = t / "repo" // "compiler-index"
 
 let init  t = t / "opam-init"
 

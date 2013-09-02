@@ -19,8 +19,11 @@
 open OpamState.Types
 open OpamTypes
 
-(** Update the repositories indexes ([repo/index]. *)
-val update_index: t -> unit
+(** Update the package index. *)
+val update_package_index: t -> unit
+
+(** Update the compiler index. *)
+val update_compiler_index: t -> unit
 
 (** Update the given dev packages. *)
 val update_dev_packages: t -> verbose:bool -> package_set -> package_set
