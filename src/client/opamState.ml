@@ -222,7 +222,9 @@ let contents_of_variable t local_variables v =
               name_str
               (OpamVariable.to_string var);
             None
-          ) else if installed then (
+          ) else if var = OpamVariable.of_string "pinned" then
+            bool (OpamPackage.Name.Map.mem name t.pinned)
+          else if installed then (
             match OpamVariable.to_string var with
             | "bin"     -> dirname (OpamPath.Switch.bin t.root t.switch)
             | "lib"     -> dirname (OpamPath.Switch.lib t.root t.switch name)
@@ -230,7 +232,6 @@ let contents_of_variable t local_variables v =
             | "doc"     -> dirname (OpamPath.Switch.doc t.root t.switch name)
             | "share"   -> dirname (OpamPath.Switch.share t.root t.switch name)
             | "etc"     -> dirname (OpamPath.Switch.etc t.root t.switch name)
-            | "pinned"  -> bool (OpamPackage.Name.Map.mem name t.pinned)
             | "version" ->
               let nv = find_installed_package_by_name t name in
               string (OpamPackage.Version.to_string (OpamPackage.version nv))
