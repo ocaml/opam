@@ -231,8 +231,19 @@ let fix_package_descriptions t ~verbose =
     OpamPackage.Set.partition (fun nv ->
         OpamPackage.Set.mem nv all_installed
       ) updated_packages in
-  log "updated-packages: %s" (OpamPackage.Set.to_string updated_packages);
-  log "changed-packages: %s" (OpamPackage.Set.to_string changed_packages);
+  let missing_installed_packages =
+    OpamPackage.Set.filter (fun nv ->
+        try
+          match OpamPackage.Map.find nv global_index with
+          | [] -> true
+          | _  -> false
+        with Not_found ->
+          true
+      ) all_installed in
+
+  log "updated-packages : %s" (OpamPackage.Set.to_string updated_packages);
+  log "changed-packages : %s" (OpamPackage.Set.to_string changed_packages);
+  log "missing-installed: %s" (OpamPackage.Set.to_string missing_installed_packages);
 
   let deleted_packages =
     OpamPackage.Set.filter (fun nv ->
@@ -262,7 +273,7 @@ let fix_package_descriptions t ~verbose =
             OpamFilename.copy_in ~root file dir
           ) files;
         OpamFilename.remove (OpamPath.archive t.root nv);
-    ) changed_packages;
+    ) (OpamPackage.Set.union missing_installed_packages changed_packages);
 
   (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)
