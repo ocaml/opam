@@ -569,7 +569,12 @@ let opam_opt t nv =
   if OpamFilename.exists overlay then Some (OpamFile.OPAM.read overlay)
   else
     try Some (OpamPackage.Map.find nv t.opams)
-    with Not_found -> None
+    with Not_found ->
+      if OpamPackage.Set.mem nv t.installed then
+        (* Work-around for installed packages with no more metadata *)
+        Some (OpamFile.OPAM.create nv)
+      else
+        None
 
 let opam t nv =
   match opam_opt t nv with
