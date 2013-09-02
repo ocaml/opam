@@ -235,7 +235,7 @@ let fix_package_descriptions t ~verbose =
     OpamPackage.Set.filter (fun nv ->
         try
           match OpamPackage.Map.find nv global_index with
-          | [] -> true
+          | [] -> OpamPackage.Map.mem nv repo_index
           | _  -> false
         with Not_found ->
           true
