@@ -75,11 +75,27 @@ let atoms_of_packages set =
 let atom_of_name name =
   name, None
 
+let check_availability t atoms =
+  let available = OpamPackage.to_map (Lazy.force t.available_packages) in
+  let check_atom (name, version) =
+    try
+      let versions = OpamPackage.Name.Map.find name available in
+      match version with
+      | Some (`Eq, v) when not (OpamPackage.Version.Set.mem v versions) ->
+        raise Not_found
+      | _ -> ()
+    with Not_found ->
+      let version = match version with Some (_, v) -> Some v | None -> None in
+      if OpamPackage.Name.Map.mem name t.pinned then
+        OpamPackage.unavailable_because_pinned name version
+      else
+        OpamPackage.unavailable name version in
+  List.iter check_atom atoms
+
 (* transform a name into:
    - <name, installed version> package
    - <$n,$v> package when name = $n.$v *)
-let atoms_of_names t names =
-  let available = OpamPackage.to_map (Lazy.force t.available_packages) in
+let atoms_of_names ?(permissive=false) t names =
   let packages = OpamPackage.to_map t.packages in
   (* gets back the original capitalization of the package name *)
   let realname name =
@@ -97,49 +113,32 @@ let atoms_of_names t names =
     | Some v ->
       let versions = OpamPackage.Name.Map.find name packages in
       OpamPackage.Version.Set.mem v versions in
-  let available name version =
-    OpamPackage.Name.Map.mem name available
-    &&
-    match version with
-    | None  -> true
-    | Some v ->
-      let versions = OpamPackage.Name.Map.find name available in
-      OpamPackage.Version.Set.mem v versions in
-  let unavailable name version =
-    if OpamPackage.Name.Map.mem name t.pinned then
-      OpamPackage.unavailable_because_pinned name version
-    else
-      OpamPackage.unavailable name version in
-  List.rev_map
-    (fun name ->
-      let name = realname name in
-      if exists name None then
-        if available name None then
-          atom_of_name name
-        else
-          unavailable name None
-      else (
-        (* consider 'name' to be 'name.version' *)
-        let nv =
-          try OpamPackage.of_string (OpamPackage.Name.to_string name)
-          with Not_found -> OpamPackage.unknown name None in
-        let sname = realname (OpamPackage.name nv) in
-        let sversion = OpamPackage.version nv in
-        log "The raw name %S not found, looking for package %s version %s"
-          (OpamPackage.Name.to_string name)
-          (OpamPackage.Name.to_string sname)
-          (OpamPackage.Version.to_string sversion);
-        if exists sname (Some sversion) then
-          if available sname (Some sversion) then
-            eq_atom sname sversion
-          else
-            unavailable sname (Some sversion)
-        else if exists sname None then
-          OpamPackage.unknown sname (Some sversion)
-        else
-          OpamPackage.unknown sname None
-      ))
-    (OpamPackage.Name.Set.elements names)
+  let atoms =
+    List.rev_map
+      (fun name ->
+         let name = realname name in
+         if exists name None then atom_of_name name
+         else (
+           (* consider 'name' to be 'name.version' *)
+           let nv =
+             try OpamPackage.of_string (OpamPackage.Name.to_string name)
+             with Not_found -> OpamPackage.unknown name None in
+           let sname = realname (OpamPackage.name nv) in
+           let sversion = OpamPackage.version nv in
+           log "The raw name %S not found, looking for package %s version %s"
+             (OpamPackage.Name.to_string name)
+             (OpamPackage.Name.to_string sname)
+             (OpamPackage.Version.to_string sversion);
+           if exists sname (Some sversion) then
+             eq_atom sname sversion
+           else if exists sname None then
+             OpamPackage.unknown sname (Some sversion)
+           else
+             OpamPackage.unknown sname None
+         ))
+      (OpamPackage.Name.Set.elements names) in
+  if not permissive then check_availability t atoms;
+  atoms
 
 (* Pretty-print errors *)
 let display_error (n, error) =

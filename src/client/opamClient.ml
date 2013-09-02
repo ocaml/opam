@@ -514,10 +514,35 @@ module API = struct
     let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
     let solution_found = match names with
       | None ->
+        let not_available =
+          let (--) = OpamPackage.Name.Set.diff in
+          let not_available_names =
+            OpamPackage.names_of_packages t.installed
+            -- OpamPackage.names_of_packages (Lazy.force t.available_packages)
+            -- OpamPackage.names_of_packages to_reinstall in
+          OpamPackage.Name.Set.fold (fun name acc ->
+              OpamPackage.Set.union acc (OpamPackage.packages_of_name t.installed name))
+            not_available_names (OpamPackage.Set.empty) in
+        let t =
+          (* This is a hack to tell the solver not to ignore unavailable packages, so that
+             they can be removed *)
+          {t with available_packages = lazy (
+               OpamPackage.Set.union (Lazy.force t.available_packages) not_available
+             )} in
+        let to_remove =
+          let universe = OpamState.universe t Reinstall in
+          let to_remove = OpamPackage.Set.of_list
+              (OpamSolver.reverse_dependencies
+                 ~depopts:false ~installed:true universe not_available) in
+          OpamPackage.names_of_packages to_remove in
+        let to_upgrade =
+          OpamPackage.Set.filter (fun nv ->
+              not (OpamPackage.Name.Set.mem (OpamPackage.name nv) to_remove)
+            ) t.installed in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = [];
-            wish_remove  = [];
-            wish_upgrade = OpamSolution.atoms_of_packages t.installed }
+            wish_remove  = OpamSolution.atoms_of_names ~permissive:true t to_remove;
+            wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
       | Some names ->
         let names = OpamSolution.atoms_of_names t names in
         let to_upgrade =
@@ -532,7 +557,10 @@ module API = struct
               )
             ) names in
           (OpamPackage.Set.of_list packages) in
-        let installed_roots = OpamPackage.Set.diff t.installed_roots to_reinstall in
+        let installed_roots =
+          let (--) = OpamPackage.Set.diff in
+          OpamPackage.Set.inter (t.installed_roots -- to_reinstall)
+            (Lazy.force t.available_packages) in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
             wish_remove  = [];
@@ -639,7 +667,7 @@ module API = struct
   let install names =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "install" in
-    let atoms = OpamSolution.atoms_of_names t names in
+    let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let pkg_skip, pkg_new =
@@ -683,6 +711,8 @@ module API = struct
       OpamFile.Installed_roots.write file t.installed_roots;
     );
 
+    OpamSolution.check_availability t atoms;
+
     if pkg_new <> [] then (
 
       (* Display a warning if at least one package contains
@@ -715,7 +745,8 @@ module API = struct
             wish_remove  = [] ;
             wish_upgrade = [] }
         else
-          { wish_install = OpamSolution.atoms_of_packages t.installed_roots;
+          { wish_install = OpamSolution.atoms_of_packages
+                (OpamPackage.Set.inter t.installed_roots (Lazy.force t.available_packages));
             wish_remove  = [] ;
             wish_upgrade = atoms }
       in
@@ -726,7 +757,7 @@ module API = struct
   let remove ~autoremove names =
     log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "remove" in
-    let atoms = OpamSolution.atoms_of_names t names in
+    let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let atoms =
       List.filter (fun (n,_) ->
         if n = OpamPackage.Name.global_config then (
