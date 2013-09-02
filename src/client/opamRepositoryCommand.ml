@@ -241,9 +241,13 @@ let fix_package_descriptions t ~verbose =
           true
       ) all_installed in
 
-  log "updated-packages : %s" (OpamPackage.Set.to_string updated_packages);
-  log "changed-packages : %s" (OpamPackage.Set.to_string changed_packages);
-  log "missing-installed: %s" (OpamPackage.Set.to_string missing_installed_packages);
+  log "updated-packages: %s" (OpamPackage.Set.to_string updated_packages);
+  log "changed-packages: %s" (OpamPackage.Set.to_string changed_packages);
+  OpamPackage.Set.iter (fun nv ->
+      OpamGlobals.warning
+        "%s is installed but does not have metadata, fixing."
+        (OpamPackage.to_string nv)
+    ) missing_installed_packages;
 
   let deleted_packages =
     OpamPackage.Set.filter (fun nv ->
@@ -266,6 +270,7 @@ let fix_package_descriptions t ~verbose =
       | Some (repo, prefix) ->
         let root = OpamPath.Repository.packages repo prefix nv in
         let files = OpamRepository.package_files repo prefix nv ~archive:false in
+        assert (files <> []);
         let dir = OpamPath.packages t.root nv in
         if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
         OpamFilename.mkdir dir;
@@ -311,6 +316,22 @@ let fix_package_descriptions t ~verbose =
         checksums_g <> checksums_r
     ) changed_packages in
   log "packages-to-upgrade: %s" (OpamPackage.Set.to_string changed_packages);
+
+  (* Display some warnings/errors *)
+  OpamPackage.Set.iter (fun nv ->
+      let file = OpamPath.opam t.root nv in
+      if not (OpamFilename.exists file) then
+        if OpamPackage.Map.mem nv repo_index then
+          OpamGlobals.error_and_exit "fatal: %s is missing" (OpamFilename.prettify file)
+        else
+          let installed = OpamState.installed_versions t (OpamPackage.name nv) in
+          let switches = OpamPackage.Map.find nv installed in
+          let switches_string =
+            OpamMisc.pretty_list (List.map OpamSwitch.to_string switches) in
+          OpamGlobals.warning
+            "%s is installed in %s but it does not have metadata."
+            (OpamPackage.to_string nv) switches_string
+    ) all_installed;
 
   let updates = {
     created = new_packages;

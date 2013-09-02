@@ -1334,8 +1334,10 @@ let upgrade_to_1_1 () =
     if OpamFilename.exists (OpamPath.state_cache root) then
       OpamFilename.remove (OpamPath.state_cache root);
 
-    (* Fix index priorities *)
+    (* Remove the index files *)
     OpamFilename.remove (OpamPath.root () / "repo" // "index");
+    OpamFilename.remove (OpamPath.root () / "repo" // "index.packages");
+    OpamFilename.remove (OpamPath.root () / "repo" // "index.compilers");
 
     (* fix the base config files *)
     let aliases = OpamFile.Aliases.safe_read (OpamPath.aliases root) in

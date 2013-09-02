@@ -174,9 +174,18 @@ let load_cudf_universe ?(depopts=false) universe =
   let universe =
     let available = OpamPackage.Set.elements universe.u_available in
     let universe =
-      List.rev_map
-        (fun nv -> OpamPackage.Map.find (real_version universe nv) opam2cudf)
-        available in
+      List.fold_left
+        (fun list nv -> try
+            let nv = OpamPackage.Map.find (real_version universe nv) opam2cudf in
+            nv :: list
+          with Not_found ->
+            OpamGlobals.error
+              "The package %s (real-version: %s) cannot be found by the solver, \
+               skipping."
+              (OpamPackage.to_string nv)
+              (OpamPackage.to_string (real_version universe nv));
+            list)
+        [] available in
     try Cudf.load_universe universe
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
