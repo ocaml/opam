@@ -236,7 +236,8 @@ let fix_package_descriptions t ~verbose =
 
   let deleted_packages =
     OpamPackage.Set.filter (fun nv ->
-        not (OpamPackage.Map.mem nv repo_index         (* available *)
+        not (OpamPackage.is_pinned nv                         (* pinned*)
+             || OpamPackage.Map.mem nv repo_index      (* OR available *)
              || OpamPackage.Set.mem nv all_installed)  (* OR installed *)
       ) t.packages in
   log "deleted-packages: %s" (OpamPackage.Set.to_string deleted_packages);
