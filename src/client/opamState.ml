@@ -1327,6 +1327,12 @@ let upgrade_to_1_1 () =
     if OpamFilename.exists_dir opam then
       OpamFilename.move_dir ~src:opam ~dst:opam_tmp;
     OpamFilename.rmdir descr;
+    if OpamFilename.exists_dir (OpamPath.packages_dir root) then
+      OpamFilename.rmdir (OpamPath.packages_dir root);
+
+    (* Remove the cache. *)
+    if OpamFilename.exists (OpamPath.state_cache root) then
+      OpamFilename.remove (OpamPath.state_cache root);
 
     (* Fix index priorities *)
     OpamFilename.remove (OpamPath.root () / "repo" // "index");
@@ -1377,7 +1383,11 @@ let upgrade_to_1_1 () =
         let pinned = OpamFile.Pinned.safe_read (OpamPath.Switch.pinned root switch) in
         OpamPackage.Name.Map.iter (fun name _ ->
             let t = { t with switch } in
-            if is_locally_pinned t name then add_pinned_overlay t name
+            if is_pinned t name then (
+              let nv = OpamPackage.pinned name in
+              OpamFilename.rmdir (OpamPath.Switch.Overlay.package root switch nv);
+              add_pinned_overlay t name;
+            )
           ) pinned
       ) aliases;
 
