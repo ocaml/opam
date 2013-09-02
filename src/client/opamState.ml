@@ -2050,6 +2050,7 @@ let update_dev_package t nv =
 let update_dev_packages t =
   log "update-dev-packages";
   let updates packages =
+    let packages = OpamPackage.Set.filter (is_dev_package t) packages in
     let packages = OpamPackage.Set.elements packages in
     OpamPackage.Parallel.map_reduce_l (2 * jobs t) packages
       ~map:(update_dev_package t)
