@@ -356,7 +356,7 @@ let copy_files ~src ~dst =
              Set OPAMDONOTCOPYFILES to a non-empty value to no \
              copy the overlay files."
             (to_string dst_file);
-        OpamGlobals.msg "Copying %s to %s/\n" (to_string file) (Dir.to_string dst);
+        OpamGlobals.msg "Copying %s to %s/\n" (prettify file) (prettify_dir dst);
         copy ~src:file ~dst:dst_file
     ) files
 
