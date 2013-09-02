@@ -264,17 +264,25 @@ let command_exists ?(env=default_env) name =
   OpamProcess.clean_files r;
   OpamProcess.is_success r
 
-let run_process ?verbose ?(env=default_env) ?name ?metadata = function
-  | []           -> invalid_arg "run_process"
+let runs = ref []
+let print_stats () =
+  match !runs with
+  | [] -> ()
+  | l  ->
+    OpamGlobals.msg "%d external processes called:\n  %s\n%!"
+      (List.length l) (String.concat "\n  " (List.map (String.concat " ") l))
+
+let run_process ?verbose ?(env=default_env) ?name ?metadata command =
+  let chrono = OpamGlobals.timer () in
+  runs := command :: !runs;
+  match command with
+  | []          -> invalid_arg "run_process"
   | cmd :: args ->
 
     (* Set-up the log files *)
     let name = match name with
       | None   -> temp_file "log"
       | Some n -> temp_file ~dir:(Sys.getcwd ()) n in
-
-    let str = String.concat " " (cmd :: args) in
-    log "[%s] %s" (Filename.basename name) str;
 
     (* Check that the command doesn't contain whitespaces *)
     if None <> try Some (String.index cmd ' ') with Not_found -> None then
@@ -289,6 +297,8 @@ let run_process ?verbose ?(env=default_env) ?name ?metadata = function
       let r = OpamProcess.run ~env ~name ~verbose ?metadata cmd args in
       if OpamProcess.is_success r && not !OpamGlobals.debug then
         OpamProcess.clean_files r;
+      let str = String.concat " " (cmd :: args) in
+      log "[%s] (in %.3fs) %s" (Filename.basename name) (chrono ()) str;
       r
     ) else
       (* Display a user-friendly message if the command does not exist *)

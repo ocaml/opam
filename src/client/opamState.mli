@@ -74,10 +74,10 @@ module Types: sig
     config: OpamFile.Config.t;
 
     (** Package index *)
-    package_index: (repository_name * string option) package_map lazy_t;
+    package_index: OpamFile.Package_index.t;
 
     (** Compiler index *)
-    compiler_index: (repository_name * string option) compiler_map lazy_t;
+    compiler_index: OpamFile.Compiler_index.t;
   }
 
 end
@@ -94,9 +94,6 @@ val rebuild_state_cache: unit -> unit
 
 (** Remove the state cache *)
 val remove_state_cache: unit -> unit
-
-(** Display stats *)
-val print_stats: unit -> unit
 
 (** Load state associated to env variables. All other fields are left empty. *)
 val load_env_state: string -> state

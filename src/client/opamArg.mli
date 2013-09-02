@@ -28,7 +28,7 @@ type command = unit Term.t * Term.info
     [commands] as subcommand and [default] as default argument
     (ie. which will be executed when no subcommand is
     given). [at_exit] is executed before the program exits. *)
-val run: ?at_exit:(unit -> unit) -> command -> command list -> unit
+val run:command -> command list -> unit
 
 (** opam *)
 val default: command
