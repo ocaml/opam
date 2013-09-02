@@ -368,7 +368,7 @@ module API = struct
       not (OpamRepositoryName.Map.is_empty repositories) in
 
     let dev_packages =
-      let all = OpamState.dev_packages t in
+      let all = OpamPackage.Set.inter t.installed (OpamState.dev_packages t) in
       if repos = [] then
         all
       else
