@@ -393,8 +393,8 @@ let remove_package_aux t ~metadata ~rm_build nv =
     OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
 
   (* Clean-up the active repository *)
-  log "Cleaning-up the active repository";
-  let dev_dir = OpamPath.dev_package t.root nv in
+  log "Cleaning-up the switch repository";
+  let dev_dir = OpamPath.Switch.dev_package t.root t.switch nv in
   if OpamFilename.exists_dir dev_dir then OpamFilename.rmdir dev_dir;
 
   let install =
