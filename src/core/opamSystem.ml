@@ -471,7 +471,7 @@ let funlock file =
       let s = input_line ic in
       close_in ic;
       if s = id then (
-        OpamGlobals.log id "unlocking %s" file;
+        log "unlocking %s (%s)" file id;
         log "rm %s" file;
         Unix.unlink file;
       ) else
