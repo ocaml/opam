@@ -990,7 +990,6 @@ in \S\ref{file:general} with the following restrictions:
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    opam-version: "1"
     ?lib:      [ <mv>+ ]
     ?bin:      [ <mv>+ ]
     ?toplevel: [ <mv>+ ]
@@ -1250,9 +1249,7 @@ syntax of templates is the following:
 
 {\small
 \begin{Verbatim}[frame=single]
-<file>    :=
-    opam-version: "1"
-    <item>*
+<file>    := <item>*
 <item>    := <def> | <section>
 <section> :=
     <kind> STRING {
