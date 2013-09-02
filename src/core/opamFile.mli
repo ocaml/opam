@@ -316,6 +316,9 @@ module Dot_install: sig
   (** List of files to install in $bin/ *)
   val bin:  t -> (basename optional * basename option) list
 
+  (** List of files to install in $sbin/ *)
+  val sbin: t -> (basename optional * basename option) list
+
   (** List of files to install in $lib/ *)
   val lib:  t -> (basename optional * basename option) list
 

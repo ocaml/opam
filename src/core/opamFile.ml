@@ -1011,6 +1011,7 @@ module X = struct
 
     type t =  {
       bin     : (basename optional * basename option) list;
+      sbin    : (basename optional * basename option) list;
       lib     : (basename optional * basename option) list;
       toplevel: (basename optional * basename option) list;
       stublibs: (basename optional * basename option) list;
@@ -1024,6 +1025,7 @@ module X = struct
     let empty = {
       lib      = [];
       bin      = [];
+      sbin     = [];
       toplevel = [];
       stublibs = [];
       misc     = [];
@@ -1034,6 +1036,7 @@ module X = struct
     }
 
     let bin t = t.bin
+    let sbin t = t.sbin
     let lib t = t.lib
     let toplevel t = t.toplevel
     let stublibs t = t.stublibs
@@ -1053,6 +1056,7 @@ module X = struct
 
     let s_lib      = "lib"
     let s_bin      = "bin"
+    let s_sbin     = "sbin"
     let s_misc     = "misc"
     let s_toplevel = "toplevel"
     let s_stublibs = "stublibs"
@@ -1064,6 +1068,7 @@ module X = struct
     let valid_fields = [
       s_lib;
       s_bin;
+      s_sbin;
       s_toplevel;
       s_stublibs;
       s_misc;
@@ -1105,6 +1110,7 @@ module X = struct
         file_name     = OpamFilename.to_string filename;
         file_contents = [
           Variable (s_bin     , mk      t.bin);
+          Variable (s_sbin    , mk      t.sbin);
           Variable (s_lib     , mk      t.lib);
           Variable (s_toplevel, mk      t.toplevel);
           Variable (s_stublibs, mk      t.stublibs);
@@ -1135,6 +1141,7 @@ module X = struct
         let fn = OpamFormat.parse_pair src dst in
         OpamFormat.assoc_list s.file_contents s_misc (OpamFormat.parse_list fn) in
       let bin      = mk s_bin      in
+      let sbin     = mk s_sbin     in
       let lib      = mk s_lib      in
       let toplevel = mk s_toplevel in
       let stublibs = mk s_stublibs in
@@ -1142,7 +1149,7 @@ module X = struct
       let etc      = mk s_etc      in
       let doc      = mk s_doc      in
       let man      = mk s_man      in
-      { lib; bin; misc; toplevel; stublibs; share; etc; doc; man }
+      { lib; bin; sbin; misc; toplevel; stublibs; share; etc; doc; man }
 
   end
 

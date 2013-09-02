@@ -145,6 +145,9 @@ module Switch: sig
   (** Installed binaries: {i $opam/$switch/bin} *)
   val bin: t -> switch -> dirname
 
+  (** Installed system binaries: {i $opam/$switch/sbin} *)
+  val sbin: t -> switch -> dirname
+
   (** List of installed packages with their version:
       {i $opam/$switch/installed} *)
   val installed: t -> switch -> filename

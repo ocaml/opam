@@ -109,6 +109,8 @@ module Switch = struct
 
   let bin t a = root t a / "bin"
 
+  let sbin t a = root t a / "sbin"
+
   let installed t a = root t a // "installed"
 
   let installed_roots t a = root t a // "installed.roots"

@@ -227,6 +227,7 @@ let contents_of_variable t local_variables v =
           else if installed then (
             match OpamVariable.to_string var with
             | "bin"     -> dirname (OpamPath.Switch.bin t.root t.switch)
+            | "sbin"    -> dirname (OpamPath.Switch.sbin t.root t.switch)
             | "lib"     -> dirname (OpamPath.Switch.lib t.root t.switch name)
             | "man"     -> dirname (OpamPath.Switch.man_dir t.root t.switch)
             | "doc"     -> dirname (OpamPath.Switch.doc t.root t.switch name)
@@ -1281,6 +1282,7 @@ let install_global_config root switch =
         ("prefix", OpamPath.Switch.root root switch);
         ("lib", OpamPath.Switch.lib_dir root switch);
         ("bin", OpamPath.Switch.bin root switch);
+        ("sbin", OpamPath.Switch.sbin root switch);
         ("doc", OpamPath.Switch.doc_dir root switch);
         ("stublibs", OpamPath.Switch.stublibs root switch);
         ("toplevel", OpamPath.Switch.toplevel root switch);
@@ -1981,6 +1983,7 @@ let install_compiler t ~quiet switch compiler =
   OpamFilename.mkdir (OpamPath.Switch.toplevel t.root switch);
   OpamFilename.mkdir (OpamPath.Switch.build_dir t.root switch);
   OpamFilename.mkdir (OpamPath.Switch.bin t.root switch);
+  OpamFilename.mkdir (OpamPath.Switch.sbin t.root switch);
   OpamFilename.mkdir (OpamPath.Switch.doc_dir t.root switch);
   OpamFilename.mkdir (OpamPath.Switch.man_dir t.root switch);
   OpamFilename.mkdir (OpamPath.Switch.install_dir t.root switch);
