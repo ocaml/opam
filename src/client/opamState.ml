@@ -698,11 +698,14 @@ let pinning_version t nv =
     | _ ->
       let nv1 = OpamPackage.pinned name in
       let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv1 in
+      if not (OpamFilename.exists overlay) then
+        add_pinned_overlay t name;
       let opam = OpamFile.OPAM.read overlay in
       if OpamFile.OPAM.version opam = OpamPackage.Version.pinned then
         (OpamGlobals.warning
            "Package %s is pinned locally but with unspecified version:\n\
-            is your OPAM directory up-to-date ? Please try running 'mkdir ~/.opam/opam && opam list'."
+            is your OPAM directory up-to-date ? Please try running \
+            'mkdir ~/.opam/opam && opam list'."
            (OpamPackage.Name.to_string name);
          nv)
       else
