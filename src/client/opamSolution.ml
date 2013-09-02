@@ -26,11 +26,11 @@ let post_message ?(failed=false) state action =
   let messages = OpamFile.OPAM.post_messages opam in
   let print_message message =
     if failed then
-      OpamGlobals.msg "\n=-=-= %s troobleshooting =-=-=\n%s.\n"
-        (OpamPackage.to_string pkg) message
+      (OpamGlobals.header_msg "%s troobleshooting" (OpamPackage.to_string pkg);
+       OpamGlobals.msg "%s.\n" message)
     else
-      OpamGlobals.msg "\n=-=-= %s information =-=-=\n%s.\n"
-        (OpamPackage.to_string pkg) message
+      (OpamGlobals.header_msg "%s information" (OpamPackage.to_string pkg);
+       OpamGlobals.msg "%s.\n" message)
   in
   let local_variables = OpamVariable.Map.empty in
   let local_variables =
