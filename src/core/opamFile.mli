@@ -323,6 +323,9 @@ module Dot_install: sig
   (** List of shared files *)
   val share: t -> (basename optional * basename option) list
 
+  (** List of etc files *)
+  val etc: t -> (basename optional * basename option) list
+
   (** List of doc files *)
   val doc: t -> (basename optional * basename option) list
 

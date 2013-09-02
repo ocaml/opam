@@ -159,6 +159,9 @@ let install_package t nv =
       (* Shared files *)
       install_files OpamPath.Switch.share OpamFile.Dot_install.share;
 
+      (* Etc files *)
+      install_files OpamPath.Switch.etc OpamFile.Dot_install.etc;
+
       (* Documentation files *)
       install_files OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
@@ -437,6 +440,16 @@ let remove_package_aux t ~metadata ~rm_build nv =
        "WARNING: %s is not empty. We keep its contents for future installations.\n"
        (OpamFilename.Dir.to_string share));
 
+  (* Removing the etc dir if it is empty, overwise keep files for
+     future installation. TODO: is it the expected semantics ? *)
+  let etc = OpamPath.Switch.etc t.root t.switch name in
+  (match OpamFilename.rec_files etc, OpamFilename.rec_dirs etc with
+   | [], [] -> OpamFilename.rmdir etc
+   | _      ->
+     OpamGlobals.msg
+       "WARNING: %s is not empty. We keep its contents for future installations.\n"
+       (OpamFilename.Dir.to_string etc));
+
   (* Remove .config and .install *)
   log "Removing config and install files";
   OpamFilename.remove (OpamPath.Switch.install t.root t.switch name);
@@ -464,7 +477,6 @@ let remove_package t ~metadata ~rm_build nv =
    be removed, eg. because of a direct uninstall action or because of
    recompilation.  *)
 let remove_all_packages t ~metadata sol =
-  let open PackageActionGraph in
   let deleted = ref [] in
   let delete nv =
     if !deleted = [] then
@@ -478,8 +490,8 @@ let remove_all_packages t ~metadata sol =
     | To_recompile nv
     | To_delete nv        -> delete nv
     | To_change (None, _) -> () in
-  List.iter delete sol.to_remove;
-  PackageActionGraph.iter_vertex action (PackageActionGraph.mirror sol.to_process);
+  List.iter delete PackageActionGraph.(sol.to_remove);
+  PackageActionGraph.(Topological.iter action (mirror sol.to_process));
   let deleted = OpamPackage.Set.of_list !deleted in
   if metadata then (
     let installed = OpamPackage.Set.diff t.installed deleted in
