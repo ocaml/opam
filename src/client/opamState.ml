@@ -583,6 +583,8 @@ let opam t nv =
 
 let overlay_of_name t name =
   let versions = OpamPackage.versions_of_name t.packages name in
+  let versions =
+    OpamPackage.Version.Set.filter ((<>) OpamPackage.Version.pinned) versions in
   let version = OpamPackage.Version.Set.max_elt versions in
   OpamPackage.create name version
 
