@@ -99,6 +99,10 @@ module Switch = struct
 
   let share t a n = share_dir t a / OpamPackage.Name.to_string n
 
+  let etc_dir t a = root t a / "etc" 
+
+  let etc t a n = etc_dir t a / OpamPackage.Name.to_string n
+
   let doc t a n = doc_dir t a / OpamPackage.Name.to_string n
 
   let bin t a = root t a / "bin"

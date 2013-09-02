@@ -128,6 +128,13 @@ module Switch: sig
       $opam/$switch/share/$package} *)
   val share: t -> switch -> name -> dirname
 
+  (** Etc directory: {i $opam/$switch/etc} *)
+  val etc_dir: t -> switch -> dirname
+
+  (** Etc directory for a given package: {i
+      $opam/$switch/etc/$package} *)
+  val etc: t -> switch -> name -> dirname
+
   (** Man pages path: {i $opam/$switch/man/}. The optional
       [num] argument will add a {i manN } suffix if specified *)
   val man_dir: ?num:string -> t -> switch -> dirname

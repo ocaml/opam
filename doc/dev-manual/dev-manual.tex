@@ -995,6 +995,7 @@ in \S\ref{file:general} with the following restrictions:
     ?bin:      [ <mv>+ ]
     ?toplevel: [ <mv>+ ]
     ?share:    [ <mv>+ ]
+    ?etc:      [ <mv>+ ]
     ?doc:      [ <mv>+ ]
     ?misc:     [ <mv>+ ]
     ?stublibs: [ <mv>+ ]
@@ -1009,6 +1010,8 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt lib} are copied into \verb+$opam/$SWITCH/lib/$NAME/+.
 \item Files listed under {\tt bin} are copied into \verb+$opam/$SWITCH/bin/+.
 \item Files listed under {\tt doc} are copied into \verb+$opam/$SWITCH/doc/$NAME/+.
+\item Files listed under {\tt share} are copied into \verb+$opam/$SWITCH/share/$NAME/+.
+\item Files listed under {\tt etc} are copied into \verb+$opam/$SWITCH/etc/$NAME/+.
 \item Files listed under {\tt toplevel} are copied into \verb+$opam/$SWITCH/toplevel+.
 \item Files lister under {\tt stublibs} are copied into \verb+$opam/$SWITCH/lib/stublibs/+
 \item Files listed under {\tt man} are copied into
