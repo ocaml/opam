@@ -453,8 +453,15 @@ let all_installed t =
   ) t.aliases OpamPackage.Set.empty
 
 let package_state t =
+  let files = OpamFilename.rec_files (OpamPath.packages_dir t.root) in
+  log "files(%s) = %s"
+    (OpamFilename.Dir.to_string (OpamPath.packages_dir t.root))
+    (OpamMisc.string_of_list OpamFilename.to_string files);
   let installed = OpamPackage.Set.fold (fun nv map ->
       let state = package_state_one t `all nv in
+      log "XXX: package-state-one %s %s %b"
+        (OpamPackage.to_string nv) (String.concat ":" state)
+        (OpamFilename.exists (OpamPath.opam t.root nv));
       OpamPackage.Map.add nv state map
     ) (all_installed t) OpamPackage.Map.empty in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
@@ -592,36 +599,73 @@ let opam_no_pin t nv =
   | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
   | Some nv -> nv
 
-let descr_opt_no_pin t nv =
-  let read file = Some (OpamFile.Descr.read file) in
-  let overlay = OpamPath.Switch.Overlay.descr t.root t.switch nv in
-  if OpamFilename.exists overlay then read overlay
-  else
-    let file = OpamPath.descr t.root nv in
-    if OpamFilename.exists file then read file
-    else None
+let rec readn exists fn = function
+  | []   -> None
+  | h::t ->
+    match h () with
+    | None      -> readn exists fn t
+    | Some file -> if exists file then Some (fn file) else readn exists fn t
+
+let get_opt_no_pin overlay global repo exits read t nv =
+  readn exits read [
+    (fun () -> Some (overlay t.root t.switch nv));
+    (fun () -> Some (global t.root nv));
+    (fun () ->
+      try
+        let r, prefix = OpamPackage.Map.find nv t.package_index in
+        let r = find_repository_exn t r in
+        Some (repo r prefix nv)
+      with Not_found ->
+        None)
+  ]
+
+let descr_opt_no_pin =
+  get_opt_no_pin
+    OpamPath.Switch.Overlay.descr OpamPath.descr OpamPath.Repository.descr
+    OpamFilename.exists OpamFile.Descr.read
 
 let descr_no_pin t nv =
   match descr_opt_no_pin t nv with
   | None   -> OpamFile.Descr.empty
   | Some f -> f
 
-let url_no_pin t nv =
-  let read file = Some (OpamFile.URL.read file) in
-  let overlay = OpamPath.Switch.Overlay.url t.root t.switch nv in
-  if OpamFilename.exists overlay then read overlay
-  else
-    let file = OpamPath.url t.root nv in
-    if OpamFilename.exists file then read file
-    else None
+let url_no_pin =
+  get_opt_no_pin
+    OpamPath.Switch.Overlay.url OpamPath.url OpamPath.Repository.url
+    OpamFilename.exists OpamFile.URL.read
 
-let files_no_pin t nv =
-  let overlay = OpamPath.Switch.Overlay.files t.root t.switch nv in
-  if OpamFilename.exists_dir overlay then Some overlay
+let files_no_pin =
+  get_opt_no_pin
+    OpamPath.Switch.Overlay.files OpamPath.files OpamPath.Repository.files
+    OpamFilename.exists_dir (fun d -> d)
+
+let install_metadata t nv =
+  if OpamFilename.exists (OpamPath.opam t.root nv) then ()
   else
-    let dir = OpamPath.files t.root nv in
-    if OpamFilename.exists_dir dir then Some dir
-    else None
+    let opam = opam_no_pin t nv in
+    let descr = descr_opt_no_pin t nv in
+    let url = url_no_pin t nv in
+    let files = files_no_pin t nv in
+    OpamFile.OPAM.write (OpamPath.opam t.root nv) opam;
+    (match descr with
+     | None   -> ()
+     | Some d -> OpamFile.Descr.write (OpamPath.descr t.root nv) d);
+    (match url with
+     | None   -> ()
+     | Some u -> OpamFile.URL.write (OpamPath.url t.root nv) u);
+    (match files with
+     | None   -> ()
+     | Some d -> OpamFilename.copy_dir ~src:d ~dst:(OpamPath.files t.root nv))
+
+let remove_metadata t packages =
+  let all_installed = all_installed t in
+  let packages = OpamPackage.Set.inter all_installed packages in
+  OpamPackage.Set.iter (fun nv ->
+      let dir = OpamPath.packages t.root nv in
+      OpamFilename.rmdir dir;
+      let archive = OpamPath.archive t.root nv in
+      OpamFilename.remove archive;
+    ) packages
 
 let overlay_of_name t name =
   let versions = OpamPackage.versions_of_name t.packages name in

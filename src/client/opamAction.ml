@@ -464,13 +464,14 @@ let remove_package_aux t ~metadata ~rm_build nv =
     let installed = OpamPackage.Set.remove nv t.installed in
     let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
     let reinstall = OpamPackage.Set.remove nv t.reinstall in
-    update_metadata t ~installed ~installed_roots ~reinstall
+    update_metadata t ~installed ~installed_roots ~reinstall;
+    OpamState.remove_metadata t (OpamPackage.Set.singleton nv);
   )
 
 let remove_package t ~metadata ~rm_build nv =
-  if not !OpamGlobals.fake then
+  if not !OpamGlobals.fake then (
     remove_package_aux t ~metadata ~rm_build nv
-  else
+  ) else
     OpamGlobals.msg "(simulation) Removing %s.\n" (OpamPackage.to_string nv)
 
 (* Remove all the packages appearing in a solution (and which need to
@@ -497,7 +498,8 @@ let remove_all_packages t ~metadata sol =
     let installed = OpamPackage.Set.diff t.installed deleted in
     let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
     let reinstall = OpamPackage.Set.diff t.reinstall deleted in
-    update_metadata t ~installed ~installed_roots ~reinstall
+    update_metadata t ~installed ~installed_roots ~reinstall;
+    OpamState.remove_metadata t deleted;
   );
   deleted
 
@@ -554,7 +556,8 @@ let build_and_install_package_aux t ~metadata nv =
       let installed = OpamPackage.Set.add nv t.installed in
       let installed_roots = OpamPackage.Set.add nv t.installed_roots in
       let reinstall = OpamPackage.Set.remove nv t.reinstall in
-      update_metadata t ~installed ~installed_roots ~reinstall
+      update_metadata t ~installed ~installed_roots ~reinstall;
+      OpamState.install_metadata t nv;
     )
 
   with e ->

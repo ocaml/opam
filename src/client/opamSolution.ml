@@ -339,7 +339,8 @@ let parallel_apply t action solution =
     state.s_reinstall <- OpamPackage.Set.remove nv state.s_reinstall;
     if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
       state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
-    update_state () in
+    update_state ();
+    OpamState.install_metadata t nv in
 
   let remove_from_install deleted =
     state.s_installed       <- OpamPackage.Set.diff state.s_installed deleted;

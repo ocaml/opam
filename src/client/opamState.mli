@@ -296,6 +296,13 @@ val add_to_reinstall: state -> all:bool -> package_set -> unit
 (** Return the files for a given package *)
 val copy_files: state -> package -> dirname -> unit
 
+(** Copy the repository metadata into the global state. *)
+val install_metadata: state -> package -> unit
+
+(** Remove some metadata from the global state if they are not used
+    anymore. *)
+val remove_metadata: state -> package_set -> unit
+
 (** {2 Development packages} *)
 
 (** Get all the development packages. This include the one locally
