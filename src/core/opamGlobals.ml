@@ -79,8 +79,6 @@ let switch: [`Env of string
     with _ -> `Not_set
   )
 
-let opam_version = "1"
-
 let external_tags = ref ([] : string list)
 
 let home =

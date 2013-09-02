@@ -49,9 +49,23 @@ module Syntax = struct
   let to_string ?(indent_variable = fun _ -> false) (t: t) =
     OpamFormat.string_of_file ~indent_variable t
 
+  let s_opam_version = "opam-version"
+
   let check =
     let not_already_warned = ref true in
     fun f fields ->
+      if List.mem s_opam_version fields then
+        let opam_version = OpamFormat.assoc f.file_contents s_opam_version
+            (OpamFormat.parse_string ++ OpamVersion.of_string) in
+        if OpamVersion.compare opam_version OpamVersion.current > 0 then (
+          OpamGlobals.error "Your version of OPAM (%s) is not recent enough to read \
+                             %s. Upgrade OPAM to a more recent version (at least %s) \
+                             to read this file correctly."
+            (OpamVersion.to_string OpamVersion.current)
+            (OpamMisc.prettify_path f.file_name)
+            (OpamVersion.to_string opam_version);
+          OpamFormat.bad_format "opam-version"
+        );
       if not (OpamFormat.is_valid f.file_contents fields) then
         let invalids = OpamFormat.invalid_fields f.file_contents fields in
         let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
@@ -528,8 +542,6 @@ module X = struct
 
   end
 
-  let s_opam_version = "opam-version"
-
   module Aliases = struct
 
     let internal = "aliases"
@@ -561,7 +573,7 @@ module X = struct
     let internal = "config"
 
     type t = {
-      opam_version  : opam_version ;
+      opam_version  : opam_version;
       repositories  : repository_name list ;
       switch        : switch;
       jobs          : int;
@@ -576,16 +588,17 @@ module X = struct
     let switch t = t.switch
     let jobs t = t.jobs
 
-    let create opam_version switch repositories jobs =
-      { opam_version ; repositories ; switch ; jobs }
+    let create switch repositories jobs =
+      { opam_version = OpamVersion.current; repositories ; switch ; jobs }
 
     let empty = {
-      opam_version = OpamVersion.of_string OpamGlobals.opam_version;
+      opam_version = OpamVersion.current;
       repositories = [];
       switch = OpamSwitch.of_string "<empty>";
       jobs = OpamGlobals.default_jobs;
     }
 
+    let s_opam_version = "opam-version"
     let s_repositories = "repositories"
     let s_switch = "switch"
     let s_switch1 = "alias"
@@ -616,8 +629,7 @@ module X = struct
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
-      let opam_version =
-        OpamFormat.assoc s.file_contents s_opam_version
+      let opam_version = OpamFormat.assoc s.file_contents s_opam_version
           (OpamFormat.parse_string ++ OpamVersion.of_string) in
       let repositories =
         OpamFormat.assoc_list s.file_contents s_repositories
@@ -667,6 +679,7 @@ module X = struct
     let internal = "opam"
 
     type t = {
+      opam_version: opam_version;
       name       : OpamPackage.Name.t;
       version    : OpamPackage.Version.t;
       maintainer : string;
@@ -696,6 +709,7 @@ module X = struct
     }
 
     let empty = {
+      opam_version = OpamVersion.current;
       name       = OpamPackage.Name.of_string "<none>";
       version    = OpamPackage.Version.of_string "<none>";
       maintainer = "<none>";
@@ -729,6 +743,7 @@ module X = struct
       let version = OpamPackage.version nv in
       { empty with name; version }
 
+    let s_opam_version = "opam-version"
     let s_version     = "version"
     let s_name        = "name"
     let s_maintainer  = "maintainer"
@@ -818,6 +833,7 @@ module X = struct
     let depexts t = t.depexts
     let messages t = t.messages
     let post_messages t = t.post_messages
+    let opam_version t = t.opam_version
 
     let with_version t version = { t with version }
     let with_depends t depends = { t with depends }
@@ -859,7 +875,8 @@ module X = struct
       let s = {
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (s_opam_version, OpamFormat.make_string OpamGlobals.opam_version);
+          Variable (s_opam_version,
+                    (OpamVersion.to_string ++ OpamFormat.make_string) t.opam_version);
           Variable (s_maintainer  , OpamFormat.make_string t.maintainer);
         ] @ name_and_version
           @ option  t.homepage      s_homepage      OpamFormat.make_string
@@ -902,9 +919,8 @@ module X = struct
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let s = s.file_contents in
-      let opam_version = OpamFormat.assoc s s_opam_version OpamFormat.parse_string in
-      if opam_version <> OpamGlobals.opam_version then
-        OpamGlobals.error_and_exit "%s is not a supported OPAM version" opam_version;
+      let opam_version = OpamFormat.assoc s s_opam_version
+          (OpamFormat.parse_string ++ OpamVersion.of_string) in
       let name_f = OpamFormat.assoc_option s s_name
           (OpamFormat.parse_string ++ OpamPackage.Name.of_string) in
       let name = match name_f, nv with
@@ -979,8 +995,9 @@ module X = struct
       let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
       let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
       let messages = OpamFormat.assoc_list s s_messages OpamFormat.parse_messages in
-      let post_messages = OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
-      { name; version; maintainer; substs; build; remove;
+      let post_messages =
+        OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
+      { opam_version; name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; authors; license; doc; tags;
@@ -1045,7 +1062,6 @@ module X = struct
     let s_man      = "man"
 
     let valid_fields = [
-      s_opam_version;
       s_lib;
       s_bin;
       s_toplevel;
@@ -1168,7 +1184,6 @@ module X = struct
     let s_requires = "requires"
 
     let valid_fields = [
-      s_opam_version;
       s_bytecomp;
       s_asmcomp;
       s_bytelink;
@@ -1303,7 +1318,7 @@ module X = struct
     }
 
     let empty = {
-      opam_version = OpamVersion.of_string OpamGlobals.opam_version;
+      opam_version = OpamVersion.current;
       name         = OpamCompiler.of_string "<none>";
       version      = OpamCompiler.Version.of_string "<none>";
       src          = None;
@@ -1332,6 +1347,7 @@ module X = struct
       let packages = List.fold_left aux OpamFormula.Empty packages in
       { empty with name; version; preinstalled = true; packages; env }
 
+    let s_opam_version = "opam-version"
     let s_name      = "name"
     let s_version   = "version"
     let s_patches   = "patches"
@@ -1391,6 +1407,7 @@ module X = struct
     let build t = t.build
     let src t = t.src
     let kind t = t.kind
+    let opam_version t = t.opam_version
 
     let packages t = t.packages
     let asmlink t = t.asmlink
@@ -1407,6 +1424,8 @@ module X = struct
       let file = Syntax.of_channel filename ic in
       Syntax.check file valid_fields;
       let s = file.file_contents in
+      let opam_version = OpamFormat.assoc s s_opam_version
+          (OpamFormat.parse_string ++ OpamVersion.of_string) in
       let parse_camlp4 = function
         | List ( Ident "CAMLP4" :: l ) ->
           Some (Camlp4 (OpamFormat.parse_string_list (List l)))
@@ -1415,9 +1434,6 @@ module X = struct
           ("camlp4"     , parse_camlp4);
           ("string-list", OpamFormat.parse_string_list ++ fun x -> Some (Cmd x));
         ] in
-      let opam_version =
-        OpamFormat.assoc s s_opam_version
-          (OpamFormat.parse_string ++ OpamVersion.of_string) in
       let name_d, version_d = match OpamCompiler.of_filename filename with
         | None   -> OpamSystem.internal_error
                       "%s is not a valid compiler description file."

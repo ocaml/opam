@@ -582,7 +582,7 @@ module API = struct
 
         (* Create ~/.opam/config *)
         let config =
-          OpamFile.Config.create OpamVersion.current switch [repo.repo_name] jobs in
+          OpamFile.Config.create switch [repo.repo_name] jobs in
         OpamFile.Config.write config_f config;
 
         (* Create ~/.opam/aliases *)

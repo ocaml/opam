@@ -39,6 +39,9 @@ val invalid_fields : file_item list -> string list -> string list
     input does not have the right format. *)
 exception Bad_format of string
 
+(** Raise [Bad_format]. *)
+val bad_format: ('a, unit, string, 'b) format4 -> 'a
+
 (** Parse a boolean *)
 val parse_bool : value -> bool
 

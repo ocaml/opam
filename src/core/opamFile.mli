@@ -51,7 +51,6 @@ module Config: sig
 
   (** Creation *)
   val create:
-    opam_version ->
     switch ->
     repository_name list ->
     int ->
@@ -87,6 +86,9 @@ module OPAM: sig
 
   (** Create an opam file *)
   val create: package -> t
+
+  (** Get OPAM version. *)
+  val opam_version: t -> opam_version
 
   (** Package name *)
   val name: t -> name
@@ -242,6 +244,9 @@ module Comp: sig
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
+
+  (** Get OPAM version *)
+  val opam_version: t -> opam_version
 
   (** Return the compiler name *)
   val name: t -> compiler
