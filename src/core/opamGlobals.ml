@@ -25,6 +25,7 @@ let check var = ref (
 
 let debug            = check "DEBUG"
 let verbose          = check "VERBOSE"
+let color            = check "COLOR"
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
@@ -105,30 +106,49 @@ let timer () =
 let global_start_time =
   Unix.gettimeofday ()
 
+(* not nestable *)
+let colorise c s =
+  if not !color then s else
+    let code = match c with
+      | `bold      -> 1
+      | `underline -> 4
+      | `black     -> 30
+      | `red       -> 31
+      | `green     -> 32
+      | `yellow    -> 33
+      | `blue      -> 34
+      | `magenta   -> 35
+      | `cyan      -> 36
+      | `white     -> 37
+    in
+    Printf.sprintf "\027[%dm%s\027[m" code s
+
+let acolor c oc s = output_string oc (colorise c s)
+
 let timestamp () =
   let time = Unix.gettimeofday () -. global_start_time in
   let tm = Unix.gmtime time in
   let msec = time -. (floor time) in
-  Printf.sprintf "%.2d:%.2d.%.3d"
+  Printf.ksprintf (colorise `blue) "%.2d:%.2d.%.3d"
     (tm.Unix.tm_hour * 60 + tm.Unix.tm_min)
     tm.Unix.tm_sec
     (int_of_float (1000.0 *. msec))
 
 let log section fmt =
-  if !debug then
-    Printf.fprintf stderr ("%s  %06d  %-25s"^^fmt^^"\n%!")
-      (timestamp ()) (Unix.getpid ()) section
-  else
-    Printf.ifprintf stderr fmt
+  Printf.ksprintf (fun str ->
+    if !debug then
+      Printf.eprintf "%s  %06d  %-25a  %s\n%!"
+        (timestamp ()) (Unix.getpid ()) (acolor `yellow) section str
+  ) fmt
 
 let error fmt =
   Printf.ksprintf (fun str ->
-    Printf.eprintf "%s\n%!" str
+    Printf.eprintf "%a\n%!" (acolor `red) str
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
-    Printf.eprintf "[WARNING] %s\n%!" str
+    Printf.eprintf "%a %a\n%!" (acolor `yellow) "[WARNING]" (acolor `yellow) str
   ) fmt
 
 exception Exit of int
@@ -145,7 +165,27 @@ let msg fmt =
   Printf.ksprintf (fun str ->
     flush stderr;
     if !display_messages then (
-      Printf.printf "%s%!" str
+      print_string str;
+      flush stdout;
+    )
+  ) fmt
+
+let header_msg fmt =
+  let mark = match !utf8_msgs with
+    | true -> colorise `yellow "\xF0\x9F\x90\xAB" (* UTF-8 <U+1F42B, U+0020> *)
+    | false -> colorise `cyan "=-=-="
+  in
+  Printf.ksprintf (fun str ->
+    flush stderr;
+    if !display_messages then (
+      print_char '\n';
+      print_string mark;
+      print_char ' ';
+      print_string (colorise `bold str);
+      print_char ' ';
+      print_string mark;
+      print_char '\n';
+      flush stdout;
     )
   ) fmt
 

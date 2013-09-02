@@ -22,6 +22,7 @@ type global_options = {
   debug  : bool;
   verbose: bool;
   quiet  : bool;
+  color  : bool;
   switch : string option;
   yes    : bool;
   strict : bool;
@@ -31,8 +32,8 @@ type global_options = {
 }
 
 let create_global_options
-    git_version debug verbose quiet switch yes strict root no_base_packages =
-  { git_version; debug; verbose; quiet; switch; yes; strict; root; no_base_packages }
+    git_version debug verbose quiet color switch yes strict root no_base_packages =
+  { git_version; debug; verbose; quiet; color; switch; yes; strict; root; no_base_packages }
 
 let apply_global_options o =
   if o.git_version then (
@@ -45,6 +46,7 @@ let apply_global_options o =
   OpamGlobals.debug    := !OpamGlobals.debug || o.debug;
   OpamMisc.debug       := !OpamGlobals.debug;
   OpamGlobals.verbose  := (not o.quiet) && (!OpamGlobals.verbose || o.verbose);
+  OpamGlobals.color    := !OpamGlobals.color || o.color;
   begin match o.switch with
     | None   -> ()
     | Some s -> OpamGlobals.switch := `Command_line s
@@ -172,6 +174,18 @@ let mk_opt ?section flags value doc conv default =
   let doc = Arg.info ?docs:section ~docv:value ~doc flags in
   Arg.(value & opt conv default & doc)
 
+let mk_tristate_opt ?section flags value doc auto default =
+  let doc = Arg.info ?docs:section ~docv:value ~doc flags in
+  let choices =
+    Arg.enum [ "always", `Always; "never", `Never; "auto", `Auto ] in
+  let arg = Arg.(value & opt choices default & doc) in
+  let to_bool = function
+    | `Always -> true
+    | `Never -> false
+    | `Auto -> auto ()
+  in
+  Term.(pure to_bool $ arg)
+
 let mk_subdoc ?(names="COMMANDS") commands =
   `S names ::
     List.map (fun (cs,_,d) ->
@@ -297,6 +311,10 @@ let global_options =
        This is equivalent to setting $(b,\\$OPAMVERBOSE) to a non-empty value." in
   let quiet =
     mk_flag ~section ["q";"quiet"] "Be quiet when installing a new compiler." in
+  let color =
+    mk_tristate_opt ~section ["color"] "WHEN"
+      "Colorize the output. $(docv) must be `always', `never' or `auto'."
+      (fun () -> Unix.isatty Unix.stdout) `Auto in
   let switch =
     mk_opt ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
@@ -324,7 +342,7 @@ let global_options =
        This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
        string." in
   Term.(pure create_global_options
-    $git_version $debug $verbose $quiet $switch $yes $strict $root $no_base_packages)
+    $git_version $debug $verbose $quiet $color $switch $yes $strict $root $no_base_packages)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
