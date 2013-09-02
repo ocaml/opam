@@ -854,24 +854,19 @@ module API = struct
     let t = OpamState.load_state "reinstall" in
     let atoms = OpamSolution.atoms_of_names t names in
     let reinstall =
-      OpamMisc.filter_map (function (n,v) ->
+      List.map (function (n,v) ->
         match v with
         | None ->
-          if not (OpamState.is_name_installed t n) then (
-            OpamGlobals.msg "%s is not installed.\n" (OpamPackage.Name.to_string n);
-            None
-          ) else
-            let nv = OpamState.find_installed_package_by_name t n in
-            Some nv
+          if not (OpamState.is_name_installed t n) then
+            OpamGlobals.error_and_exit "%s is not installed.\n" (OpamPackage.Name.to_string n)
+          else
+            OpamState.find_installed_package_by_name t n
         | Some (_,v) ->
           let nv = OpamPackage.create n v in
-          if OpamPackage.Set.mem nv t.installed then
-            Some nv
-          else (
-            OpamGlobals.msg "%s is not installed.\n" (OpamPackage.to_string nv);
-            None
-          )
-      ) atoms in
+          if OpamPackage.Set.mem nv t.installed then nv
+          else
+            OpamGlobals.error_and_exit "%s is not installed.\n" (OpamPackage.to_string nv)
+        ) atoms in
     let reinstall = OpamPackage.Set.of_list reinstall in
     let depends =
       let universe = OpamState.universe t Depends in
