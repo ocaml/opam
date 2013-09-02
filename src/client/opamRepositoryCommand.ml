@@ -335,7 +335,7 @@ let update_package_index t =
   let file = OpamPath.package_index t.root in
   OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
   let repositories = OpamState.sorted_repositories t in
-  let repo_index =
+  let package_index =
     List.fold_left (fun repo_index repo ->
         let packages = OpamRepository.packages_with_prefixes repo in
         OpamPackage.Map.fold (fun nv prefix repo_index ->
@@ -345,13 +345,14 @@ let update_package_index t =
               repo_index
           ) packages repo_index
       ) OpamPackage.Map.empty repositories in
-  OpamFile.Package_index.write file repo_index
+  OpamFile.Package_index.write file package_index;
+  { t with package_index }
 
 let update_compiler_index t =
   let file = OpamPath.compiler_index t.root in
   OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
   let repositories = OpamState.sorted_repositories t in
-  let repo_index =
+  let compiler_index =
     List.fold_left (fun repo_index repo ->
         let compilers = OpamRepository.compilers_with_prefixes repo in
         OpamCompiler.Map.fold (fun comp prefix repo_index ->
@@ -361,7 +362,8 @@ let update_compiler_index t =
               repo_index
           ) compilers repo_index
       ) OpamCompiler.Map.empty repositories in
-  OpamFile.Compiler_index.write file repo_index
+  OpamFile.Compiler_index.write file compiler_index;
+  { t with compiler_index }
 
 (* update the repository config file:
    ~/.opam/repo/<repo>/config *)
@@ -372,9 +374,9 @@ let update_config t repos =
   OpamFile.Config.write (OpamPath.config t.root) new_config
 
 let fix_descriptions ?(save_cache=true) t ~verbose =
-  update_compiler_index t;
+  let t = update_compiler_index t in
   let _ = fix_compiler_descriptions t ~verbose in
-  update_package_index t;
+  let t = update_package_index t in
   let _ = fix_package_descriptions t ~verbose in
   if save_cache then OpamState.rebuild_state_cache ()
 

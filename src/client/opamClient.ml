@@ -466,11 +466,11 @@ module API = struct
       OpamRepository.Parallel.iter_l (2 * OpamState.jobs t) repos
         ~child ~post:ignore ~pre:ignore;
 
-      let compiler_updates =
-        OpamRepositoryCommand.update_compiler_index t;
-        OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
+      let t, compiler_updates =
+        let t = OpamRepositoryCommand.update_compiler_index t in
+        t, OpamRepositoryCommand.fix_compiler_descriptions t ~verbose:true in
       let package_updates =
-        OpamRepositoryCommand.update_package_index t;
+        let t = OpamRepositoryCommand.update_package_index t in
         OpamRepositoryCommand.fix_package_descriptions t ~verbose:true in
 
       (* Eventually output some JSON file *)

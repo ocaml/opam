@@ -20,10 +20,10 @@ open OpamState.Types
 open OpamTypes
 
 (** Update the package index. *)
-val update_package_index: t -> unit
+val update_package_index: t -> t
 
 (** Update the compiler index. *)
-val update_compiler_index: t -> unit
+val update_compiler_index: t -> t
 
 (** Update the given dev packages. *)
 val update_dev_packages: t -> verbose:bool -> package_set -> package_set
