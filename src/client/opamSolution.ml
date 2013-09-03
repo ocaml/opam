@@ -96,7 +96,7 @@ let check_availability t atoms =
    - <name, installed version> package
    - <$n,$v> package when name = $n.$v *)
 let atoms_of_names ?(permissive=false) t names =
-  let packages = OpamPackage.to_map t.packages in
+  let packages = OpamPackage.to_map (OpamPackage.Set.union t.packages t.installed) in
   (* gets back the original capitalization of the package name *)
   let realname name =
     let lc_name name = String.lowercase (OpamPackage.Name.to_string name) in
