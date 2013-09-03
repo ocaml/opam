@@ -1259,7 +1259,7 @@ let load_state ?(save_cache=true) call_site =
             OpamPackage.Map.add nv opam map
           with
           | Not_found ->
-            OpamGlobals.warning "Cannot file OPAM file for %s, skipping."
+            OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."
               (OpamPackage.to_string nv);
             map
           | Parsing.Parse_error | OpamSystem.Internal_error _ ->
