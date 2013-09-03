@@ -76,8 +76,11 @@ val versions_of_name: Set.t -> Name.t -> Version.Set.t
 (** Extract the naes from a collection of packages *)
 val names_of_packages: Set.t -> Name.Set.t
 
-(** Return all the packages with the given names *)
+(** Return all the packages with the given name *)
 val packages_of_name: Set.t -> Name.t -> Set.t
+
+(** Return all the packages with one of the given names *)
+val packages_of_names: Set.t -> Name.Set.t -> Set.t
 
 (** Compare two packages *)
 val compare: t -> t -> int

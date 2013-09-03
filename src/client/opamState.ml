@@ -83,7 +83,7 @@ type state = Types.t
 open Types
 
 let universe t action = {
-  u_packages  = t.packages;
+  u_packages  = OpamPackage.Set.union t.installed t.packages;
   u_action    = action;
   u_installed = t.installed;
   u_available = Lazy.force t.available_packages;
