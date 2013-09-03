@@ -680,8 +680,8 @@ module X = struct
 
     type t = {
       opam_version: opam_version;
-      name       : OpamPackage.Name.t;
-      version    : OpamPackage.Version.t;
+      name       : OpamPackage.Name.t option;
+      version    : OpamPackage.Version.t option;
       maintainer : string;
       substs     : basename list;
       build_env  : (string * string * string) list;
@@ -710,8 +710,8 @@ module X = struct
 
     let empty = {
       opam_version = OpamVersion.current;
-      name       = OpamPackage.Name.of_string "<none>";
-      version    = OpamPackage.Version.of_string "<none>";
+      name       = None;
+      version    = None;
       maintainer = "<none>";
       substs     = [];
       build_env  = [];
@@ -739,8 +739,8 @@ module X = struct
     }
 
     let create nv =
-      let name = OpamPackage.name nv in
-      let version = OpamPackage.version nv in
+      let name = Some (OpamPackage.name nv) in
+      let version = Some (OpamPackage.version nv) in
       { empty with name; version }
 
     let s_opam_version = "opam-version"
@@ -807,9 +807,13 @@ module X = struct
         s_configure_style;
       ]
 
-    let name t = t.name
+    let check = function
+      | None    -> OpamGlobals.error_and_exit "Invalid OPAM file (name)"
+      | Some n -> n
+
+    let name t = check t.name
+    let version t = check t.version
     let maintainer t = t.maintainer
-    let version t = t.version
     let substs t = t.substs
     let build t = t.build
     let remove t = t.remove
@@ -835,7 +839,8 @@ module X = struct
     let post_messages t = t.post_messages
     let opam_version t = t.opam_version
 
-    let with_version t version = { t with version }
+    let with_name t name = { t with name = Some name }
+    let with_version t version = { t with version = Some version }
     let with_depends t depends = { t with depends }
     let with_depopts t depopts = { t with depopts }
     let with_build t build = { t with build }
@@ -855,8 +860,8 @@ module X = struct
         | _ ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
-          [ Variable (s_name, name t.name);
-            Variable (s_version, version t.version) ] in
+          [ Variable (s_name, name (check t.name));
+            Variable (s_version, version (check t.version)) ] in
       let option c s f = match c with
         | None   -> []
         | Some v -> [ Variable (s, f v) ] in
@@ -924,34 +929,28 @@ module X = struct
       let name_f = OpamFormat.assoc_option s s_name
           (OpamFormat.parse_string ++ OpamPackage.Name.of_string) in
       let name = match name_f, nv with
-        | None  , None    ->
-          OpamGlobals.error_and_exit "%s is an invalid OPAM filename"
-            (OpamFilename.to_string filename);
-        | Some n, None    -> n
-        | None  , Some nv -> OpamPackage.name nv
+        | None  , None    -> None
+        | Some n, None    -> Some n
+        | None  , Some nv -> Some (OpamPackage.name nv)
         | Some n, Some nv ->
           if OpamPackage.name nv <> n then
             OpamGlobals.error_and_exit
               "Inconsistent naming scheme in %s"
               (OpamFilename.to_string filename)
-          else
-            n in
+          else Some n in
       let version_f = OpamFormat.assoc_option s s_version
           (OpamFormat.parse_string ++ OpamPackage.Version.of_string) in
       let version = match version_f, nv with
-        | None  , None    ->
-          OpamGlobals.error_and_exit "%s is an invalid OPAM filename"
-            (OpamFilename.to_string filename);
-        | Some v, None    -> v
-        | None  , Some nv -> OpamPackage.version nv
-        | Some v, Some nv when OpamPackage.is_pinned nv -> v
+        | None  , None    -> None
+        | Some v, None    -> Some v
+        | None  , Some nv -> Some (OpamPackage.version nv)
         | Some v, Some nv ->
-          if OpamPackage.version nv <> v then
+          if OpamPackage.is_pinned nv then Some v
+          else if OpamPackage.version nv <> v then
             OpamGlobals.error_and_exit
               "Inconsistent versioning scheme in %s"
               (OpamFilename.to_string filename)
-          else
-            v in
+          else Some v in
       let maintainer = OpamFormat.assoc s s_maintainer OpamFormat.parse_string in
       let substs =
         OpamFormat.assoc_list s s_substs

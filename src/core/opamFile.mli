@@ -168,6 +168,9 @@ module OPAM: sig
   (** Messages to display at end of install *)
   val post_messages: t -> (string * filter option) list
 
+  (** construct as [name] *)
+  val with_name: t -> name -> t
+
   (** construct as [version] *)
   val with_version: t -> version -> t
 
