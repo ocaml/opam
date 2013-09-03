@@ -1277,13 +1277,13 @@ let load_state ?(save_cache=true) call_site =
     OpamFile.Installed.safe_read (OpamPath.Switch.installed root switch) in
   let installed_roots =
     OpamFile.Installed_roots.safe_read (OpamPath.Switch.installed_roots root switch) in
-  let reinstall =
-    OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let packages =
     OpamPackage.Name.Map.fold
       (fun name _ -> OpamPackage.Set.add (OpamPackage.pinned name))
       pinned
       (OpamPackage.Set.of_list (OpamPackage.Map.keys opams)) in
+  let reinstall =
+    OpamFile.Reinstall.safe_read (OpamPath.Switch.reinstall root switch) in
   let system =
     (compiler = OpamCompiler.system) in
   let available_packages_stub = lazy OpamPackage.Set.empty in
