@@ -434,25 +434,11 @@ let remove_package_aux t ~metadata ~rm_build nv =
       end
     ) (OpamFile.Dot_install.misc install);
 
-  (* Removing the shared dir if it is empty, overwise keep files for
-     future installation. TODO: is it the expected semantics ? *)
-  let share = OpamPath.Switch.share t.root t.switch name in
-  (match OpamFilename.rec_files share, OpamFilename.rec_dirs share with
-   | [], [] -> OpamFilename.rmdir share
-   | _      ->
-     OpamGlobals.msg
-       "WARNING: %s is not empty. We keep its contents for future installations.\n"
-       (OpamFilename.Dir.to_string share));
+  (* Removing the shared dir *)
+  OpamFilename.rmdir (OpamPath.Switch.share t.root t.switch name);
 
-  (* Removing the etc dir if it is empty, overwise keep files for
-     future installation. TODO: is it the expected semantics ? *)
-  let etc = OpamPath.Switch.etc t.root t.switch name in
-  (match OpamFilename.rec_files etc, OpamFilename.rec_dirs etc with
-   | [], [] -> OpamFilename.rmdir etc
-   | _      ->
-     OpamGlobals.msg
-       "WARNING: %s is not empty. We keep its contents for future installations.\n"
-       (OpamFilename.Dir.to_string etc));
+  (* Removing the etc dir *)
+  OpamFilename.rmdir (OpamPath.Switch.etc t.root t.switch name);
 
   (* Remove .config and .install *)
   log "Removing config and install files";
