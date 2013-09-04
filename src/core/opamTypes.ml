@@ -470,7 +470,7 @@ module MakeActionGraph (Pkg: PKG) = struct
       let default_edge_attributes _ = []
       let get_subgraph _ = None
       let vertex_attributes _ = []
-      let vertex_name v = Pkg.string_of_action v
+      let vertex_name v = Printf.sprintf "%S" (Pkg.string_of_action v)
       let default_vertex_attributes _ = []
       let graph_attributes _ = []
     end)

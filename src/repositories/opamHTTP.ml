@@ -150,7 +150,7 @@ module B = struct
           "Cannot find index.tar.gz on the OPAM repository. \
            Initialisation might take some time.\n"
     with _ ->
-      OpamGlobals.error_and_exit "Error: %s is unavailable."
+      OpamGlobals.error_and_exit "%s is unavailable."
         (string_of_address repo.repo_address)
 
   let curl ~remote_file ~local_file =

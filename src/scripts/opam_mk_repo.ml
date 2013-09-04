@@ -74,8 +74,8 @@ let process {index; gener_digest; dryrun; recurse; names} =
 
   List.iter (fun dir ->
       if Sys.file_exists dir then (
-        Printf.eprintf
-          "ERROR: The subdirectory '%s' already exists in the current directory. \n\
+        OpamGlobals.error
+          "The subdirectory '%s' already exists in the current directory. \n\
            Please remove or rename it or run %s in a different folder.\n"
           dir Sys.argv.(0);
         exit 1;
@@ -225,12 +225,12 @@ let process {index; gener_digest; dryrun; recurse; names} =
 
     if !errors <> [] then
       let display_error (nv, error) =
-        OpamGlobals.error "==== ERROR [%s] ====\n" (OpamPackage.to_string nv);
+        let disp = OpamGlobals.header_error "%s" (OpamPackage.to_string nv) in
         match error with
         | OpamSystem.Process_error r  ->
-          OpamGlobals.error "%s" (OpamProcess.string_of_result r)
+          disp "%s" (OpamProcess.string_of_result ~color:`red r)
         | OpamSystem.Internal_error s -> OpamGlobals.error "  %s" s
-        | _ -> OpamGlobals.error "%s" (Printexc.to_string error) in
+        | _ -> disp "%s" (Printexc.to_string error) in
       let all_errors = List.map fst !errors in
       OpamGlobals.error "Got some errors while processing: %s"
         (String.concat ", " (List.map OpamPackage.to_string all_errors));
