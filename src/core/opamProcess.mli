@@ -76,4 +76,4 @@ val clean_files : result -> unit
 val read_lines: string -> string list
 
 (** Pretty printing of process. *)
-val string_of_result: result -> string
+val string_of_result: ?color:OpamGlobals.text_style -> result -> string

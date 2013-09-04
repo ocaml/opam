@@ -342,7 +342,7 @@ module Make (G : G) = struct
         | Process_error r  -> OpamProcess.string_of_result r
         | Internal_error s -> s in
       List.iter (fun (v, e) ->
-        OpamGlobals.error "Error while processing %s\n%s"
+        OpamGlobals.error "While processing %s:\n%s"
           (G.string_of_vertex v)
           (string_of_error e);
       ) errors;

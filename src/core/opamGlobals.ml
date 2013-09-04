@@ -106,8 +106,20 @@ let timer () =
 let global_start_time =
   Unix.gettimeofday ()
 
+type text_style =
+  [ `bold
+  | `underline
+  | `black
+  | `red
+  | `green
+  | `yellow
+  | `blue
+  | `magenta
+  | `cyan
+  | `white ]
+
 (* not nestable *)
-let colorise c s =
+let colorise (c: text_style) s =
   if not !color then s else
     let code = match c with
       | `bold      -> 1
@@ -160,12 +172,12 @@ let log section fmt =
 
 let error fmt =
   Printf.ksprintf (fun str ->
-    Printf.eprintf "%a\n%!" (acolor `red) str
+    Printf.eprintf "%a %s\n%!" (acolor `red) "[ERROR]" str
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
-    Printf.eprintf "%a %a\n%!" (acolor `yellow) "[WARNING]" (acolor `yellow) str
+    Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]" str
   ) fmt
 
 exception Exit of int
@@ -205,6 +217,25 @@ let header_msg fmt =
       flush stdout;
     )
   ) fmt
+
+let header_error fmt =
+  let mark = colorise `red "=====" in
+  Printf.ksprintf (fun head fmt ->
+      Printf.ksprintf (fun contents ->
+          output_char stderr '\n';
+          output_string stderr mark;
+          output_char stderr ' ';
+          output_string stderr (colorise `bold "ERROR");
+          output_char stderr ' ';
+          output_string stderr (colorise `bold head);
+          output_char stderr ' ';
+          output_string stderr mark;
+          output_char stderr '\n';
+          output_string stderr contents;
+          output_char stderr '\n';
+          flush stderr;
+        ) fmt
+    ) fmt
 
 type os =
   | Darwin

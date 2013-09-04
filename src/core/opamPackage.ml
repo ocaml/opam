@@ -237,6 +237,12 @@ let packages_of_name nvset n =
     nvset
     Set.empty
 
+let packages_of_names nvset nameset =
+  Name.Set.fold
+    (fun name acc ->
+       Set.union acc (packages_of_name nvset name))
+    nameset Set.empty
+
 let versions_of_name packages n =
   versions_of_packages
     (Set.filter
