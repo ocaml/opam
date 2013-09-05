@@ -446,6 +446,16 @@ let add name kind address ~priority:prio =
       cleanup t repo;
       raise e
   );
+  if kind = `local then (
+    let repo_dir = OpamFilename.Dir.of_string (string_of_address address) in
+    let pkgdir = OpamPath.packages_dir repo_dir in
+    let compdir = OpamPath.compilers_dir repo_dir in
+    if not (OpamFilename.exists_dir pkgdir) && not (OpamFilename.exists_dir compdir) then
+      OpamGlobals.warning "%S doesn't contain a \"packages\" nor a \"compilers\" directory.\n\
+                           Is it really the directory of your repo ? \
+                           (\"opam remote remove %s\" to revert)"
+        (OpamFilename.Dir.to_string repo_dir) (OpamRepositoryName.to_string name)
+  );
   log "Adding %s" (OpamRepository.to_string repo);
   update_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
   try
