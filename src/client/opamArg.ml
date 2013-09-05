@@ -776,12 +776,16 @@ let remove =
        which are not necessary anymore. It is possible to prevent the removal of an \
        already-installed package by running $(b,opam install <pkg>). This flag \
        can also be set using the $(b,\\$OPAMAUTOREMOVE) configuration variable." in
-  let remove global_options build_options autoremove packages =
+  let force =
+    mk_flag ["force"]
+      "Execute the remove commands of given packages directly, even if they are \
+       not considered installed by OPAM." in
+  let remove global_options build_options autoremove force packages =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    Client.remove ~autoremove packages in
-  Term.(pure remove $global_options $build_options $autoremove $name_list),
+    Client.remove ~autoremove ~force packages in
+  Term.(pure remove $global_options $build_options $autoremove $force $name_list),
   term_info "remove" ~doc ~man
 
 (* REINSTALL *)
