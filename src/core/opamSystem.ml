@@ -521,7 +521,7 @@ let download_command =
     let curl = [
       "curl";
       "--write-out"; "%{http_code}\\n"; "--insecure";
-      "--retry"; retry; "--retry-delay"; "2";
+      "--retry"; retry; "--retry-delay"; "2"; "--compress";
       "-OL"; src
     ] in
     match read_command_output curl with
