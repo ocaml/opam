@@ -472,7 +472,8 @@ let list =
     `P "Unless the $(b,--short) switch is used, the output format displays one \
         package per line, and each line contains the name of the package, the \
         installed version or -- if the package is not installed, and a short \
-        description.";
+        description. In color mode, root packages (eg. manually installed) are \
+        underlined.";
     `P " The full description can be obtained by doing $(b,opam info <package>). \
         You can search through the package descriptions using the $(b,opam search) \
         command."

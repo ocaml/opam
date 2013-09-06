@@ -179,21 +179,36 @@ module API = struct
             try (OpamPackage.name nv, List.assoc nv packages_info) :: acc
             with Not_found -> acc
           ) [] packages in
+    let roots = OpamPackage.names_of_packages t.installed_roots in
     List.iter (
       if print_short then
-        fun (name, _) -> Printf.printf "%s " (OpamPackage.Name.to_string name)
+        fun (name, _) ->
+          let name_str = OpamPackage.Name.to_string name in
+          let colored_name =
+            if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
+              OpamGlobals.colorise `underline name_str
+            else name_str in
+          Printf.printf "%s " colored_name
       else
         let synop_len =
           let col = OpamMisc.terminal_columns () in
           max 0 (col - max_n - max_v - 4) in
         fun (name, { installed_version; synopsis }) ->
-          let name = OpamPackage.Name.to_string name in
+          let name_str = OpamPackage.Name.to_string name in
+          let colored_name =
+            if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
+              OpamGlobals.colorise `underline name_str
+            else name_str in
           let version = match installed_version with
             | None   -> s_not_installed
             | Some v -> OpamPackage.Version.to_string v in
+          let colored_version =
+            if installed_version = Some OpamPackage.Version.pinned
+            then OpamGlobals.colorise `red version
+            else OpamGlobals.colorise `yellow version in
           Printf.printf "%s  %s  %s\n"
-            (OpamMisc.indent_left name max_n)
-            (OpamMisc.indent_right version max_v)
+            (OpamMisc.indent_left colored_name ~visual:name_str max_n)
+            (OpamMisc.indent_right colored_version ~visual:version max_v)
             (OpamMisc.sub_at synop_len (Lazy.force synopsis))
     ) names
 
@@ -672,7 +687,7 @@ module API = struct
         OpamRepositoryCommand.fix_descriptions t ~save_cache:false ~verbose:false;
 
         (* Load the partial state, and install the new compiler if needed *)
-	log "updating package state";
+        log "updating package state";
         let t = OpamState.load_state ~save_cache:false "init-2" in
         let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
