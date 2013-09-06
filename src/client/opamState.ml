@@ -1355,9 +1355,11 @@ let upgrade_to_1_1 () =
   let repo_index = root / "repo" // "index" in
   if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
 
+    OpamGlobals.header_msg
+      "Upgrading to OPAM 1.1 %s"
+      (OpamGlobals.colorise `red "[DO NOT INTERRUPT THE PROCESS]");
     OpamGlobals.msg
-      "\n** Upgrading to OPAM 1.1 \027[31m[DO NOT INTERRUPT THE PROCESS]\027[m **\n\
-       \n\
+      "\n\
       \   In case something goes wrong, you can run that upgrade\n\
       \   process again by doing:\n\
        \n\
@@ -1448,9 +1450,10 @@ let upgrade_to_1_1 () =
       ) (OpamFilename.files opam_tmp);
     OpamFilename.rmdir opam_tmp;
 
-    OpamGlobals.msg
-      "\n** Upgrade complete. You can continue to use OPAM as usual. **\n";
-    OpamGlobals.exit 0
+    OpamGlobals.header_msg
+      "Upgrade complete. Now continuing with \"%s\""
+      (String.concat " " (Array.to_list Sys.argv));
+    OpamGlobals.msg "\n";
   )
 
 let () =
