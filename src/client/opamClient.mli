@@ -56,7 +56,7 @@ module API: sig
   val upgrade: name_set option -> unit
 
   (** Remove the given set of packages. *)
-  val remove: autoremove:bool -> name_set -> unit
+  val remove: autoremove:bool -> force:bool -> name_set -> unit
 
   (** Config API. *)
   module CONFIG: sig
