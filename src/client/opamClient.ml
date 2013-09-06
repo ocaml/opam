@@ -672,7 +672,7 @@ module API = struct
         OpamRepositoryCommand.fix_descriptions t ~save_cache:false ~verbose:false;
 
         (* Load the partial state, and install the new compiler if needed *)
-	log "updating package state";
+        log "updating package state";
         let t = OpamState.load_state ~save_cache:false "init-2" in
         let switch = OpamSwitch.of_string (OpamCompiler.to_string compiler) in
         let quiet = (compiler = OpamCompiler.system) in
@@ -790,9 +790,10 @@ module API = struct
       OpamSolution.check_solution t solution
     )
 
-  let remove ~autoremove names =
+  let remove ~autoremove ~force names =
     log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "remove" in
+    let nothing_to_do = ref true in
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let atoms =
       List.filter (fun (n,_) ->
@@ -826,6 +827,10 @@ module API = struct
         atoms in
 
     if does_not_exist <> [] then (
+      (* This code is older than the handling with function
+         removed_from_upstream that is used for [reinstall] and [upgrade].
+         Maybe we should use the same handling here *)
+      nothing_to_do := false;
       List.iter
         (OpamAction.remove_package ~rm_build:true ~metadata:false t)
         does_not_exist;
@@ -842,7 +847,20 @@ module API = struct
           OpamPackage.Name.to_string (OpamPackage.name nv)
         else
           OpamPackage.to_string nv in
-      if List.length not_installed = 1 then
+      if force then
+        let force_remove nv =
+          let nv =
+            if OpamPackage.version nv <> dummy_version then nv
+            else
+              let name = OpamPackage.name nv in
+              OpamPackage.create name
+                (OpamPackage.Version.Set.max_elt
+                   (OpamPackage.versions_of_name t.packages name)) in
+          OpamGlobals.warning "Forcing removal of %s" (OpamPackage.to_string nv);
+          OpamAction.remove_package ~rm_build:true ~metadata:false t nv in
+        nothing_to_do := false;
+        List.iter force_remove not_installed
+      else if List.length not_installed = 1 then
         OpamGlobals.msg "%s is not installed.\n" (to_string (List.hd not_installed))
       else
         OpamGlobals.msg "%s are not installed.\n"
@@ -882,7 +900,7 @@ module API = struct
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [] } in
       OpamSolution.check_solution t solution
-    ) else
+    ) else if !nothing_to_do then
       OpamGlobals.msg "Nothing to do.\n"
 
   let reinstall names =
@@ -972,8 +990,8 @@ module SafeAPI = struct
   let upgrade names =
     switch_lock (fun () -> API.upgrade names)
 
-  let remove ~autoremove names =
-    switch_lock (fun () -> API.remove ~autoremove names)
+  let remove ~autoremove ~force names =
+    switch_lock (fun () -> API.remove ~autoremove ~force names)
 
   let update repos =
     global_lock (fun () -> API.update repos)
