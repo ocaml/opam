@@ -751,12 +751,23 @@ let install =
         are to be installed, OPAM will confirm if the installation should \
         proceed.";
   ] in
-  let install global_options build_options packages =
+  let add_to_roots =
+    let root =
+      Some true, Arg.info ["set-root"]
+        ~doc:"Mark given packages as installed roots. This is the default \
+              for newly manually-installed packages." in
+    let unroot =
+      Some false, Arg.info ["unset-root"]
+        ~doc:"Mark given packages as \"installed automatically\"." in
+    Arg.(value & vflag None[root; unroot])
+  in
+  let install global_options build_options add_to_roots packages =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    Client.install packages in
-  Term.(pure install $global_options $build_options $name_list),
+    Client.install packages add_to_roots
+  in
+  Term.(pure install $global_options $build_options $add_to_roots $name_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
