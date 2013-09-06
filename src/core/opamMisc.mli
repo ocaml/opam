@@ -172,11 +172,12 @@ val contains: string -> char -> bool
 (** Split a string *)
 val split: string -> char -> string list
 
-(** left indenting *)
-val indent_left: string -> int -> string
+(** left indenting. [~visual] can be used to indent eg. ANSI colored
+    strings and should correspond to the visible characters of s *)
+val indent_left: string -> ?visual:string -> int -> string
 
 (** right indenting *)
-val indent_right: string -> int -> string
+val indent_right: string -> ?visual:string -> int -> string
 
 (** Cut a string *)
 val sub_at: int -> string -> string
