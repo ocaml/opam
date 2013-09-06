@@ -248,16 +248,26 @@ let fix_package_descriptions t ~verbose =
   let deleted_packages =
     OpamPackage.Set.filter (fun nv ->
         not (OpamPackage.is_pinned nv                         (* pinned*)
-             || OpamPackage.Map.mem nv repo_index      (* OR available *)
-             || OpamPackage.Set.mem nv all_installed)  (* OR installed *)
+             || OpamPackage.Map.mem nv repo_index)     (* OR available *)
       ) t.packages in
   log "deleted-packages: %s" (OpamPackage.Set.to_string deleted_packages);
 
-  (* Remove the deleted packages *)
+  (* Notify only about deleted packages that are installed or were just removed
+     (ie ignore the one that were removed from upstream but still have data
+     locally because they used to be installed) *)
+  let upstream_deleted_packages =
+    OpamPackage.Set.filter
+      (fun nv ->
+         OpamPackage.Set.mem nv all_installed ||
+         not (OpamFilename.exists (OpamPath.opam t.root nv)))
+      deleted_packages in
+
+  (* Remove the deleted packages' data (unless they are still installed) *)
   OpamPackage.Set.iter (fun nv ->
-      OpamFilename.rmdir  (OpamPath.packages t.root nv);
-      OpamFilename.remove (OpamPath.archive t.root nv);
-    ) deleted_packages;
+      if not (OpamPackage.Set.mem nv all_installed) then (
+        OpamFilename.rmdir  (OpamPath.packages t.root nv);
+        OpamFilename.remove (OpamPath.archive t.root nv);
+      )) deleted_packages;
 
   (* Update the package descriptions *)
   OpamPackage.Set.iter (fun nv ->
@@ -332,7 +342,7 @@ let fix_package_descriptions t ~verbose =
   let updates = {
     created = new_packages;
     updated = updated_packages;
-    deleted = deleted_packages;
+    deleted = upstream_deleted_packages;
     changed = changed_packages;
   } in
 
