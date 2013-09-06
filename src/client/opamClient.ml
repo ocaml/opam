@@ -204,7 +204,7 @@ module API = struct
             | Some v -> OpamPackage.Version.to_string v in
           let colored_version =
             if installed_version = Some OpamPackage.Version.pinned
-            then OpamGlobals.colorise `red version
+            then OpamGlobals.colorise `blue version
             else OpamGlobals.colorise `yellow version in
           Printf.printf "%s  %s  %s\n"
             (OpamMisc.indent_left colored_name ~visual:name_str max_n)
