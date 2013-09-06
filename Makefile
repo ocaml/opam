@@ -34,7 +34,7 @@ with-ocamlbuild: autogen
 	    > src/$$i/opam-$$i.mllib &&\
 	  ocamlbuild $(OCAMLBUILD_FLAGS) opam-$$i.cma opam-$$i.cmxa;\
 	done;\
-	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native opam_mk_repo.native opam_repo_check.native &&\
+	ocamlbuild $(OCAMLBUILD_FLAGS) opamMain.native opam_admin.native &&\
 	ln -sf _build/src/client/opamMain.native opam &&\
 	ln -sf _build/src/scripts/opam_admin.native opam-admin
 
