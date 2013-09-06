@@ -359,15 +359,15 @@ let getenv n =
 
 let env () = Lazy.force env
 
-let indent_left s nb =
-  let nb = nb - String.length s in
+let indent_left s ?(visual=s) nb =
+  let nb = nb - String.length visual in
   if nb <= 0 then
     s
   else
     s ^ String.make nb ' '
 
-let indent_right s nb =
-  let nb = nb - String.length s in
+let indent_right s ?(visual=s) nb =
+  let nb = nb - String.length visual in
   if nb <= 0 then
     s
   else

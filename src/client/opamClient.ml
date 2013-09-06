@@ -179,21 +179,36 @@ module API = struct
             try (OpamPackage.name nv, List.assoc nv packages_info) :: acc
             with Not_found -> acc
           ) [] packages in
+    let roots = OpamPackage.names_of_packages t.installed_roots in
     List.iter (
       if print_short then
-        fun (name, _) -> Printf.printf "%s " (OpamPackage.Name.to_string name)
+        fun (name, _) ->
+          let name_str = OpamPackage.Name.to_string name in
+          let colored_name =
+            if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
+              OpamGlobals.colorise `underline name_str
+            else name_str in
+          Printf.printf "%s " colored_name
       else
         let synop_len =
           let col = OpamMisc.terminal_columns () in
           max 0 (col - max_n - max_v - 4) in
         fun (name, { installed_version; synopsis }) ->
-          let name = OpamPackage.Name.to_string name in
+          let name_str = OpamPackage.Name.to_string name in
+          let colored_name =
+            if !OpamGlobals.color && OpamPackage.Name.Set.mem name roots then
+              OpamGlobals.colorise `underline name_str
+            else name_str in
           let version = match installed_version with
             | None   -> s_not_installed
             | Some v -> OpamPackage.Version.to_string v in
+          let colored_version =
+            if installed_version = Some OpamPackage.Version.pinned
+            then OpamGlobals.colorise `red version
+            else OpamGlobals.colorise `yellow version in
           Printf.printf "%s  %s  %s\n"
-            (OpamMisc.indent_left name max_n)
-            (OpamMisc.indent_right version max_v)
+            (OpamMisc.indent_left colored_name ~visual:name_str max_n)
+            (OpamMisc.indent_right colored_version ~visual:version max_v)
             (OpamMisc.sub_at synop_len (Lazy.force synopsis))
     ) names
 
@@ -337,20 +352,73 @@ module API = struct
         | f  -> List.filter (fun (d,_) -> List.mem d f) all_fields in
 
       List.iter (fun (f, desc) ->
-        if show_fields then OpamGlobals.msg "%20s: " f;
+        if show_fields then
+          OpamGlobals.msg "%s "
+            (OpamGlobals.colorise `blue (Printf.sprintf "%20s:" f));
         OpamGlobals.msg "%s\n" desc
       ) all_fields in
 
     OpamPackage.Name.Map.iter print_one names
 
+  (* When packages are removed from upstream, they normally disappear from the
+     'available' packages set and can't be seen by the solver anymore. This is a
+     problem for several reasons, mainly breaking chains of dependencies. The
+     solution here handles installed but no-longer-available packages, but it is
+     a bit of a hack, and might be fragile. Another solution which may be worth
+     investigating could be to keep those packages with a dummy "-1" version for
+     the solver, that doesn't satisfy any dependency on this package. Then
+     interpret "downgrade to -1" as remove. *)
+  let removed_from_upstream t =
+    let not_available_names =
+      OpamPackage.Name.Set.diff
+        (OpamPackage.names_of_packages t.installed)
+        (OpamPackage.names_of_packages (Lazy.force t.available_packages)) in
+    let not_available =
+      OpamPackage.packages_of_names t.installed not_available_names in
+    let t =
+      (* This is a hack to tell the solver not to ignore unavailable packages,
+         so that they can be removed *)
+      let available_packages =  lazy (
+        OpamPackage.Set.union (Lazy.force t.available_packages) not_available
+      ) in
+      {t with available_packages} in
+    t, not_available
+
+  let must_be_removed t changed unavailable =
+    if OpamPackage.Set.is_empty unavailable then
+      OpamPackage.Set.empty
+    else
+      let universe = OpamState.universe t Reinstall in
+      let recompile_cone =
+        OpamPackage.Set.of_list
+          (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
+             universe changed) in
+      let unavailable = OpamPackage.Set.inter recompile_cone unavailable in
+      let remove_cone =
+        OpamPackage.Set.of_list
+          (OpamSolver.reverse_dependencies ~depopts:false ~installed:false
+             universe unavailable) in
+      let all = OpamPackage.Set.union t.packages t.installed in
+      (* Only remove the packages for which _no_ version is available anymore,
+         let the solver deal with the others *)
+      let to_remove =
+        OpamPackage.Name.Set.diff
+          (OpamPackage.names_of_packages all)
+          (OpamPackage.names_of_packages (OpamPackage.Set.diff all remove_cone)) in
+      OpamPackage.packages_of_names t.installed to_remove
+
   let dry_upgrade () =
     log "dry-upgrade";
     let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
+    let t, not_available = removed_from_upstream t in
     let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
+    let to_remove = must_be_removed t t.installed not_available in
+    let roots = OpamPackage.Set.diff t.installed_roots to_remove in
+    let to_keep = OpamPackage.Set.diff t.installed to_remove in
     let solution = OpamSolution.resolve ~verbose:false t (Upgrade reinstall)
-        { wish_install = [];
-          wish_remove  = [];
-          wish_upgrade = OpamSolution.atoms_of_packages t.installed_roots } in
+        { wish_install = OpamSolution.atoms_of_packages to_keep;
+          wish_remove  = OpamSolution.atoms_of_packages to_remove;
+          wish_upgrade = OpamSolution.atoms_of_packages roots } in
     match solution with
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
@@ -504,53 +572,6 @@ module API = struct
         OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
       ) else
         OpamGlobals.msg "Everything is up-to-date.\n"
-
-  (* When packages are removed from upstream, they normally disappear from the
-     'available' packages set and can't be seen by the solver anymore. This is a
-     problem for several reasons, mainly breaking chains of dependencies. The
-     solution here handles installed but no-longer-available packages, but it is
-     a bit of a hack, and might be fragile. Another solution which may be worth
-     investigating could be to keep those packages with a dummy "-1" version for
-     the solver, that doesn't satisfy any dependency on this package. Then
-     interpret "downgrade to -1" as remove. *)
-  let removed_from_upstream t =
-    let not_available_names =
-      OpamPackage.Name.Set.diff
-        (OpamPackage.names_of_packages t.installed)
-        (OpamPackage.names_of_packages (Lazy.force t.available_packages)) in
-    let not_available =
-      OpamPackage.packages_of_names t.installed not_available_names in
-    let t =
-      (* This is a hack to tell the solver not to ignore unavailable packages,
-         so that they can be removed *)
-      let available_packages =  lazy (
-        OpamPackage.Set.union (Lazy.force t.available_packages) not_available
-      ) in
-      {t with available_packages} in
-    t, not_available
-
-  let must_be_removed t changed unavailable =
-    if OpamPackage.Set.is_empty unavailable then
-      OpamPackage.Set.empty
-    else
-      let universe = OpamState.universe t Reinstall in
-      let recompile_cone =
-        OpamPackage.Set.of_list
-          (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
-             universe changed) in
-      let unavailable = OpamPackage.Set.inter recompile_cone unavailable in
-      let remove_cone =
-        OpamPackage.Set.of_list
-          (OpamSolver.reverse_dependencies ~depopts:false ~installed:false
-             universe unavailable) in
-      let all = OpamPackage.Set.union t.packages t.installed in
-      (* Only remove the packages for which _no_ version is available anymore,
-         let the solver deal with the others *)
-      let to_remove =
-        OpamPackage.Name.Set.diff
-          (OpamPackage.names_of_packages all)
-          (OpamPackage.names_of_packages (OpamPackage.Set.diff all remove_cone)) in
-      OpamPackage.packages_of_names t.installed to_remove
 
 
   let upgrade names =
