@@ -315,7 +315,12 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
 let dev_opam_opt t nv build_dir =
   let opam () = OpamState.opam_opt t nv in
   if OpamState.is_dev_package t nv then
-    let overlay = build_dir // "opam" in
+    let dir =
+      if OpamFilename.exists_dir (build_dir / "opam") then
+        build_dir / "opam"
+      else
+        build_dir in
+    let overlay = dir // "opam" in
     if OpamFilename.exists overlay then
       try Some (OpamFile.OPAM.read overlay)
       with _ -> opam ()
