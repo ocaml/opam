@@ -37,10 +37,7 @@ module Dir = struct
       dirname
 
   let to_string dirname =
-    if dirname.[String.length dirname - 1] = Filename.dir_sep.[0] then
-      Filename.concat (Filename.dirname dirname) (Filename.basename dirname)
-    else
-      dirname
+    OpamSystem.real_path dirname
 
 end
 
