@@ -330,7 +330,10 @@ let dev_opam_opt t nv build_dir =
 let dev_opam t nv build_dir =
   match dev_opam_opt t nv build_dir with
   | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
-  | Some nv -> nv
+  | Some nv' ->
+    OpamFile.OPAM.with_name
+      (OpamFile.OPAM.with_version nv' (OpamPackage.version nv))
+      (OpamPackage.name nv)
 
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
