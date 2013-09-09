@@ -41,8 +41,9 @@ module API: sig
   (** Display a general summary of a collection of packages. *)
   val info: fields:string list -> string list -> unit
 
-  (** Install the given set of packages. *)
-  val install: name_set -> unit
+  (** Install the given set of packages. Second argument, if not None, specifies
+      that given packages should be added or removed from the roots *)
+  val install: name_set -> bool option -> unit
 
   (** Reinstall the given set of packages. *)
   val reinstall: name_set -> unit

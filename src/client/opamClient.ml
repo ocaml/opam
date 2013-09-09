@@ -721,7 +721,7 @@ module API = struct
         if not !OpamGlobals.debug then OpamFilename.rmdir root;
         raise e
 
-  let install names =
+  let install names add_to_roots =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let t = OpamState.load_state "install" in
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
@@ -745,25 +745,49 @@ module API = struct
     let current_roots = t.installed_roots in
     let t =
       List.fold_left (fun t (n,_) ->
-        let nv = OpamState.find_installed_package_by_name t n in
-        if OpamPackage.Set.mem nv t.installed_roots then (
-          OpamGlobals.msg
-            "Package %s is already installed (current version is %s)\n"
-            (OpamPackage.Name.to_string (OpamPackage.name nv))
-            (OpamPackage.Version.to_string (OpamPackage.version nv));
-          t;
-        ) else (
-          let installed_roots = OpamPackage.Set.add nv t.installed_roots in
-          { t with installed_roots }
-        )
-      )  t pkg_skip in
+          let nv = OpamState.find_installed_package_by_name t n in
+          if OpamPackage.Set.mem nv t.installed then
+            match add_to_roots with
+            | None ->
+              OpamGlobals.warning
+                "Package %s is already installed (current version is %s)."
+                (OpamPackage.Name.to_string (OpamPackage.name nv))
+                (OpamPackage.Version.to_string (OpamPackage.version nv));
+              t
+            | Some true ->
+              if OpamPackage.Set.mem nv t.installed_roots then
+                OpamGlobals.warning
+                  "Package %s is already installed as a root."
+                  (OpamPackage.Name.to_string (OpamPackage.name nv));
+              { t with installed_roots =
+                         OpamPackage.Set.add nv t.installed_roots }
+            | Some false ->
+              if OpamPackage.Set.mem nv t.installed_roots then
+                { t with installed_roots =
+                           OpamPackage.Set.remove nv t.installed_roots }
+              else
+                (OpamGlobals.warning
+                   "Package %s is already marked as 'installed automatically'."
+                   (OpamPackage.Name.to_string (OpamPackage.name nv));
+                 t)
+          else t
+        )  t pkg_skip in
     if t.installed_roots <> current_roots then (
       let diff = OpamPackage.Set.diff t.installed_roots current_roots in
-      let diff = OpamPackage.Set.elements diff in
-      let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
-      OpamGlobals.msg
-        "Adding %s to the list of installed roots.\n"
-        (OpamMisc.pretty_list diff);
+      if not (OpamPackage.Set.is_empty diff) then
+        let diff = OpamPackage.Set.elements diff in
+        let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
+        OpamGlobals.msg
+          "Adding %s to the list of installed roots.\n"
+          (OpamMisc.pretty_list diff)
+      else (
+        let diff = OpamPackage.Set.diff current_roots t.installed_roots in
+        let diff = OpamPackage.Set.elements diff in
+        let diff = List.rev (List.rev_map OpamPackage.to_string diff) in
+        OpamGlobals.msg
+          "Removing %s from the list of installed roots.\n"
+          (OpamMisc.pretty_list diff)
+      );
       let file = OpamPath.Switch.installed_roots t.root t.switch in
       OpamFile.Installed_roots.write file t.installed_roots;
     );
@@ -807,7 +831,10 @@ module API = struct
             wish_remove  = [] ;
             wish_upgrade = atoms }
       in
-      let solution = OpamSolution.resolve_and_apply t (Install names) request in
+      let action =
+        if add_to_roots = Some false then Install OpamPackage.Name.Set.empty
+        else Install names in
+      let solution = OpamSolution.resolve_and_apply t action request in
       OpamSolution.check_solution t solution
     )
 
@@ -1002,8 +1029,8 @@ module SafeAPI = struct
   let info ~fields regexps =
     read_lock (fun () -> API.info ~fields regexps)
 
-  let install names =
-    switch_lock (fun () -> API.install names)
+  let install names add_to_roots =
+    switch_lock (fun () -> API.install names add_to_roots)
 
   let reinstall names =
     switch_lock (fun () -> API.reinstall names)
