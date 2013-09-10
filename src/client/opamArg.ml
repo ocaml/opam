@@ -827,6 +827,9 @@ let update =
         that can be upgraded will be printed out, and the user can use \
         $(b,opam upgrade) to upgrade them.";
   ] in
+  let repos_only =
+    mk_flag ["R"; "repositories"]
+      "Only update repositories, not development packages." in
   let sync =
     mk_flag ["sync-archives"]
       "Always sync the remote archives files. This is not \
@@ -834,13 +837,13 @@ let update =
        what your are doing: this flag will make OPAM try to \
        download the archive files for ALL the available \
        packages." in
-  let update global_options jobs json repositories sync =
+  let update global_options jobs json repositories repos_only sync =
     apply_global_options global_options;
     json_update json;
     OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
-    Client.update repositories in
-  Term.(pure update $global_options $jobs_flag $json_flag $repository_list $sync),
+    Client.update ~repos_only repositories in
+  Term.(pure update $global_options $jobs_flag $json_flag $repository_list $repos_only $sync),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)

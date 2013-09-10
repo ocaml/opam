@@ -423,7 +423,7 @@ module API = struct
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
 
-  let update repos =
+  let update ~repos_only repos =
     let t = OpamState.load_state ~save_cache:true "update" in
     log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
     let repositories =
@@ -436,21 +436,23 @@ module API = struct
       not (OpamRepositoryName.Map.is_empty repositories) in
 
     let dev_packages =
-      let all = OpamPackage.Set.inter t.installed (OpamState.dev_packages t) in
-      if repos = [] then
-        all
+      if repos_only then OpamPackage.Set.empty
       else
-        OpamPackage.Set.filter (fun nv ->
-            let name repo_name =
-              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
-              =  OpamPackage.name nv in
-            let package repo_name =
-              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
-              = Some nv in
-            List.exists (fun repo_name ->
-                name repo_name || package repo_name
-              ) repos
-          ) all in
+        let all = OpamPackage.Set.inter t.installed (OpamState.dev_packages t) in
+        if repos = [] then
+          all
+        else
+          OpamPackage.Set.filter (fun nv ->
+              let name repo_name =
+                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
+                =  OpamPackage.name nv in
+              let package repo_name =
+                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
+                = Some nv in
+              List.exists (fun repo_name ->
+                  name repo_name || package repo_name
+                ) repos
+            ) all in
     let dev_packages_need_update =
       not (OpamPackage.Set.is_empty dev_packages) in
 
@@ -1041,8 +1043,8 @@ module SafeAPI = struct
   let remove ~autoremove ~force names =
     switch_lock (fun () -> API.remove ~autoremove ~force names)
 
-  let update repos =
-    global_lock (fun () -> API.update repos)
+  let update ~repos_only repos =
+    global_lock (fun () -> API.update ~repos_only repos)
 
   module CONFIG = struct
 
