@@ -106,11 +106,22 @@ let list ~print_short ~installed =
         else " " in
       OpamGlobals.msg "%s%s" name sep
     ) else
+      let bold_current s =
+        if name = OpamSwitch.to_string t.switch
+        then OpamGlobals.colorise `bold s
+        else s in
+      let colored_name = bold_current name in
+      let colored_state =
+        if state = not_installed_str then state else
+          bold_current (OpamGlobals.colorise `blue state) in
+      let colored_compiler =
+        bold_current (OpamGlobals.colorise `yellow compiler) in
+      let colored_descr = bold_current descr in
       OpamGlobals.msg "%s %s %s  %s\n"
-        (OpamMisc.indent_left name max_name)
-        (OpamMisc.indent_right state max_state)
-        (OpamMisc.indent_left compiler max_compiler)
-        descr in
+        (OpamMisc.indent_left colored_name ~visual:name max_name)
+        (OpamMisc.indent_right colored_state ~visual:state max_state)
+        (OpamMisc.indent_left colored_compiler ~visual:compiler max_compiler)
+        colored_descr in
 
   List.iter print_compiler all
 
