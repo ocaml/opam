@@ -53,13 +53,14 @@ module Git = struct
       try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit ]; true
       with _ -> false in
     let commit = match snd repo.repo_address with
-      | None   -> "origin/master"
+      | None   -> "master"
       | Some c -> c in
     OpamFilename.in_dir repo.repo_root (fun () ->
-      if not (merge commit) then
-        if not (merge ("origin/"^commit)) then
-          OpamSystem.internal_error "Unknown revision: %s." commit
-    )
+        if not (merge ("refs/remotes/origin/"^commit)) then
+          if not (merge ("refs/tags"^commit)) then
+            if not (merge commit) then
+              OpamSystem.internal_error "Unknown revision: %s." commit
+      )
 
   let diff repo =
     let diff commit =
