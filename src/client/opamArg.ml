@@ -1255,7 +1255,10 @@ let run default commands =
     OpamGlobals.error "'%s' failed." (String.concat " " (Array.to_list Sys.argv));
     let exit_code = ref 1 in
     begin match e with
-      | OpamGlobals.Exit i -> exit_code := i
+      | OpamGlobals.Exit i ->
+        exit_code := i;
+        if !OpamGlobals.debug && i <> 0 then
+          Printf.eprintf "%s" (OpamMisc.pretty_backtrace ())
       | OpamSystem.Internal_error _
       | OpamSystem.Process_error _ ->
         Printf.eprintf "%s\n" (Printexc.to_string e);
