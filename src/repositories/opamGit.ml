@@ -57,7 +57,7 @@ module Git = struct
       | Some c -> c in
     OpamFilename.in_dir repo.repo_root (fun () ->
         if not (merge ("refs/remotes/origin/"^commit)) then
-          if not (merge ("refs/tags"^commit)) then
+          if not (merge ("refs/tags/"^commit)) then
             if not (merge commit) then
               OpamSystem.internal_error "Unknown revision: %s." commit
       )
