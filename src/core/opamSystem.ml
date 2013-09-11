@@ -350,11 +350,10 @@ let copy src dst =
 module Tar = struct
 
   let extensions =
-    [ [ "tar.gz" ; "tgz" ], "z"
-    ; [ "tar.bz2" ; "tbz" ], "j"
-    ; [ "tar.xz" ; "txz" ], "J"
-    ; [ "tar.lzma" ; "tlz" ], "Y"
-    ; [ "tar" ], ""
+    [ [ "tar.gz" ; "tgz" ], 'z'
+    ; [ "tar.bz2" ; "tbz" ], 'j'
+    ; [ "tar.xz" ; "txz" ], 'J'
+    ; [ "tar.lzma" ; "tlz" ], 'Y'
     ]
 
   let guess_type f =
@@ -363,10 +362,10 @@ module Tar = struct
     let c2 = input_char ic in
     close_in ic;
     match c1, c2 with
-    | '\031', '\139' -> Some "z"
-    | 'B'   , 'Z'    -> Some "j"
-    | '\xfd', '\x37' -> Some "J"
-    | '\x5d', '\x00' -> Some "Y"
+    | '\031', '\139' -> Some 'z'
+    | 'B'   , 'Z'    -> Some 'j'
+    | '\xfd', '\x37' -> Some 'J'
+    | '\x5d', '\x00' -> Some 'Y'
     | _              -> None
 
   let match_ext file ext =
@@ -379,7 +378,7 @@ module Tar = struct
 
   let extract_function file =
     let command c dir =
-      command [ "tar" ; Printf.sprintf "x%sf" c ; file; "-C" ; dir ] in
+      command [ "tar" ; Printf.sprintf "xf%c" c ; file; "-C" ; dir ] in
 
     let ext =
       List.fold_left
@@ -518,56 +517,22 @@ let download_command =
       src
     ] in
     command wget in
-  let check_curl_code code =
-    try if int_of_string code >= 400 then internal_error "curl: error %s." code
-    with _ -> internal_error "curl: %s is not a valid return code." code in
-  let really_its_tar file =
-    log "remote server claims %s is a tarball: renaming" file;
-    command [ "mv"; file; file ^ ".tar" ]
-  in
-  let curl_gte_7_26_0 src =
-    let curl = [
-      "curl";
-      "--write-out";
-      "%{http_code}\\n%{content_type}\\n%{filename_effective}\\n";
-      "--insecure"; "--retry"; retry; "--retry-delay"; "2";
-      "--compressed"; "-JOL"; src
-    ] in
-    match read_command_output curl with
-    | [] -> internal_error "curl: empty response."
-    | l  ->
-      let lines = List.rev l in
-      let file = List.hd lines in
-      let ctype = List.hd (List.tl lines) in
-      if ctype = "application/x-tar" then really_its_tar file;
-      check_curl_code (List.hd (List.tl (List.tl lines))) in
   let curl src =
     let curl = [
       "curl";
-      "--write-out"; "%{http_code}\\n%{content_type}\\n"; "--insecure";
-      "--retry"; retry; "--retry-delay"; "2"; "--compressed";
+      "--write-out"; "%{http_code}\\n"; "--insecure";
+      "--retry"; retry; "--retry-delay"; "2";
       "-OL"; src
     ] in
     match read_command_output curl with
     | [] -> internal_error "curl: empty response."
-    | l ->
-      let lines = List.rev l in
-      let ctype = List.hd lines in
-      if ctype = "application/x-tar"
-      then begin match list (fun _ -> true) "." with
-        ( [] | _::_::_ ) -> internal_error "Too many downloaded files."
-      | [file] -> really_its_tar file end;
-      check_curl_code (List.hd (List.tl lines)) in
+    | l  ->
+      let code = List.hd (List.rev l) in
+      try if int_of_string code >= 400 then internal_error "curl: error %s." code
+      with _ -> internal_error "curl: %s is not a valid return code." code in
   lazy (
     if command_exists "curl" then
-      match read_command_output [ "curl"; "--version" ] with
-      | l0::_ ->
-        let curl_v = List.(hd (tl Re_str.(split (regexp_string " ") l0))) in
-        log "curl version is %s" curl_v;
-        let curl_version = OpamVersion.of_string curl_v in
-        if OpamVersion.(compare (of_string "7.26.0") curl_version) > 0
-        then curl else curl_gte_7_26_0
-      | [] -> curl
+      curl
     else if command_exists "wget" then
       wget
     else
@@ -582,18 +547,13 @@ let really_download ~overwrite ~src ~dst =
       ( [] | _::_::_ ) ->
       internal_error "Too many downloaded files."
     | [filename] ->
-      if not overwrite && Sys.file_exists dst && not (Sys.is_directory dst)
-      then internal_error "The downloaded file will overwrite %s." dst;
-      if Sys.is_directory dst
-      then (
-        command [ "mv"; filename; dst ];
-        Filename.(concat dst (basename filename)))
-      else (
-        commands [
-          [ "rm"; "-f"; dst ];
-          [ "mv"; filename; dst ];
-        ];
-        dst)
+      if not overwrite && Sys.file_exists dst then
+        internal_error "The downloaded file will overwrite %s." dst;
+      commands [
+        [ "rm"; "-f"; dst ];
+        [ "mv"; filename; dst ];
+      ];
+      dst
   in
   try with_tmp_dir (fun tmp_dir -> in_dir tmp_dir aux)
   with
@@ -604,18 +564,13 @@ let download ~overwrite ~filename:src ~dst:dst =
   if dst = src then
     dst
   else if Sys.file_exists src then (
-    if not overwrite && Sys.file_exists dst && not (Sys.is_directory dst)
-    then internal_error "The downloaded file will overwrite %s." dst;
-    if Sys.is_directory dst
-    then (
-      command ["cp"; src; dst ];
-      Filename.(concat dst (basename src)))
-    else (
-      commands [
-        [ "rm"; "-f"; dst ];
-        [ "cp"; src; dst ]
-      ];
-      dst)
+    if not overwrite && Sys.file_exists dst then
+      internal_error "The downloaded file will overwrite %s." dst;
+    commands [
+      [ "rm"; "-f"; dst ];
+      [ "cp"; src; dst ]
+    ];
+    dst
   ) else
     really_download ~overwrite ~src ~dst
 
