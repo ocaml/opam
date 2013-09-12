@@ -482,7 +482,7 @@ let apply ?(force = false) t action solution =
         let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
         let values =
           OpamPackage.Set.fold (fun nv accu ->
-            let opam = OpamPackage.Map.find nv t.opams in
+            let opam = OpamState.opam t nv in
             match OpamFile.OPAM.depexts opam with
             | None         -> accu
             | Some alltags ->

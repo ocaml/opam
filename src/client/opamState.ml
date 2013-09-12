@@ -82,20 +82,27 @@ end
 type state = Types.t
 open Types
 
-let universe t action = {
-  u_packages  = OpamPackage.Set.union t.installed t.packages;
-  u_action    = action;
-  u_installed = t.installed;
-  u_available = Lazy.force t.available_packages;
-  u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends t.opams;
-  u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts t.opams;
-  u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts t.opams;
-  u_installed_roots = t.installed_roots;
-  u_pinned    =
-    OpamPackage.Name.Map.fold
-      (fun k _ set -> OpamPackage.Name.Set.add k set)
-      t.pinned OpamPackage.Name.Set.empty;
-}
+let universe t action =
+  let opams =
+    OpamPackage.Map.mapi (fun nv opam ->
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+        if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
+        else opam)
+      t.opams in
+  {
+    u_packages  = OpamPackage.Set.union t.installed t.packages;
+    u_action    = action;
+    u_installed = t.installed;
+    u_available = Lazy.force t.available_packages;
+    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+    u_installed_roots = t.installed_roots;
+    u_pinned    =
+      OpamPackage.Name.Map.fold
+        (fun k _ set -> OpamPackage.Name.Set.add k set)
+        t.pinned OpamPackage.Name.Set.empty;
+  }
 
 let string_of_repositories r =
   OpamMisc.string_of_list
@@ -777,11 +784,12 @@ let copy_files t nv dst =
   | None     -> ()
   | Some src -> OpamFilename.copy_files ~src ~dst
 
-(* List the packages which does fullfil the compiler and OS constraints *)
+(* List the packages which do fulfil the compiler and OS constraints *)
 let available_packages t system =
   let filter nv =
-    if OpamPackage.Map.mem nv t.opams then (
-      let opam = OpamPackage.Map.find nv t.opams in
+    match opam_opt t nv with
+    | None -> false
+    | Some opam ->
       let consistent_ocaml_version () =
         let atom (r,v) =
           match OpamCompiler.Version.to_string v with
@@ -814,11 +822,11 @@ let available_packages t system =
       && consistent_os ()
       && available ()
       && has_reposiotry ()
-    ) else
-      false in
+  in
   let _pinned, set =
     OpamPackage.Map.fold (fun nv _ (pinned, set) ->
         if OpamPackage.Name.Set.mem (OpamPackage.name nv) pinned then
+          (* Package has already been added to the set *)
           (pinned, set)
         else
           let nv1 = pinning_version t nv in
@@ -1253,8 +1261,7 @@ let load_state ?(save_cache=true) call_site =
           try
             let file =
               let f1 = OpamPath.opam root nv in
-              if OpamFilename.exists f1 then f1
-              else
+              if OpamFilename.exists f1 then f1 else
                 let repo, prefix = OpamPackage.Map.find nv package_index in
                 let repo = OpamRepositoryName.Map.find repo repositories in
                 OpamPath.Repository.opam repo prefix nv in

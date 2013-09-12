@@ -325,7 +325,9 @@ let fix_package_descriptions t ~verbose =
 
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
-      let file = OpamPath.opam t.root nv in
+      let file = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+      let file =
+        if OpamFilename.exists file then file else OpamPath.opam t.root nv in
       if not (OpamFilename.exists file) then
         if OpamPackage.Map.mem nv repo_index then
           OpamGlobals.error_and_exit "fatal: %s is missing" (OpamFilename.prettify file)
