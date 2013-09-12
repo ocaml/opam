@@ -337,7 +337,7 @@ let fix_package_descriptions t ~verbose =
           OpamGlobals.warning
             "%s is installed in %s but it does not have metadata."
             (OpamPackage.to_string nv) switches_string
-    ) all_installed;
+    ) t.installed;
 
   let updates = {
     created = new_packages;
