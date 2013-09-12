@@ -991,14 +991,14 @@ let installed_versions t name =
    * only installed packages have something in $opam/pinned.cache *)
 let clean_dir dir nv =
   if OpamFilename.exists_dir dir then (
-    OpamGlobals.error "%s exists although %s is not installed. Removing it."
+    OpamGlobals.warning "%s exists although %s is not installed. Removing it."
       (OpamFilename.Dir.to_string dir) (OpamPackage.to_string nv);
     OpamFilename.rmdir dir
   )
 
 let clean_file file nv =
   if OpamFilename.exists file then (
-    OpamGlobals.error "%s exists although %s is not installed. Removing it."
+    OpamGlobals.warning "%s exists although %s is not installed. Removing it."
       (OpamFilename.to_string file) (OpamPackage.to_string nv);
     OpamFilename.remove file
   )
