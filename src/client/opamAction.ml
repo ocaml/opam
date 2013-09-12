@@ -240,7 +240,7 @@ let extract_package t nv =
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   OpamFilename.rmdir build_dir;
 
-  let extract_and_copy_files file =
+  let extract_and_copy_files nv file =
     begin match file with
       | None   -> ()
       | Some f -> OpamFilename.extract_generic_file f build_dir
@@ -249,13 +249,14 @@ let extract_package t nv =
 
   if OpamState.is_locally_pinned t (OpamPackage.name nv) then
     let dir = OpamPath.Switch.dev_package t.root t.switch nv in
-    extract_and_copy_files (OpamState.download_upstream t nv dir)
+    extract_and_copy_files nv (OpamState.download_upstream t nv dir)
   else (
+    let nv = OpamState.pinning_version t nv in
     match OpamState.download_archive t nv with
     | Some f -> OpamFilename.extract f build_dir
     | None   ->
       let dir = OpamPath.dev_package t.root nv in
-      extract_and_copy_files (OpamState.download_upstream t nv dir)
+      extract_and_copy_files nv (OpamState.download_upstream t nv dir)
   );
 
   prepare_package_build t nv;
@@ -497,11 +498,6 @@ let remove_all_packages t ~metadata sol =
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
 let build_and_install_package_aux t ~metadata nv =
-  let nv =
-    let name = OpamPackage.name nv in
-    if OpamState.is_locally_pinned t name then OpamPackage.pinned name
-    else nv in
-
   OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv);
 
   try
