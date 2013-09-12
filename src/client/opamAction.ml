@@ -457,6 +457,14 @@ let remove_package_aux t ~metadata ~rm_build nv =
     let reinstall = OpamPackage.Set.remove nv t.reinstall in
     update_metadata t ~installed ~installed_roots ~reinstall;
     OpamState.remove_metadata t (OpamPackage.Set.singleton nv);
+  );
+
+  (* Remove the dev archive if no switch uses the package anymore *)
+  let dev = OpamPath.dev_package t.root nv in
+  if OpamFilename.exists_dir dev &&
+     not (OpamPackage.Set.mem nv (OpamState.all_installed t)) then (
+    log "Removing %S" (OpamFilename.Dir.to_string dev);
+    OpamFilename.rmdir dev;
   )
 
 let remove_package t ~metadata ~rm_build nv =
