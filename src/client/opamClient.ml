@@ -148,7 +148,7 @@ module API = struct
     );
     let names = OpamPackage.Name.Map.mapi (fun name stats ->
         if OpamState.is_name_installed t name
-        && OpamState.is_locally_pinned t name then
+        && OpamState.is_pinned t name then
           { stats with installed_version = Some (OpamPackage.Version.pinned) }
         else
           stats
@@ -927,26 +927,31 @@ module API = struct
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies
              ~depopts:false ~installed:true universe packages) in
-      let installed_roots =
+      let to_keep =
         if autoremove then
           OpamPackage.Set.diff t.installed_roots to_remove
         else
           OpamPackage.Set.diff t.installed to_remove in
-      let installed =
+      let to_keep =
         OpamPackage.Set.of_list
           (OpamSolver.dependencies
-             ~depopts:true ~installed:true universe installed_roots) in
-      (* installed includes the depopts, because we don't want to autoremove
+             ~depopts:true ~installed:true universe to_keep) in
+      (* to_keep includes the depopts, because we don't want to autoremove
          them. But that may re-include packages that we wanted removed, so we
          need to remove them again *)
-      let installed = OpamPackage.Set.diff installed to_remove in
+      let to_keep = OpamPackage.Set.diff to_keep to_remove in
       let to_remove =
-        if atoms = [] then
-          OpamPackage.Set.diff t.installed installed
-        else
-          to_remove in
+        if autoremove then
+          let to_remove = OpamPackage.Set.diff t.installed to_keep in
+          if atoms = [] then to_remove
+          else (* restrict to the dependency cone of removed pkgs *)
+            OpamPackage.Set.inter to_remove
+              (OpamPackage.Set.of_list
+                 (OpamSolver.dependencies
+                    ~depopts:true ~installed:true universe to_remove))
+        else to_remove in
       let solution = OpamSolution.resolve_and_apply t Remove
-          { wish_install = OpamSolution.eq_atoms_of_packages installed;
+          { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [] } in
       OpamSolution.check_solution t solution

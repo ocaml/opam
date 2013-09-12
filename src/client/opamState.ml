@@ -573,7 +573,7 @@ let repository_of_locally_pinned_package t n =
 
 let real_package t nv =
   let name = OpamPackage.name nv in
-  if is_locally_pinned t name then OpamPackage.pinned name
+  if is_pinned t name then OpamPackage.pinned name
   else nv
 
 let opam_opt_no_pin t nv =
