@@ -41,8 +41,8 @@ let pin ~force action =
 
   match action.pin_option with
   | Edit  ->
-    if not (OpamState.is_locally_pinned t name) then
-      OpamGlobals.error_and_exit "%s is not locally pinned."
+    if not (OpamState.is_pinned t name) then
+      OpamGlobals.error_and_exit "%s is not pinned."
         (OpamPackage.Name.to_string name);
     let editor =
       try OpamMisc.getenv "OPAM_EDITOR"

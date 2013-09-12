@@ -148,7 +148,7 @@ module API = struct
     );
     let names = OpamPackage.Name.Map.mapi (fun name stats ->
         if OpamState.is_name_installed t name
-        && OpamState.is_locally_pinned t name then
+        && OpamState.is_pinned t name then
           { stats with installed_version = Some (OpamPackage.Version.pinned) }
         else
           stats
