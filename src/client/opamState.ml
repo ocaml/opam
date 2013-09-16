@@ -1267,14 +1267,15 @@ let load_state ?(save_cache=true) call_site =
           (OpamPackage.Set.of_list (OpamPackage.Map.keys package_index)) in
       OpamPackage.Set.fold (fun nv map ->
           try
-            let file =
-              let f1 = OpamPath.opam root nv in
-              if OpamFilename.exists f1 then f1 else
-                let repo, prefix = OpamPackage.Map.find nv package_index in
-                let repo = OpamRepositoryName.Map.find repo repositories in
-                OpamPath.Repository.opam repo prefix nv in
-            let opam = OpamFile.OPAM.read file in
-            OpamPackage.Map.add nv opam map
+            if OpamPackage.is_pinned nv then map else
+              let file =
+                let f1 = OpamPath.opam root nv in
+                if OpamFilename.exists f1 then f1 else
+                  let repo, prefix = OpamPackage.Map.find nv package_index in
+                  let repo = OpamRepositoryName.Map.find repo repositories in
+                  OpamPath.Repository.opam repo prefix nv in
+              let opam = OpamFile.OPAM.read file in
+              OpamPackage.Map.add nv opam map
           with
           | Not_found ->
             OpamGlobals.warning "Cannot find an OPAM file for %s, skipping."
