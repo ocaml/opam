@@ -224,9 +224,10 @@ module B = struct
 
 end
 
-let make_urls_txt repo_root =
+let make_urls_txt ~write repo_root =
   let repo = OpamRepository.local repo_root in
   let local_index_file = OpamFilename.of_string "urls.txt" in
+  log "Scanning %s" (OpamFilename.Dir.to_string repo_root);
   let index =
     List.fold_left (fun set f ->
       if not (OpamFilename.exists f) then set
@@ -235,7 +236,7 @@ let make_urls_txt repo_root =
         OpamFilename.Attribute.Set.add attr set
     ) OpamFilename.Attribute.Set.empty (local_files repo)
   in
-  OpamFile.File_attributes.write local_index_file index;
+  if write then OpamFile.File_attributes.write local_index_file index;
   index
 
 let make_index_tar_gz repo_root =
