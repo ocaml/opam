@@ -82,6 +82,16 @@ module Switch = struct
 
   let lock t a = root t a // "lock"
 
+  let backup_dir t a = root t a / "backup"
+
+  let backup t a =
+    backup_dir t a //
+    Unix.(
+      let tm = gmtime OpamGlobals.global_start_time in
+      Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
+        (tm.tm_year+1900) tm.tm_mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
+    )
+
   let lib_dir t a = root t a / "lib"
 
   let lib t a n = lib_dir t a / OpamPackage.Name.to_string n
