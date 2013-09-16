@@ -807,12 +807,12 @@ module X = struct
         s_configure_style;
       ]
 
-    let check = function
-      | None    -> OpamGlobals.error_and_exit "Invalid OPAM file (name)"
+    let check name = function
+      | None    -> OpamGlobals.error_and_exit "Invalid OPAM file (%s)" name
       | Some n -> n
 
-    let name t = check t.name
-    let version t = check t.version
+    let name t = check "name" t.name
+    let version t = check "version" t.version
     let maintainer t = t.maintainer
     let substs t = t.substs
     let build t = t.build
@@ -860,8 +860,8 @@ module X = struct
         | _ ->
           let name n = OpamFormat.make_string (OpamPackage.Name.to_string n) in
           let version v = OpamFormat.make_string (OpamPackage.Version.to_string v) in
-          [ Variable (s_name, name (check t.name));
-            Variable (s_version, version (check t.version)) ] in
+          [ Variable (s_name, name (check "name" t.name));
+            Variable (s_version, version (check "version" t.version)) ] in
       let option c s f = match c with
         | None   -> []
         | Some v -> [ Variable (s, f v) ] in
