@@ -710,13 +710,11 @@ let add_pinned_overlay t name =
         else
           dir in
       let local_opam = dir // "opam" in
-      try
-        if OpamFilename.exists local_opam then
-          let opam = OpamFile.OPAM.read local_opam in
-          let opam = OpamFile.OPAM.with_name opam name in
-          OpamFile.OPAM.with_version opam (OpamPackage.version rv)
-        else opam_no_pin t rv
-      with _ -> opam_no_pin t rv
+      if OpamFilename.exists local_opam then
+        let opam = OpamFile.OPAM.read local_opam in
+        let opam = OpamFile.OPAM.with_name opam name in
+        OpamFile.OPAM.with_version opam (OpamPackage.version rv)
+      else opam_no_pin t rv
     else opam_no_pin t rv in
   let descr_f = descr_opt_no_pin t rv in
   let url_f =
@@ -2140,10 +2138,6 @@ let update_dev_package t nv =
         let dirname = dev_package t nv in
         let checksum = OpamFile.URL.checksum url in
         let r = OpamRepository.pull_url kind nv dirname checksum remote_url in
-        if kind = `local && OpamFilename.exists (dirname // "opam") then (
-          let dst = OpamPath.Switch.Overlay.opam t.root t.switch nv in
-          OpamFilename.copy ~src:(dirname // "opam") ~dst;
-        );
         match r with
         | Not_available u -> OpamGlobals.error "%s is not available anymore!" u; skip
         | Up_to_date _    -> skip

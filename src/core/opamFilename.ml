@@ -172,7 +172,8 @@ let remove filename =
   OpamSystem.remove_file (to_string filename)
 
 let exists filename =
-  Sys.file_exists (to_string filename)
+  let f = to_string filename in
+  Sys.file_exists f && not (Sys.is_directory f)
 
 let with_contents fn filename =
   fn (read filename)
