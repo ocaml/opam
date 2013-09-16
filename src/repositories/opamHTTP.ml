@@ -188,19 +188,31 @@ module B = struct
         ) new_files;
     )
 
-  (* XXX: add a proxy *)
-  let pull_url package dirname remote_url =
+  let pull_url package dirname checksum remote_url =
     log "pull-file";
     let remote_url = string_of_address remote_url in
     let filename = OpamFilename.of_string remote_url in
-    OpamGlobals.msg "%-10s Downloading %s\n"
-      (OpamPackage.to_string package)
-      (OpamFilename.to_string filename);
-    try
-      let local_file = OpamFilename.download ~overwrite:true filename dirname in
+    let base = OpamFilename.basename filename in
+    let local_file = OpamFilename.create dirname base in
+    if OpamFilename.exists local_file &&
+       match checksum with
+       | None   -> false
+       | Some c -> OpamFilename.digest local_file = c then (
+      OpamGlobals.msg "%-10s %s is in the local cache, using it.\n"
+        (OpamPackage.to_string package) (OpamFilename.Base.to_string base);
       Result (F local_file)
-    with _ ->
-      Not_available remote_url
+    )
+    else (
+      OpamGlobals.msg "%-10s Downloading %s\n"
+        (OpamPackage.to_string package)
+        (OpamFilename.to_string filename);
+      try
+        let local_file = OpamFilename.download ~overwrite:true filename dirname in
+        OpamRepository.check_digest local_file checksum;
+        Result (F local_file)
+      with _ ->
+        Not_available remote_url
+    )
 
   let pull_archive repo filename =
     log "pull-archive";

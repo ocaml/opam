@@ -76,10 +76,10 @@ val update: repository -> unit
 (** Backend signature *)
 module type BACKEND = sig
 
-  (** [pull_url package local_dir remote_url] pull the contents of
+  (** [pull_url package local_dir checksum remote_url] pull the contents of
       [remote_url] into [local_dir]. Can return either a file or a
-      directory. *)
-  val pull_url: package -> dirname -> address -> generic_file download
+      directory. [checksum] is the optional expected checksum. *)
+  val pull_url: package -> dirname -> string option -> address -> generic_file download
 
   (** [pull_repo] pull the contents of a repository. *)
   val pull_repo: repository -> unit
@@ -94,17 +94,17 @@ module type BACKEND = sig
 
 end
 
-(** Signature for pull functions *)
-type pull_fn = repository_kind -> package -> dirname -> address -> generic_file download
-
 (** Download an url *)
-val pull_url: pull_fn
+val pull_url: repository_kind ->
+  package -> dirname -> string option -> address -> generic_file download
 
-(** Pull and check the resulting digest *)
-val pull_and_check_digest: checksum:string -> pull_fn
+(** Pull and fix the resulting digest *)
+val pull_url_and_fix_digest: repository_kind ->
+  package -> dirname -> string -> filename -> address -> generic_file download
 
-(** Pull and fix the resultging digest *)
-val pull_and_fix_digest: file:filename -> checksum:string -> pull_fn
+(** [check_digest file expected] check that the [file] digest is the
+    one [expected]. *)
+val check_digest: filename -> string option -> unit
 
 (** Pull an archive in a repository *)
 val pull_archive: repository -> package -> filename download

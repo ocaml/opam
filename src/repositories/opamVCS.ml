@@ -62,7 +62,11 @@ module Make (VCS: VCS) = struct
       repo_address = address;
     }
 
-  let pull_url package dirname remote_url =
+  let pull_url package dirname checksum remote_url =
+    let () = match checksum with
+      | None   -> ()
+      | Some _ -> OpamGlobals.warning "Skipping checksum for dev package %s"
+                    (OpamPackage.to_string package) in
     let repo = repo dirname remote_url in
     OpamGlobals.msg "%-10s Fetching %s\n"
       (OpamPackage.to_string package)
