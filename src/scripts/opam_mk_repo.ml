@@ -25,6 +25,7 @@ type args = {
   gener_digest: bool;
   dryrun: bool;
   recurse: bool;
+  debug: bool;
 }
 
 let args =
@@ -55,20 +56,25 @@ let args =
     let doc = "Names of the packages to include in the repo." in
     Arg.(value & pos_all string [] & info [] ~docv:"PKG" ~doc)
   in
+  let debug =
+    let doc = "Display debug messages." in
+    Arg.(value & flag & info ["debug"] ~doc)
+  in
   Term.(
     pure
-      (fun index gener_digest dryrun recurse names ->
-         {index; gener_digest; dryrun; recurse; names})
-      $index $gener_digest $dryrun $recurse $names
+      (fun index gener_digest dryrun recurse names debug ->
+         {index; gener_digest; dryrun; recurse; names; debug})
+      $index $gener_digest $dryrun $recurse $names $debug
   )
 
-let process {index; gener_digest; dryrun; recurse; names} =
+let process {index; gener_digest; dryrun; recurse; names; debug} =
   let () =
     OpamHTTP.register ();
     OpamGit.register ();
     OpamDarcs.register ();
     OpamLocal.register ();
     OpamHg.register () in
+  OpamGlobals.debug := !OpamGlobals.debug || debug;
 
   let tmp_dirs = [ "tmp"; "log" ] in
 
@@ -100,7 +106,7 @@ let process {index; gener_digest; dryrun; recurse; names} =
     | None    ->
       let n = OpamPackage.Name.of_string str in
       match OpamPackage.Version.Set.elements
-          (OpamPackage.versions_of_name packages n)
+              (OpamPackage.versions_of_name packages n)
       with
       | []       ->
         OpamGlobals.msg "Skipping unknown package %s.\n" str;
@@ -121,8 +127,7 @@ let process {index; gener_digest; dryrun; recurse; names} =
   log "Reading urls.txt";
   let local_index_file = OpamFilename.of_string "urls.txt" in
   let old_index = OpamFile.File_attributes.safe_read local_index_file in
-  let new_index = OpamHTTP.make_urls_txt repo.repo_root in
-
+  let new_index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
   let to_remove = OpamFilename.Attribute.Set.diff old_index new_index in
   let to_add = OpamFilename.Attribute.Set.diff new_index old_index in
 
@@ -135,8 +140,8 @@ let process {index; gener_digest; dryrun; recurse; names} =
       let deps = OpamFile.OPAM.depends opam in
       let depopts = OpamFile.OPAM.depopts opam in
       OpamFormula.fold_left (fun accu (n,_) ->
-        OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
-      ) OpamPackage.Set.empty (OpamFormula.And (deps, depopts))
+          OpamPackage.Set.union (mk_packages (OpamPackage.Name.to_string n)) accu
+        ) OpamPackage.Set.empty (OpamFormula.And (deps, depopts))
     ) else
       OpamPackage.Set.empty in
   let rec get_transitive_dependencies packages =
@@ -162,9 +167,9 @@ let process {index; gener_digest; dryrun; recurse; names} =
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
-      let archive = OpamPath.Repository.archive repo nv in
-      not (OpamFilename.exists archive)
-    ) new_index in
+        let archive = OpamPath.Repository.archive repo nv in
+        not (OpamFilename.exists archive)
+      ) new_index in
   let to_remove = nv_set_of_remotes to_remove in
   let to_add = OpamPackage.Set.union (nv_set_of_remotes to_add) missing_archive in
   let to_add =
@@ -181,11 +186,11 @@ let process {index; gener_digest; dryrun; recurse; names} =
     if not (OpamPackage.Set.is_empty to_remove) then
       OpamGlobals.msg "Packages to remove: %s\n" (OpamPackage.Set.to_string to_remove);
     OpamPackage.Set.iter (fun nv ->
-      let archive = OpamPath.Repository.archive repo nv in
-      OpamGlobals.msg "Removing %s ...\n" (OpamFilename.to_string archive);
-      if not dryrun then
-        OpamFilename.remove archive
-    ) to_remove;
+        let archive = OpamPath.Repository.archive repo nv in
+        OpamGlobals.msg "Removing %s ...\n" (OpamFilename.to_string archive);
+        if not dryrun then
+          OpamFilename.remove archive
+      ) to_remove;
 
     (* build the new archives *)
     if not (OpamPackage.Set.is_empty to_add) then
@@ -194,15 +199,15 @@ let process {index; gener_digest; dryrun; recurse; names} =
         let prefix = OpamPackage.Map.find nv prefixes in
         let local_archive = OpamPath.Repository.archive repo nv in
         try
+          OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive);
           if not dryrun then (
             OpamFilename.remove local_archive;
             OpamRepository.make_archive ~gener_digest repo prefix nv;
-          ) else
-            OpamGlobals.msg "Building %s\n" (OpamFilename.to_string local_archive)
-      with e ->
-        OpamFilename.remove local_archive;
-        errors := (nv, e) :: !errors;
-    ) to_add;
+          )
+        with e ->
+          OpamFilename.remove local_archive;
+          errors := (nv, e) :: !errors;
+      ) to_add;
   );
 
   (* Create index.tar.gz *)
@@ -210,28 +215,28 @@ let process {index; gener_digest; dryrun; recurse; names} =
   || not (OpamPackage.Set.is_empty to_add)
   || not (OpamPackage.Set.is_empty to_remove) then (
     OpamGlobals.msg "Rebuilding index.tar.gz ...\n";
-    if not dryrun then
+    if not dryrun then (
       OpamHTTP.make_index_tar_gz repo.repo_root;
+    )
   ) else
     OpamGlobals.msg "OPAM Repository already up-to-date.\n";
 
-  List.iter OpamSystem.remove tmp_dirs;
+  if not dryrun then
+    List.iter OpamSystem.remove tmp_dirs;
 
   (* Rebuild urls.txt now the archives have been updated *)
-  if dryrun then
-    OpamGlobals.msg "Rebuilding urls.txt\n"
-  else
-    let _index = OpamHTTP.make_urls_txt repo.repo_root in
-
-    if !errors <> [] then
-      let display_error (nv, error) =
-        let disp = OpamGlobals.header_error "%s" (OpamPackage.to_string nv) in
-        match error with
-        | OpamSystem.Process_error r  ->
-          disp "%s" (OpamProcess.string_of_result ~color:`red r)
-        | OpamSystem.Internal_error s -> OpamGlobals.error "  %s" s
-        | _ -> disp "%s" (Printexc.to_string error) in
-      let all_errors = List.map fst !errors in
-      OpamGlobals.error "Got some errors while processing: %s"
-        (String.concat ", " (List.map OpamPackage.to_string all_errors));
-      List.iter display_error !errors
+  OpamGlobals.msg "Rebuilding urls.txt\n";
+  let _index = OpamHTTP.make_urls_txt ~write:(not dryrun) repo.repo_root in
+  if !errors <> [] then (
+    let display_error (nv, error) =
+      let disp = OpamGlobals.header_error "%s" (OpamPackage.to_string nv) in
+      match error with
+      | OpamSystem.Process_error r  ->
+        disp "%s" (OpamProcess.string_of_result ~color:`red r)
+      | OpamSystem.Internal_error s -> OpamGlobals.error "  %s" s
+      | _ -> disp "%s" (Printexc.to_string error) in
+    let all_errors = List.map fst !errors in
+    OpamGlobals.error "Got some errors while processing: %s"
+      (String.concat ", " (List.map OpamPackage.to_string all_errors));
+    List.iter display_error !errors
+  )

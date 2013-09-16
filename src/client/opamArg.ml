@@ -837,13 +837,21 @@ let update =
        what your are doing: this flag will make OPAM try to \
        download the archive files for ALL the available \
        packages." in
-  let update global_options jobs json repositories repos_only sync =
+  let upgrade =
+    mk_flag ["u";"upgrade"]
+      "Automatically run $(b,opam upgrade --yes) after the update." in
+  let update global_options jobs json repositories repos_only sync upgrade =
     apply_global_options global_options;
     json_update json;
     OpamGlobals.sync_archives := sync;
     OpamGlobals.jobs := jobs;
-    Client.update ~repos_only repositories in
-  Term.(pure update $global_options $jobs_flag $json_flag $repository_list $repos_only $sync),
+    Client.update ~repos_only repositories;
+    if upgrade then (
+      OpamGlobals.yes := true;
+      Client.upgrade None
+    ) in
+  Term.(pure update $global_options $jobs_flag $json_flag $repository_list
+        $repos_only $sync $upgrade),
   term_info "update" ~doc ~man
 
 (* UPGRADE *)

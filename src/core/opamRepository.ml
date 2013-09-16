@@ -73,7 +73,7 @@ module Set = OpamMisc.Set.Make(O)
 module Map = OpamMisc.Map.Make(O)
 
 module type BACKEND = sig
-  val pull_url: package -> dirname -> address -> generic_file download
+  val pull_url: package -> dirname -> string option -> address -> generic_file download
   val pull_repo: repository -> unit
   val pull_archive: repository -> filename -> filename download
   val revision: repository -> version option
@@ -108,47 +108,17 @@ let init repo =
   OpamFilename.mkdir (OpamPath.Repository.compilers_dir repo);
   ignore (B.pull_repo repo)
 
-type pull_fn = repository_kind -> package -> dirname -> address -> generic_file download
-
-let pull_url kind package local_dirname remote_url =
+let pull_url kind package local_dirname checksum remote_url =
   let module B = (val find_backend_by_kind kind: BACKEND) in
-  B.pull_url package local_dirname remote_url
+  B.pull_url package local_dirname checksum remote_url
 
 let revision repo =
   let kind = repo.repo_kind in
   let module B = (val find_backend_by_kind kind: BACKEND) in
   B.revision repo
 
-let pull_and_check_digest ~checksum kind package dirname url =
-  let filename = OpamFilename.of_string (string_of_address url) in
-  if OpamFilename.exists filename
-  && not (Sys.is_directory (OpamFilename.to_string filename))
-  && OpamFilename.digest filename = checksum then
-    Up_to_date (F filename)
-  else match pull_url kind package dirname url with
-    | Not_available _
-    | Up_to_date _
-    | Result (D _) as r -> r
-    | Result (F f)      ->
-      let actual = OpamFilename.digest f in
-      if !OpamGlobals.no_checksums
-      || actual = checksum then
-        Result (F f)
-      else
-        OpamGlobals.error_and_exit
-          "Wrong checksum for %s:\n\
-          \  - %s [expected result]\n\
-          \  - %s [actual result]\n\
-           This is surely due to outdated package descriptions and should be   \
-           fixed by running `opam update`. In case an update does not fix that \
-           problem, you can  use the `--no-checksums` command-line option to   \
-           bypass any checksum checks."
-          (OpamFilename.to_string filename)
-          checksum
-          actual
-
-let pull_and_fix_digest ~file ~checksum kind package dirname url =
-  match pull_url kind package dirname url with
+let pull_url_and_fix_digest kind package dirname checksum file url =
+  match pull_url kind package dirname None url with
   | Not_available _
   | Up_to_date _
   | Result (D _) as r -> r
@@ -162,6 +132,26 @@ let pull_and_fix_digest ~file ~checksum kind package dirname url =
       OpamFile.URL.write file (OpamFile.URL.with_checksum u actual)
     );
     r
+
+let check_digest filename = function
+  | None          -> ()
+  | Some expected ->
+    if !OpamGlobals.no_checksums then ()
+    else
+      let actual = OpamFilename.digest filename in
+      if actual = expected then ()
+      else
+        OpamGlobals.error_and_exit
+          "Wrong checksum for %s:\n\
+          \  - %s [expected result]\n\
+          \  - %s [actual result]\n\
+           This is surely due to outdated package descriptions and should be   \
+           fixed by running `opam update`. In case an update does not fix that \
+           problem, you can  use the `--no-checksums` command-line option to   \
+           bypass any checksum checks."
+          (OpamFilename.to_string filename)
+          expected
+          actual
 
 let pull_archive repo nv =
   let module B = (val find_backend_by_kind repo.repo_kind: BACKEND) in
@@ -259,6 +249,9 @@ let make_archive ?(gener_digest=false) repo prefix nv =
   let url_file = OpamPath.Repository.url repo prefix nv in
   let files_dir = OpamPath.Repository.files repo prefix nv in
   let archive = OpamPath.Repository.archive repo nv in
+  let archive_dir = OpamPath.Repository.archives_dir repo in
+  if not (OpamFilename.exists_dir archive_dir) then
+    OpamFilename.mkdir archive_dir;
 
   (* Download the remote file / fetch the remote repository *)
   let download download_dir =
@@ -273,14 +266,12 @@ let make_archive ?(gener_digest=false) repo prefix nv =
         OpamFilename.mkdir download_dir;
       OpamFilename.in_dir download_dir (fun () ->
           match checksum with
-          | None   -> Some (pull_url kind nv download_dir remote_url)
+          | None   -> Some (pull_url kind nv download_dir None remote_url)
           | Some c ->
             if gener_digest then
-              Some (pull_and_fix_digest ~file:url_file ~checksum:c
-                      kind nv download_dir remote_url)
+              Some (pull_url_and_fix_digest kind nv download_dir c url_file remote_url)
             else
-              Some (pull_and_check_digest ~checksum:c
-                      kind nv download_dir remote_url)
+              Some (pull_url kind nv download_dir checksum remote_url)
         )
     ) else
       None

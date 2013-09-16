@@ -116,15 +116,16 @@ module B = struct
       (OpamFilename.Dir.to_string remote_dirname);
     pull_dir_quiet local_dirname remote_dirname
 
-  let pull_url package local_dirname remote_url =
+  let pull_url package local_dirname checksum remote_url =
     let remote_url = string_of_address remote_url in
     if Sys.file_exists remote_url && Sys.is_directory remote_url then
       download_dir
         (pull_dir package local_dirname (OpamFilename.Dir.of_string remote_url))
-    else if Sys.file_exists remote_url then
-      download_file
-        (pull_file package local_dirname (OpamFilename.of_string remote_url))
-    else
+    else if Sys.file_exists remote_url then (
+      let filename = OpamFilename.of_string remote_url in
+      OpamRepository.check_digest filename checksum;
+      download_file (pull_file package local_dirname filename)
+    ) else
       Not_available remote_url
 
   let pull_archive repo filename =
