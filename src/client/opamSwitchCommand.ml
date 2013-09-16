@@ -310,14 +310,14 @@ let reinstall switch =
       (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  if t.switch = switch then (
-    OpamGlobals.msg "Cannot reinstall %s as it is the current compiler.\n"
-      (OpamSwitch.to_string switch);
-    OpamGlobals.exit 1;
-  );
-
   let ocaml_version = OpamSwitch.Map.find switch t.aliases in
-  let packages = Some (t.installed, t.installed_roots) in
+  let installed =
+    let f = OpamPath.Switch.installed t.root switch in
+    OpamFile.Installed.safe_read f in
+  let installed_roots =
+    let f = OpamPath.Switch.installed_roots t.root switch in
+    OpamFile.Installed_roots.safe_read f in
+  let packages = Some (installed, installed_roots) in
 
   (* Remove the directory *)
   OpamFilename.rmdir (OpamPath.Switch.root t.root switch);
