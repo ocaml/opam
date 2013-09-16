@@ -92,11 +92,6 @@ let pin ~force action =
       | Edit            -> ()
       | Unpin           -> ()
       | Version version ->
-        if not force && not (OpamState.is_name_installed t name) then
-          OpamGlobals.error_and_exit
-            "Cannot pin %s to %s, you must install the package first (or use --force)."
-            (OpamPackage.Name.to_string name)
-            (OpamPackage.Version.to_string version);
         if OpamState.is_name_installed t name then
           let nv = OpamState.find_installed_package_by_name t name in
           if not force && OpamPackage.version nv <> version then
