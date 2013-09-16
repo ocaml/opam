@@ -189,18 +189,21 @@ let contents_of_variable t local_variables v =
   in
   if local_var <> None then local_var else
   if name = OpamPackage.Name.global_config then (
-    try string (OpamMisc.getenv var_str)
-    with Not_found ->
-      if var_str = "ocaml-version" then
+    if var_str = "ocaml-version" then
+      try string (OpamMisc.getenv "ocaml_version")
+      with Not_found ->
         string (OpamCompiler.Version.to_string (Lazy.force t.compiler_version))
-      else if var_str = "preinstalled" then
-        bool (OpamFile.Comp.preinstalled (compiler_comp t t.compiler))
-      else if var_str = "switch" then
-        string (OpamSwitch.to_string t.switch)
-      else if var_str = "jobs" then
-        int (jobs t)
-      else
-        read_var name
+    else
+      try string (OpamMisc.getenv var_str)
+      with Not_found ->
+        if var_str = "preinstalled" then
+          bool (OpamFile.Comp.preinstalled (compiler_comp t t.compiler))
+        else if var_str = "switch" then
+          string (OpamSwitch.to_string t.switch)
+        else if var_str = "jobs" then
+          int (jobs t)
+        else
+          read_var name
   ) else (
     let process_one name =
       let exists = find_packages_by_name t name <> None in
