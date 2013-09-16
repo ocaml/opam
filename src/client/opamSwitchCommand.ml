@@ -310,12 +310,6 @@ let reinstall switch =
       (OpamSwitch.to_string switch);
     OpamGlobals.exit 1;
   );
-  if t.switch = switch then (
-    OpamGlobals.msg "Cannot reinstall %s as it is the current compiler.\n"
-      (OpamSwitch.to_string switch);
-    OpamGlobals.exit 1;
-  );
-
   let ocaml_version = OpamSwitch.Map.find switch t.aliases in
   let installed =
     let f = OpamPath.Switch.installed t.root switch in
