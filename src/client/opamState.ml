@@ -704,12 +704,19 @@ let add_pinned_overlay t name =
     if local_pin then
       let path, _ = locally_pinned_package t name in
       let dir = OpamFilename.raw_dir (fst path) in
+      let dir =
+        if OpamFilename.exists_dir (dir / "opam") then
+          dir / "opam"
+        else
+          dir in
       let local_opam = dir // "opam" in
-      if OpamFilename.exists local_opam then
-        let opam = OpamFile.OPAM.read local_opam in
-        let opam = OpamFile.OPAM.with_name opam name in
-        OpamFile.OPAM.with_version opam (OpamPackage.version rv)
-      else opam_no_pin t rv
+      try
+        if OpamFilename.exists local_opam then
+          let opam = OpamFile.OPAM.read local_opam in
+          let opam = OpamFile.OPAM.with_name opam name in
+          OpamFile.OPAM.with_version opam (OpamPackage.version rv)
+        else opam_no_pin t rv
+      with _ -> opam_no_pin t rv
     else opam_no_pin t rv in
   let descr_f = descr_opt_no_pin t rv in
   let url_f =
