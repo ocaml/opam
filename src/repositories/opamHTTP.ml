@@ -188,19 +188,31 @@ module B = struct
         ) new_files;
     )
 
-  (* XXX: add a proxy *)
-  let pull_url package dirname remote_url =
+  let pull_url package dirname checksum remote_url =
     log "pull-file";
     let remote_url = string_of_address remote_url in
     let filename = OpamFilename.of_string remote_url in
-    OpamGlobals.msg "%-10s Downloading %s\n"
-      (OpamPackage.to_string package)
-      (OpamFilename.to_string filename);
-    try
-      let local_file = OpamFilename.download ~overwrite:true filename dirname in
+    let base = OpamFilename.basename filename in
+    let local_file = OpamFilename.create dirname base in
+    if OpamFilename.exists local_file &&
+       match checksum with
+       | None   -> false
+       | Some c -> OpamFilename.digest local_file = c then (
+      OpamGlobals.msg "%-10s %s is in the local cache, using it.\n"
+        (OpamPackage.to_string package) (OpamFilename.Base.to_string base);
       Result (F local_file)
-    with _ ->
-      Not_available remote_url
+    )
+    else (
+      OpamGlobals.msg "%-10s Downloading %s\n"
+        (OpamPackage.to_string package)
+        (OpamFilename.to_string filename);
+      try
+        let local_file = OpamFilename.download ~overwrite:true filename dirname in
+        OpamRepository.check_digest local_file checksum;
+        Result (F local_file)
+      with _ ->
+        Not_available remote_url
+    )
 
   let pull_archive repo filename =
     log "pull-archive";
@@ -224,9 +236,10 @@ module B = struct
 
 end
 
-let make_urls_txt repo_root =
+let make_urls_txt ~write repo_root =
   let repo = OpamRepository.local repo_root in
   let local_index_file = OpamFilename.of_string "urls.txt" in
+  log "Scanning %s" (OpamFilename.Dir.to_string repo_root);
   let index =
     List.fold_left (fun set f ->
       if not (OpamFilename.exists f) then set
@@ -235,7 +248,7 @@ let make_urls_txt repo_root =
         OpamFilename.Attribute.Set.add attr set
     ) OpamFilename.Attribute.Set.empty (local_files repo)
   in
-  OpamFile.File_attributes.write local_index_file index;
+  if write then OpamFile.File_attributes.write local_index_file index;
   index
 
 let make_index_tar_gz repo_root =

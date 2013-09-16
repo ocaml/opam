@@ -122,18 +122,18 @@ type text_style =
 let colorise (c: text_style) s =
   if not !color then s else
     let code = match c with
-      | `bold      -> 1
-      | `underline -> 4
-      | `black     -> 30
-      | `red       -> 31
-      | `green     -> 32
-      | `yellow    -> 33
-      | `blue      -> 34
-      | `magenta   -> 35
-      | `cyan      -> 36
-      | `white     -> 37
+      | `bold      -> "01"
+      | `underline -> "04"
+      | `black     -> "30"
+      | `red       -> "31"
+      | `green     -> "32"
+      | `yellow    -> "33"
+      | `blue      -> "1;34"
+      | `magenta   -> "35"
+      | `cyan      -> "36"
+      | `white     -> "37"
     in
-    Printf.sprintf "\027[%dm%s\027[m" code s
+    Printf.sprintf "\027[%sm%s\027[m" code s
 
 let indent_left str n =
   if String.length str >= n then str

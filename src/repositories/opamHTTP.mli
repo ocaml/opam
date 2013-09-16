@@ -20,6 +20,6 @@ open OpamTypes
 
 val make_index_tar_gz: repository_root -> unit
 
-val make_urls_txt: repository_root -> file_attribute_set
+val make_urls_txt: write:bool -> repository_root -> file_attribute_set
 
 val register: unit -> unit
