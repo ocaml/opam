@@ -148,7 +148,7 @@ module API = struct
     );
     let names = OpamPackage.Name.Map.mapi (fun name stats ->
         if OpamState.is_name_installed t name
-        && OpamState.is_locally_pinned t name then
+        && OpamState.is_pinned t name then
           { stats with installed_version = Some (OpamPackage.Version.pinned) }
         else
           stats
@@ -204,7 +204,7 @@ module API = struct
             | Some v -> OpamPackage.Version.to_string v in
           let colored_version =
             if installed_version = Some OpamPackage.Version.pinned
-            then OpamGlobals.colorise `red version
+            then OpamGlobals.colorise `blue version
             else OpamGlobals.colorise `yellow version in
           Printf.printf "%s  %s  %s\n"
             (OpamMisc.indent_left colored_name ~visual:name_str max_n)
@@ -423,7 +423,7 @@ module API = struct
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
 
-  let update repos =
+  let update ~repos_only repos =
     let t = OpamState.load_state ~save_cache:true "update" in
     log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
     let repositories =
@@ -436,21 +436,23 @@ module API = struct
       not (OpamRepositoryName.Map.is_empty repositories) in
 
     let dev_packages =
-      let all = OpamPackage.Set.inter t.installed (OpamState.dev_packages t) in
-      if repos = [] then
-        all
+      if repos_only then OpamPackage.Set.empty
       else
-        OpamPackage.Set.filter (fun nv ->
-            let name repo_name =
-              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
-              =  OpamPackage.name nv in
-            let package repo_name =
-              (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
-              = Some nv in
-            List.exists (fun repo_name ->
-                name repo_name || package repo_name
-              ) repos
-          ) all in
+        let all = OpamPackage.Set.inter t.installed (OpamState.dev_packages t) in
+        if repos = [] then
+          all
+        else
+          OpamPackage.Set.filter (fun nv ->
+              let name repo_name =
+                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
+                =  OpamPackage.name nv in
+              let package repo_name =
+                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
+                = Some nv in
+              List.exists (fun repo_name ->
+                  name repo_name || package repo_name
+                ) repos
+            ) all in
     let dev_packages_need_update =
       not (OpamPackage.Set.is_empty dev_packages) in
 
@@ -925,26 +927,31 @@ module API = struct
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies
              ~depopts:false ~installed:true universe packages) in
-      let installed_roots =
+      let to_keep =
         if autoremove then
           OpamPackage.Set.diff t.installed_roots to_remove
         else
           OpamPackage.Set.diff t.installed to_remove in
-      let installed =
+      let to_keep =
         OpamPackage.Set.of_list
           (OpamSolver.dependencies
-             ~depopts:true ~installed:true universe installed_roots) in
-      (* installed includes the depopts, because we don't want to autoremove
+             ~depopts:true ~installed:true universe to_keep) in
+      (* to_keep includes the depopts, because we don't want to autoremove
          them. But that may re-include packages that we wanted removed, so we
          need to remove them again *)
-      let installed = OpamPackage.Set.diff installed to_remove in
+      let to_keep = OpamPackage.Set.diff to_keep to_remove in
       let to_remove =
-        if atoms = [] then
-          OpamPackage.Set.diff t.installed installed
-        else
-          to_remove in
+        if autoremove then
+          let to_remove = OpamPackage.Set.diff t.installed to_keep in
+          if atoms = [] then to_remove
+          else (* restrict to the dependency cone of removed pkgs *)
+            OpamPackage.Set.inter to_remove
+              (OpamPackage.Set.of_list
+                 (OpamSolver.dependencies
+                    ~depopts:true ~installed:true universe to_remove))
+        else to_remove in
       let solution = OpamSolution.resolve_and_apply t Remove
-          { wish_install = OpamSolution.eq_atoms_of_packages installed;
+          { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [] } in
       OpamSolution.check_solution t solution
@@ -1041,8 +1048,8 @@ module SafeAPI = struct
   let remove ~autoremove ~force names =
     switch_lock (fun () -> API.remove ~autoremove ~force names)
 
-  let update repos =
-    global_lock (fun () -> API.update repos)
+  let update ~repos_only repos =
+    global_lock (fun () -> API.update ~repos_only repos)
 
   module CONFIG = struct
 

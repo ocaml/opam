@@ -411,6 +411,7 @@ let get_final_universe univ req =
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
   | Sat (_,u) -> Success (remove u "dose-dummy-request")
+  | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
   | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->
     let open Algo.Diagnostic in

@@ -49,7 +49,7 @@ module API: sig
   val reinstall: name_set -> unit
 
   (** Refresh the available packages. *)
-  val update: repository_name list -> unit
+  val update: repos_only:bool -> repository_name list -> unit
 
   (** Find a consistent state where most of the installed packages are
       upgraded to their latest version. [None] means all the installed
