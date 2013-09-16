@@ -202,7 +202,7 @@ let print_variable_warnings t =
     (* 2. Warn about variables possibly set by other compilers *)
     let new_variables comp =
       let comp_f = OpamPath.compiler_comp t.root comp in
-      let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
+      let env = OpamFile.Comp.env (OpamFile.Comp.safe_read comp_f) in
       new_variables env in
     let vars = ref OpamMisc.StringSet.empty in
     OpamSwitch.Map.iter (fun _ comp ->
