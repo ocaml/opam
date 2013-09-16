@@ -48,37 +48,42 @@ module Git = struct
             full
       )
 
+  let get_commits repo =
+    match snd repo.repo_address with
+    | None -> [ "refs/remotes/origin/master" ]
+    | Some c -> [ "refs/remotes/origin/"^c;
+                  "refs/tags/"^c;
+                  c ]
+
   let reset repo =
     let merge commit =
-      try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit ]; true
+      try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit; "--" ]; true
       with _ -> false in
-    let commit = match snd repo.repo_address with
-      | None   -> "master"
-      | Some c -> c in
     OpamFilename.in_dir repo.repo_root (fun () ->
-        if not (merge ("refs/remotes/origin/"^commit)) then
-          if not (merge ("refs/tags/"^commit)) then
-            if not (merge commit) then
-              OpamSystem.internal_error "Unknown revision: %s." commit
+        let ok =
+          List.fold_left (fun ok commit -> if ok then ok else merge commit)
+            false (get_commits repo) in
+        if not ok then OpamSystem.internal_error "Unknown revision: %s."
+            (match snd repo.repo_address with Some a -> a | None -> "master")
       )
 
   let diff repo =
     let diff commit =
       try Some (
-        OpamSystem.read_command_output ["git" ; "diff" ; commit ; "--name-only"])
+        OpamSystem.read_command_output ["git" ; "diff" ; "--name-only" ; commit ; "--" ])
       with _ -> None in
-    let commit = match snd repo.repo_address with
-      | None   -> "origin/master"
-      | Some c -> c in
     OpamFilename.in_dir repo.repo_root (fun () ->
-      match diff commit with
-      | Some [] -> false
-      | Some _  -> true
-      | None       ->
-        match diff ("origin/"^commit) with
+        let diff =
+          List.fold_left (fun r commit -> match r with
+              | None -> diff commit
+              | Some x -> Some x)
+            None (get_commits repo) in
+        match diff with
         | Some [] -> false
         | Some _  -> true
-        | None    -> OpamSystem.internal_error "Unknown revision: %s." commit
+        | None    ->
+          OpamSystem.internal_error "Unknown revision: %s."
+            (match snd repo.repo_address with Some a -> a | None -> "master")
     )
 
 end
