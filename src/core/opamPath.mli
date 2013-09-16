@@ -104,6 +104,12 @@ module Switch: sig
   (** lock file: {i $opam/lock} *)
   val lock: t -> switch -> filename
 
+  (** The directory where backups are stored for this switch *)
+  val backup_dir: t -> switch -> dirname
+
+  (** Backup file for state export *)
+  val backup: t -> switch -> filename
+
   (** Library path for a given package:
       {i $opam/$switch/lib/$name} *)
   val lib: t -> switch -> name -> dirname
