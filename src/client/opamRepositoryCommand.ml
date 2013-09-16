@@ -77,7 +77,6 @@ let fix_compiler_descriptions t ~verbose =
     OpamCompiler.Set.fold (fun comp map ->
         if comp = OpamCompiler.system             (* system *)
         || OpamCompiler.Map.mem comp repo_index   (* OR available *)
-        || OpamState.is_compiler_installed t comp (* OR installed *)
         then
           map
         else
@@ -85,10 +84,11 @@ let fix_compiler_descriptions t ~verbose =
       ) t.compilers OpamCompiler.Set.empty in
   log "deleted-compilers: %s" (OpamCompiler.Set.to_string deleted_compilers);
 
-  (* Delete compiler descritions *)
+  (* Delete compiler descritions (unless they are still installed) *)
   OpamCompiler.Set.iter (fun comp ->
-      let dir = OpamPath.compilers t.root comp in
-      OpamFilename.rmdir dir;
+      if not (OpamState.is_compiler_installed t comp) then
+        let dir = OpamPath.compilers t.root comp in
+        OpamFilename.rmdir dir;
     ) deleted_compilers;
 
   (* Update the compiler description *)
@@ -325,7 +325,9 @@ let fix_package_descriptions t ~verbose =
 
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
-      let file = OpamPath.opam t.root nv in
+      let file = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+      let file =
+        if OpamFilename.exists file then file else OpamPath.opam t.root nv in
       if not (OpamFilename.exists file) then
         if OpamPackage.Map.mem nv repo_index then
           OpamGlobals.error_and_exit "fatal: %s is missing" (OpamFilename.prettify file)
@@ -337,7 +339,7 @@ let fix_package_descriptions t ~verbose =
           OpamGlobals.warning
             "%s is installed in %s but it does not have metadata."
             (OpamPackage.to_string nv) switches_string
-    ) all_installed;
+    ) t.installed;
 
   let updates = {
     created = new_packages;

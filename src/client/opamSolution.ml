@@ -202,7 +202,7 @@ let print_variable_warnings t =
     (* 2. Warn about variables possibly set by other compilers *)
     let new_variables comp =
       let comp_f = OpamPath.compiler_comp t.root comp in
-      let env = OpamFile.Comp.env (OpamFile.Comp.read comp_f) in
+      let env = OpamFile.Comp.env (OpamFile.Comp.safe_read comp_f) in
       new_variables env in
     let vars = ref OpamMisc.StringSet.empty in
     OpamSwitch.Map.iter (fun _ comp ->
@@ -482,7 +482,7 @@ let apply ?(force = false) t action solution =
         let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
         let values =
           OpamPackage.Set.fold (fun nv accu ->
-            let opam = OpamPackage.Map.find nv t.opams in
+            let opam = OpamState.opam t nv in
             match OpamFile.OPAM.depexts opam with
             | None         -> accu
             | Some alltags ->
