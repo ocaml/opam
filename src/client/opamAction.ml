@@ -316,7 +316,12 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
 let dev_opam_opt t nv build_dir =
   let opam () = OpamState.opam_opt t nv in
   if OpamState.is_dev_package t nv then
-    let overlay = build_dir // "opam" in
+    let dir =
+      if OpamFilename.exists_dir (build_dir / "opam") then
+        build_dir / "opam"
+      else
+        build_dir in
+    let overlay = dir // "opam" in
     if OpamFilename.exists overlay then
       try Some (OpamFile.OPAM.read overlay)
       with _ -> opam ()
@@ -326,7 +331,10 @@ let dev_opam_opt t nv build_dir =
 let dev_opam t nv build_dir =
   match dev_opam_opt t nv build_dir with
   | None    -> OpamPackage.unknown (OpamPackage.name nv) (Some (OpamPackage.version nv))
-  | Some nv -> nv
+  | Some nv' ->
+    OpamFile.OPAM.with_name
+      (OpamFile.OPAM.with_version nv' (OpamPackage.version nv))
+      (OpamPackage.name nv)
 
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are

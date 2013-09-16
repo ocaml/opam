@@ -86,7 +86,8 @@ let move_dir ~src ~dst =
   OpamSystem.command [ "mv"; Dir.to_string src; Dir.to_string dst ]
 
 let exists_dir dirname =
-  Sys.file_exists (Dir.to_string dirname)
+  let f = Dir.to_string dirname in
+  Sys.file_exists f && Sys.is_directory f
 
 let copy_dir ~src ~dst =
   if exists_dir dst then
@@ -171,7 +172,8 @@ let remove filename =
   OpamSystem.remove_file (to_string filename)
 
 let exists filename =
-  Sys.file_exists (to_string filename)
+  let f = to_string filename in
+  Sys.file_exists f && not (Sys.is_directory f)
 
 let with_contents fn filename =
   fn (read filename)
