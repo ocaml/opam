@@ -108,10 +108,10 @@ let compare_stats s1 s2 =
 let stats repo =
   let commits = Git.commits repo in
   let n = List.length commits in
-  Printf.eprintf "Commits: %d\n%!" n;
+  Printf.printf "Commits: %d\n%!" n;
   let c = ref 0 in
   let stats = List.map (fun commit ->
-      Printf.eprintf "\r%d / %d%!" !c n; incr c;
+      Printf.printf "\r%d / %d%!" !c n; incr c;
       let date = Git.date repo commit in
       let files = Git.files repo commit "packages" in
       let authors = Git.authors repo commit in
@@ -125,6 +125,7 @@ let stats repo =
         ) packages OpamPackage.Name.Set.empty in
       { commit; date; authors; packages; names }
     ) commits in
+  Printf.printf "\n";
   List.sort compare_stats stats
 
 let display stats fn ylabel output =
@@ -135,8 +136,8 @@ let display stats fn ylabel output =
      set xdata time\n\
      set timefmt \"%%s\"\n\
      set format x \"%%m/%%Y\"\n\
-     set term svg size 800,400 font \"Arial,10\"\n\
-     set output '%s.svg'\n\
+     set term png size 800,400 font \"Arial,10\"\n\
+     set output '%s.png\n\
      unset key\n\
      set style data lines\n\
      set style fill transparent solid 0.4\n\
@@ -149,8 +150,9 @@ let display stats fn ylabel output =
   List.iter (fun stats ->
       Printf.fprintf oc "%.0f;%d\n" stats.date (fn stats)
     ) stats;
-  Printf.eprintf "e";
+  Printf.fprintf oc "e";
   close_out oc;
+  Printf.printf "Generating %s.png ...\n" output;
   OpamSystem.command ["gnuplot"; dotfile ]
 
 let process () =
