@@ -916,7 +916,7 @@ module X = struct
       } in
       Syntax.to_string
         ~indent_variable:
-          (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts])
+          (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts; s_authors])
         s
 
     let of_channel filename ic =
@@ -1480,7 +1480,7 @@ module X = struct
       let make = OpamFormat.assoc_string_list s s_make      in
       let build = OpamFormat.assoc_list s s_build OpamFormat.parse_commands in
       let env = OpamFormat.assoc_list s s_env
-          (OpamFormat.parse_list OpamFormat.parse_env_variable) in
+          (OpamFormat.parse_list_list OpamFormat.parse_env_variable) in
       let bytecomp = OpamFormat.assoc_string_list s s_bytecomp  in
       let asmcomp = OpamFormat.assoc_string_list s s_asmcomp   in
       let bytelink = OpamFormat.assoc_string_list s s_bytecomp  in

@@ -83,6 +83,23 @@ let rec kind = function
 and kinds l =
   Printf.sprintf "{%s}" (String.concat " " (List.map kind l))
 
+let rec string_of_value = function
+  | Symbol s
+  | Ident s     -> Printf.sprintf "%s" s
+  | Int i       -> Printf.sprintf "%d" i
+  | Bool b      -> Printf.sprintf "%b" b
+  | String s    -> Printf.sprintf "%S" s
+  | List l      -> Printf.sprintf "[%s]" (string_of_values l)
+  | Group g     -> Printf.sprintf "(%s)" (string_of_values g)
+  | Option(v,l) -> Printf.sprintf "%s {%s}" (string_of_value v) (string_of_values l)
+
+and string_of_values l =
+  String.concat " " (List.rev (List.rev_map string_of_value l))
+
+let is_list = function
+  | List _ -> true
+  | _      -> false
+
 (* Base parsing functions *)
 let parse_bool = function
   | Bool b -> b
@@ -106,7 +123,13 @@ let parse_string = function
 
 let parse_list fn = function
   | List s -> List.rev (List.rev_map fn s)
-  | x      -> bad_format "Expecting a list, got %s" (kind x)
+  | x      -> [fn x]
+
+let parse_list_list fn ll = match ll with
+  | List l ->
+    if List.for_all is_list l then List.rev (List.rev_map fn l)
+    else [fn ll]
+  | _      -> [fn ll]
 
 let parse_group fn = function
   | Group g -> List.rev (List.rev_map fn g)
@@ -154,19 +177,18 @@ let parse_or fns v =
   aux fns
 
 let parse_sequence fns v =
+  let rec aux = function
+    | (_,f) :: fns, h :: t -> f h :: aux (fns, t)
+    | []          , []     -> []
+    | lfns        , l      ->
+      bad_format
+        "Expecting %s (%s) got %s"
+        (String.concat ", " (List.map fst lfns))
+        (String.concat ", " (List.map fst fns))
+        (string_of_values l) in
   match v with
-  | List l ->
-    let rec aux = function
-      | (_,f) :: fns, h :: t -> f h :: aux (fns, t)
-      | [], [] -> []
-      | _ ->
-        bad_format
-          "Expecting %s, got %d values"
-          (String.concat ", " (List.map fst fns))
-          (List.length l) in
-    aux (fns, l)
-  | x      -> bad_format "Expecting a list, got %s" (kind x)
-
+  | List l -> aux (fns, l)
+  | x      -> aux (fns, [x])
 
 let make_string str = String str
 
@@ -194,54 +216,61 @@ let make_string_pair = make_pair make_string make_string
 
 (* Printing *)
 
-let is_list = function
-  | List _ -> true
-  | _      -> false
+let compute_indent = function
+  | []          -> false, []
+  | b :: indent -> b    , indent
 
-let rec pretty_string_of_value ?(indent_hint = []) = function
+let pop_indent indent =
+  let _, indent = compute_indent indent in
+  indent
+
+let can_simplify = function
+  | List [ List [_] ]
+  | List [ _ ] -> true
+  | _ -> false
+
+let rec pretty_string_of_value ~simplify ~indent = function
   | Symbol s
-  | Ident s     -> Printf.sprintf "%s" s
+  | Ident s     -> s
   | Int i       -> Printf.sprintf "%d" i
   | Bool b      -> Printf.sprintf "%b" b
-  | String s    -> Printf.sprintf "%S" s
-  | List[List[]]-> Printf.sprintf "[[]]"
-  | List l      ->
-    let force_indent, indent_hint =
-      match indent_hint with
-      | [] -> false, []
-      | b :: indent_hint -> b, indent_hint in
-    if force_indent || List.for_all is_list l then
-      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~indent_hint "\n  " l)
+  | String s    ->
+    if OpamMisc.starts_with ~prefix:"%{" s && OpamMisc.ends_with ~suffix:"}%" s then
+      String.sub s 2 (String.length s - 4)
     else
-      Printf.sprintf "[%s]" (pretty_string_of_values ~indent_hint " " l)
-  | Group g     -> Printf.sprintf "(%s)" (pretty_string_of_values ~indent_hint " " g)
+      Printf.sprintf "%S" s
+  | List[List[]]-> Printf.sprintf "[]"
+  | List l      -> pretty_string_of_list ~simplify ~indent l
+  | Group g     -> Printf.sprintf "(%s)"
+                     (pretty_string_of_values ~simplify ~indent " " g)
   | Option(v,l) ->
     Printf.sprintf "%s {%s}"
-      (pretty_string_of_value ~indent_hint v)
-      (pretty_string_of_values ~indent_hint " " l)
+      (pretty_string_of_value ~simplify ~indent v)
+      (pretty_string_of_values ~simplify ~indent " " l)
 
-and pretty_string_of_values ?(indent_hint = []) sep l =
-  String.concat sep (List.rev (List.rev_map (pretty_string_of_value ~indent_hint) l))
+and pretty_string_of_list ~simplify ~indent = function
+  | []                -> "[]"
+  | [v] when simplify -> pretty_string_of_value ~simplify ~indent:(pop_indent indent) v
+  | l                 ->
+    let force, indent = compute_indent indent in
+    let simplify = List.for_all can_simplify l in
+    if force || List.for_all is_list l then
+      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~simplify ~indent "\n  " l)
+    else
+      Printf.sprintf "[%s]" (pretty_string_of_values ~simplify ~indent " " l)
 
-let rec string_of_value = function
-  | Symbol s
-  | Ident s     -> Printf.sprintf "%s" s
-  | Int i       -> Printf.sprintf "%d" i
-  | Bool b      -> Printf.sprintf "%b" b
-  | String s    -> Printf.sprintf "%S" s
-  | List l      -> Printf.sprintf "[%s]" (string_of_values l)
-  | Group g     -> Printf.sprintf "(%s)" (string_of_values g)
-  | Option(v,l) -> Printf.sprintf "%s {%s}" (string_of_value v) (string_of_values l)
-
-and string_of_values l =
-  String.concat " " (List.rev (List.rev_map string_of_value l))
+and pretty_string_of_values ~simplify ~indent sep l =
+  String.concat sep
+    (List.rev (List.rev_map (pretty_string_of_value ~simplify ~indent) l))
 
 let incr tab = "  " ^ tab
 
 let rec string_of_item_aux tab ?(indent_variable = fun _ -> false) = function
   | Variable (_, List []) -> None
   | Variable (_, List[List[]]) -> None
-  | Variable (i, v) -> Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value ~indent_hint:[indent_variable i] v))
+  | Variable (i, v) ->
+    Some (Printf.sprintf "%s%s: %s" tab i
+            (pretty_string_of_value ~simplify:true ~indent:[indent_variable i] v))
   | Section s ->
     Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.section_kind s.section_name
@@ -325,7 +354,7 @@ let parse_formulas opt t =
     | e1 :: e2               -> let left = aux [e1] in And (left, aux e2) in
   match t with
   | List l -> aux l
-  | x      -> bad_format "Expecting list, got %s" (kind x)
+  | x      -> aux [x]
 
 let make_formulas opt t =
   let name = OpamPackage.Name.to_string in
@@ -386,7 +415,7 @@ let parse_compiler_constraint t =
     | x -> bad_format "Expecting a compiler constraint, got %s" (kinds x) in
   match t with
   | List l -> aux l
-  | x      -> bad_format "Expecting a list, got %s" (kind x)
+  | x      -> aux [x]
 
 let make_compiler_constraint t =
   let rec aux = function
@@ -418,7 +447,7 @@ let parse_os_constraint l =
     | l -> bad_format "Expecting an OS constraint, got %s" (kinds l) in
   match l with
   | List l -> aux l
-  | e      -> bad_format "Expecting a list, got %s" (kind e)
+  | x      -> aux [x]
 
 let make_os_constraint l =
   let rec aux = function
