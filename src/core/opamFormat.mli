@@ -60,6 +60,9 @@ val parse_string : value -> string
 (** Parse a list of 'things' *)
 val parse_list : (value -> 'a) -> value -> 'a list
 
+(** Parse a list of list of 'things' *)
+val parse_list_list: (value -> 'a) -> value -> 'a list
+
 (** Parse a group of 'things' *)
 val parse_group : (value -> 'a) -> value -> 'a list
 
