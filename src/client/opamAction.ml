@@ -476,7 +476,7 @@ let remove_package_aux t ~metadata ~rm_build nv =
   )
 
 let remove_package t ~metadata ~rm_build nv =
-  if not !OpamGlobals.fake then (
+  if not (!OpamGlobals.fake || !OpamGlobals.dryrun) then (
     remove_package_aux t ~metadata ~rm_build nv
   ) else
     OpamGlobals.msg "(simulation) Removing %s.\n" (OpamPackage.to_string nv)

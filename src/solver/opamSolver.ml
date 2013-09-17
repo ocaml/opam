@@ -150,13 +150,12 @@ let load_cudf_universe ?(depopts=false) universe =
         u_depends  = OpamPackage.Map.add dummy_pkg dummy_atom universe.u_depends; } in
 
   let opam2cudf =
-    let all_packages = OpamPackage.Set.union universe.u_installed universe.u_packages in
     let opam2debian =
       OpamPackage.Set.fold
         (fun pkg map ->
            OpamPackage.Map.add (real_version universe pkg)
              (opam2debian universe depopts pkg) map)
-        all_packages
+        universe.u_packages
         OpamPackage.Map.empty in
     let tables = Debian.Debcudf.init_tables (OpamPackage.Map.values opam2debian) in
     OpamPackage.Map.map (debian2cudf tables) opam2debian in
@@ -173,10 +172,9 @@ let load_cudf_universe ?(depopts=false) universe =
     h in
   let opam_universe = universe in
   let universe =
-    let available = OpamPackage.Set.elements universe.u_available in
     let universe =
-      List.fold_left
-        (fun list nv -> try
+      OpamPackage.Set.fold
+        (fun nv list -> try
             let nv = OpamPackage.Map.find (real_version universe nv) opam2cudf in
             nv :: list
           with Not_found ->
@@ -186,7 +184,7 @@ let load_cudf_universe ?(depopts=false) universe =
               (OpamPackage.to_string nv)
               (OpamPackage.to_string (real_version universe nv));
             list)
-        [] available in
+        universe.u_available [] in
     try Cudf.load_universe universe
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in

@@ -417,6 +417,7 @@ let get_final_universe univ req =
     let open Algo.Diagnostic in
     match r with
     | Some {result=Failure f} -> Conflicts f
+    | Some {result=Success f} -> OpamTypes.Success (Cudf.load_universe (f ()))
     | _                       -> failwith "opamSolver"
 
 (* A modified version of CudfDiff to handle reinstallations *)
