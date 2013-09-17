@@ -281,7 +281,7 @@ module API = struct
         ) versions in
 
       let installed_version = match OpamPackage.Map.cardinal installed with
-        | 0 -> []
+        | 0 -> [ "installed-version" , "" ]
         | 1 -> [ "installed-version" , installed_str ]
         | _ -> [ "installed-versions", installed_str ] in
 
