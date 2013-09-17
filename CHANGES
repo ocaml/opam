@@ -1,7 +1,7 @@
 1.1.0 (trunk)
 * Colors
 * New option `opam update -u` equivalent to `opam update && opam upgrade --yes`
-* New `opam-admin` tool, bundling the features of `opam-mk-repo` and `opam-repo-check`
+* New `opam-admin` tool, bundling the features of `opam-mk-repo` and `opam-repo-check` + new 'opam-admin stats' tool
 * New `available`: field in opam files, superseding `ocaml-version` and `os` fields
 * Package names specified on the command-line are now understood case-insensitively (#705)
 * Fixed parsing of malformed opam files (#696)
