@@ -1093,6 +1093,9 @@ let pin =
         <package>.";
     `P "It is possible to pin a package to a specific git commit/tag/branch \
         with $(b,opam pin <package> </path/to/git>#<commit>).";
+    `P "By default, local directories will be pinned as `local` backends. \
+        You can change that default choice by forcing a given backend kind \
+        using the $(b,--kind) option.";
     `P "To list all the currently pinned packages, call the $(b,opam pin) \
         without arguments or use $(b,--list)."
   ] in
