@@ -351,7 +351,7 @@ let fix_package_descriptions t ~verbose =
   if verbose then print_updated_packages t updates;
 
   (* update $opam/$oversion/reinstall for all installed switches *)
-  OpamState.add_to_reinstall ~all:true t updates.updated;
+  OpamState.add_to_reinstall ~all:true t updates.changed;
 
   updates
 
