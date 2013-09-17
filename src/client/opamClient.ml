@@ -389,55 +389,65 @@ module API = struct
      the solver, that doesn't satisfy any dependency on this package. Then
      interpret "downgrade to -1" as remove. *)
   let removed_from_upstream t =
-    let not_available_names =
+    let unavailable_names =
       OpamPackage.Name.Set.diff
         (OpamPackage.names_of_packages t.installed)
         (OpamPackage.names_of_packages (Lazy.force t.available_packages)) in
-    let not_available =
-      OpamPackage.packages_of_names t.installed not_available_names in
+    let unavailable_versions =
+      OpamPackage.Set.diff
+        (OpamPackage.Set.filter (fun nv -> not (OpamPackage.is_pinned nv)) t.installed)
+        (Lazy.force t.available_packages) in
     let t =
       (* This is a hack to tell the solver not to ignore unavailable packages,
-         so that they can be removed *)
-      let available_packages =  lazy (
-        OpamPackage.Set.union (Lazy.force t.available_packages) not_available
-      ) in
+         so that they can be removed (they must be added to the universe and to
+         wish_remove, and otherwise removed from the request) *)
+      let available_packages =
+        lazy (OpamPackage.Set.union
+                (Lazy.force t.available_packages)
+                unavailable_versions) in
       {t with available_packages} in
-    t, not_available
+    t, OpamPackage.packages_of_names t.installed unavailable_names, unavailable_versions
 
-  let must_be_removed t changed unavailable =
-    if OpamPackage.Set.is_empty unavailable then
-      OpamPackage.Set.empty
+  (* Returns the set of packages that have to be fully removed (no version
+     available anymore), and the full set of versionned packages to mark for
+     removal or up/down-grade *)
+  let must_be_removed t changed unavailable_versions =
+    if OpamPackage.Set.is_empty unavailable_versions then
+      OpamPackage.Set.empty, OpamPackage.Set.empty
     else
       let universe = OpamState.universe t Reinstall in
+      (* Restrict to what has to be recompiled, we can keep the rest for now *)
       let recompile_cone =
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
              universe changed) in
-      let unavailable = OpamPackage.Set.inter recompile_cone unavailable in
+      let unavailable_versions =
+        OpamPackage.Set.inter recompile_cone unavailable_versions in
+      (* Some packages will become unavailable because of these removals *)
       let remove_cone =
         OpamPackage.Set.of_list
           (OpamSolver.reverse_dependencies ~depopts:false ~installed:false
-             universe unavailable) in
+             universe unavailable_versions) in
       let all = OpamPackage.Set.union t.packages t.installed in
       (* Only remove the packages for which _no_ version is available anymore,
          let the solver deal with the others *)
-      let to_remove =
-        OpamPackage.Name.Set.diff
-          (OpamPackage.names_of_packages all)
-          (OpamPackage.names_of_packages (OpamPackage.Set.diff all remove_cone)) in
-      OpamPackage.packages_of_names t.installed to_remove
+      let to_remove_names = OpamPackage.Name.Set.diff
+        (OpamPackage.names_of_packages all)
+        (OpamPackage.names_of_packages (OpamPackage.Set.diff all remove_cone)) in
+      let to_remove = OpamPackage.packages_of_names t.installed to_remove_names in
+      to_remove, (OpamPackage.Set.union to_remove unavailable_versions)
 
   let dry_upgrade () =
     log "dry-upgrade";
     let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
-    let t, not_available = removed_from_upstream t in
+    let t, _, bad_versions = removed_from_upstream t in
     let reinstall = OpamPackage.Set.inter t.reinstall t.installed in
-    let to_remove = must_be_removed t t.installed not_available in
+    let to_remove, unavailable = must_be_removed t t.installed bad_versions in
     let roots = OpamPackage.Set.diff t.installed_roots to_remove in
     let to_keep = OpamPackage.Set.diff t.installed to_remove in
     let solution = OpamSolution.resolve ~verbose:false t (Upgrade reinstall)
         { wish_install = OpamSolution.atoms_of_packages to_keep;
-          wish_remove  = OpamSolution.atoms_of_packages to_remove;
+          wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
           wish_upgrade = OpamSolution.atoms_of_packages roots } in
     match solution with
     | Conflicts _ -> None
@@ -602,14 +612,15 @@ module API = struct
        | None -> "<all>"
        | Some n -> OpamPackage.Name.Set.to_string n);
     let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
+    let (--) = OpamPackage.Set.diff in
     let solution_found = match names with
       | None ->
-        let t, not_available = removed_from_upstream t in
-        let wish_remove = must_be_removed t t.installed not_available in
-        let to_upgrade = OpamPackage.Set.diff t.installed wish_remove in
+        let t, _, bad_versions = removed_from_upstream t in
+        let to_remove, unavailable = must_be_removed t t.installed bad_versions in
+        let to_upgrade = t.installed -- to_remove in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = [];
-            wish_remove  = OpamSolution.atoms_of_packages wish_remove;
+            wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
       | Some names ->
         let names = OpamSolution.atoms_of_names t names in
@@ -625,8 +636,8 @@ module API = struct
               )
             ) names in
           (OpamPackage.Set.of_list packages) in
-        let t, not_available = removed_from_upstream t in
-        let conflicts = OpamPackage.Set.inter to_upgrade not_available in
+        let t, removed, bad_versions = removed_from_upstream t in
+        let conflicts = OpamPackage.Set.inter to_upgrade removed in
         if not (OpamPackage.Set.is_empty conflicts) then
           OpamGlobals.error_and_exit
             "These packages would need to be recompiled, but they are no longer available \
@@ -634,14 +645,12 @@ module API = struct
             \  %s\n\
              Please run \"opam upgrade\" without argument to get to a clean state."
             (OpamPackage.Set.to_string conflicts);
-        let wish_remove = must_be_removed t to_upgrade not_available in
-        let to_upgrade = OpamPackage.Set.diff to_upgrade wish_remove in
-        let installed_roots =
-          let (--) = OpamPackage.Set.diff in
-          t.installed_roots -- to_reinstall -- wish_remove in
+        let to_remove, unavailable = must_be_removed t to_upgrade bad_versions in
+        let to_upgrade = to_upgrade -- to_remove in
+        let installed_roots = t.installed_roots -- to_reinstall -- to_remove in
         OpamSolution.resolve_and_apply t (Upgrade to_reinstall)
           { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
-            wish_remove  = OpamSolution.atoms_of_packages wish_remove;
+            wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
     in
     begin match solution_found with
@@ -877,14 +886,12 @@ module API = struct
           true
       ) atoms in
     let dummy_version = OpamPackage.Version.of_string "<dummy>" in
-    let atoms, not_installed, does_not_exist =
-      let aux (atoms, not_installed, does_not_exist) atom nv =
-        if not (OpamPackage.Set.mem nv t.installed) then
-          (atoms, nv :: not_installed, does_not_exist)
-        else if not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)) then
-          (atoms, not_installed, nv :: does_not_exist)
+    let atoms, not_installed =
+      let aux (atoms, not_installed) atom nv =
+        if OpamPackage.Set.mem nv t.installed then
+          (atom :: atoms, not_installed)
         else
-          (atom :: atoms, not_installed, does_not_exist) in
+          (atoms, nv :: not_installed) in
       List.fold_left
         (fun accu (n,v as atom) ->
           let nv = match v with
@@ -895,23 +902,8 @@ module API = struct
                 OpamPackage.create n dummy_version
             | Some (_,v) -> OpamPackage.create n v in
           aux accu atom nv)
-        ([], [], [])
+        ([], [])
         atoms in
-
-    if does_not_exist <> [] then (
-      (* This code is older than the handling with function
-         removed_from_upstream that is used for [reinstall] and [upgrade].
-         Maybe we should use the same handling here *)
-      nothing_to_do := false;
-      List.iter
-        (OpamAction.remove_package ~rm_build:true ~metadata:false t)
-        does_not_exist;
-      let installed_f = OpamPath.Switch.installed t.root t.switch in
-      let installed = OpamFile.Installed.read installed_f in
-      let installed =
-        OpamPackage.Set.filter (fun nv -> not (List.mem nv does_not_exist)) installed in
-      OpamFile.Installed.write installed_f installed;
-    );
 
     if not_installed <> [] then (
       let to_string nv =
@@ -940,6 +932,7 @@ module API = struct
     );
 
     if autoremove || atoms <> [] then (
+      let t, _, _ = removed_from_upstream t in
       let packages =
         OpamPackage.Set.of_list (List.rev_map (fun (n,_) ->
             OpamState.find_installed_package_by_name t n
@@ -985,7 +978,6 @@ module API = struct
 
   let reinstall_t names t =
     log "reinstall %s" (OpamPackage.Name.Set.to_string names);
-    let t, wish_remove = removed_from_upstream t in
     let atoms = OpamSolution.atoms_of_names t names in
     let reinstall =
       List.map (function (n,v) ->
@@ -1002,27 +994,28 @@ module API = struct
             OpamGlobals.error_and_exit "%s is not installed.\n" (OpamPackage.to_string nv)
         ) atoms in
     let reinstall = OpamPackage.Set.of_list reinstall in
-    let universe = OpamState.universe t Depends in
-    let depends =
-      OpamSolver.reverse_dependencies
-        ~depopts:true ~installed:true universe reinstall in
-    let wish_remove =
-      must_be_removed t (OpamPackage.Set.of_list depends) wish_remove in
-    let conflicts = OpamPackage.Set.inter reinstall wish_remove in
+    let t, removed, bad_versions = removed_from_upstream t in
+    let conflicts = OpamPackage.Set.inter reinstall removed in
     if not (OpamPackage.Set.is_empty conflicts) then
       OpamGlobals.error_and_exit
-        "These packages would need to be recompiled, but they (or their dependencies) \
+        "These packages would need to be recompiled, but they \
          are no longer available upstream:\n\
         \  %s\n\
          Please run \"opam upgrade\" without argument to get to a clean state."
         (OpamPackage.Set.to_string conflicts);
+    let to_remove, unavailable = must_be_removed t reinstall bad_versions in
+    let universe = OpamState.universe t Depends in
+    let depends = (* Do not cast to a set, we need to keep the order *)
+      OpamSolver.reverse_dependencies
+        ~depopts:true ~installed:true universe reinstall in
     let to_process =
       OpamMisc.filter_map (fun pkg ->
-          if OpamPackage.Set.mem pkg wish_remove then None
-          else Some (To_recompile pkg)) depends in
-    let to_remove = (* just to get the remove in reverse topological order *)
+          if OpamPackage.Set.mem pkg to_remove then None
+          else Some (To_recompile pkg))
+        depends in
+    let to_remove = (* to get the remove in reverse topological order *)
       List.rev (OpamSolver.reverse_dependencies ~depopts:false ~installed:true
-                  universe wish_remove) in
+                  universe unavailable) in
     let solution = OpamSolver.sequential_solution to_process in
     let solution = { solution with PackageActionGraph.to_remove } in
     let solution =
