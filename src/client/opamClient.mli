@@ -161,5 +161,9 @@ val switch_lock: (unit -> unit) -> unit
 (** Call an unsafe function while checking that no lock is already held. *)
 val read_lock: (unit -> unit) -> unit
 
+(** Loads state with [command], and calls [f] on it. The loaded state is backed
+    up, and in case of error, a message is displayed on how to revert. *)
+val with_switch_backup: string -> (OpamState.state -> unit) -> unit
+
 (** This version of the API can be used concurrently. *)
 module SafeAPI: (module type of API)

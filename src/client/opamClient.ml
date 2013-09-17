@@ -134,6 +134,26 @@ let names_of_regexp t ~filter ~exact_name ~case_sensitive regexps =
   else
     names
 
+let with_switch_backup command f =
+  let t = OpamState.load_state command in
+  let file = OpamPath.Switch.backup t.root t.switch in
+  OpamFilename.mkdir (OpamPath.Switch.backup_dir t.root t.switch);
+  OpamFile.Export.write file (t.installed, t.installed_roots);
+  try
+    f t;
+    OpamFilename.remove file (* We might want to keep it even if successful ? *)
+  with
+  | OpamGlobals.Exit n as err when n <> 0 ->
+    let t1 = OpamState.load_state "switch-backup-err" in
+    if OpamPackage.Set.equal t.installed t1.installed &&
+       OpamPackage.Set.equal t.installed_roots t1.installed_roots then
+      OpamFilename.remove file
+    else
+      Printf.eprintf "The former state can be restored with \
+                      %s switch import -f %S\n"
+        Sys.argv.(0) (OpamFilename.to_string file);
+    raise err
+
 module API = struct
 
   let list ~print_short ~filter ~order ~exact_name ~case_sensitive regexp =
@@ -576,12 +596,11 @@ module API = struct
         OpamGlobals.msg "Everything is up-to-date.\n"
 
 
-  let upgrade names =
+  let upgrade_t names t =
     log "UPGRADE %s"
       (match names with
        | None -> "<all>"
        | Some n -> OpamPackage.Name.Set.to_string n);
-    let t = OpamState.load_state "upgrade" in
     let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
     let solution_found = match names with
       | None ->
@@ -633,6 +652,8 @@ module API = struct
       | Nothing_to_do -> OpamGlobals.msg "Already up-to-date.\n"
     end;
     OpamSolution.check_solution t solution_found
+
+  let upgrade names = with_switch_backup "upgrade" (upgrade_t names)
 
   let init repo compiler ~jobs shell dot_profile update_config =
     log "INIT %s" (OpamRepository.to_string repo);
@@ -723,9 +744,8 @@ module API = struct
         if not !OpamGlobals.debug then OpamFilename.rmdir root;
         raise e
 
-  let install names add_to_roots =
+  let install_t names add_to_roots t =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
-    let t = OpamState.load_state "install" in
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
@@ -840,9 +860,11 @@ module API = struct
       OpamSolution.check_solution t solution
     )
 
-  let remove ~autoremove ~force names =
+  let install names add_to_roots =
+    with_switch_backup "install" (install_t names add_to_roots)
+
+  let remove_t ~autoremove ~force names t =
     log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
-    let t = OpamState.load_state "remove" in
     let nothing_to_do = ref true in
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let atoms =
@@ -958,9 +980,11 @@ module API = struct
     ) else if !nothing_to_do then
       OpamGlobals.msg "Nothing to do.\n"
 
-  let reinstall names =
+  let remove ~autoremove ~force names =
+    with_switch_backup "remove" (remove_t ~autoremove ~force names)
+
+  let reinstall_t names t =
     log "reinstall %s" (OpamPackage.Name.Set.to_string names);
-    let t = OpamState.load_state "reinstall" in
     let t, wish_remove = removed_from_upstream t in
     let atoms = OpamSolution.atoms_of_names t names in
     let reinstall =
@@ -1004,6 +1028,8 @@ module API = struct
     let solution =
       OpamSolution.apply t Reinstall solution in
     OpamSolution.check_solution t solution
+
+  let reinstall names = with_switch_backup "reinstall" (reinstall_t names)
 
   module PIN        = OpamPinCommand
   module REPOSITORY = OpamRepositoryCommand
