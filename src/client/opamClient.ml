@@ -320,11 +320,6 @@ module API = struct
         else
           [name, to_string (get v)] in
 
-      let string = mk (
-          None,
-          (function Some x -> x | None -> assert false),
-          (fun x -> x)
-        ) in
       let strings = mk (
           [],
           (fun l -> l),
@@ -336,10 +331,10 @@ module API = struct
           OpamFormula.to_string
         ) in
 
-      let authors  = strings "authors"  OpamFile.OPAM.authors in
-      let homepage = string  "homepage" OpamFile.OPAM.homepage in
-      let license  = string  "license"  OpamFile.OPAM.license in
-      let doc      = string  "doc"      OpamFile.OPAM.doc in
+      let author   = strings "author"   OpamFile.OPAM.author in
+      let homepage = strings "homepage" OpamFile.OPAM.homepage in
+      let license  = strings "license"  OpamFile.OPAM.license in
+      let doc      = strings "doc"      OpamFile.OPAM.doc in
       let tags     = strings "tags"     OpamFile.OPAM.tags in
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
@@ -357,7 +352,7 @@ module API = struct
         @ repository
         @ url
         @ homepage
-        @ authors
+        @ author
         @ license
         @ doc
         @ tags

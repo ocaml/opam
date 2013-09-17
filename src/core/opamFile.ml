@@ -682,7 +682,7 @@ module X = struct
       opam_version: opam_version;
       name       : OpamPackage.Name.t option;
       version    : OpamPackage.Version.t option;
-      maintainer : string;
+      maintainer : string list;
       substs     : basename list;
       build_env  : (string * string * string) list;
       build      : command list;
@@ -696,10 +696,10 @@ module X = struct
       ocaml_version: compiler_constraint option;
       os         : (bool * string) generic_formula;
       available  : filter;
-      homepage   : string option;
-      authors    : string list;
-      license    : string option;
-      doc        : string option;
+      homepage   : string list;
+      author     : string list;
+      license    : string list;
+      doc        : string list;
       tags       : string list;
       build_test : command list;
       build_doc  : command list;
@@ -713,7 +713,7 @@ module X = struct
       opam_version = OpamVersion.current;
       name       = None;
       version    = None;
-      maintainer = "<none>";
+      maintainer = [];
       substs     = [];
       build_env  = [];
       build      = [];
@@ -727,10 +727,10 @@ module X = struct
       ocaml_version = None;
       os         = Empty;
       available  = FBool true;
-      homepage   = None;
-      authors    = [];
-      license    = None;
-      doc        = None;
+      homepage   = [];
+      author     = [];
+      license    = [];
+      doc        = [];
       tags       = [];
       build_test = [];
       build_doc  = [];
@@ -764,6 +764,7 @@ module X = struct
     let s_os          = "os"
     let s_available   = "available"
     let s_homepage    = "homepage"
+    let s_author      = "author"
     let s_authors     = "authors"
     let s_license     = "license"
     let s_doc         = "doc"
@@ -792,6 +793,7 @@ module X = struct
       s_os;
       s_available;
       s_license;
+      s_author;
       s_authors;
       s_homepage;
       s_doc;
@@ -832,7 +834,7 @@ module X = struct
     let os t = t.os
     let available t = t.available
     let homepage t = t.homepage
-    let authors t = t.authors
+    let author t = t.author
     let license t = t.license
     let doc t = t.doc
     let tags t = t.tags
@@ -888,12 +890,12 @@ module X = struct
         file_contents = [
           Variable (s_opam_version,
                     (OpamVersion.to_string ++ OpamFormat.make_string) t.opam_version);
-          Variable (s_maintainer  , OpamFormat.make_string t.maintainer);
+          Variable (s_maintainer  , OpamFormat.make_string_list t.maintainer);
         ] @ name_and_version
-          @ option  t.homepage      s_homepage      OpamFormat.make_string
-          @ list    t.authors       s_authors       OpamFormat.make_string_list
-          @ option  t.license       s_license       OpamFormat.make_string
-          @ option  t.doc           s_doc           OpamFormat.make_string
+          @ list    t.homepage      s_homepage      OpamFormat.make_string_list
+          @ list    t.author        s_author        OpamFormat.make_string_list
+          @ list    t.license       s_license       OpamFormat.make_string_list
+          @ list    t.doc           s_doc           OpamFormat.make_string_list
           @ list    t.tags          s_tags          OpamFormat.make_string_list
           @ listm   t.substs s_substs
               (OpamFilename.Base.to_string ++ OpamFormat.make_string)
@@ -959,7 +961,8 @@ module X = struct
               "Inconsistent versioning scheme in %s"
               (OpamFilename.to_string filename)
           else Some v in
-      let maintainer = OpamFormat.assoc s s_maintainer OpamFormat.parse_string in
+      let maintainer =
+        OpamFormat.assoc_list s s_maintainer OpamFormat.parse_string_list in
       let substs =
         OpamFormat.assoc_list s s_substs
           (OpamFormat.parse_list (OpamFormat.parse_string ++
@@ -993,10 +996,13 @@ module X = struct
           OpamFormat.parse_filter in
       let patches = OpamFormat.assoc_list s s_patches
           (OpamFormat.parse_list parse_file) in
-      let homepage = OpamFormat.assoc_option s s_homepage OpamFormat.parse_string in
-      let authors = OpamFormat.assoc_list s s_authors OpamFormat.parse_string_list in
-      let license = OpamFormat.assoc_option s s_license OpamFormat.parse_string in
-      let doc = OpamFormat.assoc_option s s_doc OpamFormat.parse_string in
+      let homepage = OpamFormat.assoc_list s s_homepage OpamFormat.parse_string_list in
+      let author =
+        let x = OpamFormat.assoc_list s s_authors OpamFormat.parse_string_list in
+        let y = OpamFormat.assoc_list s s_author  OpamFormat.parse_string_list in
+        x @ y in
+      let license = OpamFormat.assoc_list s s_license OpamFormat.parse_string_list in
+      let doc = OpamFormat.assoc_list s s_doc OpamFormat.parse_string_list in
       let tags = OpamFormat.assoc_list s s_tags OpamFormat.parse_string_list in
       let build_test = OpamFormat.assoc_list s s_build_test OpamFormat.parse_commands in
       let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
@@ -1009,7 +1015,7 @@ module X = struct
       { opam_version; name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
-        homepage; authors; license; doc; tags;
+        homepage; author; license; doc; tags;
         build_test; build_doc; depexts; messages; post_messages;
         bug_reports;
       }

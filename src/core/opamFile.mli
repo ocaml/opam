@@ -105,8 +105,8 @@ module OPAM: sig
   (** Availability formula (OS + compiler constraints) *)
   val available: t -> filter
 
-  (** Package maintainer *)
-  val maintainer: t -> string
+  (** Package maintainer(s) *)
+  val maintainer: t -> string list
 
   (** File substitutions *)
   val substs: t -> basename list
@@ -141,17 +141,17 @@ module OPAM: sig
   (** Patches *)
   val patches: t -> (basename * filter option) list
 
-  (** Homepage *)
-  val homepage: t -> string option
+  (** Homepage(s) *)
+  val homepage: t -> string list
 
-  (** Authors *)
-  val authors: t -> string list
+  (** Author(s) *)
+  val author: t -> string list
 
-  (** License *)
-  val license: t -> string option
+  (** License(s) *)
+  val license: t -> string list
 
   (** API documentation *)
-  val doc: t -> string option
+  val doc: t -> string list
 
   (** Classification tags *)
   val tags: t -> string list
@@ -199,7 +199,7 @@ module OPAM: sig
   val with_ocaml_version: t -> compiler_constraint option -> t
 
   (** Construct as [maintainer] *)
-  val with_maintainer: t -> string -> t
+  val with_maintainer: t -> string list -> t
 
   (** Construct as [patches] *)
   val with_patches: t -> (basename * filter option) list -> t
