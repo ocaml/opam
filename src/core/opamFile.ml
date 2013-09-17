@@ -705,6 +705,7 @@ module X = struct
       build_doc  : command list;
       depexts    : tags option;
       messages   : (string * filter option) list;
+      bug_reports : string list;
       post_messages: (string * filter option) list;
     }
 
@@ -736,6 +737,7 @@ module X = struct
       depexts    = None;
       messages   = [];
       post_messages = [];
+      bug_reports = [];
     }
 
     let create nv =
@@ -771,6 +773,7 @@ module X = struct
     let s_depexts     = "depexts"
     let s_messages    = "messages"
     let s_post_messages = "post-messages"
+    let s_bug_reports = "bug-reports"
 
     let useful_fields = [
       s_opam_version;
@@ -798,6 +801,7 @@ module X = struct
       s_messages;
       s_post_messages;
       s_tags;
+      s_bug_reports;
     ]
 
     let valid_fields =
@@ -838,6 +842,7 @@ module X = struct
     let messages t = t.messages
     let post_messages t = t.post_messages
     let opam_version t = t.opam_version
+    let bug_reports t = t.bug_reports
 
     let with_name t name = { t with name = Some name }
     let with_version t version = { t with version = Some version }
@@ -850,6 +855,7 @@ module X = struct
     let with_ocaml_version t ocaml_version = { t with ocaml_version }
     let with_maintainer t maintainer = { t with maintainer }
     let with_patches t patches = { t with patches }
+    let with_bug_reports t bug_reports = { t with bug_reports }
 
     let to_string filename t =
       let make_file =
@@ -911,12 +917,14 @@ module X = struct
           @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ list    t.messages      s_messages
               OpamFormat.(make_list (make_option make_string make_filter))
+          @ list    t.bug_reports   s_bug_reports  OpamFormat.make_string_list
           @ list    t.post_messages s_post_messages
               OpamFormat.(make_list (make_option make_string make_filter));
       } in
       Syntax.to_string
         ~indent_variable:
-          (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts; s_authors])
+          (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts;
+                                s_authors; s_bug_reports ])
         s
 
     let of_channel filename ic =
@@ -994,13 +1002,16 @@ module X = struct
       let build_doc = OpamFormat.assoc_list s s_build_doc OpamFormat.parse_commands in
       let depexts = OpamFormat.assoc_option s s_depexts OpamFormat.parse_tags in
       let messages = OpamFormat.assoc_list s s_messages OpamFormat.parse_messages in
+      let bug_reports =
+        OpamFormat.assoc_list s s_bug_reports OpamFormat.parse_string_list in
       let post_messages =
         OpamFormat.assoc_list s s_post_messages OpamFormat.parse_messages in
       { opam_version; name; version; maintainer; substs; build; remove;
         depends; depopts; conflicts; libraries; syntax;
         patches; ocaml_version; os; available; build_env;
         homepage; authors; license; doc; tags;
-        build_test; build_doc; depexts; messages; post_messages
+        build_test; build_doc; depexts; messages; post_messages;
+        bug_reports;
       }
   end
 

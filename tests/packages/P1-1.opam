@@ -41,3 +41,5 @@ messages: [ "I'll always bother you displaying this message" ]
 post-messages: [ "Thanks SO MUCH for installing this humble package"
                  "Everything went well" {success}
                  "Nooo, something went wrong, this makes me feel sooo sad..." {failure} ]
+
+bug-reports: "TEST.com"

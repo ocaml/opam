@@ -168,6 +168,9 @@ module OPAM: sig
   (** Messages to display at end of install *)
   val post_messages: t -> (string * filter option) list
 
+  (** Where to post bug reports. *)
+  val bug_reports: t -> string list
+
   (** construct as [name] *)
   val with_name: t -> name -> t
 
@@ -200,6 +203,9 @@ module OPAM: sig
 
   (** Construct as [patches] *)
   val with_patches: t -> (basename * filter option) list -> t
+
+  (** Construct using [bug_reports] *)
+  val with_bug_reports: t -> string list -> t
 
 end
 
