@@ -83,7 +83,6 @@ module Types: sig
 end
 
 type state = Types.t
-open Types
 
 (** Load the client state. The string argument is to identify to call
     site. *)
