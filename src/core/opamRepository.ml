@@ -238,12 +238,38 @@ let package_state repo prefix nv all =
     | `partial b -> package_important_files repo prefix nv ~archive:b in
   List.flatten (List.map OpamFilename.checksum fs)
 
+(* Sort repositories by priority *)
+let sort repositories =
+  let repositories = OpamRepositoryName.Map.values repositories in
+  List.sort compare repositories
+
+let package_index repositories =
+  log "package-index";
+  let repositories = sort repositories in
+  List.fold_left (fun map repo ->
+      let packages = packages_with_prefixes repo in
+      OpamPackage.Map.fold (fun nv prefix map ->
+          if OpamPackage.Map.mem nv map then map
+          else OpamPackage.Map.add nv (repo.repo_name, prefix) map
+        ) packages map
+    ) OpamPackage.Map.empty repositories
+
+let compiler_index repositories =
+  log "compiler-index";
+  let repositories = sort repositories in
+  List.fold_left (fun map repo ->
+      let comps = compilers_with_prefixes repo in
+      OpamCompiler.Map.fold (fun comp prefix map ->
+          if OpamCompiler.Map.mem comp map then map
+          else OpamCompiler.Map.add comp (repo.repo_name, prefix) map
+        ) comps map
+    ) OpamCompiler.Map.empty repositories
+
 let update repo =
   log "update %s" (to_string repo);
   let module B = (val find_backend repo: BACKEND) in
   B.pull_repo repo;
   check_version repo
-
 
 let make_archive ?(gener_digest=false) repo prefix nv =
   let url_file = OpamPath.Repository.url repo prefix nv in

@@ -49,6 +49,17 @@ val compilers: repository -> compiler_set
 (** Get the list of compilers (and their eventual prefixes) *)
 val compilers_with_prefixes: repository -> string option compiler_map
 
+(** {2 Repository Collection Operations } *)
+
+(** Sort a collection of repositories by priority *)
+val sort: repository repository_name_map -> repository list
+
+(** Generate a package index from a collection of repositories *)
+val package_index: repository repository_name_map -> (repository_name * string option) package_map
+
+(** Generate a compiler index from a collection of repositories *)
+val compiler_index: repository repository_name_map -> (repository_name * string option) compiler_map
+
 (** {2 State} *)
 
 (** Get all the package files *)

@@ -365,34 +365,14 @@ let compare_repo t r1 r2 =
 let update_package_index t =
   let file = OpamPath.package_index t.root in
   OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
-  let repositories = OpamState.sorted_repositories t in
-  let package_index =
-    List.fold_left (fun repo_index repo ->
-        let packages = OpamRepository.packages_with_prefixes repo in
-        OpamPackage.Map.fold (fun nv prefix repo_index ->
-            if not (OpamPackage.Map.mem nv repo_index) then
-              OpamPackage.Map.add nv (repo.repo_name, prefix) repo_index
-            else
-              repo_index
-          ) packages repo_index
-      ) OpamPackage.Map.empty repositories in
+  let package_index = OpamState.package_index t in
   OpamFile.Package_index.write file package_index;
   { t with package_index }
 
 let update_compiler_index t =
   let file = OpamPath.compiler_index t.root in
   OpamGlobals.msg "Updating %s ...\n" (OpamFilename.prettify file);
-  let repositories = OpamState.sorted_repositories t in
-  let compiler_index =
-    List.fold_left (fun repo_index repo ->
-        let compilers = OpamRepository.compilers_with_prefixes repo in
-        OpamCompiler.Map.fold (fun comp prefix repo_index ->
-            if not (OpamCompiler.Map.mem comp repo_index) then
-              OpamCompiler.Map.add comp (repo.repo_name, prefix) repo_index
-            else
-              repo_index
-          ) compilers repo_index
-      ) OpamCompiler.Map.empty repositories in
+  let compiler_index = OpamState.compiler_index t in
   OpamFile.Compiler_index.write file compiler_index;
   { t with compiler_index }
 
