@@ -378,13 +378,8 @@ let filter_command t local_variables (l, f) =
 let filter_commands t local_variables l =
   OpamMisc.filter_map (filter_command t local_variables) l
 
-(* Sort repositories by priority *)
-let sorted_repositories_aux repositories =
-  let repositories = OpamRepositoryName.Map.values repositories in
-  List.sort OpamRepository.compare repositories
-
 let sorted_repositories t =
-  sorted_repositories_aux t.repositories
+  OpamRepository.sort t.repositories
 
 let mem_repository t repo_name =
   OpamRepositoryName.Map.mem repo_name t.repositories
@@ -406,33 +401,11 @@ let find_repository_opt t repo_name =
   try Some (find_repository_exn t repo_name)
   with Not_found -> None
 
-let package_index_aux repositories =
-  log "package-index";
-  let repositories = sorted_repositories_aux repositories in
-  List.fold_left (fun map repo ->
-      let packages = OpamRepository.packages_with_prefixes repo in
-      OpamPackage.Map.fold (fun nv prefix map ->
-          if OpamPackage.Map.mem nv map then map
-          else OpamPackage.Map.add nv (repo.repo_name, prefix) map
-        ) packages map
-    ) OpamPackage.Map.empty repositories
-
-let compiler_index_aux repositories =
-  log "compiler-index";
-  let repositories = sorted_repositories_aux repositories in
-  List.fold_left (fun map repo ->
-      let comps = OpamRepository.compilers_with_prefixes repo in
-      OpamCompiler.Map.fold (fun comp prefix map ->
-          if OpamCompiler.Map.mem comp map then map
-          else OpamCompiler.Map.add comp (repo.repo_name, prefix) map
-        ) comps map
-    ) OpamCompiler.Map.empty repositories
-
 let compiler_index t =
-  compiler_index_aux t.repositories
+  OpamRepository.compiler_index t.repositories
 
 let package_index t =
-  package_index_aux t.repositories
+  OpamRepository.package_index t.repositories
 
 let package_state_one t all nv =
   let opam    = OpamPath.opam t.root nv in
