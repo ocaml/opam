@@ -250,10 +250,11 @@ let rec pretty_string_of_value ~simplify ~indent = function
 
 and pretty_string_of_list ~simplify ~indent = function
   | []                -> "[]"
-  | [v] when simplify -> pretty_string_of_value ~simplify ~indent:(pop_indent indent) v
+  | [v] when simplify ->
+    pretty_string_of_value ~simplify:false ~indent:(pop_indent indent) v
   | l                 ->
     let force, indent = compute_indent indent in
-    let simplify = List.for_all can_simplify l in
+    let simplify = false in
     if force || List.for_all is_list l then
       Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~simplify ~indent "\n  " l)
     else
