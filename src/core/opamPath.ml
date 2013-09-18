@@ -76,6 +76,17 @@ let dev_packages_dir t = t / "packages.dev"
 
 let dev_package t nv = dev_packages_dir t / OpamPackage.to_string nv
 
+let backup_file () =
+  Unix.(
+    let tm = gmtime OpamGlobals.global_start_time in
+    Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
+      (tm.tm_year+1900) tm.tm_mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
+  )
+
+let backup_dir t = t / "backup"
+
+let backup t = backup_dir t // backup_file ()
+
 module Switch = struct
 
   let root t a = t / OpamSwitch.to_string a
@@ -84,13 +95,7 @@ module Switch = struct
 
   let backup_dir t a = root t a / "backup"
 
-  let backup t a =
-    backup_dir t a //
-    Unix.(
-      let tm = gmtime OpamGlobals.global_start_time in
-      Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
-        (tm.tm_year+1900) tm.tm_mon tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
-    )
+  let backup t a = backup_dir t a // backup_file ()
 
   let lib_dir t a = root t a / "lib"
 
@@ -111,7 +116,7 @@ module Switch = struct
 
   let share t a n = share_dir t a / OpamPackage.Name.to_string n
 
-  let etc_dir t a = root t a / "etc" 
+  let etc_dir t a = root t a / "etc"
 
   let etc t a n = etc_dir t a / OpamPackage.Name.to_string n
 

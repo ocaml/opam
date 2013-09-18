@@ -125,9 +125,8 @@ let list ~print_short ~installed =
 
   List.iter print_compiler all
 
-let remove switch =
+let remove_t switch t =
   log "remove switch=%s" (OpamSwitch.to_string switch);
-  let t = OpamState.load_state "switch-remove" in
   let comp_dir = OpamPath.Switch.root t.root switch in
   if not (OpamFilename.exists_dir comp_dir) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n"
@@ -201,7 +200,8 @@ let install_with_packages ~quiet ~packages switch compiler =
         (OpamPackage.Version.to_string v) in
 
   let remove_compiler () =
-    remove switch in
+    let t = OpamState.load_state "remove-compiler" in
+    remove_t switch t in
 
   match bad_packages with
   | [] ->
@@ -258,10 +258,9 @@ let filter_names ~filter set =
     not (OpamPackage.Name.Set.mem (OpamPackage.name nv) names)
   ) set
 
-let import filename =
+let import_t filename t =
   log "import switch=%s" (match filename with None -> "<none>"
                                             | Some f -> OpamFilename.to_string f);
-  let t = OpamState.load_state "switch-import" in
 
   let imported, import_roots =
     match filename with
@@ -306,9 +305,8 @@ let show () =
   let t = OpamState.load_state "switch-show" in
   OpamGlobals.msg "%s\n" (OpamSwitch.to_string t.switch)
 
-let reinstall switch =
+let reinstall_t switch t =
   log "reinstall switch=%s" (OpamSwitch.to_string switch);
-  let t = OpamState.load_state "switch-reinstall" in
   if not (OpamState.is_switch_installed t switch) then (
     OpamGlobals.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
@@ -328,6 +326,35 @@ let reinstall switch =
 
   (* Install the compiler *)
   install_with_packages ~quiet:false ~packages switch ocaml_version
+
+let with_backup command f =
+  let t = OpamState.load_state command in
+  let file = OpamPath.backup t.root in
+  OpamFilename.mkdir (OpamPath.backup_dir t.root);
+  OpamFile.Export.write file (t.installed, t.installed_roots);
+  try
+    f t;
+    OpamFilename.remove file (* We might want to keep it even if successful ? *)
+  with
+  | OpamGlobals.Exit n as err when n <> 0 ->
+    let t1 = OpamState.load_state "backup-err" in
+    if OpamPackage.Set.equal t.installed t1.installed &&
+       OpamPackage.Set.equal t.installed_roots t1.installed_roots then
+      OpamFilename.remove file
+    else
+      Printf.eprintf "The former package state can be restored with \
+                      %s switch import -f %S\n"
+        Sys.argv.(0) (OpamFilename.to_string file);
+    raise err
+
+let reinstall switch =
+  with_backup "switch-reinstall" (reinstall_t switch)
+
+let remove switch =
+  with_backup "switch-remove" (remove_t switch)
+
+let import filename =
+  with_backup "switch-import" (import_t filename)
 
 let () =
   OpamState.switch_reinstall_hook := reinstall
