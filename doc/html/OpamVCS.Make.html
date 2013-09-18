@@ -43,6 +43,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamVCS.Make</title>
@@ -51,7 +54,8 @@
 <div class="navbar">&nbsp;<a class="up" href="OpamVCS.html" title="OpamVCS">Up</a>
 &nbsp;</div>
 <h1>Functor <a href="type_OpamVCS.Make.html">OpamVCS.Make</a></h1>
-<pre><span class="keyword">module</span> Make: <div class="sig_block"><code class="code">functor (</code><code class="code">VCS</code><code class="code"> : </code><code class="type"><a href="OpamVCS.VCS.html">VCS</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a></code><code class="type"> </code></div></pre><div class="info">
+
+<pre><span class="keyword">module</span> Make: <div class="sig_block"><code class="code">functor (</code><code class="code">VCS</code><code class="code"> : </code><code class="type"><a href="OpamVCS.VCS.html">VCS</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a></code><code class="type"> </code></div></pre><div class="info module top">
 Create a backend from a <code class="code">VCS</code> implementation.<br>
 </div>
 <table border="0" cellpadding="3" width="100%">
@@ -69,19 +73,23 @@ Create a backend from a <code class="code">VCS</code> implementation.<br>
 </tr>
 </table>
 <hr width="100%">
-<pre><span id="VALpull_url"><span class="keyword">val</span> pull_url</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> <a href="OpamTypes.html#TYPEgeneric_file">OpamTypes.generic_file</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
-<code class="code">pull_url package local_dir remote_url</code> pull the contents of
+
+<pre><span id="VALpull_url"><span class="keyword">val</span> pull_url</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -><br>       <a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -><br>       string option -><br>       <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> <a href="OpamTypes.html#TYPEgeneric_file">OpamTypes.generic_file</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info ">
+<code class="code">pull_url package local_dir checksum remote_url</code> pull the contents of
       <code class="code">remote_url</code> into <code class="code">local_dir</code>. Can return either a file or a
-      directory.<br>
+      directory. <code class="code">checksum</code> is the optional expected checksum.<br>
 </div>
-<pre><span id="VALpull_repo"><span class="keyword">val</span> pull_repo</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit</code></pre><div class="info">
+
+<pre><span id="VALpull_repo"><span class="keyword">val</span> pull_repo</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> unit</code></pre><div class="info ">
 <code class="code">pull_repo</code> pull the contents of a repository.<br>
 </div>
-<pre><span id="VALpull_archive"><span class="keyword">val</span> pull_archive</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info">
+
+<pre><span id="VALpull_archive"><span class="keyword">val</span> pull_archive</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> <a href="OpamTypes.html#TYPEdownload">OpamTypes.download</a></code></pre><div class="info ">
 <code class="code">pull_archive repo archive</code> pull <code class="code">archive</code> in the given
       repository.<br>
 </div>
-<pre><span id="VALrevision"><span class="keyword">val</span> revision</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option</code></pre><div class="info">
+
+<pre><span id="VALrevision"><span class="keyword">val</span> revision</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> option</code></pre><div class="info ">
 Return the (optional) revision of a given repository. Only useful
       for VCS backends.<br>
 </div>

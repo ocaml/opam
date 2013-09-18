@@ -45,6 +45,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamRepositoryCommand</title>
@@ -55,37 +58,51 @@
 &nbsp;<a class="post" href="OpamSolution.html" title="OpamSolution">Next</a>
 </div>
 <h1>Module <a href="type_OpamRepositoryCommand.html">OpamRepositoryCommand</a></h1>
-<pre><span class="keyword">module</span> OpamRepositoryCommand: <code class="code">sig</code> <a href="OpamRepositoryCommand.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> OpamRepositoryCommand: <code class="code">sig</code> <a href="OpamRepositoryCommand.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Repository sub-command functions.<br>
 </div>
 <hr width="100%">
-<pre><span id="VALupdate_index"><span class="keyword">val</span> update_index</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> unit</code></pre><div class="info">
-Update the repositories indexes (<code class="code">repo/index</code>.<br>
+
+<pre><span id="VALupdate_package_index"><span class="keyword">val</span> update_package_index</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> <a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a></code></pre><div class="info ">
+Update the package index.<br>
 </div>
-<pre><span id="VALupdate_dev_packages"><span class="keyword">val</span> update_dev_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       verbose:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
+
+<pre><span id="VALupdate_compiler_index"><span class="keyword">val</span> update_compiler_index</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> <a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a></code></pre><div class="info ">
+Update the compiler index.<br>
+</div>
+
+<pre><span id="VALupdate_dev_packages"><span class="keyword">val</span> update_dev_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       verbose:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info ">
 Update the given dev packages.<br>
 </div>
-<pre><span id="VALfix_compiler_descriptions"><span class="keyword">val</span> fix_compiler_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a> <a href="OpamTypes.html#TYPEupdates">OpamTypes.updates</a></code></pre><div class="info">
+
+<pre><span id="VALfix_compiler_descriptions"><span class="keyword">val</span> fix_compiler_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a> <a href="OpamTypes.html#TYPEupdates">OpamTypes.updates</a></code></pre><div class="info ">
 Fix the compiler descriptions and display the changes if <code class="code">verbose</code>
     is set.<br>
 </div>
-<pre><span id="VALfix_package_descriptions"><span class="keyword">val</span> fix_package_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> <a href="OpamTypes.html#TYPEupdates">OpamTypes.updates</a></code></pre><div class="info">
+
+<pre><span id="VALfix_package_descriptions"><span class="keyword">val</span> fix_package_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> <a href="OpamTypes.html#TYPEupdates">OpamTypes.updates</a></code></pre><div class="info ">
 Fix the the package descriptions and display the changes if
     <code class="code">verbose</code> is set.<br>
 </div>
-<pre><span id="VALfix_descriptions"><span class="keyword">val</span> fix_descriptions</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> unit</code></pre><div class="info">
+
+<pre><span id="VALfix_descriptions"><span class="keyword">val</span> fix_descriptions</span> : <code class="type">?save_cache:bool -> <a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> verbose:bool -> unit</code></pre><div class="info ">
 Fix all the package and compiler descriptions.<br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">short:bool -> unit</code></pre><div class="info">
+
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">short:bool -> unit</code></pre><div class="info ">
 List the available repositories.<br>
 </div>
-<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -><br>       <a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> -> <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> priority:int option -> unit</code></pre><div class="info">
+
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -><br>       <a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> -> <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> -> priority:int option -> unit</code></pre><div class="info ">
 Add a new repository.<br>
 </div>
-<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> unit</code></pre><div class="info">
+
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> unit</code></pre><div class="info ">
 Remove a repository.<br>
 </div>
-<pre><span id="VALpriority"><span class="keyword">val</span> priority</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> priority:int -> unit</code></pre><div class="info">
+
+<pre><span id="VALpriority"><span class="keyword">val</span> priority</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> priority:int -> unit</code></pre><div class="info ">
 Set a repository priority.<br>
 </div>
 </body></html>

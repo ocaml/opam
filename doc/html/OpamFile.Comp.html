@@ -45,6 +45,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.Comp</title>
@@ -55,64 +58,92 @@
 &nbsp;<a class="post" href="OpamFile.Comp_descr.html" title="OpamFile.Comp_descr">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.Comp.html">OpamFile.Comp</a></h1>
-<pre><span class="keyword">module</span> Comp: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> Comp: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Compiler version <code class="code">$opam/compilers/</code><br>
 </div>
 <hr width="100%">
+
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALcreate_preinstalled"><span class="keyword">val</span> create_preinstalled</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -><br>       <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> -><br>       <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list -> (string * string * string) list -> t</code></pre><div class="info">
+
+<pre><span id="VALcreate_preinstalled"><span class="keyword">val</span> create_preinstalled</span> : <code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -><br>       <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> -><br>       <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> list -> (string * string * string) list -> t</code></pre><div class="info ">
 Create a pre-installed compiler description file<br>
 </div>
-<pre><span id="VALpreinstalled"><span class="keyword">val</span> preinstalled</span> : <code class="type">t -> bool</code></pre><div class="info">
+
+<pre><span id="VALpreinstalled"><span class="keyword">val</span> preinstalled</span> : <code class="type">t -> bool</code></pre><div class="info ">
 Is it a pre-installed compiler description file<br>
 </div>
-<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a></code></pre><div class="info">
+
+<pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a></code></pre><div class="info ">
+Get OPAM version<br>
+</div>
+
+<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a></code></pre><div class="info ">
 Return the compiler name<br>
 </div>
-<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a></code></pre><div class="info">
+
+<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a></code></pre><div class="info ">
 Return the compiler version<br>
 </div>
-<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> option</code></pre><div class="info">
+
+<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEaddress">OpamTypes.address</a> option</code></pre><div class="info ">
 Return the url of the compiler<br>
 </div>
-<pre><span id="VALpatches"><span class="keyword">val</span> patches</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> list</code></pre><div class="info">
+
+<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> <a href="OpamTypes.html#TYPErepository_kind">OpamTypes.repository_kind</a> option</code></pre><div class="info ">
+Return the url kind<br>
+</div>
+
+<pre><span id="VALpatches"><span class="keyword">val</span> patches</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> list</code></pre><div class="info ">
 Return the list of patches to apply<br>
 </div>
-<pre><span id="VALconfigure"><span class="keyword">val</span> configure</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALconfigure"><span class="keyword">val</span> configure</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Options to give to the "./configure" command<br>
 </div>
-<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Options to give to the "make" command<br>
 </div>
-<pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
+
+<pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info ">
 Options to give to build the package. If this one is provided,
       nothing should be specified for <code class="code">configure</code> and <code class="code">make</code>.<br>
 </div>
-<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info">
+
+<pre><span id="VALpackages"><span class="keyword">val</span> packages</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info ">
 Packages to install immediately after the creation of OCaml<br>
 </div>
-<pre><span id="VALasmlink"><span class="keyword">val</span> asmlink</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALasmlink"><span class="keyword">val</span> asmlink</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Linking options to give to the native code compiler<br>
 </div>
-<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Compilation options to give to the native code compiler<br>
 </div>
-<pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Linking options to give to the bytecode compiler<br>
 </div>
-<pre><span id="VALbytecomp"><span class="keyword">val</span> bytecomp</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALbytecomp"><span class="keyword">val</span> bytecomp</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Compilation options to give to the bytecode compiler<br>
 </div>
-<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> string list</code></pre><div class="info">
+
+<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> string list</code></pre><div class="info ">
 Linking options to give to the native code compiler<br>
 </div>
-<pre><span id="VALrequires"><span class="keyword">val</span> requires</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info">
+
+<pre><span id="VALrequires"><span class="keyword">val</span> requires</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info ">
 Libraries to link with<br>
 </div>
-<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEppflag">OpamTypes.ppflag</a> option</code></pre><div class="info">
+
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEppflag">OpamTypes.ppflag</a> option</code></pre><div class="info ">
 Preprocessing options<br>
 </div>
-<pre><span id="VALenv"><span class="keyword">val</span> env</span> : <code class="type">t -> (string * string * string) list</code></pre><div class="info">
+
+<pre><span id="VALenv"><span class="keyword">val</span> env</span> : <code class="type">t -> (string * string * string) list</code></pre><div class="info ">
 Environment variable to set-up before running commands in the
       subtree<br>
 </div>

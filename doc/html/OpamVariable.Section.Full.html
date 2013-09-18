@@ -44,6 +44,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamVariable.Section.Full</title>
@@ -53,21 +56,27 @@
 &nbsp;<a class="up" href="OpamVariable.Section.html" title="OpamVariable.Section">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_OpamVariable.Section.Full.html">OpamVariable.Section.Full</a></h1>
-<pre><span class="keyword">module</span> Full: <code class="code">sig</code> <a href="OpamVariable.Section.Full.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> Full: <code class="code">sig</code> <a href="OpamVariable.Section.Full.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Fully qualified section names<br>
 </div>
 <hr width="100%">
+
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">OpamPackage.Name.t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> -> t</code></pre><div class="info">
+
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">OpamPackage.Name.t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> -> t</code></pre><div class="info ">
 Create a fully qualified section<br>
 </div>
-<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type">OpamPackage.Name.t -> t</code></pre><div class="info">
+
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type">OpamPackage.Name.t -> t</code></pre><div class="info ">
 All the sections in a package<br>
 </div>
-<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type">t -> OpamPackage.Name.t</code></pre><div class="info">
+
+<pre><span id="VALpackage"><span class="keyword">val</span> package</span> : <code class="type">t -> OpamPackage.Name.t</code></pre><div class="info ">
 Return the package name in which the section is<br>
 </div>
-<pre><span id="VALsection"><span class="keyword">val</span> section</span> : <code class="type">t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> option</code></pre><div class="info">
+
+<pre><span id="VALsection"><span class="keyword">val</span> section</span> : <code class="type">t -> <a href="OpamVariable.Section.html#TYPEsection">OpamVariable.Section.section</a> option</code></pre><div class="info ">
 Return the optional section OpamPackage.Name.t: <code class="code">None</code> means all available
         sections.<br>
 </div>

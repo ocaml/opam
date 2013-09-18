@@ -1947,7 +1947,7 @@ let add_to_reinstall t ~all packages =
       try
         let nv =
           if not (OpamPackage.is_pinned nv) then nv
-          else find_installed_package_by_name t (OpamPackage.name nv) in
+          else OpamPackage.pinned (OpamPackage.name nv) in
         OpamPackage.Set.add nv set
       with Not_found ->
         set

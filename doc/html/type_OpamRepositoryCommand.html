@@ -40,13 +40,17 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamRepositoryCommand</title>
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_index&nbsp;:&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_package_index&nbsp;:&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_compiler_index&nbsp;:&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_dev_packages&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;verbose:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set<br>
@@ -56,7 +60,8 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fix_package_descriptions&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;verbose:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.package_set&nbsp;<span class="constructor">OpamTypes</span>.updates<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fix_descriptions&nbsp;:&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;verbose:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fix_descriptions&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?save_cache:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamState</span>.<span class="constructor">Types</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;verbose:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;list&nbsp;:&nbsp;short:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository_name&nbsp;<span class="keywordsign">-&gt;</span><br>

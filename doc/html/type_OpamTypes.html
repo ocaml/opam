@@ -40,6 +40,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamTypes</title>
@@ -316,6 +319,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.package&nbsp;<span class="constructor">OpamTypes</span>.cause)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dump_solution&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.<span class="constructor">ACTION_GRAPH</span>.solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="keyword">type</span>&nbsp;<span class="constructor">PKG</span>&nbsp;=<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -510,6 +514,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to_process&nbsp;:&nbsp;t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root_causes&nbsp;:&nbsp;(package&nbsp;*&nbsp;package&nbsp;cause)&nbsp;list;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dump_solution&nbsp;:&nbsp;solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">PackageAction</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -697,6 +702,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to_process&nbsp;:&nbsp;t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root_causes&nbsp;:&nbsp;(package&nbsp;*&nbsp;package&nbsp;cause)&nbsp;list;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dump_solution&nbsp;:&nbsp;solution&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solution&nbsp;=&nbsp;<span class="constructor">OpamTypes</span>.<span class="constructor">PackageActionGraph</span>.solution<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;solver_result&nbsp;=<br>
@@ -731,6 +737,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;u_conflicts&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.formula&nbsp;<span class="constructor">OpamTypes</span>.package_map;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;u_action&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.user_action;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;u_installed_roots&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.package_set;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;u_pinned&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.name_set;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;upload&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;upl_opam&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.filename;<br>

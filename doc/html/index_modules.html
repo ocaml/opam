@@ -41,6 +41,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>Index of modules</title>
@@ -100,8 +103,7 @@ Compiler descriptions
 </td></tr>
 <tr><td><a href="OpamFile.Compiler_index.html">Compiler_index</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
-Association between compiler and repositories:
-    <code class="code">$opam/repo/index.packages</code>
+Association between compiler names and repositories
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Config.html">Config</a> [<a href="OpamFile.html">OpamFile</a>]</td>
@@ -438,6 +440,14 @@ Variable names
 OPAM versions
 </div>
 </td></tr>
+<tr><td><a href="Opam_mk_repo.html">Opam_mk_repo</a> </td>
+<td></td></tr>
+<tr><td><a href="Opam_repo_check.html">Opam_repo_check</a> </td>
+<td></td></tr>
+<tr><td><a href="Opam_stats.html">Opam_stats</a> </td>
+<td></td></tr>
+<tr><td><a href="OpamPath.Switch.Overlay.html">Overlay</a> [<a href="OpamPath.Switch.html">OpamPath.Switch</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>P</td></tr>
 <tr><td><a href="OpamClient.API.PIN.html">PIN</a> [<a href="OpamClient.API.html">OpamClient.API</a>]</td>
 <td><div class="info">
@@ -456,8 +466,7 @@ Graph of OPAM packages
 </td></tr>
 <tr><td><a href="OpamFile.Package_index.html">Package_index</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
-Association between packages and repositories:
-    <code class="code">$opam/repo/index.packages</code>
+Association between package names and repositories
 </div>
 </td></tr>
 <tr><td><a href="OpamTypes.ACTION_GRAPH.Parallel.html">Parallel</a> [<a href="OpamTypes.ACTION_GRAPH.html">OpamTypes.ACTION_GRAPH</a>]</td>
@@ -499,11 +508,6 @@ List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</cod
 <tr><td><a href="OpamFile.Repo_config.html">Repo_config</a> [<a href="OpamFile.html">OpamFile</a>]</td>
 <td><div class="info">
 Repository config: <code class="code">$opam/repo/$repo/config</code>
-</div>
-</td></tr>
-<tr><td><a href="OpamFile.Repo_index.html">Repo_index</a> [<a href="OpamFile.html">OpamFile</a>]</td>
-<td><div class="info">
-Association between package names and repositories: <code class="code">$opam/repo/index</code>
 </div>
 </td></tr>
 <tr><td><a href="OpamPath.Repository.html">Repository</a> [<a href="OpamPath.html">OpamPath</a>]</td>
