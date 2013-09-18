@@ -273,7 +273,11 @@ let import filename =
 
   let to_import =
     List.map
-      (fun nv -> OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv))
+      (fun nv ->
+         if OpamPackage.Set.mem nv (Lazy.force t.available_packages) then
+           OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
+         else
+           OpamSolution.atom_of_package nv)
       (OpamPackage.Set.elements imported) in
 
   let to_keep =
