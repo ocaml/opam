@@ -40,6 +40,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFormat</title>
@@ -53,12 +56,14 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_valid&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.file_item&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invalid_fields&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.file_item&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Bad_format</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;bad_format&nbsp;:&nbsp;(<span class="keywordsign">'</span>a,&nbsp;unit,&nbsp;string,&nbsp;<span class="keywordsign">'</span>b)&nbsp;<span class="constructor">Pervasives</span>.format4&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_bool&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_int&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_ident&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_symbol&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_string&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_list&nbsp;:&nbsp;(<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_list_list&nbsp;:&nbsp;(<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_group&nbsp;:&nbsp;(<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse_option&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span><br>

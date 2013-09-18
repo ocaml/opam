@@ -44,6 +44,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamJson.Manual</title>
@@ -53,26 +56,30 @@
 &nbsp;<a class="post" href="OpamJson.Uncut.html" title="OpamJson.Uncut">Next</a>
 </div>
 <h1>Module <a href="type_OpamJson.Manual.html">OpamJson.Manual</a></h1>
-<pre><span class="keyword">module</span> Manual: <code class="code">sig</code> <a href="OpamJson.Manual.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> Manual: <code class="code">sig</code> <a href="OpamJson.Manual.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Manual input sources and output destinations.
 <p>
 
     <b>Warning.</b> Use only with <code class="code">`Manual</code> decoders and encoders.<br>
 </div>
 <hr width="100%">
-<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">OpamJson.decoder</a> -> string -> int -> int -> unit</code></pre><div class="info">
+
+<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">OpamJson.decoder</a> -> string -> int -> int -> unit</code></pre><div class="info ">
 <code class="code">src d s j l</code> provides <code class="code">d</code> with <code class="code">l</code> bytes to read, starting
       at <code class="code">j</code> in <code class="code">s</code>. This byte range is read by calls to <a href="OpamJson.html#VALdecode"><code class="code">OpamJson.decode</code></a> until
       <code class="code">`Await</code> is returned. To signal the end of input call the function
       with <code class="code">l = 0</code>.<br>
 </div>
-<pre><span id="VALdst"><span class="keyword">val</span> dst</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -> string -> int -> int -> unit</code></pre><div class="info">
+
+<pre><span id="VALdst"><span class="keyword">val</span> dst</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -> string -> int -> int -> unit</code></pre><div class="info ">
 <code class="code">dst e s j l</code> provides <code class="code">e</code> with <code class="code">l</code> bytes to write, starting
       at <code class="code">j</code> in <code class="code">s</code>. This byte rang is written by calls to <a href="OpamJson.html#VALencode"><code class="code">OpamJson.encode</code></a> with <code class="code">e</code>
       until <code class="code">`Partial</code> is returned. Use <a href="OpamJson.Manual.html#VALdst_rem"><code class="code">OpamJson.Manual.dst_rem</code></a> to know the remaining
       number of non-written free bytes in <code class="code">s</code>.<br>
 </div>
-<pre><span id="VALdst_rem"><span class="keyword">val</span> dst_rem</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -> int</code></pre><div class="info">
+
+<pre><span id="VALdst_rem"><span class="keyword">val</span> dst_rem</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -> int</code></pre><div class="info ">
 <code class="code">dst_rem e</code> is the remaining number of non-written, free bytes
       in the last buffer provided with <a href="OpamJson.Manual.html#VALdst"><code class="code">OpamJson.Manual.dst</code></a>.<br>
 </div>

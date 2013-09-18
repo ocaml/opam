@@ -40,6 +40,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.Dot_install</title>
@@ -56,6 +59,9 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;bin&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sbin&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lib&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)&nbsp;list<br>
@@ -66,6 +72,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;share&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;etc&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;<span class="constructor">OpamTypes</span>.optional&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.basename&nbsp;option)&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;doc&nbsp;:<br>

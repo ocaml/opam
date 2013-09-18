@@ -44,6 +44,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamParallel.G</title>
@@ -53,10 +56,16 @@
 &nbsp;<a class="post" href="OpamParallel.SIG.html" title="OpamParallel.SIG">Next</a>
 </div>
 <h1>Module type <a href="type_OpamParallel.G.html">OpamParallel.G</a></h1>
-<pre><span class="keyword">module type</span> G = <code class="code">sig</code> <a href="OpamParallel.G.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module type</span> G = <code class="code">sig</code> <a href="OpamParallel.G.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 Functor argument<br>
 </div>
 <hr width="100%">
+
 <pre><span class="keyword">include</span> Graph.Sig.I</pre>
+
 <pre><span class="keyword">include</span> Graph.Topological.G</pre>
-<pre><span id="VALhas_cycle"><span class="keyword">val</span> has_cycle</span> : <code class="type">t -> bool</code></pre><pre><span id="VALscc_list"><span class="keyword">val</span> scc_list</span> : <code class="type">t -> V.t list list</code></pre><pre><span id="VALstring_of_vertex"><span class="keyword">val</span> string_of_vertex</span> : <code class="type">V.t -> string</code></pre></body></html>
+
+<pre><span id="VALhas_cycle"><span class="keyword">val</span> has_cycle</span> : <code class="type">t -> bool</code></pre>
+<pre><span id="VALscc_list"><span class="keyword">val</span> scc_list</span> : <code class="type">t -> V.t list list</code></pre>
+<pre><span id="VALstring_of_vertex"><span class="keyword">val</span> string_of_vertex</span> : <code class="type">V.t -> string</code></pre></body></html>

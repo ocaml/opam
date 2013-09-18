@@ -43,6 +43,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamState.Types</title>
@@ -51,142 +54,137 @@
 <div class="navbar">&nbsp;<a class="up" href="OpamState.html" title="OpamState">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_OpamState.Types.html">OpamState.Types</a></h1>
-<pre><span class="keyword">module</span> Types: <code class="code">sig</code> <a href="OpamState.Types.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> Types: <code class="code">sig</code> <a href="OpamState.Types.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Client state<br>
 </div>
 <hr width="100%">
+
 <pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.partial">partial</span>&nbsp;:<code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTt.partial">partial</span>&nbsp;: <code class="type">bool</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.root">root</span>&nbsp;:<code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a></code>;</code></td>
+<code><span id="TYPEELTt.root">root</span>&nbsp;: <code class="type"><a href="OpamPath.html#TYPEt">OpamPath.t</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.switch">switch</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a></code>;</code></td>
+<code><span id="TYPEELTt.switch">switch</span>&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEswitch">OpamTypes.switch</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.compiler">compiler</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a></code>;</code></td>
+<code><span id="TYPEELTt.compiler">compiler</span>&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.compiler_version">compiler_version</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> lazy_t</code>;</code></td>
+<code><span id="TYPEELTt.compiler_version">compiler_version</span>&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEcompiler_version">OpamTypes.compiler_version</a> lazy_t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.opams">opams</span>&nbsp;:<code class="type">OpamFile.OPAM.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+<code><span id="TYPEELTt.opams">opams</span>&nbsp;: <code class="type">OpamFile.OPAM.t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.descrs">descrs</span>&nbsp;:<code class="type">OpamFile.Descr.t lazy_t <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code>;</code></td>
+<code><span id="TYPEELTt.repositories">repositories</span>&nbsp;: <code class="type">OpamFile.Repo_config.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.repositories">repositories</span>&nbsp;:<code class="type">OpamFile.Repo_config.t <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a></code>;</code></td>
+<code><span id="TYPEELTt.packages">packages</span>&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.packages">packages</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code>;</code></td>
+<code><span id="TYPEELTt.available_packages">available_packages</span>&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> Lazy.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.available_packages">available_packages</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> Lazy.t</code>;</code></td>
+<code><span id="TYPEELTt.aliases">aliases</span>&nbsp;: <code class="type">OpamFile.Aliases.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.aliases">aliases</span>&nbsp;:<code class="type">OpamFile.Aliases.t</code>;</code></td>
+<code><span id="TYPEELTt.compilers">compilers</span>&nbsp;: <code class="type"><a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a></code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.compilers">compilers</span>&nbsp;:<code class="type"><a href="OpamTypes.html#TYPEcompiler_set">OpamTypes.compiler_set</a></code>;</code></td>
+<code><span id="TYPEELTt.pinned">pinned</span>&nbsp;: <code class="type">OpamFile.Pinned.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.pinned">pinned</span>&nbsp;:<code class="type">OpamFile.Pinned.t</code>;</code></td>
+<code><span id="TYPEELTt.installed">installed</span>&nbsp;: <code class="type">OpamFile.Installed.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.installed">installed</span>&nbsp;:<code class="type">OpamFile.Installed.t</code>;</code></td>
+<code><span id="TYPEELTt.installed_roots">installed_roots</span>&nbsp;: <code class="type">OpamFile.Installed_roots.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.installed_roots">installed_roots</span>&nbsp;:<code class="type">OpamFile.Installed_roots.t</code>;</code></td>
+<code><span id="TYPEELTt.reinstall">reinstall</span>&nbsp;: <code class="type">OpamFile.Reinstall.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.reinstall">reinstall</span>&nbsp;:<code class="type">OpamFile.Reinstall.t</code>;</code></td>
+<code><span id="TYPEELTt.config">config</span>&nbsp;: <code class="type">OpamFile.Config.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.config">config</span>&nbsp;:<code class="type">OpamFile.Config.t</code>;</code></td>
+<code><span id="TYPEELTt.package_index">package_index</span>&nbsp;: <code class="type">OpamFile.Package_index.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.package_index">package_index</span>&nbsp;:<code class="type">(<a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> * string option) <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a> lazy_t</code>;</code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code>&nbsp;&nbsp;</code></td>
-<td align="left" valign="top" >
-<code><span id="TYPEELTt.compiler_index">compiler_index</span>&nbsp;:<code class="type">(<a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> * string option) <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a> lazy_t</code>;</code></td>
+<code><span id="TYPEELTt.compiler_index">compiler_index</span>&nbsp;: <code class="type">OpamFile.Compiler_index.t</code>;</code></td>
 
 </tr></table>
 }
