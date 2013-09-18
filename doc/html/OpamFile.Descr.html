@@ -45,6 +45,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamFile.Descr</title>
@@ -55,18 +58,23 @@
 &nbsp;<a class="post" href="OpamFile.Aliases.html" title="OpamFile.Aliases">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.Descr.html">OpamFile.Descr</a></h1>
-<pre><span class="keyword">module</span> Descr: <code class="code">sig</code> <a href="OpamFile.Descr.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> Descr: <code class="code">sig</code> <a href="OpamFile.Descr.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Package descriptions: <code class="code">$opam/descr/</code><br>
 </div>
 <hr width="100%">
+
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> t</code></pre><div class="info">
-Create a an abstract description file from a string<br>
+
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> t</code></pre><div class="info ">
+Create an abstract description file from a string<br>
 </div>
-<pre><span id="VALsynopsis"><span class="keyword">val</span> synopsis</span> : <code class="type">t -> string</code></pre><div class="info">
+
+<pre><span id="VALsynopsis"><span class="keyword">val</span> synopsis</span> : <code class="type">t -> string</code></pre><div class="info ">
 Return the first line<br>
 </div>
-<pre><span id="VALfull"><span class="keyword">val</span> full</span> : <code class="type">t -> string</code></pre><div class="info">
+
+<pre><span id="VALfull"><span class="keyword">val</span> full</span> : <code class="type">t -> string</code></pre><div class="info ">
 Return the full description<br>
 </div>
 </body></html>

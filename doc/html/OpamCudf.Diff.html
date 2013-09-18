@@ -45,6 +45,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamCudf.Diff</title>
@@ -55,44 +58,48 @@
 &nbsp;<a class="post" href="OpamCudf.ActionGraph.html" title="OpamCudf.ActionGraph">Next</a>
 </div>
 <h1>Module <a href="type_OpamCudf.Diff.html">OpamCudf.Diff</a></h1>
-<pre><span class="keyword">module</span> Diff: <code class="code">sig</code> <a href="OpamCudf.Diff.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> Diff: <code class="code">sig</code> <a href="OpamCudf.Diff.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Difference between universes<br>
 </div>
 <hr width="100%">
+
 <pre><code><span id="TYPEpackage"><span class="keyword">type</span> <code class="type"></code>package</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTpackage.installed">installed</span>&nbsp;:<code class="type">OpamCudf.Set.t</code>;</code></td>
+<code><span id="TYPEELTpackage.installed">installed</span>&nbsp;: <code class="type">OpamCudf.Set.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTpackage.removed">removed</span>&nbsp;:<code class="type">OpamCudf.Set.t</code>;</code></td>
+<code><span id="TYPEELTpackage.removed">removed</span>&nbsp;: <code class="type">OpamCudf.Set.t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTpackage.reinstalled">reinstalled</span>&nbsp;:<code class="type">OpamCudf.Set.t</code>;</code></td>
+<code><span id="TYPEELTpackage.reinstalled">reinstalled</span>&nbsp;: <code class="type">OpamCudf.Set.t</code>;</code></td>
 
 </tr></table>
 }
 
-<div class="info">
+<div class="info ">
 Differences between the versions of a given package<br>
 </div>
 
+
 <pre><span id="TYPEuniverse"><span class="keyword">type</span> <code class="type"></code>universe</span> = <code class="type">(Cudf_types.pkgname, <a href="OpamCudf.Diff.html#TYPEpackage">package</a>) Hashtbl.t</code> </pre>
-<div class="info">
+<div class="info ">
 Difference between universe<br>
 </div>
 
-<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">Cudf.universe -> Cudf.universe -> <a href="OpamCudf.Diff.html#TYPEuniverse">universe</a></code></pre><div class="info">
+
+<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">Cudf.universe -> Cudf.universe -> <a href="OpamCudf.Diff.html#TYPEuniverse">universe</a></code></pre><div class="info ">
 Computation of differences between universe<br>
 </div>
 </body></html>

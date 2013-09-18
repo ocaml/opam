@@ -14,7 +14,7 @@ opam\-list \- Display the list of available packages.
 .P
 This command displays the list of installed packages, or the list of all the available packages if the \fB\-\-all\fR flag is used.
 .P
-Unless the \fB\-\-short\fR switch is used, the output format displays one package per line, and each line contains the name of the package, the installed version or \-\- if the package is not installed, and a short description.
+Unless the \fB\-\-short\fR switch is used, the output format displays one package per line, and each line contains the name of the package, the installed version or \-\- if the package is not installed, and a short description. In color mode, root packages (eg. manually installed) are underlined.
 .P
 The full description can be obtained by doing \fBopam info <package>\fR. You can search through the package descriptions using the \fBopam search\fR command.
 .SH ARGUMENTS
@@ -34,9 +34,15 @@ Display only the installed roots.
 .TP 4
 \fB\-s\fR, \fB\-\-short\fR
 Output the names separated by one whitespace instead of using the usual formatting.
+.TP 4
+\fB\-S\fR, \fB\-\-sort\fR
+Sort the packages in dependency order.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.
+.TP 4
+\fB\-\-color\fR=\fIWHEN\fR (absent=auto)
+Colorize the output. \fIWHEN\fR must be `always', `never' or `auto'.
 .TP 4
 \fB\-\-debug\fR
 Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a non\-empty value.
@@ -55,6 +61,9 @@ Be quiet when installing a new compiler.
 .TP 4
 \fB\-r\fR \fIROOT\fR, \fB\-\-root\fR=\fIROOT\fR (absent=~/.opam)
 Use \fIROOT\fR as the current root path. This is equivalent to setting \fB$OPAMROOT\fR to \fIROOT\fR.
+.TP 4
+\fB\-\-strict\fR
+Fail whenever an error is found in a package definition or a configuration file. The default is to continue silently if possible.
 .TP 4
 \fB\-\-switch\fR=\fISWITCH\fR
 Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \fB$OPAMSWITCH\fR to \fISWITCH\fR.
@@ -75,7 +84,16 @@ See http://opam.ocamlpro.com.
 Thomas Gazagnaire <thomas.gazagnaire@ocamlpro.com>
 .sp -1
 .P
+Anil Madhavapeddy <anil@recoil.org>
+.sp -1
+.P
+Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>
+.sp -1
+.P
 Frederic Tuong <tuong@users.gforge.inria.fr>
+.sp -1
+.P
+Louis Gesbert <louis.gesbert@ocamlpro.com>
 .sp -1
 .P
 Vincent Bernardoff <vb@luminar.eu.org>

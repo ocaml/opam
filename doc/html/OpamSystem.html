@@ -45,6 +45,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="File locking function" rel="Section" href="#2_Filelockingfunction">
@@ -57,159 +60,203 @@
 &nbsp;<a class="post" href="OpamTypes.html" title="OpamTypes">Next</a>
 </div>
 <h1>Module <a href="type_OpamSystem.html">OpamSystem</a></h1>
-<pre><span class="keyword">module</span> OpamSystem: <code class="code">sig</code> <a href="OpamSystem.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> OpamSystem: <code class="code">sig</code> <a href="OpamSystem.html">..</a> <code class="code">end</code></pre><div class="info module top">
 Low-level untyped system operations<br>
 </div>
 <hr width="100%">
+
 <pre><span id="EXCEPTIONProcess_error"><span class="keyword">exception</span> Process_error</span> <span class="keyword">of</span> <code class="type"><a href="OpamProcess.html#TYPEresult">OpamProcess.result</a></code></pre>
-<div class="info">
+<div class="info ">
 Exception raised when subprocess fails<br>
 </div>
-<pre><span id="VALprocess_error"><span class="keyword">val</span> process_error</span> : <code class="type"><a href="OpamProcess.html#TYPEresult">OpamProcess.result</a> -> 'a</code></pre><div class="info">
+
+<pre><span id="VALprocess_error"><span class="keyword">val</span> process_error</span> : <code class="type"><a href="OpamProcess.html#TYPEresult">OpamProcess.result</a> -> 'a</code></pre><div class="info ">
 raise <code class="code">Process_error</code><br>
 </div>
+
 <pre><span id="EXCEPTIONInternal_error"><span class="keyword">exception</span> Internal_error</span> <span class="keyword">of</span> <code class="type">string</code></pre>
-<div class="info">
+<div class="info ">
 Exception raised when a computation in the current process
     fails.<br>
 </div>
-<pre><span id="VALinternal_error"><span class="keyword">val</span> internal_error</span> : <code class="type">('a, unit, string, 'b) Pervasives.format4 -> 'a</code></pre><div class="info">
+
+<pre><span id="VALinternal_error"><span class="keyword">val</span> internal_error</span> : <code class="type">('a, unit, string, 'b) Pervasives.format4 -> 'a</code></pre><div class="info ">
 Raise <code class="code">Internal_error</code><br>
 </div>
-<pre><span id="VALwith_tmp_dir"><span class="keyword">val</span> with_tmp_dir</span> : <code class="type">(string -> 'a) -> 'a</code></pre><div class="info">
+
+<pre><span id="VALwith_tmp_dir"><span class="keyword">val</span> with_tmp_dir</span> : <code class="type">(string -> 'a) -> 'a</code></pre><div class="info ">
 <code class="code">with_tmp_dir fn</code> executes <code class="code">fn</code> in a tempory directory<br>
 </div>
-<pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+
+<pre><span id="VALcopy"><span class="keyword">val</span> copy</span> : <code class="type">string -> string -> unit</code></pre><div class="info ">
 <code class="code">copy src dst</code> copies <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> before the copy
     if it is a link.<br>
 </div>
-<pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+
+<pre><span id="VALlink"><span class="keyword">val</span> link</span> : <code class="type">string -> string -> unit</code></pre><div class="info ">
 <code class="code">link src dst</code> links <code class="code">src</code> to <code class="code">dst</code>. Remove <code class="code">dst</code> if it is a file,
     not a directory.<br>
 </div>
-<pre><span id="VALreal_path"><span class="keyword">val</span> real_path</span> : <code class="type">string -> string</code></pre><div class="info">
+
+<pre><span id="VALreal_path"><span class="keyword">val</span> real_path</span> : <code class="type">string -> string</code></pre><div class="info ">
 <code class="code">real_path p</code> returns the real path associated to <code class="code">p</code>: <code class="code">..</code> are
     expanded and relative paths become absolute.<br>
 </div>
-<pre><span id="VALstring_of_channel"><span class="keyword">val</span> string_of_channel</span> : <code class="type">Pervasives.in_channel -> string</code></pre><div class="info">
+
+<pre><span id="VALstring_of_channel"><span class="keyword">val</span> string_of_channel</span> : <code class="type">Pervasives.in_channel -> string</code></pre><div class="info ">
 Return the contents of a channel.<br>
 </div>
-<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">string -> string</code></pre><div class="info">
+
+<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type">string -> string</code></pre><div class="info ">
 <code class="code">read filename</code> returns the contents of <code class="code">filename</code><br>
 </div>
-<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+
+<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type">string -> string -> unit</code></pre><div class="info ">
 <code class="code">write filename contents</code> write <code class="code">contents</code> to <code class="code">filename</code><br>
 </div>
-<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">string -> unit</code></pre><div class="info ">
 <code class="code">remove filename</code> removes <code class="code">filename</code>. Works whether <code class="code">filename</code> is
     a file or a directory<br>
 </div>
-<pre><span id="VALremove_file"><span class="keyword">val</span> remove_file</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALremove_file"><span class="keyword">val</span> remove_file</span> : <code class="type">string -> unit</code></pre><div class="info ">
 <code class="code">remove_file filename</code> removes <code class="code">filename</code>. Works only for normal
     files (or also at least for symlinks)<br>
 </div>
-<pre><span id="VALremove_dir"><span class="keyword">val</span> remove_dir</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALremove_dir"><span class="keyword">val</span> remove_dir</span> : <code class="type">string -> unit</code></pre><div class="info ">
 <code class="code">remove_dir filename</code> removes <code class="code">filename</code>. Works only for
     directory (not for symlinks or other files).<br>
 </div>
-<pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALchdir"><span class="keyword">val</span> chdir</span> : <code class="type">string -> unit</code></pre><div class="info ">
 Change the current working directory<br>
 </div>
-<pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">string -> (unit -> 'a) -> 'a</code></pre><div class="info">
+
+<pre><span id="VALin_dir"><span class="keyword">val</span> in_dir</span> : <code class="type">string -> (unit -> 'a) -> 'a</code></pre><div class="info ">
 <code class="code">in_dir dir fn</code> evaluates <code class="code">fn</code> in the directory <code class="code">dir</code><br>
 </div>
-<pre><span id="VALfiles_with_links"><span class="keyword">val</span> files_with_links</span> : <code class="type">string -> string list</code></pre><div class="info">
+
+<pre><span id="VALfiles_with_links"><span class="keyword">val</span> files_with_links</span> : <code class="type">string -> string list</code></pre><div class="info ">
 <code class="code">files_with_links dir</code> returns the files in the directory <code class="code">dir</code>.
     Links simulating directory are ignored, others links are returned.<br>
 </div>
-<pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">string -> string list</code></pre><div class="info">
+
+<pre><span id="VALrec_files"><span class="keyword">val</span> rec_files</span> : <code class="type">string -> string list</code></pre><div class="info ">
 <code class="code">rec_files dir</code> returns the list of all files in <code class="code">dir</code>,
     recursively.
     Links behaving like directory are crossed.<br>
 </div>
-<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info">
+
+<pre><span id="VALfiles"><span class="keyword">val</span> files</span> : <code class="type">string -> string list</code></pre><div class="info ">
 Return the list of files in the current directory.<br>
 </div>
-<pre><span id="VALrec_dirs"><span class="keyword">val</span> rec_dirs</span> : <code class="type">string -> string list</code></pre><div class="info">
+
+<pre><span id="VALrec_dirs"><span class="keyword">val</span> rec_dirs</span> : <code class="type">string -> string list</code></pre><div class="info ">
 <code class="code">rec_dirs dir</code> return the list list of all directories recursively
     (going through symbolink links).<br>
 </div>
-<pre><span id="VALdirs"><span class="keyword">val</span> dirs</span> : <code class="type">string -> string list</code></pre><div class="info">
+
+<pre><span id="VALdirs"><span class="keyword">val</span> dirs</span> : <code class="type">string -> string list</code></pre><div class="info ">
 Return the list of directories in the current directory.<br>
 </div>
-<pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
+
+<pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info ">
 Return the version of the current OCaml compiler. If no OCaml
     compiler is present in the path, then it returns <code class="code">None</code>.<br>
 </div>
-<pre><span id="VALsystem_ocamlc_where"><span class="keyword">val</span> system_ocamlc_where</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
+
+<pre><span id="VALsystem_ocamlc_where"><span class="keyword">val</span> system_ocamlc_where</span> : <code class="type">string option Lazy.t</code></pre><div class="info ">
 Return the path where the system ocamlc library is installed<br>
 </div>
-<pre><span id="VALsystem_ocamlc_version"><span class="keyword">val</span> system_ocamlc_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info">
+
+<pre><span id="VALsystem_ocamlc_version"><span class="keyword">val</span> system_ocamlc_version</span> : <code class="type">string option Lazy.t</code></pre><div class="info ">
 Return the version of the system compiler<br>
 </div>
-<pre><span id="VALdirectories_with_links"><span class="keyword">val</span> directories_with_links</span> : <code class="type">string -> string list</code></pre><div class="info">
+
+<pre><span id="VALdirectories_with_links"><span class="keyword">val</span> directories_with_links</span> : <code class="type">string -> string list</code></pre><div class="info ">
 <code class="code">directories_with_links dir</code> returns the directories in the directory <code class="code">dir</code>.
     Links pointing to directory are also returned.<br>
 </div>
+
 <pre><span id="TYPEcommand"><span class="keyword">type</span> <code class="type"></code>command</span> = <code class="type">string list</code> </pre>
-<div class="info">
+<div class="info ">
 a command is a list of words<br>
 </div>
 
-<pre><span id="VALcommand_exists"><span class="keyword">val</span> command_exists</span> : <code class="type">?env:string array -> string -> bool</code></pre><div class="info">
+
+<pre><span id="VALcommand_exists"><span class="keyword">val</span> command_exists</span> : <code class="type">?env:string array -> string -> bool</code></pre><div class="info ">
 Test wether a command exists in the environment.<br>
 </div>
-<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> unit</code></pre><div class="info">
+
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> unit</code></pre><div class="info ">
 <code class="code">command cmd</code> executes the command <code class="code">cmd</code> in the correct OPAM
     environment.<br>
 </div>
-<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -><br>       ?keep_going:bool -> <a href="OpamSystem.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info">
+
+<pre><span id="VALcommands"><span class="keyword">val</span> commands</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?name:string -><br>       ?metadata:(string * string) list -><br>       ?keep_going:bool -> <a href="OpamSystem.html#TYPEcommand">command</a> list -> unit</code></pre><div class="info ">
 <code class="code">commands cmds</code> executes the commands <code class="code">cmds</code> in the correct OPAM
     environment. It stops whenever one command fails unless <code class="code">keep_going</code> is set
     to <code class="code">true</code>. In this case, the first error is re-raised at the end.<br>
 </div>
-<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info">
+
+<pre><span id="VALread_command_output"><span class="keyword">val</span> read_command_output</span> : <code class="type">?verbose:bool -><br>       ?env:string array -><br>       ?metadata:(string * string) list -> <a href="OpamSystem.html#TYPEcommand">command</a> -> string list</code></pre><div class="info ">
 <code class="code">read_command_output cmd</code> executes the command <code class="code">cmd</code> in the
     correct OPAM environment and return the lines from stdout if the command
     exists normally. If the command does not exist or if the command exited
     with a non-empty exit-code, throw an error.<br>
 </div>
-<pre><span id="VALis_tar_archive"><span class="keyword">val</span> is_tar_archive</span> : <code class="type">string -> bool</code></pre><div class="info">
+
+<pre><span id="VALis_tar_archive"><span class="keyword">val</span> is_tar_archive</span> : <code class="type">string -> bool</code></pre><div class="info ">
 Test whether the file is an archive, by looking as its extension<br>
 </div>
-<pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+
+<pre><span id="VALextract"><span class="keyword">val</span> extract</span> : <code class="type">string -> string -> unit</code></pre><div class="info ">
 <code class="code">extract filename dirname</code> extracts the archive <code class="code">filename</code> into
     <code class="code">dirname</code>. <code class="code">dirname</code> should not exists and <code class="code">filename</code> should
     contain only one top-level directory.<br>
 </div>
-<pre><span id="VALextract_in"><span class="keyword">val</span> extract_in</span> : <code class="type">string -> string -> unit</code></pre><div class="info">
+
+<pre><span id="VALextract_in"><span class="keyword">val</span> extract_in</span> : <code class="type">string -> string -> unit</code></pre><div class="info ">
 <code class="code">extract_in filename dirname</code> extracts the archive <code class="code">filename</code> into
     <code class="code">dirname</code>. <code class="code">dirname</code> should already exists.<br>
 </div>
-<pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALmkdir"><span class="keyword">val</span> mkdir</span> : <code class="type">string -> unit</code></pre><div class="info ">
 Create a directory. Do not fail if the directory already
     exist.<br>
 </div>
 <br>
 <h2 id="2_Filelockingfunction">File locking function</h2><br>
-<pre><span id="VALflock"><span class="keyword">val</span> flock</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALflock"><span class="keyword">val</span> flock</span> : <code class="type">string -> unit</code></pre><div class="info ">
 <code class="code">flock ()</code> takes the global file lock. If the lock is already
     taken, sleep for 1s and then retry. Abort after 5 tentatives.<br>
 </div>
-<pre><span id="VALfunlock"><span class="keyword">val</span> funlock</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALfunlock"><span class="keyword">val</span> funlock</span> : <code class="type">string -> unit</code></pre><div class="info ">
 <code class="code">funlock ()</code> unlocks the global file lock. Work only if the
     current processus is the same as the one who took the lock at the
     first place.<br>
 </div>
 <br>
 <h2 id="2_Misc">Misc</h2><br>
-<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">overwrite:bool -> filename:string -> dirname:string -> string</code></pre><div class="info">
+
+<pre><span id="VALdownload"><span class="keyword">val</span> download</span> : <code class="type">overwrite:bool -> filename:string -> dst:string -> string</code></pre><div class="info ">
 download compiler sources<br>
 </div>
-<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info">
+
+<pre><span id="VALpatch"><span class="keyword">val</span> patch</span> : <code class="type">string -> unit</code></pre><div class="info ">
 Apply a patch file in the current directory.<br>
 </div>
-<pre><span id="VALtemp_file"><span class="keyword">val</span> temp_file</span> : <code class="type">?dir:string -> string -> string</code></pre><div class="info">
+
+<pre><span id="VALtemp_file"><span class="keyword">val</span> temp_file</span> : <code class="type">?dir:string -> string -> string</code></pre><div class="info ">
 Create a tempory file in <i>~/.opam/logs/&lt;name&gt;XXX</i><br>
+</div>
+
+<pre><span id="VALprint_stats"><span class="keyword">val</span> print_stats</span> : <code class="type">unit -> unit</code></pre><div class="info ">
+Print stats<br>
 </div>
 </body></html>

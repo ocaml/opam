@@ -44,6 +44,9 @@
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
+<link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
+<link title="Opam_repo_check" rel="Chapter" href="Opam_repo_check.html">
+<link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
 <link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><title>OpamClient.API</title>
@@ -53,46 +56,60 @@
 &nbsp;<a class="post" href="OpamClient.SafeAPI.html" title="OpamClient.SafeAPI">Next</a>
 </div>
 <h1>Module <a href="type_OpamClient.API.html">OpamClient.API</a></h1>
-<pre><span class="keyword">module</span> API: <code class="code">sig</code> <a href="OpamClient.API.html">..</a> <code class="code">end</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> API: <code class="code">sig</code> <a href="OpamClient.API.html">..</a> <code class="code">end</code></pre><div class="info module top">
 OPAM API.<br>
 </div>
 <hr width="100%">
-<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -><br>       jobs:int -><br>       <a href="OpamTypes.html#TYPEshell">OpamTypes.shell</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> [ `ask | `no | `yes ] -> unit</code></pre><div class="info">
+
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       <a href="OpamTypes.html#TYPEcompiler">OpamTypes.compiler</a> -><br>       jobs:int -><br>       <a href="OpamTypes.html#TYPEshell">OpamTypes.shell</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> [ `ask | `no | `yes ] -> unit</code></pre><div class="info ">
 Initialize the client a consistent state.<br>
 </div>
-<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -><br>       filter:[ `all | `installable | `installed | `roots ] -><br>       exact_name:bool -> case_sensitive:bool -> string list -> unit</code></pre><div class="info">
+
+<pre><span id="VALlist"><span class="keyword">val</span> list</span> : <code class="type">print_short:bool -><br>       filter:[ `all | `installable | `installed | `roots ] -><br>       order:[ `depends | `normal ] -><br>       exact_name:bool -> case_sensitive:bool -> string list -> unit</code></pre><div class="info ">
 Display all available packages that matches any of the
       regexps.<br>
 </div>
-<pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">fields:string list -> string list -> unit</code></pre><div class="info">
+
+<pre><span id="VALinfo"><span class="keyword">val</span> info</span> : <code class="type">fields:string list -> string list -> unit</code></pre><div class="info ">
 Display a general summary of a collection of packages.<br>
 </div>
-<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
-Install the given set of packages.<br>
+
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> bool option -> unit</code></pre><div class="info ">
+Install the given set of packages. Second argument, if not None, specifies
+      that given packages should be added or removed from the roots<br>
 </div>
-<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
+
+<pre><span id="VALreinstall"><span class="keyword">val</span> reinstall</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info ">
 Reinstall the given set of packages.<br>
 </div>
-<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> unit</code></pre><div class="info">
+
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">repos_only:bool -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> list -> unit</code></pre><div class="info ">
 Refresh the available packages.<br>
 </div>
-<pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> option -> unit</code></pre><div class="info">
+
+<pre><span id="VALupgrade"><span class="keyword">val</span> upgrade</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> option -> unit</code></pre><div class="info ">
 Find a consistent state where most of the installed packages are
       upgraded to their latest version. <code class="code">None</code> means all the installed
       packages.<br>
 </div>
-<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">autoremove:bool -> <a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info">
+
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">autoremove:bool -> force:bool -> <a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> unit</code></pre><div class="info ">
 Remove the given set of packages.<br>
 </div>
+
 <pre><span class="keyword">module</span> <a href="OpamClient.API.CONFIG.html">CONFIG</a>: <code class="code">sig</code> <a href="OpamClient.API.CONFIG.html">..</a> <code class="code">end</code></pre><div class="info">
 Config API.
 </div>
+
 <pre><span class="keyword">module</span> <a href="OpamClient.API.REPOSITORY.html">REPOSITORY</a>: <code class="code">sig</code> <a href="OpamClient.API.REPOSITORY.html">..</a> <code class="code">end</code></pre><div class="info">
 Repository API
 </div>
+
 <pre><span class="keyword">module</span> <a href="OpamClient.API.SWITCH.html">SWITCH</a>: <code class="code">sig</code> <a href="OpamClient.API.SWITCH.html">..</a> <code class="code">end</code></pre><div class="info">
 Switch API
 </div>
+
 <pre><span class="keyword">module</span> <a href="OpamClient.API.PIN.html">PIN</a>: <code class="code">sig</code> <a href="OpamClient.API.PIN.html">..</a> <code class="code">end</code></pre><div class="info">
 Pin API
 </div>
