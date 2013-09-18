@@ -121,7 +121,8 @@ val brute_force: ?verbose:bool
     command line for instance) and refined requests (see below). *)
 val state_space:
   ?filters:(Cudf_types.pkgname -> Cudf_types.constr) ->
-  Cudf.universe -> Cudf_types.pkgname list -> Cudf.package state_space
+  Cudf.universe -> Cudf_types.vpkglist -> Cudf_types.pkgname list ->
+  Cudf.package state_space
 
 (** Explore the given package state-space using the [brute_force] strategy.
     We assume that all the packages belong to the given universe. *)
@@ -143,4 +144,5 @@ val state_of_request: ?verbose:bool
     of reinstallations). Raise [Not_reachable] is the state is not
     reachable. This function is called once we get a consistent state
     to build a solution than we can propose to the user. *)
-val actions_of_state: Cudf.universe -> Cudf.package state -> Cudf.package action list
+val actions_of_state: Cudf.universe ->
+  Cudf_types.vpkg request -> Cudf.package state -> Cudf.package action list
