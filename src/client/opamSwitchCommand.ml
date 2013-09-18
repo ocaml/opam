@@ -148,7 +148,8 @@ let update_global_config t ~warning switch =
   if warning then
     OpamState.print_env_warning_at_switch t
 
-let install_with_packages ~quiet ~packages switch compiler =
+
+let install_compiler ~quiet switch compiler =
   log "install %b %s %s" quiet
     (OpamSwitch.to_string switch)
     (OpamCompiler.to_string compiler);
@@ -157,7 +158,7 @@ let install_with_packages ~quiet ~packages switch compiler =
   let t = OpamState.load_state "switch-install-with-packages-1" in
 
   (* install the new OCaml version *)
-  begin try OpamState.install_compiler t ~quiet switch compiler
+  try OpamState.install_compiler t ~quiet switch compiler
     with e ->
       (* in case of reinstall, the switch may still be in t.aliases *)
       let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
@@ -165,8 +166,9 @@ let install_with_packages ~quiet ~packages switch compiler =
       let compdir = OpamPath.Switch.root t.root switch in
       (try OpamFilename.rmdir compdir with _ -> ());
       raise e
-  end;
 
+
+let install_packages ~quiet ~packages switch compiler =
   (* install the compiler packages *)
   OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-install-with-packages-2" in
@@ -218,6 +220,10 @@ let install_with_packages ~quiet ~packages switch compiler =
   | p::_ ->
     remove_compiler ();
     package_error p
+
+let install_with_packages ~quiet ~packages switch compiler =
+  install_compiler ~quiet switch compiler;
+  install_packages ~quiet ~packages switch compiler
 
 let install ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
@@ -321,11 +327,28 @@ let reinstall_t switch t =
     OpamFile.Installed_roots.safe_read f in
   let packages = Some (installed, installed_roots) in
 
-  (* Remove the directory *)
-  OpamFilename.rmdir (OpamPath.Switch.root t.root switch);
+  (* Remove the directory (except the overlays) *)
+  OpamFilename.with_tmp_dir (fun tmpdir ->
+      let tmp dir = OpamFilename.(OP.(tmpdir / Base.to_string (basename_dir dir))) in
+      let save dir =
+        if OpamFilename.exists_dir dir then
+          OpamFilename.move_dir ~src:dir ~dst:(tmp dir) in
+      let restore dir =
+        if OpamFilename.exists_dir (tmp dir) then (
+          OpamFilename.mkdir (OpamFilename.dirname_dir dir);
+          OpamFilename.move_dir ~src:(tmp dir) ~dst:dir
+        ) in
+      let overlays = OpamPath.Switch.Overlay.dir t.root switch in
+      let backups = OpamPath.Switch.backup_dir t.root switch in
+      save overlays;
+      save backups;
+      OpamFilename.rmdir (OpamPath.Switch.root t.root switch);
+      install_compiler ~quiet:false switch ocaml_version;
+      restore backups;
+      restore overlays;
+  );
 
-  (* Install the compiler *)
-  install_with_packages ~quiet:false ~packages switch ocaml_version
+  install_packages ~quiet:false ~packages switch ocaml_version
 
 let with_backup command f =
   let t = OpamState.load_state command in
@@ -336,7 +359,8 @@ let with_backup command f =
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
   with
-  | OpamGlobals.Exit n as err when n <> 0 ->
+  | OpamGlobals.Exit 0 as e -> raise e
+  | err ->
     let t1 = OpamState.load_state "backup-err" in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
