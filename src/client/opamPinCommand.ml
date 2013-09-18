@@ -33,9 +33,9 @@ let pin ~force action =
   let update_config pins =
     let packages = OpamPackage.packages_of_name t.packages name in
     OpamPackage.Set.iter (fun nv ->
-      OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
-      OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch nv);
-    ) packages;
+        OpamFilename.rmdir (OpamPath.Switch.build t.root t.switch nv);
+        OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch nv);
+      ) packages;
     if force then OpamState.add_to_reinstall t ~all:false packages;
     OpamFile.Pinned.write pin_f pins in
 
@@ -76,15 +76,15 @@ let pin ~force action =
       if current = action.pin_option then
         OpamGlobals.error_and_exit
           "Package %s is already pinned to %s."
-        (OpamPackage.Name.to_string name)
-        (string_of_pin_option current);
-      OpamGlobals.error_and_exit
-        "Cannot pin %s to %s as it is already associated to %s. Use 'opam pin %s \
-         none' and retry (or use --force)."
-        (OpamPackage.Name.to_string name)
-        (string_of_pin_option action.pin_option)
-        (string_of_pin_option current)
-        (OpamPackage.Name.to_string name);
+          (OpamPackage.Name.to_string name)
+          (string_of_pin_option current)
+      else OpamGlobals.error_and_exit
+          "Cannot pin %s to %s as it is already associated to %s. Use 'opam pin %s \
+           none' and retry (or use --force)."
+          (OpamPackage.Name.to_string name)
+          (string_of_pin_option action.pin_option)
+          (string_of_pin_option current)
+          (OpamPackage.Name.to_string name);
     );
     let pins = OpamPackage.Name.Map.remove name pins in
 
