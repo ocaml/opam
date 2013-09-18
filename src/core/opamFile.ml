@@ -327,7 +327,7 @@ module X = struct
             (OpamPackage.Name.to_string n) (OpamPackage.Version.Set.to_string vs)
       ) map
 
-    let of_channel _ ic =
+    let of_channel name ic =
       let lines = Lines.of_channel ic in
       let map = ref empty in
       let add n v = map := OpamPackage.Set.add (OpamPackage.create n v) !map in
@@ -335,7 +335,9 @@ module X = struct
         | []              -> ()
         | [name; version] -> add (OpamPackage.Name.of_string name)
                                (OpamPackage.Version.of_string version)
-        | _               -> OpamGlobals.error_and_exit "[file.ml/module Installed]"
+        | s               ->
+          OpamGlobals.error_and_exit "Bad line in %s: %S"
+            (OpamFilename.to_string name) (String.concat " " s)
       ) lines;
       !map
 
