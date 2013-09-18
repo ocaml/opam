@@ -50,7 +50,8 @@
 <link title="Opam_stats" rel="Chapter" href="Opam_stats.html">
 <link title="OpamCudf" rel="Chapter" href="OpamCudf.html">
 <link title="OpamHeuristic" rel="Chapter" href="OpamHeuristic.html">
-<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="State" rel="Section" href="#2_State">
+<link title="OpamSolver" rel="Chapter" href="OpamSolver.html"><link title="Repository Collection Operations " rel="Section" href="#2_RepositoryCollectionOperations">
+<link title="State" rel="Section" href="#2_State">
 <link title="Repository backends" rel="Section" href="#2_Repositorybackends">
 <link title="Misc" rel="Section" href="#2_Misc">
 <title>OpamRepository</title>
@@ -105,6 +106,20 @@ Get the list of all compiler<br>
 
 <pre><span id="VALcompilers_with_prefixes"><span class="keyword">val</span> compilers_with_prefixes</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> string option <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code></pre><div class="info ">
 Get the list of compilers (and their eventual prefixes)<br>
+</div>
+<br>
+<h2 id="2_RepositoryCollectionOperations">Repository Collection Operations </h2><br>
+
+<pre><span id="VALsort"><span class="keyword">val</span> sort</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a> -><br>       <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> list</code></pre><div class="info ">
+Sort a collection of repositories by priority<br>
+</div>
+
+<pre><span id="VALpackage_index"><span class="keyword">val</span> package_index</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a> -><br>       (<a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> * string option) <a href="OpamTypes.html#TYPEpackage_map">OpamTypes.package_map</a></code></pre><div class="info ">
+Generate a package index from a collection of repositories<br>
+</div>
+
+<pre><span id="VALcompiler_index"><span class="keyword">val</span> compiler_index</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> <a href="OpamTypes.html#TYPErepository_name_map">OpamTypes.repository_name_map</a> -><br>       (<a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> * string option) <a href="OpamTypes.html#TYPEcompiler_map">OpamTypes.compiler_map</a></code></pre><div class="info ">
+Generate a compiler index from a collection of repositories<br>
 </div>
 <br>
 <h2 id="2_State">State</h2><br>

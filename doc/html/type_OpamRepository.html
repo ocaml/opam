@@ -134,6 +134,15 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.compiler_set<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compilers_with_prefixes&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;option&nbsp;<span class="constructor">OpamTypes</span>.compiler_map<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sort&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;package_index&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.repository_name&nbsp;*&nbsp;string&nbsp;option)&nbsp;<span class="constructor">OpamTypes</span>.package_map<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compiler_index&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="constructor">OpamTypes</span>.repository_name_map&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">OpamTypes</span>.repository_name&nbsp;*&nbsp;string&nbsp;option)&nbsp;<span class="constructor">OpamTypes</span>.compiler_map<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;package_files&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">OpamTypes</span>.repository&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span><br>
