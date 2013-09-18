@@ -33,8 +33,7 @@ let minimize_actions interesting_names actions =
   List.filter (function
     | To_change (_, p)
     | To_recompile p -> OpamMisc.StringSet.mem p.Cudf.package interesting_names
-    | To_delete p    -> OpamGlobals.error_and_exit "delete %s(%d)\n"
-                          p.Cudf.package p.Cudf.version
+    | To_delete _    -> true
   ) actions
 
 (* A list of [n] zero. *)
@@ -189,12 +188,18 @@ let explore ?(verbose=true) universe state_space =
    installed, it will not appear in the resulting solution. *)
 exception Not_reachable of (unit -> Algo.Diagnostic.reason list)
 
-let actions_of_state universe state =
+let satisfy pkg constrs =
+  List.exists (fun (n, v) ->
+      n = pkg.Cudf.package && Cudf.version_matches pkg.Cudf.version v
+    ) constrs
+
+let actions_of_state universe request state =
   log "actions_of_state %s" (OpamCudf.string_of_packages state);
   let installed =
     let filter p =
       p.Cudf.installed
-      && List.for_all (fun s -> s.Cudf.package <> p.Cudf.package) state in
+      && List.for_all (fun s -> s.Cudf.package <> p.Cudf.package) state
+      && not (satisfy p request.wish_remove) in
     let packages = Cudf.get_packages ~filter universe in
     List.rev_map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) packages in
   let small_universe =
@@ -205,13 +210,16 @@ let actions_of_state universe state =
     Cudf.load_universe packages in
   let state =
     List.map (fun p -> p.Cudf.package, Some (`Eq, p.Cudf.version)) state in
-  let request = {
+  let request = { request with
     wish_install = [];
-    wish_remove  = [];
     wish_upgrade = state @ installed
   } in
   match OpamCudf.get_final_universe small_universe request with
-  | Conflicts c -> raise (Not_reachable c)
+  | Conflicts c ->
+    log "not reachable! universe=%s request=%s"
+      (OpamCudf.string_of_universe small_universe)
+      (OpamCudf.string_of_request request);
+    raise (Not_reachable c)
   | Success u   ->
     try
       let diff = OpamCudf.Diff.diff universe u in
@@ -222,12 +230,9 @@ let actions_of_state universe state =
       OpamGlobals.error_and_exit "constraint violations: %s" s
 
 (* Find dependencies and installed & reverse dependencies. *)
-let find_interesting_names universe constrs =
+let find_interesting_names universe request =
   let filter pkg =
-    List.exists (fun (n,v) ->
-      n = pkg.Cudf.package
-      && Cudf.version_matches pkg.Cudf.version v
-    ) constrs in
+    satisfy pkg request.wish_upgrade && not (satisfy pkg request.wish_remove) in
   let packages = Cudf.get_packages ~filter universe in
   let depends = OpamCudf.dependencies universe packages in
   let revdepends =
@@ -266,8 +271,11 @@ let dependencies universe constrs =
    the package does not appear in the initial request, then return
    only the versions greater or equals to the one appearing in the
    given universe.
+
+   - if the package appears in the 'wish_remove' field we do not try
+   to test it.
 *)
-let state_space ?(filters = fun _ -> None) universe interesting_names =
+let state_space ?(filters = fun _ -> None) universe wish_remove interesting_names =
 
   let universe_packages = Cudf.get_packages universe in
 
@@ -295,6 +303,7 @@ let state_space ?(filters = fun _ -> None) universe interesting_names =
         | Some v -> List.filter (fun p -> p.Cudf.version >= v) packages in
       let packages =
         List.sort (fun p1 p2 -> compare p2.Cudf.version p1.Cudf.version) packages in
+      let packages = List.filter (fun p -> not (satisfy p wish_remove)) packages in
       if List.length packages <> 0 then
         Hashtbl.add state_space name (Array.of_list packages) in
 
@@ -339,7 +348,7 @@ let state_of_request ?(verbose=true) current_universe request =
        find a solution. *)
     let trimed_universe =
       let universe = List.fold_left (fun universe (name, constr) ->
-          OpamCudf.remove_all_uninstalled_versions_but name constr universe
+          OpamCudf.remove_all_uninstalled_versions_but universe name constr
         ) result_universe all_wishes in
       let universe = Algo.Depsolver.trim universe in
       dependencies universe all_wishes in
@@ -352,7 +361,7 @@ let state_of_request ?(verbose=true) current_universe request =
 
     let state_space =
       let names = List.map (fun (n,_) -> n) request.wish_upgrade in
-      state_space ~filters trimed_universe names in
+      state_space ~filters trimed_universe request.wish_remove names in
     explore ~verbose current_universe state_space
 
 let same_state s1 s2 =
@@ -389,13 +398,13 @@ let optimize ?(verbose=true) universe request =
           names in
       List.map (fun n -> (n, None)) (OpamMisc.StringSet.elements set) in
 
-    { wish_install; wish_upgrade; wish_remove  = [] } in
+    { request with wish_install; wish_upgrade } in
 
   let add_to_request state request name =
     let request = refine state request in
     { request with wish_upgrade = (name, None) :: request.wish_upgrade } in
 
-  let interesting_names = find_interesting_names universe request.wish_upgrade in
+  let interesting_names = find_interesting_names universe request in
 
   (* Compute the 'implicit' packages, ie. the ones which do not appear
      in the request but which are in the transitive closure of
@@ -438,12 +447,14 @@ let optimize ?(verbose=true) universe request =
   match state_of_request ~verbose universe request with
   | None       -> OpamCudf.resolve universe request
   | Some state ->
+    log "STATE(0) %s" (OpamCudf.string_of_packages state);
 
     let request = refine state request in
 
     (* strategy where we try keep the installed version before trying
        an other one. *)
     let installed_first state p =
+      log "installed-first %s" p.Cudf.package;
       if consistent_packages universe (p :: state) then (
         log "keep %s with the same version" p.Cudf.package;
         (p :: state)
@@ -463,6 +474,7 @@ let optimize ?(verbose=true) universe request =
 
     (* Try to keep the installed packages in the dependency cone *)
     let state = List.fold_left installed_first state implicit_installed in
+    log "STATE(1) %s" (OpamCudf.string_of_packages state);
 
     (* Minimize the number of new packages to install *)
     (* XXX: if we want to add an interactive mode, we need to do something here *)
@@ -470,7 +482,7 @@ let optimize ?(verbose=true) universe request =
        (for instance the size of the dependency cone of packages which
        are not yet installed). *)
     let universe, state = List.fold_left (fun (universe, state) name ->
-        let remove_universe = OpamCudf.remove universe name in
+        let remove_universe = OpamCudf.remove universe name None in
         if consistent_packages remove_universe state then (
           log "%s is not necessary (%s)" name (OpamCudf.string_of_packages state);
           (remove_universe, state)
@@ -484,20 +496,21 @@ let optimize ?(verbose=true) universe request =
       ) (universe, state) implicit_not_installed in
 
     (* Finally we check that the already installed packages can still
-       be installed in he new universe. *)
+       be installed in the new universe. *)
     let state =
       let filter p =
         p.Cudf.installed
-        && List.for_all (fun s -> s.Cudf.package <>  p.Cudf.package) state in
+        && List.for_all (fun s -> s.Cudf.package <>  p.Cudf.package) state
+        && not (satisfy p request.wish_remove) in
       let packages = Cudf.get_packages ~filter universe in
       List.fold_left installed_first state packages in
 
-    log "STATE %s" (OpamCudf.string_of_packages state);
-    Success (actions_of_state universe state)
+    log "STATE(2) %s" (OpamCudf.string_of_packages state);
+    Success (actions_of_state universe request state)
 
 let resolve ?(verbose=true) universe request =
   try
-    if request.wish_remove = [] then optimize ~verbose universe request
+    if request.wish_upgrade <> [] then optimize ~verbose universe request
     else OpamCudf.resolve universe request
   with Not_reachable c ->
     Conflicts c
