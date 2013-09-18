@@ -277,7 +277,8 @@ let resolve ?(verbose=true) universe request =
     then OpamCudf.resolve
     else OpamHeuristic.resolve ~verbose in
   match resolve simple_universe cudf_request with
-  | Conflicts c     -> Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam universe (c ()))
+  | Conflicts c     ->
+    Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam universe (c ()))
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
     let cudf_solution =

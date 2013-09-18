@@ -350,8 +350,10 @@ let default_preamble =
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
 
-let remove universe name =
-  let filter p = p.Cudf.package <> name in
+let remove universe name constr =
+  let filter p =
+    p.Cudf.package <> name
+    || not (Cudf.version_matches p.Cudf.version constr) in
   let packages = Cudf.get_packages ~filter universe in
   Cudf.load_universe packages
 
@@ -370,7 +372,7 @@ let install universe package =
     Cudf.get_packages ~filter universe in
   Cudf.load_universe (p :: packages)
 
-let remove_all_uninstalled_versions_but name constr universe =
+let remove_all_uninstalled_versions_but universe name constr =
   let filter p =
     p.Cudf.installed
     || p.Cudf.package <> name
@@ -410,7 +412,7 @@ let call_external_solver ~explain univ req =
 let get_final_universe univ req =
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success (remove u "dose-dummy-request")
+  | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
   | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
   | Unsat r   ->
