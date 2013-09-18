@@ -482,7 +482,6 @@ let rec parse_filter = function
   | [Group g]        -> parse_filter g
   | [Symbol "!"; f]  -> FNot (parse_filter [f])
   | [e; Symbol s; f] ->
-    let open OpamTypes in
     let e = parse_filter [e] in
     let f = parse_filter [f] in
     begin match s with

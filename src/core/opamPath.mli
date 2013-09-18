@@ -95,6 +95,12 @@ val init: t -> dirname
 (** Log dir {i $opam/log} *)
 val log: t -> dirname
 
+(** The directory where global backups are stored *)
+val backup_dir: t -> dirname
+
+(** Backup file for state export *)
+val backup: t -> filename
+
 (** Switch related paths *)
 module Switch: sig
 
