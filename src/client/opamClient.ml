@@ -143,7 +143,8 @@ let with_switch_backup command f =
     f t;
     OpamFilename.remove file (* We might want to keep it even if successful ? *)
   with
-  | OpamGlobals.Exit n as err when n <> 0 ->
+  | OpamGlobals.Exit 0 as e -> raise e
+  | err ->
     let t1 = OpamState.load_state "switch-backup-err" in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
