@@ -21,7 +21,12 @@ let of_string x = x
 
 let to_json x = `String x
 
-let compare = Debian.Version.compare
+let compare v w =
+  (* Ignore -xxx suffixes for version comparisons *)
+  let cut s = match OpamMisc.cut_at s '-' with
+    | Some (s,_) -> s
+    | None -> s in
+  Debian.Version.compare (cut v) (cut w)
 
 module O = struct
   type t = string
