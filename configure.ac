@@ -25,6 +25,8 @@ AS_IF([test "x${enable_version_check}" != "xno"], [
     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 ])
 
+AX_COMPARE_VERSION([$OCAMLVERSION], [gt], [3.12.1], AC_SUBST(binannot,"\"-bin-annot\""))
+
 AC_ARG_ENABLE([certificate_check],
   AS_HELP_STRING([--disable-certificate-check],
                  [Do not check the certificate of OPAM's dependency archives])
@@ -49,6 +51,7 @@ AC_CONFIG_FILES(
   Makefile.config
   src/core/opamVersion.ml
   doc/man-ext/opam-check.md
+  src/opam.ocp
 )
 AC_OUTPUT
 

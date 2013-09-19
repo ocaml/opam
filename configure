@@ -587,6 +587,7 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 fetch
 FETCH
+binannot
 AWK
 CAMLP4RF
 CAMLP4R
@@ -4408,6 +4409,43 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 fi
 
+
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "3.12.1" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+    binannot="\"-bin-annot\""
+
+      fi
+
+
 # Check whether --enable-certificate_check was given.
 if test "${enable_certificate_check+set}" = set; then :
   enableval=$enable_certificate_check;
@@ -4475,7 +4513,7 @@ else
   as_fn_error $? "You must have either curl or wget installed." "$LINENO" 5
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml doc/man-ext/opam-check.md"
+ac_config_files="$ac_config_files Makefile.config src/core/opamVersion.ml doc/man-ext/opam-check.md src/opam.ocp"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5186,6 +5224,7 @@ do
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "src/core/opamVersion.ml") CONFIG_FILES="$CONFIG_FILES src/core/opamVersion.ml" ;;
     "doc/man-ext/opam-check.md") CONFIG_FILES="$CONFIG_FILES doc/man-ext/opam-check.md" ;;
+    "src/opam.ocp") CONFIG_FILES="$CONFIG_FILES src/opam.ocp" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
