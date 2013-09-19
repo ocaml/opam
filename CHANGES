@@ -1,4 +1,4 @@
-1.1.0 (trunk)
+1.1.0-beta [Sept 2013]
 * Colors
 * New option `opam update -u` equivalent to `opam update && opam upgrade --yes`
 * New `opam-admin` tool, bundling the features of `opam-mk-repo` and `opam-repo-check` + new 'opam-admin stats' tool
