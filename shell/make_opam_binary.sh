@@ -3,7 +3,7 @@
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Thomas Gazagnaire        OCamlPro 2013
 
-set -e 
+set -e
 
 usage() {
 cat <<EOF
@@ -38,7 +38,7 @@ UNAME_MACHINE=`(uname -m) 2>/dev/null` || UNAME_MACHINE=unknown
 UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
 UNAME_SYSTEM=`(uname -s) 2>/dev/null`  || UNAME_SYSTEM=unknown
 UNAME_VERSION=`(uname -v) 2>/dev/null` || UNAME_VERSION=unknown
-file="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
+target="opam-${VERSION}-${UNAME_MACHINE}-${UNAME_SYSTEM}"
 
 if which wget >/dev/null; then
     WGETOPTS="--passive-ftp -q -O"
@@ -74,7 +74,7 @@ build() {
     pwd
     make
     cd $CURRENTDIR
-    ln -sf $BUILDDIR/opam-full-$VERSION/_obuild/opam/opam.asm $file
+    ln -sf $BUILDDIR/opam-full-$VERSION/_obuild/opam/opam.asm $target
 }
 
 {
@@ -82,4 +82,4 @@ download "http://www.ocamlpro.com/pub"
 extract
 build
 } 1>&2
-echo $file
+echo $target

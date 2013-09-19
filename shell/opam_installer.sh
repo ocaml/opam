@@ -1,12 +1,12 @@
 #!/bin/sh
 
-set -e 
+set -e
 
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 
-VERSION='1.0.0'
+VERSION='1.1.0-beta'
 
-default_ocaml=4.00.1
+default_ocaml=4.01.0
 
 usage() {
 cat <<EOF
@@ -14,9 +14,9 @@ cat <<EOF
 Usage:
     ./opam_install BINDIR [COMP]
 
-    Script to download and install binary versions of opam 
+    Script to download and install binary versions of opam
     BINDIR is the directory where you want to install OPAM
-    (BINDIR must be in your PATH). 
+    (BINDIR must be in your PATH).
     COMP is an optional argument, specifying the default
     version of OCaml you want to use ($default_ocaml by default).
 EOF
@@ -50,10 +50,10 @@ fi
 getopam() {
     url="$1"
     opamfile="$2"
-    
+
     wget $WGETOPTS $opamfile "$url/$opamfile" ||
 	error "Couldn't download $url/$opamfile"
-    chmod +x $opamfile    
+    chmod +x $opamfile
 }
 
 if [ $# = 0 ]; then
