@@ -31,4 +31,6 @@ src/core/opamGitVersion.ml
 src/core/opamScript.ml
 src/core/opamVersion.ml
 src/globals.ml
+src/opam.ocp
 src_ext/depends.ocp
+autom4te.cache/
