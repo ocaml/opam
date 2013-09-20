@@ -25,7 +25,15 @@ let check var = ref (
 
 let debug            = check "DEBUG"
 let verbose          = check "VERBOSE"
-let color            = check "COLOR"
+let color_tri_state =
+    try (match OpamMisc.getenv "OPAMCOLOR" with
+      | "always" -> `Always
+      | "never" -> `Never
+      | _ -> `Auto
+      )
+    with
+      | Not_found -> `Auto
+let color            = ref (color_tri_state = `Always)
 let keep_build_dir   = check "KEEPBUILDDIR"
 let no_base_packages = check "NOBASEPACKAGES"
 let no_checksums     = check "NOCHECKSUMS"
