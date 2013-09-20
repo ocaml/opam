@@ -253,7 +253,9 @@ let extract_package t nv =
   else (
     let nv = OpamState.pinning_version t nv in
     match OpamState.download_archive t nv with
-    | Some f -> OpamFilename.extract f build_dir
+    | Some f ->
+      OpamFilename.extract f build_dir;
+      OpamState.copy_files t nv build_dir
     | None   ->
       let dir = OpamPath.dev_package t.root nv in
       extract_and_copy_files nv (OpamState.download_upstream t nv dir)
