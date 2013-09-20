@@ -111,11 +111,6 @@ let help_sections = [
   `S global_option_section;
   `P "These options are common to all commands.";
 
-  `S "ENVIRONMENT VARIABLES";
-  `P "opam makes use of environment variables listed here.";
-  `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
-  value for the --color option";
-
   `S "FURTHER DOCUMENTATION";
   `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
 

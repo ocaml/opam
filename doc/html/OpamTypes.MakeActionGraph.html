@@ -40,8 +40,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -56,7 +56,8 @@
 &nbsp;<a class="post" href="OpamTypes.PackageAction.html" title="OpamTypes.PackageAction">Next</a>
 </div>
 <h1>Functor <a href="type_OpamTypes.MakeActionGraph.html">OpamTypes.MakeActionGraph</a></h1>
-<pre><span class="keyword">module</span> MakeActionGraph: <div class="sig_block"><code class="code">functor (</code><code class="code">Pkg</code><code class="code"> : </code><code class="type"><a href="OpamTypes.PKG.html">PKG</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a></code><code class="type">  with type package = Pkg.t</code></div></pre><div class="info">
+
+<pre><span class="keyword">module</span> MakeActionGraph: <div class="sig_block"><code class="code">functor (</code><code class="code">Pkg</code><code class="code"> : </code><code class="type"><a href="OpamTypes.PKG.html">PKG</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamTypes.ACTION_GRAPH.html">ACTION_GRAPH</a></code><code class="type">  with type package = Pkg.t</code></div></pre><div class="info module top">
 Functor to create a graph af actions<br>
 </div>
 <table border="0" cellpadding="3" width="100%">
@@ -74,47 +75,54 @@ Functor to create a graph af actions<br>
 </tr>
 </table>
 <hr width="100%">
+
 <pre><span id="TYPEpackage"><span class="keyword">type</span> <code class="type"></code>package</span> </pre>
 
+
 <pre><span class="keyword">include</span> Graph.Sig.I</pre>
+
 <pre><span class="keyword">include</span> Graph.Oper.S</pre>
+
 <pre><span class="keyword">module</span> <a href="OpamTypes.ACTION_GRAPH.Parallel.html">Parallel</a>: <code class="type"><a href="OpamParallel.SIG.html">OpamParallel.SIG</a></code><code class="type"> 
     with type G.t = t
      and type G.V.t = V.t</code></pre><div class="info">
 Parallel iterator
 </div>
+
 <pre><span class="keyword">module</span> <a href="OpamTypes.ACTION_GRAPH.Topological.html">Topological</a>: <code class="code">sig</code> <a href="OpamTypes.ACTION_GRAPH.Topological.html">..</a> <code class="code">end</code></pre><div class="info">
 Topological traversal
 </div>
+
 <pre><code><span id="TYPEsolution"><span class="keyword">type</span> <code class="type"></code>solution</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTsolution.to_remove">to_remove</span>&nbsp;:<code class="type"><a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> list</code>;</code></td>
+<code><span id="TYPEELTsolution.to_remove">to_remove</span>&nbsp;: <code class="type"><a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTsolution.to_process">to_process</span>&nbsp;:<code class="type">t</code>;</code></td>
+<code><span id="TYPEELTsolution.to_process">to_process</span>&nbsp;: <code class="type">t</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTsolution.root_causes">root_causes</span>&nbsp;:<code class="type">(<a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> *<br>        <a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> <a href="OpamTypes.html#TYPEcause">OpamTypes.cause</a>)<br>       list</code>;</code></td>
+<code><span id="TYPEELTsolution.root_causes">root_causes</span>&nbsp;: <code class="type">(<a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> *<br>        <a href="OpamTypes.ACTION_GRAPH.html#TYPEpackage">package</a> <a href="OpamTypes.html#TYPEcause">OpamTypes.cause</a>)<br>       list</code>;</code></td>
 
 </tr></table>
 }
 
-<div class="info">
+<div class="info ">
 Solver solution<br>
 </div>
 
-<pre><span id="VALdump_solution"><span class="keyword">val</span> dump_solution</span> : <code class="type"><a href="OpamTypes.ACTION_GRAPH.html#TYPEsolution">solution</a> -> unit</code></pre><div class="info">
+
+<pre><span id="VALdump_solution"><span class="keyword">val</span> dump_solution</span> : <code class="type"><a href="OpamTypes.ACTION_GRAPH.html#TYPEsolution">solution</a> -> unit</code></pre><div class="info ">
 Dump a solution graph<br>
 </div>
 </body></html>

@@ -40,8 +40,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
+<link title="OpamHg" rel="Chapter" href="OpamHg.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -56,37 +56,46 @@
 &nbsp;<a class="post" href="OpamTypes.ACTION_GRAPH.Topological.html" title="OpamTypes.ACTION_GRAPH.Topological">Next</a>
 </div>
 <h1>Module <a href="type_OpamTypes.ACTION_GRAPH.Parallel.html">OpamTypes.ACTION_GRAPH.Parallel</a></h1>
+
 <pre><span class="keyword">module</span> Parallel: <code class="type"><a href="OpamParallel.SIG.html">OpamParallel.SIG</a></code><code class="type"> 
     with type G.t = t
-     and type G.V.t = V.t</code></pre><div class="info">
+     and type G.V.t = V.t</code></pre><div class="info module top">
 Parallel iterator<br>
 </div>
 <hr width="100%">
-<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre><pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
+
+<pre><span class="keyword">module</span> <a href="OpamParallel.SIG.G.html">G</a>: <code class="type"><a href="OpamParallel.G.html">OpamParallel.G</a></code><code class="type"> </code></pre>
+<pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info ">
 <code class="code">iter n t pre child paren</code> parallel iteration on <code class="code">n</code>
       cores. <code class="code">child</code> is evaluated in a remote process and when it as
       finished, whereas <code class="code">pre</code> and <code class="code">post</code> are evaluated on the current
       process (respectively before and after the child process has
       been created).<br>
 </div>
-<pre><span id="VALiter_l"><span class="keyword">val</span> iter_l</span> : <code class="type">int -><br>       OpamParallel.G.vertex list -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info">
+
+<pre><span id="VALiter_l"><span class="keyword">val</span> iter_l</span> : <code class="type">int -><br>       OpamParallel.G.vertex list -><br>       pre:(G.V.t -> unit) -> child:(G.V.t -> unit) -> post:(G.V.t -> unit) -> unit</code></pre><div class="info ">
 Parallel iteration on a list.<br>
 </div>
-<pre><span id="VALmap_reduce"><span class="keyword">val</span> map_reduce</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       map:(G.V.t -> 'a) -> merge:('a -> 'a -> 'a) -> init:'a -> 'a</code></pre><div class="info">
+
+<pre><span id="VALmap_reduce"><span class="keyword">val</span> map_reduce</span> : <code class="type">int -><br>       OpamParallel.G.t -><br>       map:(G.V.t -> 'a) -> merge:('a -> 'a -> 'a) -> init:'a -> 'a</code></pre><div class="info ">
 Map-reduce on a graph<br>
 </div>
-<pre><span id="VALmap_reduce_l"><span class="keyword">val</span> map_reduce_l</span> : <code class="type">int -><br>       OpamParallel.G.vertex list -><br>       map:(G.V.t -> 'a) -> merge:('a -> 'a -> 'a) -> init:'a -> 'a</code></pre><div class="info">
+
+<pre><span id="VALmap_reduce_l"><span class="keyword">val</span> map_reduce_l</span> : <code class="type">int -><br>       OpamParallel.G.vertex list -><br>       map:(G.V.t -> 'a) -> merge:('a -> 'a -> 'a) -> init:'a -> 'a</code></pre><div class="info ">
 Map-reduce on a list.<br>
 </div>
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">G.V.t list -> OpamParallel.G.t</code></pre><div class="info">
+
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">G.V.t list -> OpamParallel.G.t</code></pre><div class="info ">
 Build a graph on concurrent tasks from a list of tasks.<br>
 </div>
+
 <pre><span id="EXCEPTIONErrors"><span class="keyword">exception</span> Errors</span> <span class="keyword">of</span> <code class="type">(G.V.t * <a href="OpamParallel.html#TYPEerror">OpamParallel.error</a>) list * G.V.t list</code></pre>
-<div class="info">
+<div class="info ">
 Errors (<code class="code">errors</code>, <code class="code">remaining</code>)<br>
 </div>
+
 <pre><span id="EXCEPTIONCyclic"><span class="keyword">exception</span> Cyclic</span> <span class="keyword">of</span> <code class="type">G.V.t list list</code></pre>
-<div class="info">
+<div class="info ">
 The graph is cyclic.<br>
 </div>
 </body></html>
