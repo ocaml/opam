@@ -1,2 +1,2 @@
-comp += [ "-g" "-bin-annot" ]
-link += [ "-g"]
+comp += [ "-g" ]
+link += [ "-g" ]
