@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -58,16 +58,13 @@
 &nbsp;<a class="post" href="Opam_mk_repo.html" title="Opam_mk_repo">Next</a>
 </div>
 <h1>Module <a href="type_OpamVCS.html">OpamVCS</a></h1>
-
-<pre><span class="keyword">module</span> OpamVCS: <code class="code">sig</code> <a href="OpamVCS.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OpamVCS: <code class="code">sig</code> <a href="OpamVCS.html">..</a> <code class="code">end</code></pre><div class="info">
 Generic backend for version-control systems.<br>
 </div>
 <hr width="100%">
-
 <pre><span class="keyword">module type</span> <a href="OpamVCS.VCS.html">VCS</a> = <code class="code">sig</code> <a href="OpamVCS.VCS.html">..</a> <code class="code">end</code></pre><div class="info">
 Each backend should implement this signature.
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamVCS.Make.html">Make</a>: <div class="sig_block"><code class="code">functor (</code><code class="code">VCS</code><code class="code"> : </code><code class="type"><a href="OpamVCS.VCS.html">VCS</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamRepository.BACKEND.html">OpamRepository.BACKEND</a></code><code class="type"> </code></div></pre><div class="info">
 Create a backend from a <code class="code">VCS</code> implementation.
 </div>

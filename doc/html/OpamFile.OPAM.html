@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -58,175 +58,132 @@
 &nbsp;<a class="post" href="OpamFile.Descr.html" title="OpamFile.Descr">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.OPAM.html">OpamFile.OPAM</a></h1>
-
-<pre><span class="keyword">module</span> OPAM: <code class="code">sig</code> <a href="OpamFile.OPAM.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OPAM: <code class="code">sig</code> <a href="OpamFile.OPAM.html">..</a> <code class="code">end</code></pre><div class="info">
 OPAM files<br>
 </div>
 <hr width="100%">
-
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> t</code></pre><div class="info ">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> t</code></pre><div class="info">
 Create an opam file<br>
 </div>
-
-<pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a></code></pre><div class="info ">
+<pre><span id="VALopam_version"><span class="keyword">val</span> opam_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEopam_version">OpamTypes.opam_version</a></code></pre><div class="info">
 Get OPAM version.<br>
 </div>
-
-<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a></code></pre><div class="info ">
+<pre><span id="VALname"><span class="keyword">val</span> name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a></code></pre><div class="info">
 Package name<br>
 </div>
-
-<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a></code></pre><div class="info ">
+<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a></code></pre><div class="info">
 Package version<br>
 </div>
-
-<pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> option</code></pre><div class="info ">
+<pre><span id="VALocaml_version"><span class="keyword">val</span> ocaml_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> option</code></pre><div class="info">
 Compiler constraint<br>
 </div>
-
-<pre><span id="VALos"><span class="keyword">val</span> os</span> : <code class="type">t -> (bool * string) <a href="OpamTypes.html#TYPEgeneric_formula">OpamTypes.generic_formula</a></code></pre><div class="info ">
+<pre><span id="VALos"><span class="keyword">val</span> os</span> : <code class="type">t -> (bool * string) <a href="OpamTypes.html#TYPEgeneric_formula">OpamTypes.generic_formula</a></code></pre><div class="info">
 OS constraint<br>
 </div>
-
-<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a></code></pre><div class="info ">
+<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a></code></pre><div class="info">
 Availability formula (OS + compiler constraints)<br>
 </div>
-
-<pre><span id="VALmaintainer"><span class="keyword">val</span> maintainer</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALmaintainer"><span class="keyword">val</span> maintainer</span> : <code class="type">t -> string list</code></pre><div class="info">
 Package maintainer(s)<br>
 </div>
-
-<pre><span id="VALsubsts"><span class="keyword">val</span> substs</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> list</code></pre><div class="info ">
+<pre><span id="VALsubsts"><span class="keyword">val</span> substs</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> list</code></pre><div class="info">
 File substitutions<br>
 </div>
-
-<pre><span id="VALbuild_env"><span class="keyword">val</span> build_env</span> : <code class="type">t -> (string * string * string) list</code></pre><div class="info ">
+<pre><span id="VALbuild_env"><span class="keyword">val</span> build_env</span> : <code class="type">t -> (string * string * string) list</code></pre><div class="info">
 List of environment variables to set-up for the build<br>
 </div>
-
-<pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info ">
+<pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
 List of command to run for building the package<br>
 </div>
-
-<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info ">
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
 List of command to run for removing the package<br>
 </div>
-
-<pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info ">
+<pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info">
 Package dependencies<br>
 </div>
-
-<pre><span id="VALdepopts"><span class="keyword">val</span> depopts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info ">
+<pre><span id="VALdepopts"><span class="keyword">val</span> depopts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info">
 Optional dependencies<br>
 </div>
-
-<pre><span id="VALdepexts"><span class="keyword">val</span> depexts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEtags">OpamTypes.tags</a> option</code></pre><div class="info ">
+<pre><span id="VALdepexts"><span class="keyword">val</span> depexts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEtags">OpamTypes.tags</a> option</code></pre><div class="info">
 External dependencies<br>
 </div>
-
-<pre><span id="VALconflicts"><span class="keyword">val</span> conflicts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info ">
+<pre><span id="VALconflicts"><span class="keyword">val</span> conflicts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a></code></pre><div class="info">
 Package conflicts<br>
 </div>
-
-<pre><span id="VALlibraries"><span class="keyword">val</span> libraries</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info ">
+<pre><span id="VALlibraries"><span class="keyword">val</span> libraries</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info">
 List of exported libraries<br>
 </div>
-
-<pre><span id="VALsyntax"><span class="keyword">val</span> syntax</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info ">
+<pre><span id="VALsyntax"><span class="keyword">val</span> syntax</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info">
 List of exported syntax extensions<br>
 </div>
-
-<pre><span id="VALpatches"><span class="keyword">val</span> patches</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info ">
+<pre><span id="VALpatches"><span class="keyword">val</span> patches</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info">
 Patches<br>
 </div>
-
-<pre><span id="VALhomepage"><span class="keyword">val</span> homepage</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALhomepage"><span class="keyword">val</span> homepage</span> : <code class="type">t -> string list</code></pre><div class="info">
 Homepage(s)<br>
 </div>
-
-<pre><span id="VALauthor"><span class="keyword">val</span> author</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALauthor"><span class="keyword">val</span> author</span> : <code class="type">t -> string list</code></pre><div class="info">
 Author(s)<br>
 </div>
-
-<pre><span id="VALlicense"><span class="keyword">val</span> license</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALlicense"><span class="keyword">val</span> license</span> : <code class="type">t -> string list</code></pre><div class="info">
 License(s)<br>
 </div>
-
-<pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type">t -> string list</code></pre><div class="info">
 API documentation<br>
 </div>
-
-<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> string list</code></pre><div class="info">
 Classification tags<br>
 </div>
-
-<pre><span id="VALbuild_test"><span class="keyword">val</span> build_test</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info ">
+<pre><span id="VALbuild_test"><span class="keyword">val</span> build_test</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
 Commands to build and run the tests<br>
 </div>
-
-<pre><span id="VALbuild_doc"><span class="keyword">val</span> build_doc</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info ">
+<pre><span id="VALbuild_doc"><span class="keyword">val</span> build_doc</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list</code></pre><div class="info">
 Commands to build the documentation<br>
 </div>
-
-<pre><span id="VALmessages"><span class="keyword">val</span> messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info ">
+<pre><span id="VALmessages"><span class="keyword">val</span> messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info">
 Messages to display before taking action<br>
 </div>
-
-<pre><span id="VALpost_messages"><span class="keyword">val</span> post_messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info ">
+<pre><span id="VALpost_messages"><span class="keyword">val</span> post_messages</span> : <code class="type">t -> (string * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list</code></pre><div class="info">
 Messages to display at end of install<br>
 </div>
-
-<pre><span id="VALbug_reports"><span class="keyword">val</span> bug_reports</span> : <code class="type">t -> string list</code></pre><div class="info ">
+<pre><span id="VALbug_reports"><span class="keyword">val</span> bug_reports</span> : <code class="type">t -> string list</code></pre><div class="info">
 Where to post bug reports.<br>
 </div>
-
-<pre><span id="VALwith_name"><span class="keyword">val</span> with_name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> t</code></pre><div class="info ">
+<pre><span id="VALwith_name"><span class="keyword">val</span> with_name</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEname">OpamTypes.name</a> -> t</code></pre><div class="info">
 construct as <code class="code">name</code><br>
 </div>
-
-<pre><span id="VALwith_version"><span class="keyword">val</span> with_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> -> t</code></pre><div class="info ">
+<pre><span id="VALwith_version"><span class="keyword">val</span> with_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEversion">OpamTypes.version</a> -> t</code></pre><div class="info">
 construct as <code class="code">version</code><br>
 </div>
-
-<pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> t</code></pre><div class="info ">
+<pre><span id="VALwith_depends"><span class="keyword">val</span> with_depends</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> t</code></pre><div class="info">
 Construct as <code class="code">depends</code><br>
 </div>
-
-<pre><span id="VALwith_depopts"><span class="keyword">val</span> with_depopts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> t</code></pre><div class="info ">
+<pre><span id="VALwith_depopts"><span class="keyword">val</span> with_depopts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEformula">OpamTypes.formula</a> -> t</code></pre><div class="info">
 Construct as <code class="code">depopts</code><br>
 </div>
-
-<pre><span id="VALwith_build"><span class="keyword">val</span> with_build</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_build"><span class="keyword">val</span> with_build</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> t</code></pre><div class="info">
 Construct as <code class="code">build</code><br>
 </div>
-
-<pre><span id="VALwith_remove"><span class="keyword">val</span> with_remove</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_remove"><span class="keyword">val</span> with_remove</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcommand">OpamTypes.command</a> list -> t</code></pre><div class="info">
 Construct as <code class="code">remove</code><br>
 </div>
-
-<pre><span id="VALwith_libraries"><span class="keyword">val</span> with_libraries</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_libraries"><span class="keyword">val</span> with_libraries</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list -> t</code></pre><div class="info">
 Construct as <code class="code">libraries</code><br>
 </div>
-
-<pre><span id="VALwith_substs"><span class="keyword">val</span> with_substs</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_substs"><span class="keyword">val</span> with_substs</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> list -> t</code></pre><div class="info">
 Construct as <code class="code">substs</code><br>
 </div>
-
-<pre><span id="VALwith_ocaml_version"><span class="keyword">val</span> with_ocaml_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> option -> t</code></pre><div class="info ">
+<pre><span id="VALwith_ocaml_version"><span class="keyword">val</span> with_ocaml_version</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEcompiler_constraint">OpamTypes.compiler_constraint</a> option -> t</code></pre><div class="info">
 Construct as <code class="code">compiler_version</code><br>
 </div>
-
-<pre><span id="VALwith_maintainer"><span class="keyword">val</span> with_maintainer</span> : <code class="type">t -> string list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_maintainer"><span class="keyword">val</span> with_maintainer</span> : <code class="type">t -> string list -> t</code></pre><div class="info">
 Construct as <code class="code">maintainer</code><br>
 </div>
-
-<pre><span id="VALwith_patches"><span class="keyword">val</span> with_patches</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_patches"><span class="keyword">val</span> with_patches</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) list -> t</code></pre><div class="info">
 Construct as <code class="code">patches</code><br>
 </div>
-
-<pre><span id="VALwith_bug_reports"><span class="keyword">val</span> with_bug_reports</span> : <code class="type">t -> string list -> t</code></pre><div class="info ">
+<pre><span id="VALwith_bug_reports"><span class="keyword">val</span> with_bug_reports</span> : <code class="type">t -> string list -> t</code></pre><div class="info">
 Construct using <code class="code">bug_reports</code><br>
 </div>
 </body></html>

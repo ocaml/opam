@@ -39,8 +39,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -54,29 +54,23 @@
 <div class="navbar">&nbsp;<a class="up" href="OpamCompiler.html" title="OpamCompiler">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_OpamCompiler.Version.html">OpamCompiler.Version</a></h1>
-
-<pre><span class="keyword">module</span> Version: <code class="code">sig</code> <a href="OpamCompiler.Version.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Version: <code class="code">sig</code> <a href="OpamCompiler.Version.html">..</a> <code class="code">end</code></pre><div class="info">
 OCaml compiler versions<br>
 </div>
 <hr width="100%">
-
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
-
 <pre><span id="TYPEconstr"><span class="keyword">type</span> <code class="type"></code>constr</span> = <code class="type">(<a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> * t) <a href="OpamFormula.html#TYPEformula">OpamFormula.formula</a></code> </pre>
-<div class="info ">
+<div class="info">
 Compiler constraint<br>
 </div>
 
-
-<pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> t option</code></pre><div class="info ">
+<pre><span id="VALcurrent"><span class="keyword">val</span> current</span> : <code class="type">unit -> t option</code></pre><div class="info">
 Return the version of the compiler currently installed<br>
 </div>
-
-<pre><span id="VALsystem"><span class="keyword">val</span> system</span> : <code class="type">unit -> t option</code></pre><div class="info ">
+<pre><span id="VALsystem"><span class="keyword">val</span> system</span> : <code class="type">unit -> t option</code></pre><div class="info">
 Returm the version of the system compiler<br>
 </div>
-
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> <a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> -> t -> bool</code></pre><div class="info ">
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> <a href="OpamFormula.html#TYPErelop">OpamFormula.relop</a> -> t -> bool</code></pre><div class="info">
 Compare OCaml versions<br>
 </div>
 </body></html>

@@ -40,8 +40,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -56,27 +56,21 @@
 &nbsp;<a class="post" href="OpamVariable.Full.html" title="OpamVariable.Full">Next</a>
 </div>
 <h1>Module <a href="type_OpamVariable.Section.html">OpamVariable.Section</a></h1>
-
-<pre><span class="keyword">module</span> Section: <code class="code">sig</code> <a href="OpamVariable.Section.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Section: <code class="code">sig</code> <a href="OpamVariable.Section.html">..</a> <code class="code">end</code></pre><div class="info">
 Section names<br>
 </div>
 <hr width="100%">
-
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
-
 <pre><span class="keyword">module</span> <a href="OpamVariable.Section.G.html">G</a>: <code class="type">Graph.Sig.I</code><code class="type">  with type V.t = t</code></pre><div class="info">
 Graph of fully-qualified sections
 </div>
-
-<pre><span id="VALgraph_iter"><span class="keyword">val</span> graph_iter</span> : <code class="type">(G.V.t -> unit) -> G.t -> unit</code></pre><div class="info ">
+<pre><span id="VALgraph_iter"><span class="keyword">val</span> graph_iter</span> : <code class="type">(G.V.t -> unit) -> G.t -> unit</code></pre><div class="info">
 Iteration in topological order<br>
 </div>
-
 <pre><span id="TYPEsection"><span class="keyword">type</span> <code class="type"></code>section</span> = <code class="type">t</code> </pre>
-<div class="info ">
+<div class="info">
 Shortcut to sections<br>
 </div>
-
 
 <pre><span class="keyword">module</span> <a href="OpamVariable.Section.Full.html">Full</a>: <code class="code">sig</code> <a href="OpamVariable.Section.Full.html">..</a> <code class="code">end</code></pre><div class="info">
 Fully qualified section names

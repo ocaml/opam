@@ -39,8 +39,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -54,7 +54,6 @@
 <div class="navbar">&nbsp;<a class="up" href="OpamMisc.Set.html" title="OpamMisc.Set">Up</a>
 &nbsp;</div>
 <h1>Functor <a href="type_OpamMisc.Set.Make.html">OpamMisc.Set.Make</a></h1>
-
 <pre><span class="keyword">module</span> Make: <div class="sig_block"><code class="code">functor (</code><code class="code">S</code><code class="code"> : </code><code class="type"><a href="OpamMisc.OrderedType.html">OpamMisc.OrderedType</a></code><code class="code">) -&gt; </code><code class="type"><a href="OpamMisc.SET.html">OpamMisc.SET</a></code><code class="type">  with type elt = S.t</code></div></pre><table border="0" cellpadding="3" width="100%">
 <tr>
 <td align="left" valign="top" width="1%%"><b>Parameters: </b></td>
@@ -70,30 +69,23 @@
 </tr>
 </table>
 <hr width="100%">
-
 <pre><span class="keyword">include</span> Set.S</pre>
-
-<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">(elt -> elt) -> t -> t</code></pre><div class="info ">
+<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">(elt -> elt) -> t -> t</code></pre><div class="info">
 auto-map<br>
 </div>
-
-<pre><span id="VALchoose_one"><span class="keyword">val</span> choose_one</span> : <code class="type">t -> elt</code></pre><div class="info ">
+<pre><span id="VALchoose_one"><span class="keyword">val</span> choose_one</span> : <code class="type">t -> elt</code></pre><div class="info">
 Return one element. Fail if the set is not a singleton.<br>
 </div>
-
-<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">elt list -> t</code></pre><div class="info ">
+<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">elt list -> t</code></pre><div class="info">
 Make a set from a list<br>
 </div>
-
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">t -> string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">t -> string</code></pre><div class="info">
 Pretty-print a set<br>
 </div>
-
-<pre><span id="VALto_json"><span class="keyword">val</span> to_json</span> : <code class="type">t -> <a href="OpamJson.html#TYPEt">OpamJson.t</a></code></pre><div class="info ">
+<pre><span id="VALto_json"><span class="keyword">val</span> to_json</span> : <code class="type">t -> <a href="OpamJson.html#TYPEt">OpamJson.t</a></code></pre><div class="info">
 Return a JSON representation of the given set<br>
 </div>
-
-<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type">(elt -> bool) -> t -> elt</code></pre><div class="info ">
+<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type">(elt -> bool) -> t -> elt</code></pre><div class="info">
 Find an element in the list<br>
 </div>
 </body></html>

@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -58,19 +58,15 @@
 &nbsp;<a class="post" href="OpamVersion.html" title="OpamVersion">Next</a>
 </div>
 <h1>Module <a href="type_OpamVariable.html">OpamVariable</a></h1>
-
-<pre><span class="keyword">module</span> OpamVariable: <code class="code">sig</code> <a href="OpamVariable.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OpamVariable: <code class="code">sig</code> <a href="OpamVariable.html">..</a> <code class="code">end</code></pre><div class="info">
 <h2 id="2_Variablenames">Variable names</h2><br>
 </div>
 <hr width="100%">
-
 <pre><span class="keyword">include</span> <a href="OpamMisc.ABSTRACT.html">OpamMisc.ABSTRACT</a></pre>
-
 <pre><span id="TYPEvariable"><span class="keyword">type</span> <code class="type"></code>variable</span> = <code class="type">t</code> </pre>
-<div class="info ">
+<div class="info">
 Shortcut to variables<br>
 </div>
-
 
 <pre><code><span id="TYPEvariable_contents"><span class="keyword">type</span> <code class="type"></code>variable_contents</span> = </code></pre><table class="typetable">
 <tr>
@@ -88,27 +84,22 @@ Shortcut to variables<br>
 
 </tr></table>
 
-<div class="info ">
+<div class="info">
 Variable contents<br>
 </div>
 
-
-<pre><span id="VALstring_of_variable_contents"><span class="keyword">val</span> string_of_variable_contents</span> : <code class="type"><a href="OpamVariable.html#TYPEvariable_contents">variable_contents</a> -> string</code></pre><div class="info ">
+<pre><span id="VALstring_of_variable_contents"><span class="keyword">val</span> string_of_variable_contents</span> : <code class="type"><a href="OpamVariable.html#TYPEvariable_contents">variable_contents</a> -> string</code></pre><div class="info">
 Pretty print of variable contents<br>
 </div>
-
-<pre><span id="VALenable"><span class="keyword">val</span> enable</span> : <code class="type">t</code></pre><div class="info ">
+<pre><span id="VALenable"><span class="keyword">val</span> enable</span> : <code class="type">t</code></pre><div class="info">
 the variable <code class="code">enable</code><br>
 </div>
-
-<pre><span id="VALinstalled"><span class="keyword">val</span> installed</span> : <code class="type">t</code></pre><div class="info ">
+<pre><span id="VALinstalled"><span class="keyword">val</span> installed</span> : <code class="type">t</code></pre><div class="info">
 the variable <code class="code">installed</code><br>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamVariable.Section.html">Section</a>: <code class="code">sig</code> <a href="OpamVariable.Section.html">..</a> <code class="code">end</code></pre><div class="info">
 Section names
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamVariable.Full.html">Full</a>: <code class="code">sig</code> <a href="OpamVariable.Full.html">..</a> <code class="code">end</code></pre><div class="info">
 Fully qualified variables
 </div>

@@ -40,8 +40,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -59,8 +59,7 @@
 &nbsp;<a class="up" href="OpamJson.html" title="OpamJson">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_OpamJson.Uncut.html">OpamJson.Uncut</a></h1>
-
-<pre><span class="keyword">module</span> Uncut: <code class="code">sig</code> <a href="OpamJson.Uncut.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Uncut: <code class="code">sig</code> <a href="OpamJson.Uncut.html">..</a> <code class="code">end</code></pre><div class="info">
 Codec with comments and whitespace.
 <p>
 
@@ -114,20 +113,17 @@ Codec with comments and whitespace.
       <code class="code">w</code> and <code class="code">c</code>.<br>
 <br>
 <h1 id="1_Decode">Decode</h1><br>
-
-<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">OpamJson.decoder</a> -><br>       [ `Await<br>       | `Comment of [ `M | `S ] * string<br>       | `End<br>       | `Error of <a href="OpamJson.html#TYPEerror">OpamJson.error</a><br>       | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>       | `White of string ]</code></pre><div class="info ">
+<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">OpamJson.decoder</a> -><br>       [ `Await<br>       | `Comment of [ `M | `S ] * string<br>       | `End<br>       | `Error of <a href="OpamJson.html#TYPEerror">OpamJson.error</a><br>       | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>       | `White of string ]</code></pre><div class="info">
 <code class="code">decode d</code> is like <code class="code">Jsonm.decode</code> but for the
       <a href="OpamJson.Uncut.html#uncutdatamodel">uncut data model</a>.<br>
 </div>
-
-<pre><span id="VALpp_decode"><span class="keyword">val</span> pp_decode</span> : <code class="type">Format.formatter -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Error of <a href="OpamJson.html#TYPEerror">OpamJson.error</a><br>        | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>        | `White of string ] -><br>       unit</code></pre><div class="info ">
+<pre><span id="VALpp_decode"><span class="keyword">val</span> pp_decode</span> : <code class="type">Format.formatter -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Error of <a href="OpamJson.html#TYPEerror">OpamJson.error</a><br>        | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>        | `White of string ] -><br>       unit</code></pre><div class="info">
 <code class="code">pp_decode ppf v</code> prints an unspecified representation of <code class="code">v</code>
       on <code class="code">ppf</code>.<br>
 </div>
 <br>
 <h1 id="1_Encode">Encode</h1><br>
-
-<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>        | `White of string ] -><br>       [ `Ok | `Partial ]</code></pre><div class="info ">
+<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">OpamJson.encoder</a> -><br>       [< `Await<br>        | `Comment of [ `M | `S ] * string<br>        | `End<br>        | `Lexeme of <a href="OpamJson.html#TYPElexeme">OpamJson.lexeme</a><br>        | `White of string ] -><br>       [ `Ok | `Partial ]</code></pre><div class="info">
 <code class="code">encode</code> is like <code class="code">Jsonm.encode</code> but for the <a href="OpamJson.Uncut.html#uncutdatamodel">
       uncut data model</a>.
 <p>

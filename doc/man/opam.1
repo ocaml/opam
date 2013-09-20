@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM" 1 "" "Opam 1.1.0" "Opam Manual"
+.TH "OPAM" 1 "" "Opam 1.1.0-beta" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -102,6 +102,11 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
+.SH ENVIRONMENT VARIABLES
+.P
+opam makes use of environment variables listed here.
+.P
+\fIOPAMCOLOR\fR, when set to \fIalways\fR or \fInever\fR, sets a default value for the \-\-color option
 .SH FURTHER DOCUMENTATION
 .P
 See http://opam.ocamlpro.com.

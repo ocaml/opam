@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -58,45 +58,35 @@
 &nbsp;<a class="post" href="OpamFile.Dot_config.Syntax.html" title="OpamFile.Dot_config.Syntax">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.Dot_config.Library.html">OpamFile.Dot_config.Library</a></h1>
-
-<pre><span class="keyword">module</span> Library: <code class="type"><a href="OpamFile.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Library: <code class="type"><a href="OpamFile.Dot_config.SECTION.html">SECTION</a></code><code class="type"> </code></pre><div class="info">
 Sections starting by <code class="code">library</code><br>
 </div>
 <hr width="100%">
-
-<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info ">
+<pre><span id="VALavailable"><span class="keyword">val</span> available</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info">
 List the available sections<br>
 </div>
-
-<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string</code></pre><div class="info ">
+<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string</code></pre><div class="info">
 Return the section kind<br>
 </div>
-
-<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info ">
+<pre><span id="VALasmcomp"><span class="keyword">val</span> asmcomp</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info">
 Return the list of native-compiler options<br>
 </div>
-
-<pre><span id="VALbytecomp"><span class="keyword">val</span> bytecomp</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info ">
+<pre><span id="VALbytecomp"><span class="keyword">val</span> bytecomp</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info">
 Return the list of bytecode-compiler options<br>
 </div>
-
-<pre><span id="VALasmlink"><span class="keyword">val</span> asmlink</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info ">
+<pre><span id="VALasmlink"><span class="keyword">val</span> asmlink</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info">
 Return the list of native-code linking options<br>
 </div>
-
-<pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info ">
+<pre><span id="VALbytelink"><span class="keyword">val</span> bytelink</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> string list</code></pre><div class="info">
 Return the list of bytecode linking options<br>
 </div>
-
-<pre><span id="VALrequires"><span class="keyword">val</span> requires</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info ">
+<pre><span id="VALrequires"><span class="keyword">val</span> requires</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> list</code></pre><div class="info">
 Return the build requirements<br>
 </div>
-
-<pre><span id="VALvariable"><span class="keyword">val</span> variable</span> : <code class="type">t -><br>       <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> <a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a> option</code></pre><div class="info ">
+<pre><span id="VALvariable"><span class="keyword">val</span> variable</span> : <code class="type">t -><br>       <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> <a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> -> <a href="OpamTypes.html#TYPEvariable_contents">OpamTypes.variable_contents</a> option</code></pre><div class="info">
 Return the value of variables<br>
 </div>
-
-<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> <a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> list</code></pre><div class="info ">
+<pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEsection">OpamTypes.section</a> -> <a href="OpamTypes.html#TYPEvariable">OpamTypes.variable</a> list</code></pre><div class="info">
 The list of local variables<br>
 </div>
 </body></html>

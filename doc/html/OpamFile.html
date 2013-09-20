@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -61,112 +61,88 @@
 &nbsp;<a class="post" href="OpamFilename.html" title="OpamFilename">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.html">OpamFile</a></h1>
-
-<pre><span class="keyword">module</span> OpamFile: <code class="code">sig</code> <a href="OpamFile.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OpamFile: <code class="code">sig</code> <a href="OpamFile.html">..</a> <code class="code">end</code></pre><div class="info">
 Functions to read and write OPAM configuration files in a typed way<br>
 </div>
 <hr width="100%">
 <br>
 Functions to read and write OPAM configuration files in a typed way<br>
-
 <pre><span class="keyword">module type</span> <a href="OpamFile.IO_FILE.html">IO_FILE</a> = <code class="code">sig</code> <a href="OpamFile.IO_FILE.html">..</a> <code class="code">end</code></pre><div class="info">
 All Configuration files satisfies this signature
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Config.html">Config</a>: <code class="code">sig</code> <a href="OpamFile.Config.html">..</a> <code class="code">end</code></pre><div class="info">
 Configuration file: <code class="code">$opam/config</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.OPAM.html">OPAM</a>: <code class="code">sig</code> <a href="OpamFile.OPAM.html">..</a> <code class="code">end</code></pre><div class="info">
 OPAM files
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Descr.html">Descr</a>: <code class="code">sig</code> <a href="OpamFile.Descr.html">..</a> <code class="code">end</code></pre><div class="info">
 Package descriptions: <code class="code">$opam/descr/</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Aliases.html">Aliases</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = compiler switch_map</code></pre><div class="info">
 Compiler aliases: <code class="code">$opam/aliases</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Export.html">Export</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set * package_set</code></pre><div class="info">
 Import/export file.
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Installed.html">Installed</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
 List of installed packages: <code class="code">$opam/$oversion/installed</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Installed_roots.html">Installed_roots</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
 List of packages explicitly installed by the user:
     <code class="code">$opam/$switch/installed.user</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Reinstall.html">Reinstall</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = package_set</code></pre><div class="info">
 List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Comp.html">Comp</a>: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre><div class="info">
 Compiler version <code class="code">$opam/compilers/</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Comp_descr.html">Comp_descr</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = string</code></pre><div class="info">
 Compiler descriptions
 </div>
 <br>
 <h2 id="2_Configurationfiles">Configuration files</h2><br>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Dot_install.html">Dot_install</a>: <code class="code">sig</code> <a href="OpamFile.Dot_install.html">..</a> <code class="code">end</code></pre><div class="info">
 .install files
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Dot_config.html">Dot_config</a>: <code class="code">sig</code> <a href="OpamFile.Dot_config.html">..</a> <code class="code">end</code></pre><div class="info">
 .config files
 </div>
 <br>
 <h2 id="2_Repositoryfiles">Repository files</h2><br>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Package_index.html">Package_index</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with
   type t = (repository_name * string option) package_map</code></pre><div class="info">
 Association between package names and repositories
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Compiler_index.html">Compiler_index</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with
   type t = (repository_name * string option) compiler_map</code></pre><div class="info">
 Association between compiler names and repositories
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Repo_config.html">Repo_config</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = repository</code></pre><div class="info">
 Repository config: <code class="code">$opam/repo/$repo/config</code>
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Pinned.html">Pinned</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = pin_option name_map</code></pre><div class="info">
 Pinned package files
 </div>
 <br>
 <h2 id="2_Substitutionfiles">Substitution files</h2><br>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Subst.html">Subst</a>: <code class="code">sig</code> <a href="OpamFile.Subst.html">..</a> <code class="code">end</code></pre><div class="info">
 Substitution files
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.URL.html">URL</a>: <code class="code">sig</code> <a href="OpamFile.URL.html">..</a> <code class="code">end</code></pre><div class="info">
 Urls for OPAM repositories
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.File_attributes.html">File_attributes</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = file_attribute_set</code></pre><div class="info">
 urls.txt file *
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Filenames.html">Filenames</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = filename_set</code></pre><div class="info">
 List of filenames
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamFile.Prefix.html">Prefix</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = string name_map</code></pre><div class="info">
 Prefix of package directories
 </div>
-
-<pre><span id="VALprint_stats"><span class="keyword">val</span> print_stats</span> : <code class="type">unit -> unit</code></pre><div class="info ">
+<pre><span id="VALprint_stats"><span class="keyword">val</span> print_stats</span> : <code class="type">unit -> unit</code></pre><div class="info">
 Display statistics about file access.<br>
 </div>
 </body></html>

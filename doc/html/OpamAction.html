@@ -40,8 +40,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -56,27 +56,22 @@
 &nbsp;<a class="post" href="OpamArg.html" title="OpamArg">Next</a>
 </div>
 <h1>Module <a href="type_OpamAction.html">OpamAction</a></h1>
-
-<pre><span class="keyword">module</span> OpamAction: <code class="code">sig</code> <a href="OpamAction.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OpamAction: <code class="code">sig</code> <a href="OpamAction.html">..</a> <code class="code">end</code></pre><div class="info">
 OPAM actions<br>
 </div>
 <hr width="100%">
-
-<pre><span id="VALbuild_and_install_package"><span class="keyword">val</span> build_and_install_package</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> metadata:bool -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info ">
+<pre><span id="VALbuild_and_install_package"><span class="keyword">val</span> build_and_install_package</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -> metadata:bool -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
 Build and install a package.<br>
 </div>
-
-<pre><span id="VALremove_package"><span class="keyword">val</span> remove_package</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       metadata:bool -> rm_build:bool -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info ">
+<pre><span id="VALremove_package"><span class="keyword">val</span> remove_package</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       metadata:bool -> rm_build:bool -> <a href="OpamTypes.html#TYPEpackage">OpamTypes.package</a> -> unit</code></pre><div class="info">
 Remove a package.<br>
 </div>
-
-<pre><span id="VALremove_all_packages"><span class="keyword">val</span> remove_all_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       metadata:bool -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info ">
+<pre><span id="VALremove_all_packages"><span class="keyword">val</span> remove_all_packages</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       metadata:bool -> <a href="OpamTypes.html#TYPEsolution">OpamTypes.solution</a> -> <a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a></code></pre><div class="info">
 Remove all the packages from a solution. This includes the package
     to delete, to upgrade and to recompile. Return the set of all deleted
     packages.<br>
 </div>
-
-<pre><span id="VALupdate_metadata"><span class="keyword">val</span> update_metadata</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       installed:<a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -><br>       installed_roots:<a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -><br>       reinstall:<a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> unit</code></pre><div class="info ">
+<pre><span id="VALupdate_metadata"><span class="keyword">val</span> update_metadata</span> : <code class="type"><a href="OpamState.Types.html#TYPEt">OpamState.Types.t</a> -><br>       installed:<a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -><br>       installed_roots:<a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -><br>       reinstall:<a href="OpamTypes.html#TYPEpackage_set">OpamTypes.package_set</a> -> unit</code></pre><div class="info">
 Update package metadata<br>
 </div>
 </body></html>

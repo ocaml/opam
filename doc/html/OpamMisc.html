@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -62,183 +62,140 @@
 &nbsp;<a class="post" href="OpamPackage.html" title="OpamPackage">Next</a>
 </div>
 <h1>Module <a href="type_OpamMisc.html">OpamMisc</a></h1>
-
-<pre><span class="keyword">module</span> OpamMisc: <code class="code">sig</code> <a href="OpamMisc.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OpamMisc: <code class="code">sig</code> <a href="OpamMisc.html">..</a> <code class="code">end</code></pre><div class="info">
 Basic functions<br>
 </div>
 <hr width="100%">
 <br>
 <h2 id="2_Abstracttypes">Abstract types</h2><br>
-
 <pre><span class="keyword">module type</span> <a href="OpamMisc.SET.html">SET</a> = <code class="code">sig</code> <a href="OpamMisc.SET.html">..</a> <code class="code">end</code></pre><div class="info">
 Collection of abstract values
 </div>
-
 <pre><span class="keyword">module type</span> <a href="OpamMisc.MAP.html">MAP</a> = <code class="code">sig</code> <a href="OpamMisc.MAP.html">..</a> <code class="code">end</code></pre><div class="info">
 Dictionaries of abstract values
 </div>
-
 <pre><span class="keyword">module type</span> <a href="OpamMisc.ABSTRACT.html">ABSTRACT</a> = <code class="code">sig</code> <a href="OpamMisc.ABSTRACT.html">..</a> <code class="code">end</code></pre><div class="info">
 All abstract types should implement this signature
 </div>
-
 <pre><span class="keyword">module type</span> <a href="OpamMisc.OrderedType.html">OrderedType</a> = <code class="code">sig</code> <a href="OpamMisc.OrderedType.html">..</a> <code class="code">end</code></pre><div class="info">
 Extended sets and maps
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.Set.html">Set</a>: <code class="code">sig</code> <a href="OpamMisc.Set.html">..</a> <code class="code">end</code></pre><div class="info">
 Set constructor
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.Map.html">Map</a>: <code class="code">sig</code> <a href="OpamMisc.Map.html">..</a> <code class="code">end</code></pre><div class="info">
 Map constructor
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.Base.html">Base</a>: <code class="code">sig</code> <a href="OpamMisc.Base.html">..</a> <code class="code">end</code></pre><div class="info">
 Base module, useful to abstract strings
 </div>
 <br>
 <h2 id="2_Integermanipulation">Integer manipulation</h2><br>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.IntMap.html">IntMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = int</code></pre><div class="info">
 Map of ints
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.IntSet.html">IntSet</a>: <code class="type"><a href="OpamMisc.SET.html">SET</a></code><code class="type">  with type elt = int</code></pre><div class="info">
 Set of ints
 </div>
-
-<pre><span id="VALstring_of_list"><span class="keyword">val</span> string_of_list</span> : <code class="type">('a -> string) -> 'a list -> string</code></pre><div class="info ">
+<pre><span id="VALstring_of_list"><span class="keyword">val</span> string_of_list</span> : <code class="type">('a -> string) -> 'a list -> string</code></pre><div class="info">
 Display a list of strings<br>
 </div>
-
-<pre><span id="VALpretty_list"><span class="keyword">val</span> pretty_list</span> : <code class="type">string list -> string</code></pre><div class="info ">
+<pre><span id="VALpretty_list"><span class="keyword">val</span> pretty_list</span> : <code class="type">string list -> string</code></pre><div class="info">
 Display a pretty list: <code class="code">"x";"y";"z"</code> -&gt; "x, y and z"<br>
 </div>
 <br>
 <h2 id="2_Stringmanipulation">String manipulation</h2><br>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringMap.html">StringMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = string</code></pre><div class="info">
 Map of strings
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringSet.html">StringSet</a>: <code class="type"><a href="OpamMisc.SET.html">SET</a></code><code class="type">  with type elt = string</code></pre><div class="info">
 Set of strings
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringSetSet.html">StringSetSet</a>: <code class="type"><a href="OpamMisc.SET.html">SET</a></code><code class="type">  with type elt = StringSet.t</code></pre><div class="info">
 Set of string sets
 </div>
-
 <pre><span class="keyword">module</span> <a href="OpamMisc.StringSetMap.html">StringSetMap</a>: <code class="type"><a href="OpamMisc.MAP.html">MAP</a></code><code class="type">  with type key = StringSet.t</code></pre><div class="info">
 Map of string sets
 </div>
-
-<pre><span id="VALstrip"><span class="keyword">val</span> strip</span> : <code class="type">string -> string</code></pre><div class="info ">
+<pre><span id="VALstrip"><span class="keyword">val</span> strip</span> : <code class="type">string -> string</code></pre><div class="info">
 Strip a string<br>
 </div>
-
-<pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type">prefix:string -> string -> bool</code></pre><div class="info ">
+<pre><span id="VALstarts_with"><span class="keyword">val</span> starts_with</span> : <code class="type">prefix:string -> string -> bool</code></pre><div class="info">
 Does a string starts with the given prefix ?<br>
 </div>
-
-<pre><span id="VALends_with"><span class="keyword">val</span> ends_with</span> : <code class="type">suffix:string -> string -> bool</code></pre><div class="info ">
+<pre><span id="VALends_with"><span class="keyword">val</span> ends_with</span> : <code class="type">suffix:string -> string -> bool</code></pre><div class="info">
 Does a string ends with the given suffix ?<br>
 </div>
-
-<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:string -> string -> string</code></pre><div class="info ">
+<pre><span id="VALremove_prefix"><span class="keyword">val</span> remove_prefix</span> : <code class="type">prefix:string -> string -> string</code></pre><div class="info">
 Remove a prefix<br>
 </div>
-
-<pre><span id="VALremove_suffix"><span class="keyword">val</span> remove_suffix</span> : <code class="type">suffix:string -> string -> string</code></pre><div class="info ">
+<pre><span id="VALremove_suffix"><span class="keyword">val</span> remove_suffix</span> : <code class="type">suffix:string -> string -> string</code></pre><div class="info">
 Remove a suffix<br>
 </div>
-
-<pre><span id="VALcut_at"><span class="keyword">val</span> cut_at</span> : <code class="type">string -> char -> (string * string) option</code></pre><div class="info ">
+<pre><span id="VALcut_at"><span class="keyword">val</span> cut_at</span> : <code class="type">string -> char -> (string * string) option</code></pre><div class="info">
 Cut a string at the first occurence of the given char<br>
 </div>
-
-<pre><span id="VALrcut_at"><span class="keyword">val</span> rcut_at</span> : <code class="type">string -> char -> (string * string) option</code></pre><div class="info ">
+<pre><span id="VALrcut_at"><span class="keyword">val</span> rcut_at</span> : <code class="type">string -> char -> (string * string) option</code></pre><div class="info">
 Same as <code class="code">cut_at</code>, but starts from the right<br>
 </div>
-
-<pre><span id="VALcontains"><span class="keyword">val</span> contains</span> : <code class="type">string -> char -> bool</code></pre><div class="info ">
+<pre><span id="VALcontains"><span class="keyword">val</span> contains</span> : <code class="type">string -> char -> bool</code></pre><div class="info">
 Does a string contains the given chars ?<br>
 </div>
-
-<pre><span id="VALsplit"><span class="keyword">val</span> split</span> : <code class="type">string -> char -> string list</code></pre><div class="info ">
+<pre><span id="VALsplit"><span class="keyword">val</span> split</span> : <code class="type">string -> char -> string list</code></pre><div class="info">
 Split a string<br>
 </div>
-
-<pre><span id="VALindent_left"><span class="keyword">val</span> indent_left</span> : <code class="type">string -> ?visual:string -> int -> string</code></pre><div class="info ">
+<pre><span id="VALindent_left"><span class="keyword">val</span> indent_left</span> : <code class="type">string -> ?visual:string -> int -> string</code></pre><div class="info">
 left indenting. <code class="code">~visual</code> can be used to indent eg. ANSI colored
     strings and should correspond to the visible characters of s<br>
 </div>
-
-<pre><span id="VALindent_right"><span class="keyword">val</span> indent_right</span> : <code class="type">string -> ?visual:string -> int -> string</code></pre><div class="info ">
+<pre><span id="VALindent_right"><span class="keyword">val</span> indent_right</span> : <code class="type">string -> ?visual:string -> int -> string</code></pre><div class="info">
 right indenting<br>
 </div>
-
-<pre><span id="VALsub_at"><span class="keyword">val</span> sub_at</span> : <code class="type">int -> string -> string</code></pre><div class="info ">
+<pre><span id="VALsub_at"><span class="keyword">val</span> sub_at</span> : <code class="type">int -> string -> string</code></pre><div class="info">
 Cut a string<br>
 </div>
 <br>
 <h2 id="2_Misc">Misc</h2><br>
-
-<pre><span id="VALreset_env_value"><span class="keyword">val</span> reset_env_value</span> : <code class="type">prefix:string -> string -> string list</code></pre><div class="info ">
+<pre><span id="VALreset_env_value"><span class="keyword">val</span> reset_env_value</span> : <code class="type">prefix:string -> string -> string list</code></pre><div class="info">
 Remove from a ':' separated list of string the one with the given prefix<br>
 </div>
-
-<pre><span id="VALrsync_trim"><span class="keyword">val</span> rsync_trim</span> : <code class="type">string list -> string list</code></pre><div class="info ">
+<pre><span id="VALrsync_trim"><span class="keyword">val</span> rsync_trim</span> : <code class="type">string list -> string list</code></pre><div class="info">
 if rsync -arv return 4 lines, this means that no files have changed<br>
 </div>
-
-<pre><span id="VALexact_match"><span class="keyword">val</span> exact_match</span> : <code class="type">Re.re -> string -> bool</code></pre><div class="info ">
+<pre><span id="VALexact_match"><span class="keyword">val</span> exact_match</span> : <code class="type">Re.re -> string -> bool</code></pre><div class="info">
 Exact regexp matching<br>
 </div>
-
-<pre><span id="VALfilter_map"><span class="keyword">val</span> filter_map</span> : <code class="type">('a -> 'b option) -> 'a list -> 'b list</code></pre><div class="info ">
+<pre><span id="VALfilter_map"><span class="keyword">val</span> filter_map</span> : <code class="type">('a -> 'b option) -> 'a list -> 'b list</code></pre><div class="info">
 Filter and map<br>
 </div>
-
-<pre><span id="VALinsert"><span class="keyword">val</span> insert</span> : <code class="type">('a -> 'a -> int) -> 'a -> 'a list -> 'a list</code></pre><div class="info ">
+<pre><span id="VALinsert"><span class="keyword">val</span> insert</span> : <code class="type">('a -> 'a -> int) -> 'a -> 'a list -> 'a list</code></pre><div class="info">
 Insert a value in an ordered list<br>
 </div>
-
-<pre><span id="VALgetenv"><span class="keyword">val</span> getenv</span> : <code class="type">string -> string</code></pre><div class="info ">
+<pre><span id="VALgetenv"><span class="keyword">val</span> getenv</span> : <code class="type">string -> string</code></pre><div class="info">
 Lazy environment variable<br>
 </div>
-
-<pre><span id="VALenv"><span class="keyword">val</span> env</span> : <code class="type">unit -> (string * string) list</code></pre><div class="info ">
+<pre><span id="VALenv"><span class="keyword">val</span> env</span> : <code class="type">unit -> (string * string) list</code></pre><div class="info">
 Lazy environment<br>
 </div>
-
-<pre><span id="VALpretty_backtrace"><span class="keyword">val</span> pretty_backtrace</span> : <code class="type">unit -> string</code></pre><div class="info ">
+<pre><span id="VALpretty_backtrace"><span class="keyword">val</span> pretty_backtrace</span> : <code class="type">unit -> string</code></pre><div class="info">
 Return a pretty-printed backtrace<br>
 </div>
-
-<pre><span id="VALprettify_path"><span class="keyword">val</span> prettify_path</span> : <code class="type">string -> string</code></pre><div class="info ">
+<pre><span id="VALprettify_path"><span class="keyword">val</span> prettify_path</span> : <code class="type">string -> string</code></pre><div class="info">
 Prettify a local path (eg. replace /home/me/ by '~')<br>
 </div>
-
-<pre><span class="keyword">module</span> <a href="OpamMisc.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamMisc.OP.html">..</a> <code class="code">end</code></pre>
-<pre><span id="VALterminal_columns"><span class="keyword">val</span> terminal_columns</span> : <code class="type">unit -> int</code></pre><div class="info ">
+<pre><span class="keyword">module</span> <a href="OpamMisc.OP.html">OP</a>: <code class="code">sig</code> <a href="OpamMisc.OP.html">..</a> <code class="code">end</code></pre><pre><span id="VALterminal_columns"><span class="keyword">val</span> terminal_columns</span> : <code class="type">unit -> int</code></pre><div class="info">
 When <code class="code">stdout</code> refers to a terminal, query the number of columns.
     Otherwise return <code class="code">max_int</code>.<br>
 </div>
-
-<pre><span id="VALuname_s"><span class="keyword">val</span> uname_s</span> : <code class="type">unit -> string option</code></pre><div class="info ">
+<pre><span id="VALuname_s"><span class="keyword">val</span> uname_s</span> : <code class="type">unit -> string option</code></pre><div class="info">
 Get the output of <code class="code">uname -s</code><br>
 </div>
-
-<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `bash | `csh | `fish | `sh | `zsh ]</code></pre><div class="info ">
+<pre><span id="VALguess_shell_compat"><span class="keyword">val</span> guess_shell_compat</span> : <code class="type">unit -> [ `bash | `csh | `fish | `sh | `zsh ]</code></pre><div class="info">
 Guess the shell compat-mode<br>
 </div>
-
-<pre><span id="VALguess_dot_profile"><span class="keyword">val</span> guess_dot_profile</span> : <code class="type">[ `bash | `csh | `fish | `sh | `zsh ] -> string</code></pre><div class="info ">
+<pre><span id="VALguess_dot_profile"><span class="keyword">val</span> guess_dot_profile</span> : <code class="type">[ `bash | `csh | `fish | `sh | `zsh ] -> string</code></pre><div class="info">
 Guess the location of .profile<br>
 </div>
 <br>
 /<br>
-
 <pre><span id="VALdebug"><span class="keyword">val</span> debug</span> : <code class="type">bool Pervasives.ref</code></pre></body></html>

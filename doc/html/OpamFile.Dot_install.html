@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -58,51 +58,39 @@
 &nbsp;<a class="post" href="OpamFile.Dot_config.html" title="OpamFile.Dot_config">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.Dot_install.html">OpamFile.Dot_install</a></h1>
-
-<pre><span class="keyword">module</span> Dot_install: <code class="code">sig</code> <a href="OpamFile.Dot_install.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Dot_install: <code class="code">sig</code> <a href="OpamFile.Dot_install.html">..</a> <code class="code">end</code></pre><div class="info">
 .install files<br>
 </div>
 <hr width="100%">
-
 <pre><span class="keyword">include</span> <a href="OpamFile.IO_FILE.html">OpamFile.IO_FILE</a></pre>
-
-<pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALbin"><span class="keyword">val</span> bin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of files to install in $bin/<br>
 </div>
-
-<pre><span id="VALsbin"><span class="keyword">val</span> sbin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALsbin"><span class="keyword">val</span> sbin</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of files to install in $sbin/<br>
 </div>
-
-<pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALlib"><span class="keyword">val</span> lib</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of files to install in $lib/<br>
 </div>
-
-<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALtoplevel"><span class="keyword">val</span> toplevel</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of toplevel files<br>
 </div>
-
-<pre><span id="VALstublibs"><span class="keyword">val</span> stublibs</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALstublibs"><span class="keyword">val</span> stublibs</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 C bindings<br>
 </div>
-
-<pre><span id="VALshare"><span class="keyword">val</span> share</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALshare"><span class="keyword">val</span> share</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of shared files<br>
 </div>
-
-<pre><span id="VALetc"><span class="keyword">val</span> etc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALetc"><span class="keyword">val</span> etc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of etc files<br>
 </div>
-
-<pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALdoc"><span class="keyword">val</span> doc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 List of doc files<br>
 </div>
-
-<pre><span id="VALman"><span class="keyword">val</span> man</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info ">
+<pre><span id="VALman"><span class="keyword">val</span> man</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> option) list</code></pre><div class="info">
 Man pages<br>
 </div>
-
-<pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a>) list</code></pre><div class="info ">
+<pre><span id="VALmisc"><span class="keyword">val</span> misc</span> : <code class="type">t -> (<a href="OpamTypes.html#TYPEbasename">OpamTypes.basename</a> <a href="OpamTypes.html#TYPEoptional">OpamTypes.optional</a> * <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a>) list</code></pre><div class="info">
 List of other files to install<br>
 </div>
 </body></html>

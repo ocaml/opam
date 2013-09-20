@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -58,39 +58,31 @@
 &nbsp;<a class="post" href="OpamFile.Pinned.html" title="OpamFile.Pinned">Next</a>
 </div>
 <h1>Module <a href="type_OpamFile.Repo_config.html">OpamFile.Repo_config</a></h1>
-
-<pre><span class="keyword">module</span> Repo_config: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = repository</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Repo_config: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = repository</code></pre><div class="info">
 Repository config: <code class="code">$opam/repo/$repo/config</code><br>
 </div>
 <hr width="100%">
-
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
-<div class="info ">
+<div class="info">
 File contents<br>
 </div>
 
-
-<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Empty file<br>
 </div>
-
-<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
+<pre><span id="VALwrite"><span class="keyword">val</span> write</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info">
 Write some contents to a file<br>
 </div>
-
-<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALread"><span class="keyword">val</span> read</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Read file contents. Raise an error if the file does not exist.<br>
 </div>
-
-<pre><span id="VALsafe_read"><span class="keyword">val</span> safe_read</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALsafe_read"><span class="keyword">val</span> safe_read</span> : <code class="type"><a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a> -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Read file contents. Return <code class="code">empty</code> if the file does not exist.<br>
 </div>
-
-<pre><span id="VALread_from_channel"><span class="keyword">val</span> read_from_channel</span> : <code class="type">Pervasives.in_channel -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALread_from_channel"><span class="keyword">val</span> read_from_channel</span> : <code class="type">Pervasives.in_channel -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a></code></pre><div class="info">
 Read from channel.<br>
 </div>
-
-<pre><span id="VALwrite_to_channel"><span class="keyword">val</span> write_to_channel</span> : <code class="type">Pervasives.out_channel -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
+<pre><span id="VALwrite_to_channel"><span class="keyword">val</span> write_to_channel</span> : <code class="type">Pervasives.out_channel -> <a href="OpamFile.IO_FILE.html#TYPEt">t</a> -> unit</code></pre><div class="info">
 Write to channel.<br>
 </div>
 </body></html>

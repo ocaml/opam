@@ -41,8 +41,8 @@
 <link title="OpamVersion" rel="Chapter" href="OpamVersion.html">
 <link title="OpamDarcs" rel="Chapter" href="OpamDarcs.html">
 <link title="OpamGit" rel="Chapter" href="OpamGit.html">
-<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamHg" rel="Chapter" href="OpamHg.html">
+<link title="OpamHTTP" rel="Chapter" href="OpamHTTP.html">
 <link title="OpamLocal" rel="Chapter" href="OpamLocal.html">
 <link title="OpamVCS" rel="Chapter" href="OpamVCS.html">
 <link title="Opam_mk_repo" rel="Chapter" href="Opam_mk_repo.html">
@@ -71,8 +71,7 @@
 &nbsp;<a class="post" href="OpamMisc.html" title="OpamMisc">Next</a>
 </div>
 <h1>Module <a href="type_OpamJson.html">OpamJson</a></h1>
-
-<pre><span class="keyword">module</span> OpamJson: <code class="code">sig</code> <a href="OpamJson.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> OpamJson: <code class="code">sig</code> <a href="OpamJson.html">..</a> <code class="code">end</code></pre><div class="info">
 Non-blocking streaming JSON codec.
 <p>
 
@@ -103,9 +102,8 @@ Non-blocking streaming JSON codec.
 <hr width="100%">
 <br>
 <h1 id="datamodel">JSON data model</h1><br>
-
 <pre><span id="TYPElexeme"><span class="keyword">type</span> <code class="type"></code>lexeme</span> = <code class="type">[ `Ae<br>       | `As<br>       | `Bool of bool<br>       | `Float of float<br>       | `Name of string<br>       | `Null<br>       | `Oe<br>       | `Os<br>       | `String of string ]</code> </pre>
-<div class="info ">
+<div class="info">
 The type for JSON lexemes. <code class="code">`As</code> and <code class="code">`Ae</code>
     start and end arrays and <code class="code">`Os</code> and <code class="code">`Oe</code> start
     and end objects. <code class="code">`Name</code> is for the member names of objects.
@@ -139,51 +137,43 @@ member = (`Name s) value
     escaped by the encoders, as mandated by the standard.<br>
 </div>
 
-
-<pre><span id="VALpp_lexeme"><span class="keyword">val</span> pp_lexeme</span> : <code class="type">Format.formatter -> [< <a href="OpamJson.html#TYPElexeme">lexeme</a> ] -> unit</code></pre><div class="info ">
+<pre><span id="VALpp_lexeme"><span class="keyword">val</span> pp_lexeme</span> : <code class="type">Format.formatter -> [< <a href="OpamJson.html#TYPElexeme">lexeme</a> ] -> unit</code></pre><div class="info">
 <code class="code">pp_lexeme ppf l</code> prints a unspecified non-JSON representation of <code class="code">l</code>
     on <code class="code">ppf</code>.<br>
 </div>
 <br>
 <h1 id="decode">Decode</h1><br>
-
 <pre><span id="TYPEerror"><span class="keyword">type</span> <code class="type"></code>error</span> = <code class="type">[ `Expected of<br>           [ `Aval of bool<br>           | `Comment<br>           | `Eoi<br>           | `Json<br>           | `Name<br>           | `Name_sep<br>           | `Omem of bool<br>           | `Value ]<br>       | `Illegal_BOM<br>       | `Illegal_bytes of string<br>       | `Illegal_escape of<br>           [ `Lone_hi_surrogate of int<br>           | `Lone_lo_surrogate of int<br>           | `Not_esc_uchar of int<br>           | `Not_hex_uchar of int<br>           | `Not_lo_surrogate of int ]<br>       | `Illegal_literal of string<br>       | `Illegal_number of string<br>       | `Illegal_string_uchar of int<br>       | `Unclosed of [ `As | `Comment | `Os | `String ] ]</code> </pre>
 
 <br>
 The type for decoding errors.<br>
-
-<pre><span id="VALpp_error"><span class="keyword">val</span> pp_error</span> : <code class="type">Format.formatter -> [< <a href="OpamJson.html#TYPEerror">error</a> ] -> unit</code></pre><div class="info ">
+<pre><span id="VALpp_error"><span class="keyword">val</span> pp_error</span> : <code class="type">Format.formatter -> [< <a href="OpamJson.html#TYPEerror">error</a> ] -> unit</code></pre><div class="info">
 <code class="code">pp_error e</code> prints an unspecified UTF-8 representation of <code class="code">e</code> on <code class="code">ppf</code>.<br>
 </div>
-
 <pre><span id="TYPEencoding"><span class="keyword">type</span> <code class="type"></code>encoding</span> = <code class="type">[ `UTF_16 | `UTF_16BE | `UTF_16LE | `UTF_8 ]</code> </pre>
-<div class="info ">
+<div class="info">
 The type for Unicode encoding schemes.<br>
 </div>
 
-
 <pre><span id="TYPEsrc"><span class="keyword">type</span> <code class="type"></code>src</span> = <code class="type">[ `Channel of Pervasives.in_channel | `Manual | `String of string ]</code> </pre>
-<div class="info ">
+<div class="info">
 The type for input sources. With a <code class="code">`Manual</code> source the client
     must provide input with <a href="OpamJson.Manual.html#VALsrc"><code class="code">OpamJson.Manual.src</code></a>.<br>
 </div>
 
-
 <pre><span id="TYPEdecoder"><span class="keyword">type</span> <code class="type"></code>decoder</span> </pre>
-<div class="info ">
+<div class="info">
 The type for JSON decoders.<br>
 </div>
 
-
-<pre><span id="VALdecoder"><span class="keyword">val</span> decoder</span> : <code class="type">?encoding:[< <a href="OpamJson.html#TYPEencoding">encoding</a> ] -> [< <a href="OpamJson.html#TYPEsrc">src</a> ] -> <a href="OpamJson.html#TYPEdecoder">decoder</a></code></pre><div class="info ">
+<pre><span id="VALdecoder"><span class="keyword">val</span> decoder</span> : <code class="type">?encoding:[< <a href="OpamJson.html#TYPEencoding">encoding</a> ] -> [< <a href="OpamJson.html#TYPEsrc">src</a> ] -> <a href="OpamJson.html#TYPEdecoder">decoder</a></code></pre><div class="info">
 <code class="code">decoder encoding src</code> is a JSON decoder that inputs from <code class="code">src</code>.
     <code class="code">encoding</code> specifies the character encoding of the data. If unspecified
     the encoding is guessed as
     <a href="http://tools.ietf.org/html/rfc4627#section-3">suggested</a> by
     the standard.<br>
 </div>
-
-<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -><br>       [> `Await | `End | `Error of <a href="OpamJson.html#TYPEerror">error</a> | `Lexeme of <a href="OpamJson.html#TYPElexeme">lexeme</a> ]</code></pre><div class="info ">
+<pre><span id="VALdecode"><span class="keyword">val</span> decode</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -><br>       [> `Await | `End | `Error of <a href="OpamJson.html#TYPEerror">error</a> | `Lexeme of <a href="OpamJson.html#TYPElexeme">lexeme</a> ]</code></pre><div class="info">
 <code class="code">decode d</code> is:
     <ul>
 <li><code class="code">`Await</code> if <code class="code">d</code> has a <code class="code">`Manual</code> source and awaits for more input.
@@ -204,49 +194,42 @@ The type for JSON decoders.<br>
     <b>Note.</b> Repeated invocation always eventually returns <code class="code">`End</code>, even
     in case of errors.<br>
 </div>
-
-<pre><span id="VALdecoded_range"><span class="keyword">val</span> decoded_range</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -> (int * int) * (int * int)</code></pre><div class="info ">
+<pre><span id="VALdecoded_range"><span class="keyword">val</span> decoded_range</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -> (int * int) * (int * int)</code></pre><div class="info">
 <code class="code">decoded_range d</code> is the range of characters spanning the last
     <code class="code">`Lexeme</code> or <code class="code">`Error</code> (or <code class="code">`White</code> or <code class="code">`Comment</code> for an
     <a href="OpamJson.Uncut.html#VALdecode"><code class="code">OpamJson.Uncut.decode</code></a>) decoded by <code class="code">d</code>.  A pair of line and column numbers
     respectively one and zero based.<br>
 </div>
-
-<pre><span id="VALdecoder_encoding"><span class="keyword">val</span> decoder_encoding</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -> <a href="OpamJson.html#TYPEencoding">encoding</a></code></pre><div class="info ">
+<pre><span id="VALdecoder_encoding"><span class="keyword">val</span> decoder_encoding</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -> <a href="OpamJson.html#TYPEencoding">encoding</a></code></pre><div class="info">
 <code class="code">decoder_encoding d</code> is <code class="code">d</code>'s encoding.
 <p>
 
     <b>Warning.</b> If the decoder guesses the encoding, rely on this
     value only after the first <code class="code">`Lexeme</code> was decoded.<br>
 </div>
-
-<pre><span id="VALdecoder_src"><span class="keyword">val</span> decoder_src</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -> <a href="OpamJson.html#TYPEsrc">src</a></code></pre><div class="info ">
+<pre><span id="VALdecoder_src"><span class="keyword">val</span> decoder_src</span> : <code class="type"><a href="OpamJson.html#TYPEdecoder">decoder</a> -> <a href="OpamJson.html#TYPEsrc">src</a></code></pre><div class="info">
 <code class="code">decoder_src d</code> is <code class="code">d</code>'s input source.<br>
 </div>
 <br>
 <h1 id="encode">Encode</h1><br>
-
 <pre><span id="TYPEdst"><span class="keyword">type</span> <code class="type"></code>dst</span> = <code class="type">[ `Buffer of Buffer.t | `Channel of Pervasives.out_channel | `Manual ]</code> </pre>
-<div class="info ">
+<div class="info">
 The type for output destinations. With a <code class="code">`Manual</code> destination the
     client must provide output storage with <a href="OpamJson.Manual.html#VALdst"><code class="code">OpamJson.Manual.dst</code></a>.<br>
 </div>
 
-
 <pre><span id="TYPEencoder"><span class="keyword">type</span> <code class="type"></code>encoder</span> </pre>
-<div class="info ">
+<div class="info">
 The type for JSON encoders.<br>
 </div>
 
-
-<pre><span id="VALencoder"><span class="keyword">val</span> encoder</span> : <code class="type">?minify:bool -> [< <a href="OpamJson.html#TYPEdst">dst</a> ] -> <a href="OpamJson.html#TYPEencoder">encoder</a></code></pre><div class="info ">
+<pre><span id="VALencoder"><span class="keyword">val</span> encoder</span> : <code class="type">?minify:bool -> [< <a href="OpamJson.html#TYPEdst">dst</a> ] -> <a href="OpamJson.html#TYPEencoder">encoder</a></code></pre><div class="info">
 <code class="code">encoder minify dst</code> is an encoder that outputs to <code class="code">dst</code>. If
     <code class="code">minify</code> is <code class="code">true</code> (default) the output is made as compact as
     possible, otherwise the output is indented. If you want better
     control on whitespace use <code class="code">minify = true</code> and <a href="OpamJson.Uncut.html#VALencode"><code class="code">OpamJson.Uncut.encode</code></a>.<br>
 </div>
-
-<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">encoder</a> -><br>       [< `Await | `End | `Lexeme of <a href="OpamJson.html#TYPElexeme">lexeme</a> ] -> [ `Ok | `Partial ]</code></pre><div class="info ">
+<pre><span id="VALencode"><span class="keyword">val</span> encode</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">encoder</a> -><br>       [< `Await | `End | `Lexeme of <a href="OpamJson.html#TYPElexeme">lexeme</a> ] -> [ `Ok | `Partial ]</code></pre><div class="info">
 <code class="code">encode e v</code> is:
     <ul>
 <li><code class="code">`Partial</code> iff <code class="code">e</code> has a <code class="code">`Manual</code> destination and needs more
@@ -267,23 +250,19 @@ The type for JSON encoders.<br>
     sequence of lexemes is encoded or if <code class="code">`Lexeme</code> or <code class="code">`End</code> is
     encoded after a <code class="code">`Partial</code> encode.<br>
 </div>
-
-<pre><span id="VALencoder_dst"><span class="keyword">val</span> encoder_dst</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">encoder</a> -> <a href="OpamJson.html#TYPEdst">dst</a></code></pre><div class="info ">
+<pre><span id="VALencoder_dst"><span class="keyword">val</span> encoder_dst</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">encoder</a> -> <a href="OpamJson.html#TYPEdst">dst</a></code></pre><div class="info">
 <code class="code">encoder_dst e</code> is <code class="code">e</code>'s output destination.<br>
 </div>
-
-<pre><span id="VALencoder_minify"><span class="keyword">val</span> encoder_minify</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">encoder</a> -> bool</code></pre><div class="info ">
+<pre><span id="VALencoder_minify"><span class="keyword">val</span> encoder_minify</span> : <code class="type"><a href="OpamJson.html#TYPEencoder">encoder</a> -> bool</code></pre><div class="info">
 <code class="code">encoder_minify e</code> is <code class="code">true</code> if <code class="code">e</code>'s output is minified.<br>
 </div>
 <br>
 <h1 id="manual">Manual sources and destinations</h1><br>
-
 <pre><span class="keyword">module</span> <a href="OpamJson.Manual.html">Manual</a>: <code class="code">sig</code> <a href="OpamJson.Manual.html">..</a> <code class="code">end</code></pre><div class="info">
 Manual input sources and output destinations.
 </div>
 <br>
 <h1 id="uncut">Uncut codec</h1><br>
-
 <pre><span class="keyword">module</span> <a href="OpamJson.Uncut.html">Uncut</a>: <code class="code">sig</code> <a href="OpamJson.Uncut.html">..</a> <code class="code">end</code></pre><div class="info">
 Codec with comments and whitespace.
 </div>
@@ -511,12 +490,6 @@ let json_of_src ?encoding
   match json with `A _ | `O _ as json -&gt; value json finish e
   | _ -&gt; invalid_arg "invalid json text"
 </code></pre><br>
-
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">[ `A of <a href="OpamJson.html#TYPEt">t</a> list<br>       | `Bool of bool<br>       | `Float of float<br>       | `Null<br>       | `O of (string * <a href="OpamJson.html#TYPEt">t</a>) list<br>       | `String of string ]</code> </pre>
 
-
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamJson.html#TYPEt">t</a> -> string</code></pre>
-<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="OpamJson.html#TYPEt">t</a> -> unit</code></pre>
-<pre><span id="VALoutput"><span class="keyword">val</span> output</span> : <code class="type">unit -> unit</code></pre>
-<pre><span id="VALset_output"><span class="keyword">val</span> set_output</span> : <code class="type">(string -> unit) -> unit</code></pre>
-<pre><span id="VALverbose"><span class="keyword">val</span> verbose</span> : <code class="type">unit -> bool</code></pre></body></html>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="OpamJson.html#TYPEt">t</a> -> string</code></pre><pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="OpamJson.html#TYPEt">t</a> -> unit</code></pre><pre><span id="VALoutput"><span class="keyword">val</span> output</span> : <code class="type">unit -> unit</code></pre><pre><span id="VALset_output"><span class="keyword">val</span> set_output</span> : <code class="type">(string -> unit) -> unit</code></pre><pre><span id="VALverbose"><span class="keyword">val</span> verbose</span> : <code class="type">unit -> bool</code></pre></body></html>
