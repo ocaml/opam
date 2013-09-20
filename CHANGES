@@ -1,5 +1,7 @@
 1.1.0-beta [Sept 2013]
-* Colors
+* Automatic backup before any operation which might alter the list of installed packages
+* Support for arbitrary sub-directories for metadata repositories
+* Lots of colors
 * New option `opam update -u` equivalent to `opam update && opam upgrade --yes`
 * New `opam-admin` tool, bundling the features of `opam-mk-repo` and `opam-repo-check` + new 'opam-admin stats' tool
 * New `available`: field in opam files, superseding `ocaml-version` and `os` fields
@@ -38,7 +40,7 @@
 * Export and read `OPAMSWITCH` to be able to call OPAM in different switches
 * `opam-client` can now be used in a toplevel
 * `-n` now means `--no-setup` and not `--no-checksums` anymore
-* Fix stupid typo in detection of FreeBSD archs
+* Fix support for FreeBSD
 * Fix installation of local compilers with local paths endings with `.../ocaml/`
 * Fix the contents of `~/.opam/opam-init/variable.sh` after a switch
 
