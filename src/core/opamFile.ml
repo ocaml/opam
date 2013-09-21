@@ -1621,6 +1621,57 @@ module X = struct
 
   end
 
+  module Repo = struct
+
+    let internal = "repo"
+
+    type t = {
+      browse   : string option;
+      upstream : string option;
+    }
+
+    let create ?browse ?upstream () = {
+      browse; upstream;
+    }
+
+    let empty = create ()
+
+    let s_browse   = "browse"
+    let s_upstream = "upstream"
+
+    let valid_fields = [
+      s_browse;
+      s_upstream;
+    ]
+
+    let of_channel filename ic =
+      let s = Syntax.of_channel filename ic in
+      Syntax.check s valid_fields;
+      let get f = OpamFormat.assoc_option s.file_contents f
+        OpamFormat.parse_string in
+      let browse   = get s_browse in
+      let upstream = get s_upstream in
+      { browse; upstream }
+
+    let to_string filename t =
+      let s = {
+        file_name     = OpamFilename.to_string filename;
+        file_contents = (match t.upstream with
+        | None -> []
+        | Some url -> [Variable (s_upstream , OpamFormat.make_string url)]
+        )
+        @ (match t.browse with
+        | None -> []
+        | Some url -> [Variable (s_browse   , OpamFormat.make_string url)]
+        );
+      } in
+      Syntax.to_string s
+
+    let browse t = t.browse
+    let upstream t = t.upstream
+
+  end
+
 end
 
 module type F = sig
@@ -1720,6 +1771,11 @@ end
 module Pinned = struct
   include Pinned
   include Make (Pinned)
+end
+
+module Repo = struct
+  include Repo
+  include Make(Repo)
 end
 
 module Repo_config = struct

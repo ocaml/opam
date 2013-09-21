@@ -257,6 +257,12 @@ module Repository: sig
   (** Remote version file *)
   val remote_version: repository -> filename
 
+  (** Return the repo file *)
+  val repo: repository -> filename
+
+  (** Remote repo file *)
+  val remote_repo: repository -> filename
+
   (** Return the repository config: {i $opam/repo/$repo/config} *)
   val raw_config: dirname -> repository_name -> filename
 

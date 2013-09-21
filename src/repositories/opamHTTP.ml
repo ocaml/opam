@@ -40,6 +40,7 @@ let index_archive local_path = local_path // "index.tar.gz"
 let local_files repo =
   let all =
     OpamPath.Repository.version repo ::
+      OpamPath.Repository.repo  repo ::
       OpamFilename.rec_files (OpamPath.Repository.packages_dir repo) @
       OpamFilename.rec_files (OpamPath.Repository.archives_dir repo) @
       OpamFilename.rec_files (OpamPath.Repository.compilers_dir repo) in
