@@ -1,6 +1,3 @@
-# OPAM packages needed to build tests.
-OPAM_PACKAGES="mirage-unix mirage cow mirage-fs mirari cohttp mirage-net"
-
 sudo apt-get install -qq ocaml
 make
 make tests
