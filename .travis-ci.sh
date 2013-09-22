@@ -18,3 +18,4 @@ sudo make install
 export OPAMYES=1
 opam init
 opam install lwt
+make tests
