@@ -1,7 +1,7 @@
 sudo apt-get install -qq ocaml
 ./configure
 make
-make tests > tests-3121.log 2>&1
+make tests > tests-3121.log 2>&1 || (tail -1000 tests-3121.log && exit 1)
 make distclean
 
 sudo apt-get install -qq ocaml-native-compilers
