@@ -1,4 +1,6 @@
 sudo apt-get install -qq ocaml
+git config --global user.email "travis@example.com"
+git config --global user.name "Travis CI"
 ./configure
 make
 make tests > tests-3121.log 2>&1 || (tail -1000 tests-3121.log && exit 1)
