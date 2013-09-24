@@ -109,6 +109,14 @@ let basename_dir dirname =
 let dirname_dir dirname =
   Dir.to_string (Filename.dirname (Dir.of_string dirname))
 
+let rec to_list_dir dir =
+  let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
+  let rec aux acc dir =
+    let d = dirname_dir dir in
+    if d <> dir then aux (base dir :: acc) d
+    else base dir :: acc in
+  aux [] dir
+
 let (/) d1 s2 =
   let s1 = Dir.to_string d1 in
   raw_dir (Filename.concat s1 s2)

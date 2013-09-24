@@ -65,6 +65,9 @@ val dirname_dir: Dir.t -> Dir.t
 (** Return the deeper directory name *)
 val basename_dir: Dir.t -> Base.t
 
+(** Turn a full path into a list of directory names *)
+val to_list_dir: Dir.t -> Dir.t list
+
 (** Creation from a raw string (as {i http://<path>}) *)
 val raw_dir: string -> Dir.t
 
