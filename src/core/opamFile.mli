@@ -207,6 +207,9 @@ module OPAM: sig
   (** Construct using [bug_reports] *)
   val with_bug_reports: t -> string list -> t
 
+  (** Construct using [depexts] *)
+  val with_depexts: t -> tags option -> t
+
 end
 
 (** Package descriptions: [$opam/descr/] *)
