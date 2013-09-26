@@ -164,14 +164,31 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
       OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
     let list = List.map aux (OpamFilename.Attribute.Set.elements remotes) in
     OpamPackage.Set.of_list (OpamMisc.filter_map OpamPackage.of_filename list) in
+
+  let packages_of_attrs attrs =
+    OpamFilename.Attribute.Set.fold (fun attr nvs ->
+        let f =
+          OpamFilename.raw (OpamFilename.Base.to_string (OpamFilename.Attribute.base attr))
+        in
+        let path = OpamFilename.to_list_dir (OpamFilename.dirname f) in
+        let nv_opt =
+          List.fold_left (fun acc dir -> match acc with None -> OpamPackage.of_dirname dir
+                                                      | some -> some)
+            None path in
+        match nv_opt with Some nv -> OpamPackage.Set.add nv nvs | None -> nvs
+      ) attrs OpamPackage.Set.empty in
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
         let archive = OpamPath.Repository.archive repo nv in
         not (OpamFilename.exists archive)
       ) new_index in
+  let to_add =
+    let added_changed = packages_of_attrs to_add in
+    let files_removed = OpamPackage.Set.inter new_index (packages_of_attrs to_remove) in
+    let (++) = OpamPackage.Set.union in
+    missing_archive ++ added_changed  ++ files_removed in
   let to_remove = nv_set_of_remotes to_remove in
-  let to_add = OpamPackage.Set.union (nv_set_of_remotes to_add) missing_archive in
   let to_add =
     if OpamPackage.Set.is_empty packages then
       to_add
