@@ -36,11 +36,16 @@ let stats_cmd =
   Term.(Opam_stats.(pure process $ pure ())),
   Term.info "stats" ~doc
 
+let depexts_cmd =
+  let doc = "Add external dependencies." in
+  Term.(Opam_depexts_change.(pure process $ args)),
+  Term.info "depexts" ~doc
+
 let () =
   try
     match
       Term.eval_choice ~catch:false
-        default_cmd [make_repo_cmd; check_repo_cmd; stats_cmd]
+        default_cmd [make_repo_cmd; check_repo_cmd; stats_cmd; depexts_cmd]
     with
     | `Error _ -> exit 2
     | _ -> exit 0

@@ -6,6 +6,6 @@ begin program "opam-check"
 end
 
 begin program "opam-admin"
-  files = [ "opam_mk_repo.ml" "opam_repo_check.ml" "opam_stats.ml" "opam_admin.ml" ]
+  files = [ "opam_mk_repo.ml" "opam_repo_check.ml" "opam_stats.ml" "opam_depexts_change.ml" "opam_admin.ml" ]
   requires = [ "opam-client" ]
 end
