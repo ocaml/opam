@@ -168,15 +168,20 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
   let packages_of_attrs attrs =
     OpamFilename.Attribute.Set.fold (fun attr nvs ->
         let f =
-          OpamFilename.raw (OpamFilename.Base.to_string (OpamFilename.Attribute.base attr))
+          OpamFilename.raw_dir
+            (OpamFilename.Base.to_string (OpamFilename.Attribute.base attr))
         in
-        let path = OpamFilename.to_list_dir (OpamFilename.dirname f) in
-        let nv_opt =
-          List.fold_left (fun acc dir -> match acc with None -> OpamPackage.of_dirname dir
-                                                      | some -> some)
-            None path in
-        match nv_opt with Some nv -> OpamPackage.Set.add nv nvs | None -> nvs
-      ) attrs OpamPackage.Set.empty in
+        let path = OpamFilename.to_list_dir f in
+        let rec get_nv = function
+          | [_] | [] -> nvs
+          | pkgdir::(f::_ as subpath)-> match OpamPackage.of_dirname pkgdir with
+            | None -> get_nv subpath
+            | Some nv -> match OpamFilename.Dir.to_string f with
+              | "url" | "files" -> OpamPackage.Set.add nv nvs
+              | _ -> nvs
+        in
+        get_nv path)
+      attrs OpamPackage.Set.empty in
   let new_index = nv_set_of_remotes new_index in
   let missing_archive =
     OpamPackage.Set.filter (fun nv ->
