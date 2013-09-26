@@ -51,21 +51,31 @@ module Syntax = struct
 
   let s_opam_version = "opam-version"
 
-  let check =
+  let check ?(versioned=true) =
     let not_already_warned = ref true in
     fun f fields ->
       if List.mem s_opam_version fields then
-        let opam_version = OpamFormat.assoc f.file_contents s_opam_version
-            (OpamFormat.parse_string ++ OpamVersion.of_string) in
-        if OpamVersion.compare opam_version OpamVersion.current > 0 then (
-          OpamGlobals.error "Your version of OPAM (%s) is not recent enough to read \
-                             %s. Upgrade OPAM to a more recent version (at least %s) \
-                             to read this file correctly."
-            (OpamVersion.to_string OpamVersion.current)
-            (OpamMisc.prettify_path f.file_name)
-            (OpamVersion.to_string opam_version);
-          OpamFormat.bad_format "opam-version"
-        );
+        begin match OpamFormat.assoc_option f.file_contents s_opam_version
+            (OpamFormat.parse_string ++ OpamVersion.of_string) with
+            | Some opam_version ->
+              if OpamVersion.compare opam_version OpamVersion.current > 0 then (
+                OpamGlobals.error
+                  "Your version of OPAM (%s) is not recent enough to read \
+                   %s. Upgrade OPAM to a more recent version (at least %s) \
+                   to read this file correctly."
+                  (OpamVersion.to_string OpamVersion.current)
+                  (OpamMisc.prettify_path f.file_name)
+                  (OpamVersion.to_string opam_version);
+                OpamFormat.bad_format "opam-version"
+              )
+            | None ->
+              if versioned then (
+                OpamGlobals.error
+                  "%s is missing the opam-version field: syntax check failed."
+                  (OpamMisc.prettify_path f.file_name);
+                OpamFormat.bad_format "opam-version"
+              )
+        end;
       if not (OpamFormat.is_valid f.file_contents fields) then
         let invalids = OpamFormat.invalid_fields f.file_contents fields in
         let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
@@ -1626,47 +1636,62 @@ module X = struct
     let internal = "repo"
 
     type t = {
-      browse   : string option;
-      upstream : string option;
+      opam_version : OpamVersion.t;
+      browse       : string option;
+      upstream     : string option;
     }
 
-    let create ?browse ?upstream () = {
+    let version_of_maybe_string vs = OpamVersion.of_string begin
+      match vs with
+      | None   -> "0.7.5"
+      | Some v -> v
+    end
+
+    let create ?browse ?upstream ?opam_version () = {
+      opam_version = version_of_maybe_string opam_version;
       browse; upstream;
     }
 
     let empty = create ()
 
-    let s_browse   = "browse"
-    let s_upstream = "upstream"
+    let s_opam_version = "opam-version"
+    let s_browse       = "browse"
+    let s_upstream     = "upstream"
 
     let valid_fields = [
+      s_opam_version;
       s_browse;
       s_upstream;
     ]
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
-      Syntax.check s valid_fields;
+      Syntax.check ~versioned:false s valid_fields;
       let get f = OpamFormat.assoc_option s.file_contents f
         OpamFormat.parse_string in
+      let opam_version = version_of_maybe_string (get s_opam_version) in
       let browse   = get s_browse in
       let upstream = get s_upstream in
-      { browse; upstream }
+      { opam_version; browse; upstream }
 
     let to_string filename t =
+      let opam_version = OpamVersion.to_string t.opam_version in
       let s = {
         file_name     = OpamFilename.to_string filename;
-        file_contents = (match t.upstream with
-        | None -> []
-        | Some url -> [Variable (s_upstream , OpamFormat.make_string url)]
-        )
-        @ (match t.browse with
-        | None -> []
-        | Some url -> [Variable (s_browse   , OpamFormat.make_string url)]
-        );
+        file_contents =
+          (Variable (s_opam_version, OpamFormat.make_string opam_version))
+          ::(match t.upstream with
+          | None -> []
+          | Some url -> [Variable (s_upstream , OpamFormat.make_string url)]
+          )
+          @ (match t.browse with
+          | None -> []
+          | Some url -> [Variable (s_browse   , OpamFormat.make_string url)]
+          );
       } in
       Syntax.to_string s
 
+    let opam_version t = t.opam_version
     let browse t = t.browse
     let upstream t = t.upstream
 

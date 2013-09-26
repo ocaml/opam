@@ -251,12 +251,6 @@ module Repository: sig
   (** Update cache *)
   val update_cache: repository -> filename
 
-  (** Return the version file *)
-  val version: repository -> filename
-
-  (** Remote version file *)
-  val remote_version: repository -> filename
-
   (** Return the repo file *)
   val repo: repository -> filename
 

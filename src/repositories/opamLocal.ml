@@ -82,7 +82,6 @@ module B = struct
     OpamGlobals.msg "%-10s Synchronizing with %s\n"
       (OpamRepositoryName.to_string repo.repo_name)
       (string_of_address repo.repo_address);
-    ignore (pull_file_quiet repo.repo_root (OpamPath.Repository.remote_version repo));
     ignore (pull_file_quiet repo.repo_root (OpamPath.Repository.remote_repo repo));
     List.iter
       (fun (local, remote) -> ignore (pull_dir_quiet (local repo) (remote repo)))

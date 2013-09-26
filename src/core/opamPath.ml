@@ -183,11 +183,6 @@ module Repository = struct
 
   let create root name = root / "repo" / OpamRepositoryName.to_string name
 
-  let version t = root t // "version"
-
-  let remote_version t =
-    OpamFilename.raw_dir (fst t.repo_address) // "version"
-
   let repo t = root t // "repo"
 
   let remote_repo t =
