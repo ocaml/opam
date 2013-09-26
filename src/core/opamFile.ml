@@ -860,6 +860,7 @@ module X = struct
     let with_maintainer t maintainer = { t with maintainer }
     let with_patches t patches = { t with patches }
     let with_bug_reports t bug_reports = { t with bug_reports }
+    let with_depexts t depexts = { t with depexts } 
 
     let to_string filename t =
       let make_file =

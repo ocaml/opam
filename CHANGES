@@ -1,3 +1,7 @@
+1.1.0-trunk
+* Document use of `OPAMCOLOR` for optional ANSI coloring
+* Add `opam-admin depexts` utility to rewrite OPAM files with external dependencies
+
 1.1.0-beta [Sept 2013]
 * Automatic backup before any operation which might alter the list of installed packages
 * Support for arbitrary sub-directories for metadata repositories
