@@ -159,15 +159,12 @@ let pull_archive repo nv =
   B.pull_archive repo filename
 
 let check_version repo =
-  let repo_version =
-    try
-      repo
-      |> OpamPath.Repository.version
-      |> OpamFilename.read
-      |> OpamMisc.strip
-      |> OpamVersion.of_string
-    with _ ->
-      OpamVersion.of_string "0.7.5" in
+  let repo_version = begin
+    repo
+    |> OpamPath.Repository.repo
+    |> OpamFile.Repo.safe_read
+    |> OpamFile.Repo.opam_version
+  end in
   if OpamVersion.compare repo_version OpamVersion.current > 0 then
     OpamGlobals.error_and_exit
       "\nThe current version of OPAM cannot read the repository. \
