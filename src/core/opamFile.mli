@@ -429,6 +429,25 @@ module Repo_config: IO_FILE with type t = repository
 (** Pinned package files *)
 module Pinned: IO_FILE with type t = pin_option name_map
 
+(** Repository metadata *)
+module Repo: sig
+
+  include IO_FILE
+
+  val create:
+    ?browse:string -> ?upstream:string -> ?opam_version:string -> unit -> t
+
+  (** The minimum OPAM version required for this repository *)
+  val opam_version : t -> OpamVersion.t
+
+  (** Base URL for browsing packages on the WWW *)
+  val browse: t -> string option
+
+  (** Base URL for browsing OPAM repository source on the WWW *)
+  val upstream: t -> string option
+
+end
+
 (** {2 Substitution files} *)
 
 (** Substitution files *)
