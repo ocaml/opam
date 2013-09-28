@@ -79,7 +79,8 @@ cmdliner.stamp: $(CMDLINER).tbz
 	@touch $@
 
 $(GRAPH).tar.gz:
-	$(FETCH) http://ocamlgraph.lri.fr/download/$(GRAPH).tar.gz
+	# $(FETCH) http://ocamlgraph.lri.fr/download/$(GRAPH).tar.gz
+	$(FETCH) http://pkgs.fedoraproject.org/repo/pkgs/ocaml-ocamlgraph/$(GRAPH).tar.gz/$(GRAPHMD5)/$(GRAPH).tar.gz
 	$(MD5CHECK) $(GRAPH).tar.gz $(GRAPHMD5)
 
 ocamlgraph.stamp: $(GRAPH).tar.gz
