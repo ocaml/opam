@@ -118,6 +118,7 @@ module B = struct
 
   let pull_url package local_dirname checksum remote_url =
     let remote_url = string_of_address remote_url in
+    OpamFilename.mkdir local_dirname;
     if Sys.file_exists remote_url && Sys.is_directory remote_url then
       download_dir
         (pull_dir package local_dirname (OpamFilename.Dir.of_string remote_url))
@@ -133,7 +134,9 @@ module B = struct
       OpamGlobals.msg "%-10s Synchronizing with %s\n"
         (OpamRepositoryName.to_string repo.repo_name)
         (OpamFilename.to_string filename);
-    pull_file_quiet (OpamPath.Repository.archives_dir repo) filename
+    let local_dir = OpamPath.Repository.archives_dir repo in
+    OpamFilename.mkdir local_dir;
+    pull_file_quiet local_dir filename
 
   let revision _ =
     None
