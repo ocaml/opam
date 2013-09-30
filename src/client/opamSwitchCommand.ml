@@ -171,7 +171,7 @@ let install_compiler ~quiet switch compiler =
       raise e
 
 
-let install_packages ~quiet ~packages switch compiler =
+let install_packages ~packages switch compiler =
   (* install the compiler packages *)
   OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-install-with-packages-2" in
@@ -226,7 +226,7 @@ let install_packages ~quiet ~packages switch compiler =
 
 let install_with_packages ~quiet ~packages switch compiler =
   install_compiler ~quiet switch compiler;
-  install_packages ~quiet ~packages switch compiler
+  install_packages ~packages switch compiler
 
 let install ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
@@ -351,7 +351,7 @@ let reinstall_t switch t =
       restore overlays;
   );
 
-  install_packages ~quiet:false ~packages switch ocaml_version
+  install_packages ~packages switch ocaml_version
 
 let with_backup command f =
   let t = OpamState.load_state command in
