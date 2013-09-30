@@ -29,9 +29,9 @@ let list ~print_short ~installed ~all =
       let system_version = match OpamCompiler.Version.system () with
         | None   -> "<none>"
         | Some v -> OpamCompiler.Version.to_string v in
-      Printf.sprintf "System compiler (%s)" system_version
+      OpamFile.Descr.of_string (Printf.sprintf "System compiler (%s)" system_version)
     else
-      OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
+      OpamFile.Descr.safe_read (OpamPath.compiler_descr t.root c) in
 
   let installed_str     = "I" in
   let current_str       = "C" in
@@ -116,12 +116,15 @@ let list ~print_short ~installed ~all =
           bold_current (OpamGlobals.colorise `blue state) in
       let colored_compiler =
         bold_current (OpamGlobals.colorise `yellow compiler) in
-      let colored_descr = bold_current descr in
-      OpamGlobals.msg "%s %s %s  %s\n"
+      let colored_descr = bold_current (OpamFile.Descr.synopsis descr) in
+      let colored_body =
+        if !OpamGlobals.verbose then "\n" ^ OpamFile.Descr.body descr ^ "\n"
+        else "" in
+      OpamGlobals.msg "%s %s %s  %s%s\n"
         (OpamMisc.indent_left colored_name ~visual:name max_name)
         (OpamMisc.indent_right colored_state ~visual:state max_state)
         (OpamMisc.indent_left colored_compiler ~visual:compiler max_compiler)
-        colored_descr in
+        colored_descr colored_body in
 
   List.iter print_compiler all
 

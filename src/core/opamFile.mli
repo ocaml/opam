@@ -223,6 +223,9 @@ module Descr: sig
   (** Return the first line *)
   val synopsis: t -> string
 
+  (** Return the body *)
+  val body: t -> string
+
   (** Return the full description *)
   val full: t -> string
 
@@ -314,9 +317,6 @@ module Comp: sig
   val env: t -> (string * string * string) list
 
 end
-
-(** Compiler descriptions *)
-module Comp_descr: IO_FILE with type t = string
 
 (** {2 Configuration files} *)
 
