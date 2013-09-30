@@ -105,5 +105,5 @@ let process args =
       OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string c);
       write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
       if OpamFilename.exists descr then
-        write OpamFile.Comp_descr.write descr (OpamFile.Comp_descr.read descr);
+        write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
   ) compilers

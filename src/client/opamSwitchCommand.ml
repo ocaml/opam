@@ -21,7 +21,7 @@ let log fmt = OpamGlobals.log "SWITCH" fmt
 
 (* name + state + compiler + description *)
 (* TODO: add repo *)
-let list ~print_short ~installed =
+let list ~print_short ~installed ~all =
   log "list";
   let t = OpamState.load_state "switch-list" in
   let descr c =
@@ -29,9 +29,9 @@ let list ~print_short ~installed =
       let system_version = match OpamCompiler.Version.system () with
         | None   -> "<none>"
         | Some v -> OpamCompiler.Version.to_string v in
-      Printf.sprintf "System compiler (%s)" system_version
+      OpamFile.Descr.of_string (Printf.sprintf "System compiler (%s)" system_version)
     else
-      OpamFile.Comp_descr.safe_read (OpamPath.compiler_descr t.root c) in
+      OpamFile.Descr.safe_read (OpamPath.compiler_descr t.root c) in
 
   let installed_str     = "I" in
   let current_str       = "C" in
@@ -72,17 +72,17 @@ let list ~print_short ~installed =
   let mk l =
     List.fold_left (fun acc comp ->
       let c = OpamCompiler.to_string comp in
-      let d =
-        let d = descr comp in
-        match OpamMisc.cut_at d '\n' with None -> d | Some (d,_) -> d in
+      let d = descr comp in
       (not_installed_str, not_installed_str, c, d) :: acc
     ) [] l in
 
   let all =
     if installed then
       installed_s
+    else if all then
+      installed_s @ mk officials @ mk patches
     else
-      installed_s @ mk officials @ mk patches in
+      installed_s @ mk officials in
 
   let max_name, max_state, max_compiler =
     List.fold_left (fun (n,s,c) (name, state, compiler, _) ->
@@ -116,12 +116,18 @@ let list ~print_short ~installed =
           bold_current (OpamGlobals.colorise `blue state) in
       let colored_compiler =
         bold_current (OpamGlobals.colorise `yellow compiler) in
-      let colored_descr = bold_current descr in
-      OpamGlobals.msg "%s %s %s  %s\n"
+      let colored_descr = bold_current (OpamFile.Descr.synopsis descr) in
+      let colored_body =
+        if !OpamGlobals.verbose then
+          match OpamMisc.strip (OpamFile.Descr.body descr) with
+          | "" -> ""
+          | d  -> "\n"^d^"\n"
+        else "" in
+      OpamGlobals.msg "%s %s %s  %s%s\n"
         (OpamMisc.indent_left colored_name ~visual:name max_name)
         (OpamMisc.indent_right colored_state ~visual:state max_state)
         (OpamMisc.indent_left colored_compiler ~visual:compiler max_compiler)
-        colored_descr in
+        colored_descr colored_body in
 
   List.iter print_compiler all
 
@@ -168,7 +174,7 @@ let install_compiler ~quiet switch compiler =
       raise e
 
 
-let install_packages ~quiet ~packages switch compiler =
+let install_packages ~packages switch compiler =
   (* install the compiler packages *)
   OpamGlobals.switch := `Command_line (OpamSwitch.to_string switch);
   let t = OpamState.load_state "switch-install-with-packages-2" in
@@ -223,7 +229,7 @@ let install_packages ~quiet ~packages switch compiler =
 
 let install_with_packages ~quiet ~packages switch compiler =
   install_compiler ~quiet switch compiler;
-  install_packages ~quiet ~packages switch compiler
+  install_packages ~packages switch compiler
 
 let install ~quiet ~warning ~update_config switch compiler =
   let t = OpamState.load_state "install" in
@@ -348,7 +354,7 @@ let reinstall_t switch t =
       restore overlays;
   );
 
-  install_packages ~quiet:false ~packages switch ocaml_version
+  install_packages ~packages switch ocaml_version
 
 let with_backup command f =
   let t = OpamState.load_state command in

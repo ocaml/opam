@@ -1122,8 +1122,8 @@ module SafeAPI = struct
     let reinstall switch =
       global_lock (fun () -> API.SWITCH.reinstall switch)
 
-    let list ~print_short ~installed =
-      read_lock (fun () -> API.SWITCH.list ~print_short ~installed)
+    let list ~print_short ~installed ~all =
+      read_lock (fun () -> API.SWITCH.list ~print_short ~installed ~all)
 
     let show () =
       read_lock API.SWITCH.show
