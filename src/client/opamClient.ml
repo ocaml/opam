@@ -753,7 +753,7 @@ module API = struct
         if not !OpamGlobals.debug then OpamFilename.rmdir root;
         raise e
 
-  let install_t names add_to_roots t =
+  let install_t names add_to_roots deps_only t =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
@@ -863,14 +863,46 @@ module API = struct
             wish_upgrade = atoms }
       in
       let action =
-        if add_to_roots = Some false then Install OpamPackage.Name.Set.empty
+        if add_to_roots = Some false || deps_only then
+          Install OpamPackage.Name.Set.empty
         else Install names in
-      let solution = OpamSolution.resolve_and_apply t action request in
+      let solution = OpamSolution.resolve t action request in
+      let solution = match solution with
+        | Conflicts cs ->
+          log "conflict!"; OpamGlobals.msg "%s\n" (cs()); No_solution
+        | Success solution ->
+          if deps_only then (
+            let to_install =
+              PackageActionGraph.fold_vertex (fun act acc -> match act with
+                  | To_change (_, p) -> OpamPackage.Set.add p acc
+                  | _ -> acc)
+                solution.PackageActionGraph.to_process OpamPackage.Set.empty in
+            let all_deps =
+              let universe = OpamState.universe t (Install names) in
+              OpamPackage.Name.Set.fold (fun name deps ->
+                  let nvs = OpamPackage.packages_of_name to_install name in
+                  let deps_nv =
+                    OpamSolver.dependencies ~depopts:false ~installed:false
+                      universe nvs in
+                  let deps_only =
+                    OpamPackage.Set.diff
+                      (OpamPackage.Set.of_list deps_nv) nvs in
+                  OpamPackage.Set.union deps deps_only)
+                names OpamPackage.Set.empty in
+            PackageActionGraph.iter_vertex (function
+                | To_change (_, p) as v ->
+                  if not (OpamPackage.Set.mem p all_deps) then
+                    PackageActionGraph.remove_vertex
+                      solution.PackageActionGraph.to_process v
+                | _ -> ())
+              solution.PackageActionGraph.to_process
+          );
+          OpamSolution.apply t action solution in
       OpamSolution.check_solution t solution
     )
 
-  let install names add_to_roots =
-    with_switch_backup "install" (install_t names add_to_roots)
+  let install names add_to_roots deps_only =
+    with_switch_backup "install" (install_t names add_to_roots deps_only)
 
   let remove_t ~autoremove ~force names t =
     log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
@@ -1039,8 +1071,8 @@ module SafeAPI = struct
   let info ~fields regexps =
     read_lock (fun () -> API.info ~fields regexps)
 
-  let install names add_to_roots =
-    switch_lock (fun () -> API.install names add_to_roots)
+  let install names add_to_roots deps_only =
+    switch_lock (fun () -> API.install names add_to_roots deps_only)
 
   let reinstall names =
     switch_lock (fun () -> API.reinstall names)

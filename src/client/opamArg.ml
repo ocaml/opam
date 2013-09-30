@@ -766,13 +766,18 @@ let install =
         ~doc:"Mark given packages as \"installed automatically\"." in
     Arg.(value & vflag None[root; unroot])
   in
-  let install global_options build_options add_to_roots packages =
+  let deps_only =
+    Arg.(value & flag & info ["deps-only"]
+           ~doc:"Install all its dependencies, but don't actually install the \
+                 package.") in
+  let install global_options build_options add_to_roots deps_only packages =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    Client.install packages add_to_roots
+    Client.install packages add_to_roots deps_only
   in
-  Term.(pure install $global_options $build_options $add_to_roots $name_list),
+  Term.(pure install $global_options $build_options
+        $add_to_roots $deps_only $name_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
