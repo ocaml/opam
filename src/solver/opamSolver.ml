@@ -272,10 +272,15 @@ let resolve ?(verbose=true) universe request =
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let request = cleanup_request request in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
-  let resolve =
+  let resolve u req =
     if OpamCudf.external_solver_available ()
-    then OpamCudf.resolve
-    else OpamHeuristic.resolve ~verbose in
+    then
+      try OpamCudf.resolve u req
+      with Failure "opamSolver" ->
+        OpamGlobals.warning "External solver failed, falling back \
+                             to the internal heuristic.";
+        OpamHeuristic.resolve ~verbose u req
+    else OpamHeuristic.resolve ~verbose u req in
   match resolve simple_universe cudf_request with
   | Conflicts c     ->
     Conflicts (fun () -> OpamCudf.string_of_reasons cudf2opam universe (c ()))
