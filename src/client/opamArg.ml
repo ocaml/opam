@@ -961,7 +961,8 @@ let repository name =
     | Some `priority    -> priority params
     | Some   `remove    -> remove params in
 
-  Term.(pure repository $global_options $command $repo_kind_flag $priority $print_short_flag $params),
+  Term.(pure repository $global_options $command $repo_kind_flag $priority
+        $print_short_flag $params),
   term_info name  ~doc ~man
 
 (* THOMAS: we keep 'opam remote' for backward compatibity *)
@@ -973,25 +974,29 @@ let switch_doc = "Manage multiple installation of compilers."
 let switch =
   let doc = switch_doc in
   let commands = [
-    ["install"]      , `install  , "Install the given compiler. The commands fails if the package is \
-                                    already installed (e.g. it will not transparently switch to the \
-                                    installed compiler switch, as $(b,opam switch <name>) does).";
+    ["install"]      , `install  ,
+    "Install the given compiler. The commands fails if the package is \
+     already installed (e.g. it will not transparently switch to the \
+     installed compiler switch, as $(b,opam switch <name>) does).";
     ["remove"]       , `remove   , "Remove the given compiler.";
     ["export"]       , `export   , "Export the list installed package to a file.";
     ["import"]       , `import   , "Install the packages from a file.";
-    ["reinstall"]    , `reinstall, "Reinstall the given compiler switch. This will also try reinstall the \
-                                    installed packages.";
-    ["list"]         , `list     , "List the available compilers. \
-                                    The first column displays the switch name (if any), the second one \
-                                    the switch state (C = current, I = installed, -- = not installed), \
-                                    the third one the compiler name and the last one the compiler \
-                                    description. To switch to an already installed compiler alias (with \
-                                    state = I), use $(b,opam switch <name>). If you want to use a new \
-                                    compiler <comp>, use $(b,opam switch <comp>): this will download, \
-                                    compile and create a fresh and independent environment where new packages can be installed. \
-                                    If you want to create a new compiler alias (for instance because you already have \
-                                    this compiler version installed), use $(b,opam switch <name> --alias-of <comp>). In case \
-                                    <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
+    ["reinstall"]    , `reinstall,
+    "Reinstall the given compiler switch. This will also try reinstall the \
+     installed packages.";
+    ["list"]         , `list     ,
+    "List the available compilers. \
+     The first column displays the switch name (if any), the second one \
+     the switch state (C = current, I = installed, -- = not installed), \
+     the third one the compiler name and the last one the compiler \
+     description. To switch to an already installed compiler alias (with \
+     state = I), use $(b,opam switch <name>). If you want to use a new \
+     compiler <comp>, use $(b,opam switch <comp>): this will download, \
+     compile and create a fresh and independent environment where new \
+     packages can be installed. If you want to create a new compiler alias \
+     (for instance because you already have this compiler version installed), \
+     use $(b,opam switch <name> --alias-of <comp>). In case \
+     <name> and <comp> are the same, this is equivalent to $(b,opam switch <comp>).";
     ["show"]          , `current  , "Show the current compiler.";
   ] in
   let man = [
@@ -1006,9 +1011,9 @@ let switch =
   ] @ mk_subdoc commands in
 
   let command, params = mk_subcommands_with_default commands
-      "If a compiler switch is given instead of an usual command, this command will switch to \
-       the given compiler. You will then need to run $(b,eval `opam config env`) to update your \
-       environment variables." in
+      "If a compiler switch is given instead of an usual command, this command \
+       will switch to the given compiler. You will then need to run \
+       $(b,eval `opam config env`) to update your environment variables." in
   let alias_of =
     mk_opt ["a";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
@@ -1018,11 +1023,12 @@ let switch =
       "FILENAME" "The name of the file to export to/import from."
       Arg.(some filename) None in
   let no_warning =
-    mk_flag ["no-warning"] "Do not display any warning related to environment variables." in
+    mk_flag ["no-warning"]
+      "Do not display any warning related to environment variables." in
   let no_switch =
     mk_flag ["no-switch"]
-      "Only install the compiler switch, without switching to it. If the compiler switch \
-       is already installed, then do nothing." in
+      "Only install the compiler switch, without switching to it. If the compiler \
+       switch is already installed, then do nothing." in
   let installed =
     mk_flag ["i";"installed"] "List installed compiler switches only." in
 
@@ -1058,7 +1064,9 @@ let switch =
       Client.SWITCH.import filename
     | Some `remove, switches ->
       no_alias_of ();
-      List.iter (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch)) switches
+      List.iter
+        (fun switch -> Client.SWITCH.remove (OpamSwitch.of_string switch))
+        switches
     | Some `reinstall, [switch] ->
       no_alias_of ();
       Client.SWITCH.reinstall (OpamSwitch.of_string switch)
@@ -1067,7 +1075,9 @@ let switch =
       Client.SWITCH.show ()
     | Some `default switch, [] ->
       (match alias_of with
-       | None -> Client.SWITCH.switch ~quiet:global_options.quiet ~warning (OpamSwitch.of_string switch)
+       | None ->
+         Client.SWITCH.switch ~quiet:global_options.quiet ~warning
+           (OpamSwitch.of_string switch)
        | _    ->
          Client.SWITCH.install
            ~quiet:global_options.quiet
