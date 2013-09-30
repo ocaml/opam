@@ -427,6 +427,7 @@ module API = struct
           in
           OpamState.universe {t with available_packages} Reinstall in
         OpamPackage.Set.diff all (OpamSolver.installable universe) in
+      let unavailable_versions = OpamPackage.Set.inter recompile_cone unavailable_versions in
       (* Packages for which _no_ version is available anymore *)
       let to_remove_names = OpamPackage.Name.Set.diff
         (OpamPackage.names_of_packages all)
