@@ -1031,10 +1031,13 @@ let switch =
        switch is already installed, then do nothing." in
   let installed =
     mk_flag ["i";"installed"] "List installed compiler switches only." in
+  let all =
+    mk_flag ["a";"all"]
+      "List all the compilers which can be installed on the system." in
 
   let switch global_options
-      build_options command alias_of filename print_short installed no_warning no_switch
-      params =
+      build_options command alias_of filename print_short installed all
+      no_warning no_switch params =
     apply_global_options global_options;
     apply_build_options build_options;
     let no_alias_of () =
@@ -1048,7 +1051,7 @@ let switch =
     | None      , []
     | Some `list, [] ->
       no_alias_of ();
-      Client.SWITCH.list ~print_short ~installed
+      Client.SWITCH.list ~print_short ~installed ~all
     | Some `install, [switch] ->
       Client.SWITCH.install
         ~quiet:global_options.quiet
@@ -1093,7 +1096,7 @@ let switch =
   Term.(pure switch
     $global_options $build_options $command
     $alias_of $filename $print_short_flag
-    $installed $no_warning $no_switch $params),
+    $installed $all $no_warning $no_switch $params),
   term_info "switch" ~doc ~man
 
 (* PIN *)
