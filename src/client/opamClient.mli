@@ -43,7 +43,7 @@ module API: sig
 
   (** Install the given set of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots *)
-  val install: name_set -> bool option -> unit
+  val install: name_set -> bool option -> bool -> unit
 
   (** Reinstall the given set of packages. *)
   val reinstall: name_set -> unit
