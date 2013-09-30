@@ -210,6 +210,9 @@ module OPAM: sig
   (** Construct using [depexts] *)
   val with_depexts: t -> tags option -> t
 
+  (** Convert to OPAM 1.0 *)
+  val to_1_0: file -> file
+
 end
 
 (** Package descriptions: [$opam/descr/] *)
@@ -315,6 +318,9 @@ module Comp: sig
   (** Environment variable to set-up before running commands in the
       subtree *)
   val env: t -> (string * string * string) list
+
+  (** Convert to OPAM 1.0 *)
+  val to_1_0: file -> file
 
 end
 

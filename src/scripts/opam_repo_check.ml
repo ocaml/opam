@@ -33,8 +33,10 @@ let args =
     let doc = "Attempt to repair most warnings." in
     Arg.(value & flag & info ["repair"] ~doc)
   in
-  Term.(pure (fun normalize repair -> { normalize; repair })
-        $ normalize $ repair)
+  Term.(pure (fun globals normalize repair ->
+      OpamArg.apply_global_options globals;
+      { normalize; repair })
+      $ OpamArg.global_options $ normalize $ repair)
 
 module Check = struct
   (*   let descr x = x *)

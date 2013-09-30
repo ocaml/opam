@@ -21,6 +21,9 @@ open OpamTypes
 (** The empty file *)
 val empty : file
 
+(** map a file *)
+val map: (string -> value -> (string * value) option) -> file -> file
+
 (** Get all the variable definitions from a list of items *)
 val variables : file_item list -> (string * value) list
 
@@ -141,13 +144,16 @@ val string_of_values : value list -> string
 type indent_variable = string -> bool
 
 (** Print an file_item *)
-val string_of_item : ?indent_variable:indent_variable -> file_item -> string option
+val string_of_item:
+  simplify:bool -> ?indent_variable:indent_variable -> file_item -> string option
 
 (** Print a list of items *)
-val string_of_items : ?indent_variable:indent_variable -> file_item list -> string
+val string_of_items:
+  simplify:bool -> ?indent_variable:indent_variable -> file_item list -> string
 
 (** Print a file *)
-val string_of_file : ?indent_variable:indent_variable -> file -> string
+val string_of_file:
+  simplify:bool -> ?indent_variable:indent_variable -> file -> string
 
 (** {2 Finding functions} *)
 
