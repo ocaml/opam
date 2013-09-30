@@ -109,7 +109,7 @@ let basename_dir dirname =
 let dirname_dir dirname =
   Dir.to_string (Filename.dirname (Dir.of_string dirname))
 
-let rec to_list_dir dir =
+let to_list_dir dir =
   let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
   let rec aux acc dir =
     let d = dirname_dir dir in

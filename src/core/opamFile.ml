@@ -530,6 +530,7 @@ module X = struct
     let empty = "", ""
 
     let synopsis = fst
+    let body = snd
 
     let full (x,y) = x ^ "\n" ^ y
 
@@ -870,7 +871,7 @@ module X = struct
     let with_maintainer t maintainer = { t with maintainer }
     let with_patches t patches = { t with patches }
     let with_bug_reports t bug_reports = { t with bug_reports }
-    let with_depexts t depexts = { t with depexts } 
+    let with_depexts t depexts = { t with depexts }
 
     let to_string filename t =
       let make_file =
@@ -1592,20 +1593,7 @@ module X = struct
 
   end
 
-  module Comp_descr = struct
-
-    let internal = "comp_descr"
-
-    type t = string
-
-    let empty = ""
-
-    let of_channel _ ic =
-      OpamSystem.string_of_channel ic
-
-    let to_string _ x = x
-
-  end
+  module Comp_descr = Descr
 
   module Subst = struct
 
@@ -1812,11 +1800,6 @@ end
 module Descr = struct
   include Descr
   include Make (Descr)
-end
-
-module Comp_descr = struct
-  include Comp_descr
-  include Make (Comp_descr)
 end
 
 module Aliases = struct
