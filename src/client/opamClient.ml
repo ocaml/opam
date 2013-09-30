@@ -151,7 +151,7 @@ let with_switch_backup command f =
       OpamFilename.remove file
     else
       Printf.eprintf "The former state can be restored with \
-                      %s switch import -f %S\n"
+                      %s switch import -f %S\n%!"
         Sys.argv.(0) (OpamFilename.to_string file);
     raise err
 
@@ -415,7 +415,7 @@ module API = struct
       (* Restrict to what has to be recompiled, we can keep the rest for now *)
       let recompile_cone =
         OpamPackage.Set.of_list
-          (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
+          (OpamSolver.reverse_dependencies ~depopts:true ~installed:true
              universe changed) in
       let unavailable_versions =
         OpamPackage.Set.inter recompile_cone unavailable_versions in
