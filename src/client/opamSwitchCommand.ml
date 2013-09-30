@@ -118,7 +118,10 @@ let list ~print_short ~installed ~all =
         bold_current (OpamGlobals.colorise `yellow compiler) in
       let colored_descr = bold_current (OpamFile.Descr.synopsis descr) in
       let colored_body =
-        if !OpamGlobals.verbose then "\n" ^ OpamFile.Descr.body descr ^ "\n"
+        if !OpamGlobals.verbose then
+          match OpamMisc.strip (OpamFile.Descr.body descr) with
+          | "" -> ""
+          | d  -> "\n"^d^"\n"
         else "" in
       OpamGlobals.msg "%s %s %s  %s%s\n"
         (OpamMisc.indent_left colored_name ~visual:name max_name)
