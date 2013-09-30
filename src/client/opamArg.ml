@@ -1015,7 +1015,7 @@ let switch =
        will switch to the given compiler. You will then need to run \
        $(b,eval `opam config env`) to update your environment variables." in
   let alias_of =
-    mk_opt ["a";"alias-of"]
+    mk_opt ["A";"alias-of"]
       "COMP" "The name of the compiler description which will be aliased."
       Arg.(some string) None in
   let filename =
