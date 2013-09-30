@@ -453,13 +453,15 @@ let add name kind address ~priority:prio =
   log "Adding %s" (OpamRepository.to_string repo);
   update_config t (repo.repo_name :: OpamRepositoryName.Map.keys t.repositories);
   try
-    let max_prio =
-      OpamRepositoryName.Map.fold
-        (fun _ { repo_priority } m -> max repo_priority m)
-        t.repositories min_int in
     let prio = match prio with
-      | None   -> 10 + max_prio
-      | Some p -> p in
+      | Some p -> p
+      | None ->
+        if OpamRepositoryName.Map.is_empty t.repositories then 0 else
+          let max_prio =
+            OpamRepositoryName.Map.fold
+              (fun _ { repo_priority } m -> max repo_priority m)
+              t.repositories min_int in
+          10 + max_prio in
     OpamState.remove_state_cache ();
     priority name ~priority:prio;
   with e ->
