@@ -103,10 +103,12 @@ module Syntax = struct
 
   let to_1_0 file =
     let file_contents = List.map (function
-        | Variable (s_opam_version, _) -> Variable(s_opam_version, String "1.0")
+        | Variable (v, _) as c ->
+          if v = s_opam_version then Variable(s_opam_version, String "1")
+          else c
         | c -> c
       ) file.file_contents in
-    { file with file_contents; file_format = OpamVersion.of_string "1.0" }
+    { file with file_contents; file_format = OpamVersion.of_string "1" }
 
 end
 
@@ -1445,7 +1447,6 @@ module X = struct
       s_name;
       s_version;
       s_src;
-      s_archive;
       s_patches;
       s_configure;
       s_make;
@@ -1463,6 +1464,7 @@ module X = struct
     ]
 
     let opam_1_1_fields = [
+      s_archive;
       s_http;
       s_git;
       s_darcs;
@@ -1472,11 +1474,12 @@ module X = struct
 
     let to_1_0_fields k v =
       if List.mem k opam_1_1_fields then
-        if k = s_http then Some (s_archive, v)
-        else if k = s_git then Some (s_archive, v)
-        else if k = s_darcs then Some (s_archive, v)
-        else if k = s_hg then Some (s_archive, v)
-        else if k = s_local then Some (s_archive, v)
+        if k = s_archive
+        || k = s_http
+        || k = s_git
+        || k = s_darcs
+        || k = s_hg
+        || k = s_local then Some (s_src, v)
         else None
       else Some (k, v)
 
@@ -1606,14 +1609,20 @@ module X = struct
         file_format   = s.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-            Variable (s_opam_version,
-                      OpamFormat.make_string (OpamVersion.to_string s.opam_version));
-            Variable (s_name,
-                      OpamFormat.make_string (OpamCompiler.to_string s.name));
+          Variable (s_opam_version,
+                    OpamFormat.make_string (OpamVersion.to_string s.opam_version))
+        ] @ (
+            match OpamCompiler.of_filename filename with
+            | None   -> [Variable (s_name,
+                                   OpamFormat.make_string
+                                     (OpamCompiler.to_string s.name))]
+            | Some _ -> []
+          ) @ [
             Variable (s_version,
                       OpamFormat.make_string
-                        (OpamCompiler.Version.to_string s.version));
-        ] @ (match src with
+                        (OpamCompiler.Version.to_string s.version))
+          ] @ (
+            match src with
             | None       -> []
             | Some (s,c) -> [Variable (s, OpamFormat.make_string (string_of_address c))]
           ) @ [
@@ -1638,7 +1647,7 @@ module X = struct
           ] @ (match s.pp with
                | None    -> []
                | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
-              ) @ (
+          ) @ (
             if not s.preinstalled then []
             else [ Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled) ])
       } in
