@@ -128,12 +128,12 @@ let print_state t =
 let compiler_comp t c =
   OpamFile.Comp.read (OpamPath.compiler_comp t.root c)
 
-let mem_installed_package_by_name_aux installed name =
+let is_name_installed_aux installed name =
   let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) installed in
   not (OpamPackage.Set.is_empty set)
 
 let is_name_installed t name =
-  mem_installed_package_by_name_aux t.installed name
+  is_name_installed_aux t.installed name
 
 let find_installed_package_by_name_aux installed name =
   try OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) installed
@@ -962,7 +962,7 @@ let installed_versions t name =
   OpamSwitch.Map.fold (fun switch _ map ->
     let installed =
       OpamFile.Installed.safe_read (OpamPath.Switch.installed t.root switch) in
-    if mem_installed_package_by_name_aux installed name then
+    if is_name_installed_aux installed name then
       let nv = find_installed_package_by_name_aux installed name in
       if OpamPackage.Map.mem nv map then
         let aliases = OpamPackage.Map.find nv map in
