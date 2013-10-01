@@ -12,7 +12,7 @@ all: $(LOCAL_OCPBUILD) META
 	$(MAKE) compile
 
 cold:
-	./scripts/bootstrap-ocaml.sh
+	./shell/bootstrap-ocaml.sh
 	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin ./configure
 	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE)
         
