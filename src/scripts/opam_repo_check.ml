@@ -15,56 +15,26 @@
 (**************************************************************************)
 
 (* Script to check that a given repository is well-typed (or well-parsed) *)
-open OpamTypes
 open OpamFilename.OP
 
 type args = {
   normalize: bool;
-  repair: bool;
 }
 
 let args =
   let open Cmdliner in
   let normalize =
     let doc = "Normalize all files in the repository." in
-    Arg.(value & flag & info ["normalize"] ~doc)
+    Arg.(value & flag & info ["n";"normalize"] ~doc)
   in
-  let repair =
-    let doc = "Attempt to repair most warnings." in
-    Arg.(value & flag & info ["repair"] ~doc)
-  in
-  Term.(pure (fun globals normalize repair ->
-      OpamArg.apply_global_options globals;
-      { normalize; repair })
-      $ OpamArg.global_options $ normalize $ repair)
-
-module Check = struct
-  (*   let descr x = x *)
-  let opam t args =
-    List.fold_left
-      (fun t (s, f_cons, f_make) ->
-        f_make t (List.map
-            (function
-             | (CString "make", f0) :: l, f1 as x ->
-               if args.repair then
-                 (CIdent "make", f0) :: l, f1
-               else
-                 let _ = OpamGlobals.warning "unescaped 'make' in %s" s in
-                 x
-             | x -> x)
-            (f_cons t)))
-      t
-      [ "build", OpamFile.OPAM.build, OpamFile.OPAM.with_build
-      ; "remove", OpamFile.OPAM.remove, OpamFile.OPAM.with_remove ]
-      (*   let url x = x *)
-      (*   let dot_install x = x *)
-      (*   let comp x = x *)
-      (*   let comp_descr x = x *)
-end
+  Term.(pure (fun globals normalize ->
+      OpamArg.apply_global_options globals; { normalize }
+    ) $ OpamArg.global_options $ normalize)
 
 let process args =
 
-  let write f_write fic st = if args.normalize then f_write fic st in
+  let write f_write fic st =
+    if args.normalize then f_write fic st in
 
   let repo = OpamRepository.local (OpamFilename.cwd ()) in
 
@@ -72,21 +42,21 @@ let process args =
 
   (** packages *)
   OpamPackage.Map.iter (fun package prefix ->
-    OpamGlobals.msg "Processing (package) %s\n" (OpamPackage.to_string package);
-
-    (** Descr *)
-    let descr = OpamPath.Repository.descr repo prefix package in
-    write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
+    OpamGlobals.msg "Processing package %s\n" (OpamPackage.to_string package);
 
     (** OPAM *)
     let opam = OpamPath.Repository.opam repo prefix package in
-    write OpamFile.OPAM.write opam (Check.opam (OpamFile.OPAM.read opam) args);
+    write OpamFile.OPAM.write opam (OpamFile.OPAM.read opam);
+
+    (** Descr *)
+    let descr = OpamPath.Repository.descr repo prefix package in
+    if OpamFilename.exists descr then
+      write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
 
     (** URL *)
     let url = OpamPath.Repository.url repo prefix package in
-    if OpamFilename.exists url then (
+    if OpamFilename.exists url then
       write OpamFile.URL.write url (OpamFile.URL.read url);
-    );
 
     (** Dot_install *)
     let dot_install =
@@ -104,7 +74,7 @@ let process args =
   OpamCompiler.Map.iter (fun c prefix ->
       let comp = OpamPath.Repository.compiler_comp repo prefix c in
       let descr = OpamPath.Repository.compiler_descr repo prefix c in
-      OpamGlobals.msg "Processing (compiler) %s\n" (OpamCompiler.to_string c);
+      OpamGlobals.msg "Processing compiler %s\n" (OpamCompiler.to_string c);
       write OpamFile.Comp.write comp (OpamFile.Comp.read comp);
       if OpamFilename.exists descr then
         write OpamFile.Descr.write descr (OpamFile.Descr.read descr);
