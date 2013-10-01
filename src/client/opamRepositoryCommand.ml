@@ -208,9 +208,9 @@ let fix_package_descriptions t ~verbose =
 
   let global_index = OpamState.package_state t in
   let repo_index   = OpamState.package_repository_state t in
-  let niet = String.concat ":" in
-  log "global-index: %s" (OpamPackage.Map.to_string niet global_index);
-  log "repo-index  : %s" (OpamPackage.Map.to_string niet repo_index);
+  (* let niet = String.concat ":" in *)
+  (* log "global-index: %s" (OpamPackage.Map.to_string niet global_index); *)
+  (* log "repo-index  : %s" (OpamPackage.Map.to_string niet repo_index); *)
 
   let updated_packages, new_packages =
     let updated_packages =
@@ -224,13 +224,9 @@ let fix_package_descriptions t ~verbose =
     OpamPackage.Set.partition (fun nv ->
         OpamPackage.Map.mem nv global_index
       ) updated_packages in
-  log "new-packages    : %s" (OpamPackage.Set.to_string new_packages);
 
   let all_installed = OpamState.all_installed t in
-  let changed_packages, updated_packages =
-    OpamPackage.Set.partition (fun nv ->
-        OpamPackage.Set.mem nv all_installed
-      ) updated_packages in
+  let changed_packages = OpamPackage.Set.inter all_installed updated_packages in
   let missing_installed_packages =
     OpamPackage.Set.filter (fun nv ->
         try
@@ -241,6 +237,7 @@ let fix_package_descriptions t ~verbose =
           true
       ) all_installed in
 
+  log "new-packages     : %s" (OpamPackage.Set.to_string new_packages);
   log "updated-packages : %s" (OpamPackage.Set.to_string updated_packages);
   log "changed-packages : %s" (OpamPackage.Set.to_string changed_packages);
   log "missing-installed: %s" (OpamPackage.Set.to_string missing_installed_packages);
@@ -274,19 +271,20 @@ let fix_package_descriptions t ~verbose =
       match OpamState.repository_and_prefix_of_package t nv with
       | None                -> ()
       | Some (repo, prefix) ->
-        let root = OpamPath.Repository.packages repo prefix nv in
-        let files = OpamRepository.package_files repo prefix nv ~archive:false in
-        assert (files <> []);
         let dir = OpamPath.packages t.root nv in
         if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
-        OpamFilename.mkdir dir;
-        List.iter (fun file ->
-            OpamFilename.copy_in ~root file dir
-          ) files;
-        OpamFilename.remove (OpamPath.archive t.root nv);
-        if OpamState.is_dev_package t nv then
-          OpamFilename.rmdir (OpamPath.dev_package t.root nv);
-    ) (OpamPackage.Set.union missing_installed_packages changed_packages);
+        if OpamPackage.Set.mem nv all_installed then
+          let root = OpamPath.Repository.packages repo prefix nv in
+          let files = OpamRepository.package_files repo prefix nv ~archive:false in
+          assert (files <> []);
+          OpamFilename.mkdir dir;
+          List.iter (fun file ->
+              OpamFilename.copy_in ~root file dir
+            ) files;
+          OpamFilename.remove (OpamPath.archive t.root nv);
+          if OpamState.is_dev_package t nv then
+            OpamFilename.rmdir (OpamPath.dev_package t.root nv);
+    ) (OpamPackage.Set.union missing_installed_packages updated_packages);
 
   (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)
@@ -345,7 +343,7 @@ let fix_package_descriptions t ~verbose =
 
   let updates = {
     created = new_packages;
-    updated = updated_packages;
+    updated = OpamPackage.Set.diff updated_packages changed_packages;
     deleted = upstream_deleted_packages;
     changed = changed_packages;
   } in
