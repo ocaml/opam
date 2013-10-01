@@ -303,8 +303,6 @@ let need_reinstall = check s_reinstall
 
 let is_installed_root = check s_installed_root
 
-let solver_calls = ref 0
-
 let aspcud_path = lazy (
   try
     match OpamSystem.read_command_output ~verbose:false [ "which"; "aspcud" ] with
@@ -316,25 +314,6 @@ let aspcud_path = lazy (
 
 let aspcud_command path =
   Printf.sprintf "%s $in $out $pref" path
-
-let external_solver_available () =
-  match Lazy.force aspcud_path with
-  | None   -> false
-  | Some _ -> true
-
-let dump_cudf_request (_, univ,_ as cudf) =
-  match !OpamGlobals.cudf_file with
-  | None   -> ()
-  | Some f ->
-    incr solver_calls;
-    let oc = open_out (Printf.sprintf "%s-%d.cudf" f !solver_calls) in
-    begin match Lazy.force aspcud_path with
-      | None      -> Printf.fprintf oc "#internal OPAM solver\n"
-      | Some path -> Printf.fprintf oc "#!%s %s\n" (aspcud_command path) OpamGlobals.aspcud_criteria
-    end;
-    Cudf_printer.pp_cudf oc cudf;
-    close_out oc;
-    Graph.output (Graph.of_universe univ) f
 
 let default_preamble =
   let l = [
@@ -390,37 +369,69 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
+let external_solver_available () =
+  !OpamGlobals.use_external_solver && Lazy.force aspcud_path <> None
+
+let solver_calls = ref 0
+
+let dump_cudf_request (_, univ,_ as cudf) = function
+  | None   -> None
+  | Some f ->
+    incr solver_calls;
+    let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
+    let oc = open_out filename in
+    begin match Lazy.force aspcud_path with
+      | Some path when !OpamGlobals.use_external_solver ->
+        Printf.fprintf oc "#!%s %s\n" (aspcud_command path) OpamGlobals.aspcud_criteria
+      | _ -> Printf.fprintf oc "#internal OPAM solver\n"
+    end;
+    Cudf_printer.pp_cudf oc cudf;
+    close_out oc;
+    Graph.output (Graph.of_universe univ) f;
+    Some filename
+
 let call_external_solver ~explain univ req =
   let cudf_request = to_cudf univ req in
-  dump_cudf_request cudf_request;
+  ignore (dump_cudf_request cudf_request !OpamGlobals.cudf_file);
   match Lazy.force aspcud_path with
-  | None ->
-    (* No external solver is available, use the default one *)
-    Algo.Depsolver.check_request ~explain cudf_request
-  | Some path ->
+  | Some path when !OpamGlobals.use_external_solver ->
     if Cudf.universe_size univ > 0 then begin
       let cmd = aspcud_command path in
       let criteria = OpamGlobals.aspcud_criteria in
       try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
       with e ->
-        OpamGlobals.msg "WARNING: '%s' failed with %s\n" cmd (Printexc.to_string e);
+        OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
         Algo.Depsolver.check_request ~explain cudf_request
     end else
       Algo.Depsolver.Sat(None,Cudf.load_universe [])
+  | _ ->
+    (* No external solver is available, use the default one *)
+    Algo.Depsolver.check_request ~explain cudf_request
 
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
+  let fail msg =
+    OpamGlobals.use_external_solver := false;
+    let cudf_file = match !OpamGlobals.cudf_file with
+      | Some f -> f
+      | None ->
+        let (/) = Filename.concat in
+        !OpamGlobals.root_dir / "log" /
+        ("solver-error-"^string_of_int (Unix.getpid())) in
+    let f = dump_cudf_request (to_cudf univ req) (Some cudf_file) in
+    OpamGlobals.warning "External solver failed with %s Request saved to %S"
+      msg (match f with Some x -> x | None -> "");
+    failwith "opamSolver" in
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
   | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
   | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
-  | Error str -> OpamGlobals.error_and_exit "solver error: %s" str
+  | Error str -> fail str
   | Unsat r   ->
     let open Algo.Diagnostic in
     match r with
     | Some {result=Failure f} -> Conflicts f
-    | Some {result=Success f} -> OpamTypes.Success (Cudf.load_universe (f ()))
-    | _                       -> failwith "opamSolver"
+    | _ -> fail "inconsistent return value."
 
 (* A modified version of CudfDiff to handle reinstallations *)
 module Diff = struct

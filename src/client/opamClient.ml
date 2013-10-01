@@ -151,7 +151,7 @@ let with_switch_backup command f =
       OpamFilename.remove file
     else
       Printf.eprintf "The former state can be restored with \
-                      %s switch import -f %S\n"
+                      %s switch import -f %S\n%!"
         Sys.argv.(0) (OpamFilename.to_string file);
     raise err
 
@@ -415,7 +415,7 @@ module API = struct
       (* Restrict to what has to be recompiled, we can keep the rest for now *)
       let recompile_cone =
         OpamPackage.Set.of_list
-          (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
+          (OpamSolver.reverse_dependencies ~depopts:true ~installed:true
              universe changed) in
       let unavailable_versions =
         OpamPackage.Set.inter recompile_cone unavailable_versions in
@@ -427,6 +427,7 @@ module API = struct
           in
           OpamState.universe {t with available_packages} Reinstall in
         OpamPackage.Set.diff all (OpamSolver.installable universe) in
+      let unavailable_versions = OpamPackage.Set.inter recompile_cone unavailable_versions in
       (* Packages for which _no_ version is available anymore *)
       let to_remove_names = OpamPackage.Name.Set.diff
         (OpamPackage.names_of_packages all)
@@ -753,7 +754,7 @@ module API = struct
         if not !OpamGlobals.debug then OpamFilename.rmdir root;
         raise e
 
-  let install_t names add_to_roots t =
+  let install_t names add_to_roots deps_only t =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
@@ -780,14 +781,14 @@ module API = struct
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
             | None ->
-              OpamGlobals.warning
+              OpamGlobals.note
                 "Package %s is already installed (current version is %s)."
                 (OpamPackage.Name.to_string (OpamPackage.name nv))
                 (OpamPackage.Version.to_string (OpamPackage.version nv));
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
-                OpamGlobals.warning
+                OpamGlobals.note
                   "Package %s is already installed as a root."
                   (OpamPackage.Name.to_string (OpamPackage.name nv));
               { t with installed_roots =
@@ -797,7 +798,7 @@ module API = struct
                 { t with installed_roots =
                            OpamPackage.Set.remove nv t.installed_roots }
               else
-                (OpamGlobals.warning
+                (OpamGlobals.note
                    "Package %s is already marked as 'installed automatically'."
                    (OpamPackage.Name.to_string (OpamPackage.name nv));
                  t)
@@ -863,14 +864,46 @@ module API = struct
             wish_upgrade = atoms }
       in
       let action =
-        if add_to_roots = Some false then Install OpamPackage.Name.Set.empty
+        if add_to_roots = Some false || deps_only then
+          Install OpamPackage.Name.Set.empty
         else Install names in
-      let solution = OpamSolution.resolve_and_apply t action request in
+      let solution = OpamSolution.resolve t action request in
+      let solution = match solution with
+        | Conflicts cs ->
+          log "conflict!"; OpamGlobals.msg "%s\n" (cs()); No_solution
+        | Success solution ->
+          if deps_only then (
+            let to_install =
+              PackageActionGraph.fold_vertex (fun act acc -> match act with
+                  | To_change (_, p) -> OpamPackage.Set.add p acc
+                  | _ -> acc)
+                solution.PackageActionGraph.to_process OpamPackage.Set.empty in
+            let all_deps =
+              let universe = OpamState.universe t (Install names) in
+              OpamPackage.Name.Set.fold (fun name deps ->
+                  let nvs = OpamPackage.packages_of_name to_install name in
+                  let deps_nv =
+                    OpamSolver.dependencies ~depopts:false ~installed:false
+                      universe nvs in
+                  let deps_only =
+                    OpamPackage.Set.diff
+                      (OpamPackage.Set.of_list deps_nv) nvs in
+                  OpamPackage.Set.union deps deps_only)
+                names OpamPackage.Set.empty in
+            PackageActionGraph.iter_vertex (function
+                | To_change (_, p) as v ->
+                  if not (OpamPackage.Set.mem p all_deps) then
+                    PackageActionGraph.remove_vertex
+                      solution.PackageActionGraph.to_process v
+                | _ -> ())
+              solution.PackageActionGraph.to_process
+          );
+          OpamSolution.apply t action solution in
       OpamSolution.check_solution t solution
     )
 
-  let install names add_to_roots =
-    with_switch_backup "install" (install_t names add_to_roots)
+  let install names add_to_roots deps_only =
+    with_switch_backup "install" (install_t names add_to_roots deps_only)
 
   let remove_t ~autoremove ~force names t =
     log "REMOVE autoremove:%b %s" autoremove (OpamPackage.Name.Set.to_string names);
@@ -920,7 +953,7 @@ module API = struct
               OpamPackage.create name
                 (OpamPackage.Version.Set.max_elt
                    (OpamPackage.versions_of_name t.packages name)) in
-          OpamGlobals.warning "Forcing removal of %s" (OpamPackage.to_string nv);
+          OpamGlobals.note "Forcing removal of %s" (OpamPackage.to_string nv);
           OpamAction.remove_package ~rm_build:true ~metadata:false t nv in
         nothing_to_do := false;
         List.iter force_remove not_installed
@@ -1039,8 +1072,8 @@ module SafeAPI = struct
   let info ~fields regexps =
     read_lock (fun () -> API.info ~fields regexps)
 
-  let install names add_to_roots =
-    switch_lock (fun () -> API.install names add_to_roots)
+  let install names add_to_roots deps_only =
+    switch_lock (fun () -> API.install names add_to_roots deps_only)
 
   let reinstall names =
     switch_lock (fun () -> API.reinstall names)

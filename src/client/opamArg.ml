@@ -30,14 +30,15 @@ type global_options = {
   no_base_packages: bool;
   git_version     : bool;
   compat_mode_1_0 : bool
+  no_aspcud : bool;
 }
 
 
 let create_global_options
-    git_version debug verbose quiet color switch yes strict root no_base_packages
-    compat_mode_1_0 =
+    git_version debug verbose quiet color switch yes strict root
+    no_base_packages compat_mode_1_0 no_aspcud =
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0 }
+    no_base_packages; no_aspcud }
 
 let apply_global_options o =
   if o.git_version then (
@@ -59,7 +60,9 @@ let apply_global_options o =
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
-  OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0
+  OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
+  OpamGlobals.use_external_solver :=
+    !OpamGlobals.use_external_solver && not o.no_aspcud
 
 (* Build options *)
 type build_options = {
@@ -357,9 +360,12 @@ let global_options =
   let compat_mode_1_0 =
     mk_flag ~section ["compat-mode-1.0"]
       "Compatibility mode with OPAM 1.0" in
+  let no_aspcud =
+    mk_flag ~section ["no-aspcud"]
+      "Do not use the external aspcud solver, even if available." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0)
+    $no_base_packages $compat_mode_1_0 $no_aspcud)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
@@ -775,13 +781,18 @@ let install =
         ~doc:"Mark given packages as \"installed automatically\"." in
     Arg.(value & vflag None[root; unroot])
   in
-  let install global_options build_options add_to_roots packages =
+  let deps_only =
+    Arg.(value & flag & info ["deps-only"]
+           ~doc:"Install all its dependencies, but don't actually install the \
+                 package.") in
+  let install global_options build_options add_to_roots deps_only packages =
     apply_global_options global_options;
     apply_build_options build_options;
     let packages = OpamPackage.Name.Set.of_list packages in
-    Client.install packages add_to_roots
+    Client.install packages add_to_roots deps_only
   in
-  Term.(pure install $global_options $build_options $add_to_roots $name_list),
+  Term.(pure install $global_options $build_options
+        $add_to_roots $deps_only $name_list),
   term_info "install" ~doc ~man
 
 (* REMOVE *)
