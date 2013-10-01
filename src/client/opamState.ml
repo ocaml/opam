@@ -442,8 +442,10 @@ let package_state t =
       OpamPackage.Map.add nv state map
     ) (all_installed t) OpamPackage.Map.empty in
   OpamPackage.Map.fold (fun nv (repo, prefix) map ->
-      if OpamPackage.Map.mem nv map then
-        map
+      if OpamPackage.Map.mem nv map then map
+      else if OpamFilename.exists (OpamPath.opam t.root nv) then
+        let state = package_state_one t `all nv in
+        OpamPackage.Map.add nv state map
       else
         let repo = find_repository_exn t repo in
         let state = OpamRepository.package_state repo prefix nv `all in
