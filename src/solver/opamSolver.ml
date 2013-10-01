@@ -277,8 +277,7 @@ let resolve ?(verbose=true) universe request =
     then
       try OpamCudf.resolve u req
       with Failure "opamSolver" ->
-        OpamGlobals.warning "External solver failed, falling back \
-                             to the internal heuristic.";
+        OpamGlobals.msg "Falling back to the internal heuristic.\n";
         OpamHeuristic.resolve ~verbose u req
     else OpamHeuristic.resolve ~verbose u req in
   match resolve simple_universe cudf_request with
