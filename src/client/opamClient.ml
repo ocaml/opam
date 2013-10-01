@@ -781,14 +781,14 @@ module API = struct
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
             | None ->
-              OpamGlobals.warning
+              OpamGlobals.note
                 "Package %s is already installed (current version is %s)."
                 (OpamPackage.Name.to_string (OpamPackage.name nv))
                 (OpamPackage.Version.to_string (OpamPackage.version nv));
               t
             | Some true ->
               if OpamPackage.Set.mem nv t.installed_roots then
-                OpamGlobals.warning
+                OpamGlobals.note
                   "Package %s is already installed as a root."
                   (OpamPackage.Name.to_string (OpamPackage.name nv));
               { t with installed_roots =
@@ -798,7 +798,7 @@ module API = struct
                 { t with installed_roots =
                            OpamPackage.Set.remove nv t.installed_roots }
               else
-                (OpamGlobals.warning
+                (OpamGlobals.note
                    "Package %s is already marked as 'installed automatically'."
                    (OpamPackage.Name.to_string (OpamPackage.name nv));
                  t)
@@ -953,7 +953,7 @@ module API = struct
               OpamPackage.create name
                 (OpamPackage.Version.Set.max_elt
                    (OpamPackage.versions_of_name t.packages name)) in
-          OpamGlobals.warning "Forcing removal of %s" (OpamPackage.to_string nv);
+          OpamGlobals.note "Forcing removal of %s" (OpamPackage.to_string nv);
           OpamAction.remove_package ~rm_build:true ~metadata:false t nv in
         nothing_to_do := false;
         List.iter force_remove not_installed

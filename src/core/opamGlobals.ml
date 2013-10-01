@@ -188,6 +188,11 @@ let warning fmt =
     Printf.eprintf "%a %s\n%!" (acolor `yellow) "[WARNING]" str
   ) fmt
 
+let note fmt =
+  Printf.ksprintf (fun str ->
+    Printf.eprintf "%a %s\n%!" (acolor `blue) "[NOTE]" str
+  ) fmt
+
 exception Exit of int
 
 let error_and_exit fmt =
