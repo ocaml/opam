@@ -41,7 +41,8 @@ open OpamTypes
 %%
 
 main:
-| items EOF { fun file_name -> { file_contents = $1; file_name } }
+| items EOF { fun file_name ->
+        { file_contents = $1; file_name; file_format = OpamVersion.current } }
 ;
 
 items:

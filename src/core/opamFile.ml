@@ -47,7 +47,8 @@ module Syntax = struct
     OpamParser.main OpamLexer.token lexbuf filename
 
   let to_string ?(indent_variable = fun _ -> false) (t: t) =
-    OpamFormat.string_of_file ~indent_variable t
+    let simplify = not !OpamGlobals.compat_mode_1_0 in
+    OpamFormat.string_of_file ~simplify ~indent_variable t
 
   let s_opam_version = "opam-version"
 
@@ -99,6 +100,15 @@ module Syntax = struct
             OpamGlobals.warning "unknown fields in %s: is your OPAM up-to-date ?"
               f.file_name
         )
+
+  let to_1_0 file =
+    let file_contents = List.map (function
+        | Variable (v, _) as c ->
+          if v = s_opam_version then Variable(s_opam_version, String "1")
+          else c
+        | c -> c
+      ) file.file_contents in
+    { file with file_contents; file_format = OpamVersion.of_string "1" }
 
 end
 
@@ -262,6 +272,7 @@ module X = struct
         | None   -> "archive"
         | Some k -> string_of_repository_kind k in
       let s = {
+        file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
           Variable (url_name , OpamFormat.make_string (string_of_address t.url));
@@ -504,6 +515,7 @@ module X = struct
 
     let to_string filename t =
       let s = {
+        file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
           Variable (s_name    ,
@@ -672,6 +684,7 @@ module X = struct
 
     let to_string filename t =
       let s = {
+        file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
           Variable (s_opam_version,
@@ -789,7 +802,7 @@ module X = struct
     let s_post_messages = "post-messages"
     let s_bug_reports = "bug-reports"
 
-    let useful_fields = [
+    let opam_1_0_fields = [
       s_opam_version;
       s_maintainer;
       s_substs;
@@ -804,27 +817,43 @@ module X = struct
       s_build_env;
       s_patches;
       s_os;
-      s_available;
       s_license;
-      s_author;
       s_authors;
       s_homepage;
       s_doc;
       s_build_test;
       s_build_doc;
       s_depexts;
+      s_tags;
+      s_version;
+      s_name;
+      s_configure_style;
+    ]
+
+    let opam_1_1_fields = [
+      s_author;
+      s_available;
       s_messages;
       s_post_messages;
-      s_tags;
       s_bug_reports;
     ]
 
+    let to_1_0_fields k v =
+      if List.mem k opam_1_1_fields then
+        if k = s_author then Some (s_authors, v)
+        else None
+      else if k = s_maintainer || k = s_homepage || k = s_license then
+        match v with
+        | List (v::_) -> Some (k, v)
+        | v           -> Some (k, v)
+      else Some (k, v)
+
+    let to_1_0 file =
+      let file = OpamFormat.map to_1_0_fields file in
+      Syntax.to_1_0 file
+
     let valid_fields =
-      useful_fields @ [
-        s_version;
-        s_name;
-        s_configure_style;
-      ]
+      opam_1_0_fields @ opam_1_1_fields
 
     let check name = function
       | None    -> OpamGlobals.error_and_exit "Invalid OPAM file (%s)" name
@@ -900,6 +929,7 @@ module X = struct
         | FBool true -> []
         | x     -> [ Variable (s, f x) ] in
       let s = {
+        file_format   = t.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
           Variable (s_opam_version,
@@ -937,17 +967,18 @@ module X = struct
           @ list    t.post_messages s_post_messages
               OpamFormat.(make_list (make_option make_string make_filter));
       } in
+      let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
       Syntax.to_string
         ~indent_variable:
           (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts;
-                                s_authors; s_bug_reports ])
+                                s_author; s_authors; s_bug_reports; s_patches ])
         s
 
     let of_channel filename ic =
       let nv = OpamPackage.of_filename filename in
-      let s = Syntax.of_channel filename ic in
-      Syntax.check s valid_fields;
-      let s = s.file_contents in
+      let f = Syntax.of_channel filename ic in
+      Syntax.check f valid_fields;
+      let s = f.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string ++ OpamVersion.of_string) in
       let name_f = OpamFormat.assoc_option s s_name
@@ -1137,6 +1168,7 @@ module X = struct
           Option (src, [dst]) in
         OpamFormat.make_list aux in
       let s = {
+        file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
           Variable (s_bin     , mk      t.bin);
@@ -1279,6 +1311,7 @@ module X = struct
             ] @ of_variables s.lvariables
           } in
       Syntax.to_string {
+        file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents =
           of_variables t.variables
@@ -1409,17 +1442,11 @@ module X = struct
     let s_hg        = "hg"
     let s_local     = "local"
 
-    let valid_fields = [
+    let opam_1_0_fields = [
       s_opam_version;
       s_name;
       s_version;
       s_src;
-      s_archive;
-      s_http;
-      s_git;
-      s_darcs;
-      s_hg;
-      s_local;
       s_patches;
       s_configure;
       s_make;
@@ -1435,6 +1462,33 @@ module X = struct
       s_preinstalled;
       s_tags;
     ]
+
+    let opam_1_1_fields = [
+      s_archive;
+      s_http;
+      s_git;
+      s_darcs;
+      s_hg;
+      s_local;
+    ]
+
+    let to_1_0_fields k v =
+      if List.mem k opam_1_1_fields then
+        if k = s_archive
+        || k = s_http
+        || k = s_git
+        || k = s_darcs
+        || k = s_hg
+        || k = s_local then Some (s_src, v)
+        else None
+      else Some (k, v)
+
+    let to_1_0 file =
+      let file = OpamFormat.map to_1_0_fields file in
+      Syntax.to_1_0 file
+
+    let valid_fields =
+      opam_1_0_fields @ opam_1_1_fields
 
     let name t = t.name
     let version t = t.version
@@ -1551,17 +1605,24 @@ module X = struct
         | _          , None   -> None
         | Some kind  , Some x -> Some (string_of_repository_kind kind, x)
         | None       , Some x -> Some ("archive", x) in
-      Syntax.to_string {
+      let s = {
+        file_format   = s.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-            Variable (s_opam_version,
-                      OpamFormat.make_string (OpamVersion.to_string s.opam_version));
-            Variable (s_name,
-                      OpamFormat.make_string (OpamCompiler.to_string s.name));
+          Variable (s_opam_version,
+                    OpamFormat.make_string (OpamVersion.to_string s.opam_version))
+        ] @ (
+            match OpamCompiler.of_filename filename with
+            | None   -> [Variable (s_name,
+                                   OpamFormat.make_string
+                                     (OpamCompiler.to_string s.name))]
+            | Some _ -> []
+          ) @ [
             Variable (s_version,
                       OpamFormat.make_string
-                        (OpamCompiler.Version.to_string s.version));
-        ] @ (match src with
+                        (OpamCompiler.Version.to_string s.version))
+          ] @ (
+            match src with
             | None       -> []
             | Some (s,c) -> [Variable (s, OpamFormat.make_string (string_of_address c))]
           ) @ [
@@ -1586,10 +1647,12 @@ module X = struct
           ] @ (match s.pp with
                | None    -> []
                | Some pp -> [ Variable (s_pp, make_ppflag pp) ]
-              ) @ (
+          ) @ (
             if not s.preinstalled then []
             else [ Variable (s_preinstalled, OpamFormat.make_bool s.preinstalled) ])
-      }
+      } in
+      let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
+      Syntax.to_string s
 
   end
 
@@ -1666,6 +1729,7 @@ module X = struct
     let to_string filename t =
       let opam_version = OpamVersion.to_string t.opam_version in
       let s = {
+        file_format   = t.opam_version;
         file_name     = OpamFilename.to_string filename;
         file_contents =
           (Variable (s_opam_version, OpamFormat.make_string opam_version))

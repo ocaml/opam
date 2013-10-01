@@ -29,14 +29,16 @@ type global_options = {
   root   : dirname;
   no_base_packages: bool;
   git_version     : bool;
+  compat_mode_1_0 : bool;
   no_aspcud : bool;
 }
 
+
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
-    no_base_packages no_aspcud =
+    no_base_packages compat_mode_1_0 no_aspcud =
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; no_aspcud }
+    no_base_packages; compat_mode_1_0; no_aspcud }
 
 let apply_global_options o =
   if o.git_version then (
@@ -58,6 +60,7 @@ let apply_global_options o =
   OpamGlobals.yes      := !OpamGlobals.yes || o.yes;
   OpamGlobals.strict   := !OpamGlobals.strict || o.strict;
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
+  OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
   OpamGlobals.use_external_solver :=
     !OpamGlobals.use_external_solver && not o.no_aspcud
 
@@ -354,12 +357,15 @@ let global_options =
       "Do not install base packages (useful for testing purposes). \
        This is equivalent to setting $(b,\\$OPAMNOBASEPACKAGES) to a non-empty \
        string." in
+  let compat_mode_1_0 =
+    mk_flag ~section ["compat-mode-1.0"]
+      "Compatibility mode with OPAM 1.0" in
   let no_aspcud =
     mk_flag ~section ["no-aspcud"]
       "Do not use the external aspcud solver, even if available." in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $no_aspcud)
+    $no_base_packages $compat_mode_1_0 $no_aspcud)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
