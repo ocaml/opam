@@ -1764,6 +1764,7 @@ module X = struct
     let opam_version t = t.opam_version
     let browse t = t.browse
     let upstream t = t.upstream
+    let redirect t = t.redirect
 
   end
 

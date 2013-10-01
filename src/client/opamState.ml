@@ -265,6 +265,32 @@ let contents_of_variable t local_variables =
 let contents_of_variable_exn t local_variables =
   OpamFilter.contents_of_variable_exn (env_filter t local_variables)
 
+let redirect t repo =
+  let redirect =
+    repo
+    |> OpamPath.Repository.repo
+    |> OpamFile.Repo.safe_read
+    |> OpamFile.Repo.redirect
+  in
+  let redirect = List.fold_left (fun acc (redirect, filter) ->
+      if eval_filter t OpamVariable.Map.empty filter then
+        redirect :: acc
+      else
+        acc
+    ) [] redirect in
+  match redirect with
+  | []   -> None
+  | r::_ ->
+    let config_f = OpamPath.Repository.config repo in
+    let config = OpamFile.Repo_config.read config_f in
+    let repo_address = address_of_string r in
+    if repo_address <> config.repo_address then (
+      let config = { config with repo_address } in
+      OpamFile.Repo_config.write config_f config;
+      Some repo_address
+    ) else
+      None
+
 let sorted_repositories t =
   OpamRepository.sort t.repositories
 

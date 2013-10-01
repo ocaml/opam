@@ -454,6 +454,24 @@ module API = struct
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
 
+  let repository_update t repo =
+    let rec loop n =
+      if n = 0 then
+        OpamGlobals.error_and_exit "%s Too many redirections."
+          (OpamRepositoryName.to_string repo.repo_name)
+      else (
+        OpamRepository.update repo;
+        match OpamState.redirect t repo with
+        | None              -> ()
+        | Some repo_address ->
+          OpamFilename.rmdir repo.repo_root;
+          OpamGlobals.note "The repository %s is now redirected to %s\n"
+            (OpamRepositoryName.to_string repo.repo_name)
+            (string_of_address repo_address);
+          loop (n-1);
+      ) in
+    loop 10
+
   let update ~repos_only repos =
     let t = OpamState.load_state ~save_cache:true "update" in
     log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
@@ -560,7 +578,7 @@ module API = struct
     if repositories_need_update then (
       let repos = OpamRepositoryName.Map.values repositories in
       let child repo =
-        try OpamRepository.update repo
+        try repository_update t repo
         with _ ->
           OpamGlobals.error "Skipping %s as the repository is not available.\n"
             (string_of_address repo.repo_address) in
@@ -607,7 +625,6 @@ module API = struct
         OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
       ) else
         OpamGlobals.msg "Everything is up-to-date.\n"
-
 
   let upgrade_t names t =
     log "UPGRADE %s"
