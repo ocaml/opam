@@ -441,7 +441,8 @@ module Repo: sig
   include IO_FILE
 
   val create:
-    ?browse:string -> ?upstream:string -> ?opam_version:string -> unit -> t
+    ?browse:string -> ?upstream:string -> ?opam_version:string ->
+    ?redirect:(string * filter option) list -> unit -> t
 
   (** The minimum OPAM version required for this repository *)
   val opam_version : t -> OpamVersion.t
@@ -451,6 +452,9 @@ module Repo: sig
 
   (** Base URL for browsing OPAM repository source on the WWW *)
   val upstream: t -> string option
+
+  (** Redirections. *)
+  val redirect: t -> (string * filter option) list
 
 end
 
