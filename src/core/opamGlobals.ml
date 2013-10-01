@@ -48,6 +48,7 @@ let utf8_msgs        = check "UTF8MSGS"
 let autoremove       = check "AUTOREMOVE"
 let do_not_copy_files = check "DONOTCOPYFILES"
 let sync_archives    = check "SYNCARCHIVES"
+let use_external_solver = ref (not !(check "NOASPCUD"))
 
 let jobs = ref (
     try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
