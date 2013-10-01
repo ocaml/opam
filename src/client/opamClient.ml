@@ -475,7 +475,9 @@ module API = struct
         else
           OpamPackage.Set.filter (fun nv ->
               let name repo_name =
-                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
+                (repo_name
+                 |> OpamRepositoryName.to_string
+                 |> OpamPackage.Name.of_string)
                 =  OpamPackage.name nv in
               let package repo_name =
                 (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
