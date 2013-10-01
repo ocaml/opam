@@ -461,6 +461,7 @@ and file_item =
 type file = {
   file_contents: file_item list;
   file_name    : string;
+  file_format  : opam_version;
 }
 
 

@@ -22,7 +22,19 @@ type indent_variable = string -> bool
 let empty = {
   file_contents = [];
   file_name     = "<none>";
+  file_format   = OpamVersion.current;
 }
+
+let map fn f =
+  let file_contents = List.fold_left (fun accu -> function
+      | Section _ as s -> s :: accu
+      | Variable(k,v)  ->
+        match fn k v with
+        | Some (k,v) -> Variable(k,v) :: accu
+        | None       -> accu
+    ) [] f.file_contents in
+  let file_contents = List.rev file_contents in
+  { f with file_contents }
 
 let variables items =
   let l = List.fold_left (fun accu -> function
@@ -230,12 +242,16 @@ let can_simplify = function
   | _ -> false
 
 let rec pretty_string_of_value ~simplify ~indent = function
-  | Symbol s
-  | Ident s     -> s
+  | Symbol s    -> s
+  | Ident s     ->
+    if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
+    then Printf.sprintf "\"%%{%s}%%\"" s
+    else s
   | Int i       -> Printf.sprintf "%d" i
   | Bool b      -> Printf.sprintf "%b" b
   | String s    ->
-    if OpamMisc.starts_with ~prefix:"%{" s && OpamMisc.ends_with ~suffix:"}%" s then
+    if not !OpamGlobals.compat_mode_1_0
+    && OpamMisc.starts_with ~prefix:"%{" s && OpamMisc.ends_with ~suffix:"}%" s then
       String.sub s 2 (String.length s - 4)
     else
       Printf.sprintf "%S" s
@@ -255,7 +271,7 @@ and pretty_string_of_list ~simplify ~indent = function
   | l                 ->
     let force, indent = compute_indent indent in
     let simplify = false in
-    if force || List.for_all is_list l then
+    if (List.length l > 1 && force) || List.for_all is_list l then
       Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~simplify ~indent "\n  " l)
     else
       Printf.sprintf "[%s]" (pretty_string_of_values ~simplify ~indent " " l)
@@ -266,25 +282,27 @@ and pretty_string_of_values ~simplify ~indent sep l =
 
 let incr tab = "  " ^ tab
 
-let rec string_of_item_aux tab ?(indent_variable = fun _ -> false) = function
+let rec string_of_item_aux tab ~simplify ?(indent_variable = fun _ -> false) = function
   | Variable (_, List []) -> None
   | Variable (_, List[List[]]) -> None
   | Variable (i, v) ->
     Some (Printf.sprintf "%s%s: %s" tab i
-            (pretty_string_of_value ~simplify:true ~indent:[indent_variable i] v))
+            (pretty_string_of_value ~simplify ~indent:[indent_variable i] v))
   | Section s ->
     Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.section_kind s.section_name
-        (string_of_items_aux (incr tab) ~indent_variable s.section_items))
+        (string_of_items_aux (incr tab) ~simplify ~indent_variable s.section_items))
 
-and string_of_items_aux tab ?(indent_variable = fun _ -> false) is =
-  String.concat "\n" (OpamMisc.filter_map (string_of_item_aux tab ~indent_variable) is)
+and string_of_items_aux tab ~simplify ?(indent_variable = fun _ -> false) is =
+  String.concat "\n"
+    (OpamMisc.filter_map (string_of_item_aux tab ~simplify ~indent_variable) is)
 
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file ?(indent_variable = fun _ -> false) f =
-  string_of_items f.file_contents ~indent_variable ^ "\n"
+let string_of_file ~simplify ?(indent_variable = fun _ -> false) f =
+  let simplify = if !OpamGlobals.compat_mode_1_0 then false else simplify in
+  string_of_items f.file_contents ~simplify ~indent_variable ^ "\n"
 
 (* Reading section contents *)
 
@@ -325,15 +343,18 @@ let rec parse_constraints t =
   match t with
   | []                                            -> Empty
   | (Symbol r) :: (String v) :: []                -> Atom (relop r, version v)
-  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> And (Atom (relop r, version v), parse_constraints t)
-  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> Or (Atom (relop r, version v), parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> And (Atom (relop r, version v),
+                                                          parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> Or (Atom (relop r, version v),
+                                                         parse_constraints t)
   | [Group g]                                     -> Block (parse_constraints g)
-  | x                                             -> bad_format "Expecting a list of constraints, got %s" (kinds x)
+  | x -> bad_format "Expecting a list of constraints, got %s" (kinds x)
 
 let rec make_constraints t =
   match t with
   | Empty       -> []
-  | Atom (r, v) -> [Symbol (OpamFormula.string_of_relop r); String (OpamPackage.Version.to_string v)]
+  | Atom (r, v) -> [Symbol (OpamFormula.string_of_relop r);
+                    String (OpamPackage.Version.to_string v)]
   | And (x, y)  -> make_constraints x @ [Symbol "&"] @ make_constraints y
   | Or (x, y)   -> make_constraints x @ [Symbol "|"] @ make_constraints y
   | Block g     -> [Group (make_constraints g)]
