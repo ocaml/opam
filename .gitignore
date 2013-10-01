@@ -1,4 +1,5 @@
 _obuild/
+bootstrap/
 .*.swp
 src_ext/cudf/
 src_ext/dose/
