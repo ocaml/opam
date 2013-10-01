@@ -369,13 +369,8 @@ let to_cudf univ req = (
     req_extra       = [] }
 )
 
-(* Used to provide sane fallback when there is an error from the solver *)
-let disable_external_solver = ref false
-
 let external_solver_available () =
-  match Lazy.force aspcud_path with
-  | None   -> false
-  | Some _ -> not !disable_external_solver
+  !OpamGlobals.use_external_solver && Lazy.force aspcud_path <> None
 
 let solver_calls = ref 0
 
@@ -386,7 +381,7 @@ let dump_cudf_request (_, univ,_ as cudf) = function
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
     begin match Lazy.force aspcud_path with
-      | Some path when not !disable_external_solver ->
+      | Some path when !OpamGlobals.use_external_solver ->
         Printf.fprintf oc "#!%s %s\n" (aspcud_command path) OpamGlobals.aspcud_criteria
       | _ -> Printf.fprintf oc "#internal OPAM solver\n"
     end;
@@ -399,7 +394,7 @@ let call_external_solver ~explain univ req =
   let cudf_request = to_cudf univ req in
   ignore (dump_cudf_request cudf_request !OpamGlobals.cudf_file);
   match Lazy.force aspcud_path with
-  | Some path when not !disable_external_solver ->
+  | Some path when !OpamGlobals.use_external_solver ->
     if Cudf.universe_size univ > 0 then begin
       let cmd = aspcud_command path in
       let criteria = OpamGlobals.aspcud_criteria in
@@ -416,7 +411,7 @@ let call_external_solver ~explain univ req =
 (* Return the universe in which the system has to go *)
 let get_final_universe univ req =
   let fail msg =
-    disable_external_solver := true;
+    OpamGlobals.use_external_solver := false;
     let cudf_file = match !OpamGlobals.cudf_file with
       | Some f -> f
       | None ->
