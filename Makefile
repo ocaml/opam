@@ -11,6 +11,11 @@ all: $(LOCAL_OCPBUILD) META
 	$(MAKE) clone
 	$(MAKE) compile
 
+cold:
+	./scripts/bootstrap-ocaml.sh
+	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin ./configure
+	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE)
+        
 scan: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -scan
 sanitize: $(LOCAL_OCPBUILD)
