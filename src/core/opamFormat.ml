@@ -244,7 +244,9 @@ let can_simplify = function
 let rec pretty_string_of_value ~simplify ~indent = function
   | Symbol s    -> s
   | Ident s     ->
-    if !OpamGlobals.compat_mode_1_0 then Printf.sprintf "\"%%{%s}%%\"" s else s
+    if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
+    then Printf.sprintf "\"%%{%s}%%\"" s
+    else s
   | Int i       -> Printf.sprintf "%d" i
   | Bool b      -> Printf.sprintf "%b" b
   | String s    ->

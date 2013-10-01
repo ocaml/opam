@@ -47,8 +47,7 @@ module Syntax = struct
     OpamParser.main OpamLexer.token lexbuf filename
 
   let to_string ?(indent_variable = fun _ -> false) (t: t) =
-    let simplify =
-      OpamVersion.compare t.file_format (OpamVersion.of_string "1.0") > 0 in
+    let simplify = not !OpamGlobals.compat_mode_1_0 in
     OpamFormat.string_of_file ~simplify ~indent_variable t
 
   let s_opam_version = "opam-version"
@@ -101,6 +100,13 @@ module Syntax = struct
             OpamGlobals.warning "unknown fields in %s: is your OPAM up-to-date ?"
               f.file_name
         )
+
+  let to_1_0 file =
+    let file_contents = List.map (function
+        | Variable (s_opam_version, _) -> Variable(s_opam_version, String "1.0")
+        | c -> c
+      ) file.file_contents in
+    { file with file_contents; file_format = OpamVersion.of_string "1.0" }
 
 end
 
@@ -842,7 +848,7 @@ module X = struct
 
     let to_1_0 file =
       let file = OpamFormat.map to_1_0_fields file in
-      { file with file_format = OpamVersion.of_string "1.0" }
+      Syntax.to_1_0 file
 
     let valid_fields =
       opam_1_0_fields @ opam_1_1_fields
@@ -968,9 +974,9 @@ module X = struct
 
     let of_channel filename ic =
       let nv = OpamPackage.of_filename filename in
-      let s = Syntax.of_channel filename ic in
-      Syntax.check s valid_fields;
-      let s = s.file_contents in
+      let f = Syntax.of_channel filename ic in
+      Syntax.check f valid_fields;
+      let s = f.file_contents in
       let opam_version = OpamFormat.assoc s s_opam_version
           (OpamFormat.parse_string ++ OpamVersion.of_string) in
       let name_f = OpamFormat.assoc_option s s_name
@@ -1476,7 +1482,7 @@ module X = struct
 
     let to_1_0 file =
       let file = OpamFormat.map to_1_0_fields file in
-      { file with file_format = OpamVersion.of_string "1.0" }
+      Syntax.to_1_0 file
 
     let valid_fields =
       opam_1_0_fields @ opam_1_1_fields
