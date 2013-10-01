@@ -29,7 +29,7 @@ type global_options = {
   root   : dirname;
   no_base_packages: bool;
   git_version     : bool;
-  compat_mode_1_0 : bool
+  compat_mode_1_0 : bool;
   no_aspcud : bool;
 }
 
@@ -38,7 +38,7 @@ let create_global_options
     git_version debug verbose quiet color switch yes strict root
     no_base_packages compat_mode_1_0 no_aspcud =
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; no_aspcud }
+    no_base_packages; compat_mode_1_0; no_aspcud }
 
 let apply_global_options o =
   if o.git_version then (
