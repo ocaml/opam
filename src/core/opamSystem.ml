@@ -525,11 +525,11 @@ let download_command =
       "-OL"; src
     ] in
     match read_command_output curl with
-    | [] -> internal_error "curl: empty response."
+    | [] -> internal_error "curl: empty response while downloading %s" src
     | l  ->
       let code = List.hd (List.rev l) in
-      try if int_of_string code >= 400 then internal_error "curl: error %s." code
-      with _ -> internal_error "curl: %s is not a valid return code." code in
+      try if int_of_string code >= 400 then raise Exit
+      with _ -> internal_error "curl: code %s while downloading %s" code src in
   lazy (
     if command_exists "curl" then
       curl
