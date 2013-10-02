@@ -415,7 +415,7 @@ module API = struct
       (* Restrict to what has to be recompiled, we can keep the rest for now *)
       let recompile_cone =
         OpamPackage.Set.of_list
-          (OpamSolver.reverse_dependencies ~depopts:true ~installed:true
+          (OpamSolver.reverse_dependencies ~depopts:true ~installed:false
              universe changed) in
       let unavailable_versions =
         OpamPackage.Set.inter recompile_cone unavailable_versions in
