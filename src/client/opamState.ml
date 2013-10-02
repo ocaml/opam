@@ -1912,7 +1912,7 @@ let install_compiler t ~quiet switch compiler =
     OpamGlobals.msg "Cannot find %s: %s is not a valid compiler name.\n"
       (OpamFilename.to_string comp_f)
       (OpamCompiler.to_string compiler);
-    OpamGlobals.exit 0;
+    OpamGlobals.exit 1;
   );
 
   let switch_dir = OpamPath.Switch.root t.root switch in
