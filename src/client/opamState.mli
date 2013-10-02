@@ -203,7 +203,7 @@ val find_repository: state -> repository_name -> repository
 val find_repository_opt: state -> repository_name -> repository option
 
 (** Check the redirections. *)
-val redirect: state -> repository -> address option
+val redirect: state -> repository -> (repository * filter option) option
 
 (** {2 Compilers} *)
 

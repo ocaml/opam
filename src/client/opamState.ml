@@ -274,20 +274,20 @@ let redirect t repo =
   in
   let redirect = List.fold_left (fun acc (redirect, filter) ->
       if eval_filter t OpamVariable.Map.empty filter then
-        redirect :: acc
+        (redirect, filter) :: acc
       else
         acc
     ) [] redirect in
   match redirect with
-  | []   -> None
-  | r::_ ->
+  | []         -> None
+  | (r,f) :: _ ->
     let config_f = OpamPath.Repository.config repo in
     let config = OpamFile.Repo_config.read config_f in
     let repo_address = address_of_string r in
     if repo_address <> config.repo_address then (
       let config = { config with repo_address } in
       OpamFile.Repo_config.write config_f config;
-      Some repo_address
+      Some (config, f)
     ) else
       None
 

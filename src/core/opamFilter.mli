@@ -18,6 +18,9 @@
 
 open OpamTypes
 
+(** Pretty-print *)
+val to_string: filter -> string
+
 (** Type of filter environment. *)
  type env = full_variable -> variable_contents option
 

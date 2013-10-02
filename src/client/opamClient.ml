@@ -454,23 +454,36 @@ module API = struct
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
 
+  (* Recursively traverse redirection links, but stop after 10 steps or if
+     we start to cycle. *)
   let repository_update t repo =
-    let rec loop n =
+    let max_loop = 10 in
+    let rec loop r n =
       if n = 0 then
-        OpamGlobals.error_and_exit "%s Too many redirections."
+        OpamGlobals.warning "%s: Too many redirections, stopping."
           (OpamRepositoryName.to_string repo.repo_name)
       else (
-        OpamRepository.update repo;
-        match OpamState.redirect t repo with
-        | None              -> ()
-        | Some repo_address ->
-          OpamFilename.rmdir repo.repo_root;
-          OpamGlobals.note "The repository %s is now redirected to %s\n"
+        OpamRepository.update r;
+        if n <> max_loop && r = repo then
+          OpamGlobals.warning "%s: Cyclic redirections, stopping."
             (OpamRepositoryName.to_string repo.repo_name)
-            (string_of_address repo_address);
-          loop (n-1);
+        else match OpamState.redirect t r with
+          | None        -> ()
+          | Some (new_repo, f) ->
+            OpamFilename.rmdir repo.repo_root;
+            OpamFile.Repo_config.write (OpamPath.Repository.config repo) new_repo;
+            let reason = match f with
+              | None   -> ""
+              | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
+            OpamGlobals.note
+              "The repository '%s' will be *%s* redirected to %s%s"
+              (OpamRepositoryName.to_string repo.repo_name)
+              ((OpamGlobals.colorise `bold) "permanently")
+              (OpamMisc.prettify_path (string_of_address new_repo.repo_address))
+              reason;
+            loop new_repo (n-1);
       ) in
-    loop 10
+    loop repo max_loop
 
   let update ~repos_only repos =
     let t = OpamState.load_state ~save_cache:true "update" in
