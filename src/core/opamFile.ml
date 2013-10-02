@@ -1691,6 +1691,7 @@ module X = struct
       opam_version : OpamVersion.t;
       browse       : string option;
       upstream     : string option;
+      redirect     : (string * filter option) list;
     }
 
     let version_of_maybe_string vs = OpamVersion.of_string begin
@@ -1699,9 +1700,9 @@ module X = struct
       | Some v -> v
     end
 
-    let create ?browse ?upstream ?opam_version () = {
+    let create ?browse ?upstream ?opam_version ?(redirect=[]) () = {
       opam_version = version_of_maybe_string opam_version;
-      browse; upstream;
+      browse; upstream; redirect;
     }
 
     let empty = create ()
@@ -1709,11 +1710,13 @@ module X = struct
     let s_opam_version = "opam-version"
     let s_browse       = "browse"
     let s_upstream     = "upstream"
+    let s_redirect     = "redirect"
 
     let valid_fields = [
       s_opam_version;
       s_browse;
       s_upstream;
+      s_redirect;
     ]
 
     let of_channel filename ic =
@@ -1724,7 +1727,11 @@ module X = struct
       let opam_version = version_of_maybe_string (get s_opam_version) in
       let browse   = get s_browse in
       let upstream = get s_upstream in
-      { opam_version; browse; upstream }
+      let redirect = OpamFormat.assoc_list s.file_contents s_redirect
+          (OpamFormat.parse_list
+             (OpamFormat.parse_option OpamFormat.parse_string OpamFormat.parse_filter))
+      in
+      { opam_version; browse; upstream; redirect }
 
     let to_string filename t =
       let opam_version = OpamVersion.to_string t.opam_version in
@@ -1733,13 +1740,23 @@ module X = struct
         file_name     = OpamFilename.to_string filename;
         file_contents =
           (Variable (s_opam_version, OpamFormat.make_string opam_version))
-          ::(match t.upstream with
-          | None -> []
-          | Some url -> [Variable (s_upstream , OpamFormat.make_string url)]
-          )
-          @ (match t.browse with
-          | None -> []
-          | Some url -> [Variable (s_browse   , OpamFormat.make_string url)]
+          :: (
+            match t.upstream with
+            | None -> []
+            | Some url -> [Variable (s_upstream , OpamFormat.make_string url)]
+          ) @ (
+            match t.browse with
+            | None -> []
+            | Some url -> [Variable (s_browse   , OpamFormat.make_string url)]
+          ) @ (
+            match t.redirect with
+            | [] -> []
+            | l  ->
+              let value =
+                OpamFormat.make_list
+                  (OpamFormat.make_option OpamFormat.make_string OpamFormat.make_filter)
+                  l in
+              [Variable(s_redirect, value)]
           );
       } in
       Syntax.to_string s
@@ -1747,6 +1764,7 @@ module X = struct
     let opam_version t = t.opam_version
     let browse t = t.browse
     let upstream t = t.upstream
+    let redirect t = t.redirect
 
   end
 

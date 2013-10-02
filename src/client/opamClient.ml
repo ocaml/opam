@@ -454,6 +454,37 @@ module API = struct
     | Conflicts _ -> None
     | Success sol -> Some (OpamSolver.stats sol)
 
+  (* Recursively traverse redirection links, but stop after 10 steps or if
+     we start to cycle. *)
+  let repository_update t repo =
+    let max_loop = 10 in
+    let rec loop r n =
+      if n = 0 then
+        OpamGlobals.warning "%s: Too many redirections, stopping."
+          (OpamRepositoryName.to_string repo.repo_name)
+      else (
+        OpamRepository.update r;
+        if n <> max_loop && r = repo then
+          OpamGlobals.warning "%s: Cyclic redirections, stopping."
+            (OpamRepositoryName.to_string repo.repo_name)
+        else match OpamState.redirect t r with
+          | None        -> ()
+          | Some (new_repo, f) ->
+            OpamFilename.rmdir repo.repo_root;
+            OpamFile.Repo_config.write (OpamPath.Repository.config repo) new_repo;
+            let reason = match f with
+              | None   -> ""
+              | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in
+            OpamGlobals.note
+              "The repository '%s' will be *%s* redirected to %s%s"
+              (OpamRepositoryName.to_string repo.repo_name)
+              ((OpamGlobals.colorise `bold) "permanently")
+              (OpamMisc.prettify_path (string_of_address new_repo.repo_address))
+              reason;
+            loop new_repo (n-1);
+      ) in
+    loop repo max_loop
+
   let update ~repos_only repos =
     let t = OpamState.load_state ~save_cache:true "update" in
     log "UPDATE %s" (OpamMisc.string_of_list OpamRepositoryName.to_string repos);
@@ -475,7 +506,9 @@ module API = struct
         else
           OpamPackage.Set.filter (fun nv ->
               let name repo_name =
-                (repo_name |> OpamRepositoryName.to_string |> OpamPackage.Name.of_string)
+                (repo_name
+                 |> OpamRepositoryName.to_string
+                 |> OpamPackage.Name.of_string)
                 =  OpamPackage.name nv in
               let package repo_name =
                 (repo_name |> OpamRepositoryName.to_string |> OpamPackage.of_string_opt)
@@ -558,7 +591,7 @@ module API = struct
     if repositories_need_update then (
       let repos = OpamRepositoryName.Map.values repositories in
       let child repo =
-        try OpamRepository.update repo
+        try repository_update t repo
         with _ ->
           OpamGlobals.error "Skipping %s as the repository is not available.\n"
             (string_of_address repo.repo_address) in
@@ -605,7 +638,6 @@ module API = struct
         OpamGlobals.msg "You can now run 'opam upgrade' to upgrade your system.\n"
       ) else
         OpamGlobals.msg "Everything is up-to-date.\n"
-
 
   let upgrade_t names t =
     log "UPGRADE %s"
