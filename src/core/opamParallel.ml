@@ -27,6 +27,7 @@ end
 type error =
   | Process_error of OpamProcess.result
   | Internal_error of string
+  | Package_error of string
 
 module type SIG = sig
 
@@ -284,6 +285,7 @@ module Make (G : G) = struct
             with
             | OpamSystem.Process_error p  -> return (Process_error p)
             | OpamSystem.Internal_error s -> return (Internal_error s)
+            | OpamGlobals.Package_error s -> return (Package_error s)
             | e ->
               let b = OpamMisc.pretty_backtrace () in
               let e = Printexc.to_string e in
@@ -340,6 +342,7 @@ module Make (G : G) = struct
     | Errors (errors,_) ->
       let string_of_error = function
         | Process_error r  -> OpamProcess.string_of_result r
+        | Package_error s -> s
         | Internal_error s -> s in
       List.iter (fun (v, e) ->
         OpamGlobals.error "While processing %s:\n%s"

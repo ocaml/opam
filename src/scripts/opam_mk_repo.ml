@@ -35,7 +35,7 @@ let args =
          let doc = "Build all package archives (this is the default unless -i)" in
          Arg.(value & flag & info ["a";"all"] ~doc)
        in
-     }]*)
+     ]}*)
   let index =
     let doc = "Only build indexes, not package archives." in
     Arg.(value & flag & info ["i";"index"] ~doc)

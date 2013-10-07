@@ -149,7 +149,9 @@ let display_error (n, error) =
     | OpamParallel.Process_error r  ->
       disp "%s" (OpamProcess.string_of_result ~color:`red r)
     | OpamParallel.Internal_error s ->
-      disp "Internal error:\n  %s" s in
+      disp "Internal error:\n  %s" s
+    | OpamParallel.Package_error s ->
+      disp "%s" s in
   match n with
   | To_change (Some o, nv) ->
     if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version nv) < 0
@@ -289,7 +291,9 @@ let output_json_actions action_errors =
                  ("stderr", `A (List.map (fun s -> `String s) r.r_stderr));
                ])]
     | Internal_error s ->
-      `O [ ("internal-error", `String s) ] in
+      `O [ ("internal-error", `String s) ]
+    | Package_error s ->
+      `O [ ("package-error", `String s) ] in
   let json_action (a, e) =
     `O [ ("package", `String (OpamPackage.to_string (action_contents a)));
          ("error"  ,  json_error e) ] in
