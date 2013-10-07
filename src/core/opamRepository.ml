@@ -145,10 +145,11 @@ let check_digest filename = function
           "Wrong checksum for %s:\n\
           \  - %s [expected result]\n\
           \  - %s [actual result]\n\
-           This is surely due to outdated package descriptions and should be   \
-           fixed by running `opam update`. In case an update does not fix that \
-           problem, you can  use the `--no-checksums` command-line option to   \
-           bypass any checksum checks."
+           This is surely due to outdated package descriptions and should be \
+           fixed by running `opam update`.\n\
+           In case an update does not fix that problem, you can  use the \
+           `--no-checksums` command-line option\n\
+           to /bypass any checksum checks."
           (OpamFilename.to_string filename)
           expected
           actual

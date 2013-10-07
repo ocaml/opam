@@ -197,6 +197,8 @@ let note fmt =
 
 exception Exit of int
 
+exception Package_error of string
+
 let error_and_exit fmt =
   Printf.ksprintf (fun str ->
     error "%s" str;
