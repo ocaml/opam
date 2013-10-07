@@ -516,62 +516,73 @@ let remove_all_packages t ~metadata sol =
 let build_and_install_package_aux t ~metadata nv =
   OpamGlobals.header_msg "Installing %s" (OpamPackage.to_string nv);
 
-  try
+  let exec =
+    try
+      (* This one can raises an exception (for insance an user's CTRL-C
+         when the sync takes too long. *)
+      let p_build = extract_package t nv in
 
-    (* This one can raises an exception (for insance an user's CTRL-C
-       when the sync takes too long. *)
-    let p_build = extract_package t nv in
+      (* For dev packages, we look for any opam file at the root of the build
+         directory *)
+      let opam = dev_opam t nv p_build in
 
-    (* For dev packages, we look for any opam file at the root of the build
-     directory *)
-    let opam = dev_opam t nv p_build in
+      (* Get the env variables set up in the compiler description file *)
+      let env = compilation_env t opam in
 
-    (* Get the env variables set up in the compiler description file *)
-    let env = compilation_env t opam in
+      (* Exec the given commands. *)
+      let exec name f =
+        match OpamState.filter_commands t OpamVariable.Map.empty (f opam) with
+        | []       -> ()
+        | commands ->
+          OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
+          let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+          let metadata = get_metadata t in
+          OpamFilename.exec ~env ~name ~metadata p_build commands in
 
-    (* Exec the given commands. *)
-    let exec name f =
-      match OpamState.filter_commands t OpamVariable.Map.empty (f opam) with
-      | []       -> ()
-      | commands ->
-        OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-        let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
-        let metadata = get_metadata t in
-        OpamFilename.exec ~env ~name ~metadata p_build commands in
+      Some exec
+    with e -> None
+  in
+  match exec with
+  | None ->
+    raise
+      (OpamGlobals.Package_error
+         (Printf.sprintf "Could not get the source for %s."
+            (OpamPackage.to_string nv)))
+  | Some exec ->
+    try
+      (* First, we build the package. *)
+      exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
 
-    (* First, we build the package. *)
-    exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
+      (* If necessary, build and run the test. *)
+      if !OpamGlobals.build_test then
+        exec "Building and running the test" OpamFile.OPAM.build_test;
 
-    (* If necessary, build and run the test. *)
-    if !OpamGlobals.build_test then
-      exec "Building and running the test" OpamFile.OPAM.build_test;
+      (* If necessary, build the documentation. *)
+      if !OpamGlobals.build_doc then
+        exec "Generating the documentation" OpamFile.OPAM.build_doc;
 
-    (* If necessary, build the documentation. *)
-    if !OpamGlobals.build_doc then
-      exec "Generating the documentation" OpamFile.OPAM.build_doc;
+      (* If everyting went fine, finally install the package. *)
+      install_package t nv;
 
-    (* If everyting went fine, finally install the package. *)
-    install_package t nv;
+      (* update the metadata *)
+      if metadata then (
+        let installed = OpamPackage.Set.add nv t.installed in
+        let installed_roots = OpamPackage.Set.add nv t.installed_roots in
+        let reinstall = OpamPackage.Set.remove nv t.reinstall in
+        update_metadata t ~installed ~installed_roots ~reinstall;
+        OpamState.install_metadata t nv;
+      )
 
-    (* update the metadata *)
-    if metadata then (
-      let installed = OpamPackage.Set.add nv t.installed in
-      let installed_roots = OpamPackage.Set.add nv t.installed_roots in
-      let reinstall = OpamPackage.Set.remove nv t.reinstall in
-      update_metadata t ~installed ~installed_roots ~reinstall;
-      OpamState.install_metadata t nv;
-    )
-
-  with e ->
-    let cause = match e with
-      | Sys.Break -> "was aborted"
-      | _         -> "failed" in
-    (* We keep the build dir to help debugging *)
-    OpamGlobals.error
-      "The compilation of %s %s."
-      (OpamPackage.to_string nv) cause;
-    remove_package ~rm_build:false ~metadata:false t nv;
-    raise e
+    with e ->
+      let cause = match e with
+        | Sys.Break -> "was aborted"
+        | _         -> "failed" in
+      (* We keep the build dir to help debugging *)
+      OpamGlobals.error
+        "The compilation of %s %s."
+        (OpamPackage.to_string nv) cause;
+      remove_package ~rm_build:false ~metadata:false t nv;
+      raise e
 
 let build_and_install_package t ~metadata nv =
   if not !OpamGlobals.fake then
