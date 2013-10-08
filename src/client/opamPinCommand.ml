@@ -30,6 +30,10 @@ let pin ~force action =
   let pin_f = OpamPath.Switch.pinned t.root t.switch in
   let pins = OpamFile.Pinned.safe_read pin_f in
   let name = action.pin_package in
+  let update_set set old cur save =
+    if OpamPackage.Set.mem old set then
+      save (OpamPackage.Set.add cur (OpamPackage.Set.remove old set))
+  in
   let update_config pins =
     let packages = OpamPackage.packages_of_name t.packages name in
     OpamPackage.Set.iter (fun nv ->
@@ -66,9 +70,16 @@ let pin ~force action =
           OpamGlobals.error_and_exit
             "You must remove the package before unpinning it (or use --force).";
     end;
+    let nv_pin = OpamPackage.pinned name in
+    let nv_v = OpamState.pinning_version t nv_pin in
+    update_set t.installed nv_pin nv_v
+      (OpamFile.Installed.write
+         (OpamPath.Switch.installed t.root t.switch));
+    update_set t.installed_roots nv_pin nv_v
+      (OpamFile.Installed_roots.write
+         (OpamPath.Switch.installed_roots t.root t.switch));
     update_config (OpamPackage.Name.Map.remove name pins);
-    let nv = OpamPackage.pinned name in
-    OpamState.remove_overlay t nv
+    OpamState.remove_overlay t nv_pin
 
   | _     ->
     if not force && OpamPackage.Name.Map.mem name pins then (
@@ -89,8 +100,7 @@ let pin ~force action =
     let pins = OpamPackage.Name.Map.remove name pins in
 
     begin match action.pin_option with
-      | Edit            -> ()
-      | Unpin           -> ()
+      | Edit | Unpin    -> assert false
       | Version version ->
         if OpamState.is_name_installed t name then
           let nv = OpamState.find_installed_package_by_name t name in
@@ -122,7 +132,18 @@ let pin ~force action =
       let pinned = OpamPackage.Name.Map.add name action.pin_option pins in
       update_config pinned;
       let t = { t with pinned } in
-      OpamState.add_pinned_overlay t name
+      OpamState.add_pinned_overlay t name;
+
+      (* In case the package is installed (current version or --force) *)
+      let nv_pin = OpamPackage.pinned name in
+      let nv_v = OpamState.pinning_version t nv_pin in
+      update_set t.installed nv_v nv_pin
+        (OpamFile.Installed.write
+           (OpamPath.Switch.installed t.root t.switch));
+      update_set t.installed_roots nv_v nv_pin
+        (OpamFile.Installed_roots.write
+           (OpamPath.Switch.installed_roots t.root t.switch))
+
 
 let list () =
   log "pin_list";
