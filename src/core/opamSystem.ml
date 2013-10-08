@@ -272,17 +272,19 @@ let print_stats () =
     OpamGlobals.msg "%d external processes called:\n  %s\n%!"
       (List.length l) (String.concat "\n  " (List.map (String.concat " ") l))
 
-let run_process ?verbose ?(env=default_env) ?name ?metadata command =
+let log_file name = match name with
+  | None   -> temp_file "log"
+  | Some n -> temp_file ~dir:(Sys.getcwd ()) n
+
+let log_cleanup r =
+  if not !OpamGlobals.debug then OpamProcess.clean_files r
+
+let run_process ?verbose ?(env=default_env) ~name ?metadata command =
   let chrono = OpamGlobals.timer () in
   runs := command :: !runs;
   match command with
   | []          -> invalid_arg "run_process"
   | cmd :: args ->
-
-    (* Set-up the log files *)
-    let name = match name with
-      | None   -> temp_file "log"
-      | Some n -> temp_file ~dir:(Sys.getcwd ()) n in
 
     (* Check that the command doesn't contain whitespaces *)
     if None <> try Some (String.index cmd ' ') with Not_found -> None then
@@ -295,8 +297,6 @@ let run_process ?verbose ?(env=default_env) ?name ?metadata command =
         | Some b -> b in
 
       let r = OpamProcess.run ~env ~name ~verbose ?metadata cmd args in
-      if OpamProcess.is_success r && not !OpamGlobals.debug then
-        OpamProcess.clean_files r;
       let str = String.concat " " (cmd :: args) in
       log "[%s] (in %.3fs) %s" (Filename.basename name) (chrono ()) str;
       r
@@ -305,29 +305,32 @@ let run_process ?verbose ?(env=default_env) ?name ?metadata command =
       command_not_found cmd
 
 let command ?verbose ?env ?name ?metadata cmd =
-  let r = run_process ?verbose ?env ?name ?metadata cmd in
-  if not (OpamProcess.is_success r) then
-    process_error r
+  let name = log_file name in
+  let r = run_process ?verbose ?env ~name ?metadata cmd in
+  if OpamProcess.is_success r then log_cleanup r
+  else process_error r
 
 let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
-  let err = ref None in
-  let command =
-    if keep_going then
-      (fun c ->
-        try command ?verbose ?env ?name ?metadata c with
-        | Process_error r -> if !err = None then err := Some r)
-    else
-      fun c -> command ?verbose ?env ?name ?metadata c
+  let name = log_file name in
+  let run = run_process ?verbose ?env ~name ?metadata in
+  let command r0 c =
+    if keep_going || OpamProcess.is_success r0 then
+      let r = run c in
+      (if OpamProcess.is_failure r0 then r0 else r)
+    else r0
   in
-  List.iter command commands;
-  match !err with
-  | Some err -> raise (Process_error err)
-  | None -> ()
+  match commands with
+  | [] -> ()
+  | c1::c ->
+    let r = List.fold_left command (run c1) c in
+    if OpamProcess.is_success r then log_cleanup r
+    else process_error r
 
 let read_command_output ?verbose ?env ?metadata cmd =
-  let r = run_process ?verbose ?env ?metadata cmd in
+  let name = log_file None in
+  let r = run_process ?verbose ?env ~name ?metadata cmd in
   if OpamProcess.is_success r then
-    r.OpamProcess.r_stdout
+    (log_cleanup r; r.OpamProcess.r_stdout)
   else
     process_error r
 
