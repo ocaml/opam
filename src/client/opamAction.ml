@@ -518,7 +518,7 @@ let build_and_install_package_aux t ~metadata nv =
 
   let exec =
     try
-      (* This one can raises an exception (for insance an user's CTRL-C
+      (* This one can raise an exception (for insance a user's CTRL-C
          when the sync takes too long. *)
       let p_build = extract_package t nv in
 
