@@ -27,7 +27,7 @@ type t = {
   p_metadata: (string * string) list;
 }
 
-let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC; Unix.O_EXCL]
+let open_flags =  [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND]
 
 let output_lines oc lines =
   List.iter (fun line ->
@@ -81,7 +81,7 @@ let create ?info_file ?env_file ?stdout_file ?stderr_file ?env ?(metadata=[])
     let close_fd () = Unix.close fd in
     if verbose then (
       flush stderr;
-      let chan = Unix.open_process_out ("tee " ^ Filename.quote f) in
+      let chan = Unix.open_process_out ("tee -a " ^ Filename.quote f) in
       let close () =
         match Unix.close_process_out chan with
         | _ -> close_fd () in
