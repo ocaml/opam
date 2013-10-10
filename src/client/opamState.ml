@@ -1259,6 +1259,8 @@ let upgrade_to_1_1 () =
   let compilers = root / "compilers" in
   let repo_index = root / "repo" // "index" in
   if OpamFilename.exists_dir opam || OpamFilename.exists repo_index then (
+    let cwd = OpamFilename.cwd () in
+    let () = OpamSystem.chdir OpamGlobals.home in
 
     OpamGlobals.header_msg
       "Upgrading to OPAM 1.1 %s"
@@ -1294,25 +1296,36 @@ let upgrade_to_1_1 () =
         install_global_config root switch
       ) aliases;
 
-    OpamFilename.with_tmp_dir (fun dir ->
+    OpamFilename.with_tmp_dir (fun tmp_dir ->
+        let keep_compilers =
+          OpamCompiler.Set.of_list (OpamSwitch.Map.values aliases) in
         (* Fix system.comp *)
-        let system_comp = root / "compilers" // "system.comp" in
-        let tmp_file = OpamFilename.create dir (OpamFilename.basename system_comp) in
-        if OpamFilename.exists system_comp then (
-          log "backing up %s to %s"
-            (OpamFilename.to_string system_comp)
-            (OpamFilename.to_string tmp_file);
-          OpamFilename.move ~src:system_comp ~dst:tmp_file;
-        );
+        let backups =
+          OpamCompiler.Set.fold (fun compname backups ->
+              let comp =
+                root / "compilers" // (OpamCompiler.to_string compname ^ ".comp") in
+              if OpamFilename.exists comp then (
+                let tmp_file =
+                  OpamFilename.create tmp_dir (OpamFilename.basename comp) in
+                log "backing up %s to %s"
+                  (OpamFilename.to_string comp)
+                  (OpamFilename.to_string tmp_file);
+                OpamFilename.move ~src:comp ~dst:tmp_file;
+                (compname,tmp_file) :: backups
+              )
+              else backups
+            ) keep_compilers [] in
 
         OpamFilename.rmdir compilers;
-        let system_comp = OpamPath.compiler_comp root OpamCompiler.system in
-        if OpamFilename.exists tmp_file then (
-          log "restoring %s" (OpamFilename.to_string tmp_file);
-          OpamFilename.mkdir (OpamFilename.dirname system_comp);
-          OpamFilename.move ~src:tmp_file ~dst:system_comp;
-        ) else
-          create_system_compiler_description root (OpamCompiler.Version.system ())
+
+        List.iter (fun (compname,tmp_file) ->
+            log "restoring %s" (OpamFilename.to_string tmp_file);
+            let comp = OpamPath.compiler_comp root compname in
+            OpamFilename.mkdir (OpamFilename.dirname comp);
+            OpamFilename.move ~src:tmp_file ~dst:comp
+          ) backups;
+        if not (OpamFilename.exists (OpamPath.compiler_comp root OpamCompiler.system))
+        then create_system_compiler_description root (OpamCompiler.Version.system ())
       );
     (* Remove pinned cache *)
     OpamSwitch.Map.iter (fun switch _ ->
@@ -1354,6 +1367,10 @@ let upgrade_to_1_1 () =
         if not (OpamFilename.exists dst) then OpamFilename.copy ~src:file ~dst
       ) (OpamFilename.files opam_tmp);
     OpamFilename.rmdir opam_tmp;
+
+    let () =
+      try OpamSystem.chdir (OpamFilename.Dir.to_string cwd)
+      with OpamSystem.Internal_error _ -> () in
 
     OpamGlobals.header_msg
       "Upgrade complete. Now continuing with \"%s\""
