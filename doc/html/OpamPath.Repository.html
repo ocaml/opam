@@ -23,6 +23,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -70,12 +71,12 @@ Repository local path: <i>$opam/repo/&lt;name&gt;</i><br>
 Update cache<br>
 </div>
 
-<pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info ">
-Return the version file<br>
+<pre><span id="VALrepo"><span class="keyword">val</span> repo</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info ">
+Return the repo file<br>
 </div>
 
-<pre><span id="VALremote_version"><span class="keyword">val</span> remote_version</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info ">
-Remote version file<br>
+<pre><span id="VALremote_repo"><span class="keyword">val</span> remote_repo</span> : <code class="type"><a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info ">
+Remote repo file<br>
 </div>
 
 <pre><span id="VALraw_config"><span class="keyword">val</span> raw_config</span> : <code class="type"><a href="OpamTypes.html#TYPEdirname">OpamTypes.dirname</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> <a href="OpamTypes.html#TYPEfilename">OpamTypes.filename</a></code></pre><div class="info ">

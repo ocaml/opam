@@ -23,6 +23,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -75,7 +76,7 @@ Display all available packages that matches any of the
 Display a general summary of a collection of packages.<br>
 </div>
 
-<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> bool option -> unit</code></pre><div class="info ">
+<pre><span id="VALinstall"><span class="keyword">val</span> install</span> : <code class="type"><a href="OpamTypes.html#TYPEname_set">OpamTypes.name_set</a> -> bool option -> bool -> unit</code></pre><div class="info ">
 Install the given set of packages. Second argument, if not None, specifies
       that given packages should be added or removed from the roots<br>
 </div>

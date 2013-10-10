@@ -5,7 +5,7 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
 <link rel="previous" href="OpamFile.html">
-<link rel="next" href="OpamFormat.html">
+<link rel="next" href="OpamFilter.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -24,6 +24,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -55,7 +56,7 @@
 <body>
 <div class="navbar"><a class="pre" href="OpamFile.html" title="OpamFile">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
-&nbsp;<a class="post" href="OpamFormat.html" title="OpamFormat">Next</a>
+&nbsp;<a class="post" href="OpamFilter.html" title="OpamFilter">Next</a>
 </div>
 <h1>Module <a href="type_OpamFilename.html">OpamFilename</a></h1>
 
@@ -126,6 +127,10 @@ Return the parent directory<br>
 
 <pre><span id="VALbasename_dir"><span class="keyword">val</span> basename_dir</span> : <code class="type">Dir.t -> Base.t</code></pre><div class="info ">
 Return the deeper directory name<br>
+</div>
+
+<pre><span id="VALto_list_dir"><span class="keyword">val</span> to_list_dir</span> : <code class="type">Dir.t -> Dir.t list</code></pre><div class="info ">
+Turn a full path into a list of directory names<br>
 </div>
 
 <pre><span id="VALraw_dir"><span class="keyword">val</span> raw_dir</span> : <code class="type">string -> Dir.t</code></pre><div class="info ">

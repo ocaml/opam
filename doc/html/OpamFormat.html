@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="OpamFilename.html">
+<link rel="previous" href="OpamFilter.html">
 <link rel="next" href="OpamFormula.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -24,6 +24,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -61,7 +62,7 @@
 <title>OpamFormat</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="OpamFilename.html" title="OpamFilename">Previous</a>
+<div class="navbar"><a class="pre" href="OpamFilter.html" title="OpamFilter">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="OpamFormula.html" title="OpamFormula">Next</a>
 </div>
@@ -74,6 +75,10 @@ Format of OPAM configuration files.<br>
 
 <pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="OpamTypes.html#TYPEfile">OpamTypes.file</a></code></pre><div class="info ">
 The empty file<br>
+</div>
+
+<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">(string -> <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a> -> (string * <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) option) -><br>       <a href="OpamTypes.html#TYPEfile">OpamTypes.file</a> -> <a href="OpamTypes.html#TYPEfile">OpamTypes.file</a></code></pre><div class="info ">
+map a file<br>
 </div>
 
 <pre><span id="VALvariables"><span class="keyword">val</span> variables</span> : <code class="type"><a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> (string * <a href="OpamTypes.html#TYPEvalue">OpamTypes.value</a>) list</code></pre><div class="info ">
@@ -234,15 +239,15 @@ When folding recursively a value <code class="code">Variable (s, v)</code> for p
 </div>
 
 
-<pre><span id="VALstring_of_item"><span class="keyword">val</span> string_of_item</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> -> string option</code></pre><div class="info ">
+<pre><span id="VALstring_of_item"><span class="keyword">val</span> string_of_item</span> : <code class="type">simplify:bool -><br>       ?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> -> string option</code></pre><div class="info ">
 Print an file_item<br>
 </div>
 
-<pre><span id="VALstring_of_items"><span class="keyword">val</span> string_of_items</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string</code></pre><div class="info ">
+<pre><span id="VALstring_of_items"><span class="keyword">val</span> string_of_items</span> : <code class="type">simplify:bool -><br>       ?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -><br>       <a href="OpamTypes.html#TYPEfile_item">OpamTypes.file_item</a> list -> string</code></pre><div class="info ">
 Print a list of items<br>
 </div>
 
-<pre><span id="VALstring_of_file"><span class="keyword">val</span> string_of_file</span> : <code class="type">?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -> <a href="OpamTypes.html#TYPEfile">OpamTypes.file</a> -> string</code></pre><div class="info ">
+<pre><span id="VALstring_of_file"><span class="keyword">val</span> string_of_file</span> : <code class="type">simplify:bool -><br>       ?indent_variable:<a href="OpamFormat.html#TYPEindent_variable">indent_variable</a> -> <a href="OpamTypes.html#TYPEfile">OpamTypes.file</a> -> string</code></pre><div class="info ">
 Print a file<br>
 </div>
 <br>
