@@ -1,9 +1,19 @@
-1.1.0-trunk
+1.1.0 [Oct 2013]
 * Add `make cold` target to build OPAM with a system OCaml installed (#910)
 * More informative error messages from `curl` (#905)
-* Improve error messages when using external CUDF package solver
 * Document use of `OPAMCOLOR` for optional ANSI coloring
 * Add `opam-admin depexts` utility to rewrite OPAM files with external dependencies
+* Added `repo` files for repository meta-information
+* Added support for repo redirections
+* Added scripts for automated testing in Travis
+* Fixed bug in opam-admin that could keep not up-to-date archives
+* Added an `opam-admin depexts` script to ease handling of external dependencies
+* Added the `--deps-only` option to `opam install`
+* Fixed upgrade with corner-cases of orphan packages
+* Added a `note` display form
+* Better handling of external solver failures, and added a `--no-aspcud` option
+* Fixed unpinning of some installed packages
+* Fixed upgrade of metadata from 1.0 when there are orphan custom compilers
 
 1.1.0-beta [Sept 2013]
 * Automatic backup before any operation which might alter the list of installed packages

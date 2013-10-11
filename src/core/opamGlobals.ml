@@ -74,7 +74,7 @@ let aspcud_criteria =
   with _ -> "-removed,-notuptodate,-new"
 
 let default_repository_name    = "default"
-let default_repository_address = "http://opam.ocamlpro.com"
+let default_repository_address = "https://opam.ocaml.org"
 
 let default_build_command = [ [ "./build.sh" ] ]
 

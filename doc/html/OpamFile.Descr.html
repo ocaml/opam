@@ -24,6 +24,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -72,6 +73,10 @@ Create an abstract description file from a string<br>
 
 <pre><span id="VALsynopsis"><span class="keyword">val</span> synopsis</span> : <code class="type">t -> string</code></pre><div class="info ">
 Return the first line<br>
+</div>
+
+<pre><span id="VALbody"><span class="keyword">val</span> body</span> : <code class="type">t -> string</code></pre><div class="info ">
+Return the body<br>
 </div>
 
 <pre><span id="VALfull"><span class="keyword">val</span> full</span> : <code class="type">t -> string</code></pre><div class="info ">

@@ -19,6 +19,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -70,6 +71,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;exists_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dirname_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;basename_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Base</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_list_dir&nbsp;:&nbsp;<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;raw_dir&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Dir</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;with_tmp_dir&nbsp;:&nbsp;(<span class="constructor">Dir</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>

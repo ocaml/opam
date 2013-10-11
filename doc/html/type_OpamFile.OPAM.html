@@ -19,6 +19,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -98,4 +99,6 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;with_patches&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">OpamTypes</span>.basename&nbsp;*&nbsp;<span class="constructor">OpamTypes</span>.filter&nbsp;option)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;with_bug_reports&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;with_depexts&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.tags&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_1_0&nbsp;:&nbsp;<span class="constructor">OpamTypes</span>.file&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OpamTypes</span>.file<br>
 <span class="keyword">end</span></code></body></html>

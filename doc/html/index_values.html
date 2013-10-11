@@ -20,6 +20,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -357,6 +358,16 @@ Installed binaries: <i>$opam/$switch/bin</i>
 List of files to install in $bin/
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.Descr.html#VALbody">body</a> [<a href="OpamFile.Descr.html">OpamFile.Descr</a>]</td>
+<td><div class="info">
+Return the body
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.Repo.html#VALbrowse">browse</a> [<a href="OpamFile.Repo.html">OpamFile.Repo</a>]</td>
+<td><div class="info">
+Base URL for browsing packages on the WWW
+</div>
+</td></tr>
 <tr><td><a href="OpamHeuristic.html#VALbrute_force">brute_force</a> [<a href="OpamHeuristic.html">OpamHeuristic</a>]</td>
 <td><div class="info">
 <code class="code">explore is_constent state_space</code> explore a state space by
@@ -554,6 +565,11 @@ Test wether a command exists in the environment.
     environment.
 </div>
 </td></tr>
+<tr><td><a href="OpamFilter.html#VALcommands">commands</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Filter a list of commands by: evaluating the substitution strings; and, removing the commands with a filter evaluating to "false"
+</div>
+</td></tr>
 <tr><td><a href="OpamVersion.html#VALcompare">compare</a> [<a href="OpamVersion.html">OpamVersion</a>]</td>
 <td><div class="info">
 Version comparison
@@ -725,9 +741,19 @@ Package conflicts
 Does a string contains the given chars ?
 </div>
 </td></tr>
+<tr><td><a href="OpamFilter.html#VALcontents_of_variable">contents_of_variable</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Return the contents of a variable.
+</div>
+</td></tr>
 <tr><td><a href="OpamState.html#VALcontents_of_variable">contents_of_variable</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Compute the value of a variable
+</div>
+</td></tr>
+<tr><td><a href="OpamFilter.html#VALcontents_of_variable_exn">contents_of_variable_exn</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Return the contents of a variable.
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALcontents_of_variable_exn">contents_of_variable_exn</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -803,6 +829,8 @@ Create a filename from a Dir.t and a basename
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.URL.html#VALcreate">create</a> [<a href="OpamFile.URL.html">OpamFile.URL</a>]</td>
+<td></td></tr>
+<tr><td><a href="OpamFile.Repo.html#VALcreate">create</a> [<a href="OpamFile.Repo.html">OpamFile.Repo</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamFile.Dot_config.html#VALcreate">create</a> [<a href="OpamFile.Dot_config.html">OpamFile.Dot_config</a>]</td>
 <td><div class="info">
@@ -1285,9 +1313,19 @@ Etc directory: <i>$opam/$switch/etc</i>
 Eval a formula
 </div>
 </td></tr>
+<tr><td><a href="OpamFilter.html#VALeval">eval</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Evaluate a filter.
+</div>
+</td></tr>
 <tr><td><a href="OpamState.html#VALeval_filter">eval_filter</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Evaluate a filter
+</div>
+</td></tr>
+<tr><td><a href="OpamFilter.html#VALeval_opt">eval_opt</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Evaluate an optional filter.
 </div>
 </td></tr>
 <tr><td><a href="OpamMisc.html#VALexact_match">exact_match</a> [<a href="OpamMisc.html">OpamMisc</a>]</td>
@@ -2204,6 +2242,11 @@ Man pages path: <i>$opam/$switch/man/</i>.
 Map function
 </div>
 </td></tr>
+<tr><td><a href="OpamFormat.html#VALmap">map</a> [<a href="OpamFormat.html">OpamFormat</a>]</td>
+<td><div class="info">
+map a file
+</div>
+</td></tr>
 <tr><td><a href="OpamMisc.SET.html#VALmap">map</a> [<a href="OpamMisc.SET.html">OpamMisc.SET</a>]</td>
 <td><div class="info">
 auto-map
@@ -2408,6 +2451,11 @@ Return the OPAM file for the given package
 <tr><td><a href="OpamState.html#VALopam_opt">opam_opt</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Return the OPAM file for the given package
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.Repo.html#VALopam_version">opam_version</a> [<a href="OpamFile.Repo.html">OpamFile.Repo</a>]</td>
+<td><div class="info">
+The minimum OPAM version required for this repository
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.Comp.html#VALopam_version">opam_version</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
@@ -3017,6 +3065,16 @@ List the sub-directory recursively
 List all the filenames, recursively
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.Repo.html#VALredirect">redirect</a> [<a href="OpamFile.Repo.html">OpamFile.Repo</a>]</td>
+<td><div class="info">
+Redirections.
+</div>
+</td></tr>
+<tr><td><a href="OpamState.html#VALredirect">redirect</a> [<a href="OpamState.html">OpamState</a>]</td>
+<td><div class="info">
+Check the redirections.
+</div>
+</td></tr>
 <tr><td><a href="OpamLocal.html#VALregister">register</a> [<a href="OpamLocal.html">OpamLocal</a>]</td>
 <td></td></tr>
 <tr><td><a href="OpamHg.html#VALregister">register</a> [<a href="OpamHg.html">OpamHg</a>]</td>
@@ -3082,9 +3140,9 @@ Remote compiler files: <i>$remote/compilers</i>
 Remote package files: <i>$remote/packages</i>
 </div>
 </td></tr>
-<tr><td><a href="OpamPath.Repository.html#VALremote_version">remote_version</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<tr><td><a href="OpamPath.Repository.html#VALremote_repo">remote_repo</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
-Remote version file
+Remote repo file
 </div>
 </td></tr>
 <tr><td><a href="OpamCudf.html#VALremove">remove</a> [<a href="OpamCudf.html">OpamCudf</a>]</td>
@@ -3208,6 +3266,11 @@ Substitute the variables appearing in a file
 <tr><td><a href="OpamFile.Subst.html#VALreplace_string">replace_string</a> [<a href="OpamFile.Subst.html">OpamFile.Subst</a>]</td>
 <td><div class="info">
 Substitute the variables appearing in a string
+</div>
+</td></tr>
+<tr><td><a href="OpamPath.Repository.html#VALrepo">repo</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
+<td><div class="info">
+Return the repo file
 </div>
 </td></tr>
 <tr><td><a href="OpamArg.html#VALrepo_kind_flag">repo_kind_flag</a> [<a href="OpamArg.html">OpamArg</a>]</td>
@@ -3757,9 +3820,19 @@ Substitute files
 Substitute files.
 </div>
 </td></tr>
+<tr><td><a href="OpamFilter.html#VALsubstitute_file">substitute_file</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Substitute a file.
+</div>
+</td></tr>
 <tr><td><a href="OpamState.html#VALsubstitute_file">substitute_file</a> [<a href="OpamState.html">OpamState</a>]</td>
 <td><div class="info">
 Substitute file
+</div>
+</td></tr>
+<tr><td><a href="OpamFilter.html#VALsubstitute_string">substitute_string</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Substitute a string.
 </div>
 </td></tr>
 <tr><td><a href="OpamState.html#VALsubstitute_string">substitute_string</a> [<a href="OpamState.html">OpamState</a>]</td>
@@ -3860,6 +3933,16 @@ Create a tempory file in <i>~/.opam/logs/&lt;name&gt;XXX</i>
 When <code class="code">stdout</code> refers to a terminal, query the number of columns.
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.Comp.html#VALto_1_0">to_1_0</a> [<a href="OpamFile.Comp.html">OpamFile.Comp</a>]</td>
+<td><div class="info">
+Convert to OPAM 1.0
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.OPAM.html#VALto_1_0">to_1_0</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
+<td><div class="info">
+Convert to OPAM 1.0
+</div>
+</td></tr>
 <tr><td><a href="OpamFormula.html#VALto_atom_formula">to_atom_formula</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Transform a formula where versions can be expressed using formulas
@@ -3910,6 +3993,11 @@ Return a JSON representation of the given set
 Convert an abstract value to a JSON object
 </div>
 </td></tr>
+<tr><td><a href="OpamFilename.html#VALto_list_dir">to_list_dir</a> [<a href="OpamFilename.html">OpamFilename</a>]</td>
+<td><div class="info">
+Turn a full path into a list of directory names
+</div>
+</td></tr>
 <tr><td><a href="OpamPackage.html#VALto_map">to_map</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
 <td><div class="info">
 Convert a set of pairs to a map <code class="code">name -&gt; versions</code>
@@ -3934,6 +4022,11 @@ Pretty-print
 <tr><td><a href="OpamFormula.html#VALto_string">to_string</a> [<a href="OpamFormula.html">OpamFormula</a>]</td>
 <td><div class="info">
 Pretty print the formula
+</div>
+</td></tr>
+<tr><td><a href="OpamFilter.html#VALto_string">to_string</a> [<a href="OpamFilter.html">OpamFilter</a>]</td>
+<td><div class="info">
+Pretty-print
 </div>
 </td></tr>
 <tr><td><a href="OpamMisc.MAP.html#VALto_string">to_string</a> [<a href="OpamMisc.MAP.html">OpamMisc.MAP</a>]</td>
@@ -4098,6 +4191,11 @@ Return the upload folder for a given version:
       <i>$opam/repo/$repo/upload/</i>
 </div>
 </td></tr>
+<tr><td><a href="OpamFile.Repo.html#VALupstream">upstream</a> [<a href="OpamFile.Repo.html">OpamFile.Repo</a>]</td>
+<td><div class="info">
+Base URL for browsing OPAM repository source on the WWW
+</div>
+</td></tr>
 <tr><td><a href="OpamPath.Repository.html#VALurl">url</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
 <td><div class="info">
 urls <i>$opma/repo/$repo/package/XXX/$NAME.$VERSION/url</i>
@@ -4176,11 +4274,6 @@ The list of top-level variables
 </td></tr>
 <tr><td><a href="OpamJson.html#VALverbose">verbose</a> [<a href="OpamJson.html">OpamJson</a>]</td>
 <td></td></tr>
-<tr><td><a href="OpamPath.Repository.html#VALversion">version</a> [<a href="OpamPath.Repository.html">OpamPath.Repository</a>]</td>
-<td><div class="info">
-Return the version file
-</div>
-</td></tr>
 <tr><td><a href="OpamPackage.html#VALversion">version</a> [<a href="OpamPackage.html">OpamPackage</a>]</td>
 <td><div class="info">
 Return the version name
@@ -4245,6 +4338,11 @@ Update opam-version to the current one
 <tr><td><a href="OpamFile.OPAM.html#VALwith_depends">with_depends</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
 <td><div class="info">
 Construct as <code class="code">depends</code>
+</div>
+</td></tr>
+<tr><td><a href="OpamFile.OPAM.html#VALwith_depexts">with_depexts</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
+<td><div class="info">
+Construct using <code class="code">depexts</code>
 </div>
 </td></tr>
 <tr><td><a href="OpamFile.OPAM.html#VALwith_depopts">with_depopts</a> [<a href="OpamFile.OPAM.html">OpamFile.OPAM</a>]</td>
