@@ -24,6 +24,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -109,10 +110,6 @@ List of packages to reinstall: <code class="code">$opam/$oversion/reinstall</cod
 <pre><span class="keyword">module</span> <a href="OpamFile.Comp.html">Comp</a>: <code class="code">sig</code> <a href="OpamFile.Comp.html">..</a> <code class="code">end</code></pre><div class="info">
 Compiler version <code class="code">$opam/compilers/</code>
 </div>
-
-<pre><span class="keyword">module</span> <a href="OpamFile.Comp_descr.html">Comp_descr</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = string</code></pre><div class="info">
-Compiler descriptions
-</div>
 <br>
 <h2 id="2_Configurationfiles">Configuration files</h2><br>
 
@@ -142,6 +139,10 @@ Repository config: <code class="code">$opam/repo/$repo/config</code>
 
 <pre><span class="keyword">module</span> <a href="OpamFile.Pinned.html">Pinned</a>: <code class="type"><a href="OpamFile.IO_FILE.html">IO_FILE</a></code><code class="type">  with type t = pin_option name_map</code></pre><div class="info">
 Pinned package files
+</div>
+
+<pre><span class="keyword">module</span> <a href="OpamFile.Repo.html">Repo</a>: <code class="code">sig</code> <a href="OpamFile.Repo.html">..</a> <code class="code">end</code></pre><div class="info">
+Repository metadata
 </div>
 <br>
 <h2 id="2_Substitutionfiles">Substitution files</h2><br>

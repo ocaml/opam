@@ -24,6 +24,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -228,5 +229,13 @@ Construct as <code class="code">patches</code><br>
 
 <pre><span id="VALwith_bug_reports"><span class="keyword">val</span> with_bug_reports</span> : <code class="type">t -> string list -> t</code></pre><div class="info ">
 Construct using <code class="code">bug_reports</code><br>
+</div>
+
+<pre><span id="VALwith_depexts"><span class="keyword">val</span> with_depexts</span> : <code class="type">t -> <a href="OpamTypes.html#TYPEtags">OpamTypes.tags</a> option -> t</code></pre><div class="info ">
+Construct using <code class="code">depexts</code><br>
+</div>
+
+<pre><span id="VALto_1_0"><span class="keyword">val</span> to_1_0</span> : <code class="type"><a href="OpamTypes.html#TYPEfile">OpamTypes.file</a> -> <a href="OpamTypes.html#TYPEfile">OpamTypes.file</a></code></pre><div class="info ">
+Convert to OPAM 1.0<br>
 </div>
 </body></html>

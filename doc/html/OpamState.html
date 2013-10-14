@@ -24,6 +24,7 @@
 <link title="OpamCompiler" rel="Chapter" href="OpamCompiler.html">
 <link title="OpamFile" rel="Chapter" href="OpamFile.html">
 <link title="OpamFilename" rel="Chapter" href="OpamFilename.html">
+<link title="OpamFilter" rel="Chapter" href="OpamFilter.html">
 <link title="OpamFormat" rel="Chapter" href="OpamFormat.html">
 <link title="OpamFormula" rel="Chapter" href="OpamFormula.html">
 <link title="OpamJson" rel="Chapter" href="OpamJson.html">
@@ -237,6 +238,10 @@ Find a given repostiory. Exit the program if no such repository name exists.<br>
 
 <pre><span id="VALfind_repository_opt"><span class="keyword">val</span> find_repository_opt</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -> <a href="OpamTypes.html#TYPErepository_name">OpamTypes.repository_name</a> -> <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> option</code></pre><div class="info ">
 Find a given repostiory.<br>
+</div>
+
+<pre><span id="VALredirect"><span class="keyword">val</span> redirect</span> : <code class="type"><a href="OpamState.html#TYPEstate">state</a> -><br>       <a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> -><br>       (<a href="OpamTypes.html#TYPErepository">OpamTypes.repository</a> * <a href="OpamTypes.html#TYPEfilter">OpamTypes.filter</a> option) option</code></pre><div class="info ">
+Check the redirections.<br>
 </div>
 <br>
 <h2 id="2_Compilers">Compilers</h2><br>

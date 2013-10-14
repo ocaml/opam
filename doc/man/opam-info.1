@@ -32,6 +32,9 @@ These options are common to all commands.
 \fB\-\-color\fR=\fIWHEN\fR (absent=auto)
 Colorize the output. \fIWHEN\fR must be `always', `never' or `auto'.
 .TP 4
+\fB\-\-compat\-mode\-1.0\fR
+Compatibility mode with OPAM 1.0
+.TP 4
 \fB\-\-debug\fR
 Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to a non\-empty value.
 .TP 4
@@ -40,6 +43,9 @@ Print the git version if it exists and exit.
 .TP 4
 \fB\-\-help\fR[=\fIFMT\fR] (default=pager)
 Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-no\-aspcud\fR
+Do not use the external aspcud solver, even if available.
 .TP 4
 \fB\-\-no\-base\-packages\fR
 Do not install base packages (useful for testing purposes). This is equivalent to setting \fB$OPAMNOBASEPACKAGES\fR to a non\-empty string.
@@ -64,6 +70,11 @@ Show version information.
 .TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
+.SH ENVIRONMENT VARIABLES
+.P
+opam makes use of environment variables listed here.
+.P
+\fIOPAMCOLOR\fR, when set to \fIalways\fR or \fInever\fR, sets a default value for the \-\-color option
 .SH FURTHER DOCUMENTATION
 .P
 See http://opam.ocamlpro.com.
