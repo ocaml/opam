@@ -1,5 +1,5 @@
 1.1.0 [Oct 2013]
-* Add `make cold` target to build OPAM with a system OCaml installed (#910)
+* Add `make cold` target to build OPAM without a system OCaml installed (#910)
 * More informative error messages from `curl` (#905)
 * Document use of `OPAMCOLOR` for optional ANSI coloring
 * Add `opam-admin depexts` utility to rewrite OPAM files with external dependencies
