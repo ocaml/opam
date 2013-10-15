@@ -63,12 +63,12 @@ available using `opam --help`. To get help for a specific command, use
 
 #### Tutorials
 
-A collection of tutorials are available online at http://opam.ocamlpro.com.
+A collection of tutorials are available online at <http://opam.ocamlpro.com>.
 These tutorials are automatically generated from the
 [wiki](https://github.com/OCamlPro/opam/wiki/_pages) and
 are also available in PDF format in the `doc/tutorials` directory.
 
-#### API, Code Documentation and Developpper Manual
+#### API, Code Documentation and Developer Manual
 
 The API documentation is available
  [online](http://htmlpreview.github.com/?https://github.com/OCamlPro/opam/blob/master/doc/html/index.html)
