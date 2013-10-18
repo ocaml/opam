@@ -7,7 +7,7 @@ workflow.
 OPAM is created and maintained by [OCamlPro](http://www.ocamlpro.com).
 
 To get started, checkout the [Quick
-Install](http://opam.ocamlpro.com/doc/Quick_Install.html) guide.
+Install](http://opam.ocaml.org/doc/Quick_Install.html) guide.
 
 ## Versioning
 
