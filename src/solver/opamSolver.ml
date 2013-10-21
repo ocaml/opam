@@ -26,8 +26,12 @@ let s_installed   = "  installed"
 let real_version universe pkg =
   if OpamPackage.is_pinned pkg then
     let name = OpamPackage.name pkg in
-    OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name)
-      universe.u_available
+    try
+      OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name)
+        universe.u_available
+    with Not_found ->
+      OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name)
+        universe.u_installed
   else pkg
 
 (* Convert an OPAM formula into a debian formula *)
