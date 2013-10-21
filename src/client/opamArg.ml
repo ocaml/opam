@@ -128,7 +128,7 @@ let help_sections = [
   `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
 
   `S "AUTHORS";
-  `P "Thomas Gazagnaire   <thomas.gazagnaire@ocamlpro.com>"; `Noblank;
+  `P "Thomas Gazagnaire   <thomas@gazagnaire.org>"; `Noblank;
   `P "Anil Madhavapeddy   <anil@recoil.org>"; `Noblank;
   `P "Fabrice Le Fessant  <Fabrice.Le_fessant@inria.fr>"; `Noblank;
   `P "Frederic Tuong      <tuong@users.gforge.inria.fr>"; `Noblank;

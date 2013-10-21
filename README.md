@@ -7,7 +7,7 @@ workflow.
 OPAM is created and maintained by [OCamlPro](http://www.ocamlpro.com).
 
 To get started, checkout the [Quick
-Install](http://opam.ocamlpro.com/doc/Quick_Install.html) guide.
+Install](http://opam.ocaml.org/doc/Quick_Install.html) guide.
 
 ## Versioning
 
@@ -63,7 +63,7 @@ available using `opam --help`. To get help for a specific command, use
 
 #### Tutorials
 
-A collection of tutorials are available online at <http://opam.ocamlpro.com>.
+A collection of tutorials are available online at <http://opam.ocaml.org>.
 These tutorials are automatically generated from the
 [wiki](https://github.com/OCamlPro/opam/wiki/_pages) and
 are also available in PDF format in the `doc/tutorials` directory.
@@ -78,7 +78,7 @@ The API documentation is available
 ### Related repositories
 
 - [OCamlPro/opam-repository](https://github.com/OCamlPro/opam-repository) is the official repository for OPAM packages and compilers. A number of non-official repositories are also available on the interwebs, for instance on [Github](https://github.com/search?q=opam-repo&type=Repositories).
-- [opam2web](https://github.com/OCamlPro/opam2web) generates a collection of browsable HTML files for a given repository. It is used to generate http://opam.ocamlpro.com.
+- [opam2web](https://github.com/OCamlPro/opam2web) generates a collection of browsable HTML files for a given repository. It is used to generate http://opam.ocaml.org.
 - [opam-rt](https://github.com/OCamlPro/opam-rt) is the regression framework for OPAM.
 - [opamlot](https://github.com/ocamllabs/ocamlot) is the automated QA environment for OPAM. 
 
