@@ -4,7 +4,7 @@ set -e
 
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 
-VERSION='1.1.0-beta'
+VERSION='1.1.0'
 
 default_ocaml=4.01.0
 
