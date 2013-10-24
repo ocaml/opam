@@ -81,7 +81,7 @@ module Syntax = struct
         let invalids = OpamFormat.invalid_fields f.file_contents fields in
         let too_many, invalids = List.partition (fun x -> List.mem x fields) invalids in
         if too_many <> [] then
-          OpamGlobals.error "duplicated fields in %s: %s"
+          OpamGlobals.warning "duplicated fields in %s: %s"
             f.file_name
             (OpamMisc.string_of_list (fun x -> x) too_many);
         if !OpamGlobals.strict then (
