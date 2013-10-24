@@ -402,12 +402,24 @@ module Tar = struct
 
 end
 
+module Zip = struct
+  let is_archive f = Filename.check_suffix f "zip"
+
+  let extract_function file =
+    Some (fun dir -> command [ "unzip" ; file; "-d"; dir ])
+end
+
 let is_tar_archive = Tar.is_archive
 
 let extract file dst =
+  let kind, extract_function =
+    if Tar.is_archive file then "tar", Tar.extract_function
+    else if Zip.is_archive file then "zip", Zip.extract_function
+    else internal_error "Unknown archive type %S" file
+  in
   with_tmp_dir (fun tmp_dir ->
-    match Tar.extract_function file with
-    | None   -> internal_error "%s is not a valid tar archive." file
+    match extract_function file with
+    | None   -> internal_error "%s is not a valid %s archive." file kind
     | Some f ->
       f tmp_dir;
       if Sys.file_exists dst then
@@ -416,7 +428,9 @@ let extract file dst =
       | [x] ->
         mkdir (Filename.dirname dst);
         command [ "mv"; x; dst]
-      | _   -> internal_error "The archive contains multiple root directories."
+      | _   ->
+        internal_error "The archive %S contains multiple root directories."
+          file
   )
 
 let extract_in file dst =
