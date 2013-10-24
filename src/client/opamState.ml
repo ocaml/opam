@@ -266,6 +266,7 @@ let contents_of_variable_exn t local_variables =
   OpamFilter.contents_of_variable_exn (env_filter t local_variables)
 
 let redirect t repo =
+  if repo.repo_kind <> `http then None else
   let redirect =
     repo
     |> OpamPath.Repository.repo
