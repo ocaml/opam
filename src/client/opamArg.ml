@@ -478,7 +478,7 @@ let init =
     Client.init repository compiler ~jobs shell dot_profile update_config in
   Term.(pure init
     $global_options $build_options $repo_kind_flag $repo_name $repo_address $compiler $jobs
-    $no_setup $auto_setup $sh_flag $fish_flag $csh_flag $zsh_flag $dot_profile_flag),
+    $no_setup $auto_setup $sh_flag $csh_flag $zsh_flag $fish_flag $dot_profile_flag),
   term_info "init" ~doc ~man
 
 (* LIST *)
