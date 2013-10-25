@@ -28,7 +28,9 @@ module type VCS = sig
   val init: repository -> unit
 
   (** Fetch changes from upstream. This is supposed to put the changes
-      in a staging area. *)
+      in a staging area.
+      Be aware that the remote URL might have been changed, so make sure
+      to update accordingly. *)
   val fetch: repository -> unit
 
     (** Reset the master branch of the repository to match the remote

@@ -29,11 +29,18 @@ module Hg = struct
         OpamSystem.command [ "hg" ; "init" ];
         OpamFilename.write
           (OpamFilename.of_string ".hg/hgrc")
-          (Printf.sprintf "[paths]\ndefault = %s\n" (fst repo.repo_address));
+          (Printf.sprintf "[paths]\ndefault = %s\n" (fst repo.repo_address))
       )
 
   let fetch repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
+      let url =
+        OpamSystem.read_command_output
+          [ "hg" ; "showconfig" ; "paths.default" ] in
+      if url <> [fst repo.repo_address] then (
+        OpamSystem.remove_dir ".hg";
+        init repo
+      );
       OpamSystem.command [ "hg" ; "pull" ]
     )
 
