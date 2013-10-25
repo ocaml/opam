@@ -51,6 +51,8 @@ let sync_archives    = check "SYNCARCHIVES"
 let compat_mode_1_0  = check "COMPATMODE_1_0"
 let use_external_solver = ref (not !(check "NOASPCUD"))
 
+let curl_command = try OpamMisc.getenv "OPAMCURL" with Not_found -> "curl"
+
 let jobs = ref (
     try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
     with _ -> None
