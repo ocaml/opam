@@ -510,9 +510,6 @@ let system_ocamlc_where = system [ "ocamlc"; "-where" ]
 
 let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
-(* Add the possibility to override the 'curl' command with another one. *)
-let curl_command = try OpamMisc.getenv "OPAMCURL" with Not_found -> "curl"
-
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
   let wget src =
@@ -537,8 +534,8 @@ let download_command =
       try if int_of_string code >= 400 then raise Exit
       with _ -> internal_error "curl: code %s while downloading %s" code src in
   lazy (
-    if command_exists curl_command then
-      curl curl_command
+    if command_exists OpamGlobals.curl_command then
+      curl OpamGlobals.curl_command
     else
     if command_exists "curl" then
       curl "curl"
