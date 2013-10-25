@@ -34,6 +34,8 @@ module Git = struct
 
   let fetch repo =
     OpamFilename.in_dir repo.repo_root (fun () ->
+        OpamSystem.command
+          [ "git" ; "remote" ; "set-url" ; "origin" ; fst repo.repo_address ];
         OpamSystem.command [ "git" ; "fetch" ; "origin" ]
       )
 
