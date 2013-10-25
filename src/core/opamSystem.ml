@@ -511,7 +511,7 @@ let system_ocamlc_where = system [ "ocamlc"; "-where" ]
 let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
 (* Add the possibility to override the 'curl' command with another one. *)
-let curl_command = try Sys.getenv "OPAM_CURL" with Not_found -> "curl"
+let curl_command = try OpamMisc.getenv "OPAMCURL" with Not_found -> "curl"
 
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in

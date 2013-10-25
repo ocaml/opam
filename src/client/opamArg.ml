@@ -123,6 +123,8 @@ let help_sections = [
   `P "opam makes use of environment variables listed here.";
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
   value for the --color option";
+  `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
+   command-line utility to download files";
 
   `S "FURTHER DOCUMENTATION";
   `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
