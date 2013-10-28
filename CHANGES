@@ -1,4 +1,13 @@
 1.1.0 [Oct 2013]
+* Fix update of dev packages (#962)
+* Add support for zip source archives (#958)
+* Add `OPAMCURL` environment variable to control invocation of curl (#960)
+* Ensure repository redirects only happen for http remotes (#955)
+* Turn malformed package files into warnings instead of hard errors (#957)
+* Improve robustness of pinned package update (#949)
+* Finish conversion of default repository to <https://opam.ocaml.org> (#948)
+
+1.1.0RC1 [Oct 2013]
 * Add `make cold` target to build OPAM without a system OCaml installed (#910)
 * More informative error messages from `curl` (#905)
 * Document use of `OPAMCOLOR` for optional ANSI coloring
