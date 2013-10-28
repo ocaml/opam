@@ -257,7 +257,7 @@ let extract_package t nv =
     match OpamState.download_archive t nv with
     | Some f ->
       OpamFilename.extract f build_dir;
-      Some (Digest.file (OpamFilename.to_string f))
+      Some (OpamFilename.digest f)
     | None   ->
       let dir = OpamPath.dev_package t.root nv in
       extract_and_copy_files nv (OpamState.download_upstream t nv dir);
