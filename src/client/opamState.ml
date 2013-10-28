@@ -1873,7 +1873,7 @@ let update_setup_interactive t shell dot_profile =
     end
   | _ -> false
 
-let compiler_v = OpamVariable.of_string "COMPILER"
+let compiler_v = OpamVariable.of_string "compiler"
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package

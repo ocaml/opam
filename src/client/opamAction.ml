@@ -516,11 +516,11 @@ let remove_all_packages t ~metadata sol =
   );
   deleted
 
-let package_v = OpamVariable.of_string "PACKAGE"
-let version_v = OpamVariable.of_string "VERSION"
-let depends_v = OpamVariable.of_string "DEPENDS"
-let hash_v = OpamVariable.of_string "HASH"
-let compiler_v = OpamVariable.of_string "COMPILER"
+let package_v = OpamVariable.of_string "package"
+let version_v = OpamVariable.of_string "version"
+let depends_v = OpamVariable.of_string "depends"
+let hash_v = OpamVariable.of_string "hash"
+let compiler_v = OpamVariable.of_string "compiler"
 
 let package_variables t nv opam md5sum map =
   let module OV = OpamVariable in
@@ -545,14 +545,13 @@ let package_variables t nv opam md5sum map =
   let compiler_s = OpamCompiler.to_string t.compiler in
 
   let bindings = [
-    depends_v, depends_s;
-    package_v, package_s;
-    version_v, version_s;
-    hash_v, hash_s;
-    compiler_v, compiler_s;
+    depends_v, OV.S depends_s;
+    package_v, OV.S package_s;
+    version_v, OV.S version_s;
+    hash_v, OV.S hash_s;
+    compiler_v, OV.S compiler_s;
   ] in
-
-  List.fold_left (fun map (v,s) -> OV.Map.add v  (OV.S s) map) map bindings
+OpamVariable.Map.of_list bindings
 
 (* Build and install a package. In case of error, simply return the
    error traces, and let the repo in a state that the user can
