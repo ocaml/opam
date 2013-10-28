@@ -281,7 +281,8 @@ let fix_package_descriptions t ~verbose =
           List.iter (fun file ->
               OpamFilename.copy_in ~root file dir
             ) files;
-          OpamFilename.remove (OpamPath.archive t.root nv)
+          OpamFilename.remove (OpamPath.archive t.root nv);
+          OpamFilename.remove (OpamPath.Repository.archive repo nv);
     ) (OpamPackage.Set.union missing_installed_packages updated_packages);
 
   (* that's not a good idea *at all* to enable this hook if you
