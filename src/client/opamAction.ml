@@ -581,7 +581,7 @@ let build_and_install_package_aux t ~metadata nv =
         | []       -> ()
         | commands ->
           OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-          let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+          let name = "." ^ OpamPackage.Name.to_string (OpamPackage.name nv) in
           let metadata = get_metadata t in
           OpamFilename.exec ~env ~name ~metadata p_build commands in
 
