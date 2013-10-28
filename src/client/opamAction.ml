@@ -247,20 +247,26 @@ let extract_package t nv =
     end;
     OpamState.copy_files t nv build_dir in
 
-  if OpamState.is_locally_pinned t (OpamPackage.name nv) then
-    let dir = OpamPath.Switch.dev_package t.root t.switch nv in
-    extract_and_copy_files nv (OpamState.download_upstream t nv dir)
-  else (
+  let md5sum =
+    if OpamState.is_locally_pinned t (OpamPackage.name nv) then begin
+      let dir = OpamPath.Switch.dev_package t.root t.switch nv in
+      extract_and_copy_files nv (OpamState.download_upstream t nv dir);
+      None
+    end else begin
     let nv = OpamState.pinning_version t nv in
     match OpamState.download_archive t nv with
-    | Some f -> OpamFilename.extract f build_dir
+    | Some f ->
+      OpamFilename.extract f build_dir;
+      Some (Digest.file (OpamFilename.to_string f))
     | None   ->
       let dir = OpamPath.dev_package t.root nv in
-      extract_and_copy_files nv (OpamState.download_upstream t nv dir)
-  );
+      extract_and_copy_files nv (OpamState.download_upstream t nv dir);
+      None
+    end
+  in
 
   prepare_package_build t nv;
-  build_dir
+  build_dir, md5sum
 
 
 let string_of_commands commands =
@@ -510,6 +516,44 @@ let remove_all_packages t ~metadata sol =
   );
   deleted
 
+let package_v = OpamVariable.of_string "PACKAGE"
+let version_v = OpamVariable.of_string "VERSION"
+let depends_v = OpamVariable.of_string "DEPENDS"
+let hash_v = OpamVariable.of_string "HASH"
+let compiler_v = OpamVariable.of_string "COMPILER"
+
+let package_variables t nv opam md5sum map =
+  let module OV = OpamVariable in
+
+(* Computing all this is useless in most cases. We should probably add
+   a | LS of string Lazy.t to OpamTypes.variable_contents to compute
+   them only when useful. *)
+  let depends =
+    OpamFormula.fold_left (fun accu (n,_) ->
+      if OpamState.is_name_installed t n then
+        let nv = OpamState.find_installed_package_by_name t n in
+        OpamPackage.to_string nv :: accu
+      else
+        accu
+    ) [] (OpamFile.OPAM.depends opam) in
+  let depends_s = String.concat "," depends in
+  let package_s = OpamPackage.(Name.to_string (name nv)) in
+  let version_s = OpamPackage.(Version.to_string (version nv)) in
+  let hash_s = match md5sum with
+           None -> "NOHASH"
+         | Some md5sum -> Digest.to_hex md5sum in
+  let compiler_s = OpamCompiler.to_string t.compiler in
+
+  let bindings = [
+    depends_v, depends_s;
+    package_v, package_s;
+    version_v, version_s;
+    hash_v, hash_s;
+    compiler_v, compiler_s;
+  ] in
+
+  List.fold_left (fun map (v,s) -> OV.Map.add v  (OV.S s) map) map bindings
+
 (* Build and install a package. In case of error, simply return the
    error traces, and let the repo in a state that the user can
    explore.  Do not try to recover yet. *)
@@ -520,7 +564,7 @@ let build_and_install_package_aux t ~metadata nv =
     try
       (* This one can raise an exception (for insance a user's CTRL-C
          when the sync takes too long. *)
-      let p_build = extract_package t nv in
+      let p_build, md5sum = extract_package t nv in
 
       (* For dev packages, we look for any opam file at the root of the build
          directory *)
@@ -529,9 +573,11 @@ let build_and_install_package_aux t ~metadata nv =
       (* Get the env variables set up in the compiler description file *)
       let env = compilation_env t opam in
 
+      let map = package_variables t nv opam md5sum OpamVariable.Map.empty in
+
       (* Exec the given commands. *)
       let exec name f =
-        match OpamState.filter_commands t OpamVariable.Map.empty (f opam) with
+        match OpamState.filter_commands t map  (f opam) with
         | []       -> ()
         | commands ->
           OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
