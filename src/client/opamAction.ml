@@ -352,9 +352,9 @@ let compiler_v = OpamVariable.of_string "compiler"
 let package_variables t nv opam md5sum map =
   let module OV = OpamVariable in
 
-(* Computing all this is useless in most cases. We should probably add
-   a | LS of string Lazy.t to OpamTypes.variable_contents to compute
-   them only when useful. *)
+  (* Computing all this is useless in most cases. We should probably add
+     a | LS of string Lazy.t to OpamTypes.variable_contents to compute
+     them only when useful. *)
   let depends =
     OpamFormula.fold_left (fun accu (n,_) ->
       if OpamState.is_name_installed t n then
@@ -367,8 +367,8 @@ let package_variables t nv opam md5sum map =
   let package_s = OpamPackage.(Name.to_string (name nv)) in
   let version_s = OpamPackage.(Version.to_string (version nv)) in
   let hash_s = match md5sum with
-           None -> "NOHASH"
-         | Some md5sum -> Digest.to_hex md5sum in
+      None -> "NOHASH"
+    | Some md5sum -> Digest.to_hex md5sum in
   let compiler_s = OpamCompiler.to_string t.compiler in
 
   let bindings = [
@@ -378,8 +378,7 @@ let package_variables t nv opam md5sum map =
     hash_v, OV.S hash_s;
     compiler_v, OV.S compiler_s;
   ] in
-OpamVariable.Map.of_list bindings
-
+  OpamVariable.Map.of_list bindings
 
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
@@ -412,19 +411,26 @@ let remove_package_aux t ~metadata ~rm_build nv =
         (* We also use a small hack: if the remove command is simply
            'ocamlfind remove xxx' then, no need to extract the archive
            again. *)
-        let use_ocamlfind = function
-          | [] -> true
-          | "ocamlfind" :: _ -> true
-          | _ -> false in
+        let need_archive = ref false in
+        List.iter (fun command ->
+            match command with
+              [] | ("ocamlfind" | "!") :: _ -> ()
+            | _ -> need_archive := true) remove ;
+
         if not (OpamFilename.exists_dir p_build)
-        && not (List.for_all use_ocamlfind remove) then (
+        && !need_archive then (
           try let _ = extract_package t nv in ()
           with _ -> ()
         );
         let opam = dev_opam t nv p_build in
         let map = package_variables t nv opam None OpamVariable.Map.empty in
-        let remove = OpamState.filter_commands t
-            map (OpamFile.OPAM.remove opam) in
+        let remove = OpamFile.OPAM.remove opam in
+        let remove = OpamState.filter_commands t map remove in
+        let remove = List.map (fun command ->
+            match command with
+              [] | "ocamlfind" :: _ -> command
+            | "!" :: command -> command
+            | _ -> command) remove in
         let name = OpamPackage.Name.to_string name in
         let exec_dir, name =
           if OpamFilename.exists_dir p_build
