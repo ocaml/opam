@@ -342,6 +342,45 @@ let dev_opam t nv build_dir =
       (OpamFile.OPAM.with_version nv' (OpamPackage.version nv))
       (OpamPackage.name nv)
 
+
+let package_v = OpamVariable.of_string "package"
+let version_v = OpamVariable.of_string "version"
+let depends_v = OpamVariable.of_string "depends"
+let hash_v = OpamVariable.of_string "hash"
+let compiler_v = OpamVariable.of_string "compiler"
+
+let package_variables t nv opam md5sum map =
+  let module OV = OpamVariable in
+
+(* Computing all this is useless in most cases. We should probably add
+   a | LS of string Lazy.t to OpamTypes.variable_contents to compute
+   them only when useful. *)
+  let depends =
+    OpamFormula.fold_left (fun accu (n,_) ->
+      if OpamState.is_name_installed t n then
+        let nv = OpamState.find_installed_package_by_name t n in
+        OpamPackage.to_string nv :: accu
+      else
+        accu
+    ) [] (OpamFile.OPAM.depends opam) in
+  let depends_s = String.concat "," depends in
+  let package_s = OpamPackage.(Name.to_string (name nv)) in
+  let version_s = OpamPackage.(Version.to_string (version nv)) in
+  let hash_s = match md5sum with
+           None -> "NOHASH"
+         | Some md5sum -> Digest.to_hex md5sum in
+  let compiler_s = OpamCompiler.to_string t.compiler in
+
+  let bindings = [
+    depends_v, OV.S depends_s;
+    package_v, OV.S package_s;
+    version_v, OV.S version_s;
+    hash_v, OV.S hash_s;
+    compiler_v, OV.S compiler_s;
+  ] in
+OpamVariable.Map.of_list bindings
+
+
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
@@ -383,8 +422,9 @@ let remove_package_aux t ~metadata ~rm_build nv =
           with _ -> ()
         );
         let opam = dev_opam t nv p_build in
+        let map = package_variables t nv opam None OpamVariable.Map.empty in
         let remove = OpamState.filter_commands t
-            OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+            map (OpamFile.OPAM.remove opam) in
         let name = OpamPackage.Name.to_string name in
         let exec_dir, name =
           if OpamFilename.exists_dir p_build
@@ -515,43 +555,6 @@ let remove_all_packages t ~metadata sol =
     OpamState.remove_metadata t deleted;
   );
   deleted
-
-let package_v = OpamVariable.of_string "package"
-let version_v = OpamVariable.of_string "version"
-let depends_v = OpamVariable.of_string "depends"
-let hash_v = OpamVariable.of_string "hash"
-let compiler_v = OpamVariable.of_string "compiler"
-
-let package_variables t nv opam md5sum map =
-  let module OV = OpamVariable in
-
-(* Computing all this is useless in most cases. We should probably add
-   a | LS of string Lazy.t to OpamTypes.variable_contents to compute
-   them only when useful. *)
-  let depends =
-    OpamFormula.fold_left (fun accu (n,_) ->
-      if OpamState.is_name_installed t n then
-        let nv = OpamState.find_installed_package_by_name t n in
-        OpamPackage.to_string nv :: accu
-      else
-        accu
-    ) [] (OpamFile.OPAM.depends opam) in
-  let depends_s = String.concat "," depends in
-  let package_s = OpamPackage.(Name.to_string (name nv)) in
-  let version_s = OpamPackage.(Version.to_string (version nv)) in
-  let hash_s = match md5sum with
-           None -> "NOHASH"
-         | Some md5sum -> Digest.to_hex md5sum in
-  let compiler_s = OpamCompiler.to_string t.compiler in
-
-  let bindings = [
-    depends_v, OV.S depends_s;
-    package_v, OV.S package_s;
-    version_v, OV.S version_s;
-    hash_v, OV.S hash_s;
-    compiler_v, OV.S compiler_s;
-  ] in
-OpamVariable.Map.of_list bindings
 
 (* Build and install a package. In case of error, simply return the
    error traces, and let the repo in a state that the user can
