@@ -349,21 +349,26 @@ let depends_v = OpamVariable.of_string "depends"
 let hash_v = OpamVariable.of_string "hash"
 let compiler_v = OpamVariable.of_string "compiler"
 
+let add_depends_from_formulas t depends deps =
+  OpamFormula.fold_left (fun accu (n,_) ->
+    if OpamState.is_name_installed t n then
+      let nv = OpamState.find_installed_package_by_name t n in
+      OpamPackage.to_string nv :: accu
+    else
+      accu
+  ) depends deps
+
 let package_variables t nv opam md5sum map =
   let module OV = OpamVariable in
 
   (* Computing all this is useless in most cases. We should probably add
      a | LS of string Lazy.t to OpamTypes.variable_contents to compute
      them only when useful. *)
-  let depends =
-    OpamFormula.fold_left (fun accu (n,_) ->
-      if OpamState.is_name_installed t n then
-        let nv = OpamState.find_installed_package_by_name t n in
-        OpamPackage.to_string nv :: accu
-      else
-        accu
-    ) [] (OpamFile.OPAM.depends opam) in
-  let depends_s = String.concat "," depends in
+  let depends = add_depends_from_formulas t []
+      (OpamFile.OPAM.depends opam) in
+  let depends = add_depends_from_formulas t depends
+      (OpamFile.OPAM.depopts opam) in
+  let depends_s = String.concat "," (List.sort compare depends) in
   let package_s = OpamPackage.(Name.to_string (name nv)) in
   let version_s = OpamPackage.(Version.to_string (version nv)) in
   let hash_s = match md5sum with
@@ -397,9 +402,9 @@ let remove_package_aux t ~metadata ~rm_build nv =
     | None      -> OpamGlobals.msg "  No OPAM file has been found!\n"
     | Some opam ->
       let env = compilation_env t opam in
+      let map = package_variables t nv opam None OpamVariable.Map.empty in
       let commands =
-        OpamState.filter_commands t
-          OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+        OpamState.filter_commands t map (OpamFile.OPAM.remove opam) in
       match commands with
       | []     -> ()
       | remove ->
