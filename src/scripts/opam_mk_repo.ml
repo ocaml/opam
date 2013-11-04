@@ -147,7 +147,15 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
   let rec get_transitive_dependencies packages =
     let new_packages =
       OpamPackage.Set.fold
-        (fun nv set -> OpamPackage.Set.union (get_dependencies nv) set)
+        (fun nv set ->
+           if OpamPackage.Set.mem nv set then
+             set
+           else
+             OpamPackage.Set.union 
+               (OpamPackage.Set.union 
+                  (OpamPackage.Set.singleton nv)
+                  (get_dependencies nv))
+               set)
         packages OpamPackage.Set.empty in
     if OpamPackage.Set.cardinal packages = OpamPackage.Set.cardinal new_packages then
       packages
