@@ -151,11 +151,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
            if OpamPackage.Set.mem nv set then
              set
            else
-             OpamPackage.Set.union 
-               (OpamPackage.Set.union 
-                  (OpamPackage.Set.singleton nv)
-                  (get_dependencies nv))
-               set)
+             OpamPackage.Set.(add nv (union (get_dependencies nv) set)))
         packages OpamPackage.Set.empty in
     if OpamPackage.Set.cardinal packages = OpamPackage.Set.cardinal new_packages then
       packages
