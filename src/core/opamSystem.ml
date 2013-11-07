@@ -413,9 +413,8 @@ let is_tar_archive = Tar.is_archive
 
 let extract file dst =
   let kind, extract_function =
-    if Tar.is_archive file then "tar", Tar.extract_function
-    else if Zip.is_archive file then "zip", Zip.extract_function
-    else internal_error "Unknown archive type %S" file
+    if Zip.is_archive file then "zip", Zip.extract_function
+    else "tar", Tar.extract_function
   in
   with_tmp_dir (fun tmp_dir ->
     match extract_function file with
