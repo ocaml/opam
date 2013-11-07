@@ -157,7 +157,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
                   (* Mark the node as visited. *)               
                   (OpamPackage.Set.add nv visited)
                   (* Plan to explore all deps. *)
-                  (List.rev_append deps to_visit)
+                  (List.rev_append deps tl)
             end
     in
       get_transitive_dependencies_aux
