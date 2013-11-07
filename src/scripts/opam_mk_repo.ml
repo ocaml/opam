@@ -144,19 +144,24 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
         ) OpamPackage.Set.empty (OpamFormula.And (deps, depopts))
     ) else
       OpamPackage.Set.empty in
-  let rec get_transitive_dependencies packages =
-    let new_packages =
-      OpamPackage.Set.fold
-        (fun nv set ->
-           if OpamPackage.Set.mem nv set then
-             set
-           else
-             OpamPackage.Set.(add nv (union (get_dependencies nv) set)))
-        packages OpamPackage.Set.empty in
-    if OpamPackage.Set.cardinal packages = OpamPackage.Set.cardinal new_packages then
-      packages
-    else
-      get_transitive_dependencies new_packages in
+  let get_transitive_dependencies packages =
+    let rec get_transitive_dependencies_aux visited to_visit = 
+      match to_visit with 
+        | [] -> visited
+        | nv :: tl ->
+            if OpamPackage.Set.mem nv visited then begin
+              get_transitive_dependencies_aux visited tl
+            end else begin
+              let deps = OpamPackage.Set.elements (get_dependencies nv) in
+                get_transitive_dependencies_aux
+                  (* Mark the node as visited. *)               
+                  (OpamPackage.Set.add nv visited)
+                  (* Plan to explore all deps. *)
+                  (List.rev_append deps to_visit)
+            end
+    in
+      get_transitive_dependencies_aux
+        OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
   let packages =
     if recurse then
       get_transitive_dependencies new_packages
