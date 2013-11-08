@@ -1,11 +1,11 @@
 Bug reports and feature requests for the OPAM tool should be reported
 on:
 
-  http://github.com/OCamlPro/opam/issues
+  http://github.com/ocaml/opam/issues
 
 Packaging issues or requests for a new package should be reported on:
 
-  http://github.com/OCamlPro/opam-repository/issues
+  http://github.com/ocaml/opam-repository/issues
 
 General queries can be addressed at:
 
