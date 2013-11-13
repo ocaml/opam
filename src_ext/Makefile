@@ -9,9 +9,8 @@ EXTLIBMD5 = 3de5f4e0a95fda7b2f3819c4a655b17c
 DOSE     = dose3-3.1.2
 DOSEMD5  = e98ff720fcc3873def46c85c6a980a1b
 
-CMDLINERVER = 0.9.3
-CMDLINER    = cmdliner-$(CMDLINERVER)
-CMDLINERMD5 = ae11da7c97030c1daee551f7d71c0139
+CMDLINER    = cmdliner-0.9.3
+CMDLINERMD5 = d63dd3b03966d65fc242246859c831c7
 
 GRAPH    = ocamlgraph-1.8.1
 GRAPHMD5 = 5aa256e9587a6d264d189418230af698
@@ -69,12 +68,12 @@ dose.stamp: $(DOSE).tar.gz
 	mv $(DOSE) dose
 	@touch $@
 
-$(CMDLINERVER).tar.gz:
-	$(FETCH) https://github.com/dbuenzli/cmdliner/archive/v$(CMDLINERVER).tar.gz
-	$(MD5CHECK) v$(CMDLINERVER).tar.gz $(CMDLINERMD5)
+$(CMDLINER).tbz:
+	$(FETCH) http://erratique.ch/software/cmdliner/releases/$(CMDLINER).tbz
+	$(MD5CHECK) $(CMDLINER).tbz $(CMDLINERMD5)
 
-cmdliner.stamp: $(CMDLINERVER).tar.gz
-	tar zxf v$(CMDLINERVER).tar.gz
+cmdliner.stamp: $(CMDLINER).tbz
+	tar xfj $(CMDLINER).tbz
 	rm -rf cmdliner
 	mv $(CMDLINER) cmdliner
 	@touch $@
