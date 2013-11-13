@@ -15,7 +15,7 @@ cold:
 	./shell/bootstrap-ocaml.sh
 	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin ./configure
 	env PATH=$$PATH:`pwd`/bootstrap/ocaml/bin $(MAKE)
-        
+
 scan: $(LOCAL_OCPBUILD)
 	$(OCPBUILD) -scan
 sanitize: $(LOCAL_OCPBUILD)
@@ -63,6 +63,7 @@ clean:
 	rm -f *.annot src/*.annot
 	rm -f ocp-build.*
 	rm -rf _build
+	rm -rf config.log config.status META Makefile.config
 	$(MAKE) -C $(SRC_EXT) clean
 	$(MAKE) -C ocp-build clean
 	rm -f $(OPAM_FULL_TARGZ)
