@@ -33,9 +33,11 @@ opam install lwt
 # Run opam-rt
 if [ "$OPAM_TEST" = "1" ]; then
     eval `opam config env` # put ocamlfind in the PATH
+    opam install lwt cohttp ssl
     make libinstall
     wget https://github.com/ocaml/opam-rt/archive/master.tar.gz
     tar xvfz master.tar.gz
     cd opam-rt-master
+    make
     make run > opam-rt.log 2>&1 || (tail -1000 opam-rt.log && exit 1)
 fi
