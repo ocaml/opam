@@ -33,7 +33,7 @@ opam install lwt
 # Run opam-rt
 if [ "$OPAM_TEST" = "1" ]; then
     eval `opam config env` # put ocamlfind in the PATH
-    opam install lwt cohttp ssl cmdliner
+    opam install lwt cohttp ssl cmdliner ocamlgraph dose cudf re
     make libinstall
     wget https://github.com/ocaml/opam-rt/archive/master.tar.gz
     tar xvfz master.tar.gz
