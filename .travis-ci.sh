@@ -38,7 +38,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     tar xvfz master.tar.gz
     cd opam-rt-master
     make
-    make run
+    make KINDS="local git" run
 else
     # Compile OPAM from sources and run the basic tests
     ./configure
