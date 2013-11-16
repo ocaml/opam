@@ -589,10 +589,7 @@ let parse_string_set =
   ]
 
 let make_string_set s =
-  if OpamMisc.StringSet.cardinal s = 1 then
-    make_string (OpamMisc.StringSet.choose s)
-  else
-    make_list make_string (OpamMisc.StringSet.elements s)
+  make_list make_string (OpamMisc.StringSet.elements s)
 
 let parse_tag_line =
   let fn = parse_string_set in
