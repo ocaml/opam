@@ -47,7 +47,7 @@ module Syntax = struct
     OpamParser.main OpamLexer.token lexbuf filename
 
   let to_string ?(indent_variable = fun _ -> false) (t: t) =
-    let simplify = not !OpamGlobals.compat_mode_1_0 in
+    let simplify = false in
     OpamFormat.string_of_file ~simplify ~indent_variable t
 
   let s_opam_version = "opam-version"
