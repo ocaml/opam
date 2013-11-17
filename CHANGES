@@ -1,5 +1,6 @@
 1.1.1
 * Fix `opam-admin make <packages> -r` (#990)
+* Explicitly prettyprint list of lists, to fix `opam-admin depexts` (#997)
 
 1.1.0 [Oct 2013]
 * Fix update of dev packages (#962)

@@ -46,9 +46,11 @@ module Syntax = struct
                                   Lexing.pos_fname = filename };
     OpamParser.main OpamLexer.token lexbuf filename
 
-  let to_string ?(indent_variable = fun _ -> false) (t: t) =
-    let simplify = not !OpamGlobals.compat_mode_1_0 in
-    OpamFormat.string_of_file ~simplify ~indent_variable t
+  let to_string ?simplify ?indent (t: t) =
+    let simplify =
+      if !OpamGlobals.compat_mode_1_0 then None
+      else simplify in
+    OpamFormat.string_of_file ?simplify ?indent t
 
   let s_opam_version = "opam-version"
 
@@ -968,11 +970,14 @@ module X = struct
               OpamFormat.(make_list (make_option make_string make_filter));
       } in
       let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
-      Syntax.to_string
-        ~indent_variable:
-          (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts;
-                                s_author; s_authors; s_bug_reports; s_patches ])
-        s
+      let fields = [
+        s_author; s_authors; s_maintainer;
+        s_bug_reports; s_patches; s_homepage; s_license; s_tags;
+        s_build ;s_remove ; s_depends ; s_depopts; s_depexts;
+      ] in
+      let pretty_fields v =
+        if List.mem (OpamVariable.to_string v) fields then true else false in
+      Syntax.to_string ~simplify:pretty_fields ~indent:pretty_fields s
 
     let of_channel filename ic =
       let nv = OpamPackage.of_filename filename in
@@ -1183,7 +1188,7 @@ module X = struct
           Variable (s_misc    , mk_misc t.misc);
         ]
       } in
-      Syntax.to_string ~indent_variable:(fun _ -> true) s
+      Syntax.to_string ~indent:(fun _ -> true) s
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in

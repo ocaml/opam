@@ -228,20 +228,7 @@ let make_string_pair = make_pair make_string make_string
 
 (* Printing *)
 
-let compute_indent = function
-  | []          -> false, []
-  | b :: indent -> b    , indent
-
-let pop_indent indent =
-  let _, indent = compute_indent indent in
-  indent
-
-let can_simplify = function
-  | List [ List [_] ]
-  | List [ _ ] -> true
-  | _ -> false
-
-let rec pretty_string_of_value ~simplify ~indent = function
+let rec pretty_string_of_value depth ~simplify ~indent = function
   | Symbol s    -> s
   | Ident s     ->
     if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
@@ -256,53 +243,53 @@ let rec pretty_string_of_value ~simplify ~indent = function
     else
       Printf.sprintf "%S" s
   | List[List[]]-> Printf.sprintf "[]"
-  | List l      -> pretty_string_of_list ~simplify ~indent l
+  | List l      -> pretty_string_of_list depth ~simplify ~indent l
   | Group g     -> Printf.sprintf "(%s)"
-                     (pretty_string_of_values ~simplify ~indent " " g)
+                     (pretty_string_of_values (depth+1) ~simplify ~indent g)
   | Option(v,l) ->
     Printf.sprintf "%s {%s}"
-      (pretty_string_of_value ~simplify ~indent v)
-      (pretty_string_of_values ~simplify ~indent " " l)
+      (pretty_string_of_value depth ~simplify ~indent v)
+      (pretty_string_of_values depth ~simplify ~indent l)
 
-and pretty_string_of_list ~simplify ~indent = function
-  | []                -> "[]"
-  | [v] when simplify ->
-    pretty_string_of_value ~simplify:false ~indent:(pop_indent indent) v
-  | l                 ->
-    let force, indent = compute_indent indent in
-    let simplify = false in
-    if (List.length l > 1 && force) || List.for_all is_list l then
-      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~simplify ~indent "\n  " l)
+and pretty_string_of_list depth ~simplify ~indent = function
+  | []                             -> "[]"
+  | [v] when depth = 0 && simplify -> pretty_string_of_value (depth+1) ~simplify ~indent v
+  | l                              ->
+    if depth = 0 && indent && List.length l > 1 then
+      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values depth ~simplify ~indent l)
     else
-      Printf.sprintf "[%s]" (pretty_string_of_values ~simplify ~indent " " l)
+      Printf.sprintf "[%s]" (pretty_string_of_values depth ~simplify ~indent l)
 
-and pretty_string_of_values ~simplify ~indent sep l =
+and pretty_string_of_values depth ~simplify ~indent l =
+  let sep = if depth = 0 then "\n  " else " " in
   String.concat sep
-    (List.rev (List.rev_map (pretty_string_of_value ~simplify ~indent) l))
+    (List.rev (List.rev_map (pretty_string_of_value (depth+1) ~simplify ~indent) l))
 
 let incr tab = "  " ^ tab
 
-let rec string_of_item_aux tab ~simplify ?(indent_variable = fun _ -> false) = function
-  | Variable (_, List []) -> None
+let rec string_of_item_aux tab ~simplify ~indent = function
+  | Variable (_, List [])      -> None
   | Variable (_, List[List[]]) -> None
   | Variable (i, v) ->
-    Some (Printf.sprintf "%s%s: %s" tab i
-            (pretty_string_of_value ~simplify ~indent:[indent_variable i] v))
+    let iv = OpamVariable.of_string i in
+    let simplify = simplify iv in
+    let indent = indent iv in
+    Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value 0 ~simplify ~indent v))
   | Section s ->
     Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.section_kind s.section_name
-        (string_of_items_aux (incr tab) ~simplify ~indent_variable s.section_items))
+        (string_of_items_aux (incr tab) ~simplify ~indent s.section_items))
 
-and string_of_items_aux tab ~simplify ?(indent_variable = fun _ -> false) is =
+and string_of_items_aux tab ~simplify ~indent is =
   String.concat "\n"
-    (OpamMisc.filter_map (string_of_item_aux tab ~simplify ~indent_variable) is)
+    (OpamMisc.filter_map (string_of_item_aux tab ~simplify ~indent) is)
 
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file ~simplify ?(indent_variable = fun _ -> false) f =
-  let simplify = if !OpamGlobals.compat_mode_1_0 then false else simplify in
-  string_of_items f.file_contents ~simplify ~indent_variable ^ "\n"
+let string_of_file ?(simplify = fun _ -> true) ?(indent = fun _ -> true) f =
+  let simplify = if !OpamGlobals.compat_mode_1_0 then fun _ -> false else simplify in
+  string_of_items f.file_contents ~simplify ~indent ^ "\n"
 
 (* Reading section contents *)
 
@@ -583,16 +570,10 @@ let parse_messages =
 (* TAGS *)
 
 let parse_string_set =
-  parse_or [
-    "string"     , (parse_string ++ OpamMisc.StringSet.singleton);
-    "string-list", (parse_string_list ++ OpamMisc.StringSet.of_list);
-  ]
+  parse_string_list ++ OpamMisc.StringSet.of_list
 
-let make_string_set s =
-  if OpamMisc.StringSet.cardinal s = 1 then
-    make_string (OpamMisc.StringSet.choose s)
-  else
-    make_list make_string (OpamMisc.StringSet.elements s)
+let make_string_set =
+  OpamMisc.StringSet.elements ++ make_string_list
 
 let parse_tag_line =
   let fn = parse_string_set in
@@ -603,10 +584,9 @@ let make_tag_line =
   make_pair fn fn
 
 let parse_tags v =
-  let l =
-    parse_or [
-      "tagline"     , (fun x -> [parse_tag_line x]);
-      "tagline-list", (parse_list parse_tag_line);
+  let l = parse_or [
+      "tag" , (fun x -> [parse_tag_line x]);
+      "tags", (parse_list parse_tag_line);
     ] v in
   OpamMisc.StringSetMap.of_list l
 
