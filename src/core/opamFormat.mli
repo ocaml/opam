@@ -138,14 +138,8 @@ val string_of_value : value -> string
 (** Print a list of values *)
 val string_of_values : value list -> string
 
-(** Print an file_item *)
-val string_of_item: simplify:bool -> indent:bool -> file_item -> string option
-
-(** Print a list of items *)
-val string_of_items: simplify:bool -> indent:bool -> file_item list -> string
-
 (** Print a file *)
-val string_of_file: simplify:bool -> indent:bool -> file -> string
+val string_of_file: simplify:bool -> indent:bool -> ?ignore:(string list) -> file -> string
 
 (** {2 Finding functions} *)
 

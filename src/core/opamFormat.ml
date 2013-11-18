@@ -261,32 +261,37 @@ and pretty_string_of_list depth ~simplify ~indent = function
       Printf.sprintf "[%s]" (pretty_string_of_values depth ~simplify ~indent l)
 
 and pretty_string_of_values depth ~simplify ~indent l =
-  let sep = if depth = 0 then "\n  " else " " in
+  let sep = if depth = 0 && indent then "\n  " else " " in
   String.concat sep
     (List.rev (List.rev_map (pretty_string_of_value (depth+1) ~simplify ~indent) l))
 
 let incr tab = "  " ^ tab
 
-let rec string_of_item_aux tab ~simplify ~indent = function
+let rec string_of_item_aux tab ~simplify ~indent ~ignore = function
   | Variable (_, List [])      -> None
   | Variable (_, List[List[]]) -> None
   | Variable (i, v)            ->
-    Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value 0 ~simplify ~indent v))
+    let return ~simplify ~indent =
+      Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value 0 ~simplify ~indent v)) in
+    if List.mem i ignore then
+      return ~simplify:false ~indent:false
+    else
+      return ~simplify ~indent
   | Section s                  ->
     Some (Printf.sprintf "%s%s %S {\n%s\n}"
             tab s.section_kind s.section_name
-            (string_of_items_aux (incr tab) ~simplify ~indent s.section_items))
+            (string_of_items_aux (incr tab) ~simplify ~indent ~ignore s.section_items))
 
-and string_of_items_aux tab ~simplify ~indent is =
+and string_of_items_aux tab ~simplify ~indent ~ignore is =
   String.concat "\n"
-    (OpamMisc.filter_map (string_of_item_aux tab ~simplify ~indent) is)
+    (OpamMisc.filter_map (string_of_item_aux tab ~simplify ~indent ~ignore) is)
 
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file ~simplify ~indent f =
+let string_of_file ~simplify ~indent ?(ignore=[]) f =
   let simplify = not !OpamGlobals.compat_mode_1_0 && simplify in
-  string_of_items f.file_contents ~simplify ~indent ^ "\n"
+  string_of_items f.file_contents ~simplify ~indent ~ignore ^ "\n"
 
 (* Reading section contents *)
 
