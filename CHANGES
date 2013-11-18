@@ -11,6 +11,7 @@
 * Improve robustness of pinned package update (#949)
 * Finish conversion of default repository to <https://opam.ocaml.org> (#948)
 * Fix regression in handling archives with no extension (treat them as tar again) (#972)
+* Fixed stale archives causing packages to be marked as NEW when they weren't (#945)
 
 1.1.0RC1 [Oct 2013]
 * Add `make cold` target to build OPAM without a system OCaml installed (#910)
