@@ -241,7 +241,9 @@ let can_simplify = function
   | List [ _ ] -> true
   | _ -> false
 
-let rec pretty_string_of_value ~simplify ~indent = function
+let rec pretty_string_of_value ~simplify ~depth ~indent =
+  let depth = depth + 1 in
+  function
   | Symbol s    -> s
   | Ident s     ->
     if !OpamGlobals.compat_mode_1_0 && OpamMisc.contains s ':'
@@ -256,29 +258,32 @@ let rec pretty_string_of_value ~simplify ~indent = function
     else
       Printf.sprintf "%S" s
   | List[List[]]-> Printf.sprintf "[]"
-  | List l      -> pretty_string_of_list ~simplify ~indent l
+  | List l      -> pretty_string_of_list ~simplify ~depth ~indent l
   | Group g     -> Printf.sprintf "(%s)"
-                     (pretty_string_of_values ~simplify ~indent " " g)
+                     (pretty_string_of_values ~simplify ~depth ~indent " " g)
   | Option(v,l) ->
     Printf.sprintf "%s {%s}"
-      (pretty_string_of_value ~simplify ~indent v)
-      (pretty_string_of_values ~simplify ~indent " " l)
+      (pretty_string_of_value ~simplify ~depth ~indent v)
+      (pretty_string_of_values ~simplify ~depth ~indent " " l)
 
-and pretty_string_of_list ~simplify ~indent = function
+and pretty_string_of_list ~simplify ~depth ~indent =
+  let depth = depth + 1 in
+  function
   | []                -> "[]"
   | [v] when simplify ->
-    pretty_string_of_value ~simplify:false ~indent:(pop_indent indent) v
+    pretty_string_of_value ~simplify:false ~depth ~indent:(pop_indent indent) v
   | l                 ->
     let force, indent = compute_indent indent in
     let simplify = false in
-    if (List.length l > 1 && force) || List.for_all is_list l then
-      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~simplify ~indent "\n  " l)
+    let depth = succ depth in
+    if depth < 6 && ((List.length l > 1 && force) || List.for_all is_list l) then
+      Printf.sprintf "[\n  %s\n]" (pretty_string_of_values ~simplify ~depth ~indent "\n  " l)
     else
-      Printf.sprintf "[%s]" (pretty_string_of_values ~simplify ~indent " " l)
+      Printf.sprintf "[%s]" (pretty_string_of_values ~simplify ~depth ~indent " " l)
 
-and pretty_string_of_values ~simplify ~indent sep l =
+and pretty_string_of_values ~simplify ~depth ~indent sep l =
   String.concat sep
-    (List.rev (List.rev_map (pretty_string_of_value ~simplify ~indent) l))
+    (List.rev (List.rev_map (pretty_string_of_value ~simplify ~depth ~indent) l))
 
 let incr tab = "  " ^ tab
 
@@ -287,7 +292,7 @@ let rec string_of_item_aux tab ~simplify ?(indent_variable = fun _ -> false) = f
   | Variable (_, List[List[]]) -> None
   | Variable (i, v) ->
     Some (Printf.sprintf "%s%s: %s" tab i
-            (pretty_string_of_value ~simplify ~indent:[indent_variable i] v))
+            (pretty_string_of_value ~simplify ~depth:0 ~indent:[indent_variable i] v))
   | Section s ->
     Some (Printf.sprintf "%s%s %S {\n%s\n}"
         tab s.section_kind s.section_name
@@ -589,10 +594,7 @@ let parse_string_set =
   ]
 
 let make_string_set s =
-  if OpamMisc.StringSet.cardinal s = 1 then
-    make_string (OpamMisc.StringSet.choose s)
-  else
-    make_list make_string (OpamMisc.StringSet.elements s)
+  make_list make_string (OpamMisc.StringSet.elements s)
 
 let parse_tag_line =
   let fn = parse_string_set in
