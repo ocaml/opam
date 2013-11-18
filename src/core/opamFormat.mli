@@ -138,22 +138,14 @@ val string_of_value : value -> string
 (** Print a list of values *)
 val string_of_values : value list -> string
 
-(** When folding recursively a value [Variable (s, v)] for printing,
-    we check if we indent the first encountered list below [v]
-    (i.e. in case [indent_variable s] is [true]). *)
-type indent_variable = string -> bool
-
 (** Print an file_item *)
-val string_of_item:
-  simplify:bool -> ?indent_variable:indent_variable -> file_item -> string option
+val string_of_item: simplify:bool -> indent:bool -> file_item -> string option
 
 (** Print a list of items *)
-val string_of_items:
-  simplify:bool -> ?indent_variable:indent_variable -> file_item list -> string
+val string_of_items: simplify:bool -> indent:bool -> file_item list -> string
 
 (** Print a file *)
-val string_of_file:
-  simplify:bool -> ?indent_variable:indent_variable -> file -> string
+val string_of_file: simplify:bool -> indent:bool -> file -> string
 
 (** {2 Finding functions} *)
 

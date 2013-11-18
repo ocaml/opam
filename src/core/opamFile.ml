@@ -46,9 +46,8 @@ module Syntax = struct
                                   Lexing.pos_fname = filename };
     OpamParser.main OpamLexer.token lexbuf filename
 
-  let to_string ?(indent_variable = fun _ -> false) (t: t) =
-    let simplify = not !OpamGlobals.compat_mode_1_0 in
-    OpamFormat.string_of_file ~simplify ~indent_variable t
+  let to_string (t: t) =
+    OpamFormat.string_of_file ~simplify:true ~indent:true t
 
   let s_opam_version = "opam-version"
 
@@ -934,10 +933,12 @@ module X = struct
         file_contents = [
           Variable (s_opam_version,
                     (OpamVersion.to_string ++ OpamFormat.make_string) t.opam_version);
-          Variable (s_maintainer  , OpamFormat.make_string_list t.maintainer);
-        ] @ name_and_version
-          @ list    t.homepage      s_homepage      OpamFormat.make_string_list
+        ] @ list    t.maintainer    s_maintainer    OpamFormat.make_string_list
           @ list    t.author        s_author        OpamFormat.make_string_list
+          @ name_and_version
+          @ list    t.homepage      s_homepage      OpamFormat.make_string_list
+          @ list    t.bug_reports   s_bug_reports   OpamFormat.make_string_list
+
           @ list    t.license       s_license       OpamFormat.make_string_list
           @ list    t.doc           s_doc           OpamFormat.make_string_list
           @ list    t.tags          s_tags          OpamFormat.make_string_list
@@ -945,9 +946,12 @@ module X = struct
               (OpamFilename.Base.to_string ++ OpamFormat.make_string)
           @ listm   t.build_env     s_build_env     OpamFormat.make_env_variable
           @ listm   t.build         s_build         OpamFormat.make_command
+          @ listm   t.build_test    s_build_test    OpamFormat.make_command
+          @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
           @ listm   t.remove        s_remove        OpamFormat.make_command
           @ formula t.depends       s_depends       OpamFormat.make_formula
           @ formula t.depopts       s_depopts       OpamFormat.make_opt_formula
+          @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ formula t.conflicts     s_conflicts     OpamFormat.make_formula
           @ listm   t.libraries     s_libraries
               (OpamVariable.Section.to_string ++ OpamFormat.make_string)
@@ -958,21 +962,13 @@ module X = struct
           @ formula t.os            s_os            OpamFormat.make_os_constraint
           @ filter  t.available     s_available
               (fun f -> List (OpamFormat.make_filter f))
-          @ listm   t.build_test    s_build_test    OpamFormat.make_command
-          @ listm   t.build_doc     s_build_doc     OpamFormat.make_command
-          @ option  t.depexts       s_depexts       OpamFormat.make_tags
           @ list    t.messages      s_messages
               OpamFormat.(make_list (make_option make_string make_filter))
-          @ list    t.bug_reports   s_bug_reports  OpamFormat.make_string_list
           @ list    t.post_messages s_post_messages
               OpamFormat.(make_list (make_option make_string make_filter));
       } in
       let s = if !OpamGlobals.compat_mode_1_0 then to_1_0 s else s in
-      Syntax.to_string
-        ~indent_variable:
-          (fun s -> List.mem s [s_build ; s_remove ; s_depends ; s_depopts;
-                                s_author; s_authors; s_bug_reports; s_patches ])
-        s
+      Syntax.to_string s
 
     let of_channel filename ic =
       let nv = OpamPackage.of_filename filename in
@@ -1183,7 +1179,7 @@ module X = struct
           Variable (s_misc    , mk_misc t.misc);
         ]
       } in
-      Syntax.to_string ~indent_variable:(fun _ -> true) s
+      Syntax.to_string s
 
     let of_channel filename ic =
       let s = Syntax.of_channel filename ic in
