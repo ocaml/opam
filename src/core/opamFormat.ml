@@ -270,15 +270,12 @@ let incr tab = "  " ^ tab
 let rec string_of_item_aux tab ~simplify ~indent = function
   | Variable (_, List [])      -> None
   | Variable (_, List[List[]]) -> None
-  | Variable (i, v) ->
-    let iv = OpamVariable.of_string i in
-    let simplify = simplify iv in
-    let indent = indent iv in
+  | Variable (i, v)            ->
     Some (Printf.sprintf "%s%s: %s" tab i (pretty_string_of_value 0 ~simplify ~indent v))
-  | Section s ->
+  | Section s                  ->
     Some (Printf.sprintf "%s%s %S {\n%s\n}"
-        tab s.section_kind s.section_name
-        (string_of_items_aux (incr tab) ~simplify ~indent s.section_items))
+            tab s.section_kind s.section_name
+            (string_of_items_aux (incr tab) ~simplify ~indent s.section_items))
 
 and string_of_items_aux tab ~simplify ~indent is =
   String.concat "\n"
@@ -287,8 +284,8 @@ and string_of_items_aux tab ~simplify ~indent is =
 let string_of_item = string_of_item_aux ""
 let string_of_items = string_of_items_aux ""
 
-let string_of_file ?(simplify = fun _ -> true) ?(indent = fun _ -> true) f =
-  let simplify = if !OpamGlobals.compat_mode_1_0 then fun _ -> false else simplify in
+let string_of_file ~simplify ~indent f =
+  let simplify = not !OpamGlobals.compat_mode_1_0 && simplify in
   string_of_items f.file_contents ~simplify ~indent ^ "\n"
 
 (* Reading section contents *)

@@ -139,16 +139,13 @@ val string_of_value : value -> string
 val string_of_values : value list -> string
 
 (** Print an file_item *)
-val string_of_item:
-  simplify:(variable -> bool) -> indent:(variable -> bool) -> file_item -> string option
+val string_of_item: simplify:bool -> indent:bool -> file_item -> string option
 
 (** Print a list of items *)
-val string_of_items:
-  simplify:(variable -> bool) -> indent:(variable -> bool) -> file_item list -> string
+val string_of_items: simplify:bool -> indent:bool -> file_item list -> string
 
 (** Print a file *)
-val string_of_file:
-  ?simplify:(variable -> bool) -> ?indent:(variable -> bool) -> file -> string
+val string_of_file: simplify:bool -> indent:bool -> file -> string
 
 (** {2 Finding functions} *)
 
