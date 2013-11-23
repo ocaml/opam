@@ -39,7 +39,10 @@ val init: command
 (** opam list *)
 val list: command
 
-(** opam info *)
+(** opam show *)
+val show: command
+
+(** opam info (deprecated alias for opam show) *)
 val info: command
 
 (** opam search *)
