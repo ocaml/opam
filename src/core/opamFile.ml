@@ -1840,6 +1840,13 @@ module X = struct
     let env t = t.env
     let tags t = t.tags
 
+    let with_src t src = {t with src}
+    let with_patches t patches = {t with patches}
+    let with_configure t configure = {t with configure}
+    let with_make t make = {t with make}
+    let with_build t build = {t with build}
+    let with_packages t packages = {t with packages}
+
     let of_channel filename ic =
       let file = Syntax.of_channel filename ic in
       let permissive = Syntax.check file valid_fields in

@@ -361,6 +361,13 @@ module Comp: sig
       subtree *)
   val env: t -> (string * string * string) list
 
+  val with_src: t -> address option -> t
+  val with_patches: t -> filename list -> t
+  val with_configure: t -> string list -> t
+  val with_make: t -> string list -> t
+  val with_build: t -> command list -> t
+  val with_packages: t -> formula -> t
+
   (** Convert to OPAM 1.0 *)
   val to_1_0: file -> file
 
