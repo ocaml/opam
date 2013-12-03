@@ -95,8 +95,12 @@ module Syntax = struct
           OpamGlobals.exit 5
         ) else if !not_already_warned then (
           not_already_warned := false;
+          let is_, s_ =
+            if List.length invalids <= 1 then "is an", "" else "are", "s" in
           if invalids <> [] then
-            OpamGlobals.warning "unknown fields in %s: is your OPAM up-to-date ?"
+            OpamGlobals.warning "%s %s unknown field%s in %s: is your OPAM up-to-date ?"
+              (OpamMisc.pretty_list invalids)
+              is_ s_
               f.file_name
         )
 
