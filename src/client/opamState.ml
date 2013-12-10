@@ -82,28 +82,6 @@ end
 type state = Types.t
 open Types
 
-let universe t action =
-  let opams =
-    OpamPackage.Map.mapi (fun nv opam ->
-        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
-        if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
-        else opam)
-      t.opams in
-  {
-    u_packages  = OpamPackage.Set.union t.installed t.packages;
-    u_action    = action;
-    u_installed = t.installed;
-    u_available = Lazy.force t.available_packages;
-    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
-    u_installed_roots = t.installed_roots;
-    u_pinned    =
-      OpamPackage.Name.Map.fold
-        (fun k _ set -> OpamPackage.Name.Set.add k set)
-        t.pinned OpamPackage.Name.Set.empty;
-  }
-
 let string_of_repositories r =
   OpamMisc.string_of_list
     OpamRepositoryName.to_string
@@ -861,6 +839,30 @@ let is_compiler_installed t comp =
 
 let is_switch_installed t switch =
   OpamSwitch.Map.mem switch t.aliases
+
+let universe t action =
+  let opams =
+    OpamPackage.Map.mapi (fun nv opam ->
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+        if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
+        else opam)
+      t.opams in
+  {
+    u_packages  = OpamPackage.Set.union t.installed t.packages;
+    u_action    = action;
+    u_installed = t.installed;
+    u_available = Lazy.force t.available_packages;
+    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+    u_installed_roots = t.installed_roots;
+    u_pinned    =
+      OpamPackage.Name.Map.fold
+        (fun k _ set ->
+           let v = lazy (OpamPackage.version (pinning_version t (OpamPackage.pinned k))) in
+          OpamPackage.Name.Map.add k v set)
+        t.pinned OpamPackage.Name.Map.empty;
+  }
 
 let check_base_packages t =
   let base_packages = get_compiler_packages t t.compiler in
