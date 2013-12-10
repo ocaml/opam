@@ -3,7 +3,7 @@
 LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
-TARGETS = opam opam-admin
+TARGETS = opam opam-admin opam-installer
 
 .PHONY: all
 

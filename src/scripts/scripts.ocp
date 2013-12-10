@@ -15,3 +15,10 @@ begin program "opam-admin"
   ]
   requires = [ "opam-client" ]
 end
+
+begin program "opam-installer"
+  files = [
+    "opam_installer.ml"
+  ]
+  requires = [ "opam-client" ]
+end
