@@ -18,6 +18,8 @@
 
 open OpamTypes
 
+val empty_universe: universe
+
 (** {2 Solver} *)
 
 (** Convert a request to a string *)
