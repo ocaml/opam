@@ -25,6 +25,7 @@ type args = {
   gener_digest: bool;
   dryrun: bool;
   recurse: bool;
+  resolve: bool;
   debug: bool;
 }
 
@@ -52,6 +53,12 @@ let args =
     let doc = "Recurse among the transitive dependencies." in
     Arg.(value & flag & info ["r";"recursive"] ~doc)
   in
+  let resolve =
+    let doc = "A more advanced version of `--recursive': will attempt to resolve \
+               your installation with all dependencies in the best way \
+               possible and build the archives accordingly." in
+    Arg.(value & flag & info ["resolve"] ~doc)
+  in
   let names =
     let doc = "Names of the packages to include in the repo." in
     Arg.(value & pos_all string [] & info [] ~docv:"PKG" ~doc)
@@ -62,12 +69,54 @@ let args =
   in
   Term.(
     pure
-      (fun index gener_digest dryrun recurse names debug ->
-         {index; gener_digest; dryrun; recurse; names; debug})
-      $index $gener_digest $dryrun $recurse $names $debug
+      (fun index gener_digest dryrun recurse names debug resolve ->
+         {index; gener_digest; dryrun; recurse; names; debug; resolve})
+      $index $gener_digest $dryrun $recurse $names $debug $resolve
   )
 
-let process {index; gener_digest; dryrun; recurse; names; debug} =
+let resolve_deps index names =
+  let atoms =
+    List.map (fun str ->
+        match OpamPackage.of_string_opt str with
+        | Some nv ->
+          OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv)
+        | None -> OpamPackage.Name.of_string str, None)
+      names in
+  let opams =
+    List.fold_left
+      (fun opams r ->
+         let f =
+           OpamFilename.create (OpamFilename.cwd ()) (OpamFilename.Attribute.base r) in
+         if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
+           match OpamPackage.of_dirname (OpamFilename.dirname f) with
+           | Some nv -> OpamPackage.Map.add nv (OpamFile.OPAM.read f) opams
+           | None -> opams
+         else opams)
+      OpamPackage.Map.empty
+      (OpamFilename.Attribute.Set.elements index) in
+  let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
+  let universe = {
+      u_packages = packages;
+      u_installed = OpamPackage.Set.empty;
+      u_available = packages; (* XXX add a compiler/OS option ? *)
+      u_depends = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+      u_depopts = OpamPackage.Map.empty;
+      u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+      u_action = Install (OpamPackage.Name.Set.of_list (List.map fst atoms));
+      u_installed_roots = OpamPackage.Set.empty;
+      u_pinned = OpamPackage.Name.Map.empty
+    } in
+  let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [] } in
+  match OpamSolver.resolve ~verbose:true universe request with
+  | Success solution ->
+    PackageActionGraph.fold_vertex (fun act acc -> match act with
+        | To_change (_, p) -> OpamPackage.Set.add p acc
+        | _ -> acc)
+      solution.PackageActionGraph.to_process OpamPackage.Set.empty
+  | Conflicts cs ->
+    OpamGlobals.error_and_exit "%s\n" (cs())
+
+let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
   let () =
     OpamHTTP.register ();
     OpamGit.register ();
@@ -113,6 +162,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
         OpamPackage.Set.empty
       | versions ->
         OpamPackage.Set.of_list (List.map (OpamPackage.create n) versions) in
+
   let new_packages =
     List.fold_left
       (fun accu str -> OpamPackage.Set.union accu (mk_packages str))
@@ -154,7 +204,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
             end else begin
               let deps = OpamPackage.Set.elements (get_dependencies nv) in
                 get_transitive_dependencies_aux
-                  (* Mark the node as visited. *)               
+                  (* Mark the node as visited. *)
                   (OpamPackage.Set.add nv visited)
                   (* Plan to explore all deps. *)
                   (List.rev_append deps tl)
@@ -163,7 +213,9 @@ let process {index; gener_digest; dryrun; recurse; names; debug} =
       get_transitive_dependencies_aux
         OpamPackage.Set.empty (OpamPackage.Set.elements packages) in
   let packages =
-    if recurse then
+    if resolve then
+      resolve_deps new_index names
+    else if recurse then
       get_transitive_dependencies new_packages
     else
       new_packages in
