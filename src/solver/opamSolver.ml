@@ -22,6 +22,19 @@ let log fmt = OpamGlobals.log "SOLVER" fmt
 let s_status = "status"
 let s_installed   = "  installed"
 
+let empty_universe =
+  {
+    u_packages = OpamPackage.Set.empty;
+    u_installed = OpamPackage.Set.empty;
+    u_available = OpamPackage.Set.empty;
+    u_depends = OpamPackage.Map.empty;
+    u_depopts = OpamPackage.Map.empty;
+    u_conflicts = OpamPackage.Map.empty;
+    u_action = Install OpamPackage.Name.Set.empty;
+    u_installed_roots = OpamPackage.Set.empty;
+    u_pinned = OpamPackage.Name.Map.empty
+  }
+
 (* Returns the package with its real version if it has been pinned *)
 let real_version universe pkg =
   if OpamPackage.is_pinned pkg then

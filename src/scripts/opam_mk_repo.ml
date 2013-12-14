@@ -96,16 +96,13 @@ let resolve_deps index names =
       (OpamFilename.Attribute.Set.elements index) in
   let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
   let universe = {
-      u_packages = packages;
-      u_installed = OpamPackage.Set.empty;
-      u_available = packages; (* XXX add a compiler/OS option ? *)
-      u_depends = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-      u_depopts = OpamPackage.Map.empty;
-      u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
-      u_action = Install (OpamPackage.Name.Set.of_list (List.map fst atoms));
-      u_installed_roots = OpamPackage.Set.empty;
-      u_pinned = OpamPackage.Name.Map.empty
-    } in
+    OpamSolver.empty_universe with
+    u_packages = packages;
+    u_available = packages; (* XXX add a compiler/OS option ? *)
+    u_depends = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+    u_action = Install (OpamPackage.Name.Set.of_list (List.map fst atoms));
+  } in
   let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [] } in
   match OpamSolver.resolve ~verbose:true universe request with
   | Success solution ->
