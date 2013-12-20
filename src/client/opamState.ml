@@ -678,7 +678,9 @@ let available_packages t system =
                            (only '=' and '!=' are valid)."
                           (OpamFormula.string_of_relop r)
             end
-          | _ -> OpamCompiler.Version.compare (Lazy.force t.compiler_version) r v in
+          | _ -> OpamCompiler.Version.eval_relop r
+            (Lazy.force t.compiler_version) v
+        in
         match OpamFile.OPAM.ocaml_version opam with
         | None   -> true
         | Some c -> OpamFormula.eval atom c in

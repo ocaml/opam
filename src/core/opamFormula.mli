@@ -66,6 +66,12 @@ type 'a formula =
 (** Eval a formula *)
 val eval: ('a -> bool) -> 'a formula -> bool
 
+(** Check a relational operator against an integer from compare *)
+val check_relop: relop -> int -> bool
+
+(** Evaluate a relational operator between versions *)
+val eval_relop: relop -> OpamPackage.Version.t -> OpamPackage.Version.t -> bool
+
 (** Pretty print a formula *)
 val string_of_formula: ('a -> string) -> 'a formula -> string
 

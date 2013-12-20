@@ -31,8 +31,10 @@ module Version: sig
   val system: unit -> t option
 
   (** Compare OCaml versions *)
-  val compare: t -> OpamFormula.relop -> t -> bool
+  val compare: t -> t -> int
 
+  (** Evaluate a relational operator between OCaml versions *)
+  val eval_relop: OpamFormula.relop -> t -> t -> bool
 end
 
 (** Compiler names *)
