@@ -113,6 +113,17 @@ let rec eval atom = function
   | And(x,y) -> eval atom x && eval atom y
   | Or(x,y)  -> eval atom x || eval atom y
 
+let check_relop relop c = match relop with
+  | `Eq  -> c =  0
+  | `Neq -> c <> 0
+  | `Geq -> c >= 0
+  | `Gt  -> c >  0
+  | `Leq -> c <= 0
+  | `Lt  -> c <  0
+
+let eval_relop relop v1 v2 =
+  check_relop relop (OpamPackage.Version.compare v1 v2)
+
 let to_string t =
   let string_of_constraint (relop, version) =
     Printf.sprintf "%s %s" (string_of_relop relop) (OpamPackage.Version.to_string version) in
