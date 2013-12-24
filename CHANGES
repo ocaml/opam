@@ -9,6 +9,7 @@
 * Add `OpamPackage.Name.compare` (#1046)
 * Add types `version_constraint` and `version_formula` to `OpamFormula` (#1046)
 * Clearer command aliases. Made `info` an alias for `show` and added the alias `uninstall` (#944)
+* Fixed `opam init --root=<relative path>`
 
 1.1.0 [Oct 2013]
 * Fix update of dev packages (#962)
