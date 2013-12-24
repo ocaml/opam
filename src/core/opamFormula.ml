@@ -33,7 +33,11 @@ let relop_of_string = function
   | "<"  -> `Lt
   | x    -> failwith (x ^ " is not a valid relop")
 
-type atom = OpamPackage.Name.t * (relop * OpamPackage.Version.t) option
+type version_constraint = relop * OpamPackage.Version.t
+
+type version_set = OpamPackage.Version.Set.t
+
+type atom = OpamPackage.Name.t * version_constraint option
 
 let string_of_atom = function
   | n, None       -> OpamPackage.Name.to_string n
@@ -104,7 +108,9 @@ let rec fold_left f i = function
   | And(x,y) -> fold_left f (fold_left f i x) y
   | Or(x,y)  -> fold_left f (fold_left f i x) y
 
-type t = (OpamPackage.Name.t * (relop * OpamPackage.Version.t) formula) formula
+type version_formula = version_constraint formula
+
+type t = (OpamPackage.Name.t * version_formula) formula
 
 let rec eval atom = function
   | Empty    -> true
