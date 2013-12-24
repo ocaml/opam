@@ -459,6 +459,8 @@ let init =
   let init global_options
       build_options repo_kind repo_name repo_address compiler jobs
       no_setup auto_setup sh csh zsh fish dot_profile_o =
+    (* Create the dir in current directory so that it can be made absolute *)
+    OpamFilename.mkdir global_options.root;
     apply_global_options global_options;
     apply_build_options build_options;
     let repo_kind = guess_repository_kind repo_kind repo_address in
