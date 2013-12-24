@@ -547,10 +547,10 @@ let search =
     $pattern_list),
   term_info "search" ~doc ~man
 
-(* INFO *)
-let info_doc = "Display information about specific packages."
-let info =
-  let doc = info_doc in
+(* INFO and SHOW *)
+let show_doc = "Display information about specific packages."
+let show_or_info cmd =
+  let doc = show_doc in
   let man = [
     `S "DESCRIPTION";
     `P "This command displays the information block for the selected \
@@ -574,7 +574,10 @@ let info =
     apply_global_options global_options;
     Client.info ~fields packages in
   Term.(pure pkg_info $global_options $fields $pattern_list),
-  term_info "info" ~doc ~man
+  term_info cmd ~doc ~man
+
+let show = show_or_info "show"
+let info = show_or_info "info"
 
 
 (* CONFIG *)
@@ -1240,7 +1243,7 @@ let default =
        The most commonly used opam commands are:\n\
       \    init         %s\n\
       \    list         %s\n\
-      \    info         %s\n\
+      \    show         %s\n\
       \    install      %s\n\
       \    remove       %s\n\
       \    update       %s\n\
@@ -1251,7 +1254,7 @@ let default =
       \    pin          %s\n\
        \n\
        See 'opam help <command>' for more information on a specific command.\n"
-      init_doc list_doc info_doc install_doc remove_doc update_doc
+      init_doc list_doc show_doc install_doc remove_doc update_doc
       upgrade_doc config_doc repository_doc switch_doc pin_doc in
   Term.(pure usage $global_options),
   Term.info "opam"
@@ -1262,7 +1265,7 @@ let default =
 
 let commands = [
   init;
-  list; search; info;
+  list; search; show; info;
   install; remove; reinstall;
   update; upgrade;
   config;

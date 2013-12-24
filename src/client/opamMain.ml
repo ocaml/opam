@@ -18,7 +18,7 @@ open OpamArg
 
 let commands = [
   init;
-  list; search; info;
+  list; search; show; info;
   install; remove; reinstall;
   update; upgrade;
   config;
