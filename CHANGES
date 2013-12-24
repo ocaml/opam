@@ -6,6 +6,8 @@
 * Add `OpamFormula.eval_relop` and `OpamFormula.check_relop` (#1042)
 * Change `OpamCompiler.compare` to match `Pervasives.compare` (#1042)
 * Add `OpamCompiler.eval_relop` (#1042)
+* Add `OpamPackage.Name.compare` (#1046)
+* Add types `version_constraint` and `version_formula` to `OpamFormula` (#1046)
 
 1.1.0 [Oct 2013]
 * Fix update of dev packages (#962)
