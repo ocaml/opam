@@ -30,6 +30,9 @@ type command = unit Term.t * Term.info
     given). [at_exit] is executed before the program exits. *)
 val run:command -> command list -> unit
 
+(** The default list of commands *)
+val commands: command list
+
 (** opam *)
 val default: command
 
@@ -39,8 +42,8 @@ val init: command
 (** opam list *)
 val list: command
 
-(** opam info *)
-val info: command
+(** opam show *)
+val show: command
 
 (** opam search *)
 val search: command
@@ -62,9 +65,6 @@ val upgrade: command
 
 (** opam config *)
 val config: command
-
-(** opam remote (alias for 'opam repository') *)
-val remote: command
 
 (** opam repository *)
 val repository: command

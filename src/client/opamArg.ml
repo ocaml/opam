@@ -547,10 +547,10 @@ let search =
     $pattern_list),
   term_info "search" ~doc ~man
 
-(* INFO *)
-let info_doc = "Display information about specific packages."
-let info =
-  let doc = info_doc in
+(* SHOW *)
+let show_doc = "Display information about specific packages."
+let show =
+  let doc = show_doc in
   let man = [
     `S "DESCRIPTION";
     `P "This command displays the information block for the selected \
@@ -574,7 +574,7 @@ let info =
     apply_global_options global_options;
     Client.info ~fields packages in
   Term.(pure pkg_info $global_options $fields $pattern_list),
-  term_info "info" ~doc ~man
+  term_info "show" ~doc ~man
 
 
 (* CONFIG *)
@@ -904,7 +904,7 @@ let upgrade =
 
 (* REPOSITORY *)
 let repository_doc = "Manage OPAM repositories."
-let repository name =
+let repository =
   let doc = repository_doc in
   let commands = [
     ["add"]        , `add     ,
@@ -985,11 +985,7 @@ let repository name =
 
   Term.(pure repository $global_options $command $repo_kind_flag $priority
         $print_short_flag $params),
-  term_info name  ~doc ~man
-
-(* THOMAS: we keep 'opam remote' for backward compatibity *)
-let remote = repository "remote"
-let repository = repository "repository"
+  term_info "repository" ~doc ~man
 
 (* SWITCH *)
 let switch_doc = "Manage multiple installation of compilers."
@@ -1240,7 +1236,7 @@ let default =
        The most commonly used opam commands are:\n\
       \    init         %s\n\
       \    list         %s\n\
-      \    info         %s\n\
+      \    show         %s\n\
       \    install      %s\n\
       \    remove       %s\n\
       \    update       %s\n\
@@ -1251,7 +1247,7 @@ let default =
       \    pin          %s\n\
        \n\
        See 'opam help <command>' for more information on a specific command.\n"
-      init_doc list_doc info_doc install_doc remove_doc update_doc
+      init_doc list_doc show_doc install_doc remove_doc update_doc
       upgrade_doc config_doc repository_doc switch_doc pin_doc in
   Term.(pure usage $global_options),
   Term.info "opam"
@@ -1260,13 +1256,32 @@ let default =
     ~doc
     ~man
 
+let make_command_alias cmd name =
+  let term, info = cmd in
+  let orig = Term.name info in
+  let doc = Printf.sprintf "An alias for $(b,%s)." orig in
+  let man = [
+    `S "DESCRIPTION";
+    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s)."
+          name orig);
+    `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
+          orig);
+  ] in
+  term,
+  Term.info name
+    ~docs:"COMMANDS ALIASES"
+    ~doc ~man
+
 let commands = [
   init;
-  list; search; info;
-  install; remove; reinstall;
+  list; search;
+  show; make_command_alias show "info";
+  install;
+  remove; make_command_alias remove "uninstall";
+  reinstall;
   update; upgrade;
   config;
-  remote; repository;
+  repository; make_command_alias repository "remote";
   switch;
   pin;
   help;
