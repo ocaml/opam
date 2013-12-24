@@ -35,8 +35,6 @@ let relop_of_string = function
 
 type version_constraint = relop * OpamPackage.Version.t
 
-type version_set = OpamPackage.Version.Set.t
-
 type atom = OpamPackage.Name.t * version_constraint option
 
 let string_of_atom = function

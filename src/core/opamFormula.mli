@@ -28,9 +28,6 @@ val relop_of_string: string -> relop
 (** Version constraints for OPAM *)
 type version_constraint = relop * OpamPackage.Version.t
 
-(** Version sets for OPAM *)
-type version_set = OpamPackage.Version.Set.t
-
 (** Formula atoms for OPAM *)
 type atom = OpamPackage.Name.t * version_constraint option
 
