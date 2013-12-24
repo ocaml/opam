@@ -1,33 +1,25 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-INFO" 1 "" "Opam 1.1.0" "Opam Manual"
+.TH "OPAM-INFO" 1 "" "Opam 1.1.1" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
 .SH NAME
 .P
-opam\-info \- Display information about specific packages.
+opam\-info \- An alias for \fBshow\fR.
 .SH SYNOPSIS
 .P
 \fBopam info\fR [\fIOPTION\fR]... [\fIPATTERNS\fR]...
 .SH DESCRIPTION
 .P
-This command displays the information block for the selected package(s).
+\fBopam info\fR is an alias for \fBopam show\fR.
 .P
-The information block consists in the name of the package, the installed version if this package is installed in the currently selected compiler, the list of available (installable) versions, and a complete description.
-.P
-\fBopam list\fR can be used to display the list of available packages as well as a short description for each.
+See \fBopam show \-\-help\fR for details.
 .SH ARGUMENTS
 .TP 4
 \fIPATTERNS\fR
 List of package patterns.
-.SH OPTIONS
-.TP 4
-\fB\-f\fR \fIFIELDS\fR, \fB\-\-field\fR=\fIFIELDS\fR
-Only display these fields. You can specify multiple fields by separating them with commas.
 .SH COMMON OPTIONS
-.P
-These options are common to all commands.
 .TP 4
 \fB\-\-color\fR=\fIWHEN\fR (absent=auto)
 Colorize the output. \fIWHEN\fR must be `always', `never' or `auto'.
@@ -40,9 +32,6 @@ Print debug message on stdout. This is equivalent to setting \fB$OPAMDEBUG\fR to
 .TP 4
 \fB\-\-git\-version\fR
 Print the git version if it exists and exit.
-.TP 4
-\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
-Show this help in format \fIFMT\fR (pager, plain or groff).
 .TP 4
 \fB\-\-no\-aspcud\fR
 Do not use the external aspcud solver, even if available.
@@ -65,42 +54,15 @@ Use \fISWITCH\fR as the current compiler switch. This is equivalent to setting \
 \fB\-v\fR, \fB\-\-verbose\fR
 Be more verbose. This is equivalent to setting \fB$OPAMVERBOSE\fR to a non\-empty value.
 .TP 4
-\fB\-\-version\fR
-Show version information.
-.TP 4
 \fB\-y\fR, \fB\-\-yes\fR
 Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
-.SH ENVIRONMENT VARIABLES
-.P
-opam makes use of environment variables listed here.
-.P
-\fIOPAMCOLOR\fR, when set to \fIalways\fR or \fInever\fR, sets a default value for the \-\-color option
-.P
-\fIOPAMCURL\fR can be used to define an alternative for the 'curl' command\-line utility to download files
-.SH FURTHER DOCUMENTATION
-.P
-See https://opam.ocaml.org.
-.SH AUTHORS
-.P
-Thomas Gazagnaire <thomas@gazagnaire.org>
-.sp -1
-.P
-Anil Madhavapeddy <anil@recoil.org>
-.sp -1
-.P
-Fabrice Le Fessant <Fabrice.Le_fessant@inria.fr>
-.sp -1
-.P
-Frederic Tuong <tuong@users.gforge.inria.fr>
-.sp -1
-.P
-Louis Gesbert <louis.gesbert@ocamlpro.com>
-.sp -1
-.P
-Vincent Bernardoff <vb@luminar.eu.org>
-.sp -1
-.P
-Guillem Rieu <guillem.rieu@ocamlpro.com>
-.SH BUGS
-.P
-Check bug reports at https://github.com/OCamlPro/opam/issues.
+.SH OPTIONS
+.TP 4
+\fB\-f\fR \fIFIELDS\fR, \fB\-\-field\fR=\fIFIELDS\fR
+Only display these fields. You can specify multiple fields by separating them with commas.
+.TP 4
+\fB\-\-help\fR[=\fIFMT\fR] (default=pager)
+Show this help in format \fIFMT\fR (pager, plain or groff).
+.TP 4
+\fB\-\-version\fR
+Show version information.
