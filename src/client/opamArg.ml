@@ -904,7 +904,7 @@ let upgrade =
 
 (* REPOSITORY *)
 let repository_doc = "Manage OPAM repositories."
-let repository name =
+let repository =
   let doc = repository_doc in
   let commands = [
     ["add"]        , `add     ,
@@ -985,11 +985,7 @@ let repository name =
 
   Term.(pure repository $global_options $command $repo_kind_flag $priority
         $print_short_flag $params),
-  term_info name  ~doc ~man
-
-(* THOMAS: we keep 'opam remote' for backward compatibity *)
-let remote = repository "remote"
-let repository = repository "repository"
+  term_info "repository" ~doc ~man
 
 (* SWITCH *)
 let switch_doc = "Manage multiple installation of compilers."
@@ -1260,13 +1256,29 @@ let default =
     ~doc
     ~man
 
+let make_command_alias cmd name =
+  let term, info = cmd in
+  let orig = Term.name info in
+  let doc = Printf.sprintf "An alias for $(b,%s)." orig in
+  let man = [
+    `S "DESCRIPTION";
+    `P (Printf.sprintf "$(b,$(mname) %s) is an alias for $(b,$(mname) %s)."
+          name orig);
+    `P (Printf.sprintf "See $(b,$(mname) %s --help) for details."
+          orig);
+  ] in
+  term,
+  Term.info name
+    ~docs:"COMMANDS ALIASES"
+    ~doc ~man
+
 let commands = [
   init;
   list; search; info;
   install; remove; reinstall;
   update; upgrade;
   config;
-  remote; repository;
+  repository; make_command_alias repository "remote";
   switch;
   pin;
   help;

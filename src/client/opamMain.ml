@@ -16,18 +16,6 @@
 
 open OpamArg
 
-let commands = [
-  init;
-  list; search; info;
-  install; remove; reinstall;
-  update; upgrade;
-  config;
-  remote; repository;
-  switch;
-  pin;
-  help;
-]
-
 let () =
   at_exit (fun () ->
       flush stderr;
