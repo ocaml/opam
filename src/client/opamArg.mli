@@ -42,8 +42,8 @@ val init: command
 (** opam list *)
 val list: command
 
-(** opam info *)
-val info: command
+(** opam show *)
+val show: command
 
 (** opam search *)
 val search: command
