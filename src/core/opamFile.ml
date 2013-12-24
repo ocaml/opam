@@ -25,10 +25,24 @@ module Lines = struct
   let of_channel ic =
     OpamLineLexer.main (Lexing.from_channel ic)
 
+  let escape_spaces str =
+    let rec aux i str =
+      if i < 0 then str else
+      match str.[i] with
+      | ' ' | '\t' | '\n' | '\\' ->
+        let s = String.create (String.length str + 1) in
+        String.blit str 0 s 0 i;
+        s.[i] <- '\\';
+        String.blit str i s (i+1) (String.length str - i);
+        aux (i-1) s
+      | _ -> aux (i-1) str
+    in
+    aux (String.length str - 1) str
+
   let to_string (lines: t) =
     let buf = Buffer.create 1024 in
     List.iter (fun l ->
-      Buffer.add_string buf (String.concat " " l);
+      Buffer.add_string buf (String.concat " " (List.map escape_spaces l));
       Buffer.add_string buf "\n"
     ) lines;
     Buffer.contents buf
