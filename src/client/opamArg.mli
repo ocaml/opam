@@ -172,3 +172,7 @@ val package_name: name Arg.converter
 (** Enumeration with a default command *)
 val enum_with_default:
   (string * ([> `default of string] as 'a)) list -> 'a Arg.converter
+
+(** Create an alias for an existing command *)
+val make_command_alias:
+  unit Term.t * Term.info -> string -> unit Term.t * Term.info

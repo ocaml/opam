@@ -23,6 +23,7 @@ type options = {
   script: bool;
 }
 
+(* A wrapper on top of commands to either proceed, or output a script *)
 type commands = {
   mkdir: OpamFilename.Dir.t -> unit;
   rmdir: opt:bool -> OpamFilename.Dir.t -> unit;
@@ -228,8 +229,8 @@ let options =
 
 let default_cmd =
   let doc = "Installs package files following instructions from an OPAM *.install file." in
-  Term.(ret (pure (`Help (`Pager, None)))),
-  Term.info "opam-install" ~version:OpamVersion.(to_string current) ~doc
+  Term.(ret (pure (fun _ -> `Help (`Pager, None)) $ options)),
+  Term.info "opam-installer" ~version:OpamVersion.(to_string current) ~doc
 
 let install_cmd =
   let doc =
@@ -243,10 +244,16 @@ let uninstall_cmd =
   Term.(pure uninstall $ options),
   Term.info "uninstall" ~doc
 
+let commands = [
+  install_cmd;
+  uninstall_cmd;
+  OpamArg.make_command_alias uninstall_cmd "remove";
+]
+
 let () =
   try
     match
-      Term.eval_choice ~catch:false default_cmd [install_cmd; uninstall_cmd]
+      Term.eval_choice ~catch:false default_cmd commands
     with
     | `Error _ -> exit 2
     | _ -> exit 0
