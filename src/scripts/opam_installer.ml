@@ -23,6 +23,7 @@ type options = {
   script: bool;
 }
 
+(* A wrapper on top of commands to either proceed, or output a script *)
 type commands = {
   mkdir: OpamFilename.Dir.t -> unit;
   rmdir: opt:bool -> OpamFilename.Dir.t -> unit;
@@ -212,43 +213,47 @@ let options =
       if OpamFilename.exists f then f else
         let f = OpamFilename.of_string file in
         if OpamFilename.exists f then f else
-          failwith ("File not found: " ^ file)
+          raise (Invalid_argument ("File not found: " ^ file))
     in
     let prefix = OpamFilename.Dir.of_string prefix in
     let pkgname = match name with
       | Some n -> OpamPackage.Name.of_string n
-      | None ->
-        let base = OpamFilename.Base.to_string (OpamFilename.basename file) in
+      | None when OpamFilename.check_suffix file ".install" ->
         OpamPackage.Name.of_string
-          (try Filename.chop_extension base with Invalid_argument _ -> base)
+          (OpamFilename.to_string (OpamFilename.chop_extension file))
+      | None ->
+        raise (Invalid_argument
+                 "Could not guess the package name, please specify `--name'")
     in
     { file; prefix; script; pkgname }
   in
   Term.(pure make_options $ file $ prefix $ script $ pkgname)
 
-let default_cmd =
-  let doc = "Installs package files following instructions from an OPAM *.install file." in
-  Term.(ret (pure (`Help (`Pager, None)))),
-  Term.info "opam-install" ~version:OpamVersion.(to_string current) ~doc
-
-let install_cmd =
-  let doc =
-    "Installs package files following instructions from an OPAM *.install file."
+let command =
+  let remove =
+    Arg.(value & vflag false &
+         [ false, Arg.info ["i";"install"] ~doc:"Install the package (the default)";
+           true, Arg.info ["u";"uninstall";"remove"] ~doc:"Remove the package"; ])
   in
-  Term.(pure install $ options),
-  Term.info "install" ~version:OpamVersion.(to_string current) ~doc
+  Term.(
+    pure
+      (fun options remove ->
+         if remove then uninstall options else install options)
+    $ options $ remove)
 
-let uninstall_cmd =
-  let doc = "Remove the package." in
-  Term.(pure uninstall $ options),
-  Term.info "uninstall" ~doc
+let info =
+  let doc = "Handles (un)installation of package files following instructions from \
+             OPAM *.install files." in
+  Term.info "opam-installer" ~version:OpamVersion.(to_string current) ~doc
 
 let () =
   try
     match
-      Term.eval_choice ~catch:false default_cmd [install_cmd; uninstall_cmd]
+      Term.eval ~catch:false (command,info)
     with
     | `Error _ -> exit 2
     | _ -> exit 0
   with
+  | Invalid_argument s ->
+    prerr_string "ERROR: "; prerr_endline s; exit 2
   | OpamGlobals.Exit i -> exit i
