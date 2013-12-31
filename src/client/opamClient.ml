@@ -340,6 +340,13 @@ module API = struct
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
+      let os = mk (
+        Empty,
+        (fun f -> f),
+        OpamFormula.string_of_formula (fun (t,s) ->
+          if t then s else "!"^s)
+      ) "os" OpamFile.OPAM.os in
+
       let descr =
         let d = OpamState.descr t nv in
         ["description", OpamFile.Descr.full d] in
@@ -359,6 +366,7 @@ module API = struct
         @ tags
         @ depends
         @ depopts
+        @ os
         @ installed_version
         @ available_versions
         @ descr in
