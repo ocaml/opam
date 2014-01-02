@@ -14,15 +14,29 @@
 (*                                                                        *)
 (**************************************************************************)
 
-{ }
+{
 
-rule main words lines = parse
-| '\n'              { main [] (List.rev words :: lines) lexbuf }
-| [' ' '\t']+       { main words lines lexbuf }
-| [^' ' '\t' '\n']+ { main (Lexing.lexeme lexbuf :: words) lines lexbuf }
-| _                 { assert false }
-| eof               { List.rev (List.rev words :: lines) }
+let get_words words = function
+  | [] -> words
+  | wchars -> String.concat "" (List.rev wchars) :: words
+
+}
+
+
+let normalchar = [^' ' '\t' '\n' '\\']
+
+rule main wchars words lines = parse
+| '\n'
+    { main [] [] (List.rev (get_words words wchars) :: lines) lexbuf }
+| [' ' '\t']+
+    { main [] (get_words words wchars) lines lexbuf }
+| '\\' (_ normalchar* as w) | (normalchar+ as w)
+    { main (w::wchars) words lines lexbuf }
+| _
+    { assert false }
+| eof
+    { List.rev (List.rev words :: lines) }
 
 {
-  let main = main [] []
+  let main = main [] [] []
 }
