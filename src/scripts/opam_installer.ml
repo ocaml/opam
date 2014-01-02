@@ -125,7 +125,7 @@ let iter_install f instfile options =
       instdir D.stublibs, instf S.stublibs;
       instdir D.man_dir, instf S.man;
       instdir D.share options.pkgname, instf S.share;
-      instdir D.etc options.pkgname, instf S.share;
+      instdir D.etc options.pkgname, instf S.etc;
       instdir D.doc options.pkgname, instf S.doc; ]
 
 let install options =
@@ -220,7 +220,8 @@ let options =
       | Some n -> OpamPackage.Name.of_string n
       | None when OpamFilename.check_suffix file ".install" ->
         OpamPackage.Name.of_string
-          (OpamFilename.to_string (OpamFilename.chop_extension file))
+          (OpamFilename.Base.to_string
+             (OpamFilename.basename (OpamFilename.chop_extension file)))
       | None ->
         raise (Invalid_argument
                  "Could not guess the package name, please specify `--name'")
