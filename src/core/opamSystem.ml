@@ -547,15 +547,15 @@ let download_command =
       try if int_of_string code >= 400 then raise Exit
       with _ -> internal_error "curl: code %s while downloading %s" code src in
   lazy (
-    if command_exists OpamGlobals.curl_command then
-      curl OpamGlobals.curl_command
-    else
-    if command_exists "curl" then
-      curl "curl"
-    else if command_exists "wget" then
-      wget
-    else
-      internal_error "Cannot find curl nor wget."
+    match OpamGlobals.curl_command with
+    | Some cmd -> curl cmd
+    | None ->
+      if command_exists "curl" then
+        curl "curl"
+      else if command_exists "wget" then
+        wget
+      else
+        internal_error "Cannot find curl nor wget."
   )
 
 let really_download ~overwrite ~src ~dst =
