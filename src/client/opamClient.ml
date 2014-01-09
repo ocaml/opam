@@ -870,7 +870,7 @@ module API = struct
 
       (* Display a warning if at least one package contains
          dependencies to some unknown packages *)
-      let available = OpamPackage.to_map (Lazy.force t.available_packages) in
+      let all_packages = OpamPackage.to_map t.packages in
       List.iter
         (fun (n,v) ->
           let versions = match v with
@@ -880,8 +880,10 @@ module API = struct
             let nv = OpamPackage.create n v in
             let opam = OpamState.opam t nv in
             let f_warn (n, _) =
-              if not (OpamPackage.Name.Map.mem n available) then
-                OpamGlobals.warning "unknown package %S" (OpamPackage.Name.to_string n)
+              if not (OpamPackage.Name.Map.mem n all_packages) then
+                OpamGlobals.warning "%s references unknown package %s"
+                  (OpamPackage.to_string nv)
+                  (OpamPackage.Name.to_string n)
             in
             List.iter (OpamFormula.iter f_warn) [
               OpamFile.OPAM.depends opam;
