@@ -1825,11 +1825,12 @@ let print_env_warning_at_switch t =
 
 let update_setup_interactive t shell dot_profile =
   let update dot_profile =
-    let user = Some { shell; ocamlinit = true; dot_profile = Some dot_profile } in
+    let modify_user_conf = dot_profile <> None in
+    let user = Some { shell; ocamlinit = modify_user_conf; dot_profile } in
     let global = Some { complete = true ; switch_eval = true } in
     OpamGlobals.msg "\n";
     update_setup t user global;
-    true in
+    modify_user_conf in
 
   OpamGlobals.msg "\n";
 
@@ -1867,15 +1868,15 @@ let update_setup_interactive t shell dot_profile =
       (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)
   with
-  | Some ("y" | "Y" | "yes"  | "YES" ) -> update dot_profile
+  | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
   | Some ("f" | "F" | "file" | "FILE") ->
     begin match read "  Enter the name of the file to update:" with
       | None   ->
         OpamGlobals.msg "-- No filename: skipping the auto-configuration step --\n";
         false
-      | Some f -> update (OpamFilename.of_string f)
+      | Some f -> update (Some (OpamFilename.of_string f))
     end
-  | _ -> false
+  | _ -> update None
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package
