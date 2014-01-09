@@ -150,7 +150,7 @@ let with_switch_backup command f =
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
     else
-      Printf.eprintf "The former state can be restored with \
+      Printf.eprintf "\nThe former state can be restored with \
                       %s switch import -f %S\n%!"
         Sys.argv.(0) (OpamFilename.to_string file);
     raise err
