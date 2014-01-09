@@ -591,9 +591,9 @@ let download ~overwrite ~filename:src ~dst:dst =
     really_download ~overwrite ~src ~dst
 
 let patch p =
-  let max_trying = 20 in
+  let max_trying = 4 in
   if not (Sys.file_exists p) then
-    internal_error "Cannot find %s." p;
+    internal_error "Patch file %S not found." p;
   let patch ~dryrun n =
     let opts = if dryrun then
         let open OpamGlobals in
@@ -607,7 +607,7 @@ let patch p =
     command ?verbose ("patch" :: ("-p" ^ string_of_int n) :: "-i" :: p :: opts) in
   let rec aux n =
     if n = max_trying then
-      internal_error "Application of %s failed: can not determine the correct patch level." p
+      internal_error "Patch %s does not apply." p
     else if None = try Some (patch ~dryrun:true n) with _ -> None then
       aux (succ n)
     else
@@ -633,6 +633,7 @@ let () =
     | Process_error r     -> Some (OpamProcess.string_of_result r)
     | Internal_error m    -> Some (with_opam_info m)
     | Command_not_found c -> Some (Printf.sprintf "%S: command not found." c)
+    | Sys.Break           -> Some "User interruption"
     | Unix.Unix_error (e, fn, msg) ->
       let msg = if msg = "" then "" else " on " ^ msg in
       let error = Printf.sprintf "%s: %S failed%s: %s"

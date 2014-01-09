@@ -540,16 +540,14 @@ let build_and_install_package_aux t ~metadata nv =
           let metadata = get_metadata t in
           OpamFilename.exec ~env ~name ~metadata p_build commands in
 
-      Some exec
-    with e -> None
+      exec
+    with e ->
+      raise
+        (OpamGlobals.Package_error
+           (Printf.sprintf "Could not get the source for %s:\n%s"
+              (OpamPackage.to_string nv)
+              (Printexc.to_string e)))
   in
-  match exec with
-  | None ->
-    raise
-      (OpamGlobals.Package_error
-         (Printf.sprintf "Could not get the source for %s."
-            (OpamPackage.to_string nv)))
-  | Some exec ->
     try
       (* First, we build the package. *)
       exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
