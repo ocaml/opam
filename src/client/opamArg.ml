@@ -1005,7 +1005,9 @@ let switch =
     "Reinstall the given compiler switch. This will also try reinstall the \
      installed packages.";
     ["list"]         , `list     ,
-    "List the available compilers. \
+    "List compilers. \
+     By default, lists installed and `standard' compilers. Use `--all' to get \
+     the list of all installable compilers.\n\
      The first column displays the switch name (if any), the second one \
      the switch state (C = current, I = installed, -- = not installed), \
      the third one the compiler name and the last one the compiler \
