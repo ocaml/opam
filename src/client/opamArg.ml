@@ -622,6 +622,7 @@ let config =
     ["asmcomp"] , `asmcomp , "returns assembly compile options.";
     ["bytelink"], `bytelink, "returns bytecode linking options.";
     ["asmlink"] , `asmlink , "returns assembly compile options.";
+    ["report"]  , `report,   "Prints a summary of your setup, useful for bug-reports.";
   ] in
   let man = [
     `S "DESCRIPTION";
@@ -748,7 +749,38 @@ let config =
     | Some `bytecomp -> Client.CONFIG.config (mk ~is_byte:true  ~is_link:false)
     | Some `bytelink -> Client.CONFIG.config (mk ~is_byte:true  ~is_link:true)
     | Some `asmcomp  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:false)
-    | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true) in
+    | Some `asmlink  -> Client.CONFIG.config (mk ~is_byte:false ~is_link:true)
+    | Some `report   ->
+      let print label fmt = Printf.printf ("# %-15s "^^fmt^^"\n") label in
+      Printf.printf "# OPAM status report\n";
+      let version = OpamVersion.to_string OpamVersion.current in
+      let version = match OpamVersion.git with
+        | None   -> version
+        | Some v -> Printf.sprintf "%s (%s)" version (OpamVersion.to_string v)
+      in
+      print "opam-version" "%s" version;
+      print "os" "%s" (OpamGlobals.os_string ());
+      print "external-solver" "%b" (OpamCudf.external_solver_available ());
+      try
+        let state = OpamState.load_state "config-report" in
+        let open OpamState.Types in
+        print "jobs" "%d" (OpamState.jobs state);
+        print "repositories" "%d"
+          (OpamRepositoryName.Map.cardinal state.repositories);
+        print "pinned" "%d" (OpamPackage.Name.Map.cardinal state.pinned);
+        print "current-switch" "%s"
+          (OpamSwitch.to_string state.switch);
+        print "preinstalled" "%b"
+          (OpamFile.Comp.preinstalled
+             (OpamFile.Comp.read (OpamPath.compiler_comp state.root state.compiler)));
+        let index_file = OpamFilename.to_string (OpamPath.package_index state.root) in
+        let u = Unix.gmtime (Unix.stat index_file).Unix.st_mtime in
+        Unix.(print "last-update" "%04d-%02d-%02d %02d:%02d"
+              (1900 + u.tm_year) (1 + u.tm_mon) u.tm_mday
+              u.tm_hour u.tm_min);
+        ()
+      with e -> print "read-state" "%s" (Printexc.to_string e)
+  in
 
   Term.(pure config
     $global_options $command $env $is_rec $sh_flag $csh_flag $zsh_flag $fish_flag $sexp
