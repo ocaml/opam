@@ -711,6 +711,8 @@ module API = struct
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
+    let root_empty =
+      not (OpamFilename.exists_dir root) || OpamFilename.files root = [] in
     let update_setup t =
       let updated = match update_config with
         | `ask -> OpamState.update_setup_interactive t shell dot_profile
@@ -726,7 +728,12 @@ module API = struct
       OpamGlobals.msg "OPAM has already been initialized.";
       let t = OpamState.load_state "init" in
       update_setup t
-    ) else try
+    ) else (
+      if not root_empty then (
+        OpamGlobals.warning "%s exists and is not empty"
+          (OpamFilename.Dir.to_string root);
+        if not (OpamState.confirm "Proceed ?") then OpamGlobals.exit 1);
+      try
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
@@ -791,8 +798,9 @@ module API = struct
         update_setup t
 
       with e ->
-        if not !OpamGlobals.debug then OpamFilename.rmdir root;
-        raise e
+        if not !OpamGlobals.debug && root_empty then
+          OpamFilename.rmdir root;
+        raise e)
 
   let install_t names add_to_roots deps_only t =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
