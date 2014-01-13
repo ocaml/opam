@@ -2020,6 +2020,7 @@ let install_compiler t ~quiet switch compiler =
           let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
+        if not !OpamGlobals.debug then OpamFilename.rmdir build_dir
       end;
 
       (* Update ~/.opam/aliases *)
