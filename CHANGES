@@ -9,11 +9,17 @@
 * Add `OpamPackage.Name.compare` (#1046)
 * Add types `version_constraint` and `version_formula` to `OpamFormula` (#1046)
 * Clearer command aliases. Made `info` an alias for `show` and added the alias `uninstall` (#944)
-* Fixed `opam init --root=<relative path>`
+* Fixed `opam init --root=<relative path>` (#1047)
 * Display OS constraints in `opam info` (#1052)
 * Add a new 'opam-installer' script to make `.install` files usable outside of opam (#1026)
 * Add a `--resolve` option to `opam-admin make` that builds just the archives you need
   for a specific installation (#1031)
+* Fixed handling of spaces in filenames in internal files (#1014)
+* Replace calls to `which` by a more portable call (#1061)
+* Fixed generation of the init scripts in some cases (#1011)
+* Better reports on package patch errors (#987, #988)
+* More accurate warnings for unknown package dependencies (#1079)
+* Added `opam config report` to help with bug reports
 
 1.1.0 [Oct 2013]
 * Fix update of dev packages (#962)
