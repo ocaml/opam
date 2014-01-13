@@ -19,7 +19,8 @@
 * Fixed generation of the init scripts in some cases (#1011)
 * Better reports on package patch errors (#987, #988)
 * More accurate warnings for unknown package dependencies (#1079)
-* Added `opam config report` to help with bug reports
+* Added `opam config report` to help with bug reports (#1034)
+* Do not reinstall dev packages with `opam upgrade <pkg>` (#1001)
 
 1.1.0 [Oct 2013]
 * Fix update of dev packages (#962)
