@@ -652,7 +652,14 @@ module API = struct
       (match names with
        | None -> "<all>"
        | Some n -> OpamPackage.Name.Set.to_string n);
-    let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
+    let to_reinstall =
+      match names with
+      | None -> OpamPackage.Set.inter t.reinstall t.installed
+      | Some n ->
+        OpamPackage.Set.filter
+          (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) n)
+          t.reinstall
+    in
     let (--) = OpamPackage.Set.diff in
     let solution_found = match names with
       | None ->
