@@ -248,7 +248,7 @@ The field {\tt cores} is the number of parallel process that
     ?remove:        commands
     ?depends:       [ <and-formula(package)>+ ]
     ?depopts:       [ <or-formula(package)>+ ]
-    ?depexts:       [ [STRING+] [STRING+ ]+
+    ?depexts:       [ [[STRING+] [STRING+]]+ ]
     ?conflicts:     [ <package>+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?post-messages: [ (STRING ?{ <filter> } )+ ]
@@ -379,8 +379,13 @@ The {\tt depopts} field contains a {\em OR} formula over
   installed packages. If it is the case, it will re-install the
   packages (and their transitive forward-dependency closure).
 
-\item The {\tt depexts} field is optional and contains tags describing
-  the external dependencies.
+\item The {\tt depexts} field is optional and contains tags describing the
+  external dependencies. It contains pairs of lists of the form
+  \verb+[ [predicates] [ext-packages] ]+. The predicates are tags that must be
+  specified to {\tt opam install}'s {\tt --external} flag to get the
+  corresponding external package set. Tags should normally be distribution or
+  architecture names (e.g. \verb+"debian"+, \verb+"x86"+, in which case the
+  \verb+ext-package+ list will correspond to {\tt apt-get} package names).
 
 \item The {\tt messages} field (since version $1.0.1$) is used to
   display an alternative message when prompting a solution implying
