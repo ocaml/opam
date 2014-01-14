@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM" 1 "" "Opam 1.1.0" "Opam Manual"
+.TH "OPAM" 1 "" "Opam 1.1.1" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -25,9 +25,6 @@ Display configuration options for packages.
 \fBhelp\fR
 Display help about OPAM and OPAM commands.
 .TP 4
-\fBinfo\fR
-Display information about specific packages.
-.TP 4
 \fBinit\fR
 Initialize OPAM state.
 .TP 4
@@ -43,9 +40,6 @@ Pin a given package to a specific version.
 \fBreinstall\fR
 Reinstall a list of packages.
 .TP 4
-\fBremote\fR
-Manage OPAM repositories.
-.TP 4
 \fBremove\fR
 Remove a list of packages.
 .TP 4
@@ -55,6 +49,9 @@ Manage OPAM repositories.
 \fBsearch\fR
 Search into the package list.
 .TP 4
+\fBshow\fR
+Display information about specific packages.
+.TP 4
 \fBswitch\fR
 Manage multiple installation of compilers.
 .TP 4
@@ -63,6 +60,16 @@ Update the list of available packages.
 .TP 4
 \fBupgrade\fR
 Upgrade the installed package to latest version.
+.SH COMMANDS ALIASES
+.TP 4
+\fBinfo\fR
+An alias for \fBshow\fR.
+.TP 4
+\fBremote\fR
+An alias for \fBrepository\fR.
+.TP 4
+\fBuninstall\fR
+An alias for \fBremove\fR.
 .SH COMMON OPTIONS
 .P
 These options are common to all commands.

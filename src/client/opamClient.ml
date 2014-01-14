@@ -150,7 +150,7 @@ let with_switch_backup command f =
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
     else
-      Printf.eprintf "The former state can be restored with \
+      Printf.eprintf "\nThe former state can be restored with \
                       %s switch import -f %S\n%!"
         Sys.argv.(0) (OpamFilename.to_string file);
     raise err
@@ -286,7 +286,7 @@ module API = struct
             match OpamFile.URL.kind u with
             | None   -> "http"
             | Some k -> string_of_repository_kind k in
-          let url = string_of_address (OpamFile.URL.url u) in
+          let url = OpamMisc.string_of_list string_of_address (OpamFile.URL.url u) in
           let checksum = OpamFile.URL.checksum u in
           [ "upstream-url" , url;
             "upstream-kind", kind ]
@@ -340,6 +340,13 @@ module API = struct
       let depends  = formula "depends"  OpamFile.OPAM.depends in
       let depopts  = formula "depopts"  OpamFile.OPAM.depopts in
 
+      let os = mk (
+        Empty,
+        (fun f -> f),
+        OpamFormula.string_of_formula (fun (t,s) ->
+          if t then s else "!"^s)
+      ) "os" OpamFile.OPAM.os in
+
       let descr =
         let d = OpamState.descr t nv in
         ["description", OpamFile.Descr.full d] in
@@ -359,6 +366,7 @@ module API = struct
         @ tags
         @ depends
         @ depopts
+        @ os
         @ installed_version
         @ available_versions
         @ descr in
@@ -644,7 +652,14 @@ module API = struct
       (match names with
        | None -> "<all>"
        | Some n -> OpamPackage.Name.Set.to_string n);
-    let to_reinstall = OpamPackage.Set.inter t.reinstall t.installed in
+    let to_reinstall =
+      match names with
+      | None -> OpamPackage.Set.inter t.reinstall t.installed
+      | Some n ->
+        OpamPackage.Set.filter
+          (fun nv -> OpamPackage.Name.Set.mem (OpamPackage.name nv) n)
+          t.reinstall
+    in
     let (--) = OpamPackage.Set.diff in
     let solution_found = match names with
       | None ->
@@ -703,6 +718,8 @@ module API = struct
     let config_f = OpamPath.config root in
     let dot_profile_o = Some dot_profile in
     let user = { shell; ocamlinit = true; dot_profile = dot_profile_o } in
+    let root_empty =
+      not (OpamFilename.exists_dir root) || OpamFilename.files root = [] in
     let update_setup t =
       let updated = match update_config with
         | `ask -> OpamState.update_setup_interactive t shell dot_profile
@@ -718,7 +735,12 @@ module API = struct
       OpamGlobals.msg "OPAM has already been initialized.";
       let t = OpamState.load_state "init" in
       update_setup t
-    ) else try
+    ) else (
+      if not root_empty then (
+        OpamGlobals.warning "%s exists and is not empty"
+          (OpamFilename.Dir.to_string root);
+        if not (OpamState.confirm "Proceed ?") then OpamGlobals.exit 1);
+      try
         (* Create (possibly empty) configuration files *)
         let switch =
           if compiler = OpamCompiler.system then
@@ -783,8 +805,9 @@ module API = struct
         update_setup t
 
       with e ->
-        if not !OpamGlobals.debug then OpamFilename.rmdir root;
-        raise e
+        if not !OpamGlobals.debug && root_empty then
+          OpamFilename.rmdir root;
+        raise e)
 
   let install_t names add_to_roots deps_only t =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
@@ -862,7 +885,7 @@ module API = struct
 
       (* Display a warning if at least one package contains
          dependencies to some unknown packages *)
-      let available = OpamPackage.to_map (Lazy.force t.available_packages) in
+      let all_packages = OpamPackage.to_map t.packages in
       List.iter
         (fun (n,v) ->
           let versions = match v with
@@ -872,8 +895,10 @@ module API = struct
             let nv = OpamPackage.create n v in
             let opam = OpamState.opam t nv in
             let f_warn (n, _) =
-              if not (OpamPackage.Name.Map.mem n available) then
-                OpamGlobals.warning "unknown package %S" (OpamPackage.Name.to_string n)
+              if not (OpamPackage.Name.Map.mem n all_packages) then
+                OpamGlobals.warning "%s references unknown package %s"
+                  (OpamPackage.to_string nv)
+                  (OpamPackage.Name.to_string n)
             in
             List.iter (OpamFormula.iter f_warn) [
               OpamFile.OPAM.depends opam;

@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-ADMIN-MAKE" 1 "" "Opam-admin 1.1.0" "Opam-admin Manual"
+.TH "OPAM-ADMIN-MAKE" 1 "" "Opam-admin 1.1.1" "Opam-admin Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -33,6 +33,9 @@ Only build indexes, not package archives.
 .TP 4
 \fB\-r\fR, \fB\-\-recursive\fR
 Recurse among the transitive dependencies.
+.TP 4
+\fB\-\-resolve\fR
+A more advanced version of `\-\-recursive': will attempt to resolve your installation with all dependencies in the best way possible and build the archives accordingly.
 .TP 4
 \fB\-\-version\fR
 Show version information.

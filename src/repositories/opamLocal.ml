@@ -31,6 +31,7 @@ let rsync src dst =
             "--exclude"; ".git";
             "--exclude"; "_darcs";
             "--exclude"; ".hg";
+            "--exclude"; ".#*";
             "--delete";
             src; dst; ]
         ) in

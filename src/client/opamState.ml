@@ -82,28 +82,6 @@ end
 type state = Types.t
 open Types
 
-let universe t action =
-  let opams =
-    OpamPackage.Map.mapi (fun nv opam ->
-        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
-        if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
-        else opam)
-      t.opams in
-  {
-    u_packages  = OpamPackage.Set.union t.installed t.packages;
-    u_action    = action;
-    u_installed = t.installed;
-    u_available = Lazy.force t.available_packages;
-    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
-    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
-    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
-    u_installed_roots = t.installed_roots;
-    u_pinned    =
-      OpamPackage.Name.Map.fold
-        (fun k _ set -> OpamPackage.Name.Set.add k set)
-        t.pinned OpamPackage.Name.Set.empty;
-  }
-
 let string_of_repositories r =
   OpamMisc.string_of_list
     OpamRepositoryName.to_string
@@ -459,16 +437,16 @@ let locally_pinned_package t n =
 
 let url_of_locally_pinned_package t n =
   let path, kind = locally_pinned_package t n in
-  OpamFile.URL.create (Some kind) path
+  OpamFile.URL.create (Some kind) [path]
 
 let repository_of_locally_pinned_package t n =
   let url = url_of_locally_pinned_package t n in
   let repo_address = OpamFile.URL.url url in
-  let repo_kind = guess_repository_kind (OpamFile.URL.kind url) repo_address in
+  let repo_kind = guess_repository_kind_urls (OpamFile.URL.kind url) repo_address in
   let repo_root = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
   { repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
     repo_priority = 0;
-    repo_root; repo_address; repo_kind }
+    repo_root; repo_address = List.hd repo_address; repo_kind }
 
 let real_package t nv =
   let name = OpamPackage.name nv in
@@ -700,7 +678,9 @@ let available_packages t system =
                            (only '=' and '!=' are valid)."
                           (OpamFormula.string_of_relop r)
             end
-          | _ -> OpamCompiler.Version.compare (Lazy.force t.compiler_version) r v in
+          | _ -> OpamCompiler.Version.eval_relop r
+            (Lazy.force t.compiler_version) v
+        in
         match OpamFile.OPAM.ocaml_version opam with
         | None   -> true
         | Some c -> OpamFormula.eval atom c in
@@ -862,6 +842,30 @@ let is_compiler_installed t comp =
 let is_switch_installed t switch =
   OpamSwitch.Map.mem switch t.aliases
 
+let universe t action =
+  let opams =
+    OpamPackage.Map.mapi (fun nv opam ->
+        let overlay = OpamPath.Switch.Overlay.opam t.root t.switch nv in
+        if OpamFilename.exists overlay then OpamFile.OPAM.read overlay
+        else opam)
+      t.opams in
+  {
+    u_packages  = OpamPackage.Set.union t.installed t.packages;
+    u_action    = action;
+    u_installed = t.installed;
+    u_available = Lazy.force t.available_packages;
+    u_depends   = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+    u_depopts   = OpamPackage.Map.map OpamFile.OPAM.depopts opams;
+    u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+    u_installed_roots = t.installed_roots;
+    u_pinned    =
+      OpamPackage.Name.Map.fold
+        (fun k _ set ->
+           let v = lazy (OpamPackage.version (pinning_version t (OpamPackage.pinned k))) in
+          OpamPackage.Name.Map.add k v set)
+        t.pinned OpamPackage.Name.Map.empty;
+  }
+
 let check_base_packages t =
   let base_packages = get_compiler_packages t t.compiler in
   let missing_packages =
@@ -956,7 +960,7 @@ let is_dev_package t nv =
   match url t nv with
   | None     -> false
   | Some url ->
-    match guess_repository_kind (OpamFile.URL.kind url) (OpamFile.URL.url url) with
+    match guess_repository_kind_urls (OpamFile.URL.kind url) (OpamFile.URL.url url) with
     | `http  -> false
     | _      -> true
 
@@ -1821,11 +1825,12 @@ let print_env_warning_at_switch t =
 
 let update_setup_interactive t shell dot_profile =
   let update dot_profile =
-    let user = Some { shell; ocamlinit = true; dot_profile = Some dot_profile } in
+    let modify_user_conf = dot_profile <> None in
+    let user = Some { shell; ocamlinit = modify_user_conf; dot_profile } in
     let global = Some { complete = true ; switch_eval = true } in
     OpamGlobals.msg "\n";
     update_setup t user global;
-    true in
+    modify_user_conf in
 
   OpamGlobals.msg "\n";
 
@@ -1863,15 +1868,15 @@ let update_setup_interactive t shell dot_profile =
       (OpamFilename.prettify dot_profile)
       (OpamFilename.prettify dot_profile)
   with
-  | Some ("y" | "Y" | "yes"  | "YES" ) -> update dot_profile
+  | Some ("y" | "Y" | "yes"  | "YES" ) -> update (Some dot_profile)
   | Some ("f" | "F" | "file" | "FILE") ->
     begin match read "  Enter the name of the file to update:" with
       | None   ->
         OpamGlobals.msg "-- No filename: skipping the auto-configuration step --\n";
         false
-      | Some f -> update (OpamFilename.of_string f)
+      | Some f -> update (Some (OpamFilename.of_string f))
     end
-  | _ -> false
+  | _ -> update None
 
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package
@@ -1987,7 +1992,7 @@ let install_compiler t ~quiet switch compiler =
         else OpamFilename.with_tmp_dir (fun download_dir ->
             let result =
               OpamRepository.pull_url kind (OpamPackage.of_string "compiler.get")
-                download_dir None comp_src in
+                download_dir None [comp_src] in
             match result with
             | Not_available u -> OpamGlobals.error_and_exit "%s is not available." u
             | Up_to_date r
@@ -2015,6 +2020,7 @@ let install_compiler t ~quiet switch compiler =
           let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
+        if not !OpamGlobals.debug then OpamFilename.rmdir build_dir
       end;
 
       (* Update ~/.opam/aliases *)
@@ -2043,11 +2049,11 @@ let update_dev_package t nv =
   | None     -> skip
   | Some url ->
     let remote_url = OpamFile.URL.url url in
-    match guess_repository_kind (OpamFile.URL.kind url) remote_url with
+    match guess_repository_kind_urls (OpamFile.URL.kind url) remote_url with
     | ` http -> skip
     | kind   ->
       log "updating %s:%s"
-        (string_of_address remote_url) (string_of_repository_kind kind);
+        (string_of_address (List.hd remote_url)) (string_of_repository_kind kind);
         let dirname = dev_package t nv in
         let checksum = OpamFile.URL.checksum url in
         let r = OpamRepository.pull_url kind nv dirname checksum remote_url in
@@ -2101,7 +2107,7 @@ let download_upstream t nv dirname =
   | None   -> None
   | Some u ->
     let url = OpamFile.URL.url u in
-    let kind = guess_repository_kind (OpamFile.URL.kind u) url in
+    let kind = guess_repository_kind_urls (OpamFile.URL.kind u) url in
     let checksum = OpamFile.URL.checksum u in
     match OpamRepository.pull_url kind nv dirname checksum url with
     | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u

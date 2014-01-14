@@ -1,6 +1,6 @@
 .\" Pipe this output to groff -man -Tutf8 | less
 .\"
-.TH "OPAM-SWITCH" 1 "" "Opam 1.1.0" "Opam Manual"
+.TH "OPAM-SWITCH" 1 "" "Opam 1.1.1" "Opam Manual"
 .\" Disable hyphenantion and ragged-right
 .nh
 .ad l
@@ -92,7 +92,7 @@ Install the packages from a file.
 Reinstall the given compiler switch. This will also try reinstall the installed packages.
 .TP 4
 \fBlist\fR
-List the available compilers. The first column displays the switch name (if any), the second one the switch state (C = current, I = installed, \-\- = not installed), the third one the compiler name and the last one the compiler description. To switch to an already installed compiler alias (with state = I), use \fBopam switch <name>\fR. If you want to use a new compiler <comp>, use \fBopam switch <comp>\fR: this will download, compile and create a fresh and independent environment where new packages can be installed. If you want to create a new compiler alias (for instance because you already have this compiler version installed), use \fBopam switch <name> \-\-alias\-of <comp>\fR. In case <name> and <comp> are the same, this is equivalent to \fBopam switch <comp>\fR.
+List compilers. By default, lists installed and `standard' compilers. Use `\-\-all' to get the list of all installable compilers. The first column displays the switch name (if any), the second one the switch state (C = current, I = installed, \-\- = not installed), the third one the compiler name and the last one the compiler description. To switch to an already installed compiler alias (with state = I), use \fBopam switch <name>\fR. If you want to use a new compiler <comp>, use \fBopam switch <comp>\fR: this will download, compile and create a fresh and independent environment where new packages can be installed. If you want to create a new compiler alias (for instance because you already have this compiler version installed), use \fBopam switch <name> \-\-alias\-of <comp>\fR. In case <name> and <comp> are the same, this is equivalent to \fBopam switch <comp>\fR.
 .TP 4
 \fBshow\fR
 Show the current compiler.

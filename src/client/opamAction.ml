@@ -340,7 +340,7 @@ let dev_opam t nv build_dir =
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
    consistency reasons, this is done in the main function only. *)
-let remove_package_aux t ~metadata ~rm_build nv =
+let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
   log "Removing %s (%b)" (OpamPackage.to_string nv) metadata;
   let name = OpamPackage.name nv in
 
@@ -389,9 +389,10 @@ let remove_package_aux t ~metadata ~rm_build nv =
           let metadata = get_metadata t in
           OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true remove
         with OpamSystem.Process_error r ->
-          OpamGlobals.warning
-            "failure in package uninstall script, some files may remain:\n%s"
-            (OpamProcess.string_of_result r)
+          if not silent then
+            OpamGlobals.warning
+              "failure in package uninstall script, some files may remain:\n%s"
+              (OpamProcess.string_of_result r)
   end;
 
   (* Remove the libraries *)
@@ -475,9 +476,9 @@ let remove_package_aux t ~metadata ~rm_build nv =
     OpamFilename.rmdir dev;
   )
 
-let remove_package t ~metadata ~rm_build nv =
+let remove_package t ~metadata ~rm_build ?silent nv =
   if not (!OpamGlobals.fake || !OpamGlobals.dryrun) then (
-    remove_package_aux t ~metadata ~rm_build nv
+    remove_package_aux t ~metadata ~rm_build ?silent nv
   ) else
     OpamGlobals.msg "(simulation) Removing %s.\n" (OpamPackage.to_string nv)
 
@@ -539,16 +540,14 @@ let build_and_install_package_aux t ~metadata nv =
           let metadata = get_metadata t in
           OpamFilename.exec ~env ~name ~metadata p_build commands in
 
-      Some exec
-    with e -> None
+      exec
+    with e ->
+      raise
+        (OpamGlobals.Package_error
+           (Printf.sprintf "Could not get the source for %s:\n%s"
+              (OpamPackage.to_string nv)
+              (Printexc.to_string e)))
   in
-  match exec with
-  | None ->
-    raise
-      (OpamGlobals.Package_error
-         (Printf.sprintf "Could not get the source for %s."
-            (OpamPackage.to_string nv)))
-  | Some exec ->
     try
       (* First, we build the package. *)
       exec ("Building " ^ OpamPackage.to_string nv) OpamFile.OPAM.build;
@@ -581,7 +580,7 @@ let build_and_install_package_aux t ~metadata nv =
       OpamGlobals.error
         "The compilation of %s %s."
         (OpamPackage.to_string nv) cause;
-      remove_package ~rm_build:false ~metadata:false t nv;
+      remove_package ~rm_build:false ~metadata:false t ~silent:true nv;
       raise e
 
 let build_and_install_package t ~metadata nv =

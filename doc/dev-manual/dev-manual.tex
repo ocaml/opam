@@ -248,7 +248,7 @@ The field {\tt cores} is the number of parallel process that
     ?remove:        commands
     ?depends:       [ <and-formula(package)>+ ]
     ?depopts:       [ <or-formula(package)>+ ]
-    ?depexts:       [ [STRING+] [STRING+ ]+
+    ?depexts:       [ [[STRING+] [STRING+]]+ ]
     ?conflicts:     [ <package>+ ]
     ?messages:      [ (STRING ?{ <filter> } )+ ]
     ?post-messages: [ (STRING ?{ <filter> } )+ ]
@@ -379,8 +379,13 @@ The {\tt depopts} field contains a {\em OR} formula over
   installed packages. If it is the case, it will re-install the
   packages (and their transitive forward-dependency closure).
 
-\item The {\tt depexts} field is optional and contains tags describing
-  the external dependencies.
+\item The {\tt depexts} field is optional and contains tags describing the
+  external dependencies. It contains pairs of lists of the form
+  \verb+[ [predicates] [ext-packages] ]+. The predicates are tags that must be
+  specified to {\tt opam install}'s {\tt --external} flag to get the
+  corresponding external package set. Tags should normally be distribution or
+  architecture names (e.g. \verb+"debian"+, \verb+"x86"+, in which case the
+  \verb+ext-package+ list will correspond to {\tt apt-get} package names).
 
 \item The {\tt messages} field (since version $1.0.1$) is used to
   display an alternative message when prompting a solution implying
@@ -416,20 +421,20 @@ The syntax of {\tt url} files follows the one described in
 {
 \begin{Verbatim}[frame=single]
 <file> :=
-    ?src:       STRING
-    ?archive:   STRING
-    ?http:      STRING
-    ?local:     STRING
-    ?git:       STRING
-    ?darcs:     STRING
-    ?hg:        STRING
+    ?src:       [ STRING+ ]
+    ?archive:   [ STRING+ ]
+    ?http:      [ STRING+ ]
+    ?local:     [ STRING+ ]
+    ?git:       [ STRING+ ]
+    ?darcs:     [ STRING+ ]
+    ?hg:        [ STRING+ ]
     ?checksum:  STRING
 \end{Verbatim}
 }
 
 {\tt src}, {\tt archive}, {\tt http}, {\tt local}, {\tt git}, {\tt
   hg}, {\tt darcs} are the location where the package upstream sources
-can be downloaded. It can be:
+can be downloaded. It can be one of:
 
 \begin{itemize}
 \item A directory on the local file system (which will be copied to
@@ -445,8 +450,13 @@ can be downloaded. It can be:
   the string ends by \verb+#<SHA1>+ or \verb+#<tag-name>+ or
   \verb+#<branch-name>+. Use {\tt git}, {\tt hg} or {\tt darcs}.
 \item \OPAM\ will try to guess the source kind if you use {\tt src} or
-  {\tt archive}.
+  {\tt archive}. It shouldn't be used for version control systems, for
+  which the above are preferred.
 \end{itemize}
+
+If more than one address is specified for any given kind, they will be
+understood as a list of mirrors, and tried in order until one succeeds. {\tt
+  src} and {\tt archive} require the addresses to be all of the same kind.
 
 \subsection{Commands}
 
@@ -1044,6 +1054,7 @@ General remarks:
 \end{itemize}
 
 \subsubsection{Pinned Packages: {\tt pinned}}
+\label{file:pinned}
 
 \verb+$opam/$SWITCH/pinned+ contains a list of lines of the form:
 
@@ -1119,8 +1130,9 @@ updated by different operations, depending on the repository kind.
   \OPAM\ which can read that repository meta-data.
 
 \item \verb+$opam/repo/$REPO/config+ contains the configuration
-  off the repository \verb+$REPO+. The format of repository config
-  files is described in \S\ref{file:repo-config}.
+  of the repository \verb+$REPO+.
+%  The format of repository config
+%  files is described in \S\ref{file:repo-config}.
 
 \item \verb+$opam/repo/$REPO/packages/$PREFIX/$NAME.$VERSION/opam+ is
   the {\tt opam} file for the package \verb+$NAME+ with version
@@ -1328,6 +1340,7 @@ The available options are:
 \subsection{Commands}
 
 \subsubsection{Getting Package Configuration}
+\label{opam-config}
 
 \OPAM\ contains the minimal information to be able to use installed
 libraries. In order to do so, the end-user (or the packager) should
@@ -1350,7 +1363,7 @@ run:
   in installed packages (see \S\ref{file:dotconfig})
 \item \verb+var $var+ will return the value associated to the
   variable \verb+$var+
-\item \verb+subst $FILENAME+ replace any occurrence of
+\item \label{subst}\verb+subst $FILENAME+ replace any occurrence of
   \verb+%{$NAME:$VAR}%+ and \verb+%{$NAME.$LIB:$VAR}%+ as specified in
   \S\ref{file:subst} in \verb+$FILENAME.in+ to create \verb+$FILENAME+.
 \item \verb+includes $NAME+ will return the list of paths to include when

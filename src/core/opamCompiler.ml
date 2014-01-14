@@ -39,16 +39,9 @@ module Version = struct
     | None   -> None
     | Some v -> Some (of_string v)
 
-  let compare v1 r v2 =
-    let v1 = to_string v1 in
-    let v2 = to_string v2 in
-    match r with
-    | `Eq  -> Debian.Version.equal v1 v2
-    | `Neq -> not (Debian.Version.equal v1 v2)
-    | `Geq -> Debian.Version.compare v1 v2 >= 0
-    | `Gt  -> Debian.Version.compare v1 v2 > 0
-    | `Leq -> Debian.Version.compare v1 v2 <= 0
-    | `Lt  -> Debian.Version.compare v1 v2 < 0
+  let compare v1 v2 = Debian.Version.compare (to_string v1) (to_string v2)
+
+  let eval_relop relop v1 v2 = OpamFormula.check_relop relop (compare v1 v2)
 
 end
 

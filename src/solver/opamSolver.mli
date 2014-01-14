@@ -18,6 +18,8 @@
 
 open OpamTypes
 
+val empty_universe: universe
+
 (** {2 Solver} *)
 
 (** Convert a request to a string *)
@@ -67,7 +69,7 @@ val dependencies :
   package_set ->
   package list
 
-(** Same as [bdependencies] but for reverse dependencies *)
+(** Same as [dependencies] but for reverse dependencies *)
 val reverse_dependencies :
   depopts:bool ->
   installed:bool ->

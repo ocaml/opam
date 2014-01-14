@@ -32,6 +32,9 @@ end
 module Name: sig
   include OpamMisc.ABSTRACT
 
+  (** Compare two package names *)
+  val compare: t -> t -> int
+
   (** global configuration package *)
   val global_config: t
 end

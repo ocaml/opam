@@ -22,16 +22,25 @@ let log fmt = OpamGlobals.log "SOLVER" fmt
 let s_status = "status"
 let s_installed   = "  installed"
 
+let empty_universe =
+  {
+    u_packages = OpamPackage.Set.empty;
+    u_installed = OpamPackage.Set.empty;
+    u_available = OpamPackage.Set.empty;
+    u_depends = OpamPackage.Map.empty;
+    u_depopts = OpamPackage.Map.empty;
+    u_conflicts = OpamPackage.Map.empty;
+    u_action = Install OpamPackage.Name.Set.empty;
+    u_installed_roots = OpamPackage.Set.empty;
+    u_pinned = OpamPackage.Name.Map.empty
+  }
+
 (* Returns the package with its real version if it has been pinned *)
 let real_version universe pkg =
   if OpamPackage.is_pinned pkg then
-    let name = OpamPackage.name pkg in
-    try
-      OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name)
-        universe.u_available
-    with Not_found ->
-      OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name)
-        universe.u_installed
+    let n = OpamPackage.name pkg in
+    let v = Lazy.force (OpamPackage.Name.Map.find n universe.u_pinned) in
+    OpamPackage.create n v
   else pkg
 
 (* Convert an OPAM formula into a debian formula *)
@@ -167,10 +176,12 @@ let load_cudf_universe ?(depopts=false) universe =
     let h = Hashtbl.create 1024 in
     OpamPackage.Map.iter (fun opam cudf ->
         let opam =
-          if OpamPackage.Name.Set.mem (OpamPackage.name opam) universe.u_pinned
-          && opam = real_version universe opam
-          then OpamPackage.pinned (OpamPackage.name opam)
-          else opam
+          try
+            if Lazy.force (OpamPackage.Name.Map.find (OpamPackage.name opam) universe.u_pinned)
+               = OpamPackage.version opam
+            then OpamPackage.pinned (OpamPackage.name opam)
+            else opam
+          with Not_found -> opam
         in Hashtbl.add h (cudf.Cudf.package,cudf.Cudf.version) opam
     ) opam2cudf;
     h in

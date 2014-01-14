@@ -87,7 +87,7 @@ module Git = struct
     float_of_string r
 
   let files repo commit dir =
-    return repo [ "git"; "ls-tree"; commit; dir ^ "/"; "--name-only" ]
+    return repo [ "git"; "ls-tree"; commit; dir ^ "/"; "--name-only"; "-r" ]
 
   let authors repo commit =
     return repo ["git"; "shortlog"; "-sne"; "--no-merges"; commit ]
@@ -116,7 +116,9 @@ let stats repo =
       let files = Git.files repo commit "packages" in
       let authors = Git.authors repo commit in
       let packages = List.fold_left (fun packages f ->
-          match OpamPackage.of_string_opt (Filename.basename f) with
+          if Filename.basename f <> "opam" then packages else
+          match OpamPackage.of_string_opt (Filename.basename (Filename.dirname f))
+          with
           | None    -> packages
           | Some nv -> OpamPackage.Set.add nv packages
         ) OpamPackage.Set.empty files in

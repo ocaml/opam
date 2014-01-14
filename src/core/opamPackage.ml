@@ -213,7 +213,8 @@ let prefixes dir =
               OpamMisc.remove_prefix ~prefix:(OpamFilename.Dir.to_string dir) suffix
             with
             | "" -> None
-            | p  -> Some p in
+            | p  -> (* drop the leading '/' from the prefix *)
+              Some String.(sub p 1 (length p - 1)) in
           Map.add p prefix map
       ) Map.empty files
   ) else

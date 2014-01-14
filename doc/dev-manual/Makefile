@@ -9,5 +9,8 @@ html: dev-manual.html
 %.html: %.tex
 	hevea htmlmacros.hva $<
 
+%.txt: %.html
+	links -dump $< > $@
+
 clean:
 	rm -f *~ *.log *.toc *.out *.bbl *.blg *.aux

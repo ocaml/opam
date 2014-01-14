@@ -25,8 +25,11 @@ val string_of_relop: relop -> string
 (** Parsing relops *)
 val relop_of_string: string -> relop
 
+(** Version constraints for OPAM *)
+type version_constraint = relop * OpamPackage.Version.t
+
 (** Formula atoms for OPAM *)
-type atom = OpamPackage.Name.t * (relop * OpamPackage.Version.t) option
+type atom = OpamPackage.Name.t * version_constraint option
 
 (** Pretty-printing of atoms *)
 val string_of_atom: atom -> string
@@ -66,6 +69,12 @@ type 'a formula =
 (** Eval a formula *)
 val eval: ('a -> bool) -> 'a formula -> bool
 
+(** Check a relational operator against an integer from compare *)
+val check_relop: relop -> int -> bool
+
+(** Evaluate a relational operator between versions *)
+val eval_relop: relop -> OpamPackage.Version.t -> OpamPackage.Version.t -> bool
+
 (** Pretty print a formula *)
 val string_of_formula: ('a -> string) -> 'a formula -> string
 
@@ -84,11 +93,14 @@ val iter: ('a -> unit) -> 'a formula -> unit
 (** Fold function *)
 val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 
+(** Expressions composed entirely of version constraints *)
+type version_formula = version_constraint formula
+
 (** An atom is: [name] * ([relop] * [version]) formula.
-    Examples of valid formulaes:
+    Examples of valid formulae:
     - "foo" \{> "1" & (<"3" | ="5")\}
     - "foo" \{= "1" | > "4"\} | ("bar" "bouh") *)
-type t = (OpamPackage.Name.t * (relop * OpamPackage.Version.t) formula) formula
+type t = (OpamPackage.Name.t * version_formula) formula
 
 (** Convert a formula to CNF *)
 val cnf_of_formula: 'a formula -> 'a formula

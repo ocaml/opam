@@ -97,6 +97,20 @@ let guess_repository_kind kind (address, ext) =
       else
         `http
 
+let guess_repository_kind_urls kind urls =
+  match kind with
+  | Some k -> k
+  | None   -> match urls with
+    | url::r ->
+      let k = guess_repository_kind kind url in
+      if not (List.for_all (fun url -> guess_repository_kind kind url = k) r)
+      then
+        OpamGlobals.warning "Inconsistent address kinds in %s"
+          (OpamMisc.string_of_list string_of_address urls);
+      k
+    | [] -> assert false
+
+
 type repository = {
   repo_root    : repository_root;
   repo_name    : repository_name;
@@ -563,7 +577,7 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
-  u_pinned   : name_set;
+  u_pinned   : OpamPackage.Version.t Lazy.t name_map;
 }
 
 type 'a updates = {
