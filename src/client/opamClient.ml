@@ -286,7 +286,7 @@ module API = struct
             match OpamFile.URL.kind u with
             | None   -> "http"
             | Some k -> string_of_repository_kind k in
-          let url = string_of_address (OpamFile.URL.url u) in
+          let url = OpamMisc.string_of_list string_of_address (OpamFile.URL.url u) in
           let checksum = OpamFile.URL.checksum u in
           [ "upstream-url" , url;
             "upstream-kind", kind ]

@@ -217,17 +217,19 @@ module X = struct
     let internal = "url"
 
     type t = {
-      url     : address;
+      url     : address list;
       kind    : repository_kind option;
       checksum: string option;
     }
 
-    let create kind url = {
-      url; kind; checksum = None;
-    }
+    let create kind url =
+      if url = [] then OpamSystem.internal_error "empty mirror list";
+      {
+        url; kind; checksum = None;
+      }
 
     let empty = {
-      url     = ("<none>", None);
+      url     = ["<none>", None];
       kind    = None;
       checksum= None;
     }
@@ -268,7 +270,7 @@ module X = struct
       let s = Syntax.of_channel filename ic in
       Syntax.check s valid_fields;
       let get f = OpamFormat.assoc_option s.file_contents f
-          (OpamFormat.parse_string ++ address_of_string) in
+          (OpamFormat.parse_list (OpamFormat.parse_string ++ address_of_string)) in
       let archive  = get s_archive in
       let http     = get s_http in
       let src      = get s_src in
@@ -281,6 +283,7 @@ module X = struct
       let url, kind = url_and_kind ~src ~archive ~http ~git ~darcs ~hg ~local in
       let url = match url with
         | None   -> OpamGlobals.error_and_exit "Missing URL"
+        | Some []-> OpamGlobals.error_and_exit "Empty URL list"
         | Some u -> u in
       { url; kind; checksum }
 
@@ -292,7 +295,10 @@ module X = struct
         file_format   = OpamVersion.current;
         file_name     = OpamFilename.to_string filename;
         file_contents = [
-          Variable (url_name , OpamFormat.make_string (string_of_address t.url));
+          Variable (url_name ,
+                    OpamFormat.make_list
+                      (string_of_address ++ OpamFormat.make_string)
+                      t.url);
         ] @ match t.checksum with
             | None   -> []
             | Some c -> [Variable (s_checksum, OpamFormat.make_string c)]
