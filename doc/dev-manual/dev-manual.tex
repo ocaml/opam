@@ -1049,6 +1049,7 @@ General remarks:
 \end{itemize}
 
 \subsubsection{Pinned Packages: {\tt pinned}}
+\label{file:pinned}
 
 \verb+$opam/$SWITCH/pinned+ contains a list of lines of the form:
 
@@ -1124,8 +1125,9 @@ updated by different operations, depending on the repository kind.
   \OPAM\ which can read that repository meta-data.
 
 \item \verb+$opam/repo/$REPO/config+ contains the configuration
-  off the repository \verb+$REPO+. The format of repository config
-  files is described in \S\ref{file:repo-config}.
+  of the repository \verb+$REPO+.
+%  The format of repository config
+%  files is described in \S\ref{file:repo-config}.
 
 \item \verb+$opam/repo/$REPO/packages/$PREFIX/$NAME.$VERSION/opam+ is
   the {\tt opam} file for the package \verb+$NAME+ with version
@@ -1333,6 +1335,7 @@ The available options are:
 \subsection{Commands}
 
 \subsubsection{Getting Package Configuration}
+\label{opam-config}
 
 \OPAM\ contains the minimal information to be able to use installed
 libraries. In order to do so, the end-user (or the packager) should
@@ -1355,7 +1358,7 @@ run:
   in installed packages (see \S\ref{file:dotconfig})
 \item \verb+var $var+ will return the value associated to the
   variable \verb+$var+
-\item \verb+subst $FILENAME+ replace any occurrence of
+\item \label{subst}\verb+subst $FILENAME+ replace any occurrence of
   \verb+%{$NAME:$VAR}%+ and \verb+%{$NAME.$LIB:$VAR}%+ as specified in
   \S\ref{file:subst} in \verb+$FILENAME.in+ to create \verb+$FILENAME+.
 \item \verb+includes $NAME+ will return the list of paths to include when
