@@ -172,6 +172,8 @@ val address_of_string: string -> address
 (** Guess the repository kind *)
 val guess_repository_kind: repository_kind option -> address -> repository_kind
 
+val guess_repository_kind_urls: repository_kind option -> address list -> repository_kind
+
 (** Pretty-print repository kinds. *)
 val string_of_repository_kind: [`http|`local|`git|`darcs|`hg] -> string
 

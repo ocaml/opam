@@ -109,8 +109,20 @@ let init repo =
   ignore (B.pull_repo repo)
 
 let pull_url kind package local_dirname checksum remote_url =
-  let module B = (val find_backend_by_kind kind: BACKEND) in
-  B.pull_url package local_dirname checksum remote_url
+  let pull url =
+    let module B = (val find_backend_by_kind kind: BACKEND) in
+    B.pull_url package local_dirname checksum url in
+  let rec attempt = function
+    | [] -> assert false
+    | [url] -> pull url
+    | url::mirrors ->
+      match pull url with
+      | Not_available s ->
+        OpamGlobals.warning "download of %s failed, trying mirror" s;
+        attempt mirrors
+      | r -> r
+  in
+  attempt remote_url
 
 let revision repo =
   let kind = repo.repo_kind in
@@ -283,9 +295,9 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       let url = OpamFile.URL.read url_file in
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
-      let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
+      let kind = guess_repository_kind_urls (OpamFile.URL.kind url) remote_url in
       log "downloading %s:%s"
-        (string_of_address remote_url) (string_of_repository_kind kind);
+        (string_of_address (List.hd remote_url)) (string_of_repository_kind kind);
       if not (OpamFilename.exists_dir download_dir) then
         OpamFilename.mkdir download_dir;
       OpamFilename.in_dir download_dir (fun () ->
