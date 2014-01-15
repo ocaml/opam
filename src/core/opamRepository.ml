@@ -295,19 +295,20 @@ let make_archive ?(gener_digest=false) repo prefix nv =
       let url = OpamFile.URL.read url_file in
       let checksum = OpamFile.URL.checksum url in
       let remote_url = OpamFile.URL.url url in
-      let kind = guess_repository_kind_urls (OpamFile.URL.kind url) remote_url in
+      let mirrors = remote_url :: OpamFile.URL.mirrors url in
+      let kind = guess_repository_kind (OpamFile.URL.kind url) remote_url in
       log "downloading %s:%s"
-        (string_of_address (List.hd remote_url)) (string_of_repository_kind kind);
+        (string_of_address remote_url) (string_of_repository_kind kind);
       if not (OpamFilename.exists_dir download_dir) then
         OpamFilename.mkdir download_dir;
       OpamFilename.in_dir download_dir (fun () ->
           match checksum with
-          | None   -> Some (pull_url kind nv download_dir None remote_url)
+          | None   -> Some (pull_url kind nv download_dir None mirrors)
           | Some c ->
             if gener_digest then
-              Some (pull_url_and_fix_digest kind nv download_dir c url_file remote_url)
+              Some (pull_url_and_fix_digest kind nv download_dir c url_file mirrors)
             else
-              Some (pull_url kind nv download_dir checksum remote_url)
+              Some (pull_url kind nv download_dir checksum mirrors)
         )
     ) else
       None

@@ -421,13 +421,14 @@ The syntax of {\tt url} files follows the one described in
 {
 \begin{Verbatim}[frame=single]
 <file> :=
-    ?src:       [ STRING+ ]
-    ?archive:   [ STRING+ ]
-    ?http:      [ STRING+ ]
-    ?local:     [ STRING+ ]
-    ?git:       [ STRING+ ]
-    ?darcs:     [ STRING+ ]
-    ?hg:        [ STRING+ ]
+    ?src:       STRING
+    ?archive:   STRING
+    ?http:      STRING
+    ?local:     STRING
+    ?git:       STRING
+    ?darcs:     STRING
+    ?hg:        STRING
+    ?mirrors:   [ STRING+ ]
     ?checksum:  STRING
 \end{Verbatim}
 }
@@ -454,9 +455,9 @@ can be downloaded. It can be one of:
   which the above are preferred.
 \end{itemize}
 
-If more than one address is specified for any given kind, they will be
-understood as a list of mirrors, and tried in order until one succeeds. {\tt
-  src} and {\tt archive} require the addresses to be all of the same kind.
+{\tt mirrors}, if specified, is assumed to be a list of addresses of the same
+kind as the primary address. Mirrors will be tried in order in case the download
+from the primary upstream fails.
 
 \subsection{Commands}
 
