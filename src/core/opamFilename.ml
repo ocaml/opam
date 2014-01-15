@@ -358,7 +358,7 @@ let copy_files ~src ~dst =
         let base = remove_prefix src file in
         let dst_file = create dst (Base.of_string base) in
         if exists dst_file then
-          OpamGlobals.warning
+          OpamGlobals.note
             "%s is replaced by the packager's overlay files. \
              Set OPAMDONOTCOPYFILES to a non-empty value to no \
              copy the overlay files."
