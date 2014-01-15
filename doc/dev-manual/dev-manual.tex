@@ -421,20 +421,20 @@ The syntax of {\tt url} files follows the one described in
 {
 \begin{Verbatim}[frame=single]
 <file> :=
-    ?src:       [ STRING+ ]
-    ?archive:   [ STRING+ ]
-    ?http:      [ STRING+ ]
-    ?local:     [ STRING+ ]
-    ?git:       [ STRING+ ]
-    ?darcs:     [ STRING+ ]
-    ?hg:        [ STRING+ ]
+    ?src:       STRING
+    ?archive:   STRING
+    ?http:      STRING
+    ?local:     STRING
+    ?git:       STRING
+    ?darcs:     STRING
+    ?hg:        STRING
     ?checksum:  STRING
 \end{Verbatim}
 }
 
 {\tt src}, {\tt archive}, {\tt http}, {\tt local}, {\tt git}, {\tt
   hg}, {\tt darcs} are the location where the package upstream sources
-can be downloaded. It can be one of:
+can be downloaded. It can be:
 
 \begin{itemize}
 \item A directory on the local file system (which will be copied to
@@ -450,13 +450,8 @@ can be downloaded. It can be one of:
   the string ends by \verb+#<SHA1>+ or \verb+#<tag-name>+ or
   \verb+#<branch-name>+. Use {\tt git}, {\tt hg} or {\tt darcs}.
 \item \OPAM\ will try to guess the source kind if you use {\tt src} or
-  {\tt archive}. It shouldn't be used for version control systems, for
-  which the above are preferred.
+  {\tt archive}.
 \end{itemize}
-
-If more than one address is specified for any given kind, they will be
-understood as a list of mirrors, and tried in order until one succeeds. {\tt
-  src} and {\tt archive} require the addresses to be all of the same kind.
 
 \subsection{Commands}
 
