@@ -62,6 +62,9 @@ val compiler_index: repository repository_name_map -> (repository_name * string 
 
 (** {2 State} *)
 
+(** Get the meaningful checksum off an url file *)
+val url_checksum: OpamFilename.t -> checksums
+
 (** Get all the package files *)
 val package_files: repository -> string option -> package -> archive:bool ->
   filename list

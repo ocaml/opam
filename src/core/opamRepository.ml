@@ -211,6 +211,17 @@ let packages r =
 let packages_with_prefixes r =
   OpamPackage.prefixes (OpamPath.Repository.packages_dir r)
 
+(* Returns the meaningful checksum of a url file. Uses the hash of the remote
+   archive if present, or its address, not the hash of the url file itself which
+   doesn't really matter *)
+let url_checksum url =
+  let u = OpamFile.URL.safe_read url in
+  if u = OpamFile.URL.empty then []
+  else match OpamFile.URL.checksum u with
+    | Some cksum -> [cksum]
+    | None ->
+      [Digest.string (string_of_address (OpamFile.URL.url u))]
+
 let package_files repo prefix nv ~archive =
   let opam = OpamPath.Repository.opam repo prefix nv in
   let descr = OpamPath.Repository.descr repo prefix nv in
@@ -234,7 +245,13 @@ let package_state repo prefix nv all =
   let fs = match all with
     | `all       -> package_files repo prefix nv ~archive:true
     | `partial b -> package_important_files repo prefix nv ~archive:b in
-  List.flatten (List.map OpamFilename.checksum fs)
+  let url = OpamPath.Repository.url repo prefix nv in
+  let l =
+    List.map (fun f ->
+        if f = url then url_checksum f
+        else OpamFilename.checksum f)
+      fs in
+  List.flatten l
 
 (* Sort repositories by priority *)
 let sort repositories =
