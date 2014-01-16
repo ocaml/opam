@@ -105,14 +105,13 @@ module type BACKEND = sig
 
 end
 
-(** Download an url. Several mirrors can be provided, in which case they will be
-    tried in order in case of an error. *)
+(** Download an url *)
 val pull_url: repository_kind ->
-  package -> dirname -> string option -> address list -> generic_file download
+  package -> dirname -> string option -> address -> generic_file download
 
 (** Pull and fix the resulting digest *)
 val pull_url_and_fix_digest: repository_kind ->
-  package -> dirname -> string -> filename -> address list -> generic_file download
+  package -> dirname -> string -> filename -> address -> generic_file download
 
 (** [check_digest file expected] check that the [file] digest is the
     one [expected]. *)

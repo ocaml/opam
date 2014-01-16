@@ -437,16 +437,16 @@ let locally_pinned_package t n =
 
 let url_of_locally_pinned_package t n =
   let path, kind = locally_pinned_package t n in
-  OpamFile.URL.create (Some kind) [path]
+  OpamFile.URL.create (Some kind) path
 
 let repository_of_locally_pinned_package t n =
   let url = url_of_locally_pinned_package t n in
   let repo_address = OpamFile.URL.url url in
-  let repo_kind = guess_repository_kind_urls (OpamFile.URL.kind url) repo_address in
+  let repo_kind = guess_repository_kind (OpamFile.URL.kind url) repo_address in
   let repo_root = OpamPath.Switch.dev_package t.root t.switch (OpamPackage.pinned n) in
   { repo_name     = OpamRepositoryName.of_string (OpamPackage.Name.to_string n);
     repo_priority = 0;
-    repo_root; repo_address = List.hd repo_address; repo_kind }
+    repo_root; repo_address; repo_kind }
 
 let real_package t nv =
   let name = OpamPackage.name nv in
@@ -960,7 +960,7 @@ let is_dev_package t nv =
   match url t nv with
   | None     -> false
   | Some url ->
-    match guess_repository_kind_urls (OpamFile.URL.kind url) (OpamFile.URL.url url) with
+    match guess_repository_kind (OpamFile.URL.kind url) (OpamFile.URL.url url) with
     | `http  -> false
     | _      -> true
 
@@ -1992,7 +1992,7 @@ let install_compiler t ~quiet switch compiler =
         else OpamFilename.with_tmp_dir (fun download_dir ->
             let result =
               OpamRepository.pull_url kind (OpamPackage.of_string "compiler.get")
-                download_dir None [comp_src] in
+                download_dir None comp_src in
             match result with
             | Not_available u -> OpamGlobals.error_and_exit "%s is not available." u
             | Up_to_date r
@@ -2049,11 +2049,11 @@ let update_dev_package t nv =
   | None     -> skip
   | Some url ->
     let remote_url = OpamFile.URL.url url in
-    match guess_repository_kind_urls (OpamFile.URL.kind url) remote_url with
+    match guess_repository_kind (OpamFile.URL.kind url) remote_url with
     | ` http -> skip
     | kind   ->
       log "updating %s:%s"
-        (string_of_address (List.hd remote_url)) (string_of_repository_kind kind);
+        (string_of_address remote_url) (string_of_repository_kind kind);
         let dirname = dev_package t nv in
         let checksum = OpamFile.URL.checksum url in
         let r = OpamRepository.pull_url kind nv dirname checksum remote_url in
@@ -2107,7 +2107,7 @@ let download_upstream t nv dirname =
   | None   -> None
   | Some u ->
     let url = OpamFile.URL.url u in
-    let kind = guess_repository_kind_urls (OpamFile.URL.kind u) url in
+    let kind = guess_repository_kind (OpamFile.URL.kind u) url in
     let checksum = OpamFile.URL.checksum u in
     match OpamRepository.pull_url kind nv dirname checksum url with
     | Not_available u -> OpamGlobals.error_and_exit "%s is not available" u
