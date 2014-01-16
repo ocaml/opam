@@ -1,0 +1,13 @@
+diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
+index bb4c5c5..da7bdb6 100644
+--- a/common/cudfSolver.ml
++++ b/common/cudfSolver.ml
+@@ -27,6 +27,6 @@ let check_fail file =
+ (** see mktemp(1) for the syntax of [tmp_pattern] *)
+ let mktmpdir tmp_pattern =
+   let ic =
+-    Unix.open_process_in (Printf.sprintf "mktemp --tmpdir -d %s" tmp_pattern) in
++    Unix.open_process_in (Printf.sprintf "(mktemp --tmpdir -d %s || mktemp -d -t %s) 2>/dev/null" tmp_pattern tmp_pattern) in
+   let path = input_line ic in
+   ignore (Unix.close_process_in ic);
+   path
