@@ -286,9 +286,12 @@ module API = struct
             match OpamFile.URL.kind u with
             | None   -> "http"
             | Some k -> string_of_repository_kind k in
-          let url = OpamMisc.string_of_list string_of_address (OpamFile.URL.url u) in
+          let url = string_of_address (OpamFile.URL.url u) in
+          let mirrors =
+            OpamMisc.string_of_list string_of_address (OpamFile.URL.mirrors u) in
           let checksum = OpamFile.URL.checksum u in
           [ "upstream-url" , url;
+            "upstream-mirrors" , mirrors;
             "upstream-kind", kind ]
           @ match checksum with
             | None   -> []
