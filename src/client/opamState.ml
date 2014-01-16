@@ -310,15 +310,15 @@ let package_state_one t all nv =
     | `all ->
       OpamFilename.checksum opam
       @ OpamFilename.checksum descr
-      @ OpamFilename.checksum url
+      @ OpamRepository.url_checksum url
       @ OpamFilename.checksum_dir files
       @ OpamFilename.checksum archive
     | `partial true ->
-      OpamFilename.checksum url
+      OpamRepository.url_checksum url
       @ OpamFilename.checksum_dir files
       @ OpamFilename.checksum archive
     | `partial false ->
-      OpamFilename.checksum url
+      OpamRepository.url_checksum url
       @ OpamFilename.checksum_dir files
 
 let all_installed t =

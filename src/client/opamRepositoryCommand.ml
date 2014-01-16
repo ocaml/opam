@@ -266,25 +266,6 @@ let fix_package_descriptions t ~verbose =
         OpamFilename.remove (OpamPath.archive t.root nv);
       )) deleted_packages;
 
-  (* Update the package descriptions *)
-  OpamPackage.Set.iter (fun nv ->
-      match OpamState.repository_and_prefix_of_package t nv with
-      | None                -> ()
-      | Some (repo, prefix) ->
-        let dir = OpamPath.packages t.root nv in
-        if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
-        if OpamPackage.Set.mem nv all_installed then
-          let root = OpamPath.Repository.packages repo prefix nv in
-          let files = OpamRepository.package_files repo prefix nv ~archive:false in
-          assert (files <> []);
-          OpamFilename.mkdir dir;
-          List.iter (fun file ->
-              OpamFilename.copy_in ~root file dir
-            ) files;
-          OpamFilename.remove (OpamPath.archive t.root nv);
-          OpamFilename.remove (OpamPath.Repository.archive repo nv);
-    ) (OpamPackage.Set.union missing_installed_packages updated_packages);
-
   (* that's not a good idea *at all* to enable this hook if you
            are not in a testing environment *)
   OpamPackage.Map.iter (fun nv _ ->
@@ -320,7 +301,26 @@ let fix_package_descriptions t ~verbose =
           OpamState.package_repository_partial_state t nv ~archive:false in
         checksums_g <> checksums_r
     ) changed_packages in
-  log "packages-to-upgrade: %s" (OpamPackage.Set.to_string changed_packages);
+  log "packages-to-reinstall: %s" (OpamPackage.Set.to_string changed_packages);
+
+  (* Update the package descriptions *)
+  OpamPackage.Set.iter (fun nv ->
+      match OpamState.repository_and_prefix_of_package t nv with
+      | None                -> ()
+      | Some (repo, prefix) ->
+        let dir = OpamPath.packages t.root nv in
+        if OpamFilename.exists_dir dir then OpamFilename.rmdir dir;
+        if OpamPackage.Set.mem nv all_installed then
+          let root = OpamPath.Repository.packages repo prefix nv in
+          let files = OpamRepository.package_files repo prefix nv ~archive:false in
+          assert (files <> []);
+          OpamFilename.mkdir dir;
+          List.iter (fun file ->
+              OpamFilename.copy_in ~root file dir
+            ) files;
+          OpamFilename.remove (OpamPath.archive t.root nv);
+          OpamFilename.remove (OpamPath.Repository.archive repo nv);
+    ) (OpamPackage.Set.union missing_installed_packages updated_packages);
 
   (* Display some warnings/errors *)
   OpamPackage.Set.iter (fun nv ->
