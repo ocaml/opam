@@ -22,7 +22,7 @@ export OPAMYES=1
 
 if [ "$OPAM_TEST" = "1" ]; then
     # Compile OPAM using the system libraries (install them using OPAM)
-    sudo apt-get install opam
+    sudo apt-get install opam aspcud
     opam init
     eval `opam config env`
     opam install lwt cohttp ssl cmdliner ocamlgraph dose cudf re
