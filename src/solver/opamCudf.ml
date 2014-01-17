@@ -431,7 +431,12 @@ let get_final_universe univ req =
     let open Algo.Diagnostic in
     match r with
     | Some {result=Failure f} -> Conflicts f
-    | _ -> fail "inconsistent return value."
+    | Some {result=Success _} -> fail "inconsistent return value."
+    | None -> (* External solver does not provide explanations, use the default one *)
+             (match Algo.Depsolver.check_request ~explain:true (to_cudf univ req) with
+	     | Unsat(Some{result=Failure f}) -> Conflicts f
+	     | _ -> fail "no solution found, while at least one exist. Please report this error."
+	     )
 
 (* A modified version of CudfDiff to handle reinstallations *)
 module Diff = struct
