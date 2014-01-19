@@ -57,6 +57,17 @@ let depopts_of_package universe package =
     with Not_found -> Empty in
   OpamFormula.to_dnf opts
 
+let is_installed universe (name,_) =
+  OpamPackage.Set.exists (fun pkg ->
+      OpamPackage.name pkg = name
+    ) universe.u_installed
+
+let find_installed universe (name, _) =
+  let pkg = OpamPackage.Set.find (fun pkg ->
+      OpamPackage.name pkg = name
+    ) universe.u_installed in
+  OpamPackage.version pkg
+
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
   let package = real_version universe package in
@@ -70,11 +81,7 @@ let opam2debian universe depopts package =
       And (depends, Or(depends, OpamFormula.ors opts))
     else if universe.u_action = Remove then depends
     else
-      let mem_installed conj =
-        let is_installed (name,_) =
-          OpamPackage.Set.exists
-            (fun pkg -> OpamPackage.name pkg = name) universe.u_installed in
-        List.exists is_installed conj in
+      let mem_installed conj = List.exists (is_installed universe) conj in
       let opts = List.filter mem_installed opts in
       let opts = List.rev_map OpamFormula.of_conjunction opts in
       And (depends, OpamFormula.ands opts) in
@@ -276,16 +283,24 @@ let map_request f r =
     wish_upgrade = f r.wish_upgrade }
 
 (* Remove duplicate packages *)
-let cleanup_request req =
-  let update_packages = List.rev_map (fun (n,_) -> n) req.wish_upgrade in
+(* Add upgrade constraints *)
+let cleanup_request universe (req:atom request) =
   let wish_install =
-    List.filter (fun (n,_) -> not (List.mem n update_packages)) req.wish_install in
-  { req with wish_install }
+    let upgrade_packages = List.rev_map (fun (n,_) -> n) req.wish_upgrade in
+    List.filter (fun (n,_) -> not (List.mem n upgrade_packages)) req.wish_install in
+  let wish_upgrade =
+    List.rev_map (fun (n,c as pkg) ->
+        if c = None && is_installed universe pkg then
+          n, Some (`Geq, find_installed universe pkg)
+        else
+          pkg
+      ) req.wish_upgrade in
+  { req with wish_install; wish_upgrade }
 
 let resolve ?(verbose=true) universe request =
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
-  let request = cleanup_request request in
+  let request = cleanup_request universe request in
   let cudf_request = map_request (atom2cudf opam2cudf) request in
   let resolve u req =
     if OpamCudf.external_solver_available ()
