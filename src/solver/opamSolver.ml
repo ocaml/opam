@@ -68,6 +68,14 @@ let find_installed universe (name, _) =
     ) universe.u_installed in
   OpamPackage.version pkg
 
+let is_available universe wish_remove (name, _ as c) =
+  let version = find_installed universe c in
+  OpamPackage.Set.exists (fun pkg ->
+      OpamPackage.name pkg = name && OpamPackage.version pkg = version
+    ) universe.u_available
+  &&
+  List.for_all (fun (n, _) -> n <> name) wish_remove
+
 (* Convert an OPAM package to a debian package *)
 let opam2debian universe depopts package =
   let package = real_version universe package in
@@ -290,7 +298,9 @@ let cleanup_request universe (req:atom request) =
     List.filter (fun (n,_) -> not (List.mem n upgrade_packages)) req.wish_install in
   let wish_upgrade =
     List.rev_map (fun (n,c as pkg) ->
-        if c = None && is_installed universe pkg then
+        if c = None
+        && is_installed universe pkg
+        && is_available universe req.wish_remove pkg then
           n, Some (`Geq, find_installed universe pkg)
         else
           pkg
