@@ -18,7 +18,7 @@ Usage:
     Download and installs the latest binary version of OPAM
 
     BINDIR is the directory where it should be installed, e.g. /usr/local/bin
-    (it must be in your PATH).
+    (it should be in your PATH).
 
     COMP is an optional argument, specifying the initial version of OCaml you
     want to use ($default_ocaml by default. You may use 'system' if you want to
@@ -48,13 +48,14 @@ else
     }
 fi
 
+TMP=${TMPDIR:-/tmp}
+
 getopam() {
     url="$1"
     opamfile="$2"
 
-    wget $WGETOPTS $opamfile "$url/$opamfile" ||
+    wget $WGETOPTS $TMP/$opamfile "$url/$opamfile" ||
 	error "Couldn't download $url/$opamfile." "There may not yet be a binary release for your architecture or OS, sorry."
-    chmod +x $opamfile
 }
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
@@ -70,13 +71,14 @@ file="opam-$VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
 echo Downloading OPAM...
 getopam "https://github.com/ocaml/opam/releases/download/$VERSION" $file
 
-if [ ! -w "$BINDIR" ]; then
+if [ ! -w "$BINDIR" ] && ! mkdir -p "$BINDIR" 2>/dev/null; then
     echo "You don't have write access to $BINDIR: sudo may ask for your password"
-    sudo install -g root -o root -m 755 $file $BINDIR/opam
+    if [ ! -d "$BINDIR" ]; then sudo mkdir -p "$BINDIR"; fi
+    sudo install -g root -o root -m 755 $TMP/$file $BINDIR/opam
 else
-    install -m 755 $file $BINDIR/opam
+    install -m 755 $TMP/$file $BINDIR/opam
 fi
-rm -f $file
+rm -f $TMP/$file
 
 OPAM=$(which opam || echo "$BINDIR/opam")
 if [ "$OPAM" != "$BINDIR/opam" ]; then
