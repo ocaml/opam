@@ -107,8 +107,7 @@ let compiler_comp t c =
   OpamFile.Comp.read (OpamPath.compiler_comp t.root c)
 
 let is_name_installed_aux installed name =
-  let set = OpamPackage.Set.filter (fun nv -> OpamPackage.name nv = name) installed in
-  not (OpamPackage.Set.is_empty set)
+  OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = name) installed
 
 let is_name_installed t name =
   is_name_installed_aux t.installed name
@@ -901,14 +900,14 @@ let installed_versions t name =
    * only installed packages have something in $opam/pinned.cache *)
 let clean_dir dir nv =
   if OpamFilename.exists_dir dir then (
-    OpamGlobals.note "%s exists although %s is not installed. Removing it."
+    log "%s exists although %s is not installed. Removing it."
       (OpamFilename.Dir.to_string dir) (OpamPackage.to_string nv);
     OpamFilename.rmdir dir
   )
 
 let clean_file file nv =
   if OpamFilename.exists file then (
-    OpamGlobals.note "%s exists although %s is not installed. Removing it."
+    log "%s exists although %s is not installed. Removing it."
       (OpamFilename.to_string file) (OpamPackage.to_string nv);
     OpamFilename.remove file
   )
