@@ -1,33 +1,50 @@
 diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
-index 9bfda7e..548ee12 100644
+index bb4c5c5..de561bd 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
-@@ -53,10 +53,14 @@ let rec input_all_lines acc chan =
+@@ -53,11 +53,17 @@ let rec input_all_lines acc chan =
  (** Solver "exec:" line. Contains three named wildcards to be interpolated:
     "$in", "$out", and "$pref"; corresponding to, respectively, input CUDF
     document, output CUDF universe, user preferences. *)
 +
 +(* quote string for the shell, after removing all characters disallowed in criteria *)
-+let sanitize s = Printf.sprintf "\"%s\"" (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
++let quote s = Printf.sprintf "\"%s\"" s;;
++let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
 +
  let interpolate_solver_pat exec cudf_in cudf_out pref =
-   let _, exec = String.replace ~str:exec ~sub:"$in"   ~by:cudf_in  in
-   let _, exec = String.replace ~str:exec ~sub:"$out"  ~by:cudf_out in
+-  let _, exec = String.replace ~str:exec ~sub:"$in"   ~by:cudf_in  in
+-  let _, exec = String.replace ~str:exec ~sub:"$out"  ~by:cudf_out in
 -  let _, exec = String.replace ~str:exec ~sub:"$pref" ~by:pref     in
-+  let _, exec = String.replace ~str:exec ~sub:"$pref" ~by:(sanitize pref) in
-   exec
+-  exec
++  let (|>) f g = fun x -> g(f x) in
++  let dequote s = Pcre.regexp ("\"*"^(Pcre.quote s)^"\"*") in
++  (Pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
++   Pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
++   Pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
  ;;
  
+ exception Error of string
 diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
-index 548ee12..2caf76a 100644
+index de561bd..97d889c 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
-@@ -55,7 +55,7 @@ let rec input_all_lines acc chan =
-    document, output CUDF universe, user preferences. *)
+@@ -56,14 +56,14 @@ let rec input_all_lines acc chan =
  
  (* quote string for the shell, after removing all characters disallowed in criteria *)
--let sanitize s = Printf.sprintf "\"%s\"" (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
-+let sanitize s = Printf.sprintf "\"%s\"" (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
+ let quote s = Printf.sprintf "\"%s\"" s;;
+-let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
++let sanitize s = quote (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
  
  let interpolate_solver_pat exec cudf_in cudf_out pref =
-   let _, exec = String.replace ~str:exec ~sub:"$in"   ~by:cudf_in  in
+   let (|>) f g = fun x -> g(f x) in
+-  let dequote s = Pcre.regexp ("\"*"^(Pcre.quote s)^"\"*") in
+-  (Pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
+-   Pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
+-   Pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
++  let dequote s = Re_pcre.regexp ("\"*"^(Re_pcre.quote s)^"\"*") in
++  (Re_pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
++   Re_pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
++   Re_pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
+ ;;
+ 
+ exception Error of string
