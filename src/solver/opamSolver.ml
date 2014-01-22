@@ -214,7 +214,7 @@ let load_cudf_universe ?(depopts=false) universe =
               (OpamPackage.to_string nv)
               (OpamPackage.to_string (real_version universe nv));
             list)
-        universe.u_available [] in
+        (OpamPackage.Set.union universe.u_available universe.u_installed) [] in
     try Cudf.load_universe universe
     with Cudf.Constraint_violation s ->
       OpamGlobals.error_and_exit "Malformed CUDF universe (%s)" s in
