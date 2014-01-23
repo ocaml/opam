@@ -19,6 +19,7 @@ EOF
 ACTIONS=()
 UPLOAD_FILES=()
 TAG=
+MAKE=${MAKE:-make}
 
 while [ $# -gt 0 ]; do
     A=$1
@@ -69,9 +70,9 @@ if [[ " ${ACTIONS[@]} " =~ " full-archive " ]]; then
     cd $NAME
     git checkout refs/tags/$TAG
     sed -i 's/^AC_INIT(opam,.*)/AC_INIT(opam,'"$TAG"')/' configure.ac
-    make configure
+    ${MAKE} configure
     ./configure
-    make clone
+    ${MAKE} clone
     cd ..
 
     FILES=($NAME/src_ext/*.{tar.gz,tbz})
@@ -109,7 +110,7 @@ if [[ " ${ACTIONS[@]} " =~ " binary " ]]; then
     tar -xzf "$TARBALL"
     cd opam-full-$TAG
     ./configure
-    make
+    ${MAKE}
     cd ..
     ln -s opam-full-$TAG/_obuild/opam/opam.asm $BINARY
     UPLOAD_FILES+=("$BINARY")
