@@ -247,20 +247,26 @@ let extract_package t nv =
     end;
     OpamState.copy_files t nv build_dir in
 
-  if OpamState.is_locally_pinned t (OpamPackage.name nv) then
-    let dir = OpamPath.Switch.dev_package t.root t.switch nv in
-    extract_and_copy_files nv (OpamState.download_upstream t nv dir)
-  else (
+  let md5sum =
+    if OpamState.is_locally_pinned t (OpamPackage.name nv) then begin
+      let dir = OpamPath.Switch.dev_package t.root t.switch nv in
+      extract_and_copy_files nv (OpamState.download_upstream t nv dir);
+      None
+    end else begin
     let nv = OpamState.pinning_version t nv in
     match OpamState.download_archive t nv with
-    | Some f -> OpamFilename.extract f build_dir
+    | Some f ->
+      OpamFilename.extract f build_dir;
+      Some (OpamFilename.digest f)
     | None   ->
       let dir = OpamPath.dev_package t.root nv in
-      extract_and_copy_files nv (OpamState.download_upstream t nv dir)
-  );
+      extract_and_copy_files nv (OpamState.download_upstream t nv dir);
+      None
+    end
+  in
 
   prepare_package_build t nv;
-  build_dir
+  build_dir, md5sum
 
 
 let string_of_commands commands =
@@ -336,6 +342,49 @@ let dev_opam t nv build_dir =
       (OpamFile.OPAM.with_version nv' (OpamPackage.version nv))
       (OpamPackage.name nv)
 
+
+let package_v = OpamVariable.of_string "package"
+let version_v = OpamVariable.of_string "version"
+let depends_v = OpamVariable.of_string "depends"
+let hash_v = OpamVariable.of_string "hash"
+let compiler_v = OpamVariable.of_string "compiler"
+
+let add_depends_from_formulas t depends deps =
+  OpamFormula.fold_left (fun accu (n,_) ->
+    if OpamState.is_name_installed t n then
+      let nv = OpamState.find_installed_package_by_name t n in
+      OpamPackage.to_string nv :: accu
+    else
+      accu
+  ) depends deps
+
+let package_variables t nv opam md5sum map =
+  let module OV = OpamVariable in
+
+  (* Computing all this is useless in most cases. We should probably add
+     a | LS of string Lazy.t to OpamTypes.variable_contents to compute
+     them only when useful. *)
+  let depends = add_depends_from_formulas t []
+      (OpamFile.OPAM.depends opam) in
+  let depends = add_depends_from_formulas t depends
+      (OpamFile.OPAM.depopts opam) in
+  let depends_s = String.concat "," (List.sort compare depends) in
+  let package_s = OpamPackage.(Name.to_string (name nv)) in
+  let version_s = OpamPackage.(Version.to_string (version nv)) in
+  let hash_s = match md5sum with
+      None -> "NOHASH"
+    | Some md5sum -> Digest.to_hex md5sum in
+  let compiler_s = OpamCompiler.to_string t.compiler in
+
+  let bindings = [
+    depends_v, OV.S depends_s;
+    package_v, OV.S package_s;
+    version_v, OV.S version_s;
+    hash_v, OV.S hash_s;
+    compiler_v, OV.S compiler_s;
+  ] in
+  OpamVariable.Map.of_list bindings
+
 (* Remove a given package *)
 (* This will be done by the parent process, so theoritically we are
    allowed to modify the global state of OPAM here. However, for
@@ -353,9 +402,9 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
     | None      -> OpamGlobals.msg "  No OPAM file has been found!\n"
     | Some opam ->
       let env = compilation_env t opam in
+      let map = package_variables t nv opam None OpamVariable.Map.empty in
       let commands =
-        OpamState.filter_commands t
-          OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+        OpamState.filter_commands t map (OpamFile.OPAM.remove opam) in
       match commands with
       | []     -> ()
       | remove ->
@@ -367,18 +416,26 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
         (* We also use a small hack: if the remove command is simply
            'ocamlfind remove xxx' then, no need to extract the archive
            again. *)
-        let use_ocamlfind = function
-          | [] -> true
-          | "ocamlfind" :: _ -> true
-          | _ -> false in
+        let need_archive = ref false in
+        List.iter (fun command ->
+            match command with
+              [] | ("ocamlfind" | "!") :: _ -> ()
+            | _ -> need_archive := true) remove ;
+
         if not (OpamFilename.exists_dir p_build)
-        && not (List.for_all use_ocamlfind remove) then (
+        && !need_archive then (
           try let _ = extract_package t nv in ()
           with _ -> ()
         );
         let opam = dev_opam t nv p_build in
-        let remove = OpamState.filter_commands t
-            OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
+        let map = package_variables t nv opam None OpamVariable.Map.empty in
+        let remove = OpamFile.OPAM.remove opam in
+        let remove = OpamState.filter_commands t map remove in
+        let remove = List.map (fun command ->
+            match command with
+              [] | "ocamlfind" :: _ -> command
+            | "!" :: command -> command
+            | _ -> command) remove in
         let name = OpamPackage.Name.to_string name in
         let exec_dir, name =
           if OpamFilename.exists_dir p_build
@@ -521,7 +578,7 @@ let build_and_install_package_aux t ~metadata nv =
     try
       (* This one can raise an exception (for insance a user's CTRL-C
          when the sync takes too long. *)
-      let p_build = extract_package t nv in
+      let p_build, md5sum = extract_package t nv in
 
       (* For dev packages, we look for any opam file at the root of the build
          directory *)
@@ -530,13 +587,15 @@ let build_and_install_package_aux t ~metadata nv =
       (* Get the env variables set up in the compiler description file *)
       let env = compilation_env t opam in
 
+      let map = package_variables t nv opam md5sum OpamVariable.Map.empty in
+
       (* Exec the given commands. *)
       let exec name f =
-        match OpamState.filter_commands t OpamVariable.Map.empty (f opam) with
+        match OpamState.filter_commands t map  (f opam) with
         | []       -> ()
         | commands ->
           OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
-          let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
+          let name = "." ^ OpamPackage.Name.to_string (OpamPackage.name nv) in
           let metadata = get_metadata t in
           OpamFilename.exec ~env ~name ~metadata p_build commands in
 

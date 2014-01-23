@@ -1877,6 +1877,8 @@ let update_setup_interactive t shell dot_profile =
     end
   | _ -> update None
 
+let compiler_v = OpamVariable.of_string "compiler"
+
 (* Add the given packages to the set of package to reinstall. If [all]
    is set, this is done for ALL the switches (useful when a package
    change upstream for instance). If not, only the reinstall state of the
@@ -2015,7 +2017,11 @@ let install_compiler t ~quiet switch compiler =
             ]
         end else begin
           let t = { t with switch } in
-          let env = env_filter t OpamVariable.Map.empty in
+          let compiler_s = OpamCompiler.to_string compiler in
+          let map = OpamVariable.Map.empty in
+          let map = OpamVariable.Map.add
+              compiler_v (OpamVariable.S compiler_s) map in
+          let env = env_filter t map in
           let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
