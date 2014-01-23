@@ -591,7 +591,7 @@ let download ~overwrite ~filename:src ~dst:dst =
     really_download ~overwrite ~src ~dst
 
 let patch p =
-  let max_trying = 4 in
+  let max_trying = 5 in
   if not (Sys.file_exists p) then
     internal_error "Patch file %S not found." p;
   let patch ~dryrun n =
