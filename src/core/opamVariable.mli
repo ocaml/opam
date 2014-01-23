@@ -29,12 +29,6 @@ type variable_contents =
 (** Pretty print of variable contents *)
 val string_of_variable_contents: variable_contents -> string
 
-(** the variable [enable] *)
-val enable: t
-
-(** the variable [installed] *)
-val installed: t
-
 (** Section names *)
 module Section: sig
 

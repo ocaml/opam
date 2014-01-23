@@ -18,10 +18,6 @@ include OpamMisc.Base
 
 type variable = t
 
-let installed = of_string "installed"
-
-let enable = of_string "enable"
-
 type variable_contents =
   | B of bool
   | S of string
