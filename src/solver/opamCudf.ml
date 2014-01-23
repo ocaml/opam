@@ -303,17 +303,10 @@ let need_reinstall = check s_reinstall
 
 let is_installed_root = check s_installed_root
 
-let aspcud_path = lazy (
-  try
-    match OpamSystem.read_command_output ~verbose:false [ "which"; "aspcud" ] with
-    | []   -> None
-    | h::_ -> Some (OpamMisc.strip h)
-  with _ ->
-    None
-)
+let aspcud_exists = lazy (OpamSystem.command_exists "aspcud")
 
-let aspcud_command path =
-  Printf.sprintf "%s $in $out $pref" path
+let aspcud_command =
+  Printf.sprintf "aspcud $in $out $pref"
 
 let default_preamble =
   let l = [
@@ -370,7 +363,7 @@ let to_cudf univ req = (
 )
 
 let external_solver_available () =
-  !OpamGlobals.use_external_solver && Lazy.force aspcud_path <> None
+  !OpamGlobals.use_external_solver && Lazy.force aspcud_exists
 
 let solver_calls = ref 0
 
@@ -380,11 +373,11 @@ let dump_cudf_request (_, univ,_ as cudf) = function
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
-    begin match Lazy.force aspcud_path with
-      | Some path when !OpamGlobals.use_external_solver ->
-        Printf.fprintf oc "#!%s %s\n" (aspcud_command path) OpamGlobals.aspcud_criteria
-      | _ -> Printf.fprintf oc "#internal OPAM solver\n"
-    end;
+    if Lazy.force aspcud_exists && !OpamGlobals.use_external_solver
+    then
+      Printf.fprintf oc "#%s %s\n" aspcud_command OpamGlobals.aspcud_criteria
+    else
+      Printf.fprintf oc "#internal OPAM solver\n";
     Cudf_printer.pp_cudf oc cudf;
     close_out oc;
     Graph.output (Graph.of_universe univ) f;
@@ -393,10 +386,10 @@ let dump_cudf_request (_, univ,_ as cudf) = function
 let call_external_solver ~explain univ req =
   let cudf_request = to_cudf univ req in
   ignore (dump_cudf_request cudf_request !OpamGlobals.cudf_file);
-  match Lazy.force aspcud_path with
-  | Some path when !OpamGlobals.use_external_solver ->
+  if Lazy.force aspcud_exists && !OpamGlobals.use_external_solver
+  then
     if Cudf.universe_size univ > 0 then begin
-      let cmd = aspcud_command path in
+      let cmd = aspcud_command in
       let criteria = OpamGlobals.aspcud_criteria in
       try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
       with e ->
@@ -404,7 +397,7 @@ let call_external_solver ~explain univ req =
         Algo.Depsolver.check_request ~explain cudf_request
     end else
       Algo.Depsolver.Sat(None,Cudf.load_universe [])
-  | _ ->
+  else
     (* No external solver is available, use the default one *)
     Algo.Depsolver.check_request ~explain cudf_request
 
