@@ -120,11 +120,25 @@ let help_sections = [
   `P "These options are common to all commands.";
 
   `S "ENVIRONMENT VARIABLES";
-  `P "opam makes use of environment variables listed here.";
+  `P "OPAM makes use of the environment variables listed here. Boolean \
+      variables are considered true when set to a non-empty string.";
+
+  (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
-  value for the --color option";
+      value for the --color option.";
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
-   command-line utility to download files";
+      command-line utility to download files.";
+  `P "$(i,OPAMDEBUG) see option `--debug'.";
+  `P "$(i,OPAMJOBS) sets the maximum number of parallel workers to run.";
+  `P "$(i,OPAMNOASPCUD) see option `--no-aspcud'.";
+  `P "$(i,OPAMROOT) see option `--root'. This is automatically set by \
+      `opam config env --root=DIR' when DIR is non-default.";
+  `P "$(i,OPAMSOLVERTIMEOUT) change the time allowance of the internal solver.";
+  `P "$(i,OPAMSWITCH) see option `--switch'. Automatically set by \
+      `opam config env --switch=SWITCH'.";
+  `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
+  `P "$(i,OPAMVERBOSE) see option `--verbose'.";
+  `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";
   `P (Printf.sprintf "See %s." OpamGlobals.default_repository_address);
@@ -298,7 +312,7 @@ let repo_kind_flag =
 let jobs_flag =
   mk_opt ["j";"jobs"] "JOBS"
     "Set the maximal number of concurrent jobs to use. You can also set it using \
-     the OPAMJOBS environment variable."
+     the $(b,\\$OPAMJOBS) environment variable."
     Arg.(some int) None
 
 let pattern_list =
