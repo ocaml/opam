@@ -579,13 +579,14 @@ let resolve_variable t ?opam local_variables v =
     if is_global_conf v then None else
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
     let name = OpamVariable.Full.package v in
-    let opam =
+    let opam = (* ensure opam, if not None, corresponds to name *)
       match opam with
       | Some o when OpamFile.OPAM.name o = name -> opam
       | _ when is_name_installed t name ->
         opam_opt t (find_installed_package_by_name t name)
       | _ -> None
     in
+    let get_nv opam = OpamPackage.create name (OpamFile.OPAM.version opam) in
     if OpamVariable.Full.section v <> None then None else
     match var_str, opam with
     | "enable",    Some _    -> string "enable"
@@ -601,15 +602,13 @@ let resolve_variable t ?opam local_variables v =
     | "doc",       _         -> dirname (OpamPath.Switch.doc     t.root t.switch name)
     | "share",     _         -> dirname (OpamPath.Switch.share   t.root t.switch name)
     | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root t.switch name)
+    | "name",      _         -> string  (OpamPackage.Name.to_string name)
     | "version",   Some opam ->
       let ver = OpamFile.OPAM.version opam in
       let ver =
         if ver <> OpamPackage.Version.pinned then ver else
-          OpamPackage.version
-            (pinning_version t
-               (OpamPackage.create (OpamFile.OPAM.name opam) ver)) in
+          OpamPackage.version (pinning_version t (get_nv opam)) in
       string (OpamPackage.Version.to_string ver)
-    | "name",      _         -> string  (OpamPackage.Name.to_string name)
     | "depends",   Some opam ->
       let deps =
         OpamFormula.atoms (OpamFile.OPAM.depends opam) @
@@ -632,8 +631,7 @@ let resolve_variable t ?opam local_variables v =
       string (String.concat " " (List.map OpamPackage.to_string installed_deps))
     | "hash",      Some opam ->
       (try
-         let nv =
-           OpamPackage.Set.find (fun nv -> OpamPackage.name nv = name) t.installed in
+         let nv = get_nv opam in
          let f = OpamPath.archive t.root nv in
          if OpamFilename.exists f then string (OpamFilename.digest f)
          else string ""
