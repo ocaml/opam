@@ -103,7 +103,7 @@ val universe: state -> user_action -> universe
 (** {2 Environment} *)
 
 (** Get the current environment. *)
-val get_full_env: state -> env
+val get_full_env: ?opam:OpamFile.OPAM.t -> state -> env
 
 (** Get only environment modified by OPAM. *)
 val get_opam_env: state -> env

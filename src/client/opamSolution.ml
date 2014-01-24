@@ -42,7 +42,7 @@ let post_message ?(failed=false) state action =
       (B failed) local_variables
   in
   List.iter (fun (message,filter) ->
-      if OpamState.eval_filter state local_variables filter
+      if OpamState.eval_filter state ~opam local_variables filter
       then print_message message)
     messages
 
@@ -464,7 +464,7 @@ let apply ?(force = false) t action solution =
         let opam = OpamState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
         OpamMisc.filter_map (fun (s,f) ->
-          if OpamState.eval_filter new_state OpamVariable.Map.empty f
+          if OpamState.eval_filter new_state ~opam OpamVariable.Map.empty f
           then Some s
           else None
         )  messages in

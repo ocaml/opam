@@ -142,7 +142,7 @@ let jobs t =
   | Some j -> j
 
 (* filter handling *)
-let env_filter t ?opam local_variables v =
+let resolve_variable t ?opam local_variables v =
   let string str = Some (S str) in
   let bool b = Some (B b) in
   let int i = string (string_of_int i) in
@@ -281,25 +281,24 @@ let env_filter t ?opam local_variables v =
     OpamGlobals.error "Variable %s is not defined" (OpamVariable.Full.to_string v);
   contents
 
-(* let _ = (env_filter : int) *)
-
 let eval_filter t ?opam local_variables =
-  OpamFilter.eval_opt (env_filter t ?opam local_variables)
+  OpamFilter.eval_opt (resolve_variable t ?opam local_variables)
 
 let filter_commands t ?opam local_variables =
-  OpamFilter.commands (env_filter t ?opam local_variables)
+  OpamFilter.commands (resolve_variable t ?opam local_variables)
 
 let substitute_file t ?opam local_variables =
-  OpamFilter.substitute_file (env_filter t ?opam local_variables)
+  OpamFilter.substitute_file (resolve_variable t ?opam local_variables)
 
 let substitute_string t ?opam local_variables =
-  OpamFilter.substitute_string (env_filter t ?opam local_variables)
+  OpamFilter.substitute_string (resolve_variable t ?opam local_variables)
 
 let contents_of_variable t ?opam local_variables =
-  OpamFilter.contents_of_variable (env_filter t ?opam local_variables)
+  OpamFilter.contents_of_variable (resolve_variable t ?opam local_variables)
 
 let contents_of_variable_exn t ?opam local_variables =
-  OpamFilter.contents_of_variable_exn (env_filter t ?opam local_variables)
+  OpamFilter.contents_of_variable_exn
+    (resolve_variable t ?opam local_variables)
 
 let redirect t repo =
   if repo.repo_kind <> `http then None else
@@ -719,7 +718,7 @@ let copy_files t nv dst =
 
 (* List the packages which do fulfil the compiler and OS constraints *)
 let available_packages t system =
-  let env opam = env_filter t ~opam OpamVariable.Map.empty in
+  let env opam = resolve_variable t ~opam OpamVariable.Map.empty in
   let filter nv =
     match opam_opt t nv with
     | None -> false
@@ -1475,7 +1474,7 @@ let source t ?(interactive_only=false) f =
   else s
 
 let expand_env t ?opam (env: env_updates) : env =
-  let fenv = env_filter t ?opam OpamVariable.Map.empty in
+  let fenv = resolve_variable t ?opam OpamVariable.Map.empty in
   List.rev_map (fun (ident, symbol, string) ->
     let string = OpamFilter.substitute_string fenv string in
     let read_env () =
@@ -1549,9 +1548,9 @@ let get_opam_env t =
     | `Env _   -> { t with switch = OpamFile.Config.switch t.config } in
   add_to_env t [] (env_updates ~opamswitch:true t)
 
-let get_full_env t =
+let get_full_env ?opam t =
   let env0 = OpamMisc.env () in
-  add_to_env t env0 (env_updates ~opamswitch:true t)
+  add_to_env t ?opam env0 (env_updates ~opamswitch:true t)
 
 let mem_pattern_in_string ~pattern ~string =
   let pattern = Re.compile (Re.str pattern) in
@@ -1603,7 +1602,7 @@ let update_ocamlinit () =
     OpamGlobals.msg "  ~/.ocamlinit is already up-to-date.\n"
 
 let string_of_env_update t shell updates =
-  let fenv = env_filter t OpamVariable.Map.empty in
+  let fenv = resolve_variable t OpamVariable.Map.empty in
   let sh  (k,v) = Printf.sprintf "%s=%s; export %s;\n" k v k in
   let csh (k,v) = Printf.sprintf "setenv %s %S;\n" k v in
   let export = match shell with
@@ -2074,7 +2073,7 @@ let install_compiler t ~quiet switch compiler =
             ]
         end else begin
           let t = { t with switch } in
-          let env = env_filter t OpamVariable.Map.empty in
+          let env = resolve_variable t OpamVariable.Map.empty in
           let builds = OpamFilter.commands env (OpamFile.Comp.build comp) in
           OpamFilename.exec build_dir builds
         end;
