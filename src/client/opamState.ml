@@ -603,6 +603,8 @@ let resolve_variable t ?opam local_variables v =
     | "share",     _         -> dirname (OpamPath.Switch.share   t.root t.switch name)
     | "etc",       _         -> dirname (OpamPath.Switch.etc     t.root t.switch name)
     | "name",      _         -> string  (OpamPackage.Name.to_string name)
+    | "build",     Some opam ->
+      dirname (OpamPath.Switch.build t.root t.switch (get_nv opam))
     | "version",   Some opam ->
       let ver = OpamFile.OPAM.version opam in
       let ver =
