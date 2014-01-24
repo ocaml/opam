@@ -563,7 +563,7 @@ let resolve_variable t ?opam local_variables v =
     let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
     let var_hook =
       if is_global_conf v then
-        String.map (function '-' -> '_' | c -> c) var_str
+        OpamMisc.string_map (function '-' -> '_' | c -> c) var_str
       else
         Printf.sprintf "OPAM_%s_%s"
           (OpamPackage.Name.to_string (OpamVariable.Full.package v))
