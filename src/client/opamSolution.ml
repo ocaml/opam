@@ -42,8 +42,9 @@ let post_message ?(failed=false) state action =
       (B failed) local_variables
   in
   List.iter (fun (message,filter) ->
-      if OpamState.eval_filter state ~opam local_variables filter
-      then print_message message)
+      if OpamState.eval_filter state ~opam local_variables filter then
+        print_message
+          (OpamState.substitute_string state ~opam local_variables message))
     messages
 
 let check_solution state = function
