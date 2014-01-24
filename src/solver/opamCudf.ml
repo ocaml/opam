@@ -392,7 +392,9 @@ let call_external_solver ~explain univ req =
       let cmd = aspcud_command in
       let criteria = OpamGlobals.aspcud_criteria in
       try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
-      with e ->
+      with
+      | Sys.Break as e -> raise e
+      | e ->
         OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
         Algo.Depsolver.check_request ~explain cudf_request
     end else
