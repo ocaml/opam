@@ -33,33 +33,14 @@ let need_globals ns =
 
 (* Implicit variables *)
 let implicits t ns =
-  let global_implicits =
-    if need_globals ns then
-      List.map (fun variable ->
-        OpamVariable.Full.create_global
-          OpamPackage.Name.global_config
-          (OpamVariable.of_string variable)
-      ) [ "ocaml-version"; "preinstalled" ]
-    else
-      [] in
-  let names =
-    OpamPackage.Name.Set.of_list (
-      if ns = [] then
-        List.map OpamPackage.name (OpamPackage.Set.elements t.packages)
-      else
-        ns
-    ) in
-  (* keep only the existing packages *)
-  let names =
-    OpamPackage.Name.Set.filter (fun n ->
-      OpamPackage.Set.exists (fun nv -> OpamPackage.name nv = n) t.packages
-    ) names in
-  List.fold_left
-    (fun accu variable ->
-      OpamPackage.Name.Set.fold (fun name accu ->
-        OpamVariable.Full.create_global name (OpamVariable.of_string variable) :: accu
-      ) names accu
-    ) global_implicits [ "installed"; "enable" ]
+  if need_globals ns then
+    List.map (fun variable ->
+      OpamVariable.Full.create_global
+        OpamPackage.Name.global_config
+        (OpamVariable.of_string variable)
+    ) OpamState.global_variable_names
+  else
+    []
 
 (* List all the available variables *)
 let list ns =
