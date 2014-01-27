@@ -128,6 +128,8 @@ module IntSet: SET with type elt = int
 (** Display a list of strings *)
 val string_of_list: ('a -> string) -> 'a list -> string
 
+val string_map: (char -> char) -> string -> string
+
 (** Display a pretty list: ["x";"y";"z"] -> "x, y and z" *)
 val pretty_list: string list -> string
 

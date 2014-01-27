@@ -103,13 +103,13 @@ val universe: state -> user_action -> universe
 (** {2 Environment} *)
 
 (** Get the current environment. *)
-val get_full_env: state -> env
+val get_full_env: ?opam:OpamFile.OPAM.t -> state -> env
 
 (** Get only environment modified by OPAM. *)
 val get_opam_env: state -> env
 
 (** Update an environment. *)
-val add_to_env: state -> env -> (string * string * string) list -> env
+val add_to_env: state -> ?opam:OpamFile.OPAM.t -> env -> (string * string * string) list -> env
 
 (** Print a warning if the environment is not set-up properly on init. *)
 val print_env_warning_at_init: state -> user_config -> unit
@@ -131,27 +131,30 @@ val update_setup: state -> user_config option -> global_config option -> unit
 (** {2 Substitutions} *)
 
 (** Compute the value of a variable *)
-val contents_of_variable: state -> variable_map -> full_variable -> variable_contents option
+val contents_of_variable: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
+  full_variable -> variable_contents option
 
 (** Compute the value of a variable. Raise [Exit] if the variable is
     not valid. *)
-val contents_of_variable_exn: state -> variable_map -> full_variable -> variable_contents
+val contents_of_variable_exn: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
+  full_variable -> variable_contents
 
 (** Substitute a string *)
-val substitute_string: state -> variable_map -> string -> string
+val substitute_string: state -> ?opam:OpamFile.OPAM.t -> variable_map -> string -> string
 
 (** Substitute file *)
-val substitute_file: state -> variable_map -> basename -> unit
+val substitute_file: state -> ?opam:OpamFile.OPAM.t -> variable_map -> basename -> unit
 
 (** {2 Filters} *)
 
 (** Evaluate a filter *)
-val eval_filter: state -> variable_map -> filter option -> bool
+val eval_filter: state -> ?opam:OpamFile.OPAM.t -> variable_map -> filter option -> bool
 
 (** Filter a list of commands by:
     - evaluating the substitution strings; and
     - removing the commands with a filter evaluating to "false" *)
-val filter_commands: state -> variable_map -> command list -> string list list
+val filter_commands: state -> ?opam:OpamFile.OPAM.t -> variable_map ->
+  command list -> string list list
 
 (** {2 Helpers} *)
 

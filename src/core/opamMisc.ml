@@ -64,6 +64,12 @@ let string_of_list f = function
     Buffer.add_string buf " }";
     Buffer.contents buf
 
+let string_map f s =
+  let len = String.length s in
+  let s' = String.create len in
+  for i = 0 to len - 1 do s'.[i] <- f s.[i] done;
+  s'
+
 let rec pretty_list = function
   | []    -> ""
   | [a]   -> a

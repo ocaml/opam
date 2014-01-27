@@ -214,14 +214,14 @@ let prepare_package_build t nv =
       OpamMisc.filter_map (fun (f,_) ->
         if List.mem f all then Some f else None
       ) patches in
-    List.iter (OpamState.substitute_file t OpamVariable.Map.empty) patches
+    List.iter (OpamState.substitute_file t ~opam OpamVariable.Map.empty) patches
   );
 
   (* Apply the patches *)
   List.iter (fun (base, filter) ->
     let root = OpamPath.Switch.build t.root t.switch nv in
     let patch = root // OpamFilename.Base.to_string base in
-    if OpamState.eval_filter t OpamVariable.Map.empty filter then (
+    if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter then (
       OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
       OpamFilename.patch patch p_build)
   ) patches;
@@ -231,7 +231,7 @@ let prepare_package_build t nv =
      substitution files (see [substitute_file] and
      [OpamFilename.of_basename]. *)
   OpamFilename.in_dir p_build (fun () ->
-    List.iter (OpamState.substitute_file t OpamVariable.Map.empty)
+    List.iter (OpamState.substitute_file t ~opam OpamVariable.Map.empty)
       (OpamFile.OPAM.substs opam)
   )
 
@@ -272,12 +272,12 @@ let string_of_commands commands =
     "Nothing to do."
 
 let compilation_env t opam =
-  let env0 = OpamState.get_full_env t in
+  let env0 = OpamState.get_full_env ~opam t in
   let env1 = [
     ("OPAM_PACKAGE_NAME", OpamPackage.Name.to_string (OpamFile.OPAM.name opam));
     ("OPAM_PACKAGE_VERSION", OpamPackage.Version.to_string (OpamFile.OPAM.version opam))
   ] @ env0 in
-  OpamState.add_to_env t env1 (OpamFile.OPAM.build_env opam)
+  OpamState.add_to_env t ~opam env1 (OpamFile.OPAM.build_env opam)
 
 let get_metadata t =
   let compiler =
@@ -354,7 +354,7 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
     | Some opam ->
       let env = compilation_env t opam in
       let commands =
-        OpamState.filter_commands t
+        OpamState.filter_commands t ~opam
           OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
       match commands with
       | []     -> ()
@@ -377,7 +377,7 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
           with _ -> ()
         );
         let opam = dev_opam t nv p_build in
-        let remove = OpamState.filter_commands t
+        let remove = OpamState.filter_commands t ~opam
             OpamVariable.Map.empty (OpamFile.OPAM.remove opam) in
         let name = OpamPackage.Name.to_string name in
         let exec_dir, name =
@@ -532,7 +532,7 @@ let build_and_install_package_aux t ~metadata nv =
 
       (* Exec the given commands. *)
       let exec name f =
-        match OpamState.filter_commands t OpamVariable.Map.empty (f opam) with
+        match OpamState.filter_commands t ~opam OpamVariable.Map.empty (f opam) with
         | []       -> ()
         | commands ->
           OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
