@@ -30,14 +30,17 @@ let () =
 
 let confirm fmt =
   Printf.ksprintf (fun msg ->
-    OpamGlobals.msg "%s [Y/n] %!" msg;
-    if not !OpamGlobals.yes then
-      match read_line () with
+    let rec loop () =
+      OpamGlobals.msg "%s [Y/n] %!" msg;
+      if !OpamGlobals.yes then true
+      else match read_line () with
       | "y" | "Y"
+      | "yes" | "YES" | "Yes"
       | "" -> true
-      | _  -> false
-    else
-      true
+      | "n" | "N"
+      | "no" | "No" | "NO" -> false
+      | _  -> loop ()
+    in loop ()
   ) fmt
 
 let read fmt =
