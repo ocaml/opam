@@ -344,8 +344,20 @@ let copy src dst =
   if Sys.file_exists dst then
     remove_file dst;
   mkdir (Filename.dirname dst);
-  if src <> dst then
-    command ["cp"; src; dst ]
+  command ["cp"; src; dst ]
+
+let install ?exec src dst =
+  if Sys.is_directory src then
+    internal_error "Cannot install %s: it is a directory." src;
+  if Sys.file_exists dst && Sys.is_directory dst then
+    internal_error "Cannot install to %s: it is a directory." dst;
+  mkdir (Filename.dirname dst);
+  let exec = match exec with
+    | Some e -> e
+    | None -> (Unix.stat src).Unix.st_perm land 0o100 <> 0 in
+  command
+    ("install" :: "-m" :: (if exec then "0755" else "0644") ::
+     [ src; dst ])
 
 module Tar = struct
 

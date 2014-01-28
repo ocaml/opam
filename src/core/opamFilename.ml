@@ -206,6 +206,9 @@ let files d =
 let copy ~src ~dst =
   if src <> dst then OpamSystem.copy (to_string src) (to_string dst)
 
+let install ?exec ~src ~dst () =
+  if src <> dst then OpamSystem.install ?exec (to_string src) (to_string dst)
+
 let move ~src ~dst =
   if src <> dst then OpamSystem.command [ "mv"; to_string src; to_string dst ]
 
