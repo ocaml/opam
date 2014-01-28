@@ -527,6 +527,23 @@ let ocaml_version = lazy (
   | None    -> None
 )
 
+let exists_alongside_ocamlc name =
+  let path = try OpamMisc.getenv "PATH" with Not_found -> "" in
+  let path = OpamMisc.split path path_sep in
+  let ocamlc_dir =
+    List.fold_left (function
+        | None -> fun d ->
+          if Sys.file_exists (d/"ocamlc") then Some d else None
+        | s -> fun _ -> s)
+      None path
+  in
+  match ocamlc_dir with
+  | Some d -> Sys.file_exists (d / name)
+  | None -> false
+
+let ocaml_opt_available = lazy (exists_alongside_ocamlc "ocamlc.opt")
+let ocaml_native_available = lazy (exists_alongside_ocamlc "ocamlopt")
+
 (* Reset the path to get the system compiler *)
 let system command = lazy (
   let env = Lazy.force reset_env in

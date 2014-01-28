@@ -100,6 +100,13 @@ val dirs: string -> string list
     compiler is present in the path, then it returns [None]. *)
 val ocaml_version: string option Lazy.t
 
+(** Returns true if the "ocamlopt" is available in the current switch *)
+val ocaml_native_available: bool Lazy.t
+
+(** Returns true if the ".opt" version of the current OCaml compiler is
+    available*)
+val ocaml_opt_available: bool Lazy.t
+
 (** Return the path where the system ocamlc library is installed *)
 val system_ocamlc_where: string option Lazy.t
 
