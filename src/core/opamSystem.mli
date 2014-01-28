@@ -37,6 +37,11 @@ val with_tmp_dir: (string -> 'a) -> 'a
     if it is a link. *)
 val copy: string -> string -> unit
 
+(** [install ?exec src dst] copies file [src] as file [dst] using [install].
+    If [exec], make the resulting file executable (otherwise, look at the
+    permissions of the original file to decide). *)
+val install: ?exec:bool -> string -> string -> unit
+
 (** [link src dst] links [src] to [dst]. Remove [dst] if it is a file,
     not a directory. *)
 val link: string -> string -> unit

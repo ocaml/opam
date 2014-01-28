@@ -124,7 +124,7 @@ let install_package t nv =
         OpamFilename.exists src_file in
 
       (* Install a list of files *)
-      let install_files dst_fn files_fn =
+      let install_files exec dst_fn files_fn =
         let dst_dir = dst_fn t.root t.switch name in
         let files = files_fn install in
         if not (OpamFilename.exists_dir dst_dir) then (
@@ -137,36 +137,36 @@ let install_package t nv =
               | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
               | Some d -> OpamFilename.create dst_dir d in
             if check ~src:build_dir ~dst:dst_dir base then
-              OpamFilename.copy ~src:src_file ~dst:dst_file;
+              OpamFilename.install ~exec ~src:src_file ~dst:dst_file ();
           ) files in
 
       (* bin *)
-      install_files (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
+      install_files true (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
 
       (* sbin *)
-      install_files (fun r s _ -> OpamPath.Switch.sbin r s) OpamFile.Dot_install.sbin;
+      install_files true (fun r s _ -> OpamPath.Switch.sbin r s) OpamFile.Dot_install.sbin;
 
       (* lib *)
-      install_files OpamPath.Switch.lib OpamFile.Dot_install.lib;
+      install_files false OpamPath.Switch.lib OpamFile.Dot_install.lib;
 
       (* toplevel *)
-      install_files (fun r s _ -> OpamPath.Switch.toplevel r s)
+      install_files false (fun r s _ -> OpamPath.Switch.toplevel r s)
         OpamFile.Dot_install.toplevel;
 
-      install_files (fun r s _ -> OpamPath.Switch.stublibs r s)
+      install_files true (fun r s _ -> OpamPath.Switch.stublibs r s)
         OpamFile.Dot_install.stublibs;
 
       (* Man pages *)
-      install_files (fun r s _ -> OpamPath.Switch.man_dir r s) OpamFile.Dot_install.man;
+      install_files false (fun r s _ -> OpamPath.Switch.man_dir r s) OpamFile.Dot_install.man;
 
       (* Shared files *)
-      install_files OpamPath.Switch.share OpamFile.Dot_install.share;
+      install_files false OpamPath.Switch.share OpamFile.Dot_install.share;
 
       (* Etc files *)
-      install_files OpamPath.Switch.etc OpamFile.Dot_install.etc;
+      install_files false OpamPath.Switch.etc OpamFile.Dot_install.etc;
 
       (* Documentation files *)
-      install_files OpamPath.Switch.doc OpamFile.Dot_install.doc;
+      install_files false OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
       (* misc *)
       List.iter
@@ -174,12 +174,12 @@ let install_package t nv =
           let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
           if OpamFilename.exists dst
           && OpamState.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
-            OpamFilename.copy ~src:src_file ~dst
+            OpamFilename.install ~src:src_file ~dst ()
           else begin
             OpamGlobals.msg "Installing %s to %s.\n"
               (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
             if OpamState.confirm "Continue ?" then
-              OpamFilename.copy ~src:src_file ~dst
+              OpamFilename.install ~src:src_file ~dst ()
           end
         ) (OpamFile.Dot_install.misc install);
 

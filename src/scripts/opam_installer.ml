@@ -27,7 +27,7 @@ type options = {
 type commands = {
   mkdir: OpamFilename.Dir.t -> unit;
   rmdir: opt:bool -> OpamFilename.Dir.t -> unit;
-  cp: opt:bool -> src:OpamFilename.t -> dst:OpamFilename.t -> unit;
+  cp: ?exec:bool -> opt:bool -> src:OpamFilename.t -> dst:OpamFilename.t -> unit -> unit;
   rm: opt:bool -> OpamFilename.t -> unit;
   confirm: string -> (unit -> unit) -> unit;
 }
@@ -48,13 +48,13 @@ let do_commands project_root =
     else if not opt then
       OpamGlobals.warning "Directory %S is not empty\n" (OpamFilename.Dir.to_string d)
   in
-  let cp ~opt ~src ~dst =
+  let cp ?exec ~opt ~src ~dst () =
     if OpamFilename.exists src then
       (OpamGlobals.msg "%-32s => %s\n"
          (OpamFilename.remove_prefix project_root src)
          (OpamFilename.to_string dst);
        mkdir (OpamFilename.dirname dst);
-       OpamFilename.copy ~src ~dst)
+       OpamFilename.install ?exec ~src ~dst ())
     else if not opt then
       OpamGlobals.error "Could not find %S" (OpamFilename.to_string src)
   in
@@ -86,13 +86,16 @@ let script_commands project_root ochan =
       Printf.fprintf ochan " ||\n  echo \"Warning: could not remove directory %s\"" f;
     Printf.fprintf ochan "\nfi\n"
   in
-  let cp ~opt ~src ~dst =
+  let cp ?exec ~opt ~src ~dst () =
     mkdir (OpamFilename.dirname dst);
-    (* use 'install' to set permissions ? *)
+    let mode = match exec with
+      | Some true -> "-m 0755"
+      | Some false -> "-m 0644"
+      | None -> "" in
     let src = OpamFilename.remove_prefix project_root src in
     let dst = OpamFilename.to_string dst in
     Printf.fprintf ochan "if [ -e %S ]\n" src;
-    Printf.fprintf ochan "then cp -f %S %S\n" src dst;
+    Printf.fprintf ochan "then install %s %S %S\n" mode src dst;
     if not opt then
       Printf.fprintf ochan "else echo \"Error: %s doesn't exist\"\n" src;
     Printf.fprintf ochan "fi\n"
@@ -118,15 +121,15 @@ let iter_install f instfile options =
   let instdir f = f options.prefix (OpamSwitch.of_string "") in
   let instf f = f instfile in
   List.iter f
-    [ instdir D.bin, instf S.bin;
-      instdir D.sbin, instf S.sbin;
-      instdir D.lib options.pkgname, instf S.lib;
-      instdir D.toplevel, instf S.toplevel;
-      instdir D.stublibs, instf S.stublibs;
-      instdir D.man_dir, instf S.man;
-      instdir D.share options.pkgname, instf S.share;
-      instdir D.etc options.pkgname, instf S.etc;
-      instdir D.doc options.pkgname, instf S.doc; ]
+    [ instdir D.bin, instf S.bin, true;
+      instdir D.sbin, instf S.sbin, true;
+      instdir D.lib options.pkgname, instf S.lib, false;
+      instdir D.toplevel, instf S.toplevel, false;
+      instdir D.stublibs, instf S.stublibs, true;
+      instdir D.man_dir, instf S.man, false;
+      instdir D.share options.pkgname, instf S.share, false;
+      instdir D.etc options.pkgname, instf S.etc, false;
+      instdir D.doc options.pkgname, instf S.doc, false; ]
 
 let install options =
   let instfile = OpamFile.Dot_install.safe_read options.file in
@@ -135,14 +138,14 @@ let install options =
     if options.script then script_commands project_root stdout
     else do_commands project_root
   in
-  let install_files (dst_dir, files) =
+  let install_files (dst_dir, files, exec) =
     List.iter
       (fun (base, dst) ->
          let src_file = OpamFilename.create project_root base.c in
          let dst_file = match dst with
            | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
            | Some d -> OpamFilename.create dst_dir d in
-         cmd.cp ~opt:base.optional ~src:src_file ~dst:dst_file)
+         cmd.cp ~exec ~opt:base.optional ~src:src_file ~dst:dst_file ())
       files
   in
   iter_install install_files instfile options;
@@ -152,7 +155,7 @@ let install options =
        cmd.confirm
          (Printf.sprintf "Do you want to install %s to %s ?"
             (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst))
-         (fun () -> cmd.cp ~opt:false ~src:src_file ~dst)
+         (fun () -> cmd.cp ~opt:false ~src:src_file ~dst ())
     ) (OpamFile.Dot_install.misc instfile)
 
 let uninstall options =
@@ -163,7 +166,7 @@ let uninstall options =
     else do_commands project_root
   in
   let dirs_to_remove = ref OpamFilename.Dir.Set.empty in
-  let remove_files (dst_dir, files) =
+  let remove_files (dst_dir, files, _) =
     List.iter (fun (base, dst) ->
         let src_file = OpamFilename.create project_root base.c in
         let dst_file = match dst with

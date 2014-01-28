@@ -159,6 +159,10 @@ val is_symlink: t -> bool
 (** Copy a file *)
 val copy: src:t -> dst:t -> unit
 
+(** Installs a file to a destination. Optionnally set if the destination should
+    be set executable *)
+val install: ?exec:bool -> src:t -> dst:t -> unit -> unit
+
 (** Symlink a file. If symlink is not possible on the system, use copy instead. *)
 val link: src:t -> dst:t -> unit
 
