@@ -161,6 +161,8 @@ let install_package t nv =
 
       (* Shared files *)
       install_files false OpamPath.Switch.share OpamFile.Dot_install.share;
+      install_files false (fun r s _ -> OpamPath.Switch.share_dir r s)
+        OpamFile.Dot_install.share_root;
 
       (* Etc files *)
       install_files false OpamPath.Switch.etc OpamFile.Dot_install.etc;
@@ -445,7 +447,12 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
     ) (OpamFile.Dot_install.misc install);
 
   (* Removing the shared dir *)
+  (* This one shouldn't be needed (we remove the dir). Yet some packages
+     currently install using '%{share}%/..' to workaround the lack of
+     [share_root] in previous versions *)
+  remove_files (fun t s -> OpamPath.Switch.share t s name) OpamFile.Dot_install.share;
   OpamFilename.rmdir (OpamPath.Switch.share t.root t.switch name);
+  remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
 
   (* Removing the etc dir *)
   OpamFilename.rmdir (OpamPath.Switch.etc t.root t.switch name);
