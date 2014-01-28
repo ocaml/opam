@@ -298,7 +298,7 @@ The field {\tt cores} is the number of parallel process that
 \item The first line specifies the \OPAM\ version.
 
 \item The content of {\tt name} is \verb+$NAME+, the content of {\tt
-  version} is \verb+$VERSION+. Both fields are optional are they can
+  version} is \verb+$VERSION+. Both fields are optional as they can
   be inferred from the filename.
 
 \item The content of {\tt maintainer} is the contact address of the
@@ -312,7 +312,7 @@ The field {\tt cores} is the number of parallel process that
   classify the package.
 
 \item The content of {\tt subst} is the list of files to substitute
-  variable (see \S\ref{file:subst} for the file format and
+  variables in (see \S\ref{file:subst} for the file format and
   \S\ref{section:config} for the semantic of file substitution).
 
 \item The content of {\tt patches} is a list of patches to be applied.
@@ -352,7 +352,7 @@ The field {\tt cores} is the number of parallel process that
   built and run.
 
 \item The content of {\tt remove} is the command to run before deleting
-  the installed file.
+  the installed files.
 
 \item The {\tt depends}, {\tt depopts} and {\tt conflicts} fields
   contain formulas over package names, optionally parametrized by
@@ -661,7 +661,7 @@ This command will follow the following steps:
   package will be the one providing it (this can be changed manually
   by editing \verb+$opam/repo/index+ later).
 
-\item For each installed pinned et development packages, look at what
+\item For each installed pinned and development packages, look at what
   changed upstream and if something has changed, update
   \verb+$opam/$SWITCH/reinstall+ accordingly (for each compiler
   version \verb+$SWITCH+).
@@ -1029,7 +1029,7 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt man} are copied into
   \verb+$opam/$SWITCH/man/man3+. You can change the sub-directory by setting
   the right optional argument (for instance:
-  \verb+man: [ "foo.1" {"man1"} ]+.
+  \verb+man: [ "foo.1" {"man1/foo.1"} ]+.)
 \item Files listed under {\tt misc} are processed as follows:
   for each pair \verb+$SRC { $DST }+, the tool asks the user if
   he wants to install \verb+$SRC+ to the absolute path \verb+$DST+.
@@ -1232,6 +1232,48 @@ An user can manage remote repositories, by writing:
 \label{section:config}
 
 \subsection{State}
+
+\subsection{Variables}
+\label{subsection:variables}
+
+Variables can appear in some fields of {\tt opam} files (see \S\ref{file:opam}),
+and in substition files (see below). There are three kinds:
+\begin{enumerate}
+\item Global variables, corresponding to the current configuration
+  \begin{itemize}
+  \item \verb+opam-version+ the running version of OPAM
+  \item \verb+ocaml-version+ the currently used version of OCaml
+  \item \verb+switch+ the user-defined name (alias) of the current switch
+  \item \verb+compiler+ the full OPAM name of the current OCaml compiler
+  \item \verb+preinstalled+ whether the compiler was preinstalled on the system or managed by OPAM
+  \item \verb+jobs+ the configured number of parallel jobs to run
+  \end{itemize}
+\item Package-local variables. Variable \verb+$VAR+ of package \verb+$NAME+ is
+  normally accessed using \verb+%{$NAME:$VAR}%+, which can be abbreviated as
+  \verb+%{$VAR}%+ within \verb+$NAME+'s own opam file (but global variables take
+  precedence, in particular directory names. Check \verb+opam config list+).
+  Some are only available from the opam file or when the corresponding package
+  is installed.
+  \begin{itemize}
+  \item \verb+installed+ whether the package is installed
+  \item \verb+enable+ same as \verb+installed+, but takes the value
+    \verb+"enable"+ or \verb+"disable"+. To be used in configure scripts
+  \item \verb+pinned+ whether the package is pinned
+  \item \verb+bin+, \verb+sbin+, \verb+lib+, \verb+man+, \verb+doc+,
+    \verb+share+, \verb+etc+, the installation directories used by the package
+  \item \verb+name+ the name of the package
+  \item \verb+version+ the version of the package (the one corresponding to the
+    current opam file if relevant, the installed one otherwise)
+  \item \verb+build+ the temporary build directory of this package
+  \item \verb+depends+ the list of current direct dependencies of this package.
+    Optional dependencies are included if they are currently available
+  \item \verb+hash+ the md5 of the opam archive of the package, if available.
+    For cache mechanisms
+  \end{itemize}
+\item User-defined variables, as defined in {\tt *.config} files (see
+  \S\ref{file:dotconfig}). This can also be used to override values of the above
+  variables.
+\end{enumerate}
 
 \subsection{Files}
 

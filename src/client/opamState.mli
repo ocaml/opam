@@ -147,6 +147,10 @@ val substitute_file: state -> ?opam:OpamFile.OPAM.t -> variable_map -> basename 
 
 (** {2 Filters} *)
 
+(** Lists of available variables *)
+val global_variable_names: string list
+val package_variable_names: string list
+
 (** Evaluate a filter *)
 val eval_filter: state -> ?opam:OpamFile.OPAM.t -> variable_map -> filter option -> bool
 

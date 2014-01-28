@@ -525,6 +525,15 @@ let url t nv =
 let files t nv =
   files_no_pin t (real_package t nv)
 
+(* For documentation *)
+let global_variable_names =
+  [ "ocaml-version"; "opam-version"; "compiler";
+    "preinstalled"; "switch"; "jobs" ]
+let package_variable_names =
+  [ "enable"; "installed"; "pinned";
+    "bin"; "sbin"; "lib"; "man"; "doc"; "share"; "etc";
+    "name"; "build"; "version"; "depends"; "hash" ]
+
 (* filter handling *)
 let resolve_variable t ?opam local_variables v =
   let string str = Some (S str) in
