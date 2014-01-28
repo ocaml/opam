@@ -174,3 +174,6 @@ val temp_file: ?dir:string -> string -> string
 
 (** Print stats *)
 val print_stats: unit -> unit
+
+(** The separator character for the PATH variable *)
+val path_sep: char
