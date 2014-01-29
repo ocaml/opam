@@ -1,3 +1,6 @@
+current
+* Enable packagers to specify mirrors in url files (#807)
+
 1.1.1
 * Fix `opam-admin make <packages> -r` (#990)
 * Explicitly prettyprint list of lists, to fix `opam-admin depexts` (#997)
@@ -23,7 +26,9 @@
 * Do not reinstall dev packages with `opam upgrade <pkg>` (#1001)
 * Be more careful with `opam init` to a non-empty root directory (#974)
 * Cleanup build-dir after successful compiler installation to save on space (#1006)
-* Enable packagers to specify mirrors in url files (#807)
+* Improved OSX compatibility in the external solver tools (#1074)
+* Fixed messages printed on update that were plain wrong (#1030)
+* Improved detection of meaningful changes from upstream packages to trigger recompilation
 
 1.1.0 [Oct 2013]
 * Fix update of dev packages (#962)
