@@ -346,8 +346,11 @@ module Dot_install: sig
   (** C bindings *)
   val stublibs: t -> (basename optional * basename option) list
 
-  (** List of shared files *)
+  (** List of architecture-independent files *)
   val share: t -> (basename optional * basename option) list
+
+  (** List of files under the more general share prefix *)
+  val share_root: t -> (basename optional * basename option) list
 
   (** List of etc files *)
   val etc: t -> (basename optional * basename option) list

@@ -128,6 +128,8 @@ let iter_install f instfile options =
       instdir D.stublibs, instf S.stublibs, true;
       instdir D.man_dir, instf S.man, false;
       instdir D.share options.pkgname, instf S.share, false;
+      instdir (fun t s _ -> D.share_dir t s) options.pkgname,
+      instf S.share_root, false;
       instdir D.etc options.pkgname, instf S.etc, false;
       instdir D.doc options.pkgname, instf S.doc, false; ]
 

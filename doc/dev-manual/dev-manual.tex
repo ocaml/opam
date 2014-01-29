@@ -1001,16 +1001,17 @@ in \S\ref{file:general} with the following restrictions:
 {\small
 \begin{Verbatim}[frame=single]
 <file> :=
-    ?lib:      [ <mv>+ ]
-    ?bin:      [ <mv>+ ]
-    ?sbin:     [ <mv>+ ]
-    ?toplevel: [ <mv>+ ]
-    ?share:    [ <mv>+ ]
-    ?etc:      [ <mv>+ ]
-    ?doc:      [ <mv>+ ]
-    ?misc:     [ <mv>+ ]
-    ?stublibs: [ <mv>+ ]
-    ?man:      [ <mv>+ ]
+    ?lib:        [ <mv>+ ]
+    ?bin:        [ <mv>+ ]
+    ?sbin:       [ <mv>+ ]
+    ?toplevel:   [ <mv>+ ]
+    ?share:      [ <mv>+ ]
+    ?share_root: [ <mv>+ ]
+    ?etc:        [ <mv>+ ]
+    ?doc:        [ <mv>+ ]
+    ?misc:       [ <mv>+ ]
+    ?stublibs:   [ <mv>+ ]
+    ?man:        [ <mv>+ ]
 
 <mv> := STRING
       | STRING { STRING }
@@ -1023,8 +1024,9 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt sbin} are copied into \verb+$opam/$SWITCH/sbin/+.
 \item Files listed under {\tt doc} are copied into \verb+$opam/$SWITCH/doc/$NAME/+.
 \item Files listed under {\tt share} are copied into \verb+$opam/$SWITCH/share/$NAME/+.
+\item Files listed under {\tt share_root} are copied into \verb+$opam/$SWITCH/share/+.
 \item Files listed under {\tt etc} are copied into \verb+$opam/$SWITCH/etc/$NAME/+.
-\item Files listed under {\tt toplevel} are copied into \verb+$opam/$SWITCH/toplevel+.
+\item Files listed under {\tt toplevel} are copied into \verb+$opam/$SWITCH/lib/toplevel/+.
 \item Files lister under {\tt stublibs} are copied into \verb+$opam/$SWITCH/lib/stublibs/+
 \item Files listed under {\tt man} are copied into
   \verb+$opam/$SWITCH/man/man3+. You can change the sub-directory by setting
