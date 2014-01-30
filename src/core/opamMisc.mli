@@ -186,8 +186,8 @@ val sub_at: int -> string -> string
 
 (** {2 Misc} *)
 
-(** Remove from a ':' separated list of string the one with the given prefix *)
-val reset_env_value: prefix:string -> string -> string list
+(** Remove from a c-separated list of string the one with the given prefix *)
+val reset_env_value: prefix:string -> char -> string -> string list
 
 (** if rsync -arv return 4 lines, this means that no files have changed *)
 val rsync_trim: string list -> string list

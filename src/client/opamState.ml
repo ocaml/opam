@@ -531,7 +531,7 @@ let files t nv =
 (* For documentation *)
 let global_variable_names =
   [ "ocaml-version"; "opam-version"; "compiler";
-    "preinstalled"; "switch"; "jobs" ]
+    "preinstalled"; "switch"; "jobs"; "ocaml-native"; "ocaml-tools-opt" ]
 let package_variable_names =
   [ "enable"; "installed"; "pinned";
     "bin"; "sbin"; "lib"; "man"; "doc"; "share"; "etc";
@@ -569,6 +569,8 @@ let resolve_variable t ?opam local_variables v =
                                  (compiler_comp t t.compiler))
     | "switch"        -> string (OpamSwitch.to_string t.switch)
     | "jobs"          -> int (jobs t)
+    | "ocaml-native"  -> bool (Lazy.force OpamSystem.ocaml_native_available)
+    | "ocaml-tools-opt" -> bool (Lazy.force OpamSystem.ocaml_opt_available)
     | _               -> None
   in
   let get_env_var v =
@@ -807,7 +809,8 @@ let create_system_compiler_description root = function
           OpamCompiler.system version
           (if not !OpamGlobals.no_base_packages then base_packages else [])
           [ "CAML_LD_LIBRARY_PATH", "=",
-            "%{lib}%/stublibs" ^ ":" ^ Filename.concat dir "stublibs" ] in
+            "%{lib}%/stublibs" ^ String.make 1 OpamSystem.path_sep ^
+            Filename.concat dir "stublibs" ] in
     OpamFile.Comp.write comp f
 
 let system_needs_upgrade_displayed = ref false
@@ -1495,7 +1498,7 @@ let expand_env t ?opam (env: env_updates) : env =
     let string = OpamFilter.substitute_string fenv string in
     let read_env () =
       let prefix = OpamFilename.Dir.to_string t.root in
-      try OpamMisc.reset_env_value ~prefix (OpamMisc.getenv ident)
+      try OpamMisc.reset_env_value ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
       with Not_found -> [] in
     let cons ~head a b =
       let c = List.filter ((<>)"") b in
@@ -1506,12 +1509,13 @@ let expand_env t ?opam (env: env_updates) : env =
         match List.rev b with
         | "" :: _ -> (a :: c) @ [""]
         | _       -> a :: c in
+    let c = String.make 1 OpamSystem.path_sep in
     match symbol with
     | "="  -> (ident, string)
-    | "+=" -> (ident, String.concat ":" (string :: read_env ()))
-    | "=+" -> (ident, String.concat ":" (read_env () @ [string]))
-    | ":=" -> (ident, String.concat ":" (cons ~head:true string (read_env())))
-    | "=:" -> (ident, String.concat ":" (cons ~head:false string (read_env())))
+    | "+=" -> (ident, String.concat c (string :: read_env ()))
+    | "=+" -> (ident, String.concat c (read_env () @ [string]))
+    | ":=" -> (ident, String.concat c (cons ~head:true string (read_env())))
+    | "=:" -> (ident, String.concat c (cons ~head:false string (read_env())))
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 

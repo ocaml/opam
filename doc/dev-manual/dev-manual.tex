@@ -1024,7 +1024,7 @@ in \S\ref{file:general} with the following restrictions:
 \item Files listed under {\tt sbin} are copied into \verb+$opam/$SWITCH/sbin/+.
 \item Files listed under {\tt doc} are copied into \verb+$opam/$SWITCH/doc/$NAME/+.
 \item Files listed under {\tt share} are copied into \verb+$opam/$SWITCH/share/$NAME/+.
-\item Files listed under {\tt share_root} are copied into \verb+$opam/$SWITCH/share/+.
+\item Files listed under {\tt share\_root} are copied into \verb+$opam/$SWITCH/share/+.
 \item Files listed under {\tt etc} are copied into \verb+$opam/$SWITCH/etc/$NAME/+.
 \item Files listed under {\tt toplevel} are copied into \verb+$opam/$SWITCH/lib/toplevel/+.
 \item Files lister under {\tt stublibs} are copied into \verb+$opam/$SWITCH/lib/stublibs/+
@@ -1247,7 +1247,12 @@ and in substition files (see below). There are three kinds:
   \item \verb+ocaml-version+ the currently used version of OCaml
   \item \verb+switch+ the user-defined name (alias) of the current switch
   \item \verb+compiler+ the full OPAM name of the current OCaml compiler
-  \item \verb+preinstalled+ whether the compiler was preinstalled on the system or managed by OPAM
+  \item \verb+preinstalled+ whether the compiler was preinstalled on the system
+    or managed by OPAM
+  \item \verb+ocaml-native+ whether native compilation is available ({\tt
+      ocamlopt})
+  \item \verb+ocaml-tools-opt+ whether the {\tt .opt} variant of the
+    compilers are available ({\bf not} the {\tt ocamlopt} native compiler itself)
   \item \verb+jobs+ the configured number of parallel jobs to run
   \end{itemize}
 \item Package-local variables. Variable \verb+$VAR+ of package \verb+$NAME+ is

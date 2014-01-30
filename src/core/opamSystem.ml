@@ -41,6 +41,11 @@ end
 
 let (/) = Filename.concat
 
+(* Separator for the PATH variables *)
+let path_sep = match OpamGlobals.os () with
+  | OpamGlobals.Win32 -> ';'
+  | OpamGlobals.Cygwin | _ -> ':'
+
 let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
 
@@ -245,10 +250,12 @@ let default_env =
 let reset_env = lazy (
   let env = OpamMisc.env () in
   let env =
+    let path_sep_str = String.make 1 path_sep in
     List.rev_map (fun (k,v as c) ->
       match k with
       | "PATH" ->
-        k, String.concat ":" (OpamMisc.reset_env_value ~prefix:!OpamGlobals.root_dir v)
+        k, String.concat path_sep_str
+          (OpamMisc.reset_env_value path_sep ~prefix:!OpamGlobals.root_dir v)
       | _      -> c
     ) env in
   let env = List.rev_map (fun (k,v) -> k^"="^v) env in
@@ -519,6 +526,23 @@ let ocaml_version = lazy (
   | Some [] -> internal_error "`ocamlc -version` is empty."
   | None    -> None
 )
+
+let exists_alongside_ocamlc name =
+  let path = try OpamMisc.getenv "PATH" with Not_found -> "" in
+  let path = OpamMisc.split path path_sep in
+  let ocamlc_dir =
+    List.fold_left (function
+        | None -> fun d ->
+          if Sys.file_exists (d/"ocamlc") then Some d else None
+        | s -> fun _ -> s)
+      None path
+  in
+  match ocamlc_dir with
+  | Some d -> Sys.file_exists (d / name)
+  | None -> false
+
+let ocaml_opt_available = lazy (exists_alongside_ocamlc "ocamlc.opt")
+let ocaml_native_available = lazy (exists_alongside_ocamlc "ocamlopt")
 
 (* Reset the path to get the system compiler *)
 let system command = lazy (

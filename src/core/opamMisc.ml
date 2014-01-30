@@ -308,9 +308,9 @@ let split s c =
 let split_delim s c =
   Re_str.split_delim (Re_str.regexp (Printf.sprintf "[%c]" c)) s
 
-(* Remove from a ':' separated list of string the one with the given prefix *)
-let reset_env_value ~prefix v =
-  let v = split_delim v ':' in
+(* Remove from a c-separated list of string the one with the given prefix *)
+let reset_env_value ~prefix c v =
+  let v = split_delim v c in
   List.filter (fun v -> not (starts_with ~prefix v)) v
 
 (* if rsync -arv return 4 lines, this means that no files have changed *)
