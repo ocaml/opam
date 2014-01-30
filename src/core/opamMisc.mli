@@ -207,6 +207,13 @@ val getenv: string -> string
 (** Lazy environment *)
 val env: unit -> (string * string) list
 
+(** To use when catching default exceptions: ensures we don't catch fatal errors
+    like C-c. try-with should _always_ (by decreasing order of preference):
+    - either catch specific exceptions
+    - or re-raise the same exception
+    - or call this function on the caught exception *)
+val fatal: exn -> unit
+
 (** Return a pretty-printed backtrace *)
 val pretty_backtrace: unit -> string
 
@@ -220,10 +227,6 @@ module OP: sig
 
   (** Function composition *)
   val (++): ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
-
-  (** [finally f cleaner] call the [cleaner] function when [f] is
-      complete even in the presence of exceptions. *)
-  val finally: (unit -> 'a) -> (unit -> unit) -> 'a
 
 end
 

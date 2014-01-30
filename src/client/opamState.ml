@@ -50,7 +50,7 @@ let read fmt =
       try match read_line () with
         | "" -> None
         | s  -> Some s
-      with _ ->
+      with End_of_file ->
         OpamGlobals.msg "\n";
         None
     ) else
@@ -1093,6 +1093,7 @@ let marshal_from_file file =
     log "Loaded %s in %.3fs" (OpamFilename.to_string file) (chrono ());
     Some cache.cached_opams
   with e ->
+    OpamMisc.fatal e;
     log "Got an error while loading the cache: %s" (Printexc.to_string e);
     OpamFilename.remove file;
     None
@@ -1313,8 +1314,8 @@ let install_global_config root switch =
         ("etc", OpamPath.Switch.etc_dir root switch);
       ]
     @ map id [
-      ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with _ -> "user");
-      ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with _ -> "group");
+      ("user" , try (Unix.getpwuid (Unix.getuid ())).Unix.pw_name with Not_found -> "user");
+      ("group", try (Unix.getgrgid (Unix.getgid ())).Unix.gr_name with Not_found -> "group");
       ("make" , !OpamGlobals.makecmd ());
       ("os"   , OpamGlobals.os_string ());
     ] in
@@ -1495,7 +1496,7 @@ let expand_env t ?opam (env: env_updates) : env =
     let read_env () =
       let prefix = OpamFilename.Dir.to_string t.root in
       try OpamMisc.reset_env_value ~prefix (OpamMisc.getenv ident)
-      with _ -> [] in
+      with Not_found -> [] in
     let cons ~head a b =
       let c = List.filter ((<>)"") b in
       match b with
@@ -1575,7 +1576,7 @@ let ocamlinit () =
   try
     let file = Filename.concat (OpamMisc.getenv "HOME") ".ocamlinit" in
     Some (OpamFilename.of_string file)
-  with _ ->
+  with Not_found ->
     None
 
 let ocamlinit_needs_update () =
@@ -1611,7 +1612,8 @@ let update_ocamlinit () =
         let oc = open_out_bin (OpamFilename.to_string file) in
         output_string oc (header ^ body);
         close_out oc;
-      with _ ->
+      with e ->
+        OpamMisc.fatal e;
         OpamSystem.internal_error "Cannot write ~/.ocamlinit."
   ) else
     OpamGlobals.msg "  ~/.ocamlinit is already up-to-date.\n"
@@ -1702,7 +1704,7 @@ let update_init_scripts t ~global =
     if needs_update then (
       updated := true;
       try OpamFilename.write file body
-      with _ -> ()
+      with e -> OpamMisc.fatal e
     ) in
   List.iter write scripts;
   match global with
@@ -1849,7 +1851,7 @@ let eval_string () =
 let up_to_date_env t =
   let changes =
     List.filter
-      (fun (s, v) -> Some v <> try Some (OpamMisc.getenv s) with _ -> None)
+      (fun (s, v) -> Some v <> try Some (OpamMisc.getenv s) with Not_found -> None)
       (get_opam_env t) in
   changes = []
 

@@ -244,7 +244,8 @@ let recover_from_error = function
   | To_change (None, nv) ->
     let t = OpamState.load_state "recover-from-error" in
     try OpamAction.build_and_install_package t ~metadata:true nv
-    with _ -> ()
+    with e -> OpamMisc.fatal e
+                (* let the user stop the recovery by repeating C-c *)
 
 (* Transient state (not flushed to disk) *)
 type state = {

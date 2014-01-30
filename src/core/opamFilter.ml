@@ -39,7 +39,7 @@ let contents_of_variable env v =
     let name_str = OpamPackage.Name.to_string name in
     let names =
       try OpamMisc.split name_str '+'
-      with _ -> [name_str] in
+      with e -> OpamMisc.fatal e; [name_str] in
     let names = List.rev_map OpamPackage.Name.of_string names in
     let results =
       List.rev_map (fun name ->
@@ -135,7 +135,7 @@ let eval_opt env = function
   | None   -> true
   | Some f ->
     try eval env f
-    with _ -> false
+    with e -> OpamMisc.fatal e; false
 
 let arg env (a,f) =
   if eval_opt env f then
@@ -143,7 +143,8 @@ let arg env (a,f) =
       | CString s -> Some (substitute_string env s)
       | CIdent i  ->
         Some (string_of_variable_contents i (substitute_ident env i))
-    with _ ->
+    with e ->
+      OpamMisc.fatal e;
       None
   else
     None

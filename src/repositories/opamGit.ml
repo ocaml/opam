@@ -60,7 +60,7 @@ module Git = struct
   let reset repo =
     let merge commit =
       try OpamSystem.command [ "git" ; "reset" ; "--hard"; commit; "--" ]; true
-      with _ -> false in
+      with e -> OpamMisc.fatal e; false in
     OpamFilename.in_dir repo.repo_root (fun () ->
         let ok =
           List.fold_left (fun ok commit -> if ok then ok else merge commit)
@@ -73,7 +73,7 @@ module Git = struct
     let diff commit =
       try Some (
         OpamSystem.read_command_output ["git" ; "diff" ; "--name-only" ; commit ; "--" ])
-      with _ -> None in
+      with e -> OpamMisc.fatal e; None in
     OpamFilename.in_dir repo.repo_root (fun () ->
         let diff =
           List.fold_left (fun r commit -> match r with

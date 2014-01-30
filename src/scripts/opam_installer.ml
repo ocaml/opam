@@ -187,7 +187,7 @@ let uninstall options =
         (df options.prefix (OpamSwitch.of_string "") options.pkgname))
     OpamPath.Switch.([ lib; share; etc; doc ]);
   List.iter
-    (fun (src, dst) ->
+    (fun (_src, dst) ->
        cmd.confirm
          (Printf.sprintf "Remove %s ?" (OpamFilename.to_string dst))
          (fun () -> cmd.rm ~opt:false dst))

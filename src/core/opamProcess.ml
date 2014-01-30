@@ -164,11 +164,11 @@ let read_lines f =
           let line = input_line ic in
           lines := line :: !lines;
         done
-      with _ -> ()
+      with End_of_file | Sys_error _ -> ()
     end;
     close_in ic;
     List.rev !lines
-  with _ -> []
+  with Sys_error _ -> []
 
 let wait p =
   let rec iter () =
@@ -215,7 +215,7 @@ let is_success r = r.r_code = 0
 let is_failure r = r.r_code <> 0
 
 let safe_unlink f =
-  try Unix.unlink f with _ -> ()
+  try Unix.unlink f with Unix.Unix_error _ -> ()
 
 let clean_files r =
   List.iter safe_unlink r.r_cleanup

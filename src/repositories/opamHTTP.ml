@@ -145,11 +145,13 @@ module B = struct
           OpamFilename.download ~overwrite:true
             state.remote_index_archive state.local_dir in
         OpamFilename.extract_in file state.local_dir
-      with _ ->
+      with e ->
+        OpamMisc.fatal e;
         OpamGlobals.msg
           "Cannot find index.tar.gz on the OPAM repository. \
            Initialisation might take some time.\n"
-    with _ ->
+    with e ->
+      OpamMisc.fatal e;
       OpamGlobals.error_and_exit "%s is unavailable."
         (string_of_address repo.repo_address)
 
@@ -210,7 +212,8 @@ module B = struct
         let local_file = OpamFilename.download ~overwrite:true filename dirname in
         OpamRepository.check_digest local_file checksum;
         Result (F local_file)
-      with _ ->
+      with e ->
+        OpamMisc.fatal e;
         Not_available remote_url
     )
 

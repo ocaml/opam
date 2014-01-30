@@ -62,7 +62,7 @@ module Hg = struct
   let reset repo =
     let merge commit =
       try OpamSystem.command [ "hg" ; "update" ; "--clean"; commit ]; true
-      with _ -> false in
+      with e -> OpamMisc.fatal e; false in
     let commit = match snd repo.repo_address with
       | None   -> "tip"
       | Some c -> c in
@@ -76,7 +76,7 @@ module Hg = struct
       try Some (
         OpamSystem.read_command_output
           ["hg" ; "diff" ; "--stat" ; "-r" ; commit ])
-      with _ -> None in
+      with e -> OpamMisc.fatal e; None in
     let commit = match snd repo.repo_address with
       | None   -> "tip"
       | Some c -> c in

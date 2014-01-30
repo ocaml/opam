@@ -170,7 +170,7 @@ let install_compiler ~quiet switch compiler =
       let aliases = OpamSwitch.Map.filter (fun a _ -> a <> switch) t.aliases in
       OpamFile.Aliases.write (OpamPath.aliases t.root) aliases;
       let compdir = OpamPath.Switch.root t.root switch in
-      (try OpamFilename.rmdir compdir with _ -> ());
+      (try OpamFilename.rmdir compdir with OpamSystem.Internal_error _ -> ());
       raise e
 
 

@@ -326,7 +326,7 @@ let dev_opam_opt t nv build_dir =
     let overlay = dir // "opam" in
     if OpamFilename.exists overlay then
       try Some (OpamFile.OPAM.read overlay)
-      with _ -> opam ()
+      with e -> OpamMisc.fatal e; opam ()
     else opam ()
   else opam ()
 
@@ -376,7 +376,7 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
         if not (OpamFilename.exists_dir p_build)
         && not (List.for_all use_ocamlfind remove) then (
           try let _ = extract_package t nv in ()
-          with _ -> ()
+          with e -> OpamMisc.fatal e
         );
         let opam = dev_opam t nv p_build in
         let remove = OpamState.filter_commands t ~opam
@@ -499,7 +499,7 @@ let remove_all_packages t ~metadata sol =
       OpamGlobals.header_msg "Removing Packages";
     deleted := nv :: !deleted;
     try remove_package t ~rm_build:true ~metadata:false nv;
-    with _ -> () in
+    with e -> OpamMisc.fatal e in
   let action n =
     match n with
     | To_change (Some nv, _)
@@ -549,6 +549,7 @@ let build_and_install_package_aux t ~metadata nv =
 
       exec
     with e ->
+      OpamMisc.fatal e;
       raise
         (OpamGlobals.Package_error
            (Printf.sprintf "Could not get the source for %s:\n%s"
