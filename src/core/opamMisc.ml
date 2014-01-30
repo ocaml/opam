@@ -239,18 +239,6 @@ module OP = struct
 
   let (++) f g x = g (f x)
 
-  let finally f clean =
-    let safe_clean () =
-      try clean ()
-      with _ -> () in
-    let result =
-      try f ()
-      with e ->
-        safe_clean ();
-        raise e in
-    safe_clean ();
-    result
-
 end
 
 let strip str =
@@ -303,7 +291,7 @@ let cut_at_aux fn s sep =
     let name = String.sub s 0 i in
     let version = String.sub s (i+1) (String.length s - i - 1) in
     Some (name, version)
-  with _ ->
+  with Invalid_argument _ | Not_found ->
     None
 
 let cut_at = cut_at_aux String.index
@@ -385,6 +373,12 @@ let sub_at n s =
   else
     String.sub s 0 n
 
+(** To use when catching default exceptions: ensures we don't catch fatal errors
+    like C-c *)
+let fatal e = match e with
+  | Sys.Break -> raise e
+  | _ -> ()
+
 let pretty_backtrace () =
   match Printexc.get_backtrace () with
   | "" -> ""
@@ -406,15 +400,15 @@ let get_terminal_columns () =
   try           (* terminfo *)
     with_process_in "tput cols"
       (fun ic -> int_of_string (input_line ic))
-  with _ -> try (* GNU stty *)
+  with Unix.Unix_error _ | Sys_error _ | Failure _ -> try (* GNU stty *)
       with_process_in "stty size"
         (fun ic ->
           match split (input_line ic) ' ' with
           | [_ ; v] -> int_of_string v
           | _ -> failwith "stty")
-    with _ -> try (* shell envvar *)
+    with Unix.Unix_error _ | Sys_error _ | Failure _  -> try (* shell envvar *)
         int_of_string (getenv "COLUMNS")
-      with _ ->
+      with Not_found | Failure _ ->
         default_columns
 
 let terminal_columns =
@@ -428,7 +422,7 @@ let uname_s () =
   try
     with_process_in "uname -s"
       (fun ic -> Some (strip (input_line ic)))
-  with _ ->
+  with Unix.Unix_error _ | Sys_error _ ->
     None
 
 let shell_of_string = function
@@ -441,12 +435,12 @@ let shell_of_string = function
 
 let guess_shell_compat () =
   try shell_of_string (Filename.basename (getenv "SHELL"))
-  with _ -> `sh
+  with Not_found -> `sh
 
 let guess_dot_profile shell =
   let home f =
     try Filename.concat (getenv "HOME") f
-    with _ -> f in
+    with Not_found -> f in
   match shell with
   | `fish -> List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"]
   | `zsh  -> home ".zshrc"

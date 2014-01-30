@@ -603,7 +603,8 @@ module API = struct
       let repos = OpamRepositoryName.Map.values repositories in
       let child repo =
         try repository_update t repo
-        with _ ->
+        with e ->
+          OpamMisc.fatal e;
           OpamGlobals.error "Skipping %s as the repository is not available.\n"
             (string_of_address repo.repo_address) in
 

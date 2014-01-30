@@ -175,7 +175,9 @@ module Make (G : G) = struct
     log "read_error";
     let r : error =
       try Marshal.from_channel ic
-      with _ -> Internal_error "Cannot read the error file" in
+      with e -> (* Marshal doesn't document its exceptions :( *)
+        OpamMisc.fatal e;
+        Internal_error "Cannot read the error file" in
     close_in ic;
     r
 
@@ -328,7 +330,9 @@ module Make (G : G) = struct
       let ic = open_in_bin file in
       let result =
         try Marshal.from_channel ic
-        with _ -> OpamSystem.internal_error "Cannot read the result file" in
+        with e ->
+          OpamMisc.fatal e;
+          OpamSystem.internal_error "Cannot read the result file" in
       close_in ic;
       Unix.unlink file;
       files := List.filter (fun (_,f) -> f<>file) !files;

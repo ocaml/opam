@@ -419,7 +419,7 @@ let parse_compiler_constraint t =
       Atom (parse_relop r, version)
     | [Symbol r; String v]       ->
       (try Atom (parse_relop r, OpamCompiler.Version.of_string v)
-       with _ -> bad_format "Expecting a relop, got %s" r)
+       with Invalid_argument _ -> bad_format "Expecting a relop, got %s" r)
     | [Group g]                  -> Block (aux g)
     | e1::e2 :: Symbol "|" :: e3 -> Or (aux [e1;e2], aux e3)
     | e1::e2 :: Symbol "&" :: e3 -> And (aux [e1;e2], aux e3)

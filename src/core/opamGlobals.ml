@@ -55,25 +55,25 @@ let curl_command = try Some (OpamMisc.getenv "OPAMCURL") with Not_found -> None
 
 let jobs = ref (
     try Some (int_of_string (OpamMisc.getenv "OPAMJOBS"))
-    with _ -> None
+    with Not_found | Failure _ -> None
   )
 
 let download_retry =
   try max 1 (int_of_string (OpamMisc.getenv "OPAMRETRY"))
-  with _ -> 10
+  with Not_found | Failure _ -> 10
 
 let cudf_file = ref (
     try Some (OpamMisc.getenv "OPAMCUDFFILE")
-    with _ -> None
+    with Not_found -> None
   )
 
 let solver_timeout =
   try float_of_string (OpamMisc.getenv "OPAMSOLVERTIMEOUT")
-  with _ -> 5.
+  with Not_found | Failure _ -> 5.
 
 let aspcud_criteria =
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
-  with _ -> "-removed,-notuptodate,-new,-changed"
+  with Not_found -> "-removed,-notuptodate,-new,-changed"
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
@@ -89,21 +89,21 @@ let switch: [`Env of string
             | `Not_set ] ref
   = ref (
     try `Env (OpamMisc.getenv "OPAMSWITCH")
-    with _ -> `Not_set
+    with Not_found -> `Not_set
   )
 
 let external_tags = ref ([] : string list)
 
 let home =
   try OpamMisc.getenv "HOME"
-  with _ -> Sys.getcwd ()
+  with Not_found -> Sys.getcwd ()
 
 let default_opam_dir =
   Filename.concat home ".opam"
 
 let root_dir = ref (
     try OpamMisc.getenv "OPAMROOT"
-    with _ -> default_opam_dir
+    with Not_found -> default_opam_dir
   )
 
 let timer () =

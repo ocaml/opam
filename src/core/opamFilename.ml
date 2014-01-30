@@ -218,7 +218,7 @@ let link ~src ~dst =
 let readlink src =
   if exists src then
     try of_string (Unix.readlink (to_string src))
-    with _ -> src
+    with Unix.Unix_error _ -> src
   else
     OpamSystem.internal_error "%s does not exist." (to_string src)
 
@@ -226,7 +226,7 @@ let is_symlink src =
   try
     let s = Unix.lstat (to_string src) in
     s.Unix.st_kind = Unix.S_LNK
-  with _ ->
+  with Unix.Unix_error _ ->
     OpamSystem.internal_error "%s does not exist." (to_string src)
 
 let starts_with dirname filename =
@@ -307,7 +307,7 @@ let download_iter ~overwrite filenames dirname =
       OpamSystem.internal_error "Cannot download %s." (OpamMisc.pretty_list filenames)
     | h::t ->
       try download ~overwrite h dirname
-      with _ -> aux t in
+      with e -> OpamMisc.fatal e; aux t in
   aux filenames
 
 let patch filename dirname =

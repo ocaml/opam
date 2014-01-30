@@ -35,7 +35,8 @@ let command_not_found cmd =
 module Sys2 = struct
   (* same as [Sys.is_directory] except for symlinks, which returns always [false]. *)
   let is_directory file =
-    Unix.( (lstat file).st_kind = S_DIR )
+    try Unix.( (lstat file).st_kind = S_DIR )
+    with Unix.Unix_error _ as e -> raise (Sys_error (Printexc.to_string e))
 end
 
 let (/) = Filename.concat
@@ -83,12 +84,12 @@ let rec temp_file ?dir prefix =
 
 let remove_file file =
   if Sys.file_exists file
-  || (try let _ = Unix.lstat file in true with _ -> false)
+  || (try let _ = Unix.lstat file in true with Unix.Unix_error _ -> false)
   then (
     try
       log "rm %s" file;
       Unix.unlink file
-    with e ->
+    with Unix.Unix_error _ as e ->
       internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
   )
 
@@ -129,11 +130,11 @@ let in_dir dir fn =
   let reset_cwd =
     let cwd =
       try Some (Sys.getcwd ())
-      with _ -> None in
+      with Sys_error _ -> None in
     fun () ->
       match cwd with
       | None     -> ()
-      | Some cwd -> try chdir cwd with _ -> () in
+      | Some cwd -> try chdir cwd with Unix.Unix_error _ -> () in
   chdir dir;
   try
     let r = fn () in
@@ -155,16 +156,16 @@ let list kind dir =
     []
 
 let files_with_links =
-  list (fun f -> try not (Sys.is_directory f) with _ -> true)
+  list (fun f -> try not (Sys.is_directory f) with Sys_error _ -> true)
 
 let files_all_not_dir =
-  list (fun f -> try not (Sys2.is_directory f) with _ -> true)
+  list (fun f -> try not (Sys2.is_directory f) with Sys_error _ -> true)
 
 let directories_strict =
-  list (fun f -> try Sys2.is_directory f with _ -> false)
+  list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)
 
 let directories_with_links =
-  list (fun f -> try Sys.is_directory f with _ -> false)
+  list (fun f -> try Sys.is_directory f with Sys_error _ -> false)
 
 let rec_files dir =
   let rec aux accu dir =
@@ -501,11 +502,12 @@ let funlock file =
         Unix.unlink file;
       ) else
         internal_error "Cannot unlock %s (%s)." file s
-    with _ ->
+    with e ->
+      OpamMisc.fatal e;
       OpamGlobals.error "%s is broken, removing it and continuing anyway." file;
       close_in ic;
       log "rm %s" file;
-      try Unix.unlink file with _ -> ()
+      try Unix.unlink file with Unix.Unix_error _ -> ()
   ) else
     log "Cannot find %s, but continuing anyway..." file
 
@@ -554,7 +556,9 @@ let download_command =
     | l  ->
       let code = List.hd (List.rev l) in
       try if int_of_string code >= 400 then raise Exit
-      with _ -> internal_error "curl: code %s while downloading %s" code src in
+      with e ->
+        OpamMisc.fatal e;
+        internal_error "curl: code %s while downloading %s" code src in
   lazy (
     match OpamGlobals.curl_command with
     | Some cmd -> curl cmd
@@ -620,7 +624,9 @@ let patch p =
   let rec aux n =
     if n = max_trying then
       internal_error "Patch %s does not apply." p
-    else if None = try Some (patch ~dryrun:true n) with _ -> None then
+    else if None =
+            try Some (patch ~dryrun:true n)
+            with e -> OpamMisc.fatal e; None then
       aux (succ n)
     else
       patch ~dryrun:false n in

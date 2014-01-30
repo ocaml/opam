@@ -287,6 +287,7 @@ let process {index; gener_digest; dryrun; recurse; names; debug; resolve} =
         with e ->
           OpamFilename.remove local_archive;
           errors := (nv, e) :: !errors;
+          OpamMisc.fatal e
       ) to_add;
   );
 

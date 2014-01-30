@@ -1016,7 +1016,7 @@ let repository =
         let name = OpamRepositoryName.of_string name in
         let priority =
           try int_of_string p
-          with _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
+          with Failure _ -> OpamGlobals.error_and_exit "%s is not an integer." p in
         Client.REPOSITORY.priority name ~priority
       | _ -> error `toomany usage_priority in
     let remove = function

@@ -581,10 +581,10 @@ module X = struct
     let of_channel _ ic =
       let x =
         try input_line ic
-        with _ -> "" in
+        with End_of_file | Sys_error _ -> "" in
       let y =
         try OpamSystem.string_of_channel ic
-        with _ -> ""
+        with End_of_file | Sys_error _ -> ""
       in
       x, y
 

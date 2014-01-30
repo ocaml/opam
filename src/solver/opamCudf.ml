@@ -68,7 +68,7 @@ module Graph = struct
     include Algo.Defaultgraphs.PackageGraph.G
     let succ g v =
       try succ g v
-      with _ -> []
+      with e -> OpamMisc.fatal e; []
   end
 
   module PO = Algo.Defaultgraphs.GraphOper (PG)
@@ -164,7 +164,7 @@ let vpkg2opamstr cudf2opam (name, constr) =
       | `Gt  -> str ">"
       | `Leq -> str "<="
       | `Lt  -> str "<"
-    with _ ->
+    with Not_found ->
       Common.CudfAdd.decode name
 
 let string_of_reason cudf2opam opam_universe r =
@@ -392,9 +392,8 @@ let call_external_solver ~explain univ req =
       let cmd = aspcud_command in
       let criteria = OpamGlobals.aspcud_criteria in
       try Algo.Depsolver.check_request ~cmd ~criteria ~explain:true cudf_request
-      with
-      | Sys.Break as e -> raise e
-      | e ->
+      with e ->
+        OpamMisc.fatal e;
         OpamGlobals.warning "'%s' failed with %s" cmd (Printexc.to_string e);
         Algo.Depsolver.check_request ~explain cudf_request
     end else
