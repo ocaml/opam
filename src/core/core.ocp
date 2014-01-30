@@ -1,5 +1,3 @@
-comp += [ "-warn-error" "A" ]
-
 begin library "opam-core"
   files   = [
     "opamScript.ml"

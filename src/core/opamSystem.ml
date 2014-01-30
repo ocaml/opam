@@ -256,7 +256,6 @@ let reset_env = lazy (
 )
 
 let command_exists ?(env=default_env) name =
-  let open OpamGlobals in
   let cmd, args = "/bin/sh", ["-c"; Printf.sprintf "type %s" name] in
   let r = OpamProcess.run ~env ~name:(temp_file "type") ~verbose:false cmd args in
   OpamProcess.clean_files r;

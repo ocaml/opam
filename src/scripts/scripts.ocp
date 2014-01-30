@@ -1,5 +1,3 @@
-comp += [ "-warn-error" "A" ]
-
 begin program "opam-check"
   files = [ "opam_check.ml" ]
   requires = [ "opam-client" ]

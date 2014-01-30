@@ -32,7 +32,7 @@ let need_globals ns =
   || List.mem (OpamPackage.Name.of_string "global") ns
 
 (* Implicit variables *)
-let implicits t ns =
+let implicits ns =
   if need_globals ns then
     List.map (fun variable ->
       OpamVariable.Full.create_global
@@ -60,7 +60,7 @@ let list ns =
       (name, file) :: l
     ) t.installed [] in
   let variables =
-    implicits t ns @
+    implicits ns @
     List.fold_left (fun accu (name, config) ->
       (* add all the global variables *)
       let globals =

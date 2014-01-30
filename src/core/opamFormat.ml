@@ -17,8 +17,6 @@
 open OpamTypes
 open OpamMisc.OP
 
-type indent_variable = string -> bool
-
 let empty = {
   file_contents = [];
   file_name     = "<none>";
