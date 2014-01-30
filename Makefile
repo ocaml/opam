@@ -1,6 +1,6 @@
 -include Makefile.config
 
-LOCAL_OCPBUILD=./ocp-build/ocp-build -no-use-ocamlfind
+LOCAL_OCPBUILD=./ocp-build/ocp-build.byte -no-use-ocamlfind
 OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
 TARGETS = opam opam-admin opam-installer
@@ -43,7 +43,7 @@ with-ocamlbuild: autogen
 	ln -sf _build/src/client/opamMain.native opam &&\
 	ln -sf _build/src/scripts/opam_admin.native opam-admin
 
-$(LOCAL_OCPBUILD): ocp-build/ocp-build.boot ocp-build/win32_c.c
+$(LOCAL_OCPBUILD):
 	$(MAKE) -C ocp-build
 
 OCAMLFIND_DIR=$(shell ocamlfind printconf destdir)
@@ -53,7 +53,8 @@ prepare: depends.ocp.in
 autogen: src/core/opamGitVersion.ml src/core/opamScript.ml src/core/opamVersion.ml
 
 compile: $(LOCAL_OCPBUILD) autogen
-	$(OCPBUILD) -init -scan $(TARGET)
+	$(OCPBUILD) -init -scan
+	$(OCPBUILD) $(TARGET)
 
 clone: src/core/opamVersion.ml
 	$(MAKE) -C $(SRC_EXT)
