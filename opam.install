@@ -1,4 +1,0 @@
-bin: [
-  "_obuild/opam/opam.asm" { "opam" }
-  "_obuild/opam-admin/opam-admin.asm" { "opam-admin" }
-]

@@ -5,6 +5,8 @@ OCPBUILD ?= $(LOCAL_OCPBUILD)
 SRC_EXT=src_ext
 TARGETS = opam opam-admin opam-installer
 
+OPAM_INSTALLER = _obuild/opam-installer/opam-installer.byte
+
 .PHONY: all
 
 all: $(LOCAL_OCPBUILD) META
@@ -117,18 +119,33 @@ src/core/opamScript.ml: shell/ src/core/opamVersion.ml
 	ocaml shell/crunch.ml "complete_zsh" < shell/opam_completion_zsh.sh >> $@
 	ocaml shell/crunch.ml "switch_eval"  < shell/opam_switch_eval.sh >> $@
 
+.PHONY: opam.install
+opam.install:
+	@echo "bin: [" >$@
+	@for t in $(TARGETS); do \
+	  if [ -e _obuild/$$t/$$t.asm ]; \
+	  then echo "  \"_obuild/$$t/$$t.asm\" {\"$$t\"}"; \
+	  else echo "  \"_obuild/$$t/$$t.byte\" {\"$$t\"}"; \
+	  fi; \
+	done >>$@
+	@echo "]" >>$@
+	@echo "man: [" >>$@
+	@for m in doc/man/*; do \
+	  echo "  \"$$m\" {\"man1/$$(basename $$m)\"}"; \
+	done >>$@
+	@echo "]" >>$@
+
 .PHONY: uninstall install install-with-ocamlbuild
-install:
-	mkdir -p $(DESTDIR)$(prefix)/bin
-	$(MAKE) $(TARGETS:%=%-install)
-	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
+install: $(OPAM_INSTALLER) opam.install
+	$(OPAM-INSTALLER) --prefix="$(DESTDIR)$(prefix)" opam.install
+
 install-with-ocamlbuild:
 	mkdir -p $(DESTDIR)$(prefix)/bin
 	$(MAKE) $(TARGETS:%=%-install-with-ocamlbuild)
 	mkdir -p $(DESTDIR)$(mandir)/man1 && cp doc/man/* $(DESTDIR)$(mandir)/man1
-uninstall:
-	rm -f $(prefix)/bin/opam*
-	rm -f $(mandir)/man1/opam*
+
+uninstall: $(OPAM-INSTALLER)
+	$(OPAM-INSTALLER) --prefix="$(DESTDIR)$(prefix)" -u opam.install
 
 CORE_LIB   = opam-core
 REPO_LIB   = opam-repositories
@@ -161,15 +178,20 @@ OCAMLBUILD_FILES =\
 	$(SOLVER_FILES:%=_build/src/solver/%)\
 	$(CLIENT_FILES:%=_build/src/client/%)
 
+.PHONY: opam-lib.install
+opam-lib.install:
+	@echo "lib: [\n  \"META\"\n $(FILES:%= \"%\"\n)]" >$@
+
 .PHONY: libuninstall libinstall libinstall-with-ocamlbuild
-libinstall: META
-	$(MAKE) libuninstall
-	ocamlfind install opam META $(FILES)
+libinstall: $(OPAM_INSTALLER) META opam-lib.install
+	$(OPAM_INSTALLER) --prefix="$(DESTDIR)$(prefix)" opam-lib.install
+
 libinstall-with-ocamlbuild: META
 	$(MAKE) libuninstall
 	ocamlfind install opam META $(OCAMLBUILD_FILES)
+
 libuninstall:
-	ocamlfind remove opam
+	$(OPAM_INSTALLER) --prefix="$(DESTDIR)$(prefix)" -u opam-lib.install
 
 doc: compile
 	$(MAKE) -C doc
