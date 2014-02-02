@@ -5,7 +5,7 @@ all: opam.wiki
 	        Packaging.pdf Developing.pdf
 
 opam.wiki:
-	git clone git://github.com/OCamlPro/opam.wiki.git
+	git clone git://github.com/ocaml/opam.wiki.git
 
 %.pdf: opam.wiki/%.md
 	pandoc $^ -o $@
