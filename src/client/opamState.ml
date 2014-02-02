@@ -798,8 +798,15 @@ let available_packages t system =
       ) t.opams (OpamPackage.Name.Set.empty, OpamPackage.Set.empty) in
   set
 
-let base_packages =
-  List.map OpamPackage.Name.of_string [ "base-unix"; "base-bigarray"; "base-threads" ]
+let base_packages = lazy (
+  let names = [ "base-unix"; "base-bigarray"; "base-threads" ] in
+  let names = if Lazy.force OpamSystem.system_camlp4_available then
+      "base-camlp4" :: names
+    else
+      names
+  in
+  List.map OpamPackage.Name.of_string names
+)
 
 let create_system_compiler_description root = function
   | None         -> ()
@@ -814,7 +821,7 @@ let create_system_compiler_description root = function
       let f =
         OpamFile.Comp.create_preinstalled
           OpamCompiler.system version
-          (if not !OpamGlobals.no_base_packages then base_packages else [])
+          (if not !OpamGlobals.no_base_packages then Lazy.force base_packages else [])
           [ "CAML_LD_LIBRARY_PATH", "=",
             "%{lib}%/stublibs" ^ String.make 1 OpamSystem.path_sep ^
             Filename.concat dir "stublibs" ] in
@@ -907,7 +914,7 @@ let get_compiler_packages t comp =
       if not !OpamGlobals.no_base_packages then
         pkg_not
       else
-        List.filter (fun n -> not (List.mem n base_packages)) pkg_not in
+        List.filter (fun n -> not (List.mem n (Lazy.force base_packages))) pkg_not in
     if pkg_not <> [] then (
       List.iter
         (OpamPackage.Name.to_string ++ OpamGlobals.error "Package %s not found")

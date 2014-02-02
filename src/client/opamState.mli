@@ -263,7 +263,7 @@ val find_packages_by_name: state -> name -> package_set option
 val installed_map: state -> version name_map
 
 (** Return the base packages *)
-val base_packages: name list
+val base_packages: name list Lazy.t
 
 (** Return all the collection of installed packages, for all the
     available packages *)

@@ -113,6 +113,10 @@ val system_ocamlc_where: string option Lazy.t
 (** Return the version of the system compiler *)
 val system_ocamlc_version: string option Lazy.t
 
+(** Returns true if caml4, camlp4o and camlp4r are available for the
+    system compiler *)
+val system_camlp4_available: bool Lazy.t
+
 (** [directories_with_links dir] returns the directories in the directory [dir].
     Links pointing to directory are also returned. *)
 val directories_with_links: string -> string list

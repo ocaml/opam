@@ -557,6 +557,18 @@ let system_ocamlc_where = system [ "ocamlc"; "-where" ]
 
 let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
+let system_camlp4_available = lazy (
+  let version = Lazy.force (system [ "camlp4"; "-version" ]) in
+  let where = Lazy.force (system [ "camlp4"; "-where" ]) in
+  let ocamlc_where = Lazy.force system_ocamlc_where in
+  let ocamlc_version = Lazy.force system_ocamlc_version in
+  match version, where, ocamlc_version, ocamlc_where with
+  | Some version, Some where, Some ocamlc_version, Some ocamlc_where ->
+    version = ocamlc_version &&
+    where = Filename.concat ocamlc_where "camlp4"
+  | _ -> false
+)
+
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
   let wget ~compress:_ src =
