@@ -274,12 +274,14 @@ let quick_lookup v =
 	OpamFile.Config.switch (OpamFile.Config.read config) in
     let config = OpamPath.Switch.config root switch OpamPackage.Name.global_config in
     let config = OpamFile.Dot_config.read config in
-
-    if OpamVariable.to_string var = "switch" then
-      Some (S (OpamSwitch.to_string switch))
-    else match OpamVariable.Full.section v with
-    | None   -> OpamFile.Dot_config.variable config var
-    | Some s -> OpamFile.Dot_config.Section.variable config s var
+    match OpamState.get_env_var v with
+    | Some _ as c -> c
+    | None ->
+      if OpamVariable.to_string var = "switch" then
+        Some (S (OpamSwitch.to_string switch))
+      else match OpamVariable.Full.section v with
+        | None   -> OpamFile.Dot_config.variable config var
+        | Some s -> OpamFile.Dot_config.Section.variable config s var
   ) else
     None
 
