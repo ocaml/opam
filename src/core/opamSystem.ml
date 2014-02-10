@@ -559,7 +559,7 @@ let system_ocamlc_version = system [ "ocamlc"; "-version" ]
 
 let download_command =
   let retry = string_of_int OpamGlobals.download_retry in
-  let wget src =
+  let wget ~compress:_ src =
     let wget = [
       "wget";
       "--content-disposition"; "--no-check-certificate";
@@ -567,12 +567,13 @@ let download_command =
       src
     ] in
     command wget in
-  let curl command src =
+  let curl command ~compress src =
     let curl = [
       command;
       "--write-out"; "%{http_code}\\n"; "--insecure";
       "--retry"; retry; "--retry-delay"; "2";
-      "-OL"; src
+    ] @ (if compress then ["--compressed"] else []) @ [
+        "-OL"; src
     ] in
     match read_command_output curl with
     | [] -> internal_error "curl: empty response while downloading %s" src
@@ -594,10 +595,10 @@ let download_command =
         internal_error "Cannot find curl nor wget."
   )
 
-let really_download ~overwrite ~src ~dst =
+let really_download ~overwrite ?(compress=false) ~src ~dst =
   let download = (Lazy.force download_command) in
   let aux () =
-    download src;
+    download ~compress src;
     match list (fun _ -> true) "." with
       ( [] | _::_::_ ) ->
       internal_error "Too many downloaded files."
@@ -615,7 +616,7 @@ let really_download ~overwrite ~src ~dst =
   | Internal_error s as e -> OpamGlobals.error "%s" s; raise e
   | _ -> internal_error "Cannot download %s, please check your connection settings." src
 
-let download ~overwrite ~filename:src ~dst:dst =
+let download ~overwrite ?compress ~filename:src ~dst:dst =
   if dst = src then
     dst
   else if Sys.file_exists src then (
@@ -627,7 +628,7 @@ let download ~overwrite ~filename:src ~dst:dst =
     ];
     dst
   ) else
-    really_download ~overwrite ~src ~dst
+    really_download ~overwrite ?compress ~src ~dst
 
 let patch p =
   let max_trying = 5 in
