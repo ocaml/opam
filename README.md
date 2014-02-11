@@ -36,7 +36,7 @@ packages and compilers created with OPAM version `x.(y-1).0`
 ## Bug tracker
 
 Have a bug or a feature request ?
-[Please open a new issue](https://github.com/OCamlPro/opam/issues).
+[Please open a new issue](https://github.com/ocaml/opam/issues).
 Before opening any issue, please search for existing issues.
 
 ## Community
@@ -65,21 +65,21 @@ available using `opam --help`. To get help for a specific command, use
 
 A collection of tutorials are available online at <http://opam.ocaml.org>.
 These tutorials are automatically generated from the
-[wiki](https://github.com/OCamlPro/opam/wiki/_pages) and
+[wiki](https://github.com/ocaml/opam/wiki/_pages) and
 are also available in PDF format in the `doc/tutorials` directory.
 
 #### API, Code Documentation and Developer Manual
 
 The API documentation is available
- [online](http://htmlpreview.github.com/?https://github.com/OCamlPro/opam/blob/master/doc/html/index.html)
+ [online](http://htmlpreview.github.com/?https://github.com/ocaml/opam/blob/master/doc/html/index.html)
  and under the `doc/html/` directory; the developer manual is in
  the `doc/dev-manual/` directory.
 
 ### Related repositories
 
-- [OCamlPro/opam-repository](https://github.com/OCamlPro/opam-repository) is the official repository for OPAM packages and compilers. A number of non-official repositories are also available on the interwebs, for instance on [Github](https://github.com/search?q=opam-repo&type=Repositories).
-- [opam2web](https://github.com/OCamlPro/opam2web) generates a collection of browsable HTML files for a given repository. It is used to generate http://opam.ocaml.org.
-- [opam-rt](https://github.com/OCamlPro/opam-rt) is the regression framework for OPAM.
+- [ocaml/opam-repository](https://github.com/ocaml/opam-repository) is the official repository for OPAM packages and compilers. A number of non-official repositories are also available on the interwebs, for instance on [Github](https://github.com/search?q=opam-repo&type=Repositories).
+- [opam2web](https://github.com/ocaml/opam2web) generates a collection of browsable HTML files for a given repository. It is used to generate http://opam.ocaml.org.
+- [opam-rt](https://github.com/ocaml/opam-rt) is the regression framework for OPAM.
 - [opamlot](https://github.com/ocamllabs/ocamlot) is the automated QA environment for OPAM. 
 
 ## Copyright and license

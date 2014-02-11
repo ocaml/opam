@@ -84,11 +84,29 @@ Show version information.
 Disable interactive mode and answer yes to all questions that would otherwise be asked to the user. This is equivalent to setting \fB$OPAMYES\fR to a non\-empty string.
 .SH ENVIRONMENT VARIABLES
 .P
-opam makes use of environment variables listed here.
+OPAM makes use of the environment variables listed here. Boolean variables are considered true when set to a non\-empty string.
 .P
-\fIOPAMCOLOR\fR, when set to \fIalways\fR or \fInever\fR, sets a default value for the \-\-color option
+\fIOPAMCOLOR\fR, when set to \fIalways\fR or \fInever\fR, sets a default value for the \-\-color option.
 .P
-\fIOPAMCURL\fR can be used to define an alternative for the 'curl' command\-line utility to download files
+\fIOPAMCURL\fR can be used to define an alternative for the 'curl' command\-line utility to download files.
+.P
+\fIOPAMDEBUG\fR see option `\-\-debug'.
+.P
+\fIOPAMJOBS\fR sets the maximum number of parallel workers to run.
+.P
+\fIOPAMNOASPCUD\fR see option `\-\-no\-aspcud'.
+.P
+\fIOPAMROOT\fR see option `\-\-root'. This is automatically set by `opam config env \-\-root=DIR' when DIR is non\-default.
+.P
+\fIOPAMSOLVERTIMEOUT\fR change the time allowance of the internal solver.
+.P
+\fIOPAMSWITCH\fR see option `\-\-switch'. Automatically set by `opam config env \-\-switch=SWITCH'.
+.P
+\fIOPAMUTF8MSGS\fR use nice UTF8 characters in OPAM messages.
+.P
+\fIOPAMVERBOSE\fR see option `\-\-verbose'.
+.P
+\fIOPAMYES\fR see option `\-\-yes'.
 .SH FURTHER DOCUMENTATION
 .P
 See https://opam.ocaml.org.
@@ -115,4 +133,4 @@ Vincent Bernardoff <vb@luminar.eu.org>
 Guillem Rieu <guillem.rieu@ocamlpro.com>
 .SH BUGS
 .P
-Check bug reports at https://github.com/OCamlPro/opam/issues.
+Check bug reports at https://github.com/ocaml/opam/issues.
