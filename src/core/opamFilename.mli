@@ -189,12 +189,14 @@ val remove_prefix: Dir.t -> t -> string
 val remove_suffix: Base.t -> t -> string
 
 (** download a remote file in a given directory. Return the location
-    of the downloaded file if the download is successful.  *)
-val download: overwrite:bool -> t -> Dir.t -> t
+    of the downloaded file if the download is successful.
+    Compress activates http content compression if supported. May break
+    on gzipped files, only use for text files *)
+val download: overwrite:bool -> ?compress:bool -> t -> Dir.t -> t
 
 (** same as [download], but with a specified destination filename instead of a
     directory *)
-val download_as: overwrite:bool -> t -> t -> unit
+val download_as: overwrite:bool -> ?compress:bool -> t -> t -> unit
 
 (** iterate downloads until one is sucessful *)
 val download_iter: overwrite:bool -> t list -> Dir.t -> t

@@ -64,7 +64,8 @@ let make_state ~download_index repo =
 	    (OpamRepositoryName.to_string repo.repo_name)
 	    (OpamFilename.to_string remote_index_file);
           let file =
-            OpamFilename.download ~overwrite:false remote_index_file repo.repo_root  in
+            OpamFilename.download ~compress:true ~overwrite:false
+              remote_index_file repo.repo_root in
           OpamFilename.remove local_index_file_save;
           file;
         with e ->
