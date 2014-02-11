@@ -480,10 +480,8 @@ let apply ?(force = false) t action solution =
     );
 
     let continue =
-      if !OpamGlobals.dryrun then (
-        OpamGlobals.msg "Dry run: exiting now.\n";
-        false
-      ) else if !OpamGlobals.external_tags <> [] then (
+      if !OpamGlobals.dryrun then false
+      else if !OpamGlobals.external_tags <> [] then (
         let packages = OpamSolver.new_packages solution in
         let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
         let values =
@@ -519,11 +517,11 @@ let apply ?(force = false) t action solution =
       Aborted
   )
 
-let resolve ?(verbose=true) t action request =
-  OpamSolver.resolve ~verbose (OpamState.universe t action) request
+let resolve ?(verbose=true) t action ~requested request =
+  OpamSolver.resolve ~verbose (OpamState.universe t action) ~requested request
 
-let resolve_and_apply ?(force=false) t action request =
-  match resolve t action request with
+let resolve_and_apply ?(force=false) t action ~requested request =
+  match resolve t action ~requested request with
   | Conflicts cs ->
     log "conflict!";
     OpamGlobals.msg "%s\n" (cs ());

@@ -85,6 +85,7 @@ val actions_of_diff: Diff.universe -> Cudf.package action list
 val solution_of_actions:
   simple_universe:Cudf.universe ->
   complete_universe:Cudf.universe ->
+  requested:OpamPackage.Name.Set.t ->
   Cudf.package action list ->
   ActionGraph.solution
 

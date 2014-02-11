@@ -396,7 +396,9 @@ type 'a action =
 type 'a cause =
   | Use of 'a list
   | Required_by of 'a list
+  | Conflicts_with of 'a list
   | Upstream_changes
+  | Requested
   | Unknown
 
 let action_contents = function
@@ -428,6 +430,7 @@ module type ACTION_GRAPH = sig
   }
 
   val dump_solution: solution -> unit
+  val output_dot: out_channel -> t -> unit
 
 end
 
@@ -479,6 +482,8 @@ module MakeActionGraph (Pkg: PKG) = struct
   let dump_solution g =
     Dot.output_graph stdout g.to_process
 
+  let output_dot = Dot.output_graph
+
 end
 
 
@@ -492,8 +497,10 @@ module PackageAction = struct
 
   let string_of_cause = function
     | Upstream_changes -> "[upstream changes]"
-    | Use pkgs        -> Printf.sprintf "[use %s]" (string_of_names pkgs)
+    | Use pkgs         -> Printf.sprintf "[uses %s]" (string_of_names pkgs)
     | Required_by pkgs -> Printf.sprintf "[required by %s]" (string_of_names pkgs)
+    | Conflicts_with pkgs -> Printf.sprintf "[conflicts with %s]" (string_of_names pkgs)
+    | Requested        -> ""
     | Unknown          -> ""
 
   let string_of_raw_action = function

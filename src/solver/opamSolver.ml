@@ -258,6 +258,8 @@ let map_cause f = function
   | Upstream_changes -> Upstream_changes
   | Use l            -> Use (List.rev_map f l)
   | Required_by l    -> Required_by (List.rev_map f l)
+  | Conflicts_with l -> Conflicts_with (List.rev_map f l)
+  | Requested        -> Requested
   | Unknown          -> Unknown
 
 let graph cudf2opam cudf_graph =
@@ -307,7 +309,7 @@ let cleanup_request universe (req:atom request) =
       ) req.wish_upgrade in
   { req with wish_install; wish_upgrade }
 
-let resolve ?(verbose=true) universe request =
+let resolve ?(verbose=true) universe ~requested request =
   log "resolve request=%s" (string_of_request request);
   let opam2cudf, cudf2opam, simple_universe = load_cudf_universe universe in
   let request = cleanup_request universe request in
@@ -326,7 +328,8 @@ let resolve ?(verbose=true) universe request =
   | Success actions ->
     let _, _, complete_universe = load_cudf_universe ~depopts:true universe in
     let cudf_solution =
-      OpamCudf.solution_of_actions ~simple_universe ~complete_universe actions in
+      OpamCudf.solution_of_actions
+        ~simple_universe ~complete_universe ~requested actions in
     Success (solution cudf2opam cudf_solution)
 
 let installable universe =

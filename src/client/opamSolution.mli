@@ -23,6 +23,7 @@ val resolve:
   ?verbose:bool ->
   OpamState.state ->
   user_action ->
+  requested:OpamPackage.Name.Set.t ->
   atom request ->
   (solution, string) result
 
@@ -39,6 +40,7 @@ val resolve_and_apply:
   ?force:bool ->
   OpamState.state ->
   user_action ->
+  requested:OpamPackage.Name.Set.t ->
   atom request ->
   solver_result
 

@@ -47,15 +47,10 @@ val print_solution:
   solution -> unit
 
 (** Given a description of packages, return a solution preserving the
-    consistency of the initial description.  An empty [list] : No solution
-    found. The last argument is the set of installed packages.
-
-    Every element in the solution [list] satisfies the problem given.
-    For the ordering, the first element in the list
-    is obtained by upgrading from its next element. *)
+    consistency of the initial description. *)
 val resolve :
   ?verbose:bool ->
-  universe -> atom request -> (solution, string) result
+  universe -> requested:OpamPackage.Name.Set.t -> atom request -> (solution, string) result
 
 (** Keep only the packages that are installable. *)
 val installable: universe -> package_set
