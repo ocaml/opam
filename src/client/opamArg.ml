@@ -153,7 +153,7 @@ let help_sections = [
   `P "Guillem Rieu        <guillem.rieu@ocamlpro.com>";
 
   `S "BUGS";
-  `P "Check bug reports at https://github.com/OCamlPro/opam/issues.";
+  `P "Check bug reports at https://github.com/ocaml/opam/issues.";
 ]
 
 (* Converters *)
