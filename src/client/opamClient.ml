@@ -497,12 +497,12 @@ module API = struct
         let to_upgrade = t.installed -- to_remove in
         let action = Upgrade to_reinstall in
         action,
-        OpamSolution.resolve t action
+        OpamSolution.resolve t action ~requested:OpamPackage.Name.Set.empty
           { wish_install = [];
             wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
       | Some names ->
-        let names = OpamSolution.atoms_of_names t names in
+        let atoms = OpamSolution.atoms_of_names t names in
         let to_upgrade =
           let packages =
             OpamMisc.filter_map (fun (n,_) ->
@@ -513,7 +513,7 @@ module API = struct
                   "%s is not installed.\n" (OpamPackage.Name.to_string n);
                 None
               )
-            ) names in
+            ) atoms in
           (OpamPackage.Set.of_list packages) in
         let t, removed, bad_versions = removed_from_upstream t in
         let conflicts = OpamPackage.Set.inter to_upgrade removed in
@@ -527,9 +527,11 @@ module API = struct
         let to_remove, unavailable = must_be_removed t to_upgrade bad_versions in
         let to_upgrade = to_upgrade -- to_remove in
         let installed_roots = t.installed -- to_upgrade -- to_remove in
+        let requested =
+          OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
         let action = Upgrade to_reinstall in
         action,
-        OpamSolution.resolve t action
+        OpamSolution.resolve t action ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
             wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
@@ -920,7 +922,7 @@ module API = struct
         if add_to_roots = Some false || deps_only then
           Install OpamPackage.Name.Set.empty
         else Install names in
-      let solution = OpamSolution.resolve t action request in
+      let solution = OpamSolution.resolve t action ~requested:names request in
       let solution = match solution with
         | Conflicts cs ->
           log "conflict!"; OpamGlobals.msg "%s\n" (cs()); No_solution
@@ -1041,17 +1043,18 @@ module API = struct
          them. But that may re-include packages that we wanted removed, so we
          need to remove them again *)
       let to_keep = OpamPackage.Set.diff to_keep to_remove in
-      let to_remove =
+      let to_remove, requested =
         if autoremove then
           let to_remove = OpamPackage.Set.diff t.installed to_keep in
-          if atoms = [] then to_remove
+          if atoms = [] then to_remove, OpamPackage.names_of_packages to_remove
           else (* restrict to the dependency cone of removed pkgs *)
             OpamPackage.Set.inter to_remove
               (OpamPackage.Set.of_list
                  (OpamSolver.dependencies
-                    ~depopts:true ~installed:true universe to_remove))
-        else to_remove in
-      let solution = OpamSolution.resolve_and_apply t Remove
+                    ~depopts:true ~installed:true universe to_remove)),
+            OpamPackage.names_of_packages packages
+        else to_remove, OpamPackage.names_of_packages packages in
+      let solution = OpamSolution.resolve_and_apply t Remove ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
             wish_upgrade = [] } in

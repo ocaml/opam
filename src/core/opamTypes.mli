@@ -210,7 +210,9 @@ type 'a action =
 type 'a cause =
   | Use of 'a list
   | Required_by of 'a list
+  | Conflicts_with of 'a list
   | Upstream_changes
+  | Requested
   | Unknown
 
 (** Extract a package from a package action. *)
@@ -245,6 +247,7 @@ module type ACTION_GRAPH = sig
 
   (** Dump a solution graph *)
   val dump_solution: solution -> unit
+  val output_dot: out_channel -> t -> unit
 
 end
 
