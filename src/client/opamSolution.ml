@@ -447,8 +447,46 @@ let simulate_new_state state t =
       t.PackageActionGraph.to_process installed in
   { state with installed }
 
+let print_external_tags t solution =
+  let packages = OpamSolver.new_packages solution in
+  let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
+  let values =
+    OpamPackage.Set.fold (fun nv accu ->
+        let opam = OpamState.opam t nv in
+        match OpamFile.OPAM.depexts opam with
+        | None         -> accu
+        | Some alltags ->
+          OpamMisc.StringSetMap.fold (fun tags values accu ->
+              if OpamMisc.StringSet.(
+                  (* A \subseteq B <=> (A U B) / B = 0 *)
+                  is_empty (diff (union external_tags tags) external_tags)
+                )
+              then
+                OpamMisc.StringSet.union values accu
+              else
+                accu
+            ) alltags accu
+      ) packages OpamMisc.StringSet.empty in
+  let values = OpamMisc.StringSet.elements values in
+  if values <> [] then
+    OpamGlobals.msg "%s\n" (String.concat " " values)
+
+(* Ask confirmation whenever the packages to modify are not exactly
+   the packages in the user request *)
+let confirmation requested solution =
+  !OpamGlobals.fake || !OpamGlobals.yes ||
+  PackageActionGraph.(
+    let solution_packages =
+      fold_vertex (fun v acc ->
+          OpamPackage.Name.Set.add (OpamPackage.name (action_contents v)) acc)
+        solution.to_process
+        (OpamPackage.Name.Set.of_list
+           (List.map OpamPackage.name solution.to_remove)) in
+    OpamPackage.Name.Set.equal requested solution_packages)
+  || OpamState.confirm "Do you want to continue ?"
+
 (* Apply a solution *)
-let apply ?(force = false) t action solution =
+let apply ?(force = false) t action ~requested solution =
   log "apply";
   if !OpamGlobals.debug then PackageActionGraph.dump_solution solution;
   if OpamSolver.solution_is_empty solution then
@@ -480,38 +518,12 @@ let apply ?(force = false) t action solution =
       output_json_solution solution;
     );
 
-    let continue =
-      if !OpamGlobals.show then false
-      else if !OpamGlobals.external_tags <> [] then (
-        let packages = OpamSolver.new_packages solution in
-        let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
-        let values =
-          OpamPackage.Set.fold (fun nv accu ->
-            let opam = OpamState.opam t nv in
-            match OpamFile.OPAM.depexts opam with
-            | None         -> accu
-            | Some alltags ->
-              OpamMisc.StringSetMap.fold (fun tags values accu ->
-                if OpamMisc.StringSet.(
-                    (* A \subseteq B <=> (A U B) / B = 0 *)
-                    is_empty (diff (union external_tags tags) external_tags)
-                  )
-                then
-                  OpamMisc.StringSet.union values accu
-                else
-                  accu
-              ) alltags accu
-          ) packages OpamMisc.StringSet.empty in
-        let values = OpamMisc.StringSet.elements values in
-        if values <> [] then
-          OpamGlobals.msg "%s\n" (String.concat " " values);
-        false
-      ) else if force || !OpamGlobals.fake || !OpamGlobals.yes || sum stats <= 1 then
-        true
-      else
-        OpamState.confirm "Do you want to continue ?" in
-
-    if continue then (
+    if !OpamGlobals.external_tags <> [] then (
+      print_external_tags t solution;
+      Aborted
+    ) else if not !OpamGlobals.show &&
+              (force || confirmation requested solution)
+    then (
       print_variable_warnings t;
       parallel_apply t action solution
     ) else
@@ -527,4 +539,4 @@ let resolve_and_apply ?(force=false) t action ~requested request =
     log "conflict!";
     OpamGlobals.msg "%s\n" (cs ());
     No_solution
-  | Success solution -> apply ~force t action solution
+  | Success solution -> apply ~force t action ~requested solution

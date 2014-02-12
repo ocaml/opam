@@ -495,9 +495,11 @@ module API = struct
         let t, _, bad_versions = removed_from_upstream t in
         let to_remove, unavailable = must_be_removed t t.installed bad_versions in
         let to_upgrade = t.installed -- to_remove in
+        let requested = OpamPackage.Name.Set.empty in
         let action = Upgrade to_reinstall in
+        requested,
         action,
-        OpamSolution.resolve t action ~requested:OpamPackage.Name.Set.empty
+        OpamSolution.resolve t action ~requested
           { wish_install = [];
             wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = OpamSolution.atoms_of_packages to_upgrade }
@@ -530,6 +532,7 @@ module API = struct
         let requested =
           OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
         let action = Upgrade to_reinstall in
+        requested,
         action,
         OpamSolution.resolve t action ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages installed_roots;
@@ -542,11 +545,11 @@ module API = struct
        | None -> "<all>"
        | Some n -> OpamPackage.Name.Set.to_string n);
     match compute_upgrade_t names t with
-    | _action, Conflicts cs ->
+    | _requested, _action, Conflicts cs ->
       log "conflict!";
       OpamGlobals.msg "%s\n" (cs ())
-    | action, Success solution ->
-      let result = OpamSolution.apply t action solution in
+    | requested, action, Success solution ->
+      let result = OpamSolution.apply t action ~requested solution in
       if result = Nothing_to_do then OpamGlobals.msg "Already up-to-date.\n";
       OpamSolution.check_solution t result
 
@@ -701,7 +704,7 @@ module API = struct
     log "dry-upgrade";
     let t = OpamState.load_state ~save_cache:false "dry-upgrade" in
     match compute_upgrade_t None t with
-    | _, Success upgrade ->
+    | _, _, Success upgrade ->
       let stats = OpamSolver.stats upgrade in
       if OpamSolution.sum stats > 0 then
         (OpamGlobals.msg "%s\n" (OpamSolver.string_of_stats stats);
@@ -953,7 +956,7 @@ module API = struct
                 | _ -> ())
               solution.PackageActionGraph.to_process
           );
-          OpamSolution.apply t action solution in
+          OpamSolution.apply t action ~requested:names solution in
       OpamSolution.check_solution t solution
     )
 
@@ -1091,8 +1094,9 @@ module API = struct
     let to_process =
       List.map (fun pkg -> To_recompile pkg) depends in
     let solution = OpamSolver.sequential_solution to_process in
-    let solution =
-      OpamSolution.apply t Reinstall solution in
+    let requested =
+      OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+    let solution = OpamSolution.apply t Reinstall ~requested solution in
     OpamSolution.check_solution t solution
 
   let reinstall names = with_switch_backup "reinstall" (reinstall_t names)

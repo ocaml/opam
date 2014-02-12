@@ -32,6 +32,7 @@ val apply:
   ?force:bool ->
   OpamState.state ->
   user_action ->
+  requested:OpamPackage.Name.Set.t ->
   solution ->
   solver_result
 
