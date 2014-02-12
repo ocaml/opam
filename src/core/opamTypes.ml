@@ -504,17 +504,17 @@ module PackageAction = struct
     | Unknown          -> ""
 
   let string_of_raw_action = function
-    | To_change (None, p)   -> Printf.sprintf " - install %s" (OpamPackage.to_string p)
+    | To_change (None, p)   -> Printf.sprintf " - install   %s" (OpamPackage.to_string p)
     | To_change (Some o, p) ->
       let f action =
         Printf.sprintf " - %s %s to %s" action
           (OpamPackage.to_string o) (OpamPackage.Version.to_string (OpamPackage.version p)) in
       if OpamPackage.Version.compare (OpamPackage.version o) (OpamPackage.version p) < 0 then
-        f "upgrade"
+        f "upgrade  "
       else
         f "downgrade"
     | To_recompile p -> Printf.sprintf " - recompile %s" (OpamPackage.to_string p)
-    | To_delete p    -> Printf.sprintf " - remove %s" (OpamPackage.to_string p)
+    | To_delete p    -> Printf.sprintf " - remove    %s" (OpamPackage.to_string p)
 
   let string_of_action ?causes a =
     let causes = match causes with
@@ -522,7 +522,7 @@ module PackageAction = struct
       | Some f -> string_of_cause (f (action_contents a)) in
     match causes with
     | "" -> string_of_raw_action a
-    | _  -> Printf.sprintf "%s %s" (string_of_raw_action a) causes
+    | _  -> Printf.sprintf "%-50s %s" (string_of_raw_action a) causes
 
 end
 
