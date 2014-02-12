@@ -31,14 +31,15 @@ type global_options = {
   git_version     : bool;
   compat_mode_1_0 : bool;
   no_aspcud : bool;
+  cudf_file : string option;
 }
 
 
 let create_global_options
     git_version debug verbose quiet color switch yes strict root
-    no_base_packages compat_mode_1_0 no_aspcud =
+    no_base_packages compat_mode_1_0 no_aspcud cudf_file =
   { git_version; debug; verbose; quiet; color; switch; yes; strict; root;
-    no_base_packages; compat_mode_1_0; no_aspcud }
+    no_base_packages; compat_mode_1_0; no_aspcud; cudf_file }
 
 let apply_global_options o =
   if o.git_version then (
@@ -62,7 +63,9 @@ let apply_global_options o =
   OpamGlobals.no_base_packages := !OpamGlobals.no_base_packages || o.no_base_packages;
   OpamGlobals.compat_mode_1_0  := !OpamGlobals.compat_mode_1_0 || o.compat_mode_1_0;
   OpamGlobals.use_external_solver :=
-    !OpamGlobals.use_external_solver && not o.no_aspcud
+    !OpamGlobals.use_external_solver && not o.no_aspcud;
+  OpamGlobals.cudf_file := o.cudf_file
+
 
 (* Build options *)
 type build_options = {
@@ -72,7 +75,6 @@ type build_options = {
   build_test    : bool;
   build_doc     : bool;
   dryrun        : bool;
-  cudf_file     : string option;
   fake          : bool;
   external_tags : string list;
   jobs          : int option;
@@ -81,11 +83,11 @@ type build_options = {
 
 let create_build_options
     keep_build_dir make no_checksums build_test
-    build_doc dryrun external_tags cudf_file fake
+    build_doc dryrun external_tags fake
     jobs json = {
   keep_build_dir; make; no_checksums;
   build_test; build_doc; dryrun; external_tags;
-  cudf_file; fake; jobs; json
+  fake; jobs; json
 }
 
 let json_update = function
@@ -101,7 +103,6 @@ let apply_build_options b =
   OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
   OpamGlobals.dryrun         := !OpamGlobals.dryrun || b.dryrun;
   OpamGlobals.external_tags  := b.external_tags;
-  OpamGlobals.cudf_file      := b.cudf_file;
   OpamGlobals.fake           := b.fake;
   json_update b.json;
   OpamGlobals.jobs           :=
@@ -379,9 +380,14 @@ let global_options =
   let no_aspcud =
     mk_flag ~section ["no-aspcud"]
       "Do not use the external aspcud solver, even if available." in
+  let cudf_file =
+    mk_opt ["cudf"] "FILENAME"
+      "Debug option: Save the CUDF requests sent to the solver to \
+       $(docv)-<n>.cudf."
+      Arg.(some string) None in
   Term.(pure create_global_options
     $git_version $debug $verbose $quiet $color $switch $yes $strict $root
-    $no_base_packages $compat_mode_1_0 $no_aspcud)
+    $no_base_packages $compat_mode_1_0 $no_aspcud $cudf_file)
 
 let json_flag =
   mk_opt ["json"] "FILENAME"
@@ -417,10 +423,6 @@ let build_options =
     mk_opt ["e";"external"] "TAGS"
       "Display the external packages associated to the given tags."
       Arg.(list string) [] in
-  let cudf_file =
-    mk_opt ["cudf"] "FILENAME"
-      "Save the CUDF request sent to the solver to $(docv)-<n>.cudf."
-      Arg.(some string) None in
   let fake =
     mk_flag ["fake"]
       "WARNING: This option is for testing purposes only! Using this option without    \
@@ -429,7 +431,7 @@ let build_options =
        install commands." in
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
-    $build_doc $dryrun $external_tags $cudf_file $fake
+    $build_doc $dryrun $external_tags $fake
     $jobs_flag $json_flag)
 
 let init_dot_profile shell dot_profile =
