@@ -527,11 +527,12 @@ let list =
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let list global_options print_short all installed installed_roots sort packages =
     apply_global_options global_options;
-    let filter = match all, installed, installed_roots with
-      | true, _, _ -> `installable
-      | _, _, true -> `roots
-      | _, true, _ -> `installed
-      | _          -> `installed in
+    let filter = match all, installed, installed_roots, packages with
+      | true, _, _, _ -> `installable
+      | _, _, true, _ -> `roots
+      | _, true, _, _ -> `installed
+      | _, _, _, [] -> `installed
+      | _ -> `installable in
     let order = if sort then `depends else `normal in
     Client.list ~print_short ~filter ~order ~exact_name:true ~case_sensitive:false
       packages in
