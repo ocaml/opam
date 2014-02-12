@@ -226,6 +226,7 @@ let print_variable_warnings t =
 
 (* Is a recovery possible ? *)
 let can_try_to_recover_from_error l =
+  not !OpamGlobals.dryrun &&
   List.exists (function (n,_) ->
     match n with
     | To_change(Some _,_) -> true
@@ -315,11 +316,13 @@ let parallel_apply t action solution =
     s_installed_roots = t.installed_roots;
     s_reinstall       = t.reinstall;
   } in
+  let t_ref = ref t in
   let update_state () =
     let installed       = state.s_installed in
     let installed_roots = state.s_installed_roots in
     let reinstall       = state.s_reinstall in
-    OpamAction.update_metadata t ~installed ~installed_roots ~reinstall in
+    t_ref :=
+      OpamAction.update_metadata t ~installed ~installed_roots ~reinstall in
 
   let root_installs =
     let names =
@@ -346,7 +349,8 @@ let parallel_apply t action solution =
     if OpamPackage.Name.Set.mem (OpamPackage.name nv) root_installs then
       state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
     update_state ();
-    OpamState.install_metadata t nv in
+    if not !OpamGlobals.dryrun then
+      OpamState.install_metadata t nv in
 
   let remove_from_install deleted =
     state.s_installed       <- OpamPackage.Set.diff state.s_installed deleted;
@@ -355,15 +359,14 @@ let parallel_apply t action solution =
 
   (* Installation and recompilation are done by child the processes *)
   let child n =
-    (* We are guaranteed to load the state when all the dependencies
+    (* We are guaranteed to get the state when all the dependencies
        have been correctly updated. Thus [t.installed] should be
-       up-to-date.
-       XXX: do we really need to load the state again here ? *)
-    let t = OpamState.load_state "child" in
+       up-to-date. *)
+    let t = !t_ref in
     match n with
-    | To_change (_, nv)
-    | To_recompile nv   -> OpamAction.build_and_install_package ~metadata:false t nv
-    | To_delete _       -> assert false in
+    | To_change (_, nv) | To_recompile nv ->
+      OpamAction.build_and_install_package ~metadata:false t nv
+    | To_delete _ -> assert false in
 
   (* Not pre-condition (yet ?) *)
   let pre _ = () in
@@ -384,8 +387,6 @@ let parallel_apply t action solution =
     (* 2/ We install the new packages *)
     PackageActionGraph.Parallel.iter
       (OpamState.jobs t) solution.to_process ~pre ~child ~post;
-    if !OpamGlobals.fake then
-      OpamGlobals.msg "Simulation complete.\n";
 
     (* XXX: we might want to output the sucessful actions as well. *)
     output_json_actions [];
@@ -480,7 +481,7 @@ let apply ?(force = false) t action solution =
     );
 
     let continue =
-      if !OpamGlobals.dryrun then false
+      if !OpamGlobals.show then false
       else if !OpamGlobals.external_tags <> [] then (
         let packages = OpamSolver.new_packages solution in
         let external_tags = OpamMisc.StringSet.of_list !OpamGlobals.external_tags in
