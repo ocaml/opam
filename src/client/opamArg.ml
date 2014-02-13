@@ -71,6 +71,7 @@ type build_options = {
   no_checksums  : bool;
   build_test    : bool;
   build_doc     : bool;
+  show          : bool;
   dryrun        : bool;
   cudf_file     : string option;
   fake          : bool;
@@ -81,10 +82,10 @@ type build_options = {
 
 let create_build_options
     keep_build_dir make no_checksums build_test
-    build_doc dryrun external_tags cudf_file fake
+    build_doc show dryrun external_tags cudf_file fake
     jobs json = {
   keep_build_dir; make; no_checksums;
-  build_test; build_doc; dryrun; external_tags;
+  build_test; build_doc; show; dryrun; external_tags;
   cudf_file; fake; jobs; json
 }
 
@@ -99,6 +100,7 @@ let apply_build_options b =
   OpamGlobals.no_checksums   := !OpamGlobals.no_checksums || b.no_checksums;
   OpamGlobals.build_test     := !OpamGlobals.build_test || b.build_test;
   OpamGlobals.build_doc      := !OpamGlobals.build_doc || b.build_doc;
+  OpamGlobals.show           := !OpamGlobals.show || b.show;
   OpamGlobals.dryrun         := !OpamGlobals.dryrun || b.dryrun;
   OpamGlobals.external_tags  := b.external_tags;
   OpamGlobals.cudf_file      := b.cudf_file;
@@ -410,9 +412,12 @@ let build_options =
     mk_opt ["m";"make"] "MAKE"
       "Use $(docv) as the default 'make' command."
       Arg.(some string) None in
+  let show =
+    mk_flag ["show"]
+      "Call the solver and display the actions. Don't perform any changes." in
   let dryrun =
     mk_flag ["dry-run"]
-      "Simply call the solver without actually performing any build/install operations." in
+      "Simulate the command, but don't actually perform any changes." in
   let external_tags =
     mk_opt ["e";"external"] "TAGS"
       "Display the external packages associated to the given tags."
@@ -423,13 +428,13 @@ let build_options =
       Arg.(some string) None in
   let fake =
     mk_flag ["fake"]
-      "WARNING: This option is for testing purposes only! Using this option without    \
-       care is the best way to corrupt your current compiler environment. When using \
-       this option OPAM will run a dry-run of the solver and then fake the build and  \
-       install commands." in
+      "This option registers the actions into the OPAM database, without \
+       actually performing them. \
+       WARNING: This option is dangerous and likely to break your OPAM \
+       environment. You probably want `--dry-run'. You've been warned." in
   Term.(pure create_build_options
     $keep_build_dir $make $no_checksums $build_test
-    $build_doc $dryrun $external_tags $cudf_file $fake
+    $build_doc $show $dryrun $external_tags $cudf_file $fake
     $jobs_flag $json_flag)
 
 let init_dot_profile shell dot_profile =
@@ -522,11 +527,12 @@ let list =
   let sort = mk_flag ["sort";"S"] "Sort the packages in dependency order." in
   let list global_options print_short all installed installed_roots sort packages =
     apply_global_options global_options;
-    let filter = match all, installed, installed_roots with
-      | true, _, _ -> `installable
-      | _, _, true -> `roots
-      | _, true, _ -> `installed
-      | _          -> `installed in
+    let filter = match all, installed, installed_roots, packages with
+      | true, _, _, _ -> `installable
+      | _, _, true, _ -> `roots
+      | _, true, _, _ -> `installed
+      | _, _, _, [] -> `installed
+      | _ -> `installable in
     let order = if sort then `depends else `normal in
     Client.list ~print_short ~filter ~order ~exact_name:true ~case_sensitive:false
       packages in

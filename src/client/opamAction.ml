@@ -26,6 +26,9 @@ open OpamState.Types
    Thus, the update of ~/.opam/<switch/installed MUST not be done
    here.*)
 let install_package t nv =
+  if !OpamGlobals.dryrun then
+      OpamGlobals.msg "Installing %s.\n" (OpamPackage.to_string nv)
+  else
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
   if OpamFilename.exists_dir build_dir then OpamFilename.in_dir build_dir (fun () ->
 
@@ -202,14 +205,27 @@ let install_package t nv =
    * apply the patches
    * substitute the files *)
 let prepare_package_build t nv =
-  let p_build = OpamPath.Switch.build t.root t.switch nv in
   let opam = OpamState.opam t nv in
+
+  (* Substitute the patched files.*)
+  let patches = OpamFile.OPAM.patches opam in
+
+  let iter_patches f =
+    List.iter (fun (base, filter) ->
+        if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter
+        then f base
+      ) patches in
+
+  if !OpamGlobals.dryrun then
+    iter_patches (fun base ->
+        OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base))
+  else
+
+  let p_build = OpamPath.Switch.build t.root t.switch nv in
 
   if not (OpamFilename.exists_dir p_build) then
     OpamFilename.mkdir p_build;
 
-  (* Substitute the patched files.*)
-  let patches = OpamFile.OPAM.patches opam in
   OpamFilename.in_dir p_build (fun () ->
     let all = OpamFile.OPAM.substs opam in
     let patches =
@@ -220,13 +236,11 @@ let prepare_package_build t nv =
   );
 
   (* Apply the patches *)
-  List.iter (fun (base, filter) ->
-    let root = OpamPath.Switch.build t.root t.switch nv in
-    let patch = root // OpamFilename.Base.to_string base in
-    if OpamState.eval_filter t ~opam OpamVariable.Map.empty filter then (
+  iter_patches (fun base ->
+      let root = OpamPath.Switch.build t.root t.switch nv in
+      let patch = root // OpamFilename.Base.to_string base in
       OpamGlobals.msg "Applying %s.\n" (OpamFilename.Base.to_string base);
-      OpamFilename.patch patch p_build)
-  ) patches;
+      OpamFilename.patch patch p_build);
 
   (* Substitute the configuration files. We should be in the right
      directory to get the correct absolute path for the
@@ -240,6 +254,8 @@ let prepare_package_build t nv =
 let extract_package t nv =
   log "extract_package: %s" (OpamPackage.to_string nv);
   let build_dir = OpamPath.Switch.build t.root t.switch nv in
+
+  if not !OpamGlobals.dryrun then begin
   OpamFilename.rmdir build_dir;
 
   let extract_and_copy_files nv file =
@@ -259,7 +275,8 @@ let extract_package t nv =
     | None   ->
       let dir = OpamPath.dev_package t.root nv in
       extract_and_copy_files nv (OpamState.download_upstream t nv dir)
-  );
+  )
+  end;
 
   prepare_package_build t nv;
   build_dir
@@ -305,6 +322,7 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
   let reinstall       = mark_pinned_versions reinstall in
   let installed_roots = OpamPackage.Set.inter installed_roots installed in
   let reinstall = OpamPackage.Set.inter installed_roots reinstall in
+  if not !OpamGlobals.dryrun then (
   OpamFile.Installed.write
     (OpamPath.Switch.installed t.root t.switch)
     installed;
@@ -314,6 +332,8 @@ let update_metadata t ~installed ~installed_roots ~reinstall =
   OpamFile.Reinstall.write
     (OpamPath.Switch.reinstall t.root t.switch)
     reinstall
+  );
+  {t with installed; installed_roots; reinstall}
 
 let dev_opam_opt t nv build_dir =
   let opam () = OpamState.opam_opt t nv in
@@ -389,13 +409,17 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
         try
           OpamGlobals.msg "%s\n" (string_of_commands remove);
           let metadata = get_metadata t in
-          OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true remove
+          if not !OpamGlobals.dryrun then
+            OpamFilename.exec ~env ?name exec_dir ~metadata ~keep_going:true
+              remove
         with OpamSystem.Process_error r ->
           if not silent then
             OpamGlobals.warning
               "failure in package uninstall script, some files may remain:\n%s"
               (OpamProcess.string_of_result r)
   end;
+
+  if !OpamGlobals.dryrun then () else begin
 
   (* Remove the libraries *)
   OpamFilename.rmdir (OpamPath.Switch.lib t.root t.switch name);
@@ -467,13 +491,15 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
   OpamFilename.rmdir (OpamPath.Switch.dev_package t.root t.switch nv);
 
   (* Update the metadata *)
-  if metadata then (
-    let installed = OpamPackage.Set.remove nv t.installed in
-    let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
-    let reinstall = OpamPackage.Set.remove nv t.reinstall in
-    update_metadata t ~installed ~installed_roots ~reinstall;
-    OpamState.remove_metadata t (OpamPackage.Set.singleton nv);
-  );
+  let t =
+    if metadata then
+      let installed = OpamPackage.Set.remove nv t.installed in
+      let installed_roots = OpamPackage.Set.remove nv t.installed_roots in
+      let reinstall = OpamPackage.Set.remove nv t.reinstall in
+      let t = update_metadata t ~installed ~installed_roots ~reinstall in
+      OpamState.remove_metadata t (OpamPackage.Set.singleton nv);
+      t
+    else t in
 
   (* Remove the dev archive if no switch uses the package anymore *)
   let dev = OpamPath.dev_package t.root nv in
@@ -482,12 +508,13 @@ let remove_package_aux t ~metadata ~rm_build ?(silent=false) nv =
     log "Removing %S" (OpamFilename.Dir.to_string dev);
     OpamFilename.rmdir dev;
   )
+  end
 
 let remove_package t ~metadata ~rm_build ?silent nv =
-  if not (!OpamGlobals.fake || !OpamGlobals.dryrun) then (
+  if !OpamGlobals.fake || !OpamGlobals.show then
+    OpamGlobals.msg "Would remove: %s.\n" (OpamPackage.to_string nv)
+  else
     remove_package_aux t ~metadata ~rm_build ?silent nv
-  ) else
-    OpamGlobals.msg "(simulation) Removing %s.\n" (OpamPackage.to_string nv)
 
 (* Remove all the packages appearing in a solution (and which need to
    be removed, eg. because of a direct uninstall action or because of
@@ -513,8 +540,9 @@ let remove_all_packages t ~metadata sol =
     let installed = OpamPackage.Set.diff t.installed deleted in
     let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
     let reinstall = OpamPackage.Set.diff t.reinstall deleted in
-    update_metadata t ~installed ~installed_roots ~reinstall;
-    OpamState.remove_metadata t deleted;
+    let t = update_metadata t ~installed ~installed_roots ~reinstall in
+    if not !OpamGlobals.dryrun then
+      OpamState.remove_metadata t deleted
   );
   deleted
 
@@ -543,6 +571,7 @@ let build_and_install_package_aux t ~metadata nv =
         | []       -> ()
         | commands ->
           OpamGlobals.msg "%s:\n%s\n" name (string_of_commands commands);
+          if !OpamGlobals.dryrun then () else
           let name = OpamPackage.Name.to_string (OpamPackage.name nv) in
           let metadata = get_metadata t in
           OpamFilename.exec ~env ~name ~metadata p_build commands in
@@ -576,7 +605,7 @@ let build_and_install_package_aux t ~metadata nv =
         let installed = OpamPackage.Set.add nv t.installed in
         let installed_roots = OpamPackage.Set.add nv t.installed_roots in
         let reinstall = OpamPackage.Set.remove nv t.reinstall in
-        update_metadata t ~installed ~installed_roots ~reinstall;
+        let t = update_metadata t ~installed ~installed_roots ~reinstall in
         OpamState.install_metadata t nv;
       )
 
