@@ -50,13 +50,16 @@ let args =
     Arg.(value & flag & info ["d";"dryrun"] ~doc)
   in
   let recurse =
-    let doc = "Recurse among the transitive dependencies." in
+    let doc = "Recurse among the transitive dependencies of the packages and \
+               download all available versions of the dependencies." in
     Arg.(value & flag & info ["r";"recursive"] ~doc)
   in
   let resolve =
-    let doc = "A more advanced version of `--recursive': will attempt to resolve \
-               your installation with all dependencies in the best way \
-               possible and build the archives accordingly." in
+    let doc = "A more advanced version of `--recursive' that calculates \
+               a single usable snapshot of the package universe, resulting \
+               in a single version of each package.  If you need more flexibility \
+               among package versions, you should continue to use `--recursive' \
+               to download all the archives." in
     Arg.(value & flag & info ["resolve"] ~doc)
   in
   let names =
