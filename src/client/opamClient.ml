@@ -495,7 +495,8 @@ module API = struct
         let t, _, bad_versions = removed_from_upstream t in
         let to_remove, unavailable = must_be_removed t t.installed bad_versions in
         let to_upgrade = t.installed -- to_remove in
-        let requested = OpamPackage.Name.Set.empty in
+        let requested = OpamPackage.names_of_packages
+            (OpamPackage.Set.union to_remove unavailable) in
         let action = Upgrade to_reinstall in
         requested,
         action,
@@ -530,7 +531,10 @@ module API = struct
         let to_upgrade = to_upgrade -- to_remove in
         let installed_roots = t.installed -- to_upgrade -- to_remove in
         let requested =
-          OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+          OpamPackage.Name.Set.union
+            (OpamPackage.names_of_packages
+               (OpamPackage.Set.union to_remove unavailable))
+            (OpamPackage.Name.Set.of_list (List.rev_map fst atoms)) in
         let action = Upgrade to_reinstall in
         requested,
         action,
