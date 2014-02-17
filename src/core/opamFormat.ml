@@ -330,10 +330,14 @@ let rec parse_constraints t =
   match t with
   | []                                            -> Empty
   | (Symbol r) :: (String v) :: []                -> Atom (relop r, version v)
-  | (Symbol r) :: (String v) :: (Symbol "&") :: t -> And (Atom (relop r, version v),
-                                                          parse_constraints t)
-  | (Symbol r) :: (String v) :: (Symbol "|") :: t -> Or (Atom (relop r, version v),
-                                                         parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "&") :: t ->
+    And (Atom (relop r, version v), parse_constraints t)
+  | (Symbol r) :: (String v) :: (Symbol "|") :: t ->
+    Or (Atom (relop r, version v),  parse_constraints t)
+  | (Group g) :: (Symbol "&") :: t                ->
+    And (Block (parse_constraints g), parse_constraints t)
+  | (Group g) :: (Symbol "|") :: t                ->
+    Or (Block (parse_constraints g), parse_constraints t)
   | [Group g]                                     -> Block (parse_constraints g)
   | x -> bad_format "Expecting a list of constraints, got %s" (kinds x)
 
