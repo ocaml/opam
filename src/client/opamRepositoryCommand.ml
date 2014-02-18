@@ -44,7 +44,7 @@ let print_updated_compilers updates =
 
   print
     "The following compiler description has been DELETED"
-    "The following compiler descriptions are been DELETED"
+    "The following compiler descriptions have been DELETED"
     updates.deleted
 
 let filter_compiler_checksums cs =
