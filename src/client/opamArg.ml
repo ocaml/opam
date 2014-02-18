@@ -1382,14 +1382,14 @@ let run default commands =
       | OpamGlobals.Exit i ->
         exit_code := i;
         if !OpamGlobals.debug && i <> 0 then
-          Printf.eprintf "%s" (OpamMisc.pretty_backtrace ())
+          Printf.eprintf "%s" (OpamMisc.pretty_backtrace e)
       | OpamSystem.Internal_error _
       | OpamSystem.Process_error _ ->
         Printf.eprintf "%s\n" (Printexc.to_string e);
-        Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
+        Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
       | Sys.Break -> exit_code := 1
       | _ ->
         Printf.fprintf stderr "Fatal error:\n%s\n" (Printexc.to_string e);
-        Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
+        Printf.eprintf "%s" (OpamMisc.pretty_backtrace e);
     end;
     exit !exit_code

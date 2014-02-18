@@ -379,8 +379,17 @@ let fatal e = match e with
   | Sys.Break -> raise e
   | _ -> ()
 
-let pretty_backtrace () =
-  match Printexc.get_backtrace () with
+let register_backtrace, get_backtrace =
+  let registered_backtrace = ref None in
+  (fun e ->
+     registered_backtrace := Some (e, Printexc.get_backtrace ())),
+  (fun e ->
+     match !registered_backtrace with
+     | Some(e1,bt) when e1 == e -> bt
+     | _ -> Printexc.get_backtrace ())
+
+let pretty_backtrace e =
+  match get_backtrace e with
   | "" -> ""
   | b  ->
     let b = String.concat "\n  " (split b '\n') in

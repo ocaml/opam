@@ -145,14 +145,15 @@ let with_switch_backup command f =
   with
   | OpamGlobals.Exit 0 as e -> raise e
   | err ->
+    OpamMisc.register_backtrace err;
     let t1 = OpamState.load_state "switch-backup-err" in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
     else
-      Printf.eprintf "\nThe former state can be restored with \
-                      %s switch import -f %S\n%!"
-        Sys.argv.(0) (OpamFilename.to_string file);
+     Printf.eprintf "\nThe former state can be restored with \
+                     %s switch import -f %S\n%!"
+       Sys.argv.(0) (OpamFilename.to_string file);
     raise err
 
 module API = struct

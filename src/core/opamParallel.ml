@@ -289,7 +289,7 @@ module Make (G : G) = struct
             | OpamSystem.Internal_error s -> return (Internal_error s)
             | OpamGlobals.Package_error s -> return (Package_error s)
             | e ->
-              let b = OpamMisc.pretty_backtrace () in
+              let b = OpamMisc.pretty_backtrace e in
               let e = Printexc.to_string e in
               let error =
                 if b = ""
