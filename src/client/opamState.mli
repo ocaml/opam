@@ -389,6 +389,9 @@ val create_system_compiler_description: dirname -> compiler_version option -> un
 (** {2 Jobs} *)
 val jobs: state -> int
 
+(** {2 Download Jobs} *)
+val dl_jobs: state -> int
+
 (** {2 Misc} *)
 
 (** Ask the user to press Y/y/N/n to continue *)

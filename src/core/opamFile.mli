@@ -54,6 +54,7 @@ module Config: sig
     switch ->
     repository_name list ->
     int ->
+    int ->
     t
 
   (** OCaml switch updates *)
@@ -76,6 +77,9 @@ module Config: sig
 
   (** Return the number of jobs *)
   val jobs: t -> int
+
+  (** Return the number of download jobs *)
+  val dl_jobs: t -> int
 
 end
 

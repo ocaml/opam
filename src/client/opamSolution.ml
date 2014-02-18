@@ -350,7 +350,7 @@ let parallel_apply t action solution =
       state.s_installed_roots <- OpamPackage.Set.add nv state.s_installed_roots;
     update_state ();
     if not !OpamGlobals.dryrun then
-      OpamState.install_metadata t nv in
+      OpamState.install_metadata !t_ref nv in
 
   let remove_from_install deleted =
     state.s_installed       <- OpamPackage.Set.diff state.s_installed deleted;
@@ -378,15 +378,36 @@ let parallel_apply t action solution =
     | To_recompile nv
     | To_change (_, nv) -> add_to_install nv in
 
+  let cleanup = ref (fun () -> ()) in
   try
 
+    (* 0/ Download everything that we will need, for parallelism and failing
+       early in case there is a failure *)
+    let sources_needed = OpamAction.sources_needed t solution in
+    if not (OpamPackage.Set.is_empty sources_needed) then
+      OpamGlobals.header_msg "Synchronizing package archives";
+    let dl_graph =
+      let g = PackageGraph.create () in
+      OpamPackage.Set.iter (fun nv -> PackageGraph.add_vertex g nv)
+        sources_needed;
+      g in
+    PackageGraph.Parallel.iter (OpamState.dl_jobs t) dl_graph
+      ~pre:ignore ~post:ignore
+      ~child:(OpamAction.download_package t);
+
     (* 1/ We remove all installed packages appearing in the solution. *)
-    let deleted = OpamAction.remove_all_packages t ~metadata:true solution in
+    let t, deleted = OpamAction.remove_all_packages t ~metadata:true solution in
+    t_ref := t;
     remove_from_install deleted;
+    (* Delay the cleanup until we are finished *)
+    cleanup := (fun () ->
+        OpamPackage.Set.iter (OpamAction.cleanup_package_artefacts !t_ref) deleted);
 
     (* 2/ We install the new packages *)
     PackageActionGraph.Parallel.iter
       (OpamState.jobs t) solution.to_process ~pre ~child ~post;
+
+    !cleanup ();
 
     (* XXX: we might want to output the sucessful actions as well. *)
     output_json_actions [];
@@ -400,8 +421,19 @@ let parallel_apply t action solution =
     OpamGlobals.error
       "Aborting, as the following packages have a cyclic dependency:\n%s"
       (String.concat "\n" (List.map mk strings));
+    !cleanup ();
     Aborted
+  | PackageGraph.Parallel.Errors (errors, _) ->
+    (* Error during download *)
+    OpamGlobals.msg "\n";
+    OpamGlobals.error "Errors while downloading archives of %s"
+      (String.concat ", "
+         (List.map (fun (nv,_) -> OpamPackage.to_string nv) errors));
+    !cleanup ();
+    Error ([], [], [])
+
   | PackageActionGraph.Parallel.Errors (errors, remaining) ->
+    (* Error during build/install *)
     OpamGlobals.msg "\n";
     if remaining <> [] then (
       OpamGlobals.error
@@ -429,6 +461,7 @@ let parallel_apply t action solution =
            else successful)
         solution.to_process []
     in
+    !cleanup ();
     Error (successful, errpkgs, remaining)
 
 let simulate_new_state state t =

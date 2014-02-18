@@ -64,6 +64,15 @@ type package_set = OpamPackage.Set.t
 (** Map of packages *)
 type 'a package_map = 'a OpamPackage.Map.t
 
+(** Graph of packages providing OpamParallel *)
+module PackageGraph : sig
+  include Graph.Sig.I with type V.t = package
+
+  module Parallel: OpamParallel.SIG
+    with type G.t = t
+     and type G.V.t = package
+end
+
 (** Package names *)
 type name = OpamPackage.Name.t
 

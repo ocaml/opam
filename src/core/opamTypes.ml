@@ -440,6 +440,21 @@ module type PKG = sig
   val string_of_action: ?causes:(t -> t cause) -> t action -> string
 end
 
+module PackageGraph = struct
+  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (OpamPackage)
+  module Topological = Graph.Topological.Make (PG)
+  module Traverse = Graph.Traverse.Dfs(PG)
+  module Components = Graph.Components.Make(PG)
+  module Parallel = OpamParallel.Make (struct
+      let string_of_vertex = OpamPackage.to_string
+      include PG
+      include Topological
+      include Traverse
+      include Components
+    end)
+  include PG
+end
+
 module MakeActionGraph (Pkg: PKG) = struct
   type package = Pkg.t
   module Vertex =  struct

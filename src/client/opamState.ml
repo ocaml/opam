@@ -144,6 +144,11 @@ let jobs t =
   | None   -> OpamFile.Config.jobs t.config
   | Some j -> j
 
+let dl_jobs t =
+  match !OpamGlobals.dl_jobs with
+  | None   -> OpamFile.Config.dl_jobs t.config
+  | Some j -> j
+
 let sorted_repositories t =
   OpamRepository.sort t.repositories
 

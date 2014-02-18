@@ -59,6 +59,11 @@ let jobs = ref (
     with Not_found | Failure _ -> None
   )
 
+let dl_jobs = ref (
+    try Some (int_of_string (OpamMisc.getenv "OPAMDOWNLOADJOBS"))
+    with Not_found | Failure _ -> None
+  )
+
 let download_retry =
   try max 1 (int_of_string (OpamMisc.getenv "OPAMRETRY"))
   with Not_found | Failure _ -> 10
@@ -320,6 +325,7 @@ let log_limit = 10
 let log_line_limit = 5 * 80
 
 let default_jobs = 1
+let default_dl_jobs = 3
 
 let exit i =
   raise (Exit i)
