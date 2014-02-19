@@ -66,6 +66,9 @@ module API: sig
   (** Remove the given list of packages. *)
   val remove: autoremove:bool -> force:bool -> atom list -> unit
 
+  (** Bundle the given set of packages. *)
+  val bundle : dryrun:bool -> deps_only:bool -> OpamFilename.Dir.t -> name_set -> unit
+
   (** Config API. *)
   module CONFIG: sig
 

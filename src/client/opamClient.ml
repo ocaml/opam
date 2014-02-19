@@ -1577,6 +1577,111 @@ module API = struct
     let list = list
   end
 
+  let resolve_deps t atoms =
+    let opams = t.OpamState.Types.opams in (* all opam files known *)
+    let packages = OpamPackage.Set.of_list (OpamPackage.Map.keys opams) in
+    let universe = {
+      OpamSolver.empty_universe with
+      u_packages = packages;
+      u_available = packages; (* XXX add a compiler/OS option ? *)
+      u_depends = OpamPackage.Map.map OpamFile.OPAM.depends opams;
+      u_conflicts = OpamPackage.Map.map OpamFile.OPAM.conflicts opams;
+      u_action = Install (OpamPackage.Name.Set.of_list (List.map fst atoms));
+    } in
+    let request = { wish_install = atoms; wish_remove = []; wish_upgrade = [] } in
+    match OpamSolver.resolve ~verbose:true universe request with
+    | Success solution ->
+      (* return in order *)
+      let l = PackageActionGraph.Topological.fold (fun act acc -> match act with
+          | To_change (_, p) -> p::acc
+          | _ -> acc)
+        solution.PackageActionGraph.to_process []
+      in
+      List.rev l
+    | Conflicts cs ->
+      OpamGlobals.error_and_exit "%s\n" (cs())
+
+  let bundle ~dryrun ~deps_only bundle names =
+    let open OpamFilename in
+    let archives = OP.(bundle / "archives") in
+    if not dryrun && exists_dir bundle then
+      OpamGlobals.error_and_exit "bundle directory exists";
+    if not dryrun then
+      List.iter mkdir [bundle; archives];
+    let t = OpamState.load_state "bundle" in
+    let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
+    let packages = resolve_deps t atoms in
+    let packages = match deps_only with
+    | false -> packages
+    | true -> List.filter (fun nv -> not (List.exists (OpamSolution.match_package_atom nv) atoms)) packages
+    in
+    let root_dirs = [ "lib"; "bin"; "sbin"; "man"; "doc"; "share"; "etc" ] in
+    let b = Buffer.create 10 in
+    let shellout_build ~archive ~env commands =
+      let open Printf in
+      let quote s = s in
+      let dir = Filename.chop_suffix archive ".tar.gz" in
+      let pr fmt = ksprintf (fun s -> Buffer.add_string b (s ^ "\n")) fmt in
+      pr "echo ";
+      pr "echo BUILD %s" (quote dir);
+      pr "(";
+      pr "cd build";
+      pr "rm -rf %s" (quote dir);
+      pr "tar -xzf ../archives/%s" (quote archive);
+      pr "cd %s" (quote dir);
+      List.iter (fun (k,v) -> pr "export %s=%s" (quote k) (quote v)) env;
+      List.iter (fun args -> pr "%s" (String.concat " " (List.map quote args))) commands;
+      pr ")"
+    in
+    List.iter (fun s -> Buffer.add_string b (s^"\n")) [
+      "#! /bin/sh";
+      "set -eu";
+      ": ${BUNDLE_PREFIX=$(pwd)/local}";
+      "mkdir -p build $BUNDLE_PREFIX " ^
+        (String.concat " " (List.map (Filename.concat "$BUNDLE_PREFIX") root_dirs)) ^
+        " $BUNDLE_PREFIX/lib/stublibs";
+      "export PATH=$BUNDLE_PREFIX/bin:$PATH";
+      "export CAML_LD_LIBRARY_PATH=$BUNDLE_PREFIX/lib/stublibs:$CAML_LD_LIBRARY_PATH";
+    ];
+    List.iter begin fun nv ->
+      try
+        let repo_name =
+          Option.map_default
+            (fun r -> OpamRepositoryName.to_string r.OpamTypes.repo_name)
+            "unknown repo"
+            (OpamState.repository_of_package t nv)
+        in
+        OpamGlobals.msg "Bundling %s [%s]\n" (OpamPackage.to_string nv) repo_name;
+        match dryrun with
+        | true -> ()
+        | false ->
+        (* gets the source (from url, local path, git, etc) and applies patches and substitutions *)
+        let p_build = OpamAction.extract_package t nv in
+        let archive = OP.(archives // (OpamPackage.to_string nv ^ ".tar.gz")) in
+        exec (dirname_dir p_build) [
+          [ "tar"; "czf"; to_string archive; Base.to_string (basename_dir p_build) ]
+        ];
+        let archive = Base.to_string (basename archive) in
+        let opam = OpamState.opam t nv in (* dev? *)
+        let env = OpamState.add_to_env t ~opam [] (OpamFile.OPAM.build_env opam) in
+        let vars1 = List.map (fun k -> OpamVariable.(of_string k, S (Filename.concat "$BUNDLE_PREFIX" k))) root_dirs in
+        let vars2 = OpamVariable.([of_string "prefix", S "$BUNDLE_PREFIX"; of_string "preinstalled", B true]) in
+        let variables = OpamVariable.Map.of_list (vars1 @ vars2) in
+        match OpamState.filter_commands t ~opam variables (OpamFile.OPAM.build opam) with
+        | [] -> ()
+        | commands -> shellout_build ~archive ~env commands
+      with e ->
+        OpamMisc.fatal e;
+        OpamGlobals.error_and_exit "%s" (Printexc.to_string e);
+    end packages;
+    match dryrun with
+    | true -> ()
+    | false ->
+    let install_sh = OP.(bundle // "install.sh") in
+    write install_sh (Buffer.contents b);
+    chmod install_sh 0o755;
+    ()
+
   module REPOSITORY = OpamRepositoryCommand
   module CONFIG     = OpamConfigCommand
   module SWITCH     = OpamSwitchCommand
@@ -1631,6 +1736,9 @@ module SafeAPI = struct
 
   let update ~repos_only repos =
     global_lock (fun () -> API.update ~repos_only repos)
+
+  let bundle ~dryrun ~deps_only outdir names =
+    switch_lock (fun () -> API.bundle ~dryrun ~deps_only outdir names)
 
   module CONFIG = struct
 

@@ -45,6 +45,8 @@ val remove_all_packages: t -> metadata:bool -> OpamSolver.solution
     solution *)
 val sources_needed: t -> OpamSolver.solution -> package_set
 
+val extract_package : t -> package -> dirname
+
 (** Update package metadata *)
 val update_metadata:
   t ->

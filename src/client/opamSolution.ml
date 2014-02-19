@@ -131,6 +131,12 @@ let sanitize_atom_list ?(permissive=false) t atoms =
       atoms;
   atoms
 
+let match_package_atom nv (name,cstr) =
+  OpamPackage.Name.compare (OpamPackage.name nv) name = 0 &&
+  match cstr with
+  | None -> true
+  | Some (relop,version) -> OpamFormula.eval_relop relop (OpamPackage.version nv) version
+
 (* Pretty-print errors *)
 let display_error (n, error) =
   let f action nv =

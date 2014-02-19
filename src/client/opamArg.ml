@@ -1747,6 +1747,35 @@ let lint =
   Term.(pure lint $global_options $file $normalise),
   term_info "lint" ~doc ~man
 
+(* BUNDLE *)
+let bundle_doc = "Generate a self-contained bundle of given packages with all dependencies."
+let bundle =
+  let doc = bundle_doc in
+  let man = [
+    `S "DESCRIPTION";
+    `P "This command calculates the transitive dependencies of the given packages \
+        and collects all the corresponding archives into a specified directory, \
+        along with the shell script to unpack, build and install those packages \
+        on any remote machine (even without OPAM installed).";
+  ] in
+  let outdir = 
+    mk_opt ["o";"outdir"]
+      "DIR" "Write bundle to the directory $(docv)."
+      dirname (OpamFilename.Dir.of_string "bundle")
+  in
+  let deps_only =
+    Arg.(value & flag & info ["deps-only"] ~doc:"Bundle only the dependencies, excluding the specified packages.")
+  in
+  let dryrun =
+    mk_flag ["dry-run"] "Do not actually create bundle, only show actions to be done."
+  in
+  let bundle global_options deps_only dryrun outdir names =
+    apply_global_options global_options;
+    let packages = OpamPackage.Name.Set.of_list names in
+    Client.bundle ~dryrun ~deps_only outdir packages
+  in
+  Term.(pure bundle $global_options $deps_only $dryrun $outdir $name_list),
+  term_info "bundle" ~doc ~man
 
 (* HELP *)
 let help =
@@ -1848,6 +1877,7 @@ let commands = [
   pin (); make_command_alias (pin ~unpin_only:true ()) ~options:" remove" "unpin";
   source;
   lint;
+  bundle;
   help;
 ]
 
