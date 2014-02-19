@@ -1051,17 +1051,17 @@ module API = struct
          them. But that may re-include packages that we wanted removed, so we
          need to remove them again *)
       let to_keep = OpamPackage.Set.diff to_keep to_remove in
-      let to_remove, requested =
+      let requested = OpamPackage.names_of_packages packages in
+      let to_remove =
         if autoremove then
           let to_remove = OpamPackage.Set.diff t.installed to_keep in
-          if atoms = [] then to_remove, OpamPackage.names_of_packages to_remove
+          if atoms = [] then to_remove
           else (* restrict to the dependency cone of removed pkgs *)
             OpamPackage.Set.inter to_remove
               (OpamPackage.Set.of_list
                  (OpamSolver.dependencies
-                    ~depopts:true ~installed:true universe to_remove)),
-            OpamPackage.names_of_packages packages
-        else to_remove, OpamPackage.names_of_packages packages in
+                    ~depopts:true ~installed:true universe to_remove))
+        else to_remove in
       let solution = OpamSolution.resolve_and_apply t Remove ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;
