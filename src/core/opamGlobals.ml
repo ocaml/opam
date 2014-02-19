@@ -79,7 +79,7 @@ let solver_timeout =
 
 let aspcud_criteria =
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
-  with Not_found -> "-removed,-notuptodate,-new,-changed"
+  with Not_found -> "-removed,-notuptodate,-count(down),-new,-changed"
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
