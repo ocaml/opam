@@ -149,6 +149,7 @@ let display_error (n, error) =
     match error with
     | OpamParallel.Process_error r  ->
       disp "%s" (OpamProcess.string_of_result ~color:`red r)
+    | OpamParallel.Internal_error "User interruption" -> ()
     | OpamParallel.Internal_error s ->
       disp "Internal error:\n  %s" s
     | OpamParallel.Package_error s ->
@@ -227,8 +228,7 @@ let print_variable_warnings t =
 (* Is a recovery possible ? *)
 let can_try_to_recover_from_error l =
   not !OpamGlobals.dryrun &&
-  List.exists (function (n,_) ->
-    match n with
+  List.exists (function
     | To_change(Some _,_) -> true
     | To_recompile _
     | To_change _
@@ -244,9 +244,12 @@ let recover_from_error = function
   | To_change (Some nv, _)
   | To_change (None, nv) ->
     let t = OpamState.load_state "recover-from-error" in
-    try OpamAction.build_and_install_package t ~metadata:true nv
+    try
+      OpamAction.download_package t nv;
+      OpamAction.extract_package t nv;
+      OpamAction.build_and_install_package t ~metadata:true nv
     with e -> OpamMisc.fatal e
-                (* let the user stop the recovery by repeating C-c *)
+    (* let the user stop the recovery with C-c *)
 
 (* Transient state (not flushed to disk) *)
 type state = {
@@ -378,91 +381,162 @@ let parallel_apply t action solution =
     | To_recompile nv
     | To_change (_, nv) -> add_to_install nv in
 
-  let cleanup = ref (fun () -> ()) in
-  try
+  (* - Start processing - *)
 
-    (* 0/ Download everything that we will need, for parallelism and failing
-       early in case there is a failure *)
-    let sources_needed = OpamAction.sources_needed t solution in
-    if not (OpamPackage.Set.is_empty sources_needed) then
-      OpamGlobals.header_msg "Synchronizing package archives";
-    let dl_graph =
-      let g = PackageGraph.create () in
-      OpamPackage.Set.iter (fun nv -> PackageGraph.add_vertex g nv)
-        sources_needed;
-      g in
-    PackageGraph.Parallel.iter (OpamState.dl_jobs t) dl_graph
-      ~pre:ignore ~post:ignore
-      ~child:(OpamAction.download_package t);
+  let finalize () = () in
 
-    (* 1/ We remove all installed packages appearing in the solution. *)
-    let t, deleted = OpamAction.remove_all_packages t ~metadata:true solution in
-    t_ref := t;
-    remove_from_install deleted;
-    (* Delay the cleanup until we are finished *)
-    cleanup := (fun () ->
-        OpamPackage.Set.iter (OpamAction.cleanup_package_artefacts !t_ref) deleted);
+  (* 0/ Download everything that we will need, for parallelism and failing
+        early in case there is a failure *)
+  let status, finalize = try
+      let sources_needed = OpamAction.sources_needed t solution in
+      if not (OpamPackage.Set.is_empty sources_needed) then
+        OpamGlobals.header_msg "Synchronizing package archives";
+      let dl_graph =
+        let g = PackageGraph.create () in
+        OpamPackage.Set.iter (fun nv -> PackageGraph.add_vertex g nv)
+          sources_needed;
+        g in
+      PackageGraph.Parallel.iter (OpamState.dl_jobs t) dl_graph
+        ~pre:ignore ~post:ignore
+        ~child:(OpamAction.download_package t);
+      `Successful (), finalize
+    with
+    | PackageGraph.Parallel.Errors (errors, _) ->
+      (* Error during download *)
+      let msg =
+        Printf.sprintf "Errors while downloading archives of %s"
+          (String.concat ", "
+             (List.map (fun (nv,_) -> OpamPackage.to_string nv) errors)) in
+      `Error (Aborted, msg), finalize
+    | e ->
+      `Exception e, finalize
+  in
 
-    (* 2/ We install the new packages *)
-    PackageActionGraph.Parallel.iter
-      (OpamState.jobs t) solution.to_process ~pre ~child ~post;
+  (* 1/ We remove all installed packages appearing in the solution. *)
+  let status, finalize =
+    match status with
+    | #error as e -> e, finalize
+    | `Successful () ->
+      let (t,deleted),st =
+        OpamAction.remove_all_packages t ~metadata:true solution in
+      t_ref := t;
+      remove_from_install deleted;
+      match st with
+      | `Successful () ->
+        `Successful (),
+        fun () ->
+          OpamPackage.Set.iter (OpamAction.cleanup_package_artefacts !t_ref)
+            deleted
+      | `Exception (e) ->
+        let err = Printexc.to_string e in
+        let msg = Printf.sprintf "%s during package removal" err in
+        let actions = actions_list solution.to_process in
+        let successful, remaining =
+          List.partition (function
+              | To_delete nv
+                when not (OpamPackage.Set.mem nv t.installed) -> true
+              | _ -> false) actions in
+        let failed, remaining =
+          List.partition (function
+              | To_change (Some nv, _) | To_recompile nv
+                when not (OpamPackage.Set.mem nv t.installed) -> true
+              | _ -> false) remaining in
+        `Error (Error (successful, failed, remaining), msg), finalize
+  in
 
-    !cleanup ();
+  (* 2/ We install the new packages *)
+  let status, finalize =
+    match status with
+    | #error -> status, finalize
+    | `Successful () ->
+      try
+        PackageActionGraph.Parallel.iter
+          (OpamState.jobs t) solution.to_process ~pre ~child ~post;
+        `Successful (), finalize
+      with
+      | PackageActionGraph.Parallel.Cyclic actions ->
+        let packages = List.map (List.map action_contents) actions in
+        let strings = List.map (List.map OpamPackage.to_string) packages in
+        let mk l = Printf.sprintf " - %s" (String.concat ", " l) in
+        let msg =
+          Printf.sprintf
+            "Aborting, as the following packages have a cyclic dependency:\n%s"
+            (String.concat "\n" (List.map mk strings)) in
+        `Error (Aborted, msg), finalize
+      | PackageActionGraph.Parallel.Errors (errors, remaining) ->
+        let msg =
+          Printf.sprintf
+            "Failure while processing %s" (string_of_errors errors) in
+        let failed = List.map fst errors in
+        let successful =
+          PackageActionGraph.fold_vertex
+            (fun pkg successful ->
+               if not (List.mem pkg failed) && not (List.mem pkg remaining)
+               then pkg::successful
+               else successful)
+            solution.to_process []
+        in
+        `Error (Error (successful, failed, remaining), msg),
+        fun () ->
+          finalize ();
+          List.iter display_error errors;
+          (* XXX: we might want to output the sucessful actions as well. *)
+          output_json_actions errors
+      | e -> `Exception e, finalize
+  in
 
-    (* XXX: we might want to output the sucessful actions as well. *)
-    output_json_actions [];
-
-    OK (PackageActionGraph.fold_vertex (fun a b -> a::b) solution.to_process [])
-  with
-  | PackageActionGraph.Parallel.Cyclic actions ->
-    let packages = List.map (List.map action_contents) actions in
-    let strings = List.map (List.map OpamPackage.to_string) packages in
-    let mk l = Printf.sprintf " - %s" (String.concat ", " l) in
-    OpamGlobals.error
-      "Aborting, as the following packages have a cyclic dependency:\n%s"
-      (String.concat "\n" (List.map mk strings));
-    !cleanup ();
-    Aborted
-  | PackageGraph.Parallel.Errors (errors, _) ->
-    (* Error during download *)
+  (* 3/ Display errors, possibly recover, and finalize *)
+  match status with
+  | `Successful () ->
+    finalize ();
+    OK (actions_list solution.to_process)
+  | `Exception e ->
+    OpamGlobals.error "Actions cancelled because of %s" (Printexc.to_string e);
+    finalize ();
+    raise e
+  | `Error (err, msg) ->
     OpamGlobals.msg "\n";
-    OpamGlobals.error "Errors while downloading archives of %s"
-      (String.concat ", "
-         (List.map (fun (nv,_) -> OpamPackage.to_string nv) errors));
-    !cleanup ();
-    Error ([], [], [])
-
-  | PackageActionGraph.Parallel.Errors (errors, remaining) ->
-    (* Error during build/install *)
-    OpamGlobals.msg "\n";
-    if remaining <> [] then (
-      OpamGlobals.error
-        "Due to some errors while processing %s, the following actions will NOT \
-         proceed:\n%s"
-        (string_of_errors errors)
-        (String.concat "\n" (List.map PackageAction.string_of_action remaining))
-    );
-    if can_try_to_recover_from_error errors then (
-      let pkgs = List.map (fst ++ action_contents ++ OpamPackage.to_string) errors in
-      OpamGlobals.header_msg "%s [%s]" (OpamGlobals.colorise `yellow "ERROR RECOVERY")
-        (String.concat ", " pkgs);
-      List.iter recover_from_error (List.map fst errors);
-      List.iter recover_from_error remaining;
-    );
-    List.iter display_error errors;
-
-    output_json_actions errors;
-    let errpkgs = List.map fst errors in
-    let successful =
-      PackageActionGraph.fold_vertex
-        (fun pkg successful ->
-           if not (List.mem pkg errpkgs) && not (List.mem pkg remaining)
-           then pkg::successful
-           else successful)
-        solution.to_process []
-    in
-    !cleanup ();
-    Error (successful, errpkgs, remaining)
+    OpamGlobals.error "%s" msg;
+    match err with
+    | Aborted -> finalize (); err
+    | Error (successful, failed, remaining) ->
+      let exc = if can_try_to_recover_from_error failed then try
+            let pkgs = List.map (action_contents ++ OpamPackage.to_string) failed in
+            OpamGlobals.header_msg "%s [%s]"
+              (OpamGlobals.colorise `yellow "ERROR RECOVERY")
+              (String.concat ", " pkgs);
+            List.iter recover_from_error failed;
+            List.iter recover_from_error remaining;
+            None
+          with e -> Some e
+        else None
+      in
+      OpamGlobals.msg "\n";
+      finalize ();
+      OpamGlobals.header_msg "Error report";
+      if successful <> [] then (
+        OpamGlobals.msg
+          "These actions have been completed %s\n%s\n"
+          (OpamGlobals.colorise `bold "successfully")
+          (String.concat "\n"
+             (List.map PackageAction.string_of_action successful))
+      );
+      if failed <> [] then (
+        OpamGlobals.msg
+          "The following %s\n%s\n"
+          (OpamGlobals.colorise `bold "failed")
+          (String.concat "\n"
+             (List.map PackageAction.string_of_action failed))
+      );
+      if remaining <> [] then (
+        OpamGlobals.msg
+          "Due to the errors, the following have been %s\n%s\n"
+          (OpamGlobals.colorise `bold "cancelled")
+          (String.concat "\n"
+             (List.map PackageAction.string_of_action remaining))
+      );
+      (match exc with Some e -> raise e | None -> err)
+    | _ -> assert false
 
 let simulate_new_state state t =
   let installed = List.fold_left

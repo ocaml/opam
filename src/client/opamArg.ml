@@ -1387,7 +1387,7 @@ let run default commands =
       | OpamSystem.Process_error _ ->
         Printf.eprintf "%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());
-      | Sys.Break -> exit_code := 1
+      | Sys.Break -> exit_code := 130
       | _ ->
         Printf.fprintf stderr "Fatal error:\n%s\n" (Printexc.to_string e);
         Printf.eprintf "%s" (OpamMisc.pretty_backtrace ());

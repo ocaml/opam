@@ -38,7 +38,8 @@ val cleanup_package_artefacts: t -> package -> unit
 (** Remove all the packages from a solution. This includes the package to
     delete, to upgrade and to recompile. Return the updated state and set of all
     deleted packages. *)
-val remove_all_packages: t -> metadata:bool -> solution -> t * package_set
+val remove_all_packages: t -> metadata:bool -> solution
+  -> (t * package_set) * [ `Successful of unit | `Exception of exn ]
 
 (** Compute the set of packages which will need to be downloaded to apply a
     solution *)

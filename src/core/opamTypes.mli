@@ -19,6 +19,14 @@
 (** {2 Exceptions} *)
 exception Lexer_error of string
 
+(** {2 Error and continuation handling} *)
+type 'a success = [ `Successful of 'a ]
+type 'a error = [
+  | `Error of 'a
+  | `Exception of exn
+]
+type ('a,'b) status = [ 'a success | 'b error ]
+
 (** {2 Filenames} *)
 
 (** Basenames *)
@@ -254,6 +262,7 @@ module type ACTION_GRAPH = sig
     root_causes: (package * package cause) list;
   }
 
+  val actions_list: t -> package action list
   (** Dump a solution graph *)
   val dump_solution: solution -> unit
   val output_dot: out_channel -> t -> unit

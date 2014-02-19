@@ -548,31 +548,38 @@ let remove_package t ~metadata ?silent nv =
 
 (* Remove all the packages appearing in a solution (and which need to
    be removed, eg. because of a direct uninstall action or because of
-   recompilation.  *)
+   recompilation. Ensure any possibly partially removed package is
+   marked as removed (it's the best we can do) *)
 let remove_all_packages t ~metadata sol =
   let deleted = ref [] in
+  let update_metadata () =
+    let deleted = OpamPackage.Set.of_list !deleted in
+    if metadata then (
+      let installed = OpamPackage.Set.diff t.installed deleted in
+      let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
+      let reinstall = OpamPackage.Set.diff t.reinstall deleted in
+      let t = update_metadata t ~installed ~installed_roots ~reinstall in
+      t, deleted
+    )
+    else t, deleted in
   let delete nv =
     if removal_needs_download t nv then extract_package t nv;
     if !deleted = [] then
       OpamGlobals.header_msg "Removing Packages";
-    deleted := nv :: !deleted;
-    try ignore (remove_package t ~metadata:false nv);
-    with e -> OpamMisc.fatal e in
+    deleted := nv :: !deleted; (* first mark as deleted *)
+    try ignore (remove_package t ~metadata:false nv)
+    with e -> OpamMisc.fatal e (* ignore individual errors *)
+  in
   let action n =
     match n with
     | To_change (Some nv, _) | To_delete nv | To_recompile nv -> delete nv
     | To_change (None, _) -> () in
-  List.iter delete PackageActionGraph.(sol.to_remove);
-  PackageActionGraph.(Topological.iter action (mirror sol.to_process));
-  let deleted = OpamPackage.Set.of_list !deleted in
-  if metadata then (
-    let installed = OpamPackage.Set.diff t.installed deleted in
-    let installed_roots = OpamPackage.Set.diff t.installed_roots deleted in
-    let reinstall = OpamPackage.Set.diff t.reinstall deleted in
-    let t = update_metadata t ~installed ~installed_roots ~reinstall in
-    t, deleted
-  )
-  else t, deleted
+  try
+    List.iter delete PackageActionGraph.(sol.to_remove);
+    PackageActionGraph.(Topological.iter action (mirror sol.to_process));
+    update_metadata (), `Successful ()
+  with e ->
+    update_metadata (), `Exception e
 
 (* Build and install a package. In case of error, simply return the
    error traces, and let the repo in a state that the user can

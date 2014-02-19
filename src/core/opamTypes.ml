@@ -18,6 +18,13 @@ open OpamMisc.OP
 
 exception Lexer_error of string
 
+type 'a success = [ `Successful of 'a ]
+type 'a error = [
+  | `Error of 'a
+  | `Exception of exn
+]
+type ('a,'b) status = [ 'a success | 'b error ]
+
 type json = OpamJson.t
 
 type basename = OpamFilename.Base.t
@@ -429,6 +436,7 @@ module type ACTION_GRAPH = sig
     root_causes: (package * package cause) list;
   }
 
+  val actions_list: t -> package action list
   val dump_solution: solution -> unit
   val output_dot: out_channel -> t -> unit
 
@@ -493,6 +501,9 @@ module MakeActionGraph (Pkg: PKG) = struct
       let default_vertex_attributes _ = []
       let graph_attributes _ = []
     end)
+
+  let actions_list g =
+    fold_vertex (fun a b -> a::b) g []
 
   let dump_solution g =
     Dot.output_graph stdout g.to_process
