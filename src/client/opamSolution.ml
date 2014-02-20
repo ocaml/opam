@@ -18,7 +18,6 @@ let log fmt = OpamGlobals.log "SOLUTION" fmt
 
 open OpamTypes
 open OpamState.Types
-open OpamMisc.OP
 
 let post_message ?(failed=false) state action =
   let pkg = action_contents action in
@@ -224,32 +223,6 @@ let print_variable_warnings t =
     );
     variable_warnings := true;
   )
-
-(* Is a recovery possible ? *)
-let can_try_to_recover_from_error l =
-  not !OpamGlobals.dryrun &&
-  List.exists (function
-    | To_change(Some _,_) -> true
-    | To_recompile _
-    | To_change _
-    | To_delete _         -> false
-  ) l
-
-(* Try to recover from errors by installing either the old packages or
-   by reinstalling the current ones. This can also fail but if it
-   succeeds OPAM should remains in a consistent state. *)
-let recover_from_error = function
-  | To_delete _          -> ()
-  | To_recompile nv
-  | To_change (Some nv, _)
-  | To_change (None, nv) ->
-    let t = OpamState.load_state "recover-from-error" in
-    try
-      OpamAction.download_package t nv;
-      OpamAction.extract_package t nv;
-      OpamAction.build_and_install_package t ~metadata:true nv
-    with e -> OpamMisc.fatal e
-    (* let the user stop the recovery with C-c *)
 
 (* Transient state (not flushed to disk) *)
 type state = {
@@ -485,7 +458,7 @@ let parallel_apply t action solution =
       | e -> `Exception e, finalize
   in
 
-  (* 3/ Display errors, possibly recover, and finalize *)
+  (* 3/ Display errors and finalize *)
   match status with
   | `Successful () ->
     finalize ();
@@ -500,17 +473,6 @@ let parallel_apply t action solution =
     match err with
     | Aborted -> finalize (); err
     | Error (successful, failed, remaining) ->
-      let exc = if can_try_to_recover_from_error failed then try
-            let pkgs = List.map (action_contents ++ OpamPackage.to_string) failed in
-            OpamGlobals.header_msg "%s [%s]"
-              (OpamGlobals.colorise `yellow "ERROR RECOVERY")
-              (String.concat ", " pkgs);
-            List.iter recover_from_error failed;
-            List.iter recover_from_error remaining;
-            None
-          with e -> Some e
-        else None
-      in
       OpamGlobals.msg "\n";
       finalize ();
       OpamGlobals.header_msg "Error report";
@@ -535,7 +497,7 @@ let parallel_apply t action solution =
           (String.concat "\n"
              (List.map PackageAction.string_of_action remaining))
       );
-      (match exc with Some e -> raise e | None -> err)
+      err
     | _ -> assert false
 
 let simulate_new_state state t =
