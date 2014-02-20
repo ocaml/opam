@@ -77,9 +77,11 @@ let solver_timeout =
   try float_of_string (OpamMisc.getenv "OPAMSOLVERTIMEOUT")
   with Not_found | Failure _ -> 5.
 
+(* we quote ( and ) to ensure they pass through the shell intact; 
+   this armour phase should be implemented in Dose eventually *)
 let aspcud_criteria =
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
-  with Not_found -> "-removed,-notuptodate,-count(down),-new,-changed"
+  with Not_found -> "-removed,-notuptodate,-count\\(down\\),-new,-changed"
 
 let default_repository_name    = "default"
 let default_repository_address = "https://opam.ocaml.org"
