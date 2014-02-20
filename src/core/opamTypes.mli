@@ -19,6 +19,14 @@
 (** {2 Exceptions} *)
 exception Lexer_error of string
 
+(** {2 Error and continuation handling} *)
+type 'a success = [ `Successful of 'a ]
+type 'a error = [
+  | `Error of 'a
+  | `Exception of exn
+]
+type ('a,'b) status = [ 'a success | 'b error ]
+
 (** {2 Filenames} *)
 
 (** Basenames *)
@@ -63,6 +71,15 @@ type package_set = OpamPackage.Set.t
 
 (** Map of packages *)
 type 'a package_map = 'a OpamPackage.Map.t
+
+(** Graph of packages providing OpamParallel *)
+module PackageGraph : sig
+  include Graph.Sig.I with type V.t = package
+
+  module Parallel: OpamParallel.SIG
+    with type G.t = t
+     and type G.V.t = package
+end
 
 (** Package names *)
 type name = OpamPackage.Name.t
@@ -245,6 +262,7 @@ module type ACTION_GRAPH = sig
     root_causes: (package * package cause) list;
   }
 
+  val actions_list: t -> package action list
   (** Dump a solution graph *)
   val dump_solution: solution -> unit
   val output_dot: out_channel -> t -> unit

@@ -634,6 +634,7 @@ module X = struct
       repositories  : repository_name list ;
       switch        : switch;
       jobs          : int;
+      dl_jobs       : int;
     }
 
     let with_repositories t repositories = { t with repositories }
@@ -644,15 +645,18 @@ module X = struct
     let repositories t = t.repositories
     let switch t = t.switch
     let jobs t = t.jobs
+    let dl_jobs t = t.dl_jobs
 
-    let create switch repositories jobs =
-      { opam_version = OpamVersion.current; repositories ; switch ; jobs }
+    let create switch repositories jobs dl_jobs =
+      { opam_version = OpamVersion.current;
+        repositories ; switch ; jobs ; dl_jobs}
 
     let empty = {
       opam_version = OpamVersion.current;
       repositories = [];
       switch = OpamSwitch.of_string "<empty>";
       jobs = OpamGlobals.default_jobs;
+      dl_jobs = OpamGlobals.default_dl_jobs;
     }
 
     let s_opam_version = "opam-version"
@@ -662,6 +666,7 @@ module X = struct
     let s_switch2 = "ocaml-version"
 
     let s_jobs = "jobs"
+    let s_dl_jobs = "download-jobs"
 
     let s_cores = "cores"
 
@@ -673,6 +678,7 @@ module X = struct
       s_repositories;
       s_switch;
       s_jobs;
+      s_dl_jobs;
 
       (* this fields are no longer useful, but we keep it for backward
          compatibility *)
@@ -712,7 +718,13 @@ module X = struct
         | Some i, _      -> i
         | _     , Some i -> i
         | _              -> 1 in
-      { opam_version; repositories; switch; jobs }
+
+      let dl_jobs =
+        match OpamFormat.assoc_option s.file_contents s_dl_jobs
+                OpamFormat.parse_int with
+        | Some i -> i
+        | None -> OpamGlobals.default_dl_jobs in
+      { opam_version; repositories; switch; jobs; dl_jobs; }
 
     let to_string filename t =
       let s = {
@@ -726,6 +738,7 @@ module X = struct
                       (OpamRepositoryName.to_string ++ OpamFormat.make_string)
                       t.repositories);
           Variable (s_jobs , OpamFormat.make_int t.jobs);
+          Variable (s_dl_jobs , OpamFormat.make_int t.dl_jobs);
           Variable (s_switch, OpamFormat.make_string (OpamSwitch.to_string t.switch))
         ]
       } in

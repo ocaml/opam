@@ -19,16 +19,31 @@
 open OpamTypes
 open OpamState.Types
 
-(** Build and install a package. *)
+(** Downloads the source for a package to the local cache. *)
+val download_package: t -> package -> unit
+
+(** Extracts and patches the source of a package found in the local cache. *)
+val extract_package: t -> package -> unit
+
+(** Build and install a package from its downloaded source. *)
 val build_and_install_package: t -> metadata:bool -> package -> unit
 
 (** Remove a package. *)
-val remove_package: t -> metadata:bool -> rm_build:bool -> ?silent:bool -> package -> unit
+val remove_package: t -> metadata:bool -> ?silent:bool -> package -> unit
 
-(** Remove all the packages from a solution. This includes the package
-    to delete, to upgrade and to recompile. Return the set of all deleted
-    packages. *)
-val remove_all_packages: t -> metadata:bool -> solution -> package_set
+(** Removes auxiliary files related to a package, after checking that
+    they're not needed (even in other switches) *)
+val cleanup_package_artefacts: t -> package -> unit
+
+(** Remove all the packages from a solution. This includes the package to
+    delete, to upgrade and to recompile. Return the updated state and set of all
+    deleted packages. *)
+val remove_all_packages: t -> metadata:bool -> solution
+  -> (t * package_set) * [ `Successful of unit | `Exception of exn ]
+
+(** Compute the set of packages which will need to be downloaded to apply a
+    solution *)
+val sources_needed: t -> solution -> package_set
 
 (** Update package metadata *)
 val update_metadata:

@@ -18,6 +18,13 @@ open OpamMisc.OP
 
 exception Lexer_error of string
 
+type 'a success = [ `Successful of 'a ]
+type 'a error = [
+  | `Error of 'a
+  | `Exception of exn
+]
+type ('a,'b) status = [ 'a success | 'b error ]
+
 type json = OpamJson.t
 
 type basename = OpamFilename.Base.t
@@ -429,6 +436,7 @@ module type ACTION_GRAPH = sig
     root_causes: (package * package cause) list;
   }
 
+  val actions_list: t -> package action list
   val dump_solution: solution -> unit
   val output_dot: out_channel -> t -> unit
 
@@ -438,6 +446,21 @@ module type PKG = sig
   include Graph.Sig.COMPARABLE
   val to_string: t -> string
   val string_of_action: ?causes:(t -> t cause) -> t action -> string
+end
+
+module PackageGraph = struct
+  module PG = Graph.Imperative.Digraph.ConcreteBidirectional (OpamPackage)
+  module Topological = Graph.Topological.Make (PG)
+  module Traverse = Graph.Traverse.Dfs(PG)
+  module Components = Graph.Components.Make(PG)
+  module Parallel = OpamParallel.Make (struct
+      let string_of_vertex = OpamPackage.to_string
+      include PG
+      include Topological
+      include Traverse
+      include Components
+    end)
+  include PG
 end
 
 module MakeActionGraph (Pkg: PKG) = struct
@@ -478,6 +501,9 @@ module MakeActionGraph (Pkg: PKG) = struct
       let default_vertex_attributes _ = []
       let graph_attributes _ = []
     end)
+
+  let actions_list g =
+    fold_vertex (fun a b -> a::b) g []
 
   let dump_solution g =
     Dot.output_graph stdout g.to_process
