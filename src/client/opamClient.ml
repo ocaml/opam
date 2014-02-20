@@ -291,9 +291,10 @@ module API = struct
           let mirrors =
             OpamMisc.string_of_list string_of_address (OpamFile.URL.mirrors u) in
           let checksum = OpamFile.URL.checksum u in
-          [ "upstream-url" , url;
-            "upstream-mirrors" , mirrors;
-            "upstream-kind", kind ]
+          [ "upstream-url" , url ]
+          @ (if OpamFile.URL.mirrors u = [] then []
+             else [ "upstream-mirrors" , mirrors ])
+          @ [ "upstream-kind", kind ]
           @ match checksum with
             | None   -> []
             | Some c -> [ "upstream-checksum", c ] in
