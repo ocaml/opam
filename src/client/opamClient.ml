@@ -760,7 +760,8 @@ module API = struct
 
         (* Create ~/.opam/config *)
         let config =
-          OpamFile.Config.create switch [repo.repo_name] jobs in
+          OpamFile.Config.create switch [repo.repo_name] jobs
+            OpamGlobals.default_dl_jobs in
         OpamFile.Config.write config_f config;
 
         (* Create ~/.opam/aliases *)
@@ -1017,7 +1018,8 @@ module API = struct
                 (OpamPackage.Version.Set.max_elt
                    (OpamPackage.versions_of_name t.packages name)) in
           OpamGlobals.note "Forcing removal of %s" (OpamPackage.to_string nv);
-          OpamAction.remove_package ~rm_build:true ~metadata:false t nv in
+          OpamAction.remove_package ~metadata:false t nv;
+          OpamAction.cleanup_package_artefacts t nv in
         nothing_to_do := false;
         List.iter force_remove not_installed
       else if List.length not_installed = 1 then
