@@ -145,14 +145,15 @@ let with_switch_backup command f =
   with
   | OpamGlobals.Exit 0 as e -> raise e
   | err ->
+    OpamMisc.register_backtrace err;
     let t1 = OpamState.load_state "switch-backup-err" in
     if OpamPackage.Set.equal t.installed t1.installed &&
        OpamPackage.Set.equal t.installed_roots t1.installed_roots then
       OpamFilename.remove file
     else
-      Printf.eprintf "\nThe former state can be restored with \
-                      %s switch import -f %S\n%!"
-        Sys.argv.(0) (OpamFilename.to_string file);
+     Printf.eprintf "\nThe former state can be restored with \
+                     %s switch import -f %S\n%!"
+       Sys.argv.(0) (OpamFilename.to_string file);
     raise err
 
 module API = struct
@@ -495,7 +496,8 @@ module API = struct
         let t, _, bad_versions = removed_from_upstream t in
         let to_remove, unavailable = must_be_removed t t.installed bad_versions in
         let to_upgrade = t.installed -- to_remove in
-        let requested = OpamPackage.Name.Set.empty in
+        let requested = OpamPackage.names_of_packages
+            (OpamPackage.Set.union to_remove unavailable) in
         let action = Upgrade to_reinstall in
         requested,
         action,
@@ -530,7 +532,10 @@ module API = struct
         let to_upgrade = to_upgrade -- to_remove in
         let installed_roots = t.installed -- to_upgrade -- to_remove in
         let requested =
-          OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+          OpamPackage.Name.Set.union
+            (OpamPackage.names_of_packages
+               (OpamPackage.Set.union to_remove unavailable))
+            (OpamPackage.Name.Set.of_list (List.rev_map fst atoms)) in
         let action = Upgrade to_reinstall in
         requested,
         action,
@@ -1046,17 +1051,17 @@ module API = struct
          them. But that may re-include packages that we wanted removed, so we
          need to remove them again *)
       let to_keep = OpamPackage.Set.diff to_keep to_remove in
-      let to_remove, requested =
+      let requested = OpamPackage.names_of_packages packages in
+      let to_remove =
         if autoremove then
           let to_remove = OpamPackage.Set.diff t.installed to_keep in
-          if atoms = [] then to_remove, OpamPackage.names_of_packages to_remove
+          if atoms = [] then to_remove
           else (* restrict to the dependency cone of removed pkgs *)
             OpamPackage.Set.inter to_remove
               (OpamPackage.Set.of_list
                  (OpamSolver.dependencies
-                    ~depopts:true ~installed:true universe to_remove)),
-            OpamPackage.names_of_packages packages
-        else to_remove, OpamPackage.names_of_packages packages in
+                    ~depopts:true ~installed:true universe to_remove))
+        else to_remove in
       let solution = OpamSolution.resolve_and_apply t Remove ~requested
           { wish_install = OpamSolution.eq_atoms_of_packages to_keep;
             wish_remove  = OpamSolution.atoms_of_packages to_remove;

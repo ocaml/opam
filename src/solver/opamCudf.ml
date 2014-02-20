@@ -589,8 +589,8 @@ let compute_root_causes universe actions requested =
     | To_delete p,    To_change _,         `Depends  -> Use [p]
     | _,              To_change(None,_),   `Depends  -> Unknown
     | _,              To_change _,         _         -> Upstream_changes
-    | a,              To_delete _,         `Depends  -> Conflicts_with
-                                                          [action_contents a]
+    | To_change _,    To_delete _,         `Depends  -> Conflicts_with
+                                                          [action_contents cause]
     | _,              _,                   _         -> Unknown
   in
   let get_causes acc roots =

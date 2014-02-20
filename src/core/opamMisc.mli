@@ -214,8 +214,13 @@ val env: unit -> (string * string) list
     - or call this function on the caught exception *)
 val fatal: exn -> unit
 
+(** Register a backtrace for when you need to process a finalizer (that
+    internally uses exceptions) and then re-raise the same exception.
+    To be printed by pretty_backtrace. *)
+val register_backtrace: exn -> unit
+
 (** Return a pretty-printed backtrace *)
-val pretty_backtrace: unit -> string
+val pretty_backtrace: exn -> string
 
 (** Prettify a local path (eg. replace /home/me/ by '~') *)
 val prettify_path: string -> string
