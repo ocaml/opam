@@ -151,6 +151,9 @@ val substitute_file: state -> ?opam:OpamFile.OPAM.t -> variable_map -> basename 
 val global_variable_names: string list
 val package_variable_names: string list
 
+(** Check for user-defined variable overwrite. *)
+val get_env_var: full_variable -> variable_contents option
+
 (** Evaluate a filter *)
 val eval_filter: state -> ?opam:OpamFile.OPAM.t -> variable_map -> filter option -> bool
 

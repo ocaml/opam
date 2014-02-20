@@ -141,6 +141,11 @@ let help_sections = [
       `opam config env --switch=SWITCH'.";
   `P "$(i,OPAMUTF8MSGS) use nice UTF8 characters in OPAM messages.";
   `P "$(i,OPAMVERBOSE) see option `--verbose'.";
+  `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
+      substituting `%{var}%` strings in `opam` files.";
+  `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
+      $(i,package:var) when substituting `%{package:var}%` strings in \
+      `opam` files.";
   `P "$(i,OPAMYES) see option `--yes'.";
 
   `S "FURTHER DOCUMENTATION";

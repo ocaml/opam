@@ -537,14 +537,32 @@ let package_variable_names =
     "bin"; "sbin"; "lib"; "man"; "doc"; "share"; "etc";
     "name"; "build"; "version"; "depends"; "hash" ]
 
+let string str = Some (S str)
+let bool b = Some (B b)
+let int i = string (string_of_int i)
+let is_global_conf v =
+  OpamVariable.Full.package v = OpamPackage.Name.global_config
+
+(* Read the env variables *)
+let get_env_var v =
+  let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
+  let var_hook =
+    if is_global_conf v then
+      OpamMisc.string_map (function '-' -> '_' | c -> c) var_str
+    else
+      Printf.sprintf "%s_%s"
+        (OpamPackage.Name.to_string (OpamVariable.Full.package v))
+        var_str
+  in
+  try match OpamMisc.getenv ("OPAMVAR_" ^ var_hook) with
+    | "true"  | "1" -> bool true
+    | "false" | "0" -> bool false
+    | s             -> string s
+  with Not_found -> None
+
 (* filter handling *)
 let resolve_variable t ?opam local_variables v =
-  let string str = Some (S str) in
-  let bool b = Some (B b) in
-  let int i = string (string_of_int i) in
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
-  let is_global_conf v =
-    OpamVariable.Full.package v = OpamPackage.Name.global_config in
   let read_var v =
     let var = OpamVariable.Full.variable v in
     let c = dot_config t (OpamVariable.Full.package v) in
@@ -572,22 +590,6 @@ let resolve_variable t ?opam local_variables v =
     | "ocaml-native"  -> bool (Lazy.force OpamSystem.ocaml_native_available)
     | "ocaml-tools-opt" -> bool (Lazy.force OpamSystem.ocaml_opt_available)
     | _               -> None
-  in
-  let get_env_var v =
-    let var_str = OpamVariable.to_string (OpamVariable.Full.variable v) in
-    let var_hook =
-      if is_global_conf v then
-        OpamMisc.string_map (function '-' -> '_' | c -> c) var_str
-      else
-        Printf.sprintf "OPAM_%s_%s"
-          (OpamPackage.Name.to_string (OpamVariable.Full.package v))
-          var_str
-    in
-    try match OpamMisc.getenv var_hook with
-      | "true"  | "1" -> bool true
-      | "false" | "0" -> bool false
-      | s             -> string s
-    with Not_found -> None
   in
   let get_package_var opam v =
     if is_global_conf v then None else
