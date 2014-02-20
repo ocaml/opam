@@ -313,6 +313,19 @@ let reset_env_value ~prefix c v =
   let v = split_delim v c in
   List.filter (fun v -> not (starts_with ~prefix v)) v
 
+(* Split the list in two according to the first occurrence of the string
+   starting with the given prefix.
+*)
+let cut_env_value ~prefix c v =
+  let v = split_delim v c in
+  let rec aux before =
+    function
+      | [] -> [], List.rev before
+      | curr::after when starts_with ~prefix curr ->
+        before, after
+      | curr::after -> aux (curr::before) after
+  in aux [] v
+
 (* if rsync -arv return 4 lines, this means that no files have changed *)
 let rsync_trim = function
   | [] -> []

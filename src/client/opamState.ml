@@ -1496,10 +1496,17 @@ let expand_env t ?opam (env: env_updates) : env =
   let fenv = resolve_variable t ?opam OpamVariable.Map.empty in
   List.rev_map (fun (ident, symbol, string) ->
     let string = OpamFilter.substitute_string fenv string in
+    let prefix = OpamFilename.Dir.to_string t.root in
     let read_env () =
-      let prefix = OpamFilename.Dir.to_string t.root in
       try OpamMisc.reset_env_value ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
       with Not_found -> [] in
+    let update_env a =
+      let before, after =
+        OpamMisc.cut_env_value
+          ~prefix OpamSystem.path_sep (OpamMisc.getenv ident)
+      in
+      List.rev_append before (a::after)
+    in
     let cons ~head a b =
       let c = List.filter ((<>)"") b in
       match b with
@@ -1516,6 +1523,7 @@ let expand_env t ?opam (env: env_updates) : env =
     | "=+" -> (ident, String.concat c (read_env () @ [string]))
     | ":=" -> (ident, String.concat c (cons ~head:true string (read_env())))
     | "=:" -> (ident, String.concat c (cons ~head:false string (read_env())))
+    | "=+=" -> (ident, String.concat c (update_env string))
     | _    -> failwith (Printf.sprintf "expand_env: %s is an unknown symbol" symbol)
   ) env
 
@@ -1528,7 +1536,7 @@ let env_updates ~opamswitch t =
   let comp = compiler_comp t t.compiler in
 
   let add_to_path = OpamPath.Switch.bin t.root t.switch in
-  let new_path = "PATH", "+=", OpamFilename.Dir.to_string add_to_path in
+  let new_path = "PATH", "=+=", OpamFilename.Dir.to_string add_to_path in
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch perl5 in
   let new_perl5lib = "PERL5LIB", "+=", OpamFilename.Dir.to_string add_to_perl5lib in
@@ -1638,6 +1646,7 @@ let string_of_env_update t shell updates =
       | ":=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | "=:"
       | "=+" -> (ident, Printf.sprintf "$%s:%s" ident string)
+      | "=+=" -> (ident, Printf.sprintf "%s:$%s" string ident)
       | _    -> failwith (Printf.sprintf "%s is not a valid env symbol" symbol) in
     export (key, value) in
   String.concat "" (List.rev_map aux updates)
