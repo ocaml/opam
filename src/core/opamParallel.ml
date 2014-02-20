@@ -149,12 +149,7 @@ module Make (G : G) = struct
           (string_of_pids pids);
         aux ()
       ) in
-
-    try aux ()
-    with Sys.Break as e ->
-      OpamGlobals.msg " Interrupted!\n";
-      ignore (aux ());
-      raise e
+    aux ()
 
   exception Errors of (G.V.t * error) list * G.V.t list
   exception Cyclic of G.V.t list list
@@ -207,6 +202,18 @@ module Make (G : G) = struct
       raise (Cyclic sccs)
     );
 
+    let get_errors () =
+      (* Generate the remaining nodes in topological order *)
+      let error_nodes = error_nodes () in
+      let remaining =
+        G.fold_vertex (fun v l ->
+            if S.mem v !t.visited
+            || S.mem v error_nodes then
+                l
+            else
+              v::l) !t.graph [] in
+      Errors (M.bindings !errors, List.rev remaining) in
+
     (* nslots is the number of free slots *)
     let rec loop nslots =
 
@@ -218,24 +225,28 @@ module Make (G : G) = struct
         if M.is_empty !errors then
           log "loop completed (without errors)"
         else
-          (* Generate the remaining nodes in topological order *)
-          let error_nodes = error_nodes () in
-          let remaining =
-            G.fold_vertex (fun v l ->
-              if S.mem v !t.visited
-              || S.mem v error_nodes then
-                l
-              else
-                v::l) !t.graph [] in
-          let remaining = List.rev remaining in
-          raise (Errors (M.bindings !errors, remaining))
+          raise (get_errors ())
 
       else if nslots <= 0 || (worker_nodes () ++ error_nodes ()) =|= !t.roots then (
 
         (* if either 1/ no slots are available or 2/ no action can be performed,
            then wait for a child process to finish its work *)
         log "waiting for a child process to finish";
-        let pid, status = wait !pids in
+        let pid, status =
+          try wait !pids
+          with e ->
+            OpamGlobals.error "%s while waiting for sub-processes"
+              (Printexc.to_string e);
+            (* Cleanup *)
+            errors := OpamMisc.IntMap.fold
+                (fun i (n,_) errors ->
+                   (try Unix.kill i Sys.sigint with _ -> ());
+                   M.add n (Internal_error "User interruption") errors)
+                !pids !errors;
+            (try OpamMisc.IntMap.iter (fun _ _ -> ignore (wait !pids)) !pids
+             with e -> log "%s in sub-process cleanup" (Printexc.to_string e));
+            raise (get_errors ())
+        in
         let n, from_child = OpamMisc.IntMap.find pid !pids in
         pids := OpamMisc.IntMap.remove pid !pids;
         begin match status with
@@ -272,11 +283,7 @@ module Make (G : G) = struct
         | -1  -> OpamGlobals.error_and_exit "Cannot fork a new process"
         | 0   ->
           log "Spawning a new process";
-          Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
-            OpamGlobals.error "Interrupted";
-            exit 1)
-          );
-          Sys.catch_break true;
+          Sys.catch_break false;
           let return p =
             let to_parent = open_out_bin error_file in
             write_error to_parent p;
