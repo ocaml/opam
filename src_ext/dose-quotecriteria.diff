@@ -2,14 +2,15 @@ diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
 index bb4c5c5..de561bd 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
-@@ -53,11 +53,17 @@ let rec input_all_lines acc chan =
+@@ -53,11 +53,18 @@ let rec input_all_lines acc chan =
  (** Solver "exec:" line. Contains three named wildcards to be interpolated:
     "$in", "$out", and "$pref"; corresponding to, respectively, input CUDF
     document, output CUDF universe, user preferences. *)
 +
 +(* quote string for the shell, after removing all characters disallowed in criteria *)
 +let quote s = Printf.sprintf "\"%s\"" s;;
-+let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
++let armour s = Pcre.substitute ~rex:(Pcre.regexp "[()]") ~subst:(fun m -> "\\"^m) s;;
++let sanitize s = quote (armour (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s));;
 +
  let interpolate_solver_pat exec cudf_in cudf_out pref =
 -  let _, exec = String.replace ~str:exec ~sub:"$in"   ~by:cudf_in  in
@@ -28,12 +29,14 @@ diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
 index de561bd..97d889c 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
-@@ -56,14 +56,14 @@ let rec input_all_lines acc chan =
+@@ -56,15 +56,15 @@ let rec input_all_lines acc chan =
  
  (* quote string for the shell, after removing all characters disallowed in criteria *)
  let quote s = Printf.sprintf "\"%s\"" s;;
--let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
-+let sanitize s = quote (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
+-let armour s = Pcre.substitute ~rex:(Pcre.regexp "[()]") ~subst:(fun m -> "\\"^m) s;;
+-let sanitize s = quote (armour (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s));;
++let armour s = Re_pcre.substitute ~rex:(Re_pcre.regexp "[()]") ~subst:(fun m -> "\\"^m) s;;
++let sanitize s = quote (armour (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s));;
  
  let interpolate_solver_pat exec cudf_in cudf_out pref =
    let (|>) f g = fun x -> g(f x) in
