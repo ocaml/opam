@@ -53,10 +53,10 @@ index de561bd..4f3cdc0 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
 @@ -93,6 +93,7 @@ let execsolver exec_pat criteria cudf =
-   let cmd = interpolate_solver_pat exec_pat solver_in solver_out criteria in                                                                                                                                                          
-                                                                                                                                                                                                                                       
-   debug "%s" cmd;                                                                                                                                                                                                                     
-+  Printf.printf "External solver command: %s\n" cmd;                                                                                                                                                                                  
-                                                                                                                                                                                                                                       
-   let env = Unix.environment () in                                                                                                                                                                                                    
-   let (cin,cout,cerr) = Unix.open_process_full cmd env in                                                                                                                                                                             
+   let cmd = interpolate_solver_pat exec_pat solver_in solver_out criteria in
+ 
+   debug "%s" cmd;
++  Printf.printf "External solver command: %s\n" cmd;
+ 
+   let env = Unix.environment () in
+   let (cin,cout,cerr) = Unix.open_process_full cmd env in
