@@ -24,27 +24,3 @@ index bb4c5c5..de561bd 100644
  ;;
  
  exception Error of string
-diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
-index de561bd..97d889c 100644
---- a/common/cudfSolver.ml
-+++ b/common/cudfSolver.ml
-@@ -56,14 +56,14 @@ let rec input_all_lines acc chan =
- 
- (* quote string for the shell, after removing all characters disallowed in criteria *)
- let quote s = Printf.sprintf "\"%s\"" s;;
--let sanitize s = quote (Pcre.substitute ~rex:(Pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
-+let sanitize s = quote (Re_pcre.substitute ~rex:(Re_pcre.regexp "[^+()a-z,\"-]") ~subst:(fun _ -> "") s);;
- 
- let interpolate_solver_pat exec cudf_in cudf_out pref =
-   let (|>) f g = fun x -> g(f x) in
--  let dequote s = Pcre.regexp ("\"*"^(Pcre.quote s)^"\"*") in
--  (Pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
--   Pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
--   Pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
-+  let dequote s = Re_pcre.regexp ("\"*"^(Re_pcre.quote s)^"\"*") in
-+  (Re_pcre.substitute ~rex:(dequote "$in")   ~subst: (fun _ -> (quote cudf_in))  |>
-+   Re_pcre.substitute ~rex:(dequote "$out")  ~subst: (fun _ -> (quote cudf_out)) |>
-+   Re_pcre.substitute ~rex:(dequote "$pref") ~subst: (fun _ -> (sanitize pref))) exec
- ;;
- 
- exception Error of string
