@@ -657,7 +657,7 @@ let compute_root_causes universe actions requested =
     let causes =
       (* Compute causes for remaining changes (assume upstream changes) *)
       let roots = make_roots causes Upstream_changes (function
-          | To_change _ | To_recompile _ -> true
+          | (To_change _ | To_recompile _) as a -> ActionGraph.in_degree g a = 0
           | _ -> false) in
       get_causes causes roots in
   Map.fold (fun p (cause,_depth) acc -> (p,cause)::acc) causes []
