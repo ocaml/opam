@@ -2,7 +2,7 @@ diff --git a/common/cudfSolver.ml b/common/cudfSolver.ml
 index bb4c5c5..da7bdb6 100644
 --- a/common/cudfSolver.ml
 +++ b/common/cudfSolver.ml
-@@ -27,6 +27,6 @@ let check_fail file =
+@@ -27,7 +27,7 @@ let check_fail file =
  (** see mktemp(1) for the syntax of [tmp_pattern] *)
  let mktmpdir tmp_pattern =
    let ic =

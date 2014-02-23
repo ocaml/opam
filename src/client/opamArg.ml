@@ -129,6 +129,10 @@ let help_sections = [
   (* Alphabetical order *)
   `P "$(i,OPAMCOLOR), when set to $(i,always) or $(i,never), sets a default \
       value for the --color option.";
+  `P ("$(i,OPAMCRITERIA) allows to specify user $(i,preferences) for \
+       dependency solving. The full language of the MISC212 competition is \
+       supported, see $(i,http://www.mancoosi.org/misc-2012/criteria/) for details. \
+       The default value is "^OpamGlobals.default_preferences);
   `P "$(i,OPAMCURL) can be used to define an alternative for the 'curl' \
       command-line utility to download files.";
   `P "$(i,OPAMDEBUG) see option `--debug'.";
