@@ -1624,7 +1624,6 @@ module API = struct
       let open Printf in
       let dir = Filename.chop_suffix archive ".tar.gz" in
       let pr fmt = ksprintf (fun s -> Buffer.add_string b (s ^ "\n")) fmt in
-      pr "echo ";
       pr "echo BUILD %s" dir;
       pr "(";
       pr "cd build";
@@ -1675,11 +1674,12 @@ module API = struct
         let variables = OpamVariable.Map.of_list (vars1 @ vars2) in
         let install = OpamFile.Dot_install.safe_read (OpamPath.Switch.build_install t.root t.switch nv) in
         let commands = OpamState.filter_commands t ~opam variables (OpamFile.OPAM.build opam) in
+        let commands = List.map (fun l -> l @ [">>build.log 2>>build.log || (echo FAILED; tail build.log; exit 1)"]) commands in
         let install_commands = ref [] in
         OpamAction.perform_dot_install (OpamPackage.name nv) install
             (`Shell (fun l -> install_commands := l :: !install_commands))
             (OpamSwitch.of_string "$BUNDLE_PREFIX");
-        shellout_build ~archive ~env (commands @ List.rev !install_commands)
+        shellout_build ~archive ~env (commands @ List.rev !install_commands);
       with e ->
         OpamMisc.fatal e;
         OpamGlobals.error_and_exit "%s" (Printexc.to_string e);
