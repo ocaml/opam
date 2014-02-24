@@ -38,7 +38,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     tar xvfz master.tar.gz
     cd opam-rt-master
     make
-    make KINDS="local git" run
+    ./opam-rt test $(mktemp -d /tmp/opamRT.XXXX)  big-upgrade --kind local --debug --verbose
 else
     # Compile OPAM from sources and run the basic tests
     ./configure
