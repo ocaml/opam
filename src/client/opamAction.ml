@@ -24,6 +24,121 @@ open OpamMisc.OP
 
 module PackageActionGraph = OpamSolver.ActionGraph
 
+let perform_dot_install name install act switch =
+  let warnings = ref [] in
+  let check ~src ~dst base =
+    let src_file = OpamFilename.create src base.c in
+    if base.optional && not (OpamFilename.exists src_file) then
+      log "Not installing %a is not present and optional."
+        (slog OpamFilename.to_string) src_file;
+    if not base.optional && not (OpamFilename.exists src_file) then (
+      warnings := (dst, base.c) :: !warnings
+    );
+    OpamFilename.exists src_file
+  in
+  (* Install a list of files *)
+  let install_files exec dst_fn files_fn =
+    let files = files_fn install in
+    match act with
+    | `Install (src_dir, dst_dir) ->
+      let dst_dir = dst_fn dst_dir switch name in
+      if not (OpamFilename.exists_dir dst_dir) then (
+        log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
+        OpamFilename.mkdir dst_dir;
+      );
+      List.iter (fun (base, dst) ->
+          let src_file = OpamFilename.create src_dir base.c in
+          let dst_file = match dst with
+            | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
+            | Some d -> OpamFilename.create dst_dir d in
+          if check ~src:src_dir ~dst:dst_dir base then
+            OpamFilename.install ~exec ~src:src_file ~dst:dst_file ();
+        ) files
+    | `Shell shell ->
+      let dst_dir = dst_fn (OpamFilename.raw_dir "/") switch name in
+      let dst_dir = ExtString.String.slice ~first:1 (OpamFilename.Dir.to_string dst_dir) in
+      match files with
+      | [] -> ()
+      | _ ->
+      shell ["mkdir";"-p";dst_dir];
+      List.iter (fun (base,dst) ->
+        let src_file = OpamFilename.Base.to_string base.c in
+        let dst_file = match dst with
+        | None   -> Filename.concat dst_dir (Filename.basename src_file)
+        | Some d -> Filename.concat dst_dir (OpamFilename.Base.to_string d) 
+        in
+        let exec = if exec then ["&&";"chmod";"+x";dst_file] else [] in
+        shell (["(";"[";"-f";src_file;"]";"&&";"cp";src_file;dst_file] @ exec @ [")"] @
+              if base.optional then ["|| true"] else [])
+      ) files
+  in
+
+  (* bin *)
+  install_files true (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
+
+  (* sbin *)
+  install_files true (fun r s _ -> OpamPath.Switch.sbin r s) OpamFile.Dot_install.sbin;
+
+  (* lib *)
+  install_files false OpamPath.Switch.lib OpamFile.Dot_install.lib;
+
+  (* toplevel *)
+  install_files false (fun r s _ -> OpamPath.Switch.toplevel r s)
+    OpamFile.Dot_install.toplevel;
+
+  install_files true (fun r s _ -> OpamPath.Switch.stublibs r s)
+    OpamFile.Dot_install.stublibs;
+
+  (* Man pages *)
+  install_files false (fun r s _ -> OpamPath.Switch.man_dir r s) OpamFile.Dot_install.man;
+
+  (* Shared files *)
+  install_files false OpamPath.Switch.share OpamFile.Dot_install.share;
+  install_files false (fun r s _ -> OpamPath.Switch.share_dir r s)
+    OpamFile.Dot_install.share_root;
+
+  (* Etc files *)
+  install_files false OpamPath.Switch.etc OpamFile.Dot_install.etc;
+
+  (* Documentation files *)
+  install_files false OpamPath.Switch.doc OpamFile.Dot_install.doc;
+
+  (* misc *)
+  List.iter
+    (fun (src, dst) ->
+      match act with
+      | `Install (src_dir,_dst_dir) ->
+        let src_file = OpamFilename.create src_dir src.c in
+        if OpamFilename.exists dst
+        && OpamGlobals.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
+          OpamFilename.install ~src:src_file ~dst ()
+        else begin
+          OpamGlobals.msg "Installing %s to %s.\n"
+            (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
+          if OpamGlobals.confirm "Continue ?" then
+            OpamFilename.install ~src:src_file ~dst ()
+        end
+      | `Shell shell ->
+        let src = OpamFilename.Base.to_string src.c in
+        let dst = OpamFilename.to_string dst in
+        shell ["echo";"Install";src;"to";dst;"manually!"];
+(*         shell ["[";"-f";src;"]";"&&";"echo";"Overwrite?";"||";"echo";"Continue?"]; *)
+    ) (OpamFile.Dot_install.misc install);
+
+  match act with
+  | `Install (src, _) when !warnings <> [] ->
+    let print (dir, base) =
+      Printf.sprintf " - %s in %s"
+        (OpamFilename.Base.to_string base)
+        (OpamFilename.Dir.to_string dir) in
+    OpamGlobals.error
+      "While installing the following files:\n%s"
+      (String.concat "\n" (List.map print !warnings));
+    let install_f = OpamPath.Switch.install src switch name in
+    failwith (Printf.sprintf "Error processing %s.install"
+                (OpamFilename.to_string install_f));
+  | _ -> ()
+
 (* Install the package files *)
 (* IMPORTANT: this function is executed by the children processes,
    thus it is important to NOT modify the global state of OPAM here.
@@ -52,90 +167,7 @@ let install_package t nv =
       OpamFilename.mkdir (OpamFilename.dirname dot_config);
       OpamFile.Dot_config.write dot_config config;
 
-      let warnings = ref [] in
-      let check ~src ~dst base =
-        let src_file = OpamFilename.create src base.c in
-        if base.optional && not (OpamFilename.exists src_file) then
-          log "Not installing %a is not present and optional."
-            (slog OpamFilename.to_string) src_file;
-        if not base.optional && not (OpamFilename.exists src_file) then (
-          warnings := (dst, base.c) :: !warnings
-        );
-        OpamFilename.exists src_file in
-
-      (* Install a list of files *)
-      let install_files exec dst_fn files_fn =
-        let dst_dir = dst_fn t.root t.switch name in
-        let files = files_fn install in
-        if not (OpamFilename.exists_dir dst_dir) then (
-          log "creating %a" (slog OpamFilename.Dir.to_string) dst_dir;
-          OpamFilename.mkdir dst_dir;
-        );
-        List.iter (fun (base, dst) ->
-            let src_file = OpamFilename.create build_dir base.c in
-            let dst_file = match dst with
-              | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
-              | Some d -> OpamFilename.create dst_dir d in
-            if check ~src:build_dir ~dst:dst_dir base then
-              OpamFilename.install ~exec ~src:src_file ~dst:dst_file ();
-          ) files in
-
-      (* bin *)
-      install_files true (fun r s _ -> OpamPath.Switch.bin r s) OpamFile.Dot_install.bin;
-
-      (* sbin *)
-      install_files true (fun r s _ -> OpamPath.Switch.sbin r s) OpamFile.Dot_install.sbin;
-
-      (* lib *)
-      install_files false OpamPath.Switch.lib OpamFile.Dot_install.lib;
-
-      (* toplevel *)
-      install_files false (fun r s _ -> OpamPath.Switch.toplevel r s)
-        OpamFile.Dot_install.toplevel;
-
-      install_files true (fun r s _ -> OpamPath.Switch.stublibs r s)
-        OpamFile.Dot_install.stublibs;
-
-      (* Man pages *)
-      install_files false (fun r s _ -> OpamPath.Switch.man_dir r s) OpamFile.Dot_install.man;
-
-      (* Shared files *)
-      install_files false OpamPath.Switch.share OpamFile.Dot_install.share;
-      install_files false (fun r s _ -> OpamPath.Switch.share_dir r s)
-        OpamFile.Dot_install.share_root;
-
-      (* Etc files *)
-      install_files false OpamPath.Switch.etc OpamFile.Dot_install.etc;
-
-      (* Documentation files *)
-      install_files false OpamPath.Switch.doc OpamFile.Dot_install.doc;
-
-      (* misc *)
-      List.iter
-        (fun (src, dst) ->
-          let src_file = OpamFilename.create (OpamFilename.cwd ()) src.c in
-          if OpamFilename.exists dst
-          && OpamGlobals.confirm "Overwriting %s ?" (OpamFilename.to_string dst) then
-            OpamFilename.install ~src:src_file ~dst ()
-          else begin
-            OpamGlobals.msg "Installing %s to %s.\n"
-              (OpamFilename.Base.to_string src.c) (OpamFilename.to_string dst);
-            if OpamGlobals.confirm "Continue ?" then
-              OpamFilename.install ~src:src_file ~dst ()
-          end
-        ) (OpamFile.Dot_install.misc install);
-
-      if !warnings <> [] then (
-        let print (dir, base) =
-          Printf.sprintf " - %s in %s"
-            (OpamFilename.Base.to_string base)
-            (OpamFilename.Dir.to_string dir) in
-        OpamGlobals.error
-          "While installing the following files:\n%s"
-          (String.concat "\n" (List.map print !warnings));
-        failwith (Printf.sprintf "Error processing %s.install"
-                    (OpamFilename.to_string install_f));
-      )
+      perform_dot_install name install (`Install (build_dir,t.root)) t.switch;
     );
   if not (!OpamGlobals.keep_build_dir || !OpamGlobals.debug) then
     OpamFilename.rmdir build_dir

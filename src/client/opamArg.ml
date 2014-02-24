@@ -1771,10 +1771,9 @@ let bundle =
   in
   let bundle global_options deps_only dryrun outdir names =
     apply_global_options global_options;
-    let packages = OpamPackage.Name.Set.of_list names in
-    Client.bundle ~dryrun ~deps_only outdir packages
+    Client.bundle ~dryrun ~deps_only outdir names
   in
-  Term.(pure bundle $global_options $deps_only $dryrun $outdir $name_list),
+  Term.(pure bundle $global_options $deps_only $dryrun $outdir $nonempty_atom_list),
   term_info "bundle" ~doc ~man
 
 (* HELP *)
