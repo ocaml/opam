@@ -374,7 +374,11 @@ let dev_opam t nv build_dir =
 
 let removal_needs_download t nv =
   match OpamState.opam_opt t nv with
-  | None -> false
+  | None ->
+    OpamGlobals.warning
+      "No opam file found to remove package %s. Stale files may remain."
+      (OpamPackage.to_string nv);
+    false
   | Some opam ->
     let commands =
       OpamState.filter_commands t ~opam
@@ -534,10 +538,15 @@ let sources_needed t solution =
          solution.PackageActionGraph.to_remove) in
   PackageActionGraph.fold_vertex (fun act acc ->
       match act with
-      | To_delete nv | To_change (None,nv) | To_recompile nv ->
+      | To_delete nv ->
+        if removal_needs_download t nv
+        then OpamPackage.Set.add nv acc else acc
+      | To_change (None,nv) | To_recompile nv ->
         OpamPackage.Set.add nv acc
       | To_change (Some nv1, nv2) ->
-        OpamPackage.Set.add nv1 (OpamPackage.Set.add nv2 acc))
+        let acc = OpamPackage.Set.add nv2 acc in
+        if removal_needs_download t nv1
+        then OpamPackage.Set.add nv1 acc else acc)
     solution.PackageActionGraph.to_process pkgs
 
 let remove_package t ~metadata ?silent nv =
