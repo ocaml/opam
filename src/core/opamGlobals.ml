@@ -77,7 +77,8 @@ let solver_timeout =
   try float_of_string (OpamMisc.getenv "OPAMSOLVERTIMEOUT")
   with Not_found | Failure _ -> 5.
 
-let default_preferences = "-removed,-notuptodate,-count(down),-new,-changed"
+let default_preferences = (* "-removed,-notuptodate,-count(down),-new,-changed" *)
+  "-removed,-notuptodate,-changed"
 
 let solver_preferences =
   try OpamMisc.strip (OpamMisc.getenv "OPAMCRITERIA")
