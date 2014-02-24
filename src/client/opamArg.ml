@@ -269,6 +269,10 @@ let arg_list name doc conv =
   let doc = Arg.info ~docv:name ~doc [] in
   Arg.(value & pos_all conv [] & doc)
 
+let nonempty_arg_list name doc conv =
+  let doc = Arg.info ~docv:name ~doc [] in
+  Arg.(non_empty & pos_all conv [] & doc)
+
 (* Common flags *)
 let print_short_flag =
   mk_flag ["s";"short"]
@@ -325,6 +329,9 @@ let jobs_flag =
 
 let pattern_list =
   arg_list "PATTERNS" "List of package patterns." Arg.string
+
+let nonempty_pattern_list =
+  nonempty_arg_list "PATTERNS" "List of package patterns." Arg.string
 
 let name_list =
   arg_list "PACKAGES" "List of package names." package_name
@@ -602,7 +609,7 @@ let show =
   let pkg_info global_options fields packages =
     apply_global_options global_options;
     Client.info ~fields packages in
-  Term.(pure pkg_info $global_options $fields $pattern_list),
+  Term.(pure pkg_info $global_options $fields $nonempty_pattern_list),
   term_info "show" ~doc ~man
 
 
