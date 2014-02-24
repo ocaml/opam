@@ -1641,7 +1641,7 @@ module API = struct
         (String.concat " " (List.map (Filename.concat "$BUNDLE_PREFIX") root_dirs)) ^
         " $BUNDLE_PREFIX/lib/stublibs";
       "export PATH=$BUNDLE_PREFIX/bin:$PATH";
-      "export CAML_LD_LIBRARY_PATH=$BUNDLE_PREFIX/lib/stublibs:$CAML_LD_LIBRARY_PATH";
+      "export CAML_LD_LIBRARY_PATH=$BUNDLE_PREFIX/lib/stublibs:${CAML_LD_LIBRARY_PATH:-}";
     ];
     List.iter begin fun nv ->
       try
