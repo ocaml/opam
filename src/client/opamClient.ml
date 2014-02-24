@@ -817,10 +817,30 @@ module API = struct
           OpamFilename.rmdir root;
         raise e)
 
+  let check_conflicts names atoms removed bad_versions =
+    let name_conflicts =
+      OpamPackage.Name.Set.inter (OpamPackage.names_of_packages removed) names in
+    if not (OpamPackage.Name.Set.is_empty name_conflicts) then
+      OpamGlobals.error_and_exit
+        "Sorry, these packages are no longer available from the repositories:\n%s"
+        (OpamPackage.Name.Set.to_string name_conflicts);
+    let conflicts =
+      OpamPackage.Set.filter (fun nv ->
+          let at = OpamSolution.eq_atom (OpamPackage.name nv) (OpamPackage.version nv) in
+          List.mem at atoms)
+        bad_versions in
+    if not (OpamPackage.Set.is_empty conflicts) then
+      OpamGlobals.error_and_exit
+        "Sorry, these package versions are no longer available from the repositories:\n%s"
+        (OpamPackage.Set.to_string conflicts)
+
   let install_t names add_to_roots deps_only t =
     log "INSTALL %s" (OpamPackage.Name.Set.to_string names);
     let atoms = OpamSolution.atoms_of_names ~permissive:true t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+
+    let t, removed, bad_versions = removed_from_upstream t in
+    check_conflicts names atoms removed bad_versions;
 
     let pkg_skip, pkg_new =
       List.partition (fun (n,v) ->
@@ -916,16 +936,23 @@ module API = struct
           ) versions
         ) pkg_new;
 
+      let _, unavailable =
+        must_be_removed t
+          (OpamPackage.packages_of_names
+             (Lazy.force t.available_packages)
+             (OpamPackage.Name.Set.of_list (List.map fst atoms)))
+          bad_versions in
+
       let request =
         if OpamCudf.external_solver_available ()
         then
           { wish_install = atoms;
-            wish_remove  = [] ;
+            wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = [] }
         else
           { wish_install = OpamSolution.atoms_of_packages
                 (OpamPackage.Set.inter t.installed_roots (Lazy.force t.available_packages));
-            wish_remove  = [] ;
+            wish_remove  = OpamSolution.eq_atoms_of_packages unavailable;
             wish_upgrade = atoms }
       in
       let action =
@@ -1078,8 +1105,10 @@ module API = struct
 
   let reinstall_t names t =
     log "reinstall %s" (OpamPackage.Name.Set.to_string names);
-    let t, _, _ = removed_from_upstream t in
+    let t, removed, bad_versions = removed_from_upstream t in
     let atoms = OpamSolution.atoms_of_names t names in
+    let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
+    check_conflicts names atoms removed bad_versions;
     let reinstall =
       List.map (function (n,v) ->
         match v with
