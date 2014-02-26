@@ -409,7 +409,7 @@ let install_metadata t nv =
 
 let remove_metadata t packages =
   let all_installed = all_installed t in
-  let packages = OpamPackage.Set.inter all_installed packages in
+  let packages = OpamPackage.Set.diff packages all_installed in
   OpamPackage.Set.iter (fun nv ->
       let dir = OpamPath.packages t.root nv in
       OpamFilename.rmdir dir;
