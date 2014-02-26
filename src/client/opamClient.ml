@@ -817,7 +817,14 @@ module API = struct
           OpamFilename.rmdir root;
         raise e)
 
-  let check_conflicts names atoms removed bad_versions =
+  let check_conflicts t names atoms removed bad_versions =
+    (* packages which still have local data are OK for now *)
+    let has_no_local_data nv =
+      not (OpamFilename.exists_dir (OpamPath.packages t.root nv)) in
+    let removed =
+      OpamPackage.Set.filter has_no_local_data removed in
+    let bad_versions =
+      OpamPackage.Set.filter has_no_local_data bad_versions in
     let name_conflicts =
       OpamPackage.Name.Set.inter (OpamPackage.names_of_packages removed) names in
     if not (OpamPackage.Name.Set.is_empty name_conflicts) then
@@ -840,7 +847,7 @@ module API = struct
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
 
     let t, removed, bad_versions = removed_from_upstream t in
-    check_conflicts names atoms removed bad_versions;
+    check_conflicts t names atoms removed bad_versions;
 
     let pkg_skip, pkg_new =
       List.partition (fun (n,v) ->
@@ -1108,7 +1115,7 @@ module API = struct
     let t, removed, bad_versions = removed_from_upstream t in
     let atoms = OpamSolution.atoms_of_names t names in
     let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
-    check_conflicts names atoms removed bad_versions;
+    check_conflicts t names atoms removed bad_versions;
     let reinstall =
       List.map (function (n,v) ->
         match v with
