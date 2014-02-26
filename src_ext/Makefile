@@ -12,8 +12,8 @@ DOSEMD5  = e98ff720fcc3873def46c85c6a980a1b
 CMDLINER    = cmdliner-0.9.3
 CMDLINERMD5 = d63dd3b03966d65fc242246859c831c7
 
-GRAPH    = ocamlgraph-1.8.1
-GRAPHMD5 = 5aa256e9587a6d264d189418230af698
+GRAPH    = ocamlgraph-1.8.4
+GRAPHMD5 = ddbd90b536606934953ac834c072ead5
 
 RE       = ocaml-re-1.2.0
 REMD5    = 5cbfc137683ef2b0e91f931577f2e673
@@ -79,8 +79,8 @@ cmdliner.stamp: $(CMDLINER).tbz
 	@touch $@
 
 $(GRAPH).tar.gz:
-	# $(FETCH) http://ocamlgraph.lri.fr/download/$(GRAPH).tar.gz
-	$(FETCH) http://pkgs.fedoraproject.org/repo/pkgs/ocaml-ocamlgraph/$(GRAPH).tar.gz/$(GRAPHMD5)/$(GRAPH).tar.gz
+	$(FETCH) http://ocamlgraph.lri.fr/download/$(GRAPH).tar.gz
+	#$(FETCH) http://pkgs.fedoraproject.org/repo/pkgs/ocaml-ocamlgraph/$(GRAPH).tar.gz/$(GRAPHMD5)/$(GRAPH).tar.gz
 	$(MD5CHECK) $(GRAPH).tar.gz $(GRAPHMD5)
 
 ocamlgraph.stamp: $(GRAPH).tar.gz
