@@ -409,7 +409,7 @@ let install_metadata t nv =
 
 let remove_metadata t packages =
   let all_installed = all_installed t in
-  let packages = OpamPackage.Set.inter all_installed packages in
+  let packages = OpamPackage.Set.diff packages all_installed in
   OpamPackage.Set.iter (fun nv ->
       let dir = OpamPath.packages t.root nv in
       OpamFilename.rmdir dir;
@@ -2185,14 +2185,16 @@ let update_dev_packages t =
 let download_archive t nv =
   log "get_archive %s" (OpamPackage.to_string nv);
   let dst = OpamPath.archive t.root nv in
-  if OpamFilename.exists dst then Some dst
-  else
+  if OpamFilename.exists dst then Some dst else
+  try
     let repo, _ = OpamPackage.Map.find nv t.package_index in
     let repo = find_repository t repo in
     match OpamRepository.pull_archive repo nv with
     | Not_available _ -> None
     | Up_to_date f
     | Result f        -> OpamFilename.copy ~src:f ~dst; Some dst
+  with Not_found ->
+    None
 
 (* Download a package from its upstream source, using 'cache_dir' as cache
    directory. *)
