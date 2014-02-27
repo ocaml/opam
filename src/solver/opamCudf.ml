@@ -527,16 +527,15 @@ let compute_root_causes universe actions requested =
   (* g is the graph of actions:
      prerequisite -> action -> postrequisite (eg. recompile) *)
   let g =
-    let packages =
+    let cudf_univ =
       let filter p = StringSet.mem p.Cudf.package act_packages in
-      Algo.Defaultgraphs.PackageGraph.dependency_graph
-        (Cudf.load_universe (Cudf.get_packages ~filter universe)) in
+      Cudf.load_universe (Cudf.get_packages ~filter universe) in
+    let packages =
+      Algo.Defaultgraphs.PackageGraph.dependency_graph cudf_univ in
     let g =
       ActionGraph.mirror (action_graph_of_packages actions packages) in
     let conflicts_graph =
-      let filter p = StringSet.mem p.Cudf.package act_packages in
-      Algo.Defaultgraphs.PackageGraph.conflict_graph
-        (Cudf.load_universe (Cudf.get_packages ~filter universe)) in
+      Algo.Defaultgraphs.PackageGraph.conflict_graph cudf_univ in
     (* add conflicts to the graph to get all causality relations:
        cause (removed required pkg or conflicting pkg) -> removed pkg *)
     Map.iter (fun _ -> function
