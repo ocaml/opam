@@ -21,19 +21,19 @@ let log fmt = OpamGlobals.log "CUDF" fmt
 let string_of_action a =
   let aux pkg = Printf.sprintf "%s.%d" pkg.Cudf.package pkg.Cudf.version in
   match a with
-  | To_change (None, p)   -> Printf.sprintf " - install %s" (aux p)
+  | To_change (None, p)   -> Printf.sprintf "install %s" (aux p)
   | To_change (Some o, p) ->
     let f action =
-      Printf.sprintf " - %s %s to %d" action (aux o) p.Cudf.version in
+      Printf.sprintf "%s %s to %d" action (aux o) p.Cudf.version in
     if compare o.Cudf.version p.Cudf.version < 0 then
       f "upgrade"
     else
       f "downgrade"
-  | To_recompile p        -> Printf.sprintf " - recompile %s" (aux p)
-  | To_delete p           -> Printf.sprintf " - delete %s" (aux p)
+  | To_recompile p        -> Printf.sprintf "recompile %s" (aux p)
+  | To_delete p           -> Printf.sprintf "delete %s" (aux p)
 
 let string_of_actions l =
-  OpamMisc.string_of_list string_of_action l
+  OpamMisc.string_of_list (fun a -> " - " ^ string_of_action a) l
 
 let string_of_package p =
   let installed = if p.Cudf.installed then "installed" else "not-installed" in
