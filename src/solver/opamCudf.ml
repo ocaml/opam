@@ -292,11 +292,14 @@ let string_of_reasons cudf2opam opam_universe reasons =
   end;
   Buffer.contents b
 
+(* custom cudf field labels *)
+let s_source = "opam-name"
+let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 
 let check flag p =
-  try Cudf.lookup_package_property p flag = "true"
+  try Cudf.lookup_typed_package_property p flag = `Bool true
   with Not_found -> false
 
 let need_reinstall = check s_reinstall
@@ -310,14 +313,9 @@ let aspcud_command =
 
 let default_preamble =
   let l = [
-    ("recommends",(`Vpkgformula (Some [])));
-    ("number",(`String None));
-    ("source",(`String (Some ""))) ;
-    ("sourcenumber",(`String (Some "")));
-    ("sourceversion",(`Int (Some 1))) ;
-    ("essential",(`Bool (Some false))) ;
-    ("buildessential",(`Bool (Some false))) ;
-    (s_reinstall,`Bool (Some false));
+    (s_source,         `String None) ;
+    (s_source_number,  `String None);
+    (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
   ] in
   Common.CudfAdd.add_properties Cudf.default_preamble l
@@ -418,7 +416,7 @@ let get_final_universe univ req =
     failwith "opamSolver" in
   let open Algo.Depsolver in
   match call_external_solver ~explain:true univ req with
-  | Sat (_,u) -> Success (remove u "dose-dummy-request" None)
+  | Sat (_,u) -> Success u (* (remove u "dose-dummy-request" None) *)
   | Error "(CRASH) Solution file is empty" -> Success (Cudf.load_universe [])
   | Error str -> fail str
   | Unsat r   ->
