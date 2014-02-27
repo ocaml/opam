@@ -548,9 +548,11 @@ let compute_root_causes universe actions requested =
             conflicts_graph pkg
       ) actions;
     g in
-  (* let () =
-     let fd = open_out ("test.dot") in ActionGraph.output_dot fd g; close_out fd
-     in *)
+  let () = match !OpamGlobals.cudf_file with None -> () | Some f ->
+    let filename = Printf.sprintf "%s-actions.dot" f in
+    let oc = open_out filename in
+    ActionGraph.output_dot oc g;
+    close_out oc in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
         StringSet.add (Common.CudfAdd.encode (OpamPackage.Name.to_string n)) s)
