@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 
 let log fmt = OpamGlobals.log "RSYNC" fmt
 

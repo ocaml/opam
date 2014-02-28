@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 
 let log fmt = OpamGlobals.log "CUDF" fmt
 
@@ -55,11 +56,15 @@ module Pkg = struct
   type t = Cudf.package
   include Common.CudfAdd
   let to_string = string_of_package
-  let string_of_action ?causes:_ = string_of_action
+  let name_to_string t = t.Cudf.package
+  let version_to_string t = string_of_int t.Cudf.version
   let to_json = to_json
 end
 
-module ActionGraph = MakeActionGraph(Pkg)
+module Action = OpamActionGraph.MakeAction(Pkg)
+module ActionGraph = OpamActionGraph.Make(Action)
+type solution = (Cudf.package, ActionGraph.t) gen_solution
+
 module Map = OpamMisc.Map.Make(Pkg)
 module Set = OpamMisc.Set.Make(Pkg)
 module Graph = struct
@@ -551,7 +556,7 @@ let compute_root_causes universe actions requested =
   let () = match !OpamGlobals.cudf_file with None -> () | Some f ->
     let filename = Printf.sprintf "%s-actions.dot" f in
     let oc = open_out filename in
-    ActionGraph.output_dot oc g;
+    ActionGraph.Dot.output_graph oc g;
     close_out oc in
   let requested_pkgnames =
     OpamPackage.Name.Set.fold (fun n s ->
@@ -763,4 +768,4 @@ let solution_of_actions ~simple_universe ~complete_universe ~requested root_acti
   let root_causes =
     compute_root_causes complete_universe all_actions requested in
 
-  { ActionGraph.to_remove; to_process; root_causes }
+  { to_remove; to_process; root_causes }

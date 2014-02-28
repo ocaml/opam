@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 open OpamState.Types
 open OpamMisc.OP
 
@@ -973,10 +974,10 @@ module API = struct
         | Success solution ->
           if deps_only then (
             let to_install =
-              PackageActionGraph.fold_vertex (fun act acc -> match act with
+              OpamSolver.ActionGraph.fold_vertex (fun act acc -> match act with
                   | To_change (_, p) -> OpamPackage.Set.add p acc
                   | _ -> acc)
-                solution.PackageActionGraph.to_process OpamPackage.Set.empty in
+                solution.to_process OpamPackage.Set.empty in
             let all_deps =
               let universe = OpamState.universe t (Install names) in
               OpamPackage.Name.Set.fold (fun name deps ->
@@ -989,13 +990,13 @@ module API = struct
                       (OpamPackage.Set.of_list deps_nv) nvs in
                   OpamPackage.Set.union deps deps_only)
                 names OpamPackage.Set.empty in
-            PackageActionGraph.iter_vertex (function
+            OpamSolver.ActionGraph.iter_vertex (function
                 | To_change (_, p) as v ->
                   if not (OpamPackage.Set.mem p all_deps) then
-                    PackageActionGraph.remove_vertex
-                      solution.PackageActionGraph.to_process v
+                    OpamSolver.ActionGraph.remove_vertex
+                      solution.to_process v
                 | _ -> ())
-              solution.PackageActionGraph.to_process
+              solution.to_process
           );
           OpamSolution.apply t action ~requested:names solution in
       OpamSolution.check_solution t solution

@@ -25,7 +25,7 @@ val resolve:
   user_action ->
   requested:OpamPackage.Name.Set.t ->
   atom request ->
-  (solution, string) result
+  (OpamSolver.solution, string) result
 
 (** Apply a solution returned by the solver. *)
 val apply:
@@ -33,7 +33,7 @@ val apply:
   OpamState.state ->
   user_action ->
   requested:OpamPackage.Name.Set.t ->
-  solution ->
+  OpamSolver.solution ->
   solver_result
 
 (** Call the solver to get a solution and then call [apply]. *)

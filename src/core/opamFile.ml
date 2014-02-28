@@ -15,6 +15,7 @@
 (**************************************************************************)
 
 open OpamTypes
+open OpamTypesBase
 open OpamMisc.OP
 
 module Lines = struct

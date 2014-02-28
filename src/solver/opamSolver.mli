@@ -18,6 +18,11 @@
 
 open OpamTypes
 
+module Action : OpamActionGraph.ACTION with type package = package
+module ActionGraph : OpamParallel.GRAPH with type V.t = package action
+
+type solution = (OpamPackage.t, ActionGraph.t) gen_solution
+
 val empty_universe: universe
 
 (** {2 Solver} *)
